@@ -13,7 +13,7 @@ object HakuJaValintarekisteriBuild extends Build {
   val ScalatraVersion = "2.2.2"
 
   lazy val project = Project (
-    "haku--ja-valintarekisteri",
+    "hakurekisteri",
     file("."),
     settings = Defaults.defaultSettings ++ ScalatraPlugin.scalatraWithJRebel ++ scalateSettings ++ Seq(
       organization := Organization,
