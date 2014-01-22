@@ -16,6 +16,7 @@ object HakuJaValintarekisteriBuild extends Build {
     "hakurekisteri",
     file("."),
     settings = Defaults.defaultSettings ++ ScalatraPlugin.scalatraWithJRebel ++ scalateSettings ++ Seq(
+
       organization := Organization,
       name := Name,
       version := Version,
@@ -46,3 +47,5 @@ object HakuJaValintarekisteriBuild extends Build {
     )
   )
 }
+
+

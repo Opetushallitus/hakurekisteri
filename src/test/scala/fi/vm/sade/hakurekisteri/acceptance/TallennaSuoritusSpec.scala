@@ -9,32 +9,54 @@ import org.json4s.jackson.Serialization.{read, write}
 import org.json4s.jackson.JsonMethods._
 import fi.vm.sade.hakurekisteri.{SuoritusActor, SuoritusServlet, Suoritus}
 import akka.actor.{Props, ActorSystem}
+import fi.vm.sade.hakurekisteri.acceptance.tools.HakurekisteriSupport
+import java.util.Locale
 
-class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen {
-  protected implicit val jsonFormats: Formats = DefaultFormats
+class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with HakurekisteriSupport {
+
   info("Koulun virkailijana")
   info("tallennan kouluni oppilaiden tutkintosuoritukset")
   info("jotta niitä voi hyödyntää haussa")
   info("ja valinnassa")
 
   feature("Suorituksen tallentaminen") {
-    scenario("Tallennetaan yhden henkilön suoritus") {
-      Given("Suoritus tallentuu")
-      val suoritus = new Suoritus("1.2.5", "KESKEN", "9", "2014", "K", "9D", "1.2.4")
+    scenario("Tallennetaan suoritus tyhjään kantaan") {
+      Given("kanta on tyhjä")
+      db is empty
 
-      val system = ActorSystem()
-      val suoritusRekisteri = system.actorOf(Props(new SuoritusActor))
-      addServlet(new SuoritusServlet(system, suoritusRekisteri), "/rest/v1/suoritukset")
+      When("suoritus luodaan järjestelmään")
 
-      When("kun se lähetetään (POST)")
+      create(suoritus)
 
-      post("/rest/v1/suoritukset", write(suoritus), Map("Content-Type" -> "application/json; charset=utf-8")) {}
-
-      Then("ja se löytyy tallentamisen jälkeen")
-      get("/rest/v1/suoritukset")  {
-        val parsedBody = parse(body)
-        parsedBody.extract[Seq[Suoritus]] should contain(suoritus)
-      }
+      Then("löytyy kannasta ainoastaan tallennettu suoritus")
+      allSuoritukset should equal(Seq(suoritus))
     }
+
+    scenario("Tallennettaan kantaan jossa on tietoa") {
+      Given("kannassa on suorituksia")
+      db has (suoritus, suoritus2)
+
+      When("uusi suoritus luodaan järjestelmään")
+
+      create(suoritus3)
+
+      Then("löytyy kannasta  tallennettu suoritus")
+      allSuoritukset should contain(suoritus3)
+    }
+
+    scenario("Vanhat tiedot säilyvät") {
+      Given("kannassa on suorituksia")
+      db has (suoritus, suoritus2)
+
+      When("uusi suoritus luodaan järjestelmään")
+
+      create(suoritus3)
+
+      Then("löytyy kannasta  tallennettu suoritus")
+      allSuoritukset should (contain(suoritus)  and contain(suoritus2))
+    }
+
   }
+
+
 }
