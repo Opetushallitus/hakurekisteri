@@ -1,16 +1,17 @@
 package fi.vm.sade.hakurekisteri
 
-import org.scalatra.test.specs2._
+import org.scalatra.test.scalatest.{ScalatraFunSuite, ScalatraFlatSpec}
+import akka.actor.{Props, ActorSystem}
 
-// For more on Specs2, see http://etorreborre.github.com/specs2/guide/org.specs2.guide.QuickStart.html
-class SuoritusServletSpec extends ScalatraSpec { def is =
-  "GET / on SuoritusServlet"                     ^
-    "should return status 200"                  ! root200^
-                                                end
+class SuoritusServletSpec extends ScalatraFunSuite {
+  val suoritus = new Suoritus("1.2.3", "KESKEN", "9", "2014", "K", "9D", "1.2.4")
+  val system = ActorSystem()
+  val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(Seq(suoritus))))
+  addServlet(new SuoritusServlet(system, suoritusRekisteri), "/*")
 
-  addServlet(classOf[SuoritusServlet], "/*")
-
-  def root200 = get("/") {
-    status must_== 200
+  test("get root should return 200") {
+    get("/") {
+      status should equal (200)
+    }
   }
 }
