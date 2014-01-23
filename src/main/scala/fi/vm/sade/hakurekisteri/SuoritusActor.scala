@@ -28,7 +28,7 @@ class SuoritusActor(var suoritukset:Seq[Suoritus] = Seq()) extends Actor{
 
   def checkKausi(kausi: Option[String])(s: Suoritus):Boolean = kausi match{
     case Some("K") => duringFirstHalf(s.arvioituValmistuminen)
-    case Some("S") => true
+    case Some("S") => !duringFirstHalf(s.arvioituValmistuminen)
     case Some(_) => throw new IllegalArgumentException("not a kausi")
     case None => true
   }

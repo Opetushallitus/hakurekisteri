@@ -39,11 +39,8 @@ trait HakurekisteriSupport extends HttpComponentsClient {
     var initialized = false
 
     def init() {
-      if (!initialized) {
-        println ("Initializing db with: " + tehdytSuoritukset)
-        this has(tehdytSuoritukset:_*)
-
-      }
+      println ("Initializing db with: " + tehdytSuoritukset)
+      this has(tehdytSuoritukset:_*)
 
     }
 
@@ -185,7 +182,6 @@ trait HakurekisteriSupport extends HttpComponentsClient {
         )
       }
     }
-
 
 
 }

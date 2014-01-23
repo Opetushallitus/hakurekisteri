@@ -24,7 +24,7 @@ class HaeValmistuvatSpec extends ScalatraFeatureSpec with GivenWhenThen with Hak
   info("ja apua hakuprosessissa")
 
   feature("Lähtökoulu- ja luokka-tiedot") {
-    scenario("Haetaan suoritustietoja henkiloOidilla ja arvioidulla valmistumiskaudella") {
+    scenario("Yksi valmistuminen") {
       Given("Kaksi henkilöä valmistuu keväällä")
       Mikko valmistuu (Keväällä, 2014) koulusta "1.2.3"
       Matti valmistuu (Keväällä, 2014) koulusta "1.2.4"
@@ -45,6 +45,30 @@ class HaeValmistuvatSpec extends ScalatraFeatureSpec with GivenWhenThen with Hak
       haettu.head.arvioituValmistuminen should beBefore ("01.07.2014")
 
     }
+
+    scenario("Valmistuu kahdesti") {
+      Given("henkilö valmistuu keväällä ja syksyllä")
+      Mikko valmistuu (Keväällä, 2014) koulusta "1.2.3"
+      Mikko valmistuu (Syksyllä, 2014) koulusta "1.2.4"
+
+
+      When("haetaan suorituksia toiselle henkilölle keväältä")
+      val haettu = hae(
+        suoritukset
+          henkilolle Mikko
+          vuodelta 2014
+          kaudelta Syksy
+      )
+
+      Then("saan hakutuloksen jossa on vain haetun henkilön suoritus")
+      haettu.length should equal (1)
+      haettu.head.henkiloOid should equal (Mikko.oid)
+      haettu.head.opilaitosOid should equal ("1.2.4")
+      haettu.head.arvioituValmistuminen should not(beBefore ("01.07.2014"))
+
+    }
+
+
   }
 
 
