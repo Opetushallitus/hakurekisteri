@@ -3,16 +3,13 @@ package fi.vm.sade.hakurekisteri.acceptance.tools
 import org.scalatra.test.HttpComponentsClient
 import org.json4s.{DefaultFormats, Formats}
 import javax.servlet.http.HttpServlet
-import fi.vm.sade.hakurekisteri.{SuoritusServlet, SuoritusActor, Suoritus}
+import fi.vm.sade.hakurekisteri.{SuoritusServlet, SuoritusActor}
 import akka.actor.{Props, ActorSystem}
 import org.json4s.jackson.JsonMethods._
-import fi.vm.sade.hakurekisteri.Suoritus
 import org.json4s.jackson.Serialization._
 import fi.vm.sade.hakurekisteri.Suoritus
 import java.util.Date
 import java.text.SimpleDateFormat
-import com.sun.jdi.connect.Connector.BooleanArgument
-import org.scalatest._
 import org.scalatest.matchers._
 
 
@@ -35,11 +32,11 @@ trait HakurekisteriSupport extends HttpComponentsClient {
   def addServlet(servlet: HttpServlet, path: String):Unit
 
 
-  val empty= new Object()
+  object empty
 
   object db {
 
-    var initialized = false;
+    var initialized = false
 
     def init() {
       if (!initialized) {
@@ -97,10 +94,10 @@ trait HakurekisteriSupport extends HttpComponentsClient {
     def arvot:Map[String,String]
     def resourcePath:String
 
-    def find[T: Manifest]:Seq[T] = {
+    def find[R: Manifest]:Seq[R] = {
       get(resourcePath,arvot) {
         parse(body)
-      }.extract[Seq[T]]
+      }.extract[Seq[R]]
     }
 
   }
