@@ -2,21 +2,16 @@ package fi.vm.sade.hakurekisteri.acceptance
 
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import org.scalatest.GivenWhenThen
-import fi.vm.sade.hakurekisteri.{SuoritusActor, Suoritus, SuoritusServlet}
-import org.json4s._
-import org.json4s.jackson.JsonMethods._
-import akka.actor.{Props, ActorSystem}
-import java.beans.PropertyChangeSupport
-import javax.servlet.Servlet
-import javax.servlet.http.HttpServlet
-import org.scalatra.test.HttpComponentsClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.{kausi, HakurekisteriSupport}
-import java.util.Date
 import kausi._
-import java.text.SimpleDateFormat
-import org.scalatest.matchers.Matcher
+
+
+
 
 class HaeValmistuvatSpec extends ScalatraFeatureSpec with GivenWhenThen with HakurekisteriSupport {
+
+
+
 
   info("Peruskoulua päättävänä hakijana")
   info("haluan Oponi löytävän tietoni hakupalvelusta")
@@ -24,7 +19,7 @@ class HaeValmistuvatSpec extends ScalatraFeatureSpec with GivenWhenThen with Hak
   info("ja apua hakuprosessissa")
 
   feature("Lähtökoulu- ja luokka-tiedot") {
-    scenario("Yksi valmistuminen") {
+    scenario("Keväällä valmistuminen") {
       Given("Kaksi henkilöä valmistuu keväällä")
       Mikko valmistuu (Keväällä, 2014) koulusta "1.2.3"
       Matti valmistuu (Keväällä, 2014) koulusta "1.2.4"
@@ -42,9 +37,13 @@ class HaeValmistuvatSpec extends ScalatraFeatureSpec with GivenWhenThen with Hak
       haettu.length should equal (1)
       haettu.head.henkiloOid should equal (Mikko.oid)
       haettu.head.opilaitosOid should equal ("1.2.3")
-      haettu.head.arvioituValmistuminen should beBefore ("01.07.2014")
+      haettu.head.arvioituValmistuminen should not(beBefore("01.01.2014"))
+      haettu.head.arvioituValmistuminen should beBefore ("01.08.2014")
 
     }
+
+
+
 
     scenario("Valmistuu kahdesti") {
       Given("henkilö valmistuu keväällä ja syksyllä")
@@ -64,7 +63,8 @@ class HaeValmistuvatSpec extends ScalatraFeatureSpec with GivenWhenThen with Hak
       haettu.length should equal (1)
       haettu.head.henkiloOid should equal (Mikko.oid)
       haettu.head.opilaitosOid should equal ("1.2.4")
-      haettu.head.arvioituValmistuminen should not(beBefore ("01.07.2014"))
+      haettu.head.arvioituValmistuminen should not(beBefore ("01.08.2014"))
+      haettu.head.arvioituValmistuminen should beBefore ("31.12.2014")
 
     }
 

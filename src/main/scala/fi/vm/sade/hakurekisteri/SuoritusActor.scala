@@ -35,9 +35,14 @@ class SuoritusActor(var suoritukset:Seq[Suoritus] = Seq()) extends Actor{
 
   def receive = {
     case SuoritusQuery(henkilo, kausi, vuosi) =>
-      sender ! suoritukset.filter(checkHenkilo(henkilo)).filter(checkVuosi(vuosi)).filter(checkKausi(kausi))
+      val filter = suoritukset.filter(checkHenkilo(henkilo)).filter(checkVuosi(vuosi)).filter(checkKausi(kausi))
+      println(henkilo + " " + kausi + " " + vuosi)
+      println(filter)
+      sender ! filter
     case s:Suoritus =>
+
       suoritukset = (suoritukset.toList :+ s).toSeq
+      println(suoritukset)
       sender ! suoritukset
   }
 }

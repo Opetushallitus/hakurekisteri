@@ -31,6 +31,7 @@ class SuoritusServlet(system: ActorSystem, suoritusActor: ActorRef) extends Haku
 
 
   post("/") {
+
     suoritusActor ! parsedBody.extract[Suoritus]
     Accepted()
   }

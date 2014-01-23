@@ -11,6 +11,7 @@ import fi.vm.sade.hakurekisteri.Suoritus
 import java.util.Date
 import java.text.SimpleDateFormat
 import org.scalatest.matchers._
+import org.scalatest.{Suite, BeforeAndAfterEach, BeforeAndAfter}
 
 
 object kausi extends Enumeration {
@@ -25,7 +26,16 @@ object kausi extends Enumeration {
 import kausi._
 
 
-trait HakurekisteriSupport extends HttpComponentsClient {
+trait HakurekisteriSupport extends HttpComponentsClient with BeforeAndAfterEach{  this: Suite =>
+
+  override def beforeEach() {
+    tehdytSuoritukset = Seq()
+  }
+
+  override def afterEach() {
+    try super.afterEach() // To be stackable, must call super.afterEach
+    finally db.initialized = false
+  }
 
   protected implicit val jsonFormats: Formats = DefaultFormats
 
@@ -39,8 +49,14 @@ trait HakurekisteriSupport extends HttpComponentsClient {
     var initialized = false
 
     def init() {
-      println ("Initializing db with: " + tehdytSuoritukset)
-      this has(tehdytSuoritukset:_*)
+      if (!initialized) {
+        println ("Initializing db with: " + tehdytSuoritukset)
+        val system = ActorSystem()
+        val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(tehdytSuoritukset)))
+        addServlet(new SuoritusServlet(system, suoritusRekisteri), "/rest/v1/suoritukset")
+        initialized = true
+      }
+
 
     }
 
@@ -50,10 +66,7 @@ trait HakurekisteriSupport extends HttpComponentsClient {
     }
 
     def has(suoritukset: Suoritus*) = {
-      val system = ActorSystem()
-      val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(suoritukset)))
-      addServlet(new SuoritusServlet(system, suoritusRekisteri), "/rest/v1/suoritukset")
-      initialized = true
+      tehdytSuoritukset = suoritukset
     }
 
   }
@@ -66,6 +79,7 @@ trait HakurekisteriSupport extends HttpComponentsClient {
 
 
   def create (suoritus: Suoritus){
+    db.init()
     post("/rest/v1/suoritukset", write(suoritus), Map("Content-Type" -> "application/json; charset=utf-8")) {}
   }
 
