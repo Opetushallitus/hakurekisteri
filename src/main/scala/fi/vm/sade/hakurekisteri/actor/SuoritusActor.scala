@@ -1,8 +1,10 @@
-package fi.vm.sade.hakurekisteri
+package fi.vm.sade.hakurekisteri.actor
 
 import akka.actor.Actor
 import java.util.Date
 import java.text.SimpleDateFormat
+import fi.vm.sade.hakurekisteri.domain.Suoritus
+import fi.vm.sade.hakurekisteri.query.SuoritusQuery
 
 class SuoritusActor(var suoritukset:Seq[Suoritus] = Seq()) extends Actor{
 
@@ -47,12 +49,7 @@ class SuoritusActor(var suoritukset:Seq[Suoritus] = Seq()) extends Actor{
   }
 }
 
-case class Suoritus(opilaitosOid: String, tila: String, luokkataso: String, arvioituValmistuminen: Date, luokka: String, henkiloOid: String)
 
-case class SuoritusQuery(henkilo: Option[String], kausi: Option[String], vuosi: Option[String])
 
-object SuoritusQuery{
-  def apply(params: Map[String,String]): SuoritusQuery = {
-    SuoritusQuery(params.get("henkilo"), params.get("kausi"), params.get("vuosi"))
-  }
-}
+
+

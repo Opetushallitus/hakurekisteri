@@ -3,15 +3,16 @@ package fi.vm.sade.hakurekisteri.acceptance.tools
 import org.scalatra.test.HttpComponentsClient
 import org.json4s.{DefaultFormats, Formats}
 import javax.servlet.http.HttpServlet
-import fi.vm.sade.hakurekisteri.{SuoritusServlet, SuoritusActor}
 import akka.actor.{Props, ActorSystem}
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization._
-import fi.vm.sade.hakurekisteri.Suoritus
 import java.util.Date
 import java.text.SimpleDateFormat
 import org.scalatest.matchers._
 import org.scalatest.Suite
+import fi.vm.sade.hakurekisteri.rest.SuoritusServlet
+import fi.vm.sade.hakurekisteri.actor.SuoritusActor
+import fi.vm.sade.hakurekisteri.domain.Suoritus
 
 
 object kausi extends Enumeration {

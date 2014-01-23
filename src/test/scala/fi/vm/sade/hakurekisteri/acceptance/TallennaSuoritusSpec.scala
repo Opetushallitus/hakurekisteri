@@ -7,7 +7,6 @@ import org.json4s._
 import org.json4s.jackson.Serialization
 import org.json4s.jackson.Serialization.{read, write}
 import org.json4s.jackson.JsonMethods._
-import fi.vm.sade.hakurekisteri.{SuoritusActor, SuoritusServlet, Suoritus}
 import akka.actor.{Props, ActorSystem}
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakurekisteriSupport
 import java.util.Locale
