@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.Suoritus
 import java.util.Date
 import java.text.SimpleDateFormat
 import org.scalatest.matchers._
-import org.scalatest.{Suite, BeforeAndAfterEach, BeforeAndAfter}
+import org.scalatest.Suite
 
 
 object kausi extends Enumeration {
@@ -25,17 +25,13 @@ object kausi extends Enumeration {
 
 import kausi._
 
-
-trait HakurekisteriSupport extends HttpComponentsClient with BeforeAndAfterEach{  this: Suite =>
-
-  override def beforeEach() {
+trait HakurekisteriSupport extends  Suite with HttpComponentsClient {
+  override def withFixture(test: NoArgTest) {
     tehdytSuoritukset = Seq()
+    db.initialized = false
+    super.withFixture(test)
   }
 
-  override def afterEach() {
-    try super.afterEach() // To be stackable, must call super.afterEach
-    finally db.initialized = false
-  }
 
   protected implicit val jsonFormats: Formats = DefaultFormats
 
