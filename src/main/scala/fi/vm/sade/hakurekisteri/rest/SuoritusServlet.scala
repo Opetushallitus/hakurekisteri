@@ -18,7 +18,9 @@ class SuoritusServlet(system: ActorSystem, suoritusActor: ActorRef) extends Haku
 
   protected implicit val jsonFormats: Formats = DefaultFormats
 
-  implicit val defaultTimeout = Timeout(10)
+  val timeout = 10
+
+  implicit val defaultTimeout = Timeout(timeout)
 
   before() {
     contentType = formats("json")
@@ -35,7 +37,7 @@ class SuoritusServlet(system: ActorSystem, suoritusActor: ActorRef) extends Haku
       val is = suoritusActor ? parsedBody.extract[Suoritus]
     }
   }
-  
+
 }
 
 

@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.query.SuoritusQuery
 
 class SuoritusActor(var suoritukset:Seq[Suoritus] = Seq()) extends Actor{
 
-  def receive = {
+  def receive: Receive = {
     case SuoritusQuery(henkilo, kausi, vuosi) =>
       sender ! findBy(henkilo, vuosi, kausi)
     case s:Suoritus =>

@@ -1,0 +1,1 @@
+org.scalastyle.sbt.ScalastylePlugin.Settings
