@@ -14,6 +14,6 @@ class ScalatraBootstrap extends LifeCycle {
     val system = ActorSystem()
     val actor = system.actorOf(Props(new SuoritusActor(Seq())))
     context mount(new SuoritusServlet(system, actor), "/rest/v1/suoritukset")
-    context mount (new ResourcesApp, "/api-docs/*")
+    context mount (new ResourcesApp, "/rest/v1/api-docs/*")
   }
 }

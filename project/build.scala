@@ -21,7 +21,7 @@ object HakuJaValintarekisteriBuild extends Build {
   val dependencies = Seq(
     "ch.qos.logback" % "logback-classic" % "1.0.6" % "runtime",
     "org.eclipse.jetty" % "jetty-webapp" % "8.1.8.v20121106" % "container",
-    "org.json4s" %% "json4s-jackson" % "3.2.5"
+    "org.json4s" %% "json4s-jackson" % "3.2.4"
   )
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion)
