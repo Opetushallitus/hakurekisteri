@@ -10,7 +10,7 @@ import java.util.Date
 import java.text.SimpleDateFormat
 import org.scalatest.matchers._
 import org.scalatest.Suite
-import fi.vm.sade.hakurekisteri.rest.SuoritusServlet
+import fi.vm.sade.hakurekisteri.rest.{HakurekisteriSwagger, SuoritusServlet}
 import fi.vm.sade.hakurekisteri.actor.SuoritusActor
 import fi.vm.sade.hakurekisteri.domain.Suoritus
 
@@ -33,7 +33,7 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient {
     super.withFixture(test)
   }
 
-
+  implicit val swagger = new HakurekisteriSwagger
   protected implicit val jsonFormats: Formats = DefaultFormats
 
   def addServlet(servlet: HttpServlet, path: String):Unit
