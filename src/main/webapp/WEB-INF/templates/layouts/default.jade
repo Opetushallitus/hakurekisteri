@@ -1,12 +1,33 @@
--@ val title: String
--@ val headline: String = title
--@ val body: String
-
 !!!
-html
+html(ng-app="myApp")
   head
-    title= title
-  body
-    #content
-      h1= headline
-      != body
+    title(oph-msg="hakurekisteri.title") Haku- ja valintarekisteri
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    link(type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet")
+    link(type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/ng-grid/2.0.7/ng-grid.css" rel="stylesheet")
+    style(type="text/css")
+      a { cursor: pointer; }
+      body { margin: 0 auto; }
+      body #raamit-header .header-content { height: 48px; }
+      label { font-weight: bold; }
+      .container { max-width: 1200px; padding-left: 0; padding-right: 0;}
+      .pagination { margin-top: 0; }
+      .riveja { display: inline-block; line-height: 34px; margin-right: 5px; }
+      #filterForm { margin-bottom: 20px; }
+      #opiskeluoikeudet { clear: both; }
+      .teapot { height: 100px; text-align: center; }
+      .teapot img { margin-top: 50px; margin-bottom: 50px; height: 50px; }
+      .sortable { cursor: pointer; }
+    script(type="text/javascript" src="//code.jquery.com/jquery-1.9.1.min.js")
+    script(type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js")
+    script(type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.1/angular.min.js")
+    script(type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.1/angular-resource.min.js")
+    script(type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.1/angular-route.min.js")
+    script(type="text/javascript" src="js/controllers.js")
+    script(type="text/javascript" src="js/app.js")
+    script(type="text/javascript" src="/tiedonsiirto/js/oph-msg-directive.js")
+    script(type="text/javascript" src="/virkailija-raamit/apply-raamit.js")
+
+    body
+      div(ng-view)
