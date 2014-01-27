@@ -60,6 +60,8 @@ object HakuJaValintarekisteriBuild extends Build {
 
   val cleanNodeModules = cleanFiles <+= baseDirectory { base => base / "node_modules" }
 
+  val mochaTestSources =  unmanagedSourceDirectories in Test <+= (sourceDirectory in Test) {sd => sd / "coffee"}
+
 
   lazy val project = {
 
@@ -68,8 +70,9 @@ object HakuJaValintarekisteriBuild extends Build {
       file("."),
       settings = Defaults.defaultSettings ++ ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
         ++ org.scalastyle.sbt.ScalastylePlugin.Settings
+        ++ Seq(unmanagedSourceDirectories in Compile <+= (sourceDirectory in Runtime) { sd => sd / "js"})
         ++ Seq(com.earldouglas.xsbtwebplugin.PluginKeys.webappResources in Compile <+= (sourceDirectory in Runtime)(sd => sd / "js"))
-        ++ Seq(mochaTask, installMochaTask, installCoffeeTask, cleanNodeModules)
+        ++ Seq(mochaTask, installMochaTask, installCoffeeTask, cleanNodeModules, mochaTestSources)
         ++ Seq(
           organization := Organization,
           name := Name,
