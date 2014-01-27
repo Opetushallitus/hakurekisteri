@@ -67,3 +67,6 @@ jrebel.lic
 
 # paulp script
 /.lib/
+
+# mocha support
+node_modules
