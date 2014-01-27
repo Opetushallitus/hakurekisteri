@@ -67,3 +67,9 @@ jrebel.lic
 
 # paulp script
 /.lib/
+
+# mocha support
+node_modules
+
+# add build.sbt to ignore to support local sbt options
+build.sbt

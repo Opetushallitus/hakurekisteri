@@ -1,7 +1,6 @@
 import sbt._
 import Keys._
 import org.scalatra.sbt._
-import org.scalatra.sbt.PluginKeys._
 import com.mojolly.scalate.ScalatePlugin._
 import ScalateKeys._
 
@@ -26,36 +25,74 @@ object HakuJaValintarekisteriBuild extends Build {
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion)
 
+  lazy val mocha = taskKey[Unit]("run mocha tests")
+
+  lazy val installMocha = taskKey[Unit]("install mocha")
+
+  lazy val installCoffee = taskKey[Unit]("install mocha")
+
+  val installMochaTask = installMocha := {
+    import sys.process._
+    val pb = Seq("npm", "install",  "mocha")
+    if ((pb!) !=  0)
+      sys.error("failed installing mocha")
+  }
+
+  val installCoffeeTask = installCoffee := {
+    import sys.process._
+    val pb = Seq("npm", "install",  "coffee-script")
+    if ((pb!) !=  0)
+      sys.error("failed installing coffee script")
+  }
+
+  val mochaTask = mocha <<= (installMocha, installCoffee) map {
+    (Unit1, Unit2) =>
+      import sys.process._
+      val test_dir = "src/test/coffee/"
+      if (file(test_dir).exists()) {
+        val pb = Seq("./node_modules/mocha/bin/mocha", "--compilers", "coffee:coffee-script", test_dir)
+        if ((pb!) !=  0)
+          sys.error("mocha failed")
+      } else {
+        println("no mocha tests found")
+      }
+  }
+
+  val cleanNodeModules = cleanFiles <+= baseDirectory { base => base / "node_modules" }
+
 
   lazy val project = {
 
     Project(
       "hakurekisteri",
       file("."),
-      settings = Defaults.defaultSettings ++ ScalatraPlugin.scalatraWithJRebel ++ scalateSettings ++ Seq(
-
-        organization := Organization,
-        name := Name,
-        version := Version,
-        scalaVersion := ScalaVersion,
-        resolvers += Classpaths.typesafeReleases,
-        libraryDependencies ++= Seq("org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts (Artifact("javax.servlet", "jar", "jar")))
-          ++ ScalatraStack.map((a) => a % ScalatraVersion)
-          ++ dependencies
-          ++ testDependencies.map((m) => m % "test"),
-        scalateTemplateConfig in Compile <<= (sourceDirectory in Compile) {
-          base =>
-            Seq(
-              TemplateConfig(
-                base / "webapp" / "WEB-INF" / "templates",
-                Seq.empty, /* default imports should be added here */
-                Seq(
-                  Binding("context", "_root_.org.scalatra.scalate.ScalatraRenderContext", importMembers = true, isImplicit = true)
-                ), /* add extra bindings here */
-                Some("templates")
+      settings = Defaults.defaultSettings ++ ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
+        ++ org.scalastyle.sbt.ScalastylePlugin.Settings
+        ++ Seq(com.earldouglas.xsbtwebplugin.PluginKeys.webappResources in Compile <+= (sourceDirectory in Runtime)(sd => sd / "js"))
+        ++ Seq(mochaTask, installMochaTask, installCoffeeTask, cleanNodeModules)
+        ++ Seq(
+          organization := Organization,
+          name := Name,
+          version := Version,
+          scalaVersion := ScalaVersion,
+          resolvers += Classpaths.typesafeReleases,
+          libraryDependencies ++= Seq("org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts (Artifact("javax.servlet", "jar", "jar")))
+            ++ ScalatraStack.map((a) => a % ScalatraVersion)
+            ++ dependencies
+            ++ testDependencies.map((m) => m % "test"),
+          scalateTemplateConfig in Compile <<= (sourceDirectory in Compile) {
+            base =>
+              Seq(
+                TemplateConfig(
+                  base / "webapp" / "WEB-INF" / "templates",
+                  Seq.empty, /* default imports should be added here */
+                  Seq(
+                    Binding("context", "_root_.org.scalatra.scalate.ScalatraRenderContext", importMembers = true, isImplicit = true)
+                  ), /* add extra bindings here */
+                  Some("templates")
+                )
               )
-            )
-        }
+          }
       )
     )
   }
