@@ -8,6 +8,9 @@ lazy val installCoffee = taskKey[Unit]("install mocha")
 
 cleanFiles <+= baseDirectory { base => base / "node_modules" }
 
+com.earldouglas.xsbtwebplugin.PluginKeys.webappResources in Compile <+= (sourceDirectory in Runtime)(sd => sd / "js")
+
+
 installMocha := {
   import sys.process._
   val pb = Seq("npm", "install",  "mocha")
