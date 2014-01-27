@@ -1,0 +1,58 @@
+div(class="container" ng-controller="SuorituksetCtrl")
+  form(id="filterForm" class="form-inline pull-right" ng-submit="fetch()")
+    div(class="form-group")
+      input(class="form-control" size="50" ng-model="filter.star" type="search" placeholder="Hae eränumerolla tai tiedonsiirto ID:llä")
+      button(class="btn btn-primary" type="submit") Hae
+  div(id="opiskeluoikeudet" class="panel panel-default")
+    div(class="panel-heading")
+      h2(class="panel-title")
+        span(oph-msg="suoritusrekisteri.opiskeluoikeudet") Opiskeluoikeudet
+        div(class="pull-right" ng-hide="loading")
+          span(oph-msg="suoritusrekisteri.naytetaan") Näytetään
+          span {{ currentRows.length }} / {{ totalRows }}
+          span(oph-msg="suoritusrekisteri.tulosta") tulosta
+    table(class="table")
+      tr
+        th(oph-msg="suoritusrekisteri.henkiloOid") Henkilö
+        th(oph-msg="suoritusrekisteri.oppilaitos") Oppilaitos
+        th(class="sortable" ng-click="sort('luokkataso', (sorting.direction === 'asc' ? 'desc' : 'asc'))")
+          span(oph-msg="suoritusrekisteri.luokkataso") Luokkataso
+          span(ng-show="isDirectionIconVisible('luokkataso')")
+          i(class="glyphicon glyphicon-chevron-{{sorting.direction === 'asc' ? 'up' : 'down'}}")
+        th(class="sortable" ng-click="sort('luokka', (sorting.direction === 'asc' ? 'desc' : 'asc'))")
+          span(oph-msg="suoritusrekisteri.luokka") Luokka
+          span(ng-show="isDirectionIconVisible('luokka')")
+            i(class="glyphicon glyphicon-chevron-{{sorting.direction === 'asc' ? 'up' : 'down'}}")
+        th(class="sortable" ng-click="sort('era', (sorting.direction === 'asc' ? 'desc' : 'asc'))")
+          span(oph-msg="suoritusrekisteri.era") Erä
+          span(ng-show="isDirectionIconVisible('era')")
+            i(class="glyphicon glyphicon-chevron-{{sorting.direction === 'asc' ? 'up' : 'down'}}")
+        th(class="sortable" ng-click="sort('tiedonsiirtoId', (sorting.direction === 'asc' ? 'desc' : 'asc'))")
+          span(oph-msg="suoritusrekisteri.tiedonsiirtoId") Tiedonsiirron ID
+          span(ng-show="isDirectionIconVisible('tiedonsiirtoId')")
+            i(class="glyphicon glyphicon-chevron-{{sorting.direction === 'asc' ? 'up' : 'down'}}")
+      tr(ng-repeat="row in currentRows")
+        td {{row.henkilo || row.henkiloOid}}
+        td {{row.oppilaitoskoodi || row.oppilaitosOid}}
+        td {{row.luokkataso}}
+        td {{row.luokka}}
+        td {{row.era}}
+        td {{row.tiedonsiirtoId}}
+      tr(ng-show="loading")
+        td(class="teapot" colspan="6")
+          img(src="http://chimplyimage.appspot.com/images/samples/misc-spinner/animatedTeapot.gif" alt="..." title="...")
+  ul(class="pagination pull-left")
+    li(class="{{pageNumbers ? '' : 'disabled'}}")
+      a(ng-click="prevPage()") &laquo;
+    li(class="{{pageNumbers ? '' : 'disabled'}} {{page == $index ? 'active' : ''}}" ng-repeat="pageNum in pageNumbers")
+      a(ng-click="showPageWithNumber(pageNum)") {{pageNum}}
+    li(class="{{pageNumbers ? '' : 'disabled'}}")
+      a(ng-click="nextPage()") &raquo;
+  ul(class="pagination pull-right")
+    li(class="{{pageNumbers ? '' : 'disabled'}} {{pageSize == 10 ? 'active' : ''}}")
+      a(ng-click="setPageSize(10)") 10
+    li(class="{{pageNumbers ? '' : 'disabled'}} {{pageSize == 20 ? 'active' : ''}}")
+      a(ng-click="setPageSize(20)") 20
+    li(class="{{pageNumbers ? '' : 'disabled'}} {{pageSize == 50 ? 'active' : ''}}")
+      a(ng-click="setPageSize(50)") 50
+  span(class="pull-right riveja" oph-msg="suoritusrekisteri.tuloksia.sivulla") Tuloksia sivulla:

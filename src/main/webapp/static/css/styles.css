@@ -1,0 +1,54 @@
+a {
+    cursor: pointer;
+}
+
+body {
+    margin: 0 auto;
+}
+
+body #raamit-header .header-content {
+    height: 48px;
+}
+
+label {
+    font-weight: bold;
+}
+
+.container {
+    max-width: 1200px;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.pagination {
+    margin-top: 0;
+}
+
+.riveja {
+    display: inline-block;
+    line-height: 34px;
+    margin-right: 5px;
+}
+
+.container #filterForm {
+    margin-bottom: 20px;
+}
+
+#opiskeluoikeudet {
+    clear: both;
+}
+
+.teapot {
+    height: 100px;
+    text-align: center;
+}
+
+.teapot img {
+    margin-top: 50px;
+    margin-bottom: 50px;
+    height: 50px;
+}
+
+.sortable {
+    cursor: pointer;
+}

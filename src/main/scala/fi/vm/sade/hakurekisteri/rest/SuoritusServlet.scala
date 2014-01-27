@@ -41,6 +41,7 @@ class SuoritusServlet(system: ActorSystem, suoritusActor: ActorRef)(implicit val
       parameter queryParam[Option[String]]("vuosi").description("suorituksen päättymisen vuosi"))
 
   get("/", operation(haeSuoritukset)) {
+    logger.debug("hae suoritukset")
     new AsyncResult() {
       val is = suoritusActor ? SuoritusQuery(params)
     }
