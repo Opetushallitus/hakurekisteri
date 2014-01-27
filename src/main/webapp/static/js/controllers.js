@@ -3,15 +3,7 @@
 var msgCategory = "suoritusrekisteri";
 var baseurl = "";
 
-/* Controllers */
-
-/* not in use yet
- function HomeCtrl($scope, $http) {
-
- }
- */
-
-function OpiskeluoikeudetCtrl($scope, $http, $routeParams, $log, Henkilo, Organisaatio) {
+function SuorituksetCtrl($scope, $http, $routeParams, $log, Henkilo, Organisaatio) {
     $scope.loading = false;
     $scope.currentRows = [];
     $scope.sorting = { field: "", direction: "desc" };
@@ -138,32 +130,3 @@ function getKoodi(koodiArray, koodiArvo) {
 function getCacheEnvKey() {
     return "_cachekey=" + encodeURIComponent(location.hostname);
 }
-
-/* not in use yet
- function SuorituksetCtrl($scope, $http, $log) {
- $scope.filter = {henkiloOid: ""};
- $scope.gridOptions = {
- columnDefs: [
- {field:'henkiloOid', displayName:'Henkilo OID'},
- {field:'komotoOid', displayName:'Komoto OID'},
- {field:'oppilaitos', displayName:'Oppilaitosnumero'},
- {field:'arvosana', displayName:'Arvosana'}
- ],
- data: "myData", // angular "promise"
- showGroupPanel: true
- };
-
- $scope.updateFilter = function() { // loads data to grid
- var url = "../suoritukset";
- if ($scope.filter.henkiloOid) url += "/search/henkiloOid?henkiloOid=" + $scope.filter.henkiloOid + "";
- $log.debug("updateFilter, url: "+url);
- var success = function (data) {
- $log.debug(data.content);
- $scope.myData = data.content;
- // $scope.$apply();
- };
- $http.get(url, {cache:true}, success);
- };
- $scope.updateFilter();
- }
- */

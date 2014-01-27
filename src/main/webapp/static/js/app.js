@@ -2,11 +2,7 @@
 
 // Declare app level module which depends on filters, and services
 var app = angular.module('myApp', ['ngRoute', 'ngResource'])
-    .config(function ($routeProvider, $locationProvider) {
-        //$routeProvider.when('/', {templateUrl: 'partials/home.html', controller: HomeCtrl});
-        $routeProvider.when('/opiskeluoikeudet', {templateUrl: 'partials/opiskeluoikeudet.html', controller: OpiskeluoikeudetCtrl});
-        //$routeProvider.when('/suoritukset', {templateUrl: 'partials/suoritukset.html', controller: SuorituksetCtrl});
-        $routeProvider.otherwise({redirectTo: '/opiskeluoikeudet'});
+    .config(function ($locationProvider) {
         $locationProvider.html5Mode(false);
     });
 
