@@ -73,3 +73,5 @@ node_modules
 
 # add build.sbt to ignore to support local sbt options
 build.sbt
+
+.vagrant
