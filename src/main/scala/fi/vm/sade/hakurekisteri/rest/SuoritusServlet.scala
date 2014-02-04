@@ -49,7 +49,7 @@ class SuoritusServlet(system: ActorSystem, suoritusActor: ActorRef)(implicit val
       summary "Näytä kaikki suoritukset"
       notes "Näyttää kaikki suoritukset. Voit myös hakea eri parametreillä."
       parameter queryParam[Option[String]]("henkilo").description("suorittaneen henkilon oid")
-      parameter queryParam[Option[String]]("kausi").description("suorituksen päättymisen kausi")
+      parameter queryParam[Option[String]]("kausi").description("suorituksen päättymisen kausi").allowableValues("S","K")
       parameter queryParam[Option[String]]("vuosi").description("suorituksen päättymisen vuosi"))
 
   get("/", operation(haeSuoritukset)) {
