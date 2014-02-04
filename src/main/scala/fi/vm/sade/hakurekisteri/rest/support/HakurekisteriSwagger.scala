@@ -1,4 +1,4 @@
-package fi.vm.sade.hakurekisteri.rest
+package fi.vm.sade.hakurekisteri.rest.support
 
 import org.scalatra.swagger.{JacksonSwaggerBase, NativeSwaggerBase, Swagger}
 

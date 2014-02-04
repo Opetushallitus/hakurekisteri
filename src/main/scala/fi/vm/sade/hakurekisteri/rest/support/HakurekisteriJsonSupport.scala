@@ -1,4 +1,4 @@
-package fi.vm.sade.hakurekisteri.rest
+package fi.vm.sade.hakurekisteri.rest.support
 
 import org.json4s.{DefaultFormats, Formats}
 import fi.vm.sade.hakurekisteri.domain.yksilollistaminen

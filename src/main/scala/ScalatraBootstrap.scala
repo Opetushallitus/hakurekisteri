@@ -1,6 +1,7 @@
 import _root_.akka.actor.{Props, ActorSystem}
 import fi.vm.sade.hakurekisteri.actor.SuoritusActor
-import fi.vm.sade.hakurekisteri.rest.{OpiskelijaServlet, HakurekisteriSwagger, SuoritusServlet, ResourcesApp}
+import fi.vm.sade.hakurekisteri.rest.support.{ResourcesApp, HakurekisteriSwagger}
+import fi.vm.sade.hakurekisteri.rest.{OpiskelijaServlet, SuoritusServlet}
 import gui.GuiServlet
 import org.scalatra._
 import javax.servlet.ServletContext

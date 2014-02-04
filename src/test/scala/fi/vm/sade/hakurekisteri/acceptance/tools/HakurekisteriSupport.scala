@@ -10,10 +10,11 @@ import java.util.Date
 import java.text.SimpleDateFormat
 import org.scalatest.matchers._
 import org.scalatest.Suite
-import fi.vm.sade.hakurekisteri.rest.{OpiskelijaServlet, HakurekisteriJsonSupport, HakurekisteriSwagger, SuoritusServlet}
+import fi.vm.sade.hakurekisteri.rest.{OpiskelijaServlet, SuoritusServlet}
 import fi.vm.sade.hakurekisteri.actor.{OpiskelijaActor, SuoritusActor}
 import fi.vm.sade.hakurekisteri.domain.{Opiskelija, yksilollistaminen, Peruskoulu, Suoritus}
 import scala.xml.{Elem, Node, NodeSeq}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriSwagger, HakurekisteriJsonSupport}
 
 
 object kausi extends Enumeration {

@@ -11,6 +11,7 @@ import scala.Some
 import org.scalatra.swagger.AllowableValues.AnyValue
 import scala.concurrent.Future
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
 
 class SuoritusServlet(suoritusActor: ActorRef)(implicit val swagger: Swagger, system: ActorSystem)
   extends HakurekisteriResource[Suoritus](suoritusActor) {
