@@ -1,4 +1,4 @@
-package fi.vm.sade.hakurekisteri.query
+package fi.vm.sade.hakurekisteri.opiskelija
 
 case class OpiskelijaQuery(henkilo: Option[String], kausi: Option[String], vuosi: Option[String])
 

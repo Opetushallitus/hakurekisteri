@@ -1,4 +1,4 @@
-package fi.vm.sade.hakurekisteri.domain
+package fi.vm.sade.hakurekisteri.opiskelija
 
 import java.util.Date
 

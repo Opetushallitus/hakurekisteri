@@ -2,14 +2,13 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.scalatra.swagger._
-import org.scalatra.json.{JacksonJsonSupport, JacksonJsonOutput}
+import org.scalatra.json.JacksonJsonSupport
 import scala.concurrent.{Future, ExecutionContext}
 import akka.util.Timeout
 import akka.actor.{ActorRef, ActorSystem}
 import org.scalatra.{Params, AsyncResult, FutureSupport}
-import fi.vm.sade.hakurekisteri.domain.Suoritus
 import _root_.akka.pattern.ask
-import org.scalatra.swagger.SwaggerSupportSyntax.{SwaggerOperationBuilder, OperationBuilder}
+import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 
 
 abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSystem, mf: Manifest[A])extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport {

@@ -1,16 +1,10 @@
-package fi.vm.sade.hakurekisteri.rest
+package fi.vm.sade.hakurekisteri.suoritus
 
 import _root_.akka.actor.{ActorRef, ActorSystem}
-import _root_.akka.pattern.ask
 
-import fi.vm.sade.hakurekisteri.query.SuoritusQuery
 import org.scalatra.swagger._
-import org.scalatra.{AsyncResult, FutureSupport}
-import fi.vm.sade.hakurekisteri.domain.{Komoto, yksilollistaminen, Suoritus}
 import scala.Some
 import org.scalatra.swagger.AllowableValues.AnyValue
-import scala.concurrent.Future
-import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
 
 class SuoritusServlet(suoritusActor: ActorRef)(implicit val swagger: Swagger, system: ActorSystem)
