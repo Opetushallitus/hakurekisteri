@@ -4,9 +4,9 @@ import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.scalatra.swagger._
 import org.scalatra.json.JacksonJsonSupport
 import scala.concurrent.{Future, ExecutionContext}
-import akka.util.Timeout
-import akka.actor.{ActorRef, ActorSystem}
-import org.scalatra.{Params, AsyncResult, FutureSupport}
+import _root_.akka.util.Timeout
+import _root_.akka.actor.{ActorRef, ActorSystem}
+import org.scalatra._
 import _root_.akka.pattern.ask
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 
@@ -30,12 +30,20 @@ abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSy
     }
   }
 
+  class QueryParseException(cause:Throwable) extends Exception
+
   def read(op: OperationBuilder) (implicit pb: Map[String, String] => Query[A]) {
-    get("/", operation(op))(resourceQuery(pb(params)))
+    get("/", operation(op))(
+      try resourceQuery(
+        try pb(params)
+        catch {case e: Exception => throw new QueryParseException(e)} )
+      catch {case qpe: QueryParseException => BadRequest("Illegal query")}
+    )
   }
 
   def resourceQuery(query: AnyRef): AsyncResult {val is: Future[Any]} = {
     new AsyncResult() {
+
       val is = actor ? query
     }
   }
