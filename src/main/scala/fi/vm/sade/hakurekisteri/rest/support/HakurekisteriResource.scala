@@ -30,7 +30,7 @@ abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSy
     }
   }
 
-  def readOperation(op: OperationBuilder, pb: Params => AnyRef) {
+  def read(op: OperationBuilder) (implicit pb: Map[String, String] => Query[A]) {
     get("/", operation(op))(resourceQuery(pb(params)))
   }
 
