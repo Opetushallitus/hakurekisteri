@@ -10,6 +10,7 @@ import fi.vm.sade.hakurekisteri.query.OpiskelijaQuery
 import org.slf4j.LoggerFactory
 import fi.vm.sade.hakurekisteri.domain.Opiskelija
 import scala.Some
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
 
 class OpiskelijaServlet(opiskelijaActor: ActorRef)(implicit val swagger: Swagger, system: ActorSystem) extends HakurekisteriResource[Opiskelija](opiskelijaActor)  {
   override protected val applicationName = Some("opiskelijat")

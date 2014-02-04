@@ -3,9 +3,10 @@ package fi.vm.sade.hakurekisteri
 import org.scalatra.test.scalatest.{ScalatraFunSuite, ScalatraFlatSpec}
 import akka.actor.{Props, ActorSystem}
 import java.util.Date
-import fi.vm.sade.hakurekisteri.rest.{HakurekisteriSwagger, SuoritusServlet}
+import fi.vm.sade.hakurekisteri.rest.SuoritusServlet
 import fi.vm.sade.hakurekisteri.actor.SuoritusActor
 import fi.vm.sade.hakurekisteri.domain.{Peruskoulu, Suoritus}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriSwagger
 
 class SuoritusServletSpec extends ScalatraFunSuite {
   val suoritus = Peruskoulu("1.2.3", "KESKEN",  new Date(),"1.2.4")

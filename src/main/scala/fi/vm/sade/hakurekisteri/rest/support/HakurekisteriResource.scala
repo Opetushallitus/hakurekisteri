@@ -1,4 +1,4 @@
-package fi.vm.sade.hakurekisteri.rest
+package fi.vm.sade.hakurekisteri.rest.support
 
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.scalatra.swagger._
