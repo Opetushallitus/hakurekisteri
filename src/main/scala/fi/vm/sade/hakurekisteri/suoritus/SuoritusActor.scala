@@ -1,10 +1,8 @@
-package fi.vm.sade.hakurekisteri.actor
+package fi.vm.sade.hakurekisteri.suoritus
 
 import akka.actor.Actor
 import java.util.Date
 import java.text.SimpleDateFormat
-import fi.vm.sade.hakurekisteri.domain.Suoritus
-import fi.vm.sade.hakurekisteri.query.SuoritusQuery
 
 class SuoritusActor(var suoritukset:Seq[Suoritus] = Seq()) extends Actor{
 

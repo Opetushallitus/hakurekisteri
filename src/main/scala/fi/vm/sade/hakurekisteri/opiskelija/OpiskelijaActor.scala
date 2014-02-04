@@ -1,10 +1,7 @@
-package fi.vm.sade.hakurekisteri.actor
+package fi.vm.sade.hakurekisteri.opiskelija
 
-import fi.vm.sade.hakurekisteri.query.{OpiskelijaQuery, SuoritusQuery}
-import fi.vm.sade.hakurekisteri.domain.{Opiskelija, Suoritus}
 import java.util.Date
 import java.text.SimpleDateFormat
-import akka.actor.Actor.Receive
 import com.github.nscala_time.time.Imports._
 import akka.actor.Actor
 import org.slf4j.LoggerFactory

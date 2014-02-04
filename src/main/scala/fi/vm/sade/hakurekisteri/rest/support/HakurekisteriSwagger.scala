@@ -1,10 +1,8 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import org.scalatra.swagger.{JacksonSwaggerBase, NativeSwaggerBase, Swagger}
+import org.scalatra.swagger.{JacksonSwaggerBase, Swagger}
 
 import org.scalatra.ScalatraServlet
-import org.json4s.{DefaultFormats, Formats}
-
 
 
 class ResourcesApp(implicit val swagger: Swagger) extends ScalatraServlet with HakurekisteriJsonSupport with JacksonSwaggerBase  {

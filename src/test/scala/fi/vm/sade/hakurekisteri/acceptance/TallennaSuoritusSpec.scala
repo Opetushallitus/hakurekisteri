@@ -4,7 +4,8 @@ import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import org.scalatest.GivenWhenThen
 
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakurekisteriSupport
-import fi.vm.sade.hakurekisteri.domain.{Opiskelija, Peruskoulu, Suoritus}
+import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
+import fi.vm.sade.hakurekisteri.suoritus.Peruskoulu
 
 class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with HakurekisteriSupport {
 

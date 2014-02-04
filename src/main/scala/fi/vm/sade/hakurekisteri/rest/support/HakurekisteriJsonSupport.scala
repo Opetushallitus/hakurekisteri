@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
 import org.json4s.{DefaultFormats, Formats}
-import fi.vm.sade.hakurekisteri.domain.yksilollistaminen
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 
 trait HakurekisteriJsonSupport {
 

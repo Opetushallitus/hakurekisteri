@@ -1,14 +1,7 @@
-package fi.vm.sade.hakurekisteri.rest
-
+package fi.vm.sade.hakurekisteri.opiskelija
 
 import _root_.akka.actor.{ActorRef, ActorSystem}
-import _root_.akka.pattern.ask
 import org.scalatra.swagger.Swagger
-import fi.vm.sade.hakurekisteri.domain.{Suoritus, Opiskelija}
-import org.scalatra._
-import fi.vm.sade.hakurekisteri.query.OpiskelijaQuery
-import org.slf4j.LoggerFactory
-import fi.vm.sade.hakurekisteri.domain.Opiskelija
 import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
 
