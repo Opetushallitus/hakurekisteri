@@ -15,8 +15,8 @@ class ScalatraBootstrap extends LifeCycle {
   override def init(context: ServletContext) {
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(Seq())))
     val opiskelijaRekisteri = system.actorOf(Props(new SuoritusActor(Seq())))
-    context mount(new SuoritusServlet(suoritusRekisteri), "/rest/v1/suoritukset")
-    context mount(new OpiskelijaServlet(opiskelijaRekisteri), "/rest/v1/suoritukset")
+    //context mount(new SuoritusServlet(suoritusRekisteri), "/rest/v1/suoritukset")
+    context mount(new OpiskelijaServlet(opiskelijaRekisteri), "/rest/v1/opiskelijat")
     context mount(new ResourcesApp, "/rest/v1/api-docs/*")
     context mount(classOf[GuiServlet], "/")
   }

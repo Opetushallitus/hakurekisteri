@@ -9,9 +9,11 @@ import org.scalatra.{AsyncResult, FutureSupport}
 import fi.vm.sade.hakurekisteri.domain.{Komoto, yksilollistaminen, Suoritus}
 import scala.Some
 import org.scalatra.swagger.AllowableValues.AnyValue
+import scala.concurrent.Future
+import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 
-class SuoritusServlet(suoritusActor: ActorRef)(implicit val swagger: Swagger, system: ActorSystem) extends HakurekisteriResource(system)
-     with FutureSupport {
+class SuoritusServlet(suoritusActor: ActorRef)(implicit val swagger: Swagger, system: ActorSystem)
+  extends HakurekisteriResource[Suoritus](suoritusActor) {
 
   override protected val applicationName = Some("suoritukset")
   protected val applicationDescription = "Suoritusrekisterin rajapinta."
@@ -32,26 +34,14 @@ class SuoritusServlet(suoritusActor: ActorRef)(implicit val swagger: Swagger, sy
   registerModel[Komoto]
   registerModel(suoritusModel)
 
-  val haeSuoritukset =
-    (apiOperation("haeSuoritukset", suoritusModel)
-      summary "Näytä kaikki suoritukset"
-      notes "Näyttää kaikki suoritukset. Voit myös hakea eri parametreillä."
-      parameter queryParam[Option[String]]("henkilo").description("suorittaneen henkilon oid")
-      parameter queryParam[Option[String]]("kausi").description("suorituksen päättymisen kausi").allowableValues("S","K")
-      parameter queryParam[Option[String]]("vuosi").description("suorituksen päättymisen vuosi"))
+  val basicGet = apiOperation("haeSuoritukset", suoritusModel).
+    summary("Näytä kaikki suoritukset").
+    notes("Näyttää kaikki suoritukset. Voit myös hakea eri parametreillä.").
+    parameter(queryParam[Option[String]]("henkilo").description("suorittaneen henkilon oid")).
+    parameter(queryParam[Option[String]]("kausi").description("suorituksen päättymisen kausi").allowableValues("S","K")).
+    parameter(queryParam[Option[String]]("vuosi").description("suorituksen päättymisen vuosi"))
 
-  get("/", operation(haeSuoritukset)) {
-    logger.debug("hae suoritukset")
-    new AsyncResult() {
-      val is = suoritusActor ? SuoritusQuery(params)
-    }
-  }
-
-  post("/") {
-    new AsyncResult() {
-      val is = suoritusActor ? parsedBody.extract[Suoritus]
-    }
-  }
+  readOperation(basicGet, SuoritusQuery(_))
 
 
 }
