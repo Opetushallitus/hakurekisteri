@@ -39,7 +39,7 @@ div(class="container")
             div(class="form-group col-sm-4")
               div
                 strong Postitoimipaikka
-              div {{henkilo.postitoimipaikka}}
+              div(class="ei-muokattava") {{henkilo.postitoimipaikka}}
             div(class="form-group col-sm-4")
               label(for="maa") Maa
               select(id="maa" class="form-control" ng-model="henkilo.maa" ng-options="maa.value as maa.text for maa in maat")
