@@ -3,33 +3,21 @@ package fi.vm.sade.hakurekisteri.rest
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
 
-import _root_.akka.util.Timeout
-import scala.concurrent.ExecutionContext
 import fi.vm.sade.hakurekisteri.query.SuoritusQuery
 import org.scalatra.swagger._
-import org.scalatra.{ScalatraServlet, AsyncResult, FutureSupport}
+import org.scalatra.{AsyncResult, FutureSupport}
 import fi.vm.sade.hakurekisteri.domain.{Komoto, yksilollistaminen, Suoritus}
 import scala.Some
 import org.scalatra.swagger.AllowableValues.AnyValue
 
-class SuoritusServlet(system: ActorSystem, suoritusActor: ActorRef)(implicit val swagger: Swagger) extends HakurekisteriResource
+class SuoritusServlet(system: ActorSystem, suoritusActor: ActorRef)(implicit val swagger: Swagger) extends HakurekisteriResource(system)
      with FutureSupport {
 
   override protected val applicationName = Some("suoritukset")
   protected val applicationDescription = "Suoritusrekisterin rajapinta."
 
 
-  protected implicit def executor: ExecutionContext = system.dispatcher
 
-
-
-  val timeout = 10
-
-  implicit val defaultTimeout = Timeout(timeout)
-
-  before() {
-    contentType = formats("json")
-  }
 
   val fields = Seq(ModelField("tila",null,DataType.String,None,AnyValue,required = true),
                    ModelField("komoto",null,DataType("Komoto"),None,AnyValue, required = true),
@@ -64,7 +52,6 @@ class SuoritusServlet(system: ActorSystem, suoritusActor: ActorRef)(implicit val
       val is = suoritusActor ? parsedBody.extract[Suoritus]
     }
   }
-
 
 
 }

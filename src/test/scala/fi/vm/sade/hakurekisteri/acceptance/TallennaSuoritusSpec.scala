@@ -4,7 +4,7 @@ import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import org.scalatest.GivenWhenThen
 
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakurekisteriSupport
-import fi.vm.sade.hakurekisteri.domain.{Peruskoulu, Suoritus}
+import fi.vm.sade.hakurekisteri.domain.{Opiskelija, Peruskoulu, Suoritus}
 
 class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with HakurekisteriSupport {
 
@@ -16,8 +16,7 @@ class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with H
 
 
   feature("Suorituksen tallentaminen") {
-    scenario("Oppilaitos lähettää esitäytetyn lomakkeen") {
-
+    scenario("Esitäytetyn lomakkeen lähettäminen tuottaa suorituksen") {
       Given("Koulu lähettää Mikon ja Matin esitäytetyt kaavaakkeet")
       koulu lähettää
         <ROWSET>
@@ -75,8 +74,71 @@ class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with H
             koululle koulu.id)
 
       Then("Molemmille löytyvät peruskoulun keskeneräiset suoritukset arvioidulla valmistumisella")
-        haetut should contain (Peruskoulu(koulu.id, "KESKEN", "9", "04.06.2014", "9A", Mikko.oid))
-        haetut should contain (Peruskoulu(koulu.id, "KESKEN", "9", "04.06.2014", "9A", Matti.oid))
+        haetut should contain (Peruskoulu(koulu.id, "KESKEN", "04.06.2014", Mikko.oid))
+        haetut should contain (Peruskoulu(koulu.id, "KESKEN", "04.06.2014", Matti.oid))
+
+    }
+
+    scenario("Esitäytetyn lomakkeen lähettäminen tuottaa opiskelijatiedon") {
+      Given("Koulu lähettää Mikon ja Matin esitäytetyt kaavaakkeet")
+      koulu lähettää
+        <ROWSET>
+          <ROW>
+            <VUOSI>2014</VUOSI>
+            <KAUSI>S</KAUSI>
+            <LAHTOKOULU>{koulu.koodi}</LAHTOKOULU>
+            <POHJAKOULUTUS>1</POHJAKOULUTUS>
+            <OPETUSKIELI>FI</OPETUSKIELI>
+            <LUOKKA>9A</LUOKKA>
+            <LUOKKATASO>9</LUOKKATASO>
+            <HETU>{Mikko.hetu}</HETU>
+            <SUKUPUOLI>1</SUKUPUOLI>
+            <SUKUNIMI>Möttönen</SUKUNIMI>
+            <ETUNIMET>Mikko Valtteri</ETUNIMET>
+            <KUTSUMANIMI>Mikko</KUTSUMANIMI>
+            <KOTIKUNTA>240</KOTIKUNTA>
+            <AIDINKIELI>FI</AIDINKIELI>
+            <KANSALAISUUS>246</KANSALAISUUS>
+            <LAHIOSOITE>Kaduntie 156</LAHIOSOITE>
+            <POSTINUMERO>20520</POSTINUMERO>
+            <MAA>246</MAA>
+            <MATKAPUHELIN>047 1234567</MATKAPUHELIN>
+            <MUUPUHELIN>5278091</MUUPUHELIN>
+            <ERA>PKERA1_2014S_{koulu.koodi}</ERA>
+          </ROW>
+          <ROW>
+            <VUOSI>2014</VUOSI>
+            <KAUSI>S</KAUSI>
+            <LAHTOKOULU>{koulu.koodi}</LAHTOKOULU>
+            <POHJAKOULUTUS>1</POHJAKOULUTUS>
+            <OPETUSKIELI>FI</OPETUSKIELI>
+            <LUOKKA>9A</LUOKKA>
+            <LUOKKATASO>9</LUOKKATASO>
+            <HETU>{Matti.hetu}</HETU>
+            <SUKUPUOLI>1</SUKUPUOLI>
+            <SUKUNIMI>Virtanen</SUKUNIMI>
+            <ETUNIMET>Matti Petteri</ETUNIMET>
+            <KUTSUMANIMI>Matti</KUTSUMANIMI>
+            <KOTIKUNTA>240</KOTIKUNTA>
+            <AIDINKIELI>FI</AIDINKIELI>
+            <KANSALAISUUS>246</KANSALAISUUS>
+            <LAHIOSOITE>Kaduntie 158</LAHIOSOITE>
+            <POSTINUMERO>20520</POSTINUMERO>
+            <MAA>246</MAA>
+            <MATKAPUHELIN>047 2345678</MATKAPUHELIN>
+            <MUUPUHELIN>5278091</MUUPUHELIN>
+            <ERA>PKERA1_2014S_{koulu.koodi}</ERA>
+          </ROW>
+        </ROWSET>
+
+      When("Haetaan koulun suorituksia")
+      val haetut =
+        hae(opiskelijat
+          koululle koulu.id)
+
+      Then("Molemmille löytyvät opiskelijatiedot")
+      haetut should contain (Opiskelija(koulu.id, "9", "9A", Mikko.oid, "01.01.2014", None))
+      haetut should contain (Opiskelija(koulu.id, "9", "9A", Matti.oid, "01.01.2014", None))
 
     }
 

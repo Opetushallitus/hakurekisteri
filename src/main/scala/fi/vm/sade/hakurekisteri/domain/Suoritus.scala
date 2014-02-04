@@ -13,43 +13,43 @@ object yksilollistaminen extends Enumeration {
 import yksilollistaminen._
 
 case class Komoto(oid: String, komo: String, tarjoaja: String)
-case class Suoritus(komoto: Komoto, tila: String, luokkataso: String, valmistuminen: Date, luokka: String, henkiloOid: String, yksilollistaminen: Yksilollistetty)
+case class Suoritus(komoto: Komoto, tila: String, valmistuminen: Date, henkiloOid: String, yksilollistaminen: Yksilollistetty)
 
 
 object PerusopetuksenToteutus {
   def apply (oppilaitos: String) : Komoto = {
-    new Komoto("komotoid", "peruskoulu", oppilaitos)
+    Komoto("komotoid", "peruskoulu", oppilaitos)
   }
 }
 
 object Peruskoulu {
 
-  def apply(oppilaitos: String, tila: String, luokkataso: String, valmistuminen: Date, luokka: String, henkiloOid: String): Suoritus = {
-    new Suoritus(PerusopetuksenToteutus(oppilaitos), tila, luokkataso, valmistuminen, luokka, henkiloOid, Ei)
+  def apply(oppilaitos: String, tila: String, valmistuminen: Date, henkiloOid: String): Suoritus = {
+    Suoritus(PerusopetuksenToteutus(oppilaitos), tila, valmistuminen, henkiloOid, Ei)
   }
 
 }
 
 object OsittainYksilollistettyPerusopetus {
 
-  def apply(oppilaitos: String, tila: String, luokkataso: String, valmistuminen: Date, luokka: String, henkiloOid: String): Suoritus = {
-    new Suoritus(PerusopetuksenToteutus(oppilaitos), tila, luokkataso, valmistuminen, luokka, henkiloOid, Osittain)
+  def apply(oppilaitos: String, tila: String, valmistuminen: Date, henkiloOid: String): Suoritus = {
+    Suoritus(PerusopetuksenToteutus(oppilaitos), tila, valmistuminen, henkiloOid, Osittain)
   }
 
 }
 
 object AlueittainYksilollistettyPerusopetus {
 
-  def apply(oppilaitos: String, tila: String, luokkataso: String, valmistuminen: Date, luokka: String, henkiloOid: String): Suoritus = {
-    new Suoritus(PerusopetuksenToteutus(oppilaitos), tila, luokkataso, valmistuminen, luokka, henkiloOid, Alueittain)
+  def apply(oppilaitos: String, tila: String, valmistuminen: Date, henkiloOid: String): Suoritus = {
+    Suoritus(PerusopetuksenToteutus(oppilaitos), tila, valmistuminen, henkiloOid, Alueittain)
   }
 
 }
 
 object KokonaanYksillollistettyPerusopetus {
 
-  def apply(oppilaitos: String, tila: String, luokkataso: String, valmistuminen: Date, luokka: String, henkiloOid: String): Suoritus = {
-    new Suoritus(PerusopetuksenToteutus(oppilaitos), tila, luokkataso, valmistuminen, luokka, henkiloOid, Kokonaan)
+  def apply(oppilaitos: String, tila: String, valmistuminen: Date, henkiloOid: String): Suoritus = {
+    Suoritus(PerusopetuksenToteutus(oppilaitos), tila, valmistuminen, henkiloOid, Kokonaan)
   }
 
 }

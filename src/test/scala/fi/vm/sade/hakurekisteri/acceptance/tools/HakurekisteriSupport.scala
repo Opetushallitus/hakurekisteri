@@ -10,9 +10,9 @@ import java.util.Date
 import java.text.SimpleDateFormat
 import org.scalatest.matchers._
 import org.scalatest.Suite
-import fi.vm.sade.hakurekisteri.rest.{HakurekisteriJsonSupport, HakurekisteriSwagger, SuoritusServlet}
-import fi.vm.sade.hakurekisteri.actor.SuoritusActor
-import fi.vm.sade.hakurekisteri.domain.{yksilollistaminen, Peruskoulu, Suoritus}
+import fi.vm.sade.hakurekisteri.rest.{OpiskelijaServlet, HakurekisteriJsonSupport, HakurekisteriSwagger, SuoritusServlet}
+import fi.vm.sade.hakurekisteri.actor.{OpiskelijaActor, SuoritusActor}
+import fi.vm.sade.hakurekisteri.domain.{Opiskelija, yksilollistaminen, Peruskoulu, Suoritus}
 import scala.xml.{Elem, Node, NodeSeq}
 
 
@@ -52,7 +52,9 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
         println ("Initializing db with: " + tehdytSuoritukset)
         val system = ActorSystem()
         val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(tehdytSuoritukset)))
+        val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq())))
         addServlet(new SuoritusServlet(system, suoritusRekisteri), "/rest/v1/suoritukset")
+        addServlet(new OpiskelijaServlet(system, opiskelijaRekisteri), "/rest/v1/opiskelijat")
         initialized = true
       }
 
@@ -82,16 +84,21 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
     post("/rest/v1/suoritukset", write(suoritus), Map("Content-Type" -> "application/json; charset=utf-8")) {}
   }
 
+  def create (opiskelija: Opiskelija){
+    db.init()
+    post("/rest/v1/opiskelijat", write(opiskelija), Map("Content-Type" -> "application/json; charset=utf-8")) {}
+  }
+
   val df = new SimpleDateFormat("yyyyMMdd")
 
   val kevatJuhla = df.parse("20140604")
 
 
-  val suoritus = Peruskoulu("1.2.3", "KESKEN", "9", kevatJuhla, "9D", "1.2.4")
+  val suoritus = Peruskoulu("1.2.3", "KESKEN",  kevatJuhla, "1.2.4")
 
-  val suoritus2 =  Peruskoulu("1.2.5", "KESKEN", "9", kevatJuhla, "9A", "1.2.3")
+  val suoritus2 =  Peruskoulu("1.2.5", "KESKEN", kevatJuhla, "1.2.3")
 
-  val suoritus3 =  Peruskoulu("1.2.5", "KESKEN", "9", kevatJuhla, "9B", "1.2.6")
+  val suoritus3 =  Peruskoulu("1.2.5", "KESKEN",  kevatJuhla, "1.2.6")
 
 
   def hae[T: Manifest](query:ResourceQuery[T]):Seq[T] = {
@@ -106,8 +113,19 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
 
     def find[R: Manifest]:Seq[R] = {
       get(resourcePath,arvot) {
+        println(body)
         parse(body)
       }.extract[Seq[R]]
+    }
+
+  }
+
+  case class OpiskelijaQuery(arvot:Map[String,String]) extends ResourceQuery[Opiskelija] {
+
+    def resourcePath: String = "/rest/v1/opiskelijat"
+
+    def koululle(oid: String): OpiskelijaQuery = {
+      OpiskelijaQuery(arvot + ("koulu" -> oid))
     }
 
   }
@@ -140,7 +158,9 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
 
   }
 
-  val suoritukset = new SuoritusQuery(Map())
+  val suoritukset = SuoritusQuery(Map())
+
+  val opiskelijat = OpiskelijaQuery(Map())
 
 
   var tehdytSuoritukset:Seq[Suoritus] = Seq()
@@ -157,7 +177,7 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
 
     def koulusta(koulu:String) {
       val list = tehdytSuoritukset.toList
-      val valmistuminen = Peruskoulu(koulu, "KESKEN", "9", date, "9A", oid)
+      val valmistuminen = Peruskoulu(koulu, "KESKEN",  date,  oid)
       println(valmistuminen)
       tehdytSuoritukset = (list :+ valmistuminen).toSeq
       println(tehdytSuoritukset)
@@ -234,20 +254,39 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
       }
     }
 
-    def parseRowset(rowset: Node):Seq[Suoritus]  =  {
+    def parseSuoritukset(rowset: Node):Seq[Suoritus]  =  {
 
       rowset \ "ROW" map ((row) =>
         Peruskoulu(
           oppilaitos = oppilaitosRekisteri.findOrg(row \ "LAHTOKOULU") ,
           tila = "KESKEN",
-          luokkataso = row \ "LUOKKATASO",
           valmistuminen = kevatJuhla,
-          luokka = row \ "LUOKKA",
           henkiloOid = henkiloRekisteri.find(row \ "HETU")) )
     }
 
     def lähettää(kaavake:Elem){
-      parseRowset(kaavake) foreach create
+      parseSuoritukset(kaavake) foreach create
+      parseOpiskelijat(kaavake) foreach create
+    }
+
+    def getStartDate(vuosi: String, kausi: String): Date = kausi match {
+      case "S" => dateformat.parse("01.01." + vuosi)
+      case "K" => dateformat.parse("01.08." + vuosi)
+      case default => throw new RuntimeException("unknown kausi")
+
+    }
+
+    def parseOpiskelijat(rowset: Node):Seq[Opiskelija] = {
+      rowset \ "ROW" map ((row) =>
+        Opiskelija(
+          oppilaitosOid = oppilaitosRekisteri.findOrg(row \ "LAHTOKOULU") ,
+          luokkataso = row \ "LUOKKATASO",
+          luokka = row \ "LUOKKA",
+          henkiloOid = henkiloRekisteri.find(row \ "HETU"),
+          alkuPaiva = getStartDate(row \ "VUOSI", row \"KAUSI"))
+        )
+
+
     }
 
   }
