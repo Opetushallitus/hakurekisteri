@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.domain.{Komoto, yksilollistaminen, Suoritus}
 import scala.Some
 import org.scalatra.swagger.AllowableValues.AnyValue
 
-class SuoritusServlet(system: ActorSystem, suoritusActor: ActorRef)(implicit val swagger: Swagger) extends HakurekisteriResource(system)
+class SuoritusServlet(suoritusActor: ActorRef)(implicit val swagger: Swagger, system: ActorSystem) extends HakurekisteriResource(system)
      with FutureSupport {
 
   override protected val applicationName = Some("suoritukset")

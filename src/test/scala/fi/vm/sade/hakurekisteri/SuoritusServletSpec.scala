@@ -9,11 +9,11 @@ import fi.vm.sade.hakurekisteri.domain.{Peruskoulu, Suoritus}
 
 class SuoritusServletSpec extends ScalatraFunSuite {
   val suoritus = Peruskoulu("1.2.3", "KESKEN",  new Date(),"1.2.4")
-  val system = ActorSystem()
+  implicit val system = ActorSystem()
   val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(Seq(suoritus))))
   implicit val swagger = new HakurekisteriSwagger
 
-  addServlet(new SuoritusServlet(system, suoritusRekisteri), "/*")
+  addServlet(new SuoritusServlet(suoritusRekisteri), "/*")
 
   test("get root should return 200") {
     get("/") {

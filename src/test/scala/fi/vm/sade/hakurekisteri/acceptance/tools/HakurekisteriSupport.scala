@@ -50,11 +50,11 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
     def init() {
       if (!initialized) {
         println ("Initializing db with: " + tehdytSuoritukset)
-        val system = ActorSystem()
+        implicit val system = ActorSystem()
         val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(tehdytSuoritukset)))
         val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq())))
-        addServlet(new SuoritusServlet(system, suoritusRekisteri), "/rest/v1/suoritukset")
-        addServlet(new OpiskelijaServlet(system, opiskelijaRekisteri), "/rest/v1/opiskelijat")
+        addServlet(new SuoritusServlet(suoritusRekisteri), "/rest/v1/suoritukset")
+        addServlet(new OpiskelijaServlet(opiskelijaRekisteri), "/rest/v1/opiskelijat")
         initialized = true
       }
 

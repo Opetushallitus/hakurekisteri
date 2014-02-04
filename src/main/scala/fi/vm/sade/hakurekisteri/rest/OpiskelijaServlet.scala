@@ -9,7 +9,7 @@ import org.scalatra.{FutureSupport, AsyncResult}
 import fi.vm.sade.hakurekisteri.query.OpiskelijaQuery
 import org.slf4j.LoggerFactory
 
-class OpiskelijaServlet(system: ActorSystem, opiskelijaActor: ActorRef)(implicit val swagger: Swagger) extends HakurekisteriResource(system) with FutureSupport {
+class OpiskelijaServlet(opiskelijaActor: ActorRef)(implicit val swagger: Swagger, system: ActorSystem) extends HakurekisteriResource(system) with FutureSupport {
   override protected val applicationName = Some("opiskelijat")
   protected val applicationDescription = "Opiskelijatietojen rajapinta."
 
