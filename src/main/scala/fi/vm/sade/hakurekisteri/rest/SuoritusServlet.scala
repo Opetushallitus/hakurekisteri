@@ -4,17 +4,16 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
 
 import _root_.akka.util.Timeout
-import org.json4s.{Formats, DefaultFormats}
-import org.scalatra.json._
 import scala.concurrent.ExecutionContext
-import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.domain.Suoritus
 import fi.vm.sade.hakurekisteri.query.SuoritusQuery
 import org.scalatra.swagger._
-import org.scalatra.{AsyncResult, FutureSupport}
+import org.scalatra.{ScalatraServlet, AsyncResult, FutureSupport}
+import fi.vm.sade.hakurekisteri.domain.{Komoto, yksilollistaminen, Suoritus}
+import scala.Some
+import org.scalatra.swagger.AllowableValues.AnyValue
 
-class SuoritusServlet(system: ActorSystem, suoritusActor: ActorRef)(implicit val swagger: Swagger) extends HakuJaValintarekisteriStack
-  with SwaggerSupport with JacksonJsonSupport  with FutureSupport  {
+class SuoritusServlet(system: ActorSystem, suoritusActor: ActorRef)(implicit val swagger: Swagger) extends HakurekisteriResource
+     with FutureSupport {
 
   override protected val applicationName = Some("suoritukset")
   protected val applicationDescription = "Suoritusrekisterin rajapinta."
@@ -22,7 +21,7 @@ class SuoritusServlet(system: ActorSystem, suoritusActor: ActorRef)(implicit val
 
   protected implicit def executor: ExecutionContext = system.dispatcher
 
-  protected implicit val jsonFormats: Formats = DefaultFormats
+
 
   val timeout = 10
 
@@ -32,8 +31,21 @@ class SuoritusServlet(system: ActorSystem, suoritusActor: ActorRef)(implicit val
     contentType = formats("json")
   }
 
+  val fields = Seq(ModelField("tila",null,DataType.String,None,AnyValue,required = true),
+                   ModelField("komoto",null,DataType("Komoto"),None,AnyValue, required = true),
+                   ModelField("luokka",null,DataType.String,None,AnyValue,required = true),
+                   ModelField("henkiloOid",null,DataType.String,None,AnyValue,required = true),
+                   ModelField("luokkataso",null,DataType.String,None,AnyValue,required = true),
+                   ModelField("valmistuminen",null,DataType.Date,None,AnyValue,required = true),
+                   ModelField("yksilollistaminen", null, DataType.String, None , AllowableValues(yksilollistaminen.values map {v => v.toString} toList)))
+
+  val suoritusModel = Model("Suoritus", "Suoritustiedot", fields map { t => (t.name, t) } toMap)
+
+  registerModel[Komoto]
+  registerModel(suoritusModel)
+
   val haeSuoritukset =
-    (apiOperation[Seq[Suoritus]]("haeSuoritukset")
+    (apiOperation("haeSuoritukset", suoritusModel)
       summary "Näytä kaikki suoritukset"
       notes "Näyttää kaikki suoritukset. Voit myös hakea eri parametreillä."
       parameter queryParam[Option[String]]("henkilo").description("suorittaneen henkilon oid")
@@ -53,6 +65,10 @@ class SuoritusServlet(system: ActorSystem, suoritusActor: ActorRef)(implicit val
     }
   }
 
+
+
 }
+
+
 
 

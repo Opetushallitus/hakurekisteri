@@ -10,9 +10,10 @@ import java.util.Date
 import java.text.SimpleDateFormat
 import org.scalatest.matchers._
 import org.scalatest.Suite
-import fi.vm.sade.hakurekisteri.rest.{HakurekisteriSwagger, SuoritusServlet}
+import fi.vm.sade.hakurekisteri.rest.{HakurekisteriJsonSupport, HakurekisteriSwagger, SuoritusServlet}
 import fi.vm.sade.hakurekisteri.actor.SuoritusActor
-import fi.vm.sade.hakurekisteri.domain.Suoritus
+import fi.vm.sade.hakurekisteri.domain.{yksilollistaminen, Peruskoulu, Suoritus}
+import scala.xml.{Elem, Node, NodeSeq}
 
 
 object kausi extends Enumeration {
@@ -26,7 +27,7 @@ object kausi extends Enumeration {
 
 import kausi._
 
-trait HakurekisteriSupport extends  Suite with HttpComponentsClient {
+trait HakurekisteriSupport extends  Suite with HttpComponentsClient with HakurekisteriJsonSupport  {
   override def withFixture(test: NoArgTest) {
     tehdytSuoritukset = Seq()
     db.initialized = false
@@ -34,7 +35,8 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient {
   }
 
   implicit val swagger = new HakurekisteriSwagger
-  protected implicit val jsonFormats: Formats = DefaultFormats
+
+
 
   def addServlet(servlet: HttpServlet, path: String):Unit
 
@@ -85,11 +87,11 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient {
   val kevatJuhla = df.parse("20140604")
 
 
-  val suoritus = new  Suoritus("1.2.3", "KESKEN", "9", kevatJuhla, "9D", "1.2.4")
+  val suoritus = Peruskoulu("1.2.3", "KESKEN", "9", kevatJuhla, "9D", "1.2.4")
 
-  val suoritus2 =  new Suoritus("1.2.5", "KESKEN", "9", kevatJuhla, "9A", "1.2.3")
+  val suoritus2 =  Peruskoulu("1.2.5", "KESKEN", "9", kevatJuhla, "9A", "1.2.3")
 
-  val suoritus3 =  new Suoritus("1.2.5", "KESKEN", "9", kevatJuhla, "9B", "1.2.6")
+  val suoritus3 =  Peruskoulu("1.2.5", "KESKEN", "9", kevatJuhla, "9B", "1.2.6")
 
 
   def hae[T: Manifest](query:ResourceQuery[T]):Seq[T] = {
@@ -115,6 +117,10 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient {
 
     def vuodelta(vuosi:Int): SuoritusQuery = {
       new SuoritusQuery(arvot + ("vuosi" -> vuosi.toString))
+    }
+
+    def koululle(oid: String): SuoritusQuery = {
+      new SuoritusQuery(arvot + ("koulu" -> oid))
     }
 
     def getKausiCode(kausi:Kausi):String = kausi match {
@@ -151,7 +157,7 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient {
 
     def koulusta(koulu:String) {
       val list = tehdytSuoritukset.toList
-      val valmistuminen = new Suoritus(koulu, "KESKEN", "9", date, "9A", oid)
+      val valmistuminen = Peruskoulu(koulu, "KESKEN", "9", date, "9A", oid)
       println(valmistuminen)
       tehdytSuoritukset = (list :+ valmistuminen).toSeq
       println(tehdytSuoritukset)
@@ -164,6 +170,7 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient {
   trait Henkilo {
 
     def oid:String
+    def hetu: String
 
     def valmistuu(kausi:Kausi, vuosi:Int) = {
       println(oid + " valmistuu " + kausi + " vuonna " + vuosi)
@@ -175,10 +182,14 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient {
   }
 
   object Mikko extends Henkilo{
+    val hetu: String = "291093-9159"
+
     def oid: String = "1.2.3"
   }
 
   object Matti extends Henkilo {
+    val hetu: String = "121298-869R"
+
     def oid: String = "1.2.4"
   }
 
@@ -195,6 +206,57 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient {
     }
 
 
+
+  object koulu {
+
+    val koodi = "05536"
+
+    val id ="1.2.3"
+
+
+
+    implicit def nodeSeq2String(seq:NodeSeq) : String = {
+      seq.text
+    }
+
+    object oppilaitosRekisteri {
+      def findOrg(koulukoodi: String): String   = koulukoodi match {
+        case "05536" => "1.2.3"
+      }
+
+
+    }
+
+    object henkiloRekisteri {
+      def find(hetu:String) = hetu match {
+        case  Mikko.hetu => Mikko.oid
+        case  Matti.hetu => Matti.oid
+      }
+    }
+
+    def parseRowset(rowset: Node):Seq[Suoritus]  =  {
+
+      rowset \ "ROW" map ((row) =>
+        Peruskoulu(
+          oppilaitos = oppilaitosRekisteri.findOrg(row \ "LAHTOKOULU") ,
+          tila = "KESKEN",
+          luokkataso = row \ "LUOKKATASO",
+          valmistuminen = kevatJuhla,
+          luokka = row \ "LUOKKA",
+          henkiloOid = henkiloRekisteri.find(row \ "HETU")) )
+    }
+
+    def lähettää(kaavake:Elem){
+      parseRowset(kaavake) foreach create
+    }
+
+  }
+  val dateformat = new SimpleDateFormat("dd.MM.yyyy")
+
+  implicit def string2Date(s:String):Date = {
+    dateformat.parse(s)
+
+  }
 }
 
 
