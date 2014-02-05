@@ -52,3 +52,11 @@ label {
 .sortable {
     cursor: pointer;
 }
+
+.kausi-select {
+    min-width: 90px;
+}
+
+.ei-muokattava {
+    margin-top: 11px;
+}

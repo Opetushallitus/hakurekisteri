@@ -130,3 +130,87 @@ function getKoodi(koodiArray, koodiArvo) {
 function getCacheEnvKey() {
     return "_cachekey=" + encodeURIComponent(location.hostname);
 }
+
+function MuokkaaCtrl($scope, $routeParams) {
+    $scope.henkiloOid = $routeParams.henkilo;
+    // TODO hae tiedot palveluista
+
+    $scope.henkilo = {
+        hetu: "010101-0101",
+        sukupuoli: "1",
+        etunimet: "Aapo Eemeli",
+        kutsumanimi: "Aapo",
+        sukunimi: "Virtanen",
+        katuosoite: "Katu 1",
+        postinumero: "00100",
+        postitoimipaikka: "HELSINKI",
+        maa: "246",
+        kotikunta: "091",
+        aidinkieli: "FI",
+        kansalaisuus: "246",
+        matkapuhelin: "040 000 0001",
+        muupuhelin: "020 000 0001"
+    };
+    $scope.luokkatiedot = [
+        {
+            luokka: "9A",
+            luokkataso: "9",
+            oppilaitos: "03080",
+            alkupvm: new Date(),
+            loppupvm: null
+        },
+        {
+            luokka: "10A",
+            luokkataso: "10",
+            oppilaitos: "03080",
+            alkupvm: new Date(),
+            loppupvm: null
+        }
+    ];
+    $scope.suoritukset = [
+        {
+            koulutus: "Perusopetus",
+            koulutusohjelma: "",
+            oppilaitos: "Kannelmäen peruskoulu",
+            tila: "KESKEN",
+            opetuskieli: "FI",
+            suoritukset: []
+        }
+    ];
+
+    // koodistosta
+    $scope.maat = [
+        { value: "246", text: "Suomi" }
+    ];
+    $scope.kunnat = [
+        { value: "091", text: "Helsinki" }
+    ];
+    $scope.kielet = [
+        { value: "FI", text: "Suomi" }
+    ];
+    $scope.kansalaisuudet = [
+        { value: "246", text: "Suomi" }
+    ];
+
+    // tallennus
+    $scope.save = function() {
+
+    };
+    $scope.cancel = function() {
+
+    };
+
+    // datepicker
+    $scope.showWeeks = false;
+    $scope.pickDate = function($event, openedKey) {
+        $event.preventDefault();
+        $event.stopPropagation();
+
+        $scope[openedKey] = true;
+    };
+    $scope.dateOptions = {
+        'year-format': "'yyyy'",
+        'starting-day': 1
+    };
+    $scope.format = 'dd.MM.yyyy';
+}

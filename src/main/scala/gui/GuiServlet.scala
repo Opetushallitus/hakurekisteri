@@ -28,7 +28,17 @@ class GuiServlet extends HakuJaValintarekisteriStack with ScalateSupport {
 
   get("/") {
     contentType="text/html"
-    jade("/suoritukset")
+    jade("/index")
+  }
+
+  get("/templates/muokkaa") {
+    contentType="text/html"
+    jade("/muokkaa", "layout" -> "")
+  }
+
+  get("/templates/suoritukset") {
+    contentType="text/html"
+    jade("/suoritukset", "layout" -> "")
   }
 
   notFound {
