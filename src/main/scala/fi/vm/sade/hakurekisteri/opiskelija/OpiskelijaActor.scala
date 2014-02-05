@@ -52,7 +52,6 @@ class OpiskelijaActor(var opiskelijat:Seq[Opiskelija] = Seq()) extends Actor {
   }
 
   def saveOpiskelija(o: Opiskelija) {
-    DateTime.nextDay
     opiskelijat = o +: opiskelijat
     opiskelijat
   }
