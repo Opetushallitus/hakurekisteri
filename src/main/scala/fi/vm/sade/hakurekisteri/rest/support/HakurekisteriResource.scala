@@ -9,6 +9,8 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import org.scalatra._
 import _root_.akka.pattern.ask
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
+import scala.util.Try
+import fi.vm.sade.hakurekisteri.opiskelija.Identified
 
 
 abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSystem, mf: Manifest[A])extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport {
