@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat
 import com.github.nscala_time.time.Imports._
 import akka.actor.Actor
 import org.slf4j.LoggerFactory
+import fi.vm.sade.hakurekisteri.rest.support.Kausi._
 
 class OpiskelijaActor(var opiskelijat:Seq[Opiskelija] = Seq()) extends Actor {
 
@@ -17,10 +18,10 @@ class OpiskelijaActor(var opiskelijat:Seq[Opiskelija] = Seq()) extends Actor {
       sender ! saveOpiskelija(o)
   }
 
-  def getInterval(vuosi: Int, kausi: Option[String]): Interval = kausi match {
+  def getInterval(vuosi: Int, kausi: Option[Kausi]): Interval = kausi match {
     case None => year(vuosi)
-    case Some("K") => newYear(vuosi).toDateTimeAtStartOfDay to startOfAutumn(vuosi).toDateTimeAtStartOfDay
-    case Some("S") => startOfAutumn(vuosi).toDateTimeAtStartOfDay to newYear(vuosi + 1).toDateTimeAtStartOfDay
+    case Some(Kevät) => newYear(vuosi).toDateTimeAtStartOfDay to startOfAutumn(vuosi).toDateTimeAtStartOfDay
+    case Some(Syksy) => startOfAutumn(vuosi).toDateTimeAtStartOfDay to newYear(vuosi + 1).toDateTimeAtStartOfDay
     case Some(_) => throw new IllegalArgumentException("Not a kausi")
   }
 
@@ -29,29 +30,28 @@ class OpiskelijaActor(var opiskelijat:Seq[Opiskelija] = Seq()) extends Actor {
     new MonthDay(8, 1).toLocalDate(v)
   }
 
-  def duringKausi(kausi: Option[String], start: Date, end: Option[Date]): Boolean = (kausi, end) match {
-    case (Some("S"), Some(date)) => (new DateTime(date).getYear != new DateTime(start).getYear) || startOfAutumn(new DateTime(date).getYear).toDateTimeAtStartOfDay <= new DateTime(date)
-    case (Some("K"), Some(date)) => (new DateTime(date).getYear != new DateTime(start).getYear) || startOfAutumn(new DateTime(date).getYear).toDateTimeAtStartOfDay > new DateTime(start)
+  def duringKausi(kausi: Option[Kausi], start: Date, end: Option[Date]): Boolean = (kausi, end) match {
+    case (Some(Syksy), Some(date)) => (new DateTime(date).getYear != new DateTime(start).getYear) || startOfAutumn(new DateTime(date).getYear).toDateTimeAtStartOfDay <= new DateTime(date)
+    case (Some(Kevät), Some(date)) => (new DateTime(date).getYear != new DateTime(start).getYear) || startOfAutumn(new DateTime(date).getYear).toDateTimeAtStartOfDay > new DateTime(start)
     case (Some(_), _ ) => throw new IllegalArgumentException("Not a kausi")
     case (None, _) => true
     case (_, None) => true
 
   }
 
-  def checkVuosiAndKausi(vuosi: Option[String], kausi: Option[String])(o:Opiskelija): Boolean = vuosi match {
+  def checkVuosiAndKausi(vuosi: Option[String], kausi: Option[Kausi])(o:Opiskelija): Boolean = vuosi match {
     case Some(v) => during(getInterval(v.toInt,kausi), o.alkuPaiva, o.loppuPaiva)
     case None => duringKausi(kausi, o.alkuPaiva, o.loppuPaiva)
 
   }
 
 
-  def findBy(henkilo: Option[String], vuosi: Option[String], kausi: Option[String]): Seq[Opiskelija] = {
+  def findBy(henkilo: Option[String], vuosi: Option[String], kausi: Option[Kausi]): Seq[Opiskelija] = {
     logger.debug("finding opiskelutiedot by: " + henkilo + ", " + vuosi + ", " + kausi)
     opiskelijat.filter(checkHenkilo(henkilo)).filter(checkVuosiAndKausi(vuosi, kausi))
   }
 
   def saveOpiskelija(o: Opiskelija) {
-    DateTime.nextDay
     opiskelijat = o +: opiskelijat
     opiskelijat
   }

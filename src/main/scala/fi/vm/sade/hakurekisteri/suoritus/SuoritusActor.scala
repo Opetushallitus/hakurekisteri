@@ -3,6 +3,8 @@ package fi.vm.sade.hakurekisteri.suoritus
 import akka.actor.Actor
 import java.util.Date
 import java.text.SimpleDateFormat
+import fi.vm.sade.hakurekisteri.rest.support.Kausi
+import Kausi._
 
 class SuoritusActor(var suoritukset:Seq[Suoritus] = Seq()) extends Actor{
 
@@ -13,7 +15,7 @@ class SuoritusActor(var suoritukset:Seq[Suoritus] = Seq()) extends Actor{
       sender ! saveSuoritus(s)
   }
 
-  def findBy(henkilo: Option[String], vuosi: Option[String], kausi: Option[String]): Seq[Suoritus] = {
+  def findBy(henkilo: Option[String], vuosi: Option[String], kausi: Option[Kausi]): Seq[Suoritus] = {
     suoritukset.filter(checkHenkilo(henkilo)).filter(checkVuosi(vuosi)).filter(checkKausi(kausi))
   }
 
@@ -37,10 +39,9 @@ class SuoritusActor(var suoritukset:Seq[Suoritus] = Seq()) extends Actor{
     case None => true
   }
 
-  def checkKausi(kausi: Option[String])(s: Suoritus):Boolean = kausi match{
-    case Some("K") => duringFirstHalf(s.valmistuminen)
-    case Some("S") => !duringFirstHalf(s.valmistuminen)
-    case Some(_) => throw new IllegalArgumentException("not a kausi")
+  def checkKausi(kausi: Option[Kausi])(s: Suoritus):Boolean = kausi match{
+    case Some(Kevät) => duringFirstHalf(s.valmistuminen)
+    case Some(Syksy) => !duringFirstHalf(s.valmistuminen)
     case None => true
   }
 
