@@ -1,12 +1,14 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
 import org.scalatra.test.HttpComponentsClient
-import org.json4s.{DefaultFormats, Formats}
+
 import javax.servlet.http.HttpServlet
 import akka.actor.{Props, ActorSystem}
+
+import org.json4s.{DefaultFormats, Formats}
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization._
-import java.util.Date
+import java.util.{UUID, Date}
 import java.text.SimpleDateFormat
 import org.scalatest.matchers._
 import org.scalatest.Suite
@@ -14,6 +16,7 @@ import scala.xml.{Elem, Node, NodeSeq}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriSwagger, HakurekisteriJsonSupport}
 import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaServlet, Opiskelija, OpiskelijaActor}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, Peruskoulu, Suoritus, SuoritusServlet}
+import java.io.Serializable
 
 
 object kausi extends Enumeration {
@@ -113,7 +116,8 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
 
     def find[R: Manifest]:Seq[R] = {
       get(resourcePath,arvot) {
-        println(body)
+        println("Haku polusta:  " + resourcePath + " arvoilla " + arvot)
+        println("Tulos: " + body)
         parse(body)
       }.extract[Seq[R]]
     }
@@ -284,6 +288,7 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
           luokka = row \ "LUOKKA",
           henkiloOid = henkiloRekisteri.find(row \ "HETU"),
           alkuPaiva = getStartDate(row \ "VUOSI", row \"KAUSI"))
+
         )
 
 

@@ -1,13 +1,17 @@
 package fi.vm.sade.hakurekisteri.opiskelija
 
-import java.util.Date
+import java.util.{UUID, Date}
 import java.text.SimpleDateFormat
 import com.github.nscala_time.time.Imports._
 import akka.actor.Actor
 import org.slf4j.LoggerFactory
 import fi.vm.sade.hakurekisteri.rest.support.Kausi._
 
-class OpiskelijaActor(var opiskelijat:Seq[Opiskelija] = Seq()) extends Actor {
+class OpiskelijaActor(initialStudents:Seq[Opiskelija] = Seq()) extends Actor {
+
+  var opiskelijat:Map[UUID, Opiskelija] = (initialStudents map {
+    t => (UUID.randomUUID(), t)
+  }).toMap
 
   val logger = LoggerFactory.getLogger(getClass)
 
@@ -15,7 +19,8 @@ class OpiskelijaActor(var opiskelijat:Seq[Opiskelija] = Seq()) extends Actor {
     case OpiskelijaQuery(henkilo, kausi, vuosi) =>
       sender ! findBy(henkilo, vuosi, kausi)
     case o:Opiskelija =>
-      sender ! saveOpiskelija(o)
+
+      sender ! saveOpiskelija(Opiskelija(o, UUID.randomUUID()))
   }
 
   def getInterval(vuosi: Int, kausi: Option[Kausi]): Interval = kausi match {
@@ -48,12 +53,12 @@ class OpiskelijaActor(var opiskelijat:Seq[Opiskelija] = Seq()) extends Actor {
 
   def findBy(henkilo: Option[String], vuosi: Option[String], kausi: Option[Kausi]): Seq[Opiskelija] = {
     logger.debug("finding opiskelutiedot by: " + henkilo + ", " + vuosi + ", " + kausi)
-    opiskelijat.filter(checkHenkilo(henkilo)).filter(checkVuosiAndKausi(vuosi, kausi))
+    opiskelijat.values.filter(checkHenkilo(henkilo)).filter(checkVuosiAndKausi(vuosi, kausi)).toSeq
   }
 
-  def saveOpiskelija(o: Opiskelija) {
-    opiskelijat = o +: opiskelijat
-    opiskelijat
+  def saveOpiskelija(o:( Opiskelija, UUID) ) {
+    opiskelijat = opiskelijat + (o._2 -> o._1)
+    opiskelijat.values.seq
   }
 
   def checkHenkilo(henkilo: Option[String])(o:Opiskelija):Boolean  =  henkilo match {
