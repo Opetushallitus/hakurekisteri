@@ -15,38 +15,41 @@ function SuorituksetCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRo
     $scope.myRoles = [];
 
     // roles
-    MyRoles.get({cacheKey: getCacheEnvKey()}, function(roles) {
+    MyRoles.getCached({}, function(roles) {
         $scope.myRoles = roles;
     }, function() {
-        if (location.hostname === "localhost") {
+        if (location.hostname === 'localhost') {
             $scope.myRoles = ["APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001"];
         }
         $log.error("cannot connect to CAS");
     });
     $scope.isOPH = function() {
-        if ($scope.myRoles
+        return ($scope.myRoles
                 && ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") !== -1
-                        || $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") !== -1)) {
-            return true;
-        }
-        return false;
+                        || $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") !== -1));
     };
 
-    function fetch() {
+    $scope.fetch = function() {
         $scope.currentRows = [];
         $scope.loading = true;
-        Opiskelijat.get({}, function(opiskelijat) {
-            if (Array.isArray(opiskelijat)) {
-                showCurrentProcesses([
-                    {henkiloOid: "1.2.3", luokka: "9A"}
-                ]);
-            }
+        if (location.hostname === 'localhost') {
+            showCurrentProcesses([
+                {henkiloOid: "1.2.3", luokka: "9A", luokkataso: "9", oppilaitosOid: "1.2.4"}
+            ]);
             resetPageNumbers();
             $scope.loading = false;
-        }, function() {
-            $scope.loading = false;
-        });
-    }
+        } else {
+            Opiskelijat.get({}, function(opiskelijat) {
+                if (Array.isArray(opiskelijat)) {
+                    showCurrentProcesses(opiskelijat);
+                }
+                resetPageNumbers();
+                $scope.loading = false;
+            }, function() {
+                $scope.loading = false;
+            });
+        }
+    };
 
     function showCurrentProcesses(allRows) {
         $scope.allRows = allRows;
@@ -55,21 +58,22 @@ function SuorituksetCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRo
     }
 
     function enrichData() {
-        angular.forEach($scope.currentRows, function(opiskeluoikeus) {
+        for (var i = 0; i < $scope.currentRows.length; i++) {
+            var opiskeluoikeus = $scope.currentRows[i];
             if (opiskeluoikeus.oppilaitosOid) {
-                Organisaatio.get({organisaatioOid: opiskeluoikeus.oppilaitosOid, cacheKey: getCacheEnvKey()}, function(data) {
+                Organisaatio.getCached({organisaatioOid: opiskeluoikeus.oppilaitosOid}, function(data) {
                     if (data && data.oid === opiskeluoikeus.oppilaitosOid)
                         opiskeluoikeus.oppilaitoskoodi = data.oppilaitosKoodi + ' ' + data.nimi.fi;
                 });
             }
             if (opiskeluoikeus.henkiloOid) {
-                Henkilo.get({henkiloOid: opiskeluoikeus.henkiloOid, cacheKey: getCacheEnvKey()}, function(henkilo) {
+                Henkilo.getCached({henkiloOid: opiskeluoikeus.henkiloOid}, function(henkilo) {
                     if (henkilo && henkilo.oidHenkilo === opiskeluoikeus.henkiloOid && henkilo.sukunimi && henkilo.etunimet) {
                         opiskeluoikeus.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + (henkilo.hetu ? " (" + henkilo.hetu + ")" : "");
                     }
                 });
             }
-        });
+        }
     }
 
     $scope.nextPage = function() {
@@ -115,7 +119,7 @@ function SuorituksetCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRo
         }
     }
 
-    fetch();
+    $scope.fetch();
 }
 
 function getKoodi(koodiArray, koodiArvo) {
@@ -133,56 +137,44 @@ function getKoodi(koodiArray, koodiArvo) {
     return koodiArvo;
 }
 
-function getCacheEnvKey() {
-    return encodeURIComponent(location.hostname);
-}
 
-function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Opiskelijat) {
+function MuokkaaCtrl($scope, $routeParams, $route, $location, Henkilo, Organisaatio, Koodisto, Opiskelijat, Suoritukset) {
     $scope.errors = [];
     $scope.henkiloOid = $routeParams.henkiloOid;
+
     Henkilo.get({henkiloOid: $scope.henkiloOid}, function(henkilo) {
-        $scope.henkilo = {
-            hetu: henkilo.hetu,
-            sukupuoli: henkilo.sukupuoli === 'MIES' ? 1 : henkilo.sukupuoli === 'NAINEN' ? 2 : null,
-            etunimet: henkilo.etunimet,
-            kutsumanimi: henkilo.kutsumanimi,
-            sukunimi: henkilo.sukunimi,
-            katuosoite: "",
-            postinumero: "",
-            postitoimipaikka: "",
-            maa: "",
-            kotikunta: henkilo.kotikunta,
-            aidinkieli: "",
-            kansalaisuus: "",
-            matkapuhelin: "",
-            muupuhelin: ""
-        };
-    }, function(data, status) {
-        $scope.errors.push({
-            message: "Virhe haettaessa henkilötietoja",
-            description: "Status: " + status
-        });
+        $scope.henkilo = henkilo;
+    }, function() {
+        if (location.hostname === 'localhost') {
+            $scope.henkilo = {hetu: "010101-0101"};
+        } else {
+            confirm("Henkilötietojen hakeminen epäonnistui. Yritä uudelleen?") ? $route.reload() : $location.path("/suoritukset");
+        }
     });
 
     Opiskelijat.get({henkiloOid: $scope.henkiloOid}, function(luokkatiedot) {
         $scope.luokkatiedot = luokkatiedot;
-    }, function(data, status) {
-        $scope.errors.push({
-            message: "Virhe haettaessa luokkatietoja",
-            description: "Status: " + status
-        });
+    }, function() {
+        if (location.hostname === 'localhost') {
+            $scope.luokkatiedot = [
+                {oppilaitos: "00123"}
+            ];
+        } else {
+            confirm("Luokkatietojen hakeminen epäonnistui. Yritä uudelleen?") ? $route.reload() : $location.path("/suoritukset");
+        }
     });
 
-    $scope.suoritukset = [
-        {
-            koulutus: "Perusopetus",
-            koulutusohjelma: "",
-            oppilaitos: "Kannelmäen peruskoulu",
-            tila: "KESKEN",
-            opetuskieli: "FI",
-            suoritukset: []
+    Suoritukset.get({henkiloOid: $scope.henkiloOid}, function(suoritukset) {
+        $scope.suoritukset = suoritukset;
+    }, function() {
+        if (location.hostname === 'localhost') {
+            $scope.suoritukset = [
+                {tila: "KESKEN"}
+            ];
+        } else {
+            confirm("Suoritustietojen hakeminen epäonnistui. Yritä uudelleen?") ? $route.reload() : $location.path("/suoritukset");
         }
-    ];
+    });
 
     // TODO hae koodistosta
     $scope.maat = [
@@ -197,6 +189,26 @@ function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Opi
     $scope.kansalaisuudet = [
         { value: "246", text: "Suomi" }
     ];
+    $scope.fetchPostitoimipaikka = function() {
+        if ($scope.henkilo.postinumero && $scope.henkilo.postinumero.match(/\d{5}/)) {
+            Koodisto.getCached({koodisto: "posti", koodiUri: "posti_" + $scope.henkilo.postinumero}, function(koodi) {
+                for (var i = 0; i < koodi.metadata.length; i++) {
+                    var meta = koodi.metadata[i];
+                    if (meta.kieli === 'FI') {
+                        $scope.henkilo.postitoimipaikka = meta.nimi;
+                        $scope.henkilo.postinumero.$setValidity("invalidPostinumero", true);
+                        break;
+                    }
+                }
+            }, function() {
+                $scope.henkilo.postitoimipaikka = "Postitoimipaikkaa ei löytynyt";
+                $scope.henkilo.postinumero.$setValidity("invalidPostinumero", false);
+            });
+        } else {
+            $scope.henkilo.postitoimipaikka = "Postinumero on virheellinen";
+            $scope.henkilo.postinumero.$setValidity("invalidPostinumero", false);
+        }
+    };
 
     // tallennus
     $scope.save = function() {
@@ -208,8 +220,11 @@ function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Opi
     $scope.cancel = function() {
         $location.path("/suoritukset")
     };
-    $scope.clearError = function() {
-        delete $scope.error;
+    $scope.removeError = function(error) {
+        var index = $scope.errors.indexOf(error);
+        if (index !== -1) {
+            $scope.errors.splice(index, 1);
+        }
     };
 
     // datepicker

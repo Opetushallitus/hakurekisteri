@@ -68,3 +68,7 @@ label {
 .ei-muokattava {
     margin-top: 11px;
 }
+
+.invalid-postinumero {
+    border-color: #f44;
+}
