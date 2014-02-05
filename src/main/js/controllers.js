@@ -1,62 +1,68 @@
 'use strict';
 
 var msgCategory = "suoritusrekisteri";
-var baseurl = "";
 
-function SuorituksetCtrl($scope, $http, $routeParams, $log, Henkilo, Organisaatio, MyRoles) {
+function SuorituksetCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRoles, Opiskelijat) {
     $scope.loading = false;
     $scope.currentRows = [];
+    $scope.allRows = [];
     $scope.sorting = { field: "", direction: "desc" };
     $scope.pageNumbers = [];
     $scope.page = 0;
     $scope.pageSize = 10;
-    $scope.totalRows = 0;
     $scope.filter = {star: $routeParams.star ? $routeParams.star : ""};
-    $scope.targetOrg = $.ajax({ // get the organisaatio that user has suoritusrekisteri roles to:
-        url: baseurl + "/suoritusrekisteri/user/roles/target-organisaatio-for?role=ROLE_APP_SUORITUSREKISTERI_READ,ROLE_APP_SUORITUSREKISTERI_READ_UPDATE,ROLE_APP_SUORITUSREKISTERI_CRUD",
-        async: false
-    }).responseText;
-    $log.info("targetOrg: " + $scope.targetOrg);
-    MyRoles.
+    $scope.targetOrg = "";
+    $scope.myRoles = [];
 
-    $scope.fetch = function() {
+    // roles
+    MyRoles.get({cacheKey: getCacheEnvKey()}, function(roles) {
+        $scope.myRoles = roles;
+    }, function() {
+        $log.error("cannot connect to CAS");
+    });
+    $scope.isOPH = function() {
+        if ($scope.myRoles
+                && ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") !== -1
+                        || $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") !== -1)) {
+            return true;
+        }
+        return false;
+    };
+
+    function fetch() {
         $scope.currentRows = [];
         $scope.loading = true;
-        var url = baseurl + "/suoritusrekisteri/opiskeluoikeudet/search/*?q=" + encodeURIComponent($scope.filter.star)
-            + "&page=" + encodeURIComponent($scope.page)
-            + "&size=" + encodeURIComponent($scope.pageSize)
-            + "&org=" + encodeURIComponent($scope.targetOrg);
-        if ($scope.sorting) {
-            if ($scope.sorting.field) {
-                url = url + "&sort=" + encodeURIComponent($scope.sorting.field);
-                if ($scope.sorting.direction && $scope.sorting.direction.match(/asc|desc/)) {
-                    url = url + "," + encodeURIComponent($scope.sorting.direction);
-                }
+        Opiskelijat.get({henkiloOid: ""}, function(opiskelijat) {
+            if (opiskelijat && Object.prototype.toString.call(opiskelijat) === "[object Array]") {
+                showCurrentProcesses(opiskelijat);
             }
-        }
-        $http.get(url, {cache: true})
-            .success(function (data) {
-                $scope.currentRows = data.content;
-                enrichData();
-                $scope.totalRows = data.page.totalElements ? data.page.totalElements : data.content.length;
-                resetPageNumbers();
-                $scope.loading = false;
-            })
-            .error(function() {
-                $scope.loading = false;
-            });
-    };
+            resetPageNumbers();
+            $scope.loading = false;
+        }, function() {
+            showCurrentProcesses([
+                {henkiloOid: "1.2.3", luokka: "9A", luokkataso: "9"}
+            ]);
+            resetPageNumbers();
+            $scope.loading = false;
+        });
+    }
+
+    function showCurrentProcesses(allRows) {
+        $scope.allRows = allRows;
+        $scope.currentProcesses = allRows.slice($scope.page * $scope.pageSize, ($scope.page + 1) * $scope.pageSize);
+        enrichData();
+    }
 
     function enrichData() {
         angular.forEach($scope.currentRows, function(opiskeluoikeus) {
             if (opiskeluoikeus.oppilaitosOid) {
-                $http.get("/organisaatio-service/rest/organisaatio/" + opiskeluoikeus.oppilaitosOid + "?" + getCacheEnvKey(), {cache: true}).success(function (data) {
+                Organisaatio.get({organisaatioOid: opiskeluoikeus.oppilaitosOid, cacheKey: getCacheEnvKey()}, function(data) {
                     if (data && data.oid === opiskeluoikeus.oppilaitosOid)
                         opiskeluoikeus.oppilaitoskoodi = data.oppilaitosKoodi + ' ' + data.nimi.fi;
                 });
             }
             if (opiskeluoikeus.henkiloOid) {
-                $http.get("/authentication-service/resources/henkilo/" + opiskeluoikeus.henkiloOid + "?" + getCacheEnvKey(), {cache: true}).success(function (henkilo) {
+                Henkilo.get({henkiloOid: opiskeluoikeus.henkiloOid, cacheKey: getCacheEnvKey()}, function(henkilo) {
                     if (henkilo && henkilo.oidHenkilo === opiskeluoikeus.henkiloOid && henkilo.sukunimi && henkilo.etunimet) {
                         opiskeluoikeus.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + (henkilo.hetu ? " (" + henkilo.hetu + ")" : "");
                     }
@@ -66,51 +72,49 @@ function SuorituksetCtrl($scope, $http, $routeParams, $log, Henkilo, Organisaati
     }
 
     $scope.nextPage = function() {
-        if (($scope.page + 1) * $scope.pageSize < $scope.totalRows) {
+        if (($scope.page + 1) * $scope.pageSize < $scope.allRows.length) {
             $scope.page++;
         } else {
             $scope.page = 0;
         }
-        $scope.fetch();
+        showCurrentProcesses($scope.allRows);
     };
     $scope.prevPage = function() {
-        if ($scope.page > 0 && ($scope.page - 1) * $scope.pageSize < $scope.totalRows) {
+        if ($scope.page > 0 && ($scope.page - 1) * $scope.pageSize < $scope.allRows.length) {
             $scope.page--;
         } else {
-            $scope.page = Math.floor($scope.totalRows / $scope.pageSize);
+            $scope.page = Math.floor($scope.allRows.length / $scope.pageSize);
         }
-        $scope.fetch();
+        showCurrentProcesses($scope.allRows);
     };
     $scope.showPageWithNumber = function(pageNum) {
         $scope.page = pageNum > 0 ? (pageNum - 1) : 0;
-        $scope.fetch();
+        showCurrentProcesses($scope.allRows);
     };
     $scope.setPageSize = function(newSize) {
         $scope.pageSize = newSize;
         $scope.page = 0;
         resetPageNumbers();
-        $scope.fetch();
+        showCurrentProcesses($scope.allRows);
     };
     $scope.sort = function(field, direction) {
         $scope.sorting.field = field;
         $scope.sorting.direction = direction.match(/asc|desc/) ? direction : 'asc';
         $scope.page = 0;
-        $scope.fetch();
+        showCurrentProcesses($scope.allRows);
     };
     $scope.isDirectionIconVisible = function(field) {
-        var isVisible = $scope.sorting.field === field;
-        $log.debug("isVisible: " + isVisible + " field: " + field);
-        return isVisible;
+        return $scope.sorting.field === field;
     };
 
     function resetPageNumbers() {
         $scope.pageNumbers = [];
-        for (var i = 0; i < Math.ceil($scope.totalRows / $scope.pageSize); i++) {
+        for (var i = 0; i < Math.ceil($scope.allRows.length / $scope.pageSize); i++) {
             $scope.pageNumbers.push(i + 1);
         }
     }
 
-    $scope.fetch();
+    fetch();
 }
 
 function getKoodi(koodiArray, koodiArvo) {
@@ -129,45 +133,45 @@ function getKoodi(koodiArray, koodiArvo) {
 }
 
 function getCacheEnvKey() {
-    return "_cachekey=" + encodeURIComponent(location.hostname);
+    return encodeURIComponent(location.hostname);
 }
 
-function MuokkaaCtrl($scope, $routeParams) {
-    $scope.henkiloOid = $routeParams.henkilo;
-    // TODO hae tiedot palveluista
+function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Opiskelijat) {
+    $scope.errors = [];
+    $scope.henkiloOid = $routeParams.henkiloOid;
+    Henkilo.get({henkiloOid: $scope.henkiloOid}, function(henkilo) {
+        $scope.henkilo = {
+            hetu: henkilo.hetu,
+            sukupuoli: henkilo.sukupuoli === 'MIES' ? 1 : henkilo.sukupuoli === 'NAINEN' ? 2 : null,
+            etunimet: henkilo.etunimet,
+            kutsumanimi: henkilo.kutsumanimi,
+            sukunimi: henkilo.sukunimi,
+            katuosoite: "",
+            postinumero: "",
+            postitoimipaikka: "",
+            maa: "",
+            kotikunta: henkilo.kotikunta,
+            aidinkieli: "",
+            kansalaisuus: "",
+            matkapuhelin: "",
+            muupuhelin: ""
+        };
+    }, function(data, status) {
+        $scope.errors.push({
+            message: "Virhe haettaessa henkilötietoja",
+            description: "Status: " + status
+        });
+    });
 
-    $scope.henkilo = {
-        hetu: "010101-0101",
-        sukupuoli: "1",
-        etunimet: "Aapo Eemeli",
-        kutsumanimi: "Aapo",
-        sukunimi: "Virtanen",
-        katuosoite: "Katu 1",
-        postinumero: "00100",
-        postitoimipaikka: "HELSINKI",
-        maa: "246",
-        kotikunta: "091",
-        aidinkieli: "FI",
-        kansalaisuus: "246",
-        matkapuhelin: "040 000 0001",
-        muupuhelin: "020 000 0001"
-    };
-    $scope.luokkatiedot = [
-        {
-            luokka: "9A",
-            luokkataso: "9",
-            oppilaitos: "03080",
-            alkupvm: new Date(),
-            loppupvm: null
-        },
-        {
-            luokka: "10A",
-            luokkataso: "10",
-            oppilaitos: "03080",
-            alkupvm: new Date(),
-            loppupvm: null
-        }
-    ];
+    Opiskelijat.get({henkiloOid: $scope.henkiloOid}, function(luokkatiedot) {
+        $scope.luokkatiedot = luokkatiedot;
+    }, function(data, status) {
+        $scope.errors.push({
+            message: "Virhe haettaessa luokkatietoja",
+            description: "Status: " + status
+        });
+    });
+
     $scope.suoritukset = [
         {
             koulutus: "Perusopetus",
@@ -179,7 +183,7 @@ function MuokkaaCtrl($scope, $routeParams) {
         }
     ];
 
-    // koodistosta
+    // TODO hae koodistosta
     $scope.maat = [
         { value: "246", text: "Suomi" }
     ];
@@ -195,13 +199,13 @@ function MuokkaaCtrl($scope, $routeParams) {
 
     // tallennus
     $scope.save = function() {
-        $scope.error = {
+        $scope.errors.push({
             message: "Not yet wired to the backend",
             description: ""
-        }
+        });
     };
     $scope.cancel = function() {
-
+        $location.path("/suoritukset")
     };
     $scope.clearError = function() {
         delete $scope.error;
