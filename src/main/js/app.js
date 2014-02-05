@@ -23,12 +23,12 @@ app.factory('Organisaatio', function($resource) {
 
 app.factory('MyRoles', function($resource) {
     return $resource("/cas/myroles", {}, {
-        get: {method: "GET", isArray: false, cache: true, timeout: 3000}
+        get: {method: "GET", isArray: true, cache: true, timeout: 3000}
     });
 });
 
 app.factory('Opiskelijat', function($resource) {
-    return $resource("rest/v1/opiskelijat?henkilo=:henkiloOid", {}, {
-        get: {method: "GET", isArray: false, cache: false, timeout: 3000}
+    return $resource("rest/v1/opiskelijat", {}, {
+        get: {method: "GET", isArray: true, cache: false, timeout: 3000}
     });
 });

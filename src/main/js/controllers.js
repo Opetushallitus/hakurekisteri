@@ -18,6 +18,9 @@ function SuorituksetCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRo
     MyRoles.get({cacheKey: getCacheEnvKey()}, function(roles) {
         $scope.myRoles = roles;
     }, function() {
+        if (location.hostname === "localhost") {
+            $scope.myRoles = ["APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001"];
+        }
         $log.error("cannot connect to CAS");
     });
     $scope.isOPH = function() {
@@ -32,24 +35,22 @@ function SuorituksetCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRo
     function fetch() {
         $scope.currentRows = [];
         $scope.loading = true;
-        Opiskelijat.get({henkiloOid: ""}, function(opiskelijat) {
-            if (opiskelijat && Object.prototype.toString.call(opiskelijat) === "[object Array]") {
-                showCurrentProcesses(opiskelijat);
+        Opiskelijat.get({}, function(opiskelijat) {
+            if (Array.isArray(opiskelijat)) {
+                showCurrentProcesses([
+                    {henkiloOid: "1.2.3", luokka: "9A"}
+                ]);
             }
             resetPageNumbers();
             $scope.loading = false;
         }, function() {
-            showCurrentProcesses([
-                {henkiloOid: "1.2.3", luokka: "9A", luokkataso: "9"}
-            ]);
-            resetPageNumbers();
             $scope.loading = false;
         });
     }
 
     function showCurrentProcesses(allRows) {
         $scope.allRows = allRows;
-        $scope.currentProcesses = allRows.slice($scope.page * $scope.pageSize, ($scope.page + 1) * $scope.pageSize);
+        $scope.currentRows = allRows.slice($scope.page * $scope.pageSize, ($scope.page + 1) * $scope.pageSize);
         enrichData();
     }
 
