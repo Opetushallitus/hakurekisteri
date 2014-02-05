@@ -31,14 +31,13 @@ class GuiServlet extends HakuJaValintarekisteriStack with ScalateSupport {
     jade("/index")
   }
 
-  get("/templates/muokkaa") {
+  get("/templates/:template") {
     contentType="text/html"
-    jade("/muokkaa", "layout" -> "")
-  }
-
-  get("/templates/suoritukset") {
-    contentType="text/html"
-    jade("/suoritukset", "layout" -> "")
+    try jade("/" + params("template"), "layout" -> "")
+    catch {
+      case te: org.fusesource.scalate.TemplateException  => pass()
+      case nf: org.fusesource.scalate.util.ResourceNotFoundException => pass()
+    }
   }
 
   notFound {
