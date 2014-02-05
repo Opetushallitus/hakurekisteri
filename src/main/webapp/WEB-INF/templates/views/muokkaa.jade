@@ -1,4 +1,9 @@
 div(class="container")
+  div(class="alert alert-danger alert-dismissable" ng-show="errors" ng-repeat="error in errors")
+    button(type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="clearError()") &times;
+    strong {{error.message}}
+    span {{error.description}}
+
   div(class="row")
     div(class="col-md-8")
       section(class="panel panel-default")

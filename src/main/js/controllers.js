@@ -3,7 +3,7 @@
 var msgCategory = "suoritusrekisteri";
 var baseurl = "";
 
-function SuorituksetCtrl($scope, $http, $routeParams, $log, Henkilo, Organisaatio) {
+function SuorituksetCtrl($scope, $http, $routeParams, $log, Henkilo, Organisaatio, MyRoles) {
     $scope.loading = false;
     $scope.currentRows = [];
     $scope.sorting = { field: "", direction: "desc" };
@@ -17,6 +17,7 @@ function SuorituksetCtrl($scope, $http, $routeParams, $log, Henkilo, Organisaati
         async: false
     }).responseText;
     $log.info("targetOrg: " + $scope.targetOrg);
+    MyRoles.
 
     $scope.fetch = function() {
         $scope.currentRows = [];
@@ -194,10 +195,16 @@ function MuokkaaCtrl($scope, $routeParams) {
 
     // tallennus
     $scope.save = function() {
-
+        $scope.error = {
+            message: "Not yet wired to the backend",
+            description: ""
+        }
     };
     $scope.cancel = function() {
 
+    };
+    $scope.clearError = function() {
+        delete $scope.error;
     };
 
     // datepicker

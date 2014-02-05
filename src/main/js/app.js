@@ -20,3 +20,9 @@ app.factory('Organisaatio', function($resource) {
         get: {method: "GET", isArray: false, cache: true, timeout: 3000}
     });
 });
+
+app.factory('MyRoles', function($resource) {
+    return $resource("/cas/myroles", {}, {
+        get: {method: "GET", isArray: false, cache: true, timeout: 3000}
+    });
+});
