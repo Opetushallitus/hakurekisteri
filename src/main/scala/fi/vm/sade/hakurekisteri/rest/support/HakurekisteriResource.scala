@@ -30,22 +30,25 @@ abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSy
     }
   }
 
-  class QueryParseException(cause:Throwable) extends Exception
+  def parseQuery(params:Params)(implicit pb: Map[String, String] => Query[A]): Either[Exception, Query[A]] = {
+    try Right(pb(params))
+    catch {case e: Exception => Left(e)}
+  }
+
+  val queryResource: (Either[Exception, Query[A]]) => Any = {
+    case Right(query) => ResourceQuery(query)
+    case Left(e) => BadRequest("Illegal Query")
+  }
 
   def read(op: OperationBuilder) (implicit pb: Map[String, String] => Query[A]) {
     get("/", operation(op))(
-      try resourceQuery(
-        try pb(params)
-        catch {case e: Exception => throw new QueryParseException(e)} )
-      catch {case qpe: QueryParseException => BadRequest("Illegal query")}
-    )
+      (parseQuery _
+        andThen
+        queryResource) (params))
   }
 
-  def resourceQuery(query: AnyRef): AsyncResult {val is: Future[Any]} = {
-    new AsyncResult() {
-
-      val is = actor ? query
-    }
+  case class ResourceQuery[R](query: Query[R]) extends AsyncResult {
+    val is:Future[Seq[R]] = (actor ? query).mapTo[Seq[R]]
   }
 
 }
