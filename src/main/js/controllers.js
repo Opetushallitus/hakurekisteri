@@ -196,17 +196,17 @@ function MuokkaaCtrl($scope, $routeParams, $route, $location, Henkilo, Organisaa
                     var meta = koodi.metadata[i];
                     if (meta.kieli === 'FI') {
                         $scope.henkilo.postitoimipaikka = meta.nimi;
-                        $scope.henkilo.postinumero.$setValidity("invalidPostinumero", true);
+                        $scope.henkiloForm.postinumeroField.$setValidity("postinumero", true);
                         break;
                     }
                 }
             }, function() {
                 $scope.henkilo.postitoimipaikka = "Postitoimipaikkaa ei löytynyt";
-                $scope.henkilo.postinumero.$setValidity("invalidPostinumero", false);
+                $scope.henkiloForm.postinumeroField.$setValidity("postinumero", false);
             });
         } else {
             $scope.henkilo.postitoimipaikka = "Postinumero on virheellinen";
-            $scope.henkilo.postinumero.$setValidity("invalidPostinumero", false);
+            $scope.henkiloForm.postinumeroField.$setValidity("postinumero", false);
         }
     };
 

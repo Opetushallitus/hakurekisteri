@@ -10,7 +10,7 @@ div(class="container")
         header(class="panel-heading")
           h2(class="panel-title") Henkilötiedot
         div(class="panel-body")
-          form
+          form(name="henkiloForm")
             div(class="row")
               div(class="form-group col-sm-6")
                 div
@@ -41,7 +41,7 @@ div(class="container")
             div(class="row")
               div(class="form-group col-sm-4")
                 label(for="postinumero") Postinumero
-                input(id="postinumero" type="text" class="form-control" ng-model="henkilo.postinumero" ng-change="fetchPostitoimipaikka()")
+                input(id="postinumero" name="postinumeroField" type="text" class="form-control" ng-model="henkilo.postinumero" ng-change="fetchPostitoimipaikka()")
               div(class="form-group col-sm-4")
                 div
                   strong Postitoimipaikka

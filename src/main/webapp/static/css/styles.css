@@ -69,6 +69,6 @@ label {
     margin-top: 11px;
 }
 
-.invalid-postinumero {
+.ng-invalid {
     border-color: #f44;
 }
