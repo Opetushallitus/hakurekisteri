@@ -1,4 +1,9 @@
 div(class="container")
+  div(class="alert alert-danger alert-dismissable" ng-show="errors" ng-repeat="error in errors")
+    button(type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="clearError()") &times;
+    strong {{error.message}}
+    span {{error.description}}
+
   div(class="row")
     div(class="col-md-8")
       section(class="panel panel-default")
@@ -80,18 +85,17 @@ div(class="container")
       h2(class="panel-title") Luokkatiedot
     table(class="table")
       thead
-        th Alkupvm
-        th Loppupvm
+        th Alkupäivä
+        th Loppupäivä
         th Oppilaitos
         th Luokkataso
         th Luokka
       tbody
         tr(ng-repeat="luokkatieto in luokkatiedot")
           td
-            div {{alkupvm_opened_$index}}
-            input(type="text" class="form-control" ng-model="luokkatieto.alkupvm" datepicker-popup="{{format}}" is-open="{{alkupvm_opened_$index}}" datepicker-options="dateOptions" ng-required="true" show-button-bar="false")
+            input(type="text" class="form-control" ng-model="luokkatieto.alkuPaiva" datepicker-popup="{{format}}" is-open="{{alkuPaiva_opened_$index}}" datepicker-options="dateOptions" ng-required="true" show-button-bar="false")
           td
-            input(type="text" class="form-control" ng-model="luokkatieto.loppupvm" datepicker-popup="{{format}}" is-open="{{loppupvm_opened_$index}}" datepicker-options="dateOptions" ng-required="false" show-button-bar="false" min="luokkatieto.alkupvm")
+            input(type="text" class="form-control" ng-model="luokkatieto.loppuPaiva" datepicker-popup="{{format}}" is-open="{{loppuPaiva_opened_$index}}" datepicker-options="dateOptions" ng-required="false" show-button-bar="false" min="luokkatieto.alkuPaiva")
           td
             input(type="text" class="form-control" ng-model="luokkatieto.oppilaitos")
           td

@@ -9,7 +9,7 @@ div(class="container")
         span(oph-msg="suoritusrekisteri.opiskeluoikeudet") Opiskeluoikeudet
         div(class="pull-right" ng-hide="loading")
           span(oph-msg="suoritusrekisteri.naytetaan") Näytetään
-          span {{ currentRows.length }} / {{ totalRows }}
+          span {{ currentRows.length }} / {{ allRows.length }}
           span(oph-msg="suoritusrekisteri.tulosta") tulosta
     table(class="table")
       tr
@@ -32,7 +32,9 @@ div(class="container")
           span(ng-show="isDirectionIconVisible('tiedonsiirtoId')")
             i(class="glyphicon glyphicon-chevron-{{sorting.direction === 'asc' ? 'up' : 'down'}}")
       tr(ng-repeat="row in currentRows")
-        td {{row.henkilo || row.henkiloOid}}
+        td
+          a(href="#/muokkaa/{{row.henkiloOid}}" ng-show="isOPH()") {{row.henkilo || row.henkiloOid}}
+          span(ng-hide="isOPH()") {{row.henkilo || row.henkiloOid}}
         td {{row.oppilaitoskoodi || row.oppilaitosOid}}
         td {{row.luokkataso}}
         td {{row.luokka}}
