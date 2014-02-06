@@ -18,25 +18,21 @@ import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import fi.vm.sade.hakurekisteri.suoritus.Komoto
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import scala.Some
+import org.joda.time.{MonthDay, DateTime}
 
 class IdentifiableSerializationSpec extends WordSpec with ShouldMatchers with HakurekisteriJsonSupport {
 
   val identifier = UUID.randomUUID()
-  val opiskelija = new Opiskelija("1.2.3", "9": String, "9A": String, "2.3.4": String, new Date, Some(new Date))
+  val opiskelija = new Opiskelija("1.2.3", "9": String, "9A": String, "2.3.4": String, DateTime.now, Some(DateTime.now))
 
   val df = new SimpleDateFormat("yyyyMMdd")
 
-  val kevatJuhla = df.parse("20140604")
+  val kevatJuhla = new MonthDay(6,4).toLocalDate(DateTime.now.getYear).toDateTimeAtStartOfDay
 
 
   val suoritus = Peruskoulu("1.2.3", "KESKEN",  kevatJuhla, "1.2.4")
 
-  def identify(o:Suoritus): Suoritus with Identified = o match {
-    case o: Suoritus with Identified => o
-    case _ => new Suoritus(o.komoto: Komoto, o.tila: String, o.valmistuminen: Date, o.henkiloOid: String, o.yksilollistaminen: Yksilollistetty) with Identified{
-      val id: UUID = UUID.randomUUID()
-    }
-  }
+
 
   "An identified suoritus " when {
     val s = Suoritus.identify(suoritus)
@@ -74,11 +70,11 @@ class IdentifiableSerializationSpec extends WordSpec with ShouldMatchers with Ha
       }
 
       "retain loppuPaiva with 1s precision" in {
-        result.loppuPaiva.get.getTime / 1000 should be (o.loppuPaiva.get.getTime / 1000)
+        result.loppuPaiva.get.toDate.getTime / 1000 should be (o.loppuPaiva.get.toDate.getTime / 1000)
       }
 
       "retain alkuPaiva with 1s precision" in {
-        result.alkuPaiva.getTime / 1000 should be (o.alkuPaiva.getTime / 1000)
+        result.alkuPaiva.toDate.getTime / 1000 should be (o.alkuPaiva.toDate.getTime / 1000)
       }
 
       "retain oppilaitosOid" in {

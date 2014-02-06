@@ -17,6 +17,10 @@ import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriSwagger, Hakurekister
 import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaServlet, Opiskelija, OpiskelijaActor}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, Peruskoulu, Suoritus, SuoritusServlet}
 import java.io.Serializable
+import org.joda.time.{MonthDay, DateTime}
+import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
+
+import com.github.nscala_time.time.Imports._
 
 
 object kausi extends Enumeration {
@@ -92,9 +96,9 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
     post("/rest/v1/opiskelijat", write(opiskelija), Map("Content-Type" -> "application/json; charset=utf-8")) {}
   }
 
-  val df = new SimpleDateFormat("yyyyMMdd")
 
-  val kevatJuhla = df.parse("20140604")
+
+  val kevatJuhla = new MonthDay(6,4).toLocalDate(DateTime.now.getYear).toDateTimeAtStartOfDay
 
 
   val suoritus = Peruskoulu("1.2.3", "KESKEN",  kevatJuhla, "1.2.4")
@@ -171,10 +175,10 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
 
   case class Valmistuja(oid:String, vuosi:String, kausi: Kausi) {
 
-    val date:Date =
+    val date:DateTime =
       kausi match {
-        case Kevät => df.parse(vuosi + "0604")
-        case Syksy => df.parse(vuosi + "1221")
+        case Kevät => new MonthDay(6,4).toLocalDate(vuosi.toInt).toDateTimeAtStartOfDay
+        case Syksy => new MonthDay(12,21).toLocalDate(vuosi.toInt).toDateTimeAtStartOfDay
       }
 
 
@@ -218,13 +222,14 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
   }
 
   def beBefore(s:String) =
-    new Matcher[Date] {
-      def apply(left: Date): MatchResult = {
-        val format = new SimpleDateFormat("dd.MM.yyyy")
+    new Matcher[DateTime] {
+      def apply(left: DateTime): MatchResult = {
+
+        val pattern = DateTimeFormat.forPattern("dd.MM.yyyy")
         MatchResult(
-          left.before(format.parse(s)),
-          format.format(left) + " was not before " + s,
-          format.format(left) + " was before " +s
+          left < DateTime.parse(s, pattern),
+          left.toString(pattern) + " was not before " + s,
+          left.toString(pattern) + " was before " +s
         )
       }
     }
@@ -273,9 +278,9 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
       parseOpiskelijat(kaavake) foreach create
     }
 
-    def getStartDate(vuosi: String, kausi: String): Date = kausi match {
-      case "S" => dateformat.parse("01.01." + vuosi)
-      case "K" => dateformat.parse("01.08." + vuosi)
+    def getStartDate(vuosi: String, kausi: String): DateTime = kausi match {
+      case "S" => new MonthDay(1, 1).toLocalDate(vuosi.toInt).toDateTimeAtStartOfDay
+      case "K" => new MonthDay(8, 1).toLocalDate(vuosi.toInt).toDateTimeAtStartOfDay
       case default => throw new RuntimeException("unknown kausi")
 
     }
@@ -299,6 +304,11 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
 
   implicit def string2Date(s:String):Date = {
     dateformat.parse(s)
+
+  }
+
+  implicit def string2DateTime(s:String):DateTime = {
+    DateTime.parse(s, DateTimeFormat.forPattern("dd.MM.yyyy"))
 
   }
 }

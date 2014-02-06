@@ -4,7 +4,6 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import org.scalatra.swagger.Swagger
 import fi.vm.sade.hakurekisteri.rest.support.{Query, HakurekisteriResource}
 import scala.Some
-import org.joda.time.DateTime
 import java.util.Date
 
 class OpiskelijaServlet(opiskelijaActor: ActorRef)(implicit val swagger: Swagger, system: ActorSystem) extends HakurekisteriResource[Opiskelija](opiskelijaActor)  {

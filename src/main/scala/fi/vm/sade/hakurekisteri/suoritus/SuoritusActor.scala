@@ -8,6 +8,8 @@ import fi.vm.sade.hakurekisteri.storage._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.Some
 import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaQuery, Opiskelija}
+import org.joda.time.{MonthDay, DateTime}
+import com.github.nscala_time.time.Imports._
 
 
 trait SuoritusRepository extends InMemRepository[Suoritus] {
@@ -32,8 +34,8 @@ trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suori
     case None => true
   }
 
-  def beforeYearEnd(vuosi:String)(date:Date): Boolean = {
-    new SimpleDateFormat("yyyyMMdd").parse(vuosi + "1231").after(date)
+  def beforeYearEnd(vuosi:String)(date:DateTime): Boolean = {
+    newYear(vuosi.toInt+ 1).isAfter(date)
   }
 
   def checkVuosi(vuosi: Option[String])(s:Suoritus):Boolean = vuosi match {
@@ -48,10 +50,18 @@ trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suori
     case None => true
   }
 
-  def duringFirstHalf(date: Date):Boolean = {
-    new SimpleDateFormat("yyyyMMdd").parse(new SimpleDateFormat("yyyy").format(date) + "0701").after(date)
+  def duringFirstHalf(date: DateTime):Boolean = {
+    (newYear(date.getYear) to startOfAutumn(date.getYear)).contains(date)
   }
 
+
+  def startOfAutumn(year: Int): DateTime = {
+    new MonthDay(8, 1).toLocalDate(year).toDateTimeAtStartOfDay
+  }
+
+  def newYear(year: Int): DateTime = {
+    new MonthDay(1, 1).toLocalDate(year).toDateTimeAtStartOfDay
+  }
 }
 
 class SuoritusActor(val initialSuoritukset:Seq[Suoritus] = Seq()) extends ResourceActor[Suoritus] with SuoritusRepository with SuoritusService {

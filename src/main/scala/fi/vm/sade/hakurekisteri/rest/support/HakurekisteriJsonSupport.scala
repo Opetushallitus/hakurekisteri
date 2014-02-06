@@ -8,6 +8,6 @@ trait HakurekisteriJsonSupport {
 
   protected implicit def jsonFormats: Formats = DefaultFormats +
     new org.json4s.ext.EnumNameSerializer(yksilollistaminen) +
-    FieldSerializer[Identified]()  + new UUIDSerializer  + new IdentitySerializer
+    FieldSerializer[Identified]()  + new UUIDSerializer  + new IdentitySerializer + org.json4s.ext.DateTimeSerializer
 
 }

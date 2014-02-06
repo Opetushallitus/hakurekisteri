@@ -2,8 +2,9 @@ package fi.vm.sade.hakurekisteri.opiskelija
 
 import java.util.{UUID, Date}
 import fi.vm.sade.hakurekisteri.storage.Identified
+import org.joda.time.DateTime
 
-case class Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, alkuPaiva: Date = new Date, loppuPaiva: Option[Date] = None)
+case class Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, alkuPaiva: DateTime, loppuPaiva: Option[DateTime] = None)
 
 object Opiskelija{
 

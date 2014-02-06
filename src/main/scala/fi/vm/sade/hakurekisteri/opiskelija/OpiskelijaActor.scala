@@ -67,7 +67,7 @@ trait OpiskelijaService extends ResourceService[Opiskelija] { this: Repository[O
   }
 
 
-  def during(interval: Interval, start: Date, end: Option[Date]) = end match {
+  def during(interval: Interval, start: DateTime, end: Option[DateTime]) = end match {
     case Some(date) => new DateTime(start) to new DateTime(date) overlaps interval
     case None => interval.end > new DateTime(start)
 
@@ -90,7 +90,7 @@ trait OpiskelijaService extends ResourceService[Opiskelija] { this: Repository[O
   }
 
 
-  def duringKausi(kausi: Option[Kausi], start: Date, end: Option[Date]): Boolean = (kausi, end) match {
+  def duringKausi(kausi: Option[Kausi], start: DateTime, end: Option[DateTime]): Boolean = (kausi, end) match {
     case (Some(Syksy), Some(date)) => (new DateTime(date).getYear != new DateTime(start).getYear) || startOfAutumn(new DateTime(date).getYear).toDateTimeAtStartOfDay <= new DateTime(date)
     case (Some(Kevät), Some(date)) => (new DateTime(date).getYear != new DateTime(start).getYear) || startOfAutumn(new DateTime(date).getYear).toDateTimeAtStartOfDay > new DateTime(start)
     case (Some(_), _ ) => throw new IllegalArgumentException("Not a kausi")
