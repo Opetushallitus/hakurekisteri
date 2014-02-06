@@ -9,6 +9,7 @@ import fi.vm.sade.hakurekisteri.rest.support.Kausi._
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.storage.{Repository, ResourceActor, ResourceService, Identified}
 import scala.concurrent.{ExecutionContext, Future}
+import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 
 
 trait OpiskelijaRepository extends Repository[Opiskelija] {
@@ -32,15 +33,13 @@ trait OpiskelijaRepository extends Repository[Opiskelija] {
 
 
 
-trait OpiskelijaService extends ResourceService[Opiskelija] { this: OpiskelijaRepository =>
+trait OpiskelijaService extends ResourceService[Opiskelija] { this: Repository[Opiskelija] =>
 
-  implicit val executionContext:ExecutionContext
 
-  def findBy(o: Query[Opiskelija]):Future[Seq[Opiskelija with Identified]] = o match {
-    case OpiskelijaQuery(henkilo, kausi, vuosi) => Future{
+
+  val finder :PartialFunction[Query[Opiskelija], Seq[Opiskelija with Identified]] = {
+    case OpiskelijaQuery(henkilo, kausi, vuosi) =>
       listAll().filter(checkHenkilo(henkilo)).filter(checkVuosiAndKausi(vuosi, kausi))
-    }
-    case _ => throw new IllegalArgumentException("unknown query: " + o)
   }
 
   def checkHenkilo(henkilo: Option[String])(o:Opiskelija):Boolean  =  henkilo match {

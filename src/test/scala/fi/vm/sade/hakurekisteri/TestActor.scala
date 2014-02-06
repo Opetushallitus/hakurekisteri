@@ -10,7 +10,6 @@ class TestActor extends ResourceActor[Resource]  with Repository[Resource] with 
 
   var store:Seq[Resource] = Seq()
 
-  def findBy(q: Query[Resource]): Future[Seq[Resource with Identified]] = Future(Seq())
 
   def save(t: Resource): Resource with Identified = {
     println("saving: " + t)
@@ -27,4 +26,5 @@ class TestActor extends ResourceActor[Resource]  with Repository[Resource] with 
 
   def listAll(): Seq[Resource with Identified] = store.map(identify)
 
+  val finder: PartialFunction[Query[Resource], Seq[Resource with Identified]] = { case _ => Seq()}
 }

@@ -34,12 +34,9 @@ trait SuoritusRepository extends Repository[Suoritus] {
 
 trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suoritus] =>
 
-  implicit val executionContext: ExecutionContext
-
-  def findBy(q: Query[Suoritus]): Future[Seq[Suoritus with Identified]] = q match  {
-    case SuoritusQuery(henkilo, kausi, vuosi) => Future {
+  val  finder:PartialFunction[Query[Suoritus], Seq[Suoritus with Identified]] =  {
+    case SuoritusQuery(henkilo, kausi, vuosi) =>
       listAll().filter(checkHenkilo(henkilo)).filter(checkVuosi(vuosi)).filter(checkKausi(kausi))
-    }
   }
 
   def checkHenkilo(henkilo: Option[String])(s:Suoritus):Boolean  =  henkilo match {
