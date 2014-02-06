@@ -1,8 +1,6 @@
 package fi.vm.sade.hakurekisteri.storage
 
-import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 
 trait Repository[T] {
 
