@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.opiskelija
 
 import java.util.{UUID, Date}
+import fi.vm.sade.hakurekisteri.storage.Identified
 
 case class Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, alkuPaiva: Date = new Date, loppuPaiva: Option[Date] = None)
 
@@ -17,10 +18,12 @@ object Opiskelija{
     }
   }
 
+  def identify(o:Opiskelija): Opiskelija with Identified = o match {
+    case o: Opiskelija with Identified => o
+    case _ => new Opiskelija(o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva, o.loppuPaiva) with Identified{
+      val id: UUID = UUID.randomUUID()
+    }
+  }
+
 }
 
-trait Identified {
-
-  val id:UUID
-
-}

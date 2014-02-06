@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
-import java.util.Date
+import java.util.{UUID, Date}
+import fi.vm.sade.hakurekisteri.storage.Identified
 
 object yksilollistaminen extends Enumeration {
   type Yksilollistetty = Value
@@ -15,6 +16,15 @@ import yksilollistaminen._
 case class Komoto(oid: String, komo: String, tarjoaja: String)
 case class Suoritus(komoto: Komoto, tila: String, valmistuminen: Date, henkiloOid: String, yksilollistaminen: Yksilollistetty)
 
+
+object Suoritus {
+  def identify(o:Suoritus): Suoritus with Identified = o match {
+    case o: Suoritus with Identified => o
+    case _ => new Suoritus(o.komoto: Komoto, o.tila: String, o.valmistuminen: Date, o.henkiloOid: String, o.yksilollistaminen) with Identified{
+      val id: UUID = UUID.randomUUID()
+    }
+  }
+}
 
 object PerusopetuksenToteutus {
   def apply (oppilaitos: String) : Komoto = {

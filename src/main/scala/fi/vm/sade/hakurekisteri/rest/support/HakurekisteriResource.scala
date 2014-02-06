@@ -10,7 +10,7 @@ import org.scalatra._
 import _root_.akka.pattern.ask
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import scala.util.Try
-import fi.vm.sade.hakurekisteri.opiskelija.Identified
+import fi.vm.sade.hakurekisteri.storage.Identified
 
 
 abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSystem, mf: Manifest[A])extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport {
@@ -50,7 +50,9 @@ abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSy
   }
 
   case class ResourceQuery[R](query: Query[R]) extends AsyncResult {
-    val is:Future[Seq[R]] = (actor ? query).mapTo[Seq[R]]
+    val is:Future[Seq[R with Identified]] = (actor ? query).mapTo[Seq[R with Identified]]
+
+    is.onComplete((r:Try[Seq[R with Identified]]) => println(r.get.head.id))
   }
 
 }

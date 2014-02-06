@@ -1,27 +1,45 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
-import akka.actor.Actor
-import java.util.Date
+import java.util.{UUID, Date}
 import java.text.SimpleDateFormat
-import fi.vm.sade.hakurekisteri.rest.support.Kausi
+import fi.vm.sade.hakurekisteri.rest.support.{Query, Kausi}
 import Kausi._
+import fi.vm.sade.hakurekisteri.storage.{ResourceActor, ResourceService, Identified, Repository}
+import scala.concurrent.{ExecutionContext, Future}
 
-class SuoritusActor(var suoritukset:Seq[Suoritus] = Seq()) extends Actor{
 
-  def receive: Receive = {
-    case SuoritusQuery(henkilo, kausi, vuosi) =>
-      sender ! findBy(henkilo, vuosi, kausi)
-    case s:Suoritus =>
-      sender ! saveSuoritus(s)
+trait SuoritusRepository extends Repository[Suoritus] {
+
+
+  var store:Map[UUID,Suoritus with Identified] = Map()
+
+  def identify(o:Suoritus): Suoritus with Identified = o match {
+    case o: Suoritus with Identified => o
+    case _ => Suoritus.identify(o)
   }
 
-  def findBy(henkilo: Option[String], vuosi: Option[String], kausi: Option[Kausi]): Seq[Suoritus] = {
-    suoritukset.filter(checkHenkilo(henkilo)).filter(checkVuosi(vuosi)).filter(checkKausi(kausi))
+  def save(o: Suoritus ): Suoritus with Identified = {
+    val oid = identify(o)
+    store = store + (oid.id -> oid)
+    oid
   }
 
-  def saveSuoritus(s: Suoritus) {
-    suoritukset = (suoritukset.toList :+ s).toSeq
-    suoritukset
+  def listAll(): Seq[Suoritus with Identified] = {
+    store.values.toSeq
+  }
+
+
+
+}
+
+trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suoritus] =>
+
+  implicit val executionContext: ExecutionContext
+
+  def findBy(q: Query[Suoritus]): Future[Seq[Suoritus with Identified]] = q match  {
+    case SuoritusQuery(henkilo, kausi, vuosi) => Future {
+      listAll().filter(checkHenkilo(henkilo)).filter(checkVuosi(vuosi)).filter(checkKausi(kausi))
+    }
   }
 
   def checkHenkilo(henkilo: Option[String])(s:Suoritus):Boolean  =  henkilo match {
@@ -49,8 +67,11 @@ class SuoritusActor(var suoritukset:Seq[Suoritus] = Seq()) extends Actor{
     new SimpleDateFormat("yyyyMMdd").parse(new SimpleDateFormat("yyyy").format(date) + "0701").after(date)
   }
 
+}
 
+class SuoritusActor(val initialSuoritukset:Seq[Suoritus] = Seq()) extends ResourceActor[Suoritus] with SuoritusRepository with SuoritusService {
 
+  initialSuoritukset.foreach((o) => save(o))
 
 
 
