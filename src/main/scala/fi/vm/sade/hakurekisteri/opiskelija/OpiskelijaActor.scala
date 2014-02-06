@@ -11,6 +11,7 @@ import fi.vm.sade.hakurekisteri.storage._
 import scala.concurrent.{ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import scala.Some
+import scala.Some
 
 
 trait OpiskelijaRepository extends InMemRepository[Opiskelija] {
@@ -24,11 +25,8 @@ trait OpiskelijaRepository extends InMemRepository[Opiskelija] {
 
 trait OpiskelijaService extends ResourceService[Opiskelija] { this: Repository[Opiskelija] =>
 
-
-
-  val finder :PartialFunction[Query[Opiskelija], Seq[Opiskelija with Identified]] = {
-    case OpiskelijaQuery(henkilo, kausi, vuosi) =>
-      listAll().filter(checkHenkilo(henkilo)).filter(checkVuosiAndKausi(vuosi, kausi))
+  val matcher: PartialFunction[Query[Opiskelija], (Opiskelija with Identified) => Boolean] = {
+    case OpiskelijaQuery(henkilo, kausi, vuosi) =>  (o: Opiskelija with Identified) => checkHenkilo(henkilo)(o) && checkVuosiAndKausi(vuosi, kausi)(o)
   }
 
   def checkHenkilo(henkilo: Option[String])(o:Opiskelija):Boolean  =  henkilo match {

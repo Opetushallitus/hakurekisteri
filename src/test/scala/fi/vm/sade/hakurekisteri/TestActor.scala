@@ -26,5 +26,6 @@ class TestActor extends ResourceActor[Resource]  with Repository[Resource] with 
 
   def listAll(): Seq[Resource with Identified] = store.map(identify)
 
-  val finder: PartialFunction[Query[Resource], Seq[Resource with Identified]] = { case _ => Seq()}
+  val matcher: PartialFunction[Query[Resource], (Resource with Identified) => Boolean] = { case _ => (_) => true}
+
 }

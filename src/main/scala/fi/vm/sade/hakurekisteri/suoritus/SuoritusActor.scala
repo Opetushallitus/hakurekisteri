@@ -7,6 +7,7 @@ import Kausi._
 import fi.vm.sade.hakurekisteri.storage._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.Some
+import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaQuery, Opiskelija}
 
 
 trait SuoritusRepository extends InMemRepository[Suoritus] {
@@ -21,9 +22,9 @@ trait SuoritusRepository extends InMemRepository[Suoritus] {
 
 trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suoritus] =>
 
-  val  finder:PartialFunction[Query[Suoritus], Seq[Suoritus with Identified]] =  {
-    case SuoritusQuery(henkilo, kausi, vuosi) =>
-      listAll().filter(checkHenkilo(henkilo)).filter(checkVuosi(vuosi)).filter(checkKausi(kausi))
+  val matcher: PartialFunction[Query[Suoritus], (Suoritus with Identified) => Boolean] = {
+    case SuoritusQuery(henkilo, kausi, vuosi) =>  (s: Suoritus with Identified) =>
+      checkHenkilo(henkilo)(s) && checkVuosi(vuosi)(s) && checkKausi(kausi)(s)
   }
 
   def checkHenkilo(henkilo: Option[String])(s:Suoritus):Boolean  =  henkilo match {
