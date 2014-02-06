@@ -138,43 +138,54 @@ function getKoodi(koodiArray, koodiArvo) {
 }
 
 
-function MuokkaaCtrl($scope, $routeParams, $route, $location, Henkilo, Organisaatio, Koodisto, Opiskelijat, Suoritukset) {
+function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Koodisto, Opiskelijat, Suoritukset) {
     $scope.errors = [];
     $scope.henkiloOid = $routeParams.henkiloOid;
 
-    Henkilo.get({henkiloOid: $scope.henkiloOid}, function(henkilo) {
-        $scope.henkilo = henkilo;
-    }, function() {
-        if (location.hostname === 'localhost') {
-            $scope.henkilo = {hetu: "010101-0101"};
-        } else {
-            confirm("Henkilötietojen hakeminen epäonnistui. Yritä uudelleen?") ? $route.reload() : $location.path("/suoritukset");
-        }
-    });
+    function fetchHenkilotiedot() {
+        Henkilo.get({henkiloOid: $scope.henkiloOid}, function(henkilo) {
+            $scope.henkilo = henkilo;
+        }, function() {
+            confirm("Henkilötietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchHenkilotiedot() : $location.path("/suoritukset");
+        });
+    }
+    fetchHenkilotiedot();
 
-    Opiskelijat.get({henkiloOid: $scope.henkiloOid}, function(luokkatiedot) {
-        $scope.luokkatiedot = luokkatiedot;
-    }, function() {
-        if (location.hostname === 'localhost') {
-            $scope.luokkatiedot = [
-                {oppilaitos: "00123"}
-            ];
-        } else {
-            confirm("Luokkatietojen hakeminen epäonnistui. Yritä uudelleen?") ? $route.reload() : $location.path("/suoritukset");
-        }
-    });
+    function fetchOpiskelijatiedot() {
+        Opiskelijat.get({henkiloOid: $scope.henkiloOid}, function(luokkatiedot) {
+            $scope.luokkatiedot = luokkatiedot;
+        }, function() {
+            confirm("Luokkatietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchOpiskelijatiedot() : $location.path("/suoritukset");
+        });
+    }
+    fetchOpiskelijatiedot();
 
-    Suoritukset.get({henkiloOid: $scope.henkiloOid}, function(suoritukset) {
-        $scope.suoritukset = suoritukset;
-    }, function() {
-        if (location.hostname === 'localhost') {
-            $scope.suoritukset = [
-                {tila: "KESKEN"}
-            ];
-        } else {
-            confirm("Suoritustietojen hakeminen epäonnistui. Yritä uudelleen?") ? $route.reload() : $location.path("/suoritukset");
+    function fetchSuoritukset() {
+        Suoritukset.get({henkiloOid: $scope.henkiloOid}, function(suoritukset) {
+            $scope.suoritukset = suoritukset;
+            enrichSuoritukset();
+        }, function() {
+            confirm("Suoritustietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchSuoritukset() : $location.path("/suoritukset");
+        });
+    }
+    fetchSuoritukset();
+
+    function enrichSuoritukset() {
+        if ($scope.suoritukset) {
+            for (var i = 0; i < $scope.suoritukset.length; i++) {
+                var suoritus = $scope.suoritukset[i];
+                if (suoritus.komoto && suoritus.komoto.tarjoaja) {
+                    Organisaatio.getCached({organisaatioOid: suoritus.komoto.tarjoaja}, function(organisaatio) {
+                        if (organisaatio.oid === suoritus.komoto.tarjoaja) {
+                            suoritus.oppilaitos = organisaatio.nimi.fi ? organisaatio.nimi.fi : organisaatio.nimi.sv;
+                        }
+                    });
+                }
+            }
         }
-    });
+    }
+
+    $scope.yksilollistamiset = ["Ei", "Osittain", "Kokonaan", "Alueittain"];
 
     // TODO hae koodistosta
     $scope.maat = [
@@ -190,30 +201,28 @@ function MuokkaaCtrl($scope, $routeParams, $route, $location, Henkilo, Organisaa
         { value: "246", text: "Suomi" }
     ];
     $scope.fetchPostitoimipaikka = function() {
-        if ($scope.henkilo.postinumero && $scope.henkilo.postinumero.match(/\d{5}/)) {
+        if ($scope.henkilo.postinumero && $scope.henkilo.postinumero.match(/^\d{5}$/)) {
+            $scope.searchingPostinumero = true;
             Koodisto.getCached({koodisto: "posti", koodiUri: "posti_" + $scope.henkilo.postinumero}, function(koodi) {
                 for (var i = 0; i < koodi.metadata.length; i++) {
                     var meta = koodi.metadata[i];
                     if (meta.kieli === 'FI') {
                         $scope.henkilo.postitoimipaikka = meta.nimi;
-                        $scope.henkiloForm.postinumeroField.$setValidity("postinumero", true);
                         break;
                     }
                 }
+                $scope.searchingPostinumero = false;
             }, function() {
                 $scope.henkilo.postitoimipaikka = "Postitoimipaikkaa ei löytynyt";
-                $scope.henkiloForm.postinumeroField.$setValidity("postinumero", false);
+                $scope.searchingPostinumero = false;
             });
-        } else {
-            $scope.henkilo.postitoimipaikka = "Postinumero on virheellinen";
-            $scope.henkiloForm.postinumeroField.$setValidity("postinumero", false);
         }
     };
 
     // tallennus
     $scope.save = function() {
         $scope.errors.push({
-            message: "Not yet wired to the backend",
+            message: "Tallennusta ei vielä toteutettu.",
             description: ""
         });
     };

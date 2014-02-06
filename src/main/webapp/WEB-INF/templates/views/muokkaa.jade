@@ -5,7 +5,7 @@ div(class="container")
     span {{error.description}}
 
   div(class="row")
-    div(class="col-md-8")
+    div(class="col-md-7")
       section(class="panel panel-default")
         header(class="panel-heading")
           h2(class="panel-title") Henkilötiedot
@@ -20,21 +20,21 @@ div(class="container")
                 div
                   strong Sukupuoli
                 label(class="radio-inline")
-                  input(type="radio" ng-model="henkilo.sukupuoli" value="MIES")
+                  input(type="radio" ng-model="henkilo.sukupuoli" value="MIES" required)
                   span Mies
                 label(class="radio-inline")
-                  input(type="radio" ng-model="henkilo.sukupuoli" value="NAINEN")
+                  input(type="radio" ng-model="henkilo.sukupuoli" value="NAINEN" required)
                   span Nainen
             div(class="row")
               div(class="form-group col-sm-6")
                 label(for="etunimet") Etunimet
-                input(id="etunimet" type="text" class="form-control" ng-model="henkilo.etunimet")
+                input(id="etunimet" type="text" class="form-control" ng-model="henkilo.etunimet" required)
               div(class="form-group col-sm-6")
                 label(for="kutsumanimi") Kutsumanimi
-                input(id="kutsumanimi" type="text" class="form-control" ng-model="henkilo.kutsumanimi")
+                input(id="kutsumanimi" type="text" class="form-control" ng-model="henkilo.kutsumanimi" required)
             div(class="form-group")
               label(for="sukunimi") Sukunimi
-              input(id="sukunimi" type="text" class="form-control" ng-model="henkilo.sukunimi")
+              input(id="sukunimi" type="text" class="form-control" ng-model="henkilo.sukunimi" required)
             div(class="form-group")
               label(for="katuosoite") Katuosoite
               input(id="katuosoite" type="text" class="form-control" ng-model="henkilo.katuosoite")
@@ -42,23 +42,23 @@ div(class="container")
               div(class="form-group col-sm-4")
                 label(for="postinumero") Postinumero
                 input(id="postinumero" name="postinumeroField" type="text" class="form-control" ng-model="henkilo.postinumero" ng-change="fetchPostitoimipaikka()")
-              div(class="form-group col-sm-4")
-                div
-                  strong Postitoimipaikka
-                div(class="ei-muokattava") {{henkilo.postitoimipaikka}}
+              div(class="form-group col-sm-4 postitoimipaikka")
+                label(for="postitoimipaikka") Postitoimipaikka
+                input(id="postitoimipaikka" type="text" class="form-control" ng-model="henkilo.postitoimipaikka")
+                div(class="loading" ng-show="searchingPostinumero")
               div(class="form-group col-sm-4")
                 label(for="maa") Maa
                 select(id="maa" class="form-control" ng-model="henkilo.maa" ng-options="maa.value as maa.text for maa in maat")
             div(class="row")
               div(class="form-group col-sm-4")
                 label(for="kotikunta") Kotikunta
-                select(id="kotikunta" class="form-control" ng-model="henkilo.kotikunta" ng-options="kunta.value as kunta.text for kunta in kunnat")
+                select(id="kotikunta" class="form-control" ng-model="henkilo.kotikunta" ng-options="kunta.value as kunta.text for kunta in kunnat" required)
               div(class="form-group col-sm-4")
                 label(for="kansalaisuus") Kansalaisuus
-                select(id="kansalaisuus" class="form-control" ng-model="henkilo.kansalaisuus" ng-options="kansalaisuus.value as kansalaisuus.text for kansalaisuus in kansalaisuudet")
+                select(id="kansalaisuus" class="form-control" ng-model="henkilo.kansalaisuus" ng-options="kansalaisuus.value as kansalaisuus.text for kansalaisuus in kansalaisuudet" required)
               div(class="form-group col-sm-4")
                 label(for="aidinkieli") Äidinkieli
-                select(id="aidinkieli" class="form-control" ng-model="henkilo.aidinkieli" ng-options="kieli.value as kieli.text for kieli in kielet")
+                select(id="aidinkieli" class="form-control" ng-model="henkilo.aidinkieli" ng-options="kieli.value as kieli.text for kieli in kielet" required)
             div(class="row")
               div(class="form-group col-sm-6")
                 label(for="matkapuhelin") Matkapuhelin
@@ -67,19 +67,24 @@ div(class="container")
                 label(for="muupuhelin") Muu puhelin
                 input(id="muupuhelin" type="text" class="form-control" ng-model="henkilo.muupuhelin")
 
-    div(class="col-md-4")
+    div(class="col-md-5")
       section(class="panel panel-default")
         header(class="panel-heading")
           h2(class="panel-title") Suoritukset
         div(class="panel-body")
           ul(class="list-unstyled")
             li(ng-repeat="suoritus in suoritukset")
-              div {{suoritus.koulutus}} ({{suoritus.tila}})
-              div {{suoritus.oppilaitos}}
-              form(class="form-inline")
+              strong {{suoritus.oppilaitos}} ({{suoritus.tila}})
+              form(class="form-inline suoritus-form")
+                div(class="form-group")
+                  strong Yksilöllistetty
+                  select(class="form-control" ng-model="suoritus.yksilollistaminen" ng-options="yks for yks in yksilollistamiset" required)
                 div(class="form-group")
                   strong Opetuskieli
-                  select(class="form-control" ng-model="suoritus.opetuskieli" ng-options="kieli.value as kieli.text for kieli in kielet")
+                  select(class="form-control" ng-model="suoritus.opetuskieli" ng-options="kieli.value as kieli.text for kieli in kielet" required)
+                div(class="form-group")
+                  strong Valmistumispäivä
+                  input(type="text" class="form-control" ng-model="suoritus.valmistuminen" datepicker-popup="{{format}}" datepicker-options="dateOptions" required show-button-bar="false")
 
   section(class="panel panel-default")
     header(class="panel-heading")
@@ -94,15 +99,15 @@ div(class="container")
       tbody
         tr(ng-repeat="luokkatieto in luokkatiedot")
           td
-            input(type="text" class="form-control" ng-model="luokkatieto.alkuPaiva" datepicker-popup="{{format}}" is-open="{{alkuPaiva_opened_$index}}" datepicker-options="dateOptions" ng-required="true" show-button-bar="false")
+            input(type="text" class="form-control" ng-model="luokkatieto.alkuPaiva" datepicker-popup="{{format}}" datepicker-options="dateOptions" required show-button-bar="false")
           td
-            input(type="text" class="form-control" ng-model="luokkatieto.loppuPaiva" datepicker-popup="{{format}}" is-open="{{loppuPaiva_opened_$index}}" datepicker-options="dateOptions" ng-required="false" show-button-bar="false" min="luokkatieto.alkuPaiva")
+            input(type="text" class="form-control" ng-model="luokkatieto.loppuPaiva" datepicker-popup="{{format}}" datepicker-options="dateOptions" show-button-bar="false" min="luokkatieto.alkuPaiva")
           td
-            input(type="text" class="form-control" ng-model="luokkatieto.oppilaitos")
+            input(type="text" class="form-control" ng-model="luokkatieto.oppilaitos" required)
           td
-            input(type="text" class="form-control" ng-model="luokkatieto.luokkataso")
+            input(type="text" class="form-control" ng-model="luokkatieto.luokkataso" required)
           td
-            input(type="text" class="form-control" ng-model="luokkatieto.luokka")
+            input(type="text" class="form-control" ng-model="luokkatieto.luokka" required)
 
   aside(class="btn-toolbar")
     button(class="btn btn-success" ng-click="save()") Tallenna

@@ -32,6 +32,10 @@ label {
     background-color: #dddddd;
 }
 
+.form-inline .form-control {
+    display: block;
+}
+
 .riveja {
     display: inline-block;
     line-height: 34px;
@@ -71,4 +75,24 @@ label {
 
 .ng-invalid {
     border-color: #f44;
+}
+
+.postitoimipaikka {
+    position: relative;
+}
+
+.postitoimipaikka .loading {
+    bottom: 9px;
+    position: absolute;
+    right: 24px;
+}
+
+.loading {
+    background-image: url('../images/ajax-loader.gif');
+    height: 16px;
+    width: 16px;
+}
+
+.suoritus-form .form-group {
+    max-width: 30%;
 }
