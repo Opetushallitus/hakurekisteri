@@ -2,16 +2,17 @@ package fi.vm.sade.hakurekisteri.storage
 
 import akka.actor.Actor
 import fi.vm.sade.hakurekisteri.rest.support.Query
-import scala.reflect.runtime.universe._
+import akka.pattern.pipe
+import scala.concurrent.ExecutionContext
 
 abstract class ResourceActor[T: Manifest] extends Actor { this: Repository[T] with ResourceService[T] =>
+
+  implicit val executionContext: ExecutionContext = context.dispatcher
 
   def receive: Receive = {
     case q: Query[T] =>
       println("received: " + q)
-      val by = findBy(q)
-      println("found: " + by)
-      sender ! by
+      findBy(q) pipeTo sender
     case o:T =>
       println("received: " + o)
       val saved = save(o)

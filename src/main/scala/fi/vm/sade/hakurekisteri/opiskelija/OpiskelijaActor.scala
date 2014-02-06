@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import fi.vm.sade.hakurekisteri.rest.support.Kausi._
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.storage.{Repository, ResourceActor, ResourceService, Identified}
+import scala.concurrent.{ExecutionContext, Future}
 
 
 trait OpiskelijaRepository extends Repository[Opiskelija] {
@@ -33,8 +34,12 @@ trait OpiskelijaRepository extends Repository[Opiskelija] {
 
 trait OpiskelijaService extends ResourceService[Opiskelija] { this: OpiskelijaRepository =>
 
-  def findBy(o: Query[Opiskelija]):Seq[Opiskelija with Identified] = o match {
-    case OpiskelijaQuery(henkilo, kausi, vuosi) => listAll().filter(checkHenkilo(henkilo)).filter(checkVuosiAndKausi(vuosi, kausi))
+  implicit val executionContext:ExecutionContext
+
+  def findBy(o: Query[Opiskelija]):Future[Seq[Opiskelija with Identified]] = o match {
+    case OpiskelijaQuery(henkilo, kausi, vuosi) => Future{
+      listAll().filter(checkHenkilo(henkilo)).filter(checkVuosiAndKausi(vuosi, kausi))
+    }
     case _ => throw new IllegalArgumentException("unknown query: " + o)
   }
 
@@ -92,6 +97,7 @@ trait OpiskelijaService extends ResourceService[Opiskelija] { this: OpiskelijaRe
 
 
 class OpiskelijaActor(initialStudents:Seq[Opiskelija] = Seq()) extends ResourceActor[Opiskelija] with OpiskelijaRepository with OpiskelijaService {
+
 
   initialStudents.foreach((o) => save(o))
 

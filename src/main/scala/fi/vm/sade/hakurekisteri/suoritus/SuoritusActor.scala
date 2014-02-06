@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Kausi}
 import Kausi._
 import fi.vm.sade.hakurekisteri.storage.{ResourceActor, ResourceService, Identified, Repository}
+import scala.concurrent.{ExecutionContext, Future}
 
 
 trait SuoritusRepository extends Repository[Suoritus] {
@@ -32,8 +33,13 @@ trait SuoritusRepository extends Repository[Suoritus] {
 }
 
 trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suoritus] =>
-  def findBy(q: Query[Suoritus]): Seq[Suoritus with Identified] = q match  {
-    case SuoritusQuery(henkilo, kausi, vuosi) => listAll().filter(checkHenkilo(henkilo)).filter(checkVuosi(vuosi)).filter(checkKausi(kausi))
+
+  implicit val executionContext: ExecutionContext
+
+  def findBy(q: Query[Suoritus]): Future[Seq[Suoritus with Identified]] = q match  {
+    case SuoritusQuery(henkilo, kausi, vuosi) => Future {
+      listAll().filter(checkHenkilo(henkilo)).filter(checkVuosi(vuosi)).filter(checkKausi(kausi))
+    }
   }
 
   def checkHenkilo(henkilo: Option[String])(s:Suoritus):Boolean  =  henkilo match {
@@ -66,6 +72,9 @@ trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suori
 class SuoritusActor(val initialSuoritukset:Seq[Suoritus] = Seq()) extends ResourceActor[Suoritus] with SuoritusRepository with SuoritusService {
 
   initialSuoritukset.foreach((o) => save(o))
+
+
+
 
 }
 
