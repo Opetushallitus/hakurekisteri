@@ -26,7 +26,33 @@ trait OpiskelijaRepository extends InMemRepository[Opiskelija] {
 trait OpiskelijaService extends ResourceService[Opiskelija] { this: Repository[Opiskelija] =>
 
   val matcher: PartialFunction[Query[Opiskelija], (Opiskelija with Identified) => Boolean] = {
-    case OpiskelijaQuery(henkilo, kausi, vuosi) =>  (o: Opiskelija with Identified) => checkHenkilo(henkilo)(o) && checkVuosiAndKausi(vuosi, kausi)(o)
+    case OpiskelijaQuery(henkilo, kausi, vuosi, paiva, oppilaitosOid, luokka) =>
+      (o: Opiskelija with Identified) => checkHenkilo(henkilo)(o) &&
+                                         checkVuosiAndKausi(vuosi, kausi)(o) &&
+                                         checkPaiva(paiva)(o) &&
+                                         checkOppilaitos(oppilaitosOid)(o) &&
+                                         checkLuokka(luokka)(o)
+  }
+
+
+
+  def checkOppilaitos(oppilaitos:Option[String])(o:Opiskelija):Boolean = oppilaitos match {
+    case Some(oid) => o.oppilaitosOid.equals(oid)
+    case None => true
+
+  }
+
+  def checkLuokka(luokka:Option[String])(o:Opiskelija) = luokka match {
+    case Some(l) => o.luokka.equals(l)
+    case None => true
+  }
+
+  def checkPaiva(paiva:Option[DateTime])(o:Opiskelija) = paiva match {
+    case Some(date) => o.loppuPaiva match {
+      case Some(end) =>  (new DateTime(o.alkuPaiva) to new DateTime(end)).contains(date)
+      case None => new DateTime(o.alkuPaiva).isBefore(date)
+    }
+    case None => true
   }
 
   def checkHenkilo(henkilo: Option[String])(o:Opiskelija):Boolean  =  henkilo match {
