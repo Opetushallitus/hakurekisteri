@@ -1,12 +1,12 @@
 div(class="container")
-  form(id="filterForm" class="form-inline pull-right" ng-submit="fetch()")
-    div(class="form-group")
-      input(class="form-control" size="50" ng-model="filter.star" type="search" placeholder="Hae eränumerolla tai tiedonsiirto ID:llä")
-      button(class="btn btn-primary" type="submit") Hae
-  div(id="opiskeluoikeudet" class="panel panel-default")
-    div(class="panel-heading")
+  aside
+    form(id="filterForm" class="form-inline pull-right" ng-submit="fetch()")
+      input(class="form-control" size="50" ng-model="searchTerm" type="search" placeholder="Hae hetulla")
+      button(class="btn btn-primary pull-right" type="submit") Hae
+  section(id="opiskelijat" class="panel panel-default")
+    header(class="panel-heading")
       h2(class="panel-title")
-        span(oph-msg="suoritusrekisteri.opiskeluoikeudet") Opiskeluoikeudet
+        span(oph-msg="suoritusrekisteri.opiskelijat") Opiskelijat
         div(class="pull-right" ng-hide="loading")
           span(oph-msg="suoritusrekisteri.naytetaan") Näytetään
           span {{ currentRows.length }} / {{ allRows.length }}
@@ -23,14 +23,6 @@ div(class="container")
           span(oph-msg="suoritusrekisteri.luokka") Luokka
           span(ng-show="isDirectionIconVisible('luokka')")
             i(class="glyphicon glyphicon-chevron-{{sorting.direction === 'asc' ? 'up' : 'down'}}")
-        th(class="sortable" ng-click="sort('era', (sorting.direction === 'asc' ? 'desc' : 'asc'))")
-          span(oph-msg="suoritusrekisteri.era") Erä
-          span(ng-show="isDirectionIconVisible('era')")
-            i(class="glyphicon glyphicon-chevron-{{sorting.direction === 'asc' ? 'up' : 'down'}}")
-        th(class="sortable" ng-click="sort('tiedonsiirtoId', (sorting.direction === 'asc' ? 'desc' : 'asc'))")
-          span(oph-msg="suoritusrekisteri.tiedonsiirtoId") Tiedonsiirron ID
-          span(ng-show="isDirectionIconVisible('tiedonsiirtoId')")
-            i(class="glyphicon glyphicon-chevron-{{sorting.direction === 'asc' ? 'up' : 'down'}}")
       tr(ng-repeat="row in currentRows")
         td
           a(href="#/muokkaa/{{row.henkiloOid}}" ng-show="isOPH()") {{row.henkilo || row.henkiloOid}}
@@ -38,23 +30,22 @@ div(class="container")
         td {{row.oppilaitos || row.oppilaitosOid}}
         td {{row.luokkataso}}
         td {{row.luokka}}
-        td {{row.era}}
-        td {{row.tiedonsiirtoId}}
       tr(ng-show="loading")
         td(class="teapot" colspan="6")
           img(src="http://chimplyimage.appspot.com/images/samples/misc-spinner/animatedTeapot.gif" alt="..." title="...")
-  ul(class="pagination pull-left")
-    li(class="{{pageNumbers ? '' : 'disabled'}}")
-      a(ng-click="prevPage()") &laquo;
-    li(class="{{pageNumbers ? '' : 'disabled'}} {{page == $index ? 'active' : ''}}" ng-repeat="pageNum in pageNumbers")
-      a(ng-click="showPageWithNumber(pageNum)") {{pageNum}}
-    li(class="{{pageNumbers ? '' : 'disabled'}}")
-      a(ng-click="nextPage()") &raquo;
-  ul(class="pagination pull-right")
-    li(class="{{pageNumbers ? '' : 'disabled'}} {{pageSize == 10 ? 'active' : ''}}")
-      a(ng-click="setPageSize(10)") 10
-    li(class="{{pageNumbers ? '' : 'disabled'}} {{pageSize == 20 ? 'active' : ''}}")
-      a(ng-click="setPageSize(20)") 20
-    li(class="{{pageNumbers ? '' : 'disabled'}} {{pageSize == 50 ? 'active' : ''}}")
-      a(ng-click="setPageSize(50)") 50
-  span(class="pull-right riveja" oph-msg="suoritusrekisteri.tuloksia.sivulla") Tuloksia sivulla:
+  aside
+    ul(class="pagination pull-left")
+      li(class="{{pageNumbers ? '' : 'disabled'}}")
+        a(ng-click="prevPage()") &laquo;
+      li(class="{{pageNumbers ? '' : 'disabled'}} {{page == $index ? 'active' : ''}}" ng-repeat="pageNum in pageNumbers")
+        a(ng-click="showPageWithNumber(pageNum)") {{pageNum}}
+      li(class="{{pageNumbers ? '' : 'disabled'}}")
+        a(ng-click="nextPage()") &raquo;
+    ul(class="pagination pull-right")
+      li(class="{{pageNumbers ? '' : 'disabled'}} {{pageSize == 10 ? 'active' : ''}}")
+        a(ng-click="setPageSize(10)") 10
+      li(class="{{pageNumbers ? '' : 'disabled'}} {{pageSize == 20 ? 'active' : ''}}")
+        a(ng-click="setPageSize(20)") 20
+      li(class="{{pageNumbers ? '' : 'disabled'}} {{pageSize == 50 ? 'active' : ''}}")
+        a(ng-click="setPageSize(50)") 50
+    span(class="pull-right riveja" oph-msg="suoritusrekisteri.tuloksia.sivulla") Tuloksia sivulla:

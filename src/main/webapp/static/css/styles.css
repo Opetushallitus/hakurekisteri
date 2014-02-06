@@ -46,7 +46,13 @@ label {
     margin-bottom: 20px;
 }
 
-#opiskeluoikeudet {
+#filterForm .form-control {
+    display: inline-block;
+    margin-right: 5px;
+    width: auto;
+}
+
+#opiskelijat {
     clear: both;
 }
 

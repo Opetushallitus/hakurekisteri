@@ -2,7 +2,7 @@
 
 var msgCategory = "suoritusrekisteri";
 
-function OpiskelijatCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRoles, Opiskelijat) {
+function OpiskelijatCtrl($scope, $routeParams, $log, $http, Henkilo, HenkiloByHetu, Organisaatio, Opiskelijat) {
     $scope.loading = false;
     $scope.currentRows = [];
     $scope.allRows = [];
@@ -14,20 +14,19 @@ function OpiskelijatCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRo
     $scope.targetOrg = "";
     $scope.myRoles = [];
 
-    // roles
-    MyRoles.getCached({}, function(roles) {
-        if (Array.isArray(roles)) {
-            $scope.myRoles = roles;
-        } else {
-            $scope.myRoles = angular.fromJson(roles);
-        }
-        $log.debug("myRoles: " + $scope.myRoles);
-    }, function() {
-        if (location.hostname === 'localhost') {
-            $scope.myRoles = ["APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001"];
-        }
-        $log.error("cannot connect to CAS");
-    });
+    function getMyRoles() {
+        $http.get('/cas/myroles')
+            .success(function(data) {
+                $scope.myRoles = angular.fromJson(data);
+            })
+            .error(function() {
+                if (location.hostname === 'localhost') {
+                    $scope.myRoles = ["APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001"];
+                }
+                $log.error("cannot connect to CAS");
+            });
+    }
+    getMyRoles();
     $scope.isOPH = function() {
         return (Array.isArray($scope.myRoles)
                 && ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1
@@ -37,18 +36,30 @@ function OpiskelijatCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRo
     $scope.fetch = function() {
         $scope.currentRows = [];
         $scope.loading = true;
-        Opiskelijat.get({}, function(opiskelijat) {
-            if (Array.isArray(opiskelijat)) {
-                showCurrentProcesses(opiskelijat);
-            }
-            resetPageNumbers();
-            $scope.loading = false;
-        }, function() {
-            $scope.loading = false;
-        });
+
+        if ($scope.searchTerm && $scope.searchTerm.match(/^\d{6}[+-AB]\d{3}[a-zA-Z]$/)) {
+            HenkiloByHetu.getCached({hetu: $scope.searchTerm}, function(henkilo) {
+                search({henkiloOid: henkilo.oidHenkilo});
+            }, function() {
+                search({});
+            });
+        } else {
+            search({});
+        }
+        function search(query) {
+            Opiskelijat.get(query, function(opiskelijat) {
+                if (Array.isArray(opiskelijat)) {
+                    showCurrentRows(opiskelijat);
+                }
+                resetPageNumbers();
+                $scope.loading = false;
+            }, function() {
+                $scope.loading = false;
+            });
+        }
     };
 
-    function showCurrentProcesses(allRows) {
+    function showCurrentRows(allRows) {
         $scope.allRows = allRows;
         $scope.currentRows = allRows.slice($scope.page * $scope.pageSize, ($scope.page + 1) * $scope.pageSize);
         enrichData();
@@ -79,7 +90,7 @@ function OpiskelijatCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRo
         } else {
             $scope.page = 0;
         }
-        showCurrentProcesses($scope.allRows);
+        showCurrentRows($scope.allRows);
     };
     $scope.prevPage = function() {
         if ($scope.page > 0 && ($scope.page - 1) * $scope.pageSize < $scope.allRows.length) {
@@ -87,23 +98,23 @@ function OpiskelijatCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRo
         } else {
             $scope.page = Math.floor($scope.allRows.length / $scope.pageSize);
         }
-        showCurrentProcesses($scope.allRows);
+        showCurrentRows($scope.allRows);
     };
     $scope.showPageWithNumber = function(pageNum) {
         $scope.page = pageNum > 0 ? (pageNum - 1) : 0;
-        showCurrentProcesses($scope.allRows);
+        showCurrentRows($scope.allRows);
     };
     $scope.setPageSize = function(newSize) {
         $scope.pageSize = newSize;
         $scope.page = 0;
         resetPageNumbers();
-        showCurrentProcesses($scope.allRows);
+        showCurrentRows($scope.allRows);
     };
     $scope.sort = function(field, direction) {
         $scope.sorting.field = field;
         $scope.sorting.direction = direction.match(/asc|desc/) ? direction : 'asc';
         $scope.page = 0;
-        showCurrentProcesses($scope.allRows);
+        showCurrentRows($scope.allRows);
     };
     $scope.isDirectionIconVisible = function(field) {
         return $scope.sorting.field === field;
