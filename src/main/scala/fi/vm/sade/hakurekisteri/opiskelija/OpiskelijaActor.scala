@@ -7,30 +7,19 @@ import akka.actor.Actor
 import org.slf4j.LoggerFactory
 import fi.vm.sade.hakurekisteri.rest.support.Kausi._
 import fi.vm.sade.hakurekisteri.rest.support.Query
-import fi.vm.sade.hakurekisteri.storage.{Repository, ResourceActor, ResourceService, Identified}
+import fi.vm.sade.hakurekisteri.storage._
 import scala.concurrent.{ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
+import scala.Some
 
 
-trait OpiskelijaRepository extends Repository[Opiskelija] {
+trait OpiskelijaRepository extends InMemRepository[Opiskelija] {
 
-
-  var opiskelijaStore:Map[UUID,Opiskelija with Identified] = Map()
-
-  def save(o: Opiskelija ): Opiskelija with Identified = {
-    val oid = Opiskelija.identify(o)
-    opiskelijaStore = opiskelijaStore + (oid.id -> oid)
-    oid
+  def identify(o: Opiskelija): Opiskelija with Identified = {
+    Opiskelija.identify(o)
   }
-
-  def listAll(): Seq[Opiskelija with Identified] = {
-    opiskelijaStore.values.toSeq
-  }
-
-
 
 }
-
 
 
 trait OpiskelijaService extends ResourceService[Opiskelija] { this: Repository[Opiskelija] =>

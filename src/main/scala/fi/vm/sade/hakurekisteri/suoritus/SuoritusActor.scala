@@ -4,31 +4,18 @@ import java.util.{UUID, Date}
 import java.text.SimpleDateFormat
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Kausi}
 import Kausi._
-import fi.vm.sade.hakurekisteri.storage.{ResourceActor, ResourceService, Identified, Repository}
+import fi.vm.sade.hakurekisteri.storage._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.Some
 
 
-trait SuoritusRepository extends Repository[Suoritus] {
+trait SuoritusRepository extends InMemRepository[Suoritus] {
 
-
-  var store:Map[UUID,Suoritus with Identified] = Map()
 
   def identify(o:Suoritus): Suoritus with Identified = o match {
     case o: Suoritus with Identified => o
     case _ => Suoritus.identify(o)
   }
-
-  def save(o: Suoritus ): Suoritus with Identified = {
-    val oid = identify(o)
-    store = store + (oid.id -> oid)
-    oid
-  }
-
-  def listAll(): Seq[Suoritus with Identified] = {
-    store.values.toSeq
-  }
-
-
 
 }
 
