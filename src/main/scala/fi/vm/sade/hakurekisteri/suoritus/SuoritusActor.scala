@@ -4,42 +4,27 @@ import java.util.{UUID, Date}
 import java.text.SimpleDateFormat
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Kausi}
 import Kausi._
-import fi.vm.sade.hakurekisteri.storage.{ResourceActor, ResourceService, Identified, Repository}
+import fi.vm.sade.hakurekisteri.storage._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.Some
+import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaQuery, Opiskelija}
 
 
-trait SuoritusRepository extends Repository[Suoritus] {
+trait SuoritusRepository extends InMemRepository[Suoritus] {
 
-
-  var store:Map[UUID,Suoritus with Identified] = Map()
 
   def identify(o:Suoritus): Suoritus with Identified = o match {
     case o: Suoritus with Identified => o
     case _ => Suoritus.identify(o)
   }
 
-  def save(o: Suoritus ): Suoritus with Identified = {
-    val oid = identify(o)
-    store = store + (oid.id -> oid)
-    oid
-  }
-
-  def listAll(): Seq[Suoritus with Identified] = {
-    store.values.toSeq
-  }
-
-
-
 }
 
 trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suoritus] =>
 
-  implicit val executionContext: ExecutionContext
-
-  def findBy(q: Query[Suoritus]): Future[Seq[Suoritus with Identified]] = q match  {
-    case SuoritusQuery(henkilo, kausi, vuosi) => Future {
-      listAll().filter(checkHenkilo(henkilo)).filter(checkVuosi(vuosi)).filter(checkKausi(kausi))
-    }
+  val matcher: PartialFunction[Query[Suoritus], (Suoritus with Identified) => Boolean] = {
+    case SuoritusQuery(henkilo, kausi, vuosi) =>  (s: Suoritus with Identified) =>
+      checkHenkilo(henkilo)(s) && checkVuosi(vuosi)(s) && checkKausi(kausi)(s)
   }
 
   def checkHenkilo(henkilo: Option[String])(s:Suoritus):Boolean  =  henkilo match {

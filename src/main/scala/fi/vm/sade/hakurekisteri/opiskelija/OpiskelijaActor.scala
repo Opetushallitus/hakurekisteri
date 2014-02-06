@@ -7,40 +7,52 @@ import akka.actor.Actor
 import org.slf4j.LoggerFactory
 import fi.vm.sade.hakurekisteri.rest.support.Kausi._
 import fi.vm.sade.hakurekisteri.rest.support.Query
-import fi.vm.sade.hakurekisteri.storage.{Repository, ResourceActor, ResourceService, Identified}
+import fi.vm.sade.hakurekisteri.storage._
 import scala.concurrent.{ExecutionContext, Future}
+import fi.vm.sade.hakurekisteri.suoritus.Suoritus
+import scala.Some
+import scala.Some
 
 
-trait OpiskelijaRepository extends Repository[Opiskelija] {
+trait OpiskelijaRepository extends InMemRepository[Opiskelija] {
 
-
-  var opiskelijaStore:Map[UUID,Opiskelija with Identified] = Map()
-
-  def save(o: Opiskelija ): Opiskelija with Identified = {
-    val oid = Opiskelija.identify(o)
-    opiskelijaStore = opiskelijaStore + (oid.id -> oid)
-    oid
+  def identify(o: Opiskelija): Opiskelija with Identified = {
+    Opiskelija.identify(o)
   }
-
-  def listAll(): Seq[Opiskelija with Identified] = {
-    opiskelijaStore.values.toSeq
-  }
-
-
 
 }
 
 
+trait OpiskelijaService extends ResourceService[Opiskelija] { this: Repository[Opiskelija] =>
 
-trait OpiskelijaService extends ResourceService[Opiskelija] { this: OpiskelijaRepository =>
+  val matcher: PartialFunction[Query[Opiskelija], (Opiskelija with Identified) => Boolean] = {
+    case OpiskelijaQuery(henkilo, kausi, vuosi, paiva, oppilaitosOid, luokka) =>
+      (o: Opiskelija with Identified) => checkHenkilo(henkilo)(o) &&
+                                         checkVuosiAndKausi(vuosi, kausi)(o) &&
+                                         checkPaiva(paiva)(o) &&
+                                         checkOppilaitos(oppilaitosOid)(o) &&
+                                         checkLuokka(luokka)(o)
+  }
 
-  implicit val executionContext:ExecutionContext
 
-  def findBy(o: Query[Opiskelija]):Future[Seq[Opiskelija with Identified]] = o match {
-    case OpiskelijaQuery(henkilo, kausi, vuosi) => Future{
-      listAll().filter(checkHenkilo(henkilo)).filter(checkVuosiAndKausi(vuosi, kausi))
+
+  def checkOppilaitos(oppilaitos:Option[String])(o:Opiskelija):Boolean = oppilaitos match {
+    case Some(oid) => o.oppilaitosOid.equals(oid)
+    case None => true
+
+  }
+
+  def checkLuokka(luokka:Option[String])(o:Opiskelija) = luokka match {
+    case Some(l) => o.luokka.equals(l)
+    case None => true
+  }
+
+  def checkPaiva(paiva:Option[DateTime])(o:Opiskelija) = paiva match {
+    case Some(date) => o.loppuPaiva match {
+      case Some(end) =>  (new DateTime(o.alkuPaiva) to new DateTime(end)).contains(date)
+      case None => new DateTime(o.alkuPaiva).isBefore(date)
     }
-    case _ => throw new IllegalArgumentException("unknown query: " + o)
+    case None => true
   }
 
   def checkHenkilo(henkilo: Option[String])(o:Opiskelija):Boolean  =  henkilo match {
