@@ -21,6 +21,7 @@ function OpiskelijatCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRo
         } else {
             $scope.myRoles = angular.fromJson(roles);
         }
+        $log.debug("myRoles: " + $scope.myRoles);
     }, function() {
         if (location.hostname === 'localhost') {
             $scope.myRoles = ["APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001"];
