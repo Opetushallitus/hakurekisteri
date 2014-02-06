@@ -16,15 +16,15 @@ app.factory('Henkilo', function($resource) {
     });
 });
 
-app.factory('Organisaatio', function($resource) {
-    return $resource("/organisaatio-service/rest/organisaatio/:organisaatioOid", {_cacheEnv: getCacheEnvKey()}, {
+app.factory('HenkiloByHetu', function($resource) {
+    return $resource("/authentication-service/resources/henkilo/byHetu/:hetu", {_cacheEnv: getCacheEnvKey()}, {
         getCached: {method: "GET", isArray: false, cache: true, timeout: 3000}
     });
 });
 
-app.factory('MyRoles', function($resource) {
-    return $resource("/cas/myroles", {_cacheEnv: getCacheEnvKey()}, {
-        getCached: {method: "GET", isArray: true, cache: true, timeout: 3000}
+app.factory('Organisaatio', function($resource) {
+    return $resource("/organisaatio-service/rest/organisaatio/:organisaatioOid", {_cacheEnv: getCacheEnvKey()}, {
+        getCached: {method: "GET", isArray: false, cache: true, timeout: 3000}
     });
 });
 
