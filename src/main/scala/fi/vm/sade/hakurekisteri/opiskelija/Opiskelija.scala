@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.opiskelija
 
 import java.util.{UUID, Date}
+import fi.vm.sade.hakurekisteri.storage.Identified
 
 case class Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, alkuPaiva: Date = new Date, loppuPaiva: Option[Date] = None)
 
@@ -26,8 +27,3 @@ object Opiskelija{
 
 }
 
-trait Identified {
-
-  val id:UUID
-
-}

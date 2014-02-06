@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import org.json4s.{FieldSerializer, DefaultFormats, Formats}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
-import fi.vm.sade.hakurekisteri.opiskelija.Identified
+import fi.vm.sade.hakurekisteri.storage.Identified
 
 trait HakurekisteriJsonSupport {
 

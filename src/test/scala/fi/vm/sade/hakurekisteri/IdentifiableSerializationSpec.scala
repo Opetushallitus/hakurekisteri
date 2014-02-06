@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri
 
 import org.scalatest.WordSpec
-import fi.vm.sade.hakurekisteri.opiskelija.{Identified, Opiskelija}
+import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 
 import org.json4s.FieldSerializer._
 import org.json4s.{CustomSerializer, FieldSerializer, DefaultFormats, Formats}
@@ -11,6 +11,7 @@ import java.util.{UUID, Date}
 import org.scalatest.matchers.ShouldMatchers
 import org.json4s.JsonAST.{JValue, JField, JString, JObject}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, IdentitySerializer, UUIDSerializer}
+import fi.vm.sade.hakurekisteri.storage.Identified
 
 class IdentifiableSerializationSpec extends WordSpec with ShouldMatchers with HakurekisteriJsonSupport {
 
