@@ -9,7 +9,7 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import org.scalatra._
 import _root_.akka.pattern.ask
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import fi.vm.sade.hakurekisteri.storage.Identified
 
 
@@ -32,21 +32,12 @@ abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSy
     }
   }
 
-  def parseQuery(params:Params)(implicit pb: Map[String, String] => Query[A]): Either[Exception, Query[A]] = {
-    try Right(pb(params))
-    catch {case e: Exception => Left(e)}
-  }
-
-  val queryResource: (Either[Exception, Query[A]]) => Any = {
-    case Right(query) => ResourceQuery(query)
-    case Left(e) => BadRequest("Illegal Query")
-  }
-
   def read(op: OperationBuilder) (implicit pb: Map[String, String] => Query[A]) {
     get("/", operation(op))(
-      (parseQuery _
-        andThen
-        queryResource) (params))
+      (Try(pb(params)) map ((q: Query[A]) => ResourceQuery(q)) recover {
+        case _: Exception => BadRequest("Illegal Query")
+      }).get
+    )
   }
 
   case class ResourceQuery[R](query: Query[R]) extends AsyncResult {
