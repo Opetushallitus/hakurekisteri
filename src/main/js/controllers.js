@@ -2,7 +2,7 @@
 
 var msgCategory = "suoritusrekisteri";
 
-function SuorituksetCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRoles, Opiskelijat) {
+function OpiskelijatCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRoles, Opiskelijat) {
     $scope.loading = false;
     $scope.currentRows = [];
     $scope.allRows = [];
@@ -16,7 +16,11 @@ function SuorituksetCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRo
 
     // roles
     MyRoles.getCached({}, function(roles) {
-        $scope.myRoles = roles;
+        if (Array.isArray(roles)) {
+            $scope.myRoles = roles;
+        } else {
+            $scope.myRoles = angular.fromJson(roles);
+        }
     }, function() {
         if (location.hostname === 'localhost') {
             $scope.myRoles = ["APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001"];
@@ -24,31 +28,23 @@ function SuorituksetCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRo
         $log.error("cannot connect to CAS");
     });
     $scope.isOPH = function() {
-        return ($scope.myRoles
-                && ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") !== -1
-                        || $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") !== -1));
+        return (Array.isArray($scope.myRoles)
+                && ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1
+                        || $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1));
     };
 
     $scope.fetch = function() {
         $scope.currentRows = [];
         $scope.loading = true;
-        if (location.hostname === 'localhost') {
-            showCurrentProcesses([
-                {henkiloOid: "1.2.3", luokka: "9A", luokkataso: "9", oppilaitosOid: "1.2.4"}
-            ]);
+        Opiskelijat.get({}, function(opiskelijat) {
+            if (Array.isArray(opiskelijat)) {
+                showCurrentProcesses(opiskelijat);
+            }
             resetPageNumbers();
             $scope.loading = false;
-        } else {
-            Opiskelijat.get({}, function(opiskelijat) {
-                if (Array.isArray(opiskelijat)) {
-                    showCurrentProcesses(opiskelijat);
-                }
-                resetPageNumbers();
-                $scope.loading = false;
-            }, function() {
-                $scope.loading = false;
-            });
-        }
+        }, function() {
+            $scope.loading = false;
+        });
     };
 
     function showCurrentProcesses(allRows) {
@@ -59,17 +55,17 @@ function SuorituksetCtrl($scope, $routeParams, $log, Henkilo, Organisaatio, MyRo
 
     function enrichData() {
         for (var i = 0; i < $scope.currentRows.length; i++) {
-            var opiskeluoikeus = $scope.currentRows[i];
-            if (opiskeluoikeus.oppilaitosOid) {
-                Organisaatio.getCached({organisaatioOid: opiskeluoikeus.oppilaitosOid}, function(data) {
-                    if (data && data.oid === opiskeluoikeus.oppilaitosOid)
-                        opiskeluoikeus.oppilaitoskoodi = data.oppilaitosKoodi + ' ' + data.nimi.fi;
+            var opiskelija = $scope.currentRows[i];
+            if (opiskelija.oppilaitosOid) {
+                Organisaatio.getCached({organisaatioOid: opiskelija.oppilaitosOid}, function(data) {
+                    if (data && data.oid === opiskelija.oppilaitosOid)
+                        opiskelija.oppilaitos = data.oppilaitosKoodi + ' ' + data.nimi.fi;
                 });
             }
-            if (opiskeluoikeus.henkiloOid) {
-                Henkilo.getCached({henkiloOid: opiskeluoikeus.henkiloOid}, function(henkilo) {
-                    if (henkilo && henkilo.oidHenkilo === opiskeluoikeus.henkiloOid && henkilo.sukunimi && henkilo.etunimet) {
-                        opiskeluoikeus.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + (henkilo.hetu ? " (" + henkilo.hetu + ")" : "");
+            if (opiskelija.henkiloOid) {
+                Henkilo.getCached({henkiloOid: opiskelija.henkiloOid}, function(henkilo) {
+                    if (henkilo && henkilo.oidHenkilo === opiskelija.henkiloOid && henkilo.sukunimi && henkilo.etunimet) {
+                        opiskelija.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + (henkilo.hetu ? " (" + henkilo.hetu + ")" : "");
                     }
                 });
             }
@@ -146,7 +142,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Koo
         Henkilo.get({henkiloOid: $scope.henkiloOid}, function(henkilo) {
             $scope.henkilo = henkilo;
         }, function() {
-            confirm("Henkilötietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchHenkilotiedot() : $location.path("/suoritukset");
+            confirm("Henkilötietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchHenkilotiedot() : $location.path("/opiskelijat");
         });
     }
     fetchHenkilotiedot();
@@ -155,7 +151,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Koo
         Opiskelijat.get({henkiloOid: $scope.henkiloOid}, function(luokkatiedot) {
             $scope.luokkatiedot = luokkatiedot;
         }, function() {
-            confirm("Luokkatietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchOpiskelijatiedot() : $location.path("/suoritukset");
+            confirm("Luokkatietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchOpiskelijatiedot() : $location.path("/opiskelijat");
         });
     }
     fetchOpiskelijatiedot();
@@ -165,7 +161,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Koo
             $scope.suoritukset = suoritukset;
             enrichSuoritukset();
         }, function() {
-            confirm("Suoritustietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchSuoritukset() : $location.path("/suoritukset");
+            confirm("Suoritustietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchSuoritukset() : $location.path("/opiskelijat");
         });
     }
     fetchSuoritukset();
@@ -227,7 +223,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Koo
         });
     };
     $scope.cancel = function() {
-        $location.path("/suoritukset")
+        $location.path("/opiskelijat")
     };
     $scope.removeError = function(error) {
         var index = $scope.errors.indexOf(error);

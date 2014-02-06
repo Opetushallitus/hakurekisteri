@@ -35,7 +35,7 @@ div(class="container")
         td
           a(href="#/muokkaa/{{row.henkiloOid}}" ng-show="isOPH()") {{row.henkilo || row.henkiloOid}}
           span(ng-hide="isOPH()") {{row.henkilo || row.henkiloOid}}
-        td {{row.oppilaitoskoodi || row.oppilaitosOid}}
+        td {{row.oppilaitos || row.oppilaitosOid}}
         td {{row.luokkataso}}
         td {{row.luokka}}
         td {{row.era}}
