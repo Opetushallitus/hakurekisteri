@@ -17,6 +17,13 @@ object Opiskelija{
     }
   }
 
+  def identify(o:Opiskelija): Opiskelija with Identified = o match {
+    case o: Opiskelija with Identified => o
+    case _ => new Opiskelija(o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva, o.loppuPaiva) with Identified{
+      val id: UUID = UUID.randomUUID()
+    }
+  }
+
 }
 
 trait Identified {

@@ -10,13 +10,10 @@ import org.json4s.jackson.Serialization._
 import java.util.{UUID, Date}
 import org.scalatest.matchers.ShouldMatchers
 import org.json4s.JsonAST.{JValue, JField, JString, JObject}
-import fi.vm.sade.hakurekisteri.rest.support.{IdentitySerializer, UUIDSerializer}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, IdentitySerializer, UUIDSerializer}
 
-class IdentifiableSerializationSpec extends WordSpec with ShouldMatchers {
+class IdentifiableSerializationSpec extends WordSpec with ShouldMatchers with HakurekisteriJsonSupport {
 
-  val identifiedSerializer =  FieldSerializer[Identified]()
-
-  implicit def jsonFormats: Formats = DefaultFormats + identifiedSerializer  + new UUIDSerializer  + new IdentitySerializer
   val identifier = UUID.randomUUID()
   val opiskelija = new Opiskelija("1.2.3", "9": String, "9A": String, "2.3.4": String, new Date, Some(new Date))
 

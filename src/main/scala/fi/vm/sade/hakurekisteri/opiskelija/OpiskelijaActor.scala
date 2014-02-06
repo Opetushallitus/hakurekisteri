@@ -9,8 +9,9 @@ import fi.vm.sade.hakurekisteri.rest.support.Kausi._
 
 class OpiskelijaActor(initialStudents:Seq[Opiskelija] = Seq()) extends Actor {
 
-  var opiskelijat:Map[UUID, Opiskelija] = (initialStudents map {
-    t => (UUID.randomUUID(), t)
+  var opiskelijat:Map[UUID, Opiskelija with Identified] = (initialStudents map {
+    t => val idd = Opiskelija.identify(t)
+      (idd.id , idd)
   }).toMap
 
   val logger = LoggerFactory.getLogger(getClass)
@@ -19,8 +20,7 @@ class OpiskelijaActor(initialStudents:Seq[Opiskelija] = Seq()) extends Actor {
     case OpiskelijaQuery(henkilo, kausi, vuosi) =>
       sender ! findBy(henkilo, vuosi, kausi)
     case o:Opiskelija =>
-
-      sender ! saveOpiskelija(Opiskelija(o, UUID.randomUUID()))
+      sender ! saveOpiskelija(Opiskelija.identify(o))
   }
 
   def getInterval(vuosi: Int, kausi: Option[Kausi]): Interval = kausi match {
@@ -56,8 +56,8 @@ class OpiskelijaActor(initialStudents:Seq[Opiskelija] = Seq()) extends Actor {
     opiskelijat.values.filter(checkHenkilo(henkilo)).filter(checkVuosiAndKausi(vuosi, kausi)).toSeq
   }
 
-  def saveOpiskelija(o:( Opiskelija, UUID) ) {
-    opiskelijat = opiskelijat + (o._2 -> o._1)
+  def saveOpiskelija(o: Opiskelija with Identified ) {
+    opiskelijat = opiskelijat + (o.id -> o)
     opiskelijat.values.seq
   }
 
