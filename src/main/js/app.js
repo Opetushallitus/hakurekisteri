@@ -40,9 +40,15 @@ app.factory('Suoritukset', function($resource) {
     });
 });
 
-app.factory('Koodisto', function($resource) {
+app.factory('Koodi', function($resource) {
     return $resource("/koodisto-service/rest/json/:koodisto/koodi/:koodiUri", {_cacheEnv: getCacheEnvKey()}, {
         getCached: {method: "GET", isArray: false, cache: true, timeout: 3000}
+    });
+});
+
+app.factory('Koodisto', function($resource) {
+    return $resource("/koodisto-service/rest/json/:koodisto/koodi", {_cacheEnv: getCacheEnvKey()}, {
+        getCached: {method: "GET", isArray: true, cache: true, timeout: 3000}
     });
 });
 

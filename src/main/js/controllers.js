@@ -158,7 +158,7 @@ function getKoodi(koodiArray, koodiArvo) {
 }
 
 
-function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Koodisto, Opiskelijat, Suoritukset) {
+function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Koodi, Koodisto, Opiskelijat, Suoritukset) {
     $scope.errors = [];
     $scope.henkiloOid = $routeParams.henkiloOid;
 
@@ -207,23 +207,15 @@ function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Koo
 
     $scope.yksilollistamiset = ["Ei", "Osittain", "Kokonaan", "Alueittain"];
 
-    // TODO hae koodistosta
-    $scope.maat = [
-        { value: "246", text: "Suomi" }
-    ];
-    $scope.kunnat = [
-        { value: "091", text: "Helsinki" }
-    ];
-    $scope.kielet = [
-        { value: "FI", text: "Suomi" }
-    ];
-    $scope.kansalaisuudet = [
-        { value: "246", text: "Suomi" }
-    ];
+    getKoodistoAsOptionArray("maatjavaltiot2", Koodisto, 'FI', $scope.maat);
+    getKoodistoAsOptionArray("kunta", Koodisto, 'FI', $scope.kunnat);
+    getKoodistoAsOptionArray("kieli", Koodisto, 'FI', $scope.kielet);
+    getKoodistoAsOptionArray("maatjavaltiot2", Koodisto, 'FI', $scope.kansalaisuudet);
+
     $scope.fetchPostitoimipaikka = function() {
         if ($scope.henkilo.postinumero && $scope.henkilo.postinumero.match(/^\d{5}$/)) {
             $scope.searchingPostinumero = true;
-            Koodisto.getCached({koodisto: "posti", koodiUri: "posti_" + $scope.henkilo.postinumero}, function(koodi) {
+            Koodi.getCached({koodisto: "posti", koodiUri: "posti_" + $scope.henkilo.postinumero}, function(koodi) {
                 for (var i = 0; i < koodi.metadata.length; i++) {
                     var meta = koodi.metadata[i];
                     if (meta.kieli === 'FI') {
@@ -269,4 +261,27 @@ function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Koo
         'starting-day': 1
     };
     $scope.format = 'dd.MM.yyyy';
+}
+
+function getKoodistoAsOptionArray(koodisto, Koodisto, kielikoodi, options) {
+    options = [];
+    Koodisto.getCached({koodisto: koodisto}, function(koodisto) {
+        for (var i = 0; i < koodisto.length; i++) {
+            var koodi = koodisto[i];
+            metas: for (var j = 0; j < koodi.metadata.length; j++) {
+                var meta = koodi.metadata[j];
+                if (meta.kieli.toLowerCase() === kielikoodi.toLowerCase()) {
+                    options.push({
+                        value: koodi.koodiArvo,
+                        text: meta.nimi
+                    });
+                    break metas;
+                }
+            }
+        }
+        options.sort(function(a, b) {
+            if (a.text === b.text) return 0;
+            return a.text < b.text ? -1 : 1;
+        });
+    });
 }
