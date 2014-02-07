@@ -35,13 +35,25 @@ function OpiskelijatCtrl($scope, $routeParams, $log, $http, Henkilo, HenkiloByHe
 
     $scope.fetch = function() {
         $scope.currentRows = [];
+        $scope.allRows = [];
         $scope.loading = true;
+        $scope.hakuehto = "";
 
-        if ($scope.searchTerm && $scope.searchTerm.match(/^\d{6}[+-AB]\d{3}[a-zA-Z]$/)) {
+        if ($scope.searchTerm && $scope.searchTerm.match(/^\d{6}[+-AB]\d{3}[0-9a-zA-Z]$/)) {
             HenkiloByHetu.getCached({hetu: $scope.searchTerm}, function(henkilo) {
+                $scope.hakuehto = henkilo.hetu + ' (' + henkilo.etunimet + ' ' + henkilo.sukunimi + ')';
                 search({henkiloOid: henkilo.oidHenkilo});
             }, function() {
-                search({});
+                $scope.hakuehto = $scope.searchTerm;
+                $scope.loading = false;
+            });
+        } else if ($scope.searchTerm && $scope.searchTerm.match(/^\d{5}$/)) {
+            Organisaatio.getCached({organisaatioOid: $scope.searchTerm}, function(organisaatio) {
+                $scope.hakuehto = organisaatio.oppilaitosKoodi + ' (' + (organisaatio.nimi.fi ? organisaatio.nimi.fi : (organisaatio.nimi.sv ? organisaatio.nimi.sv : 'Oppilaitoksen nimeä ei löytynyt')) + ')';
+                search({oppilaitosOid: organisaatio.oid});
+            }, function() {
+                $scope.hakuehto = $scope.searchTerm;
+                $scope.loading = false;
             });
         } else {
             search({});

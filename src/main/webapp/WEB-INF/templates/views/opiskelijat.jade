@@ -1,8 +1,11 @@
 div(class="container")
   aside
     form(id="filterForm" class="form-inline pull-right" ng-submit="fetch()")
-      input(class="form-control" size="50" ng-model="searchTerm" type="search" placeholder="Hae hetulla")
+      input(class="form-control" size="40" ng-model="searchTerm" type="search" placeholder="Hae hetulla tai oppilaitosnumerolla")
       button(class="btn btn-primary pull-right" type="submit") Hae
+      div(ng-show="hakuehto")
+        strong Hakuehto:
+        span {{hakuehto}}
   section(id="opiskelijat" class="panel panel-default")
     header(class="panel-heading")
       h2(class="panel-title")

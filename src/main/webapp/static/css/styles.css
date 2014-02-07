@@ -83,6 +83,10 @@ label {
     border-color: #f44;
 }
 
+.ng-invalid.ng-pristine {
+    border-color: #428BCA;
+}
+
 .postitoimipaikka {
     position: relative;
 }
