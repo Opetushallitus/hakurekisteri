@@ -11,6 +11,7 @@ import _root_.akka.pattern.ask
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import scala.util.{Failure, Success, Try}
 import fi.vm.sade.hakurekisteri.storage.Identified
+import java.util.concurrent.TimeUnit
 
 
 abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSystem, mf: Manifest[A])extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport {
@@ -19,7 +20,7 @@ abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSy
 
   val timeout = 10
 
-  implicit val defaultTimeout = Timeout(timeout)
+  implicit val defaultTimeout = Timeout(timeout, TimeUnit.SECONDS)
 
   before() {
     contentType = formats("json")
