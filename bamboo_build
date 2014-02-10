@@ -1,8 +1,0 @@
-set version := "${bamboo.inject.build.version.number}_${bamboo.planRepository.branchName}_b${bamboo.buildNumber}${bamboo.inject.build.version.postfix}"
-clean
-compile
-test
-package
-publish
-
-
