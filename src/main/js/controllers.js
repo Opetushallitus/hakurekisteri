@@ -208,7 +208,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, Henkilo, Opis
                 if (suoritus.komoto && suoritus.komoto.tarjoaja) {
                     getOrganisaatio($http, suoritus.komoto.tarjoaja, function(organisaatio) {
                         if (organisaatio.oid === suoritus.komoto.tarjoaja) {
-                            suoritus.oppilaitos = organisaatio.nimi.fi ? organisaatio.nimi.fi : organisaatio.nimi.sv;
+                            suoritus.oppilaitos = organisaatio.oppilaitosKoodi + ' ' + organisaatio.nimi.fi ? organisaatio.nimi.fi : organisaatio.nimi.sv;
                         }
                     }, function() {});
                 }
@@ -279,21 +279,29 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, Henkilo, Opis
         }
     };
     $scope.save = function() {
-        function validateOppilaitoskoodi() {
+        function validateOppilaitoskoodit() {
             for (var i = 0; i < $scope.luokkatiedot.length; i++) {
                 var luokkatieto = $scope.luokkatiedot[i];
+                if (!luokkatieto.oppilaitos || !luokkatieto.oppilaitos.match(/^\d{5}$/)) {
+                    $scope.messages.push({
+                        type: "danger",
+                        message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
+                        description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
+                    });
+                    continue;
+                }
                 getOrganisaatio($http, luokkatieto.oppilaitos, function (organisaatio) {
                     luokkatieto.oppilaitosOid = organisaatio.oid;
                 }, function () {
                     $scope.messages.push({
                         type: "danger",
-                        message: "Virheellinen oppilaitoskoodi: " + luokkatieto.oppilaitos + ".",
+                        message: "Oppilaitosta ei löytynyt oppilaitoskoodilla: " + luokkatieto.oppilaitos + ".",
                         description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
                     });
                 })
             }
         }
-        validateOppilaitoskoodi();
+        validateOppilaitoskoodit();
         if ($scope.messages.length > 0) {
             return;
         }
