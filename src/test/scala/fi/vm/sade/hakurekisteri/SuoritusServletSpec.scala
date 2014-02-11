@@ -13,7 +13,7 @@ class SuoritusServletSpec extends ScalatraFunSuite {
   val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(Seq(suoritus))))
   implicit val swagger = new HakurekisteriSwagger
 
-  addServlet(new HakurekisteriResource[Suoritus](suoritusRekisteri, SuoritusQuery(_ )) with SuoritusServlet, "/*")
+  addServlet(new HakurekisteriResource[Suoritus](suoritusRekisteri, SuoritusQuery(_ )) with SuoritusSwaggerApi, "/*")
 
   test("get root should return 200") {
     get("/") {

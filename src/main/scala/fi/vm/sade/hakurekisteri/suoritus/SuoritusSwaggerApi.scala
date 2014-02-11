@@ -9,7 +9,7 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
 
-trait SuoritusServlet  { this: HakurekisteriResource[Suoritus] =>
+trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus] =>
 
   override protected val applicationName = Some("suoritukset")
   protected val applicationDescription = "Suoritusrekisterin rajapinta."

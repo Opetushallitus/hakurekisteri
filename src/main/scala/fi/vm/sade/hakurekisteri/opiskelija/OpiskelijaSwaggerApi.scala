@@ -7,7 +7,7 @@ import scala.Some
 import java.util.Date
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 
-trait OpiskelijaServlet
+trait OpiskelijaSwaggerApi
     { this: HakurekisteriResource[Opiskelija] =>
 
   override protected val applicationName = Some("opiskelijat")
