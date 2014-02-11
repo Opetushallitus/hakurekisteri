@@ -19,7 +19,6 @@ function getPostitoimipaikka($http, postinumero, successCallback, errorCallback)
 }
 
 function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options) {
-    options = [];
     $http.get(koodistoServiceUrl + '/rest/json/' + koodisto + '/koodi', {cache: true})
         .success(function(koodisto) {
             angular.forEach(koodisto, function(koodi) {
@@ -191,8 +190,12 @@ function OpiskelijatCtrl($scope, $routeParams, $log, $http, Opiskelijat) {
 
 function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, Opiskelijat, Suoritukset) {
     $scope.henkiloOid = $routeParams.henkiloOid;
-    $scope.messages = [];
     $scope.yksilollistamiset = ["Ei", "Osittain", "Kokonaan", "Alueittain"];
+    $scope.messages = [];
+    $scope.maat = [];
+    $scope.kunnat = [];
+    $scope.kielet = [];
+    $scope.kansalaisuudet = [];
     getKoodistoAsOptionArray($http, 'maatjavaltiot2', 'FI', $scope.maat);
     getKoodistoAsOptionArray($http, 'kunta', 'FI', $scope.kunnat);
     getKoodistoAsOptionArray($http, 'kieli', 'FI', $scope.kielet);
@@ -205,7 +208,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
                 if (suoritus.komoto && suoritus.komoto.tarjoaja) {
                     getOrganisaatio($http, suoritus.komoto.tarjoaja, function(organisaatio) {
                         if (organisaatio.oid === suoritus.komoto.tarjoaja) {
-                            suoritus.oppilaitos = organisaatio.oppilaitosKoodi + ' ' + organisaatio.nimi.fi ? organisaatio.nimi.fi : organisaatio.nimi.sv;
+                            suoritus.oppilaitos = organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi ? organisaatio.nimi.fi : organisaatio.nimi.sv);
                         }
                     }, function() {});
                 }
