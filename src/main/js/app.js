@@ -1,10 +1,10 @@
 'use strict';
 
-// Declare app level module which depends on filters, and services
 var app = angular.module('myApp', ['ngRoute', 'ngResource', 'ui.bootstrap'])
     .config(function ($locationProvider, $routeProvider) {
         $routeProvider.when('/opiskelijat', {templateUrl: 'templates/opiskelijat', controller: OpiskelijatCtrl});
         $routeProvider.when('/muokkaa/:henkiloOid', {templateUrl: 'templates/muokkaa', controller: MuokkaaCtrl});
+        $routeProvider.when('/eihakeneet', {templateUrl: 'templates/eihakeneet', controller: EihakeneetCtrl});
         $routeProvider.otherwise({redirectTo: '/opiskelijat'});
         $locationProvider.html5Mode(false);
     });

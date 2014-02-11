@@ -1,0 +1,28 @@
+div(class="container")
+  div(class="alert alert-{{message.type}}" ng-show="messages" ng-repeat="message in messages")
+    button(type="button" class="close" aria-hidden="true" ng-click="removeMessage(message)") &times;
+    strong {{message.message}}
+    span {{message.description}}
+
+  section(id="opiskelijat" class="panel panel-default")
+    header(class="panel-heading")
+      h2(class="panel-title")
+        span(oph-msg="suoritusrekisteri.eihakeneet") Ei hakeneet oppilaat
+        div(class="pull-right" ng-hide="loading")
+          span(oph-msg="suoritusrekisteri.yhteensa") Yhteensä
+          span {{ allRows.length }}
+          span(oph-msg="suoritusrekisteri.tulosta") tulosta
+    table(class="table")
+      tr
+        th(oph-msg="suoritusrekisteri.sukunimi") Sukunimi
+        th(oph-msg="suoritusrekisteri.etunimet") Etunimet
+        th(oph-msg="suoritusrekisteri.oppilaitos") Oppilaitos
+        th(oph-msg="suoritusrekisteri.luokka") Luokka
+      tr(ng-repeat="row in allRows")
+        td {{row.sukunimi}}
+        td {{row.etunimet}}
+        td {{row.oppilaitos}}
+        td {{row.luokka}}
+      tr(ng-show="loading")
+        td(class="teapot" colspan="6")
+          img(src="http://chimplyimage.appspot.com/images/samples/misc-spinner/animatedTeapot.gif" alt="..." title="...")
