@@ -7,11 +7,11 @@ import scala.Some
 import java.util.Date
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 
-class OpiskelijaServlet(opiskelijaActor: ActorRef)(implicit val swagger: Swagger, system: ActorSystem) extends HakurekisteriResource[Opiskelija](opiskelijaActor)  {
+trait OpiskelijaServlet
+    { this: HakurekisteriResource[Opiskelija] =>
+
   override protected val applicationName = Some("opiskelijat")
   protected val applicationDescription = "Opiskelijatietojen rajapinta."
-
-  implicit val query: (Map[String,String]) => Query[Opiskelija] = OpiskelijaQuery(_)
 
   read(apiOperation[Seq[Opiskelija]]("opiskelijat")
     summary "Näytä kaikki opiskelijatiedot"

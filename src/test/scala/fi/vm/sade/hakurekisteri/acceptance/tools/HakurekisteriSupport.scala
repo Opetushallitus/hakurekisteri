@@ -13,7 +13,7 @@ import java.text.SimpleDateFormat
 import org.scalatest.matchers._
 import org.scalatest.Suite
 import scala.xml.{Elem, Node, NodeSeq}
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriSwagger, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriResource, HakurekisteriSwagger, HakurekisteriJsonSupport}
 import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaServlet, Opiskelija, OpiskelijaActor}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, Peruskoulu, Suoritus, SuoritusServlet}
 import java.io.Serializable
@@ -60,8 +60,8 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
         implicit val system = ActorSystem()
         val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(tehdytSuoritukset)))
         val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq())))
-        addServlet(new SuoritusServlet(suoritusRekisteri), "/rest/v1/suoritukset")
-        addServlet(new OpiskelijaServlet(opiskelijaRekisteri), "/rest/v1/opiskelijat")
+        addServlet(new HakurekisteriResource[Suoritus](suoritusRekisteri, fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(_)) with SuoritusServlet, "/rest/v1/suoritukset")
+        addServlet(new HakurekisteriResource[Opiskelija](opiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaServlet, "/rest/v1/opiskelijat")
         initialized = true
       }
 

@@ -12,9 +12,10 @@ import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import scala.util.{Failure, Success, Try}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.concurrent.TimeUnit
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
 
 
-abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSystem, mf: Manifest[A])extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport {
+abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A])extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport {
 
   protected implicit def executor: ExecutionContext = system.dispatcher
 
@@ -42,6 +43,8 @@ abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSy
 
   } */
 
+  implicit val queryBuilder: (Map[String, String]) => Query[A] = qb
+
   def read(op: OperationBuilder) (implicit pb: Map[String, String] => Query[A]) {
     get("/", operation(op))(
       (Try(pb(params)) map ((q: Query[A]) => ResourceQuery(q)) recover {
@@ -56,6 +59,5 @@ abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSy
     is.onComplete((r:Try[Seq[R with Identified]]) => println(r.get.head.id))
   }
 
-
-
-}
+   protected implicit def swagger(): SwaggerEngine[_] = sw
+ }
