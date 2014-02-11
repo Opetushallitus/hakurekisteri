@@ -20,10 +20,9 @@ function getPostitoimipaikka($http, postinumero, successCallback, errorCallback)
 
 function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options) {
     options = [];
-    $http.get(koodistoServiceUrl + '/rest/json/:koodisto/koodi', {cache: true})
+    $http.get(koodistoServiceUrl + '/rest/json/' + koodisto + '/koodi', {cache: true})
         .success(function(koodisto) {
-            for (var i = 0; i < koodisto.length; i++) {
-                var koodi = koodisto[i];
+            angular.forEach(koodisto, function(koodi) {
                 metas: for (var j = 0; j < koodi.metadata.length; j++) {
                     var meta = koodi.metadata[j];
                     if (meta.kieli.toLowerCase() === kielikoodi.toLowerCase()) {
@@ -34,7 +33,7 @@ function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options) {
                         break metas;
                     }
                 }
-            }
+            });
             options.sort(function(a, b) {
                 if (a.text === b.text) return 0;
                 return a.text < b.text ? -1 : 1;
@@ -123,8 +122,7 @@ function OpiskelijatCtrl($scope, $routeParams, $log, $http, Opiskelijat) {
     }
 
     function enrichData() {
-        for (var i = 0; i < $scope.currentRows.length; i++) {
-            var opiskelija = $scope.currentRows[i];
+        angular.forEach($scope.currentRows, function(opiskelija) {
             if (opiskelija.oppilaitosOid) {
                 getOrganisaatio($http, opiskelija.oppilaitosOid, function(data) {
                     if (data && data.oid === opiskelija.oppilaitosOid)
@@ -139,7 +137,7 @@ function OpiskelijatCtrl($scope, $routeParams, $log, $http, Opiskelijat) {
                         }
                     });
             }
-        }
+        });
     }
 
     $scope.nextPage = function() {
@@ -203,8 +201,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, Henkilo, Opis
 
     function enrichSuoritukset() {
         if ($scope.suoritukset) {
-            for (var i = 0; i < $scope.suoritukset.length; i++) {
-                var suoritus = $scope.suoritukset[i];
+            angular.forEach($scope.suoritukset, function(suoritus) {
                 if (suoritus.komoto && suoritus.komoto.tarjoaja) {
                     getOrganisaatio($http, suoritus.komoto.tarjoaja, function(organisaatio) {
                         if (organisaatio.oid === suoritus.komoto.tarjoaja) {
@@ -212,12 +209,12 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, Henkilo, Opis
                         }
                     }, function() {});
                 }
-            }
+            });
         }
     }
     function enrichLuokkatiedot() {
         if ($scope.luokkatiedot) {
-            for (var i = 0; i < $scope.luokkatiedot.length; i++) {
+            angular.forEach($scope.luokkatiedot, function(luokkatieto) {
                 var luokkatieto = $scope.luokkatiedot[i];
                 if (luokkatieto.oppilaitosOid) {
                     getOrganisaatio($http, luokkatieto.oppilaitosOid, function(organisaatio) {
@@ -226,7 +223,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, Henkilo, Opis
                         }
                     }, function() {});
                 }
-            }
+            });
         }
     }
     function fetchHenkilotiedot() {
@@ -280,26 +277,25 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, Henkilo, Opis
     };
     $scope.save = function() {
         function validateOppilaitoskoodit() {
-            for (var i = 0; i < $scope.luokkatiedot.length; i++) {
-                var luokkatieto = $scope.luokkatiedot[i];
+            angular.forEach($scope.luokkatiedot, function(luokkatieto) {
                 if (!luokkatieto.oppilaitos || !luokkatieto.oppilaitos.match(/^\d{5}$/)) {
                     $scope.messages.push({
                         type: "danger",
                         message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
                         description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
                     });
-                    continue;
-                }
-                getOrganisaatio($http, luokkatieto.oppilaitos, function (organisaatio) {
-                    luokkatieto.oppilaitosOid = organisaatio.oid;
-                }, function () {
-                    $scope.messages.push({
-                        type: "danger",
-                        message: "Oppilaitosta ei löytynyt oppilaitoskoodilla: " + luokkatieto.oppilaitos + ".",
-                        description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
+                } else {
+                    getOrganisaatio($http, luokkatieto.oppilaitos, function (organisaatio) {
+                        luokkatieto.oppilaitosOid = organisaatio.oid;
+                    }, function () {
+                        $scope.messages.push({
+                            type: "danger",
+                            message: "Oppilaitosta ei löytynyt oppilaitoskoodilla: " + luokkatieto.oppilaitos + ".",
+                            description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
+                        });
                     });
-                })
-            }
+                }
+            });
         }
         validateOppilaitoskoodit();
         if ($scope.messages.length > 0) {
@@ -322,8 +318,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, Henkilo, Opis
         saveHenkilo();
 
         function saveSuoritukset() {
-            for (var i = 0; i < $scope.suoritukset.length; i++) {
-                var suoritus = $scope.suoritukset[i];
+            angular.forEach($scope.suoritukset, function(suoritus) {
                 suoritus.$save(function (savedSuoritus) {
                     $log.debug("suoritus saved: " + savedSuoritus);
                 }, function () {
@@ -333,13 +328,12 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, Henkilo, Opis
                         description: "Yritä uudelleen."
                     });
                 });
-            }
+            });
         }
         saveSuoritukset();
 
         function saveLuokkatiedot() {
-            for (var i = 0; i < $scope.luokkatiedot.length; i++) {
-                var luokkatieto = $scope.luokkatiedot[i];
+            angular.forEach($scope.luokkatiedot, function(luokkatieto) {
                 luokkatieto.$save(function (savedLuokkatieto) {
                     $log.debug("opiskelija saved: " + savedLuokkatieto);
                 }, function () {
@@ -349,7 +343,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, Henkilo, Opis
                         description: "Yritä uudelleen."
                     });
                 });
-            }
+            });
         }
         saveLuokkatiedot();
     };
