@@ -9,13 +9,12 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
 
-class SuoritusServlet(suoritusActor: ActorRef)(implicit val swagger: Swagger, system: ActorSystem)
-  extends HakurekisteriResource[Suoritus](suoritusActor)  {
+trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus] =>
 
   override protected val applicationName = Some("suoritukset")
   protected val applicationDescription = "Suoritusrekisterin rajapinta."
 
-  implicit val queryBuilder: (Map[String, String]) => Query[Suoritus] = SuoritusQuery(_)
+
 
   val fields = Seq(ModelField("tila",null,DataType.String,None,AnyValue,required = true),
     ModelField("komoto",null,DataType("Komoto"),None,AnyValue, required = true),
@@ -38,7 +37,9 @@ class SuoritusServlet(suoritusActor: ActorRef)(implicit val swagger: Swagger, sy
       parameter queryParam[Option[String]]("kausi").description("suorituksen päättymisen kausi").allowableValues("S", "K")
       parameter queryParam[Option[String]]("vuosi").description("suorituksen päättymisen vuosi"))
 
-
+  create(apiOperation[Suoritus]("lisääSuoritus")
+    .parameter(bodyParam[Suoritus]("uusiSuoritus").description("Uusi suoritus").required)
+    .summary("luo Suorituksen ja palauttaa sen tiedot"))
 
 
 }
