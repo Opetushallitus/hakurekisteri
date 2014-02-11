@@ -189,7 +189,7 @@ function OpiskelijatCtrl($scope, $routeParams, $log, $http, Opiskelijat) {
 
 
 
-function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, Henkilo, Opiskelijat, Suoritukset) {
+function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, Opiskelijat, Suoritukset) {
     $scope.henkiloOid = $routeParams.henkiloOid;
     $scope.messages = [];
     $scope.yksilollistamiset = ["Ei", "Osittain", "Kokonaan", "Alueittain"];
@@ -215,7 +215,6 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, Henkilo, Opis
     function enrichLuokkatiedot() {
         if ($scope.luokkatiedot) {
             angular.forEach($scope.luokkatiedot, function(luokkatieto) {
-                var luokkatieto = $scope.luokkatiedot[i];
                 if (luokkatieto.oppilaitosOid) {
                     getOrganisaatio($http, luokkatieto.oppilaitosOid, function(organisaatio) {
                         if (organisaatio.oid === luokkatieto.oppilaitosOid) {
@@ -276,76 +275,102 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, Henkilo, Opis
         }
     };
     $scope.save = function() {
+        var deferredValidations = [];
         function validateOppilaitoskoodit() {
             angular.forEach($scope.luokkatiedot, function(luokkatieto) {
+                var deferredValidation = $q.defer();
+                deferredValidations.push(deferredValidation);
                 if (!luokkatieto.oppilaitos || !luokkatieto.oppilaitos.match(/^\d{5}$/)) {
                     $scope.messages.push({
                         type: "danger",
                         message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
                         description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
                     });
+                    deferredValidation.reject("error");
                 } else {
                     getOrganisaatio($http, luokkatieto.oppilaitos, function (organisaatio) {
                         luokkatieto.oppilaitosOid = organisaatio.oid;
+                        deferredValidation.resolve("done");
                     }, function () {
                         $scope.messages.push({
                             type: "danger",
                             message: "Oppilaitosta ei löytynyt oppilaitoskoodilla: " + luokkatieto.oppilaitos + ".",
                             description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
                         });
+                        deferredValidation.reject("error");
                     });
                 }
             });
         }
         validateOppilaitoskoodit();
-        if ($scope.messages.length > 0) {
-            return;
-        }
 
+        var deferredSaves = [];
         function saveHenkilo() {
             if ($scope.henkilo) {
+                var deferredSave = $q.defer();
+                deferredSaves.push(deferredSave);
                 $scope.henkilo.$save(function (savedHenkilo) {
                     $log.debug("henkilo saved: " + savedHenkilo);
+                    deferredSave.resolve("done");
                 }, function () {
                     $scope.messages.push({
                         type: "danger",
                         message: "Virhe tallennettaessa henkilötietoja.",
                         description: "Yritä uudelleen."
                     });
+                    deferredSave.reject("error saving henkilo: " + $scope.henkilo);
                 });
             }
         }
-        saveHenkilo();
-
         function saveSuoritukset() {
             angular.forEach($scope.suoritukset, function(suoritus) {
+                var deferredSave = $q.defer();
+                deferredSaves.push(deferredSave);
                 suoritus.$save(function (savedSuoritus) {
                     $log.debug("suoritus saved: " + savedSuoritus);
+                    deferredSave.resolve("done");
                 }, function () {
                     $scope.messages.push({
                         type: "danger",
                         message: "Virhe tallennettaessa suoritustietoja.",
                         description: "Yritä uudelleen."
                     });
+                    deferredSave.reject("error saving suoritus: " + suoritus);
                 });
             });
         }
-        saveSuoritukset();
-
         function saveLuokkatiedot() {
             angular.forEach($scope.luokkatiedot, function(luokkatieto) {
+                var deferredSave = $q.defer();
+                deferredSaves.push(deferredSave);
                 luokkatieto.$save(function (savedLuokkatieto) {
                     $log.debug("opiskelija saved: " + savedLuokkatieto);
+                    deferredSave.resolve("done");
                 }, function () {
                     $scope.messages.push({
                         type: "danger",
                         message: "Virhe tallennettaessa luokkatietoja.",
                         description: "Yritä uudelleen."
                     });
+                    deferredSave.reject("error saving luokkatieto: " + luokkatieto);
                 });
             });
         }
-        saveLuokkatiedot();
+
+        var validationPromise = $q.all(deferredValidations.map(function(deferred) { return deferred.promise; }));
+        validationPromise.then(function() {
+            saveHenkilo();
+            saveSuoritukset();
+            saveLuokkatiedot();
+        });
+
+        var savePromise = $q.all(deferredSaves.map(function(deferred) { return deferred.promise; }));
+        savePromise.then(function() {
+            $log.info("saved successfully");
+            $location.path("/opiskelijat");
+        }, function(errors) {
+            $log.error("error while saving: " + errors);
+        });
     };
     $scope.cancel = function() {
         $location.path("/opiskelijat")
