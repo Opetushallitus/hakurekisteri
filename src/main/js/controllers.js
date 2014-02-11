@@ -2,7 +2,49 @@
 
 var msgCategory = "suoritusrekisteri";
 
-function OpiskelijatCtrl($scope, $routeParams, $log, $http, Henkilo, HenkiloByHetu, Organisaatio, Opiskelijat) {
+var henkiloServiceUrl = "/authentication-service";
+var organisaatioServiceUrl = "/organisaatio-service";
+var koodistoServiceUrl = "/koodisto-service";
+
+function getOrganisaatio($http, organisaatioOid, successCallback, errorCallback) {
+    $http.get(organisaatioServiceUrl + '/rest/organisaatio/' + organisaatioOid, {cache: true})
+        .success(successCallback)
+        .error(errorCallback);
+}
+
+function getPostitoimipaikka($http, postinumero, successCallback, errorCallback) {
+    $http.get(koodistoServiceUrl + '/rest/json/posti/koodi/posti_' + postinumero, {cache: true})
+        .success(successCallback)
+        .error(errorCallback);
+}
+
+function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options) {
+    options = [];
+    $http.get(koodistoServiceUrl + '/rest/json/' + koodisto + '/koodi', {cache: true})
+        .success(function(koodisto) {
+            angular.forEach(koodisto, function(koodi) {
+                metas: for (var j = 0; j < koodi.metadata.length; j++) {
+                    var meta = koodi.metadata[j];
+                    if (meta.kieli.toLowerCase() === kielikoodi.toLowerCase()) {
+                        options.push({
+                            value: koodi.koodiArvo,
+                            text: meta.nimi
+                        });
+                        break metas;
+                    }
+                }
+            });
+            options.sort(function(a, b) {
+                if (a.text === b.text) return 0;
+                return a.text < b.text ? -1 : 1;
+            });
+        });
+}
+
+
+
+
+function OpiskelijatCtrl($scope, $routeParams, $log, $http, Opiskelijat) {
     $scope.loading = false;
     $scope.currentRows = [];
     $scope.allRows = [];
@@ -15,7 +57,7 @@ function OpiskelijatCtrl($scope, $routeParams, $log, $http, Henkilo, HenkiloByHe
     $scope.myRoles = [];
 
     function getMyRoles() {
-        $http.get('/cas/myroles')
+        $http.get('/cas/myroles', {cache: true})
             .success(function(data) {
                 $scope.myRoles = angular.fromJson(data);
             })
@@ -35,19 +77,33 @@ function OpiskelijatCtrl($scope, $routeParams, $log, $http, Henkilo, HenkiloByHe
 
     $scope.fetch = function() {
         $scope.currentRows = [];
+        $scope.allRows = [];
         $scope.loading = true;
+        $scope.hakuehto = "";
 
-        if ($scope.searchTerm && $scope.searchTerm.match(/^\d{6}[+-AB]\d{3}[a-zA-Z]$/)) {
-            HenkiloByHetu.getCached({hetu: $scope.searchTerm}, function(henkilo) {
-                search({henkiloOid: henkilo.oidHenkilo});
+        if ($scope.searchTerm && $scope.searchTerm.match(/^\d{6}[+-AB]\d{3}[0-9a-zA-Z]$/)) {
+            $http.get(henkiloServiceUrl + '/resources/henkilo/byHetu/' + $scope.searchTerm, {cache: true})
+                .success(function(henkilo) {
+                    $scope.hakuehto = henkilo.hetu + ' (' + henkilo.etunimet + ' ' + henkilo.sukunimi + ')';
+                    search({henkiloOid: henkilo.oidHenkilo});
+                })
+                .error(function() {
+                    $scope.hakuehto = $scope.searchTerm;
+                    $scope.loading = false;
+                });
+        } else if ($scope.searchTerm && $scope.searchTerm.match(/^\d{5}$/)) {
+            getOrganisaatio($http, $scope.searchTerm, function(organisaatio) {
+                $scope.hakuehto = organisaatio.oppilaitosKoodi + ' (' + (organisaatio.nimi.fi ? organisaatio.nimi.fi : (organisaatio.nimi.sv ? organisaatio.nimi.sv : 'Oppilaitoksen nimeä ei löytynyt')) + ')';
+                search({oppilaitosOid: organisaatio.oid});
             }, function() {
-                search({});
+                $scope.hakuehto = $scope.searchTerm;
+                $scope.loading = false;
             });
         } else {
             search({});
         }
         function search(query) {
-            Opiskelijat.get(query, function(opiskelijat) {
+            Opiskelijat.query(query, function(opiskelijat) {
                 if (Array.isArray(opiskelijat)) {
                     showCurrentRows(opiskelijat);
                 }
@@ -66,22 +122,22 @@ function OpiskelijatCtrl($scope, $routeParams, $log, $http, Henkilo, HenkiloByHe
     }
 
     function enrichData() {
-        for (var i = 0; i < $scope.currentRows.length; i++) {
-            var opiskelija = $scope.currentRows[i];
+        angular.forEach($scope.currentRows, function(opiskelija) {
             if (opiskelija.oppilaitosOid) {
-                Organisaatio.getCached({organisaatioOid: opiskelija.oppilaitosOid}, function(data) {
+                getOrganisaatio($http, opiskelija.oppilaitosOid, function(data) {
                     if (data && data.oid === opiskelija.oppilaitosOid)
                         opiskelija.oppilaitos = data.oppilaitosKoodi + ' ' + data.nimi.fi;
-                });
+                }, function() {});
             }
             if (opiskelija.henkiloOid) {
-                Henkilo.getCached({henkiloOid: opiskelija.henkiloOid}, function(henkilo) {
-                    if (henkilo && henkilo.oidHenkilo === opiskelija.henkiloOid && henkilo.sukunimi && henkilo.etunimet) {
-                        opiskelija.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + (henkilo.hetu ? " (" + henkilo.hetu + ")" : "");
-                    }
-                });
+                $http.get(henkiloServiceUrl + '/resources/henkilo/' + opiskelija.henkiloOid, {cache: true})
+                    .success(function(henkilo) {
+                        if (henkilo && henkilo.oidHenkilo === opiskelija.henkiloOid && henkilo.sukunimi && henkilo.etunimet) {
+                            opiskelija.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + (henkilo.hetu ? " (" + henkilo.hetu + ")" : "");
+                        }
+                    });
             }
-        }
+        });
     }
 
     $scope.nextPage = function() {
@@ -130,26 +186,46 @@ function OpiskelijatCtrl($scope, $routeParams, $log, $http, Henkilo, HenkiloByHe
     $scope.fetch();
 }
 
-function getKoodi(koodiArray, koodiArvo) {
-    for (var i = 0; i < koodiArray.length; i++) {
-        var koodi = koodiArray[i];
-        if (koodi.koodiArvo == koodiArvo) {
-            for (var m = 0; m < koodi.metadata.length; m++) {
-                var metadata = koodi.metadata[m];
-                if (metadata.kieli == "FI") {
-                    return metadata.nimi;
+
+
+
+function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, Henkilo, Opiskelijat, Suoritukset) {
+    $scope.henkiloOid = $routeParams.henkiloOid;
+    $scope.messages = [];
+    $scope.yksilollistamiset = ["Ei", "Osittain", "Kokonaan", "Alueittain"];
+    getKoodistoAsOptionArray($http, 'maatjavaltiot2', 'FI', $scope.maat);
+    getKoodistoAsOptionArray($http, 'kunta', 'FI', $scope.kunnat);
+    getKoodistoAsOptionArray($http, 'kieli', 'FI', $scope.kielet);
+    getKoodistoAsOptionArray($http, 'maatjavaltiot2', 'FI', $scope.kansalaisuudet);
+
+
+    function enrichSuoritukset() {
+        if ($scope.suoritukset) {
+            angular.forEach($scope.suoritukset, function(suoritus) {
+                if (suoritus.komoto && suoritus.komoto.tarjoaja) {
+                    getOrganisaatio($http, suoritus.komoto.tarjoaja, function(organisaatio) {
+                        if (organisaatio.oid === suoritus.komoto.tarjoaja) {
+                            suoritus.oppilaitos = organisaatio.oppilaitosKoodi + ' ' + organisaatio.nimi.fi ? organisaatio.nimi.fi : organisaatio.nimi.sv;
+                        }
+                    }, function() {});
                 }
-            }
+            });
         }
     }
-    return koodiArvo;
-}
-
-
-function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Koodisto, Opiskelijat, Suoritukset) {
-    $scope.errors = [];
-    $scope.henkiloOid = $routeParams.henkiloOid;
-
+    function enrichLuokkatiedot() {
+        if ($scope.luokkatiedot) {
+            angular.forEach($scope.luokkatiedot, function(luokkatieto) {
+                var luokkatieto = $scope.luokkatiedot[i];
+                if (luokkatieto.oppilaitosOid) {
+                    getOrganisaatio($http, luokkatieto.oppilaitosOid, function(organisaatio) {
+                        if (organisaatio.oid === luokkatieto.oppilaitosOid) {
+                            luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi;
+                        }
+                    }, function() {});
+                }
+            });
+        }
+    }
     function fetchHenkilotiedot() {
         Henkilo.get({henkiloOid: $scope.henkiloOid}, function(henkilo) {
             $scope.henkilo = henkilo;
@@ -157,61 +233,34 @@ function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Koo
             confirm("Henkilötietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchHenkilotiedot() : $location.path("/opiskelijat");
         });
     }
-    fetchHenkilotiedot();
-
-    function fetchOpiskelijatiedot() {
-        Opiskelijat.get({henkiloOid: $scope.henkiloOid}, function(luokkatiedot) {
+    function fetchLuokkatiedot() {
+        Opiskelijat.query({henkiloOid: $scope.henkiloOid}, function(luokkatiedot) {
             $scope.luokkatiedot = luokkatiedot;
+            enrichLuokkatiedot();
         }, function() {
-            confirm("Luokkatietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchOpiskelijatiedot() : $location.path("/opiskelijat");
+            confirm("Luokkatietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchLuokkatiedot() : $location.path("/opiskelijat");
         });
     }
-    fetchOpiskelijatiedot();
-
     function fetchSuoritukset() {
-        Suoritukset.get({henkiloOid: $scope.henkiloOid}, function(suoritukset) {
+        Suoritukset.query({henkiloOid: $scope.henkiloOid}, function(suoritukset) {
             $scope.suoritukset = suoritukset;
             enrichSuoritukset();
         }, function() {
             confirm("Suoritustietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchSuoritukset() : $location.path("/opiskelijat");
         });
     }
-    fetchSuoritukset();
 
-    function enrichSuoritukset() {
-        if ($scope.suoritukset) {
-            for (var i = 0; i < $scope.suoritukset.length; i++) {
-                var suoritus = $scope.suoritukset[i];
-                if (suoritus.komoto && suoritus.komoto.tarjoaja) {
-                    Organisaatio.getCached({organisaatioOid: suoritus.komoto.tarjoaja}, function(organisaatio) {
-                        if (organisaatio.oid === suoritus.komoto.tarjoaja) {
-                            suoritus.oppilaitos = organisaatio.nimi.fi ? organisaatio.nimi.fi : organisaatio.nimi.sv;
-                        }
-                    });
-                }
-            }
-        }
+    function fetchData() {
+        fetchHenkilotiedot();
+        fetchLuokkatiedot();
+        fetchSuoritukset();
     }
+    fetchData();
 
-    $scope.yksilollistamiset = ["Ei", "Osittain", "Kokonaan", "Alueittain"];
-
-    // TODO hae koodistosta
-    $scope.maat = [
-        { value: "246", text: "Suomi" }
-    ];
-    $scope.kunnat = [
-        { value: "091", text: "Helsinki" }
-    ];
-    $scope.kielet = [
-        { value: "FI", text: "Suomi" }
-    ];
-    $scope.kansalaisuudet = [
-        { value: "246", text: "Suomi" }
-    ];
     $scope.fetchPostitoimipaikka = function() {
         if ($scope.henkilo.postinumero && $scope.henkilo.postinumero.match(/^\d{5}$/)) {
             $scope.searchingPostinumero = true;
-            Koodisto.getCached({koodisto: "posti", koodiUri: "posti_" + $scope.henkilo.postinumero}, function(koodi) {
+            getPostitoimipaikka($http, $scope.henkilo.postinumero, function(koodi) {
                 for (var i = 0; i < koodi.metadata.length; i++) {
                     var meta = koodi.metadata[i];
                     if (meta.kieli === 'FI') {
@@ -226,35 +275,101 @@ function MuokkaaCtrl($scope, $routeParams, $location, Henkilo, Organisaatio, Koo
             });
         }
     };
-
-    // tallennus
     $scope.save = function() {
-        $scope.errors.push({
-            message: "Tallennusta ei vielä toteutettu.",
-            description: ""
-        });
+        function validateOppilaitoskoodit() {
+            angular.forEach($scope.luokkatiedot, function(luokkatieto) {
+                if (!luokkatieto.oppilaitos || !luokkatieto.oppilaitos.match(/^\d{5}$/)) {
+                    $scope.messages.push({
+                        type: "danger",
+                        message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
+                        description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
+                    });
+                } else {
+                    getOrganisaatio($http, luokkatieto.oppilaitos, function (organisaatio) {
+                        luokkatieto.oppilaitosOid = organisaatio.oid;
+                    }, function () {
+                        $scope.messages.push({
+                            type: "danger",
+                            message: "Oppilaitosta ei löytynyt oppilaitoskoodilla: " + luokkatieto.oppilaitos + ".",
+                            description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
+                        });
+                    });
+                }
+            });
+        }
+        validateOppilaitoskoodit();
+        if ($scope.messages.length > 0) {
+            return;
+        }
+
+        function saveHenkilo() {
+            if ($scope.henkilo) {
+                $scope.henkilo.$save(function (savedHenkilo) {
+                    $log.debug("henkilo saved: " + savedHenkilo);
+                }, function () {
+                    $scope.messages.push({
+                        type: "danger",
+                        message: "Virhe tallennettaessa henkilötietoja.",
+                        description: "Yritä uudelleen."
+                    });
+                });
+            }
+        }
+        saveHenkilo();
+
+        function saveSuoritukset() {
+            angular.forEach($scope.suoritukset, function(suoritus) {
+                suoritus.$save(function (savedSuoritus) {
+                    $log.debug("suoritus saved: " + savedSuoritus);
+                }, function () {
+                    $scope.messages.push({
+                        type: "danger",
+                        message: "Virhe tallennettaessa suoritustietoja.",
+                        description: "Yritä uudelleen."
+                    });
+                });
+            });
+        }
+        saveSuoritukset();
+
+        function saveLuokkatiedot() {
+            angular.forEach($scope.luokkatiedot, function(luokkatieto) {
+                luokkatieto.$save(function (savedLuokkatieto) {
+                    $log.debug("opiskelija saved: " + savedLuokkatieto);
+                }, function () {
+                    $scope.messages.push({
+                        type: "danger",
+                        message: "Virhe tallennettaessa luokkatietoja.",
+                        description: "Yritä uudelleen."
+                    });
+                });
+            });
+        }
+        saveLuokkatiedot();
     };
     $scope.cancel = function() {
         $location.path("/opiskelijat")
     };
-    $scope.removeError = function(error) {
-        var index = $scope.errors.indexOf(error);
+    $scope.removeMessage = function(message) {
+        var index = $scope.messages.indexOf(message);
         if (index !== -1) {
-            $scope.errors.splice(index, 1);
+            $scope.messages.splice(index, 1);
         }
     };
 
-    // datepicker
-    $scope.showWeeks = false;
-    $scope.pickDate = function($event, openedKey) {
-        $event.preventDefault();
-        $event.stopPropagation();
-
-        $scope[openedKey] = true;
-    };
-    $scope.dateOptions = {
-        'year-format': "'yyyy'",
-        'starting-day': 1
-    };
-    $scope.format = 'dd.MM.yyyy';
+    function initDatepicker() {
+        $scope.showWeeks = false;
+        $scope.pickDate = function ($event, openedKey) {
+            $event.preventDefault();
+            $event.stopPropagation();
+            $scope[openedKey] = true;
+        };
+        $scope.dateOptions = {
+            'year-format': "'yyyy'",
+            'starting-day': 1
+        };
+        $scope.format = 'dd.MM.yyyy';
+    }
+    initDatepicker();
 }
+

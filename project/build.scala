@@ -7,7 +7,7 @@ import ScalateKeys._
 object HakuJaValintarekisteriBuild extends Build {
   val Organization = "fi.vm.sade"
   val Name = "Haku- ja valintarekisteri"
-  val Version = "0.1.0-SNAPSHOT"
+  val Version = "LATEST-SNAPSHOT"
   val ScalaVersion = "2.10.3"
   val ScalatraVersion = "2.2.2"
 
@@ -81,6 +81,14 @@ object HakuJaValintarekisteriBuild extends Build {
           version := Version,
           scalaVersion := ScalaVersion,
           resolvers += Classpaths.typesafeReleases,
+          credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+          publishTo := {
+            val artifactory = "http://penaali.hard.ware.fi/artifactory"
+            if (version.value.trim.endsWith("SNAPSHOT"))
+              Some("snapshots" at artifactory + "/oph-sade-snapshot-local")
+            else
+              Some("releases"  at artifactory + "/oph-sade-release-local")
+          },
           libraryDependencies ++= Seq("org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts (Artifact("javax.servlet", "jar", "jar")))
             ++ ScalatraStack.map((a) => a % ScalatraVersion)
             ++ dependencies
