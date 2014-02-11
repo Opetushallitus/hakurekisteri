@@ -26,12 +26,21 @@ abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSy
     contentType = formats("json")
   }
 
-
-  post("/") {
-    new AsyncResult() {
-      val is = actor ? parsedBody.extract[A]
+  def create(op: OperationBuilder) {
+    post("/", operation(op)) {
+      new AsyncResult() {
+        val is = actor ? parsedBody.extract[A]
+      }
     }
   }
+
+
+  /*post("/:id") {
+    new AsyncResult() {
+      val is:
+    }
+
+  } */
 
   def read(op: OperationBuilder) (implicit pb: Map[String, String] => Query[A]) {
     get("/", operation(op))(
@@ -46,5 +55,7 @@ abstract class HakurekisteriResource[A](actor:ActorRef)(implicit system: ActorSy
 
     is.onComplete((r:Try[Seq[R with Identified]]) => println(r.get.head.id))
   }
+
+
 
 }
