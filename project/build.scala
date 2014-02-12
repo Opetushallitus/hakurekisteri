@@ -64,8 +64,19 @@ object HakuJaValintarekisteriBuild extends Build {
 
   val mochaTestSources =  unmanagedSourceDirectories in Test <+= (sourceDirectory in Test) {sd => sd / "coffee"}
 
+  val artifactoryPublish = publishTo <<= version apply {
+    (ver: String) =>
+      val artifactory = "http://penaali.hard.ware.fi/artifactory"
+      if (ver.trim.endsWith("SNAPSHOT"))
+        Some("snapshots" at artifactory + "/oph-sade-snapshot-local")
+      else
+        Some("releases" at artifactory + "/oph-sade-release-local")
+  }
+
 
   lazy val project = {
+
+
 
     Project(
       "hakurekisteri",
@@ -82,14 +93,8 @@ object HakuJaValintarekisteriBuild extends Build {
           scalaVersion := ScalaVersion,
           resolvers += Classpaths.typesafeReleases,
           credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
-          publishTo := {
-            val artifactory = "http://penaali.hard.ware.fi/artifactory"
-            if (version.value.trim.endsWith("SNAPSHOT"))
-              Some("snapshots" at artifactory + "/oph-sade-snapshot-local")
-            else
-              Some("releases"  at artifactory + "/oph-sade-release-local")
-          },
-          libraryDependencies ++= Seq("org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts (Artifact("javax.servlet", "jar", "jar")))
+          artifactoryPublish,
+          libraryDependencies ++= Seq("org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts Artifact("javax.servlet", "jar", "jar"))
             ++ ScalatraStack.map((a) => a % ScalatraVersion)
             ++ dependencies
             ++ testDependencies.map((m) => m % "test"),
