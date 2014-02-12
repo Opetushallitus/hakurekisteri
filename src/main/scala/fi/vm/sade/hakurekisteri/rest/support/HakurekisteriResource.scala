@@ -9,10 +9,9 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import org.scalatra._
 import _root_.akka.pattern.ask
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.concurrent.TimeUnit
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
 
 
 abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A])extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport {
@@ -59,5 +58,5 @@ abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String]
     is.onComplete((r:Try[Seq[R with Identified]]) => println(r.get.head.id))
   }
 
-   protected implicit def swagger(): SwaggerEngine[_] = sw
+   protected implicit def swagger: SwaggerEngine[_] = sw
  }

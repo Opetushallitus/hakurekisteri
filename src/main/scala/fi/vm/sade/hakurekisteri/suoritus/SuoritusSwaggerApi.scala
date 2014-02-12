@@ -1,13 +1,10 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
-import _root_.akka.actor.{ActorRef, ActorSystem}
 
 import org.scalatra.swagger._
 import scala.Some
 import org.scalatra.swagger.AllowableValues.AnyValue
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
-import fi.vm.sade.hakurekisteri.rest.support.Query
-import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
 
 trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus] =>
 

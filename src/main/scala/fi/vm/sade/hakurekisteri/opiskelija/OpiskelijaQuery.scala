@@ -2,7 +2,6 @@ package fi.vm.sade.hakurekisteri.opiskelija
 
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Query}
 import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
-import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 

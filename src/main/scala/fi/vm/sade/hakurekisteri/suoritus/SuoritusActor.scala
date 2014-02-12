@@ -1,14 +1,9 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
-import java.util.{UUID, Date}
-import java.text.SimpleDateFormat
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Kausi}
 import Kausi._
 import fi.vm.sade.hakurekisteri.storage._
-import scala.concurrent.{ExecutionContext, Future}
 import scala.Some
-import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaQuery, Opiskelija}
-import org.joda.time.{MonthDay, DateTime}
 import com.github.nscala_time.time.Imports._
 
 
