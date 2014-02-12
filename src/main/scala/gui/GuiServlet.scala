@@ -3,7 +3,7 @@ package gui
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.scalatra.scalate.ScalateSupport
 import org.fusesource.scalate.layout.DefaultLayoutStrategy
-import org.fusesource.scalate.{RenderContext, Template, TemplateSource, TemplateEngine}
+import org.fusesource.scalate.TemplateEngine
 import javax.servlet.http.HttpServletRequest
 import scala.collection.mutable
 import org.fusesource.scalate.util.{StringResource, Resource, ResourceLoader}

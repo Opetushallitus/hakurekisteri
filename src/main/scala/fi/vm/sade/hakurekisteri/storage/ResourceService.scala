@@ -2,8 +2,6 @@ package fi.vm.sade.hakurekisteri.storage
 
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import scala.concurrent.{ExecutionContext, Future}
-import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import akka.dispatch.Futures
 
 
 trait ResourceService[T] { this: Repository[T] =>

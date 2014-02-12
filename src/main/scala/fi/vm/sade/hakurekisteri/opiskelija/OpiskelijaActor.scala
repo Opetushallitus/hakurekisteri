@@ -1,16 +1,9 @@
 package fi.vm.sade.hakurekisteri.opiskelija
 
-import java.util.{UUID, Date}
-import java.text.SimpleDateFormat
 import com.github.nscala_time.time.Imports._
-import akka.actor.Actor
-import org.slf4j.LoggerFactory
 import fi.vm.sade.hakurekisteri.rest.support.Kausi._
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.storage._
-import scala.concurrent.{ExecutionContext, Future}
-import fi.vm.sade.hakurekisteri.suoritus.Suoritus
-import scala.Some
 import scala.Some
 
 

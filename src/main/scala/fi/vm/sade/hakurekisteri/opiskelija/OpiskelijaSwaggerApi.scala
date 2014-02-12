@@ -1,11 +1,8 @@
 package fi.vm.sade.hakurekisteri.opiskelija
 
-import _root_.akka.actor.{ActorRef, ActorSystem}
-import org.scalatra.swagger.Swagger
-import fi.vm.sade.hakurekisteri.rest.support.{Query, HakurekisteriResource}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
 import scala.Some
 import java.util.Date
-import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 
 trait OpiskelijaSwaggerApi
     { this: HakurekisteriResource[Opiskelija] =>

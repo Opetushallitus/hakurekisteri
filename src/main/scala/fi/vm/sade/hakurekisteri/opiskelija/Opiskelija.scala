@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.opiskelija
 
-import java.util.{UUID, Date}
+import java.util.UUID
 import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.DateTime
 
