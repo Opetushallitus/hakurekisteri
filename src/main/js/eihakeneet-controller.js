@@ -58,6 +58,7 @@ function EihakeneetCtrl($scope, $routeParams, $http, $q) {
 
     function fetchData() {
         if (hakuOid && oppilaitosOid) {
+            $scope.loading = true;
             var deferredOpiskelijat = $q.defer();
             var luokanOpiskelijat = [];
             var opiskelijatUrl = "rest/v1/opiskelijat?oppilaitosOid=" + encodeURIComponent(oppilaitosOid);
@@ -108,12 +109,14 @@ function EihakeneetCtrl($scope, $routeParams, $http, $q) {
                 }
                 $scope.allRows = luokanOpiskelijat.diff(hakeneetOpiskelijat).getUnique();
                 enrichOpiskelijat();
+                $scope.loading = false;
             }, function(errors) {
                 $scope.messages.push({
                     type: "danger",
                     message: "Virhe ladattaessa tietoja: " + errors,
                     description: ""
                 });
+                $scope.loading = false;
             });
         } else {
             $scope.messages.push({
