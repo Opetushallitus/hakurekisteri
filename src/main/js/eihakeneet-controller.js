@@ -56,7 +56,7 @@ function EihakeneetCtrl($scope, $routeParams, $http, $q) {
         });
     }
 
-    $scope.fetch = function() {
+    function fetchData() {
         if (hakuOid && oppilaitosOid && luokka) {
             var deferredOpiskelijat = $q.defer();
             var luokanOpiskelijat = [];
@@ -97,7 +97,7 @@ function EihakeneetCtrl($scope, $routeParams, $http, $q) {
                         }
                     }
                 }
-                $scope.allRows = luokanOpiskelijat.diff(hakeneetOpiskelijat);
+                $scope.allRows = luokanOpiskelijat.diff(hakeneetOpiskelijat).getUnique();
                 enrichOpiskelijat();
             }, function(errors) {
                 $scope.messages.push({
@@ -113,9 +113,8 @@ function EihakeneetCtrl($scope, $routeParams, $http, $q) {
                 description: "haku=" + hakuOid + ", oppilaitos=" + oppilaitosOid + ", luokka=" + luokka
             });
         }
-    };
-
-    $scope.fetch();
+    }
+    fetchData();
 
     $scope.removeMessage = function(message) {
         var index = $scope.messages.indexOf(message);
