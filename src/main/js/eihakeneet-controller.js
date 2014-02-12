@@ -63,7 +63,9 @@ function EihakeneetCtrl($scope, $routeParams, $http, $q) {
             $http.get("rest/v1/opiskelijat?oppilaitosOid=" + encodeURIComponent(oppilaitosOid)
                     + "&luokka=" + encodeURIComponent(luokka))
                 .success(function(opiskelijat) {
-                    luokanOpiskelijat = opiskelijat;
+                    if (opiskelijat) {
+                        luokanOpiskelijat = opiskelijat;
+                    }
                     deferredOpiskelijat.resolve("done");
                 })
                 .error(function() {
@@ -75,7 +77,9 @@ function EihakeneetCtrl($scope, $routeParams, $http, $q) {
             $http.get(hakuAppServiceUrl + "/applications/list/fullName/asc?appState=ACTIVE&asYear=2014&asSemester=kausi_k&discretionaryOnly=false&checkAllApplications=false&start=0&rows=50&sendingSchoolOid="
                     + encodeURIComponent(oppilaitosOid))
                 .success(function(hakemukset) {
-                    luokanHakemukset = hakemukset.results;
+                    if (hakemukset && hakemukset.results) {
+                        luokanHakemukset = hakemukset.results;
+                    }
                     deferredHakemukset.resolve("done");
                 })
                 .error(function() {
