@@ -17,6 +17,7 @@ import org.springframework.web.context.support.XmlWebApplicationContext
 import org.springframework.web.context._
 import org.springframework.web.filter.DelegatingFilterProxy
 import scala.collection.JavaConverters._
+import scala.concurrent.duration._
 
 
 class ScalatraBootstrap extends LifeCycle {
@@ -36,6 +37,8 @@ class ScalatraBootstrap extends LifeCycle {
   }
 
   override def destroy(context: ServletContext) {
+    system.shutdown()
+    system.awaitTermination(15.seconds)
     OPHSecurity.destroy(context)
   }
 }
