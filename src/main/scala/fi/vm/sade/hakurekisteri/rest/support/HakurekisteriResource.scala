@@ -12,6 +12,10 @@ import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import scala.util.Try
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.concurrent.TimeUnit
+import org.springframework.security.core.GrantedAuthority
+import javax.servlet.http.HttpServletRequest
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.core.Authentication
 
 
 abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A])extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport {
@@ -28,6 +32,8 @@ abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String]
 
   def create(op: OperationBuilder) {
     post("/", operation(op)) {
+
+
       new AsyncResult() {
         val is = actor ? parsedBody.extract[A]
       }
@@ -55,7 +61,24 @@ abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String]
   case class ResourceQuery[R](query: Query[R]) extends AsyncResult {
     val is:Future[Seq[R with Identified]] = (actor ? query).mapTo[Seq[R with Identified]]
 
-    is.onComplete((r:Try[Seq[R with Identified]]) => println(r.get.head.id))
+
+  }
+
+
+  case class User(username:String, authorities: Seq[String])
+
+  import scala.collection.JavaConverters._
+
+  object User {
+
+    def current(implicit request:HttpServletRequest):Option[User]  = {
+      val name = Option(request.getUserPrincipal.getName)
+      println("name: " + name)
+      val authorities = Try(request.getUserPrincipal.asInstanceOf[Authentication].getAuthorities.asScala.toList.map(_.getAuthority))
+      println("authorities: " + authorities)
+      name.map(User(_, authorities.getOrElse(Seq())))
+    }
+
   }
 
    protected implicit def swagger: SwaggerEngine[_] = sw
