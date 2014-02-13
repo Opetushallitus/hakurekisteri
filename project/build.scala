@@ -31,16 +31,14 @@ object HakuJaValintarekisteriBuild extends Build {
     Seq("net.sf.ehcache" % "ehcache-core" % "2.4.8",
     "fi.vm.sade.generic" % "generic-common" % "9.0-SNAPSHOT",
     "org.jgroups"  % "jgroups" % "2.10.0.GA",
-    "net.sf.ehcache" % "ehcache-jgroupsreplication" % "1.5"
-    )
+    "net.sf.ehcache" % "ehcache-jgroupsreplication" % "1.5")
 
   val dependencies = Seq(
     "ch.qos.logback" % "logback-classic" % "1.0.6" % "runtime",
     "org.eclipse.jetty" % "jetty-webapp" % "8.1.8.v20121106" % "container",
     "org.json4s" %% "json4s-jackson" % "3.2.4",
     "com.typesafe.akka" %% "akka-testkit" %  "2.1.2",
-    "com.github.nscala-time" %% "nscala-time" % "0.8.0"
-  )
+    "com.github.nscala-time" %% "nscala-time" % "0.8.0")
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion)
 
