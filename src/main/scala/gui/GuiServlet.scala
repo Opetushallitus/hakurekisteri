@@ -54,7 +54,7 @@ class GuiServlet extends HakuJaValintarekisteriStack with ScalateSupport {
     "{}"
   }
 
-  get("buildversion.txt") {
+  get("/buildversion.txt") {
     contentType="text/plain; charset=UTF-8"
     "artifactId=suoritusrekisteri"
   }
