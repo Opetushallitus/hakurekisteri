@@ -31,6 +31,8 @@ object HakuJaValintarekisteriBuild extends Build {
     Seq("net.sf.ehcache" % "ehcache-core" % "2.4.8",
     "fi.vm.sade.generic" % "generic-common" % "9.0-SNAPSHOT",
     "org.jgroups"  % "jgroups" % "2.10.0.GA",
+    "jgroups" % "jgroups-all" % "2.4.1",
+    "bsh" % "bsh" % "1.2b3",
     "net.sf.ehcache" % "ehcache-jgroupsreplication" % "1.5",
     "org.jasig.cas" % "cas-client-support-distributed-ehcache" % "3.1.10")
 
@@ -110,6 +112,8 @@ object HakuJaValintarekisteriBuild extends Build {
           resolvers += Classpaths.typesafeReleases,
           resolvers += "oph-snapshots" at "http://penaali.hard.ware.fi/artifactory/oph-sade-snapshot-local",
           resolvers += "oph-releases" at "http://penaali.hard.ware.fi/artifactory/oph-sade-release-local",
+          resolvers += "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/snapshots",
+          resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases",
           credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
           artifactoryPublish,
           libraryDependencies ++= Seq("org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts Artifact("javax.servlet", "jar", "jar"))
