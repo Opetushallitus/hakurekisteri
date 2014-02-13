@@ -29,8 +29,9 @@ object HakuJaValintarekisteriBuild extends Build {
 
   val SecurityStack = SpringStack.map(_ % SpringVersion) ++
     Seq("net.sf.ehcache" % "ehcache-core" % "2.4.8",
-    "fi.vm.sade.generic" % "generic-common" % "9.0-SNAPSHOT")
-
+    "fi.vm.sade.generic" % "generic-common" % "9.0-SNAPSHOT",
+    "org.jgroups"  % "jgroups" % "2.10.0.GA"
+    )
   val dependencies = Seq(
     "ch.qos.logback" % "logback-classic" % "1.0.6" % "runtime",
     "org.eclipse.jetty" % "jetty-webapp" % "8.1.8.v20121106" % "container",
