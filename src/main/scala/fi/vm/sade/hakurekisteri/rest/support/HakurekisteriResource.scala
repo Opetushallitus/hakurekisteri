@@ -58,10 +58,24 @@ abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String]
     )
   }
 
+
+
   case class ResourceQuery[R](query: Query[R]) extends AsyncResult {
+    val oidRegex = "\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+".r
+
+    val orgs = getOrganizations(User.current)
+    println(orgs)
     val is:Future[Seq[R with Identified]] = (actor ? query).mapTo[Seq[R with Identified]]
 
+    def getOrganizations(user:Option[User]):Option[Set[String]] = {
+      user.map(_.authorities.
+        map((authority:String) => Seq(authority.split("_"): _*)).
+        filter(_.containsSlice(Seq("ROLE","APP","SUORITUSREKISTERI"))).
+        map(_.reverse.head).
+        filter(x => oidRegex.pattern.matcher(x).matches).toSet
+      )
 
+    }
   }
 
 
