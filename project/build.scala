@@ -10,12 +10,26 @@ object HakuJaValintarekisteriBuild extends Build {
   val Version = "LATEST-SNAPSHOT"
   val ScalaVersion = "2.10.3"
   val ScalatraVersion = "2.2.2"
+  val SpringVersion = "3.1.4.RELEASE"
 
   val ScalatraStack = Seq(
     "org.scalatra" %% "scalatra",
     "org.scalatra" %% "scalatra-scalate",
     "org.scalatra" %% "scalatra-json",
     "org.scalatra" %% "scalatra-swagger")
+
+  val SpringStack = Seq(
+    "org.springframework" % "spring-web" ,
+    "org.springframework" % "spring-context" ,
+    "org.springframework.security" % "spring-security-web" ,
+    "org.springframework.security" % "spring-security-config",
+    "org.springframework.security" % "spring-security-ldap" ,
+    "org.springframework.security" % "spring-security-cas"
+    )
+
+  val SecurityStack = SpringStack.map(_ % SpringVersion) ++
+    Seq("net.sf.ehcache" % "ehcache-core" % "2.4.8",
+    "fi.vm.sade.generic" % "generic-common" % "9.0-SNAPSHOT")
 
   val dependencies = Seq(
     "ch.qos.logback" % "logback-classic" % "1.0.6" % "runtime",
@@ -92,10 +106,13 @@ object HakuJaValintarekisteriBuild extends Build {
           version := Version,
           scalaVersion := ScalaVersion,
           resolvers += Classpaths.typesafeReleases,
+          resolvers += "oph-snapshots" at "http://penaali.hard.ware.fi/artifactory/oph-sade-snapshot-local",
+          resolvers += "oph-releases" at "http://penaali.hard.ware.fi/artifactory/oph-sade-release-local",
           credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
           artifactoryPublish,
           libraryDependencies ++= Seq("org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts Artifact("javax.servlet", "jar", "jar"))
-            ++ ScalatraStack.map((a) => a % ScalatraVersion)
+            ++ ScalatraStack.map(_ % ScalatraVersion)
+            ++ SecurityStack
             ++ dependencies
             ++ testDependencies.map((m) => m % "test"),
           scalateTemplateConfig in Compile <<= (sourceDirectory in Compile) {
