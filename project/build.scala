@@ -32,7 +32,6 @@ object HakuJaValintarekisteriBuild extends Build {
     "fi.vm.sade.generic" % "generic-common" % "9.0-SNAPSHOT",
     "org.jgroups"  % "jgroups" % "2.10.0.GA",
     "jgroups" % "jgroups-all" % "2.4.1",
-    "bsh" % "bsh" % "1.2b3",
     "net.sf.ehcache" % "ehcache-jgroupsreplication" % "1.5",
     "org.jasig.cas" % "cas-client-support-distributed-ehcache" % "3.1.10")
 
