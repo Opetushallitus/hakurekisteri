@@ -57,33 +57,43 @@ function EihakeneetCtrl($scope, $routeParams, $http, $q) {
     }
 
     function fetchData() {
-        if (hakuOid && oppilaitosOid && luokka) {
+        if (hakuOid && oppilaitosOid) {
+            $scope.loading = true;
             var deferredOpiskelijat = $q.defer();
             var luokanOpiskelijat = [];
-            $http.get("rest/v1/opiskelijat?oppilaitosOid=" + encodeURIComponent(oppilaitosOid)
-                    + "&luokka=" + encodeURIComponent(luokka))
+            var opiskelijatUrl = "rest/v1/opiskelijat?oppilaitosOid=" + encodeURIComponent(oppilaitosOid);
+            if (luokka) {
+                opiskelijatUrl = opiskelijatUrl + "&luokka=" + encodeURIComponent(luokka);
+            }
+            $http.get(opiskelijatUrl)
                 .success(function(opiskelijat) {
                     if (opiskelijat) {
                         luokanOpiskelijat = opiskelijat;
                     }
                     deferredOpiskelijat.resolve("done");
                 })
-                .error(function() {
-                    deferredOpiskelijat.reject("error");
+                .error(function(data, status) {
+                    deferredOpiskelijat.reject(status);
                 });
 
             var deferredHakemukset = $q.defer();
             var luokanHakemukset = [];
-            $http.get(hakuAppServiceUrl + "/applications/list/fullName/asc?appState=ACTIVE&asYear=2014&asSemester=kausi_k&discretionaryOnly=false&checkAllApplications=false&start=0&rows=50&sendingSchoolOid="
-                    + encodeURIComponent(oppilaitosOid))
+            var hakemusUrl = hakuAppServiceUrl
+                + "/applications/list/fullName/asc?appState=ACTIVE&discretionaryOnly=false&checkAllApplications=false&start=0&rows=500"
+                + "&sendingSchoolOid=" + encodeURIComponent(oppilaitosOid)
+                + "&asId=" + encodeURIComponent(hakuOid);
+            if (luokka) {
+                hakemusUrl = hakemusUrl + "&sendingClass=" + encodeURIComponent(luokka);
+            }
+            $http.get(hakemusUrl)
                 .success(function(hakemukset) {
                     if (hakemukset && hakemukset.results) {
                         luokanHakemukset = hakemukset.results;
                     }
                     deferredHakemukset.resolve("done");
                 })
-                .error(function() {
-                    deferredHakemukset.reject("error");
+                .error(function(data, status) {
+                    deferredHakemukset.reject(status);
                 });
 
             var bothPromise = $q.all([deferredOpiskelijat.promise, deferredHakemukset.promise]);
@@ -99,12 +109,14 @@ function EihakeneetCtrl($scope, $routeParams, $http, $q) {
                 }
                 $scope.allRows = luokanOpiskelijat.diff(hakeneetOpiskelijat).getUnique();
                 enrichOpiskelijat();
+                $scope.loading = false;
             }, function(errors) {
                 $scope.messages.push({
                     type: "danger",
                     message: "Virhe ladattaessa tietoja: " + errors,
                     description: ""
                 });
+                $scope.loading = false;
             });
         } else {
             $scope.messages.push({
