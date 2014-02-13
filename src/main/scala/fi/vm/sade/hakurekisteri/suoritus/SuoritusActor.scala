@@ -43,6 +43,7 @@ trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suori
     case Some(Kevät) => duringFirstHalf(s.valmistuminen)
     case Some(Syksy) => !duringFirstHalf(s.valmistuminen)
     case None => true
+    case _ => true
   }
 
   def duringFirstHalf(date: DateTime):Boolean = {
