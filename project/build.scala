@@ -31,7 +31,9 @@ object HakuJaValintarekisteriBuild extends Build {
     Seq("net.sf.ehcache" % "ehcache-core" % "2.4.8",
     "fi.vm.sade.generic" % "generic-common" % "9.0-SNAPSHOT",
     "org.jgroups"  % "jgroups" % "2.10.0.GA",
-    "net.sf.ehcache" % "ehcache-jgroupsreplication" % "1.5")
+    "net.sf.ehcache" % "ehcache-jgroupsreplication" % "1.5",
+    "org.slf4j" % "slf4j-api" % "1.6.1",
+    "org.jasig.cas" % "cas-client-support-distributed-ehcache" % "3.1.10" exclude("net.sf.ehcache", "ehcache"))
 
   val dependencies = Seq(
     "ch.qos.logback" % "logback-classic" % "1.0.6" % "runtime",

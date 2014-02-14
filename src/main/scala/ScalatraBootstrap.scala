@@ -63,7 +63,7 @@ object OPHSecurity extends ContextLoader with LifeCycle {
   }
 
   override def createWebApplicationContext(sc: ServletContext): WebApplicationContext = OPHConfig(
-    "cas_mode" -> "front",
+    "cas_mode" -> "backend",
     "cas_key" -> "suoritusrekisteri",
     "spring_security_default_access" -> "hasRole('ROLE_APP_SUORITUSREKISTERI')",
     "cas_service" -> "${cas.service.suoritusrekisteri}",
