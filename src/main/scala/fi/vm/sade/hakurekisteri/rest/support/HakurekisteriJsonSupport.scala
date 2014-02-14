@@ -6,7 +6,7 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 
 trait HakurekisteriJsonSupport {
 
-  protected implicit def jsonFormats: Formats = DefaultFormats +
+  protected implicit def jsonFormats: Formats = DefaultFormats.lossless +
     new org.json4s.ext.EnumNameSerializer(yksilollistaminen) +
     FieldSerializer[Identified]()  + new UUIDSerializer  + new IdentitySerializer + org.json4s.ext.DateTimeSerializer
     }
