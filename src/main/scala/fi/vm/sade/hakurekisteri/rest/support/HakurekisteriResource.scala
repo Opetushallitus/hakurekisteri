@@ -35,7 +35,8 @@ abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String]
       println("post body: " + request.body)
 
       new AsyncResult() {
-        val is = actor ? parsedBody.extract[A]
+        val is = (actor ? parsedBody.extract[A]).map(Created(_)).
+          recover { case e:Throwable => InternalServerError("Operation failed")}
       }
     }
   }
@@ -62,7 +63,8 @@ abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String]
 
   case class ResourceQuery[R](query: Query[R]) extends AsyncResult {
 
-    val is:Future[Seq[R with Identified]] = (actor ? query).mapTo[Seq[R with Identified]]
+    val is = (actor ? query).mapTo[Seq[R with Identified]].map(Ok(_)).
+      recover { case e:Throwable => InternalServerError("Operation failed")}
     val oidRegex = "\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+".r
 
     //val orgs = getOrganizations(User.current)
