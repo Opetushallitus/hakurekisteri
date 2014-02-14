@@ -36,7 +36,7 @@ abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String]
 
       new AsyncResult() {
         val is = (actor ? parsedBody.extract[A]).mapTo[A with Identified].
-          map((resource) => Created(resource, headers = Map("Location" -> (request.getRequestURI + "/" + resource.id)))).
+          map((resource) => Created(resource, headers = Map("Location" -> request.getRequestURL.append("/").append(resource.id).toString))).
         recover { case e:Throwable => InternalServerError("Operation failed")}
       }
     }
