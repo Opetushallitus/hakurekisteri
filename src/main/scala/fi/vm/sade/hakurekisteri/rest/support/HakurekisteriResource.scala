@@ -53,7 +53,7 @@ abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String]
   def read(op: OperationBuilder) (implicit pb: Map[String, String] => Query[A]) {
     get("/", operation(op))(
       (Try(pb(params)) map ((q: Query[A]) => ResourceQuery(q)) recover {
-        case _: Exception => BadRequest("Illegal Query")
+        case e: Exception => logger.warn("Bad query: " + params ,e);BadRequest("Illegal Query")
       }).get
     )
   }
@@ -61,12 +61,12 @@ abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String]
 
 
   case class ResourceQuery[R](query: Query[R]) extends AsyncResult {
+
+    val is:Future[Seq[R with Identified]] = (actor ? query).mapTo[Seq[R with Identified]]
     val oidRegex = "\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+".r
 
-    val orgs = getOrganizations(User.current)
-    println(orgs)
-    val is:Future[Seq[R with Identified]] = (actor ? query).mapTo[Seq[R with Identified]]
-
+    //val orgs = getOrganizations(User.current)
+    println(User.current)
     def getOrganizations(user:Option[User]):Option[Set[String]] = {
       user.map(_.authorities.
         map((authority:String) => Seq(authority.split("_"): _*)).
@@ -86,7 +86,7 @@ abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String]
   object User {
 
     def current(implicit request:HttpServletRequest):Option[User]  = {
-      val name = Option(request.getUserPrincipal.getName)
+      val name = Option(request.getUserPrincipal).map(_.getName)
       println("name: " + name)
       val authorities = Try(request.getUserPrincipal.asInstanceOf[Authentication].getAuthorities.asScala.toList.map(_.getAuthority))
       println("authorities: " + authorities)
