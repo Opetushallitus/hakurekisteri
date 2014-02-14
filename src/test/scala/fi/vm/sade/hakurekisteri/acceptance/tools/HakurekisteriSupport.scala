@@ -5,7 +5,7 @@ import org.scalatra.test.HttpComponentsClient
 import javax.servlet.http.HttpServlet
 import akka.actor.{Props, ActorSystem}
 
-import org.json4s.{DefaultFormats, Formats}
+import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization._
 import java.util.{UUID, Date}
@@ -17,7 +17,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriResource, Hakurekiste
 import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaSwaggerApi, Opiskelija, OpiskelijaActor}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, Peruskoulu, Suoritus, SuoritusSwaggerApi}
 import java.io.Serializable
-import org.joda.time.{MonthDay, DateTime}
+import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 
 import com.github.nscala_time.time.Imports._
@@ -222,12 +222,12 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
   }
 
   def beBefore(s:String) =
-    new Matcher[DateTime] {
-      def apply(left: DateTime): MatchResult = {
+    new Matcher[LocalDate] {
+      def apply(left: LocalDate): MatchResult = {
 
         val pattern = DateTimeFormat.forPattern("dd.MM.yyyy")
         MatchResult(
-          left < DateTime.parse(s, pattern),
+          left < pattern.parseLocalDate(s),
           left.toString(pattern) + " was not before " + s,
           left.toString(pattern) + " was before " +s
         )
@@ -247,6 +247,7 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
     implicit def nodeSeq2String(seq:NodeSeq) : String = {
       seq.text
     }
+
 
     object oppilaitosRekisteri {
       def findOrg(koulukoodi: String): String   = koulukoodi match {
@@ -285,19 +286,15 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
 
     }
 
-    def parseOpiskelijat(rowset: Node):Seq[Opiskelija] = {
-      rowset \ "ROW" map ((row) =>
-        Opiskelija(
-          oppilaitosOid = oppilaitosRekisteri.findOrg(row \ "LAHTOKOULU") ,
-          luokkataso = row \ "LUOKKATASO",
-          luokka = row \ "LUOKKA",
-          henkiloOid = henkiloRekisteri.find(row \ "HETU"),
-          alkuPaiva = getStartDate(row \ "VUOSI", row \"KAUSI"))
+    def parseOpiskelijat(rowset: Node):Seq[Opiskelija] = rowset \ "ROW" map ((row) =>
+      Opiskelija(
+        oppilaitosOid = oppilaitosRekisteri.findOrg(row \ "LAHTOKOULU") ,
+        luokkataso = row \ "LUOKKATASO",
+        luokka = row \ "LUOKKA",
+        henkiloOid = henkiloRekisteri.find(row \ "HETU"),
+        alkuPaiva = getStartDate(row \ "VUOSI", row \"KAUSI"))
 
-        )
-
-
-    }
+      )
 
   }
   val dateformat = new SimpleDateFormat("dd.MM.yyyy")

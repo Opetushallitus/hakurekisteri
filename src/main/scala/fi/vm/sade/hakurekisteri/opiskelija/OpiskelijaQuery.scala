@@ -20,7 +20,9 @@ object OpiskelijaQuery{
   def apply(params: Map[String,String]): OpiskelijaQuery = {
 
     def extractDate(s:String) = Try(DateTime.parse(s,ISODateTimeFormat.dateTimeNoMillis())).
-      recoverWith{case _ : Exception => Try(DateTime.parse(s, ISODateTimeFormat.basicDateTimeNoMillis()))}.get
+      recoverWith{case _ : Exception => Try(DateTime.parse(s, ISODateTimeFormat.basicDateTimeNoMillis()))}.
+      recoverWith{case _ : Exception => Try(DateTime.parse(s, ISODateTimeFormat.basicDateTime()))}.
+      recoverWith{case _ : Exception => Try(DateTime.parse(s, ISODateTimeFormat.dateTime()))}.get
     OpiskelijaQuery(params.get("henkilo"), params.get("kausi").map(Kausi.withName), params.get("vuosi"), params.get("paiva").map(extractDate), params.get("oppilaitosOid"), params.get("luokka"))
   }
 }
