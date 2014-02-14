@@ -36,7 +36,6 @@ function getPostitoimipaikka($http, postinumero, successCallback, errorCallback)
 }
 
 function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options) {
-    options = [];
     $http.get(koodistoServiceUrl + '/rest/json/' + encodeURIComponent(koodisto) + '/koodi', {cache: true})
         .success(function(koodisto) {
             angular.forEach(koodisto, function(koodi) {
