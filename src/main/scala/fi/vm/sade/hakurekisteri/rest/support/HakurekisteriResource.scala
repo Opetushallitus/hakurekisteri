@@ -35,7 +35,8 @@ abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String]
       println("post body: " + request.body)
 
       new AsyncResult() {
-        val is = actor ? parsedBody.extract[A]
+        val is = (actor ? parsedBody.extract[A]).map(Created(_)).
+          recover  { case e:Throwable => InternalServerError("Operation failed")}
       }
     }
   }
