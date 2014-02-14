@@ -1,5 +1,8 @@
 package fi.vm.sade.hakurekisteri.henkilo
 
+import fi.vm.sade.hakurekisteri.storage.Identified
+import java.util.UUID
+
 
 case class Henkilo (
                      yhteystiedotRyhma: List[YhteystiedotRyhma],
@@ -19,7 +22,6 @@ case class Henkilo (
                      passivoitu: Boolean,
                      eiSuomalaistaHetua: Boolean,
                      etunimet: String,
-                     id: Int,
                      sukupuoli: String,
                      turvakielto: Boolean,
                      hetu: String,
@@ -52,3 +54,33 @@ case class YhteystiedotRyhma (
 
 case class Yksilointitieto (
                              hetu: String)
+
+
+object Henkilo extends {
+  def identify(o:Henkilo): Henkilo with Identified = o match {
+    case o: Henkilo with Identified => o
+    case _ => new Henkilo(o.yhteystiedotRyhma,
+  o.yksiloity: Boolean,
+  o.sukunimi: String,
+  o.kielisyys: List[Kieli],
+  o.yksilointitieto: Yksilointitieto,
+  o.henkiloTyyppi: String,
+  o.oidHenkilo: String,
+  o.duplicate: Boolean,
+  o.oppijanumero: String,
+  o.kayttajatiedot: Kayttajatiedot,
+  o.kansalaisuus: List[Kansalaisuus],
+  o.passinnumero: String,
+  o.asiointiKieli: Kieli,
+  o.kutsumanimi: String,
+  o.passivoitu: Boolean,
+  o.eiSuomalaistaHetua: Boolean,
+  o.etunimet: String,
+  o.sukupuoli: String,
+  o.turvakielto: Boolean,
+  o.hetu: String,
+  o.syntymaaika: String) with Identified{
+      override val id: UUID = UUID.randomUUID()
+    }
+  }
+}
