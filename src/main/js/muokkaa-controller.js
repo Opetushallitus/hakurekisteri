@@ -41,7 +41,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
         }
     }
     function fetchHenkilotiedot() {
-        Henkilo.get({henkiloOid: $scope.henkiloOid}, function(henkilo) {
+        Henkilo.get({oidHenkilo: $scope.henkiloOid}, function(henkilo) {
             $scope.henkilo = henkilo;
         }, function() {
             confirm("Henkilötietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchHenkilotiedot() : $location.path("/opiskelijat");

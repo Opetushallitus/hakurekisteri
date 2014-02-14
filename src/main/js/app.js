@@ -10,7 +10,7 @@ var app = angular.module('myApp', ['ngRoute', 'ngResource', 'ui.bootstrap'])
     });
 
 app.factory('Henkilo', function($resource) {
-    return $resource(henkiloServiceUrl + "/resources/henkilo/:henkiloOid", {henkiloOid: "@henkiloOid"}, {
+    return $resource(henkiloServiceUrl + "/resources/henkilo/:oidHenkilo", {oidHenkilo: "@oidHenkilo"}, {
         get: {method: "GET", timeout: 3000},
         save: {method: "PUT", timeout: 5000}
     });
