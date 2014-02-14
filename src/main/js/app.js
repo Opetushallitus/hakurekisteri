@@ -18,14 +18,14 @@ app.factory('Henkilo', function($resource) {
 
 app.factory('Opiskelijat', function($resource) {
     return $resource("rest/v1/opiskelijat/:opiskelijaId", {opiskelijaId: "@id"}, {
-        query: {method: "GET", isArray: true, timeout: 3000},
+        query: {method: "GET", isArray: true, cache: false, timeout: 3000},
         save: {method: "POST", timeout: 5000}
     });
 });
 
 app.factory('Suoritukset', function($resource) {
     return $resource("rest/v1/suoritukset/:suoritusId", {suoritusId: "@id"}, {
-        query: {method: "GET", isArray: true, timeout: 3000},
+        query: {method: "GET", isArray: true, cache: false, timeout: 3000},
         save: {method: "POST", timeout: 5000}
     });
 });

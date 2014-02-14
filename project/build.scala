@@ -28,7 +28,7 @@ object HakuJaValintarekisteriBuild extends Build {
     )
 
   val SecurityStack = SpringStack.map(_ % SpringVersion) ++
-    Seq("net.sf.ehcache" % "ehcache-core" % "2.4.8",
+    Seq("net.sf.ehcache" % "ehcache-core" % "2.5.0",
     "fi.vm.sade.generic" % "generic-common" % "9.0-SNAPSHOT",
     "org.jgroups"  % "jgroups" % "2.10.0.GA",
     "net.sf.ehcache" % "ehcache-jgroupsreplication" % "1.5",
