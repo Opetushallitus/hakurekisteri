@@ -29,8 +29,8 @@ trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suori
     case None => true
   }
 
-  def beforeYearEnd(vuosi:String)(date:DateTime): Boolean = {
-    newYear(vuosi.toInt+ 1).isAfter(date)
+  def beforeYearEnd(vuosi:String)(date:LocalDate): Boolean = {
+    date.getYear <= vuosi.toInt
   }
 
   def checkVuosi(vuosi: Option[String])(s:Suoritus):Boolean = vuosi match {
@@ -46,8 +46,8 @@ trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suori
     case _ => true
   }
 
-  def duringFirstHalf(date: DateTime):Boolean = {
-    (newYear(date.getYear) to startOfAutumn(date.getYear)).contains(date)
+  def duringFirstHalf(date: LocalDate):Boolean = {
+    (newYear(date.getYear) to startOfAutumn(date.getYear)).contains(date.toDateTimeAtStartOfDay)
   }
 
 

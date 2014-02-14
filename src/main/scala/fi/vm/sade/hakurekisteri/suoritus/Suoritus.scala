@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.suoritus
 
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.storage.Identified
-import org.joda.time.DateTime
+import org.joda.time.{LocalDate, DateTime}
 
 object yksilollistaminen extends Enumeration {
   type Yksilollistetty = Value
@@ -15,7 +15,7 @@ object yksilollistaminen extends Enumeration {
 import yksilollistaminen._
 
 case class Komoto(oid: String, komo: String, tarjoaja: String)
-case class Suoritus(komoto: Komoto, tila: String, valmistuminen: DateTime, henkiloOid: String, yksilollistaminen: Yksilollistetty)
+case class Suoritus(komoto: Komoto, tila: String, valmistuminen: LocalDate, henkiloOid: String, yksilollistaminen: Yksilollistetty)
 
 
 object Suoritus {
@@ -35,15 +35,21 @@ object PerusopetuksenToteutus {
 
 object Peruskoulu {
 
-  def apply(oppilaitos: String, tila: String, valmistuminen: DateTime, henkiloOid: String): Suoritus = {
+  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
     Suoritus(PerusopetuksenToteutus(oppilaitos), tila, valmistuminen, henkiloOid, Ei)
+  }
+
+  def apply(oppilaitos: String, tila: String, valmistuminen: DateTime, henkiloOid: String): Suoritus = {
+    Suoritus(PerusopetuksenToteutus(oppilaitos), tila, valmistuminen.toLocalDate, henkiloOid, Ei)
   }
 
 }
 
+
+
 object OsittainYksilollistettyPerusopetus {
 
-  def apply(oppilaitos: String, tila: String, valmistuminen: DateTime, henkiloOid: String): Suoritus = {
+  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
     Suoritus(PerusopetuksenToteutus(oppilaitos), tila, valmistuminen, henkiloOid, Osittain)
   }
 
@@ -51,7 +57,7 @@ object OsittainYksilollistettyPerusopetus {
 
 object AlueittainYksilollistettyPerusopetus {
 
-  def apply(oppilaitos: String, tila: String, valmistuminen: DateTime, henkiloOid: String): Suoritus = {
+  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
     Suoritus(PerusopetuksenToteutus(oppilaitos), tila, valmistuminen, henkiloOid, Alueittain)
   }
 
@@ -59,7 +65,7 @@ object AlueittainYksilollistettyPerusopetus {
 
 object KokonaanYksillollistettyPerusopetus {
 
-  def apply(oppilaitos: String, tila: String, valmistuminen: DateTime, henkiloOid: String): Suoritus = {
+  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
     Suoritus(PerusopetuksenToteutus(oppilaitos), tila, valmistuminen, henkiloOid, Kokonaan)
   }
 
