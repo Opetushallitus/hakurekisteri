@@ -48,7 +48,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
         });
     }
     function fetchLuokkatiedot() {
-        Opiskelijat.query({henkiloOid: $scope.henkiloOid}, function(luokkatiedot) {
+        Opiskelijat.query({henkilo: $scope.henkiloOid}, function(luokkatiedot) {
             $scope.luokkatiedot = luokkatiedot;
             enrichLuokkatiedot();
         }, function() {
@@ -56,7 +56,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
         });
     }
     function fetchSuoritukset() {
-        Suoritukset.query({henkiloOid: $scope.henkiloOid}, function(suoritukset) {
+        Suoritukset.query({henkilo: $scope.henkiloOid}, function(suoritukset) {
             $scope.suoritukset = suoritukset;
             enrichSuoritukset();
         }, function() {
