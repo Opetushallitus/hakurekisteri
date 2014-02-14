@@ -32,7 +32,7 @@ abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String]
 
   def create(op: OperationBuilder) {
     post("/", operation(op)) {
-
+      println("post body: " + parsedBody)
 
       new AsyncResult() {
         val is = actor ? parsedBody.extract[A]
