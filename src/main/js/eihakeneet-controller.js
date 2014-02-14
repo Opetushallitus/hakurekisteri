@@ -107,7 +107,7 @@ function EihakeneetCtrl($scope, $routeParams, $http, $q) {
                         }
                     }
                 }
-                $scope.allRows = luokanOpiskelijat.diff(hakeneetOpiskelijat).getUnique();
+                $scope.allRows = luokanOpiskelijat.diff(hakeneetOpiskelijat); //.getUnique();
                 enrichOpiskelijat();
                 $scope.loading = false;
             }, function(errors) {
