@@ -1,6 +1,6 @@
 'use strict';
 
-function OpiskelijatCtrl($scope, $routeParams, $log, $http, Opiskelijat) {
+function OpiskelijatCtrl($scope, $routeParams, $location, $log, $http, Opiskelijat) {
     $scope.loading = false;
     $scope.currentRows = [];
     $scope.allRows = [];
@@ -10,6 +10,7 @@ function OpiskelijatCtrl($scope, $routeParams, $log, $http, Opiskelijat) {
     $scope.pageSize = 10;
     $scope.targetOrg = "";
     $scope.myRoles = [];
+    $scope.searchTerm = $routeParams.q;
 
     function getMyRoles() {
         $http.get('/cas/myroles', {cache: true})
@@ -28,6 +29,10 @@ function OpiskelijatCtrl($scope, $routeParams, $log, $http, Opiskelijat) {
         return (Array.isArray($scope.myRoles)
             && ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1
             || $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1));
+    };
+
+    $scope.search = function() {
+        $location.path("/opiskelijat").search({q: $scope.searchTerm});
     };
 
     $scope.fetch = function() {

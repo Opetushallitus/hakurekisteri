@@ -1,6 +1,6 @@
 div(class="container")
   aside
-    form(id="filterForm" class="form-inline pull-right" ng-submit="fetch()")
+    form(id="filterForm" class="form-inline pull-right" ng-submit="search()")
       input(class="form-control" size="40" ng-model="searchTerm" type="search" placeholder="Hae hetulla tai oppilaitosnumerolla")
       button(class="btn btn-primary pull-right" type="submit") Hae
       div(ng-show="hakuehto")

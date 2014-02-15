@@ -44,7 +44,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
         Henkilo.get({oidHenkilo: $scope.henkiloOid}, function(henkilo) {
             $scope.henkilo = henkilo;
         }, function() {
-            confirm("Henkilötietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchHenkilotiedot() : $location.path("/opiskelijat");
+            confirm("Henkilötietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchHenkilotiedot() : back();
         });
     }
     function fetchLuokkatiedot() {
@@ -52,7 +52,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
             $scope.luokkatiedot = luokkatiedot;
             enrichLuokkatiedot();
         }, function() {
-            confirm("Luokkatietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchLuokkatiedot() : $location.path("/opiskelijat");
+            confirm("Luokkatietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchLuokkatiedot() : back();
         });
     }
     function fetchSuoritukset() {
@@ -60,7 +60,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
             $scope.suoritukset = suoritukset;
             enrichSuoritukset();
         }, function() {
-            confirm("Suoritustietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchSuoritukset() : $location.path("/opiskelijat");
+            confirm("Suoritustietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchSuoritukset() : back();
         });
     }
 
@@ -182,14 +182,21 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
         var savePromise = $q.all(deferredSaves.map(function(deferred) { return deferred.promise; }));
         savePromise.then(function() {
             $log.info("saved successfully");
-            $location.path("/opiskelijat");
+            back();
         }, function(errors) {
             $log.error("error while saving: " + errors);
         });
     };
     $scope.cancel = function() {
-        $location.path("/opiskelijat")
+        back();
     };
+    function back() {
+        if (history && history.back) {
+            history.back();
+        } else {
+            $location.path("/opiskelijat")
+        }
+    }
     $scope.removeMessage = function(message) {
         var index = $scope.messages.indexOf(message);
         if (index !== -1) {
