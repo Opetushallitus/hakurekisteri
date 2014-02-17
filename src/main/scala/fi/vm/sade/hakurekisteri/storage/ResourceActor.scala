@@ -7,6 +7,7 @@ import scala.concurrent.ExecutionContext
 import java.lang.RuntimeException
 import akka.actor.Status.Failure
 import scala.util.Try
+import fi.vm.sade.hakurekisteri.storage.repository.Repository
 
 abstract class ResourceActor[T: Manifest] extends Actor { this: Repository[T] with ResourceService[T] =>
 

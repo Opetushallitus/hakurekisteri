@@ -5,6 +5,7 @@ import Kausi._
 import fi.vm.sade.hakurekisteri.storage._
 import scala.Some
 import com.github.nscala_time.time.Imports._
+import fi.vm.sade.hakurekisteri.storage.repository.{InMemRepository, Repository}
 
 
 trait SuoritusRepository extends InMemRepository[Suoritus] {

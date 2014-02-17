@@ -5,6 +5,7 @@ import fi.vm.sade.hakurekisteri.rest.support.Kausi._
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.storage._
 import scala.Some
+import fi.vm.sade.hakurekisteri.storage.repository.{InMemRepository, Repository}
 
 
 trait OpiskelijaRepository extends InMemRepository[Opiskelija] {
