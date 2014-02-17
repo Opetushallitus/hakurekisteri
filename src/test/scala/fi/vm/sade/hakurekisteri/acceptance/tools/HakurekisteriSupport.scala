@@ -14,8 +14,8 @@ import org.scalatest.matchers._
 import org.scalatest.Suite
 import scala.xml.{Elem, Node, NodeSeq}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriResource, HakurekisteriSwagger, HakurekisteriJsonSupport}
-import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaSwaggerApi, Opiskelija, OpiskelijaActor}
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, Peruskoulu, Suoritus, SuoritusSwaggerApi}
+import fi.vm.sade.hakurekisteri.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi, Opiskelija, OpiskelijaActor}
+import fi.vm.sade.hakurekisteri.suoritus._
 import java.io.Serializable
 import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
@@ -60,8 +60,8 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
         implicit val system = ActorSystem()
         val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(tehdytSuoritukset)))
         val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq())))
-        addServlet(new HakurekisteriResource[Suoritus](suoritusRekisteri, fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(_)) with SuoritusSwaggerApi, "/rest/v1/suoritukset")
-        addServlet(new HakurekisteriResource[Opiskelija](opiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaSwaggerApi, "/rest/v1/opiskelijat")
+        addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteri, fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(_)) with SuoritusSwaggerApi, "/rest/v1/suoritukset")
+        addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](opiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaSwaggerApi, "/rest/v1/opiskelijat")
         initialized = true
       }
 

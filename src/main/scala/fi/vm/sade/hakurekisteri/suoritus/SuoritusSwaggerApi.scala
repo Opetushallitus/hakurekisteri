@@ -6,7 +6,7 @@ import scala.Some
 import org.scalatra.swagger.AllowableValues.AnyValue
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
 
-trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus] =>
+trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus, CreateSuoritusCommand] =>
 
   override protected val applicationName = Some("suoritukset")
   protected val applicationDescription = "Suoritusrekisterin rajapinta."

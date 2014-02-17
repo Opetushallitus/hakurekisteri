@@ -11,12 +11,12 @@ import scala.util.Try
 class LocalDateSerializer(dayFormat:String = "dd.MM.yyyy") extends CustomSerializer[LocalDate](format => (
   {
     case JString(date) =>
-      Try(format.dateFormat.parse(date)).map(new LocalDate(_)).
-      recoverWith{case _:Exception => Try(DateTimeFormat.forPattern(dayFormat).parseLocalDate(date))}
-        .get
+      format.dateFormat.parse(date).map(new LocalDate(_)).getOrElse(
+        Try(DateTimeFormat.forPattern(dayFormat).parseLocalDate(date)).get)}
 
 
-  },
+
+  ,
   {
     case x: LocalDate =>
       JString(x.toString(dayFormat))

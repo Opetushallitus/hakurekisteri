@@ -1,10 +1,10 @@
 import _root_.akka.actor.{Props, ActorSystem}
-import fi.vm.sade.hakurekisteri.henkilo.{HenkiloSwaggerApi, Henkilo}
-import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaQuery, Opiskelija, OpiskelijaActor, OpiskelijaSwaggerApi}
+import fi.vm.sade.hakurekisteri.henkilo.Henkilo
+import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.rest.support.{Query, HakurekisteriResource, ResourcesApp, HakurekisteriSwagger}
 import fi.vm.sade.hakurekisteri.storage.repository.InMemRepository
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService, ResourceActor}
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus, SuoritusSwaggerApi, SuoritusActor}
+import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
 import java.util
 import java.util.Properties
@@ -29,7 +29,7 @@ class ScalatraBootstrap extends LifeCycle {
   implicit val system = ActorSystem()
 
   override def init(context: ServletContext) {
-    OPHSecurity init context
+    //OPHSecurity init context
 
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(Seq())))
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq())))
@@ -38,9 +38,9 @@ class ScalatraBootstrap extends LifeCycle {
 
       override def identify(o: Henkilo): Henkilo with Identified = Henkilo.identify(o)
     }))
-    context mount(new HakurekisteriResource[Suoritus](suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi, "/rest/v1/suoritukset")
-    context mount(new HakurekisteriResource[Henkilo](henkiloRekisteri, (x) => new Query[Henkilo](){} ) with HenkiloSwaggerApi, "/rest/v1/henkilot")
-    context mount(new HakurekisteriResource[Opiskelija](opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi, "/rest/v1/opiskelijat")
+    context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi, "/rest/v1/suoritukset")
+    //context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](henkiloRekisteri, (x) => new Query[Henkilo](){} ) with HenkiloSwaggerApi, "/rest/v1/henkilot")
+    context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi, "/rest/v1/opiskelijat")
     context mount(new ResourcesApp, "/rest/v1/api-docs/*")
     context mount(classOf[GuiServlet], "/")
   }
@@ -48,7 +48,7 @@ class ScalatraBootstrap extends LifeCycle {
   override def destroy(context: ServletContext) {
     system.shutdown()
     system.awaitTermination(15.seconds)
-    OPHSecurity.destroy(context)
+    //OPHSecurity.destroy(context)
   }
 }
 

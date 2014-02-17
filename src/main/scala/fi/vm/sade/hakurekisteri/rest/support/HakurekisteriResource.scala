@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.scalatra.swagger._
 import org.scalatra.json.JacksonJsonSupport
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.ExecutionContext
 import _root_.akka.util.Timeout
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import org.scalatra._
@@ -12,13 +12,13 @@ import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import scala.util.Try
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.concurrent.TimeUnit
-import org.springframework.security.core.GrantedAuthority
 import javax.servlet.http.HttpServletRequest
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.Authentication
 
+import org.scalatra.commands._
+abstract class   HakurekisteriResource[A, C <: HakurekisteriCommand[A]](actor:ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C])extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with  JacksonJsonParsing  {
 
-abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A])extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport {
+
 
   protected implicit def executor: ExecutionContext = system.dispatcher
 
@@ -32,23 +32,19 @@ abstract class   HakurekisteriResource[A](actor:ActorRef, qb: Map[String,String]
 
   def create(op: OperationBuilder) {
     post("/", operation(op)) {
-      println("post body: " + request.body)
+      println(request.body)
+      (command[C] >> (_.toValidatedResource)).fold(
+        errors => {println(request.body);println(errors);BadRequest("Malformed Resource")},
+        resource => new AsyncResult() {
+          val is = (actor ? resource).mapTo[A with Identified].
+            map((createdResource) => Created(createdResource, headers = Map("Location" -> request.getRequestURL.append("/").append(createdResource.id).toString))).
+            recover { case e:Throwable => InternalServerError("Operation failed")}
+        })
 
-      new AsyncResult() {
-        val is = (actor ? parsedBody.extract[A]).mapTo[A with Identified].
-          map((resource) => Created(resource, headers = Map("Location" -> request.getRequestURL.append("/").append(resource.id).toString))).
-        recover { case e:Throwable => InternalServerError("Operation failed")}
-      }
     }
   }
 
 
-  /*post("/:id") {
-    new AsyncResult() {
-      val is:
-    }
-
-  } */
 
   implicit val queryBuilder: (Map[String, String]) => Query[A] = qb
 

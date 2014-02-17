@@ -16,7 +16,8 @@ object HakuJaValintarekisteriBuild extends Build {
     "org.scalatra" %% "scalatra",
     "org.scalatra" %% "scalatra-scalate",
     "org.scalatra" %% "scalatra-json",
-    "org.scalatra" %% "scalatra-swagger")
+    "org.scalatra" %% "scalatra-swagger",
+    "org.scalatra" %% "scalatra-commands")
 
   val SpringStack = Seq(
     "org.springframework" % "spring-web" ,

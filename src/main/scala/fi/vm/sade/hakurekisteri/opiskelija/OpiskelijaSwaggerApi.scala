@@ -5,7 +5,7 @@ import scala.Some
 import java.util.Date
 
 trait OpiskelijaSwaggerApi
-    { this: HakurekisteriResource[Opiskelija] =>
+    { this: HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand] =>
 
   override protected val applicationName = Some("opiskelijat")
   protected val applicationDescription = "Opiskelijatietojen rajapinta."
