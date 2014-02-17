@@ -4,8 +4,8 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
 import scala.Some
 import java.util.Date
 
-/*trait HenkiloSwaggerApi
-    { this: HakurekisteriResource[Henkilo] =>
+trait HenkiloSwaggerApi
+    { this: HakurekisteriResource[Henkilo, CreateHenkiloCommand] =>
 
   override protected val applicationName = Some("henkilot")
   protected val applicationDescription = "henkilötietojen rajapinta."
@@ -26,4 +26,4 @@ import java.util.Date
     .summary("luo Opiskelijan ja palauttaa sen tiedot"))
 
 
-}  */
+}

@@ -2,19 +2,35 @@ package fi.vm.sade.hakurekisteri.henkilo
 
 import org.scalatra.commands._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriCommand
-import org.joda.time.DateTime
 import org.json4s._
 import org.scalatra.util.conversion.TypeConverter
-import fi.vm.sade.hakurekisteri.henkilo.Kieli
-import fi.vm.sade.hakurekisteri.henkilo.Kansalaisuus
-import fi.vm.sade.hakurekisteri.henkilo.Kayttajatiedot
-import fi.vm.sade.hakurekisteri.henkilo.Yksilointitieto
-import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
+import org.scalatra.DefaultValue
 
 
-/*class CreateHenkiloCommand extends HakurekisteriCommand[Henkilo] {
+class CreateHenkiloCommand extends HakurekisteriCommand[Henkilo] {
 
   implicit def getValue[A](option: Field[A]) : A = option.value.get
+
+  implicit val yhteistiedotDefault: DefaultValue[YhteystiedotRyhma]  = default(YhteystiedotRyhma(-1,"dummy default value", "scalatra", readOnly = true, Seq()))
+  implicit val stringToYhteistiedot: TypeConverter[String, YhteystiedotRyhma] = (_: String) =>  None
+  implicit val jsonToYhteistiedot: TypeConverter[JValue, YhteystiedotRyhma] = safeOption(_.extractOpt[YhteystiedotRyhma])
+
+  implicit val kieliDefault: DefaultValue[Kieli] = default(Kieli("fi","suomi"))
+  implicit val stringToKieli: TypeConverter[String,Kieli] = (_: String ) => None
+  implicit val jsonToKieli: TypeConverter[JValue,Kieli] = safeOption(_.extractOpt[Kieli])
+
+  implicit val kansalaisuusDefault: DefaultValue[Kansalaisuus] = default(Kansalaisuus("246"))
+  implicit val stringToKansalaisuus: TypeConverter[String,Kansalaisuus] = (_: String ) => None
+  implicit val jsonToKansalaisuus: TypeConverter[JValue,Kansalaisuus] = safeOption(_.extractOpt[Kansalaisuus])
+
+  implicit val YksilointitietoDefault: DefaultValue[Yksilointitieto] = default(Yksilointitieto("dummy"))
+  implicit val stringToYksilointi:  TypeConverter[String,Yksilointitieto] = (_: String ) => None
+  implicit val jsonToYksilointi: TypeConverter[JValue,Yksilointitieto] = safeOption(_.extractOpt[Yksilointitieto])
+
+  implicit val kayttajatiedotDefault: DefaultValue[Kayttajatiedot] = default(Kayttajatiedot("No-user"))
+  implicit val stringToKayttajatiedot:  TypeConverter[String,Kayttajatiedot] = (_: String ) => None
+  implicit val jsonToKayttajatiedot: TypeConverter[JValue,Kayttajatiedot] = safeOption(_.extractOpt[Kayttajatiedot])
+
 
   val yhteysTiedotRyhma: Field[Seq[YhteystiedotRyhma]] = validatableSeqBinding(asSeq[YhteystiedotRyhma]("yhteystiedotRyhma")).notEmpty
   val yksiloity:Field[Boolean] = asBoolean("yksiloity").required
@@ -65,4 +81,4 @@ import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
 
 
 
-}        */
+}

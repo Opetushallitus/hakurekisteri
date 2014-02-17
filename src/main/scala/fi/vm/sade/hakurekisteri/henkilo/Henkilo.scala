@@ -49,7 +49,7 @@ case class YhteystiedotRyhma (
                                ryhmaKuvaus: String,
                                ryhmaAlkuperaTieto: String,
                                readOnly: Boolean,
-                               yhteystiedot: List[Yhteystiedot])
+                               yhteystiedot: Seq[Yhteystiedot])
 
 
 case class Yksilointitieto (
