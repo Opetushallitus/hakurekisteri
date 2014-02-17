@@ -48,17 +48,17 @@ div(class="container")
                 div(class="loading" ng-show="searchingPostinumero")
               div(class="form-group col-sm-4")
                 label(for="maa") Maa
-                select(id="maa" class="form-control" ng-model="henkilo.maa" ng-options="maa.value as maa.text for maa in maat")
+                input(id="maa" class="form-control" type="text" ng-model="henkilo.maa")
             div(class="row")
               div(class="form-group col-sm-4")
                 label(for="kotikunta") Kotikunta
-                select(id="kotikunta" class="form-control" ng-model="henkilo.kotikunta" ng-options="kunta.value as kunta.text for kunta in kunnat" required)
+                input(id="kotikunta" class="form-control" type="text" ng-model="henkilo.kotikunta" required)
               div(class="form-group col-sm-4")
                 label(for="kansalaisuus") Kansalaisuus
-                select(id="kansalaisuus" class="form-control" ng-model="henkilo.kansalaisuus" ng-options="kansalaisuus.value as kansalaisuus.text for kansalaisuus in kansalaisuudet" required)
+                input(id="kansalaisuus" class="form-control" type="text" ng-model="henkilo.kansalaisuus" required)
               div(class="form-group col-sm-4")
                 label(for="aidinkieli") Äidinkieli
-                select(id="aidinkieli" class="form-control" ng-model="henkilo.aidinkieli" ng-options="kieli.value as kieli.text for kieli in kielet" required)
+                input(id="aidinkieli" class="form-control" type="text" ng-model="henkilo.aidinkieli" required)
             div(class="row")
               div(class="form-group col-sm-6")
                 label(for="matkapuhelin") Matkapuhelin
@@ -74,14 +74,19 @@ div(class="container")
         div(class="panel-body")
           ul(class="list-unstyled")
             li(ng-repeat="suoritus in suoritukset")
-              strong {{suoritus.oppilaitos}} ({{suoritus.tila}})
               form(class="form-inline suoritus-form")
                 div(class="form-group")
+                  strong Oppilaitos
+                  input(type="text" class="form-control" ng-model="suoritus.oppilaitos" required)
+                div(class="form-group")
+                  strong Koulutus
+                  select(class="form-control" ng-model="suoritus.komoto.komo" ng-options="koulutus.value as koulutus.text for koulutus in koulutukset" required)
+                div(class="form-group")
                   strong Yksilöllistetty
-                  select(class="form-control" ng-model="suoritus.yksilollistaminen" ng-options="yks for yks in yksilollistamiset" required)
+                  select(class="form-control" ng-model="suoritus.yksilollistaminen" ng-options="yks.value as yks.text for yks in yksilollistamiset" required ng-disabled="suoritus.komoto.komo !== 'peruskoulu'")
                 div(class="form-group")
                   strong Opetuskieli
-                  select(class="form-control" ng-model="suoritus.opetuskieli" ng-options="kieli.value as kieli.text for kieli in kielet" required)
+                  input(type="text" class="form-control" ng-model="suoritus.opetuskieli" required)
                 div(class="form-group")
                   strong Valmistumispäivä
                   input(type="text" class="form-control" ng-model="suoritus.valmistuminen" datepicker-popup="{{format}}" datepicker-options="dateOptions" required show-button-bar="false")
