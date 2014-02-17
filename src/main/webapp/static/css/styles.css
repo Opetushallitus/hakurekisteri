@@ -61,12 +61,6 @@ label {
     text-align: center;
 }
 
-.teapot img {
-    margin-top: 50px;
-    margin-bottom: 50px;
-    height: 50px;
-}
-
 .sortable {
     cursor: pointer;
 }
@@ -103,10 +97,27 @@ label {
     width: 16px;
 }
 
+.loading-td {
+    text-align: center;
+}
+
+.loading-large {
+    background-image: url('../images/ajax-loader-large.gif');
+    height: 32px;
+    margin: 50px auto;
+    width: 32px;
+}
+
 .suoritus-form .form-group {
     max-width: 30%;
 }
 
 .nappulat {
     margin-bottom: 20px;
+}
+
+#auth-iframe {
+    border: none;
+    height: 1px;
+    width: 1px;
 }
