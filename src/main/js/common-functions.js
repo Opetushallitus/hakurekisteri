@@ -62,3 +62,8 @@ function authenticateToAuthenticationService($http, successCallback, errorCallba
         .success(successCallback)
         .error(errorCallback);
 }
+
+// IE9 hack
+if (!console) {
+    console = {}; console.log = function() {};
+}
