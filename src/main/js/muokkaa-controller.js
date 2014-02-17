@@ -11,11 +11,11 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
     $scope.koulutukset = [
         {value: "ulkomainen", text: "Ulkomainen (0)"},
         {value: "peruskoulu", text: "Peruskoulu"},
-        {value: "keskeytynyt", text: "Keskeytynyt (7)"},
+        // {value: "keskeytynyt", text: "Keskeytynyt (7)"}, TODO keskeytynyt ei vielä käytössä
         {value: "lukio", text: "Lukio (9)"}
     ];
     $scope.messages = [];
-    /*
+    /* koodistovalikot ei käytössä
     $scope.maat = [];
     $scope.kunnat = [];
     $scope.kielet = [];
