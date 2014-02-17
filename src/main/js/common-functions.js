@@ -56,3 +56,9 @@ function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options) {
             });
         });
 }
+
+function authenticateToAuthenticationService($http, successCallback, errorCallback) {
+    $http.get(henkiloServiceUrl + '/buildversion.txt?auth')
+        .success(successCallback)
+        .error(errorCallback);
+}
