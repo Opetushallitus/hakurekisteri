@@ -143,5 +143,5 @@ function OpiskelijatCtrl($scope, $routeParams, $location, $log, $http, Opiskelij
         }
     }
 
-    $scope.fetch();
+    authenticateToAuthenticationService($http, $scope.fetch, function() {});
 }

@@ -2,8 +2,20 @@
 
 function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, Opiskelijat, Suoritukset) {
     $scope.henkiloOid = $routeParams.henkiloOid;
-    $scope.yksilollistamiset = ["Ei", "Osittain", "Kokonaan", "Alueittain"];
+    $scope.yksilollistamiset = [
+        {value: "Ei", text: "Ei (1)"},
+        {value: "Osittain", text: "Osittain (2)"},
+        {value: "Alueittain", text: "Alueittain (3)"},
+        {value: "Kokonaan", text: "Kokonaan (6)"}
+    ];
+    $scope.koulutukset = [
+        {value: "ulkomainen", text: "Ulkomainen (0)"},
+        {value: "peruskoulu", text: "Peruskoulu"},
+        // {value: "keskeytynyt", text: "Keskeytynyt (7)"}, TODO keskeytynyt ei vielä käytössä
+        {value: "lukio", text: "Lukio (9)"}
+    ];
     $scope.messages = [];
+    /* koodistovalikot ei käytössä
     $scope.maat = [];
     $scope.kunnat = [];
     $scope.kielet = [];
@@ -12,7 +24,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
     getKoodistoAsOptionArray($http, 'kunta', 'FI', $scope.kunnat);
     getKoodistoAsOptionArray($http, 'kieli', 'FI', $scope.kielet);
     getKoodistoAsOptionArray($http, 'maatjavaltiot2', 'FI', $scope.kansalaisuudet);
-
+    */
 
     function enrichSuoritukset() {
         if ($scope.suoritukset) {
@@ -20,7 +32,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
                 if (suoritus.komoto && suoritus.komoto.tarjoaja) {
                     getOrganisaatio($http, suoritus.komoto.tarjoaja, function(organisaatio) {
                         if (organisaatio.oid === suoritus.komoto.tarjoaja) {
-                            suoritus.oppilaitos = organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi ? organisaatio.nimi.fi : organisaatio.nimi.sv);
+                            suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
                         }
                     }, function() {});
                 }
@@ -44,7 +56,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
         Henkilo.get({oidHenkilo: $scope.henkiloOid}, function(henkilo) {
             $scope.henkilo = henkilo;
         }, function() {
-            confirm("Henkilötietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchHenkilotiedot() : back();
+            confirm("Henkilötietojen hakeminen ei onnistunut. Yritä uudelleen?") ? fetchHenkilotiedot() : back();
         });
     }
     function fetchLuokkatiedot() {
@@ -52,7 +64,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
             $scope.luokkatiedot = luokkatiedot;
             enrichLuokkatiedot();
         }, function() {
-            confirm("Luokkatietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchLuokkatiedot() : back();
+            confirm("Luokkatietojen hakeminen ei onnistunut. Yritä uudelleen?") ? fetchLuokkatiedot() : back();
         });
     }
     function fetchSuoritukset() {
@@ -60,7 +72,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
             $scope.suoritukset = suoritukset;
             enrichSuoritukset();
         }, function() {
-            confirm("Suoritustietojen hakeminen epäonnistui. Yritä uudelleen?") ? fetchSuoritukset() : back();
+            confirm("Suoritustietojen hakeminen ei onnistunut. Yritä uudelleen?") ? fetchSuoritukset() : back();
         });
     }
 
@@ -70,6 +82,33 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
         fetchSuoritukset();
     }
     fetchData();
+
+    $scope.getOppilaitos = function(searchStr) {
+        if (searchStr && searchStr.trim().match(/^\d{5}$/))
+            return $http.get(organisaatioServiceUrl + '/rest/organisaatio/' + searchStr)
+                .then(function(result) {
+                    return [result.data];
+                }, function() {
+                    return [];
+                });
+        else if (searchStr && searchStr.length > 3)
+            return $http.get(organisaatioServiceUrl + '/rest/organisaatio/hae', {
+                    params: {
+                        searchstr: searchStr,
+                        organisaatioTyyppi: "Oppilaitos"
+                    }
+                })
+                .then(function(result) {
+                    if (result.data && result.data.numHits > 0)
+                        return result.data.organisaatiot;
+                    else
+                        return [];
+                }, function() {
+                    return [];
+                });
+        else
+            return [];
+    };
 
     $scope.fetchPostitoimipaikka = function() {
         if ($scope.henkilo.postinumero && $scope.henkilo.postinumero.match(/^\d{5}$/)) {
@@ -89,13 +128,18 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
             });
         }
     };
+    $scope.koulutusChange = function(suoritus) {
+        if (suoritus && suoritus.komoto && suoritus.komoto.komo === 'peruskoulu') {
+
+        }
+    };
     $scope.save = function() {
         var deferredValidations = [];
         function validateOppilaitoskoodit() {
-            angular.forEach($scope.luokkatiedot, function(luokkatieto) {
+            angular.forEach($scope.luokkatiedot.concat($scope.suoritukset), function(oppilaitosKoodiHolder) {
                 var deferredValidation = $q.defer();
                 deferredValidations.push(deferredValidation);
-                if (!luokkatieto.oppilaitos || !luokkatieto.oppilaitos.match(/^\d{5}$/)) {
+                if (!oppilaitosKoodiHolder.oppilaitos || !oppilaitosKoodiHolder.oppilaitos.match(/^\d{5}$/)) {
                     $scope.messages.push({
                         type: "danger",
                         message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
@@ -103,13 +147,17 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
                     });
                     deferredValidation.reject("error");
                 } else {
-                    getOrganisaatio($http, luokkatieto.oppilaitos, function (organisaatio) {
-                        luokkatieto.oppilaitosOid = organisaatio.oid;
+                    getOrganisaatio($http, oppilaitosKoodiHolder.oppilaitos, function (organisaatio) {
+                        if (oppilaitosKoodiHolder.komoto && oppilaitosKoodiHolder.komoto.tarjoaja) {
+                            oppilaitosKoodiHolder.komoto.tarjoaja = organisaatio.oid;
+                        } else {
+                            oppilaitosKoodiHolder.oppilaitosOid = organisaatio.oid;
+                        }
                         deferredValidation.resolve("done");
                     }, function () {
                         $scope.messages.push({
                             type: "danger",
-                            message: "Oppilaitosta ei löytynyt oppilaitoskoodilla: " + luokkatieto.oppilaitos + ".",
+                            message: "Oppilaitosta ei löytynyt oppilaitoskoodilla: " + oppilaitosKoodiHolder.oppilaitos + ".",
                             description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
                         });
                         deferredValidation.reject("error");

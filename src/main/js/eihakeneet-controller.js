@@ -126,7 +126,7 @@ function EihakeneetCtrl($scope, $routeParams, $http, $q) {
             });
         }
     }
-    fetchData();
+    authenticateToAuthenticationService($http, fetchData, function() {});
 
     $scope.removeMessage = function(message) {
         var index = $scope.messages.indexOf(message);

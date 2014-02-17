@@ -115,9 +115,3 @@ label {
 .nappulat {
     margin-bottom: 20px;
 }
-
-#auth-iframe {
-    border: none;
-    height: 1px;
-    width: 1px;
-}
