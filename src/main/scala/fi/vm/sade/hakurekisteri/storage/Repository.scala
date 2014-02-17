@@ -2,6 +2,9 @@ package fi.vm.sade.hakurekisteri.storage
 
 import java.util.UUID
 
+import scala.slick.lifted.AbstractTable
+import scala.slick.lifted
+
 trait Repository[T] {
 
   def save(t:T):T with Identified
@@ -54,5 +57,37 @@ trait InMemRepository[T] extends Repository[T] {
     store.values.toSeq
   }
 
+
+}
+
+
+import scala.slick.driver.JdbcDriver.simple._
+
+
+trait SlickRepository[T,P <: AbstractTable[_], R] extends JournaledRepository[T] {
+
+  val db: Database
+  val table: scala.slick.lifted.TableQuery[P]
+
+  def toRow(resource: T with Identified):  P#TableElementType
+  def toResource(row: P#TableElementType): T with Identified
+
+
+  override def addModification(o: T with Identified) {
+    db withSession {
+      implicit session =>
+      table += toRow(o)
+    }
+  }
+
+
+  override def loadJournal() {
+    db withSession {
+      implicit session =>
+        val foo = table.list.map(toResource)
+        store = foo.map((f) => f.id -> f).toMap
+    }
+
+  }
 
 }
