@@ -85,7 +85,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
 
     $scope.getOppilaitos = function(searchStr) {
         if (searchStr && searchStr.trim().match(/^\d{5}$/))
-            return $http.get(organisaatioServiceUrl + '/rest/organisaatio/' + oppilaitosKoodi)
+            return $http.get(organisaatioServiceUrl + '/rest/organisaatio/' + searchStr)
                 .then(function(result) {
                     return [result.data];
                 }, function() {
