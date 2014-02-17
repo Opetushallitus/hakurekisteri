@@ -77,7 +77,7 @@ div(class="container")
               form(class="form-inline suoritus-form")
                 div(class="form-group")
                   strong Oppilaitos
-                  input(type="text" class="form-control" ng-model="suoritus.oppilaitos" required)
+                  input(type="text" class="form-control" ng-model="suoritus.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as organisaatio.nimi.fi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue" typeahead-loading="loading-oppilaitos" required)
                 div(class="form-group")
                   strong Koulutus
                   select(class="form-control" ng-model="suoritus.komoto.komo" ng-options="koulutus.value as koulutus.text for koulutus in koulutukset" required)

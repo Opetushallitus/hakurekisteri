@@ -83,6 +83,16 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
     }
     fetchData();
 
+    $scope.getOppilaitos = function(oppilaitosKoodi) {
+        if (oppilaitosKoodi && oppilaitosKoodi.trim().match(/^\d{5}$/))
+            return $http.get(organisaatioServiceUrl + '/rest/organisaatio/' + oppilaitosKoodi)
+                .then(function(organisaatio) {
+                    return [organisaatio];
+                });
+        else
+            return [];
+    };
+
     $scope.fetchPostitoimipaikka = function() {
         if ($scope.henkilo.postinumero && $scope.henkilo.postinumero.match(/^\d{5}$/)) {
             $scope.searchingPostinumero = true;
