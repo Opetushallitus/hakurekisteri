@@ -40,7 +40,10 @@ object HakuJaValintarekisteriBuild extends Build {
     "org.eclipse.jetty" % "jetty-webapp" % "8.1.8.v20121106" % "container",
     "org.json4s" %% "json4s-jackson" % "3.2.4",
     "com.typesafe.akka" %% "akka-testkit" %  "2.1.2",
-    "com.github.nscala-time" %% "nscala-time" % "0.8.0")
+    "com.github.nscala-time" %% "nscala-time" % "0.8.0",
+    "com.typesafe.slick" %% "slick" % "2.0.0",
+    "com.h2database" % "h2" % "1.3.174"
+  )
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion)
 
@@ -111,6 +114,7 @@ object HakuJaValintarekisteriBuild extends Build {
           resolvers += Classpaths.typesafeReleases,
           resolvers += "oph-snapshots" at "http://penaali.hard.ware.fi/artifactory/oph-sade-snapshot-local",
           resolvers += "oph-releases" at "http://penaali.hard.ware.fi/artifactory/oph-sade-release-local",
+          resolvers += "Sonatype" at "http://oss.sonatype.org/content/repositories/releases/",
           credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
           artifactoryPublish,
           libraryDependencies ++= Seq("org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts Artifact("javax.servlet", "jar", "jar"))
