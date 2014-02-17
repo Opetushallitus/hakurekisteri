@@ -7,7 +7,7 @@ div(class="container")
   aside(class="nappulat")
     a(class="btn btn-warning" href="/haku-app/virkailija/hakemus" role="button")
       span(class="glyphicon glyphicon-arrow-left")
-      span Takaisin
+      span(oph-msg="suoritusrekisteri.takaisin") Takaisin
 
   section(id="opiskelijat" class="panel panel-default")
     header(class="panel-heading")
@@ -29,5 +29,5 @@ div(class="container")
         td {{row.oppilaitos}}
         td {{row.luokka}}
       tr(ng-show="loading")
-        td(class="teapot" colspan="6")
-          img(src="http://chimplyimage.appspot.com/images/samples/misc-spinner/animatedTeapot.gif" alt="..." title="...")
+        td(class="loading-td" colspan="4")
+          div(class="loading-large")
