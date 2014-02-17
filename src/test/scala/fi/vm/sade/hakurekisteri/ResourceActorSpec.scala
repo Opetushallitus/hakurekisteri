@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri
 import org.scalatest.WordSpec
 import org.scalatest.matchers.ShouldMatchers
 import akka.actor.{Props, ActorSystem}
-import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService, Repository, ResourceActor}
+import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService, ResourceActor}
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija

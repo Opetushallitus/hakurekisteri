@@ -2,7 +2,8 @@ import _root_.akka.actor.{Props, ActorSystem}
 import fi.vm.sade.hakurekisteri.henkilo.{HenkiloSwaggerApi, Henkilo}
 import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaQuery, Opiskelija, OpiskelijaActor, OpiskelijaSwaggerApi}
 import fi.vm.sade.hakurekisteri.rest.support.{Query, HakurekisteriResource, ResourcesApp, HakurekisteriSwagger}
-import fi.vm.sade.hakurekisteri.storage.{Identified, InMemRepository, ResourceService, ResourceActor}
+import fi.vm.sade.hakurekisteri.storage.repository.InMemRepository
+import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService, ResourceActor}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus, SuoritusSwaggerApi, SuoritusActor}
 import gui.GuiServlet
 import java.util
@@ -86,7 +87,7 @@ case class OPHConfig(props:(String, String)*) extends XmlWebApplicationContext {
 
   val propertyLocations = Seq("override.properties", "suoritusrekisteri.properties", "common.properties")
 
-  val localProperties = (new Properties /: Map(props: _*)) {case (props, (k,v)) => props.put(k,v); props}
+  val localProperties = (new Properties /: Map(props: _*)) {case (newProperties, (k,v)) => newProperties.put(k,v); newProperties}
 
   val homeDir = sys.props.get("user.home").getOrElse("")
 

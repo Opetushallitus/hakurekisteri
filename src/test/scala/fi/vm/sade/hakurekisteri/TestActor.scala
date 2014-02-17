@@ -1,8 +1,9 @@
 package fi.vm.sade.hakurekisteri
 
-import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService, Repository, ResourceActor}
+import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService, ResourceActor}
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import java.util.UUID
+import fi.vm.sade.hakurekisteri.storage.repository.Repository
 
 
 class TestActor extends ResourceActor[Resource]  with Repository[Resource] with ResourceService[Resource] {
