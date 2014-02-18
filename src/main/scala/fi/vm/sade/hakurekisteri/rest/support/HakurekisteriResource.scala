@@ -36,11 +36,17 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
   }
 
   post("/:id", operation(update)) {
-    updateResource
+    Try(UUID.fromString(params("id"))).map(updateResource).
+      recover {
+      case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
+    }.get
   }
 
   get("/:id") {
-    readResource
+    Try(UUID.fromString(params("id"))).map(readResource).
+      recover {
+      case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
+    }.get
 
   }
 
@@ -87,35 +93,27 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
 
 
 
-  def updateResource: Object = {
-    Try(UUID.fromString(params("id"))).map((id) =>
+  def updateResource(id:UUID): Object = {
+    (command[C] >> (_.toValidatedResource)).fold(
+      errors => BadRequest("Malformed Resource + " + errors),
+      resource => new ActorResult[A with Identified](identifyResource(resource, id), Ok(_)))
 
-      (command[C] >> (_.toValidatedResource)).fold(
-        errors => BadRequest("Malformed Resource + " + errors),
-        resource => new ActorResult[A with Identified](identifyResource(resource, id), Ok(_)))
-    ).
-      recover {
-      case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
-    }.get
+
   }
 
 
 
 
-  def readResource: Object = {
-    Try(UUID.fromString(params("id"))).map((id) =>
-      new ActorResult[Option[A with Identified]](id, {
-        case Some(data) => Ok(data)
-        case None => NotFound()
-        case result =>
-          logger.warn("unexpected result from actor: " + result)
-          InternalServerError()
+  def readResource(id:UUID): Object = {
+    new ActorResult[Option[A with Identified]](id, {
+      case Some(data) => Ok(data)
+      case None => NotFound()
+      case result =>
+        logger.warn("unexpected result from actor: " + result)
+        InternalServerError()
 
-      })
-    ).
-      recover {
-      case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
-    }.get
+    })
+
   }
 
 
