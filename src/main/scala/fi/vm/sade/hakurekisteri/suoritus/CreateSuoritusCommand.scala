@@ -9,6 +9,7 @@ import org.scalatra.{util, DefaultValue}
 import org.scalatra.util.conversion.TypeConverter
 import org.joda.time.format.DateTimeFormat
 import org.json4s.JValue
+import java.util.Locale
 
 
 class CreateSuoritusCommand extends HakurekisteriCommand[Suoritus] {
@@ -34,7 +35,8 @@ class CreateSuoritusCommand extends HakurekisteriCommand[Suoritus] {
   val henkiloOid: Field[String]  = asType[String]("henkiloOid").notBlank
   val yks: Field[Yksilollistetty]  = asType[Yksilollistetty]("yksilollistaminen")
   val oppilaitosOid: Field[String]  = asType[String]("oppilaitosOid")
-  val suoritusKieli: Field[String] = asType[String]("suoritusKieli")
+  val suoritusKieli: Field[String] = asType[String]("suoritusKieli").allowableValues(Locale.getISOLanguages:_*)
+
 
   override def toResource: Suoritus = Suoritus(Komoto(komotooid.value.get, komo.value.get, tarjoaja.value.get), tila.value.get, valmistuminen.value.get, henkiloOid.value.get, yks.value.get, suoritusKieli.value.get)
 }
