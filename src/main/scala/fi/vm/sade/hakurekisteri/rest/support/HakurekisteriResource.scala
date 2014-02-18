@@ -56,6 +56,12 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
     queryResource
   )
 
+  notFound {
+    response.setStatus(404)
+    response.getWriter.println("Resource not found")
+
+  }
+
 }
 
 abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]](actor:ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C])extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with  JacksonJsonParsing  {
