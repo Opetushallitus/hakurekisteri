@@ -28,7 +28,7 @@ class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, Opis
 
 class OpiskelijaTable(tag: Tag) extends Table[(UUID, String, String, String, String, Long, Option[Long], Long)](tag, "opiskelija") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
-  def resourceId = column[UUID]("resource_id") // This is the primary key column
+  def resourceId = column[UUID]("resource_id", O.DBType("VARCHAR(36)"))
   def oppilaitosOid = column[String]("oppilaitos_oid")
   def luokkataso = column[String]("luokkataso")
   def luokka = column[String]("luokka")
