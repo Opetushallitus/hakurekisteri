@@ -4,6 +4,7 @@ import java.util.UUID
 
 import scala.slick.lifted.AbstractTable
 import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.rest.support.Resource
 
 trait Repository[T] {
 
@@ -15,7 +16,7 @@ trait Repository[T] {
 
 
 
-trait InMemRepository[T] extends Repository[T] {
+trait InMemRepository[T <: Resource] extends Repository[T] {
 
   var store:Map[UUID,T with Identified] = Map()
 

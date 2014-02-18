@@ -1,7 +1,7 @@
 import _root_.akka.actor.{Props, ActorSystem}
 import fi.vm.sade.hakurekisteri.henkilo.{HenkiloSwaggerApi, CreateHenkiloCommand, Henkilo}
 import fi.vm.sade.hakurekisteri.opiskelija._
-import fi.vm.sade.hakurekisteri.rest.support.{Query, HakurekisteriResource, ResourcesApp, HakurekisteriSwagger}
+import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.repository.InMemRepository
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService, ResourceActor}
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -29,7 +29,7 @@ class ScalatraBootstrap extends LifeCycle {
   implicit val system = ActorSystem()
 
   override def init(context: ServletContext) {
-    OPHSecurity init context
+    //OPHSecurity init context
 
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(Seq())))
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq())))
@@ -48,7 +48,7 @@ class ScalatraBootstrap extends LifeCycle {
   override def destroy(context: ServletContext) {
     system.shutdown()
     system.awaitTermination(15.seconds)
-    OPHSecurity.destroy(context)
+    //OPHSecurity.destroy(context)
   }
 }
 

@@ -2,9 +2,10 @@ package fi.vm.sade.hakurekisteri.storage.repository
 
 import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.slick.lifted.AbstractTable
+import fi.vm.sade.hakurekisteri.rest.support.Resource
 
 
-trait JournaledRepository[T] extends InMemRepository[T] {
+trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
 
   val journal:Journal[T]
 

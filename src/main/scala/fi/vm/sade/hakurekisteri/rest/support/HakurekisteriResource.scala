@@ -16,7 +16,9 @@ import javax.servlet.http.HttpServletRequest
 import org.springframework.security.core.Authentication
 
 import org.scalatra.commands._
-abstract class   HakurekisteriResource[A, C <: HakurekisteriCommand[A]](actor:ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C])extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with  JacksonJsonParsing  {
+import java.util.UUID
+
+abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]](actor:ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C])extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with  JacksonJsonParsing  {
 
 
 
@@ -32,7 +34,7 @@ abstract class   HakurekisteriResource[A, C <: HakurekisteriCommand[A]](actor:Ac
 
   def create(op: OperationBuilder) {
     post("/", operation(op)) {
-      println(request.body)
+      println("creating" + request.body)
       (command[C] >> (_.toValidatedResource)).fold(
         errors => {println(request.body);println(errors);BadRequest("Malformed Resource")},
         resource => new AsyncResult() {
@@ -44,6 +46,26 @@ abstract class   HakurekisteriResource[A, C <: HakurekisteriCommand[A]](actor:Ac
     }
   }
 
+
+  post("/:id") {
+    println(request.body)
+
+    Try(UUID.fromString(params("id"))).map((id) =>
+      (command[C] >> (_.toValidatedResource)).fold(
+        errors => {println(request.body);println(errors);BadRequest("Malformed Resource")},
+        resource => new AsyncResult() {
+          val identified: A with Identified = resource.identify(id)
+          val is = (actor ? identified).
+            map((createdResource) => Ok(createdResource)).
+            recover { case e:Throwable => InternalServerError("Operation failed")}
+        })
+    ).
+    recover {
+      case e: Exception => logger.warn("unparseable request",e);BadRequest("Not an uuid")
+    }.get
+
+
+  }
 
 
   implicit val queryBuilder: (Map[String, String]) => Query[A] = qb

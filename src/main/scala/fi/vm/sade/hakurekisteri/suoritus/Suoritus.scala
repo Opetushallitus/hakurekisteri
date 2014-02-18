@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.suoritus
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.{LocalDate, DateTime}
+import fi.vm.sade.hakurekisteri.rest.support.Resource
 
 object yksilollistaminen extends Enumeration {
   type Yksilollistetty = Value
@@ -15,13 +16,21 @@ object yksilollistaminen extends Enumeration {
 import yksilollistaminen._
 
 case class Komoto(oid: String, komo: String, tarjoaja: String)
-case class Suoritus(komoto: Komoto, tila: String, valmistuminen: LocalDate, henkiloOid: String, yksilollistaminen: Yksilollistetty)
+case class Suoritus(komoto: Komoto, tila: String, valmistuminen: LocalDate, henkiloOid: String, yksilollistaminen: Yksilollistetty)  extends Resource{
+  override def identify[R <: Suoritus](id: UUID): R with Identified =  Suoritus.identify(this,id).asInstanceOf[R with Identified]
+
+}
 
 
 object Suoritus {
   def identify(o:Suoritus): Suoritus with Identified = o match {
     case o: Suoritus with Identified => o
-    case _ => new Suoritus(o.komoto: Komoto, o.tila: String, o.valmistuminen, o.henkiloOid: String, o.yksilollistaminen) with Identified{
+    case _ => o.identify(UUID.randomUUID())
+
+  }
+
+  def identify(o:Suoritus, id:UUID) = {
+    new Suoritus(o.komoto: Komoto, o.tila: String, o.valmistuminen, o.henkiloOid: String, o.yksilollistaminen) with Identified{
       val id: UUID = UUID.randomUUID()
     }
   }
