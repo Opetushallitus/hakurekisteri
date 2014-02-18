@@ -54,11 +54,12 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
   }
 
 
-  def identifyResource(resource : A, id: UUID): A with Identified = resource.identify(id)
+  def identifyResource(resource : A, id: UUID): A with Identified = {println("identifying: " + id);resource.identify(id)}
 
   def update(op: OperationBuilder) {
     post("/:id", operation(op)) {
       Try(UUID.fromString(params("id"))).map((id) =>
+
         (command[C] >> (_.toValidatedResource)).fold(
           errors => BadRequest("Malformed Resource + " + errors),
           resource => new ActorResult[A with Identified](identifyResource(resource,id), Ok(_)))
@@ -77,7 +78,7 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
           case Some(data) => Ok(data)
           case None => NotFound()
           case result =>
-            logger.warn("unexpected result from actor: " + result);
+            logger.warn("unexpected result from actor: " + result)
             InternalServerError()
 
         })

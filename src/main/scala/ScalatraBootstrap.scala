@@ -4,8 +4,6 @@ import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
-import java.util.Properties
-import java.util.EnumSet
 import org.scalatra._
 import javax.servlet.{ServletContextEvent, DispatcherType, ServletContext}
 import org.scalatra.swagger.Swagger
@@ -28,9 +26,9 @@ class ScalatraBootstrap extends LifeCycle {
   implicit val system = ActorSystem()
 
   override def init(context: ServletContext) {
-    //OPHSecurity init context
+    OPHSecurity init context
     val database = Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
-    val suoritusRekisteri = system.actorOf(Props(new SuoritusActor))
+    val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))))
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))))
     val henkiloRekisteri = system.actorOf(Props(new HenkiloActor))
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi, "/rest/v1/suoritukset")
@@ -43,7 +41,7 @@ class ScalatraBootstrap extends LifeCycle {
   override def destroy(context: ServletContext) {
     system.shutdown()
     system.awaitTermination(15.seconds)
-    //OPHSecurity.destroy(context)
+    OPHSecurity.destroy(context)
   }
 }
 
@@ -57,7 +55,7 @@ object OPHSecurity extends ContextLoader with LifeCycle {
     initWebApplicationContext(context)
 
     val security = context.addFilter("springSecurityFilterChain", classOf[DelegatingFilterProxy])
-    security.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST,DispatcherType.FORWARD), true, "/*")
+    security.addMappingForUrlPatterns(java.util.EnumSet.of(DispatcherType.REQUEST,DispatcherType.FORWARD), true, "/*")
   }
 
 
@@ -82,7 +80,7 @@ case class OPHConfig(props:(String, String)*) extends XmlWebApplicationContext {
 
   val propertyLocations = Seq("override.properties", "suoritusrekisteri.properties", "common.properties")
 
-  val localProperties = (new Properties /: Map(props: _*)) {case (newProperties, (k,v)) => newProperties.put(k,v); newProperties}
+  val localProperties = (new java.util.Properties /: Map(props: _*)) {case (newProperties, (k,v)) => newProperties.put(k,v); newProperties}
 
   val homeDir = sys.props.get("user.home").getOrElse("")
 

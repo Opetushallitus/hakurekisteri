@@ -24,14 +24,14 @@ case class Suoritus(komoto: Komoto, tila: String, valmistuminen: LocalDate, henk
 
 object Suoritus {
   def identify(o:Suoritus): Suoritus with Identified = o match {
-    case o: Suoritus with Identified => o
+    case o: Suoritus with Identified => println(o.id);o
     case _ => o.identify(UUID.randomUUID())
 
   }
 
-  def identify(o:Suoritus, id:UUID) = {
+  def identify(o:Suoritus, identity:UUID) = {
     new Suoritus(o.komoto: Komoto, o.tila: String, o.valmistuminen, o.henkiloOid: String, o.yksilollistaminen, o.suoritusKieli) with Identified{
-      val id: UUID = UUID.randomUUID()
+      val id: UUID = identity
     }
   }
 }

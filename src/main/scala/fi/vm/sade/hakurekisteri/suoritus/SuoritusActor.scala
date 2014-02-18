@@ -11,10 +11,7 @@ import scala.Some
 
 trait SuoritusRepository extends JournaledRepository[Suoritus] {
 
-  def identify(o:Suoritus): Suoritus with Identified = o match {
-    case o: Suoritus with Identified => o
-    case _ => Suoritus.identify(o)
-  }
+  def identify(o:Suoritus): Suoritus with Identified = Suoritus.identify(o)
 
 }
 
