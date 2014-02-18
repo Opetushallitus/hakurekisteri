@@ -28,7 +28,7 @@ class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, Suoritus
 
 class SuoritusTable(tag: Tag) extends Table[(UUID, String, String, String, String, String, String, String, String, Long)](tag, "suoritus") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
-  def resourceId = column[UUID]("resource_id", O.DBType("VARCHAR(36)"))
+  def resourceId = column[UUID]("resource_id", O.DBType("UUID"))
   def komotoOid = column[String]("komoto_oid")
   def komotoKomo = column[String]("komoto_komo")
   def komotoTarjoaja = column[String]("komoto_tarjoaja")
