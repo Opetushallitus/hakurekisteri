@@ -16,6 +16,7 @@ import org.springframework.core.io.FileSystemResource
 import org.springframework.web.context.support.XmlWebApplicationContext
 import org.springframework.web.context._
 import org.springframework.web.filter.DelegatingFilterProxy
+import scala.collection.immutable.Iterable
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.slick.driver.JdbcDriver.simple._
@@ -29,24 +30,24 @@ class ScalatraBootstrap extends LifeCycle {
   val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
   val OPH= "1.2.246.562.10.00000000001"
 
-  val serviceUrl = "http://luokka.hard.ware.fi:8301/organisaatio-service/services/organisaatioService"
+  val serviceUrl = "http://luokka.hard.ware.fi:8301/organisaatio-service"
+
 
   override def init(context: ServletContext) {
     OPHSecurity init context
-
-
+    val orgServiceUrl = OPHSecurity.config.properties.get("cas.service.organisaatio-service").getOrElse(serviceUrl) + "/services/organisaatioService"
     val database = Try(Database.forName(jndiName)).recover {
       case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
     }.get
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))))
-    val filteredSuoritusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Suoritus](serviceUrl ,suoritusRekisteri, (suoritus) => suoritus.komoto.tarjoaja )))
+    val filteredSuoritusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Suoritus](orgServiceUrl ,suoritusRekisteri, (suoritus) => suoritus.komoto.tarjoaja )))
 
 
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))))
-    val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija](serviceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid )))
+    val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija](orgServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid )))
 
     val henkiloRekisteri = system.actorOf(Props(new HenkiloActor))
-    val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo](serviceUrl,henkiloRekisteri, (henkilo) => OPH )))
+    val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo](orgServiceUrl,henkiloRekisteri, (henkilo) => OPH )))
 
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](filteredSuoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/rest/v1/suoritukset")
     context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](filteredHenkiloRekisteri, (x) => new fi.vm.sade.hakurekisteri.rest.support.Query[Henkilo](){}) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand], "/rest/v1/henkilot")
@@ -65,6 +66,14 @@ class ScalatraBootstrap extends LifeCycle {
 
 object OPHSecurity extends ContextLoader with LifeCycle {
 
+  val config = OPHConfig(
+    "cas_mode" -> "backend",
+    "cas_key" -> "suoritusrekisteri",
+    "spring_security_default_access" -> "hasRole('ROLE_APP_SUORITUSREKISTERI')",
+    "cas_service" -> "${cas.service.suoritusrekisteri}",
+    "cas_callback_url" -> "${cas.callback.suoritusrekisteri}"
+  )
+
   val cleanupListener = new ContextCleanupListener
 
   override def init(context: ServletContext) {
@@ -81,13 +90,10 @@ object OPHSecurity extends ContextLoader with LifeCycle {
     cleanupListener.contextDestroyed(new ServletContextEvent(context))
   }
 
-  override def createWebApplicationContext(sc: ServletContext): WebApplicationContext = OPHConfig(
-    "cas_mode" -> "backend",
-    "cas_key" -> "suoritusrekisteri",
-    "spring_security_default_access" -> "hasRole('ROLE_APP_SUORITUSREKISTERI')",
-    "cas_service" -> "${cas.service.suoritusrekisteri}",
-    "cas_callback_url" -> "${cas.callback.suoritusrekisteri}"
-  )
+  override def createWebApplicationContext(sc: ServletContext): WebApplicationContext = {
+
+    config
+  }
 
 
 }
@@ -109,6 +115,15 @@ case class OPHConfig(props:(String, String)*) extends XmlWebApplicationContext {
     file <- propertyLocations.reverse
   } yield new FileSystemResource(ophConfDir + file)
 
+  def properties: Map[String, String] =  {
+    import scala.collection.JavaConversions._
+    val rawMap = resources.map((fsr) => {val prop = new java.util.Properties; prop.load(fsr.getInputStream); Map(prop.toList: _*)}).
+      reduce(_ ++ _)
+    val foo = Set(rawMap.map((s) => (for (stuff <- "\\$\\{(.*?)\\}".r findAllMatchIn s._2) yield stuff.group(1)).toList).reduce(_ ++ _):_*)
+    println(foo.map(rawMap.get))
+
+    rawMap.mapValues((s) => "\\$\\{(.*?)\\}".r replaceAllIn (s, m => rawMap.getOrElse(m.group(1), m.group(1)) ))
+  }
 
   val placeholder = Bean(
     classOf[PropertySourcesPlaceholderConfigurer],
