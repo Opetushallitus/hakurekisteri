@@ -19,6 +19,8 @@ import org.scalatra.commands._
 import java.util.UUID
 import org.json4s._
 import scala.Some
+import fi.vm.sade.hakurekisteri.organization.OrganizationHierarchy
+import scala.util.matching.Regex
 
 trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] extends ScalatraServlet with JsonSupport[JValue] with SwaggerSupport { this: HakurekisteriResource[A , C] =>
 
@@ -126,23 +128,46 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
   }
 
   case class ResourceQuery[R](query: Query[R]) extends AsyncResult {
+    val authorities: Seq[String] = getOrganizations(User.current).map(_.toList).getOrElse(Seq())
+    //val foo: (R) => Boolean = (groupFinder andThen (OrganizationHierarchy.checkAccess(authorities, _)) )
+    val is = {
+      val future = (actor ? (query, authorities)).mapTo[Seq[R with Identified]]
 
-    val is = (actor ? query).mapTo[Seq[R with Identified]].map(Ok(_)).
-      recover { case e:Throwable => InternalServerError("Operation failed")}
-    val oidRegex = "\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+".r
-
-    //val orgs = getOrganizations(User.current)
-    println(User.current)
-    def getOrganizations(user:Option[User]):Option[Set[String]] = {
-      user.map(_.authorities.
-        map((authority:String) => Seq(authority.split("_"): _*)).
-        filter(_.containsSlice(Seq("ROLE","APP","SUORITUSREKISTERI"))).
-        map(_.reverse.head).
-        filter(x => oidRegex.pattern.matcher(x).matches).toSet
-      )
-
+      future.map(Ok(_)).
+        recover {
+        case e: Throwable => InternalServerError("Operation failed")
+      }
     }
+
+
   }
+
+
+  def getOrganizations(user:Option[User]):Option[Set[String]] = {
+    user.map(_.authorities.
+      map(splitAuthority).
+      filter(isSuoritusRekisteri).
+      map(_.reverse.head).
+      filter(isOid).toSet
+    )
+
+  }
+
+
+  val regex = new Regex("\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+")
+
+
+  def isOid(x:String) = {
+    println(x)
+
+    (regex findFirstIn x).nonEmpty
+  }
+
+  def isSuoritusRekisteri: (Seq[String]) => Boolean = {
+    _.containsSlice(Seq("ROLE", "APP", "SUORITUSREKISTERI"))
+  }
+
+  def splitAuthority(authority: String) = Seq(authority split "_": _*)
 
 
   case class User(username:String, authorities: Seq[String])
@@ -153,9 +178,7 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
 
     def current(implicit request:HttpServletRequest):Option[User]  = {
       val name = Option(request.getUserPrincipal).map(_.getName)
-      println("name: " + name)
       val authorities = Try(request.getUserPrincipal.asInstanceOf[Authentication].getAuthorities.asScala.toList.map(_.getAuthority))
-      println("authorities: " + authorities)
       name.map(User(_, authorities.getOrElse(Seq())))
     }
 

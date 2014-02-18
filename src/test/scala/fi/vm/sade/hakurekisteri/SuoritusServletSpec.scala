@@ -8,6 +8,7 @@ import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.DateTime
 import fi.vm.sade.hakurekisteri.storage.repository.InMemJournal
 import fi.vm.sade.hakurekisteri.opiskelija.{CreateOpiskelijaCommand, Opiskelija}
+import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 
 class SuoritusServletSpec extends ScalatraFunSuite {
   val suoritus = Peruskoulu("1.2.3", "KESKEN",  DateTime.now,"1.2.4")
@@ -18,9 +19,10 @@ class SuoritusServletSpec extends ScalatraFunSuite {
     journal
   }
   val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(Seq(suoritus))))
+  val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
   implicit val swagger = new HakurekisteriSwagger
 
-  addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteri, SuoritusQuery(_ )) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/*")
+  addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](guardedSuoritusRekisteri, SuoritusQuery(_ )) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/*")
 
   test("get root should return 200") {
     get("/") {

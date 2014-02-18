@@ -43,7 +43,8 @@ object HakuJaValintarekisteriBuild extends Build {
     "com.typesafe.akka" %% "akka-testkit" %  "2.1.2",
     "com.github.nscala-time" %% "nscala-time" % "0.8.0",
     "com.typesafe.slick" %% "slick" % "2.0.0",
-    "com.h2database" % "h2" % "1.3.174"
+    "com.h2database" % "h2" % "1.3.174",
+  "net.databinder.dispatch" %% "dispatch-core" % "0.11.0"
   )
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion)
