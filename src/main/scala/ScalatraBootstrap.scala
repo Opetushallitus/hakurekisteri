@@ -18,16 +18,22 @@ import org.springframework.web.filter.DelegatingFilterProxy
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.slick.driver.JdbcDriver.simple._
+import scala.util.Try
 
 
 class ScalatraBootstrap extends LifeCycle {
 
   implicit val swagger:Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem()
+  val jndiName = "datasourcename"
 
   override def init(context: ServletContext) {
     OPHSecurity init context
-    val database = Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
+
+
+    val database = Try(Database.forName(jndiName)).recover {
+      case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
+    }.get
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))))
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))))
     val henkiloRekisteri = system.actorOf(Props(new HenkiloActor))
