@@ -7,6 +7,7 @@ import fi.vm.sade.hakurekisteri.storage._
 import scala.Some
 import fi.vm.sade.hakurekisteri.storage.repository._
 import scala.Some
+import fi.vm.sade.hakurekisteri.henkilo.Henkilo
 
 
 trait OpiskelijaRepository extends JournaledRepository[Opiskelija] {
