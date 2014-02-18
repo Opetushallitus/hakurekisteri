@@ -25,7 +25,7 @@ class ScalatraBootstrap extends LifeCycle {
 
   implicit val swagger:Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem()
-  val jndiName = "jdbc/suoritusrekisteri"
+  val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
 
   override def init(context: ServletContext) {
     OPHSecurity init context
