@@ -3,10 +3,11 @@ package fi.vm.sade.hakurekisteri
 import org.scalatra.test.scalatest.{ScalatraFunSuite, ScalatraFlatSpec}
 import akka.actor.{Props, ActorSystem}
 import java.util.{UUID, Date}
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriResource, HakurekisteriSwagger}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriCrudCommands, HakurekisteriResource, HakurekisteriSwagger}
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.DateTime
 import fi.vm.sade.hakurekisteri.storage.repository.InMemJournal
+import fi.vm.sade.hakurekisteri.opiskelija.{CreateOpiskelijaCommand, Opiskelija}
 
 class SuoritusServletSpec extends ScalatraFunSuite {
   val suoritus = Peruskoulu("1.2.3", "KESKEN",  DateTime.now,"1.2.4")
@@ -19,7 +20,7 @@ class SuoritusServletSpec extends ScalatraFunSuite {
   val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(Seq(suoritus))))
   implicit val swagger = new HakurekisteriSwagger
 
-  addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteri, SuoritusQuery(_ )) with SuoritusSwaggerApi, "/*")
+  addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteri, SuoritusQuery(_ )) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/*")
 
   test("get root should return 200") {
     get("/") {

@@ -28,7 +28,7 @@ class ScalatraBootstrap extends LifeCycle {
   val jndiName = "jdbc/suoritusrekisteri"
 
   override def init(context: ServletContext) {
-    OPHSecurity init context
+    //OPHSecurity init context
 
 
     val database = Try(Database.forName(jndiName)).recover {
@@ -37,9 +37,9 @@ class ScalatraBootstrap extends LifeCycle {
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))))
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))))
     val henkiloRekisteri = system.actorOf(Props(new HenkiloActor))
-    context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi, "/rest/v1/suoritukset")
-    context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](henkiloRekisteri, (x) => new fi.vm.sade.hakurekisteri.rest.support.Query[Henkilo](){} ) with HenkiloSwaggerApi, "/rest/v1/henkilot")
-    context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi, "/rest/v1/opiskelijat")
+    context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/rest/v1/suoritukset")
+    context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](henkiloRekisteri, (x) => new fi.vm.sade.hakurekisteri.rest.support.Query[Henkilo](){} ) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand], "/rest/v1/henkilot")
+    context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand], "/rest/v1/opiskelijat")
     context mount(new ResourcesApp, "/rest/v1/api-docs/*")
     context mount(classOf[GuiServlet], "/")
   }
@@ -47,7 +47,7 @@ class ScalatraBootstrap extends LifeCycle {
   override def destroy(context: ServletContext) {
     system.shutdown()
     system.awaitTermination(15.seconds)
-    OPHSecurity.destroy(context)
+    //OPHSecurity.destroy(context)
   }
 }
 

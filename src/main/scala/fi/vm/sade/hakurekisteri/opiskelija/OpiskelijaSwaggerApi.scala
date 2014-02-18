@@ -10,7 +10,7 @@ trait OpiskelijaSwaggerApi
   override protected val applicationName = Some("opiskelijat")
   protected val applicationDescription = "Opiskelijatietojen rajapinta."
 
-  read(apiOperation[Seq[Opiskelija]]("opiskelijat")
+  val query = (apiOperation[Seq[Opiskelija]]("opiskelijat")
     summary "Näytä kaikki opiskelijatiedot"
     notes "Näyttää kaikki opiskelijatiedot. Voit myös hakea eri parametreillä."
     parameter queryParam[Option[String]]("henkilo").description("haetun henkilon oid")
@@ -21,9 +21,9 @@ trait OpiskelijaSwaggerApi
     parameter queryParam[Option[String]]("luokka").description("haetun luokan nimi")
   )
 
-  create(apiOperation[Opiskelija]("lisääOpiskelija")
+  val create = (apiOperation[Opiskelija]("lisääOpiskelija")
     .parameter(bodyParam[Opiskelija]("lisääOpiskelija").description("Uusi opiskelija").required)
     .summary("luo Opiskelijan ja palauttaa sen tiedot"))
 
-  update(apiOperation[Opiskelija]("päivitäOpiskelijaa")) // parameter pathParam[UUID]("id").description("päivitettävän opiskelijan id")
+  val update = (apiOperation[Opiskelija]("päivitäOpiskelijaa")) // parameter pathParam[UUID]("id").description("päivitettävän opiskelijan id")
 }

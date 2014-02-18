@@ -13,7 +13,7 @@ import java.text.SimpleDateFormat
 import org.scalatest.matchers._
 import org.scalatest.Suite
 import scala.xml.{Elem, Node, NodeSeq}
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriResource, HakurekisteriSwagger, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriCrudCommands, HakurekisteriResource, HakurekisteriSwagger, HakurekisteriJsonSupport}
 import fi.vm.sade.hakurekisteri.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi, Opiskelija, OpiskelijaActor}
 import fi.vm.sade.hakurekisteri.suoritus._
 import java.io.Serializable
@@ -66,8 +66,8 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
         }
         val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(tehdytSuoritukset)))
         val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq())))
-        addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteri, fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(_)) with SuoritusSwaggerApi, "/rest/v1/suoritukset")
-        addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](opiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaSwaggerApi, "/rest/v1/opiskelijat")
+        addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteri, fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/rest/v1/suoritukset")
+        addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](opiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] , "/rest/v1/opiskelijat")
         initialized = true
       }
 

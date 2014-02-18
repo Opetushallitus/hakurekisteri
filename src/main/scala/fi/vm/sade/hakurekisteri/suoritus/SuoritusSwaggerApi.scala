@@ -28,19 +28,23 @@ trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus, CreateSuoritus
   registerModel[Komoto]
   registerModel(suoritusModel)
 
-  read(
-    apiOperation[Suoritus]("haeSuoritukset")
-      summary "Näytä kaikki suoritukset"
-      notes "Näyttää kaikki suoritukset. Voit myös hakea eri parametreillä."
-      parameter queryParam[Option[String]]("henkilo").description("suorittaneen henkilon oid")
-      parameter queryParam[Option[String]]("kausi").description("suorituksen päättymisen kausi").allowableValues("S", "K")
-      parameter queryParam[Option[String]]("vuosi").description("suorituksen päättymisen vuosi"))
+  val query = (apiOperation[Suoritus]("haeSuoritukset")
+    summary "Näytä kaikki suoritukset"
+    notes "Näyttää kaikki suoritukset. Voit myös hakea eri parametreillä."
+    parameter queryParam[Option[String]]("henkilo").description("suorittaneen henkilon oid")
+    parameter queryParam[Option[String]]("kausi").description("suorituksen päättymisen kausi").allowableValues("S", "K")
+    parameter queryParam[Option[String]]("vuosi").description("suorituksen päättymisen vuosi"))
 
-  create(apiOperation[Suoritus]("lisääSuoritus")
+
+  val create = apiOperation[Suoritus]("lisääSuoritus")
     .parameter(bodyParam[Suoritus]("uusiSuoritus").description("Uusi suoritus").required)
-    .summary("luo Suorituksen ja palauttaa sen tiedot"))
+    .summary("luo Suorituksen ja palauttaa sen tiedot")
 
-  update(apiOperation[Suoritus]("päivitäSuoritusta")) // parameter pathParam[UUID]("id").description("päivitettävän surituksen id")
+
+  val update =  (apiOperation[Suoritus]("päivitäSuoritusta"))
+
+
+   // parameter pathParam[UUID]("id").description("päivitettävän surituksen id")
 }
 
 

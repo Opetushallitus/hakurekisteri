@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.scalatra.swagger._
-import org.scalatra.json.JacksonJsonSupport
+import org.scalatra.json.{JsonSupport, JacksonJsonSupport}
 import scala.concurrent.{Future, ExecutionContext}
 import _root_.akka.util.Timeout
 import _root_.akka.actor.{ActorRef, ActorSystem}
@@ -17,6 +17,39 @@ import org.springframework.security.core.Authentication
 
 import org.scalatra.commands._
 import java.util.UUID
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriCommand, Resource}
+import org.json4s._
+import scala.Some
+
+trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] extends ScalatraServlet with JsonSupport[JValue] with SwaggerSupport { this: HakurekisteriResource[A , C] =>
+
+  before() {
+    contentType = formats("json")
+  }
+
+  val create:OperationBuilder
+  val update:OperationBuilder
+  val query:OperationBuilder
+
+  post("/", operation(create)) {
+    println("creating" + request.body)
+    createResource
+  }
+
+  post("/:id", operation(update)) {
+    updateResource
+  }
+
+  get("/:id") {
+    readResource
+
+  }
+
+  get("/", operation(query))(
+    queryResource
+  )
+
+}
 
 abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]](actor:ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C])extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with  JacksonJsonParsing  {
 
@@ -28,9 +61,7 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
 
   implicit val defaultTimeout = Timeout(timeout, TimeUnit.SECONDS)
 
-  before() {
-    contentType = formats("json")
-  }
+
 
   class ActorResult[B:Manifest](message: AnyRef, success: (B) => AnyRef) extends AsyncResult() {
     val is = (actor ? message).mapTo[B].
@@ -38,17 +69,15 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
       recover { case e:Throwable => logger.warn("failure in actor operation", e);InternalServerError("Operation failed")}
   }
 
-  def create(op: OperationBuilder) {
-    post("/", operation(op)) {
-      println("creating" + request.body)
-
-      (command[C] >> (_.toValidatedResource)).fold(
-        errors => {logger.warn(errors.toString); BadRequest("Malformed Resource")},
-
-        resource => new ActorResult[A with Identified](resource, ResourceCreated(request.getRequestURL)))
-
-    }
+  def createResource: Object = {
+    (command[C] >> (_.toValidatedResource)).fold(
+      errors => {logger.warn(errors.toString); BadRequest("Malformed Resource")},
+      resource => new ActorResult(resource, ResourceCreated(request.getRequestURL)))
   }
+
+
+
+
 
   object ResourceCreated {
     def apply(baseUri:StringBuffer)(createdResource: A with Identified) =   Created(createdResource, headers = Map("Location" -> baseUri.append("/").append(createdResource.id).toString))
@@ -57,52 +86,47 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
 
   def identifyResource(resource : A, id: UUID): A with Identified = {println("identifying: " + id);resource.identify(id)}
 
-  def update(op: OperationBuilder) {
-    post("/:id", operation(op)) {
-      Try(UUID.fromString(params("id"))).map((id) =>
-
-        (command[C] >> (_.toValidatedResource)).fold(
-          errors => BadRequest("Malformed Resource + " + errors),
-          resource => new ActorResult[A with Identified](identifyResource(resource,id), Ok(_)))
-      ).
-        recover {
-        case e: Exception => logger.warn("unparseable request",e);BadRequest("Not an uuid")
-      }.get
 
 
-    }
-  }
-
-  get("/:id") {
+  def updateResource: Object = {
     Try(UUID.fromString(params("id"))).map((id) =>
-        new ActorResult[Option[A with Identified]](id, {
-          case Some(data) => Ok(data)
-          case None => NotFound()
-          case result =>
-            logger.warn("unexpected result from actor: " + result)
-            InternalServerError()
 
-        })
+      (command[C] >> (_.toValidatedResource)).fold(
+        errors => BadRequest("Malformed Resource + " + errors),
+        resource => new ActorResult[A with Identified](identifyResource(resource, id), Ok(_)))
     ).
       recover {
-      case e: Exception => logger.warn("unparseable request",e);BadRequest("Not an uuid")
+      case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
     }.get
-
   }
 
 
 
-  implicit val queryBuilder: (Map[String, String]) => Query[A] = qb
 
-  def read(op: OperationBuilder) (implicit pb: Map[String, String] => Query[A]) {
-    get("/", operation(op))(
-      (Try(pb(params)) map ((q: Query[A]) => ResourceQuery(q)) recover {
-        case e: Exception => logger.warn("Bad query: " + params ,e);BadRequest("Illegal Query")
-      }).get
-    )
+  def readResource: Object = {
+    Try(UUID.fromString(params("id"))).map((id) =>
+      new ActorResult[Option[A with Identified]](id, {
+        case Some(data) => Ok(data)
+        case None => NotFound()
+        case result =>
+          logger.warn("unexpected result from actor: " + result)
+          InternalServerError()
+
+      })
+    ).
+      recover {
+      case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
+    }.get
   }
 
 
+
+
+  def queryResource(): Product with Serializable = {
+    (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q)) recover {
+      case e: Exception => logger.warn("Bad query: " + params, e); BadRequest("Illegal Query")
+    }).get
+  }
 
   case class ResourceQuery[R](query: Query[R]) extends AsyncResult {
 

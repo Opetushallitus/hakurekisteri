@@ -10,7 +10,7 @@ trait HenkiloSwaggerApi
   override protected val applicationName = Some("henkilot")
   protected val applicationDescription = "henkilötietojen rajapinta."
 
-  read(apiOperation[Seq[Henkilo]]("henkilot")
+  val query = (apiOperation[Seq[Henkilo]]("henkilot")
     summary "Näytä kaikki opiskelijatiedot"
     notes "Näyttää kaikki opiskelijatiedot. Voit myös hakea eri parametreillä."
     parameter queryParam[Option[String]]("henkilo").description("haetun henkilon oid")
@@ -21,9 +21,9 @@ trait HenkiloSwaggerApi
     parameter queryParam[Option[String]]("luokka").description("haetun luokan nimi")
   )
 
-  create(apiOperation[Henkilo]("lisääOpiskelija")
+  val create = (apiOperation[Henkilo]("lisääOpiskelija")
     .parameter(bodyParam[Henkilo]("lisääOpiskelija").description("Uusi opiskelija").required)
     .summary("luo Opiskelijan ja palauttaa sen tiedot"))
 
-  update(apiOperation[Henkilo]("päivitäHenkilöä")) // parameter pathParam[UUID]("id").description("päivitettävän henkilön id")
+  val update = (apiOperation[Henkilo]("päivitäHenkilöä")) // parameter pathParam[UUID]("id").description("päivitettävän henkilön id")
 }
