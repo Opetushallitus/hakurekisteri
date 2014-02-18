@@ -25,6 +25,5 @@ trait OpiskelijaSwaggerApi
     .parameter(bodyParam[Opiskelija]("lisääOpiskelija").description("Uusi opiskelija").required)
     .summary("luo Opiskelijan ja palauttaa sen tiedot"))
 
-  update(apiOperation[Opiskelija]("päivitäOpiskelijaa")
-    parameter pathParam[UUID]("id").description("päivitettävän opiskelijan id"))
+  update(apiOperation[Opiskelija]("päivitäOpiskelijaa")) // parameter pathParam[UUID]("id").description("päivitettävän opiskelijan id")
 }

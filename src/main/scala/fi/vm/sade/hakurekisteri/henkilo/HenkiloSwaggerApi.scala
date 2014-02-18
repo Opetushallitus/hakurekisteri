@@ -25,6 +25,5 @@ trait HenkiloSwaggerApi
     .parameter(bodyParam[Henkilo]("lisääOpiskelija").description("Uusi opiskelija").required)
     .summary("luo Opiskelijan ja palauttaa sen tiedot"))
 
-  update(apiOperation[Henkilo]("päivitäHenkilöä")
-        parameter pathParam[UUID]("id").description("päivitettävän henkilön id"))
+  update(apiOperation[Henkilo]("päivitäHenkilöä")) // parameter pathParam[UUID]("id").description("päivitettävän henkilön id")
 }
