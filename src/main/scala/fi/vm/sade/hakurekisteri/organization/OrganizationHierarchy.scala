@@ -8,13 +8,11 @@ import scala.concurrent.Future
 import dispatch._
 import Defaults._
 import akka.actor.{ActorRef, Actor}
-import scala.collection.immutable.Seq
 import fi.vm.sade.hakurekisteri.rest.support.Query
-import scala.util.Try
-import akka.actor.Status.Failure
 import java.util.UUID
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
+import fi.vm.sade.hakurekisteri.storage.Identified
 
 
 class OrganizationHierarchy[A:Manifest](filteredActor:ActorRef, organizationFinder: A => String) extends Actor {
@@ -23,7 +21,7 @@ class OrganizationHierarchy[A:Manifest](filteredActor:ActorRef, organizationFind
 
   implicit def nodeSeq2RicherString(ns:NodeSeq):RicherString  = new RicherString(ns.text)
   val svc = url("http://luokka.hard.ware.fi:8301/organisaatio-service/services/organisaatioService").POST
-  var orgPaths: Map[String, Seq[String]] = Map()
+  var authorizer = OrganizationAuthorizer(Map())
 
 
   fetch()
@@ -52,29 +50,35 @@ class OrganizationHierarchy[A:Manifest](filteredActor:ActorRef, organizationFind
     val soapFuture: Future[Elem] = result map ((response) => scala.xml.XML.load(new java.io.InputStreamReader(response.getResponseBodyAsStream, "UTF-8")))
     val orgTagsFuture = soapFuture map (_ \ "Body" \ "getOrganizationStructureResponse" \ "organizationStructure")
     val orgsFuture =  orgTagsFuture map  (_.map((org) => Org((org \ "@oid").blankOption.get, (org \ "@parentOid").blankOption, (org \ "@lakkautusPvm").blankOption.map((pvm) => {DateTime.parse(pvm, DateTimeFormat.forPattern("yyyy-MM-dddZ"))}))))
-    def orgPaths: Future[Map[String, Seq[String]]] = orgsFuture map ((found) => (Map[String, Seq[String]]() /: found) ((m,org) => addParentToPaths(addSelfToPaths(m,org),org)))
+    def orgPaths = orgsFuture map ((found) => (Map[String, Seq[String]]() /: found) ((m,org) => addParentToPaths(addSelfToPaths(m,org),org)))
+    def authorizer = orgPaths map (OrganizationAuthorizer(_))
 
-
-    orgPaths pipeTo self
+    authorizer pipeTo self
 
   }
 
+
+
+
+  import akka.pattern.ask
+  override def receive: Receive = {
+    case a:OrganizationAuthorizer => println("org paths loaded");authorizer = a
+    case AuthorizedQuery(q,orgs) => (filteredActor ? q).map((item) => {println(item);item}).mapTo[Seq[A with Identified]].map(_.filter((item) => authorizer.checkAccess(orgs, organizationFinder(item)))) pipeTo sender
+    case AuthorizedRead(id, orgs) => (filteredActor ? id).mapTo[Option[A with Identified]].map(_.flatMap((item) => if (authorizer.checkAccess(orgs, organizationFinder(item))) Some(item) else None)) pipeTo sender
+    case message:AnyRef => filteredActor forward message
+  }
+
+}
+
+case class AuthorizedQuery[A](q:Query[A], orgs: Seq[String])
+case class AuthorizedRead(id:UUID, orgs:Seq[String])
+
+case class OrganizationAuthorizer(orgPaths: Map[String, Seq[String]]) {
   def checkAccess(user:Seq[String], target:String) = {
     val path = orgPaths.getOrElse(target, Seq())
     println("path " + path)
     println("user " + user)
     path.exists { x => user.contains(x) }
   }
-
-
-  import akka.pattern.ask
-  override def receive: Receive = {
-    case m:Map[String, Seq[String]] => println("org paths loaded");orgPaths = m
-    case q:(Query[A], Seq[String]) => (filteredActor ? q._1).mapTo[Seq[A]].map(_.filter((item) => checkAccess(q._2, organizationFinder(item)))) pipeTo sender
-    case message:AnyRef => filteredActor forward message
-  }
-
 }
-
-
 case class Org(oid:String, parent:Option[String], lopetusPvm: Option[DateTime] )

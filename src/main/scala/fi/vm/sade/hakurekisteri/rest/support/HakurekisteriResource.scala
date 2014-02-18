@@ -19,7 +19,7 @@ import org.scalatra.commands._
 import java.util.UUID
 import org.json4s._
 import scala.Some
-import fi.vm.sade.hakurekisteri.organization.OrganizationHierarchy
+import fi.vm.sade.hakurekisteri.organization.{AuthorizedRead, AuthorizedQuery, OrganizationHierarchy}
 import scala.util.matching.Regex
 
 trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] extends ScalatraServlet with JsonSupport[JValue] with SwaggerSupport { this: HakurekisteriResource[A , C] =>
@@ -107,7 +107,8 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
 
 
   def readResource(id:UUID): Object = {
-    new ActorResult[Option[A with Identified]](id, {
+    val authorities: Seq[String] = getOrganizations(User.current).map(_.toList).getOrElse(Seq())
+    new ActorResult[Option[A with Identified]](AuthorizedRead(id, authorities), {
       case Some(data) => Ok(data)
       case None => NotFound()
       case result =>
@@ -129,9 +130,9 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
 
   case class ResourceQuery[R](query: Query[R]) extends AsyncResult {
     val authorities: Seq[String] = getOrganizations(User.current).map(_.toList).getOrElse(Seq())
-    //val foo: (R) => Boolean = (groupFinder andThen (OrganizationHierarchy.checkAccess(authorities, _)) )
+
     val is = {
-      val future = (actor ? (query, authorities)).mapTo[Seq[R with Identified]]
+      val future = (actor ? AuthorizedQuery(query, authorities)).mapTo[Seq[R with Identified]]
 
       future.map(Ok(_)).
         recover {
