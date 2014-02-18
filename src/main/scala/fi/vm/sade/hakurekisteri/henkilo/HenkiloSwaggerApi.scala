@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.henkilo
 
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
 import scala.Some
-import java.util.Date
+import java.util.{UUID, Date}
 
 trait HenkiloSwaggerApi
     { this: HakurekisteriResource[Henkilo, CreateHenkiloCommand] =>
@@ -25,5 +25,6 @@ trait HenkiloSwaggerApi
     .parameter(bodyParam[Henkilo]("lisääOpiskelija").description("Uusi opiskelija").required)
     .summary("luo Opiskelijan ja palauttaa sen tiedot"))
 
-
+  update(apiOperation[Henkilo]("päivitäHenkilöä")
+        parameter pathParam[UUID]("id").description("päivitettävän henkilön id"))
 }

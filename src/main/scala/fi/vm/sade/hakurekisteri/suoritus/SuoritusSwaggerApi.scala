@@ -5,6 +5,8 @@ import org.scalatra.swagger._
 import scala.Some
 import org.scalatra.swagger.AllowableValues.AnyValue
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
+import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
+import java.util.UUID
 
 trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus, CreateSuoritusCommand] =>
 
@@ -38,7 +40,8 @@ trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus, CreateSuoritus
     .parameter(bodyParam[Suoritus]("uusiSuoritus").description("Uusi suoritus").required)
     .summary("luo Suorituksen ja palauttaa sen tiedot"))
 
-
+  update(apiOperation[Suoritus]("päivitäSuoritusta")
+    parameter pathParam[Suoritus]("id").description("päivitettävän surituksen id"))
 }
 
 

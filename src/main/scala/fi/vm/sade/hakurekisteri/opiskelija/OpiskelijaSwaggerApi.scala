@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.opiskelija
 
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
 import scala.Some
-import java.util.Date
+import java.util.{UUID, Date}
 
 trait OpiskelijaSwaggerApi
     { this: HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand] =>
@@ -25,5 +25,6 @@ trait OpiskelijaSwaggerApi
     .parameter(bodyParam[Opiskelija]("lisääOpiskelija").description("Uusi opiskelija").required)
     .summary("luo Opiskelijan ja palauttaa sen tiedot"))
 
-
+  update(apiOperation[Opiskelija]("päivitäOpiskelijaa")
+    parameter pathParam[UUID]("id").description("päivitettävän opiskelijan id"))
 }

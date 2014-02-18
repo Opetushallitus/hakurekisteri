@@ -32,40 +32,40 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
     contentType = formats("json")
   }
 
+  class ActorResult(message: AnyRef, success: (A with Identified) => AnyRef) extends AsyncResult() {
+    val is = (actor ? message).mapTo[A with Identified].
+      map(success).
+      recover { case e:Throwable => InternalServerError("Operation failed")}
+  }
+
   def create(op: OperationBuilder) {
     post("/", operation(op)) {
       println("creating" + request.body)
       (command[C] >> (_.toValidatedResource)).fold(
-        errors => {println(request.body);println(errors);BadRequest("Malformed Resource")},
-        resource => new AsyncResult() {
-          val is = (actor ? resource).mapTo[A with Identified].
-            map((createdResource) => Created(createdResource, headers = Map("Location" -> request.getRequestURL.append("/").append(createdResource.id).toString))).
-            recover { case e:Throwable => InternalServerError("Operation failed")}
-        })
+        errors => BadRequest("Malformed Resource"),
+        resource => new ActorResult(resource, (createdResource) => Created(createdResource, headers = Map("Location" -> request.getRequestURL.append("/").append(createdResource.id).toString))))
 
     }
   }
 
 
-  post("/:id") {
-    println(request.body)
+  def identifyResource(resource : A, id: UUID): A with Identified = resource.identify(id)
 
-    Try(UUID.fromString(params("id"))).map((id) =>
-      (command[C] >> (_.toValidatedResource)).fold(
-        errors => {println(request.body);println(errors);BadRequest("Malformed Resource")},
-        resource => new AsyncResult() {
-          val identified: A with Identified = resource.identify(id)
-          val is = (actor ? identified).
-            map((createdResource) => Ok(createdResource)).
-            recover { case e:Throwable => InternalServerError("Operation failed")}
-        })
-    ).
-    recover {
-      case e: Exception => logger.warn("unparseable request",e);BadRequest("Not an uuid")
-    }.get
+  def update(op: OperationBuilder) {
+    post("/:id", operation(op)) {
+      Try(UUID.fromString(params("id"))).map((id) =>
+        (command[C] >> (_.toValidatedResource)).fold(
+          errors => BadRequest("Malformed Resource + " + errors),
+          resource => new ActorResult(identifyResource(resource,id), Ok(_)))
+      ).
+        recover {
+        case e: Exception => logger.warn("unparseable request",e);BadRequest("Not an uuid")
+      }.get
 
 
+    }
   }
+
 
 
   implicit val queryBuilder: (Map[String, String]) => Query[A] = qb
