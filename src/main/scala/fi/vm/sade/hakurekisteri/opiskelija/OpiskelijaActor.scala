@@ -5,10 +5,11 @@ import fi.vm.sade.hakurekisteri.rest.support.Kausi._
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.storage._
 import scala.Some
-import fi.vm.sade.hakurekisteri.storage.repository.{InMemRepository, Repository}
+import fi.vm.sade.hakurekisteri.storage.repository._
+import scala.Some
 
 
-trait OpiskelijaRepository extends InMemRepository[Opiskelija] {
+trait OpiskelijaRepository extends JournaledRepository[Opiskelija] {
 
   def identify(o: Opiskelija): Opiskelija with Identified = {
     Opiskelija.identify(o)
@@ -102,9 +103,6 @@ trait OpiskelijaService extends ResourceService[Opiskelija] { this: Repository[O
 
 
 
-class OpiskelijaActor(initialStudents:Seq[Opiskelija] = Seq()) extends ResourceActor[Opiskelija] with OpiskelijaRepository with OpiskelijaService {
-
-
-  initialStudents.foreach((o) => save(o))
+class OpiskelijaActor(val journal:Journal[Opiskelija] = new InMemJournal[Opiskelija]) extends ResourceActor[Opiskelija] with OpiskelijaRepository with OpiskelijaService {
 
 }

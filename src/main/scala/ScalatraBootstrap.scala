@@ -32,7 +32,7 @@ class ScalatraBootstrap extends LifeCycle {
     //OPHSecurity init context
 
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor()))
-    val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq())))
+    val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor()))
     val henkiloRekisteri = system.actorOf(Props(new ResourceActor[Henkilo] with ResourceService[Henkilo] with JournaledRepository[Henkilo]{
       override val matcher: PartialFunction[Query[Henkilo], (Henkilo with Identified) => Boolean] = Map()
 

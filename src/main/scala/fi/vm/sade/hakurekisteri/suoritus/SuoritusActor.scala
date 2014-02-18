@@ -64,11 +64,6 @@ trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suori
 
 class SuoritusActor(val journal:Journal[Suoritus] = new InMemJournal[Suoritus]) extends ResourceActor[Suoritus] with SuoritusRepository with SuoritusService {
 
-
-
-
-
-
 }
 
 
