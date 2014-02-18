@@ -29,6 +29,8 @@ class ScalatraBootstrap extends LifeCycle {
   val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
   val OPH= "1.2.246.562.10.00000000001"
 
+  val serviceUrl = "http://luokka.hard.ware.fi:8301/organisaatio-service/services/organisaatioService"
+
   override def init(context: ServletContext) {
     OPHSecurity init context
 
@@ -37,14 +39,14 @@ class ScalatraBootstrap extends LifeCycle {
       case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
     }.get
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))))
-    val filteredSuoritusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Suoritus](suoritusRekisteri, (suoritus) => suoritus.komoto.tarjoaja )))
+    val filteredSuoritusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Suoritus](serviceUrl ,suoritusRekisteri, (suoritus) => suoritus.komoto.tarjoaja )))
 
 
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))))
-    val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija](opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid )))
+    val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija](serviceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid )))
 
     val henkiloRekisteri = system.actorOf(Props(new HenkiloActor))
-    val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo](henkiloRekisteri, (henkilo) => OPH )))
+    val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo](serviceUrl,henkiloRekisteri, (henkilo) => OPH )))
 
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](filteredSuoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/rest/v1/suoritukset")
     context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](filteredHenkiloRekisteri, (x) => new fi.vm.sade.hakurekisteri.rest.support.Query[Henkilo](){}) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand], "/rest/v1/henkilot")

@@ -15,12 +15,12 @@ import java.util.concurrent.TimeUnit
 import fi.vm.sade.hakurekisteri.storage.Identified
 
 
-class OrganizationHierarchy[A:Manifest](filteredActor:ActorRef, organizationFinder: A => String) extends Actor {
+class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: A => String) extends Actor {
 
   implicit val timeout: akka.util.Timeout = Timeout(30, TimeUnit.SECONDS)
 
   implicit def nodeSeq2RicherString(ns:NodeSeq):RicherString  = new RicherString(ns.text)
-  val svc = url("http://luokka.hard.ware.fi:8301/organisaatio-service/services/organisaatioService").POST
+  val svc = url(serviceUrl).POST
   var authorizer = OrganizationAuthorizer(Map())
 
 
