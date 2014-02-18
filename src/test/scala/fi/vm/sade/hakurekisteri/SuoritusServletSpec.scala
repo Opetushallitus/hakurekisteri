@@ -13,7 +13,7 @@ class SuoritusServletSpec extends ScalatraFunSuite {
   val suoritus = Peruskoulu("1.2.3", "KESKEN",  DateTime.now,"1.2.4")
   implicit val system = ActorSystem()
   implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource](s:Seq[R]) = {
-    var journal = new InMemJournal[R]
+    val journal = new InMemJournal[R]
     s.foreach((resource:R) => journal.addModification(resource.identify(UUID.randomUUID())))
     journal
   }
