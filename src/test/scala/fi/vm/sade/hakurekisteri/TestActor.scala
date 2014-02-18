@@ -28,4 +28,5 @@ class TestActor extends ResourceActor[Resource]  with Repository[Resource] with 
 
   val matcher: PartialFunction[Query[Resource], (Resource with Identified) => Boolean] = { case _ => (_) => true}
 
+  override def get(id: UUID): Option[Resource with Identified] = None.asInstanceOf[Option[Resource with Identified]]
 }

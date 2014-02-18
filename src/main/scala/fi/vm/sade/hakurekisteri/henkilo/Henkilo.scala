@@ -37,7 +37,6 @@ case class Yhteystiedot (id: Int,
                          yhteystietoArvo: String)
 
 
-
 case class Kansalaisuus (
                           kansalaisuusKoodi: String)
 

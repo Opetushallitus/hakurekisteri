@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.scalatra.swagger._
 import org.scalatra.json.JacksonJsonSupport
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 import _root_.akka.util.Timeout
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import org.scalatra._
@@ -32,20 +32,25 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
     contentType = formats("json")
   }
 
-  class ActorResult(message: AnyRef, success: (A with Identified) => AnyRef) extends AsyncResult() {
-    val is = (actor ? message).mapTo[A with Identified].
+  class ActorResult[B:Manifest](message: AnyRef, success: (B) => AnyRef) extends AsyncResult() {
+    val is = (actor ? message).mapTo[B].
       map(success).
-      recover { case e:Throwable => InternalServerError("Operation failed")}
+      recover { case e:Throwable => logger.warn("failure in actor operation", e);InternalServerError("Operation failed")}
   }
 
   def create(op: OperationBuilder) {
     post("/", operation(op)) {
       println("creating" + request.body)
+
       (command[C] >> (_.toValidatedResource)).fold(
         errors => BadRequest("Malformed Resource"),
-        resource => new ActorResult(resource, (createdResource) => Created(createdResource, headers = Map("Location" -> request.getRequestURL.append("/").append(createdResource.id).toString))))
+        resource => new ActorResult[A with Identified](resource, ResourceCreated(request.getRequestURL)))
 
     }
+  }
+
+  object ResourceCreated {
+    def apply(baseUri:StringBuffer)(createdResource: A with Identified) =   Created(createdResource, headers = Map("Location" -> baseUri.append("/").append(createdResource.id).toString))
   }
 
 
@@ -56,7 +61,7 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
       Try(UUID.fromString(params("id"))).map((id) =>
         (command[C] >> (_.toValidatedResource)).fold(
           errors => BadRequest("Malformed Resource + " + errors),
-          resource => new ActorResult(identifyResource(resource,id), Ok(_)))
+          resource => new ActorResult[A with Identified](identifyResource(resource,id), Ok(_)))
       ).
         recover {
         case e: Exception => logger.warn("unparseable request",e);BadRequest("Not an uuid")
@@ -64,6 +69,23 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
 
 
     }
+  }
+
+  get("/:id") {
+    Try(UUID.fromString(params("id"))).map((id) =>
+        new ActorResult[Option[A with Identified]](id, {
+          case Some(data) => Ok(data)
+          case None => NotFound()
+          case result =>
+            logger.warn("unexpected result from actor: " + result);
+            InternalServerError()
+
+        })
+    ).
+      recover {
+      case e: Exception => logger.warn("unparseable request",e);BadRequest("Not an uuid")
+    }.get
+
   }
 
 

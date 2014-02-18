@@ -12,6 +12,8 @@ trait Repository[T] {
 
   def listAll():Seq[T with Identified]
 
+  def get(id: UUID): Option[T with Identified]
+
 }
 
 
@@ -34,6 +36,10 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
 
   def listAll(): Seq[T with Identified] = {
     store.values.toSeq
+  }
+
+  def get(id:UUID): Option[T with Identified]   = {
+    store.get(id)
   }
 
 
