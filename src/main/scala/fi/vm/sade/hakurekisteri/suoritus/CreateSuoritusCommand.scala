@@ -34,8 +34,9 @@ class CreateSuoritusCommand extends HakurekisteriCommand[Suoritus] {
   val henkiloOid: Field[String]  = asType[String]("henkiloOid").notBlank
   val yks: Field[Yksilollistetty]  = asType[Yksilollistetty]("yksilollistaminen")
   val oppilaitosOid: Field[String]  = asType[String]("oppilaitosOid")
+  val suoritusKieli: Field[String] = asType[String]("suoritusKieli")
 
-  override def toResource: Suoritus = Suoritus(Komoto(komotooid.value.get, komo.value.get, tarjoaja.value.get), tila.value.get, valmistuminen.value.get, henkiloOid.value.get, yks.value.get)
+  override def toResource: Suoritus = Suoritus(Komoto(komotooid.value.get, komo.value.get, tarjoaja.value.get), tila.value.get, valmistuminen.value.get, henkiloOid.value.get, yks.value.get, suoritusKieli.value.get)
 }
 
 
