@@ -43,7 +43,8 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
       println("creating" + request.body)
 
       (command[C] >> (_.toValidatedResource)).fold(
-        errors => BadRequest("Malformed Resource"),
+        errors => {logger.warn(errors.toString); BadRequest("Malformed Resource")},
+
         resource => new ActorResult[A with Identified](resource, ResourceCreated(request.getRequestURL)))
 
     }
