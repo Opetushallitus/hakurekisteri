@@ -2,7 +2,7 @@ import _root_.akka.actor.{Props, ActorSystem}
 import fi.vm.sade.hakurekisteri.henkilo.{HenkiloSwaggerApi, CreateHenkiloCommand, Henkilo}
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.rest.support._
-import fi.vm.sade.hakurekisteri.storage.repository.InMemRepository
+import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Journal, JournaledRepository, InMemRepository}
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService, ResourceActor}
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
@@ -31,12 +31,14 @@ class ScalatraBootstrap extends LifeCycle {
   override def init(context: ServletContext) {
     //OPHSecurity init context
 
-    val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(Seq())))
+    val suoritusRekisteri = system.actorOf(Props(new SuoritusActor()))
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq())))
-    val henkiloRekisteri = system.actorOf(Props(new ResourceActor[Henkilo] with ResourceService[Henkilo] with InMemRepository[Henkilo]{
+    val henkiloRekisteri = system.actorOf(Props(new ResourceActor[Henkilo] with ResourceService[Henkilo] with JournaledRepository[Henkilo]{
       override val matcher: PartialFunction[Query[Henkilo], (Henkilo with Identified) => Boolean] = Map()
 
       override def identify(o: Henkilo): Henkilo with Identified = Henkilo.identify(o)
+
+      override val journal: Journal[Henkilo] = new InMemJournal[Henkilo]
     }))
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi, "/rest/v1/suoritukset")
     context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](henkiloRekisteri, (x) => new Query[Henkilo](){} ) with HenkiloSwaggerApi, "/rest/v1/henkilot")

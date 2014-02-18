@@ -5,10 +5,11 @@ import Kausi._
 import fi.vm.sade.hakurekisteri.storage._
 import scala.Some
 import com.github.nscala_time.time.Imports._
-import fi.vm.sade.hakurekisteri.storage.repository.{InMemRepository, Repository}
+import fi.vm.sade.hakurekisteri.storage.repository._
+import scala.Some
 
 
-trait SuoritusRepository extends InMemRepository[Suoritus] {
+trait SuoritusRepository extends JournaledRepository[Suoritus] {
 
 
   def identify(o:Suoritus): Suoritus with Identified = o match {
@@ -61,9 +62,9 @@ trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suori
   }
 }
 
-class SuoritusActor(val initialSuoritukset:Seq[Suoritus] = Seq()) extends ResourceActor[Suoritus] with SuoritusRepository with SuoritusService {
+class SuoritusActor(val journal:Journal[Suoritus] = new InMemJournal[Suoritus]) extends ResourceActor[Suoritus] with SuoritusRepository with SuoritusService {
 
-  initialSuoritukset.foreach((o) => save(o))
+
 
 
 

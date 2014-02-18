@@ -2,14 +2,20 @@ package fi.vm.sade.hakurekisteri
 
 import org.scalatra.test.scalatest.{ScalatraFunSuite, ScalatraFlatSpec}
 import akka.actor.{Props, ActorSystem}
-import java.util.Date
+import java.util.{UUID, Date}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriResource, HakurekisteriSwagger}
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.DateTime
+import fi.vm.sade.hakurekisteri.storage.repository.InMemJournal
 
 class SuoritusServletSpec extends ScalatraFunSuite {
   val suoritus = Peruskoulu("1.2.3", "KESKEN",  DateTime.now,"1.2.4")
   implicit val system = ActorSystem()
+  implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource](s:Seq[R]) = {
+    var journal = new InMemJournal[R]
+    s.foreach((resource:R) => journal.addModification(resource.identify(UUID.randomUUID())))
+    journal
+  }
   val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(Seq(suoritus))))
   implicit val swagger = new HakurekisteriSwagger
 

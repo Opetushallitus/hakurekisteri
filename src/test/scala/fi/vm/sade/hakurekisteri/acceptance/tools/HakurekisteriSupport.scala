@@ -21,6 +21,7 @@ import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 
 import com.github.nscala_time.time.Imports._
+import fi.vm.sade.hakurekisteri.storage.repository.InMemJournal
 
 
 object kausi extends Enumeration {
@@ -58,6 +59,11 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
       if (!initialized) {
         println ("Initializing db with: " + tehdytSuoritukset)
         implicit val system = ActorSystem()
+        implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource](s:Seq[R]) = {
+          var journal = new InMemJournal[R]
+          s.foreach((resource:R) => journal.addModification(resource.identify(UUID.randomUUID())))
+          journal
+        }
         val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(tehdytSuoritukset)))
         val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq())))
         addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteri, fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(_)) with SuoritusSwaggerApi, "/rest/v1/suoritukset")
