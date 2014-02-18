@@ -2,12 +2,10 @@ import _root_.akka.actor.{Props, ActorSystem}
 import fi.vm.sade.hakurekisteri.henkilo.{HenkiloActor, HenkiloSwaggerApi, CreateHenkiloCommand, Henkilo}
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.rest.support._
-import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Journal, JournaledRepository, InMemRepository}
-import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService, ResourceActor}
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
-import java.util
 import java.util.Properties
+import java.util.EnumSet
 import org.scalatra._
 import javax.servlet.{ServletContextEvent, DispatcherType, ServletContext}
 import org.scalatra.swagger.Swagger
@@ -21,6 +19,7 @@ import org.springframework.web.context._
 import org.springframework.web.filter.DelegatingFilterProxy
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
+import scala.slick.driver.JdbcDriver.simple._
 
 
 class ScalatraBootstrap extends LifeCycle {
@@ -30,12 +29,12 @@ class ScalatraBootstrap extends LifeCycle {
 
   override def init(context: ServletContext) {
     //OPHSecurity init context
-
+    val database = Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor))
-    val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor))
+    val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))))
     val henkiloRekisteri = system.actorOf(Props(new HenkiloActor))
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi, "/rest/v1/suoritukset")
-    context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](henkiloRekisteri, (x) => new Query[Henkilo](){} ) with HenkiloSwaggerApi, "/rest/v1/henkilot")
+    context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](henkiloRekisteri, (x) => new fi.vm.sade.hakurekisteri.rest.support.Query[Henkilo](){} ) with HenkiloSwaggerApi, "/rest/v1/henkilot")
     context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi, "/rest/v1/opiskelijat")
     context mount(new ResourcesApp, "/rest/v1/api-docs/*")
     context mount(classOf[GuiServlet], "/")
@@ -58,7 +57,7 @@ object OPHSecurity extends ContextLoader with LifeCycle {
     initWebApplicationContext(context)
 
     val security = context.addFilter("springSecurityFilterChain", classOf[DelegatingFilterProxy])
-    security.addMappingForUrlPatterns(util.EnumSet.of(DispatcherType.REQUEST,DispatcherType.FORWARD), true, "/*")
+    security.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST,DispatcherType.FORWARD), true, "/*")
   }
 
 

@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.storage.repository
 
 import fi.vm.sade.hakurekisteri.storage.Identified
-import scala.slick.lifted.AbstractTable
+import scala.slick.lifted.{Ordered, AbstractTable}
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 
 
@@ -42,10 +42,10 @@ class InMemJournal[T] extends Journal[T] {
 
 import scala.slick.driver.JdbcDriver.simple._
 
-trait JDBCJournal[T, P <: AbstractTable[_]] extends Journal[T] {
+trait JDBCJournal[T, P <: AbstractTable[_], O <: Ordered] extends Journal[T] {
   val db: Database
   val table: scala.slick.lifted.TableQuery[P]
-
+  val journalSort: P => O
 
   def toRow(resource: T with Identified):  P#TableElementType
   def toResource(row: P#TableElementType): T with Identified
@@ -61,7 +61,7 @@ trait JDBCJournal[T, P <: AbstractTable[_]] extends Journal[T] {
   override def journal(): Seq[T with Identified] = {
     db withSession {
       implicit session =>
-        table.list.map(toResource)
+        table.sortBy(journalSort).list.map(toResource)
     }
 
   }
