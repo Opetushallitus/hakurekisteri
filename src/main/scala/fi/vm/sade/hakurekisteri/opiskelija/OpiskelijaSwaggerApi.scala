@@ -21,9 +21,9 @@ trait OpiskelijaSwaggerApi
     parameter queryParam[Option[String]]("luokka").description("haetun luokan nimi")
   )
 
-  val create = (apiOperation[Opiskelija]("lisääOpiskelija")
+  val create = apiOperation[Opiskelija]("lisääOpiskelija")
     .parameter(bodyParam[Opiskelija]("lisääOpiskelija").description("Uusi opiskelija").required)
-    .summary("luo Opiskelijan ja palauttaa sen tiedot"))
+    .summary("luo Opiskelijan ja palauttaa sen tiedot")
 
-  val update = (apiOperation[Opiskelija]("päivitäOpiskelijaa")) // parameter pathParam[UUID]("id").description("päivitettävän opiskelijan id")
+  val update = apiOperation[Opiskelija]("päivitäOpiskelijaa") // parameter pathParam[UUID]("id").description("päivitettävän opiskelijan id")
 }

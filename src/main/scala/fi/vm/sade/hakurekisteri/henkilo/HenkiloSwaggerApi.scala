@@ -21,9 +21,9 @@ trait HenkiloSwaggerApi
     parameter queryParam[Option[String]]("luokka").description("haetun luokan nimi")
   )
 
-  val create = (apiOperation[Henkilo]("lisääOpiskelija")
+  val create = apiOperation[Henkilo]("lisääOpiskelija")
     .parameter(bodyParam[Henkilo]("lisääOpiskelija").description("Uusi opiskelija").required)
-    .summary("luo Opiskelijan ja palauttaa sen tiedot"))
+    .summary("luo Opiskelijan ja palauttaa sen tiedot")
 
-  val update = (apiOperation[Henkilo]("päivitäHenkilöä")) // parameter pathParam[UUID]("id").description("päivitettävän henkilön id")
+  val update = apiOperation[Henkilo]("päivitäHenkilöä") // parameter pathParam[UUID]("id").description("päivitettävän henkilön id")
 }

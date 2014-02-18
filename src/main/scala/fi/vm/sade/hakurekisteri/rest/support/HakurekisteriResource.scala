@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.scalatra.swagger._
 import org.scalatra.json.{JsonSupport, JacksonJsonSupport}
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.ExecutionContext
 import _root_.akka.util.Timeout
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import org.scalatra._
@@ -17,7 +17,6 @@ import org.springframework.security.core.Authentication
 
 import org.scalatra.commands._
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriCommand, Resource}
 import org.json4s._
 import scala.Some
 
@@ -71,7 +70,7 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
 
   def createResource: Object = {
     (command[C] >> (_.toValidatedResource)).fold(
-      errors => {logger.warn(errors.toString); BadRequest("Malformed Resource")},
+      errors => {logger.warn(errors.toString()); BadRequest("Malformed Resource")},
       resource => new ActorResult(resource, ResourceCreated(request.getRequestURL)))
   }
 
@@ -122,7 +121,7 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
 
 
 
-  def queryResource(): Product with Serializable = {
+  def queryResource: Product with Serializable = {
     (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q)) recover {
       case e: Exception => logger.warn("Bad query: " + params, e); BadRequest("Illegal Query")
     }).get
