@@ -86,7 +86,7 @@ div(class="container")
                   select(class="form-control" ng-model="suoritus.yksilollistaminen" ng-options="yks.value as yks.text for yks in yksilollistamiset" required ng-disabled="suoritus.komoto.komo !== 'peruskoulu'")
                 div(class="form-group")
                   strong Opetuskieli
-                  input(type="text" class="form-control" ng-model="suoritus.opetuskieli" required)
+                  input(type="text" class="form-control" ng-model="suoritus.suoritusKieli" required)
                 div(class="form-group")
                   strong Valmistumispäivä
                   input(type="text" class="form-control" ng-model="suoritus.valmistuminen" datepicker-popup="{{format}}" datepicker-options="dateOptions" required show-button-bar="false")
