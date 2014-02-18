@@ -7,15 +7,31 @@ import org.joda.time.format.DateTimeFormat
 import scala.concurrent.Future
 import dispatch._
 import Defaults._
-import akka.actor.{ActorRef, Actor}
+import akka.actor.{Cancellable, ActorRef, Actor}
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import java.util.UUID
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import fi.vm.sade.hakurekisteri.storage.Identified
-
+import scala.concurrent.duration._
 
 class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: A => String) extends Actor {
+
+  private var scheduledTask: Cancellable = null
+
+  class Update
+
+  object update extends Update
+
+  override def preStart() {
+    scheduledTask = context.system.scheduler.schedule(
+      0 seconds, 60 minutes,
+      self, update)
+  }
+
+  override def postStop() {
+    scheduledTask.cancel()
+  }
 
   implicit val timeout: akka.util.Timeout = Timeout(30, TimeUnit.SECONDS)
 
@@ -23,8 +39,6 @@ class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRe
   val svc = url(serviceUrl).POST
   var authorizer = OrganizationAuthorizer(Map())
 
-
-  fetch()
 
   def addSelfToPaths(m:Map[String,Seq[String]], org:Org) = {
     m + (org.oid -> Seq(org.oid))
@@ -62,6 +76,7 @@ class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRe
 
   import akka.pattern.ask
   override def receive: Receive = {
+    case a:Update => fetch()
     case a:OrganizationAuthorizer => println("org paths loaded");authorizer = a
     case AuthorizedQuery(q,orgs) => (filteredActor ? q).map((item) => {println(item);item}).mapTo[Seq[A with Identified]].map(_.filter((item) => authorizer.checkAccess(orgs, organizationFinder(item)))) pipeTo sender
     case AuthorizedRead(id, orgs) => (filteredActor ? id).mapTo[Option[A with Identified]].map(_.flatMap((item) => if (authorizer.checkAccess(orgs, organizationFinder(item))) Some(item) else None)) pipeTo sender
