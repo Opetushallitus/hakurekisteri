@@ -15,7 +15,7 @@ function EihakeneetCtrl($scope, $routeParams, $http, $q) {
             if (opiskelija.henkiloOid) {
                 var deferredEnrichment = $q.defer();
                 deferredEnrichments.push(deferredEnrichment);
-                $http.get(henkiloServiceUrl + '/resources/henkilo/' + encodeURIComponent(opiskelija.henkiloOid), {cache: true})
+                $http.get(henkiloServiceUrl + '/resources/henkilo/' + encodeURIComponent(opiskelija.henkiloOid), {cache: false})
                     .success(function(henkilo) {
                         if (henkilo && henkilo.oidHenkilo === opiskelija.henkiloOid) {
                             opiskelija.sukunimi = henkilo.sukunimi;

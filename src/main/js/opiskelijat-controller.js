@@ -90,7 +90,7 @@ function OpiskelijatCtrl($scope, $routeParams, $location, $log, $http, Opiskelij
                 }, function() {});
             }
             if (opiskelija.henkiloOid) {
-                $http.get(henkiloServiceUrl + '/resources/henkilo/' + encodeURIComponent(opiskelija.henkiloOid), {cache: true})
+                $http.get(henkiloServiceUrl + '/resources/henkilo/' + encodeURIComponent(opiskelija.henkiloOid), {cache: false})
                     .success(function(henkilo) {
                         if (henkilo && henkilo.oidHenkilo === opiskelija.henkiloOid && henkilo.sukunimi && henkilo.etunimet) {
                             opiskelija.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + (henkilo.hetu ? " (" + henkilo.hetu + ")" : "");
