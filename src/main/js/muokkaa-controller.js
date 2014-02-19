@@ -53,8 +53,15 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
         }
     }
     function fetchHenkilotiedot() {
-        Henkilo.get({oidHenkilo: $scope.henkiloOid}, function(henkilo) {
-            $scope.henkilo = henkilo;
+        Henkilo.query({oid: $scope.henkiloOid}, function(henkilot) {
+            if (henkilot && henkilot.length > 0)
+                $scope.henkilo = henkilot[0];
+            else
+                $scope.messages.push({
+                    type: "danger",
+                    message: "Henkilötietoja ei löytynyt.",
+                    description: ""
+                });
         }, function() {
             confirm("Henkilötietojen hakeminen ei onnistunut. Yritä uudelleen?") ? fetchHenkilotiedot() : back();
         });
