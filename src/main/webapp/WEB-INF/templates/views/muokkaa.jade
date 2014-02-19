@@ -36,7 +36,7 @@ div(class="container")
               label(for="sukunimi") Sukunimi
               input(id="sukunimi" type="text" class="form-control" ng-model="henkilo.sukunimi" required)
 
-            div(class="row" ng-repeat="yhteystietoryhma in henkilo.yhteystiedotRyhma")
+            div(ng-repeat="yhteystietoryhma in henkilo.yhteystiedotRyhma")
               div(class="form-group" ng-repeat="yhteystieto in yhteystietoryhma.yhteystiedot")
                 label {{yhteystieto.yhteystietoTyyppi}}
                 input(type="text" class="form-control" ng-model="yhteystieto.yhteystietoArvo")
