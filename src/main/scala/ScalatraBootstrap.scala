@@ -119,10 +119,18 @@ case class OPHConfig(props:(String, String)*) extends XmlWebApplicationContext {
     import scala.collection.JavaConversions._
     val rawMap = resources.map((fsr) => {val prop = new java.util.Properties; prop.load(fsr.getInputStream); Map(prop.toList: _*)}).
       reduce(_ ++ _)
-    val foo = Set(rawMap.map((s) => (for (stuff <- "\\$\\{(.*?)\\}".r findAllMatchIn s._2) yield stuff.group(1)).toList).reduce(_ ++ _):_*)
-    println(foo.map(rawMap.get))
 
-    rawMap.mapValues((s) => "\\$\\{(.*?)\\}".r replaceAllIn (s, m => rawMap.getOrElse(m.group(1), m.group(1)) ))
+    resolve(rawMap)
+  }
+
+  def resolve(source: Map[String, String]):Map[String,String] = {
+    val unResolved = Set(source.map((s) => (for (found <- "\\$\\{(.*?)\\}".r findAllMatchIn s._2) yield found.group(1)).toList).reduce(_ ++ _):_*)
+    if (unResolved.isEmpty)
+      source
+    else
+      resolve(source.mapValues((s) => "\\$\\{(.*?)\\}".r replaceAllIn (s, m => source.getOrElse(m.group(1), "[" + m.group(1) + "]") )))
+
+
   }
 
   val placeholder = Bean(

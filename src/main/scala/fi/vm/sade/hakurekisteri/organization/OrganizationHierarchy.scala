@@ -20,7 +20,6 @@ class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRe
 
   val logger = LoggerFactory.getLogger(getClass)
 
-
   private var scheduledTask: Cancellable = null
 
   class Update
