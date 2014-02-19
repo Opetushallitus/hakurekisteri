@@ -124,13 +124,13 @@ case class OPHConfig(props:(String, String)*) extends XmlWebApplicationContext {
   }
 
   def resolve(source: Map[String, String]):Map[String,String] = {
-    val unResolved = Set(source.map((s) => (for (found <- "\\$\\{(.*?)\\}".r findAllMatchIn s._2) yield found.group(1)).toList).reduce(_ ++ _):_*)
-    if (unResolved.isEmpty)
-      source
+    val converted = source.mapValues(_.replace("${","€{"))
+    val unResolved = Set(converted.map((s) => (for (found <- "€\\{(.*?)\\}".r findAllMatchIn s._2) yield found.group(1)).toList).reduce(_ ++ _):_*)
+    val unResolvable = unResolved.filter((s) => converted.get(s).isEmpty)
+    if ((unResolved -- unResolvable).isEmpty)
+      converted.mapValues(_.replace("€{","${"))
     else
-      resolve(source.mapValues((s) => "\\$\\{(.*?)\\}".r replaceAllIn (s, m => source.getOrElse(m.group(1), "[" + m.group(1) + "]") )))
-
-
+      resolve(converted.mapValues((s) => "€\\{(.*?)\\}".r replaceAllIn (s, m => {converted.getOrElse(m.group(1), "€{" + (m.group(1)) + "}") })))
   }
 
   val placeholder = Bean(
