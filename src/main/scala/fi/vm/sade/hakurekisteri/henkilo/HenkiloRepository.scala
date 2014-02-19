@@ -15,6 +15,23 @@ trait HenkiloRepository extends JournaledRepository[Henkilo] {
 
 class HenkiloActor(val journal:Journal[Henkilo] = new InMemJournal[Henkilo]) extends ResourceActor[Henkilo] with ResourceService[Henkilo] with JournaledRepository[Henkilo] with HenkiloRepository {
 
-  override val matcher: PartialFunction[Query[Henkilo], (Henkilo with Identified) => Boolean] = Map()
+  override val matcher: PartialFunction[Query[Henkilo], (Henkilo with Identified) => Boolean] = {
+    case HenkiloQuery(oid) => (henkilo) => oid match
+    {
+      case None => true
+      case Some(henkiloOid) => henkilo.oidHenkilo.equals(henkiloOid)
+    }
 
+  }
+
+}
+
+
+case class HenkiloQuery(oid:Option[String]) extends Query[Henkilo]
+
+object HenkiloQuery {
+  def apply(params: Map[String,String]):HenkiloQuery = {
+    HenkiloQuery(params.get("oid"))
+
+  }
 }
