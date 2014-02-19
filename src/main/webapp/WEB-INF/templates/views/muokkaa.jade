@@ -15,7 +15,7 @@ div(class="container")
               div(class="form-group col-sm-6")
                 div
                   strong Henkilötunnus
-                div {{henkilo.hetu}}
+                div {{henkilo.hetu || henkilo.syntymaaika}}
               div(class="form-group col-sm-6")
                 div
                   strong Sukupuoli
@@ -35,37 +35,20 @@ div(class="container")
             div(class="form-group")
               label(for="sukunimi") Sukunimi
               input(id="sukunimi" type="text" class="form-control" ng-model="henkilo.sukunimi" required)
-            div(class="form-group")
-              label(for="katuosoite") Katuosoite
-              input(id="katuosoite" type="text" class="form-control" ng-model="henkilo.katuosoite")
+
+            div(class="row" ng-repeat="yhteystietoryhma in henkilo.yhteystiedotRyhma")
+              div(class="form-group" ng-repeat="yhteystieto in yhteystietoryhma.yhteystiedot")
+                label {{yhteystieto.yhteystietoTyyppi}}
+                input(type="text" class="form-control" ng-model="yhteystieto.yhteystietoArvo")
+
             div(class="row")
-              div(class="form-group col-sm-4")
-                label(for="postinumero") Postinumero
-                input(id="postinumero" name="postinumeroField" type="text" class="form-control" ng-model="henkilo.postinumero" ng-change="fetchPostitoimipaikka()")
-              div(class="form-group col-sm-4 postitoimipaikka")
-                label(for="postitoimipaikka") Postitoimipaikka
-                input(id="postitoimipaikka" type="text" class="form-control" ng-model="henkilo.postitoimipaikka")
-                div(class="loading" ng-show="searchingPostinumero")
-              div(class="form-group col-sm-4")
-                label(for="maa") Maa
-                input(id="maa" class="form-control" type="text" ng-model="henkilo.maa")
-            div(class="row")
-              div(class="form-group col-sm-4")
-                label(for="kotikunta") Kotikunta
-                input(id="kotikunta" class="form-control" type="text" ng-model="henkilo.kotikunta" required)
-              div(class="form-group col-sm-4")
-                label(for="kansalaisuus") Kansalaisuus
-                input(id="kansalaisuus" class="form-control" type="text" ng-model="henkilo.kansalaisuus" required)
+              div(class="form-group col-sm-4" ng-repeat="kansalaisuus in henkilo.kansalaisuus")
+                label Kansalaisuus
+                input(class="form-control" type="text" ng-model="kansalaisuus.kansalaisuusKoodi" required)
               div(class="form-group col-sm-4")
                 label(for="aidinkieli") Äidinkieli
-                input(id="aidinkieli" class="form-control" type="text" ng-model="henkilo.aidinkieli" required)
+                input(id="aidinkieli" class="form-control" type="text" ng-model="henkilo.asiointiKieli.kieliKoodi" required ng-change="henkilo.asiointiKieli.kieliTyyppi = henkilo.asiointiKieli.kieliKoodi; henkilo.kielisyys[0] = henkilo.asiointiKieli;")
             div(class="row")
-              div(class="form-group col-sm-6")
-                label(for="matkapuhelin") Matkapuhelin
-                input(id="matkapuhelin" type="text" class="form-control" ng-model="henkilo.matkapuhelin")
-              div(class="form-group col-sm-6")
-                label(for="muupuhelin") Muu puhelin
-                input(id="muupuhelin" type="text" class="form-control" ng-model="henkilo.muupuhelin")
 
     div(class="col-md-5")
       section(class="panel panel-default")
