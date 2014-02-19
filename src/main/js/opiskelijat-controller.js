@@ -45,7 +45,7 @@ function OpiskelijatCtrl($scope, $routeParams, $location, $log, $http, Opiskelij
             $http.get(henkiloServiceUrl + '/resources/henkilo/byHetu/' + encodeURIComponent($scope.searchTerm), {cache: true})
                 .success(function(henkilo) {
                     $scope.hakuehto = henkilo.hetu + ' (' + henkilo.etunimet + ' ' + henkilo.sukunimi + ')';
-                    search({henkiloOid: henkilo.oidHenkilo});
+                    search({henkilo: henkilo.oidHenkilo});
                 })
                 .error(function() {
                     $scope.hakuehto = $scope.searchTerm;
