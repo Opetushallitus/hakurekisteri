@@ -75,3 +75,4 @@ node_modules
 build.sbt
 
 .vagrant
+data/
