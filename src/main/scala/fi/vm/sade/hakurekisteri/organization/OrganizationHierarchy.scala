@@ -14,11 +14,11 @@ import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.concurrent.duration._
-import org.slf4j.LoggerFactory
+import akka.event.Logging
 
 class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: A => String) extends Actor {
 
-  val logger = LoggerFactory.getLogger(getClass)
+  val logger = Logging(context.system, this)
 
   private var scheduledTask: Cancellable = null
 
