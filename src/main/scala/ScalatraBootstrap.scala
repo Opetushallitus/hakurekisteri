@@ -1,5 +1,5 @@
 import _root_.akka.actor.{Props, ActorSystem}
-import fi.vm.sade.hakurekisteri.henkilo.{HenkiloActor, HenkiloSwaggerApi, CreateHenkiloCommand, Henkilo}
+import fi.vm.sade.hakurekisteri.henkilo._
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.organization.OrganizationHierarchy
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -46,7 +46,7 @@ class ScalatraBootstrap extends LifeCycle {
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))))
     val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija](orgServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid )))
 
-    val henkiloRekisteri = system.actorOf(Props(new HenkiloActor))
+    val henkiloRekisteri = system.actorOf(Props(new HenkiloActor(new HenkiloJournal(database))))
     val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo](orgServiceUrl,henkiloRekisteri, (henkilo) => OPH )))
 
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](filteredSuoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/rest/v1/suoritukset")
