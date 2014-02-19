@@ -31,7 +31,7 @@ function EihakeneetCtrl($scope, $routeParams, $http, $q) {
                 var deferredEnrichment = $q.defer();
                 deferredEnrichments.push(deferredEnrichment);
                 getOrganisaatio($http, opiskelija.oppilaitosOid, function(organisaatio) {
-                    opiskelija.oppilaitos = organisaatio.oppilaitosKoodi + ' ' + organisaatio.nimi.fi;
+                    opiskelija.oppilaitos = organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi ? organisaatio.nimi.fi : organisaatio.nimi.sv);
                     deferredEnrichment.resolve("done");
                 }, function() {
                     deferredEnrichment.reject("error");

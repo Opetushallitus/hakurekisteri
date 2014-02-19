@@ -53,7 +53,7 @@ function OpiskelijatCtrl($scope, $routeParams, $location, $log, $http, Opiskelij
                 });
         } else if ($scope.searchTerm && $scope.searchTerm.match(/^\d{5}$/)) {
             getOrganisaatio($http, $scope.searchTerm, function(organisaatio) {
-                $scope.hakuehto = organisaatio.oppilaitosKoodi + ' (' + (organisaatio.nimi.fi ? organisaatio.nimi.fi : (organisaatio.nimi.sv ? organisaatio.nimi.sv : 'Oppilaitoksen nimeä ei löytynyt')) + ')';
+                $scope.hakuehto = organisaatio.oppilaitosKoodi + ' (' + (organisaatio.nimi.fi ? organisaatio.nimi.fi : organisaatio.nimi.sv) + ')';
                 search({oppilaitosOid: organisaatio.oid});
             }, function() {
                 $scope.hakuehto = $scope.searchTerm;
@@ -84,9 +84,9 @@ function OpiskelijatCtrl($scope, $routeParams, $location, $log, $http, Opiskelij
     function enrichData() {
         angular.forEach($scope.currentRows, function(opiskelija) {
             if (opiskelija.oppilaitosOid) {
-                getOrganisaatio($http, opiskelija.oppilaitosOid, function(data) {
-                    if (data && data.oid === opiskelija.oppilaitosOid)
-                        opiskelija.oppilaitos = data.oppilaitosKoodi + ' ' + data.nimi.fi;
+                getOrganisaatio($http, opiskelija.oppilaitosOid, function(organisaatio) {
+                    if (organisaatio && organisaatio.oid === opiskelija.oppilaitosOid)
+                        opiskelija.oppilaitos = organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi ? organisaatio.nimi.fi : organisaatio.nimi.sv);
                 }, function() {});
             }
             if (opiskelija.henkiloOid) {
