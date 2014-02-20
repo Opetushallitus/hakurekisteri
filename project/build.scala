@@ -22,10 +22,12 @@ object HakuJaValintarekisteriBuild extends Build {
   val SpringStack = Seq(
     "org.springframework" % "spring-web" ,
     "org.springframework" % "spring-context" ,
+    "org.springframework" % "spring-context-support",
     "org.springframework.security" % "spring-security-web" ,
     "org.springframework.security" % "spring-security-config",
     "org.springframework.security" % "spring-security-ldap" ,
     "org.springframework.security" % "spring-security-cas"
+
     )
 
   val SecurityStack = SpringStack.map(_ % SpringVersion) ++
