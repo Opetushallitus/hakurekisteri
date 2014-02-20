@@ -5,6 +5,7 @@ import fi.vm.sade.hakurekisteri.organization.OrganizationHierarchy
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
+import javax.servlet.FilterRegistration.Dynamic
 import org.scalatra._
 import javax.servlet.{ServletContextEvent, DispatcherType, ServletContext}
 import org.scalatra.swagger.Swagger
@@ -82,6 +83,7 @@ object OPHSecurity extends ContextLoader with LifeCycle {
 
     val security = context.addFilter("springSecurityFilterChain", classOf[DelegatingFilterProxy])
     security.addMappingForUrlPatterns(java.util.EnumSet.of(DispatcherType.REQUEST,DispatcherType.FORWARD), true, "/*")
+    security.setAsyncSupported(true);
   }
 
 
