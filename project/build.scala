@@ -10,7 +10,7 @@ object HakuJaValintarekisteriBuild extends Build {
   val Version = "LATEST-SNAPSHOT"
   val ScalaVersion = "2.10.3"
   val ScalatraVersion = "2.2.2"
-  val SpringVersion = "3.1.4.RELEASE"
+  val SpringVersion = "3.2.1.RELEASE"
 
   val ScalatraStack = Seq(
     "org.scalatra" %% "scalatra",
