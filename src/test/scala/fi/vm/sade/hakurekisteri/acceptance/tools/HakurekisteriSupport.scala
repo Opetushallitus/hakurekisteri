@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.acceptance.tools
 
 import org.scalatra.test.HttpComponentsClient
 
-import javax.servlet.http.HttpServlet
+import javax.servlet.http.{HttpServletRequest, HttpServlet}
 import akka.actor.{Props, ActorSystem}
 
 import org.json4s.DefaultFormats
@@ -13,7 +13,7 @@ import java.text.SimpleDateFormat
 import org.scalatest.matchers._
 import org.scalatest.Suite
 import scala.xml.{Elem, Node, NodeSeq}
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriCrudCommands, HakurekisteriResource, HakurekisteriSwagger, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi, Opiskelija, OpiskelijaActor}
 import fi.vm.sade.hakurekisteri.suoritus._
 import java.io.Serializable
@@ -22,6 +22,8 @@ import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 
 import com.github.nscala_time.time.Imports._
 import fi.vm.sade.hakurekisteri.storage.repository.InMemJournal
+import fi.vm.sade.hakurekisteri.acceptance.tools.kausi.Kausi
+import scala.Some
 
 
 object kausi extends Enumeration {
@@ -34,6 +36,11 @@ object kausi extends Enumeration {
 }
 
 import kausi._
+
+trait TestSecurity extends SecuritySupport{
+  override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(User("testaaja", Seq("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001")))
+
+}
 
 trait HakurekisteriSupport extends  Suite with HttpComponentsClient with HakurekisteriJsonSupport  {
   override def withFixture(test: NoArgTest) {
@@ -68,8 +75,8 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
         val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
         val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq())))
         val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(opiskelijaRekisteri)))
-        addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](guardedSuoritusRekisteri, fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/rest/v1/suoritukset")
-        addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](guardedOpiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] , "/rest/v1/opiskelijat")
+        addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](guardedSuoritusRekisteri, fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with TestSecurity, "/rest/v1/suoritukset")
+        addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](guardedOpiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with TestSecurity , "/rest/v1/opiskelijat")
         initialized = true
       }
 

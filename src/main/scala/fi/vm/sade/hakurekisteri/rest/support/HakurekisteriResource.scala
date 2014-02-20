@@ -19,10 +19,10 @@ import org.scalatra.commands._
 import java.util.UUID
 import org.json4s._
 import scala.Some
-import fi.vm.sade.hakurekisteri.organization.{AuthorizedRead, AuthorizedQuery, OrganizationHierarchy}
+import fi.vm.sade.hakurekisteri.organization.{AuthorizedRead, AuthorizedQuery}
 import scala.util.matching.Regex
 
-trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] extends ScalatraServlet with JsonSupport[JValue] with SwaggerSupport { this: HakurekisteriResource[A , C] =>
+trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
 
   before() {
     contentType = formats("json")
@@ -45,7 +45,7 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
   }
 
   get("/:id") {
-    Try(UUID.fromString(params("id"))).map(readResource).
+    Try(UUID.fromString(params("id"))).map(readResource(_ ,getKnownOrganizations(currentUser))).
       recover {
       case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
     }.get
@@ -53,7 +53,7 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
   }
 
   get("/", operation(query))(
-    queryResource
+    queryResource(getKnownOrganizations(currentUser))
   )
 
   notFound {
@@ -112,8 +112,7 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
 
 
 
-  def readResource(id:UUID): Object = {
-    val authorities: Seq[String] = getOrganizations(User.current).map(_.toList).getOrElse(Seq())
+  def readResource(id:UUID, authorities: Seq[String]): Object = {
     new ActorResult[Option[A with Identified]](AuthorizedRead(id, authorities), {
       case Some(data) => Ok(data)
       case None => NotFound()
@@ -128,14 +127,15 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
 
 
 
-  def queryResource: Product with Serializable = {
-    (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q)) recover {
+  def queryResource(authorities: Seq[String]): Product with Serializable = {
+
+    (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q, authorities)) recover {
       case e: Exception => logger.warn("Bad query: " + params, e); BadRequest("Illegal Query")
     }).get
   }
 
-  case class ResourceQuery[R](query: Query[R]) extends AsyncResult {
-    val authorities: Seq[String] = getOrganizations(User.current).map(_.toList).getOrElse(Seq())
+  case class ResourceQuery[R](query: Query[R], authorities: Seq[String]) extends AsyncResult {
+
 
     val is = {
       val future = (actor ? AuthorizedQuery(query, authorities)).mapTo[Seq[R with Identified]]
@@ -150,13 +150,28 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
   }
 
 
-  def getOrganizations(user:Option[User]):Option[Set[String]] = {
+
+
+   protected implicit def swagger: SwaggerEngine[_] = sw
+ }
+
+case class User(username:String, authorities: Seq[String])
+
+trait SecuritySupport {
+
+
+  def currentUser(implicit request: HttpServletRequest): Option[User]
+
+
+
+  def getKnownOrganizations(user:Option[User]):Seq[String] = {
     user.map(_.authorities.
       map(splitAuthority).
       filter(isSuoritusRekisteri).
       map(_.reverse.head).
-      filter(isOid).toSet
-    )
+      filter(isOid).toSet.toList
+    ).getOrElse(Seq())
+
 
   }
 
@@ -177,19 +192,23 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
   def splitAuthority(authority: String) = Seq(authority split "_": _*)
 
 
-  case class User(username:String, authorities: Seq[String])
+
+
+}
+
+trait SpringSecuritySupport extends SecuritySupport {
+
 
   import scala.collection.JavaConverters._
 
-  object User {
 
-    def current(implicit request:HttpServletRequest):Option[User]  = {
-      val name = Option(request.getUserPrincipal).map(_.getName)
-      val authorities = Try(request.getUserPrincipal.asInstanceOf[Authentication].getAuthorities.asScala.toList.map(_.getAuthority))
-      name.map(User(_, authorities.getOrElse(Seq())))
-    }
 
+
+  def currentUser(implicit request: HttpServletRequest): Option[User] = {
+    val name = Option(request.getUserPrincipal).map(_.getName)
+    val authorities = Try(request.getUserPrincipal.asInstanceOf[Authentication].getAuthorities.asScala.toList.map(_.getAuthority))
+    name.map(User(_, authorities.getOrElse(Seq())))
   }
+}
 
-   protected implicit def swagger: SwaggerEngine[_] = sw
- }
+
