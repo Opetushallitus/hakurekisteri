@@ -1,6 +1,6 @@
 'use strict';
 
-function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, Opiskelijat, Suoritukset) {
+function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilot, Opiskelijat, Suoritukset) {
     $scope.henkiloOid = $routeParams.henkiloOid;
     $scope.yksilollistamiset = [
         {value: "Ei", text: "Ei (1)"},
@@ -53,7 +53,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
         }
     }
     function fetchHenkilotiedot() {
-        Henkilo.query({oid: $scope.henkiloOid}, function(henkilot) {
+        Henkilot.query({oid: $scope.henkiloOid}, function(henkilot) {
             if (henkilot && henkilot.length > 0)
                 $scope.henkilo = henkilot[0];
             else
@@ -135,11 +135,7 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilo, 
             });
         }
     };
-    $scope.koulutusChange = function(suoritus) {
-        if (suoritus && suoritus.komoto && suoritus.komoto.komo === 'peruskoulu') {
 
-        }
-    };
     $scope.save = function() {
         var deferredValidations = [];
         function validateOppilaitoskoodit() {

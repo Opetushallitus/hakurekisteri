@@ -9,9 +9,9 @@ var app = angular.module('myApp', ['ngRoute', 'ngResource', 'ui.bootstrap'])
         $locationProvider.html5Mode(false);
     });
 
-app.factory('Henkilo', function($resource) {
+app.factory('Henkilot', function($resource) {
     return $resource("rest/v1/henkilot/:henkiloId", {henkiloId: "@id"}, {
-        query: {method: "GET", isArray: true, timeout: 3000},
+        query: {method: "GET", isArray: true, cache: false, timeout: 3000},
         save: {method: "POST", timeout: 5000}
     });
 });
