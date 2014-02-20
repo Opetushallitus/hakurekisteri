@@ -82,8 +82,9 @@ object OPHSecurity extends ContextLoader with LifeCycle {
     initWebApplicationContext(context)
 
     val security = context.addFilter("springSecurityFilterChain", classOf[DelegatingFilterProxy])
-    security.addMappingForUrlPatterns(java.util.EnumSet.of(DispatcherType.REQUEST,DispatcherType.FORWARD), true, "/*")
-    security.setAsyncSupported(true);
+    security.addMappingForUrlPatterns(java.util.EnumSet.of(DispatcherType.REQUEST, DispatcherType.ASYNC), true, "/*")
+    security.setAsyncSupported(true)
+
   }
 
 
