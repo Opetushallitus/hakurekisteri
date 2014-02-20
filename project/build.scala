@@ -44,7 +44,8 @@ object HakuJaValintarekisteriBuild extends Build {
     "com.github.nscala-time" %% "nscala-time" % "0.8.0",
     "com.typesafe.slick" %% "slick" % "2.0.0",
     "com.h2database" % "h2" % "1.3.174",
-  "net.databinder.dispatch" %% "dispatch-core" % "0.11.0"
+    "org.postgresql" % "postgresql" % "9.3-1100-jdbc4",
+    "net.databinder.dispatch" %% "dispatch-core" % "0.11.0"
   )
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion)

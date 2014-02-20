@@ -67,7 +67,7 @@ class ScalatraBootstrap extends LifeCycle {
 object OPHSecurity extends ContextLoader with LifeCycle {
 
   val config = OPHConfig(
-    "cas_mode" -> "backend",
+    "cas_mode" -> "front",
     "cas_key" -> "suoritusrekisteri",
     "spring_security_default_access" -> "hasRole('ROLE_APP_SUORITUSREKISTERI')",
     "cas_service" -> "${cas.service.suoritusrekisteri}",
