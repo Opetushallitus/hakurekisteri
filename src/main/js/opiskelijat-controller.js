@@ -106,6 +106,7 @@ function OpiskelijatCtrl($scope, $routeParams, $location, $log, $http, Opiskelij
         } else {
             $scope.page = 0;
         }
+        resetPageNumbers();
         showCurrentRows($scope.allRows);
     };
     $scope.prevPage = function() {
@@ -114,10 +115,12 @@ function OpiskelijatCtrl($scope, $routeParams, $location, $log, $http, Opiskelij
         } else {
             $scope.page = Math.floor($scope.allRows.length / $scope.pageSize);
         }
+        resetPageNumbers();
         showCurrentRows($scope.allRows);
     };
     $scope.showPageWithNumber = function(pageNum) {
         $scope.page = pageNum > 0 ? (pageNum - 1) : 0;
+        resetPageNumbers();
         showCurrentRows($scope.allRows);
     };
     $scope.setPageSize = function(newSize) {
@@ -139,7 +142,8 @@ function OpiskelijatCtrl($scope, $routeParams, $location, $log, $http, Opiskelij
     function resetPageNumbers() {
         $scope.pageNumbers = [];
         for (var i = 0; i < Math.ceil($scope.allRows.length / $scope.pageSize); i++) {
-            $scope.pageNumbers.push(i + 1);
+            if (i === 0 || (i >= ($scope.page - 3) && i <= ($scope.page + 3)) || i === (Math.ceil($scope.allRows.length / $scope.pageSize) - 1))
+                $scope.pageNumbers.push(i + 1);
         }
     }
 
