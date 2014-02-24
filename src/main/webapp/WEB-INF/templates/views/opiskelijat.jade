@@ -18,14 +18,8 @@ div(class="container")
       tr
         th(oph-msg="suoritusrekisteri.henkiloOid") Henkilö
         th(oph-msg="suoritusrekisteri.oppilaitos") Oppilaitos
-        th(class="sortable" ng-click="sort('luokkataso', (sorting.direction === 'asc' ? 'desc' : 'asc'))")
-          span(oph-msg="suoritusrekisteri.luokkataso") Luokkataso
-          span(ng-show="isDirectionIconVisible('luokkataso')")
-          i(class="glyphicon glyphicon-chevron-{{sorting.direction === 'asc' ? 'up' : 'down'}}")
-        th(class="sortable" ng-click="sort('luokka', (sorting.direction === 'asc' ? 'desc' : 'asc'))")
-          span(oph-msg="suoritusrekisteri.luokka") Luokka
-          span(ng-show="isDirectionIconVisible('luokka')")
-            i(class="glyphicon glyphicon-chevron-{{sorting.direction === 'asc' ? 'up' : 'down'}}")
+        th(oph-msg="suoritusrekisteri.luokkataso") Luokkataso
+        th(oph-msg="suoritusrekisteri.luokka") Luokka
       tr(ng-repeat="row in currentRows")
         td
           a(href="#/muokkaa/{{row.henkiloOid}}" ng-show="isOPH()") {{row.henkilo || row.henkiloOid}}
