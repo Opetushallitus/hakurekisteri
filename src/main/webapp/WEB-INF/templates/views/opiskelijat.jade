@@ -34,7 +34,7 @@ div(class="container")
     ul(class="pagination pull-left")
       li(class="{{pageNumbers ? '' : 'disabled'}}")
         a(ng-click="prevPage()") &laquo;
-      li(class="{{pageNumbers ? '' : 'disabled'}} {{page == $index ? 'active' : ''}}" ng-repeat="pageNum in pageNumbers")
+      li(class="{{pageNumbers ? '' : 'disabled'}} {{page === (pageNum - 1) ? 'active' : ''}}" ng-repeat="pageNum in pageNumbers")
         a(ng-click="showPageWithNumber(pageNum)") {{pageNum}}
       li(class="{{pageNumbers ? '' : 'disabled'}}")
         a(ng-click="nextPage()") &raquo;

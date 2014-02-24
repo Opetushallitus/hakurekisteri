@@ -3,8 +3,6 @@ package fi.vm.sade.hakurekisteri.organization
 import scala.xml.{Elem, NodeSeq}
 import org.scalatra.util.RicherString
 import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
-import scala.concurrent.Future
 import dispatch._
 import Defaults._
 import akka.actor.{Cancellable, ActorRef, Actor}
@@ -15,6 +13,7 @@ import java.util.concurrent.TimeUnit
 import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.concurrent.duration._
 import akka.event.Logging
+import com.ning.http.client.Response
 
 class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: A => String) extends Actor {
 
@@ -59,25 +58,79 @@ class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRe
 
   def fetch() {
     logger.info("fetching organizations from: " + serviceUrl)
-    val result = Http(svc << <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:typ="http://model.api.organisaatio.sade.vm.fi/types">
+    val authorizer = edgeFetch map (OrganizationAuthorizer(_))
+    authorizer pipeTo self
+    authorizer.onFailure {
+      case e: Exception => logger.error("failed loading organizations", e)
+    }
+  }
+
+
+  def readXml: concurrent.Future[Elem] = {
+    val result: dispatch.Future[Response] = Http(svc << <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:typ="http://model.api.organisaatio.sade.vm.fi/types">
       <soapenv:Header/> <soapenv:Body>
         <typ:getOrganizationStructure></typ:getOrganizationStructure>
       </soapenv:Body>
     </soapenv:Envelope>.toString)
-    val soapFuture: Future[Elem] = result map ((response) => scala.xml.XML.load(new java.io.InputStreamReader(response.getResponseBodyAsStream, "UTF-8")))
-    val orgTagsFuture = soapFuture map (_ \ "Body" \ "getOrganizationStructureResponse" \ "organizationStructure")
-    val orgsFuture =  orgTagsFuture map  (_.map((org) => Org((org \ "@oid").blankOption.get, (org \ "@parentOid").blankOption, (org \ "@lakkautusPvm").blankOption.map((pvm) => {DateTime.parse(pvm, DateTimeFormat.forPattern("yyyy-MM-dddZ"))}))))
-    def orgPaths = orgsFuture map ((found) => (Map[String, Seq[String]]() /: found) ((m,org) => addParentToPaths(addSelfToPaths(m,org),org)))
-    def authorizer = orgPaths map (OrganizationAuthorizer(_))
-    result.onFailure {
-      case e:Exception => logger.error("failed loading organizations", e)
-    }
-    authorizer pipeTo self
 
+    val soapFuture: concurrent.Future[Elem] = result map ((response) => scala.xml.XML.load(new java.io.InputStreamReader(response.getResponseBodyAsStream, "UTF-8")))
+    soapFuture
+  }
+
+  def possibleEdges(soapFuture: concurrent.Future[Elem]):concurrent.Future[Seq[(Option[String], Option[String])]] = {
+    val orgTagsFuture = soapFuture map (_ \ "Body" \ "getOrganizationStructureResponse" \ "organizationStructure")
+    orgTagsFuture map (_.map((org) => ((org \ "@parentOid").blankOption, (org \ "@oid").blankOption)))
   }
 
 
+  def findEdges(soapFuture: concurrent.Future[Elem]): concurrent.Future[Seq[(String,String)]] = {
+    val rawList = possibleEdges(soapFuture)
+    rawList.map (_.collect { case (Some(parent:String), Some(child:String)) => (parent,child)} )
 
+  }
+
+  def childOrgs(edges: Seq[(String, String)]): Set[String] = {
+    edges.map(_._2).toSet
+  }
+
+  def parentOrgs(edges: Seq[(String, String)]): Set[String] = {
+    edges.map(_._1).toSet
+  }
+
+  def leafOrgs(edges: Seq[(String,String)]): Set[String]= {
+    childOrgs(edges) -- parentOrgs(edges)
+  }
+
+  def splitWith[T](s:Seq[T], p:T => Boolean ): (Seq[T], Seq[T]) = {
+    ((Seq[T](), Seq[T]()) /: s) ((a, item) => if (p(item)) (item +: a._1, a._2) else (a._1, item +: a._2))
+  }
+
+  def findNonLeavesAndLeavesLeafEdges(edges: Seq[(String,String)]): (Seq[(String, String)], Seq[(String, String)]) = {
+    val leaves = leafOrgs(edges)
+    splitWith(edges:Seq[(String,String)], (edge:(String,String)) => leaves.contains(edge._2))
+  }
+
+  def findPaths(parentEdges: Seq[(String,String)], leafEdges: Seq[(String,String)], accumulator:Map[String, Seq[String]]): Map[String, Seq[String]] = {
+    val leafMap: Map[String, String] = leafEdges.map((edge) => edge._2 -> edge._1).toMap
+    val needAddition: Map[String, Seq[String]] = accumulator.map((kv) => {
+      val addedPathKeys = kv._2.collect(leafMap)
+      val newPath = addedPathKeys ++ kv._2
+      (kv._1 -> newPath)
+    }) ++ leafMap.map((kv: (String, String)) => kv._1 -> Seq(kv._2, kv._1))
+    val  (newLeaves, newOthers)  = findNonLeavesAndLeavesLeafEdges(parentEdges)
+    if (parentEdges.nonEmpty) findPaths(newOthers, newLeaves, needAddition)
+    else (needAddition ++ leafMap.values.map((v) => v -> Seq(v)))
+  }
+
+  def edgeBuild(edges:Seq[(String,String)]) = {
+    println(edges.filter(_._1 == "1.2.246.562.10.00000000001"))
+    findPaths(edges, Seq(), Map())
+  }
+
+  def edgeFetch: concurrent.Future[Map[String, Seq[String]]] = {
+    val edgeFuture = findEdges(readXml)
+    edgeFuture map edgeBuild
+  }
 
   import akka.pattern.ask
   override def receive: Receive = {
