@@ -45,7 +45,7 @@ class CreateHenkiloCommand extends HakurekisteriCommand[Henkilo] {
   val kansalaisuus: Field[Seq[Kansalaisuus]] =asSeq[Kansalaisuus]("kansalaisuus")
   val passinnumero: Field[String] =asString("passinnumero")
   val asiointiKieli: Field[Kieli] =asType[Kieli]("asiointiKieli")
-  val kutsumanimi: Field[String] =asString("kutsunmanimi")
+  val kutsumanimi: Field[String] =asString("kutsumanimi")
   val passivoitu: Field[Boolean] =asBoolean("passivoitu")
   val eiSuomalaistaHetua: Field[Boolean] =asBoolean("eiSuomalaistaHetua")
   val etunimet: Field[String] =asString("etunimet")

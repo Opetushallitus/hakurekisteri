@@ -10,7 +10,7 @@ object HakuJaValintarekisteriBuild extends Build {
   val Version = "LATEST-SNAPSHOT"
   val ScalaVersion = "2.10.3"
   val ScalatraVersion = "2.2.2"
-  val SpringVersion = "3.1.4.RELEASE"
+  val SpringVersion = "3.2.1.RELEASE"
 
   val ScalatraStack = Seq(
     "org.scalatra" %% "scalatra",
@@ -22,10 +22,12 @@ object HakuJaValintarekisteriBuild extends Build {
   val SpringStack = Seq(
     "org.springframework" % "spring-web" ,
     "org.springframework" % "spring-context" ,
+    "org.springframework" % "spring-context-support",
     "org.springframework.security" % "spring-security-web" ,
     "org.springframework.security" % "spring-security-config",
     "org.springframework.security" % "spring-security-ldap" ,
     "org.springframework.security" % "spring-security-cas"
+
     )
 
   val SecurityStack = SpringStack.map(_ % SpringVersion) ++
@@ -43,7 +45,9 @@ object HakuJaValintarekisteriBuild extends Build {
     "com.typesafe.akka" %% "akka-testkit" %  "2.1.2",
     "com.github.nscala-time" %% "nscala-time" % "0.8.0",
     "com.typesafe.slick" %% "slick" % "2.0.0",
-    "com.h2database" % "h2" % "1.3.174"
+    "com.h2database" % "h2" % "1.3.174",
+    "org.postgresql" % "postgresql" % "9.3-1100-jdbc4",
+    "net.databinder.dispatch" %% "dispatch-core" % "0.11.0"
   )
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion)

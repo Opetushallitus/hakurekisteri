@@ -19,8 +19,10 @@ import org.scalatra.commands._
 import java.util.UUID
 import org.json4s._
 import scala.Some
+import fi.vm.sade.hakurekisteri.organization.{AuthorizedRead, AuthorizedQuery}
+import scala.util.matching.Regex
 
-trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] extends ScalatraServlet with JsonSupport[JValue] with SwaggerSupport { this: HakurekisteriResource[A , C] =>
+trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
 
   before() {
     contentType = formats("json")
@@ -43,7 +45,7 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
   }
 
   get("/:id") {
-    Try(UUID.fromString(params("id"))).map(readResource).
+    Try(UUID.fromString(params("id"))).map(readResource(_ ,getKnownOrganizations(currentUser))).
       recover {
       case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
     }.get
@@ -51,8 +53,14 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
   }
 
   get("/", operation(query))(
-    queryResource
+    queryResource(getKnownOrganizations(currentUser))
   )
+
+  notFound {
+    response.setStatus(404)
+    response.getWriter.println("Resource not found")
+
+  }
 
 }
 
@@ -104,8 +112,8 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
 
 
 
-  def readResource(id:UUID): Object = {
-    new ActorResult[Option[A with Identified]](id, {
+  def readResource(id:UUID, authorities: Seq[String]): Object = {
+    new ActorResult[Option[A with Identified]](AuthorizedRead(id, authorities), {
       case Some(data) => Ok(data)
       case None => NotFound()
       case result =>
@@ -119,47 +127,88 @@ abstract class   HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[
 
 
 
-  def queryResource: Product with Serializable = {
-    (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q)) recover {
+  def queryResource(authorities: Seq[String]): Product with Serializable = {
+
+    (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q, authorities)) recover {
       case e: Exception => logger.warn("Bad query: " + params, e); BadRequest("Illegal Query")
     }).get
   }
 
-  case class ResourceQuery[R](query: Query[R]) extends AsyncResult {
+  case class ResourceQuery[R](query: Query[R], authorities: Seq[String]) extends AsyncResult {
 
-    val is = (actor ? query).mapTo[Seq[R with Identified]].map(Ok(_)).
-      recover { case e:Throwable => InternalServerError("Operation failed")}
-    val oidRegex = "\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+".r
 
-    //val orgs = getOrganizations(User.current)
-    println(User.current)
-    def getOrganizations(user:Option[User]):Option[Set[String]] = {
-      user.map(_.authorities.
-        map((authority:String) => Seq(authority.split("_"): _*)).
-        filter(_.containsSlice(Seq("ROLE","APP","SUORITUSREKISTERI"))).
-        map(_.reverse.head).
-        filter(x => oidRegex.pattern.matcher(x).matches).toSet
-      )
+    val is = {
+      val future = (actor ? AuthorizedQuery(query, authorities)).mapTo[Seq[R with Identified]]
 
+      future.map(Ok(_)).
+        recover {
+        case e: Throwable => InternalServerError("Operation failed")
+      }
     }
+
+
   }
 
 
-  case class User(username:String, authorities: Seq[String])
 
-  import scala.collection.JavaConverters._
-
-  object User {
-
-    def current(implicit request:HttpServletRequest):Option[User]  = {
-      val name = Option(request.getUserPrincipal).map(_.getName)
-      println("name: " + name)
-      val authorities = Try(request.getUserPrincipal.asInstanceOf[Authentication].getAuthorities.asScala.toList.map(_.getAuthority))
-      println("authorities: " + authorities)
-      name.map(User(_, authorities.getOrElse(Seq())))
-    }
-
-  }
 
    protected implicit def swagger: SwaggerEngine[_] = sw
  }
+
+case class User(username:String, authorities: Seq[String])
+
+trait SecuritySupport {
+
+
+  def currentUser(implicit request: HttpServletRequest): Option[User]
+
+
+
+  def getKnownOrganizations(user:Option[User]):Seq[String] = {
+    user.map(_.authorities.
+      map(splitAuthority).
+      filter(isSuoritusRekisteri).
+      map(_.reverse.head).
+      filter(isOid).toSet.toList
+    ).getOrElse(Seq())
+
+
+  }
+
+
+  val regex = new Regex("\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+")
+
+
+  def isOid(x:String) = {
+    println(x)
+
+    (regex findFirstIn x).nonEmpty
+  }
+
+  def isSuoritusRekisteri: (Seq[String]) => Boolean = {
+    _.containsSlice(Seq("ROLE", "APP", "SUORITUSREKISTERI"))
+  }
+
+  def splitAuthority(authority: String) = Seq(authority split "_": _*)
+
+
+
+
+}
+
+trait SpringSecuritySupport extends SecuritySupport {
+
+
+  import scala.collection.JavaConverters._
+
+
+
+
+  def currentUser(implicit request: HttpServletRequest): Option[User] = {
+    val name = Option(request.getUserPrincipal).map(_.getName)
+    val authorities = Try(request.getUserPrincipal.asInstanceOf[Authentication].getAuthorities.asScala.toList.map(_.getAuthority))
+    name.map(User(_, authorities.getOrElse(Seq())))
+  }
+}
+
+

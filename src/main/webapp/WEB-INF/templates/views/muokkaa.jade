@@ -15,15 +15,15 @@ div(class="container")
               div(class="form-group col-sm-6")
                 div
                   strong Henkilötunnus
-                div {{henkilo.hetu}}
+                div {{henkilo.hetu || henkilo.syntymaaika}}
               div(class="form-group col-sm-6")
                 div
                   strong Sukupuoli
                 label(class="radio-inline")
-                  input(type="radio" ng-model="henkilo.sukupuoli" value="MIES" required)
+                  input(type="radio" ng-model="henkilo.sukupuoli" value="1" required)
                   span Mies
                 label(class="radio-inline")
-                  input(type="radio" ng-model="henkilo.sukupuoli" value="NAINEN" required)
+                  input(type="radio" ng-model="henkilo.sukupuoli" value="2" required)
                   span Nainen
             div(class="row")
               div(class="form-group col-sm-6")
@@ -35,37 +35,20 @@ div(class="container")
             div(class="form-group")
               label(for="sukunimi") Sukunimi
               input(id="sukunimi" type="text" class="form-control" ng-model="henkilo.sukunimi" required)
-            div(class="form-group")
-              label(for="katuosoite") Katuosoite
-              input(id="katuosoite" type="text" class="form-control" ng-model="henkilo.katuosoite")
+
+            div(ng-repeat="yhteystietoryhma in henkilo.yhteystiedotRyhma")
+              div(class="form-group" ng-repeat="yhteystieto in yhteystietoryhma.yhteystiedot")
+                label {{yhteystieto.yhteystietoTyyppi}}
+                input(type="text" class="form-control" ng-model="yhteystieto.yhteystietoArvo")
+
             div(class="row")
-              div(class="form-group col-sm-4")
-                label(for="postinumero") Postinumero
-                input(id="postinumero" name="postinumeroField" type="text" class="form-control" ng-model="henkilo.postinumero" ng-change="fetchPostitoimipaikka()")
-              div(class="form-group col-sm-4 postitoimipaikka")
-                label(for="postitoimipaikka") Postitoimipaikka
-                input(id="postitoimipaikka" type="text" class="form-control" ng-model="henkilo.postitoimipaikka")
-                div(class="loading" ng-show="searchingPostinumero")
-              div(class="form-group col-sm-4")
-                label(for="maa") Maa
-                input(id="maa" class="form-control" type="text" ng-model="henkilo.maa")
-            div(class="row")
-              div(class="form-group col-sm-4")
-                label(for="kotikunta") Kotikunta
-                input(id="kotikunta" class="form-control" type="text" ng-model="henkilo.kotikunta" required)
-              div(class="form-group col-sm-4")
-                label(for="kansalaisuus") Kansalaisuus
-                input(id="kansalaisuus" class="form-control" type="text" ng-model="henkilo.kansalaisuus" required)
+              div(class="form-group col-sm-4" ng-repeat="kansalaisuus in henkilo.kansalaisuus")
+                label Kansalaisuus
+                input(class="form-control" type="text" ng-model="kansalaisuus.kansalaisuusKoodi" required)
               div(class="form-group col-sm-4")
                 label(for="aidinkieli") Äidinkieli
-                input(id="aidinkieli" class="form-control" type="text" ng-model="henkilo.aidinkieli" required)
+                input(id="aidinkieli" class="form-control" type="text" ng-model="henkilo.asiointiKieli.kieliKoodi" required ng-change="henkilo.asiointiKieli.kieliTyyppi = henkilo.asiointiKieli.kieliKoodi; henkilo.kielisyys[0] = henkilo.asiointiKieli;")
             div(class="row")
-              div(class="form-group col-sm-6")
-                label(for="matkapuhelin") Matkapuhelin
-                input(id="matkapuhelin" type="text" class="form-control" ng-model="henkilo.matkapuhelin")
-              div(class="form-group col-sm-6")
-                label(for="muupuhelin") Muu puhelin
-                input(id="muupuhelin" type="text" class="form-control" ng-model="henkilo.muupuhelin")
 
     div(class="col-md-5")
       section(class="panel panel-default")
@@ -77,7 +60,7 @@ div(class="container")
               form(class="form-inline suoritus-form")
                 div(class="form-group")
                   strong Oppilaitos
-                  input(type="text" class="form-control" ng-model="suoritus.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + organisaatio.nimi.fi) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingSuoritusOppilaitos" typeahead-wait-ms="500" required)
+                  input(type="text" class="form-control" ng-model="suoritus.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv)) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingSuoritusOppilaitos" typeahead-wait-ms="500" required)
                 div(class="form-group")
                   strong Koulutus
                   select(class="form-control" ng-model="suoritus.komoto.komo" ng-options="koulutus.value as koulutus.text for koulutus in koulutukset" required)
@@ -108,7 +91,7 @@ div(class="container")
           td
             input(type="text" class="form-control" ng-model="luokkatieto.loppuPaiva" datepicker-popup="{{format}}" datepicker-options="dateOptions" show-button-bar="false" min="luokkatieto.alkuPaiva")
           td
-            input(type="text" class="form-control" ng-model="luokkatieto.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + organisaatio.nimi.fi) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingLuokkatietoOppilaitos" typeahead-wait-ms="500" required)
+            input(type="text" class="form-control" ng-model="luokkatieto.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv)) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingLuokkatietoOppilaitos" typeahead-wait-ms="500" required)
           td
             input(type="text" class="form-control" ng-model="luokkatieto.luokkataso" required)
           td
