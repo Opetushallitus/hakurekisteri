@@ -3,8 +3,6 @@ package fi.vm.sade.hakurekisteri.organization
 import scala.xml.{Elem, NodeSeq}
 import org.scalatra.util.RicherString
 import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
-import scala.concurrent.Future
 import dispatch._
 import Defaults._
 import akka.actor.{Cancellable, ActorRef, Actor}
@@ -16,8 +14,6 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.concurrent.duration._
 import akka.event.Logging
 import com.ning.http.client.Response
-import scala.collection.immutable
-import scala.collection.immutable.IndexedSeq
 
 class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: A => String) extends Actor {
 
