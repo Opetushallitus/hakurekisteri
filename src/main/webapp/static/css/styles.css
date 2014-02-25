@@ -92,7 +92,7 @@ label {
 }
 
 .loading {
-    background-image: url('../images/ajax-loader.gif');
+    background-image: url('../img/ajax-loader.gif');
     height: 16px;
     width: 16px;
 }
@@ -102,7 +102,7 @@ label {
 }
 
 .loading-large {
-    background-image: url('../images/ajax-loader-large.gif');
+    background-image: url('../img/ajax-loader-large.gif');
     height: 32px;
     margin: 50px auto;
     width: 32px;
@@ -114,4 +114,10 @@ label {
 
 .nappulat {
     margin-bottom: 20px;
+}
+
+.nakyma {
+    border: 1px solid #DDDDDD;
+    border-top-style: none;
+    padding: 20px;
 }
