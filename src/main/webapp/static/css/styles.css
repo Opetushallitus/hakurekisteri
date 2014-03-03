@@ -1,3 +1,7 @@
+body .container {
+    max-width: 1230px;
+}
+
 h1, h2, h3 {
     margin-top: 0;
 }
@@ -72,6 +76,10 @@ body #raamit-header .header-content {
     height: 29px;
     width: 29px;
     margin-right: 5px;
+}
+
+.pagination *, .pagination li.active > a {
+    color: #000;
 }
 
 .pagination a *:hover, .btn *:hover {
