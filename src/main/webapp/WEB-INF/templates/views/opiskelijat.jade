@@ -34,14 +34,14 @@ table(class="table")
       td(class="loading-td" colspan="4")
         div(class="loading-large")
 
-aside(class="text-center")
-  div(class="pagination")
+aside(class="text-center" ng-hide="loading")
+  div(class="pagination" ng-show="pageNumbers && pageNumbers.length > 0")
     ul
-      li(class="{{pageNumbers ? '' : 'disabled'}}")
+      li
         a(ng-click="prevPage()")
           span(class="glyphicon glyphicon-arrow-left")
-      li(class="{{pageNumbers ? '' : 'disabled'}} {{page === (pageNum - 1) ? 'active' : ''}}" ng-repeat="pageNum in pageNumbers")
+      li(class="{{page === (pageNum - 1) ? 'active' : ''}}" ng-repeat="pageNum in pageNumbers")
         a(ng-click="showPageWithNumber(pageNum)") {{pageNum}}
-      li(class="{{pageNumbers ? '' : 'disabled'}}")
+      li
         a(ng-click="nextPage()")
           span(class="glyphicon glyphicon-arrow-right")
