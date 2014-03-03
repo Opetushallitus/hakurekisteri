@@ -78,7 +78,7 @@ body #raamit-header .header-content {
     margin-right: 5px;
 }
 
-.pagination *, .pagination li.active > a {
+.pagination *, .pagination ul > .active > a, .pagination ul > .active > span {
     color: #000;
 }
 
