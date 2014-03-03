@@ -1,6 +1,6 @@
 'use strict';
 
-function OpiskelijatCtrl($scope, $routeParams, $location, $log, $http, Opiskelijat) {
+function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $http, Opiskelijat) {
     $scope.loading = false;
     $scope.currentRows = [];
     $scope.allRows = [];
@@ -11,6 +11,8 @@ function OpiskelijatCtrl($scope, $routeParams, $location, $log, $http, Opiskelij
     $scope.targetOrg = "";
     $scope.myRoles = [];
     $scope.searchTerm = $routeParams.q;
+
+    $rootScope.addToMurupolku({text: "Opiskelijoiden haku"}, true);
 
     function getMyRoles() {
         $http.get('/cas/myroles', {cache: true})

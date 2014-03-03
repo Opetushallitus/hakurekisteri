@@ -1,7 +1,7 @@
 !!! 5
 html(ng-app="myApp")
   head
-    title(oph-msg="hakurekisteri.title") Haku- ja valintarekisteri
+    title(oph-msg="suoritusrekisteri.title") Haku- ja valintarekisteri
     meta(charset="utf-8")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
     link(type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet")
@@ -18,6 +18,7 @@ html(ng-app="myApp")
     script(type="text/javascript" src="static/js/angular-ui/ui-bootstrap-custom-0.10.0.min.js")
     script(type="text/javascript" src="static/js/angular-ui/ui-bootstrap-custom-tpls-0.10.0.min.js")
     script(type="text/javascript" src="common-functions.js")
+    script(type="text/javascript" src="murupolku-controller.js")
     script(type="text/javascript" src="opiskelijat-controller.js")
     script(type="text/javascript" src="muokkaa-controller.js")
     script(type="text/javascript" src="eihakeneet-controller.js")
@@ -26,4 +27,15 @@ html(ng-app="myApp")
     script(type="text/javascript" src="/virkailija-raamit/apply-raamit.js")
 
   body
-    div(ng-view)
+    div(class="container")
+      div(class="row" ng-controller="MurupolkuCtrl" ng-hide="hideMuru")
+        div(class="col-xs-12")
+          ul(class="breadcrumb")
+            li(ng-repeat="muru in murupolku")
+              a(ng-show="muru.href" href="{{muru.href}}")
+                span(ng-show="muru.icon" class="{{muru.icon}}")
+                span {{muru.text}}
+              span(ng-hide="muru.href") {{muru.text}}
+
+      div(class="row")
+        div(class="col-xs-12" ng-view)
