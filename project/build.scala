@@ -1,7 +1,10 @@
+import java.text.SimpleDateFormat
+import java.util.Date
 import sbt._
-import Keys._
+import sbt.Keys._
 import org.scalatra.sbt._
 import com.mojolly.scalate.ScalatePlugin._
+import scala.Some
 import ScalateKeys._
 
 object HakuJaValintarekisteriBuild extends Build {
@@ -98,11 +101,20 @@ object HakuJaValintarekisteriBuild extends Build {
         Some("releases" at artifactory + "/oph-sade-release-local")
   }
 
+  lazy val buildversion = taskKey[Unit]("start buildversion.txt generator")
+
+  val buildversionTask = buildversion <<= version map {
+    (ver: String) =>
+      val f: File = file("src/main/webapp/buildversion.txt")
+      val now: String = new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date())
+      IO.write(f, "artifactId=suoritusrekisteri\nversion=" + ver +
+        "\nbuildNumber=" + sys.props.getOrElse("build", "local") +
+        "\nbranchName=" + sys.props.getOrElse("branch", "local") +
+        "\nvcsRevision=" + sys.props.getOrElse("revision", "N/A") +
+        "\nbuildTtime=" + now)
+  }
 
   lazy val project = {
-
-
-
     Project(
       "hakurekisteri",
       file("."),
@@ -122,11 +134,13 @@ object HakuJaValintarekisteriBuild extends Build {
           resolvers += "Sonatype" at "http://oss.sonatype.org/content/repositories/releases/",
           credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
           artifactoryPublish,
+          buildversionTask,
           libraryDependencies ++= Seq("org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts Artifact("javax.servlet", "jar", "jar"))
             ++ ScalatraStack.map(_ % ScalatraVersion)
             ++ SecurityStack
             ++ dependencies
             ++ testDependencies.map((m) => m % "test"),
+
           scalateTemplateConfig in Compile <<= (sourceDirectory in Compile) {
             base =>
               Seq(
