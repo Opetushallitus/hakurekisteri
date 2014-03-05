@@ -105,13 +105,16 @@ object HakuJaValintarekisteriBuild extends Build {
 
   val buildversionTask = buildversion <<= version map {
     (ver: String) =>
-      val f: File = file("src/main/webapp/buildversion.txt")
       val now: String = new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date())
-      IO.write(f, "artifactId=suoritusrekisteri\nversion=" + ver +
-        "\nbuildNumber=" + sys.props.getOrElse("bamboo.inject.build.version.number", "N/A") +
-        "\nbranchName=" + sys.props.getOrElse("bamboo.planRepository.branchName", "N/A") +
-        "\nvcsRevision=" + sys.props.getOrElse("bamboo.repository.revision.number", "N/A") +
-        "\nbuildTtime=" + now)
+      val buildversionTxt: String = "artifactId=suoritusrekisteri\nversion=" + ver +
+        "\nbuildNumber=" + sys.props.getOrElse("buildNumber", "N/A") +
+        "\nbranchName=" + sys.props.getOrElse("branchName", "N/A") +
+        "\nvcsRevision=" + sys.props.getOrElse("revisionNumber", "N/A") +
+        "\nbuildTtime=" + now
+      println("writing buildversion.txt:\n" + buildversionTxt)
+
+      val f: File = file("src/main/webapp/buildversion.txt")
+      IO.write(f, buildversionTxt)
   }
 
   lazy val project = {
