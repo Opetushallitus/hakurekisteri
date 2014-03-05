@@ -108,9 +108,9 @@ object HakuJaValintarekisteriBuild extends Build {
       val f: File = file("src/main/webapp/buildversion.txt")
       val now: String = new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date())
       IO.write(f, "artifactId=suoritusrekisteri\nversion=" + ver +
-        "\nbuildNumber=" + sys.props.getOrElse("build", "local") +
-        "\nbranchName=" + sys.props.getOrElse("branch", "local") +
-        "\nvcsRevision=" + sys.props.getOrElse("revision", "N/A") +
+        "\nbuildNumber=" + sys.props.getOrElse("bamboo.inject.build.version.number", "N/A") +
+        "\nbranchName=" + sys.props.getOrElse("bamboo.planRepository.branchName", "N/A") +
+        "\nvcsRevision=" + sys.props.getOrElse("bamboo.repository.revision.number", "N/A") +
         "\nbuildTtime=" + now)
   }
 
