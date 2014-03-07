@@ -15,32 +15,60 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen {
 
     scenario("Organisaation X hakijat") {
       Given("N henkilöä täyttää hakemuksen; osa kohdistuu organisaatioon X tai sen lapsiin")
+      //Mikko täyttää hakemuksen hakukohteeseen A koulussa B, joka sisältyy organisaatioon X
+      //Matti täyttää hakemuksen hakukohteeseen C koulussa D, joka ei sisälly organisaatioon X
+
       When("rajaan muodostusta valitsemalla organisaation X")
+      //tiedosto = muodosta (organisaatioille X)
+
       Then("saan siirtotiedoston, jossa on organisaatioon X tai sen lapsiin hakeneet")
+      //tiedosto sisältää Mikon tiedot
     }
 
     scenario("Haussa Y hakeneet") {
-      Given("N henkilöä täyttää hakemuksen; viisi kohdistuu hakuun Y")
+      Given("N henkilöä täyttää hakemuksen; yksi kohdistuu hakuun Y")
+      //Mikko täyttää hakemuksen yhteishaussa
+      //Matti täyttää hakemuksen lisähaussa
+
       When("rajaan muodostusta valitsemalla haun Y")
-      Then("saan siirtotiedoston, jossa on kyseiset viisi hakijaa")
+      //tiedosto = muodosta(haku = yhteishaku)
+
+      Then("saan siirtotiedoston, jossa on kyseinen hakija")
+      //tiedosto sisältää Mikon tiedot
     }
 
     scenario("Hakukohdekoodi") {
       Given("N henkilöä täyttää hakemuksen; osa kohdistuu hakukohteisiin tyyppiä Z")
+      //Mikko täyttää hakemuksen hakukohteeseen 123
+      //Matti täyttää hakemuksen hakukohteeseen 190
+
       When("rajaan muodostusta syöttämällä hakukohdekoodin Z")
+      //tiedosto = muodosta(hakukohdekoodi = 123)
+
       Then("saan siirtotiedoston, jossa on hakijat hakukohteisiin tyyppiä Z")
+      //tiedosto sisältää Mikon tiedot
     }
 
     scenario("XML tiedosto") {
       Given("N henkilöä täyttää hakemuksen")
+      //Mikko täyttää hakemuksen
+
       When("rajaan muodostusta valitsemalla tiedostotyypiksi 'XML'")
+      //tiedosto = muodosta(muoto = XML)
+
       Then("saan siirtotiedoston, joka on XML-muodossa")
+      //tiedosto on XML-muodossa
     }
 
     scenario("Excel tiedosto") {
       Given("N henkilöä täyttää hakemuksen")
+      //Mikko täyttää hakemuksen
+
       When("rajaan muodostusta valitsemalla tiedostotyypiksi 'Excel'")
+      //tiedosto = muodosta(muoto = Excel)
+
       Then("saan siirtotiedoston, joka on Excel-muodossa")
+      //tiedosto on Excel-muodossa
     }
 
 
