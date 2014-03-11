@@ -11,14 +11,9 @@ trait HenkiloSwaggerApi
   protected val applicationDescription = "Henkilötietojen rajapinta."
 
   val query = (apiOperation[Seq[Henkilo]]("henkilot")
-    summary "Näytä kaikki opiskelijatiedot"
-    notes "Näyttää kaikki opiskelijatiedot. Voit myös hakea eri parametreillä."
-    parameter queryParam[Option[String]]("henkilo").description("haetun henkilon oid")
-    parameter queryParam[Option[String]]("kausi").description("kausi jonka tietoja haetaan").allowableValues("S", "K")
-    parameter queryParam[Option[String]]("vuosi").description("vuosi jonka tietoja haetaan")
-    parameter queryParam[Option[Date]]("paiva").description("päivä jonka tietoja haetaan")
-    parameter queryParam[Option[String]]("oppilaitosOid").description("haetun oppilaitoksen oid")
-    parameter queryParam[Option[String]]("luokka").description("haetun luokan nimi")
+    summary "Näytä kaikki henkilötiedot"
+    notes "Näyttää kaikki henkilötiedot. Voit myös hakea oid-parametrillä."
+    parameter queryParam[Option[String]]("oid").description("haetun henkilon oid")
   )
 
   val create = apiOperation[Henkilo]("lisääHenkilo")

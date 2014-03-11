@@ -15,13 +15,13 @@ trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus, CreateSuoritus
 
 
 
-  val fields = Seq(ModelField("tila",null,DataType.String,None,AnyValue,required = true),
-    ModelField("komoto",null,DataType("Komoto"),None,AnyValue, required = true),
-    ModelField("luokka",null,DataType.String,None,AnyValue,required = true),
-    ModelField("henkiloOid",null,DataType.String,None,AnyValue,required = true),
-    ModelField("luokkataso",null,DataType.String,None,AnyValue,required = true),
-    ModelField("valmistuminen",null,DataType.Date,None,AnyValue,required = true),
-    ModelField("yksilollistaminen", null, DataType.String, None , AllowableValues(yksilollistaminen.values map {v => v.toString} toList)))
+  val fields = Seq(ModelField("tila", null, DataType.String, None, AnyValue, required = true),
+    ModelField("komoto", null, DataType("Komoto"), None, AnyValue, required = true),
+    ModelField("luokka", null, DataType.String, None, AnyValue, required = true),
+    ModelField("henkiloOid", null, DataType.String, None, AnyValue, required = true),
+    ModelField("luokkataso", null, DataType.String, None, AnyValue, required = true),
+    ModelField("valmistuminen", null, DataType.Date, None, AnyValue, required = true),
+    ModelField("yksilollistaminen", null, DataType.String, None, AllowableValues(yksilollistaminen.values map {v => v.toString} toList)))
 
   val suoritusModel = Model("Suoritus", "Suoritustiedot", fields map { t => (t.name, t) } toMap)
 
