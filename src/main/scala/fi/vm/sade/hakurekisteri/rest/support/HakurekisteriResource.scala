@@ -62,6 +62,13 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
 
   }
 
+  override protected def renderPipeline: RenderPipeline = ({
+    case r: Seq[A] =>
+      response.getOutputStream.print("[")
+      for ((s,i) <- r.zipWithIndex; sep <- if (i==0) " " else ", ")  {response.getOutputStream.print(sep);write[A](s,response.getOutputStream);response.flushBuffer()}
+      response.getOutputStream.print(" ]")
+  } : RenderPipeline) orElse super.renderPipeline
+
 }
 
 abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]](actor:ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with JacksonJsonParsing with CorsSupport {
