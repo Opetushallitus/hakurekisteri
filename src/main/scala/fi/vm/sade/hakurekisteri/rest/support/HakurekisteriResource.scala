@@ -18,6 +18,7 @@ import org.springframework.security.core.Authentication
 import org.scalatra.commands._
 import java.util.UUID
 import org.json4s._
+import org.json4s.jackson.Serialization._
 import scala.Some
 import fi.vm.sade.hakurekisteri.organization.{AuthorizedRead, AuthorizedQuery}
 import scala.util.matching.Regex
