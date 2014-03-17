@@ -1,6 +1,6 @@
 'use strict';
 
-function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilot, Opiskelijat, Suoritukset) {
+function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $q, Henkilot, Opiskelijat, Suoritukset) {
     $scope.henkiloOid = $routeParams.henkiloOid;
     $scope.yksilollistamiset = [
         {value: "Ei", text: "Ei (1)"},
@@ -25,6 +25,9 @@ function MuokkaaCtrl($scope, $routeParams, $location, $http, $log, $q, Henkilot,
     getKoodistoAsOptionArray($http, 'kieli', 'FI', $scope.kielet);
     getKoodistoAsOptionArray($http, 'maatjavaltiot2', 'FI', $scope.kansalaisuudet);
     */
+
+    $rootScope.addToMurupolku({href: "#/opiskelijat", text: "Opiskelijoiden haku"}, true);
+    $rootScope.addToMurupolku({text: "Muokkaa opiskelijan tietoja"}, false);
 
     function enrichSuoritukset() {
         if ($scope.suoritukset) {

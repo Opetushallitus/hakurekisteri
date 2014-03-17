@@ -49,11 +49,6 @@ class GuiServlet extends HakuJaValintarekisteriStack with ScalateSupport {
     }
   }
 
-  get("/healthcheck") {
-    contentType="application/json; charset=UTF-8"
-    "{}"
-  }
-
   notFound {
     logger.warn("location not found, resolving template")
     // remove content type in case it was set through an action

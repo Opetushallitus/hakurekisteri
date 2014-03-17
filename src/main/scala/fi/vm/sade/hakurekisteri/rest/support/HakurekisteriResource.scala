@@ -17,7 +17,6 @@ import org.springframework.security.core.Authentication
 
 import org.scalatra.commands._
 import java.util.UUID
-import org.json4s._
 import scala.Some
 import fi.vm.sade.hakurekisteri.organization.{AuthorizedRead, AuthorizedQuery}
 import scala.util.matching.Regex
@@ -72,7 +71,7 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
 
   protected implicit def executor: ExecutionContext = system.dispatcher
 
-  val timeout = 10
+  val timeout = 60
 
   implicit val defaultTimeout = Timeout(timeout, TimeUnit.SECONDS)
 
@@ -81,7 +80,7 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
   class ActorResult[B:Manifest](message: AnyRef, success: (B) => AnyRef) extends AsyncResult() {
     val is = (actor ? message).mapTo[B].
       map(success).
-      recover { case e:Throwable => logger.warn("failure in actor operation", e);InternalServerError("Operation failed")}
+      recover { case e:Throwable => logger.warn("failure in actor operation", e); InternalServerError("Operation failed") }
   }
 
   def createResource: Object = {
@@ -144,7 +143,7 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
 
       future.map(Ok(_)).
         recover {
-        case e: Throwable => InternalServerError("Operation failed")
+        case e: Throwable => logger.warn("failure in actor operation", e); InternalServerError("Operation failed")
       }
     }
 
