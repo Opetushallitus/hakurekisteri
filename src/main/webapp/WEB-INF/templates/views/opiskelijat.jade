@@ -1,48 +1,47 @@
-div(class="container")
-  aside
-    form(id="filterForm" class="form-inline pull-right" ng-submit="search()")
-      input(class="form-control" size="40" ng-model="searchTerm" type="search" placeholder="Hae hetulla tai oppilaitosnumerolla")
-      button(class="btn btn-primary pull-right" type="submit") Hae
-      div(ng-show="hakuehto")
-        strong Hakuehto:
-        span {{hakuehto}}
-  section(id="opiskelijat" class="panel panel-default")
-    header(class="panel-heading")
-      h2(class="panel-title")
-        span(oph-msg="suoritusrekisteri.opiskelijat") Opiskelijat
-        div(class="pull-right" ng-hide="loading")
-          span(oph-msg="suoritusrekisteri.naytetaan") Näytetään
-          span {{ currentRows.length }} / {{ allRows.length }}
-          span(oph-msg="suoritusrekisteri.tulosta") tulosta
-    table(class="table")
-      tr
-        th(oph-msg="suoritusrekisteri.henkiloOid") Henkilö
-        th(oph-msg="suoritusrekisteri.oppilaitos") Oppilaitos
-        th(oph-msg="suoritusrekisteri.luokkataso") Luokkataso
-        th(oph-msg="suoritusrekisteri.luokka") Luokka
-      tr(ng-repeat="row in currentRows")
-        td
-          a(href="#/muokkaa/{{row.henkiloOid}}" ng-show="isOPH()") {{row.henkilo || row.henkiloOid}}
-          span(ng-hide="isOPH()") {{row.henkilo || row.henkiloOid}}
-        td {{row.oppilaitos || row.oppilaitosOid}}
-        td {{row.luokkataso}}
-        td {{row.luokka}}
-      tr(ng-show="loading")
-        td(class="loading-td" colspan="4")
-          div(class="loading-large")
-  aside
-    ul(class="pagination pull-left")
-      li(class="{{pageNumbers ? '' : 'disabled'}}")
-        a(ng-click="prevPage()") &laquo;
-      li(class="{{pageNumbers ? '' : 'disabled'}} {{page === (pageNum - 1) ? 'active' : ''}}" ng-repeat="pageNum in pageNumbers")
+h2(oph-msg="suoritusrekisteri.sovellus.nimi") Opiskelijoiden haku
+
+aside(class="row")
+  div(class="col-sm-8")
+    form(id="filterForm" class="well form-horizontal" ng-submit="search()")
+      div(class="form-group")
+        label(for="searchTerm" class="col-sm-2 control-label") Hakuehto
+        div(class="col-sm-10")
+          input(id="searchTerm" class="form-control" size="40" ng-model="searchTerm" type="search" placeholder="Hae hetulla tai oppilaitosnumerolla")
+          span(ng-show="hakuehto") {{hakuehto}}
+
+      div(class="form-group")
+        div(class="col-sm-10 col-sm-offset-2")
+          button(class="btn btn-primary" type="submit")
+            span Hae
+            span(class="glyphicon glyphicon-search")
+
+table(class="table")
+  thead
+    tr
+      th(oph-msg="suoritusrekisteri.henkiloOid") Henkilö
+      th(oph-msg="suoritusrekisteri.oppilaitos") Oppilaitos
+      th(oph-msg="suoritusrekisteri.luokkataso") Luokkataso
+      th(oph-msg="suoritusrekisteri.luokka") Luokka
+  tbody
+    tr(ng-repeat="row in currentRows")
+      td
+        a(href="#/muokkaa/{{row.henkiloOid}}" ng-show="isOPH()") {{row.henkilo || row.henkiloOid}}
+        span(ng-hide="isOPH()") {{row.henkilo || row.henkiloOid}}
+      td {{row.oppilaitos || row.oppilaitosOid}}
+      td {{row.luokkataso}}
+      td {{row.luokka}}
+    tr(ng-show="loading")
+      td(class="loading-td" colspan="4")
+        div(class="loading-large")
+
+aside(class="text-center" ng-hide="loading")
+  div(class="pagination" ng-show="pageNumbers && pageNumbers.length > 0")
+    ul
+      li
+        a(ng-click="prevPage()")
+          span(class="glyphicon glyphicon-arrow-left")
+      li(class="{{page === (pageNum - 1) ? 'active' : ''}}" ng-repeat="pageNum in pageNumbers")
         a(ng-click="showPageWithNumber(pageNum)") {{pageNum}}
-      li(class="{{pageNumbers ? '' : 'disabled'}}")
-        a(ng-click="nextPage()") &raquo;
-    ul(class="pagination pull-right")
-      li(class="{{pageNumbers ? '' : 'disabled'}} {{pageSize == 10 ? 'active' : ''}}")
-        a(ng-click="setPageSize(10)") 10
-      li(class="{{pageNumbers ? '' : 'disabled'}} {{pageSize == 20 ? 'active' : ''}}")
-        a(ng-click="setPageSize(20)") 20
-      li(class="{{pageNumbers ? '' : 'disabled'}} {{pageSize == 50 ? 'active' : ''}}")
-        a(ng-click="setPageSize(50)") 50
-    span(class="pull-right riveja" oph-msg="suoritusrekisteri.tuloksia.sivulla") Tuloksia sivulla:
+      li
+        a(ng-click="nextPage()")
+          span(class="glyphicon glyphicon-arrow-right")

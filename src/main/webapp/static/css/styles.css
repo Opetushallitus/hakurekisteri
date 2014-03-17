@@ -1,76 +1,17 @@
-a {
-    cursor: pointer;
+body .container {
+    max-width: 1230px;
 }
 
-body {
-    margin: 0 auto;
+h1, h2, h3 {
+    margin-top: 0;
 }
 
 body #raamit-header .header-content {
     height: 48px;
 }
 
-label {
-    font-weight: bold;
-}
-
-.container {
-    max-width: 1200px;
-    padding-left: 0;
-    padding-right: 0;
-}
-
-.pagination {
-    margin-top: 0;
-}
-
-.panel-default {
-    border-color: #cccccc;
-}
-
-.panel-default > .panel-heading {
-    background-color: #dddddd;
-}
-
-.form-inline .form-control {
-    display: block;
-}
-
-.riveja {
-    display: inline-block;
-    line-height: 34px;
-    margin-right: 5px;
-}
-
-.container #filterForm {
-    margin-bottom: 20px;
-}
-
-#filterForm .form-control {
-    display: inline-block;
-    margin-right: 5px;
-    width: auto;
-}
-
 #opiskelijat {
     clear: both;
-}
-
-.teapot {
-    height: 100px;
-    text-align: center;
-}
-
-.sortable {
-    cursor: pointer;
-}
-
-.kausi-select {
-    min-width: 90px;
-}
-
-.ei-muokattava {
-    margin-top: 11px;
 }
 
 .ng-invalid {
@@ -92,7 +33,7 @@ label {
 }
 
 .loading {
-    background-image: url('../images/ajax-loader.gif');
+    background-image: url('../img/ajax-loader.gif');
     height: 16px;
     width: 16px;
 }
@@ -102,7 +43,7 @@ label {
 }
 
 .loading-large {
-    background-image: url('../images/ajax-loader-large.gif');
+    background-image: url('../img/ajax-loader-large.gif');
     height: 32px;
     margin: 50px auto;
     width: 32px;
@@ -114,4 +55,34 @@ label {
 
 .nappulat {
     margin-bottom: 20px;
+}
+
+.icon-breadcrumb-home {
+    background: url('../img/breadcrumb-home-icon.png') no-repeat;
+    display: inline-block;
+    height: 17px;
+    width: 25px;
+    margin-bottom: -1px;
+}
+
+.icon-breadcrumb-arrow {
+    background: url('../img/breadcrumb-arrow-icon.png') no-repeat;
+    display: inline-block;
+    height: 17px;
+    width: 17px;
+}
+
+.icon-big {
+    height: 29px;
+    width: 29px;
+    margin-right: 5px;
+}
+
+.pagination a {
+    color: #000;
+    cursor: pointer;
+}
+
+.pagination a *:hover, .btn *:hover {
+    text-decoration: none;
 }
