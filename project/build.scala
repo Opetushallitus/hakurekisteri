@@ -45,6 +45,7 @@ object HakuJaValintarekisteriBuild extends Build {
     "org.eclipse.jetty" % "jetty-webapp" % "8.1.8.v20121106" % "container",
     "org.json4s" %% "json4s-jackson" % "3.2.4",
     "com.typesafe.akka" %% "akka-testkit" %  "2.1.2",
+    "com.typesafe.akka" %% "akka-slf4j" % "2.1.2",
     "com.github.nscala-time" %% "nscala-time" % "0.8.0",
     "com.typesafe.slick" %% "slick" % "2.0.0",
     "com.h2database" % "h2" % "1.3.174",
