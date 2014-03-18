@@ -12,10 +12,10 @@ import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.concurrent.duration._
-import akka.event.Logging
+import akka.event.{LoggingAdapter, Logging}
 import com.ning.http.client.Response
 
-class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: A => String) extends Actor {
+class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: A => String) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
 
   val logger = Logging(context.system, this)
 
@@ -37,6 +37,31 @@ class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRe
 
   implicit val timeout: akka.util.Timeout = Timeout(30, TimeUnit.SECONDS)
 
+  import akka.pattern.ask
+  import akka.pattern.pipe
+  override def receive: Receive = {
+    case a:Update => fetch()
+    case a:OrganizationAuthorizer => logger.info("org paths loaded");authorizer = a
+    case AuthorizedQuery(q,orgs) => (filteredActor ? q).mapTo[Seq[A with Identified]].map(_.filter(isAuthorized(orgs))) pipeTo sender
+    case AuthorizedRead(id, orgs) => (filteredActor ? id).mapTo[Option[A with Identified]].map(_.flatMap((item) => if (authorizer.checkAccess(orgs, organizationFinder(item))) Some(item) else None)) pipeTo sender
+    case message:AnyRef => filteredActor forward message
+  }
+
+  def fetch() {
+    val authorizer: Future[OrganizationAuthorizer] = createAuthorizer
+    logger.info("fetching organizations from: " + serviceUrl)
+    authorizer pipeTo self
+    authorizer.onFailure {
+      case e: Exception => logger.error("failed loading organizations", e)
+    }
+
+  }
+
+}
+
+class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organizationFinder: A => String) {
+
+
   implicit def nodeSeq2RicherString(ns:NodeSeq):RicherString  = new RicherString(ns.text)
   val svc = url(serviceUrl).POST
   var authorizer = OrganizationAuthorizer(Map())
@@ -54,17 +79,12 @@ class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRe
     m ++ addedParents
   }
 
-  import akka.pattern.pipe
 
-  def fetch() {
-    logger.info("fetching organizations from: " + serviceUrl)
-    val authorizer = edgeFetch map (OrganizationAuthorizer(_))
-    authorizer pipeTo self
-    authorizer.onFailure {
-      case e: Exception => logger.error("failed loading organizations", e)
-    }
-  }
 
+
+
+
+  def createAuthorizer: Future[OrganizationAuthorizer] =  edgeFetch map (OrganizationAuthorizer(_))
 
   def readXml: concurrent.Future[Elem] = {
     val result: dispatch.Future[Response] = Http(svc << <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:typ="http://model.api.organisaatio.sade.vm.fi/types">
@@ -132,14 +152,10 @@ class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRe
     edgeFuture map edgeBuild
   }
 
-  import akka.pattern.ask
-  override def receive: Receive = {
-    case a:Update => fetch()
-    case a:OrganizationAuthorizer => logger.info("org paths loaded");authorizer = a
-    case AuthorizedQuery(q,orgs) => (filteredActor ? q).mapTo[Seq[A with Identified]].map(_.filter((item) => authorizer.checkAccess(orgs, organizationFinder(item)))) pipeTo sender
-    case AuthorizedRead(id, orgs) => (filteredActor ? id).mapTo[Option[A with Identified]].map(_.flatMap((item) => if (authorizer.checkAccess(orgs, organizationFinder(item))) Some(item) else None)) pipeTo sender
-    case message:AnyRef => filteredActor forward message
-  }
+
+
+  def isAuthorized(orgs: Seq[String])(item: A with Identified): Boolean = authorizer.checkAccess(orgs, organizationFinder(item))
+
 
 }
 
