@@ -1,4 +1,5 @@
 import _root_.akka.actor.{Props, ActorSystem}
+import fi.vm.sade.hakurekisteri.hakija.{HakijaActor, HakijaResource}
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.henkilo._
 import fi.vm.sade.hakurekisteri.opiskelija._
@@ -6,7 +7,6 @@ import fi.vm.sade.hakurekisteri.organization.OrganizationHierarchy
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
-import javax.servlet.FilterRegistration.Dynamic
 import org.scalatra._
 import javax.servlet.{ServletContextEvent, DispatcherType, ServletContext}
 import org.scalatra.swagger.Swagger
@@ -18,7 +18,6 @@ import org.springframework.core.io.FileSystemResource
 import org.springframework.web.context.support.XmlWebApplicationContext
 import org.springframework.web.context._
 import org.springframework.web.filter.DelegatingFilterProxy
-import scala.collection.immutable.Iterable
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.slick.driver.JdbcDriver.simple._
@@ -27,17 +26,15 @@ import scala.util.Try
 
 class ScalatraBootstrap extends LifeCycle {
 
-  implicit val swagger:Swagger = new HakurekisteriSwagger
+  implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem()
   val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
   val OPH = "1.2.246.562.10.00000000001"
-
-  val serviceUrl = "http://luokka.hard.ware.fi:8301/organisaatio-service"
-
+  val serviceUrlQa = "https://testi.virkailija.opintopolku.fi/organisaatio-service"
 
   override def init(context: ServletContext) {
     OPHSecurity init context
-    val orgServiceUrl = OPHSecurity.config.properties.get("cas.service.organisaatio-service").getOrElse(serviceUrl) + "/services/organisaatioService"
+    val orgServiceUrl = OPHSecurity.config.properties.get("cas.service.organisaatio-service").getOrElse(serviceUrlQa) + "/services/organisaatioService"
     val database = Try(Database.forName(jndiName)).recover {
       case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
     }.get
@@ -52,9 +49,12 @@ class ScalatraBootstrap extends LifeCycle {
 
     val healthcheck = system.actorOf(Props(new HealthcheckActor(filteredSuoritusRekisteri, filteredOpiskelijaRekisteri)))
 
+    val hakijat = system.actorOf(Props(new HakijaActor()))
+
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](filteredSuoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
     context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](filteredOpiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")
     context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](filteredHenkiloRekisteri, HenkiloQuery(_)) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand] with SpringSecuritySupport, "/rest/v1/henkilot")
+    context mount(new HakijaResource(hakijat), "/rest/v1/hakijat")
     context mount(new HealthcheckResource(healthcheck), "/healthcheck")
     context mount(new ResourcesApp, "/rest/v1/api-docs/*")
     context mount(classOf[GuiServlet], "/")
