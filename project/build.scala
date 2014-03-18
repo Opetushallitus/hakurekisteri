@@ -42,7 +42,6 @@ object HakuJaValintarekisteriBuild extends Build {
 
   val dependencies = Seq(
     "org.slf4j" % "slf4j-api" % "1.6.1",
-    "org.slf4j" % "slf4j-log4j12" % "1.6.1",
     "org.eclipse.jetty" % "jetty-webapp" % "8.1.8.v20121106" % "container",
     "org.json4s" %% "json4s-jackson" % "3.2.4",
     "com.typesafe.akka" %% "akka-testkit" %  "2.1.2",
