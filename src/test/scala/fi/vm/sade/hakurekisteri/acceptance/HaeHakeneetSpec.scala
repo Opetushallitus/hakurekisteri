@@ -2,8 +2,10 @@ package fi.vm.sade.hakurekisteri.acceptance
 
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import org.scalatest.GivenWhenThen
+import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
+import fi.vm.sade.hakurekisteri.hakija.{Hakijat, Tyyppi, Hakuehto, HakijaQuery}
 
-class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen {
+class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with HakeneetSupport {
 
 
   info("Koulun virkailijana")
@@ -15,14 +17,13 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen {
 
     scenario("Organisaation X hakijat") {
       Given("N henkilöä täyttää hakemuksen; osa kohdistuu organisaatioon X tai sen lapsiin")
-      //Mikko täyttää hakemuksen hakukohteeseen A koulussa B, joka sisältyy organisaatioon X
-      //Matti täyttää hakemuksen hakukohteeseen C koulussa D, joka ei sisälly organisaatioon X
+      hakupalvelu has (Hakemus1, Hakemus2)
 
       When("rajaan muodostusta valitsemalla organisaation X")
-      //tiedosto = muodosta (organisaatioille X)
+      val tiedosto = hakijaResource.get(HakijaQuery(None, Some(OrganisaatioX.oid), None, Hakuehto.Kaikki, Tyyppi.Json)).mapTo[Hakijat]
 
       Then("saan siirtotiedoston, jossa on organisaatioon X tai sen lapsiin hakeneet")
-      //tiedosto sisältää Mikon tiedot
+      //tiedosto sisältää organisaatioon X hakeneet
     }
 
     scenario("Haussa Y hakeneet") {

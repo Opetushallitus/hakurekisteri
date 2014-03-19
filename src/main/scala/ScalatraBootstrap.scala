@@ -1,5 +1,5 @@
 import _root_.akka.actor.{Props, ActorSystem}
-import fi.vm.sade.hakurekisteri.hakija.{HakijaActor, HakijaResource}
+import fi.vm.sade.hakurekisteri.hakija.{RestHenkilopalvelu, RestHakupalvelu, HakijaActor, HakijaResource}
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.henkilo._
 import fi.vm.sade.hakurekisteri.opiskelija._
@@ -49,7 +49,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val healthcheck = system.actorOf(Props(new HealthcheckActor(filteredSuoritusRekisteri, filteredOpiskelijaRekisteri)))
 
-    val hakijat = system.actorOf(Props(new HakijaActor()))
+    val hakijat = system.actorOf(Props(new HakijaActor(RestHakupalvelu, RestHenkilopalvelu)))
 
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](filteredSuoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
     context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](filteredOpiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")
