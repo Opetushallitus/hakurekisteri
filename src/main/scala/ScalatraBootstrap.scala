@@ -50,7 +50,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val healthcheck = system.actorOf(Props(new HealthcheckActor(filteredSuoritusRekisteri, filteredOpiskelijaRekisteri)))
 
-    val hakijat = system.actorOf(Props(new HakijaActor(RestHakupalvelu, RestOrganisaatiopalvelu)))
+    val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu, new RestOrganisaatiopalvelu)))
 
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](filteredSuoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
     context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](filteredOpiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")

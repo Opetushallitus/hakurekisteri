@@ -1,5 +1,10 @@
 package fi.vm.sade.hakurekisteri.hakija
 
+import fi.vm.sade.generic.rest.CachingRestClient
+import org.json4s._
+import org.json4s.jackson.JsonMethods._
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+
 trait Hakupalvelu {
 
   def find(q: HakijaQuery): Seq[SmallHakemus]
@@ -8,14 +13,19 @@ trait Hakupalvelu {
 
 }
 
-object RestHakupalvelu extends Hakupalvelu {
+class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app") extends Hakupalvelu {
+  val cachingRestClient = new CachingRestClient
+  cachingRestClient.setUseProxyAuthentication(true)
+
+  protected implicit def jsonFormats: Formats = DefaultFormats
 
   override def find(q: HakijaQuery): Seq[SmallHakemus] = {
-    Seq()
+    parse(cachingRestClient.get(serviceUrl + "/applications/list/fullName/asc?appState=ACTIVE&asId=" + q.haku + "&lopoid=" + q.organisaatio +
+      "&orgSearchExpanded=true&checkAllApplications=false&start=0&rows=500")).extract[Seq[SmallHakemus]]
   }
 
   override def get(hakemusOid: String): Option[FullHakemus] = {
-    None
+    Some(parse(cachingRestClient.get(serviceUrl + "/applications/" + hakemusOid)).extract[FullHakemus])
   }
 
 }
