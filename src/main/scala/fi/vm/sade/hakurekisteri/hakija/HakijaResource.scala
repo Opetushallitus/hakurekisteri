@@ -46,14 +46,17 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     if (params("hakuehto") == null || params("tyyppi") == null)
       response.sendError(400)
     else {
+      val q = HakijaQuery(
+        params.get("haku"),
+        params.get("organisaatio"),
+        params.get("hakukohdekoodi"),
+        Hakuehto withName params("hakuehto"),
+        Tyyppi withName params("tyyppi"))
+
+      logger.info("Query: " + q)
+
       new AsyncResult() {
-        val is = hakijaActor ? HakijaQuery(
-          params.get("haku"),
-          params.get("organisaatio"),
-          params.get("hakukohdekoodi"),
-          Hakuehto withName params("hakuehto"),
-          Tyyppi withName params("tyyppi")
-        )
+        val is = hakijaActor ? q
       }
     }
   }

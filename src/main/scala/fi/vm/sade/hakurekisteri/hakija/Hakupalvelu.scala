@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.hakija
 import fi.vm.sade.generic.rest.CachingRestClient
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 
 trait Hakupalvelu {
 
@@ -13,9 +12,12 @@ trait Hakupalvelu {
 
 }
 
-class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app") extends Hakupalvelu {
+class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app",
+                      webCasUrl: String = "https://itest-virkailija.oph.ware.fi/cas") extends Hakupalvelu {
   val cachingRestClient = new CachingRestClient
   cachingRestClient.setUseProxyAuthentication(true)
+  cachingRestClient.setWebCasUrl(webCasUrl)
+  cachingRestClient.setCasService(serviceUrl + "/j_spring_cas_security_check")
 
   protected implicit def jsonFormats: Formats = DefaultFormats
 
