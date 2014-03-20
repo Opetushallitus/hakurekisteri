@@ -60,11 +60,11 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
 }
 
-class HakijaActor(hakupalvelu: Hakupalvelu, henkilopalvelu: Henkilopalvelu)(implicit system: ActorSystem) extends Actor {
+class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopalvelu)(implicit system: ActorSystem) extends Actor {
   def receive = {
     case q: HakijaQuery => {
-      sender ! Hakijat(hakijat = findHakemukset(q).map((hakemus: Hakemus) => {
-        findHenkilo(hakemus.personOid).map(_.toHakija(hakemus))
+      sender ! Hakijat(hakijat = findHakemukset(q).map((hakemus: SmallHakemus) => {
+        constructHakija(getHakemus(hakemus.oid))
       }).flatten)
     }
   }
@@ -73,8 +73,52 @@ class HakijaActor(hakupalvelu: Hakupalvelu, henkilopalvelu: Henkilopalvelu)(impl
     hakupalvelu.find(q)
   }
 
-  def findHenkilo(personOid: String) = {
-    henkilopalvelu.find(personOid)
+  def getHakemus(hakemusOid: String) = {
+    hakupalvelu.get(hakemusOid)
+  }
+
+  def constructHakija(h: Option[FullHakemus]): Option[Hakija] = {
+    if (h.isDefined) {
+      val hakemus = h.get
+      val henkilotiedot = hakemus.answers.henkilotiedot
+      Some(Hakija(henkilotiedot.Henkilotunnus, hakemus.personOid, henkilotiedot.Sukunimi, henkilotiedot.Etunimet, Option(henkilotiedot.Kutsumanimi).filter(_.trim.nonEmpty),
+        henkilotiedot.lahiosoite, henkilotiedot.Postinumero, henkilotiedot.asuinmaa, henkilotiedot.kansalaisuus, Option(henkilotiedot.matkapuhelinnumero1).filter(_.trim.nonEmpty),
+        None, Option(henkilotiedot.Sähköposti).filter(_.trim.nonEmpty), Option(henkilotiedot.kotikunta).filter(_.trim.nonEmpty),
+        henkilotiedot.sukupuoli, henkilotiedot.aidinkieli, hakemus.answers.lisatiedot.lupaMarkkinointi, toHakemus(hakemus)))
+    } else {
+      None
+    }
+  }
+
+  def toHakemus(fullHakemus: FullHakemus): Hakemus = {
+    val kt = fullHakemus.answers.koulutustausta
+    Hakemus(2014, "K", fullHakemus.oid, kt.lahtokoulu, None, kt.lahtoluokka, kt.luokkataso, kt.POHJAKOULUTUS, Option(kt.PK_PAATTOTODISTUSVUOSI.toShort),
+            fullHakemus.answers.lisatiedot.lupaJulkaisu, None, None, None, None, None, toHakutoiveet(fullHakemus))
+  }
+
+  def toHakutoiveet(fullHakemus: FullHakemus): Seq[Hakutoive] = {
+    val ht = fullHakemus.answers.hakutoiveet
+    (1 until 5).toSeq.map((v) => {
+      val opetuspisteId = ht.get("preference"+v+"-Opetuspiste-id")
+      var opetuspiste: Option[String] = None
+      var opetuspisteennimi: Option[String] = None
+      if (opetuspisteId.isDefined) {
+        val organisaatio = organisaatiopalvelu.get(opetuspisteId.get)
+        if (organisaatio.isDefined) {
+          opetuspiste = Some(organisaatio.get.toimipistekoodi)
+          opetuspisteennimi = organisaatio.get.nimi.get("fi")
+        }
+      }
+      toHakutoive("", opetuspiste, opetuspisteennimi, ht.get("preference"+v+"-Koulutus-id-aoIdentifier"), v.toShort)
+    }).flatten
+  }
+
+  def toHakutoive(oppilaitos: String, opetuspiste: Option[String], opetuspisteennimi: Option[String], hakukohdekoodi: Option[String], jno: Short): Option[Hakutoive] = {
+    if (opetuspiste != "" && opetuspiste != "" && opetuspisteennimi != "" && hakukohdekoodi != None && hakukohdekoodi != "") {
+      Some(Hakutoive(jno, oppilaitos, opetuspiste, opetuspisteennimi, hakukohdekoodi.get, None, None, None, None, None, None, None, None, None))
+    } else {
+      None
+    }
   }
 }
 
@@ -88,21 +132,11 @@ case class Hakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[Str
 case class Hakemus(vuosi: Short, kausi: String, hakemusnumero: String, lahtokoulu: Option[String], lahtokoulunnimi: Option[String], luokka: Option[String],
                    luokkataso: String, pohjakoulutus: String, todistusvuosi: Option[Short], julkaisulupa: Option[Boolean], yhteisetaineet: Option[BigDecimal],
                    lukiontasapisteet: Option[BigDecimal], lisapistekoulutus: Option[String], yleinenkoulumenestys: Option[BigDecimal],
-                   painotettavataineet: Option[BigDecimal], hakutoiveet: Seq[Hakutoive], personOid: String)
-
-class Henkilo(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
-                  postinumero: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String], muupuhelin: Option[String], sahkoposti: Option[String],
-                  kotikunta: Option[String], sukupuoli: String, aidinkieli: String, koulutusmarkkinointilupa: Boolean) {
-  def toHakija(hakemus: Hakemus) = {
-    Hakija(hetu, oppijanumero, sukunimi, etunimet, kutsumanimi, lahiosoite, postinumero, maa, kansalaisuus, matkapuhelin, muupuhelin, sahkoposti,
-      kotikunta, sukupuoli, aidinkieli, koulutusmarkkinointilupa, hakemus)
-  }
-}
+                   painotettavataineet: Option[BigDecimal], hakutoiveet: Seq[Hakutoive])
 
 case class Hakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
                   postinumero: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String], muupuhelin: Option[String], sahkoposti: Option[String],
-                  kotikunta: Option[String], sukupuoli: String, aidinkieli: String, koulutusmarkkinointilupa: Boolean, hakemus: Hakemus) extends Henkilo(hetu,
-  oppijanumero, sukunimi, etunimet, kutsumanimi, lahiosoite, postinumero, maa, kansalaisuus, matkapuhelin, muupuhelin, sahkoposti, kotikunta, sukupuoli, aidinkieli,
-  koulutusmarkkinointilupa)
+                  kotikunta: Option[String], sukupuoli: String, aidinkieli: String, koulutusmarkkinointilupa: Boolean, hakemus: Hakemus)
 
 case class Hakijat(hakijat: Seq[Hakija])
+

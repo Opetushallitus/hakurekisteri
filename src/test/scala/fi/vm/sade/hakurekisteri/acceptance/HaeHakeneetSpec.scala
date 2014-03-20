@@ -4,6 +4,9 @@ import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import org.scalatest.GivenWhenThen
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.hakija.{Hakijat, Tyyppi, Hakuehto, HakijaQuery}
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import akka.util.Timeout
 
 class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with HakeneetSupport {
 
@@ -15,15 +18,18 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
 
   feature("Muodosta hakeneet ja valitut siirtotiedosto") {
 
-    scenario("Organisaation X hakijat") {
-      Given("N henkilöä täyttää hakemuksen; osa kohdistuu organisaatioon X tai sen lapsiin")
-      hakupalvelu has (Hakemus1, Hakemus2)
+    scenario("Opetuspisteeseen X hakijat") {
+      Given("N henkilöä täyttää hakemuksen; osa kohdistuu opetuspisteeseen X")
+      hakupalvelu has (FullHakemus1.toSmallHakemus, FullHakemus2.toSmallHakemus)
 
-      When("rajaan muodostusta valitsemalla organisaation X")
-      val tiedosto = hakijaResource.get(HakijaQuery(None, Some(OrganisaatioX.oid), None, Hakuehto.Kaikki, Tyyppi.Json)).mapTo[Hakijat]
+      When("rajaan muodostusta valitsemalla opetuspisteeseen X")
+      val hakijat: Hakijat = Await.result(hakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, Tyyppi.Json)).mapTo[Hakijat], Timeout(60 seconds).duration)
+      println("tiedosto: " + hakijat)
 
-      Then("saan siirtotiedoston, jossa on organisaatioon X tai sen lapsiin hakeneet")
-      //tiedosto sisältää organisaatioon X hakeneet
+      Then("saan siirtotiedoston, jossa on opetuspisteeseen X tai sen lapsiin hakeneet")
+      hakijat.hakijat.foreach((hakija) => {
+        hakija.hakemus.hakutoiveet.head.opetuspiste.get should equal (OpetuspisteX.toimipistekoodi)
+      })
     }
 
     scenario("Haussa Y hakeneet") {
