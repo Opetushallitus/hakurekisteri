@@ -54,18 +54,29 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
   object notEmpty
 
+
+
+  import _root_.akka.pattern.ask
+
+  implicit val system = ActorSystem()
+  implicit def executor: ExecutionContext = system.dispatcher
+  implicit val defaultTimeout = Timeout(60, TimeUnit.SECONDS)
+
+
   object hakupalvelu extends Hakupalvelu {
+
+
     var tehdytHakemukset: Seq[SmallHakemus] = Seq()
 
-    def find(q: HakijaQuery): Seq[SmallHakemus] = q.organisaatio match {
-      case Some(OpetuspisteX.oid) => Seq(FullHakemus1.toSmallHakemus)
-      case Some(OpetuspisteY.oid) => Seq(FullHakemus2.toSmallHakemus)
+    def find(q: HakijaQuery): Future[Seq[SmallHakemus]] = q.organisaatio match {
+      case Some(OpetuspisteX.oid) => Future(Seq(FullHakemus1.toSmallHakemus))
+      case Some(OpetuspisteY.oid) => Future(Seq(FullHakemus2.toSmallHakemus))
     }
 
-    def get(hakemusOid: String): Option[FullHakemus] = hakemusOid match {
-      case "1.25.1" => Some(FullHakemus1)
-      case "1.25.2" => Some(FullHakemus2)
-      case default => None
+    def get(hakemusOid: String): Future[Option[FullHakemus]] = hakemusOid match {
+      case "1.25.1" => Future(Some(FullHakemus1))
+      case "1.25.2" => Future(Some(FullHakemus2))
+      case default => Future(None)
     }
 
     def is(token:Any) = token match {
@@ -78,7 +89,9 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   }
 
   object organisaatiopalvelu extends Organisaatiopalvelu {
-    override def get(str: String): Option[Organisaatio] = str match {
+    override def get(str: String): Future[Option[Organisaatio]] = Future(doTheMatch(str))
+
+    def doTheMatch(str: String): Option[Organisaatio] = str match {
       case OppilaitosX.oid => Some(OppilaitosX)
       case OppilaitosY.oid => Some(OppilaitosY)
       case OpetuspisteX.oid => Some(OpetuspisteX)
@@ -87,13 +100,11 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     }
   }
 
-  import _root_.akka.pattern.ask
-
   object hakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
-    implicit val system = ActorSystem()
-    implicit def executor: ExecutionContext = system.dispatcher
-    implicit val defaultTimeout = Timeout(60, TimeUnit.SECONDS)
+
+
+
     val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, organisaatiopalvelu)))
 
     def get(q: HakijaQuery) = {

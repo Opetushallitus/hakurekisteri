@@ -4,7 +4,7 @@ import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import org.scalatest.GivenWhenThen
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.hakija.{Hakijat, Tyyppi, Hakuehto, HakijaQuery}
-import scala.concurrent.Await
+import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
 import akka.util.Timeout
 
@@ -23,7 +23,10 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       hakupalvelu has (FullHakemus1.toSmallHakemus, FullHakemus2.toSmallHakemus)
 
       When("rajaan muodostusta valitsemalla opetuspisteeseen X")
-      val hakijat: Hakijat = Await.result(hakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, Tyyppi.Json)).mapTo[Hakijat], Timeout(60 seconds).duration)
+      val future: Future[Any] = hakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, Tyyppi.Json))
+      val foo = Await.result(future, Timeout(60 seconds).duration)
+      println(foo)
+      val hakijat: Hakijat = foo.asInstanceOf[Hakijat]
       println("tiedosto: " + hakijat)
 
       Then("saan siirtotiedoston, jossa on opetuspisteeseen X tai sen lapsiin hakeneet")

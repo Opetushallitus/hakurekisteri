@@ -10,16 +10,20 @@ import com.stackmob.newman.response.HttpResponse
 
 trait Organisaatiopalvelu {
 
-  def get(str: String): Option[Organisaatio]
+  def get(str: String): Future[Option[Organisaatio]]
 
 }
 
 case class Organisaatio(oid: String, nimi: Map[String, String], toimipistekoodi: String, oppilaitosKoodi: String)
 
-class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/organisaatio-service") extends Organisaatiopalvelu {
+class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/organisaatio-service")(implicit val ec: ExecutionContext) extends Organisaatiopalvelu {
   implicit val httpClient = new ApacheHttpClient
 
-  override def get(str: String): Option[Organisaatio] = {
+  override def get(str: String): Future[Option[Organisaatio]] = {
+    Future(call(str))
+  }
+
+  def call(str: String): Option[Organisaatio] = {
     val url = new URL(serviceUrl + "/rest/organisaatio/" + str)
     val response: HttpResponse = Await.result(GET(url).apply, 10.second)
     response.bodyAsCaseClass[Organisaatio].toOption

@@ -21,6 +21,7 @@ import org.springframework.web.context._
 import org.springframework.web.filter.DelegatingFilterProxy
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
 import scala.slick.driver.JdbcDriver.simple._
 import scala.util.Try
 
@@ -29,6 +30,7 @@ class ScalatraBootstrap extends LifeCycle {
 
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem()
+  implicit val ec:ExecutionContext = system.dispatcher
   val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
   val OPH = "1.2.246.562.10.00000000001"
   val serviceUrlQa = "https://testi.virkailija.opintopolku.fi/organisaatio-service"

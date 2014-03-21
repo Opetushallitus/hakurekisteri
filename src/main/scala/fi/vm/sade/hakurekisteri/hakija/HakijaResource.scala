@@ -7,12 +7,14 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport}
 import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, Future, ExecutionContext}
 import akka.actor.{Actor, ActorSystem}
 import _root_.akka.actor.{Actor, ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
+import scala.collection.immutable.IndexedSeq
+import scala.concurrent.duration.Duration
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
@@ -63,65 +65,62 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
 }
 
-class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopalvelu)(implicit system: ActorSystem) extends Actor {
+import akka.pattern.pipe
+
+class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopalvelu) extends Actor {
+
+  implicit val executionContext: ExecutionContext = context.dispatcher
+
   def receive = {
     case q: HakijaQuery => {
-      sender ! Hakijat(hakijat = findHakemukset(q).map((hakemus: SmallHakemus) => {
-        constructHakija(getHakemus(hakemus.oid))
-      }).flatten)
+      def getFullHakemus(sh:SmallHakemus): Future[Option[Hakija]] = getHakemus(sh.oid).flatMap(constructHakija(_))
+      val hakijatFuture: Future[Hakijat] = findHakemukset(q).flatMap(Future.traverse(_)(getFullHakemus)).map((s: Seq[Option[Hakija]]) => s.flatten).map(Hakijat(_))
+      hakijatFuture pipeTo sender
+
     }
   }
 
-  def findHakemukset(q: HakijaQuery) = {
-    hakupalvelu.find(q)
+
+
+  def findHakemukset = hakupalvelu.find(_)
+
+  def getHakemus = hakupalvelu.get(_)
+
+
+  def hakemus2Hakija(hakemus:FullHakemus):Future[Hakija]  = {
+    val henkilotiedot = hakemus.answers.henkilotiedot
+    toHakemus(hakemus).map(h => Hakija(henkilotiedot.Henkilotunnus, hakemus.personOid, henkilotiedot.Sukunimi, henkilotiedot.Etunimet, Option(henkilotiedot.Kutsumanimi).filter(_.trim.nonEmpty),
+      henkilotiedot.lahiosoite, henkilotiedot.Postinumero, henkilotiedot.asuinmaa, henkilotiedot.kansalaisuus, Option(henkilotiedot.matkapuhelinnumero1).filter(_.trim.nonEmpty),
+      None, Option(henkilotiedot.Sähköposti).filter(_.trim.nonEmpty), Option(henkilotiedot.kotikunta).filter(_.trim.nonEmpty),
+      henkilotiedot.sukupuoli, henkilotiedot.aidinkieli, hakemus.answers.lisatiedot.lupaMarkkinointi, h))
+
   }
 
-  def getHakemus(hakemusOid: String) = {
-    hakupalvelu.get(hakemusOid)
+  def constructHakija(oh: Option[FullHakemus]): Future[Option[Hakija]] = {
+    Future.sequence(oh.map(hakemus2Hakija))
   }
 
-  def constructHakija(h: Option[FullHakemus]): Option[Hakija] = {
-    if (h.isDefined) {
-      val hakemus = h.get
-      val henkilotiedot = hakemus.answers.henkilotiedot
-      Some(Hakija(henkilotiedot.Henkilotunnus, hakemus.personOid, henkilotiedot.Sukunimi, henkilotiedot.Etunimet, Option(henkilotiedot.Kutsumanimi).filter(_.trim.nonEmpty),
-        henkilotiedot.lahiosoite, henkilotiedot.Postinumero, henkilotiedot.asuinmaa, henkilotiedot.kansalaisuus, Option(henkilotiedot.matkapuhelinnumero1).filter(_.trim.nonEmpty),
-        None, Option(henkilotiedot.Sähköposti).filter(_.trim.nonEmpty), Option(henkilotiedot.kotikunta).filter(_.trim.nonEmpty),
-        henkilotiedot.sukupuoli, henkilotiedot.aidinkieli, hakemus.answers.lisatiedot.lupaMarkkinointi, toHakemus(hakemus)))
-    } else {
-      None
-    }
-  }
-
-  def toHakemus(fullHakemus: FullHakemus): Hakemus = {
+  def toHakemus(fullHakemus: FullHakemus): Future[Hakemus] = {
     val kt = fullHakemus.answers.koulutustausta
-    Hakemus(2014, "K", fullHakemus.oid, kt.lahtokoulu, None, kt.lahtoluokka, kt.luokkataso, kt.POHJAKOULUTUS, Option(kt.PK_PAATTOTODISTUSVUOSI.toShort),
-            fullHakemus.answers.lisatiedot.lupaJulkaisu, None, None, None, None, None, toHakutoiveet(fullHakemus))
+    toHakutoiveet(fullHakemus).map(ht => Hakemus(2014, "K", fullHakemus.oid, kt.lahtokoulu, None, kt.lahtoluokka, kt.luokkataso, kt.POHJAKOULUTUS, Option(kt.PK_PAATTOTODISTUSVUOSI.toShort),
+      fullHakemus.answers.lisatiedot.lupaJulkaisu, None, None, None, None, None, ht))
+
   }
 
-  def toHakutoiveet(fullHakemus: FullHakemus): Seq[Hakutoive] = {
+  def toHakutoiveet(fullHakemus: FullHakemus): Future[Seq[Hakutoive]] = {
     val ht = fullHakemus.answers.hakutoiveet
-    (1 until 5).toSeq.map((v) => {
-      val opetuspisteId = ht.get("preference"+v+"-Opetuspiste-id")
-      var opetuspiste: Option[String] = None
-      var opetuspisteennimi: Option[String] = None
-      if (opetuspisteId.isDefined) {
-        val organisaatio = organisaatiopalvelu.get(opetuspisteId.get)
-        if (organisaatio.isDefined) {
-          opetuspiste = Some(organisaatio.get.toimipistekoodi)
-          opetuspisteennimi = organisaatio.get.nimi.get("fi")
-        }
+    val Pattern = "preference(\\d+)-Opetuspiste-id".r
+    val notEmpty = "(.+)".r
+    val opetusPisteet: Map[Short,String] = ht.collect {
+        case (Pattern(n), notEmpty(opetusPisteId)) => (n.toShort, opetusPisteId)
       }
-      toHakutoive("", opetuspiste, opetuspisteennimi, ht.get("preference"+v+"-Koulutus-id-aoIdentifier"), v.toShort)
-    }).flatten
+    Future.sequence(opetusPisteet.collect {
+      case (v, opetusPisteId) => organisaatiopalvelu.get(opetusPisteId).map((o) => toHakutoive("",o.map(_.toimipistekoodi), o.flatMap(_.nimi.get("fi")), ht.get("preference" + v + "-Koulutus-id-aoIdentifier"), v))
+    }).map(_.toSeq)
   }
 
-  def toHakutoive(oppilaitos: String, opetuspiste: Option[String], opetuspisteennimi: Option[String], hakukohdekoodi: Option[String], jno: Short): Option[Hakutoive] = {
-    if (opetuspiste != "" && opetuspiste != "" && opetuspisteennimi != "" && hakukohdekoodi != None && hakukohdekoodi != "") {
-      Some(Hakutoive(jno, oppilaitos, opetuspiste, opetuspisteennimi, hakukohdekoodi.get, None, None, None, None, None, None, None, None, None))
-    } else {
-      None
-    }
+  def toHakutoive(oppilaitos: String, opetuspiste: Option[String], opetuspisteennimi: Option[String], hakukohdekoodi: Option[String], jno: Short): Hakutoive = {
+    Hakutoive(jno, oppilaitos, opetuspiste, opetuspisteennimi, hakukohdekoodi.get, None, None, None, None, None, None, None, None, None)
   }
 }
 

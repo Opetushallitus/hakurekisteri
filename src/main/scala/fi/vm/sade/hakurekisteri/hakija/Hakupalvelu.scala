@@ -3,17 +3,18 @@ package fi.vm.sade.hakurekisteri.hakija
 import fi.vm.sade.generic.rest.CachingRestClient
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import scala.concurrent.{ExecutionContext, Future}
 
 trait Hakupalvelu {
 
-  def find(q: HakijaQuery): Seq[SmallHakemus]
+  def find(q: HakijaQuery): Future[Seq[SmallHakemus]]
 
-  def get(hakemusOid: String): Option[FullHakemus]
+  def get(hakemusOid: String): Future[Option[FullHakemus]]
 
 }
 
 class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app",
-                      webCasUrl: String = "https://itest-virkailija.oph.ware.fi/cas") extends Hakupalvelu {
+                      webCasUrl: String = "https://itest-virkailija.oph.ware.fi/cas")(implicit val ec: ExecutionContext) extends Hakupalvelu {
   val cachingRestClient = new CachingRestClient
   cachingRestClient.setUseProxyAuthentication(true)
   cachingRestClient.setWebCasUrl(webCasUrl)
@@ -21,13 +22,13 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 
   protected implicit def jsonFormats: Formats = DefaultFormats
 
-  override def find(q: HakijaQuery): Seq[SmallHakemus] = {
-    parse(cachingRestClient.get(serviceUrl + "/applications/list/fullName/asc?appState=ACTIVE&asId=" + q.haku + "&lopoid=" + q.organisaatio +
-      "&orgSearchExpanded=true&checkAllApplications=false&start=0&rows=500")).extract[Seq[SmallHakemus]]
+  override def find(q: HakijaQuery): Future[Seq[SmallHakemus]] = {
+    Future(parse(cachingRestClient.get(serviceUrl + "/applications/list/fullName/asc?appState=ACTIVE&asId=" + q.haku + "&lopoid=" + q.organisaatio +
+      "&orgSearchExpanded=true&checkAllApplications=false&start=0&rows=500")).extract[Seq[SmallHakemus]])
   }
 
-  override def get(hakemusOid: String): Option[FullHakemus] = {
-    Some(parse(cachingRestClient.get(serviceUrl + "/applications/" + hakemusOid)).extract[FullHakemus])
+  override def get(hakemusOid: String): Future[Option[FullHakemus]] = {
+    Future(Some(parse(cachingRestClient.get(serviceUrl + "/applications/" + hakemusOid)).extract[FullHakemus]))
   }
 
 }
