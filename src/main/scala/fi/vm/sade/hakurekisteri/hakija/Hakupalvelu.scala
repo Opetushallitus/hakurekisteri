@@ -16,15 +16,17 @@ trait Hakupalvelu {
 class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app",
                       webCasUrl: String = "https://itest-virkailija.oph.ware.fi/cas")(implicit val ec: ExecutionContext) extends Hakupalvelu {
   val cachingRestClient = new CachingRestClient
-  cachingRestClient.setUseProxyAuthentication(true)
+  cachingRestClient.setUseProxyAuthentication(false)
   cachingRestClient.setWebCasUrl(webCasUrl)
   cachingRestClient.setCasService(serviceUrl + "/j_spring_cas_security_check")
+  cachingRestClient.setUsername("robotti")
+  cachingRestClient.setPassword("Testaaja!")
 
   protected implicit def jsonFormats: Formats = DefaultFormats
 
   override def find(q: HakijaQuery): Future[Seq[SmallHakemus]] = {
-    Future(parse(cachingRestClient.get(serviceUrl + "/applications/list/fullName/asc?appState=ACTIVE&asId=" + q.haku + "&lopoid=" + q.organisaatio +
-      "&orgSearchExpanded=true&checkAllApplications=false&start=0&rows=500")).extract[Seq[SmallHakemus]])
+    Future(parse(cachingRestClient.get(serviceUrl + "/applications/list/fullName/asc?appState=ACTIVE" + //&asId=" + q.haku + "&lopoid=" + q.organisaatio +
+      "&orgSearchExpanded=true&checkAllApplications=false&start=0&rows=500")).extract[HakemusHaku].results)
   }
 
   override def get(hakemusOid: String): Future[Option[FullHakemus]] = {
@@ -35,20 +37,22 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 
 case class SmallHakemus(oid: String, state: String, firstNames: String, lastName: String, ssn: String, personOid: String)
 
+case class HakemusHaku(totalCount: Long, results: Seq[SmallHakemus])
+
 case class Henkilotiedot(kansalaisuus: String, asuinmaa: String, matkapuhelinnumero1: String, Sukunimi: String, Henkilotunnus: String,
                          Postinumero: String, lahiosoite: String, sukupuoli: String, Sähköposti: String, Kutsumanimi: String, Etunimet: String,
-                         kotikunta: String, aidinkieli: String, syntymaaika: String)
+                         kotikunta: String, aidinkieli: String, syntymaaika: String, onkoSinullaSuomalainenHetu: Option[Boolean])
 
 case class Koulutustausta(PK_PAATTOTODISTUSVUOSI: String, POHJAKOULUTUS: String, perusopetuksen_kieli: String, lahtokoulu: Option[String], lahtoluokka: Option[String], luokkataso: String)
 
 case class Lisatiedot(lupaMarkkinointi: Boolean, lupaJulkaisu: Option[Boolean])
 
-case class Answers(henkilotiedot: Henkilotiedot, koulutustausta: Koulutustausta, hakutoiveet: Map[String, String], lisatiedot: Lisatiedot)
+case class Answers(henkilotiedot: Option[Henkilotiedot], koulutustausta: Koulutustausta, hakutoiveet: Option[Map[String, String]], lisatiedot: Option[Lisatiedot])
 
 case class FullHakemus(oid: String, state: String, personOid: String, applicationSystemId: String,
-                           studentOid: String, received: Long, updated: Long, answers: Answers) {
+                           studentOid: String, received: Long, updated: Long, answers: Option[Answers]) {
   def toSmallHakemus: SmallHakemus = {
-    SmallHakemus(oid, state, answers.henkilotiedot.Etunimet, answers.henkilotiedot.Sukunimi, answers.henkilotiedot.Henkilotunnus, personOid)
+    SmallHakemus(oid, state, answers.get.henkilotiedot.get.Etunimet, answers.get.henkilotiedot.get.Sukunimi, answers.get.henkilotiedot.get.Henkilotunnus, personOid)
   }
 }
 

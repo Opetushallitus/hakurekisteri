@@ -42,7 +42,7 @@ class ScalatraBootstrap extends LifeCycle {
       case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
     }.get
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))))
-    val filteredSuoritusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Suoritus](orgServiceUrl ,suoritusRekisteri, (suoritus) => suoritus.komoto.tarjoaja )))
+    val filteredSuoritusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Suoritus](orgServiceUrl ,suoritusRekisteri, (suoritus) => suoritus.myontaja )))
 
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))))
     val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija](orgServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid )))

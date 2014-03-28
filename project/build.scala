@@ -38,6 +38,8 @@ object HakuJaValintarekisteriBuild extends Build {
     "fi.vm.sade.generic" % "generic-common" % "9.0-SNAPSHOT",
     "org.apache.httpcomponents" % "httpclient" % "4.2.3",
     "org.apache.httpcomponents" % "httpclient-cache" % "4.2.3",
+    "commons-httpclient" % "commons-httpclient" % "3.1",
+    "commons-io" % "commons-io" % "2.4",
     "com.google.code.gson" % "gson" % "2.2.4",
     "org.jgroups"  % "jgroups" % "2.10.0.GA",
     "net.sf.ehcache" % "ehcache-jgroupsreplication" % "1.5",

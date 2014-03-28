@@ -14,7 +14,7 @@ trait Organisaatiopalvelu {
 
 }
 
-case class Organisaatio(oid: String, nimi: Map[String, String], toimipistekoodi: String, oppilaitosKoodi: String)
+case class Organisaatio(oid: String, nimi: Map[String, String], toimipistekoodi: Option[String], oppilaitosKoodi: Option[String], parentOid: Option[String])
 
 class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/organisaatio-service")(implicit val ec: ExecutionContext) extends Organisaatiopalvelu {
   implicit val httpClient = new ApacheHttpClient

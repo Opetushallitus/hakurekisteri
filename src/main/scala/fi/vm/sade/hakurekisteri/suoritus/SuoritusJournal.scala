@@ -10,8 +10,8 @@ import scala.slick.driver.JdbcDriver
 import java.util.UUID
 
 class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, SuoritusTable, ColumnOrdered[Long]] {
-  override def toResource(row: SuoritusTable#TableElementType): Suoritus with Identified = Suoritus(Komoto(row._2,row._3,row._4),row._5,LocalDate.parse(row._6), row._7, yksilollistaminen.withName(row._8), row._9).identify(UUID.fromString(row._1))
-  override def toRow(o: Suoritus with Identified): SuoritusTable#TableElementType = (o.id.toString, o.komoto.oid, o.komoto.komo, o.komoto.tarjoaja, o.tila, o.valmistuminen.toString, o.henkiloOid, o.yksilollistaminen.toString, o.suoritusKieli, System.currentTimeMillis())
+  override def toResource(row: SuoritusTable#TableElementType): Suoritus with Identified = Suoritus(row._2, row._3, row._4, LocalDate.parse(row._5), row._6, yksilollistaminen.withName(row._7), row._8).identify(UUID.fromString(row._1))
+  override def toRow(o: Suoritus with Identified): SuoritusTable#TableElementType = (o.id.toString, o.komo, o.myontaja, o.tila, o.valmistuminen.toString, o.henkiloOid, o.yksilollistaminen.toString, o.suoritusKieli, System.currentTimeMillis())
 
   val opiskelijat = TableQuery[SuoritusTable]
   database withSession(
@@ -26,12 +26,11 @@ class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, Suoritus
   override val journalSort = (o: SuoritusTable) => o.inserted.asc
 }
 
-class SuoritusTable(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, String, Long)](tag, "suoritus") {
+class SuoritusTable(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, Long)](tag, "suoritus") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def resourceId = column[String]("resource_id")
-  def komotoOid = column[String]("komoto_oid")
-  def komotoKomo = column[String]("komoto_komo")
-  def komotoTarjoaja = column[String]("komoto_tarjoaja")
+  def komo = column[String]("komo")
+  def myontaja = column[String]("myontaja")
   def tila = column[String]("tila")
   def valmistuminen = column[String]("luokkataso")
   def henkiloOid = column[String]("henkilo_oid")
@@ -39,5 +38,5 @@ class SuoritusTable(tag: Tag) extends Table[(String, String, String, String, Str
   def suoritusKieli = column[String]("suoritus_kieli")
   def inserted = column[Long]("inserted")
   // Every table needs a * projection with the same type as the table's type parameter
-  def * = (resourceId, komotoOid, komotoKomo, komotoTarjoaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, inserted)
+  def * = (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, inserted)
 }

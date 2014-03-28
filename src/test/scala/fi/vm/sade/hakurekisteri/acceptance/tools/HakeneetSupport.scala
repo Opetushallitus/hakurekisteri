@@ -8,8 +8,8 @@ import akka.actor.{Props, ActorSystem}
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
-import fi.vm.sade.hakurekisteri.hakija.Hakemus
-import fi.vm.sade.hakurekisteri.hakija.Hakutoive
+import fi.vm.sade.hakurekisteri.hakija.XMLHakemus
+import fi.vm.sade.hakurekisteri.hakija.XMLHakutoive
 import scala.Some
 import org.scalatest.Suite
 import org.scalatra.test.HttpComponentsClient
@@ -19,15 +19,22 @@ import scala.concurrent.{Future, ExecutionContext}
 
 trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport {
 
-  object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), "", "00001")
-  object OppilaitosY extends Organisaatio("1.10.2", Map("fi" -> "Oppilaitos Y"), "", "00002")
+  object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None)
+  object OppilaitosY extends Organisaatio("1.10.2", Map("fi" -> "Oppilaitos Y"), None, Some("00002"), None)
 
-  object OpetuspisteX extends Organisaatio("1.10.3", Map("fi" -> "Opetuspiste X"), "0000301", "")
-  object OpetuspisteY extends Organisaatio("1.10.4", Map("fi" -> "Opetuspiste Y"), "0000401", "")
+  object OpetuspisteX extends Organisaatio("1.10.3", Map("fi" -> "Opetuspiste X"), Some("0000101"), None, Some("1.10.1"))
+  object OpetuspisteY extends Organisaatio("1.10.4", Map("fi" -> "Opetuspiste Y"), Some("0000201"), None, Some("1.10.2"))
 
   object FullHakemus1 extends FullHakemus("1.25.1", "ACTIVE", "1.24.1", "1.26.1", "1.24.1", 1, 1,
-    Answers(Henkilotiedot("FIN", "FIN", "0401234567", "Mäkinen", "200394-9839", "00100", "Katu 1", "1", "mikko@testi.oph.fi", "Mikko", "Mikko", "098", "FI", "20.03.1994"),
-      Koulutustausta("2014", "1", "FI", Some(OppilaitosX.oid), Some("9A"), "9"), Map(
+    Some(Answers(Some(Henkilotiedot("FIN", "FIN", "0401234567", "Mäkinen", "200394-9839", "00100", "Katu 1", "1", "mikko@testi.oph.fi", "Mikko", "Mikko", "098", "FI", "20.03.1994", Some(true))),
+      Koulutustausta("2014", "1", "FI", Some(OppilaitosX.oid), Some("9A"), "9"), Some(Map(
+        "preference2-Opetuspiste" -> "Ammattikoulu Lappi2",
+        "preference2-Opetuspiste-id" -> "1.10.4",
+        "preference2-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)4",
+        "preference2-Koulutus-id" -> "1.11.2",
+        "preference2-Koulutus-id-aoIdentifier" -> "460",
+        "preference2-Koulutus-id-educationcode" -> "koulutus_321204",
+        "preference2-Koulutus-id-lang" -> "FI",
         "preference1-Opetuspiste" -> "Ammattikoulu Lappi",
         "preference1-Opetuspiste-id" -> "1.10.3",
         "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
@@ -35,12 +42,19 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
         "preference1-Koulutus-id-aoIdentifier" -> "460",
         "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
         "preference1-Koulutus-id-lang" -> "FI"
-      ), Lisatiedot(true, Some(true))
+      )), Some(Lisatiedot(true, Some(true)))
     )
-  )
+  ))
   object FullHakemus2 extends FullHakemus("1.25.2", "ACTIVE", "1.24.2", "1.26.1", "1.24.2", 1, 1,
-    Answers(Henkilotiedot("FIN", "FIN", "0401234568", "Virtanen", "200394-959H", "00100", "Katu 2", "1", "ville@testi.oph.fi", "Ville", "Ville", "098", "FI", "20.03.1994"),
-      Koulutustausta("2014", "1", "FI", Some(OppilaitosY.oid), Some("9A"), "9"), Map(
+    Some(Answers(Some(Henkilotiedot("FIN", "FIN", "0401234568", "Virtanen", "200394-959H", "00100", "Katu 2", "1", "ville@testi.oph.fi", "Ville", "Ville", "098", "FI", "20.03.1994", Some(true))),
+      Koulutustausta("2014", "1", "FI", Some(OppilaitosY.oid), Some("9A"), "9"), Some(Map(
+        "preference2-Opetuspiste" -> "Ammattiopisto Loppi2",
+        "preference2-Opetuspiste-id" -> "1.10.3",
+        "preference2-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)2",
+        "preference2-Koulutus-id" -> "1.11.1",
+        "preference2-Koulutus-id-aoIdentifier" -> "460",
+        "preference2-Koulutus-id-educationcode" -> "koulutus_321204",
+        "preference2-Koulutus-id-lang" -> "FI",
         "preference1-Opetuspiste" -> "Ammattiopisto Loppi",
         "preference1-Opetuspiste-id" -> "1.10.4",
         "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
@@ -48,9 +62,9 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
         "preference1-Koulutus-id-aoIdentifier" -> "460",
         "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
         "preference1-Koulutus-id-lang" -> "FI"
-      ), Lisatiedot(true, Some(true))
+      )), Some(Lisatiedot(true, Some(true)))
     )
-  )
+  ))
 
   object notEmpty
 
