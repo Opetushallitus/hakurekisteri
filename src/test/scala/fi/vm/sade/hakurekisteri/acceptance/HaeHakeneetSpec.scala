@@ -23,7 +23,7 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       hakupalvelu has (FullHakemus1.toSmallHakemus, FullHakemus2.toSmallHakemus)
 
       When("rajaan muodostusta valitsemalla opetuspisteeseen X")
-      val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, Tyyppi.Json)),
+      val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, Tyyppi.Json, None)),
         Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
       println("tiedosto: " + hakijat)
 
