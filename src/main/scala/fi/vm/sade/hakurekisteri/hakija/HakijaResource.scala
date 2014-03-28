@@ -32,6 +32,7 @@ import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
 import fi.vm.sade.hakurekisteri.hakija.FullHakemus
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
 import akka.event.Logging
+import javax.servlet.http.HttpServletResponse
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
@@ -44,7 +45,7 @@ object Tyyppi extends Enumeration {
   val Xml, Excel, Json = Value
 }
 
-case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, tyyppi: Tyyppi)
+case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, tyyppi: Tyyppi, tiedosto: Option[Boolean])
 
 
 class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with CorsSupport {
@@ -53,13 +54,19 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   override protected def applicationDescription: String = "Hakeneiden ja valittujen rajapinta."
   override protected implicit def swagger: SwaggerEngine[_] = sw
 
-  before() {
-    contentType = formats("json")
-  }
-
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
+
+  def getContentType(t: Tyyppi): String = t match {
+    case Tyyppi.Json => formats("json")
+    case Tyyppi.Xml => formats("xml")
+    case Tyyppi.Excel => formats("txt")
+  }
+
+  def setContentDisposition(q: HakijaQuery, response: HttpServletResponse): Unit = q.tiedosto.map(b => {
+    if (b) response.setHeader("Content-Disposition", "attachment;filename=hakijat." + q.tyyppi.toString.toLowerCase)
+  })
 
   get("/") {
     if (params("hakuehto") == null || params("tyyppi") == null)
@@ -70,13 +77,16 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
         params.get("organisaatio"),
         params.get("hakukohdekoodi"),
         Hakuehto withName params("hakuehto"),
-        Tyyppi withName params("tyyppi"))
+        Tyyppi withName params("tyyppi"),
+        params.get("tiedosto").map(_.toBoolean))
 
       logger.info("Query: " + q)
 
+      contentType = getContentType(q.tyyppi)
+      setContentDisposition(q, response)
+
       new AsyncResult() {
         val is = hakijaActor ? q
-
         is.onComplete(res => {logger.debug("result: " + res); if (res.isFailure) res.failed.get.printStackTrace()})
       }
     }
