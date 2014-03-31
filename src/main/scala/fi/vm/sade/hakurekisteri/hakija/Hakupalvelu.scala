@@ -4,6 +4,9 @@ import fi.vm.sade.generic.rest.CachingRestClient
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import scala.concurrent.{ExecutionContext, Future}
+import java.io.Serializable
+import scala.util.Try
+import java.net.URLEncoder
 
 trait Hakupalvelu {
 
@@ -24,8 +27,20 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 
   protected implicit def jsonFormats: Formats = DefaultFormats
 
+  def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
+
+  def extractQueryParams(q: HakijaQuery): String = {
+    val params: Seq[String] = Seq(
+      q.haku.map(s => "asId=" + urlencode(s)),
+      q.organisaatio.map(s => "lopoid=" + urlencode(s)),
+      q.hakukohdekoodi.map(s => "hakukohdekoodi=" + urlencode(s))
+    ).flatten
+
+    Try((for(i <- params; p <- List("&", i)) yield p).tail.reduce(_ + _)).getOrElse("")
+  }
+
   override def find(q: HakijaQuery): Future[Seq[SmallHakemus]] = {
-    Future(parse(cachingRestClient.get(serviceUrl + "/applications/list/fullName/asc?appState=ACTIVE" + //&asId=" + q.haku + "&lopoid=" + q.organisaatio +
+    Future(parse(cachingRestClient.get(serviceUrl + "/applications/list/fullName/asc?appState=ACTIVE&" + extractQueryParams(q) +
       "&orgSearchExpanded=true&checkAllApplications=false&start=0&rows=500")).extract[HakemusHaku].results)
   }
 
