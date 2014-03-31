@@ -69,8 +69,8 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   })
 
   get("/") {
-    if (params("hakuehto") == null || params("tyyppi") == null)
-      response.sendError(400)
+    if (params.get("hakuehto") == None || params.get("tyyppi") == None)
+      response.sendError(400, "hakuehto tai tyyppi puuttuu")
     else {
       val q = HakijaQuery(
         params.get("haku"),
