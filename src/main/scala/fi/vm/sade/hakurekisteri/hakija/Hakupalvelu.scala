@@ -29,19 +29,23 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
-  def extractQueryParams(q: HakijaQuery): String = {
+  def getQueryParams(q: HakijaQuery): String = {
     val params: Seq[String] = Seq(
+      Some("appState=ACTIVE"),
+      Some("orgSearchExpanded=true"),
+      Some("checkAllApplications=false"),
+      Some("start=0"),
+      Some("rows=500"),
       q.haku.map(s => "asId=" + urlencode(s)),
       q.organisaatio.map(s => "lopoid=" + urlencode(s)),
-      q.hakukohdekoodi.map(s => "hakukohdekoodi=" + urlencode(s))
+      q.hakukohdekoodi.map(s => "aoidCode=" + urlencode(s))
     ).flatten
 
     Try((for(i <- params; p <- List("&", i)) yield p).tail.reduce(_ + _)).getOrElse("")
   }
 
   override def find(q: HakijaQuery): Future[Seq[SmallHakemus]] = {
-    Future(parse(cachingRestClient.get(serviceUrl + "/applications/list/fullName/asc?appState=ACTIVE&" + extractQueryParams(q) +
-      "&orgSearchExpanded=true&checkAllApplications=false&start=0&rows=500")).extract[HakemusHaku].results)
+    Future(parse(cachingRestClient.get(serviceUrl + "/applications/list/fullName/asc?" + getQueryParams(q))).extract[HakemusHaku].results)
   }
 
   override def get(hakemusOid: String): Future[Option[FullHakemus]] = {
