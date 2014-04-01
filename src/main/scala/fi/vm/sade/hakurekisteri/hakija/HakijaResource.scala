@@ -33,12 +33,20 @@ import java.util.NoSuchElementException
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
   val Kaikki, Hyväksytyt, Vastaanottaneet = Value
+  val kaikki = Kaikki
+  val hyvaksytyt = Hyväksytyt
+  val hyväksytyt = Hyväksytyt
+  val vastaanottaneet = Vastaanottaneet
 }
 
 // TODO tyyppimuunnin, joka muuntaa oletusmuodon (JSON) XML- tai Excel-muotoon
 object Tyyppi extends Enumeration {
   type Tyyppi = Value
   val Xml, Excel, Json = Value
+  val xml = Xml
+  val excel = Excel
+  val xls = Excel
+  val json = Json
 }
 
 case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, tyyppi: Tyyppi, tiedosto: Option[Boolean])
@@ -115,9 +123,9 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     }
   }
 
-  type Hakutoive = Set[Komoto]
+  case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String)
 
-  case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria: Seq[Opiskelija], hakutoiveet: Seq[Hakutoive])
+  case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria: Seq[Opiskelija], hakutoiveet: Seq[Hakukohde])
 
   implicit def yhteystietoryhmatToMap(yhteystiedot: Seq[YhteystiedotRyhma]): Map[(String, String), Seq[Yhteystiedot]] = {
     yhteystiedot.map((y) => (y.ryhmaAlkuperaTieto, y.ryhmaKuvaus) -> y.yhteystiedot).toMap
@@ -142,7 +150,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
   def getXmlHakutoiveet(hakija: Hakija): Future[Seq[XMLHakutoive]] = {
     log.debug("get xml hakutoiveet for: " + hakija.henkilo.oidHenkilo)
     val futures = hakija.hakutoiveet.zipWithIndex.map(ht => {
-      findOrgData(ht._1.head.tarjoaja).map(option => option.map((t) => {
+      findOrgData(ht._1.koulutukset.head.tarjoaja).map(option => option.map((t) => {
         val o = t._1
         val k = t._2
         XMLHakutoive(
@@ -199,10 +207,10 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     val ht: Future[Seq[XMLHakutoive]] = getXmlHakutoiveet(hakija)
     ht.map(toiveet => {
 
-      Try(hakija.hakutoiveet.head).map((k: Hakutoive) =>
+      Try(hakija.hakutoiveet.head).map((k: Hakukohde) =>
         XMLHakemus(
-          vuosi = Try(k.head.alkamisvuosi).get,
-          kausi = if (Try(k.head.alkamiskausi).get == Kausi.Kevät) "K" else "S",
+          vuosi = Try(k.koulutukset.head.alkamisvuosi).get,
+          kausi = if (Try(k.koulutukset.head.alkamiskausi).get == Kausi.Kevät) "K" else "S",
           hakemusnumero = "",
           lahtokoulu = lahtokoulu.flatMap(o => o.oppilaitosKoodi),
           lahtokoulunnimi = lahtokoulu.flatMap(o => o.nimi.get("fi")),
@@ -315,16 +323,18 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     hak
   }
 
-  def convertToiveet(toiveet: Map[String, String]): Seq[Set[Komoto]] = {
-    val toiveet1: String = toiveet("preference1-Opetuspiste-id")
-
+  def convertToiveet(toiveet: Map[String, String]): Seq[Hakukohde] = {
     val Pattern = "preference(\\d+)-Opetuspiste-id".r
     val notEmpty = "(.+)".r
-    val opetusPisteet: Seq[(Short,String)] = toiveet.collect {
+    val opetusPisteet: Seq[(Short, String)] = toiveet.collect {
       case (Pattern(n), notEmpty(opetusPisteId)) => (n.toShort, opetusPisteId)
     }.toSeq
 
-    opetusPisteet.sortBy(_._1).map((t) => Set(Komoto("","",t._2, "2014", Kausi.Syksy)))
+    opetusPisteet.sortBy(_._1).map((t) => {
+      val koulutukset = Set(Komoto("", "", t._2, "2014", Kausi.Syksy))
+      val hakukohdekoodi = toiveet("preference" + t._1 + "-Koulutus-id-aoIdentifier")
+      Hakukohde(koulutukset, hakukohdekoodi)
+    })
   }
 
   def selectHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
