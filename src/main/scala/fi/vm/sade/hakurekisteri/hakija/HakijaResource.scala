@@ -33,20 +33,12 @@ import java.util.NoSuchElementException
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
   val Kaikki, Hyväksytyt, Vastaanottaneet = Value
-  val kaikki = Kaikki
-  val hyvaksytyt = Hyväksytyt
-  val hyväksytyt = Hyväksytyt
-  val vastaanottaneet = Vastaanottaneet
 }
 
 // TODO tyyppimuunnin, joka muuntaa oletusmuodon (JSON) XML- tai Excel-muotoon
 object Tyyppi extends Enumeration {
   type Tyyppi = Value
   val Xml, Excel, Json = Value
-  val xml = Xml
-  val excel = Excel
-  val xls = Excel
-  val json = Json
 }
 
 case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, tyyppi: Tyyppi, tiedosto: Option[Boolean])
@@ -79,13 +71,15 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   })
 
   def containsValue(e: Enumeration, s: String): Boolean = {
-    Try {e.withName(s); true }.getOrElse(false)
+    logger.debug("testing if " + e + " contains value " + s)
+    Try { val v = e.withName(s); true }.getOrElse(false)
   }
 
   get("/") {
-    val hakuehto = params.getOrElse("hakuehto", "")
-    val tyyppi = params.getOrElse("tyyppi", "")
-    if (hakuehto == "" || !containsValue(Hakuehto, hakuehto) || tyyppi == "" || !containsValue(Tyyppi, tyyppi)) {
+    val hakuehto: String = params.getOrElse("hakuehto", "")
+    val tyyppi: String = params.getOrElse("tyyppi", "")
+    if (hakuehto == "" || containsValue(Hakuehto, hakuehto) == false || tyyppi == "" || containsValue(Tyyppi, tyyppi) == false) {
+      logger.warn("invalid query params: hakuehto=" + hakuehto + ", tyyppi=" + tyyppi)
       response.sendError(400, "hakuehto tai tyyppi puuttuu tai arvo on virheellinen")
     } else {
       val q = HakijaQuery(
