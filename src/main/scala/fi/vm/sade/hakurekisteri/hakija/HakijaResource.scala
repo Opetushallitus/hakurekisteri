@@ -71,12 +71,21 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   })
 
   get("/") {
+    params.get("hakuehto") match {
+      case None => response.sendError(400, "hakuehto puuttuu")
+      case Some(h) => Try(Hakuehto.withName(h)).recover { case _ => response.sendError(400, "virheellinen hakuehto") }
+    }
+    params.get("tyyppi") match {
+      case None => response.sendError(400, "tyyppi puuttuu")
+      case Some(t) => Try(Tyyppi.withName(t)).recover { case _ => response.sendError(400, "virheellinen tyyppi") }
+    }
+
     val q = HakijaQuery(
       params.get("haku"),
       params.get("organisaatio"),
       params.get("hakukohdekoodi"),
-      Hakuehto.withName(params.getOrElse("hakuehto", halt(status = 400, reason = "virheellinen hakuehto"))),
-      Tyyppi.withName(params.getOrElse("tyyppi", halt(status = 400, reason = "virheellinen tyyppi"))),
+      Hakuehto.withName(params("hakuehto")),
+      Tyyppi.withName(params("tyyppi")),
       params.get("tiedosto").map(_.toBoolean))
 
     logger.info("Query: " + q)
