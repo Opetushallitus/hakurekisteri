@@ -71,27 +71,22 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   })
 
   get("/") {
-    Try((Hakuehto.withName(params("hakuehto")), Tyyppi.withName(params("tyyppi")))).map((p) => {
-      val q = HakijaQuery(
-        params.get("haku"),
-        params.get("organisaatio"),
-        params.get("hakukohdekoodi"),
-        p._1,
-        p._2,
-        params.get("tiedosto").map(_.toBoolean))
+    val q = HakijaQuery(
+      params.get("haku"),
+      params.get("organisaatio"),
+      params.get("hakukohdekoodi"),
+      Hakuehto.withName(params.getOrElse("hakuehto", halt(status = 400, reason = "virheellinen hakuehto"))),
+      Tyyppi.withName(params.getOrElse("tyyppi", halt(status = 400, reason = "virheellinen tyyppi"))),
+      params.get("tiedosto").map(_.toBoolean))
 
-      logger.info("Query: " + q)
+    logger.info("Query: " + q)
 
-      contentType = getContentType(q.tyyppi)
-      setContentDisposition(q, response)
+    contentType = getContentType(q.tyyppi)
+    setContentDisposition(q, response)
 
-      new AsyncResult() {
-        val is = hakijaActor ? q
-        is.onComplete(res => { logger.debug("result: " + res); if (res.isFailure) res.failed.get.printStackTrace() })
-      }
-    }).recover {
-      case nre: NoSuchElementException => logger.error("invalid value", nre); response.sendError(400, "hakuehto tai tyyppi puuttuu tai arvo on virheellinen")
-      case e: Throwable => logger.error("error", e); response.sendError(500, "virhe palvelussa")
+    new AsyncResult() {
+      val is = hakijaActor ? q
+      is.onComplete(res => { logger.debug("result: " + res); if (res.isFailure) res.failed.get.printStackTrace() })
     }
   }
 
