@@ -71,13 +71,13 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   })
 
   get("/") {
-    Try({
+    Try((Hakuehto.withName(params("hakuehto")), Tyyppi.withName(params("tyyppi")))).map((p) => {
       val q = HakijaQuery(
         params.get("haku"),
         params.get("organisaatio"),
         params.get("hakukohdekoodi"),
-        Hakuehto withName params("hakuehto"),
-        Tyyppi withName params("tyyppi"),
+        p._1,
+        p._2,
         params.get("tiedosto").map(_.toBoolean))
 
       logger.info("Query: " + q)
@@ -90,8 +90,8 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
         is.onComplete(res => { logger.debug("result: " + res); if (res.isFailure) res.failed.get.printStackTrace() })
       }
     }).recover {
-      case nse: NoSuchElementException => response.sendError(400, "hakuehto tai tyyppi puuttuu tai arvo on virheellinen")
-      case e: Throwable => logger.error("virhe palvelussa", e); response.sendError(500, "virhe palvelussa")
+      case nre: NoSuchElementException => logger.error("invalid value", nre); response.sendError(400, "hakuehto tai tyyppi puuttuu tai arvo on virheellinen")
+      case e: Throwable => logger.error("error", e); response.sendError(500, "virhe palvelussa")
     }
   }
 
