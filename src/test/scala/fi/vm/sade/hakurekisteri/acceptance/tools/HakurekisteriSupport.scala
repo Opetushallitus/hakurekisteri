@@ -36,7 +36,7 @@ object kausi extends Enumeration {
 import kausi._
 
 trait TestSecurity extends SecuritySupport{
-  override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(User("testaaja", Seq("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001")))
+  override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(User("testaaja", Seq("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001"), None))
 
 }
 

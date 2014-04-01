@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.hakija
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.Tyyppi.Tyyppi
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.rest.support.{Kausi, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, Kausi, HakurekisteriJsonSupport}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport}
 import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
@@ -41,10 +41,10 @@ object Tyyppi extends Enumeration {
   val Xml, Excel, Json = Value
 }
 
-case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, tyyppi: Tyyppi, tiedosto: Option[Boolean])
+case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, tyyppi: Tyyppi, tiedosto: Option[Boolean], proxyTicket: Option[String])
 
 
-class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with CorsSupport {
+class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(60, TimeUnit.SECONDS)
   override protected def applicationDescription: String = "Hakeneiden ja valittujen rajapinta."
@@ -82,13 +82,15 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
       logger.warn("invalid query params: hakuehto=" + hakuehto + ", tyyppi=" + tyyppi)
       response.sendError(400, "hakuehto tai tyyppi puuttuu tai arvo on virheellinen")
     } else {
+      val user = currentUser
       val q = HakijaQuery(
         params.get("haku"),
         params.get("organisaatio"),
         params.get("hakukohdekoodi"),
         Hakuehto.withName(hakuehto),
         Tyyppi.withName(tyyppi),
-        params.get("tiedosto").map(_.toBoolean))
+        params.get("tiedosto").map(_.toBoolean),
+        user.flatMap(_.attributePrincipal.map(_.getProxyTicketFor("https://itest-virkailija.oph.ware.fi/haku-app/j_spring_cas_security_check")))) // TODO parametrisoi cas service url
 
       logger.info("Query: " + q)
 
