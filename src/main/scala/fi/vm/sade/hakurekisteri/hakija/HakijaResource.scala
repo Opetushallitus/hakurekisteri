@@ -7,32 +7,28 @@ import fi.vm.sade.hakurekisteri.rest.support.{Kausi, HakurekisteriJsonSupport}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport}
 import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
-import scala.concurrent.{Await, Future, ExecutionContext}
-import akka.actor.{Actor, ActorSystem}
+import scala.concurrent.{Future, ExecutionContext}
+import akka.actor.ActorSystem
 import _root_.akka.actor.{Actor, ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
-import scala.collection.immutable.IndexedSeq
 import scala.concurrent.duration.Duration
 import fi.vm.sade.hakurekisteri.henkilo._
 import scala.util.Try
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, Komoto}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import org.joda.time.{LocalDate, DateTime, Duration}
+import org.joda.time.{LocalDate, DateTime}
 import scala.Some
 import fi.vm.sade.hakurekisteri.hakija.XMLHakutoive
 import fi.vm.sade.hakurekisteri.hakija.Organisaatio
 import fi.vm.sade.hakurekisteri.suoritus.Komoto
-import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
 import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
-import fi.vm.sade.hakurekisteri.hakija.XMLHakija
 import fi.vm.sade.hakurekisteri.hakija.XMLHakemus
 import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
-import fi.vm.sade.hakurekisteri.hakija.FullHakemus
-import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
 import akka.event.Logging
 import javax.servlet.http.HttpServletResponse
+import java.util.NoSuchElementException
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
@@ -64,14 +60,18 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     case Tyyppi.Excel => formats("txt")
   }
 
-  def setContentDisposition(q: HakijaQuery, response: HttpServletResponse): Unit = q.tiedosto.map(b => {
-    if (b) response.setHeader("Content-Disposition", "attachment;filename=hakijat." + q.tyyppi.toString.toLowerCase)
+  def getFileExtension(t: Tyyppi): String = t match {
+    case Tyyppi.Json => "json"
+    case Tyyppi.Xml => "xml"
+    case Tyyppi.Excel => "xls"
+  }
+
+  def setContentDisposition(q: HakijaQuery, response: HttpServletResponse): Unit = q.tiedosto.map(returnAsFile => {
+    if (returnAsFile) response.setHeader("Content-Disposition", "attachment;filename=hakijat." + getFileExtension(q.tyyppi))
   })
 
   get("/") {
-    if (params.get("hakuehto") == None || params.get("tyyppi") == None)
-      response.sendError(400, "hakuehto tai tyyppi puuttuu")
-    else {
+    Try({
       val q = HakijaQuery(
         params.get("haku"),
         params.get("organisaatio"),
@@ -87,8 +87,11 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
       new AsyncResult() {
         val is = hakijaActor ? q
-        is.onComplete(res => {logger.debug("result: " + res); if (res.isFailure) res.failed.get.printStackTrace()})
+        is.onComplete(res => { logger.debug("result: " + res); if (res.isFailure) res.failed.get.printStackTrace() })
       }
+    }).recover {
+      case nse: NoSuchElementException => response.sendError(400, "hakuehto tai tyyppi puuttuu tai arvo on virheellinen")
+      case e: Throwable => logger.error("virhe palvelussa", e); response.sendError(500, "virhe palvelussa")
     }
   }
 
