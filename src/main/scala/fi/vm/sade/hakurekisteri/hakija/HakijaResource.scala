@@ -78,32 +78,33 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     if (returnAsFile) response.setHeader("Content-Disposition", "attachment;filename=hakijat." + getFileExtension(q.tyyppi))
   })
 
+  def containsValue(e: Enumeration, s: String): Boolean = {
+    Try {e.withName(s); true }.getOrElse(false)
+  }
+
   get("/") {
-    params.get("hakuehto") match {
-      case None => response.sendError(400, "hakuehto puuttuu")
-      case Some(h) => Try(Hakuehto.withName(h)).recover { case _ => response.sendError(400, "virheellinen hakuehto") }
-    }
-    params.get("tyyppi") match {
-      case None => response.sendError(400, "tyyppi puuttuu")
-      case Some(t) => Try(Tyyppi.withName(t)).recover { case _ => response.sendError(400, "virheellinen tyyppi") }
-    }
+    val hakuehto = params.getOrElse("hakuehto", "")
+    val tyyppi = params.getOrElse("tyyppi", "")
+    if (hakuehto == "" || !containsValue(Hakuehto, hakuehto) || tyyppi == "" || !containsValue(Tyyppi, tyyppi)) {
+      response.sendError(400, "hakuehto tai tyyppi puuttuu tai arvo on virheellinen")
+    } else {
+      val q = HakijaQuery(
+        params.get("haku"),
+        params.get("organisaatio"),
+        params.get("hakukohdekoodi"),
+        Hakuehto.withName(hakuehto),
+        Tyyppi.withName(tyyppi),
+        params.get("tiedosto").map(_.toBoolean))
 
-    val q = HakijaQuery(
-      params.get("haku"),
-      params.get("organisaatio"),
-      params.get("hakukohdekoodi"),
-      Hakuehto.withName(params("hakuehto")),
-      Tyyppi.withName(params("tyyppi")),
-      params.get("tiedosto").map(_.toBoolean))
+      logger.info("Query: " + q)
 
-    logger.info("Query: " + q)
+      contentType = getContentType(q.tyyppi)
+      setContentDisposition(q, response)
 
-    contentType = getContentType(q.tyyppi)
-    setContentDisposition(q, response)
-
-    new AsyncResult() {
-      val is = hakijaActor ? q
-      is.onComplete(res => { logger.debug("result: " + res); if (res.isFailure) res.failed.get.printStackTrace() })
+      new AsyncResult() {
+        val is = hakijaActor ? q
+        is.onComplete(res => { logger.debug("result: " + res); if (res.isFailure) res.failed.get.printStackTrace() })
+      }
     }
   }
 
