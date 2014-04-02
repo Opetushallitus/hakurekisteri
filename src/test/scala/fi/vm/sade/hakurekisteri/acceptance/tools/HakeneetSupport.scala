@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.acceptance.tools
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.hakija
 import org.scalatra.swagger.Swagger
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, HakurekisteriSwagger}
+import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport, HakurekisteriSwagger}
 import akka.actor.{Props, ActorSystem}
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
@@ -87,7 +87,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       case Some(OpetuspisteY.oid) => Future(Seq(FullHakemus2.toSmallHakemus))
     }
 
-    def get(hakemusOid: String): Future[Option[FullHakemus]] = hakemusOid match {
+    def get(hakemusOid: String, user: Option[User]): Future[Option[FullHakemus]] = hakemusOid match {
       case "1.25.1" => Future(Some(FullHakemus1))
       case "1.25.2" => Future(Some(FullHakemus2))
       case default => Future(None)

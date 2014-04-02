@@ -1,29 +1,26 @@
 package fi.vm.sade.hakurekisteri.hakija
 
-import fi.vm.sade.generic.rest.CachingRestClient
 import org.json4s._
-import org.json4s.jackson.JsonMethods._
-import scala.concurrent.{ExecutionContext, Future}
-import java.io.Serializable
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
 import scala.util.Try
-import java.net.URLEncoder
+import java.net.{URL, URLEncoder}
+import com.stackmob.newman.ApacheHttpClient
+import com.stackmob.newman.response.HttpResponse
+import com.stackmob.newman.dsl._
+import scala.Some
+import fi.vm.sade.hakurekisteri.rest.support.User
 
 trait Hakupalvelu {
 
   def find(q: HakijaQuery): Future[Seq[SmallHakemus]]
 
-  def get(hakemusOid: String): Future[Option[FullHakemus]]
+  def get(hakemusOid: String, user: Option[User]): Future[Option[FullHakemus]]
 
 }
 
-class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app",
-                      webCasUrl: String = "https://itest-virkailija.oph.ware.fi/cas")(implicit val ec: ExecutionContext) extends Hakupalvelu {
-  val cachingRestClient = new CachingRestClient
-  cachingRestClient.setUseProxyAuthentication(false)
-  cachingRestClient.setWebCasUrl(webCasUrl)
-  cachingRestClient.setCasService(serviceUrl + "/j_spring_cas_security_check")
-  cachingRestClient.setUsername("robotti")
-  cachingRestClient.setPassword("Testaaja!")
+class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app")(implicit val ec: ExecutionContext) extends Hakupalvelu {
+  implicit val httpClient = new ApacheHttpClient
 
   protected implicit def jsonFormats: Formats = DefaultFormats
 
@@ -44,12 +41,20 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
     Try((for(i <- params; p <- List("&", i)) yield p).tail.reduce(_ + _)).getOrElse("")
   }
 
-  override def find(q: HakijaQuery): Future[Seq[SmallHakemus]] = {
-    Future(parse(cachingRestClient.get(serviceUrl + "/applications/list/fullName/asc?" + getQueryParams(q))).extract[HakemusHaku].results)
+  def getProxyTicket(user: Option[User]): String = {
+    user.flatMap(_.attributePrincipal.map(_.getProxyTicketFor(serviceUrl + "/j_spring_cas_security_check"))).getOrElse("")
   }
 
-  override def get(hakemusOid: String): Future[Option[FullHakemus]] = {
-    Future(Some(parse(cachingRestClient.get(serviceUrl + "/applications/" + hakemusOid)).extract[FullHakemus]))
+  override def find(q: HakijaQuery): Future[Seq[SmallHakemus]] = {
+    val url = new URL(serviceUrl + "/applications/list/fullName/asc?" + getQueryParams(q))
+    val response: HttpResponse = Await.result(GET(url).addHeaders("CasSecurityTicket" -> getProxyTicket(q.user)).apply, 10.second)
+    Future(response.bodyAsCaseClass[HakemusHaku].toList.head.results)
+  }
+
+  override def get(hakemusOid: String, user: Option[User]): Future[Option[FullHakemus]] = {
+    val url = new URL(serviceUrl + "/applications/" + hakemusOid)
+    val response: HttpResponse = Await.result(GET(url).addHeaders("CasSecurityTicket" -> getProxyTicket(user)).apply, 10.second)
+    Future(response.bodyAsCaseClass[FullHakemus].toOption)
   }
 
 }

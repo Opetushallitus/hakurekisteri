@@ -3,32 +3,26 @@ package fi.vm.sade.hakurekisteri.hakija
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.Tyyppi.Tyyppi
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, Kausi, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.{User, SpringSecuritySupport, Kausi, HakurekisteriJsonSupport}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport}
 import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
 import scala.concurrent.{Future, ExecutionContext}
-import akka.actor.ActorSystem
 import _root_.akka.actor.{Actor, ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.Duration
 import fi.vm.sade.hakurekisteri.henkilo._
 import scala.util.Try
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, Komoto}
+import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import org.joda.time.{LocalDate, DateTime}
 import scala.Some
-import fi.vm.sade.hakurekisteri.hakija.XMLHakutoive
-import fi.vm.sade.hakurekisteri.hakija.Organisaatio
 import fi.vm.sade.hakurekisteri.suoritus.Komoto
 import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
-import fi.vm.sade.hakurekisteri.hakija.XMLHakemus
 import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
 import akka.event.Logging
 import javax.servlet.http.HttpServletResponse
-import java.util.NoSuchElementException
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
@@ -41,7 +35,7 @@ object Tyyppi extends Enumeration {
   val Xml, Excel, Json = Value
 }
 
-case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, tyyppi: Tyyppi, tiedosto: Option[Boolean], proxyTicket: Option[String])
+case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, tyyppi: Tyyppi, tiedosto: Option[Boolean], user: Option[User])
 
 
 class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
@@ -90,7 +84,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
         Hakuehto.withName(hakuehto),
         Tyyppi.withName(tyyppi),
         params.get("tiedosto").map(_.toBoolean),
-        user.flatMap(_.attributePrincipal.map(_.getProxyTicketFor("https://itest-virkailija.oph.ware.fi/haku-app/j_spring_cas_security_check")))) // TODO parametrisoi cas service url
+        user)
 
       logger.info("Query: " + q)
 
@@ -336,7 +330,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
 
   def selectHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     val y: Future[Future[Seq[Hakija]]] = findHakemukset(q).map(hakemukset => {
-      val kk: Seq[Future[Option[Hakija]]] = hakemukset.map(sh => getHakemus(sh.oid).map((fh: Option[FullHakemus]) => fh.map(getHakija(_))))
+      val kk: Seq[Future[Option[Hakija]]] = hakemukset.map(sh => getHakemus(sh.oid, q.user).map((fh: Option[FullHakemus]) => fh.map(getHakija(_))))
       val f: Future[Seq[Hakija]] = Future.sequence(kk).map((s: Seq[Option[Hakija]]) => s.flatten)
       f.onComplete(res => {log.debug("hakijat result: " + res); if (res.isFailure) res.failed.get.printStackTrace()})
       f
@@ -355,7 +349,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
 
   def findHakemukset = hakupalvelu.find(_)
 
-  def getHakemus = hakupalvelu.get(_)
+  def getHakemus = hakupalvelu.get(_, _)
 
   /*
   def hakemus2Hakija(hakemus: FullHakemus): Future[XMLHakija]  = {
