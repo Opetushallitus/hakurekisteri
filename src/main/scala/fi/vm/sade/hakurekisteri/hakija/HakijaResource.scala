@@ -65,8 +65,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   })
 
   def containsValue(e: Enumeration, s: String): Boolean = {
-    logger.debug("testing if " + e + " contains value " + s)
-    Try { val v = e.withName(s); true }.getOrElse(false)
+    Try { e.withName(s); true }.getOrElse(false)
   }
 
   get("/") {
@@ -76,7 +75,6 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
       logger.warn("invalid query params: hakuehto=" + hakuehto + ", tyyppi=" + tyyppi)
       response.sendError(400, "hakuehto tai tyyppi puuttuu tai arvo on virheellinen")
     } else {
-      val user = currentUser
       val q = HakijaQuery(
         params.get("haku"),
         params.get("organisaatio"),
@@ -84,16 +82,26 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
         Hakuehto.withName(hakuehto),
         Tyyppi.withName(tyyppi),
         params.get("tiedosto").map(_.toBoolean),
-        user)
+        currentUser)
 
       logger.info("Query: " + q)
 
-      contentType = getContentType(q.tyyppi)
-      setContentDisposition(q, response)
 
       new AsyncResult() {
         val is = hakijaActor ? q
-        is.onComplete(res => { logger.debug("result: " + res); if (res.isFailure) res.failed.get.printStackTrace() })
+        is.onComplete {
+          case res => {
+            logger.debug("result: " + res)
+            contentType = getContentType(q.tyyppi)
+            setContentDisposition(q, response)
+          }
+        }
+        is.onFailure {
+          case t: Throwable => {
+            logger.error("error in service", t)
+            response.sendError(500, t.getMessage)
+          }
+        }
       }
     }
   }
@@ -148,8 +156,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
           hakujno = (ht._2 + 1).toShort,
           oppilaitos = k,
           opetuspiste = o.toimipistekoodi,
-          opetuspisteennimi = o.nimi.get("fi"),
-          koulutus = "",
+          opetuspisteennimi = o.nimi.get("fi").orElse(o.nimi.get("sv")),
+          koulutus = ht._1.hakukohdekoodi,
           harkinnanvaraisuusperuste = None,
           urheilijanammatillinenkoulutus = None,
           yhteispisteet = None,

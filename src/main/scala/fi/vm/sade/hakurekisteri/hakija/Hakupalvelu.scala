@@ -6,10 +6,11 @@ import scala.concurrent.duration._
 import scala.util.Try
 import java.net.{URL, URLEncoder}
 import com.stackmob.newman.ApacheHttpClient
-import com.stackmob.newman.response.HttpResponse
+import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
 import com.stackmob.newman.dsl._
 import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
+import org.slf4j.LoggerFactory
 
 trait Hakupalvelu {
 
@@ -20,6 +21,8 @@ trait Hakupalvelu {
 }
 
 class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app")(implicit val ec: ExecutionContext) extends Hakupalvelu {
+  val logger = LoggerFactory.getLogger(getClass)
+
   implicit val httpClient = new ApacheHttpClient
 
   protected implicit def jsonFormats: Formats = DefaultFormats
@@ -47,14 +50,36 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 
   override def find(q: HakijaQuery): Future[Seq[SmallHakemus]] = {
     val url = new URL(serviceUrl + "/applications/list/fullName/asc?" + getQueryParams(q))
-    val response: HttpResponse = Await.result(GET(url).addHeaders("CasSecurityTicket" -> getProxyTicket(q.user)).apply, 10.second)
-    Future(response.bodyAsCaseClass[HakemusHaku].toList.head.results)
+    val ticket = getProxyTicket(q.user)
+    Future {
+      logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
+      val response: HttpResponse = Await.result(GET(url).addHeaders("CasSecurityTicket" -> ticket).apply, 10.second)
+      if (response.code != HttpResponseCode.Ok) {
+        logger.error("call to haku-app [url={}, ticket={}] failed: {}", url, ticket, response.code)
+        throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
+      } else {
+        val hakemusHaku = response.bodyAsCaseClass[HakemusHaku].toOption
+        logger.debug("got response: [{}]", hakemusHaku)
+        hakemusHaku.map(_.results).getOrElse(Seq())
+      }
+    }
   }
 
   override def get(hakemusOid: String, user: Option[User]): Future[Option[FullHakemus]] = {
     val url = new URL(serviceUrl + "/applications/" + hakemusOid)
-    val response: HttpResponse = Await.result(GET(url).addHeaders("CasSecurityTicket" -> getProxyTicket(user)).apply, 10.second)
-    Future(response.bodyAsCaseClass[FullHakemus].toOption)
+    val ticket = getProxyTicket(user)
+    Future {
+      logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
+      val response: HttpResponse = Await.result(GET(url).addHeaders("CasSecurityTicket" -> ticket).apply, 10.second)
+      if (response.code != HttpResponseCode.Ok) {
+        logger.error("call to haku-app [url={}, ticket={}] failed: " + response.code, url, ticket)
+        throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
+      } else {
+        val fullHakemus = response.bodyAsCaseClass[FullHakemus].toOption
+        logger.debug("got response: [{}]", fullHakemus)
+        fullHakemus
+      }
+    }
   }
 
 }
@@ -74,11 +99,8 @@ case class Lisatiedot(lupaMarkkinointi: Boolean, lupaJulkaisu: Option[Boolean])
 case class Answers(henkilotiedot: Option[Henkilotiedot], koulutustausta: Koulutustausta, hakutoiveet: Option[Map[String, String]], lisatiedot: Option[Lisatiedot])
 
 case class FullHakemus(oid: String, state: String, personOid: String, applicationSystemId: String,
-                           studentOid: String, received: Long, updated: Long, answers: Option[Answers]) {
-  def toSmallHakemus: SmallHakemus = {
-    SmallHakemus(oid, state, answers.get.henkilotiedot.get.Etunimet, answers.get.henkilotiedot.get.Sukunimi, answers.get.henkilotiedot.get.Henkilotunnus, personOid)
-  }
-}
+                           studentOid: String, received: Long, updated: Long, answers: Option[Answers])
+
 
 // "hakutoiveet":{
 // "preference4-Koulutus-id-aoIdentifier":"",

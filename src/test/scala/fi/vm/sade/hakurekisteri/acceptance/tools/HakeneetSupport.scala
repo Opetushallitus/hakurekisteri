@@ -68,7 +68,9 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
   object notEmpty
 
-
+  implicit def fullHakemus2SmallHakemus(h: FullHakemus): SmallHakemus = {
+    SmallHakemus(h.oid, h.state, h.answers.get.henkilotiedot.get.Etunimet, h.answers.get.henkilotiedot.get.Sukunimi, h.answers.get.henkilotiedot.get.Henkilotunnus, h.personOid)
+  }
 
   import _root_.akka.pattern.ask
 
@@ -83,8 +85,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     var tehdytHakemukset: Seq[SmallHakemus] = Seq()
 
     def find(q: HakijaQuery): Future[Seq[SmallHakemus]] = q.organisaatio match {
-      case Some(OpetuspisteX.oid) => Future(Seq(FullHakemus1.toSmallHakemus))
-      case Some(OpetuspisteY.oid) => Future(Seq(FullHakemus2.toSmallHakemus))
+      case Some(OpetuspisteX.oid) => Future(Seq(FullHakemus1))
+      case Some(OpetuspisteY.oid) => Future(Seq(FullHakemus2))
     }
 
     def get(hakemusOid: String, user: Option[User]): Future[Option[FullHakemus]] = hakemusOid match {
@@ -94,7 +96,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     }
 
     def is(token:Any) = token match {
-      case notEmpty => has(FullHakemus1.toSmallHakemus, FullHakemus2.toSmallHakemus)
+      case notEmpty => has(FullHakemus1, FullHakemus2)
     }
 
     def has(hakemukset: SmallHakemus*) = {

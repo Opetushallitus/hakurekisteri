@@ -5,7 +5,8 @@ import com.stackmob.newman.dsl._
 import scala.concurrent._
 import scala.concurrent.duration._
 import java.net.URL
-import com.stackmob.newman.response.HttpResponse
+import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
+import org.slf4j.LoggerFactory
 
 
 trait Organisaatiopalvelu {
@@ -17,16 +18,24 @@ trait Organisaatiopalvelu {
 case class Organisaatio(oid: String, nimi: Map[String, String], toimipistekoodi: Option[String], oppilaitosKoodi: Option[String], parentOid: Option[String])
 
 class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/organisaatio-service")(implicit val ec: ExecutionContext) extends Organisaatiopalvelu {
+  val logger = LoggerFactory.getLogger(getClass)
+
   implicit val httpClient = new ApacheHttpClient
 
   override def get(str: String): Future[Option[Organisaatio]] = {
-    Future(call(str))
-  }
-
-  def call(str: String): Option[Organisaatio] = {
     val url = new URL(serviceUrl + "/rest/organisaatio/" + str)
-    val response: HttpResponse = Await.result(GET(url).apply, 10.second)
-    response.bodyAsCaseClass[Organisaatio].toOption
+    Future {
+      logger.debug("calling organisaatio-service [{}]", url)
+      val response: HttpResponse = Await.result(GET(url).apply, 10.second)
+      if (response.code != HttpResponseCode.Ok) {
+        logger.error("call to organisaatio-service [{}] failed: {}", url, response.code)
+        throw new RuntimeException("virhe kutsuttaessa organisaatiopalvelua: %s".format(response.code))
+      } else {
+        val organisaatio = response.bodyAsCaseClass[Organisaatio].toOption
+        logger.debug("got response: [{}]", organisaatio)
+        organisaatio
+      }
+    }
   }
 
 }
