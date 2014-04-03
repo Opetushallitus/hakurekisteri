@@ -23,6 +23,7 @@ import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
 import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
 import akka.event.Logging
 import javax.servlet.http.HttpServletResponse
+import javax.xml.bind.annotation.{XmlElement, XmlRootElement}
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
@@ -440,11 +441,12 @@ case class XMLHakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[
 case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahtokoulu: Option[String], lahtokoulunnimi: Option[String], luokka: Option[String],
                    luokkataso: Option[String], pohjakoulutus: String, todistusvuosi: Option[String], julkaisulupa: Option[Boolean], yhteisetaineet: Option[BigDecimal],
                    lukiontasapisteet: Option[BigDecimal], lisapistekoulutus: Option[String], yleinenkoulumenestys: Option[BigDecimal],
-                   painotettavataineet: Option[BigDecimal], hakutoiveet: Seq[XMLHakutoive])
+                   painotettavataineet: Option[BigDecimal], @XmlElement(name = "Hakutoive") hakutoiveet: Seq[XMLHakutoive])
 
 case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
                   postinumero: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String], muupuhelin: Option[String], sahkoposti: Option[String],
-                  kotikunta: Option[String], sukupuoli: String, aidinkieli: String, koulutusmarkkinointilupa: Boolean, hakemus: XMLHakemus)
+                  kotikunta: Option[String], sukupuoli: String, aidinkieli: String, koulutusmarkkinointilupa: Boolean, @XmlElement(name = "Hakemus") hakemus: XMLHakemus)
 
-case class XMLHakijat(hakijat: Seq[XMLHakija])
+@XmlRootElement(name = "Hakijat")
+case class XMLHakijat(@XmlElement(name="Hakija") hakijat: Seq[XMLHakija])
 
