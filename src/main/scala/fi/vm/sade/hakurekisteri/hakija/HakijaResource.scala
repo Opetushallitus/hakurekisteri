@@ -144,13 +144,17 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
 
   case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String)
 
-  case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria: Seq[Opiskelija], hakutoiveet: Seq[Hakukohde])
+  case class Hakutoive(hakukohde: Hakukohde, kaksoistutkinto: Boolean)
+
+  case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String)
+
+  case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria: Seq[Opiskelija], hakemus: Hakemus)
 
   implicit def yhteystietoryhmatToMap(yhteystiedot: Seq[YhteystiedotRyhma]): Map[(String, String), Seq[Yhteystiedot]] = {
     yhteystiedot.map((y) => (y.ryhmaAlkuperaTieto, y.ryhmaKuvaus) -> y.yhteystiedot).toMap
   }
 
-  implicit def yhteistiedotToMap(yhteystiedot: Seq[Yhteystiedot]): Map[String, String] = {
+  implicit def yhteystiedotToMap(yhteystiedot: Seq[Yhteystiedot]): Map[String, String] = {
     yhteystiedot.map((y) => y.yhteystietoTyyppi -> y.yhteystietoArvo).toMap
   }
 
@@ -168,8 +172,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
   @Deprecated // TODO mäppää puuttuvat tiedot
   def getXmlHakutoiveet(hakija: Hakija): Future[Seq[XMLHakutoive]] = {
     log.debug("get xml hakutoiveet for: " + hakija.henkilo.oidHenkilo)
-    val futures = hakija.hakutoiveet.zipWithIndex.map(ht => {
-      findOrgData(ht._1.koulutukset.head.tarjoaja).map(option => option.map((t) => {
+    val futures = hakija.hakemus.hakutoiveet.zipWithIndex.map(ht => {
+      findOrgData(ht._1.hakukohde.koulutukset.head.tarjoaja).map(option => option.map((t) => {
         val o = t._1
         val k = t._2
         XMLHakutoive(
@@ -177,7 +181,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
           oppilaitos = k,
           opetuspiste = o.toimipistekoodi,
           opetuspisteennimi = o.nimi.get("fi").orElse(o.nimi.get("sv")),
-          koulutus = ht._1.hakukohdekoodi,
+          koulutus = ht._1.hakukohde.hakukohdekoodi,
           harkinnanvaraisuusperuste = None,
           urheilijanammatillinenkoulutus = None,
           yhteispisteet = None,
@@ -226,11 +230,11 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     val ht: Future[Seq[XMLHakutoive]] = getXmlHakutoiveet(hakija)
     ht.map(toiveet => {
 
-      Try(hakija.hakutoiveet.head).map((k: Hakukohde) =>
+      Try(hakija.hakemus).map((hakemus: Hakemus) =>
         XMLHakemus(
-          vuosi = Try(k.koulutukset.head.alkamisvuosi).get,
-          kausi = if (Try(k.koulutukset.head.alkamiskausi).get == Kausi.Kevät) "K" else "S",
-          hakemusnumero = "",
+          vuosi = Try(hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamisvuosi).get,
+          kausi = if (Try(hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamiskausi).get == Kausi.Kevät) "K" else "S",
+          hakemusnumero = hakemus.hakemusnumero,
           lahtokoulu = lahtokoulu.flatMap(o => o.oppilaitosKoodi),
           lahtokoulunnimi = lahtokoulu.flatMap(o => o.nimi.get("fi")),
           luokka = opiskelutieto.map(_.luokka),
@@ -336,13 +340,16 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
         ))
         case _ => Seq()
       },
-      a.flatMap(_.hakutoiveet).map(convertToiveet).getOrElse(Seq())
+      a.flatMap(_.hakutoiveet).map(toiveet => {
+        val hakutoiveet = convertToiveet(toiveet)
+        Hakemus(hakutoiveet, hakemus.oid)
+      }).getOrElse(Hakemus(Seq(), hakemus.oid))
     )
     log.debug("hakija: " + hak)
     hak
   }
 
-  def convertToiveet(toiveet: Map[String, String]): Seq[Hakukohde] = {
+  def convertToiveet(toiveet: Map[String, String]): Seq[Hakutoive] = {
     val Pattern = "preference(\\d+)-Opetuspiste-id".r
     val notEmpty = "(.+)".r
     val opetusPisteet: Seq[(Short, String)] = toiveet.collect {
@@ -352,7 +359,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     opetusPisteet.sortBy(_._1).map((t) => {
       val koulutukset = Set(Komoto("", "", t._2, "2014", Kausi.Syksy))
       val hakukohdekoodi = toiveet("preference" + t._1 + "-Koulutus-id-aoIdentifier")
-      Hakukohde(koulutukset, hakukohdekoodi)
+      Hakutoive(Hakukohde(koulutukset, hakukohdekoodi), toiveet.get("preference" + t._1 + "-Koulutus-id-kaksoistutkinto").map(_.toBoolean).getOrElse(false))
     })
   }
 
@@ -531,7 +538,9 @@ case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etuni
 
 case class XMLHakijat(hakijat: Seq[XMLHakija]) {
   def toXml: Elem =
-<Hakijat>
+<Hakijat xmlns="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat hakijat.xsd">
   {hakijat.map(_.toXml)}
 </Hakijat>
 }
