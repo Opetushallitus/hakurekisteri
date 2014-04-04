@@ -51,9 +51,8 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
   override def find(q: HakijaQuery): Future[Seq[SmallHakemus]] = {
     val url = new URL(serviceUrl + "/applications/list/fullName/asc?" + getQueryParams(q))
     val ticket = getProxyTicket(q.user)
-    Future {
-      logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
-      val response: HttpResponse = Await.result(GET(url).addHeaders("CasSecurityTicket" -> ticket).apply, 10.second)
+    logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
+    GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
       if (response.code != HttpResponseCode.Ok) {
         logger.error("call to haku-app [url={}, ticket={}] failed: {}", url, ticket, response.code)
         throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
@@ -62,15 +61,14 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
         logger.debug("got response: [{}]", hakemusHaku)
         hakemusHaku.map(_.results).getOrElse(Seq())
       }
-    }
+    })
   }
 
   override def get(hakemusOid: String, user: Option[User]): Future[Option[FullHakemus]] = {
     val url = new URL(serviceUrl + "/applications/" + hakemusOid)
     val ticket = getProxyTicket(user)
-    Future {
-      logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
-      val response: HttpResponse = Await.result(GET(url).addHeaders("CasSecurityTicket" -> ticket).apply, 10.second)
+    logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
+    GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
       if (response.code != HttpResponseCode.Ok) {
         logger.error("call to haku-app [url={}, ticket={}] failed: " + response.code, url, ticket)
         throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
@@ -79,7 +77,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
         logger.debug("got response: [{}]", fullHakemus)
         fullHakemus
       }
-    }
+    })
   }
 
 }

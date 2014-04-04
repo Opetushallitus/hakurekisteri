@@ -24,9 +24,8 @@ class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph
 
   override def get(str: String): Future[Option[Organisaatio]] = {
     val url = new URL(serviceUrl + "/rest/organisaatio/" + str)
-    Future {
-      logger.debug("calling organisaatio-service [{}]", url)
-      val response: HttpResponse = Await.result(GET(url).apply, 10.second)
+    logger.debug("calling organisaatio-service [{}]", url)
+    GET(url).apply.map(response => {
       if (response.code != HttpResponseCode.Ok) {
         logger.error("call to organisaatio-service [{}] failed: {}", url, response.code)
         throw new RuntimeException("virhe kutsuttaessa organisaatiopalvelua: %s".format(response.code))
@@ -35,7 +34,7 @@ class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph
         logger.debug("got response: [{}]", organisaatio)
         organisaatio
       }
-    }
+    })
   }
 
 }
