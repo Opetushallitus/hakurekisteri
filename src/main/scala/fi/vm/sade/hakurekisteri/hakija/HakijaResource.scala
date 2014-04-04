@@ -6,7 +6,7 @@ import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.rest.support.{User, SpringSecuritySupport, Kausi, HakurekisteriJsonSupport}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport}
-import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
+import org.scalatra.{RenderPipeline, AsyncResult, CorsSupport, FutureSupport}
 import scala.concurrent.{Future, ExecutionContext}
 import _root_.akka.actor.{Actor, ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
@@ -70,6 +70,16 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     Try { e.withName(s); true }.getOrElse(false)
   }
 
+  override protected def renderPipeline: RenderPipeline = renderXml orElse super.renderPipeline
+
+  private def renderXml: RenderPipeline = {
+    case a: Any if responseFormat == "xml" => {
+      val hakijat = a.asInstanceOf[XMLHakijat]
+      val context = JAXBContext.newInstance(classOf[XMLHakijat])
+      context.createMarshaller.marshal(hakijat, response.getWriter)
+    }
+  }
+
   get("/") {
     val hakuehto: String = params.getOrElse("hakuehto", "")
     val tyyppi: String = params.getOrElse("tyyppi", "")
@@ -88,25 +98,11 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
       logger.info("Query: " + q)
 
+      contentType = getContentType(q.tyyppi)
+      setContentDisposition(q, response)
 
       new AsyncResult() {
         val is = hakijaActor ? q
-        is.onComplete {
-          case res => {
-            logger.debug("result: " + res)
-            contentType = getContentType(q.tyyppi)
-            setContentDisposition(q, response)
-            val hakijat = res.get.asInstanceOf[XMLHakijat]
-            logger.debug("writing hakijat: " + hakijat)
-            q.tyyppi match {
-              case Tyyppi.Xml => {
-                val context = JAXBContext.newInstance(classOf[XMLHakijat])
-                context.createMarshaller.marshal(hakijat, response.getWriter)
-              }
-              case _ => res
-            }
-          }
-        }
         is.onFailure {
           case t: Throwable => {
             logger.error("error in service", t)
