@@ -88,8 +88,8 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
   private def renderXml: RenderPipeline = {
     case hakijat: XMLHakijat if responseFormat == "xml" => {
-      logger.debug("hakijat: " + hakijat.toXml.toString)
-      XML.write(response.writer, hakijat.toXml, response.characterEncoding.get, xmlDecl = true, doctype = null)
+      logger.debug("hakijat: " + XMLUtil.toXml(hakijat).toString)
+      XML.write(response.writer, XMLUtil.toXml(hakijat), response.characterEncoding.get, xmlDecl = true, doctype = null)
     }
   }
 
@@ -284,11 +284,9 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
           hakemus
         )
       )
-
     })
   }
 
-  // TODO muodosta Hakija hakupalvelun hakemuksesta
   def getHakija(hakemus: FullHakemus): Hakija = {
     log.debug("getting hakija from full hakemus: " + hakemus.oid)
     val lahtokoulu: Option[String] = hakemus.answers.flatMap(_.koulutustausta.lahtokoulu)
@@ -308,7 +306,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
         duplicate = false,
         oppijanumero = hakemus.personOid,
         kayttajatiedot = None,
-        kansalaisuus = Seq(Kansalaisuus("FI")),
+        kansalaisuus = Seq(Kansalaisuus(h.map(_.kansalaisuus).getOrElse(""))),
         passinnumero = "",
         asiointiKieli = Kieli("FI", "FI"),
         passivoitu = false,
@@ -317,8 +315,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
         hetu = h.map(_.Henkilotunnus).getOrElse(""),
         syntymaaika = h.map(_.syntymaaika).getOrElse(""),
         turvakielto = false,
-        markkinointilupa=hakemus.answers.flatMap(_.lisatiedot.map(_.lupaMarkkinointi))
-
+        markkinointilupa = hakemus.answers.flatMap(_.lisatiedot.map(_.lupaMarkkinointi))
       ),
       Seq(Suoritus(
         komo = "peruskoulu",
@@ -378,171 +375,94 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     selectHakijat(q).map(_.map(hakija2XMLHakija)).flatMap(Future.sequence(_).map(hakijat => XMLHakijat(hakijat.flatten)))
   }
 
-  // ------------------------------
-  // OLD
-  // ------------------------------
-
   def findHakemukset = hakupalvelu.find(_)
 
   def getHakemus = hakupalvelu.get(_, _)
 
-  /*
-  def hakemus2Hakija(hakemus: FullHakemus): Future[XMLHakija]  = {
-    val henkilotiedot = hakemus.answers.flatMap(_.henkilotiedot).get
-    toHakemus(hakemus).map(h => XMLHakija(
-      henkilotiedot.Henkilotunnus,
-      hakemus.personOid,
-      henkilotiedot.Sukunimi,
-      henkilotiedot.Etunimet,
-      Option(henkilotiedot.Kutsumanimi).filter(_.trim.nonEmpty),
-      henkilotiedot.lahiosoite,
-      henkilotiedot.Postinumero,
-      henkilotiedot.asuinmaa,
-      henkilotiedot.kansalaisuus,
-      Option(henkilotiedot.matkapuhelinnumero1).filter(_.trim.nonEmpty),
-      None,
-      Option(henkilotiedot.Sähköposti).filter(_.trim.nonEmpty),
-      Option(henkilotiedot.kotikunta).filter(_.trim.nonEmpty),
-      henkilotiedot.sukupuoli, henkilotiedot.aidinkieli,
-      if (hakemus.answers.flatMap(_.lisatiedot).map(_.lupaMarkkinointi) == None) false else hakemus.answers.flatMap(_.lisatiedot).map(_.lupaMarkkinointi).get,
-      h))
-  }
-
-  def extract(option:Option[Future[XMLHakija]]):Future[Option[XMLHakija]] = option match {
-    case None => Future(None)
-    case Some(future:Future[XMLHakija]) => future.map(h => Some(h))
-  }
-
-  def constructHakija(oh: Option[FullHakemus]): Future[Option[XMLHakija]] = {
-    extract(oh.map(hakemus2Hakija))
-  }
-
-  def toHakemus(fullHakemus: FullHakemus): Future[XMLHakemus] = {
-    val kt = fullHakemus.answers.map(_.koulutustausta)
-    toHakutoiveet(fullHakemus).map(ht => XMLHakemus(
-      "2014",
-      "K",
-      fullHakemus.oid,
-      kt.flatMap(_.lahtokoulu),
-      None,
-      kt.flatMap(_.lahtoluokka),
-      kt.map(_.luokkataso),
-      kt.map(_.POHJAKOULUTUS).get,
-      kt.map(_.PK_PAATTOTODISTUSVUOSI),
-      fullHakemus.answers.flatMap(_.lisatiedot.flatMap(_.lupaJulkaisu)),
-      None,
-      None,
-      None,
-      None,
-      None,
-      ht))
-
-  }
-
-  def toHakutoiveet(fullHakemus: FullHakemus): Future[Seq[XMLHakutoive]] = {
-    val ht = fullHakemus.answers.flatMap(_.hakutoiveet).get
-    val Pattern = "preference(\\d+)-Opetuspiste-id".r
-    val notEmpty = "(.+)".r
-    val opetusPisteet: Map[Short,String] = ht.collect {
-        case (Pattern(n), notEmpty(opetusPisteId)) => (n.toShort, opetusPisteId)
-      }
-    Future.sequence(opetusPisteet.collect {
-      case (v, opetusPisteId) => organisaatiopalvelu.get(opetusPisteId).map(o => toHakutoive("", o.map(_.toimipistekoodi), o.flatMap(_.nimi.get("fi")), ht.get("preference" + v + "-Koulutus-id-aoIdentifier"), v))
-    }).map(_.toSeq)
-  }
-
-  def toHakutoive(oppilaitos: String, opetuspiste: Option[String], opetuspisteennimi: Option[String], hakukohdekoodi: Option[String], jno: Short): XMLHakutoive = {
-    XMLHakutoive(jno, oppilaitos, opetuspiste, opetuspisteennimi, hakukohdekoodi.get, None, None, None, None, None, None, None, None, None)
-  }
-  */
 }
 
 object XMLUtil {
   def toBooleanX(b: Boolean): String = if (b) "X" else ""
   def toBoolean10(b: Boolean): String = if (b) "1" else "0"
+  def toXml(hakijat: XMLHakijat): Elem = {
+<Hakijat xmlns="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat hakijat.xsd">
+  {hakijat.hakijat.map((hakija: XMLHakija) => {
+  <Hakija>
+    <Hetu>{hakija.hetu}</Hetu>
+    <Oppijanumero>{hakija.oppijanumero}</Oppijanumero>
+    <Sukunimi>{hakija.sukunimi}</Sukunimi>
+    <Etunimet>{hakija.etunimet}</Etunimet>
+    <Kutsumanimi>{hakija.kutsumanimi.getOrElse("")}</Kutsumanimi>
+    <Lahiosoite>{hakija.lahiosoite}</Lahiosoite>
+    <Postinumero>{hakija.postinumero}</Postinumero>
+    <Maa>{hakija.maa}</Maa>
+    <Kansalaisuus>{hakija.kansalaisuus}</Kansalaisuus>
+    <Matkapuhelin>{hakija.matkapuhelin.getOrElse("")}</Matkapuhelin>
+    <Muupuhelin>{hakija.muupuhelin.getOrElse("")}</Muupuhelin>
+    <Sahkoposti>{hakija.sahkoposti.getOrElse("")}</Sahkoposti>
+    <Kotikunta>{hakija.kotikunta.getOrElse("")}</Kotikunta>
+    <Sukupuoli>{hakija.sukupuoli}</Sukupuoli>
+    <Aidinkieli>{hakija.aidinkieli}</Aidinkieli>
+    <Koulutusmarkkinointilupa>{toBooleanX(hakija.koulutusmarkkinointilupa)}</Koulutusmarkkinointilupa>
+    <Hakemus>
+      <Vuosi>{hakija.hakemus.vuosi}</Vuosi>
+      <Kausi>{hakija.hakemus.kausi}</Kausi>
+      <Hakemusnumero>{hakija.hakemus.hakemusnumero}</Hakemusnumero>
+      <Lahtokoulu>{hakija.hakemus.lahtokoulu.getOrElse("")}</Lahtokoulu>
+      <Lahtokoulunnimi>{hakija.hakemus.lahtokoulunnimi.getOrElse("")}</Lahtokoulunnimi>
+      <Luokka>{hakija.hakemus.luokka.getOrElse("")}</Luokka>
+      <Luokkataso>{hakija.hakemus.luokkataso.getOrElse("")}</Luokkataso>
+      <Pohjakoulutus>{hakija.hakemus.pohjakoulutus}</Pohjakoulutus>
+      <Todistusvuosi>{hakija.hakemus.todistusvuosi.getOrElse("")}</Todistusvuosi>
+      <Julkaisulupa>{toBooleanX(hakija.hakemus.julkaisulupa.getOrElse(false))}</Julkaisulupa>
+      <Yhteisetaineet>{hakija.hakemus.yhteisetaineet.getOrElse(null)}</Yhteisetaineet>
+      <Lukiontasapisteet>{hakija.hakemus.lukiontasapisteet.getOrElse(null)}</Lukiontasapisteet>
+      <Lisapistekoulutus>{hakija.hakemus.lisapistekoulutus.getOrElse("")}</Lisapistekoulutus>
+      <Yleinenkoulumenestys>{hakija.hakemus.yleinenkoulumenestys.getOrElse(null)}</Yleinenkoulumenestys>
+      <Painotettavataineet>{hakija.hakemus.painotettavataineet.getOrElse(null)}</Painotettavataineet>
+      <Hakutoiveet>
+        {hakija.hakemus.hakutoiveet.map((hakutoive: XMLHakutoive) => {
+        <Hakutoive>
+          <Hakujno>{hakutoive.hakujno}</Hakujno>
+          <Oppilaitos>{hakutoive.oppilaitos}</Oppilaitos>
+          <Opetuspiste>{hakutoive.opetuspiste.getOrElse("")}</Opetuspiste>
+          <Opetuspisteennimi>{hakutoive.opetuspisteennimi.getOrElse("")}</Opetuspisteennimi>
+          <Koulutus>{hakutoive.koulutus}</Koulutus>
+          <Harkinnanvaraisuusperuste>{hakutoive.harkinnanvaraisuusperuste.getOrElse("")}</Harkinnanvaraisuusperuste>
+          <Urheilijanammatillinenkoulutus>{toBoolean10(hakutoive.urheilijanammatillinenkoulutus.getOrElse(false))}</Urheilijanammatillinenkoulutus>
+          <Yhteispisteet>{hakutoive.yhteispisteet.getOrElse(null)}</Yhteispisteet>
+          <Valinta>{hakutoive.valinta.getOrElse("")}</Valinta>
+          <Vastaanotto>{hakutoive.vastaanotto.getOrElse("")}</Vastaanotto>
+          <Lasnaolo>{hakutoive.lasnaolo.getOrElse("")}</Lasnaolo>
+          <Terveys>{toBooleanX(hakutoive.terveys.getOrElse(false))}</Terveys>
+          <Aiempiperuminen>{toBooleanX(hakutoive.aiempiperuminen.getOrElse(false))}</Aiempiperuminen>
+          <Kaksoistutkinto>{toBooleanX(hakutoive.kaksoistutkinto.getOrElse(false))}</Kaksoistutkinto>
+        </Hakutoive>
+        })}
+      </Hakutoiveet>
+    </Hakemus>
+  </Hakija>
+  })}
+</Hakijat>
+  }
 }
-
-import XMLUtil._
 
 case class XMLHakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[String], opetuspisteennimi: Option[String], koulutus: String,
                      harkinnanvaraisuusperuste: Option[String], urheilijanammatillinenkoulutus: Option[Boolean], yhteispisteet: Option[BigDecimal],
                      valinta: Option[String], vastaanotto: Option[String], lasnaolo: Option[String], terveys: Option[Boolean], aiempiperuminen: Option[Boolean],
-                     kaksoistutkinto: Option[Boolean]) {
-  def toXml: Elem = <Hakutoive>
-        <Hakujno>{hakujno}</Hakujno>
-        <Oppilaitos>{oppilaitos}</Oppilaitos>
-        <Opetuspiste>{opetuspiste.getOrElse("")}</Opetuspiste>
-        <Opetuspisteennimi>{opetuspisteennimi.getOrElse("")}</Opetuspisteennimi>
-        <Koulutus>{koulutus}</Koulutus>
-        <Harkinnanvaraisuusperuste>{harkinnanvaraisuusperuste.getOrElse("")}</Harkinnanvaraisuusperuste>
-        <Urheilijanammatillinenkoulutus>{toBoolean10(urheilijanammatillinenkoulutus.getOrElse(false))}</Urheilijanammatillinenkoulutus>
-        <Yhteispisteet>{yhteispisteet.getOrElse(null)}</Yhteispisteet>
-        <Valinta>{valinta.getOrElse("")}</Valinta>
-        <Vastaanotto>{vastaanotto.getOrElse("")}</Vastaanotto>
-        <Lasnaolo>{lasnaolo.getOrElse("")}</Lasnaolo>
-        <Terveys>{toBooleanX(terveys.getOrElse(false))}</Terveys>
-        <Aiempiperuminen>{toBooleanX(aiempiperuminen.getOrElse(false))}</Aiempiperuminen>
-        <Kaksoistutkinto>{toBooleanX(kaksoistutkinto.getOrElse(false))}</Kaksoistutkinto>
-      </Hakutoive>
-}
+                     kaksoistutkinto: Option[Boolean])
 
 case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahtokoulu: Option[String], lahtokoulunnimi: Option[String], luokka: Option[String],
                    luokkataso: Option[String], pohjakoulutus: String, todistusvuosi: Option[String], julkaisulupa: Option[Boolean], yhteisetaineet: Option[BigDecimal],
                    lukiontasapisteet: Option[BigDecimal], lisapistekoulutus: Option[String], yleinenkoulumenestys: Option[BigDecimal],
-                   painotettavataineet: Option[BigDecimal], hakutoiveet: Seq[XMLHakutoive]) {
-  def toXml: Elem = <Hakemus>
-      <Vuosi>{vuosi}</Vuosi>
-      <Kausi>{kausi}</Kausi>
-      <Hakemusnumero>{hakemusnumero}</Hakemusnumero>
-      <Lahtokoulu>{lahtokoulu.getOrElse("")}</Lahtokoulu>
-      <Lahtokoulunnimi>{lahtokoulunnimi.getOrElse("")}</Lahtokoulunnimi>
-      <Luokka>{luokka.getOrElse("")}</Luokka>
-      <Luokkataso>{luokkataso.getOrElse("")}</Luokkataso>
-      <Pohjakoulutus>{pohjakoulutus}</Pohjakoulutus>
-      <Todistusvuosi>{todistusvuosi.getOrElse("")}</Todistusvuosi>
-      <Julkaisulupa>{toBooleanX(julkaisulupa.getOrElse(false))}</Julkaisulupa>
-      <Yhteisetaineet>{yhteisetaineet.getOrElse(null)}</Yhteisetaineet>
-      <Lukiontasapisteet>{lukiontasapisteet.getOrElse(null)}</Lukiontasapisteet>
-      <Lisapistekoulutus>{lisapistekoulutus.getOrElse("")}</Lisapistekoulutus>
-      <Yleinenkoulumenestys>{yleinenkoulumenestys.getOrElse(null)}</Yleinenkoulumenestys>
-      <Painotettavataineet>{painotettavataineet.getOrElse(null)}</Painotettavataineet>
-      <Hakutoiveet>
-        {hakutoiveet.map(_.toXml)}
-      </Hakutoiveet>
-    </Hakemus>
-}
+                   painotettavataineet: Option[BigDecimal], hakutoiveet: Seq[XMLHakutoive])
 
 case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
                   postinumero: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String], muupuhelin: Option[String], sahkoposti: Option[String],
-                  kotikunta: Option[String], sukupuoli: String, aidinkieli: String, koulutusmarkkinointilupa: Boolean, hakemus: XMLHakemus) {
-  def toXml: Elem = <Hakija>
-    <Hetu>{hetu}</Hetu>
-    <Oppijanumero>{oppijanumero}</Oppijanumero>
-    <Sukunimi>{sukunimi}</Sukunimi>
-    <Etunimet>{etunimet}</Etunimet>
-    <Kutsumanimi>{kutsumanimi.getOrElse("")}</Kutsumanimi>
-    <Lahiosoite>{lahiosoite}</Lahiosoite>
-    <Postinumero>{postinumero}</Postinumero>
-    <Maa>{maa}</Maa>
-    <Kansalaisuus>{kansalaisuus}</Kansalaisuus>
-    <Matkapuhelin>{matkapuhelin.getOrElse("")}</Matkapuhelin>
-    <Muupuhelin>{muupuhelin.getOrElse("")}</Muupuhelin>
-    <Sahkoposti>{sahkoposti.getOrElse("")}</Sahkoposti>
-    <Kotikunta>{kotikunta.getOrElse("")}</Kotikunta>
-    <Sukupuoli>{sukupuoli}</Sukupuoli>
-    <Aidinkieli>{aidinkieli}</Aidinkieli>
-    <Koulutusmarkkinointilupa>{toBooleanX(koulutusmarkkinointilupa)}</Koulutusmarkkinointilupa>
-    {hakemus.toXml}
-  </Hakija>
-}
+                  kotikunta: Option[String], sukupuoli: String, aidinkieli: String, koulutusmarkkinointilupa: Boolean, hakemus: XMLHakemus)
 
-case class XMLHakijat(hakijat: Seq[XMLHakija]) {
-  def toXml: Elem =
-<Hakijat xmlns="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat hakijat.xsd">
-  {hakijat.map(_.toXml)}
-</Hakijat>
-}
+case class XMLHakijat(hakijat: Seq[XMLHakija])
 
 
