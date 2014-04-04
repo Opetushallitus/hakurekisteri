@@ -24,6 +24,7 @@ import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
 import akka.event.Logging
 import javax.servlet.http.HttpServletResponse
 import javax.xml.bind.annotation.{XmlElement, XmlRootElement}
+import javax.xml.bind.JAXBContext
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
@@ -95,6 +96,15 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
             logger.debug("result: " + res)
             contentType = getContentType(q.tyyppi)
             setContentDisposition(q, response)
+            val hakijat = res.get.asInstanceOf[XMLHakijat]
+            logger.debug("writing hakijat: " + hakijat)
+            q.tyyppi match {
+              case Tyyppi.Xml => {
+                val context = JAXBContext.newInstance(classOf[XMLHakijat])
+                context.createMarshaller.marshal(hakijat, response.getWriter)
+              }
+              case _ => res
+            }
           }
         }
         is.onFailure {
@@ -448,5 +458,7 @@ case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etuni
                   kotikunta: Option[String], sukupuoli: String, aidinkieli: String, koulutusmarkkinointilupa: Boolean, @XmlElement(name = "Hakemus") hakemus: XMLHakemus)
 
 @XmlRootElement(name = "Hakijat")
-case class XMLHakijat(@XmlElement(name="Hakija") hakijat: Seq[XMLHakija])
+case class XMLHakijat(@XmlElement(name="Hakija") hakijat: Seq[XMLHakija]) {
+  private def this() = this(Seq())
+}
 
