@@ -96,8 +96,7 @@ case class Lisatiedot(lupaMarkkinointi: Boolean, lupaJulkaisu: Option[Boolean])
 
 case class Answers(henkilotiedot: Option[Henkilotiedot], koulutustausta: Koulutustausta, hakutoiveet: Option[Map[String, String]], lisatiedot: Option[Lisatiedot])
 
-case class FullHakemus(oid: String, state: String, personOid: String, applicationSystemId: String,
-                           studentOid: String, received: Long, updated: Long, answers: Option[Answers])
+case class FullHakemus(oid: String, state: String, personOid: String, answers: Option[Answers])
 
 
 // "hakutoiveet":{
