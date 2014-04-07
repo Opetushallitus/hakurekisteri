@@ -400,7 +400,7 @@ object XMLUtil {
     case other => false
   }
 
-  def toXml(hakijat: XMLHakijat): Node = {
+  def toXml(hakijat: XMLHakijat, removeEmpty: Boolean = true): Node = {
     val hakijatXml: Elem =
 <Hakijat xmlns="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -463,7 +463,7 @@ object XMLUtil {
   </Hakija>
   })}
 </Hakijat>
-    removeEmptyElements.transform(hakijatXml).head
+    if (removeEmpty) removeEmptyElements.transform(hakijatXml).head else hakijatXml
   }
 }
 
