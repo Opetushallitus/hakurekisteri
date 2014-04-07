@@ -56,7 +56,8 @@ object HakuJaValintarekisteriBuild extends Build {
     "com.h2database" % "h2" % "1.3.174",
     "org.postgresql" % "postgresql" % "9.3-1100-jdbc4",
     "net.databinder.dispatch" %% "dispatch-core" % "0.11.0",
-    "com.stackmob" %% "newman" % "1.3.5"
+    "com.stackmob" %% "newman" % "1.3.5",
+    "info.folone" %% "poi-scala" % "0.9"
   )
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion)

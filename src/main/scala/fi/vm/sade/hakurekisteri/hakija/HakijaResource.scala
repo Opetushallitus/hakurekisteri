@@ -67,7 +67,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   def getContentType(t: Tyyppi): String = t match {
     case Tyyppi.Json => formats("json")
     case Tyyppi.Xml => formats("xml")
-    case Tyyppi.Excel => formats("txt")
+    case Tyyppi.Excel => "application/vnd.ms-excel"
   }
 
   def getFileExtension(t: Tyyppi): String = t match {
@@ -84,12 +84,16 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     Try { e.withName(s); true }.getOrElse(false)
   }
 
-  override protected def renderPipeline: RenderPipeline = renderXml orElse super.renderPipeline
+  override protected def renderPipeline: RenderPipeline = renderCustom orElse super.renderPipeline
 
-  private def renderXml: RenderPipeline = {
+  private def renderCustom: RenderPipeline = {
     case hakijat: XMLHakijat if responseFormat == "xml" => {
       logger.debug("hakijat: " + XMLUtil.toXml(hakijat).toString)
       XML.write(response.writer, XMLUtil.toXml(hakijat), response.characterEncoding.get, xmlDecl = true, doctype = null)
+    }
+    case hakijat: XMLHakijat if response.contentType == "application/vnd.ms-excel" => {
+      logger.debug("hakijat to Excel: " + hakijat)
+      ExcelUtil.writeHakijatAsExcel(hakijat, response.getOutputStream)
     }
   }
 
