@@ -23,7 +23,7 @@ import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
 import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
 import akka.event.Logging
 import javax.servlet.http.HttpServletResponse
-import scala.xml.{Elem, XML}
+import scala.xml.{NodeSeq, Node, Elem, XML}
 import org.json4s.Xml._
 import fi.vm.sade.hakurekisteri.henkilo.Kansalaisuus
 import scala.Some
@@ -39,6 +39,7 @@ import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
 import fi.vm.sade.hakurekisteri.hakija.XMLHakemus
 import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
+import scala.xml.transform.{RuleTransformer, RewriteRule}
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
@@ -388,9 +389,31 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
 }
 
 object XMLUtil {
+
   def toBooleanX(b: Boolean): String = if (b) "X" else ""
+
   def toBoolean10(b: Boolean): String = if (b) "1" else "0"
-  def toXml(hakijat: XMLHakijat): Elem = {
+
+  class RemoveEmptyElementsRule extends RewriteRule {
+    override def transform(n: Node) = n match {
+      case e @ Elem(prefix, label, attributes, scope, child @ _*) if
+      (isEmptyElement(e)) => NodeSeq.Empty
+      case other => other
+    }
+  }
+
+  val removeEmptyElements = new RuleTransformer(new RemoveEmptyElementsRule)
+
+  private def isEmptyElement(n: Node): Boolean = n match {
+    case e @ Elem(prefix, label, attributes, scope, child @ _*) if
+    (e.text.isEmpty &&
+      (e.attributes.isEmpty || e.attributes.forall(_.value == null))
+      && e.child.isEmpty) => true
+    case other => false
+  }
+
+  def toXml(hakijat: XMLHakijat): Node = {
+    removeEmptyElements.transform(
 <Hakijat xmlns="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat hakijat.xsd">
@@ -452,6 +475,7 @@ object XMLUtil {
   </Hakija>
   })}
 </Hakijat>
+    ).head
   }
 }
 
