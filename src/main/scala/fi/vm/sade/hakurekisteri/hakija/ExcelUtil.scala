@@ -13,6 +13,8 @@ import info.folone.scala.poi.StringCell
 
 object ExcelUtil {
 
+  val zero = BigDecimal.valueOf(0)
+
   def getHeaders(): Set[Row] = {
     Set(Row(0)(Set(
       StringCell(0, "Hetu"),
@@ -60,55 +62,49 @@ object ExcelUtil {
   }
 
   def getRows(hakijat: XMLHakijat): Set[Row] = {
-    hakijat.hakijat.zipWithIndex.flatMap((t) =>
-      t._1.hakemus.hakutoiveet.map(ht =>
-        Row(t._2 + 1) {
-          Set(
-            StringCell(0, t._1.hetu),
-            StringCell(1, t._1.sukunimi),
-            StringCell(2, t._1.etunimet),
-            StringCell(3, t._1.kutsumanimi.getOrElse("")),
-            StringCell(4, t._1.lahiosoite),
-            StringCell(5, t._1.postinumero),
-            StringCell(6, ""),
-            StringCell(7, t._1.maa),
-            StringCell(8, t._1.kansalaisuus),
-            StringCell(9, t._1.matkapuhelin.getOrElse("")),
-            StringCell(10, t._1.muupuhelin.getOrElse("")),
-            StringCell(11, t._1.sahkoposti.getOrElse("")),
-            StringCell(12, t._1.kotikunta.getOrElse("")),
-            StringCell(13, t._1.sukupuoli),
-            StringCell(14, t._1.aidinkieli),
-            StringCell(15, if (t._1.koulutusmarkkinointilupa) "X" else ""),
-            StringCell(16, t._1.hakemus.vuosi),
-            StringCell(17, t._1.hakemus.kausi),
-            StringCell(18, t._1.hakemus.hakemusnumero),
-            StringCell(19, t._1.hakemus.lahtokoulu.getOrElse("")),
-            StringCell(20, t._1.hakemus.lahtokoulunnimi.getOrElse("")),
-            StringCell(21, t._1.hakemus.luokka.getOrElse("")),
-            StringCell(22, t._1.hakemus.pohjakoulutus),
-            StringCell(23, t._1.hakemus.todistusvuosi.getOrElse("")),
-            StringCell(24, if (t._1.hakemus.julkaisulupa.getOrElse(false)) "X" else ""),
-            StringCell(25, t._1.hakemus.yhteisetaineet.getOrElse(BigDecimal.valueOf(0)).toString),
-            StringCell(26, t._1.hakemus.lukiontasapisteet.getOrElse(BigDecimal.valueOf(0)).toString),
-            StringCell(27, t._1.hakemus.yleinenkoulumenestys.getOrElse(BigDecimal.valueOf(0)).toString),
-            StringCell(28, t._1.hakemus.painotettavataineet.getOrElse(BigDecimal.valueOf(0)).toString),
-            StringCell(29, ht.hakujno.toString),
-            StringCell(30, ht.oppilaitos),
-            StringCell(31, ht.opetuspiste.getOrElse("")),
-            StringCell(32, ht.opetuspisteennimi.getOrElse("")),
-            StringCell(33, ht.koulutus),
-            StringCell(34, ""),
-            StringCell(35, ht.yhteispisteet.getOrElse(BigDecimal.valueOf(0)).toString),
-            StringCell(36, ht.valinta.getOrElse("")),
-            StringCell(37, ht.vastaanotto.getOrElse("")),
-            StringCell(38, ht.lasnaolo.getOrElse("")),
-            StringCell(39, if (ht.terveys.getOrElse(false)) "X" else ""),
-            StringCell(40, if (ht.aiempiperuminen.getOrElse(false)) "X" else "")
-          )
-        }
-      )
-    ).toSet
+    hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet.map(ht => Set[Cell](
+      StringCell(0, h.hetu),
+      StringCell(1, h.sukunimi),
+      StringCell(2, h.etunimet),
+      StringCell(3, h.kutsumanimi.getOrElse("")),
+      StringCell(4, h.lahiosoite),
+      StringCell(5, h.postinumero),
+      StringCell(6, ""), // TODO resolve
+      StringCell(7, h.maa),
+      StringCell(8, h.kansalaisuus),
+      StringCell(9, h.matkapuhelin.getOrElse("")),
+      StringCell(10, h.muupuhelin.getOrElse("")),
+      StringCell(11, h.sahkoposti.getOrElse("")),
+      StringCell(12, h.kotikunta.getOrElse("")),
+      StringCell(13, h.sukupuoli),
+      StringCell(14, h.aidinkieli),
+      StringCell(15, if (h.koulutusmarkkinointilupa) "X" else ""),
+      StringCell(16, h.hakemus.vuosi),
+      StringCell(17, h.hakemus.kausi),
+      StringCell(18, h.hakemus.hakemusnumero),
+      StringCell(19, h.hakemus.lahtokoulu.getOrElse("")),
+      StringCell(20, h.hakemus.lahtokoulunnimi.getOrElse("")),
+      StringCell(21, h.hakemus.luokka.getOrElse("")),
+      StringCell(22, h.hakemus.pohjakoulutus),
+      StringCell(23, h.hakemus.todistusvuosi.getOrElse("")),
+      StringCell(24, if (h.hakemus.julkaisulupa.getOrElse(false)) "X" else ""),
+      StringCell(25, h.hakemus.yhteisetaineet.getOrElse(zero).toString),
+      StringCell(26, h.hakemus.lukiontasapisteet.getOrElse(zero).toString),
+      StringCell(27, h.hakemus.yleinenkoulumenestys.getOrElse(zero).toString),
+      StringCell(28, h.hakemus.painotettavataineet.getOrElse(zero).toString),
+      StringCell(29, ht.hakujno.toString),
+      StringCell(30, ht.oppilaitos),
+      StringCell(31, ht.opetuspiste.getOrElse("")),
+      StringCell(32, ht.opetuspisteennimi.getOrElse("")),
+      StringCell(33, ht.koulutus),
+      StringCell(34, ""), // TODO miten suhtautuu Harkinnanvaraisuusperusteeseen?
+      StringCell(35, ht.yhteispisteet.getOrElse(zero).toString),
+      StringCell(36, ht.valinta.getOrElse("")),
+      StringCell(37, ht.vastaanotto.getOrElse("")),
+      StringCell(38, ht.lasnaolo.getOrElse("")),
+      StringCell(39, if (ht.terveys.getOrElse(false)) "X" else ""),
+      StringCell(40, if (ht.aiempiperuminen.getOrElse(false)) "X" else "")
+    ))).zipWithIndex.map((t) => Row(t._2 + 1)(t._1)).toSet
   }
 
   def writeHakijatAsExcel(hakijat: XMLHakijat, out: OutputStream) {
