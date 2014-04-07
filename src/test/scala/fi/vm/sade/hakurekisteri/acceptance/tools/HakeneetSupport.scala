@@ -118,8 +118,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
   object koodistopalvelu extends Koodistopalvelu {
     override def getRinnasteinenKoodiArvo(koodiUri: String, rinnasteinenKoodistoUri: String): Future[String] = koodiUri match {
-      case "FIN" => Future("246")
-      case _ => throw new RuntimeException("not found")
+      case _ => Future("246")
     }
   }
 
