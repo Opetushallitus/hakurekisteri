@@ -125,7 +125,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
 import akka.pattern.pipe
 
-class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopalvelu) extends Actor {
+class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopalvelu, koodistopalvelu: Koodistopalvelu) extends Actor {
 
   implicit val executionContext: ExecutionContext = context.dispatcher
 
@@ -254,31 +254,41 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     }
   }
 
+  def getMaakoodi(koodiArvo: String): Future[String] = {
+    koodistopalvelu.getRinnasteinenKoodiArvo("maatjavaltiot1_" + koodiArvo.toLowerCase, "maatjavaltiot2")
+  }
+
   @Deprecated // TODO ratkaise kaksoiskansalaisuus
   def hakija2XMLHakija(hakija: Hakija): Future[Option[XMLHakija]] = {
-    getXmlHakemus(hakija).map((hakemus) => {
+    getXmlHakemus(hakija).flatMap((hakemus) => {
       log.debug("map hakemus henkilolle: " + hakija.henkilo.oidHenkilo)
       val yhteystiedot: Seq[Yhteystiedot] = hakija.henkilo.yhteystiedotRyhma.getOrElse(("hakemus", "yhteystietotyyppi1"), Seq())
-      hakemus.map(hakemus =>
-        XMLHakija(
-          hakija.henkilo.hetu,
-          hakija.henkilo.oidHenkilo,
-          hakija.henkilo.sukunimi,
-          hakija.henkilo.etunimet,
-          Some(hakija.henkilo.kutsumanimi),
-          yhteystiedot.getOrElse("YHTEYSTIETO_KATUOSOITE",""),
-          yhteystiedot.getOrElse("YHTEYSTIETO_POSTINUMERO", ""),
-          yhteystiedot.getOrElse("YHTEYSTIETO_MAA", ""),
-          Try(hakija.henkilo.kansalaisuus.head).map(k => k.kansalaisuusKoodi).recover{case _:Throwable => ""}.get,
-          yhteystiedot.get("YHTEYSTIETO_MATKAPUHELIN"),
-          yhteystiedot.get("YHTEYSTIETO_PUHELINNUMERO"),
-          yhteystiedot.get("YHTEYSTIETO_SAHKOPOSTI"),
-          yhteystiedot.get("YHTEYSTIETO_KAUPUNKI"),
-          if (hakija.henkilo.sukupuoli == "MIES") "1" else "2", hakija.henkilo.asiointiKieli.kieliKoodi,
-          hakija.henkilo.markkinointilupa.getOrElse(false),
-          hakemus
-        )
-      )
+      hakemus.map(hakemus => {
+        val maaFuture = getMaakoodi(yhteystiedot.getOrElse("YHTEYSTIETO_MAA", "FIN"))
+        maaFuture.flatMap((maa) => {
+          val kansalaisuusFuture = getMaakoodi(Try(hakija.henkilo.kansalaisuus.head).map(k => k.kansalaisuusKoodi).recover{case _:Throwable => "FIN"}.get)
+          kansalaisuusFuture.map((kansalaisuus) => {
+            XMLHakija(
+              hakija.henkilo.hetu,
+              hakija.henkilo.oidHenkilo,
+              hakija.henkilo.sukunimi,
+              hakija.henkilo.etunimet,
+              Some(hakija.henkilo.kutsumanimi),
+              yhteystiedot.getOrElse("YHTEYSTIETO_KATUOSOITE", ""),
+              yhteystiedot.getOrElse("YHTEYSTIETO_POSTINUMERO", "00000"),
+              maa,
+              kansalaisuus,
+              yhteystiedot.get("YHTEYSTIETO_MATKAPUHELIN"),
+              yhteystiedot.get("YHTEYSTIETO_PUHELINNUMERO"),
+              yhteystiedot.get("YHTEYSTIETO_SAHKOPOSTI"),
+              yhteystiedot.get("YHTEYSTIETO_KAUPUNKI"),
+              if (hakija.henkilo.sukupuoli == "MIES") "1" else "2", hakija.henkilo.asiointiKieli.kieliKoodi,
+              hakija.henkilo.markkinointilupa.getOrElse(false),
+              hakemus
+            )
+          })
+        })
+      }).map(f => f.map(Option(_))).getOrElse(Future.successful(None))
     })
   }
 
@@ -363,8 +373,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
   }
 
   def selectHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
-    val y: Future[Future[Seq[Hakija]]] = findHakemukset(q).map(hakemukset => {
-      val kk: Seq[Future[Option[Hakija]]] = hakemukset.map(sh => getHakemus(sh.oid, q.user).map((fh: Option[FullHakemus]) => fh.map(getHakija(_))))
+    val y: Future[Future[Seq[Hakija]]] = hakupalvelu.find(q).map(hakemukset => {
+      val kk: Seq[Future[Option[Hakija]]] = hakemukset.map(sh => hakupalvelu.get(sh.oid, q.user).map((fh: Option[FullHakemus]) => fh.map(getHakija(_))))
       val f: Future[Seq[Hakija]] = Future.sequence(kk).map((s: Seq[Option[Hakija]]) => s.flatten)
       f.onComplete(res => {log.debug("hakijat result: " + res); if (res.isFailure) res.failed.get.printStackTrace()})
       f
@@ -376,10 +386,6 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     log.debug("XMLQuery: " + q)
     selectHakijat(q).map(_.map(hakija2XMLHakija)).flatMap(Future.sequence(_).map(hakijat => XMLHakijat(hakijat.flatten)))
   }
-
-  def findHakemukset = hakupalvelu.find(_)
-
-  def getHakemus = hakupalvelu.get(_, _)
 
 }
 

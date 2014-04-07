@@ -116,12 +116,19 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     }
   }
 
+  object koodistopalvelu extends Koodistopalvelu {
+    override def getRinnasteinenKoodiArvo(koodiUri: String, rinnasteinenKoodistoUri: String): Future[String] = koodiUri match {
+      case "FIN" => Future("246")
+      case _ => throw new RuntimeException("not found")
+    }
+  }
+
   object hakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
 
 
-    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, organisaatiopalvelu)))
+    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, organisaatiopalvelu, koodistopalvelu)))
 
     def get(q: HakijaQuery) = {
       hakijaActor ? q

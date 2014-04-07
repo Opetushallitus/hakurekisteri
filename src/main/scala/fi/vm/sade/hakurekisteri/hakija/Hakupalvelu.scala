@@ -53,13 +53,13 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
     val ticket = getProxyTicket(q.user)
     logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
     GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
-      if (response.code != HttpResponseCode.Ok) {
-        logger.error("call to haku-app [url={}, ticket={}] failed: {}", url, ticket, response.code)
-        throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
-      } else {
+      if (response.code == HttpResponseCode.Ok) {
         val hakemusHaku = response.bodyAsCaseClass[HakemusHaku].toOption
         logger.debug("got response: [{}]", hakemusHaku)
         hakemusHaku.map(_.results).getOrElse(Seq())
+      } else {
+        logger.error("call to haku-app [url={}, ticket={}] failed: {}", url, ticket, response.code)
+        throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
       }
     })
   }
@@ -69,13 +69,13 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
     val ticket = getProxyTicket(user)
     logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
     GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
-      if (response.code != HttpResponseCode.Ok) {
-        logger.error("call to haku-app [url={}, ticket={}] failed: " + response.code, url, ticket)
-        throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
-      } else {
+      if (response.code == HttpResponseCode.Ok) {
         val fullHakemus = response.bodyAsCaseClass[FullHakemus].toOption
         logger.debug("got response: [{}]", fullHakemus)
         fullHakemus
+      } else {
+        logger.error("call to haku-app [url={}, ticket={}] failed: " + response.code, url, ticket)
+        throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
       }
     })
   }

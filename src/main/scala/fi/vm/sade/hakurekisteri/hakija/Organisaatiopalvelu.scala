@@ -26,13 +26,13 @@ class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph
     val url = new URL(serviceUrl + "/rest/organisaatio/" + str)
     logger.debug("calling organisaatio-service [{}]", url)
     GET(url).apply.map(response => {
-      if (response.code != HttpResponseCode.Ok) {
-        logger.error("call to organisaatio-service [{}] failed: {}", url, response.code)
-        throw new RuntimeException("virhe kutsuttaessa organisaatiopalvelua: %s".format(response.code))
-      } else {
+      if (response.code == HttpResponseCode.Ok) {
         val organisaatio = response.bodyAsCaseClass[Organisaatio].toOption
         logger.debug("got response: [{}]", organisaatio)
         organisaatio
+      } else {
+        logger.error("call to organisaatio-service [{}] failed: {}", url, response.code)
+        throw new RuntimeException("virhe kutsuttaessa organisaatiopalvelua: %s".format(response.code))
       }
     })
   }
