@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.hakija
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.Tyyppi.Tyyppi
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.rest.support.{User, SpringSecuritySupport, Kausi, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, Kausi, HakurekisteriJsonSupport}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport}
 import org.scalatra.{RenderPipeline, AsyncResult, CorsSupport, FutureSupport}
@@ -17,29 +17,17 @@ import scala.util.Try
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import org.joda.time.{LocalDate, DateTime}
-import scala.Some
-import fi.vm.sade.hakurekisteri.suoritus.Komoto
-import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
-import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
 import akka.event.Logging
 import javax.servlet.http.HttpServletResponse
-import scala.xml.{NodeSeq, Node, Elem, XML}
-import org.json4s.Xml._
+import scala.xml._
+import scala.xml.transform.{RuleTransformer, RewriteRule}
 import fi.vm.sade.hakurekisteri.henkilo.Kansalaisuus
 import scala.Some
-import fi.vm.sade.hakurekisteri.hakija.Organisaatio
-import fi.vm.sade.hakurekisteri.hakija.XMLHakija
-import fi.vm.sade.hakurekisteri.hakija.FullHakemus
-import fi.vm.sade.hakurekisteri.hakija.XMLHakutoive
 import fi.vm.sade.hakurekisteri.henkilo.Kieli
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.suoritus.Komoto
-import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
 import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
-import fi.vm.sade.hakurekisteri.hakija.XMLHakemus
 import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
-import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
-import scala.xml.transform.{RuleTransformer, RewriteRule}
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
@@ -413,7 +401,7 @@ object XMLUtil {
   }
 
   def toXml(hakijat: XMLHakijat): Node = {
-    removeEmptyElements.transform(
+    val hakijatXml: Elem =
 <Hakijat xmlns="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat hakijat.xsd">
@@ -423,15 +411,15 @@ object XMLUtil {
     <Oppijanumero>{hakija.oppijanumero}</Oppijanumero>
     <Sukunimi>{hakija.sukunimi}</Sukunimi>
     <Etunimet>{hakija.etunimet}</Etunimet>
-    <Kutsumanimi>{hakija.kutsumanimi.getOrElse("")}</Kutsumanimi>
+    <Kutsumanimi>{hakija.kutsumanimi.getOrElse(null)}</Kutsumanimi>
     <Lahiosoite>{hakija.lahiosoite}</Lahiosoite>
     <Postinumero>{hakija.postinumero}</Postinumero>
     <Maa>{hakija.maa}</Maa>
     <Kansalaisuus>{hakija.kansalaisuus}</Kansalaisuus>
-    <Matkapuhelin>{hakija.matkapuhelin.getOrElse("")}</Matkapuhelin>
-    <Muupuhelin>{hakija.muupuhelin.getOrElse("")}</Muupuhelin>
-    <Sahkoposti>{hakija.sahkoposti.getOrElse("")}</Sahkoposti>
-    <Kotikunta>{hakija.kotikunta.getOrElse("")}</Kotikunta>
+    <Matkapuhelin>{hakija.matkapuhelin.getOrElse(null)}</Matkapuhelin>
+    <Muupuhelin>{hakija.muupuhelin.getOrElse(null)}</Muupuhelin>
+    <Sahkoposti>{hakija.sahkoposti.getOrElse(null)}</Sahkoposti>
+    <Kotikunta>{hakija.kotikunta.getOrElse(null)}</Kotikunta>
     <Sukupuoli>{hakija.sukupuoli}</Sukupuoli>
     <Aidinkieli>{hakija.aidinkieli}</Aidinkieli>
     <Koulutusmarkkinointilupa>{toBooleanX(hakija.koulutusmarkkinointilupa)}</Koulutusmarkkinointilupa>
@@ -439,16 +427,16 @@ object XMLUtil {
       <Vuosi>{hakija.hakemus.vuosi}</Vuosi>
       <Kausi>{hakija.hakemus.kausi}</Kausi>
       <Hakemusnumero>{hakija.hakemus.hakemusnumero}</Hakemusnumero>
-      <Lahtokoulu>{hakija.hakemus.lahtokoulu.getOrElse("")}</Lahtokoulu>
-      <Lahtokoulunnimi>{hakija.hakemus.lahtokoulunnimi.getOrElse("")}</Lahtokoulunnimi>
-      <Luokka>{hakija.hakemus.luokka.getOrElse("")}</Luokka>
+      <Lahtokoulu>{hakija.hakemus.lahtokoulu.getOrElse(null)}</Lahtokoulu>
+      <Lahtokoulunnimi>{hakija.hakemus.lahtokoulunnimi.getOrElse(null)}</Lahtokoulunnimi>
+      <Luokka>{hakija.hakemus.luokka.getOrElse(null)}</Luokka>
       <Luokkataso>{hakija.hakemus.luokkataso.getOrElse("")}</Luokkataso>
       <Pohjakoulutus>{hakija.hakemus.pohjakoulutus}</Pohjakoulutus>
-      <Todistusvuosi>{hakija.hakemus.todistusvuosi.getOrElse("")}</Todistusvuosi>
+      <Todistusvuosi>{hakija.hakemus.todistusvuosi.getOrElse(null)}</Todistusvuosi>
       <Julkaisulupa>{toBooleanX(hakija.hakemus.julkaisulupa.getOrElse(false))}</Julkaisulupa>
       <Yhteisetaineet>{hakija.hakemus.yhteisetaineet.getOrElse(null)}</Yhteisetaineet>
       <Lukiontasapisteet>{hakija.hakemus.lukiontasapisteet.getOrElse(null)}</Lukiontasapisteet>
-      <Lisapistekoulutus>{hakija.hakemus.lisapistekoulutus.getOrElse("")}</Lisapistekoulutus>
+      <Lisapistekoulutus>{hakija.hakemus.lisapistekoulutus.getOrElse(null)}</Lisapistekoulutus>
       <Yleinenkoulumenestys>{hakija.hakemus.yleinenkoulumenestys.getOrElse(null)}</Yleinenkoulumenestys>
       <Painotettavataineet>{hakija.hakemus.painotettavataineet.getOrElse(null)}</Painotettavataineet>
       <Hakutoiveet>
@@ -456,15 +444,15 @@ object XMLUtil {
         <Hakutoive>
           <Hakujno>{hakutoive.hakujno}</Hakujno>
           <Oppilaitos>{hakutoive.oppilaitos}</Oppilaitos>
-          <Opetuspiste>{hakutoive.opetuspiste.getOrElse("")}</Opetuspiste>
-          <Opetuspisteennimi>{hakutoive.opetuspisteennimi.getOrElse("")}</Opetuspisteennimi>
+          <Opetuspiste>{hakutoive.opetuspiste.getOrElse(null)}</Opetuspiste>
+          <Opetuspisteennimi>{hakutoive.opetuspisteennimi.getOrElse(null)}</Opetuspisteennimi>
           <Koulutus>{hakutoive.koulutus}</Koulutus>
-          <Harkinnanvaraisuusperuste>{hakutoive.harkinnanvaraisuusperuste.getOrElse("")}</Harkinnanvaraisuusperuste>
+          <Harkinnanvaraisuusperuste>{hakutoive.harkinnanvaraisuusperuste.getOrElse(null)}</Harkinnanvaraisuusperuste>
           <Urheilijanammatillinenkoulutus>{toBoolean10(hakutoive.urheilijanammatillinenkoulutus.getOrElse(false))}</Urheilijanammatillinenkoulutus>
           <Yhteispisteet>{hakutoive.yhteispisteet.getOrElse(null)}</Yhteispisteet>
-          <Valinta>{hakutoive.valinta.getOrElse("")}</Valinta>
-          <Vastaanotto>{hakutoive.vastaanotto.getOrElse("")}</Vastaanotto>
-          <Lasnaolo>{hakutoive.lasnaolo.getOrElse("")}</Lasnaolo>
+          <Valinta>{hakutoive.valinta.getOrElse(null)}</Valinta>
+          <Vastaanotto>{hakutoive.vastaanotto.getOrElse(null)}</Vastaanotto>
+          <Lasnaolo>{hakutoive.lasnaolo.getOrElse(null)}</Lasnaolo>
           <Terveys>{toBooleanX(hakutoive.terveys.getOrElse(false))}</Terveys>
           <Aiempiperuminen>{toBooleanX(hakutoive.aiempiperuminen.getOrElse(false))}</Aiempiperuminen>
           <Kaksoistutkinto>{toBooleanX(hakutoive.kaksoistutkinto.getOrElse(false))}</Kaksoistutkinto>
@@ -475,7 +463,7 @@ object XMLUtil {
   </Hakija>
   })}
 </Hakijat>
-    ).head
+    removeEmptyElements.transform(hakijatXml).head
   }
 }
 
