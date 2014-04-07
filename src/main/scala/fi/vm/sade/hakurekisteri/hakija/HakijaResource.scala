@@ -289,7 +289,14 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     val h = a.flatMap(_.henkilotiedot)
     val hak = Hakija(
       Henkilo(
-        yhteystiedotRyhma = Seq(),
+        yhteystiedotRyhma = Seq(YhteystiedotRyhma(0, "hakemus", "yhteystietotyyppi1", true, Seq(
+          Yhteystiedot(0, "YHTEYSTIETO_KATUOSOITE", h.map(_.lahiosoite).getOrElse("")),
+          Yhteystiedot(1, "YHTEYSTIETO_POSTINUMERO", h.map(_.Postinumero).getOrElse("")),
+          Yhteystiedot(2, "YHTEYSTIETO_MAA", h.map(_.asuinmaa).getOrElse("")),
+          Yhteystiedot(3, "YHTEYSTIETO_MATKAPUHELIN", h.map(_.matkapuhelinnumero1).getOrElse("")),
+          Yhteystiedot(4, "YHTEYSTIETO_SAHKOPOSTI", h.map(_.Sähköposti).getOrElse("")),
+          Yhteystiedot(5, "YHTEYSTIETO_KAUPUNKI", h.map(_.kotikunta).getOrElse(""))
+        ))),
         yksiloity = false,
         sukunimi = h.map(_.Sukunimi).getOrElse(""),
         etunimet = h.map(_.Etunimet).getOrElse(""),
@@ -382,26 +389,7 @@ object XMLUtil {
 
   def toBoolean10(b: Boolean): String = if (b) "1" else "0"
 
-  class RemoveEmptyElementsRule extends RewriteRule {
-    override def transform(n: Node) = n match {
-      case e @ Elem(prefix, label, attributes, scope, child @ _*) if
-      (isEmptyElement(e)) => NodeSeq.Empty
-      case other => other
-    }
-  }
-
-  val removeEmptyElements = new RuleTransformer(new RemoveEmptyElementsRule)
-
-  private def isEmptyElement(n: Node): Boolean = n match {
-    case e @ Elem(prefix, label, attributes, scope, child @ _*) if
-    (e.text.isEmpty &&
-      (e.attributes.isEmpty || e.attributes.forall(_.value == null))
-      && e.child.isEmpty) => true
-    case other => false
-  }
-
-  def toXml(hakijat: XMLHakijat, removeEmpty: Boolean = true): Node = {
-    val hakijatXml: Elem =
+  def toXml(hakijat: XMLHakijat): Node = {
 <Hakijat xmlns="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat hakijat.xsd">
@@ -411,15 +399,15 @@ object XMLUtil {
     <Oppijanumero>{hakija.oppijanumero}</Oppijanumero>
     <Sukunimi>{hakija.sukunimi}</Sukunimi>
     <Etunimet>{hakija.etunimet}</Etunimet>
-    <Kutsumanimi>{hakija.kutsumanimi.getOrElse(null)}</Kutsumanimi>
+    <Kutsumanimi>{hakija.kutsumanimi}</Kutsumanimi>
     <Lahiosoite>{hakija.lahiosoite}</Lahiosoite>
     <Postinumero>{hakija.postinumero}</Postinumero>
     <Maa>{hakija.maa}</Maa>
     <Kansalaisuus>{hakija.kansalaisuus}</Kansalaisuus>
-    <Matkapuhelin>{hakija.matkapuhelin.getOrElse(null)}</Matkapuhelin>
-    <Muupuhelin>{hakija.muupuhelin.getOrElse(null)}</Muupuhelin>
-    <Sahkoposti>{hakija.sahkoposti.getOrElse(null)}</Sahkoposti>
-    <Kotikunta>{hakija.kotikunta.getOrElse(null)}</Kotikunta>
+    {if (hakija.matkapuhelin.isDefined) <Matkapuhelin>{hakija.matkapuhelin.get}</Matkapuhelin>}
+    {if (hakija.muupuhelin.isDefined) <Muupuhelin>{hakija.muupuhelin.get}</Muupuhelin>}
+    {if (hakija.sahkoposti.isDefined) <Sahkoposti>{hakija.sahkoposti.get}</Sahkoposti>}
+    {if (hakija.kotikunta.isDefined) <Kotikunta>{hakija.kotikunta.get}</Kotikunta>}
     <Sukupuoli>{hakija.sukupuoli}</Sukupuoli>
     <Aidinkieli>{hakija.aidinkieli}</Aidinkieli>
     <Koulutusmarkkinointilupa>{toBooleanX(hakija.koulutusmarkkinointilupa)}</Koulutusmarkkinointilupa>
@@ -427,35 +415,35 @@ object XMLUtil {
       <Vuosi>{hakija.hakemus.vuosi}</Vuosi>
       <Kausi>{hakija.hakemus.kausi}</Kausi>
       <Hakemusnumero>{hakija.hakemus.hakemusnumero}</Hakemusnumero>
-      <Lahtokoulu>{hakija.hakemus.lahtokoulu.getOrElse(null)}</Lahtokoulu>
-      <Lahtokoulunnimi>{hakija.hakemus.lahtokoulunnimi.getOrElse(null)}</Lahtokoulunnimi>
-      <Luokka>{hakija.hakemus.luokka.getOrElse(null)}</Luokka>
-      <Luokkataso>{hakija.hakemus.luokkataso.getOrElse("")}</Luokkataso>
+      {if (hakija.hakemus.lahtokoulu.isDefined) <Lahtokoulu>{hakija.hakemus.lahtokoulu.get}</Lahtokoulu>}
+      {if (hakija.hakemus.lahtokoulunnimi.isDefined) <Lahtokoulunnimi>{hakija.hakemus.lahtokoulunnimi.get}</Lahtokoulunnimi>}
+      {if (hakija.hakemus.luokka.isDefined) <Luokka>{hakija.hakemus.luokka.get}</Luokka>}
+      {if (hakija.hakemus.luokkataso.isDefined) <Luokkataso>{hakija.hakemus.luokkataso.get}</Luokkataso>}
       <Pohjakoulutus>{hakija.hakemus.pohjakoulutus}</Pohjakoulutus>
-      <Todistusvuosi>{hakija.hakemus.todistusvuosi.getOrElse(null)}</Todistusvuosi>
-      <Julkaisulupa>{toBooleanX(hakija.hakemus.julkaisulupa.getOrElse(false))}</Julkaisulupa>
-      <Yhteisetaineet>{hakija.hakemus.yhteisetaineet.getOrElse(null)}</Yhteisetaineet>
-      <Lukiontasapisteet>{hakija.hakemus.lukiontasapisteet.getOrElse(null)}</Lukiontasapisteet>
-      <Lisapistekoulutus>{hakija.hakemus.lisapistekoulutus.getOrElse(null)}</Lisapistekoulutus>
-      <Yleinenkoulumenestys>{hakija.hakemus.yleinenkoulumenestys.getOrElse(null)}</Yleinenkoulumenestys>
-      <Painotettavataineet>{hakija.hakemus.painotettavataineet.getOrElse(null)}</Painotettavataineet>
+      {if (hakija.hakemus.todistusvuosi.isDefined) <Todistusvuosi>{hakija.hakemus.todistusvuosi.get}</Todistusvuosi>}
+      {if (hakija.hakemus.julkaisulupa.isDefined) <Julkaisulupa>{toBooleanX(hakija.hakemus.julkaisulupa.get)}</Julkaisulupa>}
+      {if (hakija.hakemus.yhteisetaineet.isDefined) <Yhteisetaineet>{hakija.hakemus.yhteisetaineet.get}</Yhteisetaineet>}
+      {if (hakija.hakemus.lukiontasapisteet.isDefined) <Lukiontasapisteet>{hakija.hakemus.lukiontasapisteet.get}</Lukiontasapisteet>}
+      {if (hakija.hakemus.lisapistekoulutus.isDefined) <Lisapistekoulutus>{hakija.hakemus.lisapistekoulutus.get}</Lisapistekoulutus>}
+      {if (hakija.hakemus.yleinenkoulumenestys.isDefined) <Yleinenkoulumenestys>{hakija.hakemus.yleinenkoulumenestys.get}</Yleinenkoulumenestys>}
+      {if (hakija.hakemus.painotettavataineet.isDefined) <Painotettavataineet>{hakija.hakemus.painotettavataineet.get}</Painotettavataineet>}
       <Hakutoiveet>
         {hakija.hakemus.hakutoiveet.map((hakutoive: XMLHakutoive) => {
         <Hakutoive>
           <Hakujno>{hakutoive.hakujno}</Hakujno>
           <Oppilaitos>{hakutoive.oppilaitos}</Oppilaitos>
-          <Opetuspiste>{hakutoive.opetuspiste.getOrElse(null)}</Opetuspiste>
-          <Opetuspisteennimi>{hakutoive.opetuspisteennimi.getOrElse(null)}</Opetuspisteennimi>
+          {if (hakutoive.opetuspiste.isDefined) <Opetuspiste>{hakutoive.opetuspiste.get}</Opetuspiste>}
+          {if (hakutoive.opetuspisteennimi.isDefined) <Opetuspisteennimi>{hakutoive.opetuspisteennimi.get}</Opetuspisteennimi>}
           <Koulutus>{hakutoive.koulutus}</Koulutus>
-          <Harkinnanvaraisuusperuste>{hakutoive.harkinnanvaraisuusperuste.getOrElse(null)}</Harkinnanvaraisuusperuste>
-          <Urheilijanammatillinenkoulutus>{toBoolean10(hakutoive.urheilijanammatillinenkoulutus.getOrElse(false))}</Urheilijanammatillinenkoulutus>
-          <Yhteispisteet>{hakutoive.yhteispisteet.getOrElse(null)}</Yhteispisteet>
-          <Valinta>{hakutoive.valinta.getOrElse(null)}</Valinta>
-          <Vastaanotto>{hakutoive.vastaanotto.getOrElse(null)}</Vastaanotto>
-          <Lasnaolo>{hakutoive.lasnaolo.getOrElse(null)}</Lasnaolo>
-          <Terveys>{toBooleanX(hakutoive.terveys.getOrElse(false))}</Terveys>
-          <Aiempiperuminen>{toBooleanX(hakutoive.aiempiperuminen.getOrElse(false))}</Aiempiperuminen>
-          <Kaksoistutkinto>{toBooleanX(hakutoive.kaksoistutkinto.getOrElse(false))}</Kaksoistutkinto>
+          {if (hakutoive.harkinnanvaraisuusperuste.isDefined) <Harkinnanvaraisuusperuste>{hakutoive.harkinnanvaraisuusperuste.get}</Harkinnanvaraisuusperuste>}
+          {if (hakutoive.urheilijanammatillinenkoulutus.isDefined) <Urheilijanammatillinenkoulutus>{toBoolean10(hakutoive.urheilijanammatillinenkoulutus.get)}</Urheilijanammatillinenkoulutus>}
+          {if (hakutoive.yhteispisteet.isDefined) <Yhteispisteet>{hakutoive.yhteispisteet.get}</Yhteispisteet>}
+          {if (hakutoive.valinta.isDefined) <Valinta>{hakutoive.valinta.get}</Valinta>}
+          {if (hakutoive.vastaanotto.isDefined) <Vastaanotto>{hakutoive.vastaanotto.get}</Vastaanotto>}
+          {if (hakutoive.lasnaolo.isDefined) <Lasnaolo>{hakutoive.lasnaolo.get}</Lasnaolo>}
+          {if (hakutoive.terveys.isDefined) <Terveys>{toBooleanX(hakutoive.terveys.get)}</Terveys>}
+          {if (hakutoive.aiempiperuminen.isDefined) <Aiempiperuminen>{toBooleanX(hakutoive.aiempiperuminen.get)}</Aiempiperuminen>}
+          {if (hakutoive.kaksoistutkinto.isDefined) <Kaksoistutkinto>{toBooleanX(hakutoive.kaksoistutkinto.get)}</Kaksoistutkinto>}
         </Hakutoive>
         })}
       </Hakutoiveet>
@@ -463,8 +451,8 @@ object XMLUtil {
   </Hakija>
   })}
 </Hakijat>
-    if (removeEmpty) removeEmptyElements.transform(hakijatXml).head else hakijatXml
   }
+
 }
 
 case class XMLHakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[String], opetuspisteennimi: Option[String], koulutus: String,
