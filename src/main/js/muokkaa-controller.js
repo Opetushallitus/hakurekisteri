@@ -32,11 +32,9 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
     function enrichSuoritukset() {
         if ($scope.suoritukset) {
             angular.forEach($scope.suoritukset, function(suoritus) {
-                if (suoritus.komoto && suoritus.komoto.tarjoaja) {
-                    getOrganisaatio($http, suoritus.komoto.tarjoaja, function(organisaatio) {
-                        if (organisaatio.oid === suoritus.komoto.tarjoaja) {
-                            suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
-                        }
+                if (suoritus.myontaja) {
+                    getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
+                        suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
                     }, function() {});
                 }
             });
@@ -47,9 +45,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             angular.forEach($scope.luokkatiedot, function(luokkatieto) {
                 if (luokkatieto.oppilaitosOid) {
                     getOrganisaatio($http, luokkatieto.oppilaitosOid, function(organisaatio) {
-                        if (organisaatio.oid === luokkatieto.oppilaitosOid) {
-                            luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi;
-                        }
+                        luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi;
                     }, function() {});
                 }
             });
@@ -154,8 +150,8 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                     deferredValidation.reject("error");
                 } else {
                     getOrganisaatio($http, oppilaitosKoodiHolder.oppilaitos, function (organisaatio) {
-                        if (oppilaitosKoodiHolder.komoto && oppilaitosKoodiHolder.komoto.tarjoaja) {
-                            oppilaitosKoodiHolder.komoto.tarjoaja = organisaatio.oid;
+                        if (oppilaitosKoodiHolder.myontaja) {
+                            oppilaitosKoodiHolder.myontaja = organisaatio.oid;
                         } else {
                             oppilaitosKoodiHolder.oppilaitosOid = organisaatio.oid;
                         }
