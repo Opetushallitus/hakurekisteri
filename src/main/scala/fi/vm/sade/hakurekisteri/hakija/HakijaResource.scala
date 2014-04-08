@@ -407,7 +407,7 @@ object XMLUtil {
     <Oppijanumero>{hakija.oppijanumero}</Oppijanumero>
     <Sukunimi>{hakija.sukunimi}</Sukunimi>
     <Etunimet>{hakija.etunimet}</Etunimet>
-    <Kutsumanimi>{hakija.kutsumanimi}</Kutsumanimi>
+    {if (hakija.kutsumanimi.isDefined) <Kutsumanimi>{hakija.kutsumanimi.get}</Kutsumanimi>}
     <Lahiosoite>{hakija.lahiosoite}</Lahiosoite>
     <Postinumero>{hakija.postinumero}</Postinumero>
     <Maa>{hakija.maa}</Maa>
