@@ -45,7 +45,7 @@ case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakuk
 
 class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
-  implicit val defaultTimeout = Timeout(60, TimeUnit.SECONDS)
+  implicit val defaultTimeout = Timeout(120, TimeUnit.SECONDS)
   override protected def applicationDescription: String = "Hakeneiden ja valittujen rajapinta."
   override protected implicit def swagger: SwaggerEngine[_] = sw
 
@@ -373,7 +373,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     opetusPisteet.sortBy(_._1).map((t) => {
       val koulutukset = Set(Komoto("", "", t._2, "2014", Kausi.Syksy))
       val hakukohdekoodi = toiveet("preference" + t._1 + "-Koulutus-id-aoIdentifier")
-      Hakutoive(Hakukohde(koulutukset, hakukohdekoodi), toiveet.get("preference" + t._1 + "-Koulutus-id-kaksoistutkinto").map(_.toBoolean).getOrElse(false))
+      Hakutoive(Hakukohde(koulutukset, hakukohdekoodi), Try(toiveet("preference" + t._1 + "-Koulutus-id-kaksoistutkinto").toBoolean).recover{ case _ => false }.get)
     })
   }
 
