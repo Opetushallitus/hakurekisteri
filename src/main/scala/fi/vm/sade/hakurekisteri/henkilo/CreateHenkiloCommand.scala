@@ -5,6 +5,7 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriCommand
 import org.json4s._
 import org.scalatra.util.conversion.TypeConverter
 import org.scalatra.DefaultValue
+import scala.util.Try
 
 
 class CreateHenkiloCommand extends HakurekisteriCommand[Henkilo] {
@@ -36,33 +37,32 @@ class CreateHenkiloCommand extends HakurekisteriCommand[Henkilo] {
   val yksiloity:Field[Boolean] = asBoolean("yksiloity").required
   val sukunimi:Field[String] = asString("sukunimi").required
   val kielisyys: Field[Seq[Kieli]] = validatableSeqBinding(asSeq[Kieli]("kielisyys")).notEmpty
-  val yksilointitieto: Field[Yksilointitieto] =asType[Yksilointitieto]("yksilointitieto").required
-  val henkiloTyyppi: Field[String]  = asString("henkiloTyyppi")
-  val oidHenkilo: Field[String]  = asString("oidHenkilo")
+  val yksilointitieto: Field[Yksilointitieto] =asType[Yksilointitieto]("yksilointitieto").optional
+  val henkiloTyyppi: Field[String]  = asString("henkiloTyyppi").required
+  val oidHenkilo: Field[String]  = asString("oidHenkilo").required
   val duplicate: Field[Boolean] = asBoolean("duplicate")
   val oppijanumero: Field[String] = asString("oppijanumero")
-  val kayttajatiedot: Field[Kayttajatiedot] = asType[Kayttajatiedot]("kayttajatiedot")
+  val kayttajatiedot: Field[Kayttajatiedot] = asType[Kayttajatiedot]("kayttajatiedot").optional
   val kansalaisuus: Field[Seq[Kansalaisuus]] =asSeq[Kansalaisuus]("kansalaisuus")
   val passinnumero: Field[String] =asString("passinnumero")
   val asiointiKieli: Field[Kieli] =asType[Kieli]("asiointiKieli")
   val kutsumanimi: Field[String] =asString("kutsumanimi")
   val passivoitu: Field[Boolean] =asBoolean("passivoitu")
   val eiSuomalaistaHetua: Field[Boolean] =asBoolean("eiSuomalaistaHetua")
-  val etunimet: Field[String] =asString("etunimet")
+  val etunimet: Field[String] =asString("etunimet").required
   val sukupuoli: Field[String] = asString("sukupuoli")
   val turvakielto: Field[Boolean] =asBoolean("turvakielto")
   val hetu: Field[String] =asString("hetu")
   val syntymaaika: Field[String] =asString("syntymaaika")
+  val markkinointiLupa: Field[Boolean] =asBoolean("markkinointiLupa").optional
 
 
-
-
-  override def toResource: Henkilo = Henkilo(yhteysTiedotRyhma, yksiloity, sukunimi, kielisyys, yksilointitieto,
+  override def toResource: Henkilo = Henkilo(yhteysTiedotRyhma, yksiloity, sukunimi, getValue(kielisyys), yksilointitieto.value,
     henkiloTyyppi: String,
     oidHenkilo: String,
     duplicate: Boolean,
     oppijanumero: String,
-    kayttajatiedot: Kayttajatiedot,
+    kayttajatiedot.value: Option[Kayttajatiedot],
     kansalaisuus: Seq[Kansalaisuus],
     passinnumero: String,
     asiointiKieli: Kieli,
@@ -73,12 +73,8 @@ class CreateHenkiloCommand extends HakurekisteriCommand[Henkilo] {
     sukupuoli: String,
     turvakielto: Boolean,
     hetu: String,
-    syntymaaika: String)
-
-
-
-
-
-
+    syntymaaika: String,
+    markkinointiLupa.value.flatMap((m: Boolean) => Try(JBool(m).extract[Boolean]).toOption)
+  )
 
 }

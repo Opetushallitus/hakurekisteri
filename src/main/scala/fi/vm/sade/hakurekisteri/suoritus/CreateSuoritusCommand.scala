@@ -26,10 +26,8 @@ class CreateSuoritusCommand extends HakurekisteriCommand[Suoritus] {
   implicit val jsonToYksilollistaminen: TypeConverter[JValue, Yksilollistetty] = safeOption(_.extractOpt[Yksilollistetty])
 
 
-  val komotooid: Field[String] = asType[String]("komoto.oid").notBlank
-  val komo: Field[String] = asType[String]("komoto.komo").notBlank
-  val tarjoaja: Field[String] = asType[String]("komoto.tarjoaja").notBlank
-
+  val komo: Field[String] = asType[String]("komo").notBlank
+  val myontaja: Field[String] = asType[String]("myontaja").notBlank
   val tila: Field[String] = asType[String]("tila").notBlank
   val valmistuminen: Field[LocalDate] = asType[LocalDate]("valmistuminen").required
   val henkiloOid: Field[String]  = asType[String]("henkiloOid").notBlank
@@ -37,7 +35,7 @@ class CreateSuoritusCommand extends HakurekisteriCommand[Suoritus] {
   val languages = Seq(Locale.getISOLanguages:_*) ++ Seq(Locale.getISOLanguages:_*).map(_.toUpperCase())
   val suoritusKieli: Field[String] = asType[String]("suoritusKieli").required.allowableValues(languages:_*)
 
-  override def toResource: Suoritus = Suoritus(Komoto(komotooid.value.get, komo.value.get, tarjoaja.value.get), tila.value.get, valmistuminen.value.get, henkiloOid.value.get, yks.value.get, suoritusKieli.value.get)
+  override def toResource: Suoritus = Suoritus(komo.value.get, myontaja.value.get, tila.value.get, valmistuminen.value.get, henkiloOid.value.get, yks.value.get, suoritusKieli.value.get)
 }
 
 

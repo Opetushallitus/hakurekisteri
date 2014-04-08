@@ -10,12 +10,12 @@ case class Henkilo (
                      yksiloity: Boolean,
                      sukunimi: String,
                      kielisyys: Seq[Kieli],
-                     yksilointitieto: Yksilointitieto,
+                     yksilointitieto: Option[Yksilointitieto],
                      henkiloTyyppi: String,
                      oidHenkilo: String,
                      duplicate: Boolean,
                      oppijanumero: String,
-                     kayttajatiedot: Kayttajatiedot,
+                     kayttajatiedot: Option[Kayttajatiedot],
                      kansalaisuus: Seq[Kansalaisuus],
                      passinnumero: String,
                      asiointiKieli: Kieli,
@@ -26,7 +26,8 @@ case class Henkilo (
                      sukupuoli: String,
                      turvakielto: Boolean,
                      hetu: String,
-                     syntymaaika: String) extends Resource{
+                     syntymaaika: String,
+                     markkinointilupa: Option[Boolean]) extends Resource{
 
   override def identify[R <: Henkilo](id: UUID): R with Identified = Henkilo.identify(this,id).asInstanceOf[R with Identified]
 }
@@ -70,12 +71,12 @@ object Henkilo extends {
       o.yksiloity: Boolean,
       o.sukunimi: String,
       o.kielisyys: Seq[Kieli],
-      o.yksilointitieto: Yksilointitieto,
+      o.yksilointitieto: Option[Yksilointitieto],
       o.henkiloTyyppi: String,
       o.oidHenkilo: String,
       o.duplicate: Boolean,
       o.oppijanumero: String,
-      o.kayttajatiedot: Kayttajatiedot,
+      o.kayttajatiedot: Option[Kayttajatiedot],
       o.kansalaisuus: Seq[Kansalaisuus],
       o.passinnumero: String,
       o.asiointiKieli: Kieli,
@@ -86,7 +87,8 @@ object Henkilo extends {
       o.sukupuoli: String,
       o.turvakielto: Boolean,
       o.hetu: String,
-      o.syntymaaika: String) with Identified{
+      o.syntymaaika: String,
+      o.markkinointilupa: Option[Boolean]) with Identified{
       override val id: UUID = identity
     }
   }

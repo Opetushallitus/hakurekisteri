@@ -2,8 +2,13 @@ package fi.vm.sade.hakurekisteri.acceptance
 
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import org.scalatest.GivenWhenThen
+import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
+import fi.vm.sade.hakurekisteri.hakija.{XMLHakijat, Tyyppi, Hakuehto, HakijaQuery}
+import scala.concurrent.{Future, Await}
+import scala.concurrent.duration._
+import akka.util.Timeout
 
-class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen {
+class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with HakeneetSupport {
 
 
   info("Koulun virkailijana")
@@ -13,16 +18,20 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen {
 
   feature("Muodosta hakeneet ja valitut siirtotiedosto") {
 
-    scenario("Organisaation X hakijat") {
-      Given("N henkilöä täyttää hakemuksen; osa kohdistuu organisaatioon X tai sen lapsiin")
-      //Mikko täyttää hakemuksen hakukohteeseen A koulussa B, joka sisältyy organisaatioon X
-      //Matti täyttää hakemuksen hakukohteeseen C koulussa D, joka ei sisälly organisaatioon X
+    scenario("Opetuspisteeseen X hakijat") {
+      Given("N henkilöä täyttää hakemuksen; osa kohdistuu opetuspisteeseen X")
+      hakupalvelu has (FullHakemus1, FullHakemus2)
 
-      When("rajaan muodostusta valitsemalla organisaation X")
-      //tiedosto = muodosta (organisaatioille X)
+      When("rajaan muodostusta valitsemalla opetuspisteeseen X")
+      val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, Tyyppi.Json, None, None)),
+        Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
+      println("tiedosto: " + hakijat)
 
-      Then("saan siirtotiedoston, jossa on organisaatioon X tai sen lapsiin hakeneet")
-      //tiedosto sisältää Mikon tiedot
+      Then("saan siirtotiedoston, jossa on opetuspisteeseen X tai sen lapsiin hakeneet")
+      hakijat.hakijat.size should equal (1)
+      hakijat.hakijat.foreach((hakija) => {
+        hakija.hakemus.hakutoiveet.head.opetuspiste should equal (OpetuspisteX.toimipistekoodi)
+      })
     }
 
     scenario("Haussa Y hakeneet") {

@@ -36,21 +36,28 @@ object HakuJaValintarekisteriBuild extends Build {
   val SecurityStack = SpringStack.map(_ % SpringVersion) ++
     Seq("net.sf.ehcache" % "ehcache-core" % "2.5.0",
     "fi.vm.sade.generic" % "generic-common" % "9.0-SNAPSHOT",
+    "org.apache.httpcomponents" % "httpclient" % "4.2.3",
+    "org.apache.httpcomponents" % "httpclient-cache" % "4.2.3",
+    "commons-httpclient" % "commons-httpclient" % "3.1",
+    "commons-io" % "commons-io" % "2.4",
+    "com.google.code.gson" % "gson" % "2.2.4",
     "org.jgroups"  % "jgroups" % "2.10.0.GA",
     "net.sf.ehcache" % "ehcache-jgroupsreplication" % "1.5",
-    "org.slf4j" % "slf4j-api" % "1.6.1",
     "org.jasig.cas" % "cas-client-support-distributed-ehcache" % "3.1.10" exclude("net.sf.ehcache", "ehcache"))
 
   val dependencies = Seq(
-    "ch.qos.logback" % "logback-classic" % "1.0.6" % "runtime",
+    "org.slf4j" % "slf4j-api" % "1.6.1",
     "org.eclipse.jetty" % "jetty-webapp" % "8.1.8.v20121106" % "container",
     "org.json4s" %% "json4s-jackson" % "3.2.4",
-    "com.typesafe.akka" %% "akka-testkit" %  "2.1.2",
+    "com.typesafe.akka" %% "akka-testkit" %  "2.2.3",
+    "com.typesafe.akka" %% "akka-slf4j" % "2.2.3",
     "com.github.nscala-time" %% "nscala-time" % "0.8.0",
     "com.typesafe.slick" %% "slick" % "2.0.0",
     "com.h2database" % "h2" % "1.3.174",
     "org.postgresql" % "postgresql" % "9.3-1100-jdbc4",
-    "net.databinder.dispatch" %% "dispatch-core" % "0.11.0"
+    "net.databinder.dispatch" %% "dispatch-core" % "0.11.0",
+    "com.stackmob" %% "newman" % "1.3.5",
+    "info.folone" %% "poi-scala" % "0.9"
   )
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion)
