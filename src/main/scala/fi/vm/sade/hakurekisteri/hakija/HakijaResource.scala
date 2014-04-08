@@ -168,7 +168,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
 
   @Deprecated // TODO mäppää puuttuvat tiedot
   def getXmlHakutoiveet(hakija: Hakija): Future[Seq[XMLHakutoive]] = {
-    log.debug("get xml hakutoiveet for: " + hakija.henkilo.oidHenkilo)
+    log.debug("get xml hakutoiveet for: " + hakija.henkilo.oidHenkilo + ", hakutoiveet size: " + hakija.hakemus.hakutoiveet.size)
     val futures = hakija.hakemus.hakutoiveet.zipWithIndex.map(ht => {
       findOrgData(ht._1.hakukohde.koulutukset.head.tarjoaja).map(option => option.map((t) => {
         val o = t._1
@@ -263,7 +263,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
   @Deprecated // TODO ratkaise kaksoiskansalaisuus
   def hakija2XMLHakija(hakija: Hakija): Future[Option[XMLHakija]] = {
     getXmlHakemus(hakija).flatMap((hakemus) => {
-      log.debug("map hakemus henkilolle: " + hakija.henkilo.oidHenkilo)
+      log.debug("map hakemus henkilolle: " + hakija.henkilo.oidHenkilo + ", hakutoiveet size: " + hakija.hakemus.hakutoiveet.size)
       val yhteystiedot: Seq[Yhteystiedot] = hakija.henkilo.yhteystiedotRyhma.getOrElse(("hakemus", "yhteystietotyyppi1"), Seq())
       hakemus.map(hakemus => {
         val maaFuture = getMaakoodi(yhteystiedot.getOrElse("YHTEYSTIETO_MAA", "FIN"))
@@ -295,9 +295,9 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
   }
 
   def getHakija(hakemus: FullHakemus): Hakija = {
-    log.debug("getting hakija from full hakemus: " + hakemus.oid)
     val lahtokoulu: Option[String] = hakemus.answers.flatMap(_.koulutustausta.lahtokoulu)
     val a = hakemus.answers
+    log.debug("getting hakija from full hakemus: " + hakemus.oid + ", answers: " + a)
     val h = a.flatMap(_.henkilotiedot)
     val hak = Hakija(
       Henkilo(

@@ -71,7 +71,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
     GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
       if (response.code == HttpResponseCode.Ok) {
         val fullHakemus = response.bodyAsCaseClass[FullHakemus].toOption
-        logger.debug("got response: [{}]", fullHakemus)
+        logger.debug("got response: [{}], original body: [{}]", fullHakemus, response.bodyString)
         fullHakemus
       } else {
         logger.error("call to haku-app [url={}, ticket={}] failed: " + response.code, url, ticket)
