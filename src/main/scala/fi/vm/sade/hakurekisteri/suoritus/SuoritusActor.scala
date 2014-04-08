@@ -32,14 +32,13 @@ trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suori
   }
 
   def checkVuosi(vuosi: Option[String])(s:Suoritus):Boolean = vuosi match {
-
-    case Some(vuosi:String) => beforeYearEnd(vuosi)(s.valmistuminen)
+    case Some(vuosi:String) => s.valmistuminen.map(v => beforeYearEnd(vuosi)(v)).getOrElse(false)
     case None => true
   }
 
   def checkKausi(kausi: Option[Kausi])(s: Suoritus):Boolean = kausi match{
-    case Some(Kevät) => duringFirstHalf(s.valmistuminen)
-    case Some(Syksy) => !duringFirstHalf(s.valmistuminen)
+    case Some(Kevät) => s.valmistuminen.map(v => duringFirstHalf(v)).getOrElse(false)
+    case Some(Syksy) => s.valmistuminen.map(v => !duringFirstHalf(v)).getOrElse(false)
     case None => true
     case _ => true
   }

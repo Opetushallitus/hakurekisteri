@@ -335,7 +335,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
         komo = "peruskoulu",
         myontaja = lahtokoulu.getOrElse(""),
         tila = "KESKEN",
-        valmistuminen = LocalDate.now,
+        valmistuminen = Some(LocalDate.now),
         henkiloOid = hakemus.personOid,
         yksilollistaminen = Ei,
         suoritusKieli = hakemus.answers.map(_.koulutustausta.perusopetuksen_kieli).getOrElse("FI")

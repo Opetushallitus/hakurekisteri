@@ -10,8 +10,8 @@ import scala.slick.driver.JdbcDriver
 import java.util.UUID
 
 class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, SuoritusTable, ColumnOrdered[Long]] {
-  override def toResource(row: SuoritusTable#TableElementType): Suoritus with Identified = Suoritus(row._2, row._3, row._4, LocalDate.parse(row._5), row._6, yksilollistaminen.withName(row._7), row._8).identify(UUID.fromString(row._1))
-  override def toRow(o: Suoritus with Identified): SuoritusTable#TableElementType = (o.id.toString, o.komo, o.myontaja, o.tila, o.valmistuminen.toString, o.henkiloOid, o.yksilollistaminen.toString, o.suoritusKieli, System.currentTimeMillis())
+  override def toResource(row: SuoritusTable#TableElementType): Suoritus with Identified = Suoritus(row._2, row._3, row._4, if (row._5 == "") None else Some(LocalDate.parse(row._5)), row._6, yksilollistaminen.withName(row._7), row._8).identify(UUID.fromString(row._1))
+  override def toRow(o: Suoritus with Identified): SuoritusTable#TableElementType = (o.id.toString, o.komo, o.myontaja, o.tila, o.valmistuminen.getOrElse("").toString, o.henkiloOid, o.yksilollistaminen.toString, o.suoritusKieli, System.currentTimeMillis())
 
   val opiskelijat = TableQuery[SuoritusTable]
   database withSession(
@@ -32,7 +32,7 @@ class SuoritusTable(tag: Tag) extends Table[(String, String, String, String, Str
   def komo = column[String]("komo")
   def myontaja = column[String]("myontaja")
   def tila = column[String]("tila")
-  def valmistuminen = column[String]("luokkataso")
+  def valmistuminen = column[String]("valmistuminen")
   def henkiloOid = column[String]("henkilo_oid")
   def yksilollistaminen = column[String]("yksilollistaminen")
   def suoritusKieli = column[String]("suoritus_kieli")
