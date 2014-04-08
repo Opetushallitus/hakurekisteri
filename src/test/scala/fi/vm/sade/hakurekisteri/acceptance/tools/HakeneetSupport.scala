@@ -26,50 +26,88 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object OpetuspisteY extends Organisaatio("1.10.4", Map("fi" -> "Opetuspiste Y"), Some("0000201"), None, Some("1.10.2"))
 
   object FullHakemus1 extends FullHakemus("1.25.1", "ACTIVE", "1.24.1",
-    Some(Answers(Some(Henkilotiedot("FIN", "FIN", "0401234567", "Mäkinen", "200394-9839", "00100", "Katu 1", "1", "mikko@testi.oph.fi", "Mikko", "Mikko", "098", "FI", "20.03.1994", Some(true))),
-      Koulutustausta("2014", "1", "FI", Some(OppilaitosX.oid), Some("9A"), "9"), Some(Map(
-        "preference2-Opetuspiste" -> "Ammattikoulu Lappi2",
-        "preference2-Opetuspiste-id" -> "1.10.4",
-        "preference2-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)4",
-        "preference2-Koulutus-id" -> "1.11.2",
-        "preference2-Koulutus-id-aoIdentifier" -> "460",
-        "preference2-Koulutus-id-educationcode" -> "koulutus_321204",
-        "preference2-Koulutus-id-lang" -> "FI",
-        "preference1-Opetuspiste" -> "Ammattikoulu Lappi",
-        "preference1-Opetuspiste-id" -> "1.10.3",
-        "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
-        "preference1-Koulutus-id" -> "1.11.1",
-        "preference1-Koulutus-id-aoIdentifier" -> "460",
-        "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
-        "preference1-Koulutus-id-lang" -> "FI"
-      )), Some(Lisatiedot(true, Some(true)))
-    )
-  ))
+    Some(Map("kansalaisuus" -> "FIN",
+      "asuinmaa" -> "FIN",
+      "matkapuhelinnumero1" -> "0401234567",
+      "Sukunimi" -> "Mäkinen",
+      "Henkilotunnus" -> "200394-9839",
+      "Postinumero" -> "00100",
+      "lahiosoite" -> "Katu 1",
+      "sukupuoli" -> "1",
+      "Sähköposti" -> "mikko@testi.oph.fi",
+      "Kutsumanimi" -> "Mikko",
+      "Etunimet" -> "Mikko",
+      "kotikunta" -> "098",
+      "aidinkieli" -> "FI",
+      "syntymaaika" -> "20.03.1994",
+      "onkoSinullaSuomalainenHetu" -> "true",
+      "PK_PAATTOTODISTUSVUOSI" -> "2014",
+      "POHJAKOULUTUS" -> "1",
+      "perusopetuksen_kieli" -> "FI",
+      "lahtokoulu" -> OppilaitosX.oid,
+      "lahtoluokka" -> "9A",
+      "luokkataso" -> "9",
+      "preference2-Opetuspiste" -> "Ammattikoulu Lappi2",
+      "preference2-Opetuspiste-id" -> "1.10.4",
+      "preference2-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)4",
+      "preference2-Koulutus-id" -> "1.11.2",
+      "preference2-Koulutus-id-aoIdentifier" -> "460",
+      "preference2-Koulutus-id-educationcode" -> "koulutus_321204",
+      "preference2-Koulutus-id-lang" -> "FI",
+      "preference1-Opetuspiste" -> "Ammattikoulu Lappi",
+      "preference1-Opetuspiste-id" -> "1.10.3",
+      "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
+      "preference1-Koulutus-id" -> "1.11.1",
+      "preference1-Koulutus-id-aoIdentifier" -> "460",
+      "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
+      "preference1-Koulutus-id-lang" -> "FI",
+      "lupaMarkkinointi" -> "true",
+      "lupaJulkaisu" -> "true"))
+  )
   object FullHakemus2 extends FullHakemus("1.25.2", "ACTIVE", "1.24.2",
-    Some(Answers(Some(Henkilotiedot("FIN", "FIN", "0401234568", "Virtanen", "200394-959H", "00100", "Katu 2", "1", "ville@testi.oph.fi", "Ville", "Ville", "098", "FI", "20.03.1994", Some(true))),
-      Koulutustausta("2014", "1", "FI", Some(OppilaitosY.oid), Some("9A"), "9"), Some(Map(
-        "preference2-Opetuspiste" -> "Ammattiopisto Loppi2",
-        "preference2-Opetuspiste-id" -> "1.10.3",
-        "preference2-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)2",
-        "preference2-Koulutus-id" -> "1.11.1",
-        "preference2-Koulutus-id-aoIdentifier" -> "460",
-        "preference2-Koulutus-id-educationcode" -> "koulutus_321204",
-        "preference2-Koulutus-id-lang" -> "FI",
-        "preference1-Opetuspiste" -> "Ammattiopisto Loppi",
-        "preference1-Opetuspiste-id" -> "1.10.4",
-        "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
-        "preference1-Koulutus-id" -> "1.11.2",
-        "preference1-Koulutus-id-aoIdentifier" -> "460",
-        "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
-        "preference1-Koulutus-id-lang" -> "FI"
-      )), Some(Lisatiedot(true, Some(true)))
-    )
-  ))
+    Some(Map("kansalaisuus" -> "FIN",
+    "asuinmaa" -> "FIN",
+    "matkapuhelinnumero1" -> "0401234568",
+    "Sukunimi" -> "Virtanen",
+    "Henkilotunnus" -> "200394-959H",
+    "Postinumero" -> "00100",
+    "lahiosoite" -> "Katu 2",
+    "sukupuoli" -> "1",
+    "Sähköposti" -> "ville@testi.oph.fi",
+    "Kutsumanimi" -> "Ville",
+    "Etunimet" -> "Ville",
+    "kotikunta" -> "098",
+    "aidinkieli" -> "FI",
+    "syntymaaika" -> "20.03.1994",
+    "onkoSinullaSuomalainenHetu" -> "true",
+    "PK_PAATTOTODISTUSVUOSI" -> "2014",
+    "POHJAKOULUTUS" -> "1",
+    "perusopetuksen_kieli" -> "FI",
+    "lahtokoulu" -> OppilaitosY.oid,
+    "lahtoluokka" -> "9A",
+    "luokkataso" -> "9",
+    "preference2-Opetuspiste" -> "Ammattiopisto Loppi2\"",
+    "preference2-Opetuspiste-id" -> "1.10.3",
+    "preference2-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)2",
+    "preference2-Koulutus-id" -> "1.11.1",
+    "preference2-Koulutus-id-aoIdentifier" -> "460",
+    "preference2-Koulutus-id-educationcode" -> "koulutus_321204",
+    "preference2-Koulutus-id-lang" -> "FI",
+    "preference1-Opetuspiste" -> "Ammattiopisto Loppi",
+    "preference1-Opetuspiste-id" -> "1.10.4",
+    "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
+    "preference1-Koulutus-id" -> "1.11.2",
+    "preference1-Koulutus-id-aoIdentifier" -> "460",
+    "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
+    "preference1-Koulutus-id-lang" -> "FI",
+    "lupaMarkkinointi" -> "true",
+    "lupaJulkaisu" -> "true"))
+  )
 
   object notEmpty
 
-  implicit def fullHakemus2SmallHakemus(h: FullHakemus): SmallHakemus = {
-    SmallHakemus(h.oid, h.state, h.answers.get.henkilotiedot.get.Etunimet, h.answers.get.henkilotiedot.get.Sukunimi, h.answers.get.henkilotiedot.get.Henkilotunnus, h.personOid)
+  implicit def fullHakemus2SmallHakemus(h: FullHakemus): ListHakemus = {
+    ListHakemus(h.oid, h.state, h.vastauksetMerged.get("Etunimet"), h.vastauksetMerged.get("Sukunimi"), h.vastauksetMerged.get("Henkilotunnus"), h.personOid)
   }
 
   import _root_.akka.pattern.ask
@@ -82,9 +120,9 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object hakupalvelu extends Hakupalvelu {
 
 
-    var tehdytHakemukset: Seq[SmallHakemus] = Seq()
+    var tehdytHakemukset: Seq[ListHakemus] = Seq()
 
-    def find(q: HakijaQuery): Future[Seq[SmallHakemus]] = q.organisaatio match {
+    def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {
       case Some(OpetuspisteX.oid) => Future(Seq(FullHakemus1))
       case Some(OpetuspisteY.oid) => Future(Seq(FullHakemus2))
     }
@@ -99,7 +137,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       case notEmpty => has(FullHakemus1, FullHakemus2)
     }
 
-    def has(hakemukset: SmallHakemus*) = {
+    def has(hakemukset: ListHakemus*) = {
       tehdytHakemukset = hakemukset
     }
   }

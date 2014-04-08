@@ -22,6 +22,7 @@ import com.github.nscala_time.time.Imports._
 import fi.vm.sade.hakurekisteri.storage.repository.InMemJournal
 import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
+import org.joda.time
 
 
 object kausi extends Enumeration {
@@ -111,7 +112,7 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
 
 
-  val kevatJuhla = new MonthDay(6,4).toLocalDate(DateTime.now.getYear).toDateTimeAtStartOfDay
+  val kevatJuhla = Some(new MonthDay(6,4).toLocalDate(DateTime.now.getYear))
 
 
   val suoritus = Peruskoulu("1.2.3", "KESKEN",  kevatJuhla, "1.2.4")
@@ -188,10 +189,10 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
   case class Valmistuja(oid:String, vuosi:String, kausi: Kausi) {
 
-    val date:DateTime =
+    val date: Option[LocalDate] =
       kausi match {
-        case Kevät => new MonthDay(6,4).toLocalDate(vuosi.toInt).toDateTimeAtStartOfDay
-        case Syksy => new MonthDay(12,21).toLocalDate(vuosi.toInt).toDateTimeAtStartOfDay
+        case Kevät => Some(new MonthDay(6,4).toLocalDate(vuosi.toInt))
+        case Syksy => Some(new MonthDay(12,21).toLocalDate(vuosi.toInt))
       }
 
 
@@ -317,13 +318,13 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
   }
 
-  implicit def string2DateTime(s:String):DateTime = {
-    DateTime.parse(s, DateTimeFormat.forPattern("dd.MM.yyyy"))
-
+  implicit def string2LocalDate(s: String): Option[LocalDate] = {
+    Some(DateTime.parse(s, DateTimeFormat.forPattern("dd.MM.yyyy")).toLocalDate)
   }
 
-
-
+  implicit def string2DateTime(s: String): DateTime = {
+    DateTime.parse(s, DateTimeFormat.forPattern("dd.MM.yyyy"))
+  }
 
 }
 

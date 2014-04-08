@@ -37,8 +37,8 @@ class HaeValmistuvatSpec extends ScalatraFeatureSpec with GivenWhenThen with Hak
       haettu.length should equal (1)
       haettu.head.henkiloOid should equal (Mikko.oid)
       haettu.head.myontaja should equal ("1.2.3")
-      haettu.head.valmistuminen should not(beBefore("01.01.2014"))
-      haettu.head.valmistuminen should beBefore ("01.08.2014")
+      haettu.head.valmistuminen.get should not(beBefore("01.01.2014"))
+      haettu.head.valmistuminen.get should beBefore ("01.08.2014")
 
     }
 
@@ -63,8 +63,8 @@ class HaeValmistuvatSpec extends ScalatraFeatureSpec with GivenWhenThen with Hak
       haettu.length should equal (1)
       haettu.head.henkiloOid should equal (Mikko.oid)
       haettu.head.myontaja should equal ("1.2.4")
-      haettu.head.valmistuminen should not(beBefore ("01.08.2014"))
-      haettu.head.valmistuminen should beBefore ("31.12.2014")
+      haettu.head.valmistuminen.get should not(beBefore ("01.08.2014"))
+      haettu.head.valmistuminen.get should beBefore ("31.12.2014")
 
     }
 

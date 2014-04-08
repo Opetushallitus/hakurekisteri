@@ -168,7 +168,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
 
   @Deprecated // TODO mäppää puuttuvat tiedot
   def getXmlHakutoiveet(hakija: Hakija): Future[Seq[XMLHakutoive]] = {
-    log.debug("get xml hakutoiveet for: " + hakija.henkilo.oidHenkilo)
+    log.debug("get xml hakutoiveet for: " + hakija.henkilo.oidHenkilo + ", hakutoiveet size: " + hakija.hakemus.hakutoiveet.size)
     val futures = hakija.hakemus.hakutoiveet.zipWithIndex.map(ht => {
       findOrgData(ht._1.hakukohde.koulutukset.head.tarjoaja).map(option => option.map((t) => {
         val o = t._1
@@ -263,7 +263,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
   @Deprecated // TODO ratkaise kaksoiskansalaisuus
   def hakija2XMLHakija(hakija: Hakija): Future[Option[XMLHakija]] = {
     getXmlHakemus(hakija).flatMap((hakemus) => {
-      log.debug("map hakemus henkilolle: " + hakija.henkilo.oidHenkilo)
+      log.debug("map hakemus henkilolle: " + hakija.henkilo.oidHenkilo + ", hakutoiveet size: " + hakija.hakemus.hakutoiveet.size)
       val yhteystiedot: Seq[Yhteystiedot] = hakija.henkilo.yhteystiedotRyhma.getOrElse(("hakemus", "yhteystietotyyppi1"), Seq())
       hakemus.map(hakemus => {
         val maaFuture = getMaakoodi(yhteystiedot.getOrElse("YHTEYSTIETO_MAA", "FIN"))
@@ -294,25 +294,28 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     })
   }
 
+  def getValue(h: Option[Map[String, String]], key: String, default: String = ""): String = {
+    h.flatMap(_.get(key)).getOrElse(default)
+  }
+
   def getHakija(hakemus: FullHakemus): Hakija = {
-    log.debug("getting hakija from full hakemus: " + hakemus.oid)
-    val lahtokoulu: Option[String] = hakemus.answers.flatMap(_.koulutustausta.lahtokoulu)
-    val a = hakemus.answers
-    val h = a.flatMap(_.henkilotiedot)
+    val lahtokoulu: Option[String] = hakemus.vastauksetMerged.flatMap(_.get("lahtokoulu"))
+    val v = hakemus.vastauksetMerged
+    log.debug("getting hakija from full hakemus: " + hakemus.oid + ", vastauksetMerged: " + v)
     val hak = Hakija(
       Henkilo(
         yhteystiedotRyhma = Seq(YhteystiedotRyhma(0, "hakemus", "yhteystietotyyppi1", true, Seq(
-          Yhteystiedot(0, "YHTEYSTIETO_KATUOSOITE", h.map(_.lahiosoite).getOrElse("")),
-          Yhteystiedot(1, "YHTEYSTIETO_POSTINUMERO", h.map(_.Postinumero).getOrElse("")),
-          Yhteystiedot(2, "YHTEYSTIETO_MAA", h.map(_.asuinmaa).getOrElse("")),
-          Yhteystiedot(3, "YHTEYSTIETO_MATKAPUHELIN", h.map(_.matkapuhelinnumero1).getOrElse("")),
-          Yhteystiedot(4, "YHTEYSTIETO_SAHKOPOSTI", h.map(_.Sähköposti).getOrElse("")),
-          Yhteystiedot(5, "YHTEYSTIETO_KAUPUNKI", h.map(_.kotikunta).getOrElse(""))
+          Yhteystiedot(0, "YHTEYSTIETO_KATUOSOITE", getValue(v, "lahiosoite")),
+          Yhteystiedot(1, "YHTEYSTIETO_POSTINUMERO", getValue(v, "Postinumero")),
+          Yhteystiedot(2, "YHTEYSTIETO_MAA", getValue(v, "asuinmaa")),
+          Yhteystiedot(3, "YHTEYSTIETO_MATKAPUHELIN", getValue(v, "matkapuhelinnumero1")),
+          Yhteystiedot(4, "YHTEYSTIETO_SAHKOPOSTI", getValue(v, "Sähköposti")),
+          Yhteystiedot(5, "YHTEYSTIETO_KAUPUNKI", getValue(v, "kotikunta"))
         ))),
         yksiloity = false,
-        sukunimi = h.map(_.Sukunimi).getOrElse(""),
-        etunimet = h.map(_.Etunimet).getOrElse(""),
-        kutsumanimi = h.map(_.Kutsumanimi).getOrElse(""),
+        sukunimi = getValue(v, "Sukunimi"),
+        etunimet = getValue(v, "Etunimet"),
+        kutsumanimi = getValue(v, "Kutsumanimi"),
         kielisyys = Seq(),
         yksilointitieto = None,
         henkiloTyyppi = "OPPIJA",
@@ -320,38 +323,38 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
         duplicate = false,
         oppijanumero = hakemus.personOid,
         kayttajatiedot = None,
-        kansalaisuus = Seq(Kansalaisuus(h.map(_.kansalaisuus).getOrElse(""))),
+        kansalaisuus = Seq(Kansalaisuus(getValue(v, "kansalaisuus"))),
         passinnumero = "",
         asiointiKieli = Kieli("FI", "FI"),
         passivoitu = false,
-        eiSuomalaistaHetua = h.flatMap(_.onkoSinullaSuomalainenHetu).getOrElse(false),
-        sukupuoli = h.map(_.sukupuoli).getOrElse(""),
-        hetu = h.map(_.Henkilotunnus).getOrElse(""),
-        syntymaaika = h.map(_.syntymaaika).getOrElse(""),
+        eiSuomalaistaHetua = getValue(v, "onkoSinullaSuomalainenHetu", "false").toBoolean,
+        sukupuoli = getValue(v, "sukupuoli"),
+        hetu = getValue(v, "Henkilotunnus"),
+        syntymaaika = getValue(v, "syntymaaika"),
         turvakielto = false,
-        markkinointilupa = hakemus.answers.flatMap(_.lisatiedot.map(_.lupaMarkkinointi))
+        markkinointilupa = Some(getValue(v, "lupaMarkkinointi", "false").toBoolean)
       ),
       Seq(Suoritus(
         komo = "peruskoulu",
         myontaja = lahtokoulu.getOrElse(""),
         tila = "KESKEN",
-        valmistuminen = LocalDate.now,
+        valmistuminen = Some(LocalDate.now),
         henkiloOid = hakemus.personOid,
         yksilollistaminen = Ei,
-        suoritusKieli = hakemus.answers.map(_.koulutustausta.perusopetuksen_kieli).getOrElse("FI")
+        suoritusKieli = getValue(v, "perusopetuksen_kieli", "FI")
       )),
       lahtokoulu match {
         case Some(oid) => Seq(Opiskelija(
           oppilaitosOid = lahtokoulu.get,
           henkiloOid = hakemus.personOid,
-          luokkataso = hakemus.answers.map(_.koulutustausta.luokkataso).getOrElse(""),
-          luokka = hakemus.answers.flatMap(_.koulutustausta.lahtoluokka).getOrElse(""),
+          luokkataso = getValue(v, "luokkataso"),
+          luokka = getValue(v, "lahtoluokka"),
           alkuPaiva = DateTime.now.minus(org.joda.time.Duration.standardDays(1)),
           loppuPaiva = None
         ))
         case _ => Seq()
       },
-      a.flatMap(_.hakutoiveet).map(toiveet => {
+      v.map(toiveet => {
         val hakutoiveet = convertToiveet(toiveet)
         Hakemus(hakutoiveet, hakemus.oid)
       }).getOrElse(Hakemus(Seq(), hakemus.oid))
