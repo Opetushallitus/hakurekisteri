@@ -114,6 +114,8 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
         is.onFailure {
           case t: Throwable => {
             logger.error("error in service", t)
+            contentType = formats("html")
+            if (response.containsHeader("Content-Disposition")) response.setHeader("Content-Disposition", "")
             response.sendError(500, t.getMessage)
           }
         }

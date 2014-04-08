@@ -26,16 +26,14 @@ class RestKoodistopalvelu(serviceUrl: String = "https://itest-virkailija.oph.war
     logger.debug("calling koodisto-service [{}]", url)
     GET(url).apply.map(response => {
       if (response.code == HttpResponseCode.Ok) {
-        val kooditOption = response.bodyAsCaseClass[Seq[Koodi]].toOption
-        logger.debug("got response: [{}]", kooditOption)
-        kooditOption.map((koodit) => {
-          if (!koodit.isEmpty) {
-            val x = koodit.filter((koodi: Koodi) => koodi.koodisto.koodistoUri == rinnasteinenKoodistoUri)
-            if (!x.isEmpty) x.head.koodiArvo else throw new RuntimeException("rinnasteista koodia ei löytynyt")
-          } else {
-            throw new RuntimeException("rinnasteista koodia ei löytynyt")
-          }
-        }).get
+        val koodiList = response.bodyAsCaseClass[Koodi].toList
+        logger.debug("got response: [{}]", koodiList)
+        if (!koodiList.isEmpty) {
+          val filtered = koodiList.filter(_.koodisto.koodistoUri == rinnasteinenKoodistoUri)
+          if (!filtered.isEmpty) filtered.head.koodiArvo else throw new RuntimeException("rinnasteista koodia ei löytynyt kyseiseen koodistoon")
+        } else {
+          throw new RuntimeException("rinnasteisia koodeja ei löytynyt")
+        }
       } else {
         logger.error("call to koodisto-service [{}] failed: {}", Array(url, response.code))
         throw new RuntimeException("virhe kutsuttaessa koodistopalvelua: %s".format(response.code))
