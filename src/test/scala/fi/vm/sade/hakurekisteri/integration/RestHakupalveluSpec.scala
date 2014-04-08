@@ -19,11 +19,11 @@ class RestHakupalveluSpec extends ScalatraFunSuite {
    val client = new RestHakupalvelu("https://itest-virkailija.oph.ware.fi/koodisto-service")
 
    ignore("koodisto-service should return rinnasteinen koodi") {
-     val future: Future[Seq[SmallHakemus]] = client.find(HakijaQuery(None, None, None, Hakuehto.Kaikki, Tyyppi.Json, None, Some(User("testi", Seq(), None))))
+     val future = client.find(HakijaQuery(None, None, None, Hakuehto.Kaikki, Tyyppi.Json, None, Some(User("testi", Seq(), None))))
 
      // TODO improve this to also test successful query
      val t = intercept[RuntimeException] {
-       val list: Seq[SmallHakemus] = Await.result(future, Duration(length = 5, unit = TimeUnit.SECONDS))
+       Await.result(future, Duration(length = 5, unit = TimeUnit.SECONDS))
      }
      t.getMessage should equal ("virhe kutsuttaessa hakupalvelua: Unauthorized")
    }

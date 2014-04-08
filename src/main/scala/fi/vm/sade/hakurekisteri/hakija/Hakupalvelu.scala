@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
 
 trait Hakupalvelu {
 
-  def find(q: HakijaQuery): Future[Seq[SmallHakemus]]
+  def find(q: HakijaQuery): Future[Seq[ListHakemus]]
 
   def get(hakemusOid: String, user: Option[User]): Future[Option[FullHakemus]]
 
@@ -48,7 +48,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
     user.flatMap(_.attributePrincipal.map(_.getProxyTicketFor(serviceUrl + "/j_spring_cas_security_check"))).getOrElse("")
   }
 
-  override def find(q: HakijaQuery): Future[Seq[SmallHakemus]] = {
+  override def find(q: HakijaQuery): Future[Seq[ListHakemus]] = {
     val url = new URL(serviceUrl + "/applications/list/fullName/asc?" + getQueryParams(q))
     val ticket = getProxyTicket(q.user)
     logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
@@ -82,22 +82,11 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 
 }
 
-case class SmallHakemus(oid: String, state: String, firstNames: String, lastName: String, ssn: String, personOid: String)
+case class ListHakemus(oid: String, state: String, firstNames: String, lastName: String, ssn: String, personOid: String)
 
-case class HakemusHaku(totalCount: Long, results: Seq[SmallHakemus])
+case class HakemusHaku(totalCount: Long, results: Seq[ListHakemus])
 
-case class Henkilotiedot(kansalaisuus: String, asuinmaa: String, matkapuhelinnumero1: String, Sukunimi: String, Henkilotunnus: String,
-                         Postinumero: String, lahiosoite: String, sukupuoli: String, Sähköposti: String, Kutsumanimi: String, Etunimet: String,
-                         kotikunta: String, aidinkieli: String, syntymaaika: String, onkoSinullaSuomalainenHetu: Option[Boolean])
-
-case class Koulutustausta(PK_PAATTOTODISTUSVUOSI: String, POHJAKOULUTUS: String, perusopetuksen_kieli: String, lahtokoulu: Option[String], lahtoluokka: Option[String], luokkataso: String)
-
-case class Lisatiedot(lupaMarkkinointi: Boolean, lupaJulkaisu: Option[Boolean])
-
-case class Answers(henkilotiedot: Option[Henkilotiedot], koulutustausta: Koulutustausta, hakutoiveet: Option[Map[String, String]], lisatiedot: Option[Lisatiedot])
-
-case class FullHakemus(oid: String, state: String, personOid: String, answers: Option[Answers])
-
+case class FullHakemus(oid: String, state: String, personOid: String, vastauksetMerged: Option[Map[String, String]])
 
 // "hakutoiveet":{
 // "preference4-Koulutus-id-aoIdentifier":"",
