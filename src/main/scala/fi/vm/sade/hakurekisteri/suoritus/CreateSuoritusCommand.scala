@@ -35,6 +35,6 @@ class CreateSuoritusCommand extends HakurekisteriCommand[Suoritus] {
   val languages = Seq(Locale.getISOLanguages:_*) ++ Seq(Locale.getISOLanguages:_*).map(_.toUpperCase())
   val suoritusKieli: Field[String] = asType[String]("suoritusKieli").required.allowableValues(languages:_*)
 
-  override def toResource: Suoritus = Suoritus(komo.value.get, myontaja.value.get, tila.value.get, valmistuminen.value, henkiloOid.value.get, yks.value.get, suoritusKieli.value.get)}
+  override def toResource: Suoritus = Suoritus(komo.value.get, myontaja.value.get, tila.value.get, valmistuminen.value.get, henkiloOid.value.get, yks.value.get, suoritusKieli.value.get)}
 
 

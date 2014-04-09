@@ -22,9 +22,7 @@ trait Hakupalvelu {
 
 class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app")(implicit val ec: ExecutionContext) extends Hakupalvelu {
   val logger = LoggerFactory.getLogger(getClass)
-
   implicit val httpClient = new ApacheHttpClient
-
   protected implicit def jsonFormats: Formats = DefaultFormats
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
@@ -86,7 +84,7 @@ case class ListHakemus(oid: String, state: String, firstNames: String, lastName:
 
 case class HakemusHaku(totalCount: Long, results: Seq[ListHakemus])
 
-case class FullHakemus(oid: String, state: String, personOid: String, vastauksetMerged: Option[Map[String, String]])
+case class FullHakemus(oid: String, state: String, personOid: String, applicationSystemId: String, vastauksetMerged: Option[Map[String, String]])
 
 // "hakutoiveet":{
 // "preference4-Koulutus-id-aoIdentifier":"",

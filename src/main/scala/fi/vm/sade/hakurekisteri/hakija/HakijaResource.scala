@@ -28,7 +28,6 @@ object Hakuehto extends Enumeration {
   val Kaikki, Hyväksytyt, Vastaanottaneet = Value
 }
 
-// TODO tyyppimuunnin, joka muuntaa oletusmuodon (JSON) XML- tai Excel-muotoon
 object Tyyppi extends Enumeration {
   type Tyyppi = Value
   val Xml, Excel, Json = Value

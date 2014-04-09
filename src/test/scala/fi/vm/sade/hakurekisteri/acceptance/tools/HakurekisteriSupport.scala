@@ -112,7 +112,7 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
 
 
-  val kevatJuhla = Some(new MonthDay(6,4).toLocalDate(DateTime.now.getYear))
+  val kevatJuhla = new MonthDay(6,4).toLocalDate(DateTime.now.getYear)
 
 
   val suoritus = Peruskoulu("1.2.3", "KESKEN",  kevatJuhla, "1.2.4")
@@ -189,17 +189,17 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
   case class Valmistuja(oid:String, vuosi:String, kausi: Kausi) {
 
-    val date: Option[LocalDate] =
+    val date: LocalDate =
       kausi match {
-        case Kevät => Some(new MonthDay(6,4).toLocalDate(vuosi.toInt))
-        case Syksy => Some(new MonthDay(12,21).toLocalDate(vuosi.toInt))
+        case Kevät => new MonthDay(6,4).toLocalDate(vuosi.toInt)
+        case Syksy => new MonthDay(12,21).toLocalDate(vuosi.toInt)
       }
 
 
 
     def koulusta(koulu:String) {
       val list = tehdytSuoritukset.toList
-      val valmistuminen = Peruskoulu(koulu, "KESKEN",  date,  oid)
+      val valmistuminen = Peruskoulu(koulu, "KESKEN", date, oid)
       println(valmistuminen)
       tehdytSuoritukset = (list :+ valmistuminen).toSeq
       println(tehdytSuoritukset)
@@ -318,8 +318,8 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
   }
 
-  implicit def string2LocalDate(s: String): Option[LocalDate] = {
-    Some(DateTime.parse(s, DateTimeFormat.forPattern("dd.MM.yyyy")).toLocalDate)
+  implicit def string2LocalDate(s: String): LocalDate = {
+    DateTime.parse(s, DateTimeFormat.forPattern("dd.MM.yyyy")).toLocalDate
   }
 
   implicit def string2DateTime(s: String): DateTime = {

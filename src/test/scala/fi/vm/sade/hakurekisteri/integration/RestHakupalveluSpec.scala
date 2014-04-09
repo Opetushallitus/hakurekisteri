@@ -16,9 +16,9 @@ class RestHakupalveluSpec extends ScalatraFunSuite {
    implicit val system = ActorSystem()
    implicit def executor: ExecutionContext = system.dispatcher
 
-   val client = new RestHakupalvelu("https://itest-virkailija.oph.ware.fi/koodisto-service")
+   val client = new RestHakupalvelu("https://itest-virkailija.oph.ware.fi/haku-app")
 
-   ignore("koodisto-service should return rinnasteinen koodi") {
+   ignore("haku-app should return list of applications") {
      val future = client.find(HakijaQuery(None, None, None, Hakuehto.Kaikki, Tyyppi.Json, None, Some(User("testi", Seq(), None))))
 
      // TODO improve this to also test successful query
