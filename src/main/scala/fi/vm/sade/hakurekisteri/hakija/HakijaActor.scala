@@ -207,9 +207,9 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
         kielisyys = Seq(),
         yksilointitieto = None,
         henkiloTyyppi = "OPPIJA",
-        oidHenkilo = hakemus.personOid,
+        oidHenkilo = hakemus.personOid.getOrElse(""),
         duplicate = false,
-        oppijanumero = hakemus.personOid,
+        oppijanumero = hakemus.personOid.getOrElse(""),
         kayttajatiedot = None,
         kansalaisuus = Seq(Kansalaisuus(getValue(v, "kansalaisuus"))),
         passinnumero = "",
@@ -227,14 +227,14 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
         myontaja = lahtokoulu.getOrElse(""),
         tila = "KESKEN",
         valmistuminen = LocalDate.now,
-        henkiloOid = hakemus.personOid,
+        henkiloOid = hakemus.personOid.getOrElse(""),
         yksilollistaminen = Ei,
         suoritusKieli = getValue(v, "perusopetuksen_kieli", "FI")
       )),
       lahtokoulu match {
         case Some(oid) => Seq(Opiskelija(
           oppilaitosOid = lahtokoulu.get,
-          henkiloOid = hakemus.personOid,
+          henkiloOid = hakemus.personOid.getOrElse(""),
           luokkataso = getValue(v, "luokkataso"),
           luokka = getValue(v, "lahtoluokka"),
           alkuPaiva = DateTime.now.minus(org.joda.time.Duration.standardDays(1)),

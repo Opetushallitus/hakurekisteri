@@ -80,11 +80,11 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 
 }
 
-case class ListHakemus(oid: String, state: String, firstNames: String, lastName: String, ssn: String, personOid: String)
+case class ListHakemus(oid: String)
 
 case class HakemusHaku(totalCount: Long, results: Seq[ListHakemus])
 
-case class FullHakemus(oid: String, state: String, personOid: String, applicationSystemId: String, vastauksetMerged: Option[Map[String, String]])
+case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, vastauksetMerged: Option[Map[String, String]])
 
 // "hakutoiveet":{
 // "preference4-Koulutus-id-aoIdentifier":"",

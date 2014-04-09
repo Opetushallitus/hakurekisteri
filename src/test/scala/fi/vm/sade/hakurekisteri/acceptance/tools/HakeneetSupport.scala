@@ -25,7 +25,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object OpetuspisteX extends Organisaatio("1.10.3", Map("fi" -> "Opetuspiste X"), Some("0000101"), None, Some("1.10.1"))
   object OpetuspisteY extends Organisaatio("1.10.4", Map("fi" -> "Opetuspiste Y"), Some("0000201"), None, Some("1.10.2"))
 
-  object FullHakemus1 extends FullHakemus("1.25.1", "ACTIVE", "1.24.1", "1.1",
+  object FullHakemus1 extends FullHakemus("1.25.1", None, "1.1",
     Some(Map("kansalaisuus" -> "FIN",
       "asuinmaa" -> "FIN",
       "matkapuhelinnumero1" -> "0401234567",
@@ -64,7 +64,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       "lupaMarkkinointi" -> "true",
       "lupaJulkaisu" -> "true"))
   )
-  object FullHakemus2 extends FullHakemus("1.25.2", "ACTIVE", "1.24.2", "1.1",
+  object FullHakemus2 extends FullHakemus("1.25.2", Some("1.24.2"), "1.1",
     Some(Map("kansalaisuus" -> "FIN",
       "asuinmaa" -> "FIN",
       "matkapuhelinnumero1" -> "0401234568",
@@ -107,7 +107,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object notEmpty
 
   implicit def fullHakemus2SmallHakemus(h: FullHakemus): ListHakemus = {
-    ListHakemus(h.oid, h.state, h.vastauksetMerged.get("Etunimet"), h.vastauksetMerged.get("Sukunimi"), h.vastauksetMerged.get("Henkilotunnus"), h.personOid)
+    ListHakemus(h.oid)
   }
 
   import _root_.akka.pattern.ask
