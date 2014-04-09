@@ -78,6 +78,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     case hakijat: XMLHakijat if responseFormat == "excel" => {
       logger.debug("hakijat to excel: {}", hakijat)
       ExcelUtil.write(response.outputStream, hakijat)
+      response.outputStream.flush
     }
   }
 

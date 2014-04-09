@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.hakija
 
 import info.folone.scala.poi._
-import java.io.OutputStream
+import java.io.{Writer, OutputStream}
 import info.folone.scala.poi.StringCell
 import org.slf4j.LoggerFactory
 
@@ -10,7 +10,7 @@ object ExcelUtil {
   val zero = BigDecimal.valueOf(0)
 
   def getHeaders(): Set[Row] = {
-    Set(new Row(0)(Set(
+    Set(Row(0)(Set(
       StringCell(0, "Hetu"),
       StringCell(1, "Oppijanumero"),
       StringCell(2, "Sukunimi"),
@@ -60,7 +60,7 @@ object ExcelUtil {
   }
 
   def getRows(hakijat: XMLHakijat): Set[Row] = {
-    hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet.map(ht => Set[Cell](
+    val rows: Set[Set[Cell]] = hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet.map(ht => Set[Cell](
       StringCell(0, h.hetu),
       StringCell(1, h.oppijanumero),
       StringCell(2, h.sukunimi),
@@ -106,7 +106,8 @@ object ExcelUtil {
       StringCell(42, if (ht.terveys.getOrElse(false)) "X" else ""),
       StringCell(43, if (ht.aiempiperuminen.getOrElse(false)) "X" else ""),
       StringCell(44, if (ht.kaksoistutkinto.getOrElse(false)) "X" else "")
-    ))).zipWithIndex.map((rowWithIndex) => new Row(rowWithIndex._2 + 1)(rowWithIndex._1)).toSet
+    ))).toSet
+    rows.zipWithIndex.map((rowWithIndex) => Row(rowWithIndex._2 + 1)(rowWithIndex._1))
   }
 
   def write(out: OutputStream, hakijat: XMLHakijat) {
@@ -115,7 +116,7 @@ object ExcelUtil {
     val wb = new Workbook(Set(sheet))
     logger.debug("writing workbook: " + wb)
 
-    wb.safeToStream(out).unsafePerformIO
+    wb.safeToStream(out).map(_.fold(ex => throw ex, identity)).unsafePerformIO
   }
 
 }
