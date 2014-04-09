@@ -75,7 +75,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
           lasnaolo = None,
           terveys = None,
           aiempiperuminen = None,
-          kaksoistutkinto = None
+          kaksoistutkinto = Some(ht._1.kaksoistutkinto)
         )
       }))
     }).toSeq
@@ -192,7 +192,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     log.debug("getting hakija from full hakemus: " + hakemus.oid + ", vastauksetMerged: " + v)
     val hak = Hakija(
       Henkilo(
-        yhteystiedotRyhma = Seq(YhteystiedotRyhma(0, "hakemus", "yhteystietotyyppi1", true, Seq(
+        yhteystiedotRyhma = Seq(YhteystiedotRyhma(0, "yhteystietotyyppi1", "hakemus", true, Seq(
           Yhteystiedot(0, "YHTEYSTIETO_KATUOSOITE", getValue(v, "lahiosoite")),
           Yhteystiedot(1, "YHTEYSTIETO_POSTINUMERO", getValue(v, "Postinumero")),
           Yhteystiedot(2, "YHTEYSTIETO_MAA", getValue(v, "asuinmaa")),
