@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.storage.repository.InMemJournal
 import java.util.UUID
 
 class HealthcheckResourceSpec extends ScalatraFunSuite {
-  val suoritus = Peruskoulu("1.2.3", "KESKEN", Some(LocalDate.now),"1.2.4")
+  val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now,"1.2.4")
   val opiskelija = Opiskelija("1.2.3", "9", "9A", "1.2.4", DateTime.now, None)
   implicit val system = ActorSystem()
 

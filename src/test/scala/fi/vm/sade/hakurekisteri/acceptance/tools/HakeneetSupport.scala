@@ -25,7 +25,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object OpetuspisteX extends Organisaatio("1.10.3", Map("fi" -> "Opetuspiste X"), Some("0000101"), None, Some("1.10.1"))
   object OpetuspisteY extends Organisaatio("1.10.4", Map("fi" -> "Opetuspiste Y"), Some("0000201"), None, Some("1.10.2"))
 
-  object FullHakemus1 extends FullHakemus("1.25.1", "ACTIVE", "1.24.1",
+  object FullHakemus1 extends FullHakemus("1.25.1", None, "1.1",
     Some(Map("kansalaisuus" -> "FIN",
       "asuinmaa" -> "FIN",
       "matkapuhelinnumero1" -> "0401234567",
@@ -64,50 +64,50 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       "lupaMarkkinointi" -> "true",
       "lupaJulkaisu" -> "true"))
   )
-  object FullHakemus2 extends FullHakemus("1.25.2", "ACTIVE", "1.24.2",
+  object FullHakemus2 extends FullHakemus("1.25.2", Some("1.24.2"), "1.1",
     Some(Map("kansalaisuus" -> "FIN",
-    "asuinmaa" -> "FIN",
-    "matkapuhelinnumero1" -> "0401234568",
-    "Sukunimi" -> "Virtanen",
-    "Henkilotunnus" -> "200394-959H",
-    "Postinumero" -> "00100",
-    "lahiosoite" -> "Katu 2",
-    "sukupuoli" -> "1",
-    "Sähköposti" -> "ville@testi.oph.fi",
-    "Kutsumanimi" -> "Ville",
-    "Etunimet" -> "Ville",
-    "kotikunta" -> "098",
-    "aidinkieli" -> "FI",
-    "syntymaaika" -> "20.03.1994",
-    "onkoSinullaSuomalainenHetu" -> "true",
-    "PK_PAATTOTODISTUSVUOSI" -> "2014",
-    "POHJAKOULUTUS" -> "1",
-    "perusopetuksen_kieli" -> "FI",
-    "lahtokoulu" -> OppilaitosY.oid,
-    "lahtoluokka" -> "9A",
-    "luokkataso" -> "9",
-    "preference2-Opetuspiste" -> "Ammattiopisto Loppi2\"",
-    "preference2-Opetuspiste-id" -> "1.10.3",
-    "preference2-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)2",
-    "preference2-Koulutus-id" -> "1.11.1",
-    "preference2-Koulutus-id-aoIdentifier" -> "460",
-    "preference2-Koulutus-id-educationcode" -> "koulutus_321204",
-    "preference2-Koulutus-id-lang" -> "FI",
-    "preference1-Opetuspiste" -> "Ammattiopisto Loppi",
-    "preference1-Opetuspiste-id" -> "1.10.4",
-    "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
-    "preference1-Koulutus-id" -> "1.11.2",
-    "preference1-Koulutus-id-aoIdentifier" -> "460",
-    "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
-    "preference1-Koulutus-id-lang" -> "FI",
-    "lupaMarkkinointi" -> "true",
-    "lupaJulkaisu" -> "true"))
+      "asuinmaa" -> "FIN",
+      "matkapuhelinnumero1" -> "0401234568",
+      "Sukunimi" -> "Virtanen",
+      "Henkilotunnus" -> "200394-959H",
+      "Postinumero" -> "00100",
+      "lahiosoite" -> "Katu 2",
+      "sukupuoli" -> "1",
+      "Sähköposti" -> "ville@testi.oph.fi",
+      "Kutsumanimi" -> "Ville",
+      "Etunimet" -> "Ville",
+      "kotikunta" -> "098",
+      "aidinkieli" -> "FI",
+      "syntymaaika" -> "20.03.1994",
+      "onkoSinullaSuomalainenHetu" -> "true",
+      "PK_PAATTOTODISTUSVUOSI" -> "2014",
+      "POHJAKOULUTUS" -> "1",
+      "perusopetuksen_kieli" -> "FI",
+      "lahtokoulu" -> OppilaitosY.oid,
+      "lahtoluokka" -> "9A",
+      "luokkataso" -> "9",
+      "preference2-Opetuspiste" -> "Ammattiopisto Loppi2\"",
+      "preference2-Opetuspiste-id" -> "1.10.3",
+      "preference2-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)2",
+      "preference2-Koulutus-id" -> "1.11.1",
+      "preference2-Koulutus-id-aoIdentifier" -> "460",
+      "preference2-Koulutus-id-educationcode" -> "koulutus_321204",
+      "preference2-Koulutus-id-lang" -> "FI",
+      "preference1-Opetuspiste" -> "Ammattiopisto Loppi",
+      "preference1-Opetuspiste-id" -> "1.10.4",
+      "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
+      "preference1-Koulutus-id" -> "1.11.2",
+      "preference1-Koulutus-id-aoIdentifier" -> "460",
+      "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
+      "preference1-Koulutus-id-lang" -> "FI",
+      "lupaMarkkinointi" -> "true",
+      "lupaJulkaisu" -> "true"))
   )
 
   object notEmpty
 
   implicit def fullHakemus2SmallHakemus(h: FullHakemus): ListHakemus = {
-    ListHakemus(h.oid, h.state, h.vastauksetMerged.get("Etunimet"), h.vastauksetMerged.get("Sukunimi"), h.vastauksetMerged.get("Henkilotunnus"), h.personOid)
+    ListHakemus(h.oid)
   }
 
   import _root_.akka.pattern.ask

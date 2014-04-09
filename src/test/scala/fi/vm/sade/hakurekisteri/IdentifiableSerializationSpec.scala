@@ -30,7 +30,7 @@ class IdentifiableSerializationSpec extends WordSpec with ShouldMatchers with Ha
   val kevatJuhla = new MonthDay(6,4).toLocalDate(DateTime.now.getYear).toDateTimeAtStartOfDay
 
 
-  val suoritus = Peruskoulu("1.2.3", "KESKEN", Some(kevatJuhla.toLocalDate), "1.2.4")
+  val suoritus = Peruskoulu("1.2.3", "KESKEN", kevatJuhla.toLocalDate, "1.2.4")
 
 
 
