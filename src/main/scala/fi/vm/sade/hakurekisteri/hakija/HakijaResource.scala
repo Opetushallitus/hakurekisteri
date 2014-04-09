@@ -47,12 +47,12 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
-  addMimeMapping("application/vnd.ms-excel", "excel")
+  addMimeMapping("application/octet-stream", "binary")
 
   def getContentType(t: Tyyppi): String = t match {
     case Tyyppi.Json => formats("json")
     case Tyyppi.Xml => formats("xml")
-    case Tyyppi.Excel => formats("excel")
+    case Tyyppi.Excel => formats("binary")
   }
 
   def getFileExtension(t: Tyyppi): String = t match {
@@ -76,9 +76,9 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
       logger.debug("hakijat to xml: {}", hakijat)
       XML.write(response.writer, Utility.trim(hakijat.toXml), response.characterEncoding.get, xmlDecl = true, doctype = null)
     }
-    case hakijat: XMLHakijat if responseFormat == "excel" => {
+    case hakijat: XMLHakijat if responseFormat == "binary" => {
       logger.debug("hakijat to excel: {}", hakijat)
-      ExcelUtil.write(new BufferedOutputStream(response.outputStream), hakijat)
+      ExcelUtil.write(response.outputStream, hakijat)
     }
   }
 
