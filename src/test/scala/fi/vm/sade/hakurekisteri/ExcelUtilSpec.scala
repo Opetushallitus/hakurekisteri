@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri
 
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import fi.vm.sade.hakurekisteri.hakija._
-import java.io.ByteArrayOutputStream
+import java.io.{BufferedOutputStream, OutputStream, ByteArrayOutputStream}
 
 class ExcelUtilSpec extends ScalatraFunSuite {
 
@@ -61,6 +61,8 @@ class ExcelUtilSpec extends ScalatraFunSuite {
 
     val out: ByteArrayOutputStream = new ByteArrayOutputStream()
     ExcelUtil.write(out, hakijat)
+
+    println("out size: " + out.size)
 
     out.size() should not equal(0)
   }

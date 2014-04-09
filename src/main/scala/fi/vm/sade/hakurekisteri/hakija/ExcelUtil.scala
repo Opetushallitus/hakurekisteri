@@ -116,7 +116,7 @@ object ExcelUtil {
     val wb = new Workbook(Set(sheet))
     logger.debug("writing workbook: " + wb)
 
-    wb.safeToStream(out).map(_.fold(ex => throw ex, identity)).unsafePerformIO
+    wb.safeToStream(out).map(_.fold(ex => throw ex, x => {out.flush; identity(x)})).unsafePerformIO
   }
 
 }

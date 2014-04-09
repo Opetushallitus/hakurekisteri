@@ -22,6 +22,7 @@ import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.suoritus.Komoto
 import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
+import java.io.BufferedOutputStream
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
@@ -77,8 +78,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     }
     case hakijat: XMLHakijat if responseFormat == "excel" => {
       logger.debug("hakijat to excel: {}", hakijat)
-      ExcelUtil.write(response.outputStream, hakijat)
-      response.outputStream.flush
+      ExcelUtil.write(new BufferedOutputStream(response.outputStream), hakijat)
     }
   }
 
