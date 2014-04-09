@@ -109,13 +109,13 @@ object ExcelUtil {
     ))).zipWithIndex.map((rowWithIndex) => new Row(rowWithIndex._2 + 1)(rowWithIndex._1)).toSet
   }
 
-  def writeHakijatAsExcel(hakijat: XMLHakijat, out: OutputStream) {
+  def write(out: OutputStream, hakijat: XMLHakijat) {
     logger.debug("about to create xls")
     val sheet = new Sheet("Hakijat")(getHeaders ++ getRows(hakijat))
     val wb = new Workbook(Set(sheet))
     logger.debug("writing workbook: " + wb)
 
-    wb.safeToStream(out).map((t) => t.fold(th => throw th, identity)).unsafePerformIO
+    wb.safeToStream(out).unsafePerformIO
   }
 
 }

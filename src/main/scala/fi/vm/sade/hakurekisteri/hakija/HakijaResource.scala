@@ -72,12 +72,12 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
   private def renderCustom: RenderPipeline = {
     case hakijat: XMLHakijat if responseFormat == "xml" => {
-      logger.debug("hakijat: " + hakijat.toXml.toString)
+      logger.debug("hakijat to xml: {}", hakijat)
       XML.write(response.writer, Utility.trim(hakijat.toXml), response.characterEncoding.get, xmlDecl = true, doctype = null)
     }
     case hakijat: XMLHakijat if responseFormat == "excel" => {
-      logger.debug("hakijat to Excel: " + hakijat)
-      ExcelUtil.writeHakijatAsExcel(hakijat, response.getOutputStream)
+      logger.debug("hakijat to excel: {}", hakijat)
+      ExcelUtil.write(response.outputStream, hakijat)
     }
   }
 

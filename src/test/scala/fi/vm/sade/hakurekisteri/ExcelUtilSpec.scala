@@ -60,7 +60,7 @@ class ExcelUtilSpec extends ScalatraFunSuite {
     )))
 
     val out: ByteArrayOutputStream = new ByteArrayOutputStream()
-    ExcelUtil.writeHakijatAsExcel(hakijat, out)
+    ExcelUtil.write(out, hakijat)
 
     out.size() should not equal(0)
   }
