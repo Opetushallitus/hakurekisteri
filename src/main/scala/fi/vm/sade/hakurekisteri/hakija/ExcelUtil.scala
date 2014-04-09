@@ -1,23 +1,16 @@
 package fi.vm.sade.hakurekisteri.hakija
 
 import info.folone.scala.poi._
-import scalaz._
-import syntax.monoid._
-import syntax.foldable._
-import std.list._
 import java.io.OutputStream
-import scalaz.effect.IO
-import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
-import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
 import info.folone.scala.poi.StringCell
+import org.slf4j.LoggerFactory
 
 object ExcelUtil {
-
+  val logger = LoggerFactory.getLogger(getClass)
   val zero = BigDecimal.valueOf(0)
-  // 	Kaksoistutkinto
 
   def getHeaders(): Set[Row] = {
-    Set(Row(0)(Set(
+    Set(new Row(0)(Set(
       StringCell(0, "Hetu"),
       StringCell(1, "Oppijanumero"),
       StringCell(2, "Sukunimi"),
@@ -113,14 +106,16 @@ object ExcelUtil {
       StringCell(42, if (ht.terveys.getOrElse(false)) "X" else ""),
       StringCell(43, if (ht.aiempiperuminen.getOrElse(false)) "X" else ""),
       StringCell(44, if (ht.kaksoistutkinto.getOrElse(false)) "X" else "")
-    ))).zipWithIndex.map((t) => Row(t._2 + 1)(t._1)).toSet
+    ))).zipWithIndex.map((rowWithIndex) => new Row(rowWithIndex._2 + 1)(rowWithIndex._1)).toSet
   }
 
   def writeHakijatAsExcel(hakijat: XMLHakijat, out: OutputStream) {
+    logger.debug("about to create xls")
     val sheet = new Sheet("Hakijat")(getHeaders ++ getRows(hakijat))
-
     val wb = new Workbook(Set(sheet))
-    wb.safeToStream(out).map((t) => t.fold(th => throw th, identity)).unsafePerformIO()
+    logger.debug("writing workbook: " + wb)
+
+    wb.safeToStream(out).map((t) => t.fold(th => throw th, identity)).unsafePerformIO
   }
 
 }
