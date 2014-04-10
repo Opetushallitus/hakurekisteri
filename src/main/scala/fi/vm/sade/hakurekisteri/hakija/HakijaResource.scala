@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.hakija
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.Tyyppi.Tyyppi
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.{Kausi, SpringSecuritySupport, HakurekisteriJsonSupport, User}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport}
 import org.scalatra.{RenderPipeline, AsyncResult, CorsSupport, FutureSupport}
@@ -13,16 +13,19 @@ import _root_.akka.pattern.ask
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import scala.util.Try
-import fi.vm.sade.hakurekisteri.suoritus.Suoritus
-import org.joda.time.DateTime
 import javax.servlet.http.HttpServletResponse
 import scala.xml._
-import scala.xml.transform.RewriteRule
 import scala.Some
+import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
+import fi.vm.sade.hakurekisteri.suoritus.Suoritus
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
+import scala.Some
+import fi.vm.sade.hakurekisteri.hakija.Organisaatio
 import fi.vm.sade.hakurekisteri.rest.support.User
-import fi.vm.sade.hakurekisteri.suoritus.Komoto
-import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
-import java.io.BufferedOutputStream
+import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
+import fi.vm.sade.hakurekisteri.hakija.XMLHakija
+import fi.vm.sade.hakurekisteri.hakija.Hakutoive
+
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
@@ -34,8 +37,16 @@ object Tyyppi extends Enumeration {
   val Xml, Excel, Json = Value
 }
 
-case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, tyyppi: Tyyppi, tiedosto: Option[Boolean], user: Option[User])
+case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, user: Option[User])
 
+object HakijaQuery {
+  def apply(params: Map[String,String], user: Option[User]): HakijaQuery = HakijaQuery(
+    params.get("haku"),
+    params.get("organisaatio"),
+    params.get("hakukohdekoodi"),
+    Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki}.get,
+    user)
+}
 
 class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -61,59 +72,35 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     case Tyyppi.Excel => "xls"
   }
 
-  def setContentDisposition(q: HakijaQuery, response: HttpServletResponse): Unit = q.tiedosto.map(returnAsFile => {
-    if (returnAsFile) response.setHeader("Content-Disposition", "attachment;filename=hakijat." + getFileExtension(q.tyyppi))
-  })
-
-  def containsValue(e: Enumeration, s: String): Boolean = {
-    Try { e.withName(s); true }.getOrElse(false)
-  }
+  def setContentDisposition(t: Tyyppi, response: HttpServletResponse, filename: String): Unit = response.setHeader("Content-Disposition", "attachment;filename=%s.%s".format(filename, getFileExtension(t)))
 
   override protected def renderPipeline: RenderPipeline = renderCustom orElse super.renderPipeline
-
   private def renderCustom: RenderPipeline = {
-    case hakijat: XMLHakijat if responseFormat == "xml" => {
-      logger.debug("hakijat to xml: {}", hakijat)
-      XML.write(response.writer, Utility.trim(hakijat.toXml), response.characterEncoding.get, xmlDecl = true, doctype = null)
-    }
-    case hakijat: XMLHakijat if responseFormat == "binary" => {
-      logger.debug("hakijat to excel: {}", hakijat)
-      ExcelUtil.write(response.outputStream, hakijat)
-    }
+    case hakijat: XMLHakijat if responseFormat == "xml" => XML.write(response.writer, Utility.trim(hakijat.toXml), response.characterEncoding.get, xmlDecl = true, doctype = null)
+    case hakijat: XMLHakijat if responseFormat == "binary" => ExcelUtil.write(response.outputStream, hakijat)
+  }
+
+  before() {
+    val tyyppi = Try(Tyyppi.withName(params("tyyppi"))).getOrElse(Tyyppi.Json)
+    contentType = getContentType(tyyppi)
+    if (Try(params("tiedosto").toBoolean).getOrElse(false)) setContentDisposition(tyyppi, response, "hakijat")
   }
 
   get("/") {
-    val hakuehto: String = params.getOrElse("hakuehto", "")
-    val tyyppi: String = params.getOrElse("tyyppi", "")
-    if (hakuehto == "" || containsValue(Hakuehto, hakuehto) == false || tyyppi == "" || containsValue(Tyyppi, tyyppi) == false) {
-      logger.warn("invalid query params: hakuehto=" + hakuehto + ", tyyppi=" + tyyppi)
-      response.sendError(400, "hakuehto tai tyyppi puuttuu tai arvo on virheellinen")
-    } else {
-      val q = HakijaQuery(
-        params.get("haku"),
-        params.get("organisaatio"),
-        params.get("hakukohdekoodi"),
-        Hakuehto.withName(hakuehto),
-        Tyyppi.withName(tyyppi),
-        params.get("tiedosto").map(_.toBoolean),
-        currentUser)
+    val q = HakijaQuery(params, currentUser)
+    logger.info("Query: " + q)
 
-      logger.info("Query: " + q)
+    new AsyncResult() {
+      val is = hakijaActor ? q
+    }
+  }
 
-      contentType = getContentType(q.tyyppi)
-      setContentDisposition(q, response)
-
-      new AsyncResult() {
-        val is = hakijaActor ? q
-        is.onFailure {
-          case t: Throwable => {
-            logger.error("error in service", t)
-            contentType = formats("html")
-            if (response.containsHeader("Content-Disposition")) response.setHeader("Content-Disposition", "")
-            response.sendError(500, t.getMessage)
-          }
-        }
-      }
+  error {
+    case t: Throwable => {
+      logger.error("error in service", t)
+      contentType = formats("html")
+      if (response.containsHeader("Content-Disposition")) response.setHeader("Content-Disposition", "")
+      response.sendError(500, t.getMessage)
     }
   }
 }
@@ -149,6 +136,12 @@ case class XMLHakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[
   }
 }
 
+object XMLHakutoive {
+  def apply(ht: Hakutoive, jno: Integer)(o: Organisaatio, k: String): XMLHakutoive =
+    XMLHakutoive((jno + 1).toShort, k, o.toimipistekoodi, o.nimi.get("fi").orElse(o.nimi.get("sv")),
+                 ht.hakukohde.hakukohdekoodi, None, None, None, None, None, None, None, None, Some(ht.kaksoistutkinto))
+}
+
 case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahtokoulu: Option[String], lahtokoulunnimi: Option[String], luokka: Option[String],
                    luokkataso: Option[String], pohjakoulutus: String, todistusvuosi: Option[String], julkaisulupa: Option[Boolean], yhteisetaineet: Option[BigDecimal],
                    lukiontasapisteet: Option[BigDecimal], lisapistekoulutus: Option[String], yleinenkoulumenestys: Option[BigDecimal],
@@ -177,6 +170,42 @@ case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahto
   }
 }
 
+object XMLHakemus {
+  def resolvePohjakoulutus(suoritus: Option[Suoritus]): String = suoritus match {
+    case Some(s) => {
+      s.komo match {
+        case "ulkomainen" => "0"
+        case "peruskoulu" => s.yksilollistaminen match {
+          case Ei => "1"
+          case Osittain => "2"
+          case Alueittain => "3"
+          case Kokonaan => "6"
+        }
+        case "lukio" => "9"
+      }
+    }
+    case None => "7"
+  }
+
+  def apply(hakija: Hakija, hakemus: Hakemus, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive]): XMLHakemus =
+    XMLHakemus(vuosi = Try(hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamisvuosi).get,
+      kausi = if (Try(hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamiskausi).get == Kausi.Kevät) "K" else "S",
+      hakemusnumero = hakemus.hakemusnumero,
+      lahtokoulu = lahtokoulu.flatMap(o => o.oppilaitosKoodi),
+      lahtokoulunnimi = lahtokoulu.flatMap(o => o.nimi.get("fi")),
+      luokka = opiskelutieto.map(_.luokka),
+      luokkataso = opiskelutieto.map(_.luokkataso),
+      pohjakoulutus = resolvePohjakoulutus(Try(hakija.suoritukset.head).toOption),
+      todistusvuosi = Some("2014"),
+      julkaisulupa = Some(false),
+      yhteisetaineet = None,
+      lukiontasapisteet = None,
+      lisapistekoulutus = None,
+      yleinenkoulumenestys = None,
+      painotettavataineet = None,
+      hakutoiveet = toiveet)
+}
+
 case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
                   postinumero: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String], muupuhelin: Option[String], sahkoposti: Option[String],
                   kotikunta: Option[String], sukupuoli: String, aidinkieli: String, koulutusmarkkinointilupa: Boolean, hakemus: XMLHakemus) {
@@ -201,6 +230,28 @@ case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etuni
       {hakemus.toXml}
     </Hakija>
   }
+}
+
+object XMLHakija {
+  def apply(hakija: Hakija, yhteystiedot: Map[String, String], maa: String, kansalaisuus: String, hakemus: XMLHakemus): XMLHakija =
+    XMLHakija(
+      hakija.henkilo.hetu,
+      hakija.henkilo.oidHenkilo,
+      hakija.henkilo.sukunimi,
+      hakija.henkilo.etunimet,
+      Some(hakija.henkilo.kutsumanimi),
+      yhteystiedot.getOrElse("YHTEYSTIETO_KATUOSOITE", ""),
+      yhteystiedot.getOrElse("YHTEYSTIETO_POSTINUMERO", "00000"),
+      maa,
+      kansalaisuus,
+      yhteystiedot.get("YHTEYSTIETO_MATKAPUHELIN"),
+      yhteystiedot.get("YHTEYSTIETO_PUHELINNUMERO"),
+      yhteystiedot.get("YHTEYSTIETO_SAHKOPOSTI"),
+      yhteystiedot.get("YHTEYSTIETO_KAUPUNKI"),
+      if (hakija.henkilo.sukupuoli == "MIES") "1" else "2", hakija.henkilo.asiointiKieli.kieliKoodi,
+      hakija.henkilo.markkinointilupa.getOrElse(false),
+      hakemus
+    )
 }
 
 case class XMLHakijat(hakijat: Seq[XMLHakija]) {

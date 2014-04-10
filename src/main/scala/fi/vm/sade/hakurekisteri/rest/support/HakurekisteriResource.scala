@@ -108,8 +108,6 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
     (command[C] >> (_.toValidatedResource)).fold(
       errors => BadRequest("Malformed Resource + " + errors),
       resource => new ActorResult[A with Identified](identifyResource(resource, id), Ok(_)))
-
-
   }
 
 

@@ -23,7 +23,7 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       hakupalvelu has (FullHakemus1, FullHakemus2)
 
       When("rajaan muodostusta valitsemalla opetuspisteeseen X")
-      val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, Tyyppi.Json, None, None)),
+      val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, None)),
         Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
       println("tiedosto: " + hakijat)
 
@@ -34,36 +34,14 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       })
     }
 
-    scenario("Haussa Y hakeneet") {
-      Given("N henkilöä täyttää hakemuksen; yksi kohdistuu hakuun Y")
-      //Mikko täyttää hakemuksen yhteishaussa
-      //Matti täyttää hakemuksen lisähaussa
-
-      When("rajaan muodostusta valitsemalla haun Y")
-      //tiedosto = muodosta(haku = yhteishaku)
-
-      Then("saan siirtotiedoston, jossa on kyseinen hakija")
-      //tiedosto sisältää Mikon tiedot
-    }
-
-    scenario("Hakukohdekoodi") {
-      Given("N henkilöä täyttää hakemuksen; osa kohdistuu hakukohteisiin tyyppiä Z")
-      //Mikko täyttää hakemuksen hakukohteeseen 123
-      //Matti täyttää hakemuksen hakukohteeseen 190
-
-      When("rajaan muodostusta syöttämällä hakukohdekoodin Z")
-      //tiedosto = muodosta(hakukohdekoodi = 123)
-
-      Then("saan siirtotiedoston, jossa on hakijat hakukohteisiin tyyppiä Z")
-      //tiedosto sisältää Mikon tiedot
-    }
-
     scenario("XML tiedosto") {
       Given("N henkilöä täyttää hakemuksen")
-      //Mikko täyttää hakemuksen
+      hakupalvelu has (FullHakemus1)
 
       When("rajaan muodostusta valitsemalla tiedostotyypiksi 'XML'")
-      //tiedosto = muodosta(muoto = XML)
+      val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, None)),
+        Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
+      println("tiedosto: " + hakijat)
 
       Then("saan siirtotiedoston, joka on XML-muodossa")
       //tiedosto on XML-muodossa
@@ -80,28 +58,43 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       //tiedosto on Excel-muodossa
     }
 
-
-
-
-
-    // Myöhemmin nämä
-
     scenario("Kaikki hakeneet") {
-      Given("Kaikkiaan viisi henkilöä täyttää hakemuksen")
+      Given("Kaikkiaan kaksi henkilöä täyttää hakemuksen")
+      hakupalvelu has (FullHakemus1, FullHakemus2)
+
       When("rajaan muodostusta valitsemalla 'Kaikki hakeneet'")
-      Then("saan siirtotiedoston, jossa on kaikki viisi hakijaa")
+      val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, None)),
+        Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
+      println("hyväksytyt: " + hakijat)
+
+      Then("saan siirtotiedoston, jossa on kaksi hakijaa")
+      hakijat.hakijat.size should equal (2)
     }
 
     scenario("Hyväksytyt hakijat") {
       Given("N henkilöä täyttää hakemuksen")
+      hakupalvelu has (FullHakemus1, FullHakemus2)
+
       When("rajaan muodostusta valitsemalla 'Hyväksytyt hakijat'")
+      val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Hyväksytyt, None)),
+        Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
+      println("hyväksytyt: " + hakijat)
+
       Then("saan siirtotiedoston, jossa on vain hyväksytyt hakijat")
+      hakijat.hakijat.size should equal (0)
     }
 
     scenario("Paikan vastaanottaneet hakijat") {
       Given("N henkilöä täyttää hakemuksen")
+      hakupalvelu has (FullHakemus1, FullHakemus2)
+
       When("rajaan muodostusta valitsemalla 'Paikan vastaanottaneet'")
+      val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Vastaanottaneet, None)),
+        Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
+      println("vastaanottaneet: " + hakijat)
+
       Then("saan siirtotiedoston, jossa on vain paikan vastaanottaneet hakijat")
+      hakijat.hakijat.size should equal (0)
     }
 
   }

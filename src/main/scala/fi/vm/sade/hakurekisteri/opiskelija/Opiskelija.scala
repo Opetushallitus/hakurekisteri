@@ -7,12 +7,10 @@ import fi.vm.sade.hakurekisteri.rest.support.Resource
 
 case class Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, alkuPaiva: DateTime, loppuPaiva: Option[DateTime] = None) extends Resource{
    override def identify[R <: Opiskelija](id: UUID): R with Identified = Opiskelija.identify(this,id).asInstanceOf[R with Identified]
-
 }
 
 
-object Opiskelija{
-
+object Opiskelija {
 
   def identify(o:Opiskelija, identity:UUID) = {
     new Opiskelija(o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva, o.loppuPaiva) with Identified{
@@ -24,7 +22,6 @@ object Opiskelija{
     case o: Opiskelija with Identified => o
     case _ => o.identify(UUID.randomUUID())
   }
-
 
 }
 
