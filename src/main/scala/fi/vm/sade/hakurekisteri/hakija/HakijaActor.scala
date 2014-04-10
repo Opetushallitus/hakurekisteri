@@ -55,8 +55,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
   }
 
   def findOppilaitoskoodi(parentOid: Option[String]): Future[Option[String]] = parentOid match {
-    case None => log.debug("no parentOid"); Future(None)
-    case Some(oid) => log.debug("parentOid: " + oid); organisaatiopalvelu.get(oid).flatMap(_.map(resolveOppilaitosKoodi).getOrElse(Future(None)))
+    case None => Future(None)
+    case Some(oid) => organisaatiopalvelu.get(oid).flatMap(_.map(resolveOppilaitosKoodi).getOrElse(Future(None)))
   }
 
   def hakutoive2XMLHakutoive(ht: Hakutoive, jno:Int): Future[Option[XMLHakutoive]] =  {
@@ -65,7 +65,6 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
 
   @Deprecated // TODO mäppää puuttuvat tiedot
   def getXmlHakutoiveet(hakija: Hakija): Future[Seq[XMLHakutoive]] = {
-    log.debug("get xml hakutoiveet for: " + hakija.henkilo.oidHenkilo + ", hakutoiveet size: " + hakija.hakemus.hakutoiveet.size)
     hakija.hakemus.hakutoiveet.
       zipWithIndex.
       map((hakutoive2XMLHakutoive _).tupled).
@@ -80,7 +79,6 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
   }
 
   def findOrgData(tarjoaja: String): Future[Option[(Organisaatio,String)]] = {
-    log.debug("find org data for: " + tarjoaja)
     organisaatiopalvelu.get(tarjoaja).flatMap((o) => findOppilaitoskoodi(o.map(_.oid)).map(k => extractOption(o, k)))
   }
 
@@ -106,15 +104,13 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
   @Deprecated // TODO ratkaise kaksoiskansalaisuus
   def hakija2XMLHakija(hakija: Hakija): Future[Option[XMLHakija]] = {
     getXmlHakemus(hakija).flatMap((hakemus) => {
-      log.debug("map hakemus henkilolle: " + hakija.henkilo.oidHenkilo + ", hakutoiveet size: " + hakija.hakemus.hakutoiveet.size)
       val yhteystiedot: Seq[Yhteystiedot] = hakija.henkilo.yhteystiedotRyhma.getOrElse(("hakemus", "yhteystietotyyppi1"), Seq())
-      hakemus.map(hakemus => {
-        val maaFuture = getMaakoodi(yhteystiedot.getOrElse("YHTEYSTIETO_MAA", "FIN"))
-        maaFuture.flatMap((maa) => {
-          val kansalaisuusFuture = getMaakoodi(Try(hakija.henkilo.kansalaisuus.head).map(k => k.kansalaisuusKoodi).getOrElse("FIN"))
-          kansalaisuusFuture.map((kansalaisuus) => XMLHakija(hakija, yhteystiedot, maa, kansalaisuus, hakemus))
-        })
-      }).map(f => f.map(Option(_))).getOrElse(Future.successful(None))
+      hakemus.
+        map(hakemus => getMaakoodi(yhteystiedot.getOrElse("YHTEYSTIETO_MAA", "FIN")).
+          flatMap((maa) => getMaakoodi(Try(hakija.henkilo.kansalaisuus.head).map(k => k.kansalaisuusKoodi).getOrElse("FIN")).
+            map((kansalaisuus) => XMLHakija(hakija, yhteystiedot, maa, kansalaisuus, hakemus)))).
+        map(f => f.map(Option(_))).
+        getOrElse(Future.successful(None))
     })
   }
 
@@ -125,8 +121,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
   def getHakija(hakemus: FullHakemus): Hakija = {
     val lahtokoulu: Option[String] = hakemus.vastauksetMerged.flatMap(_.get("lahtokoulu"))
     val v = hakemus.vastauksetMerged
-    log.debug("getting hakija from full hakemus: " + hakemus.oid + ", vastauksetMerged: " + v)
-    val hak = Hakija(
+    Hakija(
       Henkilo(
         yhteystiedotRyhma = Seq(YhteystiedotRyhma(0, "yhteystietotyyppi1", "hakemus", true, Seq(
           Yhteystiedot(0, "YHTEYSTIETO_KATUOSOITE", getValue(v, "lahiosoite")),
@@ -183,8 +178,6 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
         Hakemus(hakutoiveet, hakemus.oid)
       }).getOrElse(Hakemus(Seq(), hakemus.oid))
     )
-    log.debug("hakija: " + hak)
-    hak
   }
 
   def convertToiveet(toiveet: Map[String, String]): Seq[Hakutoive] = {
@@ -217,10 +210,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
   }
 
   def XMLQuery(q: HakijaQuery): Future[XMLHakijat] = q.hakuehto match {
-    case Hakuehto.Kaikki => {
-      log.debug("XMLQuery: " + q)
-      selectHakijat(q).map(_.map(hakija2XMLHakija)).flatMap(Future.sequence(_).map(hakijat => XMLHakijat(hakijat.flatten)))
-    }
+    case Hakuehto.Kaikki => selectHakijat(q).map(_.map(hakija2XMLHakija)).flatMap(Future.sequence(_).map(hakijat => XMLHakijat(hakijat.flatten)))
     // TODO Hakuehto.Hyväksytyt & Hakuehto.Vastaanottaneet
     case _ => Future(XMLHakijat(Seq()))
   }
