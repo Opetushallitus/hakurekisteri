@@ -19,7 +19,7 @@ class RestHakupalveluSpec extends ScalatraFunSuite {
    val client = new RestHakupalvelu("https://itest-virkailija.oph.ware.fi/haku-app")
 
    ignore("haku-app should return list of applications") {
-     val future = client.find(HakijaQuery(None, None, None, Hakuehto.Kaikki, Tyyppi.Json, None, Some(User("testi", Seq(), None))))
+     val future = client.find(HakijaQuery(None, None, None, Hakuehto.Kaikki, Some(User("testi", Seq(), None))))
 
      // TODO improve this to also test successful query
      val t = intercept[RuntimeException] {

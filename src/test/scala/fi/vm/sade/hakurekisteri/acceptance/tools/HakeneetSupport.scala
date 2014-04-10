@@ -64,7 +64,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       "lupaMarkkinointi" -> "true",
       "lupaJulkaisu" -> "true"))
   )
-  object FullHakemus2 extends FullHakemus("1.25.2", Some("1.24.2"), "1.1",
+  object FullHakemus2 extends FullHakemus("1.25.2", Some("1.24.2"), "1.2",
     Some(Map("kansalaisuus" -> "FIN",
       "asuinmaa" -> "FIN",
       "matkapuhelinnumero1" -> "0401234568",
@@ -125,6 +125,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {
       case Some(OpetuspisteX.oid) => Future(Seq(FullHakemus1))
       case Some(OpetuspisteY.oid) => Future(Seq(FullHakemus2))
+      case None => Future(Seq(FullHakemus1, FullHakemus2))
     }
 
     def get(hakemusOid: String, user: Option[User]): Future[Option[FullHakemus]] = hakemusOid match {
