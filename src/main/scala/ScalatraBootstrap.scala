@@ -8,6 +8,7 @@ import fi.vm.sade.hakurekisteri.organization.OrganizationHierarchy
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
+import java.util.concurrent.Executors
 import org.scalatra._
 import javax.servlet.{ServletContextEvent, DispatcherType, ServletContext}
 import org.scalatra.swagger.Swagger
@@ -21,7 +22,7 @@ import org.springframework.web.context._
 import org.springframework.web.filter.DelegatingFilterProxy
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContextExecutor, ExecutionContext}
 import scala.slick.driver.JdbcDriver.simple._
 import scala.util.Try
 
@@ -36,6 +37,7 @@ class ScalatraBootstrap extends LifeCycle {
   val organisaatioServiceUrlQa = "https://testi.virkailija.opintopolku.fi/organisaatio-service"
   val hakuappServiceUrlQa = "https://testi.virkailija.opintopolku.fi/haku-app"
   val koodistoServiceUrlQa = "https://testi.virkailija.opintopolku.fi/koodisto-service"
+  val webExec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(1000))
 
   override def init(context: ServletContext) {
     OPHSecurity init context
@@ -57,7 +59,7 @@ class ScalatraBootstrap extends LifeCycle {
     val hakuappServiceUrl = OPHSecurity.config.properties.get("cas.service.haku").getOrElse(hakuappServiceUrlQa)
     val organisaatioServiceUrl = OPHSecurity.config.properties.get("cas.service.organisaatio-service").getOrElse(organisaatioServiceUrlQa)
     val koodistoServiceUrl = OPHSecurity.config.properties.get("cas.service.koodisto-service").getOrElse(koodistoServiceUrlQa)
-    val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu(hakuappServiceUrl), new RestOrganisaatiopalvelu(organisaatioServiceUrl), new RestKoodistopalvelu(koodistoServiceUrl))))
+    val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu(hakuappServiceUrl)(webExec), new RestOrganisaatiopalvelu(organisaatioServiceUrl)(webExec), new RestKoodistopalvelu(koodistoServiceUrl)(webExec))))
 
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](filteredSuoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
     context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](filteredOpiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")

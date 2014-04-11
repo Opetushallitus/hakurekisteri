@@ -26,7 +26,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
   implicit val httpClient = new ApacheHttpClient
   protected implicit def jsonFormats: Formats = DefaultFormats
 
-  val casExec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(300))
+
 
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
@@ -44,7 +44,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
   }
 
   def getProxyTicket(user: Option[User]): Future[String] = {
-    Future(user.flatMap(_.attributePrincipal.map(_.getProxyTicketFor(serviceUrl + "/j_spring_cas_security_check"))).getOrElse(""))(casExec)
+    Future(user.flatMap(_.attributePrincipal.map(_.getProxyTicketFor(serviceUrl + "/j_spring_cas_security_check"))).getOrElse(""))
   }
 
   override def find(q: HakijaQuery): Future[Seq[ListHakemus]] = {
