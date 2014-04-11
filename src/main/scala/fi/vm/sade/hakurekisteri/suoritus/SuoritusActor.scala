@@ -32,7 +32,6 @@ trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suori
   }
 
   def checkVuosi(vuosi: Option[String])(s:Suoritus):Boolean = vuosi match {
-
     case Some(vuosi:String) => beforeYearEnd(vuosi)(s.valmistuminen)
     case None => true
   }

@@ -5,7 +5,6 @@ import org.scalatra.test.HttpComponentsClient
 import javax.servlet.http.{HttpServletRequest, HttpServlet}
 import akka.actor.{Props, ActorSystem}
 
-import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization._
 import java.util.{UUID, Date}
@@ -16,14 +15,14 @@ import scala.xml.{Elem, Node, NodeSeq}
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi, Opiskelija, OpiskelijaActor}
 import fi.vm.sade.hakurekisteri.suoritus._
-import java.io.Serializable
 import org.joda.time.DateTime
-import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
+import org.joda.time.format.DateTimeFormat
 
 import com.github.nscala_time.time.Imports._
 import fi.vm.sade.hakurekisteri.storage.repository.InMemJournal
-import fi.vm.sade.hakurekisteri.acceptance.tools.kausi.Kausi
 import scala.Some
+import fi.vm.sade.hakurekisteri.rest.support.User
+import org.joda.time
 
 
 object kausi extends Enumeration {
@@ -38,11 +37,11 @@ object kausi extends Enumeration {
 import kausi._
 
 trait TestSecurity extends SecuritySupport{
-  override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(User("testaaja", Seq("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001")))
+  override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(User("testaaja", Seq("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001"), None))
 
 }
 
-trait HakurekisteriSupport extends  Suite with HttpComponentsClient with HakurekisteriJsonSupport  {
+trait HakurekisteriSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport  {
   override def withFixture(test: NoArgTest) {
     tehdytSuoritukset = Seq()
     db.initialized = false
@@ -113,7 +112,7 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
 
 
 
-  val kevatJuhla = new MonthDay(6,4).toLocalDate(DateTime.now.getYear).toDateTimeAtStartOfDay
+  val kevatJuhla = new MonthDay(6,4).toLocalDate(DateTime.now.getYear)
 
 
   val suoritus = Peruskoulu("1.2.3", "KESKEN",  kevatJuhla, "1.2.4")
@@ -190,17 +189,17 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
 
   case class Valmistuja(oid:String, vuosi:String, kausi: Kausi) {
 
-    val date:DateTime =
+    val date: LocalDate =
       kausi match {
-        case Kevät => new MonthDay(6,4).toLocalDate(vuosi.toInt).toDateTimeAtStartOfDay
-        case Syksy => new MonthDay(12,21).toLocalDate(vuosi.toInt).toDateTimeAtStartOfDay
+        case Kevät => new MonthDay(6,4).toLocalDate(vuosi.toInt)
+        case Syksy => new MonthDay(12,21).toLocalDate(vuosi.toInt)
       }
 
 
 
     def koulusta(koulu:String) {
       val list = tehdytSuoritukset.toList
-      val valmistuminen = Peruskoulu(koulu, "KESKEN",  date,  oid)
+      val valmistuminen = Peruskoulu(koulu, "KESKEN", date, oid)
       println(valmistuminen)
       tehdytSuoritukset = (list :+ valmistuminen).toSeq
       println(tehdytSuoritukset)
@@ -319,10 +318,14 @@ trait HakurekisteriSupport extends  Suite with HttpComponentsClient with Hakurek
 
   }
 
-  implicit def string2DateTime(s:String):DateTime = {
-    DateTime.parse(s, DateTimeFormat.forPattern("dd.MM.yyyy"))
-
+  implicit def string2LocalDate(s: String): LocalDate = {
+    DateTime.parse(s, DateTimeFormat.forPattern("dd.MM.yyyy")).toLocalDate
   }
+
+  implicit def string2DateTime(s: String): DateTime = {
+    DateTime.parse(s, DateTimeFormat.forPattern("dd.MM.yyyy"))
+  }
+
 }
 
 

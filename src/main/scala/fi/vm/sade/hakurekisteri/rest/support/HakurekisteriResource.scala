@@ -20,6 +20,8 @@ import java.util.UUID
 import scala.Some
 import fi.vm.sade.hakurekisteri.organization.{AuthorizedRead, AuthorizedQuery}
 import scala.util.matching.Regex
+import org.springframework.security.cas.authentication.CasAuthenticationToken
+import org.jasig.cas.client.authentication.AttributePrincipal
 
 trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
 
@@ -106,8 +108,6 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
     (command[C] >> (_.toValidatedResource)).fold(
       errors => BadRequest("Malformed Resource + " + errors),
       resource => new ActorResult[A with Identified](identifyResource(resource, id), Ok(_)))
-
-
   }
 
 
@@ -156,7 +156,7 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
    protected implicit def swagger: SwaggerEngine[_] = sw
  }
 
-case class User(username:String, authorities: Seq[String])
+case class User(username:String, authorities: Seq[String], attributePrincipal: Option[AttributePrincipal])
 
 trait SecuritySupport {
 
@@ -208,7 +208,8 @@ trait SpringSecuritySupport extends SecuritySupport {
   def currentUser(implicit request: HttpServletRequest): Option[User] = {
     val name = Option(request.getUserPrincipal).map(_.getName)
     val authorities = Try(request.getUserPrincipal.asInstanceOf[Authentication].getAuthorities.asScala.toList.map(_.getAuthority))
-    name.map(User(_, authorities.getOrElse(Seq())))
+    val attributePrincipal: Option[AttributePrincipal] = Try(request.getUserPrincipal.asInstanceOf[CasAuthenticationToken].getAssertion.getPrincipal).toOption
+    name.map(User(_, authorities.getOrElse(Seq()), attributePrincipal))
   }
 }
 

@@ -87,7 +87,7 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
         angular.forEach($scope.currentRows, function(opiskelija) {
             if (opiskelija.oppilaitosOid) {
                 getOrganisaatio($http, opiskelija.oppilaitosOid, function(organisaatio) {
-                    if (organisaatio && organisaatio.oid === opiskelija.oppilaitosOid)
+                    if (organisaatio)
                         opiskelija.oppilaitos = organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi ? organisaatio.nimi.fi : organisaatio.nimi.sv);
                 }, function() {});
             }
