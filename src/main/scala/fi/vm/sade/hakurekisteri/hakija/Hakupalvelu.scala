@@ -53,7 +53,13 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
   implicit val httpClient = new ApacheHttpClient
   protected implicit def jsonFormats: Formats = DefaultFormats
 
-
+  override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
+    implicit val user:Option[User] = q.user
+    selectHakijat(q).
+      flatMap(_.map(fetchHakija).
+      join.
+      map(_.flatten))
+  }
 
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
@@ -74,13 +80,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
     Future(user.flatMap(_.attributePrincipal.map(_.getProxyTicketFor(serviceUrl + "/j_spring_cas_security_check"))).getOrElse(""))
   }
 
-  override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
-    implicit val user:Option[User] = q.user
-    selectHakijat(q).
-      flatMap(_.map(fetchHakija).
-      join.
-      map(_.flatten))
-  }
+
 
   def selectHakijat(q: HakijaQuery): Future[Seq[String]] = {
     find(q).map(hakemukset => {
@@ -95,44 +95,33 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 
   def find(q: HakijaQuery): Future[Seq[ListHakemus]] = {
     val url = new URL(serviceUrl + "/applications/list/fullName/asc?" + getQueryParams(q))
-    getProxyTicket(q.user).flatMap((ticket) => {
-        logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
+    val user = q.user
+    restRequest[HakemusHaku](user, url).map(_.map(_.results).getOrElse(Seq()))
+  }
 
-        GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
-          if (response.code == HttpResponseCode.Ok) {
-            val hakemusHaku = response.bodyAsCaseClass[HakemusHaku].toOption
-            logger.debug("got response: [{}]", hakemusHaku)
 
-            hakemusHaku.map(_.results).getOrElse(Seq())
-          } else {
-            logger.error("call to haku-app [url={}, ticket={}] failed: {}", url, ticket, response.code)
+  def restRequest[A <: AnyRef](user: Option[User], url: URL)(implicit mf : Manifest[A]): Future[Option[A]] = {
+    getProxyTicket(user).flatMap((ticket) => {
+      logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
 
-            throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
-          }
-        })
-      }
-    )
+      GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
+        if (response.code == HttpResponseCode.Ok) {
+          val hakemusHaku = response.bodyAsCaseClass[A].toOption
+          logger.debug("got response: [{}]", hakemusHaku)
+
+          hakemusHaku
+        } else {
+          logger.error("call to haku-app [url={}, ticket={}] failed: {}", url, ticket, response.code)
+
+          throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
+        }
+      })
+    })
   }
 
   def get(hakemusOid: String, user: Option[User]): Future[Option[FullHakemus]] = {
     val url = new URL(serviceUrl + "/applications/" + hakemusOid)
-    getProxyTicket(user).flatMap((ticket: String) => {
-        logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
-
-        GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
-          if (response.code == HttpResponseCode.Ok) {
-            val fullHakemus = response.bodyAsCaseClass[FullHakemus].toOption
-            logger.debug("got response: [{}], original body: [{}]", fullHakemus, response.bodyString)
-
-            fullHakemus
-          } else {
-            logger.error("call to haku-app [url={}, ticket={}] failed: " + response.code, url, ticket)
-
-            throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
-          }
-        })
-      }
-    )
+    restRequest[FullHakemus](user,url)
   }
 
 
