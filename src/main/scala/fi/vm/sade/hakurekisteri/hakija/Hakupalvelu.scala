@@ -50,7 +50,7 @@ trait Hakupalvelu {
 
 class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app")(implicit val ec: ExecutionContext) extends Hakupalvelu {
   val logger = LoggerFactory.getLogger(getClass)
-  implicit val httpClient = new ApacheHttpClient
+  implicit val httpClient = new ApacheHttpClient()()
   protected implicit def jsonFormats: Formats = DefaultFormats
 
 
