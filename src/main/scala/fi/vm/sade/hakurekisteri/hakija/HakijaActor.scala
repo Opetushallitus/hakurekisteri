@@ -15,6 +15,7 @@ import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
 import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
 import org.joda.time.{DateTime, LocalDate}
 import akka.pattern.pipe
+import ForkedSeq._
 
 
 case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String)
@@ -29,11 +30,6 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
 
-  class ForkedSeq[A](forked: Seq[Future[A]]) {
-    def join() = Future.sequence(forked)
-  }
-
-  implicit def Seq2Forked[A](s:Seq[Future[A]]): ForkedSeq[A] = new ForkedSeq(s)
 
   def receive = {
     case q: HakijaQuery => {
@@ -114,103 +110,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     })
   }
 
-  def getValue(h: Option[Map[String, String]], key: String, default: String = ""): String = {
-    h.flatMap(_.get(key)).getOrElse(default)
-  }
-
-  def getHakija(hakemus: FullHakemus): Hakija = {
-    val lahtokoulu: Option[String] = hakemus.vastauksetMerged.flatMap(_.get("lahtokoulu"))
-    val v = hakemus.vastauksetMerged
-    Hakija(
-      Henkilo(
-        yhteystiedotRyhma = Seq(YhteystiedotRyhma(0, "yhteystietotyyppi1", "hakemus", true, Seq(
-          Yhteystiedot(0, "YHTEYSTIETO_KATUOSOITE", getValue(v, "lahiosoite")),
-          Yhteystiedot(1, "YHTEYSTIETO_POSTINUMERO", getValue(v, "Postinumero")),
-          Yhteystiedot(2, "YHTEYSTIETO_MAA", getValue(v, "asuinmaa")),
-          Yhteystiedot(3, "YHTEYSTIETO_MATKAPUHELIN", getValue(v, "matkapuhelinnumero1")),
-          Yhteystiedot(4, "YHTEYSTIETO_SAHKOPOSTI", getValue(v, "Sähköposti")),
-          Yhteystiedot(5, "YHTEYSTIETO_KAUPUNKI", getValue(v, "kotikunta"))
-        ))),
-        yksiloity = false,
-        sukunimi = getValue(v, "Sukunimi"),
-        etunimet = getValue(v, "Etunimet"),
-        kutsumanimi = getValue(v, "Kutsumanimi"),
-        kielisyys = Seq(),
-        yksilointitieto = None,
-        henkiloTyyppi = "OPPIJA",
-        oidHenkilo = hakemus.personOid.getOrElse(""),
-        duplicate = false,
-        oppijanumero = hakemus.personOid.getOrElse(""),
-        kayttajatiedot = None,
-        kansalaisuus = Seq(Kansalaisuus(getValue(v, "kansalaisuus"))),
-        passinnumero = "",
-        asiointiKieli = Kieli("FI", "FI"),
-        passivoitu = false,
-        eiSuomalaistaHetua = getValue(v, "onkoSinullaSuomalainenHetu", "false").toBoolean,
-        sukupuoli = getValue(v, "sukupuoli"),
-        hetu = getValue(v, "Henkilotunnus"),
-        syntymaaika = getValue(v, "syntymaaika"),
-        turvakielto = false,
-        markkinointilupa = Some(getValue(v, "lupaMarkkinointi", "false").toBoolean)
-      ),
-      Seq(Suoritus(
-        komo = "peruskoulu",
-        myontaja = lahtokoulu.getOrElse(""),
-        tila = "KESKEN",
-        valmistuminen = LocalDate.now,
-        henkiloOid = hakemus.personOid.getOrElse(""),
-        yksilollistaminen = Ei,
-        suoritusKieli = getValue(v, "perusopetuksen_kieli", "FI")
-      )),
-      lahtokoulu match {
-        case Some(oid) => Seq(Opiskelija(
-          oppilaitosOid = lahtokoulu.get,
-          henkiloOid = hakemus.personOid.getOrElse(""),
-          luokkataso = getValue(v, "luokkataso"),
-          luokka = getValue(v, "lahtoluokka"),
-          alkuPaiva = DateTime.now.minus(org.joda.time.Duration.standardDays(1)),
-          loppuPaiva = None
-        ))
-        case _ => Seq()
-      },
-      v.map(toiveet => {
-        val hakutoiveet = convertToiveet(toiveet)
-        Hakemus(hakutoiveet, hakemus.oid)
-      }).getOrElse(Hakemus(Seq(), hakemus.oid))
-    )
-  }
-
-  def convertToiveet(toiveet: Map[String, String]): Seq[Hakutoive] = {
-    val Pattern = "preference(\\d+)-Opetuspiste-id".r
-    val notEmpty = "(.+)".r
-    val opetusPisteet: Seq[(Short, String)] = toiveet.collect {
-      case (Pattern(n), notEmpty(opetusPisteId)) => (n.toShort, opetusPisteId)
-    }.toSeq
-
-    opetusPisteet.sortBy(_._1).map((t) => {
-      val koulutukset = Set(Komoto("", "", t._2, "2014", Kausi.Syksy))
-      val hakukohdekoodi = toiveet("preference" + t._1 + "-Koulutus-id-aoIdentifier")
-      Hakutoive(Hakukohde(koulutukset, hakukohdekoodi), Try(toiveet("preference" + t._1 + "-Koulutus-id-kaksoistutkinto").toBoolean).getOrElse(false))
-    })
-  }
-
-  def fetchHakija(oid: String)(implicit user: Option[User]): Future[Option[Hakija]] = {
-    hakupalvelu.get(oid, user).map(_.map(getHakija(_)))
-  }
-
-  def selectHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
-    hakupalvelu.find(q).flatMap(hakemukset => {
-      implicit val user:Option[User] = q.user
-      hakemukset.
-        map(_.oid).
-        map(fetchHakija).
-        join.
-        map(_.flatten)
-    })
-  }
-
   def XMLQuery(q: HakijaQuery): Future[XMLHakijat] = q.hakuehto match {
-    case Hakuehto.Kaikki => selectHakijat(q).map(_.map(hakija2XMLHakija)).flatMap(Future.sequence(_).map(hakijat => XMLHakijat(hakijat.flatten)))
+    case Hakuehto.Kaikki => hakupalvelu.getHakijat(q).map(_.map(hakija2XMLHakija)).flatMap(Future.sequence(_).map(hakijat => XMLHakijat(hakijat.flatten)))
     // TODO Hakuehto.Hyväksytyt & Hakuehto.Vastaanottaneet
     case _ => Future(XMLHakijat(Seq()))
   }

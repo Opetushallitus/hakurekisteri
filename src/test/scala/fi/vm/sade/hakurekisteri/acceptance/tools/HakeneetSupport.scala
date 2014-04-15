@@ -23,6 +23,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object OppilaitosY extends Organisaatio("1.10.2", Map("fi" -> "Oppilaitos Y"), None, Some("00002"), None)
 
   object OpetuspisteX extends Organisaatio("1.10.3", Map("fi" -> "Opetuspiste X"), Some("0000101"), None, Some("1.10.1"))
+  object OpetuspisteZ extends Organisaatio("1.10.5", Map("fi" -> "Opetuspiste Z"), Some("0000101"), None, Some("1.10.1"))
   object OpetuspisteY extends Organisaatio("1.10.4", Map("fi" -> "Opetuspiste Y"), Some("0000201"), None, Some("1.10.2"))
 
   object FullHakemus1 extends FullHakemus("1.25.1", None, "1.1",
@@ -87,7 +88,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       "lahtoluokka" -> "9A",
       "luokkataso" -> "9",
       "preference2-Opetuspiste" -> "Ammattiopisto Loppi2\"",
-      "preference2-Opetuspiste-id" -> "1.10.3",
+      "preference2-Opetuspiste-id" -> "1.10.5",
       "preference2-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)2",
       "preference2-Koulutus-id" -> "1.11.1",
       "preference2-Koulutus-id-aoIdentifier" -> "460",
@@ -120,7 +121,25 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object hakupalvelu extends Hakupalvelu {
 
 
-    var tehdytHakemukset: Seq[ListHakemus] = Seq()
+    var tehdytHakemukset: Seq[FullHakemus] = Seq()
+
+
+    
+    
+    override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = q.organisaatio match {
+
+      case Some(org) => {
+        println("Haetaan tarjoajalta %s".format(org))
+        Future(hakijat.filter(_.hakemus.hakutoiveet.exists(_.hakukohde.koulutukset.exists((kohde) => {println(kohde);kohde.tarjoaja == org}))))
+      }
+      case _ => Future(hakijat)
+      
+    }
+
+
+    def hakijat: Seq[Hakija] = {
+      tehdytHakemukset.map(RestHakupalvelu.getHakija(_))
+    }
 
     def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {
       case Some(OpetuspisteX.oid) => Future(Seq(FullHakemus1))
@@ -138,9 +157,10 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       case notEmpty => has(FullHakemus1, FullHakemus2)
     }
 
-    def has(hakemukset: ListHakemus*) = {
+    def has(hakemukset: FullHakemus*) = {
       tehdytHakemukset = hakemukset
     }
+
   }
 
   object organisaatiopalvelu extends Organisaatiopalvelu {
