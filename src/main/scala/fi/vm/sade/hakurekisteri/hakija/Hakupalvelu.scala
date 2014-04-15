@@ -53,13 +53,14 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
   implicit val httpClient = new ApacheHttpClient
   protected implicit def jsonFormats: Formats = DefaultFormats
 
+
+
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
-    implicit val user:Option[User] = q.user
-    selectHakijat(q).
-      flatMap(_.map(fetchHakija).
-      join.
-      map(_.flatten))
+    val url = new URL(serviceUrl + "/applications/listfull?" + getQueryParams(q))
+    val user = q.user
+    restRequest[List[FullHakemus]](user, url).map(_.getOrElse(Seq()).map(RestHakupalvelu.getHakija(_)))
   }
+
 
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
@@ -82,16 +83,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 
 
 
-  def selectHakijat(q: HakijaQuery): Future[Seq[String]] = {
-    find(q).map(hakemukset => {
-      hakemukset.
-        map(_.oid)
-    })
-  }
 
-  def fetchHakija(oid: String)(implicit user: Option[User]): Future[Option[Hakija]] = {
-    get(oid, user).map(_.map(RestHakupalvelu.getHakija(_)))
-  }
 
   def find(q: HakijaQuery): Future[Seq[ListHakemus]] = {
     val url = new URL(serviceUrl + "/applications/list/fullName/asc?" + getQueryParams(q))
@@ -118,14 +110,6 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
       })
     })
   }
-
-  def get(hakemusOid: String, user: Option[User]): Future[Option[FullHakemus]] = {
-    val url = new URL(serviceUrl + "/applications/" + hakemusOid)
-    restRequest[FullHakemus](user,url)
-  }
-
-
-
 
 
 }
