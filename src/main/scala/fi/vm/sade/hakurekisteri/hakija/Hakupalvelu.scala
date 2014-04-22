@@ -58,7 +58,11 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     val url = new URL(serviceUrl + "/applications/listfull?" + getQueryParams(q))
     val user = q.user
-    restRequest[List[FullHakemus]](user, url).map(_.getOrElse(Seq()).map(RestHakupalvelu.getHakija(_)))
+    def f(foo: Option[List[FullHakemus]]): Seq[Hakija] = {
+      logger.info("got result for: %s".format(url))
+      foo.getOrElse(Seq()).map(RestHakupalvelu.getHakija(_))
+    }
+    restRequest[List[FullHakemus]](user, url).map(f)
   }
 
 
