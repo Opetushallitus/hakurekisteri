@@ -15,16 +15,10 @@ import java.util.concurrent.TimeUnit
 import scala.util.Try
 import javax.servlet.http.HttpServletResponse
 import scala.xml._
-import scala.Some
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import scala.Some
-import fi.vm.sade.hakurekisteri.hakija.Organisaatio
-import fi.vm.sade.hakurekisteri.rest.support.User
-import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
-import fi.vm.sade.hakurekisteri.hakija.XMLHakija
-import fi.vm.sade.hakurekisteri.hakija.Hakutoive
 
 
 object Hakuehto extends Enumeration {
@@ -96,10 +90,9 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   }
 
   error {
-    case t: Throwable => {
+    case t: Throwable =>
       logger.error("error in service", t)
       response.sendError(500, t.getMessage)
-    }
   }
 }
 
@@ -170,7 +163,7 @@ case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahto
 
 object XMLHakemus {
   def resolvePohjakoulutus(suoritus: Option[Suoritus]): String = suoritus match {
-    case Some(s) => {
+    case Some(s) =>
       s.komo match {
         case "ulkomainen" => "0"
         case "peruskoulu" => s.yksilollistaminen match {
@@ -181,14 +174,13 @@ object XMLHakemus {
         }
         case "lukio" => "9"
       }
-    }
     case None => "7"
   }
 
-  def apply(hakija: Hakija, hakemus: Hakemus, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive]): XMLHakemus =
-    XMLHakemus(vuosi = Try(hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamisvuosi).get,
-      kausi = if (Try(hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamiskausi).get == Kausi.Kevät) "K" else "S",
-      hakemusnumero = hakemus.hakemusnumero,
+  def apply(hakija: Hakija, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive]): XMLHakemus =
+    XMLHakemus(vuosi = Try(hakija.hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamisvuosi).get,
+      kausi = if (Try(hakija.hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamiskausi).get == Kausi.Kevät) "K" else "S",
+      hakemusnumero = hakija.hakemus.hakemusnumero,
       lahtokoulu = lahtokoulu.flatMap(o => o.oppilaitosKoodi),
       lahtokoulunnimi = lahtokoulu.flatMap(o => o.nimi.get("fi")),
       luokka = opiskelutieto.map(_.luokka),
