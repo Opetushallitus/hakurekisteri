@@ -10,6 +10,10 @@ import org.slf4j.LoggerFactory
 import akka.actor.{Cancellable, Actor}
 import akka.actor.Actor.Receive
 import scala.compat.Platform
+import akka.event.Logging
+import scala.Some
+import fi.vm.sade.hakurekisteri.hakija.Organisaatio
+import scala.util.Try
 
 
 trait Organisaatiopalvelu {
@@ -25,24 +29,24 @@ import akka.pattern.pipe
 class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
 
 
-  class Swipe
+  class Refresh
 
-  private object swipe  extends Swipe
+  private object refresh  extends Refresh
 
-  case class Remove(oid:String)
+  case class Refetch(oid:String)
   implicit val executionContext: ExecutionContext = context.dispatcher
 
-  import scala.collection.mutable.Map
-  private val cache:Map[String,(Long, Future[Option[Organisaatio]])] = Map()
+
+  private var cache:Map[String,(Long, Future[Option[Organisaatio]])] = Map()
 
 
   var cancellable: Option[Cancellable] = None
 
   override def preStart(): Unit = {
-    cancellable = Some(context.system.scheduler.schedule(0 milliseconds,
+    cancellable = Some(context.system.scheduler.schedule(10 minutes,
       10 minutes,
       self,
-      swipe)(context.dispatcher, self))
+      refresh)(context.dispatcher, self))
   }
 
 
@@ -55,15 +59,27 @@ class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
 
   val timeToLive = 30 minutes
 
+  val log = Logging(context.system, this)
+
+  case class Save(oid:String, value: (Long, Future[Option[Organisaatio]]))
+
   override def receive: Receive = {
     case oid:String => find(oid)._2 pipeTo sender
-    case Remove(oid) => cache.remove(oid)
-    case swipe:Swipe => Future(cache.toSeq.filter(t => t._2._1 < Platform.currentTime).map(_._1).foreach(self ! Remove(_)))
+    case Refetch(oid) => val result = newValue(oid)
+                         result._2.onSuccess {case _ => self ! Save(oid, result)}
+                         result._2.onFailure {case _ => log.warning("fetching organisation data for %s failed. Trying again".format(oid))
+                                                        self ! Refetch(oid)}
+    case Save(oid,result) => cache = cache + (oid -> result)
+    case refresh:Refresh => Future(cache.toSeq.filter(t => t._2._1 < Platform.currentTime).map(_._1).foreach(self ! Refetch(_)))
   }
 
 
   def find(oid: String): (Long, Future[Option[Organisaatio]]) = {
-    cache getOrElseUpdate(oid, (Platform.currentTime + timeToLive.toMillis, palvelu.get(oid)))
+    Try(cache(oid)).recoverWith{ case e: NoSuchElementException => Try({val result = newValue(oid); cache = cache + (oid -> result); result})}.get
+  }
+
+  def newValue(oid: String): (Long, Future[Option[Organisaatio]]) = {
+    (Platform.currentTime + timeToLive.toMillis, palvelu.get(oid))
   }
 }
 
