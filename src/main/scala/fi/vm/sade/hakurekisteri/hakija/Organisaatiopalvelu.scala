@@ -46,9 +46,7 @@ class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
   override def preStart(): Unit = {
     palvelu.getAll.onSuccess {
       case s:Seq[String] =>
-        s.grouped(10).zipWithIndex.foreach((t: (Seq[String], Int)) => {
-        t._1 foreach {context.system.scheduler.scheduleOnce(t._2 second, self, _)}
-      })
+        fetchOrgs(s)
     }
     cancellable = Some(context.system.scheduler.schedule(10 minutes,
       10 minutes,
@@ -57,6 +55,10 @@ class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
 
 
   }
+
+  def fetchOrgs(s:Seq[String], mf: String => AnyRef = (s) => s) = s.grouped(10).zipWithIndex.foreach((t: (Seq[String], Int)) => {
+    t._1 foreach(oid => {context.system.scheduler.scheduleOnce(t._2 second, self, mf(oid))})
+  })
 
 
   override def postStop(): Unit = {
@@ -79,7 +81,7 @@ class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
                          result._2.onFailure {case _ => log.warning("fetching organisation data for %s failed. Trying again".format(oid))
                                                         self ! Refetch(oid)}
     case Save(oid,result) => cache = cache + (oid -> result)
-    case refresh:Refresh => Future(cache.toSeq.filter(t => t._2._1 < Platform.currentTime).map(_._1).foreach(self ! Refetch(_)))
+    case refresh:Refresh => Future(fetchOrgs(cache.toSeq.filter(t => t._2._1 < Platform.currentTime).map(_._1), Refetch(_)))
   }
 
 
