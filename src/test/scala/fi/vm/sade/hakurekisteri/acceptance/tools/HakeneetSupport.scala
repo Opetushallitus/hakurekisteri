@@ -164,6 +164,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   }
 
   object organisaatiopalvelu extends Organisaatiopalvelu {
+    override def getAll() =  Future.successful(Seq(OppilaitosX,OppilaitosY,OpetuspisteX, OpetuspisteY).map(_.oid))
+
     override def get(str: String): Future[Option[Organisaatio]] = Future(doTheMatch(str))
 
     def doTheMatch(str: String): Option[Organisaatio] = str match {

@@ -18,6 +18,7 @@ import scala.util.Try
 
 trait Organisaatiopalvelu {
 
+  def getAll():Future[Seq[String]]
   def get(str: String): Future[Option[Organisaatio]]
 
 }
@@ -43,10 +44,15 @@ class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
   var cancellable: Option[Cancellable] = None
 
   override def preStart(): Unit = {
+    palvelu.getAll.onSuccess {
+      case s:Seq[String] => s.foreach( self ! _)
+    }
     cancellable = Some(context.system.scheduler.schedule(10 minutes,
       10 minutes,
       self,
       refresh)(context.dispatcher, self))
+
+
   }
 
 
@@ -57,7 +63,7 @@ class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
 
 
 
-  val timeToLive = 30 minutes
+  val timeToLive = 24 hours
 
   val log = Logging(context.system, this)
 
@@ -90,7 +96,19 @@ class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph
 
 
 
+  override def getAll(): Future[Seq[String]] = {
+    val url = new URL(serviceUrl + "/rest/organisaatio")
+    GET(url).apply.map(response =>
+    if (response.code == HttpResponseCode.Ok) {
+      response.bodyAsCaseClass[List[String]].toOption.getOrElse(Seq())
+    } else {
+      logger.error("call to organisaatio-service [{}] failed: {}", url, response.code)
+      throw new RuntimeException("virhe kutsuttaessa organisaatiopalvelua: %s".format(response.code))
+    }
 
+    )
+
+  }
 
   override def get(str: String): Future[Option[Organisaatio]] = {
     val url = new URL(serviceUrl + "/rest/organisaatio/" + str)
