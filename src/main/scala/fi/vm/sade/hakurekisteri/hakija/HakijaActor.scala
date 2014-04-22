@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.hakija
 
-import akka.actor.Actor
+import akka.actor.{ActorRef, Actor}
 import scala.concurrent.{Future, ExecutionContext}
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
@@ -16,6 +16,8 @@ import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
 import org.joda.time.{DateTime, LocalDate}
 import akka.pattern.pipe
 import ForkedSeq._
+import akka.util.Timeout
+import java.util.concurrent.TimeUnit
 
 
 case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String)
@@ -26,9 +28,10 @@ case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String)
 
 case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria: Seq[Opiskelija], hakemus: Hakemus)
 
-class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopalvelu, koodistopalvelu: Koodistopalvelu) extends Actor {
+class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistopalvelu: Koodistopalvelu) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
+  implicit val timeout: akka.util.Timeout = Timeout(30, TimeUnit.SECONDS)
 
 
   def receive = {
@@ -50,9 +53,14 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     case Some(k) => Future(Some(k))
   }
 
+  import akka.pattern.ask
+
+  def getOrg(oid: String): Future[Option[Organisaatio]] = (organisaatioActor ? oid).mapTo[Option[Organisaatio]]
+
   def findOppilaitoskoodi(parentOid: Option[String]): Future[Option[String]] = parentOid match {
     case None => Future(None)
-    case Some(oid) => organisaatiopalvelu.get(oid).flatMap(_.map(resolveOppilaitosKoodi).getOrElse(Future(None)))
+    case Some(oid) => getOrg(oid).flatMap(_.map(resolveOppilaitosKoodi).getOrElse(Future(None)))
+
   }
 
   def hakutoive2XMLHakutoive(ht: Hakutoive, jno:Int): Future[Option[XMLHakutoive]] =  {
@@ -75,7 +83,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
   }
 
   def findOrgData(tarjoaja: String): Future[Option[(Organisaatio,String)]] = {
-    organisaatiopalvelu.get(tarjoaja).flatMap((o) => findOppilaitoskoodi(o.map(_.oid)).map(k => extractOption(o, k)))
+    getOrg(tarjoaja).flatMap((o) => findOppilaitoskoodi(o.map(_.oid)).map(k => extractOption(o, k)))
   }
 
   import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
@@ -89,7 +97,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
   def getXmlHakemus(hakija: Hakija): Future[Option[XMLHakemus]] = {
     hakija.opiskeluhistoria.size match {
       case 0 => getXmlHakemus(hakija, None, None)
-      case _ => organisaatiopalvelu.get(hakija.opiskeluhistoria.head.oppilaitosOid).flatMap((o: Option[Organisaatio]) => getXmlHakemus(hakija, Some(hakija.opiskeluhistoria.head), o))
+      case _ => getOrg(hakija.opiskeluhistoria.head.oppilaitosOid).flatMap((o: Option[Organisaatio]) => getXmlHakemus(hakija, Some(hakija.opiskeluhistoria.head), o))
     }
   }
 

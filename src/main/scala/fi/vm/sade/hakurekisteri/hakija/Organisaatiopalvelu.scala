@@ -7,6 +7,9 @@ import scala.concurrent.duration._
 import java.net.URL
 import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
 import org.slf4j.LoggerFactory
+import akka.actor.{Cancellable, Actor}
+import akka.actor.Actor.Receive
+import scala.compat.Platform
 
 
 trait Organisaatiopalvelu {
@@ -17,10 +20,59 @@ trait Organisaatiopalvelu {
 
 case class Organisaatio(oid: String, nimi: Map[String, String], toimipistekoodi: Option[String], oppilaitosKoodi: Option[String], parentOid: Option[String])
 
+import akka.pattern.ask
+import akka.pattern.pipe
+
+class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
+
+
+  class Swipe
+
+  private object swipe  extends Swipe
+  implicit val executionContext: ExecutionContext = context.dispatcher
+
+  import scala.collection.mutable.Map
+  private var cache:Map[String,(Long, Future[Option[Organisaatio]])] = Map()
+
+
+  var cancellable: Option[Cancellable] = None
+
+  override def preStart(): Unit = {
+    cancellable = Some(context.system.scheduler.schedule(0 milliseconds,
+      10 minutes,
+      self,
+      swipe)(context.dispatcher, self))
+  }
+
+
+  override def postStop(): Unit = {
+    cancellable.foreach(_.cancel())
+
+  }
+
+
+
+  val timeToLive = 30 minutes
+
+  override def receive: Receive = {
+    case oid:String => find(oid)._2 pipeTo sender
+    case swipe:Swipe => cache.toSeq.filter(t => t._2._1 < Platform.currentTime).map(_._1).foreach(cache.remove(_))
+  }
+
+
+  def find(oid: String): (Long, Future[Option[Organisaatio]]) = {
+    cache getOrElseUpdate(oid, (Platform.currentTime + timeToLive.toMillis, palvelu.get(oid)))
+  }
+}
+
 class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/organisaatio-service")(implicit val ec: ExecutionContext) extends Organisaatiopalvelu {
   val logger = LoggerFactory.getLogger(getClass)
 
   implicit val httpClient = new ApacheHttpClient()()
+
+
+
+
 
   override def get(str: String): Future[Option[Organisaatio]] = {
     val url = new URL(serviceUrl + "/rest/organisaatio/" + str)

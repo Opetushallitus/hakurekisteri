@@ -185,8 +185,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
 
-
-    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, organisaatiopalvelu, koodistopalvelu)))
+    val orgAct = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
+    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodistopalvelu)))
 
     def get(q: HakijaQuery) = {
       hakijaActor ? q
