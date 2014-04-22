@@ -93,8 +93,9 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatiopalvelu: Organisaatiopal
     }
   }
 
-  def getMaakoodi(koodiArvo: String): Future[String] = {
-    koodistopalvelu.getRinnasteinenKoodiArvo("maatjavaltiot1_" + koodiArvo.toLowerCase, "maatjavaltiot2")
+  def getMaakoodi(koodiArvo: String): Future[String] = koodiArvo.toLowerCase match {
+    case "fin" => Future.successful("246")
+    case arvo => koodistopalvelu.getRinnasteinenKoodiArvo("maatjavaltiot1_" + arvo, "maatjavaltiot2")
   }
 
   @Deprecated // TODO ratkaise kaksoiskansalaisuus
