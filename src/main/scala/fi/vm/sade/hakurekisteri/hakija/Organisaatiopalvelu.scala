@@ -20,7 +20,7 @@ case class Organisaatio(oid: String, nimi: Map[String, String], toimipistekoodi:
 class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/organisaatio-service")(implicit val ec: ExecutionContext) extends Organisaatiopalvelu {
   val logger = LoggerFactory.getLogger(getClass)
 
-  implicit val httpClient = new ApacheHttpClient
+  implicit val httpClient = new ApacheHttpClient()()
 
   override def get(str: String): Future[Option[Organisaatio]] = {
     val url = new URL(serviceUrl + "/rest/organisaatio/" + str)

@@ -8,7 +8,8 @@ import fi.vm.sade.hakurekisteri.organization.OrganizationHierarchy
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
-import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.{ThreadFactory, Executors}
 import org.scalatra._
 import javax.servlet.{ServletContextEvent, DispatcherType, ServletContext}
 import org.scalatra.swagger.Swagger
@@ -37,7 +38,18 @@ class ScalatraBootstrap extends LifeCycle {
   val organisaatioServiceUrlQa = "https://testi.virkailija.opintopolku.fi/organisaatio-service"
   val hakuappServiceUrlQa = "https://testi.virkailija.opintopolku.fi/haku-app"
   val koodistoServiceUrlQa = "https://testi.virkailija.opintopolku.fi/koodisto-service"
-  val webExec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(1000))
+
+
+
+  private val NumThreads = 1000
+  private val threadNumber = new AtomicInteger(1)
+  lazy val webPool = Executors.newFixedThreadPool(NumThreads, new ThreadFactory() {
+    override def newThread(r: Runnable): Thread = {
+      new Thread(r, "webpool-" + threadNumber.getAndIncrement)
+    }
+  })
+
+  lazy val webExec = ExecutionContext.fromExecutorService(webPool)
 
   override def init(context: ServletContext) {
     OPHSecurity init context

@@ -24,7 +24,7 @@ trait Valintapalvelu {
 
 class RestValintapalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/sijoittelu-service")(implicit val ec: ExecutionContext) extends Valintapalvelu {
   val logger = LoggerFactory.getLogger(getClass)
-  implicit val httpClient = new ApacheHttpClient
+  implicit val httpClient = new ApacheHttpClient()()
   protected implicit def jsonFormats: Formats = DefaultFormats
 
   def getProxyTicket(user: Option[User]): String = {
