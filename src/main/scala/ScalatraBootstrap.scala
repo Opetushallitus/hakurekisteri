@@ -8,7 +8,8 @@ import fi.vm.sade.hakurekisteri.organization.OrganizationHierarchy
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
-import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.{ThreadFactory, Executors}
 import org.scalatra._
 import javax.servlet.{ServletContextEvent, DispatcherType, ServletContext}
 import org.scalatra.swagger.Swagger
@@ -37,7 +38,18 @@ class ScalatraBootstrap extends LifeCycle {
   val organisaatioServiceUrlQa = "https://testi.virkailija.opintopolku.fi/organisaatio-service"
   val hakuappServiceUrlQa = "https://testi.virkailija.opintopolku.fi/haku-app"
   val koodistoServiceUrlQa = "https://testi.virkailija.opintopolku.fi/koodisto-service"
-  val webExec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(1000))
+
+
+
+  private val NumThreads = 1000
+  private val threadNumber = new AtomicInteger(1)
+  lazy val webPool = Executors.newFixedThreadPool(NumThreads, new ThreadFactory() {
+    override def newThread(r: Runnable): Thread = {
+      new Thread(r, "webpool-" + threadNumber.getAndIncrement)
+    }
+  })
+
+  lazy val webExec = ExecutionContext.fromExecutorService(webPool)
 
   override def init(context: ServletContext) {
     OPHSecurity init context
@@ -59,7 +71,9 @@ class ScalatraBootstrap extends LifeCycle {
     val hakuappServiceUrl = OPHSecurity.config.properties.get("cas.service.haku").getOrElse(hakuappServiceUrlQa)
     val organisaatioServiceUrl = OPHSecurity.config.properties.get("cas.service.organisaatio-service").getOrElse(organisaatioServiceUrlQa)
     val koodistoServiceUrl = OPHSecurity.config.properties.get("cas.service.koodisto-service").getOrElse(koodistoServiceUrlQa)
-    val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu(hakuappServiceUrl)(webExec), new RestOrganisaatiopalvelu(organisaatioServiceUrl)(webExec), new RestKoodistopalvelu(koodistoServiceUrl)(webExec))))
+    val organisaatiopalvelu: RestOrganisaatiopalvelu = new RestOrganisaatiopalvelu(organisaatioServiceUrl)(webExec)
+    val organisaatiot = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
+    val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu(hakuappServiceUrl)(webExec), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl)(webExec))))
 
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](filteredSuoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
     context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](filteredOpiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")

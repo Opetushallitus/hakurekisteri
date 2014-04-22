@@ -19,7 +19,7 @@ trait Koodistopalvelu {
 class RestKoodistopalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/koodisto-service")(implicit val ec: ExecutionContext) extends Koodistopalvelu {
   val logger = LoggerFactory.getLogger(getClass)
 
-  implicit val httpClient = new ApacheHttpClient
+  implicit val httpClient = new ApacheHttpClient()()
 
   override def getRinnasteinenKoodiArvo(koodiUri: String, rinnasteinenKoodistoUri: String): Future[String] = {
     val url = new URL(serviceUrl + "/rest/json/relaatio/rinnasteinen/" + koodiUri)
