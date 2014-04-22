@@ -23,11 +23,10 @@ class RestKoodistopalvelu(serviceUrl: String = "https://itest-virkailija.oph.war
 
   override def getRinnasteinenKoodiArvo(koodiUri: String, rinnasteinenKoodistoUri: String): Future[String] = {
     val url = new URL(serviceUrl + "/rest/json/relaatio/rinnasteinen/" + koodiUri)
-    logger.info("calling koodisto-service [{}]", url)
+    logger.debug("calling koodisto-service [{}]", url)
     GET(url).apply.map(response => {
       if (response.code == HttpResponseCode.Ok) {
         val koodiList = response.bodyAsCaseClass[Koodi].toList
-        logger.info("response received for %s".format(url))
         logger.debug("got response: [{}]", koodiList)
         if (!koodiList.isEmpty) {
           val filtered = koodiList.filter(_.koodisto.koodistoUri == rinnasteinenKoodistoUri)
