@@ -100,10 +100,6 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
 
-
-
-
-
   def hakija2XMLHakija(hakija:Hakija): Future[XMLHakija] = {
     enrich(hakija).tupledMap(data2XmlHakija(hakija))
   }
@@ -120,11 +116,10 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def data2XmlHakija(hakija:Hakija)(hakemus:XMLHakemus, yhteystiedot: Seq[Yhteystiedot], kotimaa:String, kansalaisuus:String) =
     XMLHakija(hakija, yhteystiedot, kotimaa, kansalaisuus, hakemus)
 
-
+  def hakijat2XmlHakijat(hakijat:Seq[Hakija]) = hakijat.map(hakija2XMLHakija).join.map(XMLHakijat)
 
   def XMLQuery(q: HakijaQuery): Future[XMLHakijat] = q.hakuehto match {
-    case Hakuehto.Kaikki => val map: Future[Seq[Future[XMLHakija]]] = hakupalvelu.getHakijat(q).map(_.map(hakija2XMLHakija))
-      map.flatMap(Future.sequence(_).map(XMLHakijat))
+    case Hakuehto.Kaikki => hakupalvelu.getHakijat(q).flatMap(hakijat2XmlHakijat)
     // TODO Hakuehto.Hyväksytyt & Hakuehto.Vastaanottaneet
     case _ => Future.successful(XMLHakijat(Seq()))
   }
