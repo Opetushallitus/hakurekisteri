@@ -20,7 +20,6 @@ trait Organisaatiopalvelu {
 
 case class Organisaatio(oid: String, nimi: Map[String, String], toimipistekoodi: Option[String], oppilaitosKoodi: Option[String], parentOid: Option[String])
 
-import akka.pattern.ask
 import akka.pattern.pipe
 
 class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
@@ -29,10 +28,12 @@ class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
   class Swipe
 
   private object swipe  extends Swipe
+
+  case class Remove(oid:String)
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   import scala.collection.mutable.Map
-  private var cache:Map[String,(Long, Future[Option[Organisaatio]])] = Map()
+  private val cache:Map[String,(Long, Future[Option[Organisaatio]])] = Map()
 
 
   var cancellable: Option[Cancellable] = None
@@ -56,7 +57,8 @@ class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
 
   override def receive: Receive = {
     case oid:String => find(oid)._2 pipeTo sender
-    case swipe:Swipe => cache.toSeq.filter(t => t._2._1 < Platform.currentTime).map(_._1).foreach(cache.remove(_))
+    case Remove(oid) => cache.remove(oid)
+    case swipe:Swipe => Future(cache.toSeq.filter(t => t._2._1 < Platform.currentTime).map(_._1).foreach(self ! Remove(_)))
   }
 
 
