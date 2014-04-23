@@ -1,46 +1,23 @@
 package fi.vm.sade.hakurekisteri.hakija
 
 import org.json4s._
-import scala.concurrent.{ExecutionContextExecutor, Await, ExecutionContext, Future}
-import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 import java.net.{URL, URLEncoder}
 import com.stackmob.newman.ApacheHttpClient
-import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
+import com.stackmob.newman.response.HttpResponseCode
 import com.stackmob.newman.dsl._
-import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, User}
 import org.slf4j.LoggerFactory
-import java.util.concurrent.{Executors, ExecutorService}
 import fi.vm.sade.hakurekisteri.henkilo._
-import fi.vm.sade.hakurekisteri.hakija.Hakemus
-import fi.vm.sade.hakurekisteri.henkilo.Kansalaisuus
-import fi.vm.sade.hakurekisteri.hakija.HakemusHaku
-import scala.Some
-import fi.vm.sade.hakurekisteri.hakija.ListHakemus
-import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
-import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
-import fi.vm.sade.hakurekisteri.hakija.FullHakemus
-import fi.vm.sade.hakurekisteri.hakija.Hakija
-import fi.vm.sade.hakurekisteri.hakija.Hakukohde
-import fi.vm.sade.hakurekisteri.hakija.Hakutoive
 import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Komoto, Suoritus}
 import org.joda.time.{MonthDay, DateTime, LocalDate}
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
-import fi.vm.sade.hakurekisteri.hakija.Hakemus
 import fi.vm.sade.hakurekisteri.henkilo.Kansalaisuus
-import fi.vm.sade.hakurekisteri.hakija.HakemusHaku
 import scala.Some
-import fi.vm.sade.hakurekisteri.hakija.ListHakemus
 import fi.vm.sade.hakurekisteri.henkilo.Kieli
 import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
 import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
-import fi.vm.sade.hakurekisteri.hakija.FullHakemus
-import fi.vm.sade.hakurekisteri.hakija.Hakija
-import fi.vm.sade.hakurekisteri.hakija.Hakukohde
-import fi.vm.sade.hakurekisteri.hakija.Hakutoive
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import ForkedSeq._
 
 trait Hakupalvelu {
 
@@ -60,7 +37,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
     val user = q.user
     def f(foo: Option[List[FullHakemus]]): Seq[Hakija] = {
       logger.info("got result for: %s".format(url))
-      foo.getOrElse(Seq()).map(RestHakupalvelu.getHakija(_))
+      foo.getOrElse(Seq()).map(RestHakupalvelu.getHakija)
     }
     restRequest[List[FullHakemus]](user, url).map(f)
   }
@@ -143,7 +120,7 @@ object RestHakupalvelu {
 
     Hakija(
       Henkilo(
-        yhteystiedotRyhma = Seq(YhteystiedotRyhma(0, "yhteystietotyyppi1", "hakemus", true, Seq(
+        yhteystiedotRyhma = Seq(YhteystiedotRyhma(0, "yhteystietotyyppi1", "hakemus", readOnly = true, Seq(
           Yhteystiedot(0, "YHTEYSTIETO_KATUOSOITE", getValue(v, "lahiosoite")),
           Yhteystiedot(1, "YHTEYSTIETO_POSTINUMERO", getValue(v, "Postinumero")),
           Yhteystiedot(2, "YHTEYSTIETO_MAA", getValue(v, "asuinmaa")),
