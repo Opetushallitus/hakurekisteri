@@ -55,6 +55,21 @@ case class YhteystiedotRyhma (
                                readOnly: Boolean,
                                yhteystiedot: Seq[Yhteystiedot])
 
+object YhteystiedotRyhma {
+  implicit def yhteystietoryhmatToMap(yhteystiedot: Seq[YhteystiedotRyhma]): Map[(String, String), Seq[Yhteystiedot]] = {
+    yhteystiedot.map((y) => (y.ryhmaAlkuperaTieto, y.ryhmaKuvaus) -> y.yhteystiedot).toMap
+  }
+
+}
+
+object Yhteystiedot {
+
+  implicit def yhteystiedotToMap(yhteystiedot: Seq[Yhteystiedot]): Map[String, String] = {
+    yhteystiedot.map((y) => y.yhteystietoTyyppi -> y.yhteystietoArvo).toMap
+  }
+
+
+}
 
 case class Yksilointitieto (
                              hetu: String)
