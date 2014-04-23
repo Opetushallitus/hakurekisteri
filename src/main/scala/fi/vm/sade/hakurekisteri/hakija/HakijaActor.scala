@@ -7,17 +7,14 @@ import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.henkilo._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import scala.util.Try
-import fi.vm.sade.hakurekisteri.rest.support.{User, Kausi}
-import fi.vm.sade.hakurekisteri.henkilo.Kansalaisuus
 import scala.Some
 import fi.vm.sade.hakurekisteri.suoritus.Komoto
 import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
-import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
-import org.joda.time.{DateTime, LocalDate}
-import akka.pattern.pipe
+import akka.pattern.{pipe, ask}
 import ForkedSeq._
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
+import TupledFuture._
 
 
 case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String)
@@ -35,25 +32,16 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
 
   def receive = {
-    case q: HakijaQuery => {
-      XMLQuery(q) pipeTo sender
-    }
+    case q: HakijaQuery => XMLQuery(q) pipeTo sender
   }
 
-  implicit def yhteystietoryhmatToMap(yhteystiedot: Seq[YhteystiedotRyhma]): Map[(String, String), Seq[Yhteystiedot]] = {
-    yhteystiedot.map((y) => (y.ryhmaAlkuperaTieto, y.ryhmaKuvaus) -> y.yhteystiedot).toMap
-  }
 
-  implicit def yhteystiedotToMap(yhteystiedot: Seq[Yhteystiedot]): Map[String, String] = {
-    yhteystiedot.map((y) => y.yhteystietoTyyppi -> y.yhteystietoArvo).toMap
-  }
 
   def resolveOppilaitosKoodi(o:Organisaatio): Future[Option[String]] =  o.oppilaitosKoodi match {
     case None => findOppilaitoskoodi(o.parentOid)
     case Some(k) => Future(Some(k))
   }
 
-  import akka.pattern.ask
 
   def getOrg(oid: String): Future[Option[Organisaatio]] = (organisaatioActor ? oid).mapTo[Option[Organisaatio]]
 
@@ -86,42 +74,53 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     getOrg(tarjoaja).flatMap((o) => findOppilaitoskoodi(o.map(_.oid)).map(k => extractOption(o, k)))
   }
 
-  import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
+
+  def createHakemus(hakija: Hakija)(opiskelija: Option[Opiskelija], org:Option[Organisaatio], ht: Seq[XMLHakutoive]) = XMLHakemus(hakija,opiskelija, org, ht)
+
 
   @Deprecated // TODO mäppää puuttuvat tiedot
-  def getXmlHakemus(hakija: Hakija, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio]): Future[Option[XMLHakemus]] = {
+  def getXmlHakemus(hakija: Hakija): Future[XMLHakemus] = {
+
+    val (opiskelutieto, lahtokoulu) = getOpiskelijaTiedot(hakija)
     val ht: Future[Seq[XMLHakutoive]] = getXmlHakutoiveet(hakija)
-    ht.map(toiveet => Try(hakija.hakemus).map((hakemus: Hakemus) => XMLHakemus(hakija, hakemus, opiskelutieto, lahtokoulu, toiveet)).toOption)
+    val data = (opiskelutieto,lahtokoulu,ht).join
+
+    data.tupledMap(createHakemus(hakija))
   }
 
-  def getXmlHakemus(hakija: Hakija): Future[Option[XMLHakemus]] = {
-    hakija.opiskeluhistoria.size match {
-      case 0 => getXmlHakemus(hakija, None, None)
-      case _ => getOrg(hakija.opiskeluhistoria.head.oppilaitosOid).flatMap((o: Option[Organisaatio]) => getXmlHakemus(hakija, Some(hakija.opiskeluhistoria.head), o))
-    }
+  def getOpiskelijaTiedot(hakija: Hakija): (Future[Option[Opiskelija]], Future[Option[Organisaatio]]) = hakija.opiskeluhistoria match {
+    case opiskelijaTiedot :: _ => (Future.successful(Some(opiskelijaTiedot)), getOrg(opiskelijaTiedot.oppilaitosOid))
+    case _ => (Future.successful(None),Future.successful(None))
   }
+
 
   def getMaakoodi(koodiArvo: String): Future[String] = koodiArvo.toLowerCase match {
     case "fin" => Future.successful("246")
     case arvo => koodistopalvelu.getRinnasteinenKoodiArvo("maatjavaltiot1_" + arvo, "maatjavaltiot2")
   }
 
-  @Deprecated // TODO ratkaise kaksoiskansalaisuus
-  def hakija2XMLHakija(hakija: Hakija): Future[Option[XMLHakija]] = {
-    getXmlHakemus(hakija).flatMap((hakemus) => {
-      val yhteystiedot: Seq[Yhteystiedot] = hakija.henkilo.yhteystiedotRyhma.getOrElse(("hakemus", "yhteystietotyyppi1"), Seq())
-      hakemus.
-        map(hakemus => getMaakoodi(yhteystiedot.getOrElse("YHTEYSTIETO_MAA", "FIN")).
-          flatMap((maa) => getMaakoodi(Try(hakija.henkilo.kansalaisuus.head).map(k => k.kansalaisuusKoodi).getOrElse("FIN")).
-            map((kansalaisuus) => XMLHakija(hakija, yhteystiedot, maa, kansalaisuus, hakemus)))).
-        map(f => f.map(Option(_))).
-        getOrElse(Future.successful(None))
-    })
+
+  def hakija2XMLHakija(hakija:Hakija): Future[XMLHakija] = {
+    enrich(hakija).tupledMap(data2XmlHakija(hakija))
   }
 
+  def enrich(hakija: Hakija) = {
+    val hakemus: Future[XMLHakemus] = getXmlHakemus(hakija)
+    val yhteystiedot: Seq[Yhteystiedot] = hakija.henkilo.yhteystiedotRyhma.getOrElse(("hakemus", "yhteystietotyyppi1"), Seq())
+    val maakoodi = getMaakoodi(yhteystiedot.getOrElse("YHTEYSTIETO_MAA", "FIN"))
+    val kansalaisuus = getMaakoodi(Try(hakija.henkilo.kansalaisuus.head).map(k => k.kansalaisuusKoodi).getOrElse("FIN"))
+
+    (hakemus, Future.successful(yhteystiedot), maakoodi, kansalaisuus).join
+  }
+
+  def data2XmlHakija(hakija:Hakija)(hakemus:XMLHakemus, yhteystiedot: Seq[Yhteystiedot], kotimaa:String, kansalaisuus:String) =
+    XMLHakija(hakija, yhteystiedot, kotimaa, kansalaisuus, hakemus)
+
+  def hakijat2XmlHakijat(hakijat:Seq[Hakija]) = hakijat.map(hakija2XMLHakija).join.map(XMLHakijat)
+
   def XMLQuery(q: HakijaQuery): Future[XMLHakijat] = q.hakuehto match {
-    case Hakuehto.Kaikki => hakupalvelu.getHakijat(q).map(_.map(hakija2XMLHakija)).flatMap {log.info("enriched");Future.sequence(_).map(hakijat => XMLHakijat(hakijat.flatten))}
+    case Hakuehto.Kaikki => hakupalvelu.getHakijat(q).flatMap(hakijat2XmlHakijat)
     // TODO Hakuehto.Hyväksytyt & Hakuehto.Vastaanottaneet
-    case _ => Future(XMLHakijat(Seq()))
+    case _ => Future.successful(XMLHakijat(Seq()))
   }
 }
