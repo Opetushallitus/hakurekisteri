@@ -30,6 +30,7 @@ build/*
 logs/*
 
 # sbt specific
+.history
 target/
 project/boot
 lib_managed/*

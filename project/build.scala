@@ -124,6 +124,16 @@ object HakuJaValintarekisteriBuild extends Build {
       IO.write(f, buildversionTxt)
   }
 
+  import info.schleichardt.sbt.sonar.SbtSonarPlugin._
+
+  // TODO käytä alla olevia asetuksia oletusten sijaan https://github.com/schleichardt/sbt-sonar
+  sonarProperties <<= (version) { (v) =>
+    Map("sonar.host.url" -> "http://pulpetti.hard.ware.fi:9000/sonar",
+      "sonar.jdbc.url" -> "jdbc:mysql://pulpetti.hard.ware.fi:3306/sonar?useUnicode=true&amp;characterEncoding=utf8",
+      "sonar.jdbc.username" -> "sonar",
+      "sonar.jdbc.password" -> sys.env.getOrElse("sonar.jdbc.password", "sonar"))
+  }
+
   lazy val project = {
     Project(
       "hakurekisteri",
@@ -150,7 +160,6 @@ object HakuJaValintarekisteriBuild extends Build {
             ++ SecurityStack
             ++ dependencies
             ++ testDependencies.map((m) => m % "test"),
-
           scalateTemplateConfig in Compile <<= (sourceDirectory in Compile) {
             base =>
               Seq(
@@ -164,7 +173,8 @@ object HakuJaValintarekisteriBuild extends Build {
                 )
               )
           }
-      )
+        )
+        ++ sonarSettings // TODO lisää sonarProperties tänne jotenkin
     )
   }
 }
