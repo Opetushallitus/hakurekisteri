@@ -1,9 +1,18 @@
+import com.mojolly.scalate.ScalatePlugin.Binding
+import com.mojolly.scalate.ScalatePlugin.Binding
+import com.mojolly.scalate.ScalatePlugin.TemplateConfig
+import com.mojolly.scalate.ScalatePlugin.TemplateConfig
+import info.schleichardt.sbt.sonar.SbtSonarPlugin._
 import java.text.SimpleDateFormat
 import java.util.Date
 import sbt._
 import sbt.Keys._
 import org.scalatra.sbt._
 import com.mojolly.scalate.ScalatePlugin._
+import sbt.ScalaVersion
+import sbt.ScalaVersion
+import scala.Some
+import scala.Some
 import scala.Some
 import ScalateKeys._
 
@@ -124,15 +133,14 @@ object HakuJaValintarekisteriBuild extends Build {
       IO.write(f, buildversionTxt)
   }
 
-  import info.schleichardt.sbt.sonar.SbtSonarPlugin._
 
-  // TODO käytä alla olevia asetuksia oletusten sijaan https://github.com/schleichardt/sbt-sonar
-  sonarProperties <<= (version) { (v) =>
+
+  val sonar =  sonarSettings ++ Seq(sonarProperties := sonarProperties.value ++
     Map("sonar.host.url" -> "http://pulpetti.hard.ware.fi:9000/sonar",
       "sonar.jdbc.url" -> "jdbc:mysql://pulpetti.hard.ware.fi:3306/sonar?useUnicode=true&amp;characterEncoding=utf8",
       "sonar.jdbc.username" -> "sonar",
-      "sonar.jdbc.password" -> sys.env.getOrElse("sonar.jdbc.password", "sonar"))
-  }
+      "sonar.jdbc.password" -> sys.env.getOrElse("sonar.jdbc.password", "sonar")))
+
 
   lazy val project = {
     Project(
@@ -174,8 +182,7 @@ object HakuJaValintarekisteriBuild extends Build {
               )
           }
         )
-        ++ sonarSettings // TODO lisää sonarProperties tänne jotenkin
-    )
+        ++ sonar)
   }
 }
 
