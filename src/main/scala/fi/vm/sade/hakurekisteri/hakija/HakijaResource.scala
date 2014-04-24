@@ -19,6 +19,7 @@ import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import scala.Some
+import org.joda.time.LocalDate
 
 
 object Hakuehto extends Enumeration {
@@ -177,6 +178,15 @@ object XMLHakemus {
     case None => "7"
   }
 
+  def getRelevantSuoritus(suoritukset:Seq[Suoritus]) = {
+    suoritukset.map(s => (s, resolvePohjakoulutus(Some(s)).toInt)).sortBy(_._2).map(_._1).headOption
+  }
+
+  def resolveYear(suoritus:Suoritus) = suoritus match {
+    case Suoritus("ulkomainen", _,  _, _, _, _, _) => None
+    case Suoritus(_, _, _,date, _, _, _)  => Some(date.getYear.toString)
+  }
+
   def apply(hakija: Hakija, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive]): XMLHakemus =
     XMLHakemus(vuosi = Try(hakija.hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamisvuosi).get,
       kausi = if (Try(hakija.hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamiskausi).get == Kausi.Kevät) "K" else "S",
@@ -185,8 +195,8 @@ object XMLHakemus {
       lahtokoulunnimi = lahtokoulu.flatMap(o => o.nimi.get("fi")),
       luokka = opiskelutieto.map(_.luokka),
       luokkataso = opiskelutieto.map(_.luokkataso),
-      pohjakoulutus = resolvePohjakoulutus(Try(hakija.suoritukset.head).toOption),
-      todistusvuosi = Some("2014"),
+      pohjakoulutus = resolvePohjakoulutus(getRelevantSuoritus(hakija.suoritukset)),
+      todistusvuosi = getRelevantSuoritus(hakija.suoritukset).flatMap(resolveYear),
       julkaisulupa = Some(false),
       yhteisetaineet = None,
       lukiontasapisteet = None,

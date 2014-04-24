@@ -1,46 +1,23 @@
 package fi.vm.sade.hakurekisteri.hakija
 
 import org.json4s._
-import scala.concurrent.{ExecutionContextExecutor, Await, ExecutionContext, Future}
-import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 import java.net.{URL, URLEncoder}
 import com.stackmob.newman.ApacheHttpClient
-import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
+import com.stackmob.newman.response.HttpResponseCode
 import com.stackmob.newman.dsl._
-import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, User}
 import org.slf4j.LoggerFactory
-import java.util.concurrent.{Executors, ExecutorService}
 import fi.vm.sade.hakurekisteri.henkilo._
-import fi.vm.sade.hakurekisteri.hakija.Hakemus
+import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Komoto, Suoritus}
+import org.joda.time.{MonthDay, DateTime, LocalDate}
 import fi.vm.sade.hakurekisteri.henkilo.Kansalaisuus
-import fi.vm.sade.hakurekisteri.hakija.HakemusHaku
 import scala.Some
-import fi.vm.sade.hakurekisteri.hakija.ListHakemus
-import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
-import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
-import fi.vm.sade.hakurekisteri.hakija.FullHakemus
-import fi.vm.sade.hakurekisteri.hakija.Hakija
-import fi.vm.sade.hakurekisteri.hakija.Hakukohde
-import fi.vm.sade.hakurekisteri.hakija.Hakutoive
-import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus}
-import org.joda.time.{DateTime, LocalDate}
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
-import fi.vm.sade.hakurekisteri.hakija.Hakemus
-import fi.vm.sade.hakurekisteri.henkilo.Kansalaisuus
-import fi.vm.sade.hakurekisteri.hakija.HakemusHaku
-import scala.Some
-import fi.vm.sade.hakurekisteri.hakija.ListHakemus
 import fi.vm.sade.hakurekisteri.henkilo.Kieli
 import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
 import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
-import fi.vm.sade.hakurekisteri.hakija.FullHakemus
-import fi.vm.sade.hakurekisteri.hakija.Hakija
-import fi.vm.sade.hakurekisteri.hakija.Hakukohde
-import fi.vm.sade.hakurekisteri.hakija.Hakutoive
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import ForkedSeq._
 
 trait Hakupalvelu {
 
@@ -60,7 +37,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
     val user = q.user
     def f(foo: Option[List[FullHakemus]]): Seq[Hakija] = {
       logger.info("got result for: %s".format(url))
-      foo.getOrElse(Seq()).map(RestHakupalvelu.getHakija(_))
+      foo.getOrElse(Seq()).map(RestHakupalvelu.getHakija)
     }
     restRequest[List[FullHakemus]](user, url).map(f)
   }
@@ -119,12 +96,31 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 }
 
 object RestHakupalvelu {
+
+  val DEFAULT_POHJA_KOULUTUS: String = "1"
+
+  def getVuosi(vastaukset:Option[Map[String,String]])(pohjakoulutus:String) = pohjakoulutus match {
+    case "9" => vastaukset.flatMap(_.get("lukioPaattotodistusVuosi"))
+    case "7" => Some((LocalDate.now.getYear + 1).toString)
+    case _ => vastaukset.flatMap(_.get("PK_PAATTOTODISTUSVUOSI"))
+  }
+
+
+
   def getHakija(hakemus: FullHakemus): Hakija = {
+    val kesa = new MonthDay(6,4)
     val lahtokoulu: Option[String] = hakemus.vastauksetMerged.flatMap(_.get("lahtokoulu"))
+    val pohjakoulutus: Option[String] = hakemus.vastauksetMerged.flatMap(_.get("POHJAKOULUTUS"))
+    val todistusVuosi: Option[String] = pohjakoulutus.flatMap(getVuosi(hakemus.vastauksetMerged)(_))
     val v = hakemus.vastauksetMerged
+    val kieli  = getValue(v, "perusopetuksen_kieli", "FI")
+    val myontaja = lahtokoulu.getOrElse("")
+    val suorittaja = hakemus.personOid.getOrElse("")
+    val valmistuminen = todistusVuosi.map(vuosi => kesa.toLocalDate(vuosi.toInt)).getOrElse(new LocalDate(0))
+
     Hakija(
       Henkilo(
-        yhteystiedotRyhma = Seq(YhteystiedotRyhma(0, "yhteystietotyyppi1", "hakemus", true, Seq(
+        yhteystiedotRyhma = Seq(YhteystiedotRyhma(0, "yhteystietotyyppi1", "hakemus", readOnly = true, Seq(
           Yhteystiedot(0, "YHTEYSTIETO_KATUOSOITE", getValue(v, "lahiosoite")),
           Yhteystiedot(1, "YHTEYSTIETO_POSTINUMERO", getValue(v, "Postinumero")),
           Yhteystiedot(2, "YHTEYSTIETO_MAA", getValue(v, "asuinmaa")),
@@ -154,15 +150,7 @@ object RestHakupalvelu {
         turvakielto = false,
         markkinointilupa = Some(getValue(v, "lupaMarkkinointi", "false").toBoolean)
       ),
-      Seq(Suoritus(
-        komo = "peruskoulu",
-        myontaja = lahtokoulu.getOrElse(""),
-        tila = "KESKEN",
-        valmistuminen = LocalDate.now,
-        henkiloOid = hakemus.personOid.getOrElse(""),
-        yksilollistaminen = Ei,
-        suoritusKieli = getValue(v, "perusopetuksen_kieli", "FI")
-      )),
+      getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli),
       lahtokoulu match {
         case Some(oid) => Seq(Opiskelija(
           oppilaitosOid = lahtokoulu.get,
@@ -179,6 +167,18 @@ object RestHakupalvelu {
         Hakemus(hakutoiveet, hakemus.oid)
       }).getOrElse(Hakemus(Seq(), hakemus.oid))
     )
+  }
+
+
+  def getSuoritukset(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String): Seq[Suoritus] = {
+    Seq(pohjakoulutus).collect {
+      case Some("0") => Suoritus("ulkomainen", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli)
+      case Some("1") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli)
+      case Some("2") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Osittain, kieli)
+      case Some("3") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Alueittain, kieli)
+      case Some("6") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Kokonaan, kieli)
+      case Some("9") => Suoritus("lukio", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli)
+    }
   }
 
   def convertToiveet(toiveet: Map[String, String]): Seq[Hakutoive] = {
