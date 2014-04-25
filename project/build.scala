@@ -183,9 +183,6 @@ object HakuJaValintarekisteriBuild extends Build {
       IO.write(f, buildversionTxt)
   }
 
-  generateSonarReport <<= (sonarProperties, target, generateSonarPropertiesFile) map { (sP, ta, unused) =>
-    org.sonar.runner.Main.main(Array[String]("-e","-D", "project.settings=" + (ta / "sonar-project.properties").getCanonicalPath))
-  }
 
 
   val sonar =  sonarSettings ++ Seq(sonarProperties := sonarProperties.value ++
