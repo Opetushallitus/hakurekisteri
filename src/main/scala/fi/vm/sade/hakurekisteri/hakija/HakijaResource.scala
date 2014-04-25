@@ -6,11 +6,11 @@ import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, SpringSecuritySupport, HakurekisteriJsonSupport, User}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport}
-import org.scalatra.{RenderPipeline, AsyncResult, CorsSupport, FutureSupport}
+import org.scalatra._
 import scala.concurrent.ExecutionContext
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
-import akka.util.Timeout
+import _root_.akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import scala.util.Try
 import javax.servlet.http.HttpServletResponse
@@ -20,6 +20,13 @@ import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import scala.Some
 import org.joda.time.LocalDate
+import scala.Some
+import fi.vm.sade.hakurekisteri.hakija.Organisaatio
+import fi.vm.sade.hakurekisteri.rest.support.User
+import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
+import fi.vm.sade.hakurekisteri.hakija.Hakija
+import fi.vm.sade.hakurekisteri.hakija.Hakutoive
+import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 
 
 object Hakuehto extends Enumeration {
@@ -43,7 +50,7 @@ object HakijaQuery {
     user)
 }
 
-class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
+class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(120, TimeUnit.SECONDS)
   override protected def applicationDescription: String = "Hakeneiden ja valittujen rajapinta."
@@ -81,7 +88,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     if (Try(params("tiedosto").toBoolean).getOrElse(false)) setContentDisposition(tyyppi, response, "hakijat")
   }
 
-  get("/") {
+  get("/", operation(query)) {
     val q = HakijaQuery(params, currentUser)
     logger.info("Query: " + q)
 

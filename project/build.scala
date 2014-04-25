@@ -136,10 +136,16 @@ object HakuJaValintarekisteriBuild extends Build {
 
 
   val sonar =  sonarSettings ++ Seq(sonarProperties := sonarProperties.value ++
-    Map("sonar.host.url" -> "http://pulpetti.hard.ware.fi:9000/sonar",
+    Map("sonar.projectKey" -> "fi.vm.sade.hakurekisteri:hakurekisteri",
+      "sonar.language" -> "scala",
+      "sonar.sourceEncoding" -> "UTF-8",
+      "sonar.host.url" -> "http://pulpetti.hard.ware.fi:9000/sonar",
       "sonar.jdbc.url" -> "jdbc:mysql://pulpetti.hard.ware.fi:3306/sonar?useUnicode=true&amp;characterEncoding=utf8",
       "sonar.jdbc.username" -> "sonar",
-      "sonar.jdbc.password" -> sys.env.getOrElse("sonar.jdbc.password", "sonar")))
+      "sonar.jdbc.password" -> sys.env.getOrElse("sonar.jdbc.password", "sonar"),
+      "sonar.sources" -> "src/main/scala",
+      "sonar.tests" -> "src/test/scala",
+      "sonar.binaries" -> "target/scala-2.10/classes"))
 
 
   lazy val project = {

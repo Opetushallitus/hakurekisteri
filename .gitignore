@@ -79,3 +79,4 @@ build.sbt
 data/
 
 buildversion.txt
+.sonar/
