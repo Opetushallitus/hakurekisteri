@@ -1,8 +1,11 @@
 import com.mojolly.scalate.ScalatePlugin.Binding
 import com.mojolly.scalate.ScalatePlugin.Binding
+import com.mojolly.scalate.ScalatePlugin.Binding
+import com.mojolly.scalate.ScalatePlugin.TemplateConfig
 import com.mojolly.scalate.ScalatePlugin.TemplateConfig
 import com.mojolly.scalate.ScalatePlugin.TemplateConfig
 import info.schleichardt.sbt.sonar.SbtSonarPlugin._
+import java.nio.charset.Charset
 import java.text.SimpleDateFormat
 import java.util.Date
 import sbt._
@@ -10,11 +13,56 @@ import sbt.Keys._
 import org.scalatra.sbt._
 import com.mojolly.scalate.ScalatePlugin._
 import sbt.ScalaVersion
-import sbt.ScalaVersion
+import sbt.testing.{Status, TestSelector, Event}
+import scala.collection.concurrent.TrieMap
+import scala.compat.Platform
 import scala.Some
-import scala.Some
-import scala.Some
+import scala.xml._
 import ScalateKeys._
+
+case class Attr(name:String, text:String) extends UnprefixedAttribute(name, Text(text),Null)
+
+class SurefireListener(targetDir:File) extends TestReportListener {
+
+  val startTimes: scala.collection.concurrent.Map[String,Long] = TrieMap()
+  val details: scala.collection.concurrent.Map[String,Seq[Event]] = TrieMap()
+
+  val baseDir = new File(targetDir,"surefire-reports")
+  baseDir.mkdir()
+
+  def createResults(name:String, result: TestResult.Value) = {
+    val time = ((Platform.currentTime - startTimes(name))/1000f).toString
+    val statuses: Seq[Status] = details(name).map(d => (d.selector(), d.status())).collect{case (s:TestSelector, status) => status}
+    val tests = statuses.length.toString
+
+    val skipped = statuses.filter(Set(Status.Skipped, Status.Pending, Status.Ignored).contains(_)).length.toString
+    val errors = statuses.filter(_ eq Status.Error).length.toString
+    val failures = statuses.filter(_ eq Status.Failure).length.toString
+    import sbt.testing.TestSelector
+    val testDetails: Seq[Elem] = details(name).map(detail => (detail.fullyQualifiedName, detail.selector, detail.duration)).collect{case (classname, sel:TestSelector, duration) => <testcase/> % Attr("name",sel.testName) % Attr("classname", classname) % Attr("time",(duration/1000f).toString)}
+    (<testsuite/> %
+      Attr("name",name) %
+      Attr("tests",tests) %
+      Attr("skipped", skipped) %
+      Attr("errors", errors) %
+      Attr("time", time) %
+      Attr("failures", failures)).copy(child = testDetails)
+  }
+
+
+  override def endGroup(name: String, result: TestResult.Value):Unit = {
+    IO.write(new File(baseDir, "TEST-" + name + ".xml"), createResults(name, result).toString, Charset.forName("UTF-8"))
+
+  }
+
+  override def endGroup(name: String, t: Throwable): Unit = {}
+
+
+
+  override def testEvent(event: TestEvent): Unit = event.detail.headOption.foreach(e => details.put(e.fullyQualifiedName(), event.detail))
+
+  override def startGroup(name: String): Unit = startTimes.put(name, Platform.currentTime)
+}
 
 object HakuJaValintarekisteriBuild extends Build {
   val Organization = "fi.vm.sade"
@@ -119,6 +167,8 @@ object HakuJaValintarekisteriBuild extends Build {
 
   lazy val buildversion = taskKey[Unit]("start buildversion.txt generator")
 
+  val surefire = testListeners += new SurefireListener(target.value)
+
   val buildversionTask = buildversion <<= version map {
     (ver: String) =>
       val now: String = new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date())
@@ -133,13 +183,19 @@ object HakuJaValintarekisteriBuild extends Build {
       IO.write(f, buildversionTxt)
   }
 
+  generateSonarReport <<= (sonarProperties, target, generateSonarPropertiesFile) map { (sP, ta, unused) =>
+    org.sonar.runner.Main.main(Array[String]("-e","-D", "project.settings=" + (ta / "sonar-project.properties").getCanonicalPath))
+  }
 
 
   val sonar =  sonarSettings ++ Seq(sonarProperties := sonarProperties.value ++
     Map("sonar.host.url" -> "http://pulpetti.hard.ware.fi:9000/sonar",
       "sonar.jdbc.url" -> "jdbc:mysql://pulpetti.hard.ware.fi:3306/sonar?useUnicode=true&amp;characterEncoding=utf8",
       "sonar.jdbc.username" -> "sonar",
-      "sonar.jdbc.password" -> sys.env.getOrElse("sonar.jdbc.password", "sonar")))
+      "sonar.jdbc.password" -> sys.env.getOrElse("SONAR_PASSWORD", "sonar"),
+      "sonar.projectKey" -> "fi.vm.sade.hakurekisteri:hakurekisteri",
+      "sonar.language" -> "scala",
+      "sonar.surefire.reportsPath" -> (target.value.getAbsolutePath + "/surefire-reports")))
 
 
   lazy val project = {
@@ -182,7 +238,8 @@ object HakuJaValintarekisteriBuild extends Build {
               )
           }
         )
-        ++ sonar)
+        ++ sonar
+        ++ Seq(surefire))
   }
 }
 
