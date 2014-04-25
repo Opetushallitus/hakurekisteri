@@ -1,25 +1,13 @@
-import com.mojolly.scalate.ScalatePlugin.Binding
-import com.mojolly.scalate.ScalatePlugin.Binding
-import com.mojolly.scalate.ScalatePlugin.Binding
-import com.mojolly.scalate.ScalatePlugin.Binding
-import com.mojolly.scalate.ScalatePlugin.TemplateConfig
-import com.mojolly.scalate.ScalatePlugin.TemplateConfig
-import com.mojolly.scalate.ScalatePlugin.TemplateConfig
-import com.mojolly.scalate.ScalatePlugin.TemplateConfig
 import info.schleichardt.sbt.sonar.SbtSonarPlugin._
-import java.nio.charset.Charset
 import java.text.SimpleDateFormat
 import java.util.Date
 import sbt._
 import sbt.Keys._
 import org.scalatra.sbt._
 import com.mojolly.scalate.ScalatePlugin._
-import sbt.ScalaVersion
-import sbt.ScalaVersion
 import sbt.testing.{OptionalThrowable, Status, TestSelector, Event}
 import scala.collection.concurrent.TrieMap
 import scala.compat.Platform
-import scala.Some
 import scala.Some
 import scala.xml._
 import ScalateKeys._
@@ -265,7 +253,12 @@ object HakuJaValintarekisteriBuild extends Build {
       "sonar.jdbc.password" -> sys.env.getOrElse("SONAR_PASSWORD", "sonar"),
       "sonar.projectKey" -> "fi.vm.sade.hakurekisteri:hakurekisteri",
       "sonar.language" -> "scala",
-      "sonar.surefire.reportsPath" -> (target.value.getAbsolutePath + "/surefire-reports")))
+      "sonar.surefire.reportsPath" -> (target.value.getAbsolutePath + "/surefire-reports"),
+      "sonar.dynamicAnalysis" -> "reuseReports",
+      "sonar.core.codeCoveragePlugin" -> "cobertura",
+      "sonar.java.coveragePlugin"  -> "cobertura",
+      "sonar.cobertura.reportPath" -> (target.value.getAbsolutePath +"/scala-" +scalaBinaryVersion.value + "/coverage-report/cobertura.xml")))
+
 
 
   lazy val project = {
@@ -309,7 +302,8 @@ object HakuJaValintarekisteriBuild extends Build {
           }
         )
         ++ sonar
-        ++ Seq(surefire))
+        ++ Seq(surefire)
+        ++ ScctPlugin.instrumentSettings)
   }
 }
 
