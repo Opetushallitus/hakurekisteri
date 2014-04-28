@@ -63,7 +63,7 @@
         <sshexec command="
 				mkdir ${tomcat.home}/webapps/suoritusrekisteri;
 
-				unzip -qo -d${tomcat.home}/webapps/suoritusrekisteri  ${tomcat.home}/webapps/haku-*.war;
+				unzip -qo -d${tomcat.home}/webapps/suoritusrekisteri ${tomcat.home}/webapps/haku-*.war;
 
                 rm -rf ${tomcat.home}/webapps/haku-*.war;
 				"
