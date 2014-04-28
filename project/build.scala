@@ -5,18 +5,8 @@ import sbt._
 import sbt.Keys._
 import org.scalatra.sbt._
 import com.mojolly.scalate.ScalatePlugin._
-import sbt.testing.{OptionalThrowable, Status, TestSelector, Event}
-import scala.collection.concurrent.TrieMap
-import scala.compat.Platform
 import scala.Some
-import scala.xml._
 import ScalateKeys._
-
-
-
-/**
- * Created by verneri on 28.4.2014.
- */
 
 
 object HakuJaValintarekisteriBuild extends Build {
