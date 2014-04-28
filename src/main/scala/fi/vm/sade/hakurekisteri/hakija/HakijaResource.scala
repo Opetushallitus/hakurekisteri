@@ -74,7 +74,10 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     case Tyyppi.Excel => "xls"
   }
 
-  def setContentDisposition(t: Tyyppi, response: HttpServletResponse, filename: String): Unit = response.setHeader("Content-Disposition", "attachment;filename=%s.%s".format(filename, getFileExtension(t)))
+  def setContentDisposition(t: Tyyppi, response: HttpServletResponse, filename: String) {
+    response.setHeader("Content-Disposition", "attachment;filename=%s.%s".format(filename, getFileExtension(t)))
+    response.addCookie(Cookie("fileDownload", "true")(CookieOptions(path = "/")))
+  }
 
   override protected def renderPipeline: RenderPipeline = renderCustom orElse super.renderPipeline
   private def renderCustom: RenderPipeline = {
