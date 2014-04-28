@@ -30,6 +30,7 @@ build/*
 logs/*
 
 # sbt specific
+.history
 target/
 project/boot
 lib_managed/*
@@ -78,3 +79,4 @@ build.sbt
 data/
 
 buildversion.txt
+.sonar/

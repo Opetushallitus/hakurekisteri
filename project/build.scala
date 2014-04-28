@@ -1,11 +1,23 @@
+import info.schleichardt.sbt.sonar.SbtSonarPlugin._
 import java.text.SimpleDateFormat
 import java.util.Date
 import sbt._
 import sbt.Keys._
 import org.scalatra.sbt._
 import com.mojolly.scalate.ScalatePlugin._
+import sbt.testing.{OptionalThrowable, Status, TestSelector, Event}
+import scala.collection.concurrent.TrieMap
+import scala.compat.Platform
 import scala.Some
+import scala.xml._
 import ScalateKeys._
+
+
+
+/**
+ * Created by verneri on 28.4.2014.
+ */
+
 
 object HakuJaValintarekisteriBuild extends Build {
   val Organization = "fi.vm.sade"
@@ -110,6 +122,8 @@ object HakuJaValintarekisteriBuild extends Build {
 
   lazy val buildversion = taskKey[Unit]("start buildversion.txt generator")
 
+  val surefire = testListeners += new SurefireListener(target.value)
+
   val buildversionTask = buildversion <<= version map {
     (ver: String) =>
       val now: String = new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date())
@@ -123,6 +137,23 @@ object HakuJaValintarekisteriBuild extends Build {
       val f: File = file("src/main/webapp/buildversion.txt")
       IO.write(f, buildversionTxt)
   }
+
+
+
+  val sonar =  sonarSettings ++ Seq(sonarProperties := sonarProperties.value ++
+    Map("sonar.host.url" -> "http://pulpetti.hard.ware.fi:9000/sonar",
+      "sonar.jdbc.url" -> "jdbc:mysql://pulpetti.hard.ware.fi:3306/sonar?useUnicode=true&amp;characterEncoding=utf8",
+      "sonar.jdbc.username" -> "sonar",
+      "sonar.jdbc.password" -> sys.env.getOrElse("SONAR_PASSWORD", "sonar"),
+      "sonar.projectKey" -> "fi.vm.sade.hakurekisteri:hakurekisteri",
+      "sonar.language" -> "scala",
+      "sonar.surefire.reportsPath" -> (target.value.getAbsolutePath + "/surefire-reports"),
+      "sonar.dynamicAnalysis" -> "reuseReports",
+      "sonar.core.codeCoveragePlugin" -> "cobertura",
+      "sonar.java.coveragePlugin"  -> "cobertura",
+      "sonar.cobertura.reportPath" -> (target.value.getAbsolutePath +"/scala-" +scalaBinaryVersion.value + "/coverage-report/cobertura.xml")))
+
+
 
   lazy val project = {
     Project(
@@ -150,7 +181,6 @@ object HakuJaValintarekisteriBuild extends Build {
             ++ SecurityStack
             ++ dependencies
             ++ testDependencies.map((m) => m % "test"),
-
           scalateTemplateConfig in Compile <<= (sourceDirectory in Compile) {
             base =>
               Seq(
@@ -164,8 +194,10 @@ object HakuJaValintarekisteriBuild extends Build {
                 )
               )
           }
-      )
-    )
+        )
+        ++ sonar
+        ++ Seq(surefire)
+        ++ ScctPlugin.instrumentSettings)
   }
 }
 

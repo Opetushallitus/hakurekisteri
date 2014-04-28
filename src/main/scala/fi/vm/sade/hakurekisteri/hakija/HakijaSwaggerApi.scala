@@ -3,12 +3,12 @@ package fi.vm.sade.hakurekisteri.hakija
 import org.scalatra.swagger._
 import org.scalatra.swagger.AllowableValues.AnyValue
 import scala.Some
+import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 
-//TODO kiinnitä hakurekisterin swaggeriin
 trait HakijaSwaggerApi extends SwaggerSupport {
   override protected val applicationName = Some("hakijat")
-  protected val applicationDescription = "Hakijatietojen rajapinta."
 
+  /*
   val hakutoiveFields = Seq(ModelField("hakujno", null, DataType.Int, None, AnyValue, required = true),
     ModelField("oppilaitos", null, DataType.String, None, AnyValue, required = true),
     ModelField("opetuspiste", null, DataType.String, None, AnyValue, required = false),
@@ -64,5 +64,15 @@ trait HakijaSwaggerApi extends SwaggerSupport {
   registerModel(Model("Hakemus", "Hakemus", hakemusFields map { t => (t.name, t) } toMap))
   registerModel(Model("Hakija", "Hakija", hakijaFields map { t => (t.name, t) } toMap))
   registerModel(Model("Hakijat", "Hakijat", hakijatFields map { t => (t.name, t) } toMap))
+  */
 
+  val query: OperationBuilder = (apiOperation[XMLHakijat]("haeHakijat")
+    summary "Hae hakeneet/valitut"
+    notes "Hakee listauksen hakeneista/valituista parametrien mukaisesti."
+    parameter queryParam[Option[String]]("haku").description("haun oid").optional
+    parameter queryParam[Option[String]]("organisaatio").description("koulutuksen tarjoajan tai sen yläorganisaation oid").optional
+    parameter queryParam[Option[String]]("hakukohdekoodi").description("hakukohdekoodi").optional
+    parameter queryParam[String]("hakuehto").description("hakuehto").allowableValues("Kaikki", "Hyväksytyt", "Vastaanottaneet").required
+    parameter queryParam[String]("tyyppi").description("tietotyyppi").allowableValues("Json", "Xml", "Excel").required
+    parameter queryParam[Option[Boolean]]("tiedosto").description("palautetaanko vastaus tiedostona").allowableValues(true, false).optional)
 }
