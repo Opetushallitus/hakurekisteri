@@ -45,7 +45,7 @@
         <echo>Tomcat stopped.</echo>
 
         <echo>Clean Tomcat</echo>
-        <sshexec command="rm -rf ${tomcat.home}/webapps/* ${tomcat.home}/work/* ${tomcat.home}/temp/*"
+        <sshexec command="rm -rf ${tomcat.home}/webapps/suoritusrekisteri ${tomcat.home}/work/* ${tomcat.home}/temp/*"
                  host="${tomcat-host}" username="tomcat" keyfile="${ssh.keyfile}"
                  passphrase="${ssh.keypass}" trust="true" failonerror="false" />
 
@@ -63,7 +63,7 @@
         <sshexec command="
 				mkdir ${tomcat.home}/webapps/suoritusrekisteri;
 
-				unzip -qo -d${tomcat.home}/webapps/suoritusrekisteri  ${tomcat.home}/webapps/haku-*.war;
+				unzip -qo -d${tomcat.home}/webapps/suoritusrekisteri ${tomcat.home}/webapps/haku-*.war;
 
                 rm -rf ${tomcat.home}/webapps/haku-*.war;
 				"

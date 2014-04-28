@@ -25,7 +25,7 @@ trait Hakupalvelu {
 
 }
 
-class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app")(implicit val ec: ExecutionContext) extends Hakupalvelu {
+class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Integer = 2000)(implicit val ec: ExecutionContext) extends Hakupalvelu {
   val logger = LoggerFactory.getLogger(getClass)
   implicit val httpClient = new ApacheHttpClient()()
   protected implicit def jsonFormats: Formats = DefaultFormats
@@ -49,7 +49,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
   def getQueryParams(q: HakijaQuery): String = {
     val params: Seq[String] = Seq(
       Some("appState=ACTIVE"), Some("orgSearchExpanded=true"), Some("checkAllApplications=false"),
-      Some("start=0"), Some("rows=500"),
+      Some("start=0"), Some("rows=" + maxApplications),
       q.haku.map(s => "asId=" + urlencode(s)),
       q.organisaatio.map(s => "lopoid=" + urlencode(s)),
       q.hakukohdekoodi.map(s => "aoidCode=" + urlencode(s))
