@@ -6,11 +6,11 @@ import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, SpringSecuritySupport, HakurekisteriJsonSupport, User}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport}
-import org.scalatra.{RenderPipeline, AsyncResult, CorsSupport, FutureSupport}
+import org.scalatra._
 import scala.concurrent.ExecutionContext
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
-import akka.util.Timeout
+import _root_.akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import scala.util.Try
 import javax.servlet.http.HttpServletResponse
@@ -19,6 +19,14 @@ import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import scala.Some
+import org.joda.time.LocalDate
+import scala.Some
+import fi.vm.sade.hakurekisteri.hakija.Organisaatio
+import fi.vm.sade.hakurekisteri.rest.support.User
+import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
+import fi.vm.sade.hakurekisteri.hakija.Hakija
+import fi.vm.sade.hakurekisteri.hakija.Hakutoive
+import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 
 
 object Hakuehto extends Enumeration {
@@ -42,7 +50,7 @@ object HakijaQuery {
     user)
 }
 
-class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
+class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(120, TimeUnit.SECONDS)
   override protected def applicationDescription: String = "Hakeneiden ja valittujen rajapinta."
@@ -80,7 +88,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     if (Try(params("tiedosto").toBoolean).getOrElse(false)) setContentDisposition(tyyppi, response, "hakijat")
   }
 
-  get("/") {
+  get("/", operation(query)) {
     val q = HakijaQuery(params, currentUser)
     logger.info("Query: " + q)
 
@@ -177,6 +185,15 @@ object XMLHakemus {
     case None => "7"
   }
 
+  def getRelevantSuoritus(suoritukset:Seq[Suoritus]) = {
+    suoritukset.map(s => (s, resolvePohjakoulutus(Some(s)).toInt)).sortBy(_._2).map(_._1).headOption
+  }
+
+  def resolveYear(suoritus:Suoritus) = suoritus match {
+    case Suoritus("ulkomainen", _,  _, _, _, _, _) => None
+    case Suoritus(_, _, _,date, _, _, _)  => Some(date.getYear.toString)
+  }
+
   def apply(hakija: Hakija, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive]): XMLHakemus =
     XMLHakemus(vuosi = Try(hakija.hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamisvuosi).get,
       kausi = if (Try(hakija.hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamiskausi).get == Kausi.Kevät) "K" else "S",
@@ -185,8 +202,8 @@ object XMLHakemus {
       lahtokoulunnimi = lahtokoulu.flatMap(o => o.nimi.get("fi")),
       luokka = opiskelutieto.map(_.luokka),
       luokkataso = opiskelutieto.map(_.luokkataso),
-      pohjakoulutus = resolvePohjakoulutus(Try(hakija.suoritukset.head).toOption),
-      todistusvuosi = Some("2014"),
+      pohjakoulutus = resolvePohjakoulutus(getRelevantSuoritus(hakija.suoritukset)),
+      todistusvuosi = getRelevantSuoritus(hakija.suoritukset).flatMap(resolveYear),
       julkaisulupa = Some(false),
       yhteisetaineet = None,
       lukiontasapisteet = None,

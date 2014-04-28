@@ -65,7 +65,7 @@
                                 </goals>
                                 <configuration>
                                     <target>
-                                        <ant antfile="build.xml">
+                                        <ant antfile="deploy.xml">
                                             <property name="pom.version" value="${version.number}${version.postfix}" />
                                         </ant>
                                     </target>
