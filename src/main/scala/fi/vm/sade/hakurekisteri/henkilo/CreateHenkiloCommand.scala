@@ -10,7 +10,7 @@ import scala.util.Try
 
 class CreateHenkiloCommand extends HakurekisteriCommand[Henkilo] {
 
-  implicit def getValue[A](option: Field[A]) : A = option.value.get
+
 
   implicit val yhteistiedotDefault: DefaultValue[YhteystiedotRyhma]  = default(YhteystiedotRyhma(-1,"dummy default value", "scalatra", readOnly = true, Seq()))
   implicit val stringToYhteistiedot: TypeConverter[String, YhteystiedotRyhma] = (_: String) =>  None
@@ -56,24 +56,28 @@ class CreateHenkiloCommand extends HakurekisteriCommand[Henkilo] {
   val syntymaaika: Field[String] =asString("syntymaaika")
   val markkinointiLupa: Field[Boolean] =asBoolean("markkinointiLupa").optional
 
-
-  override def toResource: Henkilo = Henkilo(yhteysTiedotRyhma, yksiloity, sukunimi, getValue(kielisyys), yksilointitieto.value,
-    henkiloTyyppi: String,
-    oidHenkilo: String,
-    duplicate: Boolean,
-    oppijanumero: String,
-    kayttajatiedot.value: Option[Kayttajatiedot],
-    kansalaisuus: Seq[Kansalaisuus],
-    passinnumero: String,
-    asiointiKieli: Kieli,
-    kutsumanimi: String,
-    passivoitu: Boolean,
-    eiSuomalaistaHetua: Boolean,
-    etunimet: String,
-    sukupuoli: String,
-    turvakielto: Boolean,
-    hetu: String,
-    syntymaaika: String,
+  override def toResource: Henkilo = Henkilo(
+    yhteysTiedotRyhma.value.get,
+    yksiloity.value.get,
+    sukunimi.value.get,
+    kielisyys.value.get,
+    yksilointitieto.value,
+    henkiloTyyppi.value.get,
+    oidHenkilo.value.get,
+    duplicate.value.get,
+    oppijanumero.value.get,
+    kayttajatiedot.value,
+    kansalaisuus.value.get,
+    passinnumero.value.get,
+    asiointiKieli.value.get,
+    kutsumanimi.value.get,
+    passivoitu.value.get,
+    eiSuomalaistaHetua.value.get,
+    etunimet.value.get,
+    sukupuoli.value.get,
+    turvakielto.value.get,
+    hetu.value.get,
+    syntymaaika.value.get,
     markkinointiLupa.value.flatMap((m: Boolean) => Try(JBool(m).extract[Boolean]).toOption)
   )
 
