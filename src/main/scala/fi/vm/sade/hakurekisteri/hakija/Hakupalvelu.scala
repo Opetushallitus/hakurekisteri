@@ -123,7 +123,7 @@ object RestHakupalvelu {
         yhteystiedotRyhma = Seq(YhteystiedotRyhma(0, "yhteystietotyyppi1", "hakemus", readOnly = true, Seq(
           Yhteystiedot(0, "YHTEYSTIETO_KATUOSOITE", getValue(v, "lahiosoite")),
           Yhteystiedot(1, "YHTEYSTIETO_POSTINUMERO", getValue(v, "Postinumero")),
-          Yhteystiedot(2, "YHTEYSTIETO_MAA", getValue(v, "asuinmaa")),
+          Yhteystiedot(2, "YHTEYSTIETO_MAA", getValue(v, "asuinmaa", "FIN")),
           Yhteystiedot(3, "YHTEYSTIETO_MATKAPUHELIN", getValue(v, "matkapuhelinnumero1")),
           Yhteystiedot(4, "YHTEYSTIETO_SAHKOPOSTI", getValue(v, "Sähköposti")),
           Yhteystiedot(5, "YHTEYSTIETO_KAUPUNKI", getValue(v, "kotikunta"))
@@ -139,7 +139,7 @@ object RestHakupalvelu {
         duplicate = false,
         oppijanumero = hakemus.personOid.getOrElse(""),
         kayttajatiedot = None,
-        kansalaisuus = Seq(Kansalaisuus(getValue(v, "kansalaisuus"))),
+        kansalaisuus = Seq(Kansalaisuus(getValue(v, "kansalaisuus", "FIN"))),
         passinnumero = "",
         asiointiKieli = Kieli("FI", "FI"),
         passivoitu = false,
