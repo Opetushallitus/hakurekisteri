@@ -79,17 +79,15 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     case hakijat: XMLHakijat if responseFormat == "binary" => ExcelUtil.write(response.outputStream, hakijat)
   }
 
-  before() {
-    val tyyppi = Try(Tyyppi.withName(params("tyyppi"))).getOrElse(Tyyppi.Json)
-    contentType = getContentType(tyyppi)
-    if (Try(params("tiedosto").toBoolean).getOrElse(false)) setContentDisposition(tyyppi, response, "hakijat")
-  }
-
   get("/", operation(query)) {
     val q = HakijaQuery(params, currentUser)
     logger.info("Query: " + q)
 
     new AsyncResult() {
+      val tyyppi = Try(Tyyppi.withName(params("tyyppi"))).getOrElse(Tyyppi.Json)
+      contentType = getContentType(tyyppi)
+      if (Try(params("tiedosto").toBoolean).getOrElse(false)) setContentDisposition(tyyppi, response, "hakijat")
+
       val is = hakijaActor ? q
     }
   }
