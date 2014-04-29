@@ -4,12 +4,9 @@ import scala.concurrent.{ExecutionContext, Future}
 import org.slf4j.LoggerFactory
 import com.stackmob.newman.ApacheHttpClient
 import org.json4s.{DefaultFormats, Formats}
-import fi.vm.sade.hakurekisteri.rest.support.User
 import java.net.URL
 import com.stackmob.newman.dsl._
-import fi.vm.sade.hakurekisteri.hakija.HakemusSijoittelu
 import fi.vm.sade.hakurekisteri.rest.support.User
-import fi.vm.sade.hakurekisteri.hakija.HakutoiveSijoittelu
 import com.stackmob.newman.response.HttpResponseCode
 
 case class HakutoiveSijoittelu(hakutoive: Option[Short], hakukohdeOid: Option[String], tarjoajaOid: Option[String], hakutoiveenValintatapajonot: Option[Seq[Map[String, String]]])

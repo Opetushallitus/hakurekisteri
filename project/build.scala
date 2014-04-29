@@ -1,3 +1,5 @@
+import com.mojolly.scalate.ScalatePlugin.Binding
+import com.mojolly.scalate.ScalatePlugin.TemplateConfig
 import info.schleichardt.sbt.sonar.SbtSonarPlugin._
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -5,18 +7,10 @@ import sbt._
 import sbt.Keys._
 import org.scalatra.sbt._
 import com.mojolly.scalate.ScalatePlugin._
-import sbt.testing.{OptionalThrowable, Status, TestSelector, Event}
-import scala.collection.concurrent.TrieMap
-import scala.compat.Platform
+import sbt.ScalaVersion
 import scala.Some
-import scala.xml._
+import scala.Some
 import ScalateKeys._
-
-
-
-/**
- * Created by verneri on 28.4.2014.
- */
 
 
 object HakuJaValintarekisteriBuild extends Build {
@@ -138,7 +132,7 @@ object HakuJaValintarekisteriBuild extends Build {
       IO.write(f, buildversionTxt)
   }
 
-
+  val scalac = Seq(scalacOptions ++= Seq( "-deprecation", "-unchecked", "-feature" ))
 
   val sonar =  sonarSettings ++ Seq(sonarProperties := sonarProperties.value ++
     Map("sonar.host.url" -> "http://pulpetti.hard.ware.fi:9000/sonar",
@@ -197,6 +191,7 @@ object HakuJaValintarekisteriBuild extends Build {
         )
         ++ sonar
         ++ Seq(surefire)
+
         ++ ScctPlugin.instrumentSettings)
   }
 }

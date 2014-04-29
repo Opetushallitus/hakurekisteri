@@ -3,9 +3,9 @@ package fi.vm.sade.hakurekisteri.hakija
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.Tyyppi.Tyyppi
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.rest.support.{Kausi, SpringSecuritySupport, HakurekisteriJsonSupport, User}
+import fi.vm.sade.hakurekisteri.rest.support.{Kausi, SpringSecuritySupport, HakurekisteriJsonSupport}
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.swagger.{Swagger, SwaggerEngine, SwaggerSupport}
+import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra._
 import scala.concurrent.ExecutionContext
 import _root_.akka.actor.{ActorRef, ActorSystem}
@@ -18,15 +18,9 @@ import scala.xml._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
+import org.joda.time.{DateTimeFieldType, LocalDate}
 import scala.Some
-import org.joda.time.LocalDate
-import scala.Some
-import fi.vm.sade.hakurekisteri.hakija.Organisaatio
 import fi.vm.sade.hakurekisteri.rest.support.User
-import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
-import fi.vm.sade.hakurekisteri.hakija.Hakija
-import fi.vm.sade.hakurekisteri.hakija.Hakutoive
-import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 
 
 object Hakuehto extends Enumeration {
@@ -52,7 +46,7 @@ object HakijaQuery {
 
 class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
-  implicit val defaultTimeout = Timeout(120, TimeUnit.SECONDS)
+  implicit val defaultTimeout = Timeout(60, TimeUnit.SECONDS)
   override protected def applicationDescription: String = "Hakeneiden ja valittujen rajapinta."
   override protected implicit def swagger: SwaggerEngine[_] = sw
 
@@ -74,7 +68,10 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     case Tyyppi.Excel => "xls"
   }
 
-  def setContentDisposition(t: Tyyppi, response: HttpServletResponse, filename: String): Unit = response.setHeader("Content-Disposition", "attachment;filename=%s.%s".format(filename, getFileExtension(t)))
+  def setContentDisposition(t: Tyyppi, response: HttpServletResponse, filename: String) {
+    response.setHeader("Content-Disposition", "attachment;filename=%s.%s".format(filename, getFileExtension(t)))
+    response.addCookie(Cookie("fileDownload", "true")(CookieOptions(path = "/")))
+  }
 
   override protected def renderPipeline: RenderPipeline = renderCustom orElse super.renderPipeline
   private def renderCustom: RenderPipeline = {
@@ -195,8 +192,8 @@ object XMLHakemus {
   }
 
   def apply(hakija: Hakija, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive]): XMLHakemus =
-    XMLHakemus(vuosi = Try(hakija.hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamisvuosi).get,
-      kausi = if (Try(hakija.hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamiskausi).get == Kausi.Kevät) "K" else "S",
+    XMLHakemus(vuosi = Try(hakija.hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamisvuosi).getOrElse("" + new LocalDate().get(DateTimeFieldType.year())), // FIXME poista oletusarvo
+      kausi = if (Try(hakija.hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamiskausi).getOrElse(Kausi.Syksy) == Kausi.Kevät) "K" else "S", // FIXME poista oletusarvo
       hakemusnumero = hakija.hakemus.hakemusnumero,
       lahtokoulu = lahtokoulu.flatMap(o => o.oppilaitosKoodi),
       lahtokoulunnimi = lahtokoulu.flatMap(o => o.nimi.get("fi")),
