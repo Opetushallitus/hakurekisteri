@@ -5,20 +5,18 @@ import com.stackmob.newman.dsl._
 import scala.concurrent._
 import scala.concurrent.duration._
 import java.net.URL
-import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
+import com.stackmob.newman.response.HttpResponseCode
 import org.slf4j.LoggerFactory
 import akka.actor.{Cancellable, Actor}
-import akka.actor.Actor.Receive
 import scala.compat.Platform
 import akka.event.Logging
 import scala.Some
-import fi.vm.sade.hakurekisteri.hakija.Organisaatio
 import scala.util.Try
 
 
 trait Organisaatiopalvelu {
 
-  def getAll():Future[Seq[String]]
+  def getAll:Future[Seq[String]]
   def get(str: String): Future[Option[Organisaatio]]
 
 }
@@ -81,7 +79,7 @@ class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
                          result._2.onFailure {case _ => log.warning("fetching organisation data for %s failed. Trying again".format(oid))
                                                         self ! Refetch(oid)}
     case Save(oid,result) => cache = cache + (oid -> result)
-    case refresh:Refresh => Future(fetchOrgs(cache.toSeq.filter(t => t._2._1 < Platform.currentTime).map(_._1), Refetch(_)))
+    case refresh:Refresh => Future(fetchOrgs(cache.toSeq.filter(t => t._2._1 < Platform.currentTime).map(_._1), Refetch))
   }
 
 
@@ -101,7 +99,7 @@ class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph
 
 
 
-  override def getAll(): Future[Seq[String]] = {
+  override def getAll: Future[Seq[String]] = {
     val url = new URL(serviceUrl + "/rest/organisaatio")
     GET(url).apply.map(response =>
     if (response.code == HttpResponseCode.Ok) {
