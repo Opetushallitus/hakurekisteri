@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.opiskelija
 
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
 import scala.Some
-import java.util.{UUID, Date}
+import java.util.Date
 import org.scalatra.swagger.{DataType, ModelField, Model}
 import org.scalatra.swagger.AllowableValues.AnyValue
 
@@ -18,7 +18,7 @@ trait OpiskelijaSwaggerApi
     ModelField("henkiloOid", null, DataType.String, None, AnyValue, required = true),
     ModelField("alkuPaiva", null, DataType.Date, None, AnyValue, required = true),
     ModelField("loppuPaiva", null, DataType.Date, None, AnyValue, required = false))
-  val opiskelijaModel = Model("Opiskelija", "Opiskelijatiedot", fields map { t => (t.name, t) } toMap)
+  val opiskelijaModel = Model("Opiskelija", "Opiskelijatiedot", fields.map(t => (t.name, t)).toMap)
 
   registerModel(opiskelijaModel)
 
