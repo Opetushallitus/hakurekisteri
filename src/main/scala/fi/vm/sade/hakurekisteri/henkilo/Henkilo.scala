@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.henkilo
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.rest.support.Resource
+import scala.language.implicitConversions
 
 
 case class Henkilo (

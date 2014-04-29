@@ -20,9 +20,9 @@ trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus, CreateSuoritus
     ModelField("henkiloOid", null, DataType.String, None, AnyValue, required = true),
     ModelField("luokkataso", null, DataType.String, None, AnyValue, required = true),
     ModelField("valmistuminen", null, DataType.Date, None, AnyValue, required = true),
-    ModelField("yksilollistaminen", null, DataType.String, None, AllowableValues(yksilollistaminen.values map {v => v.toString} toList)))
+    ModelField("yksilollistaminen", null, DataType.String, None, AllowableValues(yksilollistaminen.values.map(v => v.toString).toList)))
 
-  val suoritusModel = Model("Suoritus", "Suoritustiedot", fields map { t => (t.name, t) } toMap)
+  val suoritusModel = Model("Suoritus", "Suoritustiedot", fields.map(t => (t.name, t)).toMap)
 
   registerModel(suoritusModel)
 

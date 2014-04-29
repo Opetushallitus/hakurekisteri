@@ -28,7 +28,7 @@ case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria
 class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistopalvelu: Koodistopalvelu) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
-  implicit val timeout: akka.util.Timeout = Timeout(30, TimeUnit.SECONDS)
+  implicit val timeout: akka.util.Timeout = Timeout(60, TimeUnit.SECONDS)
 
 
   def receive = {

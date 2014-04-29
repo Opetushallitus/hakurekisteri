@@ -1,10 +1,8 @@
 package fi.vm.sade.hakurekisteri.hakija
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.implicitConversions
 
-/**
- * Created by verneri on 23.4.2014.
- */
 object TupledFuture {
 
 
