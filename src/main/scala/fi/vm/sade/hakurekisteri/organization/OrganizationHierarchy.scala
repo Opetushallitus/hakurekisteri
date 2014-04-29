@@ -27,7 +27,7 @@ class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRe
 
   override def preStart() {
     scheduledTask = context.system.scheduler.schedule(
-      0 seconds, 60 minutes,
+      0.seconds, 60.minutes,
       self, update)
   }
 
@@ -35,7 +35,7 @@ class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRe
     scheduledTask.cancel()
   }
 
-  implicit val timeout: akka.util.Timeout = Timeout(30, TimeUnit.SECONDS)
+  implicit val timeout: akka.util.Timeout = 30.seconds
 
   import akka.pattern.ask
   import akka.pattern.pipe
