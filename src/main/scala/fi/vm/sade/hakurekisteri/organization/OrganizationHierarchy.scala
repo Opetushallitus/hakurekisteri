@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.organization
 
 import scala.xml.{Elem, NodeSeq}
-import org.scalatra.util.RicherString
+import org.scalatra.util.RicherString._
 import org.joda.time.DateTime
 import dispatch._
 import Defaults._
@@ -60,7 +60,6 @@ class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRe
 class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organizationFinder: A => String) {
 
 
-  implicit def nodeSeq2RicherString(ns:NodeSeq):RicherString  = new RicherString(ns.text)
   val svc = url(serviceUrl).POST
   var authorizer = OrganizationAuthorizer(Map())
 
@@ -82,7 +81,7 @@ class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organiza
 
 
 
-  def createAuthorizer: Future[OrganizationAuthorizer] =  edgeFetch map (OrganizationAuthorizer(_))
+  def createAuthorizer: Future[OrganizationAuthorizer] =  edgeFetch map OrganizationAuthorizer
 
   def readXml: concurrent.Future[Elem] = {
     val result: dispatch.Future[Response] = Http(svc << <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:typ="http://model.api.organisaatio.sade.vm.fi/types">
@@ -97,7 +96,7 @@ class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organiza
 
   def possibleEdges(soapFuture: concurrent.Future[Elem]):concurrent.Future[Seq[(Option[String], Option[String])]] = {
     val orgTagsFuture = soapFuture map (_ \ "Body" \ "getOrganizationStructureResponse" \ "organizationStructure")
-    orgTagsFuture map (_.map((org) => ((org \ "@parentOid").blankOption, (org \ "@oid").blankOption)))
+    orgTagsFuture map (_.map((org) => ((org \ "@parentOid").text.blankOption, (org \ "@oid").text.blankOption)))
   }
 
 
@@ -133,11 +132,11 @@ class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organiza
     val needAddition: Map[String, Seq[String]] = accumulator.map((kv) => {
       val addedPathKeys = kv._2.collect(leafMap)
       val newPath = addedPathKeys ++ kv._2
-      (kv._1 -> newPath)
+      kv._1 -> newPath
     }) ++ leafMap.map((kv: (String, String)) => kv._1 -> Seq(kv._2, kv._1))
     val  (newLeaves, newOthers)  = findNonLeavesAndLeavesLeafEdges(parentEdges)
     if (parentEdges.nonEmpty) findPaths(newOthers, newLeaves, needAddition)
-    else (needAddition ++ leafMap.values.map((v) => v -> Seq(v)))
+    else needAddition ++ leafMap.values.map((v) => v -> Seq(v))
   }
 
   def edgeBuild(edges:Seq[(String,String)]) = {
