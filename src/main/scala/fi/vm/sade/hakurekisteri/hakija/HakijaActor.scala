@@ -52,17 +52,17 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
   def hakutoive2XMLHakutoive(ht: Hakutoive, jno:Int): Future[Option[XMLHakutoive]] =  {
-    findOrgData(ht.hakukohde.koulutukset.head.tarjoaja).map(_.map((XMLHakutoive(ht, jno) _).tupled))
+   for(
+      orgData: Option[(Organisaatio, String)] <- findOrgData(ht.hakukohde.koulutukset.head.tarjoaja)
+    ) yield
+     for ((org: Organisaatio, oppilaitos: String) <- orgData)
+      yield XMLHakutoive(ht,jno,org,oppilaitos)
   }
 
   @Deprecated // TODO mäppää puuttuvat tiedot
   def getXmlHakutoiveet(hakija: Hakija): Future[Seq[XMLHakutoive]] = {
-    hakija.hakemus.hakutoiveet.
-      zipWithIndex.
-      map((hakutoive2XMLHakutoive _).tupled).
-      toSeq.
-      join.
-      map(_.flatten)
+    val futureToiveet = for ((ht, jno) <- hakija.hakemus.hakutoiveet.zipWithIndex)  yield hakutoive2XMLHakutoive(ht, jno)
+    futureToiveet.join.map(_.flatten)
   }
 
   def extractOption(t: (Option[Organisaatio], Option[String])): Option[(Organisaatio, String)] = t._1 match {
