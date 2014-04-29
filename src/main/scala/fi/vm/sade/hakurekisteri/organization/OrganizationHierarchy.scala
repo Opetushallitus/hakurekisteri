@@ -8,11 +8,9 @@ import Defaults._
 import akka.actor.{Cancellable, ActorRef, Actor}
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import java.util.UUID
-import akka.util.Timeout
-import java.util.concurrent.TimeUnit
 import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.concurrent.duration._
-import akka.event.{LoggingAdapter, Logging}
+import akka.event.Logging
 import com.ning.http.client.Response
 
 class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: A => String) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
