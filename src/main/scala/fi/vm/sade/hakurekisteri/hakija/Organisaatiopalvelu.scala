@@ -46,8 +46,8 @@ class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
       case s:Seq[String] =>
         fetchOrgs(s)
     }
-    cancellable = Some(context.system.scheduler.schedule(10 minutes,
-      10 minutes,
+    cancellable = Some(context.system.scheduler.schedule(10.minutes,
+      10.minutes,
       self,
       refresh)(context.dispatcher, self))
 
@@ -55,7 +55,7 @@ class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
   }
 
   def fetchOrgs(s:Seq[String], mf: String => AnyRef = (s) => s) = s.grouped(10).zipWithIndex.foreach((t: (Seq[String], Int)) => {
-    t._1 foreach(oid => {context.system.scheduler.scheduleOnce(t._2 second, self, mf(oid))})
+    t._1 foreach(oid => {context.system.scheduler.scheduleOnce(t._2.second, self, mf(oid))})
   })
 
 
@@ -66,7 +66,7 @@ class OrganisaatioActor(palvelu: Organisaatiopalvelu) extends Actor {
 
 
 
-  val timeToLive = 24 hours
+  val timeToLive = 24.hours
 
   val log = Logging(context.system, this)
 
