@@ -43,7 +43,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
 
   def getOrg(oid: String): Future[Option[Organisaatio]] = {
-    implicit val timeout: akka.util.Timeout = Timeout(30, TimeUnit.SECONDS)
+    import scala.concurrent.duration._
+    implicit val timeout: akka.util.Timeout = 30.seconds
     Try((organisaatioActor ? oid).mapTo[Option[Organisaatio]]).getOrElse(Future.successful(None))
   }
 
