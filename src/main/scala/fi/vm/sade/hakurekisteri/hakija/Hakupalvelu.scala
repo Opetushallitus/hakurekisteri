@@ -27,7 +27,11 @@ trait Hakupalvelu {
 
 class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Integer = 2000)(implicit val ec: ExecutionContext) extends Hakupalvelu {
   val logger = LoggerFactory.getLogger(getClass)
-  implicit val httpClient = new ApacheHttpClient(socketTimeout = 60000)()
+
+
+  import scala.concurrent.duration._
+
+  implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
   protected implicit def jsonFormats: Formats = DefaultFormats
 
 
