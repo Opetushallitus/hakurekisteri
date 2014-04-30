@@ -136,7 +136,7 @@ case class XMLHakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[
 }
 
 object XMLHakutoive {
-  def apply(ht: Hakutoive, jno: Integer)(o: Organisaatio, k: String): XMLHakutoive =
+  def apply(ht: Hakutoive, jno: Integer, o: Organisaatio, k: String): XMLHakutoive =
     XMLHakutoive((jno + 1).toShort, k, o.toimipistekoodi, o.nimi.get("fi").orElse(o.nimi.get("sv")),
                  ht.hakukohde.hakukohdekoodi, None, None, None, None, None, None, None, None, Some(ht.kaksoistutkinto))
 }
