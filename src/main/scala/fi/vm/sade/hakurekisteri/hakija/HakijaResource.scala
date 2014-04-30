@@ -21,6 +21,7 @@ import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.joda.time.{DateTimeFieldType, LocalDate}
 import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
+import scala.concurrent.duration.Duration
 
 
 object Hakuehto extends Enumeration {
@@ -46,7 +47,6 @@ object HakijaQuery {
 
 class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
-  implicit val defaultTimeout = Timeout(90, TimeUnit.SECONDS)
   override protected def applicationDescription: String = "Hakeneiden ja valittujen rajapinta."
   override protected implicit def swagger: SwaggerEngine[_] = sw
 
@@ -84,11 +84,17 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     logger.info("Query: " + q)
 
     new AsyncResult() {
-      val tyyppi = Try(Tyyppi.withName(params("tyyppi"))).getOrElse(Tyyppi.Json)
-      contentType = getContentType(tyyppi)
-      if (Try(params("tiedosto").toBoolean).getOrElse(false)) setContentDisposition(tyyppi, response, "hakijat")
-
-      val is = hakijaActor ? q
+      import scala.concurrent.duration._
+      override implicit def timeout: Duration = 180.seconds
+      implicit val defaultTimeout: Timeout = 90.seconds
+      import scala.concurrent.future
+      val hakuResult = Try(hakijaActor ? q).get
+      val is = hakuResult.flatMap((result) => future {
+        val tyyppi = Try(Tyyppi.withName(params("tyyppi"))).getOrElse(Tyyppi.Json)
+        contentType = getContentType(tyyppi)
+        if (Try(params("tiedosto").toBoolean).getOrElse(false)) setContentDisposition(tyyppi, response, "hakijat")
+        result
+      })
     }
   }
 
@@ -131,7 +137,7 @@ case class XMLHakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[
 }
 
 object XMLHakutoive {
-  def apply(ht: Hakutoive, jno: Integer)(o: Organisaatio, k: String): XMLHakutoive =
+  def apply(ht: Hakutoive, jno: Integer, o: Organisaatio, k: String): XMLHakutoive =
     XMLHakutoive((jno + 1).toShort, k, o.toimipistekoodi, o.nimi.get("fi").orElse(o.nimi.get("sv")),
                  ht.hakukohde.hakukohdekoodi, None, None, None, None, None, None, None, None, Some(ht.kaksoistutkinto))
 }

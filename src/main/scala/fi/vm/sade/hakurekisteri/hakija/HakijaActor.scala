@@ -28,7 +28,6 @@ case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria
 class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistopalvelu: Koodistopalvelu) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
-  implicit val timeout: akka.util.Timeout = Timeout(90, TimeUnit.SECONDS)
 
 
   def receive = {
@@ -43,7 +42,11 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
 
-  def getOrg(oid: String): Future[Option[Organisaatio]] = (organisaatioActor ? oid).mapTo[Option[Organisaatio]]
+  def getOrg(oid: String): Future[Option[Organisaatio]] = {
+    import scala.concurrent.duration._
+    implicit val timeout: akka.util.Timeout = 30.seconds
+    Try((organisaatioActor ? oid).mapTo[Option[Organisaatio]]).getOrElse(Future.successful(None))
+  }
 
   def findOppilaitoskoodi(parentOid: Option[String]): Future[Option[String]] = parentOid match {
     case None => Future(None)
@@ -52,17 +55,17 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
   def hakutoive2XMLHakutoive(ht: Hakutoive, jno:Int): Future[Option[XMLHakutoive]] =  {
-    findOrgData(ht.hakukohde.koulutukset.head.tarjoaja).map(_.map((XMLHakutoive(ht, jno) _).tupled))
+   for(
+      orgData: Option[(Organisaatio, String)] <- findOrgData(ht.hakukohde.koulutukset.head.tarjoaja)
+    ) yield
+     for ((org: Organisaatio, oppilaitos: String) <- orgData)
+      yield XMLHakutoive(ht,jno,org,oppilaitos)
   }
 
   @Deprecated // TODO mäppää puuttuvat tiedot
   def getXmlHakutoiveet(hakija: Hakija): Future[Seq[XMLHakutoive]] = {
-    hakija.hakemus.hakutoiveet.
-      zipWithIndex.
-      map((hakutoive2XMLHakutoive _).tupled).
-      toSeq.
-      join.
-      map(_.flatten)
+    val futureToiveet = for ((ht, jno) <- hakija.hakemus.hakutoiveet.zipWithIndex)  yield hakutoive2XMLHakutoive(ht, jno)
+    futureToiveet.join.map(_.flatten)
   }
 
   def extractOption(t: (Option[Organisaatio], Option[String])): Option[(Organisaatio, String)] = t._1 match {
