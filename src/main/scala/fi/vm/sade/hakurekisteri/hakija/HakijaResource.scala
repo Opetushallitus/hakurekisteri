@@ -46,7 +46,6 @@ object HakijaQuery {
 
 class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
-  implicit val defaultTimeout = Timeout(90, TimeUnit.SECONDS)
   override protected def applicationDescription: String = "Hakeneiden ja valittujen rajapinta."
   override protected implicit def swagger: SwaggerEngine[_] = sw
 
@@ -84,11 +83,17 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     logger.info("Query: " + q)
 
     new AsyncResult() {
-      val tyyppi = Try(Tyyppi.withName(params("tyyppi"))).getOrElse(Tyyppi.Json)
-      contentType = getContentType(tyyppi)
-      if (Try(params("tiedosto").toBoolean).getOrElse(false)) setContentDisposition(tyyppi, response, "hakijat")
 
-      val is = hakijaActor ? q
+
+      implicit val defaultTimeout = Timeout(90, TimeUnit.SECONDS)
+      import scala.concurrent.future
+      val hakuResult = Try(hakijaActor ? q).get
+      val is = hakuResult.flatMap((result) => future {
+        val tyyppi = Try(Tyyppi.withName(params("tyyppi"))).getOrElse(Tyyppi.Json)
+        contentType = getContentType(tyyppi)
+        if (Try(params("tiedosto").toBoolean).getOrElse(false)) setContentDisposition(tyyppi, response, "hakijat")
+        result
+      })
     }
   }
 

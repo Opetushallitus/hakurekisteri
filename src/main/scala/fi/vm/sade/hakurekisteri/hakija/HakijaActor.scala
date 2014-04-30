@@ -28,7 +28,6 @@ case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria
 class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistopalvelu: Koodistopalvelu) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
-  implicit val timeout: akka.util.Timeout = Timeout(90, TimeUnit.SECONDS)
 
 
   def receive = {
@@ -43,7 +42,10 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
 
-  def getOrg(oid: String): Future[Option[Organisaatio]] = (organisaatioActor ? oid).mapTo[Option[Organisaatio]]
+  def getOrg(oid: String): Future[Option[Organisaatio]] = {
+    implicit val timeout: akka.util.Timeout = Timeout(30, TimeUnit.SECONDS)
+    Try((organisaatioActor ? oid).mapTo[Option[Organisaatio]]).getOrElse(Future.successful(None))
+  }
 
   def findOppilaitoskoodi(parentOid: Option[String]): Future[Option[String]] = parentOid match {
     case None => Future(None)
