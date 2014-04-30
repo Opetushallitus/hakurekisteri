@@ -21,6 +21,7 @@ import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.joda.time.{DateTimeFieldType, LocalDate}
 import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
+import scala.concurrent.duration.Duration
 
 
 object Hakuehto extends Enumeration {
@@ -83,8 +84,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     logger.info("Query: " + q)
 
     new AsyncResult() {
-
-
+      override implicit def timeout = Duration(90, TimeUnit.SECONDS)
       implicit val defaultTimeout = Timeout(90, TimeUnit.SECONDS)
       import scala.concurrent.future
       val hakuResult = Try(hakijaActor ? q).get
