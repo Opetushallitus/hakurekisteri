@@ -18,6 +18,7 @@ import fi.vm.sade.hakurekisteri.henkilo.Kieli
 import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
 import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
+import scala.annotation.tailrec
 
 trait Hakupalvelu {
 
@@ -25,7 +26,7 @@ trait Hakupalvelu {
 
 }
 
-class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Integer = 2000)(implicit val ec: ExecutionContext) extends Hakupalvelu {
+class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000)(implicit val ec: ExecutionContext) extends Hakupalvelu {
   val logger = LoggerFactory.getLogger(getClass)
 
 
@@ -37,23 +38,35 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 
 
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
-    val url = new URL(serviceUrl + "/applications/listfull?" + getQueryParams(q))
+    def getUrl(page: Int = 0): URL = {
+      new URL(serviceUrl + "/applications/listfull?" + getQueryParams(q, page))
+    }
     val user = q.user
+
+    val future: Future[Option[List[FullHakemus]]] = restRequest[List[FullHakemus]](user, getUrl())
+
+    def getAll(cur: List[FullHakemus])(res: Option[List[FullHakemus]]):Future[Option[List[FullHakemus]]] = res match {
+      case None                                   => Future.successful(None)
+      case Some(l) if l.length < maxApplications  => Future.successful(Some(cur ++ l))
+      case a                                      => restRequest[List[FullHakemus]](user, getUrl(cur.length / maxApplications)).flatMap(getAll(cur))
+    }
+
     def f(foo: Option[List[FullHakemus]]): Seq[Hakija] = {
-      logger.info("got result for: %s".format(url))
+
       foo.getOrElse(Seq()).map(RestHakupalvelu.getHakija)
     }
-    restRequest[List[FullHakemus]](user, url).map(f)
+
+    future.flatMap(getAll(List())).map(f)
   }
 
 
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
-  def getQueryParams(q: HakijaQuery): String = {
+  def getQueryParams(q: HakijaQuery, page: Int = 0): String = {
     val params: Seq[String] = Seq(
       Some("appState=ACTIVE"), Some("orgSearchExpanded=true"), Some("checkAllApplications=false"),
-      Some("start=0"), Some("rows=" + maxApplications),
+      Some("start=%d" format (page * maxApplications)), Some("rows=" + maxApplications),
       q.haku.map(s => "asId=" + urlencode(s)),
       q.organisaatio.map(s => "lopoid=" + urlencode(s)),
       q.hakukohdekoodi.map(s => "aoidCode=" + urlencode(s))
