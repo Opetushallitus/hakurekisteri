@@ -32,7 +32,7 @@ class RestKoodistopalvelu(serviceUrl: String = "https://itest-virkailija.oph.war
           val filtered = koodiList.filter(_.koodisto.koodistoUri == rinnasteinenKoodistoUri)
           if (!filtered.isEmpty) filtered.head.koodiArvo else throw new RuntimeException("rinnasteista koodia ei löytynyt kyseiseen koodistoon")
         } else {
-          throw new RuntimeException("rinnasteisia koodeja ei löytynyt")
+          throw new RuntimeException("rinnasteisia koodeja ei löytynyt koodiurilla [%s]".format(koodiUri))
         }
       } else {
         logger.error("call to koodisto-service [{}] failed: {}", Array(url, response.code))

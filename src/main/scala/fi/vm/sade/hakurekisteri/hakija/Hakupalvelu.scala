@@ -97,7 +97,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
       GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
         if (response.code == HttpResponseCode.Ok) {
           val hakemusHaku = response.bodyAsCaseClass[A].toOption
-          logger.debug("got response: [{}]", hakemusHaku)
+          logger.debug("got response for url: [{}]", url)
 
           hakemusHaku
         } else {
