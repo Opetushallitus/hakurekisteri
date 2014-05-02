@@ -6,7 +6,7 @@ import akka.event.Logging
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.henkilo._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import scala.Some
 import fi.vm.sade.hakurekisteri.suoritus.Komoto
 import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
@@ -110,8 +110,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def enrich(hakija: Hakija) = {
     val hakemus: Future[XMLHakemus] = getXmlHakemus(hakija)
     val yhteystiedot: Seq[Yhteystiedot] = hakija.henkilo.yhteystiedotRyhma.getOrElse(("hakemus", "yhteystietotyyppi1"), Seq())
-    val maakoodi = getMaakoodi(yhteystiedot.getOrElse("YHTEYSTIETO_MAA", "FIN"))
-    val kansalaisuus = getMaakoodi(Try(hakija.henkilo.kansalaisuus.head).map(k => k.kansalaisuusKoodi).getOrElse("FIN"))
+    val maakoodi = Try(getMaakoodi(yhteystiedot.getOrElse("YHTEYSTIETO_MAA", "FIN"))).transform(s => Success(s), t => {log.error("%s failed to fetch country".format(hakija));Failure(t)}).get
+    val kansalaisuus = Try(getMaakoodi(Try(hakija.henkilo.kansalaisuus.head).map(k => k.kansalaisuusKoodi).getOrElse("FIN"))).transform(s => Success(s), t => {log.error("%s failed to fetch country".format(hakija));Failure(t)}).get
 
     (hakemus, Future.successful(yhteystiedot), maakoodi, kansalaisuus).join
   }
