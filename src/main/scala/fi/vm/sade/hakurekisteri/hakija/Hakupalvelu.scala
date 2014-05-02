@@ -48,7 +48,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
     def getAll(cur: List[FullHakemus])(res: Option[List[FullHakemus]]):Future[Option[List[FullHakemus]]] = res match {
       case None                                   => Future.successful(None)
       case Some(l) if l.length < maxApplications  => Future.successful(Some(cur ++ l))
-      case a                                      => restRequest[List[FullHakemus]](user, getUrl(cur.length / maxApplications)).flatMap(getAll(cur))
+      case Some(l)                                => restRequest[List[FullHakemus]](user, getUrl((cur.length / maxApplications) + 1)).flatMap(getAll(cur ++ l))
     }
 
     def f(foo: Option[List[FullHakemus]]): Seq[Hakija] = {
