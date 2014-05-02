@@ -85,8 +85,8 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
     new AsyncResult() {
       import scala.concurrent.duration._
-      override implicit def timeout: Duration = 180.seconds
-      implicit val defaultTimeout: Timeout = 90.seconds
+      override implicit def timeout: Duration = 300.seconds
+      implicit val defaultTimeout: Timeout = 299.seconds
       import scala.concurrent.future
       val hakuResult = Try(hakijaActor ? q).get
       val is = hakuResult.flatMap((result) => future {
