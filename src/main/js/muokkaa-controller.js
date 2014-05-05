@@ -1,6 +1,6 @@
 'use strict';
 
-function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $q, Henkilot, Opiskelijat, Suoritukset) {
+function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $q, Opiskelijat, Suoritukset) {
     $scope.henkiloOid = $routeParams.henkiloOid;
     $scope.yksilollistamiset = [
         {value: "Ei", text: "Ei (1)"},
@@ -11,20 +11,13 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
     $scope.koulutukset = [
         {value: "ulkomainen", text: "Ulkomainen (0)"},
         {value: "peruskoulu", text: "Peruskoulu"},
-        // {value: "keskeytynyt", text: "Keskeytynyt (7)"}, TODO keskeytynyt ei vielä käytössä
+        {value: "ammattistartti", text: "Ammattistartti"},
+        {value: "maahanmuuttaja", text: "Maahanmuuttaja"},
+        {value: "valmentava", text: "Valmentava"},
+        // {value: "keskeytynyt", text: "Keskeytynyt (7)"}, //TODO keskeytynyt ei vielä käytössä
         {value: "lukio", text: "Lukio (9)"}
     ];
     $scope.messages = [];
-    /* koodistovalikot ei käytössä
-    $scope.maat = [];
-    $scope.kunnat = [];
-    $scope.kielet = [];
-    $scope.kansalaisuudet = [];
-    getKoodistoAsOptionArray($http, 'maatjavaltiot2', 'FI', $scope.maat);
-    getKoodistoAsOptionArray($http, 'kunta', 'FI', $scope.kunnat);
-    getKoodistoAsOptionArray($http, 'kieli', 'FI', $scope.kielet);
-    getKoodistoAsOptionArray($http, 'maatjavaltiot2', 'FI', $scope.kansalaisuudet);
-    */
 
     $rootScope.addToMurupolku({href: "#/opiskelijat", text: "Opiskelijoiden haku"}, true);
     $rootScope.addToMurupolku({text: "Muokkaa opiskelijan tietoja"}, false);
@@ -52,18 +45,25 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         }
     }
     function fetchHenkilotiedot() {
-        Henkilot.query({oid: $scope.henkiloOid}, function(henkilot) {
-            if (henkilot && henkilot.length > 0)
-                $scope.henkilo = henkilot[0];
-            else
-                $scope.messages.push({
-                    type: "danger",
-                    message: "Henkilötietoja ei löytynyt.",
-                    description: ""
-                });
-        }, function() {
-            confirm("Henkilötietojen hakeminen ei onnistunut. Yritä uudelleen?") ? fetchHenkilotiedot() : back();
-        });
+        $http.get(henkiloServiceUrl + '/resources/henkilo/' + encodeURIComponent($scope.henkiloOid), {cache: false})
+            .success(function(henkilo) {
+                if (henkilo) {
+                    if (henkilo.duplicate === false) {
+                        $scope.henkilo = henkilo;
+                    } else {
+                        $http.get(henkiloServiceUrl + '/resources/s2s/' + encodeURIComponent($scope.henkiloOid), {cache: false})
+                            .success(function(masterHenkilo) {
+                                $scope.henkilo = masterHenkilo;
+                            })
+                            .error(function() {
+                                confirm("Henkilötietojen hakeminen ei onnistunut. Yritä uudelleen?") ? fetchHenkilotiedot() : back();
+                            });
+                    }
+                }
+            })
+            .error(function() {
+                confirm("Henkilötietojen hakeminen ei onnistunut. Yritä uudelleen?") ? fetchHenkilotiedot() : back();
+            });
     }
     function fetchLuokkatiedot() {
         Opiskelijat.query({henkilo: $scope.henkiloOid}, function(luokkatiedot) {
@@ -116,32 +116,13 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             return [];
     };
 
-    $scope.fetchPostitoimipaikka = function() {
-        if ($scope.henkilo.postinumero && $scope.henkilo.postinumero.match(/^\d{5}$/)) {
-            $scope.searchingPostinumero = true;
-            getPostitoimipaikka($http, $scope.henkilo.postinumero, function(koodi) {
-                for (var i = 0; i < koodi.metadata.length; i++) {
-                    var meta = koodi.metadata[i];
-                    if (meta.kieli === 'FI') {
-                        $scope.henkilo.postitoimipaikka = meta.nimi;
-                        break;
-                    }
-                }
-                $scope.searchingPostinumero = false;
-            }, function() {
-                $scope.henkilo.postitoimipaikka = "Postitoimipaikkaa ei löytynyt";
-                $scope.searchingPostinumero = false;
-            });
-        }
-    };
-
     $scope.save = function() {
         var deferredValidations = [];
         function validateOppilaitoskoodit() {
-            angular.forEach($scope.luokkatiedot.concat($scope.suoritukset), function(oppilaitosKoodiHolder) {
+            angular.forEach($scope.luokkatiedot.concat($scope.suoritukset), function(obj) {
                 var deferredValidation = $q.defer();
                 deferredValidations.push(deferredValidation);
-                if (!oppilaitosKoodiHolder.oppilaitos || !oppilaitosKoodiHolder.oppilaitos.match(/^\d{5}$/)) {
+                if (!obj.oppilaitos || !obj.oppilaitos.match(/^\d{5}$/)) {
                     $scope.messages.push({
                         type: "danger",
                         message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
@@ -149,17 +130,17 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                     });
                     deferredValidation.reject("error");
                 } else {
-                    getOrganisaatio($http, oppilaitosKoodiHolder.oppilaitos, function (organisaatio) {
-                        if (oppilaitosKoodiHolder.myontaja) {
-                            oppilaitosKoodiHolder.myontaja = organisaatio.oid;
+                    getOrganisaatio($http, obj.oppilaitos, function (organisaatio) {
+                        if (obj.myontaja) {
+                            obj.myontaja = organisaatio.oid;
                         } else {
-                            oppilaitosKoodiHolder.oppilaitosOid = organisaatio.oid;
+                            obj.oppilaitosOid = organisaatio.oid;
                         }
                         deferredValidation.resolve("done");
                     }, function () {
                         $scope.messages.push({
                             type: "danger",
-                            message: "Oppilaitosta ei löytynyt oppilaitoskoodilla: " + oppilaitosKoodiHolder.oppilaitos + ".",
+                            message: "Oppilaitosta ei löytynyt oppilaitoskoodilla: " + obj.oppilaitos + ".",
                             description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
                         });
                         deferredValidation.reject("error");
@@ -170,23 +151,6 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         validateOppilaitoskoodit();
 
         var deferredSaves = [];
-        function saveHenkilo() {
-            if ($scope.henkilo) {
-                var deferredSave = $q.defer();
-                deferredSaves.push(deferredSave);
-                $scope.henkilo.$save(function (savedHenkilo) {
-                    $log.debug("henkilo saved: " + savedHenkilo);
-                    deferredSave.resolve("done");
-                }, function () {
-                    $scope.messages.push({
-                        type: "danger",
-                        message: "Virhe tallennettaessa henkilötietoja.",
-                        description: "Yritä uudelleen."
-                    });
-                    deferredSave.reject("error saving henkilo: " + $scope.henkilo);
-                });
-            }
-        }
         function saveSuoritukset() {
             angular.forEach($scope.suoritukset, function(suoritus) {
                 var deferredSave = $q.defer();
@@ -224,7 +188,6 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
 
         var validationPromise = $q.all(deferredValidations.map(function(deferred) { return deferred.promise; }));
         validationPromise.then(function() {
-            saveHenkilo();
             saveSuoritukset();
             saveLuokkatiedot();
         });
