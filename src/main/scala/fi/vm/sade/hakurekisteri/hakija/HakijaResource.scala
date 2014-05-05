@@ -24,6 +24,7 @@ import org.scalatra.ScalatraBase._
 import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
 import org.scalatra.CookieOptions
+import org.json4s.jackson.Serialization
 
 
 object Hakuehto extends Enumeration {
@@ -72,7 +73,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
   def setContentDisposition(t: Tyyppi, response: HttpServletResponse, filename: String) {
     response.setHeader("Content-Disposition", "attachment;filename=%s.%s".format(filename, getFileExtension(t)))
-    response.addCookie(Cookie("fileDownload", "true")(CookieOptions(path = "/")))
+
   }
 
   override protected def renderPipeline: RenderPipeline = renderCustom orElse super.renderPipeline
@@ -139,13 +140,18 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
       }
 
     }
+
+    def downloading: Boolean = Try(params("tiedosto").toBoolean).getOrElse(false)
+
+
     def renderStart() {
       withinAsyncContext(webContext) {
         def getTyyppi(params:Params): Tyyppi.Value = {
           Try(Tyyppi.withName(params("tyyppi"))).getOrElse(Tyyppi.Json)
         }
         contentType = getContentType(getTyyppi(params))
-        if (Try(params("tiedosto").toBoolean).getOrElse(false)) setContentDisposition(getTyyppi(params), response, "hakijat")
+
+        if (downloading) setContentDisposition(getTyyppi(params), response, "hakijat")
 
         val out = response.getWriter
         responseFormat match {
@@ -170,19 +176,24 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
           case "binary" =>  renderExcel
           case _ => throw new IllegalArgumentException("unknown result format")
         }
+        if (downloading) response.addCookie(Cookie("fileDownload", "true")(CookieOptions(path = "/")))
         out.flush()
       }
 
 
     }
 
-    def renderExcel() {}
+    def renderExcel() {
+      ExcelUtil.write(response.outputStream, new XMLHakijat(renderables))
+
+    }
 
     def renderItem(item:XMLHakija) {
       responseFormat match  {
         case "xml" =>   XML.write(response.writer, Utility.trim(item.toXml), response.characterEncoding.get, xmlDecl = false, doctype = null)
         case "json" =>  if (renderedFirst) response.getWriter.print(",")
-                        jsonFormats.customSerializer.lift(item).foreach{(value) => response.writer.print(value.toString)}
+                        Serialization.write(item, response.writer)
+
 
         case _ =>
       }
