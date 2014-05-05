@@ -13,31 +13,32 @@ div(class="row")
       header(class="panel-heading")
         h2(class="panel-title" oph-msg="suoritusrekisteri.muokkaa.henkilotiedot") Henkilötiedot
       div(class="panel-body")
-        form(name="henkiloForm")
-          div(class="row")
-            div(class="form-group col-sm-8")
-              div
-                strong(oph-msg="suoritusrekisteri.muokkaa.henkilotunnus") Henkilötunnus / syntymäaika
-              div {{henkilo.hetu || henkilo.syntymaaika}}
-            div(class="form-group col-sm-4")
-              div
-                strong(oph-msg="suoritusrekisteri.muokkaa.sukupuoli") Sukupuoli
-              div(ng-show="henkilo.sukupuoli == 'MIES'" oph-msg="suoritusrekisteri.muokkaa.mies") Mies
-              div(ng-show="henkilo.sukupuoli == 'NAINEN'" oph-msg="suoritusrekisteri.muokkaa.nainen") Nainen
-              div(ng-hide="henkilo.sukupuoli") -
-          div(class="row")
-            div(class="form-group col-sm-4")
-              div
-                strong(oph-msg="suoritusrekisteri.muokkaa.etunimet") Etunimet
-              div {{henkilo.etunimet}}
-            div(class="form-group col-sm-4")
-              div
-                strong(oph-msg="suoritusrekisteri.muokkaa.kutsumanimi") Kutsumanimi
-              div {{henkilo.kutsumanimi}}
-            div(class="form-group col-sm-4")
-              div
-                strong(oph-msg="suoritusrekisteri.muokkaa.sukunimi") Sukunimi
-              div {{henkilo.sukunimi}}
+        div(class="row")
+          div(class="form-group col-sm-8")
+            div
+              strong(oph-msg="suoritusrekisteri.muokkaa.henkilotunnus") Henkilötunnus / syntymäaika
+            div {{henkilo.hetu || henkilo.syntymaaika}}
+          div(class="form-group col-sm-4")
+            div
+              strong(oph-msg="suoritusrekisteri.muokkaa.sukupuoli") Sukupuoli
+            div(ng-show="henkilo.sukupuoli == 'MIES'" oph-msg="suoritusrekisteri.muokkaa.mies") Mies
+            div(ng-show="henkilo.sukupuoli == 'NAINEN'" oph-msg="suoritusrekisteri.muokkaa.nainen") Nainen
+            div(ng-hide="henkilo.sukupuoli") -
+        div(class="row")
+          div(class="form-group col-sm-4")
+            div
+              strong(oph-msg="suoritusrekisteri.muokkaa.etunimet") Etunimet
+            div {{henkilo.etunimet}}
+          div(class="form-group col-sm-4")
+            div
+              strong(oph-msg="suoritusrekisteri.muokkaa.kutsumanimi") Kutsumanimi
+            div {{henkilo.kutsumanimi}}
+          div(class="form-group col-sm-4")
+            div
+              strong(oph-msg="suoritusrekisteri.muokkaa.sukunimi") Sukunimi
+            div {{henkilo.sukunimi}}
+        aside
+          a(class="btn btn-default btn-xs" href="/authentication-henkiloui/html/index.html#/muokkaaoppija/{{henkilo.oidHenkilo}}/" oph-msg="suoritusrekisteri.muokkaa.henkilotietoja" target="_blank") Muokkaa henkilötietoja
 
   div(class="col-md-5")
     section(class="panel panel-default")
