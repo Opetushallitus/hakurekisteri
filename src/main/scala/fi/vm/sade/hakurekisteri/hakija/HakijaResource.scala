@@ -7,12 +7,12 @@ import fi.vm.sade.hakurekisteri.rest.support.{Kausi, SpringSecuritySupport, Haku
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra._
-import scala.concurrent.ExecutionContext
-import _root_.akka.actor.{ActorRef, ActorSystem}
+import scala.concurrent.{Future, ExecutionContext}
+import _root_.akka.actor.{Props, Actor, ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
 import java.util.concurrent.TimeUnit
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import javax.servlet.http.HttpServletResponse
 import scala.xml._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
@@ -22,6 +22,16 @@ import org.joda.time.{DateTimeFieldType, LocalDate}
 import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
 import scala.concurrent.duration.Duration
+import javax.servlet.AsyncContext
+import scala.annotation.tailrec
+import org.scalatra.ScalatraBase._
+import scala.Some
+import fi.vm.sade.hakurekisteri.hakija.Organisaatio
+import fi.vm.sade.hakurekisteri.rest.support.User
+import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
+import org.scalatra.CookieOptions
+import fi.vm.sade.hakurekisteri.hakija.Hakija
+import fi.vm.sade.hakurekisteri.hakija.Hakutoive
 
 
 object Hakuehto extends Enumeration {
@@ -82,20 +92,21 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   get("/", operation(query)) {
     val q = HakijaQuery(params, currentUser)
     logger.info("Query: " + q)
+    import scala.concurrent.duration._
+    //implicit def timeout: Duration = 300.seconds
+    implicit val defaultTimeout: Timeout = 299.seconds
+    import scala.concurrent.future
+    val hakuResult = Try(hakijaActor ? q).get
+    val context: AsyncContext = request.startAsync(request, response)
+    log("async context detached")
 
-    new AsyncResult() {
-      import scala.concurrent.duration._
-      override implicit def timeout: Duration = 300.seconds
-      implicit val defaultTimeout: Timeout = 299.seconds
-      import scala.concurrent.future
-      val hakuResult = Try(hakijaActor ? q).get
-      val is = hakuResult.flatMap((result) => future {
-        val tyyppi = Try(Tyyppi.withName(params("tyyppi"))).getOrElse(Tyyppi.Json)
-        contentType = getContentType(tyyppi)
-        if (Try(params("tiedosto").toBoolean).getOrElse(false)) setContentDisposition(tyyppi, response, "hakijat")
-        result
-      })
-    }
+    val is = hakuResult.mapTo[XMLHakijat]
+
+    val streamer = system.actorOf(Props(new StreamerActor(context)))
+    is.onComplete{case Success(hakijat) => for (hakija <- hakijat.hakijat) streamer ! hakija
+                                           streamer ! EOF
+                  case Failure(e) => throw e}
+    streamer
   }
 
   error {
@@ -103,7 +114,151 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
       logger.error("error in service", t)
       response.sendError(500, t.getMessage)
   }
+
+
+
+  class StreamerActor(webContext:AsyncContext) extends Actor {
+
+    log("streamer actor starting")
+    var renderables: Seq[XMLHakija] = Seq()
+    var result:Try[ActorRef] = Success(self)
+
+    import scala.concurrent.promise
+    val start = promise[Unit]()
+    val rendering = start.future.andThen{case Success(_) => renderStart}
+    rendering.onComplete((_) => log("started rendering"))
+
+    var renderedFirst = false
+
+    override def receive = {
+      case Render =>  start success()
+        render()
+      case EOF =>   endStreaming()
+      case a:XMLHakija => renderables = renderables ++ Seq(a)
+        render()
+    }
+
+    def endStreaming() {
+      rendering.onComplete{
+        case Success(_) => render()
+                           context.stop(self)
+        case Failure(e) => result = Failure(e)
+                           context.stop(self)
+                           throw(e)
+      }
+
+    }
+    def renderStart() {
+      withinAsyncContext(webContext) {
+        def getTyyppi(params:Params): Tyyppi.Value = {
+          Try(Tyyppi.withName(params("tyyppi"))).getOrElse(Tyyppi.Json)
+        }
+        contentType = getContentType(getTyyppi(params))
+        if (Try(params("tiedosto").toBoolean).getOrElse(false)) setContentDisposition(getTyyppi(params), response, "hakijat")
+
+        val out = response.getWriter
+        responseFormat match {
+          case "xml" => out.print("<?xml version='1.0' encoding='UTF-8'?>\n<Hakijat xsi:schemaLocation=\"http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat hakijat.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat\">")
+          case "json" => out.print("{\"hakijat\":[")
+
+        }
+        out.flush()
+
+      }
+
+    }
+
+    def renderEnd() {
+
+      withinAsyncContext(webContext) {
+        val out = response.getWriter
+        responseFormat match {
+          case "xml" => out.print("</Hakijat>")
+          case "json" => out.print("]}")
+          case "binary" =>  renderExcel
+        }
+        out.flush()
+      }
+
+
+    }
+
+    def renderExcel() {}
+
+    def renderItem(item:XMLHakija) {
+      @tailrec def loop(ar: Any): Any = ar match {
+        case _: Unit | Unit => ()
+        case a => loop(renderPipeline.lift(a) getOrElse())
+      }
+      responseFormat match {
+        case "json" if renderedFirst => response.getWriter.print(",")
+      }
+      loop(item)
+      renderedFirst = true
+    }
+
+    def render()  {
+
+      if (rendering.isCompleted ) {
+
+        withinAsyncContext(webContext) {
+          if (responseFormat != "binary") {
+            val out = response.getWriter
+            for (item <- renderables)
+              try {
+                renderItem(item)
+                out.flush()
+              } catch {
+                case e: Throwable =>
+                  runCallbacks(Failure(e))
+                  result = Failure(e)
+                  context.stop(self)
+                  throw(e)
+              }
+
+          }
+
+
+        }
+
+        renderables = Seq()
+      }
+    }
+
+
+
+
+    override def postStop() {
+      runCallbacks(result)
+      renderEnd()
+      webContext.complete()
+
+    }
+  }
+
+
+
+
+
+
+
+  override protected def renderResponseBody(actionResult: Any):Unit = actionResult match {
+
+    case actor:ActorRef => actor ! Render
+    case a => super.renderResponseBody(a)
+
+  }
+
+  class Render
+  object Render extends Render
+
+  class EOF
+  object EOF extends EOF
+
 }
+
+
+
 
 object XMLUtil {
   def toBooleanX(b: Boolean): String = if (b) "X" else ""
