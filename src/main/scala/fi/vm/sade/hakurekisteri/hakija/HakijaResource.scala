@@ -224,8 +224,8 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
 
     override def postStop() {
-      runCallbacks(result)
       renderEnd()
+      runCallbacks(result)
       webContext.complete()
 
     }
