@@ -160,6 +160,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
         responseFormat match {
           case "xml" => out.print("<?xml version='1.0' encoding='UTF-8'?>\n<Hakijat xsi:schemaLocation=\"http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat hakijat.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat\">")
           case "json" => out.print("{\"hakijat\":[")
+          case _ => throw new IllegalArgumentException("unknown format")
 
         }
         out.flush()
@@ -176,6 +177,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
           case "xml" => out.print("</Hakijat>")
           case "json" => out.print("]}")
           case "binary" =>  renderExcel
+          case _ => throw new IllegalArgumentException("unknown result format")
         }
         out.flush()
       }
@@ -190,9 +192,11 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
         case _: Unit | Unit => ()
         case a => loop(renderPipeline.lift(a) getOrElse())
       }
-      responseFormat match {
+      val checkjson: PartialFunction[String,Unit] =
+      {
         case "json" if renderedFirst => response.getWriter.print(",")
       }
+      checkjson.lift(responseFormat)
       loop(item)
       renderedFirst = true
     }
