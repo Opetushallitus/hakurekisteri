@@ -7,11 +7,10 @@ import fi.vm.sade.hakurekisteri.rest.support.{Kausi, SpringSecuritySupport, Haku
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra._
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.ExecutionContext
 import _root_.akka.actor.{Props, Actor, ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
-import java.util.concurrent.TimeUnit
 import scala.util.{Failure, Success, Try}
 import javax.servlet.http.HttpServletResponse
 import scala.xml._
@@ -19,19 +18,12 @@ import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.joda.time.{DateTimeFieldType, LocalDate}
-import scala.Some
-import fi.vm.sade.hakurekisteri.rest.support.User
-import scala.concurrent.duration.Duration
 import javax.servlet.AsyncContext
 import scala.annotation.tailrec
 import org.scalatra.ScalatraBase._
 import scala.Some
-import fi.vm.sade.hakurekisteri.hakija.Organisaatio
 import fi.vm.sade.hakurekisteri.rest.support.User
-import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
 import org.scalatra.CookieOptions
-import fi.vm.sade.hakurekisteri.hakija.Hakija
-import fi.vm.sade.hakurekisteri.hakija.Hakutoive
 
 
 object Hakuehto extends Enumeration {
@@ -85,7 +77,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
   override protected def renderPipeline: RenderPipeline = renderCustom orElse super.renderPipeline
   private def renderCustom: RenderPipeline = {
-    case hakijat: XMLHakijat if responseFormat == "xml" => XML.write(response.writer, Utility.trim(hakijat.toXml), response.characterEncoding.get, xmlDecl = true, doctype = null)
+    case hakija: XMLHakija if responseFormat == "xml" => XML.write(response.writer, Utility.trim(hakija.toXml), response.characterEncoding.get, xmlDecl = false, doctype = null)
     case hakijat: XMLHakijat if responseFormat == "binary" => ExcelUtil.write(response.outputStream, hakijat)
   }
 
@@ -95,7 +87,6 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     import scala.concurrent.duration._
     //implicit def timeout: Duration = 300.seconds
     implicit val defaultTimeout: Timeout = 299.seconds
-    import scala.concurrent.future
     val hakuResult = Try(hakijaActor ? q).get
     val context: AsyncContext = request.startAsync(request, response)
     log("async context detached")
