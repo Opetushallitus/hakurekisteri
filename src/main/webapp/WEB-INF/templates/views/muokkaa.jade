@@ -22,8 +22,9 @@ div(class="row")
             div(class="form-group col-sm-4")
               div
                 strong(oph-msg="suoritusrekisteri.muokkaa.sukupuoli") Sukupuoli
-              div(ng-show="henkilo.sukupuoli == 1" oph-msg="suoritusrekisteri.muokkaa.mies") Mies
-              div(ng-show="henkilo.sukupuoli == 2" oph-msg="suoritusrekisteri.muokkaa.nainen") Nainen
+              div(ng-show="henkilo.sukupuoli == 'MIES'" oph-msg="suoritusrekisteri.muokkaa.mies") Mies
+              div(ng-show="henkilo.sukupuoli == 'NAINEN'" oph-msg="suoritusrekisteri.muokkaa.nainen") Nainen
+              div(ng-hide="henkilo.sukupuoli") -
           div(class="row")
             div(class="form-group col-sm-4")
               div
@@ -69,7 +70,7 @@ section(class="panel panel-default")
     thead
       th(oph-msg="suoritusrekisteri.muokkaa.alkupaiva") Alkupäivä
       th(oph-msg="suoritusrekisteri.muokkaa.loppupaiva") Loppupäivä
-      th(oph-msg="suoritusrekisteri.muokkaa.henkilotiedot") Oppilaitos
+      th(oph-msg="suoritusrekisteri.muokkaa.oppilaitos") Oppilaitos
       th(oph-msg="suoritusrekisteri.muokkaa.luokkataso") Luokkataso
       th(oph-msg="suoritusrekisteri.muokkaa.luokka") Luokka
     tbody
