@@ -115,11 +115,10 @@ class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph
 
   override def get(str: String): Future[Option[Organisaatio]] = {
     val url = new URL(serviceUrl + "/rest/organisaatio/" + str)
-    logger.info("calling organisaatio-service [{}]", url)
+    logger.debug("calling organisaatio-service [{}]", url)
     GET(url).apply.map(response => {
       if (response.code == HttpResponseCode.Ok) {
         val organisaatio = response.bodyAsCaseClass[Organisaatio].toOption
-        logger.info("response received from {}", url)
         logger.debug("got response: [{}]", organisaatio)
         organisaatio
       } else {

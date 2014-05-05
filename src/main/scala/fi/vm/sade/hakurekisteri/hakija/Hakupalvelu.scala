@@ -18,6 +18,7 @@ import fi.vm.sade.hakurekisteri.henkilo.Kieli
 import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
 import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
+import scala.annotation.tailrec
 
 trait Hakupalvelu {
 
@@ -25,7 +26,7 @@ trait Hakupalvelu {
 
 }
 
-class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Integer = 2000)(implicit val ec: ExecutionContext) extends Hakupalvelu {
+class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000)(implicit val ec: ExecutionContext) extends Hakupalvelu {
   val logger = LoggerFactory.getLogger(getClass)
 
 
@@ -37,23 +38,35 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 
 
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
-    val url = new URL(serviceUrl + "/applications/listfull?" + getQueryParams(q))
+    def getUrl(page: Int = 0): URL = {
+      new URL(serviceUrl + "/applications/listfull?" + getQueryParams(q, page))
+    }
     val user = q.user
+
+    val future: Future[Option[List[FullHakemus]]] = restRequest[List[FullHakemus]](user, getUrl())
+
+    def getAll(cur: List[FullHakemus])(res: Option[List[FullHakemus]]):Future[Option[List[FullHakemus]]] = res match {
+      case None                                   => Future.successful(None)
+      case Some(l) if l.length < maxApplications  => Future.successful(Some(cur ++ l))
+      case Some(l)                                => restRequest[List[FullHakemus]](user, getUrl((cur.length / maxApplications) + 1)).flatMap(getAll(cur ++ l))
+    }
+
     def f(foo: Option[List[FullHakemus]]): Seq[Hakija] = {
-      logger.info("got result for: %s".format(url))
+
       foo.getOrElse(Seq()).map(RestHakupalvelu.getHakija)
     }
-    restRequest[List[FullHakemus]](user, url).map(f)
+
+    future.flatMap(getAll(List())).map(f)
   }
 
 
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
-  def getQueryParams(q: HakijaQuery): String = {
+  def getQueryParams(q: HakijaQuery, page: Int = 0): String = {
     val params: Seq[String] = Seq(
       Some("appState=ACTIVE"), Some("orgSearchExpanded=true"), Some("checkAllApplications=false"),
-      Some("start=0"), Some("rows=" + maxApplications),
+      Some("start=%d" format (page * maxApplications)), Some("rows=" + maxApplications),
       q.haku.map(s => "asId=" + urlencode(s)),
       q.organisaatio.map(s => "lopoid=" + urlencode(s)),
       q.hakukohdekoodi.map(s => "aoidCode=" + urlencode(s))
@@ -84,7 +97,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
       GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
         if (response.code == HttpResponseCode.Ok) {
           val hakemusHaku = response.bodyAsCaseClass[A].toOption
-          logger.debug("got response: [{}]", hakemusHaku)
+          logger.debug("got response for url: [{}]", url)
 
           hakemusHaku
         } else {
@@ -103,7 +116,7 @@ object RestHakupalvelu {
 
   val DEFAULT_POHJA_KOULUTUS: String = "1"
 
-  def getVuosi(vastaukset:Option[Map[String,String]])(pohjakoulutus:String) = pohjakoulutus match {
+  def getVuosi(vastaukset:Option[Map[String,String]])(pohjakoulutus:String): Option[String] = pohjakoulutus match {
     case "9" => vastaukset.flatMap(_.get("lukioPaattotodistusVuosi"))
     case "7" => Some((LocalDate.now.getYear + 1).toString)
     case _ => vastaukset.flatMap(_.get("PK_PAATTOTODISTUSVUOSI"))
@@ -113,11 +126,12 @@ object RestHakupalvelu {
 
   def getHakija(hakemus: FullHakemus): Hakija = {
     val kesa = new MonthDay(6,4)
-    val lahtokoulu: Option[String] = hakemus.vastauksetMerged.flatMap(_.get("lahtokoulu"))
-    val pohjakoulutus: Option[String] = hakemus.vastauksetMerged.flatMap(_.get("POHJAKOULUTUS"))
-    val todistusVuosi: Option[String] = pohjakoulutus.flatMap(getVuosi(hakemus.vastauksetMerged)(_))
-    val v = hakemus.vastauksetMerged
-    val kieli  = getValue(v, "perusopetuksen_kieli", "FI")
+    implicit val v = hakemus.answers
+    val koulutustausta = for (a <- v; k <- a.get("koulutustausta")) yield k
+    val lahtokoulu: Option[String] = for(k <- koulutustausta; l <- k.get("lahtokoulu")) yield l
+    val pohjakoulutus: Option[String] = for (k <- koulutustausta; p <- k.get("POHJAKOULUTUS")) yield p
+    val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus; v <- getVuosi(koulutustausta)(p)) yield v
+    val kieli = getValue("koulutustausta", "perusopetuksen_kieli", "FI")
     val myontaja = lahtokoulu.getOrElse("")
     val suorittaja = hakemus.personOid.getOrElse("")
     val valmistuminen = todistusVuosi.map(vuosi => kesa.toLocalDate(vuosi.toInt)).getOrElse(new LocalDate(0))
@@ -125,17 +139,17 @@ object RestHakupalvelu {
     Hakija(
       Henkilo(
         yhteystiedotRyhma = Seq(YhteystiedotRyhma(0, "yhteystietotyyppi1", "hakemus", readOnly = true, Seq(
-          Yhteystiedot(0, "YHTEYSTIETO_KATUOSOITE", getValue(v, "lahiosoite")),
-          Yhteystiedot(1, "YHTEYSTIETO_POSTINUMERO", getValue(v, "Postinumero")),
-          Yhteystiedot(2, "YHTEYSTIETO_MAA", getValue(v, "asuinmaa", "FIN")),
-          Yhteystiedot(3, "YHTEYSTIETO_MATKAPUHELIN", getValue(v, "matkapuhelinnumero1")),
-          Yhteystiedot(4, "YHTEYSTIETO_SAHKOPOSTI", getValue(v, "Sähköposti")),
-          Yhteystiedot(5, "YHTEYSTIETO_KAUPUNKI", getValue(v, "kotikunta"))
+          Yhteystiedot(0, "YHTEYSTIETO_KATUOSOITE", getValue("henkilotiedot", "lahiosoite")),
+          Yhteystiedot(1, "YHTEYSTIETO_POSTINUMERO", getValue("henkilotiedot", "Postinumero")),
+          Yhteystiedot(2, "YHTEYSTIETO_MAA", getValue("henkilotiedot", "asuinmaa", "FIN")),
+          Yhteystiedot(3, "YHTEYSTIETO_MATKAPUHELIN", getValue("henkilotiedot", "matkapuhelinnumero1")),
+          Yhteystiedot(4, "YHTEYSTIETO_SAHKOPOSTI", getValue("henkilotiedot", "Sähköposti")),
+          Yhteystiedot(5, "YHTEYSTIETO_KAUPUNKI", getValue("henkilotiedot", "kotikunta"))
         ))),
         yksiloity = false,
-        sukunimi = getValue(v, "Sukunimi"),
-        etunimet = getValue(v, "Etunimet"),
-        kutsumanimi = getValue(v, "Kutsumanimi"),
+        sukunimi = getValue("henkilotiedot", "Sukunimi"),
+        etunimet = getValue("henkilotiedot", "Etunimet"),
+        kutsumanimi = getValue("henkilotiedot", "Kutsumanimi"),
         kielisyys = Seq(),
         yksilointitieto = None,
         henkiloTyyppi = "OPPIJA",
@@ -143,33 +157,30 @@ object RestHakupalvelu {
         duplicate = false,
         oppijanumero = hakemus.personOid.getOrElse(""),
         kayttajatiedot = None,
-        kansalaisuus = Seq(Kansalaisuus(getValue(v, "kansalaisuus", "FIN"))),
+        kansalaisuus = Seq(Kansalaisuus(getValue("henkilotiedot", "kansalaisuus", "FIN"))),
         passinnumero = "",
         asiointiKieli = Kieli("FI", "FI"),
         passivoitu = false,
-        eiSuomalaistaHetua = getValue(v, "onkoSinullaSuomalainenHetu", "false").toBoolean,
-        sukupuoli = getValue(v, "sukupuoli"),
-        hetu = getValue(v, "Henkilotunnus"),
-        syntymaaika = getValue(v, "syntymaaika"),
+        eiSuomalaistaHetua = getValue("henkilotiedot", "onkoSinullaSuomalainenHetu", "false").toBoolean,
+        sukupuoli = getValue("henkilotiedot", "sukupuoli"),
+        hetu = getValue("henkilotiedot", "Henkilotunnus"),
+        syntymaaika = getValue("henkilotiedot", "syntymaaika"),
         turvakielto = false,
-        markkinointilupa = Some(getValue(v, "lupaMarkkinointi", "false").toBoolean)
+        markkinointilupa = Some(getValue("lisatiedot", "lupaMarkkinointi", "false").toBoolean)
       ),
       getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli),
       lahtokoulu match {
         case Some(oid) => Seq(Opiskelija(
           oppilaitosOid = lahtokoulu.get,
           henkiloOid = hakemus.personOid.getOrElse(""),
-          luokkataso = getValue(v, "luokkataso"),
-          luokka = getValue(v, "lahtoluokka"),
+          luokkataso = getValue("koulutustausta", "luokkataso"),
+          luokka = getValue("koulutustausta", "lahtoluokka"),
           alkuPaiva = DateTime.now.minus(org.joda.time.Duration.standardDays(1)),
           loppuPaiva = None
         ))
         case _ => Seq()
       },
-      v.map(toiveet => {
-        val hakutoiveet = convertToiveet(toiveet)
-        Hakemus(hakutoiveet, hakemus.oid)
-      }).getOrElse(Hakemus(Seq(), hakemus.oid))
+      (for (a <- v; t <- a.get("hakutoiveet")) yield Hakemus(convertToiveet(t), hakemus.oid)).getOrElse(Hakemus(Seq(), hakemus.oid))
     )
   }
 
@@ -199,8 +210,8 @@ object RestHakupalvelu {
     })
   }
 
-  def getValue(h: Option[Map[String, String]], key: String, default: String = ""): String = {
-    h.flatMap(_.get(key)).getOrElse(default)
+  def getValue(key: String, subKey: String, default: String = "")(implicit answers: Option[Map[String, Map[String, String]]]): String = {
+    (for (m <- answers; c <- m.get(key); v <- c.get(subKey)) yield v).getOrElse(default)
   }
 
 }
@@ -209,4 +220,4 @@ case class ListHakemus(oid: String)
 
 case class HakemusHaku(totalCount: Long, results: Seq[ListHakemus])
 
-case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, vastauksetMerged: Option[Map[String, String]])
+case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[Map[String, Map[String, String]]])
