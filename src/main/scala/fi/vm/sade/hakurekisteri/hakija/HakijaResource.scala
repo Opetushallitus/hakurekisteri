@@ -179,18 +179,20 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     def renderExcel() {}
 
     def renderItem(item:XMLHakija) {
-      @tailrec def loop(ar: Any): Any = ar match {
-        case _: Unit | Unit => ()
-        case a => loop(renderPipeline.lift(a) getOrElse())
+      responseFormat match  {
+        case "xml" =>   XML.write(response.writer, Utility.trim(item.toXml), response.characterEncoding.get, xmlDecl = false, doctype = null)
+        case "json" =>  if (renderedFirst) response.getWriter.print(",")
+                        jsonFormats.customSerializer.lift(item).foreach{(value) => response.writer.print(value.toString)}
+
+        case _ =>
       }
-      val checkjson: PartialFunction[String,Unit] =
-      {
-        case "json" if renderedFirst => response.getWriter.print(",")
-      }
-      checkjson.lift(responseFormat)
-      loop(item)
+
       renderedFirst = true
     }
+
+
+
+
 
     def render()  {
 
