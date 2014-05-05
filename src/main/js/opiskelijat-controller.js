@@ -94,8 +94,15 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
             if (opiskelija.henkiloOid) {
                 $http.get(henkiloServiceUrl + '/resources/henkilo/' + encodeURIComponent(opiskelija.henkiloOid), {cache: false})
                     .success(function(henkilo) {
-                        if (henkilo && henkilo.oidHenkilo === opiskelija.henkiloOid && henkilo.sukunimi && henkilo.etunimet) {
-                            opiskelija.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + (henkilo.hetu ? " (" + henkilo.hetu + ")" : "");
+                        if (henkilo) {
+                            if (henkilo.duplicate === false) {
+                                opiskelija.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + (henkilo.hetu ? " (" + henkilo.hetu + ")" : "");
+                            } else {
+                                $http.get(henkiloServiceUrl + '/resources/s2s/' + encodeURIComponent(opiskelija.henkiloOid), {cache: false})
+                                    .success(function(masterHenkilo) {
+                                        opiskelija.henkilo = masterHenkilo.sukunimi + ", " + masterHenkilo.etunimet + (masterHenkilo.hetu ? " (" + masterHenkilo.hetu + ")" : "");
+                                    });
+                            }
                         }
                     });
             }
