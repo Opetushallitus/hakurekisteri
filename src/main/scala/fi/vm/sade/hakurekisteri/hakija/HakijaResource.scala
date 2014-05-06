@@ -143,8 +143,10 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
         }
         contentType = getContentType(getTyyppi(params))
 
-        if (downloading) setContentDisposition(getTyyppi(params), response, "hakijat")
-
+        if (downloading) {
+          setContentDisposition(getTyyppi(params), response, "hakijat")
+          response.addCookie(Cookie("fileDownload", "true")(CookieOptions(path = "/")))
+        }
         val out = response.getWriter
         responseFormat match {
           case "xml" => out.print("<?xml version='1.0' encoding='UTF-8'?>\n<Hakijat xsi:schemaLocation=\"http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat hakijat.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat\">")
@@ -168,7 +170,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
           case "binary" =>  renderExcel
           case _ => throw new IllegalArgumentException("unknown result format")
         }
-        if (downloading) response.addCookie(Cookie("fileDownload", "true")(CookieOptions(path = "/")))
+
         out.flush()
       }
 
