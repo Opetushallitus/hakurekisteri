@@ -15,6 +15,7 @@ import ForkedSeq._
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import TupledFuture._
+import fi.vm.sade.hakurekisteri.hakija.HakijaResource.EOF
 
 
 case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String)
@@ -31,7 +32,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
 
   def receive = {
-    case q: HakijaQuery => XMLQuery(q) pipeTo sender
+    case q: HakijaQuery => XMLQuery(q)
   }
 
 
@@ -122,10 +123,26 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def hakijat2XmlHakijat(hakijat:Seq[Hakija]) = hakijat.map(hakija2XMLHakija).join.map(XMLHakijat)
 
 
+  def sendCurrent(hakijat:Seq[Hakija], streamer:ActorRef) = {
+    hakijat.map(hakija2XMLHakija).map(_ map ((result) => streamer ! result))
+  }
 
-  def XMLQuery(q: HakijaQuery): Future[XMLHakijat] = q.hakuehto match {
-    case Hakuehto.Kaikki => hakupalvelu.getHakijat(q).flatMap(hakijat2XmlHakijat)
+
+  def getAll(streamer:ActorRef, q: HakijaQuery, cur: Int = 0)(res: Seq[Hakija]):Future[Seq[Hakija]] = {
+    Future.sequence(sendCurrent(res, streamer)).flatMap((_) =>
+      if (res.length < hakupalvelu.maxApplications)  {
+        streamer ! EOF
+        Future.successful(Seq())
+      }
+      else  hakupalvelu.getHakijat(q,cur + 1).flatMap(getAll(streamer, q, cur + 1))
+
+    )
+
+  }
+
+  def XMLQuery(q: HakijaQuery): Unit = q.hakuehto match {
+    case Hakuehto.Kaikki => hakupalvelu.getHakijat(q).flatMap(getAll(sender, q))
     // TODO Hakuehto.Hyväksytyt & Hakuehto.Vastaanottaneet
-    case _ => Future.successful(XMLHakijat(Seq()))
+    case _ => sender ! EOF
   }
 }

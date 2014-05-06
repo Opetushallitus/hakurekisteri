@@ -25,6 +25,8 @@ import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
 import org.scalatra.CookieOptions
 import org.json4s.jackson.Serialization
+import fi.vm.sade.hakurekisteri.hakija.HakijaResource.EOF
+import java.util.UUID
 
 
 object Hakuehto extends Enumeration {
@@ -83,22 +85,12 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   }
 
   get("/", operation(query)) {
-    val q = HakijaQuery(params, currentUser)
-    logger.info("Query: " + q)
-    import scala.concurrent.duration._
-    //implicit def timeout: Duration = 300.seconds
-    implicit val defaultTimeout: Timeout = 299.seconds
-    val hakuResult = Try(hakijaActor ? q).get
+
     val context: AsyncContext = request.startAsync(request, response)
     log("async context detached")
 
-    val is = hakuResult.mapTo[XMLHakijat]
+    system.actorOf(Props(new StreamerActor(context)),"prod-streamer" + UUID.randomUUID())
 
-    val streamer = system.actorOf(Props(new StreamerActor(context)))
-    is.onComplete{case Success(hakijat) => for (hakija <- hakijat.hakijat) streamer ! hakija
-                                           streamer ! EOF
-                  case Failure(e) => throw e}
-    streamer
   }
 
   error {
@@ -242,6 +234,19 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
       webContext.complete()
 
     }
+
+    override def preStart(): Unit = {
+      withinAsyncContext(webContext) {
+        val q = HakijaQuery(params, currentUser)
+        logger.info("Query: " + q)
+        import scala.concurrent.duration._
+        //implicit def timeout: Duration = 300.seconds
+        implicit val defaultTimeout: Timeout = 299.seconds
+        hakijaActor ! q
+
+      }
+
+    }
   }
 
 
@@ -260,9 +265,13 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   class Render
   object Render extends Render
 
+
+
+}
+
+object HakijaResource {
   class EOF
   object EOF extends EOF
-
 }
 
 
