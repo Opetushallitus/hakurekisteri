@@ -10,10 +10,8 @@ import scala.util.{Failure, Success, Try}
 import scala.Some
 import fi.vm.sade.hakurekisteri.suoritus.Komoto
 import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
-import akka.pattern.{pipe, ask}
+import akka.pattern.ask
 import ForkedSeq._
-import akka.util.Timeout
-import java.util.concurrent.TimeUnit
 import TupledFuture._
 import fi.vm.sade.hakurekisteri.hakija.HakijaResource.EOF
 
@@ -129,6 +127,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
 
   def getAll(streamer:ActorRef, q: HakijaQuery, cur: Int = 0)(res: Seq[Hakija]):Future[Seq[Hakija]] = {
+
     Future.sequence(sendCurrent(res, streamer)).flatMap((_) =>
       if (res.length < hakupalvelu.maxApplications)  {
         streamer ! EOF
