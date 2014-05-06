@@ -168,15 +168,19 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     def renderEnd() {
 
       withinAsyncContext(webContext) {
-        val out = response.getWriter
+
         responseFormat match {
-          case "xml" => out.print("</Hakijat>")
-          case "json" => out.print("]}")
+          case "xml" => val out = response.getWriter
+                        out.print("</Hakijat>")
+                        out.flush()
+          case "json" => val out = response.getWriter
+                         out.print("]}")
+                         out.flush()
           case "binary" =>  renderExcel
           case _ => throw new IllegalArgumentException("unknown result format")
         }
 
-        out.flush()
+
       }
 
 
