@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.hakija
 
-import akka.actor.{ActorRef, Actor}
+import akka.actor.{Props, ActorRef, Actor}
 import scala.concurrent.{Future, ExecutionContext}
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
@@ -121,27 +121,49 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def hakijat2XmlHakijat(hakijat:Seq[Hakija]) = hakijat.map(hakija2XMLHakija).join.map(XMLHakijat)
 
 
-  def sendCurrent(hakijat:Seq[Hakija], streamer:ActorRef) = {
-    hakijat.map(hakija2XMLHakija).map(_ map ((result) => streamer ! result))
-  }
-
-
-  def getAll(streamer:ActorRef, q: HakijaQuery, cur: Int = 0)(res: Seq[Hakija]):Future[Seq[Hakija]] = {
-
-    Future.sequence(sendCurrent(res, streamer)).flatMap((_) =>
-      if (res.length < hakupalvelu.maxApplications)  {
-        streamer ! EOF
-        Future.successful(Seq())
-      }
-      else  hakupalvelu.getHakijat(q,cur + 1).flatMap(getAll(streamer, q, cur + 1))
-
-    )
-
-  }
-
   def XMLQuery(q: HakijaQuery): Unit = q.hakuehto match {
-    case Hakuehto.Kaikki => hakupalvelu.getHakijat(q).flatMap(getAll(sender, q))
+    case Hakuehto.Kaikki => val streamer = sender
+                            context.actorOf(Props(new Haku(q,streamer)))
     // TODO Hakuehto.Hyväksytyt & Hakuehto.Vastaanottaneet
     case _ => sender ! EOF
+  }
+
+  class Haku(q: HakijaQuery, streamer: ActorRef) extends Actor {
+
+    var page = 0
+    var fetching = true
+    var found = 0
+    var sent = 0
+
+    import akka.pattern._
+
+    override def preStart(): Unit = nextPage
+
+
+    def nextPage {
+      log.info("%s getting page %d of query %s" format (self, page,q))
+      hakupalvelu.getHakijat(q, page) pipeTo self
+    }
+
+    override def receive: Actor.Receive = {
+      case hakijat:Seq[Hakija] => log.info("found %d applicants" format hakijat.length)
+                                  found = found + hakijat.length
+                                  if (hakijat.length == hakupalvelu.maxApplications) {
+                                    page = page + 1
+                                    nextPage
+                                  } else fetching = false
+                                  for (xmlHakija: Future[XMLHakija] <- hakijat.map(hakija2XMLHakija)) {
+                                    xmlHakija pipeTo self
+                                  }
+                                  if (!fetching && sent == found) context.stop(self)
+      case xmlHakija:XMLHakija => log.info("%s sending %s to %s" format (self, xmlHakija, streamer))
+                                  streamer ! xmlHakija
+                                  sent = sent + 1
+                                  if (!fetching && sent == found) context.stop(self)
+    }
+
+    override def postStop() {
+      streamer ! EOF
+    }
   }
 }
