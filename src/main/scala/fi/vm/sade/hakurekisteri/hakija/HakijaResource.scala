@@ -85,11 +85,11 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   }
 
   get("/", operation(query)) {
-
+    val user: Option[User] = currentUser
     val context: AsyncContext = request.startAsync(request, response)
     log("async context detached")
 
-    system.actorOf(Props(new StreamerActor(context)),"prod-streamer" + UUID.randomUUID())
+    system.actorOf(Props(new StreamerActor(context,user)),"prod-streamer" + UUID.randomUUID())
 
   }
 
@@ -101,7 +101,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
 
 
-  class StreamerActor(webContext:AsyncContext) extends Actor {
+  class StreamerActor(webContext:AsyncContext, user: Option[User]) extends Actor {
 
     log("streamer actor starting")
     var renderables: Seq[XMLHakija] = Seq()
@@ -237,7 +237,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
     override def preStart(): Unit = {
       withinAsyncContext(webContext) {
-        val q = HakijaQuery(params, currentUser)
+        val q = HakijaQuery(params, user)
         logger.info("Query: " + q)
         import scala.concurrent.duration._
         //implicit def timeout: Duration = 300.seconds
