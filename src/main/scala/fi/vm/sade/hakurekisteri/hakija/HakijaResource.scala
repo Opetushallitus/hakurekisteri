@@ -193,10 +193,11 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
     def renderItem(item:XMLHakija) {
       responseFormat match  {
-        case "xml" =>   XML.write(response.writer, Utility.trim(item.toXml), response.characterEncoding.get, xmlDecl = false, doctype = null)
+        case "xml" =>   XML.write(response.getWriter, Utility.trim(item.toXml), response.characterEncoding.get, xmlDecl = false, doctype = null)
+                        response.getWriter.flush()
         case "json" =>  if (renderedFirst) response.getWriter.print(",")
-                        Serialization.write(item, response.writer)
-
+                        response.getWriter.print(Serialization.write(item))
+                        response.getWriter.flush()
 
         case _ =>
       }
