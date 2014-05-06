@@ -227,12 +227,12 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
                   throw(e)
               }
 
+            renderables = Seq()
           }
 
 
         }
 
-        renderables = Seq()
       }
     }
 
