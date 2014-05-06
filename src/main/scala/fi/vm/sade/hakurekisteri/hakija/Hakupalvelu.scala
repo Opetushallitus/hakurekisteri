@@ -22,13 +22,14 @@ import scala.annotation.tailrec
 
 trait Hakupalvelu {
 
-  def getHakijat(q: HakijaQuery): Future[Seq[Hakija]]
+  val maxApplications: Int
+
+  def getHakijat(q: HakijaQuery, page: Int = 0): Future[Seq[Hakija]]
 
 }
 
-class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000)(implicit val ec: ExecutionContext) extends Hakupalvelu {
+class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app",  val maxApplications: Int = 2000)(implicit val ec: ExecutionContext) extends Hakupalvelu {
   val logger = LoggerFactory.getLogger(getClass)
-
 
   import scala.concurrent.duration._
 
@@ -37,26 +38,15 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 
 
 
-  override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
-    def getUrl(page: Int = 0): URL = {
+  override def getHakijat(q: HakijaQuery, page: Int = 0): Future[Seq[Hakija]] = {
+    def getUrl(page: Int): URL = {
       new URL(serviceUrl + "/applications/listfull?" + getQueryParams(q, page))
     }
     val user = q.user
 
-    val future: Future[Option[List[FullHakemus]]] = restRequest[List[FullHakemus]](user, getUrl())
+    restRequest[List[FullHakemus]](user, getUrl(page)).map(_.getOrElse(Seq()).map(RestHakupalvelu.getHakija))
 
-    def getAll(cur: List[FullHakemus])(res: Option[List[FullHakemus]]):Future[Option[List[FullHakemus]]] = res match {
-      case None                                   => Future.successful(None)
-      case Some(l) if l.length < maxApplications  => Future.successful(Some(cur ++ l))
-      case Some(l)                                => restRequest[List[FullHakemus]](user, getUrl((cur.length / maxApplications) + 1)).flatMap(getAll(cur ++ l))
-    }
 
-    def f(foo: Option[List[FullHakemus]]): Seq[Hakija] = {
-
-      foo.getOrElse(Seq()).map(RestHakupalvelu.getHakija)
-    }
-
-    future.flatMap(getAll(List())).map(f)
   }
 
 

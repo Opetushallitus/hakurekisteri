@@ -8,20 +8,25 @@ import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra._
 import scala.concurrent.ExecutionContext
-import _root_.akka.actor.{ActorRef, ActorSystem}
+import _root_.akka.actor.{Props, Actor, ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
-import java.util.concurrent.TimeUnit
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import javax.servlet.http.HttpServletResponse
 import scala.xml._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.joda.time.{DateTimeFieldType, LocalDate}
+import javax.servlet.AsyncContext
+import scala.annotation.tailrec
+import org.scalatra.ScalatraBase._
 import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
-import scala.concurrent.duration.Duration
+import org.scalatra.CookieOptions
+import org.json4s.jackson.Serialization
+import fi.vm.sade.hakurekisteri.hakija.HakijaResource.EOF
+import java.util.UUID
 
 
 object Hakuehto extends Enumeration {
@@ -70,32 +75,22 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
   def setContentDisposition(t: Tyyppi, response: HttpServletResponse, filename: String) {
     response.setHeader("Content-Disposition", "attachment;filename=%s.%s".format(filename, getFileExtension(t)))
-    response.addCookie(Cookie("fileDownload", "true")(CookieOptions(path = "/")))
+
   }
 
   override protected def renderPipeline: RenderPipeline = renderCustom orElse super.renderPipeline
   private def renderCustom: RenderPipeline = {
-    case hakijat: XMLHakijat if responseFormat == "xml" => XML.write(response.writer, Utility.trim(hakijat.toXml), response.characterEncoding.get, xmlDecl = true, doctype = null)
+    case hakija: XMLHakija if responseFormat == "xml" => XML.write(response.writer, Utility.trim(hakija.toXml), response.characterEncoding.get, xmlDecl = false, doctype = null)
     case hakijat: XMLHakijat if responseFormat == "binary" => ExcelUtil.write(response.outputStream, hakijat)
   }
 
   get("/", operation(query)) {
-    val q = HakijaQuery(params, currentUser)
-    logger.info("Query: " + q)
+    val user: Option[User] = currentUser
+    val context: AsyncContext = request.startAsync(request, response)
+    log("async context detached")
 
-    new AsyncResult() {
-      import scala.concurrent.duration._
-      override implicit def timeout: Duration = 300.seconds
-      implicit val defaultTimeout: Timeout = 299.seconds
-      import scala.concurrent.future
-      val hakuResult = Try(hakijaActor ? q).get
-      val is = hakuResult.flatMap((result) => future {
-        val tyyppi = Try(Tyyppi.withName(params("tyyppi"))).getOrElse(Tyyppi.Json)
-        contentType = getContentType(tyyppi)
-        if (Try(params("tiedosto").toBoolean).getOrElse(false)) setContentDisposition(tyyppi, response, "hakijat")
-        result
-      })
-    }
+    system.actorOf(Props(new StreamerActor(context,user)),"prod-streamer" + UUID.randomUUID())
+
   }
 
   error {
@@ -103,7 +98,186 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
       logger.error("error in service", t)
       response.sendError(500, t.getMessage)
   }
+
+
+
+  class StreamerActor(webContext:AsyncContext, user: Option[User]) extends Actor {
+
+    log("streamer actor starting")
+    var renderables: Seq[XMLHakija] = Seq()
+    var result:Try[ActorRef] = Success(self)
+
+    import scala.concurrent.promise
+    val start = promise[Unit]()
+    val rendering = start.future.andThen{case Success(_) => renderStart}
+    rendering.onComplete((_) => log("started rendering"))
+
+    var renderedFirst = false
+
+    override def receive = {
+      case Render =>  start success()
+        render()
+      case EOF =>   endStreaming()
+      case a:XMLHakija => renderables = renderables ++ Seq(a)
+        render()
+    }
+
+    def endStreaming() {
+      rendering.onComplete{
+        case Success(_) => render()
+                           context.stop(self)
+        case Failure(e) => result = Failure(e)
+                           context.stop(self)
+                           throw(e)
+      }
+
+    }
+
+    def downloading: Boolean = Try(params("tiedosto").toBoolean).getOrElse(false)
+
+
+    def renderStart() {
+      withinAsyncContext(webContext) {
+        def getTyyppi(params:Params): Tyyppi.Value = {
+          Try(Tyyppi.withName(params("tyyppi"))).getOrElse(Tyyppi.Json)
+        }
+        contentType = getContentType(getTyyppi(params))
+
+        if (downloading) {
+          setContentDisposition(getTyyppi(params), response, "hakijat")
+          response.addCookie(Cookie("fileDownload", "true")(CookieOptions(path = "/")))
+        }
+        val out = response.getWriter
+        responseFormat match {
+          case "xml" => out.print("<?xml version='1.0' encoding='UTF-8'?>\n<Hakijat xsi:schemaLocation=\"http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat hakijat.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat\">")
+          case "json" => out.print("{\"hakijat\":[")
+          case _ => throw new IllegalArgumentException("unknown format")
+
+        }
+        out.flush()
+
+      }
+
+    }
+
+    def renderEnd() {
+
+      withinAsyncContext(webContext) {
+        val out = response.getWriter
+        responseFormat match {
+          case "xml" => out.print("</Hakijat>")
+          case "json" => out.print("]}")
+          case "binary" =>  renderExcel
+          case _ => throw new IllegalArgumentException("unknown result format")
+        }
+
+        out.flush()
+      }
+
+
+    }
+
+    def renderExcel() {
+      ExcelUtil.write(response.outputStream, new XMLHakijat(renderables))
+
+    }
+
+    def renderItem(item:XMLHakija) {
+      responseFormat match  {
+        case "xml" =>   XML.write(response.writer, Utility.trim(item.toXml), response.characterEncoding.get, xmlDecl = false, doctype = null)
+        case "json" =>  if (renderedFirst) response.getWriter.print(",")
+                        Serialization.write(item, response.writer)
+
+
+        case _ =>
+      }
+
+      renderedFirst = true
+    }
+
+
+
+
+
+    def render()  {
+
+      if (rendering.isCompleted ) {
+
+        withinAsyncContext(webContext) {
+          if (responseFormat != "binary") {
+            val out = response.getWriter
+            for (item <- renderables)
+              try {
+                renderItem(item)
+                out.flush()
+              } catch {
+                case e: Throwable =>
+                  runCallbacks(Failure(e))
+                  result = Failure(e)
+                  context.stop(self)
+                  throw(e)
+              }
+
+          }
+
+
+        }
+
+        renderables = Seq()
+      }
+    }
+
+
+
+
+    override def postStop() {
+      renderEnd()
+      runCallbacks(result)
+      webContext.complete()
+
+    }
+
+    override def preStart(): Unit = {
+      withinAsyncContext(webContext) {
+        val q = HakijaQuery(params, user)
+        logger.info("Query: " + q)
+        import scala.concurrent.duration._
+        //implicit def timeout: Duration = 300.seconds
+        implicit val defaultTimeout: Timeout = 299.seconds
+        hakijaActor ! q
+
+      }
+
+    }
+  }
+
+
+
+
+
+
+
+  override protected def renderResponseBody(actionResult: Any):Unit = actionResult match {
+
+    case actor:ActorRef => actor ! Render
+    case a => super.renderResponseBody(a)
+
+  }
+
+  class Render
+  object Render extends Render
+
+
+
 }
+
+object HakijaResource {
+  class EOF
+  object EOF extends EOF
+}
+
+
+
 
 object XMLUtil {
   def toBooleanX(b: Boolean): String = if (b) "X" else ""

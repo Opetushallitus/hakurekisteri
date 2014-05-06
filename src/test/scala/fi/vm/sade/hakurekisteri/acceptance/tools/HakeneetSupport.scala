@@ -4,7 +4,7 @@ import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.hakija
 import org.scalatra.swagger.Swagger
 import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport, HakurekisteriSwagger}
-import akka.actor.{Props, ActorSystem}
+import akka.actor.{Actor, Props, ActorSystem}
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
@@ -15,7 +15,10 @@ import org.scalatest.Suite
 import org.scalatra.test.HttpComponentsClient
 import akka.actor.Status.Success
 import akka.actor.FSM.Failure
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{Promise, Future, ExecutionContext}
+import fi.vm.sade.hakurekisteri.hakija.HakijaResource.EOF
+import akka.event.Logging
+import java.util.UUID
 
 trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport {
 
@@ -130,15 +133,15 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
   object hakupalvelu extends Hakupalvelu {
 
-
+    val maxApplications = 50000000
     var tehdytHakemukset: Seq[FullHakemus] = Seq()
 
 
     
     
-    override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = q.organisaatio match {
-
-      case Some(org) => {
+    override def getHakijat(q: HakijaQuery, page: Int = 0): Future[Seq[Hakija]] = (q.organisaatio, page) match {
+      case (_ , i) if i > 0 => Future.successful(Seq())
+      case (Some(org), _) => {
         println("Haetaan tarjoajalta %s".format(org))
         Future(hakijat.filter(_.hakemus.hakutoiveet.exists(_.hakukohde.koulutukset.exists((kohde) => {println(kohde);kohde.tarjoaja == org}))))
       }
@@ -198,10 +201,39 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
 
     val orgAct = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
-    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodistopalvelu)))
+    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodistopalvelu)), "test-hakuactor")
+
+    import scala.concurrent.promise
 
     def get(q: HakijaQuery) = {
-      hakijaActor ? q
+      val prom = promise[XMLHakijat]
+      system.actorOf(Props(new TestStreamer(prom, q)), "test-streamer-%s" format UUID.randomUUID)
+      prom.future
+    }
+
+    class TestStreamer(result: Promise[XMLHakijat], q: HakijaQuery) extends Actor {
+
+      val log = Logging(context.system, this)
+
+      var renderables:Seq[XMLHakija] = Seq()
+
+
+
+      override def preStart() {
+        log.info(self + " sending query " + q + " to " + hakijaActor)
+        hakijaActor ! q
+      }
+
+      override def receive = {
+
+          case EOF =>   log.info("received eof")
+                        result.success(XMLHakijat(renderables))
+                        context.stop(self)
+          case a:XMLHakija =>  log.info("received" + a)
+                               renderables = renderables ++ Seq(a)
+          case a => log.info("strangely " + a)
+
+      }
     }
   }
 }

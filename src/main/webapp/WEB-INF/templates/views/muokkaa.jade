@@ -1,4 +1,4 @@
-h2 Muokkaa opiskelijan tietoja
+h2(oph-msg="suoritusrekisteri.muokkaa.muokkaatietoja") Muokkaa opiskelijan tietoja
 
 div(class="alert alert-{{message.type}}" ng-show="messages" ng-repeat="message in messages")
   button(type="button" class="close" aria-hidden="true" ng-click="removeMessage(message)") &times;
@@ -11,82 +11,69 @@ div(class="row")
   div(class="col-md-7")
     section(class="panel panel-default")
       header(class="panel-heading")
-        h2(class="panel-title") Henkilötiedot
+        h2(class="panel-title" oph-msg="suoritusrekisteri.muokkaa.henkilotiedot") Henkilötiedot
       div(class="panel-body")
-        form(name="henkiloForm")
-          div(class="row")
-            div(class="form-group col-sm-6")
-              div
-                strong Henkilötunnus
-              div {{henkilo.hetu || henkilo.syntymaaika}}
-            div(class="form-group col-sm-6")
-              div
-                strong Sukupuoli
-              label(class="radio-inline")
-                input(type="radio" ng-model="henkilo.sukupuoli" value="1" required)
-                span Mies
-              label(class="radio-inline")
-                input(type="radio" ng-model="henkilo.sukupuoli" value="2" required)
-                span Nainen
-          div(class="row")
-            div(class="form-group col-sm-6")
-              label(for="etunimet") Etunimet
-              input(id="etunimet" type="text" class="form-control" ng-model="henkilo.etunimet" required)
-            div(class="form-group col-sm-6")
-              label(for="kutsumanimi") Kutsumanimi
-              input(id="kutsumanimi" type="text" class="form-control" ng-model="henkilo.kutsumanimi" required)
-          div(class="form-group")
-            label(for="sukunimi") Sukunimi
-            input(id="sukunimi" type="text" class="form-control" ng-model="henkilo.sukunimi" required)
-
-          div(ng-repeat="yhteystietoryhma in henkilo.yhteystiedotRyhma")
-            div(class="form-group" ng-repeat="yhteystieto in yhteystietoryhma.yhteystiedot")
-              label {{yhteystieto.yhteystietoTyyppi}}
-              input(type="text" class="form-control" ng-model="yhteystieto.yhteystietoArvo")
-
-          div(class="row")
-            div(class="form-group col-sm-4" ng-repeat="kansalaisuus in henkilo.kansalaisuus")
-              label Kansalaisuus
-              input(class="form-control" type="text" ng-model="kansalaisuus.kansalaisuusKoodi" required)
-            div(class="form-group col-sm-4")
-              label(for="aidinkieli") Äidinkieli
-              input(id="aidinkieli" class="form-control" type="text" ng-model="henkilo.asiointiKieli.kieliKoodi" required ng-change="henkilo.asiointiKieli.kieliTyyppi = henkilo.asiointiKieli.kieliKoodi; henkilo.kielisyys[0] = henkilo.asiointiKieli;")
-          div(class="row")
+        div(class="row")
+          div(class="form-group col-sm-8")
+            div
+              strong(oph-msg="suoritusrekisteri.muokkaa.henkilotunnus") Henkilötunnus / syntymäaika
+            div {{henkilo.hetu || henkilo.syntymaaika}}
+          div(class="form-group col-sm-4")
+            div
+              strong(oph-msg="suoritusrekisteri.muokkaa.sukupuoli") Sukupuoli
+            div(ng-show="henkilo.sukupuoli == 'MIES'" oph-msg="suoritusrekisteri.muokkaa.mies") Mies
+            div(ng-show="henkilo.sukupuoli == 'NAINEN'" oph-msg="suoritusrekisteri.muokkaa.nainen") Nainen
+            div(ng-hide="henkilo.sukupuoli") -
+        div(class="row")
+          div(class="form-group col-sm-4")
+            div
+              strong(oph-msg="suoritusrekisteri.muokkaa.etunimet") Etunimet
+            div {{henkilo.etunimet}}
+          div(class="form-group col-sm-4")
+            div
+              strong(oph-msg="suoritusrekisteri.muokkaa.kutsumanimi") Kutsumanimi
+            div {{henkilo.kutsumanimi}}
+          div(class="form-group col-sm-4")
+            div
+              strong(oph-msg="suoritusrekisteri.muokkaa.sukunimi") Sukunimi
+            div {{henkilo.sukunimi}}
+        aside
+          a(class="btn btn-default btn-xs" href="/authentication-henkiloui/html/index.html#/muokkaaoppija/{{henkilo.oidHenkilo}}/" oph-msg="suoritusrekisteri.muokkaa.henkilotietoja" target="_blank") Muokkaa henkilötietoja
 
   div(class="col-md-5")
     section(class="panel panel-default")
       header(class="panel-heading")
-        h2(class="panel-title") Suoritukset
+        h2(class="panel-title" oph-msg="suoritusrekisteri.muokkaa.suoritukset") Suoritukset
       div(class="panel-body")
         ul(class="list-unstyled")
           li(ng-repeat="suoritus in suoritukset")
             form(class="form-inline suoritus-form")
               div(class="form-group")
-                strong Oppilaitos
+                strong(oph-msg="suoritusrekisteri.muokkaa.myontaja") Myöntäjä
                 input(type="text" class="form-control" ng-model="suoritus.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv)) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingSuoritusOppilaitos" typeahead-wait-ms="500" required)
               div(class="form-group")
-                strong Koulutus
+                strong(oph-msg="suoritusrekisteri.muokkaa.koulutus") Koulutus
                 select(class="form-control" ng-model="suoritus.komo" ng-options="koulutus.value as koulutus.text for koulutus in koulutukset" required)
               div(class="form-group")
-                strong Yksilöllistetty
+                strong(oph-msg="suoritusrekisteri.muokkaa.yksilollistetty") Yksilöllistetty
                 select(class="form-control" ng-model="suoritus.yksilollistaminen" ng-options="yks.value as yks.text for yks in yksilollistamiset" required ng-disabled="suoritus.komo !== 'peruskoulu'")
               div(class="form-group")
-                strong Opetuskieli
+                strong(oph-msg="suoritusrekisteri.muokkaa.opetuskieli") Opetuskieli
                 input(type="text" class="form-control" ng-model="suoritus.suoritusKieli" required)
               div(class="form-group")
-                strong Valmistumispäivä
+                strong(oph-msg="suoritusrekisteri.muokkaa.valmistumispaiva") Valmistumispäivä
                 input(type="text" class="form-control" ng-model="suoritus.valmistuminen" datepicker-popup="{{format}}" datepicker-options="dateOptions" show-button-bar="false")
 
 section(class="panel panel-default")
   header(class="panel-heading")
-    h2(class="panel-title") Luokkatiedot
+    h2(class="panel-title" oph-msg="suoritusrekisteri.muokkaa.luokkatiedot") Luokkatiedot
   table(class="table")
     thead
-      th Alkupäivä
-      th Loppupäivä
-      th Oppilaitos
-      th Luokkataso
-      th Luokka
+      th(oph-msg="suoritusrekisteri.muokkaa.alkupaiva") Alkupäivä
+      th(oph-msg="suoritusrekisteri.muokkaa.loppupaiva") Loppupäivä
+      th(oph-msg="suoritusrekisteri.muokkaa.oppilaitos") Oppilaitos
+      th(oph-msg="suoritusrekisteri.muokkaa.luokkataso") Luokkataso
+      th(oph-msg="suoritusrekisteri.muokkaa.luokka") Luokka
     tbody
       tr(ng-repeat="luokkatieto in luokkatiedot")
         td
@@ -101,5 +88,5 @@ section(class="panel panel-default")
           input(type="text" class="form-control" ng-model="luokkatieto.luokka" required)
 
 aside(class="btn-toolbar")
-  button(class="btn btn-primary" ng-click="save()") Tallenna
-  button(class="btn btn-default" ng-click="cancel()") Peruuta
+  button(class="btn btn-default" ng-click="cancel()" oph-msg="suoritusrekisteri.muokkaa.peruuta") Peruuta
+  button(class="btn btn-primary" ng-click="save()" oph-msg="suoritusrekisteri.muokkaa.tallenna") Tallenna
