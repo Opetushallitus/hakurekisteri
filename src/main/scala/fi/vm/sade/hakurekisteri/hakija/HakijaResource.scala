@@ -147,14 +147,19 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
           setContentDisposition(getTyyppi(params), response, "hakijat")
           response.addCookie(Cookie("fileDownload", "true")(CookieOptions(path = "/")))
         }
-        val out = response.getWriter
+
         responseFormat match {
-          case "xml" => out.print("<?xml version='1.0' encoding='UTF-8'?>\n<Hakijat xsi:schemaLocation=\"http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat hakijat.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat\">")
-          case "json" => out.print("{\"hakijat\":[")
+          case "xml" => val out = response.getWriter
+                        out.print("<?xml version='1.0' encoding='UTF-8'?>\n<Hakijat xsi:schemaLocation=\"http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat hakijat.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://service.henkilo.sade.vm.fi/types/perusopetus/hakijat\">")
+                        out.flush()
+          case "json" => val out = response.getWriter
+                         out.print("{\"hakijat\":[")
+                         out.flush()
+          case "binary" =>
           case _ => throw new IllegalArgumentException("unknown format")
 
         }
-        out.flush()
+
 
       }
 
@@ -163,15 +168,19 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     def renderEnd() {
 
       withinAsyncContext(webContext) {
-        val out = response.getWriter
+
         responseFormat match {
-          case "xml" => out.print("</Hakijat>")
-          case "json" => out.print("]}")
+          case "xml" => val out = response.getWriter
+                        out.print("</Hakijat>")
+                        out.flush()
+          case "json" => val out = response.getWriter
+                         out.print("]}")
+                         out.flush()
           case "binary" =>  renderExcel
           case _ => throw new IllegalArgumentException("unknown result format")
         }
 
-        out.flush()
+
       }
 
 
@@ -184,10 +193,11 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
     def renderItem(item:XMLHakija) {
       responseFormat match  {
-        case "xml" =>   XML.write(response.writer, Utility.trim(item.toXml), response.characterEncoding.get, xmlDecl = false, doctype = null)
+        case "xml" =>   XML.write(response.getWriter, Utility.trim(item.toXml), response.characterEncoding.get, xmlDecl = false, doctype = null)
+                        response.getWriter.flush()
         case "json" =>  if (renderedFirst) response.getWriter.print(",")
-                        Serialization.write(item, response.writer)
-
+                        response.getWriter.print(Serialization.write(item))
+                        response.getWriter.flush()
 
         case _ =>
       }
@@ -218,12 +228,12 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
                   throw(e)
               }
 
+            renderables = Seq()
           }
 
 
         }
 
-        renderables = Seq()
       }
     }
 
