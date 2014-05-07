@@ -19,11 +19,11 @@ trait ArvosanaSwaggerApi  { this: HakurekisteriResource[Arvosana, CreateArvosana
 
   registerModel(arvioModel)
 
-  val fields = Seq(ModelField("suoritus", null, DataType.String, None, AnyValue, required = true),
-    ModelField("arvio", null, DataType("Arvio"), None, AnyValue, required = true),
-    ModelField("aine", null, DataType.String, None, AnyValue, required = true),
-    ModelField("lisatieto", null, DataType.String, None, AnyValue, required = false),
-    ModelField("valinnainen", null, DataType.Boolean, Some("false"), AnyValue, required = false))
+  val fields = Seq(ModelField("suoritus", "suorituksen uuid", DataType.String),
+    ModelField("arvio", null, DataType("Arvio")),
+    ModelField("aine", null, DataType.String),
+    ModelField("lisatieto", null, DataType.String, required = false),
+    ModelField("valinnainen", null, DataType.Boolean, Some("false"), required = false))
 
   val arvosanaModel = Model("Arvosana", "Arvosanatiedot", fields.map(t => (t.name, t)).toMap)
 
