@@ -19,7 +19,8 @@ trait ArvosanaSwaggerApi  { this: HakurekisteriResource[Arvosana, CreateArvosana
 
   registerModel(arvioModel)
 
-  val fields = Seq(ModelField("suoritus", "suorituksen uuid", DataType.String),
+  val fields = Seq(ModelField("id", "arvosanan uuid", DataType.String, None, AnyValue, required = false),
+    ModelField("suoritus", "suorituksen uuid", DataType.String),
     ModelField("arvio", "arvosana", DataType("Arvio")),
     ModelField("aine", "aine josta arvosana on annettu", DataType.String),
     ModelField("lisatieto", "aineen lisätieto. esim kieli", DataType.String, required = false),

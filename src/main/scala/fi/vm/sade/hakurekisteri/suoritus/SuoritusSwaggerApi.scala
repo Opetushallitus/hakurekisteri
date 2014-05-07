@@ -13,13 +13,13 @@ trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus, CreateSuoritus
   override protected val applicationName = Some("suoritukset")
   protected val applicationDescription = "Suoritusrekisterin rajapinta."
 
-  val fields = Seq(ModelField("tila", null, DataType.String, None, AnyValue, required = true),
+  val fields = Seq(ModelField("id", "suorituksen uuid", DataType.String, None, AnyValue, required = false),
+    ModelField("tila", null, DataType.String, None, AnyValue, required = true),
     ModelField("komo", null, DataType.String, None, AnyValue, required = true),
     ModelField("myontaja", null, DataType.String, None, AnyValue, required = true),
-    ModelField("luokka", null, DataType.String, None, AnyValue, required = true),
     ModelField("henkiloOid", null, DataType.String, None, AnyValue, required = true),
-    ModelField("luokkataso", null, DataType.String, None, AnyValue, required = true),
     ModelField("valmistuminen", null, DataType.Date, None, AnyValue, required = true),
+    ModelField("suoritusKieli", null, DataType.String, None, AnyValue, required = true),
     ModelField("yksilollistaminen", null, DataType.String, None, AllowableValues(yksilollistaminen.values.map(v => v.toString).toList)))
 
   val suoritusModel = Model("Suoritus", "Suoritustiedot", fields.map(t => (t.name, t)).toMap)

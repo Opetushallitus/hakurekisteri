@@ -12,7 +12,8 @@ trait OpiskelijaSwaggerApi
   override protected val applicationName = Some("opiskelijat")
   protected val applicationDescription = "Opiskelijatietojen rajapinta."
 
-  val fields = Seq(ModelField("oppilaitosOid", null, DataType.String, None, AnyValue, required = true),
+  val fields = Seq(ModelField("id", "opiskelijatiedon uuid", DataType.String, None, AnyValue, required = false),
+    ModelField("oppilaitosOid", null, DataType.String, None, AnyValue, required = true),
     ModelField("luokkataso", null, DataType.String, None, AnyValue, required = true),
     ModelField("luokka", null, DataType.String, None, AnyValue, required = true),
     ModelField("henkiloOid", null, DataType.String, None, AnyValue, required = true),
