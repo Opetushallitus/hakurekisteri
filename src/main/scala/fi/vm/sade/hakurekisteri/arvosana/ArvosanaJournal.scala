@@ -8,17 +8,22 @@ import scala.slick.jdbc.meta.MTable
 import scala.slick.driver.JdbcDriver
 import java.util.UUID
 import scala.compat.Platform
+import org.slf4j.LoggerFactory
 
 class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, ArvosanaTable, ColumnOrdered[Long]] {
 
-
+  val logger = LoggerFactory.getLogger(getClass)
 
   override def toResource(row: ArvosanaTable#TableElementType): Arvosana with Identified = row match {
-    case (id,suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, inserted) => Arvosana(UUID.fromString(suoritus), Arvio(arvosana, asteikko), aine, lisatieto, valinnainen).identify(UUID.fromString(id))
+    case (id,suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, inserted) =>
+      logger.debug("toResource lisatieto {}", lisatieto)
+      Arvosana(UUID.fromString(suoritus), Arvio(arvosana, asteikko), aine, lisatieto, valinnainen).identify(UUID.fromString(id))
   }
 
   override def toRow(o: Arvosana with Identified): ArvosanaTable#TableElementType = o.arvio match {
-    case Arvio410(arvosana) => (o.id.toString, o.suoritus.toString, arvosana, Arvio.ASTEIKKO_4_10 , o.aine, o.lisatieto, o.valinnainen, Platform.currentTime)
+    case Arvio410(arvosana) =>
+      logger.debug("toRow lisatieto {}", o.lisatieto)
+      (o.id.toString, o.suoritus.toString, arvosana, Arvio.ASTEIKKO_4_10 , o.aine, o.lisatieto, o.valinnainen, Platform.currentTime)
     case a:Arvio if a == Arvio.NA => throw UnknownAssessmentResultException
    }
 
