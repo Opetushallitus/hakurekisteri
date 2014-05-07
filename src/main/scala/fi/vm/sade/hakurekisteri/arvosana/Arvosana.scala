@@ -4,7 +4,7 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 
-case class Arvosana(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: String, valinnainen: Boolean) extends Resource {
+case class Arvosana(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: Option[String], valinnainen: Boolean) extends Resource {
   override def identify[R <: Arvosana](id: UUID): R with Identified = Arvosana.identify(this,id).asInstanceOf[R with Identified]
 }
 

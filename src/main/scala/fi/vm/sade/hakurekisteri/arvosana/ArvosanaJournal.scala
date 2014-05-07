@@ -38,14 +38,14 @@ class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, Arvosana
   override val journalSort = (o: ArvosanaTable) => o.inserted.asc
 }
 
-class ArvosanaTable(tag: Tag) extends Table[(String, String, String, String, String, String, Boolean, Long)](tag, "arvosana") {
+class ArvosanaTable(tag: Tag) extends Table[(String, String, String, String, String, Option[String], Boolean, Long)](tag, "arvosana") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def resourceId = column[String]("resource_id")
   def suoritus = column[String]("suoritus")
   def arvosana = column[String]("arvosana")
   def asteikko = column[String]("asteikko")
   def aine = column[String]("aine")
-  def lisatieto = column[String]("lisatieto")
+  def lisatieto = column[Option[String]]("lisatieto")
   def valinnainen = column[Boolean]("valinnainen")
   def inserted = column[Long]("inserted")
   // Every table needs a * projection with the same type as the table's type parameter

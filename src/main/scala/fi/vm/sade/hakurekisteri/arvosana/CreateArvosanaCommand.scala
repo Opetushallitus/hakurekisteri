@@ -32,7 +32,7 @@ class CreateArvosanaCommand extends HakurekisteriCommand[Arvosana] {
   val lisatieto: Field[String] = asType[String]("lisatieto").optional
   val valinnainen: Field[Boolean] = asType[Boolean]("valinnainen").optional
 
-  override def toResource: Arvosana = Arvosana(suoritus.value.get, Arvio(arvio.value.get, asteikko.value.get), aine.value.get, lisatieto.value.get, valinnainen.value.get)
+  override def toResource: Arvosana = Arvosana(suoritus.value.get, Arvio(arvio.value.get, asteikko.value.get), aine.value.get, lisatieto.value, valinnainen.value.get)
 }
 
 
