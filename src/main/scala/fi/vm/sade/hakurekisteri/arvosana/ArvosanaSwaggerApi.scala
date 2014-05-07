@@ -13,7 +13,7 @@ trait ArvosanaSwaggerApi  { this: HakurekisteriResource[Arvosana, CreateArvosana
   protected val applicationDescription = "Arvosanojen rajapinta."
 
   val arvioFields = Seq(ModelField("arvosana", null, DataType.String, None, AnyValue, required = true),
-    ModelField("asteikko", null, DataType.String, None, AllowableValues(Arvio.asteikot:_*), required = true))
+    ModelField("asteikko", null, DataType.String, None, AllowableValues(Arvio.asteikot.toList), required = true))
 
   val arvioModel = Model("Arvio", "Arviotiedot", arvioFields.map(t => (t.name, t)).toMap)
 
