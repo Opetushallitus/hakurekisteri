@@ -25,9 +25,9 @@ trait ArvosanaSwaggerApi  { this: HakurekisteriResource[Arvosana, CreateArvosana
     ModelField("lisatieto", null, DataType.String, None, AnyValue, required = false),
     ModelField("valinnainen", null, DataType.Boolean, Some("false"), AnyValue, required = false))
 
-  val suoritusModel = Model("Arvosana", "Arvosanatiedot", fields.map(t => (t.name, t)).toMap)
+  val arvosanaModel = Model("Arvosana", "Arvosanatiedot", fields.map(t => (t.name, t)).toMap)
 
-  registerModel(suoritusModel)
+  registerModel(arvosanaModel)
 
   val query = (apiOperation[Arvosana]("haeArvosanat")
     summary "Näytä kaikki arvosanat"
