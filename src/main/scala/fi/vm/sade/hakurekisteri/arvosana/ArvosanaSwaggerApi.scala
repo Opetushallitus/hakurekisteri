@@ -12,18 +12,18 @@ trait ArvosanaSwaggerApi  { this: HakurekisteriResource[Arvosana, CreateArvosana
   override protected val applicationName = Some("arvosanat")
   protected val applicationDescription = "Arvosanojen rajapinta."
 
-  val arvioFields = Seq(ModelField("arvosana", null, DataType.String, None, AnyValue, required = true),
-    ModelField("asteikko", null, DataType.String, None, AllowableValues(Arvio.asteikot.toList), required = true))
+  val arvioFields = Seq(ModelField("arvosana", "arvosana", DataType.String),
+    ModelField("asteikko", "arvosanan asteikko", DataType.String, Some("4-10"), AllowableValues(Arvio.asteikot.toList)))
 
   val arvioModel = Model("Arvio", "Arviotiedot", arvioFields.map(t => (t.name, t)).toMap)
 
   registerModel(arvioModel)
 
   val fields = Seq(ModelField("suoritus", "suorituksen uuid", DataType.String),
-    ModelField("arvio", null, DataType("Arvio")),
-    ModelField("aine", null, DataType.String),
-    ModelField("lisatieto", null, DataType.String, required = false),
-    ModelField("valinnainen", null, DataType.Boolean, Some("false"), required = false))
+    ModelField("arvio", "arvosana", DataType("Arvio")),
+    ModelField("aine", "aine josta arvosana on annettu", DataType.String),
+    ModelField("lisatieto", "aineen lisätieto. esim kieli", DataType.String, required = false),
+    ModelField("valinnainen", "onko aine ollut valinnainen", DataType.Boolean, Some("false"), required = false))
 
   val arvosanaModel = Model("Arvosana", "Arvosanatiedot", fields.map(t => (t.name, t)).toMap)
 
