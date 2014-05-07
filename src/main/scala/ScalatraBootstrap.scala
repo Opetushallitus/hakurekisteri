@@ -1,4 +1,5 @@
 import _root_.akka.actor.{Props, ActorSystem}
+import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.henkilo._
@@ -64,7 +65,9 @@ class ScalatraBootstrap extends LifeCycle {
     val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija](orgServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid )))
 
     val henkiloRekisteri = system.actorOf(Props(new HenkiloActor(new HenkiloJournal(database))))
-    val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo](orgServiceUrl,henkiloRekisteri, (henkilo) => OPH )))
+    val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo](orgServiceUrl, henkiloRekisteri, (henkilo) => OPH )))
+
+    val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(new ArvosanaJournal(database))))
 
     val healthcheck = system.actorOf(Props(new HealthcheckActor(filteredSuoritusRekisteri, filteredOpiskelijaRekisteri)))
 
@@ -79,6 +82,7 @@ class ScalatraBootstrap extends LifeCycle {
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](filteredSuoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
     context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](filteredOpiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")
     context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](filteredHenkiloRekisteri, HenkiloQuery(_)) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand] with SpringSecuritySupport, "/rest/v1/henkilot")
+    context mount(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport, "/rest/v1/arvosanat")
     context mount(new HakijaResource(hakijat), "/rest/v1/hakijat")
     context mount(new HealthcheckResource(healthcheck), "/healthcheck")
     context mount(new ResourcesApp, "/rest/v1/api-docs/*")
