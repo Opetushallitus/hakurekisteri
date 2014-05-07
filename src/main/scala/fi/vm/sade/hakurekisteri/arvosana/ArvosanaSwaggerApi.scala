@@ -31,8 +31,8 @@ trait ArvosanaSwaggerApi  { this: HakurekisteriResource[Arvosana, CreateArvosana
 
   val query = (apiOperation[Arvosana]("haeArvosanat")
     summary "Näytä kaikki arvosanat"
-    notes "Näyttää kaikki arvosanat. Voit myös hakea eri parametreillä."
-    parameter queryParam[Option[String]]("suoritus").description("suorituksen id"))
+    notes "Näyttää kaikki arvosanat. Voit myös hakea suorituksella."
+    parameter queryParam[Option[String]]("suoritus").description("suorituksen uuid"))
 
   val create = apiOperation[Arvosana]("lisääArvosana")
     .parameter(bodyParam[Arvosana]("uusiArvosana").description("Uusi arvosana").required)
