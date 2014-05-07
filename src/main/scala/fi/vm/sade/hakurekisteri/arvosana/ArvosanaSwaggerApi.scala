@@ -13,7 +13,7 @@ trait ArvosanaSwaggerApi  { this: HakurekisteriResource[Arvosana, CreateArvosana
   protected val applicationDescription = "Arvosanojen rajapinta."
 
   val arvioFields = Seq(ModelField("arvosana", null, DataType.String, None, AnyValue, required = true),
-    ModelField("asteikko", null, DataType.String, None, AnyValue, required = true))
+    ModelField("asteikko", null, DataType.String, None, AllowableValues(Arvio.asteikot), required = true))
 
   val arvioModel = Model("Arvio", "Arviotiedot", arvioFields.map(t => (t.name, t)).toMap)
 
@@ -23,7 +23,7 @@ trait ArvosanaSwaggerApi  { this: HakurekisteriResource[Arvosana, CreateArvosana
     ModelField("arvio", null, DataType("Arvio"), None, AnyValue, required = true),
     ModelField("aine", null, DataType.String, None, AnyValue, required = true),
     ModelField("lisatieto", null, DataType.String, None, AnyValue, required = false),
-    ModelField("valinnainen", null, DataType.Boolean, None, AnyValue, required = false))
+    ModelField("valinnainen", null, DataType.Boolean, Some("false"), AnyValue, required = false))
 
   val suoritusModel = Model("Arvosana", "Arvosanatiedot", fields.map(t => (t.name, t)).toMap)
 

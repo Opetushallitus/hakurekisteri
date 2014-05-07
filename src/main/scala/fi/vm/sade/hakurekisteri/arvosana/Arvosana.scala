@@ -27,6 +27,7 @@ sealed abstract class Arvio(val arvosana:String)
 
 object Arvio {
 
+  val asteikot = Seq(ASTEIKKO_4_10)
   object NA extends Arvio("NA")
 
   val ASTEIKKO_4_10 = "4-10"

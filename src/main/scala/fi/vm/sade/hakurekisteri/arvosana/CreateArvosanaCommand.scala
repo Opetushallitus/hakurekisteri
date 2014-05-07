@@ -25,8 +25,8 @@ class CreateArvosanaCommand extends HakurekisteriCommand[Arvosana] {
 
 
 
-  val arvio: Field[String] = asType[String]("arvosana.arvio").notBlank
-  val asteikko: Field[String] = asType[String]("arvosana.asteikko").notBlank
+  val arvio: Field[String] = asType[String]("arvio.arvosana").notBlank
+  val asteikko: Field[String] = asType[String]("arvio.asteikko").required.allowableValues(Arvio.asteikot:_*)
   val suoritus: Field[UUID] = asType[UUID]("suoritus").required
   val aine: Field[String] = asType[String]("aine").notBlank
   val lisatieto: Field[String] = asType[String]("lisatieto").optional
