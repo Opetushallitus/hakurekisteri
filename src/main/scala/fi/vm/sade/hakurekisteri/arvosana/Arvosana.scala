@@ -27,10 +27,10 @@ sealed abstract class Arvio(val arvosana:String)
 
 object Arvio {
 
-  val asteikot = Seq(ASTEIKKO_4_10)
-  object NA extends Arvio("NA")
-
   val ASTEIKKO_4_10 = "4-10"
+  val asteikot = Seq(ASTEIKKO_4_10)
+
+  object NA extends Arvio("NA")
 
   def apply(arvosana:String, asteikko:String):Arvio = asteikko match {
     case ASTEIKKO_4_10 => Arvio410(arvosana)
