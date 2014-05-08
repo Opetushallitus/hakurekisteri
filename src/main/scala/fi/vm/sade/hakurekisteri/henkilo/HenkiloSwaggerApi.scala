@@ -9,20 +9,24 @@ trait HenkiloSwaggerApi
     { this: HakurekisteriResource[Henkilo, CreateHenkiloCommand] =>
 
   override protected val applicationName = Some("henkilot")
-  protected val applicationDescription = "Henkilötietojen rajapinta."
+  protected val applicationDescription = "Henkilötietojen rajapinta"
 
   val query = (apiOperation[Seq[Henkilo]]("henkilot")
-    summary "Näytä kaikki henkilötiedot"
-    notes "Näyttää kaikki henkilötiedot. Voit myös hakea oid-parametrillä."
-    parameter queryParam[Option[String]]("oid").description("haetun henkilon oid")
+    .summary("näyttää kaikki henkilötiedot")
+    .notes("Näyttää kaikki henkilötiedot. Voit myös hakea oid-parametrillä.")
+    .parameter(queryParam[Option[String]]("oid").description("haetun henkilon oid"))
   )
 
   val create = apiOperation[Henkilo]("lisääHenkilo")
-    .parameter(bodyParam[Henkilo]("lisääHenkilo").description("Uusi henkilö").required)
     .summary("luo henkilön ja palauttaa sen tiedot")
+    .parameter(bodyParam[Henkilo]("henkilo").description("uusi henkilö").required)
 
-  val update = apiOperation[Henkilo]("päivitäHenkilöä") // parameter pathParam[UUID]("id").description("päivitettävän henkilön id")
+  val update = apiOperation[Henkilo]("päivitäHenkilö")
+    .summary("päivittää olemassa olevaa henkilöä ja palauttaa sen tiedot")
+    .parameter(pathParam[String]("id").description("henkilön uuid").required)
+    .parameter(bodyParam[Henkilo]("henkilo").description("päivitettävä henkilö").required)
 
   val read = apiOperation[Henkilo]("haeHenkilo")
-    .parameter(pathParam[String]("id").description("henkilön uuid"))
+    .summary("hakee henkilön tiedot")
+    .parameter(pathParam[String]("id").description("henkilön uuid").required)
 }

@@ -10,7 +10,7 @@ import java.util.UUID
 trait ArvosanaSwaggerApi  { this: HakurekisteriResource[Arvosana, CreateArvosanaCommand] =>
 
   override protected val applicationName = Some("arvosanat")
-  protected val applicationDescription = "Arvosanojen rajapinta."
+  protected val applicationDescription = "Arvosanojen rajapinta"
 
   val arvioFields = Seq(ModelField("arvosana", "arvosana", DataType.String),
     ModelField("asteikko", "arvosanan asteikko", DataType.String, Some(Arvio.ASTEIKKO_4_10), AllowableValues(Arvio.asteikot.toList)))
@@ -30,19 +30,23 @@ trait ArvosanaSwaggerApi  { this: HakurekisteriResource[Arvosana, CreateArvosana
 
   registerModel(arvosanaModel)
 
-  val query = (apiOperation[Arvosana]("haeArvosanat")
-    summary "Näytä kaikki arvosanat"
-    notes "Näyttää kaikki arvosanat. Voit myös hakea suorituksella."
-    parameter queryParam[Option[String]]("suoritus").description("suorituksen uuid"))
+  val query = apiOperation[Arvosana]("haeArvosanat")
+    .summary("näyttää kaikki arvosanat")
+    .notes("Näyttää kaikki arvosanat. Voit myös hakea suorituksella.")
+    .parameter(queryParam[Option[String]]("suoritus").description("suorituksen uuid"))
 
   val create = apiOperation[Arvosana]("lisääArvosana")
-    .parameter(bodyParam[Arvosana]("uusiArvosana").description("Uusi arvosana").required)
     .summary("luo arvosanan ja palauttaa sen tiedot")
+    .parameter(bodyParam[Arvosana]("arvosana").description("uusi arvosana").required)
 
-  val update =  apiOperation[Arvosana]("päivitäArvosanaa")
+  val update = apiOperation[Arvosana]("päivitäArvosana")
+    .summary("päivittää olemassa olevaa arvosanaa ja palauttaa sen tiedot")
+    .parameter(pathParam[String]("id").description("arvosanan uuid").required)
+    .parameter(bodyParam[Arvosana]("arvosana").description("päivitettävä arvosana").required)
 
   val read = apiOperation[Arvosana]("haeArvosana")
-    .parameter(pathParam[String]("id").description("arvosanan uuid"))
+    .summary("hakee arvosanan tiedot")
+    .parameter(pathParam[String]("id").description("arvosanan uuid").required)
 
 }
 

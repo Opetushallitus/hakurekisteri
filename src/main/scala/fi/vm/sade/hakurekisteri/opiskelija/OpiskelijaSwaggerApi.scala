@@ -6,12 +6,13 @@ import java.util.Date
 import org.scalatra.swagger.{DataType, ModelField, Model}
 import org.scalatra.swagger.AllowableValues.AnyValue
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
+import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 
 trait OpiskelijaSwaggerApi
     { this: HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand] =>
 
   override protected val applicationName = Some("opiskelijat")
-  protected val applicationDescription = "Opiskelijatietojen rajapinta."
+  protected val applicationDescription = "Opiskelijatietojen rajapinta"
 
   val fields = Seq(ModelField("id", "opiskelijatiedon uuid", DataType.String, None, AnyValue, required = false),
     ModelField("oppilaitosOid", null, DataType.String, None, AnyValue, required = true),
@@ -20,27 +21,31 @@ trait OpiskelijaSwaggerApi
     ModelField("henkiloOid", null, DataType.String, None, AnyValue, required = true),
     ModelField("alkuPaiva", null, DataType.Date, None, AnyValue, required = true),
     ModelField("loppuPaiva", null, DataType.Date, None, AnyValue, required = false))
+
   val opiskelijaModel = Model("Opiskelija", "Opiskelijatiedot", fields.map(t => (t.name, t)).toMap)
 
   registerModel(opiskelijaModel)
 
-  val query = (apiOperation[Seq[Opiskelija]]("opiskelijat")
-    summary "Näytä kaikki opiskelijatiedot"
-    notes "Näyttää kaikki opiskelijatiedot. Voit myös hakea eri parametreillä."
-    parameter queryParam[Option[String]]("henkilo").description("haetun henkilon oid")
-    parameter queryParam[Option[String]]("kausi").description("kausi jonka tietoja haetaan").allowableValues("S", "K")
-    parameter queryParam[Option[String]]("vuosi").description("vuosi jonka tietoja haetaan")
-    parameter queryParam[Option[Date]]("paiva").description("päivä jonka tietoja haetaan")
-    parameter queryParam[Option[String]]("oppilaitosOid").description("haetun oppilaitoksen oid")
-    parameter queryParam[Option[String]]("luokka").description("haetun luokan nimi")
-  )
+  val query = apiOperation[Seq[Opiskelija]]("opiskelijat")
+    .summary("näyttää kaikki opiskelijatiedot")
+    .notes("Näyttää kaikki opiskelijatiedot. Voit myös hakea eri parametreillä.")
+    .parameter(queryParam[Option[String]]("henkilo").description("haetun henkilon oid"))
+    .parameter(queryParam[Option[String]]("kausi").description("kausi jonka tietoja haetaan").allowableValues("S", "K"))
+    .parameter(queryParam[Option[String]]("vuosi").description("vuosi jonka tietoja haetaan"))
+    .parameter(queryParam[Option[Date]]("paiva").description("päivä jonka tietoja haetaan"))
+    .parameter(queryParam[Option[String]]("oppilaitosOid").description("haetun oppilaitoksen oid"))
+    .parameter(queryParam[Option[String]]("luokka").description("haetun luokan nimi"))
 
   val create = apiOperation[Opiskelija]("lisääOpiskelija")
-    .parameter(bodyParam[Opiskelija]("lisääOpiskelija").description("Uusi opiskelija").required)
     .summary("luo opiskelijan ja palauttaa sen tiedot")
+    .parameter(bodyParam[Opiskelija]("opiskelija").description("uusi opiskelija").required)
 
-  val update = apiOperation[Opiskelija]("päivitäOpiskelijaa") // parameter pathParam[UUID]("id").description("päivitettävän opiskelijan id")
+  val update = apiOperation[Opiskelija]("päivitäOpiskelijaa")
+    .summary("päivittää olemassa olevaa opiskelijaa ja palauttaa sen tiedot")
+    .parameter(pathParam[String]("id").description("opiskelijan uuid").required)
+    .parameter(bodyParam[Opiskelija]("opiskelija").description("päivitettävä opiskelija").required)
 
   val read = apiOperation[Opiskelija]("haeOpiskelija")
-    .parameter(pathParam[String]("id").description("opiskelijan uuid"))
+    .summary("hakee opiskelijan tiedot")
+    .parameter(pathParam[String]("id").description("opiskelijan uuid").required)
 }

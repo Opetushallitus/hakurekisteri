@@ -11,7 +11,7 @@ import java.util.UUID
 trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus, CreateSuoritusCommand] =>
 
   override protected val applicationName = Some("suoritukset")
-  protected val applicationDescription = "Suoritusrekisterin rajapinta."
+  protected val applicationDescription = "Suoritusrekisterin rajapinta"
 
   val fields = Seq(ModelField("id", "suorituksen uuid", DataType.String, None, AnyValue, required = false),
     ModelField("tila", null, DataType.String, None, AnyValue, required = true),
@@ -26,21 +26,25 @@ trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus, CreateSuoritus
 
   registerModel(suoritusModel)
 
-  val query = (apiOperation[Suoritus]("haeSuoritukset")
-    summary "Näytä kaikki suoritukset"
-    notes "Näyttää kaikki suoritukset. Voit myös hakea eri parametreillä."
-    parameter queryParam[Option[String]]("henkilo").description("suorittaneen henkilon oid")
-    parameter queryParam[Option[String]]("kausi").description("suorituksen päättymisen kausi").allowableValues("S", "K")
-    parameter queryParam[Option[String]]("vuosi").description("suorituksen päättymisen vuosi"))
+  val query = apiOperation[Suoritus]("haeSuoritukset")
+    .summary("näyttää kaikki suoritukset")
+    .notes("Näyttää kaikki suoritukset. Voit myös hakea eri parametreillä.")
+    .parameter(queryParam[Option[String]]("henkilo").description("suorittaneen henkilon oid"))
+    .parameter(queryParam[Option[String]]("kausi").description("suorituksen päättymisen kausi").allowableValues("S", "K"))
+    .parameter(queryParam[Option[String]]("vuosi").description("suorituksen päättymisen vuosi"))
 
   val create = apiOperation[Suoritus]("lisääSuoritus")
-    .parameter(bodyParam[Suoritus]("uusiSuoritus").description("Uusi suoritus").required)
     .summary("luo suorituksen ja palauttaa sen tiedot")
+    .parameter(bodyParam[Suoritus]("suoritus").description("uusi suoritus").required)
 
   val update =  apiOperation[Suoritus]("päivitäSuoritusta")
+    .summary("päivittää olemassa olevaa suoritusta ja palauttaa sen tiedot")
+    .parameter(pathParam[String]("id").description("suorituksen uuid").required)
+    .parameter(bodyParam[Suoritus]("suoritus").description("päivitettävä suoritus").required)
 
   val read = apiOperation[Suoritus]("haeSuoritus")
-   .parameter(pathParam[String]("id").description("suorituksen uuid"))
+    .summary("hakee suorituksen tiedot")
+    .parameter(pathParam[String]("id").description("suorituksen uuid").required)
 
 }
 
