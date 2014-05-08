@@ -59,7 +59,7 @@ trait HakijaSwaggerApi extends SwaggerSupport {
     ModelField("sukupuoli", null, DataType.String, None, AnyValue, required = true),
     ModelField("aidinkieli", null, DataType.String, None, AnyValue, required = true),
     ModelField("koulutusmarkkinointilupa", null, DataType.Boolean, None, AnyValue, required = true),
-    ModelField("hakemus", null, DataType("Hakemus"), None, AnyValue, required = true))
+    ModelField("hakemus", null, DataType("XMLHakemus"), None, AnyValue, required = true))
 
   registerModel(Model("XMLHakija", "Hakija", hakijaFields map { t => (t.name, t) } toMap))
 
