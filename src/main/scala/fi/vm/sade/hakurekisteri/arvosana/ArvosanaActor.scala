@@ -15,7 +15,8 @@ trait ArvosanaRepository extends JournaledRepository[Arvosana] {
 
 trait ArvosanaService extends ResourceService[Arvosana] { this: Repository[Arvosana] =>
   override val matcher: PartialFunction[Query[Arvosana], (Arvosana with Identified) => Boolean] = {
-    case ArvosanaQuery(suoritus) => (a) => a.suoritus == suoritus
+    case ArvosanaQuery(None) => (a) => true
+    case ArvosanaQuery(Some(suoritus)) => (a) => a.suoritus == suoritus
   }
 }
 
