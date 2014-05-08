@@ -5,6 +5,7 @@ import scala.Some
 import java.util.Date
 import org.scalatra.swagger.{DataType, ModelField, Model}
 import org.scalatra.swagger.AllowableValues.AnyValue
+import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 
 trait OpiskelijaSwaggerApi
     { this: HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand] =>
@@ -39,4 +40,7 @@ trait OpiskelijaSwaggerApi
     .summary("luo opiskelijan ja palauttaa sen tiedot")
 
   val update = apiOperation[Opiskelija]("päivitäOpiskelijaa") // parameter pathParam[UUID]("id").description("päivitettävän opiskelijan id")
+
+  val read = apiOperation[Opiskelija]("haeOpiskelija")
+    .parameter(pathParam[String]("id").description("opiskelijan uuid"))
 }

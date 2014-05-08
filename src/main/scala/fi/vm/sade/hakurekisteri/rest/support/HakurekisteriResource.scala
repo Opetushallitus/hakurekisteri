@@ -32,6 +32,7 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
   val create:OperationBuilder
   val update:OperationBuilder
   val query:OperationBuilder
+  val read:OperationBuilder
 
   post("/", operation(create)) {
     println("creating" + request.body)
@@ -45,7 +46,7 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
     }.get
   }
 
-  get("/:id") {
+  get("/:id", operation(read)) {
     Try(UUID.fromString(params("id"))).map(readResource(_ ,getKnownOrganizations(currentUser))).
       recover {
       case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")

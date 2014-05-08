@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.henkilo
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
 import scala.Some
 import java.util.{UUID, Date}
+import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 
 trait HenkiloSwaggerApi
     { this: HakurekisteriResource[Henkilo, CreateHenkiloCommand] =>
@@ -21,4 +22,7 @@ trait HenkiloSwaggerApi
     .summary("luo henkilön ja palauttaa sen tiedot")
 
   val update = apiOperation[Henkilo]("päivitäHenkilöä") // parameter pathParam[UUID]("id").description("päivitettävän henkilön id")
+
+  val read = apiOperation[Henkilo]("haeHenkilo")
+    .parameter(pathParam[String]("id").description("henkilön uuid"))
 }

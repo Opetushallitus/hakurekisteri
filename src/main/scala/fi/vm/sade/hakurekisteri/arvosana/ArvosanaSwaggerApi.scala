@@ -41,7 +41,9 @@ trait ArvosanaSwaggerApi  { this: HakurekisteriResource[Arvosana, CreateArvosana
 
   val update =  apiOperation[Arvosana]("päivitäArvosanaa")
 
-   // parameter pathParam[UUID]("id").description("päivitettävän arvosanan id")
+  val read = apiOperation[Arvosana]("haeArvosana")
+    .parameter(pathParam[String]("id").description("arvosanan uuid"))
+
 }
 
 
