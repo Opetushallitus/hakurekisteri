@@ -47,7 +47,7 @@ object HakijaQuery {
 
 class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
-  override protected def applicationDescription: String = "Hakeneiden ja valittujen rajapinta."
+  override protected def applicationDescription: String = "Hakijatietojen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
 
   options("/*") {
