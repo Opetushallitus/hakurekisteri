@@ -8,7 +8,6 @@ import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 trait HakijaSwaggerApi extends SwaggerSupport {
   override protected val applicationName = Some("hakijat")
 
-  /*
   val hakutoiveFields = Seq(ModelField("hakujno", null, DataType.Int, None, AnyValue, required = true),
     ModelField("oppilaitos", null, DataType.String, None, AnyValue, required = true),
     ModelField("opetuspiste", null, DataType.String, None, AnyValue, required = false),
@@ -23,6 +22,8 @@ trait HakijaSwaggerApi extends SwaggerSupport {
     ModelField("terveys", null, DataType.String, None, AnyValue, required = false),
     ModelField("aiempiperuminen", null, DataType.Boolean, None, AnyValue, required = false),
     ModelField("kaksoistutkinto", null, DataType.Boolean, None, AnyValue, required = false))
+
+  registerModel(Model("Hakutoive", "Hakutoive", hakutoiveFields map { t => (t.name, t) } toMap))
 
   val hakemusFields = Seq(ModelField("vuosi", null, DataType.String, None, AnyValue, required = true),
     ModelField("kausi", null, DataType.String, None, AnyValue, required = true),
@@ -39,7 +40,9 @@ trait HakijaSwaggerApi extends SwaggerSupport {
     ModelField("lisapistekoulutus", null, DataType.String, None, AnyValue, required = false),
     ModelField("yleinenkoulumenestys", null, DataType("double"), None, AnyValue, required = false),
     ModelField("painotettavataineet", null, DataType("double"), None, AnyValue, required = false),
-    ModelField("hakutoiveet", null, DataType.List, None, AnyValue, required = true))
+    ModelField("hakutoiveet", null, DataType.GenArray(DataType("Hakutoive")), None, AnyValue, required = true))
+
+  registerModel(Model("Hakemus", "Hakemus", hakemusFields map { t => (t.name, t) } toMap))
 
   val hakijaFields = Seq(ModelField("hetu", null, DataType.String, None, AnyValue, required = true),
     ModelField("oppijanumero", null, DataType.String, None, AnyValue, required = true),
@@ -58,21 +61,20 @@ trait HakijaSwaggerApi extends SwaggerSupport {
     ModelField("koulutusmarkkinointilupa", null, DataType.Boolean, None, AnyValue, required = true),
     ModelField("hakemus", null, DataType("Hakemus"), None, AnyValue, required = true))
 
-  val hakijatFields = Seq(ModelField("hakijat", null, DataType.List, None, AnyValue, required = true))
-
-  registerModel(Model("Hakutoive", "Hakutoive", hakutoiveFields map { t => (t.name, t) } toMap))
-  registerModel(Model("Hakemus", "Hakemus", hakemusFields map { t => (t.name, t) } toMap))
   registerModel(Model("Hakija", "Hakija", hakijaFields map { t => (t.name, t) } toMap))
-  registerModel(Model("Hakijat", "Hakijat", hakijatFields map { t => (t.name, t) } toMap))
-  */
 
-  val query: OperationBuilder = (apiOperation[XMLHakijat]("haeHakijat")
-    summary "Hae hakeneet/valitut"
-    notes "Hakee listauksen hakeneista/valituista parametrien mukaisesti."
-    parameter queryParam[Option[String]]("haku").description("haun oid").optional
-    parameter queryParam[Option[String]]("organisaatio").description("koulutuksen tarjoajan tai sen yläorganisaation oid").optional
-    parameter queryParam[Option[String]]("hakukohdekoodi").description("hakukohdekoodi").optional
-    parameter queryParam[String]("hakuehto").description("hakuehto").allowableValues("Kaikki", "Hyväksytyt", "Vastaanottaneet").required
-    parameter queryParam[String]("tyyppi").description("tietotyyppi").allowableValues("Json", "Xml", "Excel").required
-    parameter queryParam[Option[Boolean]]("tiedosto").description("palautetaanko vastaus tiedostona").allowableValues(true, false).optional)
+  val hakijatFields = Seq(ModelField("hakijat", null, DataType.GenArray(DataType("Hakija")), None, AnyValue, required = true))
+
+  registerModel(Model("Hakijat", "Hakijat", hakijatFields map { t => (t.name, t) } toMap))
+  type Hakijat = XMLHakijat
+
+  val query: OperationBuilder = apiOperation[Hakijat]("haeHakijat")
+    .summary("näyttää kaikki hakijat")
+    .notes("Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti.")
+    .parameter(queryParam[Option[String]]("haku").description("haun oid").optional)
+    .parameter(queryParam[Option[String]]("organisaatio").description("koulutuksen tarjoajan tai sen yläorganisaation oid").optional)
+    .parameter(queryParam[Option[String]]("hakukohdekoodi").description("hakukohdekoodi").optional)
+    .parameter(queryParam[String]("hakuehto").description("hakuehto").allowableValues(Hakuehto.values.toList).required)
+    .parameter(queryParam[String]("tyyppi").description("tietotyyppi").allowableValues(Tyyppi.values.toList).required)
+    .parameter(queryParam[Option[Boolean]]("tiedosto").description("palautetaanko vastaus tiedostona").optional)
 }
