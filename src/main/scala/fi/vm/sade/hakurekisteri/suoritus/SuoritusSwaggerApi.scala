@@ -37,7 +37,7 @@ trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus, CreateSuoritus
     .summary("luo suorituksen ja palauttaa sen tiedot")
     .parameter(bodyParam[Suoritus]("suoritus").description("uusi suoritus").required)
 
-  val update =  apiOperation[Suoritus]("päivitäSuoritusta")
+  val update =  apiOperation[Suoritus]("päivitäSuoritus")
     .summary("päivittää olemassa olevaa suoritusta ja palauttaa sen tiedot")
     .parameter(pathParam[String]("id").description("suorituksen uuid").required)
     .parameter(bodyParam[Suoritus]("suoritus").description("päivitettävä suoritus").required)

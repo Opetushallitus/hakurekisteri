@@ -37,15 +37,15 @@ trait OpiskelijaSwaggerApi
     .parameter(queryParam[Option[String]]("luokka").description("haetun luokan nimi"))
 
   val create = apiOperation[Opiskelija]("lisääOpiskelija")
-    .summary("luo opiskelijan ja palauttaa sen tiedot")
-    .parameter(bodyParam[Opiskelija]("opiskelija").description("uusi opiskelija").required)
+    .summary("luo opiskelijatiedon ja palauttaa sen tiedot")
+    .parameter(bodyParam[Opiskelija]("opiskelija").description("uusi opiskelijatieto").required)
 
-  val update = apiOperation[Opiskelija]("päivitäOpiskelijaa")
-    .summary("päivittää olemassa olevaa opiskelijaa ja palauttaa sen tiedot")
+  val update = apiOperation[Opiskelija]("päivitäOpiskelija")
+    .summary("päivittää olemassa olevaa opiskelijatietoa ja palauttaa sen tiedot")
     .parameter(pathParam[String]("id").description("opiskelijan uuid").required)
-    .parameter(bodyParam[Opiskelija]("opiskelija").description("päivitettävä opiskelija").required)
+    .parameter(bodyParam[Opiskelija]("opiskelija").description("päivitettävä opiskelijatieto").required)
 
   val read = apiOperation[Opiskelija]("haeOpiskelija")
-    .summary("hakee opiskelijan tiedot")
-    .parameter(pathParam[String]("id").description("opiskelijan uuid").required)
+    .summary("hakee opiskelijatiedon tiedot")
+    .parameter(pathParam[String]("id").description("opiskelijatiedon uuid").required)
 }

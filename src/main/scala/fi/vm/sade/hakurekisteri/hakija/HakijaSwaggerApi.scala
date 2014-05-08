@@ -23,7 +23,7 @@ trait HakijaSwaggerApi extends SwaggerSupport {
     ModelField("aiempiperuminen", null, DataType.Boolean, None, AnyValue, required = false),
     ModelField("kaksoistutkinto", null, DataType.Boolean, None, AnyValue, required = false))
 
-  registerModel(Model("Hakutoive", "Hakutoive", hakutoiveFields map { t => (t.name, t) } toMap))
+  registerModel(Model("XMLHakutoive", "Hakutoive", hakutoiveFields map { t => (t.name, t) } toMap))
 
   val hakemusFields = Seq(ModelField("vuosi", null, DataType.String, None, AnyValue, required = true),
     ModelField("kausi", null, DataType.String, None, AnyValue, required = true),
@@ -40,9 +40,9 @@ trait HakijaSwaggerApi extends SwaggerSupport {
     ModelField("lisapistekoulutus", null, DataType.String, None, AnyValue, required = false),
     ModelField("yleinenkoulumenestys", null, DataType("double"), None, AnyValue, required = false),
     ModelField("painotettavataineet", null, DataType("double"), None, AnyValue, required = false),
-    ModelField("hakutoiveet", null, DataType.GenArray(DataType("Hakutoive")), None, AnyValue, required = true))
+    ModelField("hakutoiveet", null, DataType.GenList(DataType("XMLHakutoive")), None, AnyValue, required = true))
 
-  registerModel(Model("Hakemus", "Hakemus", hakemusFields map { t => (t.name, t) } toMap))
+  registerModel(Model("XMLHakemus", "Hakemus", hakemusFields map { t => (t.name, t) } toMap))
 
   val hakijaFields = Seq(ModelField("hetu", null, DataType.String, None, AnyValue, required = true),
     ModelField("oppijanumero", null, DataType.String, None, AnyValue, required = true),
@@ -61,9 +61,9 @@ trait HakijaSwaggerApi extends SwaggerSupport {
     ModelField("koulutusmarkkinointilupa", null, DataType.Boolean, None, AnyValue, required = true),
     ModelField("hakemus", null, DataType("Hakemus"), None, AnyValue, required = true))
 
-  registerModel(Model("Hakija", "Hakija", hakijaFields map { t => (t.name, t) } toMap))
+  registerModel(Model("XMLHakija", "Hakija", hakijaFields map { t => (t.name, t) } toMap))
 
-  val hakijatFields = Seq(ModelField("hakijat", null, DataType.GenArray(DataType("Hakija")), None, AnyValue, required = true))
+  val hakijatFields = Seq(ModelField("hakijat", null, DataType.GenList(DataType("XMLHakija")), None, AnyValue, required = true))
 
   registerModel(Model("XMLHakijat", "Hakijat", hakijatFields map { t => (t.name, t) } toMap))
 
