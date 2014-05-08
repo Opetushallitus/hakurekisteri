@@ -65,10 +65,9 @@ trait HakijaSwaggerApi extends SwaggerSupport {
 
   val hakijatFields = Seq(ModelField("hakijat", null, DataType.GenArray(DataType("Hakija")), None, AnyValue, required = true))
 
-  registerModel(Model("Hakijat", "Hakijat", hakijatFields map { t => (t.name, t) } toMap))
-  type Hakijat = XMLHakijat
+  registerModel(Model("XMLHakijat", "Hakijat", hakijatFields map { t => (t.name, t) } toMap))
 
-  val query: OperationBuilder = apiOperation[Hakijat]("haeHakijat")
+  val query: OperationBuilder = apiOperation[XMLHakijat]("haeHakijat")
     .summary("näyttää kaikki hakijat")
     .notes("Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti.")
     .parameter(queryParam[Option[String]]("haku").description("haun oid").optional)
