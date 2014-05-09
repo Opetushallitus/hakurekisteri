@@ -9,7 +9,7 @@ div(class="alert alert-{{message.type}}" ng-show="messages" ng-repeat="message i
 
 script(type="text/ng-template" id="organisaatioTemplate.html")
   a
-    span(bind-html-unsafe="(match.model.oppilaitosKoodi + ' ' + (match.model.nimi.fi ? match.model.nimi.fi : match.model.nimi.sv)) | typeaheadHighlight:query")
+    span(bind-html-unsafe="(match.model.oppilaitosKoodi + ' ' + (match.model.nimi.fi ? match.model.nimi.fi : (match.model.nimi.sv ? match.model.nimi.sv : match.model.nimi.en))) | typeaheadHighlight:query")
 
 aside(class="row")
   div(class="col-sm-8")
@@ -24,11 +24,15 @@ aside(class="row")
         label(for="organisaatioTerm" class="col-sm-2 control-label" oph-msg="suoritusrekisteri.opiskelijat.oppilaitos") Oppilaitos
         div(class="col-sm-5")
           input(id="organisaatioTerm" class="form-control" autocomplete="off" ng-model="organisaatioTerm" type="search" placeholder="Hae oppilaitoksen numerolla tai nimellä" typeahead="organisaatio as organisaatio.oppilaitosKoodi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingOppilaitos" typeahead-wait-ms="500" typeahead-template-url="organisaatioTemplate.html")
+          span(ng-show="organisaatioTerm") {{organisaatioTerm.oppilaitosKoodi}} {{organisaatioTerm.nimi.fi || organisaatioTerm.nimi.sv || organisaatioTerm.nimi.en}}
 
       div(class="form-group")
         div(class="col-sm-10 col-sm-offset-2")
+          button(class="btn btn-default" type="button")
+            span(oph-msg="suoritusrekisteri.opiskelijat.tyhjenna") Tyhjennä
+            span(class="glyphicon glyphicon-remove")
           button(class="btn btn-primary" type="submit")
-            span Hae
+            span(oph-msg="suoritusrekisteri.opiskelijat.hae") Hae
             span(class="glyphicon glyphicon-search")
 
 table(class="table")
@@ -46,7 +50,9 @@ table(class="table")
       td
         div(ng-repeat="s in row.suoritustiedot") {{s.komo}} {{s.oppilaitos}}
       td
-        a(class="btn bt-default btn-xs" href="#/muokkaa/{{row.henkiloOid}}" oph-msg="suoritusrekisteri.opiskelijat.muokkaa") Muokkaa tietoja
+        a(class="btn bt-default btn-xs" href="#/muokkaa/{{row.henkiloOid}}")
+          span(oph-msg="suoritusrekisteri.opiskelijat.muokkaa") Muokkaa tietoja
+          span(class="glyphicon glyphicon-edit")
     tr(ng-show="loading")
       td(class="loading-td" colspan="4")
         div(class="loading-large")

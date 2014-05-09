@@ -88,5 +88,10 @@ section(class="panel panel-default")
           input(type="text" class="form-control" ng-model="luokkatieto.luokka" required)
 
 aside(class="btn-toolbar")
-  button(class="btn btn-default" ng-click="cancel()" oph-msg="suoritusrekisteri.muokkaa.peruuta") Peruuta
-  button(class="btn btn-primary" ng-click="save()" oph-msg="suoritusrekisteri.muokkaa.tallenna") Tallenna
+  button(class="btn btn-default" ng-click="cancel()")
+    span(oph-msg="suoritusrekisteri.muokkaa.peruuta") Peruuta
+    span(class="glyphicon glyphicon-remove")
+  button(class="btn btn-primary" ng-click="save()")
+    span(oph-msg="suoritusrekisteri.muokkaa.tallenna") Tallenna
+    span(class="glyphicon glyphicon-saved")
+
