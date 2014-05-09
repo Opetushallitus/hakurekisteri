@@ -51,8 +51,7 @@ function getOphMsg(key, def) {
     else key;
 }
 
-// Avoid `console` errors in browsers that lack a console.
-(function() {
+function ensureConsoleMethods() {
     var method;
     var noop = function () {};
     var methods = [
@@ -66,10 +65,12 @@ function getOphMsg(key, def) {
 
     while (length--) {
         method = methods[length];
-
-        // Only stub undefined methods.
-        if (!console[method]) {
-            console[method] = noop;
-        }
+        if (!console[method]) console[method] = noop;
     }
+}
+
+(function() {
+    ensureConsoleMethods();
+
+    if (window.globalInitOphMsg) window.globalInitOphMsg(function() {});
 }());
