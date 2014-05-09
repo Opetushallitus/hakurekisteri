@@ -208,10 +208,10 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         back();
     };
     $scope.addSuoritus = function() {
-        $scope.suoritukset.push({});
+        $scope.suoritukset.push(new Suoritukset({}));
     };
     $scope.addLuokkatieto = function() {
-        $scope.luokkatiedot.push({});
+        $scope.luokkatiedot.push(new Opiskelijat({}));
     };
     $scope.removeMessage = function(message) {
         var index = $scope.messages.indexOf(message);
