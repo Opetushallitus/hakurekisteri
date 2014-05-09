@@ -49,12 +49,8 @@ body #raamit-header .header-content {
     width: 32px;
 }
 
-.suoritus-form .form-group, .luokkatieto-form .form-group {
-    max-width: 20%;
-}
-
 .entrylist li {
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 
 .nappulat {
