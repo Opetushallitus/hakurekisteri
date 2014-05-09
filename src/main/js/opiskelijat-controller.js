@@ -79,44 +79,21 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
         $scope.henkilo = null;
         $scope.organisaatio = null;
 
-        if ($scope.henkiloTerm) {
-            var henkiloSearchUrl = null;
-            if ($scope.henkiloTerm.trim().match(/^\d{6}[+-AB]\d{3}[0-9a-zA-Z]$/)) {
-                henkiloSearchUrl = henkiloServiceUrl + '/resources/s2s/byHetu/' + encodeURIComponent($scope.henkiloTerm.trim().toUpperCase());
-            } else if ($scope.henkiloTerm.trim().match(/^[0-9.]{14,30}$/)) {
-                henkiloSearchUrl = henkiloServiceUrl + '/resources/s2s/' + encodeURIComponent($scope.henkiloTerm.trim());
-            } else {
-                $scope.loading = false;
-                $scope.messages.push({
-                    type: "danger",
-                    message: "Henkilön hakuehto ei ole hetu eikä oid.",
-                    description: "Korjaa hakuehto."
-                });
-                return;
-            }
-            if (henkiloSearchUrl) {
-                $http.get(henkiloSearchUrl, {cache: true})
-                    .success(function (henkilo) {
-                        $scope.henkilo = henkilo;
-                    });
-            }
-        }
-
         function search(query) {
             if (query.oppilaitosOid) {
                 Opiskelijat.query(query, function(opiskelijat) {
                     if (Array.isArray(opiskelijat)) {
                         showCurrentRows(opiskelijat
-                            .filter(function(o) {
-                                return (!query.henkilo || (query.henkilo && o.henkiloOid === query.henkilo));
-                            })
-                            .map(function(o) {
-                                return o.henkiloOid;
-                            })
-                            .getUnique()
-                            .map(function(o) {
-                                return { henkiloOid: o };
-                            })
+                                .filter(function(o) {
+                                    return (!query.henkilo || (query.henkilo && o.henkiloOid === query.henkilo));
+                                })
+                                .map(function(o) {
+                                    return o.henkiloOid;
+                                })
+                                .getUnique()
+                                .map(function(o) {
+                                    return { henkiloOid: o };
+                                })
                         );
                     }
                     resetPageNumbers();
@@ -128,14 +105,36 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
                 showCurrentRows([{henkiloOid: query.henkilo}]);
                 resetPageNumbers();
                 $scope.loading = false;
-            } else {
-                $scope.loading = false;
             }
         }
-        search({
-            henkilo: ($scope.henkilo ? $scope.henkilo.oidHenkilo : null),
-            oppilaitosOid: ($scope.organisaatioTerm ? $scope.organisaatioTerm.oid : null)
-        });
+
+        if ($scope.henkiloTerm) {
+            var henkiloSearchUrl = null;
+            if ($scope.henkiloTerm.trim().match(/^\d{6}[+-AB]\d{3}[0-9a-zA-Z]$/)) {
+                henkiloSearchUrl = henkiloServiceUrl + '/resources/s2s/byHetu/' + encodeURIComponent($scope.henkiloTerm.trim().toUpperCase());
+            } else if ($scope.henkiloTerm.trim().match(/^[0-9.]{14,30}$/)) {
+                henkiloSearchUrl = henkiloServiceUrl + '/resources/s2s/' + encodeURIComponent($scope.henkiloTerm.trim());
+            } else {
+                $scope.messages.push({
+                    type: "danger",
+                    message: "Henkilön hakuehto ei ole hetu eikä oid.",
+                    description: "Korjaa hakuehto."
+                });
+                $scope.loading = false;
+                return;
+            }
+            if (henkiloSearchUrl) {
+                $http.get(henkiloSearchUrl, {cache: true})
+                    .success(function (henkilo) {
+                        $scope.henkilo = henkilo;
+                        search({ henkilo: henkilo.oidHenkilo });
+                    });
+            }
+        } else if ($scope.organisaatioTerm) {
+            search({ oppilaitosOid: $scope.organisaatioTerm.oid });
+        } else {
+            $scope.loading = false;
+        }
     };
 
     function showCurrentRows(allRows) {
