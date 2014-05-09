@@ -28,7 +28,7 @@ aside(class="row")
 
       div(class="form-group")
         div(class="col-sm-10 col-sm-offset-2")
-          button(class="btn btn-default" type="button")
+          button(class="btn btn-default" type="button" ng-click="reset()")
             span(oph-msg="suoritusrekisteri.opiskelijat.tyhjenna") Tyhjennä
             span(class="glyphicon glyphicon-remove")
           button(class="btn btn-primary" type="submit")
@@ -50,7 +50,7 @@ table(class="table")
       td
         div(ng-repeat="s in row.suoritustiedot") {{s.komo}} {{s.oppilaitos}}
       td
-        a(class="btn bt-default btn-xs" href="#/muokkaa/{{row.henkiloOid}}")
+        a(class="btn bt-default btn-xs pull-right" href="#/muokkaa/{{row.henkiloOid}}")
           span(oph-msg="suoritusrekisteri.opiskelijat.muokkaa") Muokkaa tietoja
           span(class="glyphicon glyphicon-edit")
     tr(ng-show="loading")

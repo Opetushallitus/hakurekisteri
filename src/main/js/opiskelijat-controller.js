@@ -13,7 +13,7 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
     $scope.henkiloTerm = $routeParams.henkilo;
     $scope.organisaatioTerm = { oppilaitosKoodi: ($routeParams.oppilaitos ? $routeParams.oppilaitos : '') };
 
-    $rootScope.addToMurupolku({text: "Opiskelijoiden haku"}, true);
+    $rootScope.addToMurupolku({text: getOphMsg("suoritusrekisteri.opiskelijat.muru", "Opiskelijoiden haku")}, true);
 
     function getMyRoles() {
         $http.get('/cas/myroles', {cache: true})
@@ -38,6 +38,9 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
         else return [];
     };
 
+    $scope.reset = function() {
+        $location.path("/opiskelijat");
+    };
     $scope.search = function() {
         $location.path("/opiskelijat").search({
             henkilo: ($scope.henkiloTerm ? $scope.henkiloTerm : ''),
@@ -91,8 +94,8 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
             } else {
                 $scope.messages.push({
                     type: "danger",
-                    message: "Henkilön hakuehto ei ole hetu eikä oid.",
-                    description: "Korjaa hakuehto."
+                    message: getOphMsg("suoritusrekisteri.opiskelijat.henkilonhakuehtoeihetu", "Henkilön hakuehto ei ole hetu eikä oid."),
+                    description: getOphMsg("suoritusrekisteri.opiskelijat.henkilokorjaa", "Korjaa hakuehto.")
                 });
                 stopLoading();
                 return;
@@ -118,15 +121,15 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
                 }, function() { organisaatioTerm.resolve() });
             }
         }
-        var allTermsReady = $q.all(searchTerms.map(function(d) { return d.promise; }));
-        allTermsReady.then(function() {
-            if ($scope.henkilo || ($scope.organisaatioTerm && $scope.organisaatioTerm.oid))
+        if (searchTerms.length > 0) {
+            var allTermsReady = $q.all(searchTerms.map(function(d) { return d.promise; }));
+            allTermsReady.then(function() {
                 doSearch({
                     henkilo: ($scope.henkilo ? $scope.henkilo.oidHenkilo : null),
                     oppilaitosOid: ($scope.organisaatioTerm ? $scope.organisaatioTerm.oid : null)
                 });
-            else stopLoading();
-        });
+            });
+        } else stopLoading();
 
     };
 
@@ -214,8 +217,8 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
     function cannotAuthenticate() {
         $scope.messages.push({
             type: "danger",
-            message: "Henkilöpalveluun ei juuri nyt saada yhteyttä.",
-            description: "Yritä hetken kuluttua uudelleen."
+            message: getOphMsg("suoritusrekisteri.opiskelijat.henkiloeiyhteytta", "Henkilöpalveluun ei juuri nyt saada yhteyttä."),
+            description: getOphMsg("suoritusrekisteri.opiskelijat.henkiloyrita", "Yritä hetken kuluttua uudelleen.")
         })
     }
 

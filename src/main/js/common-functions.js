@@ -3,9 +3,7 @@
 var msgCategory = "suoritusrekisteri";
 
 function getBaseUrl() {
-    if (location.hostname === 'localhost') {
-        return 'https://itest-virkailija.oph.ware.fi';
-    }
+    if (location.hostname === 'localhost') return 'https://itest-virkailija.oph.ware.fi';
     return '';
 }
 
@@ -13,21 +11,28 @@ var henkiloServiceUrl = getBaseUrl() + "/authentication-service";
 var organisaatioServiceUrl = getBaseUrl() + "/organisaatio-service";
 var hakuAppServiceUrl = getBaseUrl() + "/haku-app";
 
-Array.prototype.diff = function(a) {
-    return this.filter(function(i) { return a.indexOf(i) < 0; });
-};
+if (!Array.prototype.diff)
+    Array.prototype.diff = function(a) {
+        return this.filter(function(i) { return a.indexOf(i) < 0; });
+    };
 
-Array.prototype.getUnique = function() {
-    var u = {}, a = [];
-    for(var i = 0, l = this.length; i < l; ++i){
-        if(u.hasOwnProperty(this[i])) {
-            continue;
+if (!Array.prototype.getUnique)
+    Array.prototype.getUnique = function() {
+        var u = {}, a = [];
+        for(var i = 0, l = this.length; i < l; ++i){
+            if(u.hasOwnProperty(this[i])) {
+                continue;
+            }
+            a.push(this[i]);
+            u[this[i]] = 1;
         }
-        a.push(this[i]);
-        u[this[i]] = 1;
-    }
-    return a;
-};
+        return a;
+    };
+
+if (!Array.prototype.last)
+    Array.prototype.last = function() {
+        return this[this.length - 1];
+    };
 
 function getOrganisaatio($http, organisaatioOid, successCallback, errorCallback) {
     $http.get(organisaatioServiceUrl + '/rest/organisaatio/' + encodeURIComponent(organisaatioOid), {cache: true})
@@ -39,6 +44,11 @@ function authenticateToAuthenticationService($http, successCallback, errorCallba
     $http.get(henkiloServiceUrl + '/buildversion.txt?auth')
         .success(successCallback)
         .error(errorCallback);
+}
+
+function getOphMsg(key, def) {
+    if (window.globalGetOphMsg) return window.globalGetOphMsg(key, def);
+    else key;
 }
 
 // Avoid `console` errors in browsers that lack a console.
