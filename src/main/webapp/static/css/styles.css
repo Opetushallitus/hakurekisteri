@@ -49,8 +49,12 @@ body #raamit-header .header-content {
     width: 32px;
 }
 
-.suoritus-form .form-group {
-    max-width: 30%;
+.suoritus-form .form-group, .luokkatieto-form .form-group {
+    max-width: 20%;
+}
+
+.entrylist li {
+    margin-bottom: 5px;
 }
 
 .nappulat {
@@ -86,3 +90,4 @@ body #raamit-header .header-content {
 .pagination a *:hover, .btn *:hover {
     text-decoration: none;
 }
+
