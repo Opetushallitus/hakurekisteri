@@ -29,11 +29,6 @@ if (!Array.prototype.getUnique)
         return a;
     };
 
-if (!Array.prototype.last)
-    Array.prototype.last = function() {
-        return this[this.length - 1];
-    };
-
 function getOrganisaatio($http, organisaatioOid, successCallback, errorCallback) {
     $http.get(organisaatioServiceUrl + '/rest/organisaatio/' + encodeURIComponent(organisaatioOid), {cache: true})
         .success(successCallback)
