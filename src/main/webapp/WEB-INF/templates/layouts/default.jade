@@ -34,8 +34,8 @@ html(ng-app="myApp")
             li(ng-repeat="muru in murupolku")
               a(ng-show="muru.href" href="{{muru.href}}")
                 span(ng-show="muru.icon" class="{{muru.icon}}")
-                span {{muru.text}}
-              span(ng-hide="muru.href") {{muru.text}}
+                span(oph-msg="{{muru.key}}") {{muru.text}}
+              span(ng-hide="muru.href" oph-msg="{{muru.key}}") {{muru.text}}
 
       div(class="row")
         div(class="col-xs-12" ng-view)

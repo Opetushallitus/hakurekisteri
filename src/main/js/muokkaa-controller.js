@@ -22,8 +22,8 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
     $scope.suoritukset = [];
     $scope.luokkatiedot = [];
 
-    $rootScope.addToMurupolku({href: "#/opiskelijat", text: getOphMsg("suoritusrekisteri.muokkaa.muru1", "Opiskelijoiden haku")}, true);
-    $rootScope.addToMurupolku({text: getOphMsg("suoritusrekisteri.muokkaa.muru", "Muokkaa opiskelijan tietoja")}, false);
+    $rootScope.addToMurupolku({href: "#/opiskelijat", key: "suoritusrekisteri.muokkaa.muru1", text: "Opiskelijoiden haku"}, true);
+    $rootScope.addToMurupolku({key: "suoritusrekisteri.muokkaa.muru", text: "Muokkaa opiskelijan tietoja"}, false);
 
     function fetchHenkilotiedot() {
         $http.get(henkiloServiceUrl + '/resources/henkilo/' + encodeURIComponent($scope.henkiloOid), {cache: false})
@@ -124,8 +124,10 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                 if (!obj.oppilaitos || !obj.oppilaitos.match(/^\d{5}$/)) {
                     $scope.messages.push({
                         type: "danger",
-                        message: getOphMsg("suoritusrekisteri.muokkaa.oppilaitoskoodipuuttuu", "Oppilaitoskoodi puuttuu tai se on virheellinen."),
-                        description: getOphMsg("suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi", "Tarkista oppilaitoskoodi ja yritä uudelleen.")
+                        messageKey: "suoritusrekisteri.muokkaa.oppilaitoskoodipuuttuu",
+                        message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
+                        descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi",
+                        description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
                     });
                     deferredValidation.reject("error");
                 } else {
@@ -136,8 +138,10 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                     }, function () {
                         $scope.messages.push({
                             type: "danger",
-                            message: getOphMsg("suoritusrekisteri.muokkaa.oppilaitostaeiloytynyt", "Oppilaitosta ei löytynyt oppilaitoskoodilla: ") + obj.oppilaitos + ".",
-                            description: getOphMsg("suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi", "Tarkista oppilaitoskoodi ja yritä uudelleen.")
+                            messageKey: "suoritusrekisteri.muokkaa.oppilaitostaeiloytynyt",
+                            message: "Oppilaitosta ei löytynyt oppilaitoskoodilla.",
+                            descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi",
+                            description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
                         });
                         deferredValidation.reject("error");
                     });
@@ -157,8 +161,10 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                 }, function () {
                     $scope.messages.push({
                         type: "danger",
-                        message: getOphMsg("suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja", "Virhe tallennettaessa suoritustietoja."),
-                        description: getOphMsg("suoritusrekisteri.muokkaa.virhesuoritusyrita", "Yritä uudelleen.")
+                        messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
+                        message: "Virhe tallennettaessa suoritustietoja.",
+                        descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
+                        description: "Yritä uudelleen."
                     });
                     deferredSave.reject("error saving suoritus: " + suoritus);
                 });
@@ -174,8 +180,10 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                 }, function () {
                     $scope.messages.push({
                         type: "danger",
-                        message: getOphMsg("suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja", "Virhe tallennettaessa luokkatietoja."),
-                        description: getOphMsg("suoritusrekisteri.muokkaa.virheluokkayrita", "Yritä uudelleen.")
+                        messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja",
+                        message: "Virhe tallennettaessa luokkatietoja.",
+                        descriptionKey: "suoritusrekisteri.muokkaa.virheluokkayrita",
+                        description: "Yritä uudelleen."
                     });
                     deferredSave.reject("error saving luokkatieto: " + luokkatieto);
                 });

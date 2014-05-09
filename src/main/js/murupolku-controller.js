@@ -4,7 +4,7 @@ function MurupolkuCtrl($rootScope) {
     function initMurupolku() {
         $rootScope.hideMuru = false;
         $rootScope.murupolku = [];
-        $rootScope.murupolku.push({href: "#/", text: "", icon: "icon-breadcrumb-home"});
+        $rootScope.murupolku.push({href: "#/", icon: "icon-breadcrumb-home"});
     }
 
     $rootScope.addToMurupolku = function(element, reset) {

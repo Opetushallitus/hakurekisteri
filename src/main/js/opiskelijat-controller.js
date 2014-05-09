@@ -13,7 +13,7 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
     $scope.henkiloTerm = $routeParams.henkilo;
     $scope.organisaatioTerm = { oppilaitosKoodi: ($routeParams.oppilaitos ? $routeParams.oppilaitos : '') };
 
-    $rootScope.addToMurupolku({text: getOphMsg("suoritusrekisteri.opiskelijat.muru", "Opiskelijoiden haku")}, true);
+    $rootScope.addToMurupolku({key: "suoritusrekisteri.opiskelijat.muru", text: "Opiskelijoiden haku"}, true);
 
     function getMyRoles() {
         $http.get('/cas/myroles', {cache: true})
@@ -94,8 +94,10 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
             } else {
                 $scope.messages.push({
                     type: "danger",
-                    message: getOphMsg("suoritusrekisteri.opiskelijat.henkilonhakuehtoeihetu", "Henkilön hakuehto ei ole hetu eikä oid."),
-                    description: getOphMsg("suoritusrekisteri.opiskelijat.henkilokorjaa", "Korjaa hakuehto.")
+                    messageKey: "suoritusrekisteri.opiskelijat.henkilonhakuehtoeihetu",
+                    message: "Henkilön hakuehto ei ole hetu eikä oid.",
+                    descriptionKey: "suoritusrekisteri.opiskelijat.henkilokorjaa",
+                    description: "Korjaa hakuehto."
                 });
                 stopLoading();
                 return;
@@ -109,12 +111,10 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
                     .error(function() { henkiloTerm.resolve() });
             }
         }
-        if ($scope.organisaatioTerm) {
+        if ($scope.organisaatioTerm && $scope.organisaatioTerm.oppilaitosKoodi && !$scope.organisaatioTerm.oid) {
             var organisaatioTerm = $q.defer();
             searchTerms.push(organisaatioTerm);
-            if ($scope.organisaatioTerm.oid) {
-                doSearch({ oppilaitosOid: $scope.organisaatioTerm.oid });
-            } else if ($scope.organisaatioTerm.oppilaitosKoodi) {
+            if ($scope.organisaatioTerm.oppilaitosKoodi) {
                 getOrganisaatio($http, $scope.organisaatioTerm.oppilaitosKoodi, function(organisaatio) {
                     $scope.organisaatioTerm = organisaatio;
                     organisaatioTerm.resolve();
@@ -217,8 +217,10 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
     function cannotAuthenticate() {
         $scope.messages.push({
             type: "danger",
-            message: getOphMsg("suoritusrekisteri.opiskelijat.henkiloeiyhteytta", "Henkilöpalveluun ei juuri nyt saada yhteyttä."),
-            description: getOphMsg("suoritusrekisteri.opiskelijat.henkiloyrita", "Yritä hetken kuluttua uudelleen.")
+            messageKey: "suoritusrekisteri.opiskelijat.henkiloeiyhteytta",
+            message: "Henkilöpalveluun ei juuri nyt saada yhteyttä.",
+            descriptionKey: "suoritusrekisteri.opiskelijat.henkiloyrita",
+            description: "Yritä hetken kuluttua uudelleen."
         })
     }
 
