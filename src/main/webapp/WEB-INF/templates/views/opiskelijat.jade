@@ -1,13 +1,22 @@
-h2(oph-msg="suoritusrekisteri.sovellus.nimi") Opiskelijoiden haku
+h2(oph-msg="suoritusrekisteri.sovellus.nimi" oph-msg="suoritusrekisteri.opiskelijat.opiskelijatiedot") Opiskelijatiedot
+
+script(type="text/ng-template" id="organisaatioTemplate.html")
+  a
+    span(bind-html-unsafe="(match.model.oppilaitosKoodi + ' ' + (match.model.nimi.fi ? match.model.nimi.fi : match.model.nimi.sv)) | typeaheadHighlight:query")
 
 aside(class="row")
   div(class="col-sm-8")
     form(id="filterForm" class="well form-horizontal" ng-submit="search()")
       div(class="form-group")
-        label(for="searchTerm" class="col-sm-2 control-label") Hakuehto
-        div(class="col-sm-10")
-          input(id="searchTerm" class="form-control" size="40" ng-model="searchTerm" type="search" placeholder="Hae hetulla tai oppilaitosnumerolla")
-          span(ng-show="hakuehto") {{hakuehto}}
+        label(for="henkiloTerm" class="col-sm-2 control-label" oph-msg="suoritusrekisteri.opiskelijat.henkilo") Henkilö
+        div(class="col-sm-5")
+          input(id="henkiloTerm" class="form-control" ng-model="henkiloTerm" type="search" placeholder="Hae hetulla tai henkilönumerolla")
+          span(ng-show="henkilo") {{henkilo.etunimet}} {{henkilo.sukunimi}} ({{henkilo.hetu || henkilo.syntymaaika}})
+
+      div(class="form-group")
+        label(for="organisaatioTerm" class="col-sm-2 control-label" oph-msg="suoritusrekisteri.opiskelijat.oppilaitos") Oppilaitos
+        div(class="col-sm-5")
+          input(id="organisaatioTerm" class="form-control" autocomplete="off" ng-model="organisaatioTerm" type="search" placeholder="Hae oppilaitoksen numerolla tai nimellä" typeahead="organisaatio as organisaatio.oppilaitosKoodi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingOppilaitos" typeahead-wait-ms="500" typeahead-template-url="organisaatioTemplate.html")
 
       div(class="form-group")
         div(class="col-sm-10 col-sm-offset-2")
@@ -18,18 +27,19 @@ aside(class="row")
 table(class="table")
   thead
     tr
-      th(oph-msg="suoritusrekisteri.henkiloOid") Henkilö
-      th(oph-msg="suoritusrekisteri.oppilaitos") Oppilaitos
-      th(oph-msg="suoritusrekisteri.luokkataso") Luokkataso
-      th(oph-msg="suoritusrekisteri.luokka") Luokka
+      th(oph-msg="suoritusrekisteri.opiskelijat.henkiloOid") Henkilö
+      th(oph-msg="suoritusrekisteri.opiskelijat.opiskelijatiedot") Opiskelijatiedot
+      th(oph-msg="suoritusrekisteri.opiskelijat.suoritustiedot") Suoritustiedot
+      th
   tbody
     tr(ng-repeat="row in currentRows")
+      td {{row.henkilo || row.henkiloOid}}
       td
-        a(href="#/muokkaa/{{row.henkiloOid}}" ng-show="isOPH()") {{row.henkilo || row.henkiloOid}}
-        span(ng-hide="isOPH()") {{row.henkilo || row.henkiloOid}}
-      td {{row.oppilaitos || row.oppilaitosOid}}
-      td {{row.luokkataso}}
-      td {{row.luokka}}
+        div(ng-repeat="o in row.opiskelijatiedot") {{o.oppilaitos || o.oppilaitosOid}} {{o.luokka}}
+      td
+        div(ng-repeat="s in row.suoritustiedot") {{s.komo}} {{s.oppilaitos || s.myontaja}}
+      td
+        a(class="btn bt-default btn-xs" href="#/muokkaa/{{row.henkiloOid}}" oph-msg="suoritusrekisteri.opiskelijat.muokkaa") Muokkaa tietoja
     tr(ng-show="loading")
       td(class="loading-td" colspan="4")
         div(class="loading-large")

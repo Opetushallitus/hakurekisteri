@@ -2,9 +2,16 @@
 
 var msgCategory = "suoritusrekisteri";
 
-var henkiloServiceUrl = "/authentication-service";
-var organisaatioServiceUrl = "/organisaatio-service";
-var hakuAppServiceUrl = "/haku-app";
+function getBaseUrl() {
+    if (location.hostname === 'localhost') {
+        return 'https://itest-virkailija.oph.ware.fi';
+    }
+    return '';
+}
+
+var henkiloServiceUrl = getBaseUrl() + "/authentication-service";
+var organisaatioServiceUrl = getBaseUrl() + "/organisaatio-service";
+var hakuAppServiceUrl = getBaseUrl() + "/haku-app";
 
 Array.prototype.diff = function(a) {
     return this.filter(function(i) { return a.indexOf(i) < 0; });
