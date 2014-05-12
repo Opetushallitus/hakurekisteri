@@ -69,7 +69,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
       Some("start=%d" format (page * maxApplications)), Some("rows=" + maxApplications),
       q.haku.map(s => "asId=" + urlencode(s)),
       q.organisaatio.map(s => "lopoid=" + urlencode(s)),
-      q.hakukohdekoodi.map(s => "aoidCode=" + urlencode(s))
+      q.hakukohdekoodi.map(s => "aoid=" + urlencode(s))
     ).flatten
 
     Try((for(i <- params; p <- List("&", i)) yield p).tail.reduce(_ + _)).getOrElse("")
