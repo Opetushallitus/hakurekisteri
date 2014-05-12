@@ -1,15 +1,14 @@
 'use strict';
 
-function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukset) {
+function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukset, suoritusId) {
     $scope.arvosanat = [];
-    $scope.suoritusId = $rootScope.suoritusId;
     $scope.oppiaineet = {};
     $scope.valinnaisuudet = [
         {value: false, text: getOphMsg("suoritusrekisteri.valinnaisuus.ei", "Ei")},
         {value: true, text: getOphMsg("suoritusrekisteri.valinnaisuus.kylla", "Kyllä")}
     ];
 
-    Suoritukset.query({ id: $scope.suoritusId }, function(suoritus) {
+    Suoritukset.query({ id: suoritusId }, function(suoritus) {
         var pohjakoulutusFilter = "onperusasteenoppiaine_1";
         if (suoritus.komo === "lukio") {
             pohjakoulutusFilter = "onlukionoppiaine_1";
@@ -54,11 +53,10 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
 
                     $scope.oppiaineet = Object.keys(oppiaineet).filter(filterOppiaine).map(composeOppiaine);
 
-                    Arvosanat.query({ suoritus: $rootScope.suoritusId }, function(arvosanat) {
+                    Arvosanat.query({ suoritus: suoritusId }, function(arvosanat) {
                         $scope.arvosanat = arvosanat;
                         if (arvosanat.length === 0) {
                             $scope.arvosanat = Object.keys($scope.oppiaineet).map(function(oppiaineKoodi) {
-                                $log.debug("oppiainekoodi: " + oppiaineKoodi);
                                 return new Arvosanat({aine: oppiaineKoodi})
                             });
                         }
@@ -68,15 +66,19 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
     });
 
     $scope.addArvosana = function() {
-        $scope.arvosanat.push(new Arvosanat({ suoritus: $scope.suoritusId, arvio: { asteikko: "4-10" }, lisatiedot: "", valinnainen: "false" }))
+        $scope.arvosanat.push(new Arvosanat({ suoritus: suoritusId, arvio: { asteikko: "4-10" }, lisatiedot: "", valinnainen: "false" }))
     };
 
     $scope.save = function() {
-        $rootScope.modalInstance.close($scope.suoritusId);
+        $rootScope.modalInstance.close({
+            type: "success",
+            messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennettu",
+            message: "Arvosanat tallennettu."
+        });
     };
 
     $scope.cancel = function() {
-        $rootScope.modalInstance.close($scope.suoritusId);
+        $rootScope.modalInstance.close();
     };
 
     $scope.delete = function(arvosana) {

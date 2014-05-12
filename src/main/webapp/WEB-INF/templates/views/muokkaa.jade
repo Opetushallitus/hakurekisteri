@@ -3,16 +3,17 @@ h2(oph-msg="suoritusrekisteri.muokkaa.muokkaatietoja") Muokkaa opiskelijan tieto
 div(class="alert alert-{{message.type}}" ng-show="messages" ng-repeat="message in messages")
   button(type="button" class="close" aria-hidden="true" ng-click="removeMessage(message)") &times;
   strong
-    img(class="icon-big" src="static/img/alert-icon28x29.png")
+    img(ng-show="message.type == 'alert'" class="icon-big" src="static/img/alert-icon28x29.png")
+    img(ng-show="message.type == 'success'" class="icon-big" src="static/img/confirm-icon28x29.png")
     span(oph-msg="{{message.messageKey}}") {{message.message}}
   span(oph-msg="{{message.descriptionKey}}") {{message.description}}
 
 script(type="text/ng-template" id="arvosanaedit.html")
-  div(class="modal-header")
-    button(type="button" class="close" ng-click="modalInstance.close()" aria-hidden="true") &times;
-    h4(class="modal-title" oph-msg="suoritusrekisteri.muokkaa.arvosanat.otsikko") Muokkaa arvosanoja
-  table(class="table table-condensed" ng-controller="ArvosanaCtrl")
-    form(ng-submit="save()")
+  form(ng-submit="save()")
+    div(class="modal-header")
+      button(type="button" class="close" ng-click="modalInstance.close()" aria-hidden="true") &times;
+      h4(class="modal-title" oph-msg="suoritusrekisteri.muokkaa.arvosanat.otsikko") Muokkaa arvosanoja
+    table(class="table table-condensed")
       thead
         th(oph-msg="suoritusrekisteri.muokkaa.arvosanat.oppiaine") Oppiaine
         th(oph-msg="suoritusrekisteri.muokkaa.arvosanat.lisatieto") Lisätieto (kieli)
@@ -32,14 +33,13 @@ script(type="text/ng-template" id="arvosanaedit.html")
           td
             input(type="text" class="form-control input-sm" ng-model="arvio.arvosanaToinenValinnainen")
 
-
-  div(class="modal-footer")
-    button(type="button" class="btn btn-default" ng-click="cancel()")
-      span(oph-msg="suoritusrekisteri.muokkaa.arvosanat.peruuta") Peruuta
-      span(class="glyphicon glyphicon-remove")
-    button(type="submit" class="btn btn-primary")
-      span(oph-msg="suoritusrekisteri.muokkaa.arvosanat.tallenna") Tallenna
-      span(class="glyphicon glyphicon-saved")
+    div(class="modal-footer")
+      button(type="button" class="btn btn-default" ng-click="cancel()")
+        span(oph-msg="suoritusrekisteri.muokkaa.arvosanat.peruuta") Peruuta
+        span(class="glyphicon glyphicon-remove")
+      button(type="submit" class="btn btn-primary")
+        span(oph-msg="suoritusrekisteri.muokkaa.arvosanat.tallenna") Tallenna
+        span(class="glyphicon glyphicon-saved")
 
 div(class="row")
   div(class="col-sm-8")

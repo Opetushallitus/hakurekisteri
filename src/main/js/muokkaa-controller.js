@@ -208,13 +208,16 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         $scope.suoritukset.push(new Suoritukset({ henkiloOid: $scope.henkiloOid, tila: "KESKEN", yksilollistaminen: "Ei", myontaja: "na" }));
     };
     $scope.editArvosana = function(suoritusId) {
-        $rootScope.suoritusId = suoritusId;
         $rootScope.modalInstance = $modal.open({
-            templateUrl: 'arvosanaedit.html'
+            templateUrl: 'arvosanaedit.html',
+            controller: ArvosanaCtrl,
+            resolve: {
+                suoritusId: function() { return suoritusId }
+            }
         });
 
-        $rootScope.modalInstance.result.then(function (ok) {
-            delete $rootScope.suoritusId;
+        $rootScope.modalInstance.result.then(function (message) {
+            if (message) $scope.messages.push(message);
         }, function () {
             // error
         });

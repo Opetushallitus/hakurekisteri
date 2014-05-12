@@ -98,3 +98,8 @@ body #raamit-header .header-content {
 .arvosana-button {
     margin-top: 16px;
 }
+
+.modal-dialog {
+    width: auto;
+    max-width: 850px;
+}
