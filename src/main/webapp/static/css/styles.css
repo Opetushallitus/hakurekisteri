@@ -50,7 +50,15 @@ body #raamit-header .header-content {
 }
 
 .entrylist li {
-    margin-bottom: 10px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.entrylist li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
 }
 
 .nappulat {
@@ -87,3 +95,6 @@ body #raamit-header .header-content {
     text-decoration: none;
 }
 
+.arvosana-button {
+    margin-top: 16px;
+}

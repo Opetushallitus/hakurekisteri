@@ -23,4 +23,11 @@ app.factory('Suoritukset', function($resource) {
     });
 });
 
+app.factory('Arvosanat', function($resource) {
+    return $resource("rest/v1/arvosanat/:arvosanaId", {arvosanaId: "@id"}, {
+        query: {method: "GET", isArray: true, cache: false, timeout: 55000},
+        save: {method: "POST", timeout: 15000}
+    });
+});
+
 

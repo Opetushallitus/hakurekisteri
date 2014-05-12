@@ -7,6 +7,40 @@ div(class="alert alert-{{message.type}}" ng-show="messages" ng-repeat="message i
     span(oph-msg="{{message.messageKey}}") {{message.message}}
   span(oph-msg="{{message.descriptionKey}}") {{message.description}}
 
+script(type="text/ng-template" id="arvosanaedit.html")
+  div(class="modal-header")
+    button(type="button" class="close" ng-click="modalInstance.close()" aria-hidden="true") &times;
+    h4(class="modal-title" oph-msg="suoritusrekisteri.muokkaa.arvosanat.otsikko") Muokkaa arvosanoja
+  table(class="table table-condensed" ng-controller="ArvosanaCtrl")
+    form(ng-submit="save()")
+      thead
+        th(oph-msg="suoritusrekisteri.muokkaa.arvosanat.oppiaine") Oppiaine
+        th(oph-msg="suoritusrekisteri.muokkaa.arvosanat.lisatieto") Lisätieto (kieli)
+        th(oph-msg="suoritusrekisteri.muokkaa.arvosanat.arvosana") Arvosana
+        th(oph-msg="suoritusrekisteri.muokkaa.arvosanat.valinnainen") Valinnainen
+        th(oph-msh="suoritusrekisteri.muokkaa.arvosanat.toinenvalinnainen") Toinen valinnainen
+      tbody
+        tr(ng-repeat="o in oppiaineet")
+          td
+
+          td
+            input(type="text" class="form-control input-sm" ng-model="lisatieto")
+          td
+            input(type="text" class="form-control input-sm" ng-model="arvio.arvosana" required="required")
+          td
+            input(type="text" class="form-control input-sm" ng-model="arvio.arvosanaValinnainen")
+          td
+            input(type="text" class="form-control input-sm" ng-model="arvio.arvosanaToinenValinnainen")
+
+
+  div(class="modal-footer")
+    button(type="button" class="btn btn-default" ng-click="cancel()")
+      span(oph-msg="suoritusrekisteri.muokkaa.arvosanat.peruuta") Peruuta
+      span(class="glyphicon glyphicon-remove")
+    button(type="submit" class="btn btn-primary")
+      span(oph-msg="suoritusrekisteri.muokkaa.arvosanat.tallenna") Tallenna
+      span(class="glyphicon glyphicon-saved")
+
 div(class="row")
   div(class="col-sm-8")
     section(class="panel panel-default")
@@ -57,6 +91,11 @@ div(class="row")
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.valmistumispaiva") Valmistumispäivä
                   input(type="text" class="form-control input-sm" ng-model="suoritus.valmistuminen" datepicker-popup="{{format}}" datepicker-options="dateOptions" show-button-bar="false")
+                div(class="form-group col-sm-6")
+                  div(class="pull-right")
+                    button(type="button" class="btn btn-default arvosana-button" ng-disabled="!suoritus.id" ng-click="editArvosana(suoritus.id)")
+                      span(oph-msg="suoritusrekisteri.muokkaa.muokkaaarvosanoja") Muokkaa arvosanoja
+                      span(class="glyphicon glyphicon-edit")
           li
             button(class="btn btn-default btn-xs" ng-click="addSuoritus()")
               span(oph-msg="suoritusrekisteri.muokkaa.uusisuoritus") Lisää uusi suoritus

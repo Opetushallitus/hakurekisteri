@@ -10,6 +10,7 @@ function getBaseUrl() {
 var henkiloServiceUrl = getBaseUrl() + "/authentication-service";
 var organisaatioServiceUrl = getBaseUrl() + "/organisaatio-service";
 var hakuAppServiceUrl = getBaseUrl() + "/haku-app";
+var koodistoServiceUrl = getBaseUrl() + "/koodisto-service";
 
 if (!Array.prototype.diff)
     Array.prototype.diff = function(a) {

@@ -1,6 +1,6 @@
 'use strict';
 
-function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $q, Opiskelijat, Suoritukset) {
+function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset) {
     $scope.henkiloOid = $routeParams.henkiloOid;
     $scope.yksilollistamiset = [
         {value: "Ei", text: getOphMsg("suoritusrekisteri.yks.ei", "Ei")},
@@ -87,12 +87,9 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         });
     }
 
-    function fetchData() {
-        fetchHenkilotiedot();
-        fetchLuokkatiedot();
-        fetchSuoritukset();
-    }
-    fetchData();
+    fetchHenkilotiedot();
+    fetchLuokkatiedot();
+    fetchSuoritukset();
 
     $scope.getOppilaitos = function(searchStr) {
         if (searchStr && searchStr.trim().match(/^\d{5}$/))
@@ -190,13 +187,13 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             });
         }
 
-        var validationPromise = $q.all(deferredValidations.map(function(deferred) { return deferred.promise; }));
+        var validationPromise = $q.all(deferredValidations.map(function(deferred) { return deferred.promise }));
         validationPromise.then(function() {
             saveSuoritukset();
             saveLuokkatiedot();
         });
 
-        var savePromise = $q.all(deferredSaves.map(function(deferred) { return deferred.promise; }));
+        var savePromise = $q.all(deferredSaves.map(function(deferred) { return deferred.promise }));
         savePromise.then(function() {
             $log.info("saved successfully");
             back();
@@ -208,10 +205,22 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         back();
     };
     $scope.addSuoritus = function() {
-        $scope.suoritukset.push(new Suoritukset({ henkiloOid: $scope.henkiloOid, tila: "KESKEN", yksilollistaminen: "Ei", myontaja: null }));
+        $scope.suoritukset.push(new Suoritukset({ henkiloOid: $scope.henkiloOid, tila: "KESKEN", yksilollistaminen: "Ei", myontaja: "na" }));
+    };
+    $scope.editArvosana = function(suoritusId) {
+        $rootScope.suoritusId = suoritusId;
+        $rootScope.modalInstance = $modal.open({
+            templateUrl: 'arvosanaedit.html'
+        });
+
+        $rootScope.modalInstance.result.then(function (ok) {
+            delete $rootScope.suoritusId;
+        }, function () {
+            // error
+        });
     };
     $scope.addLuokkatieto = function() {
-        $scope.luokkatiedot.push(new Opiskelijat({ henkiloOid: $scope.henkiloOid, oppilaitosOid: null }));
+        $scope.luokkatiedot.push(new Opiskelijat({ henkiloOid: $scope.henkiloOid, oppilaitosOid: "na" }));
     };
     $scope.removeMessage = function(message) {
         var index = $scope.messages.indexOf(message);
