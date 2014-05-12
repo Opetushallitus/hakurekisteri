@@ -8,7 +8,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
         {value: true, text: getOphMsg("suoritusrekisteri.valinnaisuus.kylla", "Kyllä")}
     ];
 
-    Suoritukset.query({ id: suoritusId }, function(suoritus) {
+    Suoritukset.get({ suoritusId: suoritusId }, function(suoritus) {
         var pohjakoulutusFilter = "onperusasteenoppiaine_1";
         if (suoritus.komo === "lukio") {
             pohjakoulutusFilter = "onlukionoppiaine_1";
