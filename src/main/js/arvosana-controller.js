@@ -98,7 +98,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                                         arvosanataulukko[aine + ';' + lisatieto] = a;
                                     }
                                 }
-                                if (!arvosanataulukko[aine + ';' + lisatieto]) arvosanataulukko[aine + ';' + lisatieto] = { aine: aine }
+                                if (!arvosanataulukko[aine + ';' + lisatieto]) arvosanataulukko[aine + ';' + lisatieto] = { aine: aine, arvosana: "Ei arvosanaa" }
                             }
                             $scope.arvosanataulukko = Object.keys(arvosanataulukko).map(function(key) {
                                 return arvosanataulukko[key];
