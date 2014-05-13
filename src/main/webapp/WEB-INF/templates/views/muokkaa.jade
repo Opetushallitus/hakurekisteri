@@ -21,17 +21,16 @@ script(type="text/ng-template" id="arvosanaedit.html")
         th(oph-msg="suoritusrekisteri.muokkaa.arvosanat.valinnainen") Valinnainen
         th(oph-msh="suoritusrekisteri.muokkaa.arvosanat.toinenvalinnainen") Toinen valinnainen
       tbody
-        tr(ng-repeat="o in oppiaineet")
+        tr(ng-repeat="a in arvosanataulukko")
+          td {{a.aine}}
           td
-
+            input(type="text" class="form-control input-sm" ng-model="a.lisatieto")
           td
-            input(type="text" class="form-control input-sm" ng-model="lisatieto")
+            input(type="text" class="form-control input-sm" ng-model="a.arvosana" required="required")
           td
-            input(type="text" class="form-control input-sm" ng-model="arvio.arvosana" required="required")
+            input(type="text" class="form-control input-sm" ng-model="a.arvosanaValinnainen")
           td
-            input(type="text" class="form-control input-sm" ng-model="arvio.arvosanaValinnainen")
-          td
-            input(type="text" class="form-control input-sm" ng-model="arvio.arvosanaToinenValinnainen")
+            input(type="text" class="form-control input-sm" ng-model="a.arvosanaToinenValinnainen")
 
     div(class="modal-footer")
       button(type="button" class="btn btn-default" ng-click="cancel()")

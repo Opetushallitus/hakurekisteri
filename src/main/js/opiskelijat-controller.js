@@ -1,6 +1,6 @@
 'use strict';
 
-function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $http, $q, Opiskelijat, Suoritukset) {
+function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $http, $q, Opiskelijat, Suoritukset, Arvosanat) {
     $scope.messages = [];
     $scope.loading = false;
     $scope.currentRows = [];
@@ -172,7 +172,12 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
                         o.oppilaitos = oppilaitos.oppilaitosKoodi + ' ' + (oppilaitos.nimi.fi ? oppilaitos.nimi.fi : oppilaitos.nimi.sv);
                     });
                 });
-                row.suoritustiedot = suoritukset
+                row.suoritustiedot = suoritukset;
+                angular.forEach(suoritukset, function(s) {
+                    Arvosanat.query({ suoritus: s.id }, function(arvosanat) {
+                        s.isArvosanat = arvosanat.length > 0;
+                    });
+                });
             });
         }
         angular.forEach($scope.currentRows, function(row) {

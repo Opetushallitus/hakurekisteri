@@ -48,7 +48,10 @@ table(class="table")
       td
         div(ng-repeat="o in row.opiskelijatiedot") {{o.oppilaitos}} {{o.luokka}}
       td
-        div(ng-repeat="s in row.suoritustiedot") {{s.komo}} {{s.oppilaitos}}
+        div(ng-repeat="s in row.suoritustiedot")
+          span {{s.komo}} {{s.oppilaitos}}
+          span(ng-show="s.isArvosanat" oph-msg="suoritusrekisteri.opiskelijat.arvosanatsiirretty") (arvosanat siirretty)
+          span(ng-hide="s.isArvosanat" oph-msg="suoritusrekisteri.opiskelijat.eiarvosanoja") (ei arvosanoja)
       td
         a(class="btn bt-default btn-xs pull-right" href="#/muokkaa/{{row.henkiloOid}}")
           span(oph-msg="suoritusrekisteri.opiskelijat.muokkaa") Muokkaa tietoja
