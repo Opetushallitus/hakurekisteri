@@ -6,9 +6,17 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
         {value: false, text: getOphMsg("suoritusrekisteri.valinnaisuus.ei", "Ei")},
         {value: true, text: getOphMsg("suoritusrekisteri.valinnaisuus.kylla", "Kyllä")}
     ];
-    $scope.arvosanat = [];
+    $scope.arvosanat = [
+        {value: "Ei arvosanaa", text: "Ei arvosanaa"},
+        {value: "4", text: "4"},
+        {value: "5", text: "5"},
+        {value: "6", text: "6"},
+        {value: "7", text: "7"},
+        {value: "8", text: "8"},
+        {value: "9", text: "9"},
+        {value: "10", text: "10"}
+    ];
     $scope.kielet = [];
-    getKoodistoAsOptionArray($http, 'arvosanat', 'fi', $scope.arvosanat, 'nimi');
     getKoodistoAsOptionArray($http, 'kielivalikoima', 'fi', $scope.kielet, 'nimi');
 
     Suoritukset.get({ suoritusId: suoritusId }, function(suoritus) {
@@ -37,7 +45,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                         for (var i = 0; i < arvosanat.length; i++) {
                             if (!arvosanat[i].taken && arvosanat[i].aine === aine && arvosanat[i].lisatieto === lisatieto && arvosanat[i].valinnainen === valinnainen) {
                                 arvosanat[i].taken = true;
-                                return arvosanat[i].arvio.arvosana;
+                                return arvosanat[i];
                             }
                         }
                         return null;
@@ -66,9 +74,18 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                                         a.aine = aine;
                                         a.aineNimi = getOppiaineNimi(oppiainekoodi);
                                         a.lisatieto = lisatieto;
-                                        a.arvosana = findArvosana(aine, lisatieto, arvosanat, false);
-                                        a.arvosanaValinnainen = findArvosana(aine, lisatieto, arvosanat, true);
-                                        a.arvosanaToinenValinnainen = findArvosana(aine, lisatieto, arvosanat, true);
+
+                                        var arvosana = findArvosana(aine, lisatieto, arvosanat, false);
+                                        a.arvosana = arvosana ? arvosana.arvio.arvosana : null;
+                                        a.arvosanaId = arvosana ? arvosana.id : null;
+
+                                        var valinnainen = findArvosana(aine, lisatieto, arvosanat, true);
+                                        a.arvosanaValinnainen = valinnainen ? valinnainen.arvio.arvosana : null;
+                                        a.valinnainenId = valinnainen ? valinnainen.id : null;
+
+                                        var toinenValinnainen = findArvosana(aine, lisatieto, arvosanat, true);
+                                        a.arvosanaToinenValinnainen = toinenValinnainen ? toinenValinnainen.arvio.arvosana : null;
+                                        a.toinenValinnainenId = toinenValinnainen ? toinenValinnainen.id : null;
 
                                         arvosanataulukko[aine + ';' + lisatieto] = a;
                                     }
@@ -132,9 +149,9 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
         var arvosanat = [];
         for (var i = 0; i < $scope.arvosanataulukko.length; i++) {
             var a = $scope.arvosanataulukko[i];
-            if (a.aine && a.arvosana) arvosanat.push(new Arvosanat({ aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosana, asteikko: "4-10" } }));
-            if (a.aine && a.arvosanaValinnainen) arvosanat.push(new Arvosanat({ aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosanaValinnainen, asteikko: "4-10" }, valinnainen: true }));
-            if (a.aine && a.arvosanaToinenValinnainen) arvosanat.push(new Arvosanat({ aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosanaToinenValinnainen, asteikko: "4-10" }, valinnainen: true }));
+            if (a.aine && a.arvosana) arvosanat.push(new Arvosanat({ id: a.arvosanaId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosana, asteikko: "4-10" } }));
+            if (a.aine && a.arvosanaValinnainen) arvosanat.push(new Arvosanat({ id: a.valinnainenId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosanaValinnainen, asteikko: "4-10" }, valinnainen: true }));
+            if (a.aine && a.arvosanaToinenValinnainen) arvosanat.push(new Arvosanat({ id: a.toinenValinnainenId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosanaToinenValinnainen, asteikko: "4-10" }, valinnainen: true }));
         }
         var deferreds = [];
         for (var i = 0; i < arvosanat.length; i++) {
