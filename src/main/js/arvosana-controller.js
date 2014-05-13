@@ -17,7 +17,16 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
         {value: "10", text: "10"}
     ];
     $scope.kielet = [];
+    $scope.aidinkieli = [];
     getKoodistoAsOptionArray($http, 'kielivalikoima', 'fi', $scope.kielet, 'nimi');
+    getKoodistoAsOptionArray($http, 'aidinkielijakirjallisuus', 'fi', $scope.aidinkieli, 'nimi');
+
+    var arvosanaSort = {
+        AI: 10, A1: 20, A12: 21, A2: 30, A22: 31, B1: 40, B2: 50, B22: 51,
+        B23: 52, B3: 53, B32: 54, B33: 55, MA: 60, BI: 70, GE: 80, FY: 90,
+        KE: 100, TE: 110, KT: 120, HI: 130, YH: 140, MU: 150, KU: 160, KS: 170,
+        LI: 180, KO: 190, PS: 200, FI: 210
+    };
 
     Suoritukset.get({ suoritusId: suoritusId }, function(suoritus) {
         var pohjakoulutusFilter = "onperusasteenoppiaine_1";
@@ -50,7 +59,6 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                         }
                         return null;
                     }
-
                     function getOppiaineNimi(oppiainekoodi) {
                         return oppiainekoodi.koodi.metadata.sort(function(a, b) { return (a.kieli < b.kieli ? -1 : 1) })[0].nimi;
                     }
@@ -94,6 +102,9 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                             }
                             $scope.arvosanataulukko = Object.keys(arvosanataulukko).map(function(key) {
                                 return arvosanataulukko[key];
+                            }).sort(function(a, b) {
+                                if (a.aine === b.aine) return 0;
+                                return (arvosanaSort[a.aine] < arvosanaSort[b.aine] ? -1 : 1);
                             });
                         }, function() {
                             $rootScope.modalInstance.close({
@@ -153,16 +164,20 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
             if (a.aine && a.arvosanaValinnainen) arvosanat.push(new Arvosanat({ id: a.valinnainenId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosanaValinnainen, asteikko: "4-10" }, valinnainen: true }));
             if (a.aine && a.arvosanaToinenValinnainen) arvosanat.push(new Arvosanat({ id: a.toinenValinnainenId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosanaToinenValinnainen, asteikko: "4-10" }, valinnainen: true }));
         }
+
         var deferreds = [];
-        for (var i = 0; i < arvosanat.length; i++) {
+        angular.forEach(arvosanat, function(arvosana) {
             var d = $q.defer();
             deferreds.push(d);
-            var arvosana = arvosanat[i];
             arvosana.$save(function(saved) {
                 d.resolve("saved: " + saved.id);
             }, function() {
                 d.reject("save failed");
             });
+        });
+
+        while (deferreds.length < arvosanat.length) {
+            setTimeout(function() { /* wait */ }, 100);
         }
 
         var allSaved = $q.all(deferreds.map(function(d) { return d.promise }));

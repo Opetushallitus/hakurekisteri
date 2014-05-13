@@ -24,6 +24,7 @@ script(type="text/ng-template" id="arvosanaedit.html")
         tr(ng-repeat="a in arvosanataulukko")
           td {{a.aineNimi || a.aine}}
           td
+            select(ng-show="a.aine == 'AI" class="form-control input-sm" ng-model="a.lisatieto" ng-options="k.value as k.text for k in aidinkieli")
             select(ng-show="isKielisyys(a.aine)" class="form-control input-sm" ng-model="a.lisatieto" ng-options="k.value as k.text for k in kielet")
           td
             select(class="form-control input-sm" ng-model="a.arvosana" required="required" ng-options="a.value as a.text for a in arvosanat")
