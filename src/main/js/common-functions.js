@@ -47,6 +47,31 @@ function getOphMsg(key, def) {
     else key;
 }
 
+function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options, valueFromField) {
+    $http.get(getBaseUrl() + '/koodisto-service/rest/json/' + encodeURIComponent(koodisto) + '/koodi', {cache: true})
+        .success(function(koodisto) {
+            angular.forEach(koodisto, function(koodi) {
+                metas: for (var j = 0; j < koodi.metadata.length; j++) {
+                    var meta = koodi.metadata[j];
+                    if (meta.kieli.toLowerCase() === kielikoodi.toLowerCase()) {
+                        var value = koodi.koodiUri + '#' + koodi.versio;
+                        if (valueFromField === 'nimi')
+                            value = meta.nimi;
+                        options.push({
+                            value: value,
+                            text: meta.nimi
+                        });
+                        break metas;
+                    }
+                }
+            });
+            options.sort(function(a, b) {
+                if (a.text === b.text) return 0;
+                return a.text < b.text ? -1 : 1;
+            });
+        });
+}
+
 function ensureConsoleMethods() {
     var method;
     var noop = function () {};

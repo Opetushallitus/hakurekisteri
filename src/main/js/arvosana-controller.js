@@ -1,10 +1,15 @@
 'use strict';
 
 function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukset, suoritusId) {
+    $scope.oppiaineet = [];
     $scope.valinnaisuudet = [
         {value: false, text: getOphMsg("suoritusrekisteri.valinnaisuus.ei", "Ei")},
         {value: true, text: getOphMsg("suoritusrekisteri.valinnaisuus.kylla", "Kyllä")}
     ];
+    $scope.arvosanat = [];
+    $scope.kielet = [];
+    getKoodistoAsOptionArray($http, 'arvosanat', 'fi', $scope.arvosanat, 'nimi');
+    getKoodistoAsOptionArray($http, 'kielivalikoima', 'fi', $scope.kielet, 'nimi');
 
     Suoritukset.get({ suoritusId: suoritusId }, function(suoritus) {
         var pohjakoulutusFilter = "onperusasteenoppiaine_1";
@@ -13,14 +18,13 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
         }
 
         var koodistoPromises = [];
-        var oppiaineet = [];
 
         $http.get(koodistoServiceUrl + '/rest/json/oppiaineetyleissivistava/koodi/', { cache: true })
             .success(function(koodit) {
                 angular.forEach(koodit, function(koodi) {
                     var p = $http.get(koodistoServiceUrl + '/rest/json/relaatio/sisaltyy-alakoodit/' + koodi.koodiUri, { cache: true })
                         .success(function (alaKoodit) {
-                            oppiaineet.push({ koodi: koodi, alaKoodit: alaKoodit });
+                            $scope.oppiaineet.push({ koodi: koodi, alaKoodit: alaKoodit });
                         });
                     koodistoPromises.push(p);
                 });
@@ -39,16 +43,20 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                         return null;
                     }
 
+                    function getOppiaineNimi(oppiainekoodi) {
+                        return oppiainekoodi.koodi.metadata.sort(function(a, b) { return (a.kieli < b.kieli ? -1 : 1) })[0].nimi;
+                    }
                     function fetchArvosanat() {
                         Arvosanat.query({ suoritus: suoritusId }, function(arvosanat) {
-                            var oppiainekoodit = oppiaineet.filter(function(o) {
+                            var oppiainekoodit = $scope.oppiaineet.filter(function(o) {
                                 return o.alaKoodit.filter(function(alakoodi) {
                                     return alakoodi.koodiUri === pohjakoulutusFilter;
                                 }).length > 0
-                            }).map(function(o) { return o.koodi.koodiArvo });
+                            });
                             var arvosanataulukko = {};
                             for (var j = 0; j < oppiainekoodit.length; j++) {
-                                var aine = oppiainekoodit[j];
+                                var oppiainekoodi = oppiainekoodit[j];
+                                var aine = oppiainekoodi.koodi.koodiArvo;
                                 for (var i = 0; i < arvosanat.length; i++) {
                                     var lisatieto = arvosanat[i].lisatieto;
                                     if (arvosanat[i].aine === aine) {
@@ -56,6 +64,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                                         if (!a) a = {};
 
                                         a.aine = aine;
+                                        a.aineNimi = getOppiaineNimi(oppiainekoodi);
                                         a.lisatieto = lisatieto;
                                         a.arvosana = findArvosana(aine, lisatieto, arvosanat, false);
                                         a.arvosanaValinnainen = findArvosana(aine, lisatieto, arvosanat, true);
@@ -103,6 +112,22 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
         })
     });
 
+    $scope.isValinnainen = function(aine) {
+        return $scope.oppiaineet.filter(function(o) {
+            return o.koodi.koodiArvo === aine && o.alaKoodit.filter(function(alakoodi) {
+                return alakoodi.koodiUri === 'oppiaineenvalinnaisuus_1'
+            }).length > 0
+        }).length > 0
+    };
+
+    $scope.isKielisyys = function(aine) {
+        return $scope.oppiaineet.filter(function(o) {
+            return o.koodi.koodiArvo === aine && o.alaKoodit.filter(function(alakoodi) {
+                return alakoodi.koodiUri === 'oppiaineenkielisyys_1'
+            }).length > 0
+        }).length > 0
+    };
+
     $scope.save = function() {
         var arvosanat = [];
         for (var i = 0; i < $scope.arvosanataulukko.length; i++) {
@@ -118,19 +143,21 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
             var arvosana = arvosanat[i];
             arvosana.$save(function(saved) {
                 d.resolve("saved: " + saved.id);
-            }, function(err) {
+            }, function() {
                 d.reject("save failed");
             });
         }
 
         var allSaved = $q.all(deferreds.map(function(d) { return d.promise }));
         allSaved.then(function() {
+            $log.debug("all saved");
             $rootScope.modalInstance.close({
                 type: "success",
                 messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennettu",
                 message: "Arvosanat tallennettu."
             });
         }, function() {
+            $log.error("saving failed");
             $rootScope.modalInstance.close({
                 type: "danger",
                 messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennuseionnistunut",
@@ -143,8 +170,4 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
         $rootScope.modalInstance.close();
     };
 
-    $scope.delete = function(arvosana) {
-        var index = $scope.arvosanat.indexOf(arvosana);
-        if (index !== -1) $scope.arvosanat.splice(index, 1);
-    };
 }
