@@ -57,6 +57,8 @@ function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options, valueFro
                         var value = koodi.koodiUri + '#' + koodi.versio;
                         if (valueFromField === 'nimi')
                             value = meta.nimi;
+                        if (valueFromField === 'koodiArvo')
+                            value = koodi.koodiArvo;
                         options.push({
                             value: value,
                             text: meta.nimi

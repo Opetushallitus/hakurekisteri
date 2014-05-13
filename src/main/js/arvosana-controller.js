@@ -18,8 +18,8 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
     ];
     $scope.kielet = [];
     $scope.aidinkieli = [];
-    getKoodistoAsOptionArray($http, 'kielivalikoima', 'fi', $scope.kielet, 'nimi');
-    getKoodistoAsOptionArray($http, 'aidinkielijakirjallisuus', 'fi', $scope.aidinkieli, 'nimi');
+    getKoodistoAsOptionArray($http, 'kielivalikoima', 'fi', $scope.kielet, 'koodiArvo');
+    getKoodistoAsOptionArray($http, 'aidinkielijakirjallisuus', 'fi', $scope.aidinkieli, 'koodiArvo');
 
     var arvosanaSort = {
         AI: 10, A1: 20, A12: 21, A2: 30, A22: 31, B1: 40, B2: 50, B22: 51,
@@ -74,9 +74,9 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                                 var oppiainekoodi = oppiainekoodit[j];
                                 var aine = oppiainekoodi.koodi.koodiArvo;
                                 var arvosanaFound = false;
-                                for (var i = 0; i < arvosanat.length; i++) {
-                                    var lisatieto = arvosanat[i].lisatieto;
+                                arv: for (var i = 0; i < arvosanat.length; i++) {
                                     if (arvosanat[i].aine === aine) {
+                                        var lisatieto = arvosanat[i].lisatieto;
                                         var a = arvosanataulukko[aine + ';' + lisatieto];
                                         if (!a) a = {};
 
@@ -98,6 +98,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
 
                                         arvosanataulukko[aine + ';' + lisatieto] = a;
                                         arvosanaFound = true;
+                                        break arv;
                                     }
                                 }
                                 if (!arvosanaFound) arvosanataulukko[aine + ';'] = {
