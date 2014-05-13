@@ -17,18 +17,18 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
 
         $http.get(koodistoServiceUrl + '/rest/json/oppiaineetyleissivistava/koodi/', { cache: true })
             .success(function(koodit) {
-                for (var i = 0; i < koodit.length; i++) {
-                    var koodi = koodit[i];
+                angular.forEach(koodit, function(koodi) {
                     var p = $http.get(koodistoServiceUrl + '/rest/json/relaatio/sisaltyy-alakoodit/' + koodi.koodiUri, { cache: true })
                         .success(function (alaKoodit) {
                             oppiaineet.push({ koodi: koodi, alaKoodit: alaKoodit });
                         });
                     koodistoPromises.push(p);
+                });
+                while (koodistoPromises.length < koodit.length) {
+                    setTimeout(function() { /* wait */ }, 100);
                 }
-
-                var koodistoDone = $q.all(koodistoPromises);
-                koodistoDone.then(function() {
-
+                var allDone = $q.all(koodistoPromises);
+                allDone.then(function() {
                     function findArvosana(aine, lisatieto, arvosanat, valinnainen) {
                         for (var i = 0; i < arvosanat.length; i++) {
                             if (!arvosanat[i].taken && arvosanat[i].aine === aine && arvosanat[i].lisatieto === lisatieto && arvosanat[i].valinnainen === valinnainen) {
@@ -43,7 +43,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                         Arvosanat.query({ suoritus: suoritusId }, function(arvosanat) {
                             var oppiainekoodit = oppiaineet.filter(function(o) {
                                 return o.alaKoodit.filter(function(alakoodi) {
-                                    alakoodi.koodiUri === pohjakoulutusFilter;
+                                    return alakoodi.koodiUri === pohjakoulutusFilter;
                                 }).length > 0
                             }).map(function(o) { return o.koodi.koodiArvo });
                             var arvosanataulukko = {};
@@ -51,17 +51,18 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                                 var aine = oppiainekoodit[j];
                                 for (var i = 0; i < arvosanat.length; i++) {
                                     var lisatieto = arvosanat[i].lisatieto;
+                                    if (arvosanat[i].aine === aine) {
+                                        var a = arvosanataulukko[aine + ';' + lisatieto];
+                                        if (!a) a = {};
 
-                                    var a = arvosanataulukko[aine + ';' + lisatieto];
-                                    if (!a) a = {};
+                                        a.aine = aine;
+                                        a.lisatieto = lisatieto;
+                                        a.arvosana = findArvosana(aine, lisatieto, arvosanat, false);
+                                        a.arvosanaValinnainen = findArvosana(aine, lisatieto, arvosanat, true);
+                                        a.arvosanaToinenValinnainen = findArvosana(aine, lisatieto, arvosanat, true);
 
-                                    a.aine = aine;
-                                    a.lisatieto = lisatieto;
-                                    a.arvosana = findArvosana(aine, lisatieto, arvosanat, false);
-                                    a.arvosanaValinnainen = findArvosana(aine, lisatieto, arvosanat, true);
-                                    a.arvosanaToinenValinnainen = findArvosana(aine, lisatieto, arvosanat, true);
-
-                                    arvosanataulukko[aine + ';' + lisatieto] = a;
+                                        arvosanataulukko[aine + ';' + lisatieto] = a;
+                                    }
                                 }
                                 if (!arvosanataulukko[aine + ';' + lisatieto]) arvosanataulukko[aine + ';' + lisatieto] = { aine: aine }
                             }
@@ -78,7 +79,14 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                     }
 
                     fetchArvosanat();
-                });
+                }, function() {
+                    $log.error("some of the calls to koodisto service failed");
+                    $rootScope.modalInstance.close({
+                        type: "danger",
+                        messageKey: "suoritusrekisteri.muokkaa.arvosanat.koodistopalveluongelma",
+                        message: "Koodistopalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
+                    })
+                })
             })
             .error(function() {
                 $rootScope.modalInstance.close({
