@@ -1,8 +1,6 @@
 'use strict';
 
 function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukset, suoritusId) {
-    $scope.arvosanat = [];
-    $scope.oppiaineet = [];
     $scope.valinnaisuudet = [
         {value: false, text: getOphMsg("suoritusrekisteri.valinnaisuus.ei", "Ei")},
         {value: true, text: getOphMsg("suoritusrekisteri.valinnaisuus.kylla", "Kyllä")}
@@ -15,7 +13,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
         }
 
         var koodistoPromises = [];
-        var oppiaineet = {};
+        var oppiaineet = [];
 
         $http.get(koodistoServiceUrl + '/rest/json/oppiaineetyleissivistava/koodi/', { cache: true })
             .success(function(koodit) {
@@ -23,7 +21,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                     var koodi = koodit[i];
                     var p = $http.get(koodistoServiceUrl + '/rest/json/relaatio/sisaltyy-alakoodit/' + koodi.koodiUri, { cache: true })
                         .success(function (alaKoodit) {
-                            oppiaineet[koodi.koodiUri] = { koodi: koodi, alaKoodit: alaKoodit };
+                            oppiaineet.push({ koodi: koodi, alaKoodit: alaKoodit });
                         });
                     koodistoPromises.push(p);
                 }
@@ -31,11 +29,6 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                 var koodistoDone = $q.all(koodistoPromises);
                 koodistoDone.then(function() {
 
-                    function filterOppiaine(koodiUri) {
-                        return oppiaineet[koodiUri].alaKoodit.filter(function(alakoodi) {
-                            alakoodi.koodiUri === pohjakoulutusFilter;
-                        }).length > 0
-                    }
                     function findArvosana(aine, lisatieto, arvosanat, valinnainen) {
                         for (var i = 0; i < arvosanat.length; i++) {
                             if (!arvosanat[i].taken && arvosanat[i].aine === aine && arvosanat[i].lisatieto === lisatieto && arvosanat[i].valinnainen === valinnainen) {
@@ -48,7 +41,11 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
 
                     function fetchArvosanat() {
                         Arvosanat.query({ suoritus: suoritusId }, function(arvosanat) {
-                            var oppiainekoodit = Object.keys(oppiaineet).filter(filterOppiaine);
+                            var oppiainekoodit = oppiaineet.filter(function(o) {
+                                return o.alaKoodit.filter(function(alakoodi) {
+                                    alakoodi.koodiUri === pohjakoulutusFilter;
+                                }).length > 0
+                            }).map(function(o) { return o.koodi.koodiArvo });
                             var arvosanataulukko = {};
                             for (var j = 0; j < oppiainekoodit.length; j++) {
                                 var aine = oppiainekoodit[j];
