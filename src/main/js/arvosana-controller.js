@@ -2,7 +2,7 @@
 
 function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukset, suoritusId) {
     $scope.arvosanat = [];
-    $scope.oppiaineet = {};
+    $scope.oppiaineet = [];
     $scope.valinnaisuudet = [
         {value: false, text: getOphMsg("suoritusrekisteri.valinnaisuus.ei", "Ei")},
         {value: true, text: getOphMsg("suoritusrekisteri.valinnaisuus.kylla", "Kyllä")}
@@ -30,7 +30,6 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
 
                 var koodistoDone = $q.all(koodistoPromises);
                 koodistoDone.then(function() {
-                    $scope.oppiaineet = [];
 
                     function filterOppiaine(koodiUri) {
                         return oppiaineet[koodiUri].alaKoodit.filter(function(alakoodi) {
@@ -53,16 +52,39 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
 
                     $scope.oppiaineet = Object.keys(oppiaineet).filter(filterOppiaine).map(composeOppiaine);
 
-                    Arvosanat.query({ suoritus: suoritusId }, function(arvosanat) {
-                        $scope.arvosanat = arvosanat;
-                        if (arvosanat.length === 0) {
-                            $scope.arvosanat = Object.keys($scope.oppiaineet).map(function(oppiaineKoodi) {
-                                return new Arvosanat({aine: oppiaineKoodi})
-                            });
-                        }
-                    });
+                    function fetchArvosanat() {
+                        Arvosanat.query({ suoritus: suoritusId }, function(arvosanat) {
+                            $scope.arvosanat = arvosanat;
+                            if (arvosanat.length === 0) {
+                                $scope.arvosanat = $scope.oppiaineet.map(function(o) {
+                                    return new Arvosanat({ aine: o.oppiaine })
+                                });
+                            }
+                        }, function() {
+                            $rootScope.modalInstance.close({
+                                type: "danger",
+                                messageKey: "suoritusrekisteri.muokkaa.arvosanat.arvosanapalveluongelma",
+                                message: "Arvosanapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
+                            })
+                        });
+                    }
+
+                    fetchArvosanat();
                 });
+            })
+            .error(function() {
+                $rootScope.modalInstance.close({
+                    type: "danger",
+                    messageKey: "suoritusrekisteri.muokkaa.arvosanat.koodistopalveluongelma",
+                    message: "Koodistopalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
+                })
             });
+    }, function() {
+        $rootScope.modalInstance.close({
+            type: "danger",
+            messageKey: "suoritusrekisteri.muokkaa.arvosanat.taustapalveluongelma",
+            message: "Taustapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
+        })
     });
 
     $scope.addArvosana = function() {
@@ -74,7 +96,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
             type: "success",
             messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennettu",
             message: "Arvosanat tallennettu."
-        });
+        })
     };
 
     $scope.cancel = function() {
