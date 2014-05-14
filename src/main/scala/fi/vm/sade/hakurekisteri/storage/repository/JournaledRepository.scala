@@ -12,7 +12,9 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
   loadJournal()
 
   def loadJournal() {
-    store = journal.journal().map((f: T with Identified) => f.id -> f).toMap
+    store = journal.
+      journal().
+      map((f: T with Identified) => f.id -> f).toMap
   }
 
   override def saveIdentified(o: T with Identified): T with Identified  = {
