@@ -70,11 +70,10 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                                 }).length > 0
                             });
                             var arvosanataulukko = {};
-                            for (var j = 0; j < oppiainekoodit.length; j++) {
+                            opp: for (var j = 0; j < oppiainekoodit.length; j++) {
                                 var oppiainekoodi = oppiainekoodit[j];
                                 var aine = oppiainekoodi.koodi.koodiArvo;
-                                var arvosanaFound = false;
-                                arv: for (var i = 0; i < arvosanat.length; i++) {
+                                for (var i = 0; i < arvosanat.length; i++) {
                                     if (arvosanat[i].aine === aine) {
                                         var lisatieto = arvosanat[i].lisatieto;
                                         var a = arvosanataulukko[aine + ';' + lisatieto];
@@ -97,11 +96,11 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                                         a.toinenValinnainenId = toinenValinnainen ? toinenValinnainen.id : null;
 
                                         arvosanataulukko[aine + ';' + lisatieto] = a;
-                                        arvosanaFound = true;
-                                        break arv;
+                                        continue opp;
                                     }
                                 }
-                                if (!arvosanaFound) arvosanataulukko[aine + ';'] = {
+                                
+                                arvosanataulukko[aine + ';'] = {
                                     aine: aine,
                                     aineNimi: getOppiaineNimi(oppiainekoodi),
                                     arvosana: "Ei arvosanaa"
