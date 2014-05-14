@@ -25,13 +25,19 @@ trait Repository[T] {
 trait InMemRepository[T <: Resource] extends Repository[T] {
 
   var store:Map[UUID,T with Identified] = Map()
-  var cursor = Platform.currentTime
+  var cursor = (Platform.currentTime, UUID.randomUUID.toString)
 
+  def updateCursor(id:UUID) = (id, Platform.currentTime, cursor) match {
+    case (id, time, (curtime, curid)) if id.toString == curid  && time == curtime =>  (time, id.toString + "#a")
+    case (id, time, (curtime, curid)) if curid.startsWith(id.toString) && time == curtime => (time, curid + "a")
+    case (id, time, cursor) => (time -> id.toString)
+
+  }
 
   def save(o: T ): T with Identified = {
     val oid = identify(o)
     val result = saveIdentified(oid)
-    cursor = Platform.currentTime
+    cursor = updateCursor(oid.id)
     result
   }
 
@@ -52,9 +58,10 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
 
 
   override def delete(id:UUID) = {
-    deleteFromStore(id)
-    cursor = Platform.currentTime
-
+    if (store.contains(id)) {
+      deleteFromStore(id)
+      cursor = updateCursor(id)
+    }
   }
 
   def deleteFromStore(id:UUID) = {
