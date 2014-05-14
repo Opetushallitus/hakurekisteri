@@ -43,14 +43,15 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
   }
 
 
-  it should "add the modification to the journal" in {
+  it should "add the modification to the journal" in new EmptyJournal {
 
-    val journal = TestJournal[TestResource]()
-    val idResource = TestRepo(journal).save(TestResource("first item"))
+    val idResource = repo.save(TestResource("first item"))
     val delta:Delta[TestResource] = Updated(idResource)
-    journal.journal() should contain (delta)
+    journal.journal().last should be (delta)
 
   }
+
+
 
 
   "A repository with a journal with entries" should "contain all the resources in journal" in new JournalWithEntries {
@@ -87,7 +88,7 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
     val resource = repo.get(ids.tail.head).get
     repo.delete(ids.head)
     val delta:Delta[TestResource] = Deleted(ids.head)
-    journal.journal should contain (delta)
+    journal.journal.last should be (delta)
   }
 
 
