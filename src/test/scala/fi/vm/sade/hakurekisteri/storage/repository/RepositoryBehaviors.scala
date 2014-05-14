@@ -118,7 +118,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
         repo.save(repo.listAll().headOption.getOrElse(itemConstructor))
         var start = repo.cursor
         val head = repo.listAll().head
-        for( i <- (1 to 100)) {
+        for( i <- 1 to 100) {
           start = repo.cursor
           repo.save(head)
           repo.cursor should not (be (start))
