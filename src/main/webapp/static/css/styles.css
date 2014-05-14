@@ -50,13 +50,13 @@ body #raamit-header .header-content {
     width: 32px;
 }
 
-.entrylist li {
+.entrylist > li {
     border-bottom: 1px solid #ccc;
     padding-bottom: 15px;
     margin-bottom: 15px;
 }
 
-.entrylist li:last-child {
+.entrylist > li:last-child {
     border-bottom: none;
     padding-bottom: 0;
     margin-bottom: 0;
