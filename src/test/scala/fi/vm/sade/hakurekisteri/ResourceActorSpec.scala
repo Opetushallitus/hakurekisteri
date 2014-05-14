@@ -22,7 +22,7 @@ class ResourceActorSpec extends WordSpec with ShouldMatchers {
 
     val resourceActor = TestActorRef[TestActor]
     "receiving resource" should {
-      val resource = new Resource("foo")
+      val resource = new TestResource("foo")
       resourceActor ! resource
       "save it"  in {
         resourceActor.underlyingActor.store should contain (resource)
