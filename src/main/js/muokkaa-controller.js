@@ -288,7 +288,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         $rootScope.modalInstance.result.then(function (message) {
             if (message) $scope.messages.push(message)
         }, function () {
-            $log.error("error closing modal")
+            $log.info("modal closed")
         });
     };
     $scope.addLuokkatieto = function() {
