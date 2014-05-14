@@ -15,8 +15,8 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 
 class HenkiloJournal(database: Database) extends JDBCJournal[Henkilo, HenkiloTable, ColumnOrdered[Long]] with HakurekisteriJsonSupport {
   override def toResource(row: HenkiloTable#TableElementType): Henkilo with Identified = read[Henkilo](row._2).identify(UUID.fromString(row._1))
-  override def toRow(o: Henkilo with Identified): HenkiloTable#TableElementType = (o.id.toString, write(o), System.currentTimeMillis())
-
+  override def update(o: Henkilo with Identified): HenkiloTable#TableElementType = (o.id.toString, write(o), System.currentTimeMillis())
+  override def delete(id:UUID) = ???
   val henkilot = TableQuery[HenkiloTable]
     database withSession(
       implicit session =>

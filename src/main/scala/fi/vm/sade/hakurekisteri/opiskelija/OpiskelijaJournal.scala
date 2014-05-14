@@ -11,7 +11,8 @@ import scala.slick.jdbc.meta.MTable
 
 class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, OpiskelijaTable, ColumnOrdered[Long]] {
   override def toResource(row: OpiskelijaTable#TableElementType): Opiskelija with Identified = Opiskelija(row._2,row._3,row._4,row._5,new DateTime(row._6), row._7.map(new DateTime(_))).identify(UUID.fromString(row._1))
-  override def toRow(o: Opiskelija with Identified): OpiskelijaTable#TableElementType = (o.id.toString, o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva.getMillis, o.loppuPaiva.map(_.getMillis), System.currentTimeMillis())
+  override def update(o: Opiskelija with Identified): OpiskelijaTable#TableElementType = (o.id.toString, o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva.getMillis, o.loppuPaiva.map(_.getMillis), System.currentTimeMillis())
+  override def delete(id:UUID) = ???
 
   val opiskelijat = TableQuery[OpiskelijaTable]
     database withSession(

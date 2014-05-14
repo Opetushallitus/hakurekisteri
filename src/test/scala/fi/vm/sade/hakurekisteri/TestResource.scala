@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri
 
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.storage.repository.{JournaledRepository, InMemRepository, Journal, InMemJournal}
+import fi.vm.sade.hakurekisteri.storage.repository._
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 
 case class TestResource(name:String) extends fi.vm.sade.hakurekisteri.rest.support.Resource{
@@ -30,9 +30,11 @@ object TestResource {
 }
 
 
-case class TestJournal[T <: Resource](state: Seq[T with Identified] = Seq()) extends InMemJournal[T] {
-  state foreach {(resource) => addModification(resource)}
+case class TestJournal[T <: Resource](state: Seq[T with Identified] = Seq(), deleted:Seq[UUID] = Seq()) extends InMemJournal[T] {
+  state foreach {(resource) => addModification(Updated(resource))}
+  deleted foreach {(id) => addModification(Deleted(id))}
 }
+
 
 
 case class TestRepo(journal: Journal[TestResource]) extends JournaledRepository[TestResource]{

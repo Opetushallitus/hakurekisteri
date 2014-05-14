@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.arvosana
 
 import scala.slick.driver.JdbcDriver.simple._
-import fi.vm.sade.hakurekisteri.storage.repository.JDBCJournal
+import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, Updated, Delta, JDBCJournal}
 import scala.slick.lifted.ColumnOrdered
 import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.slick.jdbc.meta.MTable
@@ -20,12 +20,18 @@ class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, Arvosana
       Arvosana(UUID.fromString(suoritus), Arvio(arvosana, asteikko), aine, lisatieto, valinnainen).identify(UUID.fromString(id))
   }
 
-  override def toRow(o: Arvosana with Identified): ArvosanaTable#TableElementType = o.arvio match {
+
+
+
+
+  def delete(id:UUID) =  ???
+
+  def update(o:Arvosana with Identified) = o.arvio match {
     case Arvio410(arvosana) =>
       logger.debug("toRow lisatieto {}", o.lisatieto)
       (o.id.toString, o.suoritus.toString, arvosana, Arvio.ASTEIKKO_4_10 , o.aine, o.lisatieto, o.valinnainen, Platform.currentTime)
     case a:Arvio if a == Arvio.NA => throw UnknownAssessmentResultException
-   }
+  }
 
 
   object UnknownAssessmentResultException extends IllegalArgumentException("Trying to save unknown assessment result")

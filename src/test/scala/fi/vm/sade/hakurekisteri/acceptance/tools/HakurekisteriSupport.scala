@@ -19,7 +19,7 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 
 import com.github.nscala_time.time.Imports._
-import fi.vm.sade.hakurekisteri.storage.repository.InMemJournal
+import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
 import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
 import org.joda.time
@@ -67,7 +67,7 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
         implicit val system = ActorSystem()
         implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource](s:Seq[R]) = {
           var journal = new InMemJournal[R]
-          s.foreach((resource:R) => journal.addModification(resource.identify(UUID.randomUUID())))
+          s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
           journal
         }
         val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(tehdytSuoritukset)))
