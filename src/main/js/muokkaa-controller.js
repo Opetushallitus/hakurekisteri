@@ -273,7 +273,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                 $scope.messages.push({
                     type: "danger",
                     messageKey: "suoritusrekisteri.muokkaa.tallennusepaonnistui",
-                    message: "Tiedot ei onnistunut. Yritä uudelleen."
+                    message: "Tietojen tallentaminen ei onnistunut. Yritä uudelleen."
                 });
             });
         }, function(errors) {
