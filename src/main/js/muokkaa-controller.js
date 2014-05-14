@@ -18,9 +18,19 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         // {value: "keskeytynyt", text: getOphMsg("suoritusrekisteri.komo.keskeytynyt", "Keskeytynyt")}, //TODO keskeytynyt ei käytössä
         {value: "lukio", text: getOphMsg("suoritusrekisteri.komo.lukio", "Lukio")}
     ];
+    $scope.luokkatasot = [
+        {value: "9", text: "9"},
+        {value: "10", text: "10"},
+        {value: "A", text: "A"},
+        {value: "M", text: "M"},
+        {value: "V", text: "V"}
+    ];
     $scope.messages = [];
     $scope.suoritukset = [];
     $scope.luokkatiedot = [];
+    $scope.kielet = [];
+
+    getKoodistoAsOptionArray($http, 'kieli', 'fi', $scope.kielet, 'koodiArvo');
 
     $rootScope.addToMurupolku({href: "#/opiskelijat", key: "suoritusrekisteri.muokkaa.muru1", text: "Opiskelijoiden haku"}, true);
     $rootScope.addToMurupolku({key: "suoritusrekisteri.muokkaa.muru", text: "Muokkaa opiskelijan tietoja"}, false);
