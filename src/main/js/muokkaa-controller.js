@@ -11,7 +11,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
     $scope.koulutukset = [
         {value: "ulkomainen", text: getOphMsg("suoritusrekisteri.komo.ulkomainen", "Ulkomainen")},
         {value: "peruskoulu", text: getOphMsg("suoritusrekisteri.komo.peruskoulu", "Peruskoulu")},
-        {value: "lisaopetus", text: getOphMsg("suoritusrekisteri.komo.", "Perusopetuksen lisäopetus")},
+        {value: "lisaopetus", text: getOphMsg("suoritusrekisteri.komo.lisaopetus", "Perusopetuksen lisäopetus")},
         {value: "ammattistartti", text: getOphMsg("suoritusrekisteri.komo.ammattistartti", "Ammattistartti")},
         {value: "maahanmuuttaja", text: getOphMsg("suoritusrekisteri.komo.maahanmuuttaja", "Maahanmuuttaja")},
         {value: "valmentava", text: getOphMsg("suoritusrekisteri.komo.valmentava", "Valmentava")},
