@@ -116,74 +116,116 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         var deferredValidations = [];
         function validateOppilaitoskoodit() {
             angular.forEach($scope.luokkatiedot.concat($scope.suoritukset), function(obj) {
-                var deferredValidation = $q.defer();
-                deferredValidations.push(deferredValidation);
-                if (!obj.oppilaitos || !obj.oppilaitos.match(/^\d{5}$/)) {
-                    $scope.messages.push({
-                        type: "danger",
-                        messageKey: "suoritusrekisteri.muokkaa.oppilaitoskoodipuuttuu",
-                        message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
-                        descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi",
-                        description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
-                    });
-                    deferredValidation.reject("error");
-                } else {
-                    getOrganisaatio($http, obj.oppilaitos, function (organisaatio) {
-                        if (obj.myontaja) obj.myontaja = organisaatio.oid;
-                        else obj.oppilaitosOid = organisaatio.oid;
-                        deferredValidation.resolve("done");
-                    }, function () {
+                if (!obj.delete) {
+                    var deferredValidation = $q.defer();
+                    deferredValidations.push(deferredValidation);
+                    if (!obj.oppilaitos || !obj.oppilaitos.match(/^\d{5}$/)) {
                         $scope.messages.push({
                             type: "danger",
-                            messageKey: "suoritusrekisteri.muokkaa.oppilaitostaeiloytynyt",
-                            message: "Oppilaitosta ei löytynyt oppilaitoskoodilla.",
+                            messageKey: "suoritusrekisteri.muokkaa.oppilaitoskoodipuuttuu",
+                            message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
                             descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi",
                             description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
                         });
                         deferredValidation.reject("error");
-                    });
+                    } else {
+                        getOrganisaatio($http, obj.oppilaitos, function (organisaatio) {
+                            if (obj.myontaja) obj.myontaja = organisaatio.oid;
+                            else obj.oppilaitosOid = organisaatio.oid;
+                            deferredValidation.resolve("done");
+                        }, function () {
+                            $scope.messages.push({
+                                type: "danger",
+                                messageKey: "suoritusrekisteri.muokkaa.oppilaitostaeiloytynyt",
+                                message: "Oppilaitosta ei löytynyt oppilaitoskoodilla.",
+                                descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi",
+                                description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
+                            });
+                            deferredValidation.reject("error");
+                        });
+                    }
                 }
             });
         }
         validateOppilaitoskoodit();
 
-        var deferredSaves = [];
+        var deferreds = [];
         function saveSuoritukset() {
             angular.forEach($scope.suoritukset, function(suoritus) {
-                var deferredSave = $q.defer();
-                deferredSaves.push(deferredSave);
-                suoritus.$save(function (savedSuoritus) {
-                    $log.debug("suoritus saved: " + savedSuoritus);
-                    deferredSave.resolve("done");
-                }, function () {
-                    $scope.messages.push({
-                        type: "danger",
-                        messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
-                        message: "Virhe tallennettaessa suoritustietoja.",
-                        descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
-                        description: "Yritä uudelleen."
-                    });
-                    deferredSave.reject("error saving suoritus: " + suoritus);
-                });
-            });
+                var d = $q.defer();
+                deferreds.push(d);
+                if (suoritus.delete) {
+                    if (suoritus.id) {
+                        suoritus.$remove(function() {
+                            $log.debug("suoritus removed");
+                            d.resolve("done");
+                        }, function() {
+                            $scope.messages.push({
+                                type: "danger",
+                                messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
+                                message: "Virhe tallennettaessa suoritustietoja.",
+                                descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
+                                description: "Yritä uudelleen."
+                            });
+                            d.reject("error deleting suoritus: " + suoritus);
+                        })
+                    } else {
+                        d.resolve("done")
+                    }
+                } else {
+                    suoritus.$save(function (savedSuoritus) {
+                        $log.debug("suoritus saved: " + savedSuoritus);
+                        d.resolve("done");
+                    }, function () {
+                        $scope.messages.push({
+                            type: "danger",
+                            messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
+                            message: "Virhe tallennettaessa suoritustietoja.",
+                            descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
+                            description: "Yritä uudelleen."
+                        });
+                        d.reject("error saving suoritus: " + suoritus);
+                    })
+                }
+            })
         }
         function saveLuokkatiedot() {
             angular.forEach($scope.luokkatiedot, function(luokkatieto) {
-                var deferredSave = $q.defer();
-                deferredSaves.push(deferredSave);
-                luokkatieto.$save(function (savedLuokkatieto) {
-                    $log.debug("luokkatieto saved: " + savedLuokkatieto);
-                    deferredSave.resolve("done");
-                }, function () {
-                    $scope.messages.push({
-                        type: "danger",
-                        messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja",
-                        message: "Virhe tallennettaessa luokkatietoja.",
-                        descriptionKey: "suoritusrekisteri.muokkaa.virheluokkayrita",
-                        description: "Yritä uudelleen."
-                    });
-                    deferredSave.reject("error saving luokkatieto: " + luokkatieto);
-                });
+                var d = $q.defer();
+                deferreds.push(d);
+                if (luokkatieto.delete) {
+                    if (luokkatieto.id) {
+                        luokkatieto.$remove(function() {
+                            $log.debug("luokkatieto removed");
+                            d.resolve("done");
+                        }, function() {
+                            $scope.messages.push({
+                                type: "danger",
+                                messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
+                                message: "Virhe tallennettaessa suoritustietoja.",
+                                descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
+                                description: "Yritä uudelleen."
+                            });
+                            d.reject("error deleting luokkatieto: " + luokkatieto);
+                        })
+                    } else {
+                        d.resolve("done")
+                    }
+                } else {
+                    luokkatieto.$save(function (savedLuokkatieto) {
+                        $log.debug("luokkatieto saved: " + savedLuokkatieto);
+                        d.resolve("done");
+                    }, function () {
+                        $scope.messages.push({
+                            type: "danger",
+                            messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja",
+                            message: "Virhe tallennettaessa luokkatietoja.",
+                            descriptionKey: "suoritusrekisteri.muokkaa.virheluokkayrita",
+                            description: "Yritä uudelleen."
+                        });
+                        d.reject("error saving luokkatieto: " + luokkatieto);
+                    })
+                }
             });
         }
 
@@ -193,7 +235,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             saveLuokkatiedot();
         });
 
-        var savePromise = $q.all(deferredSaves.map(function(deferred) { return deferred.promise }));
+        var savePromise = $q.all(deferreds.map(function(deferred) { return deferred.promise }));
         savePromise.then(function() {
             $log.info("saved successfully");
             back();

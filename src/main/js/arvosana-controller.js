@@ -1,6 +1,7 @@
 'use strict';
 
 function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukset, suoritusId) {
+    $scope.arvosanataulukko = [];
     $scope.oppiaineet = [];
     $scope.valinnaisuudet = [
         {value: false, text: getOphMsg("suoritusrekisteri.valinnaisuus.ei", "Ei")},
@@ -176,7 +177,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
         var arvosanat = [];
         for (var i = 0; i < $scope.arvosanataulukko.length; i++) {
             var a = $scope.arvosanataulukko[i];
-            if (a.aine && a.arvosana && a.arvosana !== "Ei arvosanaa") arvosanat.push(new Arvosanat({ id: a.arvosanaId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosana, asteikko: "4-10" } }));
+            if (a.aine && a.arvosana) arvosanat.push(new Arvosanat({ id: a.arvosanaId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosana, asteikko: "4-10" } }));
             if (a.aine && a.arvosanaValinnainen) arvosanat.push(new Arvosanat({ id: a.valinnainenId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosanaValinnainen, asteikko: "4-10" }, valinnainen: true }));
             if (a.aine && a.arvosanaToinenValinnainen) arvosanat.push(new Arvosanat({ id: a.toinenValinnainenId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosanaToinenValinnainen, asteikko: "4-10" }, valinnainen: true }));
         }
@@ -186,9 +187,13 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
             var d = $q.defer();
             deferreds.push(d);
             arvosana.$save(function(saved) {
-                d.resolve("saved: " + saved.id);
+                d.resolve("save ok: " + saved.id);
             }, function() {
-                d.reject("save failed");
+                arvosana.$save(function(retriedSave) {
+                    d.resolve("retry save ok: " + retriedSave.id);
+                }, function() {
+                    d.reject("retry save failed");
+                });
             });
         });
 

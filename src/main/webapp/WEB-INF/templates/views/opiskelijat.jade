@@ -46,10 +46,11 @@ table(class="table")
     tr(ng-repeat="row in currentRows")
       td {{row.henkilo || row.henkiloOid}}
       td
-        div(ng-repeat="o in row.opiskelijatiedot") {{o.oppilaitos}} {{o.luokka}}
+        div(ng-repeat="o in row.opiskelijatiedot") {{o.oppilaitos}}, {{o.luokka}}
       td
         div(ng-repeat="s in row.suoritustiedot")
-          span {{s.komo}} {{s.oppilaitos}}
+          span {{s.oppilaitos}},
+          span(oph-msg="suoritusrekisteri.komo.{{s.komo}}") {{s.komo}}
           span(ng-show="s.isArvosanat" oph-msg="suoritusrekisteri.opiskelijat.arvosanatsiirretty") (arvosanat siirretty)
           span(ng-hide="s.isArvosanat" oph-msg="suoritusrekisteri.opiskelijat.eiarvosanoja") (ei arvosanoja)
       td

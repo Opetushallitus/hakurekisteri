@@ -32,6 +32,9 @@ script(type="text/ng-template" id="arvosanaedit.html")
             select(ng-show="isValinnainen(a.aine)" class="form-control input-sm" ng-model="a.arvosanaValinnainen" ng-options="a.value as a.text for a in arvosanat")
           td
             select(ng-show="isValinnainen(a.aine)" class="form-control input-sm" ng-model="a.arvosanaToinenValinnainen" ng-options="a.value as a.text for a in arvosanat")
+        tr(ng-show="arvosanataulukko.length == 0")
+          td(class="loading-td" colspan="5")
+            div(class="loading-large")
 
     div(class="modal-footer")
       button(type="button" class="btn btn-default" ng-click="cancel()")
@@ -72,30 +75,33 @@ div(class="row")
         h2(class="panel-title" oph-msg="suoritusrekisteri.muokkaa.suoritukset") Suoritukset
       div(class="panel-body")
         ul(class="list-unstyled entrylist")
-          li(ng-repeat="suoritus in suoritukset")
+          li(ng-repeat="suoritus in suoritukset" class="{{suoritus.delete ? 'delete-suoritus' : ''}}")
             form(class="form-inline suoritus-form")
               div(class="row")
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.myontaja") Myöntäjä
-                  input(type="text" class="form-control input-sm" ng-model="suoritus.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv)) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingSuoritusOppilaitos" typeahead-wait-ms="500" required)
+                  input(type="text" class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv)) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingSuoritusOppilaitos" typeahead-wait-ms="500" required)
                 div(class="form-group col-sm-5")
                   strong(oph-msg="suoritusrekisteri.muokkaa.koulutus") Koulutus
-                  select(class="form-control input-sm" ng-model="suoritus.komo" ng-options="koulutus.value as koulutus.text for koulutus in koulutukset" required)
+                  select(class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.komo" ng-options="koulutus.value as koulutus.text for koulutus in koulutukset" required)
                 div(class="form-group col-sm-4")
                   strong(oph-msg="suoritusrekisteri.muokkaa.yksilollistetty") Yksilöllistetty
-                  select(class="form-control input-sm" ng-model="suoritus.yksilollistaminen" ng-options="yks.value as yks.text for yks in yksilollistamiset" required ng-disabled="suoritus.komo !== 'peruskoulu'")
+                  select(class="form-control input-sm" ng-model="suoritus.yksilollistaminen" ng-options="yks.value as yks.text for yks in yksilollistamiset" required ng-disabled="suoritus.delete || suoritus.komo !== 'peruskoulu'")
               div(class="row")
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.opetuskieli") Opetuskieli
-                  input(type="text" class="form-control input-sm" ng-model="suoritus.suoritusKieli" required)
+                  input(type="text" class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.suoritusKieli" required)
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.valmistumispaiva") Valmistumispäivä
-                  input(type="text" class="form-control input-sm" ng-model="suoritus.valmistuminen" datepicker-popup="{{format}}" datepicker-options="dateOptions" show-button-bar="false")
+                  input(type="text" class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.valmistuminen" datepicker-popup="{{format}}" datepicker-options="dateOptions" show-button-bar="false")
                 div(class="form-group col-sm-6")
                   div(class="pull-right")
-                    button(type="button" class="btn btn-default arvosana-button" ng-disabled="!suoritus.id" ng-click="editArvosana(suoritus.id)")
+                    button(type="button" class="btn btn-default arvosana-button" ng-disabled="!suoritus.id || suoritus.delete" ng-click="editArvosana(suoritus.id)")
                       span(oph-msg="suoritusrekisteri.muokkaa.muokkaaarvosanoja") Muokkaa arvosanoja
                       span(class="glyphicon glyphicon-edit")
+                    button(type="button" class="btn btn-default arvosana-button" ng-disabled="suoritus.delete" ng-click="suoritus.delete = true")
+                      span(oph-msg="suoritusrekisteri.muokkaa.poistasuoritus") Poista suoritus
+                      span(class="glyphicon glyhicon-remove")
           li
             button(class="btn btn-default btn-xs" ng-click="addSuoritus()")
               span(oph-msg="suoritusrekisteri.muokkaa.uusisuoritus") Lisää uusi suoritus
@@ -107,25 +113,29 @@ div(class="row")
         h2(class="panel-title" oph-msg="suoritusrekisteri.muokkaa.luokkatiedot") Luokkatiedot
       div(class="panel-body")
         ul(class="list-unstyled entrylist")
-          li(ng-repeat="luokkatieto in luokkatiedot")
+          li(ng-repeat="luokkatieto in luokkatiedot" class="{{suoritus.delete ? 'delete-luokkatieto' : ''}}")
             form(class="form-inline luokkatieto-form")
               div(class="row")
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.oppilaitos") Oppilaitos
-                  input(type="text" class="form-control input-sm" ng-model="luokkatieto.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv)) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingLuokkatietoOppilaitos" typeahead-wait-ms="500" required)
+                  input(type="text" class="form-control input-sm" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv)) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingLuokkatietoOppilaitos" typeahead-wait-ms="500" required)
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.luokka") Luokka
-                  input(type="text" class="form-control input-sm" ng-model="luokkatieto.luokka" required)
+                  input(type="text" class="form-control input-sm" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.luokka" required)
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.luokkataso") Luokkataso
-                  input(type="text" class="form-control input-sm" ng-model="luokkatieto.luokkataso" required)
+                  input(type="text" class="form-control input-sm" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.luokkataso" required)
               div(class="row")
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.alkupaiva") Alkupäivä
-                  input(type="text" class="form-control input-sm" ng-model="luokkatieto.alkuPaiva" datepicker-popup="{{format}}" datepicker-options="dateOptions" required show-button-bar="false")
+                  input(type="text" class="form-control input-sm" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.alkuPaiva" datepicker-popup="{{format}}" datepicker-options="dateOptions" required show-button-bar="false")
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.loppupaiva") Loppupäivä
-                  input(type="text" class="form-control input-sm" ng-model="luokkatieto.loppuPaiva" datepicker-popup="{{format}}" datepicker-options="dateOptions" show-button-bar="false" min="luokkatieto.alkuPaiva")
+                  input(type="text" class="form-control input-sm" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.loppuPaiva" datepicker-popup="{{format}}" datepicker-options="dateOptions" show-button-bar="false" min="luokkatieto.alkuPaiva")
+                div(class="form-group col-sm-6")
+                  button(type="button" class="btn btn-default arvosana-button" ng-disabled="luokkatieto.delete" ng-click="luokkatieto.delete = true")
+                    span(oph-msg="suoritusrekisteri.muokkaa.poistasuoritus") Poista suoritus
+                    span(class="glyphicon glyhicon-remove")
           li
             button(class="btn btn-default btn-xs" ng-click="addLuokkatieto()")
               span(oph-msg="suoritusrekisteri.muokkaa.uusiluokkatieto") Lisää uusi luokkatieto
