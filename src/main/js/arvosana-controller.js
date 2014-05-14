@@ -66,9 +66,9 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                     function fetchArvosanat() {
                         Arvosanat.query({ suoritus: suoritusId }, function(arvosanat) {
                             var oppiainekoodit = $scope.oppiaineet.filter(function(o) {
-                                return o.alaKoodit.filter(function(alakoodi) {
+                                return o.alaKoodit.some(function(alakoodi) {
                                     return alakoodi.koodiUri === pohjakoulutusFilter;
-                                }).length > 0
+                                })
                             });
                             var arvosanataulukko = {};
                             opp: for (var j = 0; j < oppiainekoodit.length; j++) {
@@ -109,9 +109,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                             }
 
                             function hasRedundantArvosana(arvosanat) {
-                                return arvosanat.filter(function(a) {
-                                    return !a.taken
-                                }).length > 0
+                                return arvosanat.some(function(a) { return !a.taken })
                             }
 
                             if (hasRedundantArvosana(arvosanat)) {
@@ -163,19 +161,15 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
     });
 
     $scope.isValinnainen = function(aine) {
-        return $scope.oppiaineet.filter(function(o) {
-            return o.koodi.koodiArvo === aine && o.alaKoodit.filter(function(alakoodi) {
-                return alakoodi.koodiUri === 'oppiaineenvalinnaisuus_1'
-            }).length > 0
-        }).length > 0
+        return $scope.oppiaineet.some(function(o) {
+            return o.koodi.koodiArvo === aine && o.alaKoodit.some(function(alakoodi) { return alakoodi.koodiUri === 'oppiaineenvalinnaisuus_1' })
+        })
     };
 
     $scope.isKielisyys = function(aine) {
-        return $scope.oppiaineet.filter(function(o) {
-            return o.koodi.koodiArvo === aine && o.alaKoodit.filter(function(alakoodi) {
-                return alakoodi.koodiUri === 'oppiaineenkielisyys_1'
-            }).length > 0
-        }).length > 0
+        return $scope.oppiaineet.some(function(o) {
+            return o.koodi.koodiArvo === aine && o.alaKoodit.some(function(alakoodi) { return alakoodi.koodiUri === 'oppiaineenkielisyys_1' })
+        })
     };
 
     $scope.save = function() {
