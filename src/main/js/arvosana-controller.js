@@ -7,6 +7,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
         {value: true, text: getOphMsg("suoritusrekisteri.valinnaisuus.kylla", "Kyllä")}
     ];
     $scope.arvosanat = [
+        {value: "", text: ""},
         {value: "Ei arvosanaa", text: "Ei arvosanaa"},
         {value: "4", text: "4"},
         {value: "5", text: "5"},
@@ -105,6 +106,21 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                                     aineNimi: getOppiaineNimi(oppiainekoodi),
                                     arvosana: "Ei arvosanaa"
                                 }
+                            }
+
+                            function hasRedundantArvosana(arvosanat) {
+                                return arvosanat.filter(function(a) {
+                                    return !a.taken
+                                }).length > 0
+                            }
+
+                            if (hasRedundantArvosana(arvosanat)) {
+                                $rootScope.modalInstance.close({
+                                    type: "danger",
+                                    messageKey: "suoritusrekisteri.muokkaa.arvosanat.arvosanoissavirhe",
+                                    message: "Arvosanoissa on duplikaatteja. Ota yhteyttä asiakaspalveluun."
+                                });
+                                return;
                             }
                             $scope.arvosanataulukko = Object.keys(arvosanataulukko).map(function(key) {
                                 return arvosanataulukko[key];
