@@ -186,9 +186,13 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
             var d = $q.defer();
             deferreds.push(d);
             arvosana.$save(function(saved) {
-                d.resolve("saved: " + saved.id);
+                d.resolve("save ok: " + saved.id);
             }, function() {
-                d.reject("save failed");
+                arvosana.$save(function(retriedSave) {
+                    d.resolve("retry save ok: " + retriedSave.id);
+                }, function() {
+                    d.reject("retry save failed");
+                });
             });
         });
 
