@@ -17,6 +17,7 @@ trait Repository[T] {
 
   def cursor: Any
 
+  def delete(id: UUID)
 }
 
 
@@ -49,6 +50,16 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
     store.get(id)
   }
 
+
+  override def delete(id:UUID) = {
+    deleteFromStore(id)
+    cursor = Platform.currentTime
+
+  }
+
+  def deleteFromStore(id:UUID) = {
+    store = store - id
+  }
 
 }
 

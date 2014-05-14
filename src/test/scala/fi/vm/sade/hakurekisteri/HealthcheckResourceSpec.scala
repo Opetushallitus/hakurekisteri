@@ -8,7 +8,7 @@ import akka.actor.{Props, ActorSystem}
 import fi.vm.sade.hakurekisteri.acceptance.tools.{FakeAuthorizer}
 import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaActor, Opiskelija}
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
-import fi.vm.sade.hakurekisteri.storage.repository.InMemJournal
+import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
 import java.util.UUID
 
 class HealthcheckResourceSpec extends ScalatraFunSuite {
@@ -38,7 +38,7 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
 
   def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource](s:Seq[R]) = {
     val journal = new InMemJournal[R]
-    s.foreach((resource:R) => journal.addModification(resource.identify(UUID.randomUUID())))
+    s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
     journal
   }
 

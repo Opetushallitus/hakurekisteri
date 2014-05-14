@@ -35,4 +35,6 @@ class TestActor extends ResourceActor[TestResource]  with Repository[TestResourc
   var currentCursor = Platform.currentTime
 
   override def cursor: Any = currentCursor
+
+  override def delete(id:UUID) = ???
 }

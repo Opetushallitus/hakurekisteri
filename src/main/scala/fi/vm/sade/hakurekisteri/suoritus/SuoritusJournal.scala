@@ -11,7 +11,9 @@ import java.util.UUID
 
 class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, SuoritusTable, ColumnOrdered[Long]] {
   override def toResource(row: SuoritusTable#TableElementType): Suoritus with Identified = Suoritus(row._2, row._3, row._4, LocalDate.parse(row._5), row._6, yksilollistaminen.withName(row._7), row._8).identify(UUID.fromString(row._1))
-  override def toRow(o: Suoritus with Identified): SuoritusTable#TableElementType = (o.id.toString, o.komo, o.myontaja, o.tila, o.valmistuminen.toString, o.henkiloOid, o.yksilollistaminen.toString, o.suoritusKieli, System.currentTimeMillis())
+  override def update(o: Suoritus with Identified): SuoritusTable#TableElementType = (o.id.toString, o.komo, o.myontaja, o.tila, o.valmistuminen.toString, o.henkiloOid, o.yksilollistaminen.toString, o.suoritusKieli, System.currentTimeMillis())
+  override def delete(id:UUID) = ???
+
 
   val opiskelijat = TableQuery[SuoritusTable]
   database withSession(
