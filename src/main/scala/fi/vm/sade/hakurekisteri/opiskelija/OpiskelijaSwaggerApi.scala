@@ -48,4 +48,9 @@ trait OpiskelijaSwaggerApi
   val read = apiOperation[Opiskelija]("haeOpiskelija")
     .summary("hakee opiskelijatiedon tiedot")
     .parameter(pathParam[String]("id").description("opiskelijatiedon uuid").required)
-}
+
+  val delete = apiOperation[Unit]("poistaOpiskelija")
+    .summary("poistaa olemassa olevan opiskelutiedon")
+    .parameter(pathParam[String]("id").description("opiskelutiedon uuid").required)
+
+    }

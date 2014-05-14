@@ -38,6 +38,8 @@ abstract class ResourceActor[T: Manifest] extends Actor { this: Repository[T] wi
       self.forward(o)
     case id:UUID =>
       sender ! get(id)
+    case DeleteResource(id) =>
+      sender ! delete(id)
 
   }
 
@@ -49,5 +51,7 @@ abstract class ResourceActor[T: Manifest] extends Actor { this: Repository[T] wi
 
 
 
-
 }
+
+case class DeleteResource(id:UUID)
+

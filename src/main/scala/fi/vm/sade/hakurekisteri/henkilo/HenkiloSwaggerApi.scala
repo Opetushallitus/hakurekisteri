@@ -29,4 +29,9 @@ trait HenkiloSwaggerApi
   val read = apiOperation[Henkilo]("haeHenkilo")
     .summary("hakee henkilön tiedot")
     .parameter(pathParam[String]("id").description("henkilön uuid").required)
-}
+
+  val delete = apiOperation[Unit]("poistaHenkilo")
+    .summary("poistaa olemassa olevan henkilon tiedot")
+    .parameter(pathParam[String]("id").description("henkilotiedon uuid").required)
+
+    }

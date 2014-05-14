@@ -44,6 +44,10 @@ trait ArvosanaSwaggerApi  { this: HakurekisteriResource[Arvosana, CreateArvosana
     .summary("hakee arvosanatiedon tiedot")
     .parameter(pathParam[String]("id").description("arvosanatiedon uuid").required)
 
+  val delete = apiOperation[Unit]("poistaArvosana")
+    .summary("poistaa olemassa olevan arvosanan tiedot")
+    .parameter(pathParam[String]("id").description("arvosanatiedon uuid").required)
+
 }
 
 

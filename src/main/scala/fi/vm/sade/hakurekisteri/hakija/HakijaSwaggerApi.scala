@@ -76,4 +76,6 @@ trait HakijaSwaggerApi extends SwaggerSupport {
     .parameter(queryParam[String]("hakuehto").description("hakuehto").allowableValues(Hakuehto.values.toList).required)
     .parameter(queryParam[String]("tyyppi").description("tietotyyppi").allowableValues(Tyyppi.values.toList).required)
     .parameter(queryParam[Option[Boolean]]("tiedosto").description("palautetaanko vastaus tiedostona").optional)
+
+
 }

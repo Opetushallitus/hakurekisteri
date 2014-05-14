@@ -46,6 +46,11 @@ trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus, CreateSuoritus
     .summary("hakee suorituksen tiedot")
     .parameter(pathParam[String]("id").description("suorituksen uuid").required)
 
+  val delete = apiOperation[Unit]("poistaSuoritus")
+    .summary("poistaa olemassa olevan suoritustiedon")
+    .parameter(pathParam[String]("id").description("suoritustiedon uuid").required)
+
+
 }
 
 
