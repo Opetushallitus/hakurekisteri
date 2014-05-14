@@ -68,8 +68,8 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
 
     it should "return updated item when updated" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        for (i <- repo.listAll.size to 10) repo.save(itemConstructor)
-        forAll(Table("adds",repo.listAll.map(itemUpdater).take(10):_*)) {
+        for (i <- repo.listAll().size to 10) repo.save(itemConstructor)
+        forAll(Table("adds",repo.listAll().map(itemUpdater).take(10):_*)) {
           (item) => {
             val saved = repo.save(item)
             repo.get(saved.id) should be (Some(saved))
@@ -79,16 +79,16 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
 
     it should "contain updated item when updated" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        for (i <- repo.listAll.size to 10) repo.save(itemConstructor)
-        forAll(Table("adds",repo.listAll.map(itemUpdater).take(10):_*)) {
+        for (i <- repo.listAll().size to 10) repo.save(itemConstructor)
+        forAll(Table("adds",repo.listAll().map(itemUpdater).take(10):_*)) {
           (item) => repo.get(repo.save(item).id) should be (Some(item))
         }
     }
 
     it should "retain id of the item when updated" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        for (i <- repo.listAll.size to 10) repo.save(itemConstructor)
-        forAll(Table("adds",repo.listAll.map(itemUpdater).take(10):_*)) {
+        for (i <- repo.listAll().size to 10) repo.save(itemConstructor)
+        forAll(Table("adds",repo.listAll().map(itemUpdater).take(10):_*)) {
           (item) => repo.get(repo.save(item).id).map(_.id) should be (Some(item.id))
         }
     }
@@ -110,7 +110,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
 
     it should "change cursor when item is updated" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        val saved = repo.listAll.headOption.getOrElse(repo.save(itemConstructor))
+        val saved = repo.listAll().headOption.getOrElse(repo.save(itemConstructor))
         val start = repo.cursor
         repo.save(itemUpdater(saved))
         repo.cursor should not (be (start))

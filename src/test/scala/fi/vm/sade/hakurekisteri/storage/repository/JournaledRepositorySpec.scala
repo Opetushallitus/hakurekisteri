@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with RepositoryBehaviors[TestResource] {
 
   val repoConstructor = (items:Seq[TestResource]) => {
-    val resources = items.map(TestResource.identify(_))
+    val resources = items.map(TestResource.identify)
     TestRepo(TestJournal[TestResource](resources))
   }
 
@@ -55,7 +55,7 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
 
   "A repository with a journal with entries" should "contain all the resources in journal" in new JournalWithEntries {
     forAll(Table("id",ids:_*)) {
-      (id) => repo.get(id) should not be (None)
+      (id) => repo.get(id) should not be None
     }
   }
 
