@@ -104,3 +104,7 @@ body #raamit-header .header-content {
     width: auto;
     max-width: 850px;
 }
+
+.delete-suoritus, .delete-luokkatieto {
+    background: #ccc repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255, 255, 255, .5) 5px, rgba(255, 255, 255, .5) 10px);
+}
