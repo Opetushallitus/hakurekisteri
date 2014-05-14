@@ -116,12 +116,10 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         $scope.messages.length = 0;
         var validations = [];
         function validateOppilaitoskoodit() {
-            var objects = $scope.luokkatiedot.concat($scope.suoritukset);
-            for (var i = 0; i < objects.length; i++) {
-                var obj = objects[i];
+            angular.forEach($scope.luokkatiedot.concat($scope.suoritukset), function(obj) {
                 if (!obj.delete) {
                     var d = $q.defer();
-                    validations.push(d);
+                    this.push(d);
                     if (!obj.oppilaitos || !obj.oppilaitos.match(/^\d{5}$/)) {
                         $scope.messages.push({
                             type: "danger",
@@ -148,7 +146,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                         });
                     }
                 }
-            }
+            }, validations)
         }
         validateOppilaitoskoodit();
 
@@ -159,11 +157,10 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
 
         var deferreds = [];
         function saveSuoritukset() {
-            for (var i = 0; i < $scope.suoritukset.length; i++) {
-                var suoritus = $scope.suoritukset[i];
+            angular.forEach($scope.suoritukset, function(suoritus) {
                 $log.debug("save suoritus: " + suoritus.id);
                 var d = $q.defer();
-                deferreds.push(d);
+                this.push(d);
                 if (suoritus.delete) {
                     if (suoritus.id) {
                         suoritus.$remove(function() {
@@ -201,14 +198,13 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                         d.reject("error saving suoritus: " + suoritus);
                     })
                 }
-            }
+            }, deferreds)
         }
         function saveLuokkatiedot() {
-            for (var i = 0; i < $scope.luokkatiedot.length; i++) {
-                var luokkatieto = $scope.luokkatiedot[i];
+            angular.forEach($scope.luokkatiedot, function(luokkatieto) {
                 $log.debug("save luokkatieto: " + luokkatieto.id);
                 var d = $q.defer();
-                deferreds.push(d);
+                this.push(d);
                 if (luokkatieto.delete) {
                     if (luokkatieto.id) {
                         luokkatieto.$remove(function() {
@@ -246,11 +242,11 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                         d.reject("error saving luokkatieto: " + luokkatieto);
                     })
                 }
-            }
+            }, deferreds)
         }
 
         var allValidated = $q.all(validations.map(function(deferred) { return deferred.promise }));
-        allValidated.then(function(messages) {
+        allValidated.then(function() {
             saveSuoritukset();
             saveLuokkatiedot();
 
