@@ -39,6 +39,7 @@ body #raamit-header .header-content {
 }
 
 .loading-td {
+    background-color: #fff !important;
     text-align: center;
 }
 

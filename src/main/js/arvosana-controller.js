@@ -1,6 +1,7 @@
 'use strict';
 
 function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukset, suoritusId) {
+    $scope.arvosanataulukko = [];
     $scope.oppiaineet = [];
     $scope.valinnaisuudet = [
         {value: false, text: getOphMsg("suoritusrekisteri.valinnaisuus.ei", "Ei")},
