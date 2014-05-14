@@ -113,12 +113,12 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
     }
 
     $scope.save = function() {
-        var deferredValidations = [];
+        var validations = [];
         function validateOppilaitoskoodit() {
             angular.forEach($scope.luokkatiedot.concat($scope.suoritukset), function(obj) {
                 if (!obj.delete) {
                     var deferredValidation = $q.defer();
-                    deferredValidations.push(deferredValidation);
+                    validations.push(deferredValidation);
                     if (!obj.oppilaitos || !obj.oppilaitos.match(/^\d{5}$/)) {
                         $scope.messages.push({
                             type: "danger",
@@ -229,22 +229,39 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             });
         }
 
-        var validationPromise = $q.all(deferredValidations.map(function(deferred) { return deferred.promise }));
-        validationPromise.then(function() {
+        while (validations.length < $scope.luokkatiedot.concat($scope.suoritukset).length) {
+            setTimeout(function() { /* wait */ }, 100)
+        }
+
+        var allValidated = $q.all(validations.map(function(deferred) { return deferred.promise }));
+        allValidated.then(function() {
             saveSuoritukset();
             saveLuokkatiedot();
         });
 
-        var savePromise = $q.all(deferreds.map(function(deferred) { return deferred.promise }));
-        savePromise.then(function() {
+        while (deferreds.length < $scope.luokkatiedot.concat($scope.suoritukset).length) {
+            setTimeout(function() { /* wait */ }, 100)
+        }
+
+        var allSaved = $q.all(deferreds.map(function(deferred) { return deferred.promise }));
+        allSaved.then(function() {
             $log.info("saved successfully");
-            back();
+            $scope.messages.push({
+                type: "success",
+                messageKey: "suoritusrekisteri.muokkaa.tallennettu",
+                message: "Tiedot tallennettu."
+            });
         }, function(errors) {
             $log.error("error while saving: " + errors);
+            $scope.messages.push({
+                type: "danger",
+                messageKey: "suoritusrekisteri.muokkaa.tallennusepaonnistui",
+                message: "Tiedot ei onnistunut. Yritä uudelleen."
+            });
         });
     };
     $scope.cancel = function() {
-        back();
+        back()
     };
     $scope.addSuoritus = function() {
         $scope.suoritukset.push(new Suoritukset({ henkiloOid: $scope.henkiloOid, tila: "KESKEN", yksilollistaminen: "Ei", myontaja: "na" }));
@@ -259,13 +276,13 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         });
 
         $rootScope.modalInstance.result.then(function (message) {
-            if (message) $scope.messages.push(message);
+            if (message) $scope.messages.push(message)
         }, function () {
-            // error
+            $log.error("error closing modal")
         });
     };
     $scope.addLuokkatieto = function() {
-        $scope.luokkatiedot.push(new Opiskelijat({ henkiloOid: $scope.henkiloOid, oppilaitosOid: "na" }));
+        $scope.luokkatiedot.push(new Opiskelijat({ henkiloOid: $scope.henkiloOid, oppilaitosOid: "na" }))
     };
     $scope.removeMessage = function(message) {
         var index = $scope.messages.indexOf(message);
