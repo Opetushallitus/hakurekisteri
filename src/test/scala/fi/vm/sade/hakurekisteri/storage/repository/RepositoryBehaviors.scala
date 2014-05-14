@@ -6,6 +6,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.prop.Tables.Table
 import java.util.UUID
 import scala.annotation.tailrec
+import fi.vm.sade.hakurekisteri.storage.Identified
 
 trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
 
@@ -25,22 +26,22 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
 
   }
 
-  def repositorywithItems(repoContext: ((Repository[T], Seq[T], => T) => Any) => Unit)  {
+  def repositorywithItems(repoContext: ((Repository[T], Seq[T], => T,  (T with Identified) => T with Identified) => Any) => Unit)  {
 
 
     it should "have same amount of items as saved" in repoContext {
-      (repo, items, itemConstructor) => repo.listAll().size should be (items.size)
+      (repo, items, itemConstructor, itemUpdater) => repo.listAll().size should be (items.size)
     }
 
     it should "contain all items" in repoContext {
-      (repo, items, itemConstructor) =>
+      (repo, items, itemConstructor, itemUpdater) =>
       forAll(Table("id",items:_*)) {
         (item) => repo.listAll() should contain (item)
       }
     }
 
     it should "return item with id" in repoContext {
-      (repo, items, itemConstructor) =>
+      (repo, items, itemConstructor, itemUpdater) =>
       forAll(Table("id",repo.listAll():_*)) {
         (item) => repo.get(item.id) should be (Some(item))
       }
@@ -48,7 +49,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
     }
 
     it should "return created item when created" in repoContext {
-      (repo, items, itemConstructor) =>
+      (repo, items, itemConstructor, itemUpdater) =>
         forAll(Table("adds",Stream.continually(itemConstructor).take(10):_*)) {
           (item) => {
             val saved = repo.save(item)
@@ -58,14 +59,42 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
     }
 
     it should "contain created item when created" in repoContext {
-      (repo, items, itemConstructor) =>
+      (repo, items, itemConstructor, itemUpdater) =>
         forAll(Table("adds",Stream.continually(itemConstructor).take(10):_*)) {
           (item) => repo.get(repo.save(item).id) should be (Some(item))
         }
     }
 
+
+    it should "return updated item when updated" in repoContext {
+      (repo, items, itemConstructor, itemUpdater) =>
+        for (i <- repo.listAll().size to 10) repo.save(itemConstructor)
+        forAll(Table("adds",repo.listAll().map(itemUpdater).take(10):_*)) {
+          (item) => {
+            val saved = repo.save(item)
+            repo.get(saved.id) should be (Some(saved))
+          }
+        }
+    }
+
+    it should "contain updated item when updated" in repoContext {
+      (repo, items, itemConstructor, itemUpdater) =>
+        for (i <- repo.listAll().size to 10) repo.save(itemConstructor)
+        forAll(Table("adds",repo.listAll().map(itemUpdater).take(10):_*)) {
+          (item) => repo.get(repo.save(item).id) should be (Some(item))
+        }
+    }
+
+    it should "retain id of the item when updated" in repoContext {
+      (repo, items, itemConstructor, itemUpdater) =>
+        for (i <- repo.listAll().size to 10) repo.save(itemConstructor)
+        forAll(Table("adds",repo.listAll().map(itemUpdater).take(10):_*)) {
+          (item) => repo.get(repo.save(item).id).map(_.id) should be (Some(item.id))
+        }
+    }
+
     it should "remove item when item is deleted" in repoContext {
-      (repo, items, itemConstructor) =>
+      (repo, items, itemConstructor, itemUpdater) =>
         val saved = repo.save(itemConstructor)
         repo.delete(saved.id)
         repo.listAll should not(contain(saved))
@@ -73,21 +102,22 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
 
 
     it should "change cursor when item is created" in repoContext {
-      (repo, items, itemConstructor) =>
+      (repo, items, itemConstructor, itemUpdater) =>
         val start = repo.cursor
         repo.save(itemConstructor)
         repo.cursor should not (be (start))
     }
 
     it should "change cursor when item is updated" in repoContext {
-      (repo, items, itemConstructor) =>
+      (repo, items, itemConstructor, itemUpdater) =>
+        val saved = repo.listAll().headOption.getOrElse(repo.save(itemConstructor))
         val start = repo.cursor
-        repo.save(itemConstructor)
+        repo.save(itemUpdater(saved))
         repo.cursor should not (be (start))
     }
 
     it should "change cursor when item is deleted" in repoContext {
-      (repo, items, itemConstructor) =>
+      (repo, items, itemConstructor, itemUpdater) =>
         val saved = repo.save(itemConstructor)
         val start = repo.cursor
         repo.delete(saved.id)
@@ -95,7 +125,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
     }
 
     it should "not change cursor when delete is called on an item that doesn't exist" in repoContext {
-      (repo, items, itemConstructor) =>
+      (repo, items, itemConstructor, itemUpdater) =>
         @tailrec def newId:UUID= {
           val id = UUID.randomUUID
           if (repo.listAll().map(_.id).contains(id)) newId else id
@@ -106,21 +136,20 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
     }
 
     it should "change cursor when same item is updated twice" in repoContext {
-      (repo, items, itemConstructor) =>
+      (repo, items, itemConstructor, itemUpdater) =>
         repo.save(repo.listAll().headOption.getOrElse(itemConstructor))
         val start = repo.cursor
-        repo.save(repo.listAll().head)
+        repo.save(itemUpdater(repo.listAll().head))
         repo.cursor should not (be (start))
     }
 
     it should "change cursor when same item is updated in row" in repoContext {
-      (repo, items, itemConstructor) =>
+      (repo, items, itemConstructor, itemUpdater) =>
         repo.save(repo.listAll().headOption.getOrElse(itemConstructor))
         var start = repo.cursor
-        val head = repo.listAll().head
         for( i <- 1 to 100) {
           start = repo.cursor
-          repo.save(head)
+          repo.save(itemUpdater(repo.listAll().head))
           repo.cursor should not (be (start))
 
         }
@@ -130,12 +159,12 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
 
   }
 
-  def beforeAndAfterAdds(initialState:String, repoContext: ((Repository[T], Seq[T], => T) => Any) => Unit) {
-    def addContext(repoModifier: (Repository[T], Seq[T],  => T) => (Repository[T], Seq[T]))(test: (Repository[T], Seq[T],  => T) => Any ) {
-      repoContext((repo,items, itemConstructor) =>
+  def beforeAndAfterAdds(initialState:String, repoContext: ((Repository[T], Seq[T], => T,  (T with Identified) => T with Identified) => Any) => Unit) {
+    def addContext(repoModifier: (Repository[T], Seq[T],  => T) => (Repository[T], Seq[T]))(test: (Repository[T], Seq[T],  => T,  (T with Identified) => T with Identified) => Any ) {
+      repoContext((repo,items, itemConstructor, itemUpdater) =>
       {
         val (modRepo, modItems) = repoModifier(repo,items, itemConstructor)
-        test(modRepo, modItems, itemConstructor)
+        test(modRepo, modItems, itemConstructor, itemUpdater)
 
       }
       )
@@ -158,9 +187,9 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
     "%s with 10 removals".format(initialState) should behave like repositorywithItems(addContext(repoRemover(10)))
   }
 
-  def basicRepoBehaviors(repoConstructor: Seq[T] => Repository[T], itemConstructor: => T) {
-    def withRepo(items:Seq[T])(test: (Repository[T], Seq[T],  => T) => Any ) {
-      test(repoConstructor(items), items, itemConstructor)
+  def basicRepoBehaviors(repoConstructor: Seq[T] => Repository[T], itemConstructor: => T, itemUpdater: (T with Identified) => T with Identified ) {
+    def withRepo(items:Seq[T])(test: (Repository[T], Seq[T],  => T,  (T with Identified) => T with Identified) => Any  ) {
+      test(repoConstructor(items), items, itemConstructor, itemUpdater)
     }
     it should behave like beforeAndAfterAdds("empty repo",withRepo(Seq()))
     it should behave like beforeAndAfterAdds("repo with 100 items",withRepo(Stream.continually(itemConstructor).take(100)))

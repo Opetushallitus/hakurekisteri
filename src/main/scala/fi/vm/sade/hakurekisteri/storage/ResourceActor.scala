@@ -25,8 +25,8 @@ abstract class ResourceActor[T: Manifest] extends Actor { this: Repository[T] wi
     case o:T =>
       log.debug("deduplicating: %s from %s" format(o,sender))
       val dedupcursor = cursor
-      findBy(DeduplicationQuery(o)).map((s) => {log.debug("deduplicated: " + s);s.headOption match { case None => DeduplicatedResource(o,dedupcursor) case Some(duplicate) => DuplicateResource(o)}}).pipeTo(self)(sender)
-    case DuplicateResource(o:T) =>
+      findBy(DeduplicationQuery(o)).map((s) => {log.debug("deduplicated: " + s);s.headOption match { case None => DeduplicatedResource(o,dedupcursor) case Some(duplicate) => DuplicateResource(duplicate)}}).pipeTo(self)(sender)
+    case DuplicateResource(o:T with Identified) =>
       sender ! o
     case DeduplicatedResource(o:T, dedupcursor) if dedupcursor == cursor =>
       log.debug("received: " + o)
@@ -44,7 +44,7 @@ abstract class ResourceActor[T: Manifest] extends Actor { this: Repository[T] wi
   sealed abstract class DeduplicationResult[T]
 
   case class DeduplicatedResource[T](resource:T, cursor:Any) extends  DeduplicationResult[T]
-  case class DuplicateResource[T](resource:T) extends  DeduplicationResult[T]
+  case class DuplicateResource[T](resource:T with Identified) extends  DeduplicationResult[T]
 
 
 
