@@ -19,7 +19,11 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
     TestResource(java.util.UUID.randomUUID.toString)
   }
 
-  it should behave like basicRepoBehaviors(repoConstructor, itemConstructor)
+  def itemUpdater(original:TestResource with Identified):TestResource with Identified = {
+    TestResource(original.id, original.name + " updated")
+  }
+
+  it should behave like basicRepoBehaviors(repoConstructor, itemConstructor, itemUpdater)
 
   abstract class Repo {
     val journal:Journal[TestResource]
@@ -37,19 +41,6 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
     val resources = Stream.continually(ids).take(2).flatten.zip(Stream.tabulate(amount * 2){(i) => if (i >= amount) "updated" else "original"}).map{case (id, round) => TestResource(id, round.toString)}
     val journal = TestJournal[TestResource](resources)
   }
-
-  "A repository with an empty journal" should "be empty" in new EmptyJournal {
-    repo.listAll == Seq()
-
-  }
-
-  it should "contain a resource when saved" in new EmptyJournal {
-    val resource = TestResource("first item")
-    val idResource = repo.save(resource)
-    repo.get(idResource.id) === resource
-
-  }
-
 
 
   it should "add the modification to the journal" in {
@@ -90,34 +81,6 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
 
     }
 
-  }
-
-  it should "return the created resource" in new JournalWithEntries {
-
-    val resource = TestResource("jiihaa")
-    val saved = repo.save(resource)
-    saved === resource
-
-  }
-
-  it should "return the updated resource when updated" in new JournalWithEntries {
-    val resource = TestResource(ids.head, "juhuuu")
-    val saved = repo.save(resource)
-    saved === resource
-
-  }
-
-  it should "keep the id of an updated resource" in new JournalWithEntries {
-    val resource = TestResource(ids.head, "juhuuu")
-    val saved = repo.save(resource)
-    saved.id === resource.id
-  }
-
-
-  it should "delete a resource when requested" in new JournalWithEntries {
-
-    repo.delete(ids.head)
-    repo.get(ids.head) should be (None)
   }
 
   it should "mark a delete delta in journal when deleted" in new JournalWithEntries {
