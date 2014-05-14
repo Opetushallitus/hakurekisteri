@@ -110,3 +110,7 @@ body #raamit-header .header-content {
     border-radius: 5px;
     padding: 10px;
 }
+
+.btn-toolbar {
+    clear: both;
+}

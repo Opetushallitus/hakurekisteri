@@ -201,9 +201,9 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                         }, function() {
                             $scope.messages.push({
                                 type: "danger",
-                                messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
-                                message: "Virhe tallennettaessa suoritustietoja.",
-                                descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
+                                messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja",
+                                message: "Virhe tallennettaessa luokkatietoja.",
+                                descriptionKey: "suoritusrekisteri.muokkaa.virheluokkatietoyrita",
                                 description: "Yritä uudelleen."
                             });
                             d.reject("error deleting luokkatieto: " + luokkatieto);
