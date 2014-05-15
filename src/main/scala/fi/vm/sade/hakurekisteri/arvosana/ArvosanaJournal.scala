@@ -30,7 +30,7 @@ class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, Arvosana
   def update(o:Arvosana with Identified) = o.arvio match {
     case Arvio410(arvosana) =>
       logger.debug("toRow lisatieto {}", o.lisatieto)
-      (o.id.toString, o.suoritus.toString, arvosana, Arvio.ASTEIKKO_4_10 , o.aine, o.lisatieto, o.valinnainen, Platform.currentTime, true)
+      (o.id.toString, o.suoritus.toString, arvosana, Arvio.ASTEIKKO_4_10 , o.aine, o.lisatieto, o.valinnainen, Platform.currentTime, false)
     case a:Arvio if a == Arvio.NA => throw UnknownAssessmentResultException
   }
 
