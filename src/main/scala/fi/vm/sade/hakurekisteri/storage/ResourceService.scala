@@ -11,9 +11,15 @@ trait ResourceService[T] { this: Repository[T] =>
 
   val matcher: PartialFunction[Query[T], (T with Identified) => Boolean]
 
+
+  val deDuplicateAndMatch: PartialFunction[Query[T], (T with Identified) => Boolean] =  {
+    case DeduplicationQuery(o:T) => (existing:T) => existing == o
+    case q if matcher.isDefinedAt(q) => matcher(q)
+  }
+
   def check(q: Query[T])(item: T with Identified): Future[Option[T with Identified]] = {
     Future{
-      if (matcher(q)(item)) Some(item) else None
+      if (deDuplicateAndMatch(q)(item)) Some(item) else None
     }
   }
 
@@ -24,3 +30,6 @@ trait ResourceService[T] { this: Repository[T] =>
 
 
 }
+
+
+case class DeduplicationQuery[T](resource:T) extends Query[T]

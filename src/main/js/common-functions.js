@@ -2,26 +2,33 @@
 
 var msgCategory = "suoritusrekisteri";
 
-var henkiloServiceUrl = "/authentication-service";
-var organisaatioServiceUrl = "/organisaatio-service";
-var koodistoServiceUrl = "/koodisto-service";
-var hakuAppServiceUrl = "/haku-app";
+function getBaseUrl() {
+    if (location.hostname === 'localhost') return 'https://itest-virkailija.oph.ware.fi';
+    return '';
+}
 
-Array.prototype.diff = function(a) {
-    return this.filter(function(i) { return a.indexOf(i) < 0; });
-};
+var henkiloServiceUrl = getBaseUrl() + "/authentication-service";
+var organisaatioServiceUrl = getBaseUrl() + "/organisaatio-service";
+var hakuAppServiceUrl = getBaseUrl() + "/haku-app";
+var koodistoServiceUrl = getBaseUrl() + "/koodisto-service";
 
-Array.prototype.getUnique = function() {
-    var u = {}, a = [];
-    for(var i = 0, l = this.length; i < l; ++i){
-        if(u.hasOwnProperty(this[i])) {
-            continue;
+if (!Array.prototype.diff)
+    Array.prototype.diff = function(a) {
+        return this.filter(function(i) { return a.indexOf(i) < 0; });
+    };
+
+if (!Array.prototype.getUnique)
+    Array.prototype.getUnique = function() {
+        var u = {}, a = [];
+        for(var i = 0, l = this.length; i < l; ++i){
+            if(u.hasOwnProperty(this[i])) {
+                continue;
+            }
+            a.push(this[i]);
+            u[this[i]] = 1;
         }
-        a.push(this[i]);
-        u[this[i]] = 1;
-    }
-    return a;
-};
+        return a;
+    };
 
 function getOrganisaatio($http, organisaatioOid, successCallback, errorCallback) {
     $http.get(organisaatioServiceUrl + '/rest/organisaatio/' + encodeURIComponent(organisaatioOid), {cache: true})
@@ -29,21 +36,31 @@ function getOrganisaatio($http, organisaatioOid, successCallback, errorCallback)
         .error(errorCallback);
 }
 
-function getPostitoimipaikka($http, postinumero, successCallback, errorCallback) {
-    $http.get(koodistoServiceUrl + '/rest/json/posti/koodi/posti_' + encodeURIComponent(postinumero), {cache: true})
+function authenticateToAuthenticationService($http, successCallback, errorCallback) {
+    $http.get(henkiloServiceUrl + '/buildversion.txt?auth')
         .success(successCallback)
         .error(errorCallback);
 }
 
-function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options) {
-    $http.get(koodistoServiceUrl + '/rest/json/' + encodeURIComponent(koodisto) + '/koodi', {cache: true})
+function getOphMsg(key, def) {
+    if (window.globalGetOphMsg) return window.globalGetOphMsg(key, def);
+    else key;
+}
+
+function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options, valueFromField) {
+    $http.get(getBaseUrl() + '/koodisto-service/rest/json/' + encodeURIComponent(koodisto) + '/koodi', {cache: true})
         .success(function(koodisto) {
             angular.forEach(koodisto, function(koodi) {
                 metas: for (var j = 0; j < koodi.metadata.length; j++) {
                     var meta = koodi.metadata[j];
                     if (meta.kieli.toLowerCase() === kielikoodi.toLowerCase()) {
+                        var value = koodi.koodiUri + '#' + koodi.versio;
+                        if (valueFromField === 'nimi')
+                            value = meta.nimi;
+                        if (valueFromField === 'koodiArvo')
+                            value = koodi.koodiArvo;
                         options.push({
-                            value: koodi.koodiArvo,
+                            value: value,
                             text: meta.nimi
                         });
                         break metas;
@@ -57,14 +74,7 @@ function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options) {
         });
 }
 
-function authenticateToAuthenticationService($http, successCallback, errorCallback) {
-    $http.get(henkiloServiceUrl + '/buildversion.txt?auth')
-        .success(successCallback)
-        .error(errorCallback);
-}
-
-// Avoid `console` errors in browsers that lack a console.
-(function() {
+function ensureConsoleMethods() {
     var method;
     var noop = function () {};
     var methods = [
@@ -78,10 +88,12 @@ function authenticateToAuthenticationService($http, successCallback, errorCallba
 
     while (length--) {
         method = methods[length];
-
-        // Only stub undefined methods.
-        if (!console[method]) {
-            console[method] = noop;
-        }
+        if (!console[method]) console[method] = noop;
     }
+}
+
+(function() {
+    ensureConsoleMethods();
+
+    if (window.globalInitOphMsg) window.globalInitOphMsg(function() {});
 }());

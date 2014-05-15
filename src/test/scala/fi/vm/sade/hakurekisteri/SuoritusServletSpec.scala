@@ -6,7 +6,7 @@ import java.util.{UUID, Date}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriCrudCommands, HakurekisteriResource, HakurekisteriSwagger}
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.{LocalDate, DateTime}
-import fi.vm.sade.hakurekisteri.storage.repository.InMemJournal
+import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
 import fi.vm.sade.hakurekisteri.opiskelija.{CreateOpiskelijaCommand, Opiskelija}
 import fi.vm.sade.hakurekisteri.acceptance.tools.{TestSecurity, FakeAuthorizer}
 
@@ -15,7 +15,7 @@ class SuoritusServletSpec extends ScalatraFunSuite {
   implicit val system = ActorSystem()
   implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource](s:Seq[R]) = {
     val journal = new InMemJournal[R]
-    s.foreach((resource:R) => journal.addModification(resource.identify(UUID.randomUUID())))
+    s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
     journal
   }
   val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(Seq(suoritus))))

@@ -10,7 +10,7 @@ import org.scalatra._
 import _root_.akka.pattern.ask
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import scala.util.Try
-import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import java.util.concurrent.TimeUnit
 import javax.servlet.http.HttpServletRequest
 import org.springframework.security.core.Authentication
@@ -32,6 +32,17 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
   val create:OperationBuilder
   val update:OperationBuilder
   val query:OperationBuilder
+  val read:OperationBuilder
+  val delete:OperationBuilder
+
+  delete("/:id", operation(delete)) {
+    Try(UUID.fromString(params("id"))).map(deleteResource).
+      recover {
+      case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
+    }.get
+
+
+  }
 
   post("/", operation(create)) {
     println("creating" + request.body)
@@ -45,7 +56,7 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
     }.get
   }
 
-  get("/:id") {
+  get("/:id", operation(read)) {
     Try(UUID.fromString(params("id"))).map(readResource(_ ,getKnownOrganizations(currentUser))).
       recover {
       case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
@@ -110,7 +121,9 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
       resource => new ActorResult[A with Identified](identifyResource(resource, id), Ok(_)))
   }
 
-
+  def deleteResource(id:UUID): Object = {
+    new ActorResult[Unit](DeleteResource(id), (unit) => Ok())
+  }
 
 
   def readResource(id:UUID, authorities: Seq[String]): Object = {

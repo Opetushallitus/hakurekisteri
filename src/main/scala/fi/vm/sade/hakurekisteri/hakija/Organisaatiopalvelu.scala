@@ -101,6 +101,7 @@ class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph
 
   override def getAll: Future[Seq[String]] = {
     val url = new URL(serviceUrl + "/rest/organisaatio")
+    logger.info("fetching all organizations: [{}]", url)
     GET(url).apply.map(response =>
     if (response.code == HttpResponseCode.Ok) {
       response.bodyAsCaseClass[List[String]].toOption.getOrElse(Seq())
@@ -115,11 +116,9 @@ class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph
 
   override def get(str: String): Future[Option[Organisaatio]] = {
     val url = new URL(serviceUrl + "/rest/organisaatio/" + str)
-    logger.debug("calling organisaatio-service [{}]", url)
     GET(url).apply.map(response => {
       if (response.code == HttpResponseCode.Ok) {
         val organisaatio = response.bodyAsCaseClass[Organisaatio].toOption
-        logger.debug("got response: [{}]", organisaatio)
         organisaatio
       } else {
         logger.error("call to organisaatio-service [{}] failed: {}", url, response.code)

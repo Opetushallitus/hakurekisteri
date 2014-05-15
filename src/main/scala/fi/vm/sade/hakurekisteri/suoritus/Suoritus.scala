@@ -27,7 +27,7 @@ case class Suoritus(komo: String, myontaja: String, tila: String, valmistuminen:
 object Suoritus {
   def identify(o:Suoritus): Suoritus with Identified = o match {
     case o: Suoritus with Identified => println(o.id);o
-    case _ => o.identify(UUID.randomUUID())
+    case _ => o.identify(UUID.randomUUID)
   }
 
   def identify(o:Suoritus, identity:UUID) = {

@@ -39,6 +39,7 @@ body #raamit-header .header-content {
 }
 
 .loading-td {
+    background-color: #fff !important;
     text-align: center;
 }
 
@@ -49,8 +50,16 @@ body #raamit-header .header-content {
     width: 32px;
 }
 
-.suoritus-form .form-group {
-    max-width: 30%;
+.entrylist > li {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.entrylist > li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
 }
 
 .nappulat {
@@ -85,4 +94,23 @@ body #raamit-header .header-content {
 
 .pagination a *:hover, .btn *:hover {
     text-decoration: none;
+}
+
+.arvosana-button {
+    margin-top: 16px;
+}
+
+.modal-dialog {
+    width: auto;
+    max-width: 850px;
+}
+
+.delete-suoritus, .delete-luokkatieto {
+    background: #ccc repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255, 255, 255, .5) 5px, rgba(255, 255, 255, .5) 10px);
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.btn-toolbar {
+    clear: both;
 }
