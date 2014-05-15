@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.organization
 
-import scala.xml.{Elem, NodeSeq}
+import scala.xml.Elem
 import org.scalatra.util.RicherString._
 import org.joda.time.DateTime
 import dispatch._
@@ -13,7 +13,9 @@ import scala.concurrent.duration._
 import akka.event.Logging
 import com.ning.http.client.Response
 
-class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: A => String) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
+class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: A => Future[String]) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
+
+  def this(serviceUrl:String, filteredActor:ActorRef, organizationFinder: A => String) =this(serviceUrl:String, filteredActor:ActorRef, (item) => Future {organizationFinder(item)} )
 
   val logger = Logging(context.system, this)
 
@@ -35,15 +37,28 @@ class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRe
 
   implicit val timeout: akka.util.Timeout = 30.seconds
 
+  def futfilt(s: Seq[A with Identified], authorizer: A with Identified => concurrent.Future[Boolean]) = {
+    Future.traverse(s)((item) => authorizer(item).map((_ , item))).map(_.filter(_._1).map(_._2))
+  }
+
+
   import akka.pattern.ask
   import akka.pattern.pipe
   override def receive: Receive = {
     case a:Update => fetch()
     case a:OrganizationAuthorizer => logger.info("org paths loaded");authorizer = a
-    case AuthorizedQuery(q,orgs) => (filteredActor ? q).mapTo[Seq[A with Identified]].map(_.filter(isAuthorized(orgs))) pipeTo sender
-    case AuthorizedRead(id, orgs) => (filteredActor ? id).mapTo[Option[A with Identified]].map(_.flatMap((item) => if (authorizer.checkAccess(orgs, organizationFinder(item))) Some(item) else None)) pipeTo sender
+    case AuthorizedQuery(q,orgs) => (filteredActor ? q).mapTo[Seq[A with Identified]].flatMap((i: Seq[A with Identified]) => futfilt(i, isAuthorized(orgs))) pipeTo sender
+    case AuthorizedRead(id, orgs) => (filteredActor ? id).mapTo[Option[A with Identified]].flatMap(checkRights(orgs)) pipeTo sender
     case message:AnyRef => filteredActor forward message
   }
+
+
+  def checkRights(orgs: Seq[String]) = (item:Option[A with Identified]) => item match {
+
+    case None => Future.successful(None)
+    case Some(resource: A with Identified) => isAuthorized(orgs)(resource).map((authorized) => if (authorized) Some(resource) else None)
+  }
+
 
   def fetch() {
     val authorizer: Future[OrganizationAuthorizer] = createAuthorizer
@@ -57,7 +72,7 @@ class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRe
 
 }
 
-class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organizationFinder: A => String) {
+class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organizationFinder: A => Future[String]) {
 
 
   val svc = url(serviceUrl).POST
@@ -151,7 +166,7 @@ class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organiza
 
 
 
-  def isAuthorized(orgs: Seq[String])(item: A with Identified): Boolean = authorizer.checkAccess(orgs, organizationFinder(item))
+  def isAuthorized(orgs: Seq[String])(item: A with Identified): concurrent.Future[Boolean] = authorizer.checkAccess(orgs, organizationFinder(item))
 
 
 }
@@ -160,7 +175,8 @@ case class AuthorizedQuery[A](q:Query[A], orgs: Seq[String])
 case class AuthorizedRead(id:UUID, orgs:Seq[String])
 
 case class OrganizationAuthorizer(orgPaths: Map[String, Seq[String]]) {
-  def checkAccess(user:Seq[String], target:String) = {
+  def checkAccess(user:Seq[String], futTarget:concurrent.Future[String]) = futTarget.map {
+    (target) =>
     val path = orgPaths.getOrElse(target, Seq())
     path.exists { x => user.contains(x) }
   }
