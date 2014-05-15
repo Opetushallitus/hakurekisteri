@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.storage.repository
 
 import fi.vm.sade.hakurekisteri.storage.Identified
-import scala.slick.lifted.{Ordered, AbstractTable}
+import scala.slick.lifted.{ColumnOrdered, Ordered, AbstractTable}
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
@@ -69,11 +69,22 @@ trait JDBCJournal[T, P <: AbstractTable[_], O <: Ordered] extends Journal[T] {
     case Deleted(id) => delete(id)
   }
 
+
+  def currentState(id: UUID): P#TableElementType  = {
+    db withSession(
+      implicit session =>
+        table.filter(filterByResourceId(id)).sortBy(newest).take(1).list().head)
+  }
+
+  def newest: (P) => ColumnOrdered[Long]
+
+  def filterByResourceId(id: UUID): (P) => Column[Boolean]
+
   def update(resource:T with Identified): P#TableElementType
 
   def delete(id:UUID): P#TableElementType
 
-  def toResource(row: P#TableElementType): T with Identified
+  //def toResource(row: P#TableElementType): T with Identified
 
   override def addModification(delta:Delta[T]) {
     db withSession {
@@ -82,7 +93,7 @@ trait JDBCJournal[T, P <: AbstractTable[_], O <: Ordered] extends Journal[T] {
     }
   }
 
-  def delta(row: P#TableElementType):Delta[T] = Updated(toResource(row))
+  def delta(row: P#TableElementType):Delta[T]
 
   override def journal(): Seq[Delta[T]] = {
     db withSession {
