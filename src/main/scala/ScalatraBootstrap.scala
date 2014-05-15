@@ -5,7 +5,7 @@ import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResour
 import fi.vm.sade.hakurekisteri.henkilo._
 import fi.vm.sade.hakurekisteri.henkilo.Henkilo
 import fi.vm.sade.hakurekisteri.opiskelija._
-import fi.vm.sade.hakurekisteri.organization.OrganizationHierarchy
+import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, OrganizationHierarchy}
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
@@ -68,7 +68,8 @@ class ScalatraBootstrap extends LifeCycle {
     val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo](orgServiceUrl, henkiloRekisteri, (henkilo) => OPH )))
 
     val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(new ArvosanaJournal(database))))
-    val filteredArvosanaRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Arvosana](orgServiceUrl, arvosanaRekisteri, (arvosana) => OPH )))
+    import _root_.akka.pattern.ask
+    val filteredArvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana](orgServiceUrl, arvosanaRekisteri, (arvosana) => (suoritusRekisteri ? arvosana.suoritus).mapTo[Suoritus].map(_.myontaja))))
 
     val healthcheck = system.actorOf(Props(new HealthcheckActor(filteredSuoritusRekisteri, filteredOpiskelijaRekisteri)))
 
