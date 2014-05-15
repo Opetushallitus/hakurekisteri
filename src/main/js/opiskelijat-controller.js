@@ -39,7 +39,7 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
     };
 
     $scope.reset = function() {
-        $location.path("/opiskelijat");
+        $location.path("/opiskelijat").search({});
     };
     $scope.search = function() {
         $location.path("/opiskelijat").search({
