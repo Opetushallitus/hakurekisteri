@@ -13,9 +13,10 @@ import scala.concurrent.duration._
 import akka.event.Logging
 import com.ning.http.client.Response
 
-class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: A => Future[String]) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
+class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A,String]) extends FutureOrganizationHierarchy[A](serviceUrl, filteredActor, (item: A) => concurrent.Future {organizationFinder(item)} )
 
-  def this(serviceUrl:String, filteredActor:ActorRef, organizationFinder: A => String) =this(serviceUrl:String, filteredActor:ActorRef, (item) => Future {organizationFinder(item)} )
+class FutureOrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A, concurrent.Future[String]]) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
+
 
   val logger = Logging(context.system, this)
 
