@@ -41,6 +41,7 @@ abstract class ResourceActor[T: Manifest] extends Actor { this: Repository[T] wi
     case DeleteResource(id) =>
       log.debug(s"received delete request for resource: $id")
       sender ! delete(id)
+      log.debug(s"deleted $id")
 
   }
 
