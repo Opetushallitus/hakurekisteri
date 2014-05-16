@@ -7,11 +7,13 @@ import akka.camel.{Producer, CamelMessage}
 import akka.actor.Actor
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import fi.vm.sade.hakurekisteri.organization.{AuthorizedDelete, AuthorizedRead, AuthorizedQuery}
-import fi.vm.sade.hakurekisteri.rest.support.Query
+import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
 import java.util.{Date, UUID}
 import akka.event.Logging
 import org.xml.sax.InputSource
 import java.nio.charset.Charset
+import scala.reflect.api.JavaUniverse
+import scala.reflect.ClassTag
 
 
 sealed trait AuditMessage[T] {
@@ -50,7 +52,6 @@ object DeleteEvent extends AuditMessage[UUID] {
   override def tapahtuma(resource: String,original: UUID, user:String): Tapahtuma =  createDELETE("hakurekisteri", user, resource, original.toString)
 }
 
-
 case class AuditEvent(host: String,system: String,targetType: String,target: String,timestamp: Date, etype: String, user: String, userActsForUser: String)
 
 object AuditEvent {
@@ -66,6 +67,12 @@ case class AuditUri(uri:String)
 
 class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with Producer  {
 
+  override def receive = {
+    case msg =>
+      log.debug(msg.toString)
+      super.produce(msg)
+
+  }
   val log = Logging(context.system, this)
 
   def endpointUri: String = audit.uri
