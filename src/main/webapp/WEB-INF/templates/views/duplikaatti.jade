@@ -18,7 +18,7 @@ table(class="table table-condensed table-striped")
         span(ng-show="a.valinnainen" oph-msg="suoritusrekisteri.muokkaa.duplikaatti.valinnainen.kylla") Kyllä
         span(ng-hide="a.valinnainen" oph-msg="suoritusrekisteri.muokkaa.duplikaatti.valinnainen.ei") Ei
       td
-        button(type="button" class="btn btn-default btn-xs" ng-click="remove(a.id)")
+        button(type="button" class="btn btn-default btn-xs" ng-click="remove(a)")
           span(oph-msg="suoritusrekisteri.muokkaa.duplikaatti.poista") Poista
           span(class="glyphicon glyphicon-remove")
 div(class="modal-footer")
