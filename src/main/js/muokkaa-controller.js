@@ -9,14 +9,13 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         {value: "Kokonaan", text: getOphMsg("suoritusrekisteri.yks.kokonaan", "Kokonaan")}
     ];
     $scope.koulutukset = [
-        {value: "ulkomainen", text: getOphMsg("suoritusrekisteri.komo.ulkomainen", "Ulkomainen")},
-        {value: "peruskoulu", text: getOphMsg("suoritusrekisteri.komo.peruskoulu", "Peruskoulu")},
-        {value: "lisaopetus", text: getOphMsg("suoritusrekisteri.komo.lisaopetus", "Perusopetuksen lisäopetus")},
-        {value: "ammattistartti", text: getOphMsg("suoritusrekisteri.komo.ammattistartti", "Ammattistartti")},
-        {value: "maahanmuuttaja", text: getOphMsg("suoritusrekisteri.komo.maahanmuuttaja", "Maahanmuuttaja")},
-        {value: "valmentava", text: getOphMsg("suoritusrekisteri.komo.valmentava", "Valmentava")},
-        // {value: "keskeytynyt", text: getOphMsg("suoritusrekisteri.komo.keskeytynyt", "Keskeytynyt")}, //TODO keskeytynyt ei käytössä
-        {value: "lukio", text: getOphMsg("suoritusrekisteri.komo.lukio", "Lukio")}
+        {value: "1.2.246.562.13.86722481404", text: getOphMsg("suoritusrekisteri.komo.ulkomainen", "Ulkomainen")},
+        {value: "1.2.246.562.13.62959769647", text: getOphMsg("suoritusrekisteri.komo.peruskoulu", "Peruskoulu")},
+        {value: "1.2.246.562.5.2013112814572435044876", text: getOphMsg("suoritusrekisteri.komo.lisaopetus", "Perusopetuksen lisäopetus")},
+        {value: "1.2.246.562.5.2013112814572438136372", text: getOphMsg("suoritusrekisteri.komo.ammattistartti", "Ammattistartti")},
+        {value: "1.2.246.562.5.2013112814572441001730", text: getOphMsg("suoritusrekisteri.komo.maahanmuuttaja", "Maahanmuuttaja")},
+        {value: "1.2.246.562.5.2013112814572435755085", text: getOphMsg("suoritusrekisteri.komo.valmentava", "Valmentava")},
+        {value: "1.2.246.562.5.2013061010184880799984", text: getOphMsg("suoritusrekisteri.komo.lukio", "Lukio")}
     ];
     $scope.luokkatasot = [
         {value: "9", text: "9"},
@@ -25,6 +24,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         {value: "M", text: "M"},
         {value: "V", text: "V"}
     ];
+    $scope.myRoles = [];
     $scope.messages = [];
     $scope.suoritukset = [];
     $scope.luokkatiedot = [];
@@ -34,6 +34,18 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
 
     $rootScope.addToMurupolku({href: "#/opiskelijat", key: "suoritusrekisteri.muokkaa.muru1", text: "Opiskelijoiden haku"}, true);
     $rootScope.addToMurupolku({key: "suoritusrekisteri.muokkaa.muru", text: "Muokkaa opiskelijan tietoja"}, false);
+
+    function getMyRoles() {
+        $http.get('/cas/myroles', {cache: true})
+            .success(function(data) { $scope.myRoles = angular.fromJson(data) })
+            .error(function() { $log.error("cannot connect to CAS") });
+    }
+    getMyRoles();
+    $scope.isOPH = function() {
+        return (Array.isArray($scope.myRoles)
+            && ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1
+                || $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1));
+    };
 
     function fetchHenkilotiedot() {
         $http.get(henkiloServiceUrl + '/resources/henkilo/' + encodeURIComponent($scope.henkiloOid), {cache: false})

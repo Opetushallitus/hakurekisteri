@@ -63,7 +63,7 @@ form(ng-submit="save()")
                     button(type="button" class="btn btn-default arvosana-button" ng-disabled="!suoritus.id || suoritus.delete" ng-click="editArvosana(suoritus.id)")
                       span(oph-msg="suoritusrekisteri.muokkaa.muokkaaarvosanoja") Muokkaa arvosanoja
                       span(class="glyphicon glyphicon-edit")
-                    button(type="button" class="btn btn-default arvosana-button" ng-disabled="suoritus.delete" ng-click="suoritus.delete = true")
+                    button(ng-show="isOPH()" type="button" class="btn btn-default arvosana-button" ng-disabled="suoritus.delete" ng-click="suoritus.delete = true")
                       span(oph-msg="suoritusrekisteri.muokkaa.poistasuoritus") Poista
                       span(class="glyphicon glyphicon-remove")
             li
@@ -96,7 +96,7 @@ form(ng-submit="save()")
                   input(type="text" class="form-control input-sm" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.loppuPaiva" datepicker-popup="{{format}}" datepicker-options="dateOptions" show-button-bar="false" min="luokkatieto.alkuPaiva")
                 div(class="form-group col-sm-6")
                   div(class="pull-right")
-                    button(type="button" class="btn btn-default arvosana-button" ng-disabled="luokkatieto.delete" ng-click="luokkatieto.delete = true")
+                    button(ng-show="isOPH()" type="button" class="btn btn-default arvosana-button" ng-disabled="luokkatieto.delete" ng-click="luokkatieto.delete = true")
                       span(oph-msg="suoritusrekisteri.muokkaa.poistaluokkatieto") Poista
                       span(class="glyphicon glyphicon-remove")
             li
