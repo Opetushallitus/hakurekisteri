@@ -1,6 +1,8 @@
-import _root_.akka.actor.{Props, ActorSystem}
+import _root_.akka.actor.{Actor, Props, ActorSystem}
+import _root_.akka.routing.BroadcastRouter
 import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana._
+import fi.vm.sade.hakurekisteri.Audit
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.henkilo._
@@ -15,6 +17,7 @@ import java.util.concurrent.{TimeUnit, ThreadFactory, Executors}
 import org.scalatra._
 import javax.servlet.{ServletContextEvent, DispatcherType, ServletContext}
 import org.scalatra.swagger.Swagger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.support.RootBeanDefinition
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader
 import org.springframework.beans.MutablePropertyValues
@@ -59,8 +62,16 @@ class ScalatraBootstrap extends LifeCycle {
     val database = Try(Database.forName(jndiName)).recover {
       case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
     }.get
+
+    val alog = LoggerFactory.getLogger(classOf[Audit])
+    val logger = system.actorOf(Props(new Actor() {
+      override def receive: Actor.Receive = { case a => alog.info(a.toString)}
+    }))
+
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))))
     val filteredSuoritusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Suoritus](orgServiceUrl ,suoritusRekisteri, (suoritus) => suoritus.myontaja )))
+    val loggedSuoritusRekisteri = system.actorOf(Props().withRouter(BroadcastRouter(routees = List(filteredSuoritusRekisteri, logger))))
+
 
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))))
     val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija](orgServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid )))
