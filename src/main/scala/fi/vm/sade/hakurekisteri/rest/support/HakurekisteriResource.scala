@@ -18,7 +18,7 @@ import org.springframework.security.core.Authentication
 import org.scalatra.commands._
 import java.util.UUID
 import scala.Some
-import fi.vm.sade.hakurekisteri.organization.{AuthorizedDelete, AuthorizedRead, AuthorizedQuery}
+import fi.vm.sade.hakurekisteri.organization.{AuthorizedCreate, AuthorizedDelete, AuthorizedRead, AuthorizedQuery}
 import scala.util.matching.Regex
 import org.springframework.security.cas.authentication.CasAuthenticationToken
 import org.jasig.cas.client.authentication.AttributePrincipal
@@ -46,7 +46,7 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
 
   post("/", operation(create)) {
     println("creating" + request.body)
-    createResource
+    createResource(getKnownOrganizations(currentUser), currentUser.map(_.username))
   }
 
   post("/:id", operation(update)) {
@@ -96,10 +96,10 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
       recover { case e:Throwable => logger.warn("failure in actor operation", e); InternalServerError("Operation failed") }
   }
 
-  def createResource: Object = {
+  def createResource(authorities:Seq[String], user:Option[String]): Object = {
     (command[C] >> (_.toValidatedResource)).fold(
       errors => {logger.warn(errors.toString()); BadRequest("Malformed Resource")},
-      resource => new ActorResult(resource, ResourceCreated(request.getRequestURL)))
+      resource => new ActorResult(AuthorizedCreate(resource, authorities, user.getOrElse("anonymous")), ResourceCreated(request.getRequestURL)))
   }
 
 
