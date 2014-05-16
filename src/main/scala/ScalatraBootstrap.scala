@@ -74,7 +74,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     implicit val audit = AuditUri(OPHSecurity.config.properties.get("activemq.queue.name.log").getOrElse("Sade.Log"))
     val logger = system.actorOf(Props(new AuditLog("suoritus")))
-    alog.debug(s"AuditLog using uri: $audit")
+    alog.debug(s"AuditLog using uri: $amqUrl")
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))))
     val filteredSuoritusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Suoritus](orgServiceUrl ,suoritusRekisteri, (suoritus) => suoritus.myontaja )))
     val loggedSuoritusRekisteri = system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(filteredSuoritusRekisteri, logger))))
