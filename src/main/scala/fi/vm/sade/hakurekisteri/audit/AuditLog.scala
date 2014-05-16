@@ -48,7 +48,7 @@ object ReadEvent extends AuditMessage[UUID] {
 case class AuditEvent(host: String,system: String,targetType: String,target: String,timestamp: Date, etype: String, user: String, userActsForUser: String)
 
 object AuditEvent {
-  def apply(responseBody:String) = {
+  def apply(responseBody:String):AuditEvent = {
     val t = new XMLDecoder(new InputSource( new StringReader( responseBody ) ) ).readObject().asInstanceOf[LogEvent].getTapahtuma
     AuditEvent(t.getHost, t.getSystem, t.getTargetType, t.getTarget, t.getTimestamp, t.getType, t.getUser, t.getUserActsForUser)
 
