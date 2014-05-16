@@ -9,13 +9,13 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         {value: "Kokonaan", text: getOphMsg("suoritusrekisteri.yks.kokonaan", "Kokonaan")}
     ];
     $scope.koulutukset = [
-        {value: "1.2.246.562.13.86722481404", text: getOphMsg("suoritusrekisteri.komo.ulkomainen", "Ulkomainen")},
-        {value: "1.2.246.562.13.62959769647", text: getOphMsg("suoritusrekisteri.komo.peruskoulu", "Peruskoulu")},
-        {value: "1.2.246.562.5.2013112814572435044876", text: getOphMsg("suoritusrekisteri.komo.lisaopetus", "Perusopetuksen lisäopetus")},
-        {value: "1.2.246.562.5.2013112814572438136372", text: getOphMsg("suoritusrekisteri.komo.ammattistartti", "Ammattistartti")},
-        {value: "1.2.246.562.5.2013112814572441001730", text: getOphMsg("suoritusrekisteri.komo.maahanmuuttaja", "Maahanmuuttaja")},
-        {value: "1.2.246.562.5.2013112814572435755085", text: getOphMsg("suoritusrekisteri.komo.valmentava", "Valmentava")},
-        {value: "1.2.246.562.5.2013061010184880799984", text: getOphMsg("suoritusrekisteri.komo.lukio", "Lukio")}
+        {value: "1.2.246.562.13.86722481404", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.13.86722481404", "Ulkomainen")},
+        {value: "1.2.246.562.13.62959769647", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.13.62959769647", "Peruskoulu")},
+        {value: "1.2.246.562.5.2013112814572435044876", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572435044876", "Perusopetuksen lisäopetus")},
+        {value: "1.2.246.562.5.2013112814572438136372", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572438136372", "Ammattistartti")},
+        {value: "1.2.246.562.5.2013112814572441001730", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572441001730", "Maahanmuuttaja")},
+        {value: "1.2.246.562.5.2013112814572435755085", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572435755085", "Valmentava")},
+        {value: "1.2.246.562.5.2013061010184880799984", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013061010184880799984", "Lukio")}
     ];
     $scope.luokkatasot = [
         {value: "9", text: "9"},
@@ -299,16 +299,26 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         $scope.suoritukset.push(new Suoritukset({ henkiloOid: $scope.henkiloOid, tila: "KESKEN", yksilollistaminen: "Ei", myontaja: "na" }));
     };
     $scope.editArvosana = function(suoritusId) {
-        $rootScope.modalInstance = $modal.open({
-            templateUrl: 'templates/arvosanat',
-            controller: ArvosanaCtrl,
-            resolve: {
-                suoritusId: function() { return suoritusId }
-            }
-        });
+        function openModal(template, controller) {
+            $rootScope.modalInstance = $modal.open({
+                templateUrl: template,
+                controller: controller,
+                resolve: {
+                    suoritusId: function() { return suoritusId }
+                }
+            });
+        }
+        openModal('templates/arvosanat', ArvosanaCtrl);
 
-        $rootScope.modalInstance.result.then(function (message) {
-            if (message) $scope.messages.push(message)
+        $rootScope.modalInstance.result.then(function (arvosanaRet) {
+            if (arvosanaRet === "duplicates") {
+                openModal('templates/duplikaatti', DuplikaattiCtrl);
+                $rootScope.modalInstance.result.then(function(ret) {
+                    if (ret) $scope.messages.push(ret)
+                }, function() {
+                    $log.info("duplicate modal closed")
+                });
+            } else if (arvosanaRet) $scope.messages.push(arvosanaRet)
         }, function () {
             $log.info("modal closed")
         });
