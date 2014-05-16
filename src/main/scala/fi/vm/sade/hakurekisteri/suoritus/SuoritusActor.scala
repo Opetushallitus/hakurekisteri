@@ -18,8 +18,13 @@ trait SuoritusRepository extends JournaledRepository[Suoritus] {
 trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suoritus] =>
 
   val matcher: PartialFunction[Query[Suoritus], (Suoritus with Identified) => Boolean] = {
-    case SuoritusQuery(henkilo, kausi, vuosi) =>  (s: Suoritus with Identified) =>
-      checkHenkilo(henkilo)(s) && checkVuosi(vuosi)(s) && checkKausi(kausi)(s)
+    case SuoritusQuery(henkilo, kausi, vuosi, myontaja) =>  (s: Suoritus with Identified) =>
+      checkHenkilo(henkilo)(s) && checkVuosi(vuosi)(s) && checkKausi(kausi)(s) &&checkMyontaja(myontaja)(s)
+  }
+
+  def checkMyontaja(myontaja: Option[String])(s:Suoritus):Boolean  =  myontaja match {
+    case Some(oid) => s.myontaja.equals(oid)
+    case None => true
   }
 
   def checkHenkilo(henkilo: Option[String])(s:Suoritus):Boolean  =  henkilo match {

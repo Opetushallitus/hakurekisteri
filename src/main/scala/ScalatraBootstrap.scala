@@ -1,19 +1,23 @@
-import _root_.akka.actor.{Props, ActorSystem}
+import _root_.akka.actor.{Actor, Props, ActorSystem}
+import _root_.akka.routing.BroadcastRouter
+import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana._
+import fi.vm.sade.hakurekisteri.Audit
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.henkilo._
 import fi.vm.sade.hakurekisteri.henkilo.Henkilo
 import fi.vm.sade.hakurekisteri.opiskelija._
-import fi.vm.sade.hakurekisteri.organization.OrganizationHierarchy
+import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, OrganizationHierarchy}
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{ThreadFactory, Executors}
+import java.util.concurrent.{TimeUnit, ThreadFactory, Executors}
 import org.scalatra._
 import javax.servlet.{ServletContextEvent, DispatcherType, ServletContext}
 import org.scalatra.swagger.Swagger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.support.RootBeanDefinition
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader
 import org.springframework.beans.MutablePropertyValues
@@ -58,8 +62,16 @@ class ScalatraBootstrap extends LifeCycle {
     val database = Try(Database.forName(jndiName)).recover {
       case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
     }.get
+
+    val alog = LoggerFactory.getLogger(classOf[Audit])
+    val logger = system.actorOf(Props(new Actor() {
+      override def receive: Actor.Receive = { case a => alog.info(a.toString)}
+    }))
+
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))))
     val filteredSuoritusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Suoritus](orgServiceUrl ,suoritusRekisteri, (suoritus) => suoritus.myontaja )))
+    val loggedSuoritusRekisteri = system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(filteredSuoritusRekisteri, logger))))
+
 
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))))
     val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija](orgServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid )))
@@ -68,7 +80,9 @@ class ScalatraBootstrap extends LifeCycle {
     val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo](orgServiceUrl, henkiloRekisteri, (henkilo) => OPH )))
 
     val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(new ArvosanaJournal(database))))
-    val filteredArvosanaRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Arvosana](orgServiceUrl, arvosanaRekisteri, (arvosana) => OPH )))
+
+    import _root_.akka.pattern.ask
+    val filteredArvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana](orgServiceUrl, arvosanaRekisteri, (arvosana) => suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).mapTo[Suoritus].map(_.myontaja))))
 
     val healthcheck = system.actorOf(Props(new HealthcheckActor(filteredSuoritusRekisteri, filteredOpiskelijaRekisteri)))
 
@@ -166,7 +180,7 @@ case class OPHConfig(props:(String, String)*) extends XmlWebApplicationContext {
     if ((unResolved -- unResolvable).isEmpty)
       converted.mapValues(_.replace("€{","${"))
     else
-      resolve(converted.mapValues((s) => "€\\{(.*?)\\}".r replaceAllIn (s, m => {converted.getOrElse(m.group(1), "€{" + (m.group(1)) + "}") })))
+      resolve(converted.mapValues((s) => "€\\{(.*?)\\}".r replaceAllIn (s, m => {converted.getOrElse(m.group(1), "€{" + m.group(1) + "}") })))
   }
 
   val placeholder = Bean(

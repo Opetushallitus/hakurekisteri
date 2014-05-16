@@ -39,7 +39,7 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
     };
 
     $scope.reset = function() {
-        $location.path("/opiskelijat");
+        $location.path("/opiskelijat").search({});
     };
     $scope.search = function() {
         $location.path("/opiskelijat").search({
@@ -108,7 +108,7 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
                         $scope.henkilo = henkilo;
                         henkiloTerm.resolve();
                     })
-                    .error(function() { henkiloTerm.resolve() });
+                    .error(function() { henkiloTerm.reject() });
             }
         }
         if ($scope.organisaatioTerm && $scope.organisaatioTerm.oppilaitosKoodi && !$scope.organisaatioTerm.oid) {
@@ -118,7 +118,7 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
                 getOrganisaatio($http, $scope.organisaatioTerm.oppilaitosKoodi, function(organisaatio) {
                     $scope.organisaatioTerm = organisaatio;
                     organisaatioTerm.resolve();
-                }, function() { organisaatioTerm.resolve() });
+                }, function() { organisaatioTerm.reject() });
             }
         }
         if (searchTerms.length > 0) {
@@ -128,9 +128,8 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
                     henkilo: ($scope.henkilo ? $scope.henkilo.oidHenkilo : null),
                     oppilaitosOid: ($scope.organisaatioTerm ? $scope.organisaatioTerm.oid : null)
                 });
-            });
+            }, function() { stopLoading() });
         } else stopLoading();
-
     };
 
     function showCurrentRows(allRows) {

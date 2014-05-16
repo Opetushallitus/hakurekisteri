@@ -114,11 +114,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                             }
 
                             if (hasRedundantArvosana(arvosanat)) {
-                                $rootScope.modalInstance.close({
-                                    type: "danger",
-                                    messageKey: "suoritusrekisteri.muokkaa.arvosanat.arvosanoissavirhe",
-                                    message: "Arvosanoissa on duplikaatteja. Ota yhteyttä asiakaspalveluun."
-                                });
+                                $rootScope.modalInstance.close("duplicates");
                                 return;
                             }
                             $scope.arvosanataulukko = Object.keys(arvosanataulukko).map(function(key) {
