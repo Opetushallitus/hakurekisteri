@@ -12,6 +12,7 @@ import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import scala.concurrent.duration._
 import akka.event.Logging
 import com.ning.http.client.Response
+import akka.actor.Status.Failure
 
 class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A,String]) extends FutureOrganizationHierarchy[A](serviceUrl, filteredActor, (item: A) => concurrent.Future {organizationFinder(item)} )
 
@@ -50,10 +51,17 @@ class FutureOrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:A
     case a:OrganizationAuthorizer => logger.info("org paths loaded");authorizer = a
     case AuthorizedQuery(q,orgs,_) => (filteredActor ? q).mapTo[Seq[A with Identified]].flatMap((i: Seq[A with Identified]) => futfilt(i, isAuthorized(orgs))) pipeTo sender
     case AuthorizedRead(id, orgs,_) => (filteredActor ? id).mapTo[Option[A with Identified]].flatMap(checkRights(orgs)) pipeTo sender
-    case AuthorizedDelete(id, orgs, _)  => (filteredActor ? id).mapTo[Option[A with Identified]].flatMap(checkRights(orgs)).onSuccess{
-                                                                                                                              case Some(a) => filteredActor forward DeleteResource(a.id)
-                                                                                                                              case None => sender ! Unit
-                                                                                                                            }
+    case AuthorizedDelete(id, orgs, _)  => val checkedRights = for (resourceToDelete <- (filteredActor ? id);
+                                                                    rights <- checkRights(orgs)(resourceToDelete.asInstanceOf[Option[A with Identified]]))
+                                                                    yield rights
+                                               checkedRights.onSuccess{
+                                                              case Some(a) => filteredActor forward DeleteResource(a.id)
+                                                              case None => sender ! Unit
+                                                             }
+                                               checkedRights.onFailure {
+                                                              case e => sender ! Failure(e)
+                                                             }
+
     case message:AnyRef => filteredActor forward message
   }
 
