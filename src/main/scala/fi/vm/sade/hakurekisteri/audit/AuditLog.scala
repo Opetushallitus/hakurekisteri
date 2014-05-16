@@ -52,6 +52,9 @@ object DeleteEvent extends AuditMessage[UUID] {
   override def tapahtuma(resource: String,original: UUID, user:String): Tapahtuma =  createDELETE("hakurekisteri", user, resource, original.toString)
 }
 
+
+
+
 case class AuditEvent(host: String,system: String,targetType: String,target: String,timestamp: Date, etype: String, user: String, userActsForUser: String)
 
 object AuditEvent {
@@ -67,7 +70,7 @@ case class AuditUri(uri:String)
 
 class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with Producer  {
 
-  override def receive = {
+  override def produce = {
     case msg =>
       log.debug(msg.toString)
       super.produce(msg)
