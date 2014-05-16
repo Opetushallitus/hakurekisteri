@@ -13,6 +13,7 @@ import akka.event.Logging
 import java.nio.charset.Charset
 import scala.reflect.ClassTag
 import org.xml.sax.InputSource
+import java.net.{UnknownHostException, InetAddress}
 
 
 sealed trait AuditMessage[T] {
@@ -70,6 +71,31 @@ object UpdateEvent extends AuditMessage[Resource with Identified] {
   }
 }
 
+object UnknownEvent extends AuditMessage[Any] {
+
+  def apply(msg:Any) = apply(msg, "")
+
+  override def tapahtuma(resource: String, original: Any, user: String): Tapahtuma = {
+    val t: Tapahtuma = new Tapahtuma
+    t.setSystem("hakurekisteri")
+    t.setTarget(original.toString)
+    t.setTargetType(resource)
+    t.setTimestamp(new Date)
+    t.setType("UNKNOWN")
+    t.setUser(null)
+    t.setUserActsForUser(null)
+    try {
+      t.setHost(InetAddress.getLocalHost.getHostName)
+    }
+    catch {
+      case ex: UnknownHostException => {
+      }
+    }
+
+
+    t
+  }
+}
 
 
 case class AuditEvent(host: String,system: String,targetType: String,target: String,timestamp: Date, etype: String, user: String, userActsForUser: String)
@@ -103,6 +129,7 @@ class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with 
     case AuthorizedQuery(q,orgs, user) => QueryEvent(q,user)
     case AuthorizedRead(id, orgs, user) => ReadEvent(id,user)
     case AuthorizedDelete(id, orgs, user) => DeleteEvent(id, user)
+    case a => UnknownEvent(a)
   }
 
   override protected def transformOutgoingMessage(original: Any): Any ={
