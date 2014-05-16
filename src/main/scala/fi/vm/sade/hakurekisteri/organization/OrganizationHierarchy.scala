@@ -15,9 +15,9 @@ import com.ning.http.client.Response
 import akka.actor.Status.Failure
 import fi.vm.sade.hakurekisteri.storage.DeleteResource
 
-class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A,String]) extends FutureOrganizationHierarchy[A](serviceUrl, filteredActor, (item: A) => Future.successful(organizationFinder(item)) )
+class OrganizationHierarchy[A <: Resource :Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A,String]) extends FutureOrganizationHierarchy[A](serviceUrl, filteredActor, (item: A) => Future.successful(organizationFinder(item)) )
 
-class FutureOrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A, concurrent.Future[String]]) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
+class FutureOrganizationHierarchy[A <: Resource :Manifest ](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A, concurrent.Future[String]]) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
 
 
   val logger = Logging(context.system, this)
