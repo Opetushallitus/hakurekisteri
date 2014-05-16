@@ -53,18 +53,12 @@ class FutureOrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:A
     case AuthorizedQuery(q,orgs,_) => (filteredActor ? q).mapTo[Seq[A with Identified]].flatMap((i: Seq[A with Identified]) => futfilt(i, isAuthorized(orgs))) pipeTo sender
     case AuthorizedRead(id, orgs,_) => (filteredActor ? id).mapTo[Option[A with Identified]].flatMap(checkRights(orgs)) pipeTo sender
     case AuthorizedDelete(id, orgs, _)  => val checkedRights = for (resourceToDelete <- (filteredActor ? id);
-                                                                    rights <- checkRights(orgs)(resourceToDelete.asInstanceOf[Option[A with Identified]]))
-                                                                    yield rights
+                                                                    rights <- checkRights(orgs)(resourceToDelete.asInstanceOf[Option[A with Identified]]);
+                                                                    result <- if (rights.isDefined) filteredActor ? DeleteResource(id) else Future.successful(Unit)
+                                                                    )
+                                                                    yield result.asInstanceOf[Unit]
 
-                                               val originalSender = sender
-                                               log.debug(s"handling delete from $originalSender")
-                                               checkedRights.onSuccess{
-                                                              case Some(a) => filteredActor.!(DeleteResource(a.id))(originalSender)
-                                                              case None => originalSender ! Unit
-                                                             }
-                                               checkedRights.onFailure {
-                                                              case e => originalSender ! Failure(e)
-                                                             }
+                                               checkedRights pipeTo sender
     case AuthorizedCreate(resource, _ , _) => filteredActor forward resource
     case AuthorizedUpdate(resource, _ , _) => filteredActor forward resource
     case message:AnyRef => filteredActor forward message
