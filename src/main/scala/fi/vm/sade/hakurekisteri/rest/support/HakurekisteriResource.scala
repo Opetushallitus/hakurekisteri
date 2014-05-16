@@ -18,7 +18,7 @@ import org.springframework.security.core.Authentication
 import org.scalatra.commands._
 import java.util.UUID
 import scala.Some
-import fi.vm.sade.hakurekisteri.organization.{AuthorizedRead, AuthorizedQuery}
+import fi.vm.sade.hakurekisteri.organization.{AuthorizedDelete, AuthorizedRead, AuthorizedQuery}
 import scala.util.matching.Regex
 import org.springframework.security.cas.authentication.CasAuthenticationToken
 import org.jasig.cas.client.authentication.AttributePrincipal
@@ -36,7 +36,7 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
   val delete:OperationBuilder
 
   delete("/:id", operation(delete)) {
-    Try(UUID.fromString(params("id"))).map(deleteResource).
+    Try(UUID.fromString(params("id"))).map(deleteResource(_ ,getKnownOrganizations(currentUser), currentUser.map(_.username))).
       recover {
       case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
     }.get
@@ -121,8 +121,8 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
       resource => new ActorResult[A with Identified](identifyResource(resource, id), Ok(_)))
   }
 
-  def deleteResource(id:UUID): Object = {
-    new ActorResult[Unit](DeleteResource(id), (unit) => Ok())
+  def deleteResource(id:UUID, authorities: Seq[String], user:Option[String]): Object = {
+    new ActorResult[Unit](AuthorizedDelete(id, authorities, user.getOrElse("anonymous")), (unit) => Ok())
   }
 
 

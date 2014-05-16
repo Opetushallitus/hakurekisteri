@@ -1,16 +1,17 @@
 package fi.vm.sade.hakurekisteri.audit
 
 import fi.vm.sade.log.model.{Tapahtuma, LogEvent}
-import java.io.{StringReader, ByteArrayOutputStream}
+import java.io.{ByteArrayInputStream, StringReader, ByteArrayOutputStream}
 import java.beans.{XMLDecoder, XMLEncoder}
 import akka.camel.{Producer, CamelMessage}
 import akka.actor.Actor
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
-import fi.vm.sade.hakurekisteri.organization.{AuthorizedRead, AuthorizedQuery}
+import fi.vm.sade.hakurekisteri.organization.{AuthorizedDelete, AuthorizedRead, AuthorizedQuery}
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import java.util.{Date, UUID}
 import akka.event.Logging
 import org.xml.sax.InputSource
+import java.nio.charset.Charset
 
 
 sealed trait AuditMessage[T] {
@@ -45,11 +46,16 @@ object ReadEvent extends AuditMessage[UUID] {
   override def tapahtuma(resource: String,original: UUID, user:String): Tapahtuma =  createREAD("hakurekisteri", user, resource, original.toString)
 }
 
+object DeleteEvent extends AuditMessage[UUID] {
+  override def tapahtuma(resource: String,original: UUID, user:String): Tapahtuma =  createDELETE("hakurekisteri", user, resource, original.toString)
+}
+
+
 case class AuditEvent(host: String,system: String,targetType: String,target: String,timestamp: Date, etype: String, user: String, userActsForUser: String)
 
 object AuditEvent {
   def apply(responseBody:String):AuditEvent = {
-    val t = new XMLDecoder(new InputSource( new StringReader( responseBody ) ) ).readObject().asInstanceOf[LogEvent].getTapahtuma
+    val t = new XMLDecoder(new ByteArrayInputStream(responseBody.getBytes(Charset.defaultCharset()))  ).readObject().asInstanceOf[LogEvent].getTapahtuma
     AuditEvent(t.getHost, t.getSystem, t.getTargetType, t.getTarget, t.getTimestamp, t.getType, t.getUser, t.getUserActsForUser)
 
   }
@@ -69,7 +75,7 @@ class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with 
   def createAuditMsg(original: Any) = original match {
     case AuthorizedQuery(q,orgs, user) => QueryEvent(q,user)
     case AuthorizedRead(id, orgs, user) => ReadEvent(id,user)
-
+    case AuthorizedDelete(id, orgs, user) => DeleteEvent(id, user)
   }
 
   override protected def transformOutgoingMessage(original: Any): Any ={
