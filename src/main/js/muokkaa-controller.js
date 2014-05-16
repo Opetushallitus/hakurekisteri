@@ -9,13 +9,13 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         {value: "Kokonaan", text: getOphMsg("suoritusrekisteri.yks.kokonaan", "Kokonaan")}
     ];
     $scope.koulutukset = [
-        {value: "1.2.246.562.13.86722481404", text: getOphMsg("suoritusrekisteri.komo.ulkomainen", "Ulkomainen")},
-        {value: "1.2.246.562.13.62959769647", text: getOphMsg("suoritusrekisteri.komo.peruskoulu", "Peruskoulu")},
-        {value: "1.2.246.562.5.2013112814572435044876", text: getOphMsg("suoritusrekisteri.komo.lisaopetus", "Perusopetuksen lisäopetus")},
-        {value: "1.2.246.562.5.2013112814572438136372", text: getOphMsg("suoritusrekisteri.komo.ammattistartti", "Ammattistartti")},
-        {value: "1.2.246.562.5.2013112814572441001730", text: getOphMsg("suoritusrekisteri.komo.maahanmuuttaja", "Maahanmuuttaja")},
-        {value: "1.2.246.562.5.2013112814572435755085", text: getOphMsg("suoritusrekisteri.komo.valmentava", "Valmentava")},
-        {value: "1.2.246.562.5.2013061010184880799984", text: getOphMsg("suoritusrekisteri.komo.lukio", "Lukio")}
+        {value: "1.2.246.562.13.86722481404", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.13.86722481404", "Ulkomainen")},
+        {value: "1.2.246.562.13.62959769647", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.13.62959769647", "Peruskoulu")},
+        {value: "1.2.246.562.5.2013112814572435044876", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572435044876", "Perusopetuksen lisäopetus")},
+        {value: "1.2.246.562.5.2013112814572438136372", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572438136372", "Ammattistartti")},
+        {value: "1.2.246.562.5.2013112814572441001730", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572441001730", "Maahanmuuttaja")},
+        {value: "1.2.246.562.5.2013112814572435755085", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572435755085", "Valmentava")},
+        {value: "1.2.246.562.5.2013061010184880799984", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013061010184880799984", "Lukio")}
     ];
     $scope.luokkatasot = [
         {value: "9", text: "9"},
