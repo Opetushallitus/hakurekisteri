@@ -69,10 +69,11 @@ class ScalatraBootstrap extends LifeCycle {
 
     val camel = CamelExtension(system)
     val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
-    camel.context.addComponent("activemq", ActiveMQComponent.activeMQComponent(amqUrl))
+    val broker = "activemq"
+    camel.context.addComponent(broker, ActiveMQComponent.activeMQComponent(amqUrl))
     val alog = LoggerFactory.getLogger(classOf[AuditLog])
 
-    implicit val audit = AuditUri(OPHSecurity.config.properties.get("activemq.queue.name.log").getOrElse("Sade.Log"))
+    implicit val audit = AuditUri(broker, OPHSecurity.config.properties.get("activemq.queue.name.log").getOrElse("Sade.Log"))
     val logger = system.actorOf(Props(new AuditLog("suoritus")))
     alog.debug(s"AuditLog using uri: $amqUrl")
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))))

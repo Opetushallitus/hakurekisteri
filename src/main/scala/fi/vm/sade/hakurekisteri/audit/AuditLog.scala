@@ -1,18 +1,16 @@
 package fi.vm.sade.hakurekisteri.audit
 
 import fi.vm.sade.log.model.{Tapahtuma, LogEvent}
-import java.io.{ByteArrayInputStream, StringReader, ByteArrayOutputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.beans.{XMLDecoder, XMLEncoder}
 import akka.camel.{Producer, CamelMessage}
 import akka.actor.Actor
-import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
+import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.organization.{AuthorizedDelete, AuthorizedRead, AuthorizedQuery}
 import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
 import java.util.{Date, UUID}
 import akka.event.Logging
-import org.xml.sax.InputSource
 import java.nio.charset.Charset
-import scala.reflect.api.JavaUniverse
 import scala.reflect.ClassTag
 
 
@@ -55,6 +53,7 @@ object DeleteEvent extends AuditMessage[UUID] {
 
 
 
+
 case class AuditEvent(host: String,system: String,targetType: String,target: String,timestamp: Date, etype: String, user: String, userActsForUser: String)
 
 object AuditEvent {
@@ -67,6 +66,11 @@ object AuditEvent {
 
 
 case class AuditUri(uri:String)
+
+object AuditUri {
+  def apply(broker:String, queue:String):AuditUri = new AuditUri(s"$broker:$queue")
+
+}
 
 class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with Producer  {
 
