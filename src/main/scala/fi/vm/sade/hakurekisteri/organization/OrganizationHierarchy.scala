@@ -8,7 +8,7 @@ import Defaults._
 import akka.actor.{Cancellable, ActorRef, Actor}
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import scala.concurrent.duration._
 import akka.event.Logging
 import com.ning.http.client.Response
@@ -50,6 +50,10 @@ class FutureOrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:A
     case a:OrganizationAuthorizer => logger.info("org paths loaded");authorizer = a
     case AuthorizedQuery(q,orgs,_) => (filteredActor ? q).mapTo[Seq[A with Identified]].flatMap((i: Seq[A with Identified]) => futfilt(i, isAuthorized(orgs))) pipeTo sender
     case AuthorizedRead(id, orgs,_) => (filteredActor ? id).mapTo[Option[A with Identified]].flatMap(checkRights(orgs)) pipeTo sender
+    case AuthorizedDelete(id, orgs, _)  => (filteredActor ? id).mapTo[Option[A with Identified]].flatMap(checkRights(orgs)).onSuccess{
+                                                                                                                              case Some(a) => filteredActor forward DeleteResource(a.id)
+                                                                                                                              case None => sender ! Unit
+                                                                                                                            }
     case message:AnyRef => filteredActor forward message
   }
 
@@ -174,6 +178,9 @@ class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organiza
 
 case class AuthorizedQuery[A](q:Query[A], orgs: Seq[String], user:String)
 case class AuthorizedRead(id:UUID, orgs:Seq[String], user:String)
+
+case class AuthorizedDelete(id:UUID, orgs:Seq[String], user:String)
+
 
 case class OrganizationAuthorizer(orgPaths: Map[String, Seq[String]]) {
   def checkAccess(user:Seq[String], futTarget:concurrent.Future[String]) = futTarget.map {
