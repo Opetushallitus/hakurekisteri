@@ -18,7 +18,7 @@ function DuplikaattiCtrl($scope, $rootScope, $log, Arvosanat, suoritusId) {
             } else {
                 return (a.aine < b.aine ? -1 : 1)
             }
-        });
+        })
     }, function() {
         $rootScope.modalInstance.close({
             type: "danger",
@@ -36,11 +36,11 @@ function DuplikaattiCtrl($scope, $rootScope, $log, Arvosanat, suoritusId) {
                 type: "danger",
                 messageKey: "suoritusrekisteri.muokkaa.duplikaatti.virhepoistettaessaarvosanaa",
                 message: "Virhe poistettaessa arvosanaa. Yritä uudelleen."
-            });
+            })
         })
     };
 
     $scope.close = function() {
-        $rootScope.modalInstance.close();
+        $rootScope.modalInstance.close()
     };
 }
