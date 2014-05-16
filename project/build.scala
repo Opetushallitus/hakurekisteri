@@ -51,19 +51,25 @@ object HakuJaValintarekisteriBuild extends Build {
     "net.sf.ehcache" % "ehcache-jgroupsreplication" % "1.5",
     "org.jasig.cas" % "cas-client-support-distributed-ehcache" % "3.1.10" exclude("net.sf.ehcache", "ehcache"))
 
+  val akkaVersion = "2.2.3"
+
+  val AkkaStack = Seq("akka-testkit", "akka-slf4j","akka-camel").map("com.typesafe.akka" %% _ % akkaVersion)
+
+
   val dependencies = Seq(
     "org.slf4j" % "slf4j-api" % "1.6.1",
     "org.eclipse.jetty" % "jetty-webapp" % "8.1.8.v20121106" % "container",
     "org.json4s" %% "json4s-jackson" % "3.2.4",
-    "com.typesafe.akka" %% "akka-testkit" %  "2.2.3",
-    "com.typesafe.akka" %% "akka-slf4j" % "2.2.3",
     "com.github.nscala-time" %% "nscala-time" % "0.8.0",
     "com.typesafe.slick" %% "slick" % "2.0.0",
     "com.h2database" % "h2" % "1.3.174",
     "org.postgresql" % "postgresql" % "9.3-1100-jdbc4",
     "net.databinder.dispatch" %% "dispatch-core" % "0.11.0",
     "com.stackmob" %% "newman" % "1.3.5",
-    "info.folone" %% "poi-scala" % "0.9"
+    "info.folone" %% "poi-scala" % "0.9",
+    "org.apache.activemq" % "activemq-all" % "5.9.1",
+    "org.apache.camel" % "camel-jms" % "2.13.0",
+    "fi.vm.sade.log" % "log-client" % "7.0"
   )
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion)
@@ -173,6 +179,7 @@ object HakuJaValintarekisteriBuild extends Build {
           libraryDependencies ++= Seq("org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts Artifact("javax.servlet", "jar", "jar"))
             ++ ScalatraStack.map(_ % ScalatraVersion)
             ++ SecurityStack
+            ++ AkkaStack
             ++ dependencies
             ++ testDependencies.map((m) => m % "test"),
           scalateTemplateConfig in Compile <<= (sourceDirectory in Compile) {

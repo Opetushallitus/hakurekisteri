@@ -77,7 +77,7 @@ class HealthcheckActor(suoritusRekisteri: ActorRef, opiskelijaRekisteri: ActorRe
   }
 
   def getSuoritusCount: Future[ItemCount] = {
-    val suoritusFuture = (suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(None, None, None, None), authorities))
+    val suoritusFuture = (suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(None, None, None, None), authorities, "healthcheck"))
       .mapTo[Seq[Suoritus with Identified]]
     suoritusFuture.map((s) => { new ItemCount(Status.OK, s.length.toLong) }).recover {
       case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
@@ -86,7 +86,7 @@ class HealthcheckActor(suoritusRekisteri: ActorRef, opiskelijaRekisteri: ActorRe
   }
 
   def getOpiskelijaCount: Future[ItemCount] = {
-    val opiskelijaFuture = (opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaQuery(None, None, None, None, None, None), authorities))
+    val opiskelijaFuture = (opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaQuery(None, None, None, None, None, None), authorities, "healthcheck"))
       .mapTo[Seq[Opiskelija with Identified]]
     opiskelijaFuture.map((o) => { ItemCount(Status.OK, o.length.toLong) }).recover {
       case e: AskTimeoutException => ItemCount(Status.TIMEOUT, 0)

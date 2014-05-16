@@ -57,7 +57,7 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
   }
 
   get("/:id", operation(read)) {
-    Try(UUID.fromString(params("id"))).map(readResource(_ ,getKnownOrganizations(currentUser))).
+    Try(UUID.fromString(params("id"))).map(readResource(_ ,getKnownOrganizations(currentUser), currentUser.map(_.username))).
       recover {
       case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
     }.get
@@ -65,7 +65,7 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
   }
 
   get("/", operation(query))(
-    queryResource(getKnownOrganizations(currentUser))
+    queryResource(getKnownOrganizations(currentUser), currentUser.map(_.username))
   )
 
   notFound {
@@ -126,8 +126,8 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
   }
 
 
-  def readResource(id:UUID, authorities: Seq[String]): Object = {
-    new ActorResult[Option[A with Identified]](AuthorizedRead(id, authorities), {
+  def readResource(id:UUID, authorities: Seq[String], user:Option[String]): Object = {
+    new ActorResult[Option[A with Identified]](AuthorizedRead(id, authorities, user.getOrElse("anonymous")), {
       case Some(data) => Ok(data)
       case None => NotFound()
       case result =>
@@ -141,18 +141,18 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
 
 
 
-  def queryResource(authorities: Seq[String]): Product with Serializable = {
+  def queryResource(authorities: Seq[String], user:Option[String]): Product with Serializable = {
 
-    (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q, authorities)) recover {
+    (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q, authorities,user)) recover {
       case e: Exception => logger.warn("Bad query: " + params, e); BadRequest("Illegal Query")
     }).get
   }
 
-  case class ResourceQuery[R](query: Query[R], authorities: Seq[String]) extends AsyncResult {
+  case class ResourceQuery[R](query: Query[R], authorities: Seq[String], user:Option[String]) extends AsyncResult {
 
 
     val is = {
-      val future = (actor ? AuthorizedQuery(query, authorities)).mapTo[Seq[R with Identified]]
+      val future = (actor ? AuthorizedQuery(query, authorities, user.getOrElse("anonymous"))).mapTo[Seq[R with Identified]]
 
       future.map(Ok(_)).
         recover {

@@ -1,8 +1,10 @@
 import _root_.akka.actor.{Actor, Props, ActorSystem}
+import _root_.akka.camel.CamelExtension
 import _root_.akka.routing.BroadcastRouter
 import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.Audit
+import fi.vm.sade.hakurekisteri.audit.{AuditLog, AuditUri}
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.henkilo._
@@ -14,6 +16,7 @@ import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.{TimeUnit, ThreadFactory, Executors}
+import org.apache.activemq.camel.component.ActiveMQComponent
 import org.scalatra._
 import javax.servlet.{ServletContextEvent, DispatcherType, ServletContext}
 import org.scalatra.swagger.Swagger
@@ -63,10 +66,12 @@ class ScalatraBootstrap extends LifeCycle {
       case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
     }.get
 
-    val alog = LoggerFactory.getLogger(classOf[Audit])
-    val logger = system.actorOf(Props(new Actor() {
-      override def receive: Actor.Receive = { case a => alog.info(a.toString)}
-    }))
+
+    val camel = CamelExtension(system)
+    val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
+    camel.context.addComponent("activemq", ActiveMQComponent.activeMQComponent(amqUrl))
+    implicit val audit = AuditUri(OPHSecurity.config.properties.get("activemq.queue.name.log").getOrElse("Sade.Log"))
+    val logger = system.actorOf(Props(new AuditLog("suoritus")))
 
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))))
     val filteredSuoritusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Suoritus](orgServiceUrl ,suoritusRekisteri, (suoritus) => suoritus.myontaja )))

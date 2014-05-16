@@ -48,8 +48,8 @@ class FutureOrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:A
   override def receive: Receive = {
     case a:Update => fetch()
     case a:OrganizationAuthorizer => logger.info("org paths loaded");authorizer = a
-    case AuthorizedQuery(q,orgs) => (filteredActor ? q).mapTo[Seq[A with Identified]].flatMap((i: Seq[A with Identified]) => futfilt(i, isAuthorized(orgs))) pipeTo sender
-    case AuthorizedRead(id, orgs) => (filteredActor ? id).mapTo[Option[A with Identified]].flatMap(checkRights(orgs)) pipeTo sender
+    case AuthorizedQuery(q,orgs,_) => (filteredActor ? q).mapTo[Seq[A with Identified]].flatMap((i: Seq[A with Identified]) => futfilt(i, isAuthorized(orgs))) pipeTo sender
+    case AuthorizedRead(id, orgs,_) => (filteredActor ? id).mapTo[Option[A with Identified]].flatMap(checkRights(orgs)) pipeTo sender
     case message:AnyRef => filteredActor forward message
   }
 
@@ -172,8 +172,8 @@ class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organiza
 
 }
 
-case class AuthorizedQuery[A](q:Query[A], orgs: Seq[String])
-case class AuthorizedRead(id:UUID, orgs:Seq[String])
+case class AuthorizedQuery[A](q:Query[A], orgs: Seq[String], user:String)
+case class AuthorizedRead(id:UUID, orgs:Seq[String], user:String)
 
 case class OrganizationAuthorizer(orgPaths: Map[String, Seq[String]]) {
   def checkAccess(user:Seq[String], futTarget:concurrent.Future[String]) = futTarget.map {
