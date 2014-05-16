@@ -22,7 +22,7 @@ class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, Opis
       case (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, _, _) => Updated(Opiskelija(oppilaitosOid, luokkataso, luokka, henkiloOid,new DateTime(alkuPaiva), loppuPaiva.map(new DateTime(_))).identify(UUID.fromString(resourceId)))
     }
 
-  override def update(o: Opiskelija with Identified): OpiskelijaTable#TableElementType = (o.id.toString, o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva.getMillis, o.loppuPaiva.map(_.getMillis), Platform.currentTime, true)
+  override def update(o: Opiskelija with Identified): OpiskelijaTable#TableElementType = (o.id.toString, o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva.getMillis, o.loppuPaiva.map(_.getMillis), Platform.currentTime, false)
   override def delete(id:UUID) = currentState(id) match
     { case (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, _, _)  =>
       (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, Platform.currentTime,true)}
