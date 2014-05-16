@@ -6,7 +6,7 @@ import java.beans.{XMLDecoder, XMLEncoder}
 import akka.camel.{Producer, CamelMessage}
 import akka.actor.Actor
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.organization.{AuthorizedDelete, AuthorizedRead, AuthorizedQuery}
+import fi.vm.sade.hakurekisteri.organization._
 import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
 import java.util.{Date, UUID}
 import akka.event.Logging
@@ -14,6 +14,10 @@ import java.nio.charset.Charset
 import scala.reflect.ClassTag
 import org.xml.sax.InputSource
 import java.net.{UnknownHostException, InetAddress}
+import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
+import fi.vm.sade.hakurekisteri.organization.AuthorizedRead
+import fi.vm.sade.hakurekisteri.organization.AuthorizedCreate
+import fi.vm.sade.hakurekisteri.organization.AuthorizedDelete
 
 
 sealed trait AuditMessage[T] {
@@ -129,6 +133,9 @@ class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with 
     case AuthorizedQuery(q,orgs, user) => QueryEvent(q,user)
     case AuthorizedRead(id, orgs, user) => ReadEvent(id,user)
     case AuthorizedDelete(id, orgs, user) => DeleteEvent(id, user)
+    case AuthorizedCreate(resource, orgs, user) => CreateEvent(resource, user)
+    case AuthorizedUpdate(resource, orgs, user) => UpdateEvent(resource, user)
+
     case a => UnknownEvent(a)
   }
 

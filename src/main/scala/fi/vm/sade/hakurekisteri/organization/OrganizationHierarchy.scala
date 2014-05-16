@@ -6,7 +6,7 @@ import org.joda.time.DateTime
 import dispatch._
 import Defaults._
 import akka.actor.{Cancellable, ActorRef, Actor}
-import fi.vm.sade.hakurekisteri.rest.support.Query
+import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import scala.concurrent.duration._
@@ -61,7 +61,8 @@ class FutureOrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:A
                                                checkedRights.onFailure {
                                                               case e => sender ! Failure(e)
                                                              }
-
+    case AuthorizedCreate(resource, _ , _) => filteredActor forward resource
+    case AuthorizedUpdate(resource, _ , _) => filteredActor forward resource
     case message:AnyRef => filteredActor forward message
   }
 
@@ -188,6 +189,9 @@ case class AuthorizedQuery[A](q:Query[A], orgs: Seq[String], user:String)
 case class AuthorizedRead(id:UUID, orgs:Seq[String], user:String)
 
 case class AuthorizedDelete(id:UUID, orgs:Seq[String], user:String)
+case class AuthorizedCreate[A <: Resource](q:A, orgs: Seq[String], user:String)
+case class AuthorizedUpdate[A <: Resource](q:A with Identified, orgs: Seq[String], user:String)
+
 
 
 case class OrganizationAuthorizer(orgPaths: Map[String, Seq[String]]) {
