@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.audit
 
 import fi.vm.sade.log.model.{Tapahtuma, LogEvent}
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+import java.io.{StringReader, ByteArrayInputStream, ByteArrayOutputStream}
 import java.beans.{XMLDecoder, XMLEncoder}
 import akka.camel.{Producer, CamelMessage}
 import akka.actor.Actor
@@ -12,6 +12,7 @@ import java.util.{Date, UUID}
 import akka.event.Logging
 import java.nio.charset.Charset
 import scala.reflect.ClassTag
+import org.xml.sax.InputSource
 
 
 sealed trait AuditMessage[T] {
@@ -110,10 +111,13 @@ class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with 
     msg
   }
 
-  override protected def routeResponse(msg: Any): Unit =  msg match {
-    case xml:String => log.debug(AuditEvent(xml).toString)
-
+  override protected def transformResponse(msg: Any): Any =  msg match {
+    case CamelMessage(body:String, headers) => val t = AuditEvent(body).toString
+    case a => a.getClass.getName
   }
+
+
+  override protected def routeResponse(msg: Any): Unit =  log.debug(msg.toString)
 }
 
 
