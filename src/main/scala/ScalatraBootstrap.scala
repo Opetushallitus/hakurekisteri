@@ -70,7 +70,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))))
     val filteredSuoritusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Suoritus](orgServiceUrl ,suoritusRekisteri, (suoritus) => suoritus.myontaja )))
-    val loggedSuoritusRekisteri = system.actorOf(Props().withRouter(BroadcastRouter(routees = List(filteredSuoritusRekisteri, logger))))
+    val loggedSuoritusRekisteri = system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(filteredSuoritusRekisteri, logger))))
 
 
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))))
