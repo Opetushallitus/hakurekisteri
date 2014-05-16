@@ -50,7 +50,24 @@ object DeleteEvent extends AuditMessage[UUID] {
   override def tapahtuma(resource: String,original: UUID, user:String): Tapahtuma =  createDELETE("hakurekisteri", user, resource, original.toString)
 }
 
+object CreateEvent extends AuditMessage[Resource] {
+  override def tapahtuma(resource: String,original: Resource, user:String): Tapahtuma =  createCREATE("hakurekisteri", user, resource, original.toString)
+}
 
+object UpdateEvent extends AuditMessage[Resource with Identified] {
+  import scala.reflect.runtime.universe._
+  def casMap[T: ClassTag: TypeTag](value: T) = {
+    val m = runtimeMirror(getClass.getClassLoader)
+    val im = m.reflect(value)
+    typeOf[T].members.collect{ case m:MethodSymbol if m.isCaseAccessor => m}.map(im.reflectMethod(_)).map((m) => m.symbol.name.toString -> m()).toMap
+  }
+
+  override def tapahtuma(resource: String,original: Resource with Identified, user:String): Tapahtuma =  {
+    val event = createUPDATE("hakurekisteri", user, resource, original.id.toString)
+    for ((field, value) <- casMap(original)) event.addValue(field, value.toString)
+    event
+  }
+}
 
 
 
@@ -74,12 +91,7 @@ object AuditUri {
 
 class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with Producer  {
 
-  override def produce = {
-    case msg =>
-      log.debug(msg.toString)
-      super.produce(msg)
 
-  }
   val log = Logging(context.system, this)
 
   def endpointUri: String = audit.uri
