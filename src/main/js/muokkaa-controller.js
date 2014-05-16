@@ -299,16 +299,26 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         $scope.suoritukset.push(new Suoritukset({ henkiloOid: $scope.henkiloOid, tila: "KESKEN", yksilollistaminen: "Ei", myontaja: "na" }));
     };
     $scope.editArvosana = function(suoritusId) {
-        $rootScope.modalInstance = $modal.open({
-            templateUrl: 'templates/arvosanat',
-            controller: ArvosanaCtrl,
-            resolve: {
-                suoritusId: function() { return suoritusId }
-            }
-        });
+        function openModal(template, controller) {
+            $rootScope.modalInstance = $modal.open({
+                templateUrl: template,
+                controller: controller,
+                resolve: {
+                    suoritusId: function() { return suoritusId }
+                }
+            });
+        }
+        openModal('templates/arvosanat', ArvosanaCtrl);
 
-        $rootScope.modalInstance.result.then(function (message) {
-            if (message) $scope.messages.push(message)
+        $rootScope.modalInstance.result.then(function (arvosanaRet) {
+            if (arvosanaRet === "duplicates") {
+                openModal('templates/duplikaatti', DuplikaattiCtrl);
+                $rootScope.modalInstance.result.then(function(ret) {
+                    if (ret) $scope.messages.push(ret)
+                }, function() {
+                    $log.info("duplicate modal closed")
+                });
+            } else if (arvosanaRet) $scope.messages.push(arvosanaRet)
         }, function () {
             $log.info("modal closed")
         });
