@@ -55,7 +55,7 @@ class FutureOrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:A
                                                                     rights <- checkRights(orgs)(resourceToDelete.asInstanceOf[Option[A with Identified]]))
                                                                     yield rights
                                                checkedRights.onSuccess{
-                                                              case Some(a) => filteredActor forward DeleteResource(a.id)
+                                                              case Some(a) => filteredActor.!(DeleteResource(a.id))(sender)
                                                               case None => sender ! Unit
                                                              }
                                                checkedRights.onFailure {
