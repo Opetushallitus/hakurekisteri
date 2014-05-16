@@ -43,6 +43,7 @@ class FutureOrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:A
     Future.traverse(s)((item) => authorizer(item).map((_ , item))).map(_.filter(_._1).map(_._2))
   }
 
+  val log = Logging(context.system, this)
 
   import akka.pattern.ask
   import akka.pattern.pipe
@@ -54,12 +55,15 @@ class FutureOrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:A
     case AuthorizedDelete(id, orgs, _)  => val checkedRights = for (resourceToDelete <- (filteredActor ? id);
                                                                     rights <- checkRights(orgs)(resourceToDelete.asInstanceOf[Option[A with Identified]]))
                                                                     yield rights
+
+                                               val originalSender = sender
+                                               log.debug(s"handling delete from $originalSender")
                                                checkedRights.onSuccess{
-                                                              case Some(a) => filteredActor.!(DeleteResource(a.id))(sender)
-                                                              case None => sender ! Unit
+                                                              case Some(a) => filteredActor.!(DeleteResource(a.id))(originalSender)
+                                                              case None => originalSender ! Unit
                                                              }
                                                checkedRights.onFailure {
-                                                              case e => sender ! Failure(e)
+                                                              case e => originalSender ! Failure(e)
                                                              }
     case AuthorizedCreate(resource, _ , _) => filteredActor forward resource
     case AuthorizedUpdate(resource, _ , _) => filteredActor forward resource
