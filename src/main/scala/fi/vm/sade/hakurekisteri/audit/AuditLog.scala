@@ -73,7 +73,7 @@ object UpdateEvent extends AuditMessage[Resource with Identified] {
 
 object UnknownEvent extends AuditMessage[Any] {
 
-  def apply(msg:Any) = apply(msg, "")
+  def apply(msg:Any):CamelMessage = apply(msg, "")
 
   override def tapahtuma(resource: String, original: Any, user: String): Tapahtuma = {
     val t: Tapahtuma = new Tapahtuma
