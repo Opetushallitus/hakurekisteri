@@ -10,9 +10,9 @@ table(class="table table-condensed table-striped")
     th(oph-msg="suoritusrekisteri.muokkaa.duplikaatti.valinnainen") Valinnainen
     th
   tbody
-    tr(ng-repeat="a in arvosanat")
+    tr(ng-repeat="a in arvosanat" class="{{!a.taken ? 'danger' : ''}}")
       td {{a.aine}}
-      td {{a.lisatietoNimi || a.lisatieto}}
+      td {{a.lisatieto}}
       td {{a.arvio.arvosana}}
       td
         span(ng-show="a.valinnainen" oph-msg="suoritusrekisteri.muokkaa.duplikaatti.valinnainen.kylla") Kyllä
