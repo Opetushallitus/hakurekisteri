@@ -57,7 +57,7 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
   }
 
 
-  override def delete(id:UUID) = {
+  override def delete(id:UUID): Unit = {
     if (store.contains(id)) {
       deleteFromStore(id)
       cursor = updateCursor(id)

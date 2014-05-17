@@ -10,18 +10,22 @@ import org.scalatra._
 import _root_.akka.pattern.ask
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import scala.util.Try
-import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
+import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.concurrent.TimeUnit
 import javax.servlet.http.HttpServletRequest
 import org.springframework.security.core.Authentication
 
 import org.scalatra.commands._
 import java.util.UUID
-import scala.Some
-import fi.vm.sade.hakurekisteri.organization.{AuthorizedDelete, AuthorizedRead, AuthorizedQuery}
+import fi.vm.sade.hakurekisteri.organization._
 import scala.util.matching.Regex
 import org.springframework.security.cas.authentication.CasAuthenticationToken
 import org.jasig.cas.client.authentication.AttributePrincipal
+import scala.Some
+import fi.vm.sade.hakurekisteri.organization.AuthorizedRead
+import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
+import fi.vm.sade.hakurekisteri.organization.AuthorizedCreate
+import fi.vm.sade.hakurekisteri.organization.AuthorizedDelete
 
 trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
 
@@ -46,11 +50,11 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
 
   post("/", operation(create)) {
     println("creating" + request.body)
-    createResource
+    createResource(getKnownOrganizations(currentUser), currentUser.map(_.username))
   }
 
   post("/:id", operation(update)) {
-    Try(UUID.fromString(params("id"))).map(updateResource).
+    Try(UUID.fromString(params("id"))).map(updateResource(_ , getKnownOrganizations(currentUser), currentUser.map(_.username))).
       recover {
       case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
     }.get
@@ -96,10 +100,10 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
       recover { case e:Throwable => logger.warn("failure in actor operation", e); InternalServerError("Operation failed") }
   }
 
-  def createResource: Object = {
+  def createResource(authorities:Seq[String], user:Option[String]): Object = {
     (command[C] >> (_.toValidatedResource)).fold(
       errors => {logger.warn(errors.toString()); BadRequest("Malformed Resource")},
-      resource => new ActorResult(resource, ResourceCreated(request.getRequestURL)))
+      resource => new ActorResult(AuthorizedCreate(resource, authorities, user.getOrElse("anonymous")), ResourceCreated(request.getRequestURL)))
   }
 
 
@@ -115,10 +119,10 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
 
 
 
-  def updateResource(id:UUID): Object = {
+  def updateResource(id:UUID, authorities:Seq[String], user: Option[String]): Object = {
     (command[C] >> (_.toValidatedResource)).fold(
       errors => BadRequest("Malformed Resource + " + errors),
-      resource => new ActorResult[A with Identified](identifyResource(resource, id), Ok(_)))
+      resource => new ActorResult[A with Identified](AuthorizedUpdate(identifyResource(resource, id), authorities, user.getOrElse("anonymous")), Ok(_)))
   }
 
   def deleteResource(id:UUID, authorities: Seq[String], user:Option[String]): Object = {

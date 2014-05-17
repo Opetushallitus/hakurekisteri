@@ -1,17 +1,23 @@
 package fi.vm.sade.hakurekisteri.audit
 
 import fi.vm.sade.log.model.{Tapahtuma, LogEvent}
-import java.io.{ByteArrayInputStream, StringReader, ByteArrayOutputStream}
+import java.io.{StringReader, ByteArrayInputStream, ByteArrayOutputStream}
 import java.beans.{XMLDecoder, XMLEncoder}
 import akka.camel.{Producer, CamelMessage}
 import akka.actor.Actor
-import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
-import fi.vm.sade.hakurekisteri.organization.{AuthorizedDelete, AuthorizedRead, AuthorizedQuery}
-import fi.vm.sade.hakurekisteri.rest.support.Query
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.organization._
+import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
 import java.util.{Date, UUID}
 import akka.event.Logging
-import org.xml.sax.InputSource
 import java.nio.charset.Charset
+import scala.reflect.ClassTag
+import org.xml.sax.InputSource
+import java.net.{UnknownHostException, InetAddress}
+import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
+import fi.vm.sade.hakurekisteri.organization.AuthorizedRead
+import fi.vm.sade.hakurekisteri.organization.AuthorizedCreate
+import fi.vm.sade.hakurekisteri.organization.AuthorizedDelete
 
 
 sealed trait AuditMessage[T] {
@@ -50,6 +56,51 @@ object DeleteEvent extends AuditMessage[UUID] {
   override def tapahtuma(resource: String,original: UUID, user:String): Tapahtuma =  createDELETE("hakurekisteri", user, resource, original.toString)
 }
 
+object CreateEvent extends AuditMessage[Resource] {
+  override def tapahtuma(resource: String,original: Resource, user:String): Tapahtuma =  createCREATE("hakurekisteri", user, resource, original.toString)
+}
+
+object UpdateEvent extends AuditMessage[Resource with Identified] {
+  import scala.reflect.runtime.universe._
+  def casMap[T: ClassTag: TypeTag](value: T) = {
+    val m = runtimeMirror(getClass.getClassLoader)
+    val im = m.reflect(value)
+    typeOf[T].members.collect{ case m:MethodSymbol if m.isCaseAccessor => m}.map(im.reflectMethod(_)).map((m) => m.symbol.name.toString -> m()).toMap
+  }
+
+  override def tapahtuma(resource: String,original: Resource with Identified, user:String): Tapahtuma =  {
+    val event = createUPDATE("hakurekisteri", user, resource, original.id.toString)
+    for ((field, value) <- casMap(original)) event.addValue(field, value.toString)
+    event
+  }
+}
+
+object UnknownEvent extends AuditMessage[Any] {
+
+  def apply(msg:Any)(implicit system:String):CamelMessage = apply(msg, "")
+
+  override def tapahtuma(resource: String, original: Any, user: String): Tapahtuma = {
+    val t: Tapahtuma = new Tapahtuma
+    t.setSystem("hakurekisteri")
+    t.setTarget(original.toString)
+    t.setTargetType(resource)
+    t.setTimestamp(new Date)
+    t.setType("UNKNOWN")
+    t.setUser(null)
+    t.setUserActsForUser(null)
+    try {
+      t.setHost(InetAddress.getLocalHost.getHostName)
+    }
+    catch {
+      case ex: UnknownHostException => {
+      }
+    }
+
+
+    t
+  }
+}
+
 
 case class AuditEvent(host: String,system: String,targetType: String,target: String,timestamp: Date, etype: String, user: String, userActsForUser: String)
 
@@ -64,7 +115,13 @@ object AuditEvent {
 
 case class AuditUri(uri:String)
 
+object AuditUri {
+  def apply(broker:String, queue:String):AuditUri = new AuditUri(s"$broker:$queue")
+
+}
+
 class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with Producer  {
+
 
   val log = Logging(context.system, this)
 
@@ -76,6 +133,10 @@ class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with 
     case AuthorizedQuery(q,orgs, user) => QueryEvent(q,user)
     case AuthorizedRead(id, orgs, user) => ReadEvent(id,user)
     case AuthorizedDelete(id, orgs, user) => DeleteEvent(id, user)
+    case AuthorizedCreate(resource, orgs, user) => CreateEvent(resource, user)
+    case AuthorizedUpdate(resource, orgs, user) => UpdateEvent(resource, user)
+
+    case a => UnknownEvent(a)
   }
 
   override protected def transformOutgoingMessage(original: Any): Any ={
@@ -84,10 +145,13 @@ class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with 
     msg
   }
 
-  override protected def routeResponse(msg: Any): Unit =  msg match {
-    case xml:String => log.debug(AuditEvent(xml).toString)
-
+  override protected def transformResponse(msg: Any): Any =  msg match {
+    case CamelMessage(body:String, headers) => val t = AuditEvent(body).toString
+    case a => a.getClass.getName
   }
+
+
+  override protected def routeResponse(msg: Any): Unit =  log.debug(msg.toString)
 }
 
 

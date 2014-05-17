@@ -6,17 +6,18 @@ import org.joda.time.DateTime
 import dispatch._
 import Defaults._
 import akka.actor.{Cancellable, ActorRef, Actor}
-import fi.vm.sade.hakurekisteri.rest.support.Query
+import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import scala.concurrent.duration._
 import akka.event.Logging
 import com.ning.http.client.Response
 import akka.actor.Status.Failure
+import fi.vm.sade.hakurekisteri.storage.DeleteResource
 
-class OrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A,String]) extends FutureOrganizationHierarchy[A](serviceUrl, filteredActor, (item: A) => Future.successful(organizationFinder(item)) )
+class OrganizationHierarchy[A <: Resource :Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A,String]) extends FutureOrganizationHierarchy[A](serviceUrl, filteredActor, (item: A) => Future.successful(organizationFinder(item)) )
 
-class FutureOrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A, concurrent.Future[String]]) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
+class FutureOrganizationHierarchy[A <: Resource :Manifest ](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A, concurrent.Future[String]]) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
 
 
   val logger = Logging(context.system, this)
@@ -39,10 +40,11 @@ class FutureOrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:A
 
   implicit val timeout: akka.util.Timeout = 30.seconds
 
-  def futfilt(s: Seq[A with Identified], authorizer: A with Identified => concurrent.Future[Boolean]) = {
+  def futfilt(s: Seq[A], authorizer: A => concurrent.Future[Boolean]) = {
     Future.traverse(s)((item) => authorizer(item).map((_ , item))).map(_.filter(_._1).map(_._2))
   }
 
+  val log = Logging(context.system, this)
 
   import akka.pattern.ask
   import akka.pattern.pipe
@@ -52,24 +54,31 @@ class FutureOrganizationHierarchy[A:Manifest](serviceUrl:String, filteredActor:A
     case AuthorizedQuery(q,orgs,_) => (filteredActor ? q).mapTo[Seq[A with Identified]].flatMap((i: Seq[A with Identified]) => futfilt(i, isAuthorized(orgs))) pipeTo sender
     case AuthorizedRead(id, orgs,_) => (filteredActor ? id).mapTo[Option[A with Identified]].flatMap(checkRights(orgs)) pipeTo sender
     case AuthorizedDelete(id, orgs, _)  => val checkedRights = for (resourceToDelete <- (filteredActor ? id);
-                                                                    rights <- checkRights(orgs)(resourceToDelete.asInstanceOf[Option[A with Identified]]))
-                                                                    yield rights
-                                               checkedRights.onSuccess{
-                                                              case Some(a) => filteredActor forward DeleteResource(a.id)
-                                                              case None => sender ! Unit
-                                                             }
-                                               checkedRights.onFailure {
-                                                              case e => sender ! Failure(e)
-                                                             }
+                                                                    rights <- checkRights(orgs)(resourceToDelete.asInstanceOf[Option[A]]);
+                                                                    result <- if (rights.isDefined) filteredActor ? DeleteResource(id) else Future.successful(Unit)
+                                                                    )
+                                                                    yield result.asInstanceOf[Unit]
 
+                                               checkedRights pipeTo sender
+    case AuthorizedCreate(resource:A, orgs , _) => val checked = for (rights <- checkRights(orgs)(Some(resource));
+                                                                      result <- if (rights.isDefined) filteredActor ? resource else Future.successful(resource))
+                                                                      yield result
+                                                   checked pipeTo sender
+    case AuthorizedUpdate(resource:A with Identified, orgs , _) => val checked = for (resourceToUpdate <- (filteredActor ? resource.id);
+                                                                     rightsForOld <- checkRights(orgs)(resourceToUpdate.asInstanceOf[Option[A]]);
+                                                                     rightsForNew <- checkRights(orgs)(Some(resource));
+                                                                     result <- if (rightsForOld.isDefined && rightsForNew.isDefined) filteredActor ? resource else Future.successful(rightsForOld)
+                                                                      )
+                                                                      yield result
+                                                                    checked pipeTo sender
     case message:AnyRef => filteredActor forward message
   }
 
 
-  def checkRights(orgs: Seq[String]) = (item:Option[A with Identified]) => item match {
+  def checkRights(orgs: Seq[String]) = (item:Option[A]) => item match {
 
     case None => Future.successful(None)
-    case Some(resource: A with Identified) => isAuthorized(orgs)(resource).map((authorized) => if (authorized) Some(resource) else None)
+    case Some(resource: A) => isAuthorized(orgs)(resource).map((authorized) => if (authorized) Some(resource) else None)
   }
 
 
@@ -179,7 +188,7 @@ class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organiza
 
 
 
-  def isAuthorized(orgs: Seq[String])(item: A with Identified): concurrent.Future[Boolean] = authorizer.checkAccess(orgs, organizationFinder(item))
+  def isAuthorized(orgs: Seq[String])(item: A): concurrent.Future[Boolean] = authorizer.checkAccess(orgs, organizationFinder(item))
 
 
 }
@@ -188,6 +197,9 @@ case class AuthorizedQuery[A](q:Query[A], orgs: Seq[String], user:String)
 case class AuthorizedRead(id:UUID, orgs:Seq[String], user:String)
 
 case class AuthorizedDelete(id:UUID, orgs:Seq[String], user:String)
+case class AuthorizedCreate[A <: Resource](q:A, orgs: Seq[String], user:String)
+case class AuthorizedUpdate[A <: Resource](q:A with Identified, orgs: Seq[String], user:String)
+
 
 
 case class OrganizationAuthorizer(orgPaths: Map[String, Seq[String]]) {
