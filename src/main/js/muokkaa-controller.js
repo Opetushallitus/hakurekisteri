@@ -311,8 +311,14 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         openModal('templates/arvosanat', ArvosanaCtrl);
 
         $rootScope.modalInstance.result.then(function (arvosanaRet) {
-            if (arvosanaRet === "duplicates") {
-                openModal('templates/duplikaatti', DuplikaattiCtrl);
+            if (Array.isArray(arvosanaRet)) {
+                $rootScope.modalInstance = $modal.open({
+                    templateUrl: 'templates/duplikaatti',
+                    controller: DuplikaattiCtrl,
+                    resolve: {
+                        arvosanat: function() { return arvosanaRet }
+                    }
+                });
                 $rootScope.modalInstance.result.then(function(ret) {
                     if (ret) $scope.messages.push(ret)
                 }, function() {

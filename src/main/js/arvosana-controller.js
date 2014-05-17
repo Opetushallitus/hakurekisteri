@@ -114,7 +114,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                             }
 
                             if (hasRedundantArvosana(arvosanat)) {
-                                $rootScope.modalInstance.close("duplicates");
+                                $rootScope.modalInstance.close(arvosanat);
                                 return;
                             }
                             $scope.arvosanataulukko = Object.keys(arvosanataulukko).map(function(key) {

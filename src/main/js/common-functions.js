@@ -30,6 +30,12 @@ if (!Array.prototype.getUnique)
         return a;
     };
 
+if(!Array.isArray)
+    Array.isArray = function(arg) {
+        return Object.prototype.toString.call(arg) === '[object Array]';
+    };
+
+
 function getOrganisaatio($http, organisaatioOid, successCallback, errorCallback) {
     $http.get(organisaatioServiceUrl + '/rest/organisaatio/' + encodeURIComponent(organisaatioOid), {cache: true})
         .success(successCallback)

@@ -1,4 +1,4 @@
-import _root_.akka.actor.{Actor, Props, ActorSystem}
+import _root_.akka.actor.{ActorRef, Actor, Props, ActorSystem}
 import _root_.akka.camel.CamelExtension
 import _root_.akka.routing.BroadcastRouter
 import _root_.akka.util.Timeout
@@ -69,29 +69,33 @@ class ScalatraBootstrap extends LifeCycle {
 
     val camel = CamelExtension(system)
     val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
-    camel.context.addComponent("activemq", ActiveMQComponent.activeMQComponent(amqUrl))
+    val broker = "activemq"
+    camel.context.addComponent(broker, ActiveMQComponent.activeMQComponent(amqUrl))
     val alog = LoggerFactory.getLogger(classOf[AuditLog])
 
-    implicit val audit = AuditUri(OPHSecurity.config.properties.get("activemq.queue.name.log").getOrElse("Sade.Log"))
-    val logger = system.actorOf(Props(new AuditLog("suoritus")))
-    alog.debug(s"AuditLog using uri: $audit")
-    val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))))
-    val filteredSuoritusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Suoritus](orgServiceUrl ,suoritusRekisteri, (suoritus) => suoritus.myontaja )))
-    val loggedSuoritusRekisteri = system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(filteredSuoritusRekisteri, logger))))
+    implicit val audit = AuditUri(broker, OPHSecurity.config.properties.get("activemq.queue.name.log").getOrElse("Sade.Log"))
+    alog.debug(s"AuditLog using uri: $amqUrl")
+    def getBroadcastForLogger(rekisteri: ActorRef, resource: String) = {
+      system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog(resource)))))))
+    }
+
+    val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))), "suoritukset")
+    val filteredSuoritusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Suoritus](orgServiceUrl ,suoritusRekisteri, (suoritus) => suoritus.myontaja )), "suoritus-authorizer")
 
 
-    val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))))
-    val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija](orgServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid )))
 
-    val henkiloRekisteri = system.actorOf(Props(new HenkiloActor(new HenkiloJournal(database))))
-    val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo](orgServiceUrl, henkiloRekisteri, (henkilo) => OPH )))
+    val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))), "opiskelijat")
+    val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija](orgServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid )), "opiskelijat-authorizer")
 
-    val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(new ArvosanaJournal(database))))
+    val henkiloRekisteri = system.actorOf(Props(new HenkiloActor(new HenkiloJournal(database))), "henkilot")
+    val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo](orgServiceUrl, henkiloRekisteri, (henkilo) => OPH )), "henkilo-authorizer")
+
+    val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(new ArvosanaJournal(database))), "arvosanat")
 
     import _root_.akka.pattern.ask
-    val filteredArvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana](orgServiceUrl, arvosanaRekisteri, (arvosana) => suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).mapTo[Option[Suoritus]].map(_.map(_.myontaja).getOrElse("")))))
+    val filteredArvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana](orgServiceUrl, arvosanaRekisteri, (arvosana) => suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).mapTo[Option[Suoritus]].map(_.map(_.myontaja).getOrElse("")))), "arvosana-authorizer")
 
-    val healthcheck = system.actorOf(Props(new HealthcheckActor(filteredSuoritusRekisteri, filteredOpiskelijaRekisteri)))
+    val healthcheck = system.actorOf(Props(new HealthcheckActor(filteredSuoritusRekisteri, filteredOpiskelijaRekisteri)), "healthcheck")
 
     val hakuappServiceUrl = OPHSecurity.config.properties.get("cas.service.haku").getOrElse(hakuappServiceUrlQa)
     val organisaatioServiceUrl = OPHSecurity.config.properties.get("cas.service.organisaatio-service").getOrElse(organisaatioServiceUrlQa)
@@ -101,10 +105,10 @@ class ScalatraBootstrap extends LifeCycle {
     val maxApplications = OPHSecurity.config.properties.get("suoritusrekisteri.hakijat.max.applications").getOrElse("2000").toInt
     val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu(hakuappServiceUrl, maxApplications)(webExec), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl)(webExec))))
 
-    context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](filteredSuoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
-    context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](filteredOpiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")
-    context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](filteredHenkiloRekisteri, HenkiloQuery(_)) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand] with SpringSecuritySupport, "/rest/v1/henkilot")
-    context mount(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](filteredArvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport, "/rest/v1/arvosanat")
+    context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](getBroadcastForLogger(filteredSuoritusRekisteri, "suoritus"), SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
+    context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](getBroadcastForLogger(filteredOpiskelijaRekisteri, "opiskelija"), OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")
+    context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](getBroadcastForLogger(filteredHenkiloRekisteri, "henkilo"), HenkiloQuery(_)) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand] with SpringSecuritySupport, "/rest/v1/henkilot")
+    context mount(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](getBroadcastForLogger(filteredArvosanaRekisteri, "arvosana"), ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport, "/rest/v1/arvosanat")
     context mount(new HakijaResource(hakijat), "/rest/v1/hakijat")
     context mount(new HealthcheckResource(healthcheck), "/healthcheck")
     context mount(new ResourcesApp, "/rest/v1/api-docs/*")
