@@ -84,7 +84,7 @@ class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with 
         val caseMap = casMap(original)
 
         for ((field, value) <- caseMap) event.addValue(field, value.toString)
-      } catch { case t => log.error ("error adding value for update event for $original", t)}
+      } catch { case t => log.error (s"error adding value for update event for $original", t)}
         event
       }
     }

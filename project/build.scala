@@ -199,7 +199,8 @@ object HakuJaValintarekisteriBuild extends Build {
         ++ sonar
         ++ Seq(surefire)
 
-        ++ ScctPlugin.instrumentSettings)
+        ++ ScctPlugin.instrumentSettings).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
+
   }
 }
 
