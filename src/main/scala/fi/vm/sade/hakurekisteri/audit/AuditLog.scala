@@ -23,15 +23,15 @@ sealed trait AuditMessage[T] {
 
   def encode(event:LogEvent ):String = {
     if (event == null) {
-      return null;
+      return null
     }
 
-    val baos = new ByteArrayOutputStream();
-    val xmlEncoder = new XMLEncoder(baos);
-    xmlEncoder.writeObject(event);
-    xmlEncoder.close();
+    val baos = new ByteArrayOutputStream
+    val xmlEncoder = new XMLEncoder(baos)
+    xmlEncoder.writeObject(event)
+    xmlEncoder.close()
 
-    return baos.toString();
+    baos.toString
   }
 
   def apply(original:T, user:String)(implicit system:String) = CamelMessage(encode(new LogEvent(tapahtuma(system, original, user))), Map[String,Any]())
@@ -64,7 +64,7 @@ object UpdateEvent extends AuditMessage[Resource with Identified] {
   def casMap[T: ClassTag: TypeTag](value: T) = {
     val m = runtimeMirror(getClass.getClassLoader)
     val im = m.reflect(value)
-    typeOf[T].members.collect{ case m:MethodSymbol if m.isCaseAccessor => m}.map(im.reflectMethod(_)).map((m) => m.symbol.name.toString -> m()).toMap
+    typeOf[T].members.collect{ case m:MethodSymbol if m.isCaseAccessor => m}.map(im.reflectMethod).map((m) => m.symbol.name.toString -> m()).toMap
   }
 
   override def tapahtuma(resource: String,original: Resource with Identified, user:String): Tapahtuma =  {
@@ -91,8 +91,7 @@ object UnknownEvent extends AuditMessage[Any] {
       t.setHost(InetAddress.getLocalHost.getHostName)
     }
     catch {
-      case ex: UnknownHostException => {
-      }
+      case ex: UnknownHostException =>
     }
 
 
@@ -132,8 +131,8 @@ class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with 
     case AuthorizedQuery(q,orgs, user) => QueryEvent(q,user)
     case AuthorizedRead(id, orgs, user) => ReadEvent(id,user)
     case AuthorizedDelete(id, orgs, user) => DeleteEvent(id, user)
-    case AuthorizedCreate(resource, orgs, user) => CreateEvent(resource, user)
-    case AuthorizedUpdate(resource, orgs, user) => UpdateEvent(resource, user)
+    case AuthorizedCreate(res, orgs, user) => CreateEvent(res, user)
+    case AuthorizedUpdate(res, orgs, user) => UpdateEvent(res, user)
 
     case a => UnknownEvent(a)
   }
@@ -145,7 +144,7 @@ class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with 
   }
 
   override protected def transformResponse(msg: Any): Any =  msg match {
-    case CamelMessage(body:String, headers) => val t = AuditEvent(body).toString
+    case CamelMessage(body:String, headers) => AuditEvent(body).toString
     case a => a.getClass.getName
   }
 
