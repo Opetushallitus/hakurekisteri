@@ -80,12 +80,14 @@ class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with 
     override def tapahtuma(resource: String,original: Resource with Identified, user:String): Tapahtuma =  {
       val event = createUPDATE("hakurekisteri", user, resource, original.id.toString)
       log.debug(s"creating tapahtuma for: $original")
-      val caseMap = casMap(original)
+      try {
+        val caseMap = casMap(original)
 
-      for ((field, value) <- caseMap) event.addValue(field, value.toString)
-      event
+        for ((field, value) <- caseMap) event.addValue(field, value.toString)
+      } catch { case t => log.error ("error adding value for update event for $original", t)}
+        event
+      }
     }
-  }
 
   object UnknownEvent extends AuditMessage[Any] {
 
