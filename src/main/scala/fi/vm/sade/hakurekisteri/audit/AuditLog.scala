@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.audit
 
 import fi.vm.sade.log.model.{Tapahtuma, LogEvent}
-import java.io.{StringReader, ByteArrayInputStream, ByteArrayOutputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.beans.{XMLDecoder, XMLEncoder}
 import akka.camel.{Producer, CamelMessage}
 import akka.actor.Actor
@@ -12,7 +12,6 @@ import java.util.{Date, UUID}
 import akka.event.Logging
 import java.nio.charset.Charset
 import scala.reflect.ClassTag
-import org.xml.sax.InputSource
 import java.net.{UnknownHostException, InetAddress}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.organization.AuthorizedRead
