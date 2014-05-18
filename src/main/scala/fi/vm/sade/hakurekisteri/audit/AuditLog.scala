@@ -19,98 +19,6 @@ import fi.vm.sade.hakurekisteri.organization.AuthorizedCreate
 import fi.vm.sade.hakurekisteri.organization.AuthorizedDelete
 
 
-sealed trait AuditMessage[T] {
-
-  def encode(event:LogEvent ):String = {
-    if (event == null) {
-      return null
-    }
-
-    val baos = new ByteArrayOutputStream
-    val xmlEncoder = new XMLEncoder(baos)
-    xmlEncoder.writeObject(event)
-    xmlEncoder.close()
-
-    baos.toString
-  }
-
-  def apply(original:T, user:String)(implicit system:String) = CamelMessage(encode(new LogEvent(tapahtuma(system, original, user))), Map[String,Any]())
-
-
-
-  def tapahtuma(resource: String, original:T, user:String): Tapahtuma
-}
-
-import Tapahtuma._
-
-object QueryEvent extends AuditMessage[Query[_]] {
-  override def tapahtuma(resource: String,original: Query[_], user:String): Tapahtuma =  createREAD("hakurekisteri", user, resource, original.toString)
-}
-
-object ReadEvent extends AuditMessage[UUID] {
-  override def tapahtuma(resource: String,original: UUID, user:String): Tapahtuma =  createREAD("hakurekisteri", user, resource, original.toString)
-}
-
-object DeleteEvent extends AuditMessage[UUID] {
-  override def tapahtuma(resource: String,original: UUID, user:String): Tapahtuma =  createDELETE("hakurekisteri", user, resource, original.toString)
-}
-
-object CreateEvent extends AuditMessage[Resource] {
-  override def tapahtuma(resource: String,original: Resource, user:String): Tapahtuma =  createCREATE("hakurekisteri", user, resource, original.toString)
-}
-
-object UpdateEvent extends AuditMessage[Resource with Identified] {
-  import scala.reflect.runtime.universe._
-  def casMap[T: ClassTag: TypeTag](value: T) = {
-    val m = runtimeMirror(getClass.getClassLoader)
-    val im = m.reflect(value)
-    typeOf[T].members.collect{ case m:MethodSymbol if m.isCaseAccessor => m}.map(im.reflectMethod).map((m) => m.symbol.name.toString -> m()).toMap
-  }
-
-  override def tapahtuma(resource: String,original: Resource with Identified, user:String): Tapahtuma =  {
-    val event = createUPDATE("hakurekisteri", user, resource, original.id.toString)
-    for ((field, value) <- casMap(original)) event.addValue(field, value.toString)
-    event
-  }
-}
-
-object UnknownEvent extends AuditMessage[Any] {
-
-  def apply(msg:Any)(implicit system:String):CamelMessage = apply(msg, "")
-
-  override def tapahtuma(resource: String, original: Any, user: String): Tapahtuma = {
-    val t: Tapahtuma = new Tapahtuma
-    t.setSystem("hakurekisteri")
-    t.setTarget(original.toString)
-    t.setTargetType(resource)
-    t.setTimestamp(new Date)
-    t.setType("UNKNOWN")
-    t.setUser(null)
-    t.setUserActsForUser(null)
-    try {
-      t.setHost(InetAddress.getLocalHost.getHostName)
-    }
-    catch {
-      case ex: UnknownHostException =>
-    }
-
-
-    t
-  }
-}
-
-
-case class AuditEvent(host: String,system: String,targetType: String,target: String,timestamp: Date, etype: String, user: String, userActsForUser: String)
-
-object AuditEvent {
-  def apply(responseBody:String):AuditEvent = {
-    val t = new XMLDecoder(new ByteArrayInputStream(responseBody.getBytes(Charset.defaultCharset()))  ).readObject().asInstanceOf[LogEvent].getTapahtuma
-    AuditEvent(t.getHost, t.getSystem, t.getTargetType, t.getTarget, t.getTimestamp, t.getType, t.getUser, t.getUserActsForUser)
-
-  }
-}
-
-
 case class AuditUri(uri:String)
 
 object AuditUri {
@@ -120,6 +28,100 @@ object AuditUri {
 
 class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with Producer  {
 
+
+  sealed trait AuditMessage[T] {
+
+    def encode(event:LogEvent ):String = {
+      if (event == null) {
+        return null
+      }
+
+      val baos = new ByteArrayOutputStream
+      val xmlEncoder = new XMLEncoder(baos)
+      xmlEncoder.writeObject(event)
+      xmlEncoder.close()
+
+      baos.toString
+    }
+
+    def apply(original:T, user:String)(implicit system:String) = CamelMessage(encode(new LogEvent(tapahtuma(system, original, user))), Map[String,Any]())
+
+
+
+    def tapahtuma(resource: String, original:T, user:String): Tapahtuma
+  }
+
+  import Tapahtuma._
+
+  object QueryEvent extends AuditMessage[Query[_]] {
+    override def tapahtuma(resource: String,original: Query[_], user:String): Tapahtuma =  createREAD("hakurekisteri", user, resource, original.toString)
+  }
+
+  object ReadEvent extends AuditMessage[UUID] {
+    override def tapahtuma(resource: String,original: UUID, user:String): Tapahtuma =  createREAD("hakurekisteri", user, resource, original.toString)
+  }
+
+  object DeleteEvent extends AuditMessage[UUID] {
+    override def tapahtuma(resource: String,original: UUID, user:String): Tapahtuma =  createDELETE("hakurekisteri", user, resource, original.toString)
+  }
+
+  object CreateEvent extends AuditMessage[Resource] {
+    override def tapahtuma(resource: String,original: Resource, user:String): Tapahtuma =  createCREATE("hakurekisteri", user, resource, original.toString)
+  }
+
+  object UpdateEvent extends AuditMessage[Resource with Identified] {
+    import scala.reflect.runtime.universe._
+    def casMap[T: ClassTag: TypeTag](value: T) = {
+      val m = runtimeMirror(getClass.getClassLoader)
+      val im = m.reflect(value)
+      typeOf[T].members.collect{ case m:MethodSymbol if m.isCaseAccessor => m}.map(im.reflectMethod).map((m) => m.symbol.name.toString -> m()).toMap
+    }
+
+    override def tapahtuma(resource: String,original: Resource with Identified, user:String): Tapahtuma =  {
+      val event = createUPDATE("hakurekisteri", user, resource, original.id.toString)
+      log.debug(s"creating tapahtuma for: $original")
+      val caseMap = casMap(original)
+
+      for ((field, value) <- caseMap) event.addValue(field, value.toString)
+      event
+    }
+  }
+
+  object UnknownEvent extends AuditMessage[Any] {
+
+    def apply(msg:Any)(implicit system:String):CamelMessage = apply(msg, "")
+
+    override def tapahtuma(resource: String, original: Any, user: String): Tapahtuma = {
+      val t: Tapahtuma = new Tapahtuma
+      t.setSystem("hakurekisteri")
+      t.setTarget(original.toString)
+      t.setTargetType(resource)
+      t.setTimestamp(new Date)
+      t.setType("UNKNOWN")
+      t.setUser(null)
+      t.setUserActsForUser(null)
+      try {
+        t.setHost(InetAddress.getLocalHost.getHostName)
+      }
+      catch {
+        case ex: UnknownHostException =>
+      }
+
+
+      t
+    }
+  }
+
+
+  case class AuditEvent(host: String,system: String,targetType: String,target: String,timestamp: Date, etype: String, user: String, userActsForUser: String)
+
+  object AuditEvent {
+    def apply(responseBody:String):AuditEvent = {
+      val t = new XMLDecoder(new ByteArrayInputStream(responseBody.getBytes(Charset.defaultCharset()))  ).readObject().asInstanceOf[LogEvent].getTapahtuma
+      AuditEvent(t.getHost, t.getSystem, t.getTargetType, t.getTarget, t.getTimestamp, t.getType, t.getUser, t.getUserActsForUser)
+
+    }
+  }
 
   val log = Logging(context.system, this)
 
