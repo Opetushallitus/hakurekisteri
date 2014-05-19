@@ -135,6 +135,7 @@ object RestHakupalvelu {
     val myontaja = lahtokoulu.getOrElse("")
     val suorittaja = hakemus.personOid.getOrElse("")
     val valmistuminen = todistusVuosi.map(vuosi => kesa.toLocalDate(vuosi.toInt)).getOrElse(new LocalDate(0))
+    val julkaisulupa = Some(getValue("lisatiedot", "lupaJulkaisu", "false").toBoolean)
 
     Hakija(
       Henkilo(
@@ -180,7 +181,7 @@ object RestHakupalvelu {
         ))
         case _ => Seq()
       },
-      (for (a <- v; t <- a.get("hakutoiveet")) yield Hakemus(convertToiveet(t), hakemus.oid)).getOrElse(Hakemus(Seq(), hakemus.oid))
+      (for (a <- v; t <- a.get("hakutoiveet")) yield Hakemus(convertToiveet(t), hakemus.oid, julkaisulupa)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa))
     )
   }
 
@@ -206,7 +207,7 @@ object RestHakupalvelu {
     opetusPisteet.sortBy(_._1).map((t) => {
       val koulutukset = Set(Komoto("", "", t._2, "2014", Kausi.Syksy))
       val hakukohdekoodi = toiveet("preference" + t._1 + "-Koulutus-id-aoIdentifier")
-      Hakutoive(Hakukohde(koulutukset, hakukohdekoodi), Try(toiveet("preference" + t._1 + "-Koulutus-id-kaksoistutkinto").toBoolean).getOrElse(false))
+      Hakutoive(Hakukohde(koulutukset, hakukohdekoodi), Try(toiveet("preference" + t._1 + "-kaksoistutkinnon_lisakysymys").toBoolean).getOrElse(false))
     })
   }
 

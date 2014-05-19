@@ -21,7 +21,7 @@ case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String)
 
 case class Hakutoive(hakukohde: Hakukohde, kaksoistutkinto: Boolean)
 
-case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String)
+case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String, julkaisulupa: Option[Boolean])
 
 case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria: Seq[Opiskelija], hakemus: Hakemus)
 
