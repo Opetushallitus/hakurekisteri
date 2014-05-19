@@ -73,18 +73,20 @@ class ScalatraBootstrap extends LifeCycle {
     val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
     val broker = "activemq"
     camel.context.addComponent(broker, ActiveMQComponent.activeMQComponent(amqUrl))
-    val alog = LoggerFactory.getLogger(classOf[AuditLog])
+    val log = LoggerFactory.getLogger(getClass)
 
     implicit val audit = AuditUri(broker, OPHSecurity.config.properties.get("activemq.queue.name.log").getOrElse("Sade.Log"))
-    alog.debug(s"AuditLog using uri: $amqUrl")
+    log.debug(s"AuditLog using uri: $amqUrl")
 
-    def getBroadcastForLogger[A](rekisteri: ActorRef) = {
+    import scala.reflect.runtime.universe._
 
-      system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog[A](classOf[A].getName)).withDispatcher("audit-dispatcher"))))))
+    def getBroadcastForLogger[A <: Resource: TypeTag: ClassTag](rekisteri: ActorRef) = {
+
+      system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog[A](typeOf[A].typeSymbol.name.toString)).withDispatcher("audit-dispatcher"))))))
     }
 
-    def authorizer[A : ClassTag](guarded: ActorRef, orgFinder: A => String): ActorRef = {
-      val resource = classOf[A].getName.toLowerCase
+    def authorizer[A <: Resource : ClassTag: Manifest](guarded: ActorRef, orgFinder: A => String): ActorRef = {
+      val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
       system.actorOf(Props(new OrganizationHierarchy[A](orgServiceUrl, guarded, orgFinder)), s"$resource-authorizer")
     }
 

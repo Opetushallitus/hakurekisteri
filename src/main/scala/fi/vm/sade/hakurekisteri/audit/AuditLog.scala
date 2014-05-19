@@ -26,7 +26,10 @@ object AuditUri {
 
 }
 
-class AuditLog[A <: Resource](resource:String)(implicit val audit:AuditUri) extends Actor with Producer  {
+
+import scala.reflect.runtime.universe._
+
+class AuditLog[A <: Resource](resource:String)(implicit val audit:AuditUri, ct: ClassTag[A], tt: TypeTag[A]) extends Actor with Producer  {
 
 
   sealed trait AuditMessage[T] {
@@ -70,7 +73,6 @@ class AuditLog[A <: Resource](resource:String)(implicit val audit:AuditUri) exte
   }
 
   object UpdateEvent extends AuditMessage[A with Identified] {
-    import scala.reflect.runtime.universe._
     def casMap[T: ClassTag: TypeTag](value: T) = {
       val m = runtimeMirror(getClass.getClassLoader)
       val im = m.reflect(value)
@@ -84,7 +86,7 @@ class AuditLog[A <: Resource](resource:String)(implicit val audit:AuditUri) exte
         val caseMap = casMap(original)
 
         for ((field, value) <- caseMap) event.addValue(field, value.toString)
-      } catch { case t => log.error (s"error adding value for update event for $original", t)}
+      } catch { case t:Throwable => log.error (s"error adding value for update event for $original", t)}
         event
       }
     }
