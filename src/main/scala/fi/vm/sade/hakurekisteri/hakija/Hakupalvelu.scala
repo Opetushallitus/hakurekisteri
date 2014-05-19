@@ -207,7 +207,7 @@ object RestHakupalvelu {
     opetusPisteet.sortBy(_._1).map((t) => {
       val koulutukset = Set(Komoto("", "", t._2, "2014", Kausi.Syksy))
       val hakukohdekoodi = toiveet("preference" + t._1 + "-Koulutus-id-aoIdentifier")
-      Hakutoive(Hakukohde(koulutukset, hakukohdekoodi), Try(toiveet("preference" + t._1 + "-kaksoistutkinnon_lisakysymys").toBoolean).getOrElse(false))
+      Hakutoive(Hakukohde(koulutukset, hakukohdekoodi), Try(toiveet("preference" + t._1 + "_kaksoistutkinnon_lisakysymys").toBoolean).getOrElse(false))
     })
   }
 
