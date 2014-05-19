@@ -15,6 +15,7 @@ import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, Organ
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
+
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.{TimeUnit, ThreadFactory, Executors}
 import org.apache.activemq.camel.component.ActiveMQComponent
@@ -41,14 +42,13 @@ import scala.util.Try
 class ScalatraBootstrap extends LifeCycle {
 
   implicit val swagger: Swagger = new HakurekisteriSwagger
-  implicit val system = ActorSystem()
+  implicit val system = ActorSystem("hakurekisteri")
   implicit val ec:ExecutionContext = system.dispatcher
   val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
   val OPH = "1.2.246.562.10.00000000001"
   val organisaatioServiceUrlQa = "https://testi.virkailija.opintopolku.fi/organisaatio-service"
   val hakuappServiceUrlQa = "https://testi.virkailija.opintopolku.fi/haku-app"
   val koodistoServiceUrlQa = "https://testi.virkailija.opintopolku.fi/koodisto-service"
-
 
 
   private val NumThreads = 1000
@@ -78,11 +78,13 @@ class ScalatraBootstrap extends LifeCycle {
     implicit val audit = AuditUri(broker, OPHSecurity.config.properties.get("activemq.queue.name.log").getOrElse("Sade.Log"))
     log.debug(s"AuditLog using uri: $amqUrl")
 
+
+
     import scala.reflect.runtime.universe._
 
     def getBroadcastForLogger[A <: Resource: TypeTag: ClassTag](rekisteri: ActorRef) = {
 
-      system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog[A](typeOf[A].typeSymbol.name.toString)).withDispatcher("audit-dispatcher"))))))
+      system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog[A](typeOf[A].typeSymbol.name.toString)).withDispatcher("akka.hakurekisteri.audit-dispatcher"), typeOf[A].typeSymbol.name.toString.toLowerCase+"-audit") ))))
     }
 
     def authorizer[A <: Resource : ClassTag: Manifest](guarded: ActorRef, orgFinder: A => String): ActorRef = {
