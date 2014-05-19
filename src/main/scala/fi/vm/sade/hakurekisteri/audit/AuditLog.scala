@@ -26,7 +26,7 @@ object AuditUri {
 
 }
 
-class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with Producer  {
+class AuditLog[A <: Resource](resource:String)(implicit val audit:AuditUri) extends Actor with Producer  {
 
 
   sealed trait AuditMessage[T] {
@@ -65,11 +65,11 @@ class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with 
     override def tapahtuma(resource: String,original: UUID, user:String): Tapahtuma =  createDELETE("hakurekisteri", user, resource, original.toString)
   }
 
-  object CreateEvent extends AuditMessage[Resource] {
-    override def tapahtuma(resource: String,original: Resource, user:String): Tapahtuma =  createCREATE("hakurekisteri", user, resource, original.toString)
+  object CreateEvent extends AuditMessage[A] {
+    override def tapahtuma(resource: String,original: A, user:String): Tapahtuma =  createCREATE("hakurekisteri", user, resource, original.toString)
   }
 
-  object UpdateEvent extends AuditMessage[Resource with Identified] {
+  object UpdateEvent extends AuditMessage[A with Identified] {
     import scala.reflect.runtime.universe._
     def casMap[T: ClassTag: TypeTag](value: T) = {
       val m = runtimeMirror(getClass.getClassLoader)
@@ -77,7 +77,7 @@ class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with 
       typeOf[T].members.collect{ case m:MethodSymbol if m.isCaseAccessor => m}.map(im.reflectMethod).map((m) => m.symbol.name.toString -> m()).toMap
     }
 
-    override def tapahtuma(resource: String,original: Resource with Identified, user:String): Tapahtuma =  {
+    override def tapahtuma(resource: String,original: A with Identified, user:String): Tapahtuma =  {
       val event = createUPDATE("hakurekisteri", user, resource, original.id.toString)
       log.debug(s"creating tapahtuma for: $original")
       try {
@@ -135,8 +135,8 @@ class AuditLog(resource:String)(implicit val audit:AuditUri) extends Actor with 
     case AuthorizedQuery(q,orgs, user) => QueryEvent(q,user)
     case AuthorizedRead(id, orgs, user) => ReadEvent(id,user)
     case AuthorizedDelete(id, orgs, user) => DeleteEvent(id, user)
-    case AuthorizedCreate(res, orgs, user) => CreateEvent(res, user)
-    case AuthorizedUpdate(res, orgs, user) => UpdateEvent(res, user)
+    case AuthorizedCreate(res : A, orgs, user) => CreateEvent(res, user)
+    case AuthorizedUpdate(res: A with Identified, orgs, user) => UpdateEvent(res, user)
 
     case a => UnknownEvent(a)
   }
