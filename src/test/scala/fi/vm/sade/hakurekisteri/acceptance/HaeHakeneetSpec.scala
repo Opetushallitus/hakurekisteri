@@ -34,30 +34,6 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       })
     }
 
-    scenario("XML tiedosto") {
-      Given("N henkilöä täyttää hakemuksen")
-      hakupalvelu has (FullHakemus1)
-
-      When("rajaan muodostusta valitsemalla tiedostotyypiksi 'XML'")
-      val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, None)),
-        Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
-      println("tiedosto: " + hakijat)
-
-      Then("saan siirtotiedoston, joka on XML-muodossa")
-      //tiedosto on XML-muodossa
-    }
-
-    scenario("Excel tiedosto") {
-      Given("N henkilöä täyttää hakemuksen")
-      //Mikko täyttää hakemuksen
-
-      When("rajaan muodostusta valitsemalla tiedostotyypiksi 'Excel'")
-      //tiedosto = muodosta(muoto = Excel)
-
-      Then("saan siirtotiedoston, joka on Excel-muodossa")
-      //tiedosto on Excel-muodossa
-    }
-
     scenario("Kaikki hakeneet") {
       Given("Kaikkiaan kaksi henkilöä täyttää hakemuksen")
       hakupalvelu has (FullHakemus1, FullHakemus2)
@@ -97,5 +73,21 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       hakijat.hakijat.size should equal (0)
     }
 
+    scenario("Vapaaehtoiset uudet tiedot tulostuvat hakemukselle") {
+      Given("Henkilö täyttää hakemuksen ja valitsee hakevansa urheilijan ammatilliseen koulutukseen harkinnanvaraisessa sekä valitsee terveys, oikeudenmenetys ja kaksoistutkinto -kysymyksiin kyllä")
+      hakupalvelu has (FullHakemus1)
+
+      When("haen kaikki hakeneet")
+      val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, None)),
+        Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
+      println("hakeneet: " + hakijat)
+
+      Then("saan siirtotiedoston, jossa on vaaditut arvot")
+      hakijat.hakijat.size should equal(1)
+      hakijat.hakijat.head.hakemus.hakutoiveet.head.aiempiperuminen should equal(Some(true))
+      hakijat.hakijat.head.hakemus.hakutoiveet.head.terveys should equal(Some(true))
+      hakijat.hakijat.head.hakemus.hakutoiveet.head.harkinnanvaraisuusperuste should equal(Some("2"))
+      hakijat.hakijat.head.hakemus.hakutoiveet.head.kaksoistutkinto should equal(Some(true))
+    }
   }
 }

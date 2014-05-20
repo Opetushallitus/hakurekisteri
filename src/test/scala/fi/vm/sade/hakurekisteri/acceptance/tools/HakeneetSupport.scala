@@ -65,7 +65,13 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
         "preference1-Koulutus-id" -> "1.11.1",
         "preference1-Koulutus-id-aoIdentifier" -> "460",
         "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
-        "preference1-Koulutus-id-lang" -> "FI"),
+        "preference1-Koulutus-id-lang" -> "FI",
+        "preference1-Koulutus-id-sora" -> "true",
+        "preference1_sora_terveys" -> "true",
+        "preference1_sora_oikeudenMenetys" -> "true",
+        "preference1-discretionary-follow-up" -> "sosiaalisetsyyt",
+        "preference1_urheilijan_ammatillisen_koulutuksen_lisakysymys" -> "true",
+        "preference1_kaksoistutkinnon_lisakysymys" -> "true"),
       "lisatiedot" -> Map(
         "lupaMarkkinointi" -> "true",
         "lupaJulkaisu" -> "true")))
@@ -109,7 +115,13 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
         "preference1-Koulutus-id" -> "1.11.2",
         "preference1-Koulutus-id-aoIdentifier" -> "460",
         "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
-        "preference1-Koulutus-id-lang" -> "FI"),
+        "preference1-Koulutus-id-lang" -> "FI",
+        "preference1-Koulutus-id-sora" -> "true",
+        "preference1_sora_terveys" -> "true",
+        "preference1_sora_oikeudenMenetys" -> "true",
+        "preference1-discretionary-follow-up" -> "oppimisvaikudet",
+        "preference1_urheilijan_ammatillisen_koulutuksen_lisakysymys" -> "true",
+        "preference1_kaksoistutkinnon_lisakysymys" -> "true"),
       "lisatiedot" -> Map(
         "lupaMarkkinointi" -> "true",
         "lupaJulkaisu" -> "true")))

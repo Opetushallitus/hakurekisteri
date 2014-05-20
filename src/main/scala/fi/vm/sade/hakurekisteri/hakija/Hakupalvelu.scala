@@ -113,6 +113,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 }
 
 object RestHakupalvelu {
+  val logger = LoggerFactory.getLogger(getClass)
 
   val DEFAULT_POHJA_KOULUTUS: String = "1"
 
@@ -207,7 +208,19 @@ object RestHakupalvelu {
     opetusPisteet.sortBy(_._1).map((t) => {
       val koulutukset = Set(Komoto("", "", t._2, "2014", Kausi.Syksy))
       val hakukohdekoodi = toiveet("preference" + t._1 + "-Koulutus-id-aoIdentifier")
-      Hakutoive(Hakukohde(koulutukset, hakukohdekoodi), Try(toiveet("preference" + t._1 + "_kaksoistutkinnon_lisakysymys").toBoolean).getOrElse(false))
+      val kaksoistutkinto = toiveet.get("preference" + t._1 + "_kaksoistutkinnon_lisakysymys").map(s => Try(s.toBoolean).getOrElse(false))
+      val urheilijanammatillinenkoulutus = toiveet.get("preference" + t._1 + "_urheilijan_ammatillisen_koulutuksen_lisakysymys").
+        map(s => Try(s.toBoolean).getOrElse(false))
+      val harkinnanvaraisuusperuste: Option[String] = toiveet.get("preference" + t._1 + "-discretionary-follow-up").flatMap(s => s match {
+        case "oppimisvaikudet" => Some("1")
+        case "sosiaalisetsyyt" => Some("2")
+        case "todistustenvertailuvaikeudet" => Some("3")
+        case "todistustenpuuttuminen" => Some("4")
+        case _ => logger.error(s"invalid discretionary-follow-up value $s"); None
+      })
+      val aiempiperuminen = toiveet.get("preference" + t._1 + "_sora_oikeudenMenetys").map(s => Try(s.toBoolean).getOrElse(false))
+      val terveys = toiveet.get("preference" + t._1 + "_sora_terveys").map(s => Try(s.toBoolean).getOrElse(false))
+      Hakutoive(Hakukohde(koulutukset, hakukohdekoodi), kaksoistutkinto, urheilijanammatillinenkoulutus, harkinnanvaraisuusperuste, aiempiperuminen, terveys)
     })
   }
 
