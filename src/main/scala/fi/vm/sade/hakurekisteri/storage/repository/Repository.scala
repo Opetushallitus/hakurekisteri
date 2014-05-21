@@ -35,7 +35,7 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
   }
 
   override def cursor(t: T): Option[(Long, String)] = {
-    cursor.get(t.hashCode % 1024)
+    cursor.get(t.hashCode % 16384)
 
   }
 
@@ -43,8 +43,8 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
     val oid = identify(o)
     val old = store.get(oid.id)
     val result = saveIdentified(oid)
-    cursor = cursor + ((o.hashCode % 1024) -> updateCursor(o,oid.id))
-    old.foreach((item) => cursor = cursor + ((item.hashCode % 1024) -> updateCursor(item,oid.id)))
+    cursor = cursor + ((o.hashCode % 16384) -> updateCursor(o,oid.id))
+    old.foreach((item) => cursor = cursor + ((item.hashCode % 16384) -> updateCursor(item,oid.id)))
     result
   }
 
@@ -67,7 +67,7 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
   override def delete(id:UUID): Unit = {
     if (store.contains(id)) {
       val deleted = deleteFromStore(id)
-      deleted.foreach((item) => cursor = cursor + (item.hashCode % 1024 -> updateCursor(item, id)))
+      deleted.foreach((item) => cursor = cursor + (item.hashCode % 16384 -> updateCursor(item, id)))
     }
   }
 
