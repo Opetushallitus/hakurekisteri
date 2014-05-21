@@ -15,7 +15,7 @@ trait Repository[T] {
 
   def get(id: UUID): Option[T with Identified]
 
-  def cursor: Any
+  def cursor(t:T): Any
 
   def delete(id: UUID)
 }
@@ -25,19 +25,26 @@ trait Repository[T] {
 trait InMemRepository[T <: Resource] extends Repository[T] {
 
   var store:Map[UUID,T with Identified] = Map()
-  var cursor = (Platform.currentTime, UUID.randomUUID.toString)
+  var cursor:Map[Int, (Long, String)] = Map()
 
-  def updateCursor(id:UUID) = (id, Platform.currentTime, cursor) match {
-    case (id, time, (curtime, curid)) if id.toString == curid  && time == curtime =>  (time, id.toString + "#a")
-    case (id, time, (curtime, curid)) if curid.startsWith(id.toString) && time == curtime => (time, curid + "a")
+  def updateCursor(t:T, id:UUID) = (id, Platform.currentTime, cursor(t)) match {
+    case (id, time, Some((curtime, curid))) if id.toString == curid  && time == curtime =>  (time, id.toString + "#a")
+    case (id, time, Some((curtime, curid))) if curid.startsWith(id.toString) && time == curtime => (time, curid + "a")
     case (id, time, cursor) => (time -> id.toString)
+
+  }
+
+  override def cursor(t: T): Option[(Long, String)] = {
+    cursor.get(t.hashCode % 1024)
 
   }
 
   def save(o: T ): T with Identified = {
     val oid = identify(o)
+    val old = store.get(oid.id)
     val result = saveIdentified(oid)
-    cursor = updateCursor(oid.id)
+    cursor = cursor + ((o.hashCode % 1024) -> updateCursor(o,oid.id))
+    old.foreach((item) => cursor = cursor + ((item.hashCode % 1024) -> updateCursor(item,oid.id)))
     result
   }
 
@@ -59,13 +66,15 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
 
   override def delete(id:UUID): Unit = {
     if (store.contains(id)) {
-      deleteFromStore(id)
-      cursor = updateCursor(id)
+      val deleted = deleteFromStore(id)
+      deleted.foreach((item) => cursor = cursor + (item.hashCode % 1024 -> updateCursor(item, id)))
     }
   }
 
   def deleteFromStore(id:UUID) = {
+    val item = store.get(id)
     store = store - id
+    item
   }
 
 }

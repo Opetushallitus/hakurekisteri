@@ -27,7 +27,7 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
     super.saveIdentified(o)
   }
 
-  override def deleteFromStore(id: UUID)  {
+  override def deleteFromStore(id: UUID): Option[T with Identified] = {
     journal.addModification(Deleted(id))
     super.deleteFromStore(id)
   }
