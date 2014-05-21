@@ -24,17 +24,17 @@ abstract class ResourceActor[T: Manifest] extends Actor { this: Repository[T] wi
       findBy(q) pipeTo sender
     case o:T =>
       log.debug("deduplicating: %s from %s" format(o,sender))
-      val dedupcursor = cursor
+      val dedupcursor = cursor(o)
       findBy(DeduplicationQuery(o)).map((s) => {log.debug("deduplicated: " + s);s.headOption match { case None => DeduplicatedResource(o,dedupcursor) case Some(duplicate) => DuplicateResource(duplicate)}}).pipeTo(self)(sender)
     case DuplicateResource(o:T with Identified) =>
       sender ! o
-    case DeduplicatedResource(o:T, dedupcursor) if dedupcursor == cursor =>
+    case DeduplicatedResource(o:T, dedupcursor) if dedupcursor == cursor(o) =>
       log.debug("received: " + o)
       val saved = Try(save(o))
       log.debug("saved: " + saved)
       sender ! saved.recover{ case e:Exception => Failure(e)}.get
-    case DeduplicatedResource(o:T, dedupcursor) if dedupcursor != cursor =>
-      log.debug("obosolete dedup result for %s with cursor %s. current cursor %s" format (o,dedupcursor,cursor) )
+    case DeduplicatedResource(o:T, dedupcursor) if dedupcursor != cursor(o) =>
+      log.debug("obosolete dedup result for %s with cursor %s. current cursor %s" format (o,dedupcursor,cursor(o)) )
       self.forward(o)
     case id:UUID =>
       sender ! get(id)
