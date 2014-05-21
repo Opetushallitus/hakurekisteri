@@ -41,8 +41,10 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
 
   def save(o: T ): T with Identified = {
     val oid = identify(o)
+    val old = store.get(oid.id)
     val result = saveIdentified(oid)
     cursor = cursor + ((o.hashCode % 1024) -> updateCursor(o,oid.id))
+    old.foreach((item) => cursor = cursor + ((item.hashCode % 1024) -> updateCursor(item,oid.id)))
     result
   }
 

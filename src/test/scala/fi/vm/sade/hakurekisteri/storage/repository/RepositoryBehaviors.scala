@@ -103,25 +103,30 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
 
     it should "change cursor when item is created" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        val start = repo.cursor
-        repo.save(itemConstructor)
-        repo.cursor should not (be (start))
+        val item = itemConstructor
+        val start = repo.cursor(item)
+        repo.save(item)
+        repo.cursor(item) should not (be (start))
     }
 
     it should "change cursor when item is updated" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        val saved = repo.listAll().headOption.getOrElse(repo.save(itemConstructor))
-        val start = repo.cursor
+        val item = itemConstructor
+
+        val saved = repo.listAll().headOption.getOrElse(repo.save(item))
+        val start = repo.cursor(saved)
         repo.save(itemUpdater(saved))
-        repo.cursor should not (be (start))
+        repo.cursor(saved) should not (be (start))
     }
 
     it should "change cursor when item is deleted" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        val saved = repo.save(itemConstructor)
-        val start = repo.cursor
+        val item = itemConstructor
+
+        val saved = repo.save(item)
+        val start = repo.cursor(item)
         repo.delete(saved.id)
-        repo.cursor should not (be (start))
+        repo.cursor(item) should not (be (start))
     }
 
     it should "not change cursor when delete is called on an item that doesn't exist" in repoContext {
@@ -130,28 +135,28 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
           val id = UUID.randomUUID
           if (repo.listAll().map(_.id).contains(id)) newId else id
         }
-        val start = repo.cursor
+        val start = repo.listAll().map(repo.cursor)
         repo.delete(newId)
-        repo.cursor should be (start)
+        repo.listAll().map(repo.cursor) should be (start)
     }
 
     it should "change cursor when same item is updated twice" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        repo.save(repo.listAll().headOption.getOrElse(itemConstructor))
-        val start = repo.cursor
+        val item = repo.save(repo.listAll().headOption.getOrElse(itemConstructor))
+        val start = repo.cursor(item)
         repo.save(itemUpdater(repo.listAll().head))
-        repo.cursor should not (be (start))
+        repo.cursor(item) should not (be (start))
     }
 
     it should "change cursor when same item is updated in row" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
-        repo.save(repo.listAll().headOption.getOrElse(itemConstructor))
-        var start = repo.cursor
+        var item = repo.save(repo.listAll().headOption.getOrElse(itemConstructor))
+        var start = repo.cursor(item)
         for( i <- 1 to 100) {
-          start = repo.cursor
-          repo.save(itemUpdater(repo.listAll().head))
-          repo.cursor should not (be (start))
-
+          start = repo.cursor(item)
+          val newItem  = repo.save(itemUpdater(repo.listAll().head))
+          repo.cursor(item) should not (be (start))
+          item = newItem
         }
 
     }
