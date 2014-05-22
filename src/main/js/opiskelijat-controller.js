@@ -67,14 +67,42 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
         }
 
         function doSearch(query) {
+            $scope.messages.length = 0;
+            function searchOpiskelijat(o) {
+                Opiskelijat.query(query, function (result) {
+                    o.resolve(result);
+                }, function () {
+                    o.reject("opiskelija query failed");
+                });
+            }
+
+            function searchSuoritukset(s) {
+                var suoritusQuery = { myontaja: query.oppilaitosOid, henkilo: (query.henkilo ? query.henkilo : null) };
+                Suoritukset.query(suoritusQuery, function (result) {
+                    s.resolve(result);
+                }, function () {
+                    s.reject("suoritus query failed");
+                });
+            }
+
             if (query.oppilaitosOid) {
-                Opiskelijat.query(query, function(opiskelijat) {
-                    if (Array.isArray(opiskelijat)) {
-                        showCurrentRows(getUniqueHenkiloOids(opiskelijat));
-                    }
+                var o = $q.defer();
+                searchOpiskelijat(o);
+                var s = $q.defer();
+                searchSuoritukset(s);
+                $q.all([ o.promise, s.promise ]).then(function(resultArrays) {
+                    showCurrentRows(getUniqueHenkiloOids(resultArrays.reduce(function(a, b) { return a.concat(b) })));
                     resetPageNumbers();
                     stopLoading();
-                }, function() { stopLoading() });
+                }, function(errors) {
+                    $log.error(errors);
+                    $scope.messages.push({
+                        type: "danger",
+                        messageKey: "suoritusrekisteri.opiskelijat.virhehaussa",
+                        message: "Haussa tapahtui virhe. Yritä uudelleen."
+                    });
+                    stopLoading();
+                });
             } else if (query.henkilo) {
                 showCurrentRows([ { henkiloOid: query.henkilo } ]);
                 resetPageNumbers();
