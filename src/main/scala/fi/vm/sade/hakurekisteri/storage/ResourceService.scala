@@ -12,14 +12,11 @@ trait ResourceService[T] { this: Repository[T] =>
   val matcher: PartialFunction[Query[T], (T with Identified) => Boolean]
 
 
-  val deDuplicateAndMatch: PartialFunction[Query[T], (T with Identified) => Boolean] =  {
-    case DeduplicationQuery(o:T) => (existing:T) => existing == o
-    case q if matcher.isDefinedAt(q) => matcher(q)
-  }
+
 
   def check(q: Query[T])(item: T with Identified): Future[Option[T with Identified]] = {
     Future{
-      if (deDuplicateAndMatch(q)(item)) Some(item) else None
+      if (matcher(q)(item)) Some(item) else None
     }
   }
 
@@ -27,7 +24,7 @@ trait ResourceService[T] { this: Repository[T] =>
 
   def findBy(o: Query[T]):Future[Seq[T with Identified]] = {
     val current = listAll()
-    optimize.applyOrElse(o, (query) => Future.traverse(current)(check(query)).map(_.collect  {case Some(a) => a}))
+    Future.traverse(current)(check(o)).map(_.collect  {case Some(a: T with Identified) => a})
   }
 
 

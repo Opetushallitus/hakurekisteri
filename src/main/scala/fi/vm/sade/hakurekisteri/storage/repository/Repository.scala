@@ -25,6 +25,7 @@ trait Repository[T] {
 trait InMemRepository[T <: Resource] extends Repository[T] {
 
   var store:Map[UUID,T with Identified] = Map()
+  var reverseStore:Map[T, UUID] = Map()
   var cursor:Map[Int, (Long, String)] = Map()
 
   def updateCursor(t:T, id:UUID) = (id, Platform.currentTime, cursor(t)) match {
@@ -40,7 +41,8 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
   }
 
   def save(o: T ): T with Identified = {
-    val oid = identify(o)
+
+    val oid = reverseStore.get(o).map((id) => o.identify(id)).getOrElse(identify(o))
     val old = store.get(oid.id)
     val result = saveIdentified(oid)
     cursor = cursor + ((o.hashCode % 16384) -> updateCursor(o,oid.id))
@@ -49,7 +51,9 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
   }
 
   protected def saveIdentified(oid: T with Identified) = {
+    val old = store.get(oid.id)
     store = store + (oid.id -> oid)
+    reverseStore = old.map(o => reverseStore - o).getOrElse(reverseStore) + (oid -> oid.id)
     oid
   }
 

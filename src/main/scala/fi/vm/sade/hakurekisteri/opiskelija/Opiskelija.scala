@@ -6,7 +6,7 @@ import org.joda.time.DateTime
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 
 case class Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, alkuPaiva: DateTime, loppuPaiva: Option[DateTime] = None) extends Resource{
-   override def identify[R <: Opiskelija](id: UUID): R with Identified = Opiskelija.identify(this,id).asInstanceOf[R with Identified]
+   override def identify(id: UUID): this.type with Identified = Opiskelija.identify(this,id).asInstanceOf[this.type with Identified]
 }
 
 

@@ -30,7 +30,7 @@ case class Henkilo (
                      syntymaaika: String,
                      markkinointilupa: Option[Boolean]) extends Resource{
 
-  override def identify[R <: Henkilo](id: UUID): R with Identified = Henkilo.identify(this,id).asInstanceOf[R with Identified]
+  override def identify(id: UUID): this.type with Identified = Henkilo.identify(this,id).asInstanceOf[this.type with Identified]
 }
 
 
