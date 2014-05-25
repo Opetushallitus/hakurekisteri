@@ -18,7 +18,6 @@ trait SuoritusRepository extends JournaledRepository[Suoritus] {
 
 
   def addNew(suoritus: Suoritus with Identified) = {
-    println(s"adding $suoritus to $tiedonSiirtoIndex")
     val newIndexSeq =  suoritus +: tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).getOrElse(Seq())
     val newHenk = tiedonSiirtoIndex.get(suoritus.henkiloOid).getOrElse(Map()) + (suoritus.valmistuminen.getYear.toString -> newIndexSeq)
     tiedonSiirtoIndex =tiedonSiirtoIndex + (suoritus.henkiloOid -> newHenk)
@@ -59,9 +58,7 @@ trait SuoritusService extends ResourceService[Suoritus] with SuoritusRepository 
   override val optimize:PartialFunction[Query[Suoritus], Future[Seq[Suoritus with Identified]]] = {
     case SuoritusQuery(Some(henkilo), None, Some(vuosi), None) => Future.successful(tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq()))
     case SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja) =>
-      println(s"filtering query with index $tiedonSiirtoIndex")
       val filtered = tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq())
-      println(s"using filtered list $filtered instead of all ")
       executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja))
   }
 
