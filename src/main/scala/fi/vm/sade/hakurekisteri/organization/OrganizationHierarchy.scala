@@ -60,10 +60,7 @@ class FutureOrganizationHierarchy[A <: Resource :Manifest ](serviceUrl:String, f
                                                                     yield result.asInstanceOf[Unit]
 
                                                checkedRights pipeTo sender
-    case AuthorizedCreate(resource:A, orgs , _) => val checked = for (rights <- checkRights(orgs)(Some(resource));
-                                                                      result <- if (rights.isDefined) filteredActor ? resource else Future.successful(resource))
-                                                                      yield result
-                                                   checked pipeTo sender
+    case AuthorizedCreate(resource:A, orgs , _) => filteredActor forward resource
     case AuthorizedUpdate(resource:A with Identified, orgs , _) => val checked = for (resourceToUpdate <- (filteredActor ? resource.id);
                                                                      rightsForOld <- checkRights(orgs)(resourceToUpdate.asInstanceOf[Option[A]]);
                                                                      rightsForNew <- checkRights(orgs)(Some(resource));
