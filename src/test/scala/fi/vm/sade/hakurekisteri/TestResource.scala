@@ -6,7 +6,7 @@ import fi.vm.sade.hakurekisteri.storage.repository._
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 
 case class TestResource(name:String) extends fi.vm.sade.hakurekisteri.rest.support.Resource{
-  override def identify[R <: TestResource](id: UUID): R with Identified = TestResource.identify(this, id).asInstanceOf[R with Identified]
+  override def identify(id: UUID): this.type with Identified = TestResource.identify(this, id).asInstanceOf[this.type with Identified]
 }
 
 object TestResource {

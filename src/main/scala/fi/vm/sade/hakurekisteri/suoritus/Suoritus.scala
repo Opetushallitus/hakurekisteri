@@ -21,7 +21,7 @@ import yksilollistaminen._
 case class Komoto(oid: String, komo: String, tarjoaja: String, alkamisvuosi: String, alkamiskausi: Kausi)
 
 case class Suoritus(komo: String, myontaja: String, tila: String, valmistuminen: LocalDate, henkiloOid: String, yksilollistaminen: Yksilollistetty, suoritusKieli: String) extends Resource {
-  override def identify[R <: Suoritus](id: UUID): R with Identified =  Suoritus.identify(this,id).asInstanceOf[R with Identified]
+  override def identify(id: UUID): this.type with Identified =  Suoritus.identify(this,id).asInstanceOf[this.type with Identified]
 }
 
 object Suoritus {

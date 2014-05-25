@@ -6,6 +6,6 @@ import java.util.UUID
 
 trait Resource {
 
-  def identify[R <: this.type ](id:UUID): R with Identified
+  def identify(id:UUID): this.type with Identified
 
 }

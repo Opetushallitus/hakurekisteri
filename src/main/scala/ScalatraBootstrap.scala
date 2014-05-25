@@ -69,14 +69,14 @@ class ScalatraBootstrap extends LifeCycle {
     }.get
 
 
-    val camel = CamelExtension(system)
-    val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
-    val broker = "activemq"
-    camel.context.addComponent(broker, ActiveMQComponent.activeMQComponent(amqUrl))
+    //val camel = CamelExtension(system)
+    //val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
+    //val broker = "activemq"
+    //camel.context.addComponent(broker, ActiveMQComponent.activeMQComponent(amqUrl))
     val log = LoggerFactory.getLogger(getClass)
 
-    implicit val audit = AuditUri(broker, OPHSecurity.config.properties.get("activemq.queue.name.log").getOrElse("Sade.Log"))
-    log.debug(s"AuditLog using uri: $amqUrl")
+    //implicit val audit = AuditUri(broker, OPHSecurity.config.properties.get("activemq.queue.name.log").getOrElse("Sade.Log"))
+    //log.debug(s"AuditLog using uri: $amqUrl")
 
 
 
@@ -84,7 +84,9 @@ class ScalatraBootstrap extends LifeCycle {
 
     def getBroadcastForLogger[A <: Resource: TypeTag: ClassTag](rekisteri: ActorRef) = {
 
-      system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog[A](typeOf[A].typeSymbol.name.toString)).withDispatcher("akka.hakurekisteri.audit-dispatcher"), typeOf[A].typeSymbol.name.toString.toLowerCase+"-audit") ))))
+      //
+      // system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog[A](typeOf[A].typeSymbol.name.toString)).withDispatcher("akka.hakurekisteri.audit-dispatcher"), typeOf[A].typeSymbol.name.toString.toLowerCase+"-audit") ))))
+      rekisteri
     }
 
     def authorizer[A <: Resource : ClassTag: Manifest](guarded: ActorRef, orgFinder: A => String): ActorRef = {
