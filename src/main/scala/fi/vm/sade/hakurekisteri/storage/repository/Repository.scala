@@ -54,8 +54,11 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
     val old = store.get(oid.id)
     store = store + (oid.id -> oid)
     reverseStore = old.map(o => reverseStore - o).getOrElse(reverseStore) + (oid -> oid.id)
+    index(old, oid);
     oid
   }
+
+  def index(old: Option[T with Identified], oid: T with Identified) {}
 
   def identify(o: T): T with Identified
 
