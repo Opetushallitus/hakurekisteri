@@ -38,13 +38,8 @@ trait SuoritusRepository extends JournaledRepository[Suoritus] {
       tiedonSiirtoIndex = newIndex.getOrElse(tiedonSiirtoIndex)
     }
 
-
-
-
-
-
-    old.foreach(removeOld(_))
-    current.foreach(addNew(_))
+    old.foreach(removeOld)
+    current.foreach(addNew)
 
   }
 
