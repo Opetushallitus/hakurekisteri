@@ -54,11 +54,11 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
     val old = store.get(oid.id)
     store = store + (oid.id -> oid)
     reverseStore = old.map(o => reverseStore - o).getOrElse(reverseStore) + (oid -> oid.id)
-    index(old, oid);
+    index(old, Some(oid));
     oid
   }
 
-  def index(old: Option[T with Identified], oid: T with Identified) {}
+  def index(old: Option[T with Identified], oid: Option[T with Identified]) {}
 
   def identify(o: T): T with Identified
 
@@ -74,6 +74,7 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
   override def delete(id:UUID): Unit = {
     if (store.contains(id)) {
       val deleted = deleteFromStore(id)
+      index(deleted, None)
       deleted.foreach((item) => cursor = cursor + (item.hashCode % 16384 -> updateCursor(item, id)))
     }
   }
