@@ -13,14 +13,23 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
 
   loadJournal()
 
+
+  def loadDelta(delta: Delta[T]) = delta match {
+    case Updated(resource) =>
+      store.get(resource.id).foreach((r) => reverseStore = reverseStore - r)
+      store =  store + (resource.id -> resource)
+      reverseStore = reverseStore + (resource -> resource.id)
+    case Deleted(id) =>
+      store.get(id).foreach((r) => reverseStore = reverseStore - r)
+      store = store - id
+
+  }
+
   def loadJournal() {
-    store = journal.
-      journal().
-      foldLeft(Map():Map[UUID,T with Identified])((o,n) => n match {
-        case Updated(resource) => o + (resource.id -> resource)
-        case Deleted(id) => o - id
-      })
-    reverseStore = store.collect{ case (id:UUID, value: T)  => (value, id) }.toMap
+    for (
+      delta <- journal.journal()
+    ) loadDelta(delta)
+
   }
 
   override def saveIdentified(o: T with Identified): T with Identified  = {
