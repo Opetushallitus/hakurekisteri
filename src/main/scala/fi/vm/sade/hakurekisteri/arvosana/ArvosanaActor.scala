@@ -49,6 +49,7 @@ trait ArvosanaService extends ResourceService[Arvosana]  with ArvosanaRepository
     case ArvosanaQuery(Some(suoritus)) =>
       println(suoritusIndex.size)
       Future.successful(suoritusIndex.get(suoritus).getOrElse(Seq()))
+    case ArvosanaQuery(None) => Future.successful(listAll())
 
   }
 
