@@ -8,6 +8,7 @@ import com.github.nscala_time.time.Imports._
 import fi.vm.sade.hakurekisteri.storage.repository._
 import scala.Some
 import scala.concurrent.Future
+import fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery
 
 
 trait SuoritusRepository extends JournaledRepository[Suoritus] {
@@ -60,6 +61,10 @@ trait SuoritusService extends ResourceService[Suoritus] with SuoritusRepository 
     case SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja) =>
       val filtered = tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq())
       executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja))
+    case SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja) =>
+      val filtered = tiedonSiirtoIndex.get(henkilo).map(_.values.reduce(_ ++ _)).getOrElse(Seq())
+      executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja))
+
   }
 
   val matcher: PartialFunction[Query[Suoritus], (Suoritus with Identified) => Boolean] = {
