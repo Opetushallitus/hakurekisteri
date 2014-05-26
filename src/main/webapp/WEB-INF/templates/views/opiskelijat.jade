@@ -51,8 +51,8 @@ table(class="table")
         div(ng-repeat="s in row.suoritustiedot")
           span {{s.oppilaitos}},
           span(oph-msg="suoritusrekisteri.komo.{{s.komo}}") {{s.komo}}
-          span(ng-show="s.isArvosanat" oph-msg="suoritusrekisteri.opiskelijat.arvosanatsiirretty") (arvosanat siirretty)
-          span(ng-hide="s.isArvosanat" oph-msg="suoritusrekisteri.opiskelijat.eiarvosanoja") (ei arvosanoja)
+          span(ng-show="s.hasArvosanat" oph-msg="suoritusrekisteri.opiskelijat.arvosanatsiirretty") (arvosanat siirretty)
+          span(ng-show="s.noArvosanat" oph-msg="suoritusrekisteri.opiskelijat.eiarvosanoja") (ei arvosanoja)
       td
         a(class="btn bt-default btn-xs pull-right" href="#/muokkaa/{{row.henkiloOid}}")
           span(oph-msg="suoritusrekisteri.opiskelijat.muokkaa") Muokkaa tietoja

@@ -172,12 +172,12 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
                 .success(function(henkilo) {
                     if (henkilo) {
                         if (henkilo.duplicate === false) {
-                            row.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + " (" + (henkilo.hetu ? henkilo.hetu : henkilo.syntymaaika) + ")";
+                            row.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + " (" + (henkilo.hetu ? henkilo.hetu : henkilo.syntymaaika) + ")"
                         } else {
                             $http.get(henkiloServiceUrl + '/resources/s2s/' + encodeURIComponent(row.henkiloOid), {cache: false})
                                 .success(function(masterHenkilo) {
-                                    row.henkilo = masterHenkilo.sukunimi + ", " + masterHenkilo.etunimet + " (" + (masterHenkilo.hetu ? masterHenkilo.hetu : masterHenkilo.syntymaaika) + ")";
-                                });
+                                    row.henkilo = masterHenkilo.sukunimi + ", " + masterHenkilo.etunimet + " (" + (masterHenkilo.hetu ? masterHenkilo.hetu : masterHenkilo.syntymaaika) + ")"
+                                })
                         }
                     }
                 });
@@ -186,8 +186,8 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
             Opiskelijat.query({henkilo: row.henkiloOid}, function(opiskelijat) {
                 angular.forEach(opiskelijat, function(o) {
                     getOrganisaatio($http, o.oppilaitosOid, function(oppilaitos) {
-                        o.oppilaitos = oppilaitos.oppilaitosKoodi + ' ' + (oppilaitos.nimi.fi ? oppilaitos.nimi.fi : oppilaitos.nimi.sv);
-                    });
+                        o.oppilaitos = oppilaitos.oppilaitosKoodi + ' ' + (oppilaitos.nimi.fi ? oppilaitos.nimi.fi : oppilaitos.nimi.sv)
+                    })
                 });
                 row.opiskelijatiedot = opiskelijat;
             });
@@ -196,16 +196,19 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
             Suoritukset.query({henkilo: row.henkiloOid}, function(suoritukset) {
                 angular.forEach(suoritukset, function(o) {
                     getOrganisaatio($http, o.myontaja, function(oppilaitos) {
-                        o.oppilaitos = oppilaitos.oppilaitosKoodi + ' ' + (oppilaitos.nimi.fi ? oppilaitos.nimi.fi : oppilaitos.nimi.sv);
-                    });
+                        o.oppilaitos = oppilaitos.oppilaitosKoodi + ' ' + (oppilaitos.nimi.fi ? oppilaitos.nimi.fi : oppilaitos.nimi.sv)
+                    })
                 });
                 row.suoritustiedot = suoritukset;
                 angular.forEach(suoritukset, function(s) {
                     Arvosanat.query({ suoritus: s.id }, function(arvosanat) {
-                        s.isArvosanat = arvosanat.length > 0;
-                    });
-                });
-            });
+                        if (arvosanat.length > 0)
+                            s.hasArvosanat = true;
+                        else
+                            s.noArvosanat = true;
+                    })
+                })
+            })
         }
         angular.forEach($scope.currentRows, function(row) {
             if (row.henkiloOid) {
@@ -242,7 +245,7 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
         $scope.pageNumbers = [];
         for (var i = 0; i < Math.ceil($scope.allRows.length / $scope.pageSize); i++) {
             if (i === 0 || (i >= ($scope.page - 3) && i <= ($scope.page + 3)) || i === (Math.ceil($scope.allRows.length / $scope.pageSize) - 1))
-                $scope.pageNumbers.push(i + 1);
+                $scope.pageNumbers.push(i + 1)
         }
     }
 
