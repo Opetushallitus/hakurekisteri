@@ -174,7 +174,6 @@ class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organiza
   }
 
   def edgeBuild(edges:Seq[(String,String)]) = {
-    println(edges.filter(_._1 == "1.2.246.562.10.00000000001"))
     findPaths(edges, Seq(), Map())
   }
 
