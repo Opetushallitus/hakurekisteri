@@ -23,12 +23,18 @@ trait ResourceService[T] { this: Repository[T] =>
   val optimize:PartialFunction[Query[T], Future[Seq[T with Identified]]] = Map()
 
   def findBy(o: Query[T]):Future[Seq[T with Identified]] = {
+
     val current = listAll()
-    Future.traverse(current)(check(o)).map(_.collect  {case Some(a: T with Identified) => a})
+    optimize.applyOrElse(o, executeQuery(current))
+
   }
 
 
-
+  def executeQuery(current: Seq[T with Identified])( o: Query[T]): Future[Seq[T with Identified]] = {
+    Future.traverse(current)(check(o)).map(_.collect {
+      case Some(a: T with Identified) => a
+    })
+  }
 }
 
 

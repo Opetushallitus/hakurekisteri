@@ -7,15 +7,60 @@ import scala.Some
 import com.github.nscala_time.time.Imports._
 import fi.vm.sade.hakurekisteri.storage.repository._
 import scala.Some
+import scala.concurrent.Future
 
 
 trait SuoritusRepository extends JournaledRepository[Suoritus] {
+
+
+  var tiedonSiirtoIndex: Map[String, Map[String, Seq[Suoritus with Identified]]] = Map()
+  for (suoritus <- store.values) addNew(suoritus)
+
+
+  def addNew(suoritus: Suoritus with Identified) = {
+    val newIndexSeq =  suoritus +: tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).getOrElse(Seq())
+    val newHenk = tiedonSiirtoIndex.get(suoritus.henkiloOid).getOrElse(Map()) + (suoritus.valmistuminen.getYear.toString -> newIndexSeq)
+    tiedonSiirtoIndex =tiedonSiirtoIndex + (suoritus.henkiloOid -> newHenk)
+
+  }
+
+
+  override def index(old: Option[Suoritus with Identified], current: Suoritus with Identified) {
+
+    def removeOld(suoritus: Suoritus with Identified) = {
+      val newIndexSeq = tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).map(_.filter(_ != suoritus))
+      val newHenkiloIndex: Option[Map[String, Seq[Suoritus with Identified]]] = newIndexSeq.flatMap((newSeq) =>
+        tiedonSiirtoIndex.get(suoritus.henkiloOid).map((henk) => henk + (suoritus.valmistuminen.getYear.toString -> newSeq))
+      )
+      val newIndex = newHenkiloIndex.map((henk)=>
+        tiedonSiirtoIndex + (suoritus.henkiloOid -> henk)
+      )
+
+      tiedonSiirtoIndex = newIndex.getOrElse(tiedonSiirtoIndex)
+    }
+
+
+
+
+
+
+    old.foreach((s) => removeOld(s))
+    addNew(current)
+
+  }
 
   def identify(o:Suoritus): Suoritus with Identified = Suoritus.identify(o)
 
 }
 
-trait SuoritusService extends ResourceService[Suoritus] { this: Repository[Suoritus] =>
+trait SuoritusService extends ResourceService[Suoritus] with SuoritusRepository {
+
+  override val optimize:PartialFunction[Query[Suoritus], Future[Seq[Suoritus with Identified]]] = {
+    case SuoritusQuery(Some(henkilo), None, Some(vuosi), None) => Future.successful(tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq()))
+    case SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja) =>
+      val filtered = tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq())
+      executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja))
+  }
 
   val matcher: PartialFunction[Query[Suoritus], (Suoritus with Identified) => Boolean] = {
     case SuoritusQuery(henkilo, kausi, vuosi, myontaja) =>  (s: Suoritus with Identified) =>

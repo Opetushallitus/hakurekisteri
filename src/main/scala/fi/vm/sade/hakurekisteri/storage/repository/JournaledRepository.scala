@@ -20,6 +20,7 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
         case Updated(resource) => o + (resource.id -> resource)
         case Deleted(id) => o - id
       })
+    reverseStore = store.collect{ case (id:UUID, value: T)  => (value, id) }.toMap
   }
 
   override def saveIdentified(o: T with Identified): T with Identified  = {
