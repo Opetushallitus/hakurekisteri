@@ -13,6 +13,8 @@ trait ArvosanaRepository extends JournaledRepository[Arvosana] {
   var suoritusIndex: Map[UUID, Seq[Arvosana with Identified]] = Option(suoritusIndex).getOrElse(Map())
 
 
+  println(suoritusIndex.keys)
+
 
   def addNew(arvosana: Arvosana with Identified) = {
     suoritusIndex = Option(suoritusIndex).getOrElse(Map())
@@ -47,7 +49,6 @@ trait ArvosanaService extends ResourceService[Arvosana]  with ArvosanaRepository
 
   override val optimize:PartialFunction[Query[Arvosana], Future[Seq[Arvosana with Identified]]] = {
     case ArvosanaQuery(Some(suoritus)) =>
-      println(suoritusIndex.size)
       Future.successful(suoritusIndex.get(suoritus).getOrElse(Seq()))
     case ArvosanaQuery(None) => Future.successful(listAll())
 
