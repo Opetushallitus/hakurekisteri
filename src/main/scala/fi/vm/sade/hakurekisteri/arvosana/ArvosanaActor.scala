@@ -46,7 +46,9 @@ trait ArvosanaService extends ResourceService[Arvosana]  with ArvosanaRepository
 
 
   override val optimize:PartialFunction[Query[Arvosana], Future[Seq[Arvosana with Identified]]] = {
-    case ArvosanaQuery(Some(suoritus)) => Future.successful(suoritusIndex.get(suoritus).getOrElse(Seq()))
+    case ArvosanaQuery(Some(suoritus)) =>
+      println(suoritusIndex.size)
+      Future.successful(suoritusIndex.get(suoritus).getOrElse(Seq()))
 
   }
 
