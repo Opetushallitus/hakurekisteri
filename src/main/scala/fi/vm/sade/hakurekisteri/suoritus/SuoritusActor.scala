@@ -12,11 +12,10 @@ import scala.concurrent.Future
 trait SuoritusRepository extends JournaledRepository[Suoritus] {
 
 
-  var tiedonSiirtoIndex: Map[String, Map[String, Seq[Suoritus with Identified]]] = Map()
-  for (suoritus <- store.values) addNew(suoritus)
-
+  var tiedonSiirtoIndex: Map[String, Map[String, Seq[Suoritus with Identified]]] = Option(tiedonSiirtoIndex).getOrElse(Map())
 
   def addNew(suoritus: Suoritus with Identified) = {
+    tiedonSiirtoIndex = Option(tiedonSiirtoIndex).getOrElse(Map())
     val newIndexSeq =  suoritus +: tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).getOrElse(Seq())
     val newHenk = tiedonSiirtoIndex.get(suoritus.henkiloOid).getOrElse(Map()) + (suoritus.valmistuminen.getYear.toString -> newIndexSeq)
     tiedonSiirtoIndex =tiedonSiirtoIndex + (suoritus.henkiloOid -> newHenk)
@@ -24,9 +23,10 @@ trait SuoritusRepository extends JournaledRepository[Suoritus] {
   }
 
 
-  override def index(old: Option[Suoritus with Identified], current: Suoritus with Identified) {
+  override def index(old: Option[Suoritus with Identified], current: Option[Suoritus with Identified]) {
 
     def removeOld(suoritus: Suoritus with Identified) = {
+      tiedonSiirtoIndex = Option(tiedonSiirtoIndex).getOrElse(Map())
       val newIndexSeq = tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).map(_.filter(_ != suoritus))
       val newHenkiloIndex: Option[Map[String, Seq[Suoritus with Identified]]] = newIndexSeq.flatMap((newSeq) =>
         tiedonSiirtoIndex.get(suoritus.henkiloOid).map((henk) => henk + (suoritus.valmistuminen.getYear.toString -> newSeq))
@@ -43,8 +43,8 @@ trait SuoritusRepository extends JournaledRepository[Suoritus] {
 
 
 
-    old.foreach((s) => removeOld(s))
-    addNew(current)
+    old.foreach(removeOld(_))
+    current.foreach(addNew(_))
 
   }
 

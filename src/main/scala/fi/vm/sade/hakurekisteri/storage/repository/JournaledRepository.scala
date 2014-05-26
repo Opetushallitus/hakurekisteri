@@ -16,13 +16,16 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
 
   def loadDelta(delta: Delta[T]) = delta match {
     case Updated(resource) =>
-      store.get(resource.id).foreach((r) => reverseStore = reverseStore - r)
+      val old = store.get(resource.id)
+      old.foreach((r) => reverseStore = reverseStore - r)
       store =  store + (resource.id -> resource)
       reverseStore = reverseStore + (resource -> resource.id)
+      index(old, Some(resource))
     case Deleted(id) =>
-      store.get(id).foreach((r) => reverseStore = reverseStore - r)
+      val old = store.get(id)
+      old.foreach((r) => reverseStore = reverseStore - r)
       store = store - id
-
+      index(old, None)
   }
 
   def loadJournal() {

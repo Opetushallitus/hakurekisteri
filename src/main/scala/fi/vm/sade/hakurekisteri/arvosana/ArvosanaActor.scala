@@ -11,29 +11,31 @@ import scala.concurrent.Future
 
 trait ArvosanaRepository extends JournaledRepository[Arvosana] {
 
-  var suoritusIndex: Map[UUID, Seq[Arvosana with Identified]] = Map()
+  var suoritusIndex: Map[UUID, Seq[Arvosana with Identified]] = Option(suoritusIndex).getOrElse(Map())
 
-  for (arvosana <- store.values) addNew(arvosana)
 
 
   def addNew(arvosana: Arvosana with Identified) = {
-    suoritusIndex = suoritusIndex + (arvosana.suoritus -> suoritusIndex.get(arvosana.suoritus).getOrElse(Seq()))
+    suoritusIndex = Option(suoritusIndex).getOrElse(Map()) + (arvosana.suoritus -> suoritusIndex.get(arvosana.suoritus).getOrElse(Seq()))
 
 
   }
 
 
-  override def index(old: Option[Arvosana with Identified], current: Arvosana with Identified) {
+  override def index(old: Option[Arvosana with Identified], current: Option[Arvosana with Identified]) {
 
     def removeOld(arvosana: Arvosana with Identified) = {
+      suoritusIndex = Option(suoritusIndex).getOrElse(Map())
       suoritusIndex = suoritusIndex.get(arvosana.suoritus).
         map(_.filter(_ != arvosana)).
         map((ns) => suoritusIndex + (arvosana.suoritus -> ns)).getOrElse(suoritusIndex)
 
     }
 
-    old.foreach((s) => removeOld(s))
-    addNew(current)
+
+
+    old.foreach(removeOld(_))
+    current.foreach(addNew(_))
 
   }
 
