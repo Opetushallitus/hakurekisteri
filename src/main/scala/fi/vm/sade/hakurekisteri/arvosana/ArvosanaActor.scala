@@ -15,7 +15,8 @@ trait ArvosanaRepository extends JournaledRepository[Arvosana] {
 
 
   def addNew(arvosana: Arvosana with Identified) = {
-    suoritusIndex = Option(suoritusIndex).getOrElse(Map()) + (arvosana.suoritus -> suoritusIndex.get(arvosana.suoritus).getOrElse(Seq()))
+    suoritusIndex = Option(suoritusIndex).getOrElse(Map())
+    suoritusIndex = suoritusIndex  + (arvosana.suoritus -> suoritusIndex.get(arvosana.suoritus).getOrElse(Seq()))
 
 
   }
