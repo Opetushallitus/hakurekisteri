@@ -5,7 +5,6 @@ import fi.vm.sade.hakurekisteri.storage._
 import fi.vm.sade.hakurekisteri.storage.repository._
 import scala.Some
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
 import scala.concurrent.Future
 
 
@@ -34,8 +33,8 @@ trait ArvosanaRepository extends JournaledRepository[Arvosana] {
 
 
 
-    old.foreach(removeOld(_))
-    current.foreach(addNew(_))
+    old.foreach(removeOld)
+    current.foreach(addNew)
 
   }
 
