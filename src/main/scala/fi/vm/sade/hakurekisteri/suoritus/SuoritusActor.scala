@@ -3,12 +3,10 @@ package fi.vm.sade.hakurekisteri.suoritus
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Kausi}
 import Kausi._
 import fi.vm.sade.hakurekisteri.storage._
-import scala.Some
 import com.github.nscala_time.time.Imports._
 import fi.vm.sade.hakurekisteri.storage.repository._
 import scala.Some
 import scala.concurrent.Future
-import fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery
 
 
 trait SuoritusRepository extends JournaledRepository[Suoritus] {
