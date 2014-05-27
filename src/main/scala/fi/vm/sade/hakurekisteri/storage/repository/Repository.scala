@@ -24,7 +24,7 @@ trait Repository[T] {
 trait InMemRepository[T <: Resource] extends Repository[T] {
 
   var store:Map[UUID,T with Identified] = Map()
-  var reverseStore:Map[T, UUID] = Map()
+  var reverseStore:Map[T, Seq[UUID]] = Map()
   var cursor:Map[Int, (Long, String)] = Map()
 
   def updateCursor(t:T, id:UUID) = (id, Platform.currentTime, cursor(t)) match {
@@ -41,7 +41,7 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
 
   def save(o: T ): T with Identified = {
 
-    val oid = reverseStore.get(o).map((id) => o.identify(id)).getOrElse(identify(o))
+    val oid = reverseStore.get(o).flatMap((ids) => ids.headOption.map((id) => o.identify(id)) ).getOrElse(identify(o))
     val old = store.get(oid.id)
     val result = saveIdentified(oid)
     cursor = cursor + ((o.hashCode % 16384) -> updateCursor(o,oid.id))
@@ -52,7 +52,8 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
   protected def saveIdentified(oid: T with Identified) = {
     val old = store.get(oid.id)
     store = store + (oid.id -> oid)
-    reverseStore = old.map(o => reverseStore - o).getOrElse(reverseStore) + (oid -> oid.id)
+    val newSeq = reverseStore.get(oid).map(oid.id +: _).getOrElse(Seq(oid.id))
+    reverseStore = reverseStore + (oid -> newSeq)
     index(old, Some(oid))
     oid
   }
@@ -81,6 +82,13 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
   def deleteFromStore(id:UUID) = {
     val item = store.get(id)
     store = store - id
+    item.foreach((deleted) => {
+
+      val newSeq = reverseStore.get(deleted).map(_.filter(_ != id)).getOrElse(Seq())
+      if (newSeq.isEmpty) reverseStore = reverseStore - deleted
+      else reverseStore = reverseStore + (deleted -> newSeq)
+
+    })
     item
   }
 

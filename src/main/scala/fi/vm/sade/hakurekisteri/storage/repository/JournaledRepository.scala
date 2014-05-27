@@ -4,7 +4,6 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.slick.lifted.{ColumnOrdered, Ordered, AbstractTable}
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 
 
 trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
@@ -17,13 +16,27 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
   def loadDelta(delta: Delta[T]) = delta match {
     case Updated(resource) =>
       val old = store.get(resource.id)
-      old.foreach((r) => reverseStore = reverseStore - r)
+      old.foreach((deleted) => {
+
+        val newSeq = reverseStore.get(deleted).map(_.filter(_ != resource.id)).getOrElse(Seq())
+        if (newSeq.isEmpty) reverseStore = reverseStore - deleted
+        else reverseStore = reverseStore + (deleted -> newSeq)
+
+      })
+
       store =  store + (resource.id -> resource)
-      reverseStore = reverseStore + (resource -> resource.id)
+      val newSeq = resource.id +: reverseStore.get(resource).getOrElse(Seq())
+      reverseStore = reverseStore + (resource -> newSeq)
       index(old, Some(resource))
     case Deleted(id) =>
       val old = store.get(id)
-      old.foreach((r) => reverseStore = reverseStore - r)
+      old.foreach((deleted) => {
+
+        val newSeq = reverseStore.get(deleted).map(_.filter(_ != id)).getOrElse(Seq())
+        if (newSeq.isEmpty) reverseStore = reverseStore - deleted
+        else reverseStore = reverseStore + (deleted -> newSeq)
+
+      })
       store = store - id
       index(old, None)
   }
