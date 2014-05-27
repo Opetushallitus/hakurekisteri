@@ -11,23 +11,26 @@ import scala.concurrent.Future
 trait ArvosanaRepository extends JournaledRepository[Arvosana] {
 
   var suoritusIndex: Map[UUID, Seq[Arvosana with Identified]] = Option(suoritusIndex).getOrElse(Map())
-
+  var suoritusIndexSnapShot: Map[UUID, Seq[Arvosana with Identified]] = Option(suoritusIndexSnapShot).getOrElse(Map())
 
   def addNew(arvosana: Arvosana with Identified) = {
-    suoritusIndex = Option(suoritusIndex).getOrElse(Map())
-    suoritusIndex = suoritusIndex  + (arvosana.suoritus -> (arvosana +: suoritusIndex.get(arvosana.suoritus).getOrElse(Seq())))
+    suoritusIndexSnapShot = Option(suoritusIndexSnapShot).getOrElse(Map())
+    suoritusIndexSnapShot = suoritusIndexSnapShot  + (arvosana.suoritus -> (arvosana +: suoritusIndexSnapShot.get(arvosana.suoritus).getOrElse(Seq())))
 
 
   }
 
+  override def indexSwapSnapshot() {
+    suoritusIndex = suoritusIndexSnapShot
 
+  }
   override def index(old: Option[Arvosana with Identified], current: Option[Arvosana with Identified]) {
 
     def removeOld(arvosana: Arvosana with Identified) = {
-      suoritusIndex = Option(suoritusIndex).getOrElse(Map())
-      suoritusIndex = suoritusIndex.get(arvosana.suoritus).
+      suoritusIndexSnapShot = Option(suoritusIndexSnapShot).getOrElse(Map())
+      suoritusIndexSnapShot = suoritusIndexSnapShot.get(arvosana.suoritus).
         map(_.filter((a) => a != arvosana || a.id != arvosana.id)).
-        map((ns) => suoritusIndex + (arvosana.suoritus -> ns)).getOrElse(suoritusIndex)
+        map((ns) => suoritusIndexSnapShot + (arvosana.suoritus -> ns)).getOrElse(suoritusIndexSnapShot)
 
     }
 

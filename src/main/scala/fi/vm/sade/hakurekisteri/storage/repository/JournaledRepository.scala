@@ -11,34 +11,39 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
 
   val journal:Journal[T]
 
+  var snapShot= store
+  var reverseSnapShot = reverseStore
+
   loadJournal()
+
+  def indexSwapSnapshot():Unit = {}
 
 
   def loadDelta(delta: Delta[T]) = delta match {
     case Updated(resource) =>
-      val old = store.get(resource.id)
+      val old = snapShot.get(resource.id)
       old.foreach((deleted) => {
 
-        val newSeq = reverseStore.get(deleted).map(_.filter(_ != resource.id)).getOrElse(Seq())
-        if (newSeq.isEmpty) reverseStore = reverseStore - deleted
-        else reverseStore = reverseStore + (deleted -> newSeq)
+        val newSeq = reverseSnapShot.get(deleted).map(_.filter(_ != resource.id)).getOrElse(Seq())
+        if (newSeq.isEmpty) reverseSnapShot = reverseSnapShot - deleted
+        else reverseSnapShot = reverseSnapShot + (deleted -> newSeq)
 
       })
 
-      store =  store + (resource.id -> resource)
-      val newSeq = resource.id +: reverseStore.get(resource).getOrElse(Seq())
-      reverseStore = reverseStore + (resource -> newSeq)
+      snapShot =  snapShot + (resource.id -> resource)
+      val newSeq = resource.id +: reverseSnapShot.get(resource).getOrElse(Seq())
+      reverseSnapShot = reverseSnapShot + (resource -> newSeq)
       index(old, Some(resource))
     case Deleted(id) =>
-      val old = store.get(id)
+      val old = snapShot.get(id)
       old.foreach((deleted) => {
 
-        val newSeq = reverseStore.get(deleted).map(_.filter(_ != id)).getOrElse(Seq())
-        if (newSeq.isEmpty) reverseStore = reverseStore - deleted
-        else reverseStore = reverseStore + (deleted -> newSeq)
+        val newSeq = reverseSnapShot.get(deleted).map(_.filter(_ != id)).getOrElse(Seq())
+        if (newSeq.isEmpty) reverseSnapShot = reverseSnapShot - deleted
+        else reverseSnapShot = reverseSnapShot + (deleted -> newSeq)
 
       })
-      store = store - id
+      snapShot = snapShot - id
       index(old, None)
   }
 
@@ -46,7 +51,9 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
     for (
       delta <- journal.journal(time)
     ) loadDelta(delta)
-
+    store = snapShot
+    reverseStore = reverseSnapShot
+    indexSwapSnapshot()
   }
 
   override def saveIdentified(o: T with Identified): T with Identified  = {
@@ -131,7 +138,12 @@ trait JDBCJournal[T, P <: AbstractTable[_], O <: Ordered] extends Journal[T] {
           table.sortBy(journalSort).list.map(delta)
       }
     case Some(latest) =>
-      table.filter(timestamp(_) >= latest).sortBy(journalSort).list.map(delta)
+
+      db withSession {
+        implicit session =>
+          table.filter(timestamp(_) >= latest).sortBy(journalSort).list.map(delta)
+      }
+
 
   }
 }

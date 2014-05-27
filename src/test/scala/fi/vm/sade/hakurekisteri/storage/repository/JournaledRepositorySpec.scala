@@ -47,7 +47,7 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
 
     val idResource = repo.save(TestResource("first item"))
     val delta:Delta[TestResource] = Updated(idResource)
-    journal.journal().last should be (delta)
+    journal.journal(None).last should be (delta)
 
   }
 
@@ -88,7 +88,7 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
     val resource = repo.get(ids.tail.head).get
     repo.delete(ids.head)
     val delta:Delta[TestResource] = Deleted(ids.head)
-    journal.journal.last should be (delta)
+    journal.journal(None).last should be (delta)
   }
 
 

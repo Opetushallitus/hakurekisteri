@@ -13,12 +13,15 @@ trait SuoritusRepository extends JournaledRepository[Suoritus] {
 
 
   var tiedonSiirtoIndex: Map[String, Map[String, Seq[Suoritus with Identified]]] = Option(tiedonSiirtoIndex).getOrElse(Map())
+  var tiedonSiirtoIndexSnapShot: Map[String, Map[String, Seq[Suoritus with Identified]]] = Option(tiedonSiirtoIndexSnapShot).getOrElse(Map())
+
+
 
   def addNew(suoritus: Suoritus with Identified) = {
-    tiedonSiirtoIndex = Option(tiedonSiirtoIndex).getOrElse(Map())
-    val newIndexSeq =  suoritus +: tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).getOrElse(Seq())
-    val newHenk = tiedonSiirtoIndex.get(suoritus.henkiloOid).getOrElse(Map()) + (suoritus.valmistuminen.getYear.toString -> newIndexSeq)
-    tiedonSiirtoIndex =tiedonSiirtoIndex + (suoritus.henkiloOid -> newHenk)
+    tiedonSiirtoIndexSnapShot = Option(tiedonSiirtoIndexSnapShot).getOrElse(Map())
+    val newIndexSeq =  suoritus +: tiedonSiirtoIndexSnapShot.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).getOrElse(Seq())
+    val newHenk = tiedonSiirtoIndexSnapShot.get(suoritus.henkiloOid).getOrElse(Map()) + (suoritus.valmistuminen.getYear.toString -> newIndexSeq)
+    tiedonSiirtoIndexSnapShot = tiedonSiirtoIndexSnapShot + (suoritus.henkiloOid -> newHenk)
 
   }
 
@@ -26,21 +29,25 @@ trait SuoritusRepository extends JournaledRepository[Suoritus] {
   override def index(old: Option[Suoritus with Identified], current: Option[Suoritus with Identified]) {
 
     def removeOld(suoritus: Suoritus with Identified) = {
-      tiedonSiirtoIndex = Option(tiedonSiirtoIndex).getOrElse(Map())
-      val newIndexSeq = tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).map(_.filter((s) => s != suoritus || s.id != suoritus.id))
+      tiedonSiirtoIndexSnapShot = Option(tiedonSiirtoIndexSnapShot).getOrElse(Map())
+      val newIndexSeq = tiedonSiirtoIndexSnapShot.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).map(_.filter((s) => s != suoritus || s.id != suoritus.id))
       val newHenkiloIndex: Option[Map[String, Seq[Suoritus with Identified]]] = newIndexSeq.flatMap((newSeq) =>
-        tiedonSiirtoIndex.get(suoritus.henkiloOid).map((henk) => henk + (suoritus.valmistuminen.getYear.toString -> newSeq))
+        tiedonSiirtoIndexSnapShot.get(suoritus.henkiloOid).map((henk) => henk + (suoritus.valmistuminen.getYear.toString -> newSeq))
       )
       val newIndex = newHenkiloIndex.map((henk)=>
-        tiedonSiirtoIndex + (suoritus.henkiloOid -> henk)
+        tiedonSiirtoIndexSnapShot + (suoritus.henkiloOid -> henk)
       )
 
-      tiedonSiirtoIndex = newIndex.getOrElse(tiedonSiirtoIndex)
+      tiedonSiirtoIndexSnapShot = newIndex.getOrElse(tiedonSiirtoIndexSnapShot)
     }
 
     old.foreach(removeOld)
     current.foreach(addNew)
 
+  }
+
+  override def indexSwapSnapshot() {
+    tiedonSiirtoIndex = tiedonSiirtoIndexSnapShot
   }
 
   def identify(o:Suoritus): Suoritus with Identified = Suoritus.identify(o)
