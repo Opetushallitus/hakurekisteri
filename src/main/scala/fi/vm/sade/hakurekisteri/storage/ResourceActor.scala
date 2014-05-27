@@ -7,12 +7,12 @@ import scala.concurrent.{Future, ExecutionContext}
 import java.lang.RuntimeException
 import akka.actor.Status.Failure
 import scala.util.Try
-import fi.vm.sade.hakurekisteri.storage.repository.Repository
+import fi.vm.sade.hakurekisteri.storage.repository.{JournaledRepository, Repository}
 import java.util.UUID
 import akka.event.Logging
 
 
-abstract class ResourceActor[T: Manifest] extends Actor { this: Repository[T] with ResourceService[T] =>
+abstract class ResourceActor[T <: Resource : Manifest ] extends Actor { this: JournaledRepository[T] with ResourceService[T] =>
 
   val log = Logging(context.system, this)
 
