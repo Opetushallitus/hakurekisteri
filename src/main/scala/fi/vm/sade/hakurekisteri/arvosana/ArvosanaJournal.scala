@@ -11,6 +11,7 @@ import scala.compat.Platform
 import org.slf4j.LoggerFactory
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import org.joda.time.DateTime
+import scala.slick.lifted
 
 class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, ArvosanaTable, ColumnOrdered[Long]] {
 
@@ -53,6 +54,9 @@ class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, Arvosana
   override val table = arvosanat
   override val db: JdbcDriver.simple.Database = database
   override val journalSort = (o: ArvosanaTable) => o.inserted.asc
+
+  override def timestamp(resource: ArvosanaTable): lifted.Column[Long] =  resource.inserted
+
 }
 
 class ArvosanaTable(tag: Tag) extends Table[(String, String, String, String, String, Option[String], Boolean, Long, Boolean)](tag, "arvosana") {

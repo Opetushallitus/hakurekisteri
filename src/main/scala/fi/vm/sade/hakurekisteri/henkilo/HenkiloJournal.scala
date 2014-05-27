@@ -13,6 +13,7 @@ import org.json4s.jackson.Serialization.{read, write}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus}
 import scala.compat.Platform
+import scala.slick.lifted
 
 
 class HenkiloJournal(database: Database) extends JDBCJournal[Henkilo, HenkiloTable, ColumnOrdered[Long]] with HakurekisteriJsonSupport {
@@ -43,6 +44,8 @@ class HenkiloJournal(database: Database) extends JDBCJournal[Henkilo, HenkiloTab
   override val table = henkilot
   override val db: JdbcDriver.simple.Database = database
   override val journalSort = (o: HenkiloTable) => o.inserted.asc
+
+  override def timestamp(resource: HenkiloTable): lifted.Column[Long] = resource.inserted
 }
 
 class HenkiloTable(tag: Tag) extends Table[(String, String, Long, Boolean)](tag, "henkilo") {

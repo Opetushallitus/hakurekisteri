@@ -4,6 +4,7 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.slick.lifted.{ColumnOrdered, Ordered, AbstractTable}
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 import java.util.UUID
+import scala.slick.lifted
 
 
 trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
@@ -41,9 +42,9 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
       index(old, None)
   }
 
-  def loadJournal() {
+  def loadJournal(time: Option[Long] = None) {
     for (
-      delta <- journal.journal()
+      delta <- journal.journal(time)
     ) loadDelta(delta)
 
   }
@@ -62,7 +63,7 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
 
 trait Journal[T] {
 
-  def journal():Seq[Delta[T]]
+  def journal(latest:Option[Long]):Seq[Delta[T]]
 
   def addModification(o: Delta[T])
 
@@ -76,7 +77,7 @@ class InMemJournal[T] extends Journal[T] {
 
   private var deltas: Seq[Delta[T]] = Seq()
 
-  override def journal(): Seq[Delta[T]] = deltas
+  override def journal(latest:Option[Long]): Seq[Delta[T]] = deltas
 
   override def addModification(delta:Delta[T]): Unit =  {
     deltas = deltas :+ delta
@@ -121,11 +122,16 @@ trait JDBCJournal[T, P <: AbstractTable[_], O <: Ordered] extends Journal[T] {
 
   def delta(row: P#TableElementType):Delta[T]
 
-  override def journal(): Seq[Delta[T]] = {
-    db withSession {
-      implicit session =>
-        table.sortBy(journalSort).list.map(delta)
-    }
+  def timestamp(resource: P): lifted.Column[Long]
+
+  override def journal(latest:Option[Long]): Seq[Delta[T]] = latest match  {
+    case None =>
+      db withSession {
+        implicit session =>
+          table.sortBy(journalSort).list.map(delta)
+      }
+    case Some(latest) =>
+      table.filter(timestamp(_) >= latest).sortBy(journalSort).list.map(delta)
 
   }
 }

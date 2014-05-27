@@ -9,6 +9,7 @@ import scala.slick.jdbc.meta.MTable
 import scala.slick.driver.JdbcDriver
 import java.util.UUID
 import scala.compat.Platform
+import scala.slick.lifted
 
 class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, SuoritusTable, ColumnOrdered[Long]] {
   override def delta(row: SuoritusTable#TableElementType): Delta[Suoritus] =
@@ -39,6 +40,8 @@ class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, Suoritus
   override val table = suoritukset
   override val db: JdbcDriver.simple.Database = database
   override val journalSort = (o: SuoritusTable) => o.inserted.asc
+
+  override def timestamp(resource: SuoritusTable): lifted.Column[Long] = resource.inserted
 }
 
 class SuoritusTable(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, Long, Boolean)](tag, "suoritus") {

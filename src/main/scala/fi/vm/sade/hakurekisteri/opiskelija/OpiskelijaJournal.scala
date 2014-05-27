@@ -14,6 +14,7 @@ import fi.vm.sade.hakurekisteri.storage.repository.Deleted
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import scala.slick.lifted.ColumnOrdered
 import scala.compat.Platform
+import scala.slick.lifted
 
 class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, OpiskelijaTable, ColumnOrdered[Long]] {
   override def delta(row: OpiskelijaTable#TableElementType): Delta[Opiskelija] =
@@ -44,6 +45,8 @@ class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, Opis
   override val table = opiskelijat
   override val db: JdbcDriver.simple.Database = database
   override val journalSort = (o: OpiskelijaTable) => o.inserted.asc
+
+  override def timestamp(resource: OpiskelijaTable): lifted.Column[Long] = resource.inserted
 }
 
 class OpiskelijaTable(tag: Tag) extends Table[(String, String, String, String, String, Long, Option[Long], Long, Boolean)](tag, "opiskelija") {
