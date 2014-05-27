@@ -156,7 +156,7 @@ trait JDBCJournal[T, P <: AbstractTable[_], O <: Ordered] extends Journal[T] {
   override def journal(latest:Option[Long]): Seq[Delta[T]] = {
     val dbList: List[P#TableElementType] = loadFromDb(latest)
 
-    latestReload = Some(timestamp(dbList.last))
+    latestReload = dbList.lastOption.map(timestamp(_))
     dbList.map(delta)
   }
 }
