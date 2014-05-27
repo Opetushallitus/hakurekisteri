@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.storage
 
-import akka.actor.Actor
+import akka.actor.{Cancellable, Actor}
 import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
 import akka.pattern.pipe
 import scala.concurrent.{Future, ExecutionContext}
@@ -18,7 +18,13 @@ abstract class ResourceActor[T <: Resource : Manifest ] extends Actor { this: Jo
 
   import scala.concurrent.duration._
   val reloadInterval = 10.seconds
-  val reload = context.system.scheduler.schedule(reloadInterval, reloadInterval, self, Reload)
+
+  override def postStop(): Unit = reload.foreach((c) => if (!c.isCancelled) c.cancel())
+
+  var reload:Option[Cancellable] = None
+
+
+  override def preStart(): Unit = reload = Some(context.system.scheduler.schedule(reloadInterval, reloadInterval, self, Reload))
 
   implicit val executionContext: ExecutionContext = context.dispatcher
 
