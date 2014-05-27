@@ -16,6 +16,10 @@ abstract class ResourceActor[T <: Resource : Manifest ] extends Actor { this: Jo
 
   val log = Logging(context.system, this)
 
+  import scala.concurrent.duration._
+  val reloadInterval = 10.seconds
+  val reload = context.system.scheduler.schedule(reloadInterval, reloadInterval, self, Reload)
+
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   def receive: Receive = {
@@ -32,6 +36,9 @@ abstract class ResourceActor[T <: Resource : Manifest ] extends Actor { this: Jo
       log.debug(s"received delete request for resource: $id from $sender")
       sender ! delete(id)
       log.debug(s"deleted $id answered to $sender")
+    case Reload  =>
+      log.debug(s"reloading from ${journal.latestReload}")
+      loadJournal(journal.latestReload)
 
   }
 
@@ -41,3 +48,4 @@ abstract class ResourceActor[T <: Resource : Manifest ] extends Actor { this: Jo
 
 case class DeleteResource(id:UUID)
 
+object Reload

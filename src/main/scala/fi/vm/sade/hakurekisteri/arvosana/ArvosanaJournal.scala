@@ -57,6 +57,7 @@ class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, Arvosana
 
   override def timestamp(resource: ArvosanaTable): lifted.Column[Long] =  resource.inserted
 
+  override def timestamp(resource: ArvosanaTable#TableElementType): Long = resource._8
 }
 
 class ArvosanaTable(tag: Tag) extends Table[(String, String, String, String, String, Option[String], Boolean, Long, Boolean)](tag, "arvosana") {

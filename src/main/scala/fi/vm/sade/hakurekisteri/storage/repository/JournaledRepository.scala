@@ -74,6 +74,8 @@ trait Journal[T] {
 
   def addModification(o: Delta[T])
 
+  var latestReload:Option[Long] = None
+
 }
 
 sealed abstract class Delta[T]
@@ -130,20 +132,31 @@ trait JDBCJournal[T, P <: AbstractTable[_], O <: Ordered] extends Journal[T] {
   def delta(row: P#TableElementType):Delta[T]
 
   def timestamp(resource: P): lifted.Column[Long]
+  def timestamp(resource: P#TableElementType): Long
 
-  override def journal(latest:Option[Long]): Seq[Delta[T]] = latest match  {
+
+  def loadFromDb(latest:Option[Long]): List[P#TableElementType] = latest match  {
     case None =>
       db withSession {
         implicit session =>
-          table.sortBy(journalSort).list.map(delta)
+          table.sortBy(journalSort).list
       }
     case Some(latest) =>
 
       db withSession {
         implicit session =>
-          table.filter(timestamp(_) >= latest).sortBy(journalSort).list.map(delta)
+          table.filter(timestamp(_) >= latest).sortBy(journalSort).list
       }
 
 
+  }
+
+
+
+  override def journal(latest:Option[Long]): Seq[Delta[T]] = {
+    val dbList: List[P#TableElementType] = loadFromDb(latest)
+
+    latestReload = Some(timestamp(dbList.last))
+    dbList.map(delta)
   }
 }

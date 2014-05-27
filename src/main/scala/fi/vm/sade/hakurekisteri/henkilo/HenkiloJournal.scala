@@ -46,6 +46,8 @@ class HenkiloJournal(database: Database) extends JDBCJournal[Henkilo, HenkiloTab
   override val journalSort = (o: HenkiloTable) => o.inserted.asc
 
   override def timestamp(resource: HenkiloTable): lifted.Column[Long] = resource.inserted
+
+  override def timestamp(resource: HenkiloTable#TableElementType): Long = resource._3
 }
 
 class HenkiloTable(tag: Tag) extends Table[(String, String, Long, Boolean)](tag, "henkilo") {

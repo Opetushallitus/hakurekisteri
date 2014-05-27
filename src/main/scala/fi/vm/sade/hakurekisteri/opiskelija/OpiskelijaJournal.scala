@@ -47,6 +47,8 @@ class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, Opis
   override val journalSort = (o: OpiskelijaTable) => o.inserted.asc
 
   override def timestamp(resource: OpiskelijaTable): lifted.Column[Long] = resource.inserted
+
+  override def timestamp(resource: OpiskelijaTable#TableElementType): Long = resource._8
 }
 
 class OpiskelijaTable(tag: Tag) extends Table[(String, String, String, String, String, Long, Option[Long], Long, Boolean)](tag, "opiskelija") {

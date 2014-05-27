@@ -42,6 +42,8 @@ class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, Suoritus
   override val journalSort = (o: SuoritusTable) => o.inserted.asc
 
   override def timestamp(resource: SuoritusTable): lifted.Column[Long] = resource.inserted
+
+  override def timestamp(resource: SuoritusTable#TableElementType): Long = resource._9
 }
 
 class SuoritusTable(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, Long, Boolean)](tag, "suoritus") {
