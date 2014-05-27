@@ -27,7 +27,7 @@ trait SuoritusRepository extends JournaledRepository[Suoritus] {
 
     def removeOld(suoritus: Suoritus with Identified) = {
       tiedonSiirtoIndex = Option(tiedonSiirtoIndex).getOrElse(Map())
-      val newIndexSeq = tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).map(_.filter(_ != suoritus))
+      val newIndexSeq = tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).map(_.filter((s) => s != suoritus || s.id != suoritus.id))
       val newHenkiloIndex: Option[Map[String, Seq[Suoritus with Identified]]] = newIndexSeq.flatMap((newSeq) =>
         tiedonSiirtoIndex.get(suoritus.henkiloOid).map((henk) => henk + (suoritus.valmistuminen.getYear.toString -> newSeq))
       )

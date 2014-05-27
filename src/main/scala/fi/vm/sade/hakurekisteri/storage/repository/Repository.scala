@@ -2,7 +2,6 @@ package fi.vm.sade.hakurekisteri.storage.repository
 
 import java.util.UUID
 
-import scala.slick.lifted.AbstractTable
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 import scala.compat.Platform
@@ -29,9 +28,9 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
   var cursor:Map[Int, (Long, String)] = Map()
 
   def updateCursor(t:T, id:UUID) = (id, Platform.currentTime, cursor(t)) match {
-    case (id, time, Some((curtime, curid))) if id.toString == curid  && time == curtime =>  (time, id.toString + "#a")
-    case (id, time, Some((curtime, curid))) if curid.startsWith(id.toString) && time == curtime => (time, curid + "a")
-    case (id, time, cursor) => (time -> id.toString)
+    case (resourceId, time, Some((curtime, curid))) if resourceId.toString == curid  && time == curtime =>  (time, resourceId.toString + "#a")
+    case (resourceId, time, Some((curtime, curid))) if curid.startsWith(resourceId.toString) && time == curtime => (time, curid + "a")
+    case (resourceId, time, _) => time -> id.toString
 
   }
 
@@ -54,7 +53,7 @@ trait InMemRepository[T <: Resource] extends Repository[T] {
     val old = store.get(oid.id)
     store = store + (oid.id -> oid)
     reverseStore = old.map(o => reverseStore - o).getOrElse(reverseStore) + (oid -> oid.id)
-    index(old, Some(oid));
+    index(old, Some(oid))
     oid
   }
 
