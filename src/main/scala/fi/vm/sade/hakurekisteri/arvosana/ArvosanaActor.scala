@@ -26,7 +26,7 @@ trait ArvosanaRepository extends JournaledRepository[Arvosana] {
     def removeOld(arvosana: Arvosana with Identified) = {
       suoritusIndex = Option(suoritusIndex).getOrElse(Map())
       suoritusIndex = suoritusIndex.get(arvosana.suoritus).
-        map(_.filter(_ != arvosana)).
+        map(_.filter((a) => a != arvosana || a.id != arvosana.id)).
         map((ns) => suoritusIndex + (arvosana.suoritus -> ns)).getOrElse(suoritusIndex)
 
     }
