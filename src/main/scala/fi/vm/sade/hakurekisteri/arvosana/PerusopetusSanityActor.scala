@@ -48,7 +48,7 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
     findPakolliset.onSuccess{
       case aineet:Set[String] => pakolliset = aineet
       suoritusRequests = scheduleSuoritusRequest(10.seconds)
-      log.info("perusopetus sanity actor started")
+      log.info(s"perusopetus sanity actor started with mandatory subjects $pakolliset")
     }
 
 
@@ -56,6 +56,7 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
 
 
   def scheduleSuoritusRequest(seconds: FiniteDuration = 1.hour): Cancellable = {
+    log.info(s"scheduling suoritus fetch in $seconds")
     context.system.scheduler.scheduleOnce(seconds, suoritusRekisteri, SuoritusQuery(None, Some(Kausi.Kevät), Some("2014"), None))(executionContext, self)
   }
 
