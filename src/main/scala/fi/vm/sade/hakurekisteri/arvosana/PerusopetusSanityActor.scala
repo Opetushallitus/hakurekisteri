@@ -111,6 +111,7 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
           val validation = invalid(arvosanas)
           problems = problems.filter(_._2 != id) ++ validation.map((oppilas, id, _))
           if (!validation.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas ($validation)")
+        case _ =>
       }
     case unknown => log.debug(s"received ${unknown.getClass} unable to handle");
 
