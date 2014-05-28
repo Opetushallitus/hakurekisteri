@@ -38,18 +38,26 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
     override def isCancelled: Boolean = true
   }
 
+  override def postStop(): Unit = {
+    suoritusRequests.cancel()
+  }
+
   override def preStart(): Unit = {
 
 
     findPakolliset.onSuccess{
       case aineet:Set[String] => pakolliset = aineet
-      suoritusRequests = context.system.scheduler.schedule(10.seconds, 1.hour, suoritusRekisteri, SuoritusQuery(None, Some(Kausi.Kevät), Some("2014"), None))(executionContext, self)
+      suoritusRequests = scheduleSuoritusRequest(10.seconds)
       log.info("perusopetus sanity actor started")
     }
 
 
   }
 
+
+  def scheduleSuoritusRequest(seconds: FiniteDuration = 1.hour): Cancellable = {
+    context.system.scheduler.scheduleOnce(seconds, suoritusRekisteri, SuoritusQuery(None, Some(Kausi.Kevät), Some("2014"), None))(executionContext, self)
+  }
 
   def findPakolliset: Future[Set[String]] = {
     for (muut <- getAineetWith(findPerusasteenAineet, "oppiaineenkielisyys_0")) yield Set("A1") ++ muut.toSet
@@ -91,11 +99,14 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
   override def receive: Actor.Receive = {
     case s :: rest => self ! s
                       if (rest != Nil) self ! rest
+                      else suoritusRequests = scheduleSuoritusRequest()
     case s: Suoritus with Identified => findBy(ArvosanaQuery(Some(s.id))).map(Todistus(s, _)) pipeTo self
-    case Todistus(suoritus, arvosanas) =>  (suoritus.id, suoritus) match {
+    case Todistus(suoritus, arvosanas) =>  (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {
       case (id, Suoritus(`perusopetus`, _, _, _ ,oppilas ,_, _))  => if (invalid(arvosanas)) {
         problems = (oppilas, id) +: problems
         log.warning(s"problem with suoritus $id for oppilas $oppilas")
+      } else {
+        problems = problems.filter(_._2 != id)
       }
 
     }
