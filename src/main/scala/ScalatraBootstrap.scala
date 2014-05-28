@@ -108,7 +108,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(new ArvosanaJournal(database))), "arvosanat")
 
-    system.actorOf(Props(new PerusopetusSanityActor(suoritusRekisteri, new ArvosanaJournal(database))))
+    val sanity = system.actorOf(Props(new PerusopetusSanityActor(suoritusRekisteri, new ArvosanaJournal(database))))
 
 
     import _root_.akka.pattern.ask
@@ -131,6 +131,7 @@ class ScalatraBootstrap extends LifeCycle {
     context mount(new HakijaResource(hakijat), "/rest/v1/hakijat")
     context mount(new HealthcheckResource(healthcheck), "/healthcheck")
     context mount(new ResourcesApp, "/rest/v1/api-docs/*")
+    context mount(new SanityResource(sanity), "/sanity")
     context mount(classOf[GuiServlet], "/")
   }
 

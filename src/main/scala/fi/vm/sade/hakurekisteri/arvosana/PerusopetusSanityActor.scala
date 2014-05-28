@@ -97,6 +97,7 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
   }
 
   override def receive: Actor.Receive = {
+    case Problems => sender ! problems
     case s :: rest => self ! s
                       if (rest != Nil) self ! rest
                       else suoritusRequests = scheduleSuoritusRequest()
@@ -121,3 +122,5 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
 }
 
 case class Todistus(suoritus:Suoritus with Identified, arvosanas: Seq[Arvosana])
+
+object Problems
