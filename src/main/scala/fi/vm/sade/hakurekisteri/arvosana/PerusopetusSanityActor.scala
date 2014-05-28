@@ -99,10 +99,8 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
 
   override def receive: Actor.Receive = {
     case Problems => sender ! problems
-    case s :: rest => log.debug(s"going through suorituslist ${rest.size} left")
-                      self ! s
-                      if (rest != Nil) self ! rest
-                      else suoritusRequests = scheduleSuoritusRequest()
+    case s:Stream => for (first <- s.headOption) goThrough(first, s.tail)
+    case s::rest  => goThrough(s, rest)
     case s: Suoritus with Identified =>
       log.debug(s"received suoritus for ${s.henkiloOid} creating todistus")
       findBy(ArvosanaQuery(Some(s.id))).map(Todistus(s, _)) pipeTo self
@@ -116,6 +114,13 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
       }
     case unknown => log.debug(s"received ${unknown.getClass} unable to handle");
 
+  }
+
+
+  def goThrough(s: Any, rest: Seq[Any]) {
+    self ! s
+    if (rest != Nil) self ! rest
+    else suoritusRequests = scheduleSuoritusRequest()
   }
 
   def invalid(arvosanas: Seq[Arvosana]): Seq[Problem] = {
