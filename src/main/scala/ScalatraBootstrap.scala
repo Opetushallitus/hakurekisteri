@@ -108,7 +108,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(new ArvosanaJournal(database))), "arvosanat")
 
-    val sanity = system.actorOf(Props(new PerusopetusSanityActor(suoritusRekisteri, new ArvosanaJournal(database))))
+    val sanity = system.actorOf(Props(new PerusopetusSanityActor(suoritusRekisteri, new ArvosanaJournal(database))), "perusopetus-sanity")
 
 
     import _root_.akka.pattern.ask

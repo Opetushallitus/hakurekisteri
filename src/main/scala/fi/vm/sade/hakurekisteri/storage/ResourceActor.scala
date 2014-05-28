@@ -30,8 +30,12 @@ abstract class ResourceActor[T <: Resource : Manifest ] extends Actor { this: Jo
 
   def receive: Receive = {
     case q: Query[T] =>
-      log.debug("received: " + q)
-      findBy(q) pipeTo sender
+      log.debug(s"received: $q from $sender")
+      val result = findBy(q)
+      result pipeTo sender
+      result.onSuccess{
+        case s => log.debug(s"answered query $q with ${s.size} results to $sender")
+      }
     case o:T =>
       val saved = Try(save(o))
       log.debug("saved: " + saved)
