@@ -6,6 +6,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, Hakurekiste
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.{CorsSupport, FutureSupport}
 import scala.concurrent.ExecutionContext
+import akka.util.Timeout
 
 
 class SanityResource(sanityActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack  with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport{
@@ -13,12 +14,14 @@ class SanityResource(sanityActor: ActorRef)(implicit system: ActorSystem) extend
   override protected implicit def executor: ExecutionContext = system.dispatcher
 
   import akka.pattern.ask
+  import scala.concurrent.duration._
 
   before() {
     contentType = formats("json")
   }
 
   get("/perusopetus") {
+    implicit val timeout: Timeout = 300.seconds
     sanityActor ? Problems
 
   }
