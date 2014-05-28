@@ -98,7 +98,8 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
   }
 
   override def receive: Actor.Receive = {
-    case Problems => sender ! problems
+    case Problems => log.info(s"$sender requested problem list returning ${problems.size} problems")
+                     sender ! problems
     case s:Stream[_] => for (first <- s.headOption) goThrough(first, s.tail)
     case s::rest  => goThrough(s, rest)
     case s: Suoritus with Identified =>
