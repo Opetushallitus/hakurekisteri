@@ -22,7 +22,7 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
   implicit val executionContext: ExecutionContext = context.dispatcher
   val perusopetus = "1.2.246.562.13.62959769647"
 
-  var problems: Seq[(String, UUID)]  = Seq()
+  var problems: Seq[(String, UUID, Problem)]  = Seq()
 
   import scala.concurrent.duration._
 
@@ -99,7 +99,8 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
 
   override def receive: Actor.Receive = {
     case Problems => sender ! problems
-    case s :: rest => self ! s
+    case s :: rest => log.debug("going through suorituslist ${rest.size} left")
+                      self ! s
                       if (rest != Nil) self ! rest
                       else suoritusRequests = scheduleSuoritusRequest()
     case s: Suoritus with Identified =>
@@ -108,23 +109,27 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
     case Todistus(suoritus, arvosanas) =>
       log.debug(s"received todistus for ${suoritus.henkiloOid} with ${arvosanas.size} arvosanas")
       (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {
-        case (id, Suoritus(`perusopetus`, _, _, _ ,oppilas ,_, _))  => if (invalid(arvosanas)) {
-          problems = (oppilas, id) +: problems
-          log.warning(s"problem with suoritus $id for oppilas $oppilas")
-        } else {
-          problems = problems.filter(_._2 != id)
-        }
+        case (id, Suoritus(`perusopetus`, _, _, _ ,oppilas ,_, _))  =>
+          val validation = invalid(arvosanas)
+          problems = problems.filter(_._2 != id) ++ validation.map((oppilas, id, _))
+          if (!validation.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas ($validation)")
 
     }
   }
 
-  def invalid(arvosanas: Seq[Arvosana]) = {
-    pakolliset.exists(!arvosanas.map(_.aine).toSet.contains(_))
+  def invalid(arvosanas: Seq[Arvosana]): Seq[Problem] = {
+    pakolliset.filterNot(arvosanas.map(_.aine).toSet.contains(_)).map(MissingArvosana).toList
   }
 
   override def identify(o: Arvosana): Arvosana with Identified = ???
 
 }
+
+sealed trait Problem
+
+case class MissingArvosana(aine:String) extends Problem
+
+
 
 case class Todistus(suoritus:Suoritus with Identified, arvosanas: Seq[Arvosana])
 
