@@ -22,13 +22,13 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
   def loadDelta(delta: Delta[T]) = delta match {
     case Updated(resource) =>
       val old = snapShot.get(resource.id)
-      old.foreach((deleted) => {
+      for (deleted <- old) {
 
         val newSeq = reverseSnapShot.get(deleted).map(_.filter(_ != resource.id)).getOrElse(Seq())
         if (newSeq.isEmpty) reverseSnapShot = reverseSnapShot - deleted
         else reverseSnapShot = reverseSnapShot + (deleted -> newSeq)
 
-      })
+      }
 
       snapShot =  snapShot + (resource.id -> resource)
       val newSeq = resource.id +: reverseSnapShot.get(resource).getOrElse(Seq())
@@ -36,13 +36,13 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
       index(old, Some(resource))
     case Deleted(id) =>
       val old = snapShot.get(id)
-      old.foreach((deleted) => {
+      for (deleted <- old) {
 
         val newSeq = reverseSnapShot.get(deleted).map(_.filter(_ != id)).getOrElse(Seq())
         if (newSeq.isEmpty) reverseSnapShot = reverseSnapShot - deleted
         else reverseSnapShot = reverseSnapShot + (deleted -> newSeq)
 
-      })
+      }
       snapShot = snapShot - id
       index(old, None)
   }
