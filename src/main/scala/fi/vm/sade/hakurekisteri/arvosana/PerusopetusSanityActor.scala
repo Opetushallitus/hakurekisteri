@@ -99,7 +99,7 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
 
   override def receive: Actor.Receive = {
     case Problems => sender ! problems
-    case s :: rest => log.debug("going through suorituslist ${rest.size} left")
+    case s :: rest => log.debug(s"going through suorituslist ${rest.size} left")
                       self ! s
                       if (rest != Nil) self ! rest
                       else suoritusRequests = scheduleSuoritusRequest()
@@ -113,8 +113,9 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
           val validation = invalid(arvosanas)
           problems = problems.filter(_._2 != id) ++ validation.map((oppilas, id, _))
           if (!validation.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas ($validation)")
-
-    }
+      }
+    case unknown => log.debug(s"received ${unknown.getClass} unable to handle");
+                    super.receive(unknown)
   }
 
   def invalid(arvosanas: Seq[Arvosana]): Seq[Problem] = {
