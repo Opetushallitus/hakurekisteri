@@ -102,14 +102,18 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
     case s :: rest => self ! s
                       if (rest != Nil) self ! rest
                       else suoritusRequests = scheduleSuoritusRequest()
-    case s: Suoritus with Identified => findBy(ArvosanaQuery(Some(s.id))).map(Todistus(s, _)) pipeTo self
-    case Todistus(suoritus, arvosanas) =>  (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {
-      case (id, Suoritus(`perusopetus`, _, _, _ ,oppilas ,_, _))  => if (invalid(arvosanas)) {
-        problems = (oppilas, id) +: problems
-        log.warning(s"problem with suoritus $id for oppilas $oppilas")
-      } else {
-        problems = problems.filter(_._2 != id)
-      }
+    case s: Suoritus with Identified =>
+      log.debug(s"received suoritus for ${s.henkiloOid} creating todistus")
+      findBy(ArvosanaQuery(Some(s.id))).map(Todistus(s, _)) pipeTo self
+    case Todistus(suoritus, arvosanas) =>
+      log.debug(s"received todistus for ${suoritus.henkiloOid} with ${arvosanas.size} arvosanas")
+      (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {
+        case (id, Suoritus(`perusopetus`, _, _, _ ,oppilas ,_, _))  => if (invalid(arvosanas)) {
+          problems = (oppilas, id) +: problems
+          log.warning(s"problem with suoritus $id for oppilas $oppilas")
+        } else {
+          problems = problems.filter(_._2 != id)
+        }
 
     }
   }

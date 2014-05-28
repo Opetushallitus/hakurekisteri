@@ -48,7 +48,7 @@ abstract class ResourceActor[T <: Resource : Manifest ] extends Actor { this: Jo
       sender ! delete(id)
       log.debug(s"deleted $id answered to $sender")
     case Reload  =>
-      log.debug(s"reloading from ${journal.latestReload}")
+      //log.debug(s"reloading from ${journal.latestReload}")
       loadJournal(journal.latestReload)
 
   }
