@@ -115,7 +115,7 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
           if (!validation.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas ($validation)")
       }
     case unknown => log.debug(s"received ${unknown.getClass} unable to handle");
-                    super.receive(unknown)
+
   }
 
   def invalid(arvosanas: Seq[Arvosana]): Seq[Problem] = {
