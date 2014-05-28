@@ -20,7 +20,7 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
 
 
   implicit val executionContext: ExecutionContext = context.dispatcher
-  val perusopetus = ""
+  val perusopetus = "1.2.246.562.13.62959769647"
 
   var problems: Seq[(String, UUID)]  = Seq()
 
