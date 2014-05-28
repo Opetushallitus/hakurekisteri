@@ -22,7 +22,7 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
   implicit val executionContext: ExecutionContext = context.dispatcher
   val perusopetus = "1.2.246.562.13.62959769647"
 
-  var problems: Seq[(String, UUID, Problem)]  = Seq()
+  var problems: Seq[Problem]  = Seq()
 
   import scala.concurrent.duration._
 
@@ -109,8 +109,11 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
       log.debug(s"received todistus for ${suoritus.henkiloOid} with ${arvosanas.size} arvosanas")
       (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {
         case (id, Suoritus(`perusopetus`, _, _, _ ,oppilas ,_, _))  =>
-          val validation = invalid(arvosanas)
-          problems = problems.filter(_._2 != id) ++ validation.map((oppilas, id, _))
+          val validation = missing(arvosanas).map(MissingArvosana(oppilas, id, _))
+          problems = problems.filterNot( _ match {
+            case MissingArvosana(_, `id`, _) => true
+            case _ => false
+          }) ++ validation
           if (!validation.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas ($validation)")
         case _ =>
       }
@@ -125,8 +128,8 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
     else suoritusRequests = scheduleSuoritusRequest()
   }
 
-  def invalid(arvosanas: Seq[Arvosana]): Seq[Problem] = {
-    pakolliset.filterNot(arvosanas.map(_.aine).toSet.contains(_)).map(MissingArvosana).toList
+  def missing(arvosanas: Seq[Arvosana]): Set[String] = {
+    pakolliset.filterNot(arvosanas.map(_.aine).toSet.contains(_))
   }
 
   override def identify(o: Arvosana): Arvosana with Identified = ???
@@ -135,7 +138,7 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
 
 sealed trait Problem
 
-case class MissingArvosana(aine:String) extends Problem
+case class MissingArvosana(henkilo: String, suoritus: UUID, aine:String) extends Problem
 
 
 
