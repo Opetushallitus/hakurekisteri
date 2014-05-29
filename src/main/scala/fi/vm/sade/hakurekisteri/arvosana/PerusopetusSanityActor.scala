@@ -113,7 +113,9 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
             case MissingArvosana(_, `id`, _) => true
             case _ => false
           }) ++ validation
-          if (!validation.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  missing mandatory subjects (${missingMandatory.mkString(",")})")
+
+          if (!missingMandatory.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  missing mandatory subjects (${missingMandatory.mkString(",")})")
+
         case _ =>
       }
 
@@ -127,7 +129,8 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
   }
 
   def missing(arvosanas: Seq[Arvosana]): Set[String] = {
-    pakolliset.filterNot(arvosanas.map(_.aine).toSet.contains(_))
+    val skaala = (4 to 10).map(_.toString).toSet
+    pakolliset.filterNot(arvosanas.withFilter((a) => skaala.contains(a.arvio.arvosana)).map(_.aine).toSet.contains(_))
   }
 
   override def identify(o: Arvosana): Arvosana with Identified = ???
