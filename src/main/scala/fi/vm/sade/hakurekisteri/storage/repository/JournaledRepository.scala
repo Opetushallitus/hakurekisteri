@@ -4,48 +4,56 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.slick.lifted.{ColumnOrdered, Ordered, AbstractTable}
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 import java.util.UUID
+import scala.slick.lifted
 
 
 trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
 
   val journal:Journal[T]
 
+  var snapShot= store
+  var reverseSnapShot = reverseStore
+
   loadJournal()
+
+  def indexSwapSnapshot():Unit = {}
 
 
   def loadDelta(delta: Delta[T]) = delta match {
     case Updated(resource) =>
-      val old = store.get(resource.id)
-      old.foreach((deleted) => {
+      val old = snapShot.get(resource.id)
+      for (deleted <- old) {
 
-        val newSeq = reverseStore.get(deleted).map(_.filter(_ != resource.id)).getOrElse(Seq())
-        if (newSeq.isEmpty) reverseStore = reverseStore - deleted
-        else reverseStore = reverseStore + (deleted -> newSeq)
+        val newSeq = reverseSnapShot.get(deleted).map(_.filter(_ != resource.id)).getOrElse(Seq())
+        if (newSeq.isEmpty) reverseSnapShot = reverseSnapShot - deleted
+        else reverseSnapShot = reverseSnapShot + (deleted -> newSeq)
 
-      })
+      }
 
-      store =  store + (resource.id -> resource)
-      val newSeq = resource.id +: reverseStore.get(resource).getOrElse(Seq())
-      reverseStore = reverseStore + (resource -> newSeq)
+      snapShot =  snapShot + (resource.id -> resource)
+      val newSeq = resource.id +: reverseSnapShot.get(resource).getOrElse(Seq())
+      reverseSnapShot = reverseSnapShot + (resource -> newSeq)
       index(old, Some(resource))
     case Deleted(id) =>
-      val old = store.get(id)
-      old.foreach((deleted) => {
+      val old = snapShot.get(id)
+      for (deleted <- old) {
 
-        val newSeq = reverseStore.get(deleted).map(_.filter(_ != id)).getOrElse(Seq())
-        if (newSeq.isEmpty) reverseStore = reverseStore - deleted
-        else reverseStore = reverseStore + (deleted -> newSeq)
+        val newSeq = reverseSnapShot.get(deleted).map(_.filter(_ != id)).getOrElse(Seq())
+        if (newSeq.isEmpty) reverseSnapShot = reverseSnapShot - deleted
+        else reverseSnapShot = reverseSnapShot + (deleted -> newSeq)
 
-      })
-      store = store - id
+      }
+      snapShot = snapShot - id
       index(old, None)
   }
 
-  def loadJournal() {
+  def loadJournal(time: Option[Long] = None) {
     for (
-      delta <- journal.journal()
+      delta <- journal.journal(time)
     ) loadDelta(delta)
-
+    store = snapShot
+    reverseStore = reverseSnapShot
+    indexSwapSnapshot()
   }
 
   override def saveIdentified(o: T with Identified): T with Identified  = {
@@ -62,9 +70,11 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
 
 trait Journal[T] {
 
-  def journal():Seq[Delta[T]]
+  def journal(latest:Option[Long]):Seq[Delta[T]]
 
   def addModification(o: Delta[T])
+
+  var latestReload:Option[Long] = None
 
 }
 
@@ -76,7 +86,7 @@ class InMemJournal[T] extends Journal[T] {
 
   private var deltas: Seq[Delta[T]] = Seq()
 
-  override def journal(): Seq[Delta[T]] = deltas
+  override def journal(latest:Option[Long]): Seq[Delta[T]] = deltas
 
   override def addModification(delta:Delta[T]): Unit =  {
     deltas = deltas :+ delta
@@ -121,11 +131,32 @@ trait JDBCJournal[T, P <: AbstractTable[_], O <: Ordered] extends Journal[T] {
 
   def delta(row: P#TableElementType):Delta[T]
 
-  override def journal(): Seq[Delta[T]] = {
-    db withSession {
-      implicit session =>
-        table.sortBy(journalSort).list.map(delta)
-    }
+  def timestamp(resource: P): lifted.Column[Long]
+  def timestamp(resource: P#TableElementType): Long
 
+
+  def loadFromDb(latest:Option[Long]): List[P#TableElementType] = latest match  {
+    case None =>
+      db withSession {
+        implicit session =>
+          table.sortBy(journalSort).list
+      }
+    case Some(latest) =>
+
+      db withSession {
+        implicit session =>
+          table.filter(timestamp(_) >= latest).sortBy(journalSort).list
+      }
+
+
+  }
+
+
+
+  override def journal(latest:Option[Long]): Seq[Delta[T]] = {
+    val dbList: List[P#TableElementType] = loadFromDb(latest)
+
+    latestReload = dbList.lastOption.map(timestamp(_))
+    dbList.map(delta)
   }
 }

@@ -3,38 +3,19 @@ package fi.vm.sade.hakurekisteri
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService, ResourceActor}
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.storage.repository.Repository
+import fi.vm.sade.hakurekisteri.storage.repository._
 import scala.compat.Platform
 
 
-class TestActor extends ResourceActor[TestResource]  with Repository[TestResource] with ResourceService[TestResource] {
 
-  var store:Seq[TestResource] = Seq()
+class TestActor(val journal: Journal[TestResource]) extends ResourceActor[TestResource]  with JournaledRepository[TestResource] with ResourceService[TestResource] {
+  def this() = this(new InMemJournal[TestResource])
 
-
-  def save(t: TestResource): TestResource with Identified = {
-    println("saving: " + t)
-    store = t +: store
-    currentCursor = Platform.currentTime
-    identify(t)
+  override def identify(o: TestResource): TestResource with Identified = new TestResource(o.name) with Identified {
+    val id = UUID.randomUUID()
   }
 
-
-  def identify(t: TestResource): TestResource with Identified {val id: UUID} = {
-    new TestResource(t.name) with Identified {
-      val id = UUID.randomUUID()
-    }
+  override val matcher: PartialFunction[Query[TestResource], (TestResource with Identified) => Boolean] = {
+    case _ => (_) => true
   }
-
-  def listAll(): Seq[TestResource with Identified] = store.map(identify)
-
-  val matcher: PartialFunction[Query[TestResource], (TestResource with Identified) => Boolean] = { case _ => (_) => true}
-
-  override def get(id: UUID): Option[TestResource with Identified] = None.asInstanceOf[Option[TestResource with Identified]]
-
-  var currentCursor = Platform.currentTime
-
-  override def cursor(t:TestResource): Any = currentCursor
-
-  override def delete(id:UUID) = ???
 }

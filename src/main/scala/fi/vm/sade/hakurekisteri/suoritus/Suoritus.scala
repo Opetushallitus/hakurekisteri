@@ -2,11 +2,9 @@ package fi.vm.sade.hakurekisteri.suoritus
 
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.storage.Identified
-import org.joda.time.{LocalDate, DateTime}
+import org.joda.time.LocalDate
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
-import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
-import java.io.Serializable
 
 object yksilollistaminen extends Enumeration {
   type Yksilollistetty = Value

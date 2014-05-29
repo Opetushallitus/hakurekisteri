@@ -25,7 +25,7 @@ class ResourceActorSpec extends WordSpec with ShouldMatchers {
       val resource = new TestResource("foo")
       resourceActor ! resource
       "save it"  in {
-        resourceActor.underlyingActor.store should contain (resource)
+        resourceActor.underlyingActor.store.values should contain (resource)
       }
 
     }

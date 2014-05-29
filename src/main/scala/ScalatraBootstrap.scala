@@ -99,6 +99,7 @@ class ScalatraBootstrap extends LifeCycle {
 
 
 
+
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))), "opiskelijat")
     val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija](orgServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid )), "opiskelijat-authorizer")
 
@@ -106,6 +107,9 @@ class ScalatraBootstrap extends LifeCycle {
     val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo](orgServiceUrl, henkiloRekisteri, (henkilo) => OPH )), "henkilo-authorizer")
 
     val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(new ArvosanaJournal(database))), "arvosanat")
+
+    val sanity = system.actorOf(Props(new PerusopetusSanityActor(suoritusRekisteri, new ArvosanaJournal(database))), "perusopetus-sanity")
+
 
     import _root_.akka.pattern.ask
     val filteredArvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana](orgServiceUrl, arvosanaRekisteri, (arvosana) => suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).mapTo[Option[Suoritus]].map(_.map(_.myontaja).getOrElse("")))), "arvosana-authorizer")
@@ -127,6 +131,7 @@ class ScalatraBootstrap extends LifeCycle {
     context mount(new HakijaResource(hakijat), "/rest/v1/hakijat")
     context mount(new HealthcheckResource(healthcheck), "/healthcheck")
     context mount(new ResourcesApp, "/rest/v1/api-docs/*")
+    context mount(new SanityResource(sanity), "/sanity")
     context mount(classOf[GuiServlet], "/")
   }
 

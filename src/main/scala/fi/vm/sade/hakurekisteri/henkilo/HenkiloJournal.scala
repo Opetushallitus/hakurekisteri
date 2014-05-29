@@ -1,25 +1,23 @@
 package fi.vm.sade.hakurekisteri.henkilo
 
-import fi.vm.sade.hakurekisteri.storage.repository.{Updated, Deleted, Delta, JDBCJournal}
+import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, Delta, JDBCJournal}
 import scala.slick.lifted.ColumnOrdered
 import fi.vm.sade.hakurekisteri.storage.Identified
-import org.joda.time.{LocalDate, DateTime}
 import scala.slick.driver.JdbcDriver
 import scala.slick.driver.JdbcDriver.simple._
 import java.util.UUID
 import scala.slick.jdbc.meta.MTable
-import org.json4s._
 import org.json4s.jackson.Serialization.{read, write}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus}
 import scala.compat.Platform
+import scala.slick.lifted
 
 
 class HenkiloJournal(database: Database) extends JDBCJournal[Henkilo, HenkiloTable, ColumnOrdered[Long]] with HakurekisteriJsonSupport {
   override def delta(row: HenkiloTable#TableElementType): Delta[Henkilo] =
     row match {
       case (resourceId, _, _, true) => Deleted(UUID.fromString(resourceId))
-      case (resourceId, henkilo, inserted, deleted) => Updated(read[Henkilo](henkilo).identify(UUID.fromString(resourceId)))
+      case (resourceId, henkilo, inserted, deleted) => fi.vm.sade.hakurekisteri.storage.repository.Updated(read[Henkilo](henkilo).identify(UUID.fromString(resourceId)))
     }
   override def update(o: Henkilo with Identified): HenkiloTable#TableElementType = (o.id.toString, write(o), Platform.currentTime, false)
   override def delete(id:UUID) = currentState(id) match
@@ -43,6 +41,10 @@ class HenkiloJournal(database: Database) extends JDBCJournal[Henkilo, HenkiloTab
   override val table = henkilot
   override val db: JdbcDriver.simple.Database = database
   override val journalSort = (o: HenkiloTable) => o.inserted.asc
+
+  override def timestamp(resource: HenkiloTable): lifted.Column[Long] = resource.inserted
+
+  override def timestamp(resource: HenkiloTable#TableElementType): Long = resource._3
 }
 
 class HenkiloTable(tag: Tag) extends Table[(String, String, Long, Boolean)](tag, "henkilo") {
