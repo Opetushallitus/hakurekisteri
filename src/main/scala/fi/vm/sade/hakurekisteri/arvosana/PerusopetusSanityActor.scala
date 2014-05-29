@@ -109,12 +109,13 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
       log.debug(s"received todistus for ${suoritus.henkiloOid} with ${arvosanas.size} arvosanas")
       (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {
         case (id, Suoritus(`perusopetus`, _, _, _ ,oppilas ,_, _))  =>
-          val validation = missing(arvosanas).map(MissingArvosana(oppilas, id, _))
+          val missingMandatory = missing(arvosanas)
+          val validation = missingMandatory.map(MissingArvosana(oppilas, id, _))
           problems = problems.filterNot( _ match {
             case MissingArvosana(_, `id`, _) => true
             case _ => false
           }) ++ validation
-          if (!validation.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas ($validation)")
+          if (!validation.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  missing mandatory subjects (${missingMandatory.mkString(",")})")
         case _ =>
       }
     case unknown => log.debug(s"received ${unknown.getClass} unable to handle");
