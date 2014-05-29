@@ -121,7 +121,7 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
           problems = problems.filterNot( _ match {
             case ExtraGeneral(_, `id`, _) => true
             case _ => false
-          }) ++ validation
+          }) ++ probs
 
           if (!extraMan.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  more than one general course for subjects (${extraMan.mkString(",")})")
 
@@ -130,7 +130,7 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
           problems = problems.filterNot( _ match {
             case ExtraVoluntary(_, `id`, _) => true
             case _ => false
-          }) ++ validation
+          }) ++ volProbs
 
           if (!extraVol.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  more than two optional courses for subjects (${extraVol.mkString(",")})")
 
@@ -140,7 +140,7 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
           problems = problems.filterNot( _ match {
             case VoluntaryWithoutGeneral(_, `id`, _) => true
             case _ => false
-          }) ++ validation
+          }) ++ orphans
 
           if (!orphanVoluntary.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas optional courses without general for subjects (${orphanVoluntary.mkString(",")})")
 
