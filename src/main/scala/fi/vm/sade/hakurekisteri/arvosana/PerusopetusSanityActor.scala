@@ -103,10 +103,8 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
     case s:Stream[_] => for (first <- s.headOption) goThrough(first, s.tail)
     case s::rest  => goThrough(s, rest)
     case s: Suoritus with Identified =>
-      log.debug(s"received suoritus for ${s.henkiloOid} creating todistus")
       findBy(ArvosanaQuery(Some(s.id))).map(Todistus(s, _)) pipeTo self
     case Todistus(suoritus, arvosanas) =>
-      log.debug(s"received todistus for ${suoritus.henkiloOid} with ${arvosanas.size} arvosanas")
       (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {
         case (id, Suoritus(`perusopetus`, _, _, _ ,oppilas ,_, _))  =>
           val missingMandatory = missing(arvosanas)
@@ -118,7 +116,6 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
           if (!validation.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  missing mandatory subjects (${missingMandatory.mkString(",")})")
         case _ =>
       }
-    case unknown => log.debug(s"received ${unknown.getClass} unable to handle");
 
   }
 
