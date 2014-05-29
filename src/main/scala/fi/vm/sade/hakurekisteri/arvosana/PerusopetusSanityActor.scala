@@ -116,6 +116,37 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
 
           if (!missingMandatory.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  missing mandatory subjects (${missingMandatory.mkString(",")})")
 
+          val extraMan = extraMandatory(arvosanas)
+          val probs = extraMan.map(ExtraGeneral(oppilas, id, _))
+          problems = problems.filterNot( _ match {
+            case ExtraGeneral(_, `id`, _) => true
+            case _ => false
+          }) ++ validation
+
+          if (!extraMan.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  more than one general course for subjects (${extraMan.mkString(",")})")
+
+          val extraVol = extraVoluntary(arvosanas)
+          val volProbs = extraVol.map(ExtraVoluntary(oppilas, id, _))
+          problems = problems.filterNot( _ match {
+            case ExtraVoluntary(_, `id`, _) => true
+            case _ => false
+          }) ++ validation
+
+          if (!extraVol.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  more than two optional courses for subjects (${extraVol.mkString(",")})")
+
+
+          val orphanVoluntary = voluntaryWithoutMandatory(arvosanas)
+          val orphans = orphanVoluntary.map(VoluntaryWithoutGeneral(oppilas, id, _))
+          problems = problems.filterNot( _ match {
+            case VoluntaryWithoutGeneral(_, `id`, _) => true
+            case _ => false
+          }) ++ validation
+
+          if (!orphanVoluntary.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas optional courses without general for subjects (${orphanVoluntary.mkString(",")})")
+
+
+
+
         case _ =>
       }
 
@@ -133,6 +164,34 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
     pakolliset.filterNot(arvosanas.withFilter((a) => skaala.contains(a.arvio.arvosana)).map(_.aine).toSet.contains(_))
   }
 
+  def extraMandatory(arvosanas: Seq[Arvosana]): Set[String] = {
+    (for (aine <- arvosanas.groupBy(_.aine).values
+         if pakolliset(aine).length > 1) yield aine.head.aine).toSet
+  }
+
+  def extraVoluntary(arvosanas: Seq[Arvosana]): Set[String] = {
+    (for (aine <- arvosanas.groupBy(_.aine).values
+          if valinnaiset(aine).length > 2) yield aine.head.aine).toSet
+  }
+
+  def voluntaryWithoutMandatory(arvosanas: Seq[Arvosana]): Set[String] = {
+    (for (aine <- arvosanas.groupBy(_.aine).values
+          if valinnaiset(aine).length > 0 && pakolliset(aine).length == 0) yield aine.head.aine).toSet
+  }
+
+  def valinnaiset(aine: Seq[Arvosana]): Seq[Arvosana] = {
+    valinnaisuus(aine).get(true).getOrElse(Seq())
+  }
+
+
+  def pakolliset(aine: Seq[Arvosana]): Seq[Arvosana] = {
+    valinnaisuus(aine).get(false).getOrElse(Seq())
+  }
+
+  def valinnaisuus(aine: Seq[Arvosana]): Map[Boolean, Seq[Arvosana]] = {
+    aine.groupBy(_.valinnainen)
+  }
+
   override def identify(o: Arvosana): Arvosana with Identified = ???
 
 }
@@ -140,6 +199,11 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
 sealed trait Problem
 
 case class MissingArvosana(henkilo: String, suoritus: UUID, aine:String) extends Problem
+case class ExtraGeneral(henkilo: String, suoritus: UUID, aine:String) extends Problem
+case class ExtraVoluntary(henkilo: String, suoritus: UUID, aine:String) extends Problem
+case class VoluntaryWithoutGeneral(henkilo: String, suoritus: UUID, aine:String) extends Problem
+
+
 
 
 
