@@ -53,6 +53,10 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
     ) loadDelta(delta)
     store = snapShot
     reverseStore = reverseSnapShot
+    if (time.isEmpty)
+      for (oids <- reverseSnapShot.values
+           if oids.length > 1;
+           duplicate <- oids.tail) delete(duplicate)
     indexSwapSnapshot()
   }
 
