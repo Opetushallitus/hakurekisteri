@@ -14,7 +14,7 @@ import java.net.URL
 import net.liftweb.json.JsonAST.JValue
 import akka.event.Logging
 
-class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journal[Arvosana] = new InMemJournal[Arvosana]) extends Actor with ArvosanaService with JournaledRepository[Arvosana] {
+class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.oph.ware.fi/koodisto-service", val suoritusRekisteri: ActorRef, val journal:Journal[Arvosana] = new InMemJournal[Arvosana]) extends Actor with ArvosanaService with JournaledRepository[Arvosana] {
 
   val log = Logging(context.system, this)
 
@@ -28,7 +28,6 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
 
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
 
-  val serviceUrl = "https://itest-virkailija.oph.ware.fi/koodisto-service"
 
   var pakolliset:Set[String] = Set()
 
