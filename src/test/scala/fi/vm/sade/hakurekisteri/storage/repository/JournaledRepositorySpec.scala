@@ -6,6 +6,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks._
 import scala.Some
 import fi.vm.sade.hakurekisteri.{TestJournal, TestRepo, TestResource}
 import fi.vm.sade.hakurekisteri.storage.Identified
+import java.util.UUID
 
 
 class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with RepositoryBehaviors[TestResource] {
@@ -38,7 +39,7 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
   trait JournalWithEntries extends Repo {
     val amount = 100
     val ids = Stream.continually(java.util.UUID.randomUUID).take(amount)
-    val resources = Stream.continually(ids).take(2).flatten.zip(Stream.tabulate(amount * 2){(i) => if (i >= amount) "updated" else "original"}).map{case (id, round) => TestResource(id, round.toString)}
+    val resources = Stream.continually(ids).take(2).flatten.zip(Stream.tabulate(amount * 2){(i) => if (i >= amount) s"updated${UUID.randomUUID}" else s"original${UUID.randomUUID}"}).map{case (id, round) => TestResource(id, round.toString)}
     val journal = TestJournal[TestResource](resources)
   }
 
@@ -55,6 +56,8 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
 
 
   "A repository with a journal with entries" should "contain all the resources in journal" in new JournalWithEntries {
+
+
     forAll(Table("id",ids:_*)) {
       (id) => repo.get(id) should not be None
     }
@@ -66,7 +69,7 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
   it should "contain the latest version of a given resource" in new JournalWithEntries {
 
     forAll(Table("id",ids:_*)) {
-      (id) => repo.get(id).map(_.name) should be (Some("updated"))
+      (id) => repo.get(id).map(_.name.take(7)) should be (Some("updated"))
 
     }
 
