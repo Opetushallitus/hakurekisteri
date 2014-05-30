@@ -103,10 +103,8 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
     case s:Stream[_] => for (first <- s.headOption) goThrough(first, s.tail)
     case s::rest  => goThrough(s, rest)
     case s: Suoritus with Identified =>
-      log.debug(s"received suoritus for ${s.henkiloOid} creating todistus")
       findBy(ArvosanaQuery(Some(s.id))).map(Todistus(s, _)) pipeTo self
     case Todistus(suoritus, arvosanas) =>
-      log.debug(s"received todistus for ${suoritus.henkiloOid} with ${arvosanas.size} arvosanas")
       (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {
         case (id, Suoritus(`perusopetus`, _, _, _ ,oppilas ,_, _))  =>
           val missingMandatory = missing(arvosanas)
@@ -115,10 +113,42 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
             case MissingArvosana(_, `id`, _) => true
             case _ => false
           }) ++ validation
-          if (!validation.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  missing mandatory subjects (${missingMandatory.mkString(",")})")
+
+          if (!missingMandatory.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  missing mandatory subjects (${missingMandatory.mkString(",")})")
+
+          val extraMan = extraMandatory(arvosanas)
+          val probs = extraMan.map(ExtraGeneral(oppilas, id, _))
+          problems = problems.filterNot( _ match {
+            case ExtraGeneral(_, `id`, _) => true
+            case _ => false
+          }) ++ probs
+
+          if (!extraMan.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  more than one general course for subjects (${extraMan.mkString(",")})")
+
+          val extraVol = extraVoluntary(arvosanas)
+          val volProbs = extraVol.map(ExtraVoluntary(oppilas, id, _))
+          problems = problems.filterNot( _ match {
+            case ExtraVoluntary(_, `id`, _) => true
+            case _ => false
+          }) ++ volProbs
+
+          if (!extraVol.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  more than two optional courses for subjects (${extraVol.mkString(",")})")
+
+
+          val orphanVoluntary = voluntaryWithoutMandatory(arvosanas)
+          val orphans = orphanVoluntary.map(VoluntaryWithoutGeneral(oppilas, id, _))
+          problems = problems.filterNot( _ match {
+            case VoluntaryWithoutGeneral(_, `id`, _) => true
+            case _ => false
+          }) ++ orphans
+
+          if (!orphanVoluntary.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas optional courses without general for subjects (${orphanVoluntary.mkString(",")})")
+
+
+
+
         case _ =>
       }
-    case unknown => log.debug(s"received ${unknown.getClass} unable to handle");
 
   }
 
@@ -130,7 +160,36 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
   }
 
   def missing(arvosanas: Seq[Arvosana]): Set[String] = {
-    pakolliset.filterNot(arvosanas.map(_.aine).toSet.contains(_))
+    val skaala = (4 to 10).map(_.toString).toSet
+    pakolliset.filterNot(arvosanas.withFilter((a) => skaala.contains(a.arvio.arvosana)).map(_.aine).toSet.contains(_))
+  }
+
+  def extraMandatory(arvosanas: Seq[Arvosana]): Set[String] = {
+    (for (aine <- arvosanas.groupBy(_.aine).values
+         if pakolliset(aine).length > 1) yield aine.head.aine).toSet
+  }
+
+  def extraVoluntary(arvosanas: Seq[Arvosana]): Set[String] = {
+    (for (aine <- arvosanas.groupBy(_.aine).values
+          if valinnaiset(aine).length > 2) yield aine.head.aine).toSet
+  }
+
+  def voluntaryWithoutMandatory(arvosanas: Seq[Arvosana]): Set[String] = {
+    (for (aine <- arvosanas.groupBy(_.aine).values
+          if valinnaiset(aine).length > 0 && pakolliset(aine).length == 0) yield aine.head.aine).toSet
+  }
+
+  def valinnaiset(aine: Seq[Arvosana]): Seq[Arvosana] = {
+    valinnaisuus(aine).get(true).getOrElse(Seq())
+  }
+
+
+  def pakolliset(aine: Seq[Arvosana]): Seq[Arvosana] = {
+    valinnaisuus(aine).get(false).getOrElse(Seq())
+  }
+
+  def valinnaisuus(aine: Seq[Arvosana]): Map[Boolean, Seq[Arvosana]] = {
+    aine.groupBy(_.valinnainen)
   }
 
   override def identify(o: Arvosana): Arvosana with Identified = ???
@@ -140,6 +199,11 @@ class PerusopetusSanityActor(val suoritusRekisteri: ActorRef, val journal:Journa
 sealed trait Problem
 
 case class MissingArvosana(henkilo: String, suoritus: UUID, aine:String) extends Problem
+case class ExtraGeneral(henkilo: String, suoritus: UUID, aine:String) extends Problem
+case class ExtraVoluntary(henkilo: String, suoritus: UUID, aine:String) extends Problem
+case class VoluntaryWithoutGeneral(henkilo: String, suoritus: UUID, aine:String) extends Problem
+
+
 
 
 
