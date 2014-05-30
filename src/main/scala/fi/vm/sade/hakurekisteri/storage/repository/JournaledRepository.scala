@@ -9,7 +9,7 @@ import scala.slick.lifted
 
 trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
 
-  val deduplicate = true;
+  val deduplicate = true
 
   val journal:Journal[T]
 
