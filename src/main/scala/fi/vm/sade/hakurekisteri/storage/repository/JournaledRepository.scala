@@ -24,21 +24,21 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
       val old = snapShot.get(resource.id)
       for (deleted <- old) {
 
-        val newSeq = reverseSnapShot.get(deleted).map(_.filter(_ != resource.id)).getOrElse(Seq())
+        val newSeq = reverseSnapShot.get(deleted).map(_.filter(_ != resource.id)).getOrElse(Set())
         if (newSeq.isEmpty) reverseSnapShot = reverseSnapShot - deleted
         else reverseSnapShot = reverseSnapShot + (deleted -> newSeq)
 
       }
 
       snapShot =  snapShot + (resource.id -> resource)
-      val newSeq = resource.id +: reverseSnapShot.get(resource).getOrElse(Seq())
+      val newSeq =  reverseSnapShot.get(resource).getOrElse(Set()) + resource.id
       reverseSnapShot = reverseSnapShot + (resource -> newSeq)
       index(old, Some(resource))
     case Deleted(id) =>
       val old = snapShot.get(id)
       for (deleted <- old) {
 
-        val newSeq = reverseSnapShot.get(deleted).map(_.filter(_ != id)).getOrElse(Seq())
+        val newSeq = reverseSnapShot.get(deleted).map(_.filter(_ != id)).getOrElse(Set())
         if (newSeq.isEmpty) reverseSnapShot = reverseSnapShot - deleted
         else reverseSnapShot = reverseSnapShot + (deleted -> newSeq)
 
@@ -55,7 +55,7 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
     reverseStore = reverseSnapShot
     if (time.isEmpty)
       for (oids <- reverseSnapShot.values
-           if oids.length > 1;
+           if oids.size > 1;
            duplicate <- oids.tail) delete(duplicate)
     indexSwapSnapshot()
   }
