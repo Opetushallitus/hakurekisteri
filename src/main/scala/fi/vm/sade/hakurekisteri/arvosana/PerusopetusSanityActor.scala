@@ -58,7 +58,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
 
   def scheduleSuoritusRequest(seconds: FiniteDuration = 1.hour): Cancellable = {
     log.info(s"scheduling suoritus fetch in $seconds")
-    context.system.scheduler.scheduleOnce(seconds, suoritusRekisteri, SuoritusQuery(None, Some(Kausi.Kevät), Some("2014"), None))(executionContext, self)
+    context.system.scheduler.scheduleOnce(seconds, self, ReloadAndCheck)
   }
 
   def findPakolliset: Future[Set[String]] = {
@@ -99,6 +99,10 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
   }
 
   override def receive: Actor.Receive = {
+    case ReloadAndCheck =>
+      suoritusRekisteri ! SuoritusQuery(None, Some(Kausi.Kevät), Some("2014"), None)
+      suoritusIndex = Map()
+      loadJournal()
     case Problems => log.info(s"$sender requested problem list returning ${problems.size} problems")
                      sender ! problems
     case s:Stream[_] => for (first <- s.headOption) goThrough(first, s.tail)
@@ -212,3 +216,5 @@ case class VoluntaryWithoutGeneral(henkilo: String, suoritus: UUID, aine:String)
 case class Todistus(suoritus:Suoritus with Identified, arvosanas: Seq[Arvosana])
 
 object Problems
+
+object ReloadAndCheck
