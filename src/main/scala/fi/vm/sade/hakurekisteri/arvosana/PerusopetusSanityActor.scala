@@ -23,6 +23,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
 
   implicit val executionContext: ExecutionContext = context.dispatcher
   val perusopetus = "1.2.246.562.13.62959769647"
+  val perusopetuksenlisa = "1.2.246.562.5.2013112814572435044876"
 
   var problems: Seq[Problem]  = Seq()
 
@@ -111,45 +112,11 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
       findBy(ArvosanaQuery(Some(s.id))).map(Todistus(s, _)) pipeTo self
     case Todistus(suoritus, arvosanas) =>
       (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {
-        case (id, Suoritus(`perusopetus`, oppilaitos, _, _ ,oppilas ,_, _))  =>
+        case (id, Suoritus(`perusopetus`, oppilaitos, _, _ ,oppilas ,_, _)) =>
 
-          val missingMandatory = missing(arvosanas)
-          val validation = missingMandatory.map(MissingArvosana(oppilas, id, _))
-          problems = problems.filterNot( _ match {
-            case MissingArvosana(_, `id`, _) => true
-            case _ => false
-          }) ++ validation
-
-          if (!missingMandatory.isEmpty)log.warning(s"problems with suoritus $id  for oppilas $oppilas from $oppilaitos missing mandatory subjects (${missingMandatory.mkString(",")})")
-
-          val extraMan = extraMandatory(arvosanas)
-          val probs = extraMan.map(ExtraGeneral(oppilas, id, _))
-          problems = problems.filterNot( _ match {
-            case ExtraGeneral(_, `id`, _) => true
-            case _ => false
-          }) ++ probs
-
-          if (!extraMan.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas from $oppilaitos more than one general course for subjects (${extraMan.mkString(",")})")
-
-          val extraVol = extraVoluntary(arvosanas)
-          val volProbs = extraVol.map(ExtraVoluntary(oppilas, id, _))
-          problems = problems.filterNot( _ match {
-            case ExtraVoluntary(_, `id`, _) => true
-            case _ => false
-          }) ++ volProbs
-
-          if (!extraVol.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas from $oppilaitos more than two optional courses for subjects (${extraVol.mkString(",")})")
-
-
-          val orphanVoluntary = voluntaryWithoutMandatory(arvosanas)
-          val orphans = orphanVoluntary.map(VoluntaryWithoutGeneral(oppilas, id, _))
-          problems = problems.filterNot( _ match {
-            case VoluntaryWithoutGeneral(_, `id`, _) => true
-            case _ => false
-          }) ++ orphans
-
-          if (!orphanVoluntary.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas from $oppilaitos optional courses without general for subjects (${orphanVoluntary.mkString(",")})")
-
+          checkTodistus(arvosanas, oppilas, id, oppilaitos, "perusopetus")
+        case (id, Suoritus(`perusopetuksenlisa`, oppilaitos, _, _ ,oppilas ,_, _)) =>
+          checkTodistus(arvosanas, oppilas, id, oppilaitos, "perusopetuksen lisäopetus")
 
 
 
@@ -158,6 +125,45 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
 
   }
 
+
+  def checkTodistus(arvosanas: Seq[Arvosana], oppilas: String, id: UUID, oppilaitos: String, opetusTyyppi:String) {
+    val missingMandatory = missing(arvosanas)
+    val validation = missingMandatory.map(MissingArvosana(oppilas, id, _))
+    problems = problems.filterNot(_ match {
+      case MissingArvosana(_, `id`, _) => true
+      case _ => false
+    }) ++ validation
+
+    if (!missingMandatory.isEmpty) log.warning(s"problems with suoritus $id ($opetusTyyppi) for oppilas $oppilas from $oppilaitos missing mandatory subjects (${missingMandatory.mkString(",")})")
+
+    val extraMan = extraMandatory(arvosanas)
+    val probs = extraMan.map(ExtraGeneral(oppilas, id, _))
+    problems = problems.filterNot(_ match {
+      case ExtraGeneral(_, `id`, _) => true
+      case _ => false
+    }) ++ probs
+
+    if (!extraMan.isEmpty) log.warning(s"problems with suoritus $id ($opetusTyyppi) for oppilas $oppilas from $oppilaitos more than one general course for subjects (${extraMan.mkString(",")})")
+
+    val extraVol = extraVoluntary(arvosanas)
+    val volProbs = extraVol.map(ExtraVoluntary(oppilas, id, _))
+    problems = problems.filterNot(_ match {
+      case ExtraVoluntary(_, `id`, _) => true
+      case _ => false
+    }) ++ volProbs
+
+    if (!extraVol.isEmpty) log.warning(s"problems with suoritus $id ($opetusTyyppi) for oppilas $oppilas from $oppilaitos more than two optional courses for subjects (${extraVol.mkString(",")})")
+
+
+    val orphanVoluntary = voluntaryWithoutMandatory(arvosanas)
+    val orphans = orphanVoluntary.map(VoluntaryWithoutGeneral(oppilas, id, _))
+    problems = problems.filterNot(_ match {
+      case VoluntaryWithoutGeneral(_, `id`, _) => true
+      case _ => false
+    }) ++ orphans
+
+    if (!orphanVoluntary.isEmpty) log.warning(s"problems with suoritus $id ($opetusTyyppi) for oppilas $oppilas from $oppilaitos optional courses without general for subjects (${orphanVoluntary.mkString(",")})")
+  }
 
   def goThrough(s: Any, rest: Seq[Any]) {
     self ! s
