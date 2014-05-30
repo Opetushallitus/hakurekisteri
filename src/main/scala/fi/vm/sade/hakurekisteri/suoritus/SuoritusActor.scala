@@ -21,7 +21,7 @@ trait SuoritusRepository extends JournaledRepository[Suoritus] {
 
   override def index(old: Option[Suoritus with Identified], current: Option[Suoritus with Identified]) {tiedonSiirtoIndexSnapShot = indexcorrect(old, current, tiedonSiirtoIndexSnapShot)}
 
-  override def indexRunning(old: Option[Suoritus with Identified], current: Option[Suoritus with Identified])  {tiedonSiirtoIndex = indexcorrect(old,current, tiedonSiirtoIndex) }
+  def indexRunning(old: Option[Suoritus with Identified], current: Option[Suoritus with Identified])  {tiedonSiirtoIndex = indexcorrect(old,current, tiedonSiirtoIndex) }
 
   def indexcorrect(old: Option[Suoritus with Identified], current: Option[Suoritus with Identified], index: Map[String, Map[String, Seq[Suoritus with Identified]]]) = {
     var updatedIndex = index
