@@ -9,6 +9,8 @@ import scala.slick.lifted
 
 trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
 
+  val deduplicate = true;
+
   val journal:Journal[T]
 
   var snapShot= store
@@ -53,7 +55,7 @@ trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
     ) loadDelta(delta)
     store = snapShot
     reverseStore = reverseSnapShot
-    if (time.isEmpty)
+    if (time.isEmpty && deduplicate)
       for (oids <- reverseSnapShot.values
            if oids.size > 1;
            duplicate <- oids.tail) delete(duplicate)
