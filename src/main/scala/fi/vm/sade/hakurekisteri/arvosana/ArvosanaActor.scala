@@ -11,34 +11,26 @@ import scala.concurrent.Future
 trait ArvosanaRepository extends JournaledRepository[Arvosana] {
 
   var suoritusIndex: Map[UUID, Seq[Arvosana with Identified]] = Option(suoritusIndex).getOrElse(Map())
-  var suoritusIndexSnapShot: Map[UUID, Seq[Arvosana with Identified]] = Option(suoritusIndexSnapShot).getOrElse(Map())
+  //var suoritusIndexSnapShot: Map[UUID, Seq[Arvosana with Identified]] = Option(suoritusIndexSnapShot).getOrElse(Map())
 
   def addNew(arvosana: Arvosana with Identified) = {
-    suoritusIndexSnapShot = Option(suoritusIndexSnapShot).getOrElse(Map())
-    suoritusIndexSnapShot = suoritusIndexSnapShot  + (arvosana.suoritus -> (arvosana +: suoritusIndexSnapShot.get(arvosana.suoritus).getOrElse(Seq())))
+    suoritusIndex = Option(suoritusIndex).getOrElse(Map())
+    suoritusIndex = suoritusIndex  + (arvosana.suoritus -> (arvosana +: suoritusIndex.get(arvosana.suoritus).getOrElse(Seq())))
 
 
   }
 
   override def indexSwapSnapshot() {
-    suoritusIndex = suoritusIndexSnapShot
+    suoritusIndex = suoritusIndex
 
   }
-
-  override def indexRunning(old: Option[Arvosana with Identified], current: Option[Arvosana with Identified]) {suoritusIndex = indexcurrent(old, current, suoritusIndex)}
-
-
-  override def index(old: Option[Arvosana with Identified], current: Option[Arvosana with Identified]) {suoritusIndexSnapShot = indexcurrent(old, current, suoritusIndexSnapShot)}
-
-  def indexcurrent(old: Option[Arvosana with Identified], current: Option[Arvosana with Identified], index: Map[UUID, Seq[Arvosana with Identified]]) =  {
-
-    var updatedIndex = index
+  override def index(old: Option[Arvosana with Identified], current: Option[Arvosana with Identified]) {
 
     def removeOld(arvosana: Arvosana with Identified) = {
-      updatedIndex = Option(updatedIndex).getOrElse(Map())
-      updatedIndex = updatedIndex.get(arvosana.suoritus).
+      suoritusIndex = Option(suoritusIndex).getOrElse(Map())
+      suoritusIndex = suoritusIndex.get(arvosana.suoritus).
         map(_.filter((a) => a != arvosana || a.id != arvosana.id)).
-        map((ns) => updatedIndex + (arvosana.suoritus -> ns)).getOrElse(suoritusIndexSnapShot)
+        map((ns) => suoritusIndex + (arvosana.suoritus -> ns)).getOrElse(suoritusIndex)
 
     }
 
@@ -46,7 +38,7 @@ trait ArvosanaRepository extends JournaledRepository[Arvosana] {
 
     old.foreach(removeOld)
     current.foreach(addNew)
-    updatedIndex
+
   }
 
     def identify(o:Arvosana): Arvosana with Identified = Arvosana.identify(o)
