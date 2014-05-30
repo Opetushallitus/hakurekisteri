@@ -16,6 +16,8 @@ import akka.event.Logging
 
 class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.oph.ware.fi/koodisto-service", val suoritusRekisteri: ActorRef, val journal:Journal[Arvosana] = new InMemJournal[Arvosana]) extends Actor with ArvosanaService with JournaledRepository[Arvosana] {
 
+  override val deduplicate = false
+
   val log = Logging(context.system, this)
 
 
@@ -106,6 +108,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
     case Todistus(suoritus, arvosanas) =>
       (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {
         case (id, Suoritus(`perusopetus`, _, _, _ ,oppilas ,_, _))  =>
+
           val missingMandatory = missing(arvosanas)
           val validation = missingMandatory.map(MissingArvosana(oppilas, id, _))
           problems = problems.filterNot( _ match {

@@ -20,10 +20,7 @@ trait ArvosanaRepository extends JournaledRepository[Arvosana] {
 
   }
 
-  override def indexSwapSnapshot() {
-    suoritusIndex = suoritusIndex
 
-  }
   override def index(old: Option[Arvosana with Identified], current: Option[Arvosana with Identified]) {
 
     def removeOld(arvosana: Arvosana with Identified) = {
