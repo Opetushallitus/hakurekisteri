@@ -107,7 +107,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
       findBy(ArvosanaQuery(Some(s.id))).map(Todistus(s, _)) pipeTo self
     case Todistus(suoritus, arvosanas) =>
       (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {
-        case (id, Suoritus(`perusopetus`, _, _, _ ,oppilas ,_, _))  =>
+        case (id, Suoritus(`perusopetus`, oppilaitos, _, _ ,oppilas ,_, _))  =>
 
           val missingMandatory = missing(arvosanas)
           val validation = missingMandatory.map(MissingArvosana(oppilas, id, _))
@@ -116,7 +116,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
             case _ => false
           }) ++ validation
 
-          if (!missingMandatory.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  missing mandatory subjects (${missingMandatory.mkString(",")})")
+          if (!missingMandatory.isEmpty)log.warning(s"problems with suoritus $id  for oppilas $oppilas from $oppilaitos missing mandatory subjects (${missingMandatory.mkString(",")})")
 
           val extraMan = extraMandatory(arvosanas)
           val probs = extraMan.map(ExtraGeneral(oppilas, id, _))
@@ -125,7 +125,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
             case _ => false
           }) ++ probs
 
-          if (!extraMan.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  more than one general course for subjects (${extraMan.mkString(",")})")
+          if (!extraMan.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas from $oppilaitos more than one general course for subjects (${extraMan.mkString(",")})")
 
           val extraVol = extraVoluntary(arvosanas)
           val volProbs = extraVol.map(ExtraVoluntary(oppilas, id, _))
@@ -134,7 +134,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
             case _ => false
           }) ++ volProbs
 
-          if (!extraVol.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas  more than two optional courses for subjects (${extraVol.mkString(",")})")
+          if (!extraVol.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas from $oppilaitos more than two optional courses for subjects (${extraVol.mkString(",")})")
 
 
           val orphanVoluntary = voluntaryWithoutMandatory(arvosanas)
@@ -144,7 +144,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
             case _ => false
           }) ++ orphans
 
-          if (!orphanVoluntary.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas optional courses without general for subjects (${orphanVoluntary.mkString(",")})")
+          if (!orphanVoluntary.isEmpty)log.warning(s"problems with suoritus $id for oppilas $oppilas from $oppilaitos optional courses without general for subjects (${orphanVoluntary.mkString(",")})")
 
 
 
