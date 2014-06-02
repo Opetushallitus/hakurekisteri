@@ -7,9 +7,10 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
         {value: false, text: getOphMsg("suoritusrekisteri.valinnaisuus.ei", "Ei")},
         {value: true, text: getOphMsg("suoritusrekisteri.valinnaisuus.kylla", "Kyllä")}
     ];
+    var eiArvosanaa = "Ei arvosanaa";
     $scope.arvosanat = [
         {value: "", text: ""},
-        {value: "Ei arvosanaa", text: "Ei arvosanaa"},
+        {value: eiArvosanaa, text: eiArvosanaa},
         {value: "4", text: "4"},
         {value: "5", text: "5"},
         {value: "6", text: "6"},
@@ -105,7 +106,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                                 arvosanataulukko[aine + ';'] = {
                                     aine: aine,
                                     aineNimi: getOppiaineNimi(oppiainekoodi),
-                                    arvosana: "Ei arvosanaa"
+                                    arvosana: eiArvosanaa
                                 }
                             }
 
@@ -173,29 +174,50 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
         var arvosanat = [];
         for (var i = 0; i < $scope.arvosanataulukko.length; i++) {
             var a = $scope.arvosanataulukko[i];
-            if (a.aine && a.arvosana) arvosanat.push(new Arvosanat({ id: a.arvosanaId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosana, asteikko: "4-10" } }));
-            if (a.aine && a.arvosanaValinnainen) arvosanat.push(new Arvosanat({ id: a.valinnainenId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosanaValinnainen, asteikko: "4-10" }, valinnainen: true }));
-            if (a.aine && a.arvosanaToinenValinnainen) arvosanat.push(new Arvosanat({ id: a.toinenValinnainenId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosanaToinenValinnainen, asteikko: "4-10" }, valinnainen: true }));
+            if (a.aine && (a.arvosana || a.arvosanaId)) arvosanat.push(new Arvosanat({ id: a.arvosanaId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosana, asteikko: "4-10" } }));
+            if (a.aine && (a.arvosanaValinnainen || a.valinnainenId)) arvosanat.push(new Arvosanat({ id: a.valinnainenId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosanaValinnainen, asteikko: "4-10" }, valinnainen: true }));
+            if (a.aine && (a.arvosanaToinenValinnainen || a.toinenValinnainenId)) arvosanat.push(new Arvosanat({ id: a.toinenValinnainenId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosanaToinenValinnainen, asteikko: "4-10" }, valinnainen: true }));
         }
 
         var deferreds = [];
-        angular.forEach(arvosanat, function(arvosana) {
-            var d = $q.defer();
-            deferreds.push(d);
-            arvosana.$save(function(saved) {
-                d.resolve("save ok: " + saved.id);
-            }, function() {
-                arvosana.$save(function(retriedSave) {
-                    d.resolve("retry save ok: " + retriedSave.id);
-                }, function() {
+
+        function removeArvosana(arvosana, d) {
+            arvosana.$remove(function () {
+                d.resolve("remove ok")
+            }, function (err) {
+                $log.error("error removing, retrying to remove: " + err);
+                arvosana.$remove(function () {
+                    d.resolve("retry remove ok");
+                }, function (retryErr) {
+                    $log.error("retry remove failed: " + retryErr);
                     d.reject("retry save failed");
                 });
-            });
-        });
-
-        while (deferreds.length < arvosanat.length) {
-            setTimeout(function() { /* wait */ }, 100);
+            })
         }
+
+        function saveArvosana(arvosana, d) {
+            arvosana.$save(function (saved) {
+                d.resolve("save ok: " + saved.id)
+            }, function (err) {
+                $log.error("error saving, retrying to save: " + err);
+                arvosana.$save(function (retriedSave) {
+                    d.resolve("retry save ok: " + retriedSave.id);
+                }, function (retryErr) {
+                    $log.error("retry save failed: " + retryErr);
+                    d.reject("retry save failed");
+                });
+            })
+        }
+
+        angular.forEach(arvosanat, function(arvosana) {
+            var d = $q.defer();
+            this.push(d);
+            if (arvosana.id && (!arvosana.arvio.arvosana || arvosana.arvio.arvosana === eiArvosanaa)) {
+                removeArvosana(arvosana, d);
+            } else if (arvosana.arvio.arvosana && arvosana.arvio.arvosana !== eiArvosanaa) {
+                saveArvosana(arvosana, d);
+            }
+        }, deferreds);
 
         var allSaved = $q.all(deferreds.map(function(d) { return d.promise }));
         allSaved.then(function() {
@@ -216,7 +238,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
     };
 
     $scope.cancel = function() {
-        $rootScope.modalInstance.close();
+        $rootScope.modalInstance.close()
     };
 
 }
