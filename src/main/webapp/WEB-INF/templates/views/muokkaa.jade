@@ -55,10 +55,14 @@ form(ng-submit="save()")
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.opetuskieli") Opetuskieli
                   select(class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.suoritusKieli" required="required" ng-options="k.value as k.text for k in kielet")
-                div(class="form-group col-sm-3")
+                div(class="form-group col-sm-5")
                   strong(oph-msg="suoritusrekisteri.muokkaa.valmistumispaiva") Valmistumispäivä
                   input(type="text" class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.valmistuminen" datepicker-popup="{{format}}" datepicker-options="dateOptions" show-button-bar="false")
-                div(class="form-group col-sm-6")
+                div(class="form-group col-sm-4")
+                  strong(oph-msg="suoritusrekisteri.muokkaa.tila") Tila
+                  select(class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.tila" required="required" ng-options="t.value as t.text for t in tilat")
+              div(class="row")
+                div(class="form-group col-sm-12")
                   div(class="pull-right")
                     button(type="button" class="btn btn-default arvosana-button" ng-disabled="!suoritus.id || suoritus.delete" ng-click="editArvosana(suoritus.id)")
                       span(oph-msg="suoritusrekisteri.muokkaa.muokkaaarvosanoja") Muokkaa arvosanoja
