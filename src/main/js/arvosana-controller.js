@@ -179,8 +179,6 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
             if (a.aine && (a.arvosanaToinenValinnainen || a.toinenValinnainenId)) arvosanat.push(new Arvosanat({ id: a.toinenValinnainenId, aine: a.aine, lisatieto: a.lisatieto, suoritus: suoritusId, arvio: { arvosana: a.arvosanaToinenValinnainen, asteikko: "4-10" }, valinnainen: true }));
         }
 
-        var deferreds = [];
-
         function removeArvosana(arvosana, d) {
             arvosana.$remove(function () {
                 d.resolve("remove ok")
@@ -209,19 +207,19 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
             })
         }
 
-        angular.forEach(arvosanat, function(arvosana) {
-            var d = $q.defer();
-            this.push(d);
-            if (arvosana.id && (!arvosana.arvio.arvosana || arvosana.arvio.arvosana === eiArvosanaa)) {
-                removeArvosana(arvosana, d);
-            } else if (arvosana.arvio.arvosana && arvosana.arvio.arvosana !== eiArvosanaa) {
-                saveArvosana(arvosana, d);
-            }
-        }, deferreds);
-
-        while (deferreds.length < arvosanat.length) {
-            setTimeout(function() { /* wait */ }, 100);
+        var deferreds = [];
+        function saveArvosanat() {
+            angular.forEach(arvosanat, function(arvosana) {
+                var d = $q.defer();
+                this.push(d);
+                if (arvosana.id && (!arvosana.arvio.arvosana || arvosana.arvio.arvosana === eiArvosanaa)) {
+                    removeArvosana(arvosana, d);
+                } else if (arvosana.arvio.arvosana && arvosana.arvio.arvosana !== eiArvosanaa) {
+                    saveArvosana(arvosana, d);
+                }
+            }, deferreds);
         }
+        saveArvosanat();
 
         var allSaved = $q.all(deferreds.map(function(d) { return d.promise }));
         allSaved.then(function() {
