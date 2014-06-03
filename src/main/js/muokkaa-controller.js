@@ -24,6 +24,11 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         {value: "M", text: "M"},
         {value: "V", text: "V"}
     ];
+    $scope.tilat = [
+        {value: "KESKEN", text: getOphMsg("suoritusrekisteri.tila.KESKEN", "Kesken")},
+        {value: "KESKEYTYNYT", text: getOphMsg("suoritusrekisteri.tila.KESKEYTYNYT", "Keskeytynyt")},
+        {value: "VALMIS", text: getOphMsg("suoritusrekisteri.tila.VALMIS", "Valmis")}
+    ];
     $scope.myRoles = [];
     $scope.messages = [];
     $scope.suoritukset = [];
