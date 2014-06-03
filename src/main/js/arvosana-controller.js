@@ -219,6 +219,10 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
             }
         }, deferreds);
 
+        while (deferreds.length < arvosanat.length) {
+            setTimeout(function() { /* wait */ }, 100);
+        }
+
         var allSaved = $q.all(deferreds.map(function(d) { return d.promise }));
         allSaved.then(function() {
             $log.debug("all saved");

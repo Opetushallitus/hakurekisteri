@@ -63,11 +63,9 @@ function EihakeneetCtrl($scope, $rootScope, $routeParams, $http, $q) {
             $scope.loading = true;
             var deferredOpiskelijat = $q.defer();
             var luokanOpiskelijat = [];
-            var opiskelijatUrl = "rest/v1/opiskelijat?oppilaitosOid=" + encodeURIComponent(oppilaitosOid);
-            if (luokka) {
-                opiskelijatUrl = opiskelijatUrl + "&luokka=" + encodeURIComponent(luokka);
-            }
-            $http.get(opiskelijatUrl)
+            var opiskelijatConfig = { params: { oppilaitosOid: oppilaitosOid } };
+            if (luokka) opiskelijatConfig.params.luokka = luokka;
+            $http.get("rest/v1/opiskelijat", opiskelijatConfig)
                 .success(function(opiskelijat) {
                     if (opiskelijat) {
                         luokanOpiskelijat = opiskelijat;
@@ -80,14 +78,17 @@ function EihakeneetCtrl($scope, $rootScope, $routeParams, $http, $q) {
 
             var deferredHakemukset = $q.defer();
             var luokanHakemukset = [];
-            var hakemusUrl = hakuAppServiceUrl
-                + "/applications/list/fullName/asc?appState=ACTIVE&discretionaryOnly=false&checkAllApplications=false&start=0&rows=500"
-                + "&sendingSchoolOid=" + encodeURIComponent(oppilaitosOid)
-                + "&asId=" + encodeURIComponent(hakuOid);
-            if (luokka) {
-                hakemusUrl = hakemusUrl + "&sendingClass=" + encodeURIComponent(luokka);
-            }
-            $http.get(hakemusUrl)
+            var hakemusConfig = { params: {
+                appState: 'ACTIVE',
+                discretionaryOnly: false,
+                checkAllApplications: false,
+                start: 0,
+                rows: 500,
+                sendingSchoolOid: oppilaitosOid,
+                asId: hakuOid
+            }};
+            if (luokka) hakemusConfig.params.sendingClass = luokka;
+            $http.get(hakuAppServiceUrl + "/applications/listshort", hakemusConfig)
                 .success(function(hakemukset) {
                     if (hakemukset && hakemukset.results) {
                         luokanHakemukset = hakemukset.results;
@@ -100,16 +101,12 @@ function EihakeneetCtrl($scope, $rootScope, $routeParams, $http, $q) {
 
             var bothPromise = $q.all([deferredOpiskelijat.promise, deferredHakemukset.promise]);
             bothPromise.then(function() {
-                var hakeneetOpiskelijat = [];
-                for (var i = 0; i < luokanOpiskelijat.length; i++) {
-                    var opiskelija = luokanOpiskelijat[i];
-                    for (var j = 0; j < luokanHakemukset.length; j++) {
-                        if (opiskelija.henkiloOid === luokanHakemukset[j].personOid) {
-                            hakeneetOpiskelijat.push(opiskelija);
-                        }
+                $scope.allRows = luokanOpiskelijat.filter(function hasNoHakemus(h) {
+                    for (var i = 0; i < luokanHakemukset.length; i++) {
+                        if (h.henkiloOid === luokanHakemukset[i].personOid) return false;
                     }
-                }
-                $scope.allRows = luokanOpiskelijat.diff(hakeneetOpiskelijat); //.getUnique();
+                    return true;
+                });
                 enrichOpiskelijat();
                 $scope.loading = false;
             }, function(errors) {
