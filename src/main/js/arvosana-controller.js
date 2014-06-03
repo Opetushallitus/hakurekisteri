@@ -7,10 +7,8 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
         {value: false, text: getOphMsg("suoritusrekisteri.valinnaisuus.ei", "Ei")},
         {value: true, text: getOphMsg("suoritusrekisteri.valinnaisuus.kylla", "Kyllä")}
     ];
-    var eiArvosanaa = "Ei arvosanaa";
     $scope.arvosanat = [
-        {value: "", text: ""},
-        {value: eiArvosanaa, text: eiArvosanaa},
+        {value: "", text: "Ei arvosanaa"},
         {value: "4", text: "4"},
         {value: "5", text: "5"},
         {value: "6", text: "6"},
@@ -106,7 +104,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                                 arvosanataulukko[aine + ';'] = {
                                     aine: aine,
                                     aineNimi: getOppiaineNimi(oppiainekoodi),
-                                    arvosana: eiArvosanaa
+                                    arvosana: ''
                                 }
                             }
 
@@ -212,9 +210,9 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
             angular.forEach(arvosanat, function(arvosana) {
                 var d = $q.defer();
                 this.push(d);
-                if (arvosana.id && (!arvosana.arvio.arvosana || arvosana.arvio.arvosana === eiArvosanaa)) {
+                if (arvosana.id && !arvosana.arvio.arvosana) {
                     removeArvosana(arvosana, d);
-                } else if (arvosana.arvio.arvosana && arvosana.arvio.arvosana !== eiArvosanaa) {
+                } else {
                     saveArvosana(arvosana, d);
                 }
             }, deferreds);
