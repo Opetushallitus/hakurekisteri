@@ -7,9 +7,6 @@ var app = angular.module('myApp', ['ngRoute', 'ngResource', 'ui.bootstrap'])
         $routeProvider.when('/eihakeneet', {templateUrl: 'templates/eihakeneet', controller: EihakeneetCtrl});
         $routeProvider.otherwise({redirectTo: '/opiskelijat'});
         $locationProvider.html5Mode(false);
-    })
-    .run(function($log) {
-        if (window.globalInitOphMsg) window.globalInitOphMsg(function() { $log.info("messages loaded") });
     });
 
 app.factory('Opiskelijat', function($resource) {
