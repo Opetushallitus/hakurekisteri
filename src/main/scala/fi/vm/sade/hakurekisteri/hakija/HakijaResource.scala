@@ -37,12 +37,15 @@ object Tyyppi extends Enumeration {
 case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, user: Option[User])
 
 object HakijaQuery {
-  def apply(params: Map[String,String], user: Option[User]): HakijaQuery = HakijaQuery(
-    params.get("haku"),
-    params.get("organisaatio"),
-    params.get("hakukohdekoodi"),
-    Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki}.get,
-    user)
+  def apply(params: Map[String,String], user: Option[User]): HakijaQuery = {
+    println("hakuehto: " + params.get("hakuehto"))
+    HakijaQuery(
+      params.get("haku"),
+      params.get("organisaatio"),
+      params.get("hakukohdekoodi"),
+      Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki}.get,
+      user)
+  }
 }
 
 class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
