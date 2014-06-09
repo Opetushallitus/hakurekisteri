@@ -191,9 +191,12 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def hakijat2XmlHakijat(hakijat: Seq[Hakija]): Future[XMLHakijat] = hakijat.map(hakija2XMLHakija).join.map(XMLHakijat)
 
   def matchSijoitteluAndHakemus(shakijas: Seq[SijoitteluHakija], hakijas: Seq[Hakija]): Seq[Hakija] = {
-    val sijoittelu: Map[String, Map[String, SijoitteluHakemuksenTila]] = shakijas.groupBy(_.hakemusOid).collect{ case (Some(s), hs) => (s,hs)}.map{
-      case (hakemus, sijoittelu) => (hakemus, sijoittelu.map(
-        _.hakutoiveet.flatMap((ht: SijoitteluHakutoive) => ht.hakutoiveenValintatapajonot.flatMap((vtj) => ht.hakukohdeOid.map((_, vtj.tila)))) ).flatten.collect{case (a, Some(s)) => (a,s)}.toMap)}
+    val sijoittelu: Map[String, Map[String, SijoitteluHakemuksenTila]] = shakijas.groupBy(_.hakemusOid).collect{ case (Some(s), hs: Seq[SijoitteluHakija]) => (s,hs.flatMap(_.hakutoiveet.getOrElse(Seq()))
+      .map((ht) => ht.hakukohdeOid.flatMap((oid) => ht.hakutoiveenValintatapajonot.map((vtj) => (oid, vtj.tila)))).flatten.collect{case (a, Some(s)) => (a,s)}.toMap)}
+
+      //.map{
+      //case (hakemus, sijoittelu) => (hakemus, sijoittelu.map(
+      //  _.hakutoiveet.flatMap((ht) => ht.map(_.hakutoiveenValintatapajonot.flatMap((vtj) => ht.map(_.hakukohdeOid.map((_, vtj.tila)))))) ).flatten.collect{case (a, Some(s)) => (a,s)}.toMap)}
     /*val valinta: Map[String, Map[String, Option[SijoitteluValintatuloksenTila]]] = hakijas.groupBy(_.hakemusOid).collect{ case (Some(s), hs) => (s,hs)}.map{
       case (hakemus, sijoittelu) => (hakemus, sijoittelu.map(_.hakutoiveet.flatMap((ht: SijoitteluHakutoive) => ht.hakutoiveenValintatapajonot.flatMap((vtj) => ht.hakukohdeOid.map((_, vtj.vastaanottotieto)))) ).flatten.toMap)}*/
 
