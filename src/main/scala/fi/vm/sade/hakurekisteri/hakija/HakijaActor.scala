@@ -225,7 +225,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def XMLQuery(q: HakijaQuery): Future[XMLHakijat] = q.hakuehto match {
     case Hakuehto.Kaikki => hakupalvelu.getHakijat(q).flatMap(hakijat2XmlHakijat)
-    case Hakuehto.Hyväksytyt => hakupalvelu.getHakijat(q).flatMap(combine2sijoittelunTulos(_)(q.user)).flatMap(hakijat2XmlHakijat)
+    case Hakuehto.Hyvaksytyt => hakupalvelu.getHakijat(q).flatMap(combine2sijoittelunTulos(_)(q.user)).flatMap(hakijat2XmlHakijat)
     // TODO Hakuehto.Vastaanottaneet
     case _ => Future.successful(XMLHakijat(Seq()))
   }

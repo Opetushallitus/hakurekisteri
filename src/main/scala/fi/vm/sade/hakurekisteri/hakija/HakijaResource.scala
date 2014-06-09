@@ -26,7 +26,7 @@ import scala.concurrent.duration.Duration
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
-  val Kaikki, Hyväksytyt, Vastaanottaneet = Value
+  val Kaikki, Hyvaksytyt, Vastaanottaneet = Value
 }
 
 object Tyyppi extends Enumeration {
@@ -37,15 +37,12 @@ object Tyyppi extends Enumeration {
 case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, user: Option[User])
 
 object HakijaQuery {
-  def apply(params: Map[String,String], user: Option[User]): HakijaQuery = {
-    println("hakuehto: " + params.get("hakuehto"))
-    HakijaQuery(
+  def apply(params: Map[String,String], user: Option[User]): HakijaQuery = HakijaQuery(
       params.get("haku"),
       params.get("organisaatio"),
       params.get("hakukohdekoodi"),
       Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki}.get,
       user)
-  }
 }
 
 class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
@@ -145,15 +142,11 @@ object XMLHakutoive {
       None, valittu(ht), None, None,
       ht.terveys, ht.aiempiperuminen, ht.kaksoistutkinto)
 
-
   def valittu(ht:Hakutoive) = ht match {
-
     case v:Valittu => Some("1")
     case v:Varalla => Some("2")
     case t => None
-
   }
-
 }
 
 case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahtokoulu: Option[String], lahtokoulunnimi: Option[String], luokka: Option[String],
