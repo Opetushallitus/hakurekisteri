@@ -1,5 +1,12 @@
 // NOTE! this directive is used from multiple apps (tiedonsiirto+suoritusrekisteri)
 
+app.factory('lokalisointiService', function($log) {
+    var getMsg = function(key, def, callback) {
+        var msg = "";
+        callback(msg);
+    }
+});
+
 // localisation
 app.directive('ophMsg', function($log, $http) {
 

@@ -49,6 +49,7 @@ class ScalatraBootstrap extends LifeCycle {
   val organisaatioServiceUrlQa = "https://testi.virkailija.opintopolku.fi/organisaatio-service"
   val hakuappServiceUrlQa = "https://testi.virkailija.opintopolku.fi/haku-app"
   val koodistoServiceUrlQa = "https://testi.virkailija.opintopolku.fi/koodisto-service"
+  val sijoitteluServiceUrlQa = "https://testi.virkailija.opintopolku.fi/sijoittelu-service"
 
 
   private val NumThreads = 1000
@@ -121,7 +122,8 @@ class ScalatraBootstrap extends LifeCycle {
     val organisaatiopalvelu: RestOrganisaatiopalvelu = new RestOrganisaatiopalvelu(organisaatioServiceUrl)(webExec)
     val organisaatiot = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
     val maxApplications = OPHSecurity.config.properties.get("suoritusrekisteri.hakijat.max.applications").getOrElse("2000").toInt
-    val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu(hakuappServiceUrl, maxApplications)(webExec), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl)(webExec))))
+    val sijoitteluServiceUrl = OPHSecurity.config.properties.get("cas.service.sijoittelu-service").getOrElse(sijoitteluServiceUrlQa)
+    val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu(hakuappServiceUrl, maxApplications)(webExec), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl)(webExec), new RestSijoittelupalvelu(sijoitteluServiceUrl)(webExec))))
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, suoritusRekisteri, new ArvosanaJournal(database))), "perusopetus-sanity")
 

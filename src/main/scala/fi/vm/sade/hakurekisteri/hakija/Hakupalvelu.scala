@@ -182,7 +182,7 @@ object RestHakupalvelu {
         ))
         case _ => Seq()
       },
-      (for (a <- v; t <- a.get("hakutoiveet")) yield Hakemus(convertToiveet(t), hakemus.oid, julkaisulupa)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa))
+      (for (a <- v; t <- a.get("hakutoiveet")) yield Hakemus(convertToiveet(t), hakemus.oid, julkaisulupa, hakemus.applicationSystemId)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId))
     )
   }
 
@@ -220,7 +220,8 @@ object RestHakupalvelu {
       })
       val aiempiperuminen = toiveet.get("preference" + t._1 + "_sora_oikeudenMenetys").map(s => Try(s.toBoolean).getOrElse(false))
       val terveys = toiveet.get("preference" + t._1 + "_sora_terveys").map(s => Try(s.toBoolean).getOrElse(false))
-      Hakutoive(Hakukohde(koulutukset, hakukohdekoodi), kaksoistutkinto, urheilijanammatillinenkoulutus, harkinnanvaraisuusperuste, aiempiperuminen, terveys)
+      val hakukohdeOid = toiveet.get("preference" + t._1 + "-Koulutus-id").getOrElse("")
+      Toive(Hakukohde(koulutukset, hakukohdekoodi, hakukohdeOid), kaksoistutkinto, urheilijanammatillinenkoulutus, harkinnanvaraisuusperuste, aiempiperuminen, terveys)
     })
   }
 

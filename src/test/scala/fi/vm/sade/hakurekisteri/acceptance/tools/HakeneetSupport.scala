@@ -205,12 +205,18 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     }
   }
 
+  object sijoittelupalvelu extends Sijoittelupalvelu {
+    override def getSijoitteluTila(hakuOid: String, user: Option[User]): Future[Option[SijoitteluPagination]] = hakuOid match {
+      case _ => Future(None)
+    }
+  }
+
   object hakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
 
     val orgAct = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
-    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodistopalvelu)))
+    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodistopalvelu, sijoittelupalvelu)))
 
     def get(q: HakijaQuery) = {
       hakijaActor ? q
