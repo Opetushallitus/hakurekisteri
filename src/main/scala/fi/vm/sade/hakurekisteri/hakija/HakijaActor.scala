@@ -218,8 +218,12 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     val hakemuksetByHakuOids: Map[String, Seq[Hakija]] = hakijat.groupBy(_.hakemus.hakuOid) // hakuOid -> lista hakijoista
 
     Future.sequence(hakemuksetByHakuOids.map((t: (String, Seq[Hakija])) => {
+      log.debug("hakuOid: " + t._1)
       sijoittelupalvelu.getSijoitteluTila(t._1, user).map(handleSijoittelu(t._2))
-    })).map(_.reduce(_ ++ _))
+    })).map((m: Iterable[Seq[Hakija]]) => {
+      if (m.isEmpty) Seq()
+      else m.reduce(_ ++ _)
+    })
 
   }
 

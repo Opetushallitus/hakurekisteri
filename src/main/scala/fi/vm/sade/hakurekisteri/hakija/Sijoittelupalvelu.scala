@@ -46,7 +46,8 @@ trait Sijoittelupalvelu {
 
 class RestSijoittelupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/sijoittelu-service")(implicit val ec: ExecutionContext) extends Sijoittelupalvelu {
   val logger = LoggerFactory.getLogger(getClass)
-  implicit val httpClient = new ApacheHttpClient()()
+  import scala.concurrent.duration._
+  implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
   protected implicit def jsonFormats: Formats = DefaultFormats
 
   def getProxyTicket(user: Option[User]): String = {
