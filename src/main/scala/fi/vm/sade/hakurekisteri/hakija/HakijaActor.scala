@@ -215,7 +215,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
   def combine2sijoittelunTulos(hakijat: Seq[Hakija])(user: Option[User]): Future[Seq[Hakija]] = {
-    val hakemuksetByHakuOids: Map[String, Seq[Hakija]] = hakijat.groupBy(_.hakemus.hakuOid) // hakuOid -> lista hakijoista
+    val hakemuksetByHakuOids = hakijat.groupBy(_.hakemus.hakuOid) // hakuOid -> lista hakijoista
+    log.debug("hakemuksetByHakuOids keys: " + hakemuksetByHakuOids.keys)
 
     Future.sequence(hakemuksetByHakuOids.map((t: (String, Seq[Hakija])) => {
       log.debug("hakuOid: " + t._1)
