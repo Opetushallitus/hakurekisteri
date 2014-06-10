@@ -16,14 +16,21 @@ import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import TupledFuture._
 import fi.vm.sade.hakurekisteri.rest.support.User
-import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakemuksenTila.SijoitteluHakemuksenTila
+import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakemuksenTila._
 import fi.vm.sade.hakurekisteri.hakija.SijoitteluValintatuloksenTila.SijoitteluValintatuloksenTila
 
 
 case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String, oid: String)
 
-sealed abstract class Hakutoive(val hakukohde: Hakukohde, val kaksoistutkinto: Option[Boolean], val urheilijanammatillinenkoulutus: Option[Boolean],
-                       val harkinnanvaraisuusperuste: Option[String], val aiempiperuminen: Option[Boolean], val terveys: Option[Boolean], val yhteispisteet: Option[BigDecimal]) {
+sealed abstract class Hakutoive {
+
+  val hakukohde:Hakukohde
+  val kaksoistutkinto: Option[Boolean]
+  val urheilijanammatillinenkoulutus: Option[Boolean]
+  val harkinnanvaraisuusperuste: Option[String]
+  val aiempiperuminen: Option[Boolean]
+  val terveys: Option[Boolean]
+  val yhteispisteet: Option[BigDecimal]
 
   def withPisteet(pisteet: Option[BigDecimal]):Hakutoive
 
@@ -31,175 +38,83 @@ sealed abstract class Hakutoive(val hakukohde: Hakukohde, val kaksoistutkinto: O
 
 object Hakutoive{
 
-  def apply(ht:Hakutoive, tila: Option[String]) = tila match {
+  def apply(ht:Hakutoive, tila: Option[String]) = tila.flatMap((t) => Try(SijoitteluHakemuksenTila.withName(t)).toOption) match {
 
-    case Some(v) if (v == SijoitteluHakemuksenTila.HYVAKSYTTY.toString) => Valittu(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
-    case Some(v) if (v == SijoitteluHakemuksenTila.VARALLA.toString) => Varalla(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
-    case Some(v) if (v == SijoitteluHakemuksenTila.HYLATTY.toString) => Hylatty(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
-    case Some(v) if (v == SijoitteluHakemuksenTila.PERUUTETTU.toString) => Peruutettu(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
-    case Some(v) if (v == SijoitteluHakemuksenTila.PERUUNTUNUT.toString) => Peruuntunut(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
-    case Some(v) if (v == SijoitteluHakemuksenTila.PERUNUT.toString) => Perunut(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
+    case Some(HYVAKSYTTY) => Valittu(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
+    case Some(VARALLA) => Varalla(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
+    case Some(HYLATTY) => Hylatty(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
+    case Some(PERUUTETTU) => Peruutettu(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
+    case Some(PERUUNTUNUT)  => Peruuntunut(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
+    case Some(PERUNUT) => Perunut(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
 
 
     case _ => Toive(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
   }
 
-  def unapply(ht: Hakutoive): Option[(Hakukohde, Option[Boolean],  Option[Boolean], Option[String],  Option[Boolean],  Option[Boolean])] =
-    Some((ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys))
 
 }
 
 
-class Toive(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
-                   harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean], yhteispisteet: Option[BigDecimal])
-  extends Hakutoive(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-                    harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal]) {
-
-  override def withPisteet(pisteet:Option[BigDecimal]) = new Toive(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean], pisteet)
-
-}
-
-object Toive {
-
-  def apply(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-            harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal] = None) = new Toive(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal])
-
-  def unapply(ht: Toive): Option[(Hakukohde, Option[Boolean],  Option[Boolean], Option[String],  Option[Boolean],  Option[Boolean])] = Hakutoive.unapply(ht)
+case class Toive(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
+                   harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean], yhteispisteet: Option[BigDecimal] = None)
+  extends Hakutoive {
+  override def withPisteet(pisteet: Option[BigDecimal]):Hakutoive =  this.copy(yhteispisteet = pisteet)
 
 }
 
 
-class Valittu(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
+case class Valittu(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
             harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal])
-  extends Hakutoive(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean], yhteispisteet: Option[BigDecimal]) {
+  extends Hakutoive {
 
-  override def withPisteet(pisteet:Option[BigDecimal]) = new Valittu(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean], pisteet)
-
-}
-
-object Valittu {
-
-  def apply(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-            harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal]) = new Valittu(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal])
-
-  def unapply(ht: Valittu): Option[(Hakukohde, Option[Boolean],  Option[Boolean], Option[String],  Option[Boolean],  Option[Boolean])] = Hakutoive.unapply(ht)
-
+  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
 }
 
 
-class Varalla(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
+
+case class Varalla(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
 harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal])
-extends Hakutoive(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal]) {
+extends Hakutoive {
 
-  override def withPisteet(pisteet:Option[BigDecimal]) = new Varalla(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean], pisteet)
+  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
 
 }
 
 
-object Varalla {
 
-  def apply(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-            harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal]) = new Varalla(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal])
-
-  def unapply(ht: Varalla): Option[(Hakukohde, Option[Boolean],  Option[Boolean], Option[String],  Option[Boolean],  Option[Boolean])] = Hakutoive.unapply(ht)
-
-}
-
-
-class Hylatty(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
+case class Hylatty(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
               harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal])
-  extends Hakutoive(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal]) {
+  extends Hakutoive {
 
-  override def withPisteet(pisteet:Option[BigDecimal]) = new Hylatty(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean], pisteet)
+  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
 
 }
 
 
-object Hylatty {
-
-  def apply(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-            harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal]) = new Hylatty(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal])
-
-  def unapply(ht: Hylatty): Option[(Hakukohde, Option[Boolean],  Option[Boolean], Option[String],  Option[Boolean],  Option[Boolean])] = Hakutoive.unapply(ht)
-
-}
-
-
-class Perunut(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
+case class Perunut(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
               harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal])
-  extends Hakutoive(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal]) {
+  extends Hakutoive {
 
-  override def withPisteet(pisteet:Option[BigDecimal]) = new Perunut(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean], pisteet)
-
+  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
 }
 
 
-object Perunut {
 
-  def apply(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-            harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal]) = new Perunut(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal])
-
-  def unapply(ht: Perunut): Option[(Hakukohde, Option[Boolean],  Option[Boolean], Option[String],  Option[Boolean],  Option[Boolean])] = Hakutoive.unapply(ht)
-
-}
-
-class Peruutettu(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
+case class Peruutettu(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
               harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal])
-  extends Hakutoive(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal]) {
+  extends Hakutoive {
 
-  override def withPisteet(pisteet:Option[BigDecimal]) = new Peruutettu(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean], pisteet)
-
+  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
 }
 
 
-object Peruutettu {
 
-  def apply(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-            harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal]) = new Peruutettu(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal])
-
-  def unapply(ht: Peruutettu): Option[(Hakukohde, Option[Boolean],  Option[Boolean], Option[String],  Option[Boolean],  Option[Boolean])] = Hakutoive.unapply(ht)
-
-}
-
-
-class Peruuntunut(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
+case class Peruuntunut(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
                  harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal])
-  extends Hakutoive(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal]) {
+  extends Hakutoive {
 
-  override def withPisteet(pisteet:Option[BigDecimal]) = new Peruuntunut(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String],   aiempiperuminen: Option[Boolean],  terveys: Option[Boolean], pisteet)
-
+  override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
 }
-
-
-object Peruuntunut {
-
-  def apply(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-            harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal]) = new Peruuntunut(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-    harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal])
-
-  def unapply(ht: Peruuntunut): Option[(Hakukohde, Option[Boolean],  Option[Boolean], Option[String],  Option[Boolean],  Option[Boolean])] = Hakutoive.unapply(ht)
-
-}
-
 
 
 case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String, julkaisulupa: Option[Boolean], hakuOid: String)
