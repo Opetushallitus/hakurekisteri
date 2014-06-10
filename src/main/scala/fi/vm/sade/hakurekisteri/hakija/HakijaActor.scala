@@ -27,10 +27,10 @@ sealed class Hakutoive(val hakukohde: Hakukohde, val kaksoistutkinto: Option[Boo
 
 object Hakutoive{
 
-  def apply(ht:Hakutoive, tila: Option[SijoitteluHakemuksenTila]) = tila match {
+  def apply(ht:Hakutoive, tila: Option[String]) = tila match {
 
-    case Some(SijoitteluHakemuksenTila.HYVAKSYTTY) => Valittu(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys)
-    case Some(SijoitteluHakemuksenTila.VARALLA) => Varalla(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys)
+    case Some(s) if (SijoitteluHakemuksenTila.withName(s) == SijoitteluHakemuksenTila.HYVAKSYTTY) => Valittu(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys)
+    case Some(v) if (SijoitteluHakemuksenTila.withName(v) == SijoitteluHakemuksenTila.VARALLA) => Varalla(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys)
 
     case _ => Toive(ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys)
   }
@@ -222,14 +222,14 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
    }]
    */
   def matchSijoitteluAndHakemus(shakijas: Seq[SijoitteluHakija], hakijas: Seq[Hakija]): Seq[Hakija] = {
-    val sijoittelu: Map[String, Map[String, SijoitteluHakemuksenTila]] = shakijas.groupBy(_.hakemusOid).
+    val sijoittelu: Map[String, Map[String, String]] = shakijas.groupBy(_.hakemusOid).
       collect{
         case (Some(s: String), hs: Seq[SijoitteluHakija]) => {
           (s, hs.
             flatMap(_.hakutoiveet.getOrElse(Seq())).
             flatMap((ht: SijoitteluHakutoive) => ht.hakukohdeOid.
               map((oid: String) => {
-                val mapped: Seq[(String, Option[SijoitteluHakemuksenTila])] = ht.hakutoiveenValintatapajonot.getOrElse(Seq()).
+                val mapped: Seq[(String, Option[String])] = ht.hakutoiveenValintatapajonot.getOrElse(Seq()).
                   map((vtj: SijoitteluHakutoiveenValintatapajono) => (oid, vtj.tila))
                 mapped.collect{case (s, Some(t)) => (s, t)}.toMap
               })).flatten.toMap)
@@ -240,7 +240,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     hakijas.map(tila(sijoittelu))
   }
 
-  def tila(sijoittelu: Map[String, Map[String, SijoitteluHakemuksenTila]] )(h:Hakija): Hakija = {
+  def tila(sijoittelu: Map[String, Map[String, String]] )(h:Hakija): Hakija = {
     val toiveet = h.hakemus.hakutoiveet.map((ht) => Hakutoive(ht, sijoittelu.getOrElse(h.hakemus.hakemusnumero, Map()).get(ht.hakukohde.oid)))
     h.copy(hakemus = h.hakemus.copy(hakutoiveet = toiveet))
   }

@@ -26,8 +26,8 @@ case class SijoitteluPistetieto(osallistuminen: Option[String], laskennallinenAr
 
 case class SijoitteluHakutoiveenValintatapajono(varalla: Option[Int], hyvaksytty: Option[Int], hakeneet: Option[Int], alinHyvaksyttyPistemaara: Option[BigDecimal],
                                                  pisteet: Option[BigDecimal], tasasijaJonosija: Option[BigDecimal], hyvaksyttyHarkinnanvaraisesti: Option[Boolean],
-                                                 vastaanottotieto: Option[SijoitteluValintatuloksenTila], tilanKuvaukset: Option[Map[String, String]],
-                                                 tila: Option[SijoitteluHakemuksenTila], varasijanNumero: Option[Int], paasyJaSoveltuvuusKokeenTulos: Option[BigDecimal],
+                                                 vastaanottotieto: Option[String], tilanKuvaukset: Option[Map[String, String]],
+                                                 tila: Option[String], varasijanNumero: Option[Int], paasyJaSoveltuvuusKokeenTulos: Option[BigDecimal],
                                                  jonosija: Option[Int], valintatapajonoNimi: Option[String], valintatapajonoOid: Option[String],
                                                  valintatapajonoPrioriteetti: Option[Int])
 
@@ -48,8 +48,8 @@ class RestSijoittelupalvelu(serviceUrl: String = "https://itest-virkailija.oph.w
   val logger = LoggerFactory.getLogger(getClass)
   import scala.concurrent.duration._
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
-  protected implicit def jsonFormats: Formats = DefaultFormats + new org.json4s.ext.EnumNameSerializer(SijoitteluValintatuloksenTila) +
-    new org.json4s.ext.EnumNameSerializer(SijoitteluHakemuksenTila)
+  /*protected implicit def jsonFormats: Formats = DefaultFormats + new org.json4s.ext.EnumNameSerializer(SijoitteluValintatuloksenTila) +
+    new org.json4s.ext.EnumNameSerializer(SijoitteluHakemuksenTila)*/
 
   def getProxyTicket(user: Option[User]): String = {
     user.flatMap(_.attributePrincipal.map(_.getProxyTicketFor(serviceUrl + "/j_spring_cas_security_check"))).getOrElse("")
@@ -63,6 +63,7 @@ class RestSijoittelupalvelu(serviceUrl: String = "https://itest-virkailija.oph.w
       if (response.code == HttpResponseCode.Ok) {
         val hakemus = response.bodyAsCaseClass[SijoitteluPagination].toOption
         logger.debug("got response: [{}]", hakemus)
+
         hakemus
       } else {
         logger.error("call to sijoittelu-service [url={}, ticket={}] failed: {}", url, ticket, response.code)
