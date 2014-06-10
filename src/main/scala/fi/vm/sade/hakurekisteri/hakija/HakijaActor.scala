@@ -268,7 +268,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def XMLQuery(q: HakijaQuery): Future[XMLHakijat] = q.hakuehto match {
     case Hakuehto.Kaikki => hakupalvelu.getHakijat(q).flatMap(combine2sijoittelunTulos(_)(q.user)).flatMap(hakijat2XmlHakijat)
-    case Hakuehto.Hyvaksytyt => hakupalvelu.getHakijat(q).flatMap(combine2sijoittelunTulos(_)(q.user)).map(_.filter(_.hakemus.hakutoiveet.exists(_.isInstanceOf[Valittu]))).flatMap(hakijat2XmlHakijat)
+    case Hakuehto.Hyvaksytyt => hakupalvelu.getHakijat(q).flatMap(combine2sijoittelunTulos(_)(q.user)).map(_.filter(_.hakemus.hakutoiveet.exists(_.isInstanceOf[Valittu]))).flatMap(hakijat2XmlHakijat).map((xhakijat) => xhakijat.copy(hakijat = xhakijat.hakijat.map((xh) => xh.copy(hakemus = xh.hakemus.copy(hakutoiveet = xh.hakemus.hakutoiveet.filter(_.valinta == "1")))).filter(_.hakemus.hakutoiveet.size > 0)))
     // TODO Hakuehto.Vastaanottaneet
     case _ => Future.successful(XMLHakijat(Seq()))
   }
