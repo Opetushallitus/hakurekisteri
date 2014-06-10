@@ -12,12 +12,9 @@ import fi.vm.sade.hakurekisteri.suoritus.Komoto
 import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
 import akka.pattern.{pipe, ask}
 import ForkedSeq._
-import akka.util.Timeout
-import java.util.concurrent.TimeUnit
 import TupledFuture._
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakemuksenTila._
-import fi.vm.sade.hakurekisteri.hakija.SijoitteluValintatuloksenTila.SijoitteluValintatuloksenTila
 
 
 case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String, oid: String)
@@ -131,7 +128,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def resolveOppilaitosKoodi(o:Organisaatio): Future[Option[String]] =  o.oppilaitosKoodi match {
     case None => findOppilaitoskoodi(o.parentOid)
-    case Some(k) => Future(Some(k))
+    case Some(k) => Future.successful(Some(k))
   }
 
   def getOrg(oid: String): Future[Option[Organisaatio]] = {
@@ -141,8 +138,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
   def findOppilaitoskoodi(parentOid: Option[String]): Future[Option[String]] = parentOid match {
-    case None => Future(None)
-    case Some(oid) => getOrg(oid).flatMap(_.map(resolveOppilaitosKoodi).getOrElse(Future(None)))
+    case None => Future.successful(None)
+    case Some(oid) => getOrg(oid).flatMap(_.fold[Future[Option[String]]](Future.successful(None))(resolveOppilaitosKoodi))
 
   }
 
@@ -215,18 +212,15 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     hakijas.map(tila(sijoittelu)).map(yhteispisteet(pisteet))
   }
 
-  def getValintatapaMap[A](shakijas: Seq[SijoitteluHakija], f: (SijoitteluHakutoiveenValintatapajono) => Option[A]): Map[String, Map[String, A]] = {
-    shakijas.groupBy(_.hakemusOid).
-      collect {
-      case (Some(s), hs) => {
-        (s, hs.
-          flatMap(_.hakutoiveet.getOrElse(Seq())).
-          flatMap((ht: SijoitteluHakutoive) => ht.hakukohdeOid.
-          map((oid) => ht.hakutoiveenValintatapajonot.getOrElse(Seq()).
-          map((vtj: SijoitteluHakutoiveenValintatapajono) => (oid, f(vtj))).
-          collect { case (s, Some(t)) => (s, t)}.toMap)).flatten.toMap)
-      }
-    }
+  def getValintatapaMap[A](shakijas: Seq[SijoitteluHakija], f: (SijoitteluHakutoiveenValintatapajono) => Option[A]): Map[String, Map[String, A]] = shakijas.groupBy(_.hakemusOid).
+    collect {
+    case (Some(s), hs) =>
+      (s, hs.
+        flatMap(_.hakutoiveet.getOrElse(Seq())).
+        flatMap((ht: SijoitteluHakutoive) => ht.hakukohdeOid.
+        map((oid) => ht.hakutoiveenValintatapajonot.getOrElse(Seq()).
+        map((vtj: SijoitteluHakutoiveenValintatapajono) => (oid, f(vtj))).
+        collect { case (hakemusOid, Some(t)) => (hakemusOid, t)}.toMap)).flatten.toMap)
   }
 
   def yhteispisteet(pisteet: Map[String, Map[String, BigDecimal]])(h:Hakija) : Hakija = {
