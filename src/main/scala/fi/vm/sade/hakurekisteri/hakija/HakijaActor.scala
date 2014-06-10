@@ -58,7 +58,7 @@ class Toive(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean],  urheilijana
 object Toive {
 
   def apply(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
-            harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal]) = new Toive(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
+            harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal] = None) = new Toive(hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
     harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],  yhteispisteet: Option[BigDecimal])
 
   def unapply(ht: Toive): Option[(Hakukohde, Option[Boolean],  Option[Boolean], Option[String],  Option[Boolean],  Option[Boolean])] = Hakutoive.unapply(ht)
@@ -247,8 +247,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
   def handleSijoittelu(hakijas: Seq[Hakija])(sp: Option[SijoitteluPagination]): Seq[Hakija] = sp match {
-    case None  => Seq()
-    case Some(s) if s.results.isEmpty => Seq()
+    case None  => matchSijoitteluAndHakemus(Seq(), hakijas)
+    case Some(s) if s.results.isEmpty => matchSijoitteluAndHakemus(Seq(), hakijas)
     case Some(s) if s.results.isDefined => matchSijoitteluAndHakemus(s.results.get, hakijas)
   }
 
@@ -268,7 +268,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def XMLQuery(q: HakijaQuery): Future[XMLHakijat] = q.hakuehto match {
     case Hakuehto.Kaikki => hakupalvelu.getHakijat(q).flatMap(combine2sijoittelunTulos(_)(q.user)).flatMap(hakijat2XmlHakijat)
-    case Hakuehto.Hyvaksytyt => hakupalvelu.getHakijat(q).flatMap(combine2sijoittelunTulos(_)(q.user)).flatMap(hakijat2XmlHakijat)
+    case Hakuehto.Hyvaksytyt => hakupalvelu.getHakijat(q).flatMap(combine2sijoittelunTulos(_)(q.user)).map(_.filter(_.hakemus.hakutoiveet.exists(_.isInstanceOf[Valittu]))).flatMap(hakijat2XmlHakijat)
     // TODO Hakuehto.Vastaanottaneet
     case _ => Future.successful(XMLHakijat(Seq()))
   }
