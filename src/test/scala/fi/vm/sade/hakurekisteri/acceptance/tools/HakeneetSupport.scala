@@ -188,7 +188,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object organisaatiopalvelu extends Organisaatiopalvelu {
     override def getAll() =  Future.successful(Seq(OppilaitosX,OppilaitosY,OpetuspisteX, OpetuspisteY).map(_.oid))
 
-    override def get(str: String): Future[Option[Organisaatio]] = Future(doTheMatch(str))
+    override def get(str: String): Future[Option[Organisaatio]] = Future.successful(doTheMatch(str))
 
     def doTheMatch(str: String): Option[Organisaatio] = str match {
       case OppilaitosX.oid => Some(OppilaitosX)
@@ -201,13 +201,45 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
   object koodistopalvelu extends Koodistopalvelu {
     override def getRinnasteinenKoodiArvo(koodiUri: String, rinnasteinenKoodistoUri: String): Future[String] = koodiUri match {
-      case _ => Future("246")
+      case _ => Future.successful("246")
     }
   }
 
   object sijoittelupalvelu extends Sijoittelupalvelu {
     override def getSijoitteluTila(hakuOid: String, user: Option[User]): Future[Option[SijoitteluPagination]] = hakuOid match {
-      case _ => Future(None)
+      case _ => Future.successful(
+        Some(SijoitteluPagination(
+          Some(Seq(
+            SijoitteluHakija(
+              hakemusOid = Some(FullHakemus1.oid),
+              hakutoiveet=Some(Seq(
+                SijoitteluHakutoive(
+                  hakutoiveenValintatapajonot = Some(Seq(
+                    SijoitteluHakutoiveenValintatapajono(
+                      varalla = None,
+                      hyvaksytty = None,
+                      hakeneet = None,
+                      alinHyvaksyttyPistemaara = None,
+                      pisteet = None,
+                      tasasijaJonosija = None,
+                      hyvaksyttyHarkinnanvaraisesti = None,
+                      vastaanottotieto = None,
+                      tilanKuvaukset = None,
+                      tila = Some("HYVAKSYTTY"),
+                      varasijanNumero = None,
+                      paasyJaSoveltuvuusKokeenTulos = None,
+                      jonosija = None,
+                      valintatapajonoNimi = None,
+                      valintatapajonoOid = None,
+                      valintatapajonoPrioriteetti = None)
+                  )),
+                  pistetiedot = None,
+                  tarjoajaOid = None,
+                  hakukohdeOid = Some("1.11.2"),
+                  hakutoive = None))),
+              etunimi = None,
+              sukunimi = None))),
+          Some(1))))
     }
   }
 
