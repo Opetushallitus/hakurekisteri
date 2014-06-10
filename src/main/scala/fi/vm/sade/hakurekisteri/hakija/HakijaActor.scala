@@ -190,20 +190,54 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def hakijat2XmlHakijat(hakijat: Seq[Hakija]): Future[XMLHakijat] = hakijat.map(hakija2XMLHakija).join.map(XMLHakijat)
 
+  /*
+   [{
+     "hakemusOid" : "1.2.246.562.11.00000588674",
+     "etunimi" : "Maj",
+     "sukunimi" : "Neuvonen",
+     "hakutoiveet" : [{
+       "hakutoive" : 1,
+       "hakukohdeOid" : "1.2.246.562.14.2013100208570295557217",
+       "tarjoajaOid" : "1.2.246.562.10.86957351009",
+       "pistetiedot" : [ ],
+       "hakutoiveenValintatapajonot" : [{
+         "valintatapajonoPrioriteetti" : 1,
+         "valintatapajonoOid" : "1396419314887-4817653397800727413",
+         "valintatapajonoNimi" : "Varsinaisen valinnanvaiheen valintatapajono",
+         "jonosija" : 1,
+         "paasyJaSoveltuvuusKokeenTulos" : null,
+         "varasijanNumero" : null,
+         "tila" : "HYVAKSYTTY",
+         "tilanKuvaukset" : { },
+         "vastaanottotieto" : null,
+         "hyvaksyttyHarkinnanvaraisesti" : false,
+         "tasasijaJonosija" : 1,
+         "pisteet" : null,
+         "alinHyvaksyttyPistemaara" : null,
+         "hakeneet" : 1,
+         "hyvaksytty" : 1,
+         "varalla" : 0
+       }]
+     }]
+   }]
+   */
   def matchSijoitteluAndHakemus(shakijas: Seq[SijoitteluHakija], hakijas: Seq[Hakija]): Seq[Hakija] = {
-    val sijoittelu: Map[String, Map[String, SijoitteluHakemuksenTila]] = shakijas.groupBy(_.hakemusOid).collect{ case (Some(s), hs: Seq[SijoitteluHakija]) => (s,hs.flatMap(_.hakutoiveet.getOrElse(Seq()))
-      .map((ht) => ht.hakukohdeOid.flatMap((oid) => ht.hakutoiveenValintatapajonot.map((vtj) => (oid, vtj.tila)))).flatten.collect{case (a, Some(s)) => (a,s)}.toMap)}
+    val sijoittelu: Map[String, Map[String, SijoitteluHakemuksenTila]] = shakijas.groupBy(_.hakemusOid).
+      collect{
+        case (Some(s: String), hs: Seq[SijoitteluHakija]) => {
+          (s, hs.
+            flatMap(_.hakutoiveet.getOrElse(Seq())).
+            flatMap((ht: SijoitteluHakutoive) => ht.hakukohdeOid.
+              map((oid: String) => {
+                val mapped: Seq[(String, Option[SijoitteluHakemuksenTila])] = ht.hakutoiveenValintatapajonot.getOrElse(Seq()).
+                  map((vtj: SijoitteluHakutoiveenValintatapajono) => (oid, vtj.tila))
+                mapped.collect{case (s, Some(t)) => (s, t)}.toMap
+              })).flatten.toMap)
+        }
+      }
 
-      //.map{
-      //case (hakemus, sijoittelu) => (hakemus, sijoittelu.map(
-      //  _.hakutoiveet.flatMap((ht) => ht.map(_.hakutoiveenValintatapajonot.flatMap((vtj) => ht.map(_.hakukohdeOid.map((_, vtj.tila)))))) ).flatten.collect{case (a, Some(s)) => (a,s)}.toMap)}
-    /*val valinta: Map[String, Map[String, Option[SijoitteluValintatuloksenTila]]] = hakijas.groupBy(_.hakemusOid).collect{ case (Some(s), hs) => (s,hs)}.map{
-      case (hakemus, sijoittelu) => (hakemus, sijoittelu.map(_.hakutoiveet.flatMap((ht: SijoitteluHakutoive) => ht.hakutoiveenValintatapajonot.flatMap((vtj) => ht.hakukohdeOid.map((_, vtj.vastaanottotieto)))) ).flatten.toMap)}*/
-
+    // TODO filter by tila (hyvaksytty/varalla)
     hakijas.map(tila(sijoittelu))
-
-
-
   }
 
   def tila(sijoittelu: Map[String, Map[String, SijoitteluHakemuksenTila]] )(h:Hakija): Hakija = {

@@ -31,7 +31,7 @@ case class SijoitteluHakutoiveenValintatapajono(varalla: Option[Int], hyvaksytty
                                                  jonosija: Option[Int], valintatapajonoNimi: Option[String], valintatapajonoOid: Option[String],
                                                  valintatapajonoPrioriteetti: Option[Int])
 
-case class SijoitteluHakutoive(hakutoiveenValintatapajonot: Option[SijoitteluHakutoiveenValintatapajono], pistetiedot: Option[Seq[SijoitteluPistetieto]],
+case class SijoitteluHakutoive(hakutoiveenValintatapajonot: Option[Seq[SijoitteluHakutoiveenValintatapajono]], pistetiedot: Option[Seq[SijoitteluPistetieto]],
                                 tarjoajaOid: Option[String], hakukohdeOid: Option[String], hakutoive: Option[Int])
 
 case class SijoitteluHakija(hakutoiveet: Option[Seq[SijoitteluHakutoive]], sukunimi: Option[String], etunimi: Option[String], hakemusOid: Option[String])
