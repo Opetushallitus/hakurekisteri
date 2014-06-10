@@ -11,7 +11,6 @@ import scala.concurrent.ExecutionContext
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
-import java.util.concurrent.TimeUnit
 import scala.util.Try
 import javax.servlet.http.HttpServletResponse
 import scala.xml._
@@ -21,7 +20,6 @@ import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.joda.time.{DateTimeFieldType, LocalDate}
 import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
-import scala.concurrent.duration.Duration
 
 
 object Hakuehto extends Enumeration {
@@ -145,7 +143,11 @@ object XMLHakutoive {
   def valittu(ht:Hakutoive) = ht match {
     case v:Valittu => Some("1")
     case v:Varalla => Some("2")
-    case t => None
+    case v:Hylatty=> Some("3")
+    case v:Perunut => Some("4")
+    case v:Peruutettu => Some("5")
+    case v:Peruuntunut => Some("4")
+    case t:Toive => None
   }
 }
 

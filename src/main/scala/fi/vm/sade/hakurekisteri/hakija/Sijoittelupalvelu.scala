@@ -48,8 +48,6 @@ class RestSijoittelupalvelu(serviceUrl: String = "https://itest-virkailija.oph.w
   val logger = LoggerFactory.getLogger(getClass)
   import scala.concurrent.duration._
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
-  /*protected implicit def jsonFormats: Formats = DefaultFormats + new org.json4s.ext.EnumNameSerializer(SijoitteluValintatuloksenTila) +
-    new org.json4s.ext.EnumNameSerializer(SijoitteluHakemuksenTila)*/
 
   def getProxyTicket(user: Option[User]): String = {
     user.flatMap(_.attributePrincipal.map(_.getProxyTicketFor(serviceUrl + "/j_spring_cas_security_check"))).getOrElse("")
@@ -61,10 +59,10 @@ class RestSijoittelupalvelu(serviceUrl: String = "https://itest-virkailija.oph.w
     logger.debug("calling sijoittelu-service [url={}, ticket={}]", Array(url, ticket))
     GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
       if (response.code == HttpResponseCode.Ok) {
-        val hakemus = response.bodyAsCaseClass[SijoitteluPagination].toOption
+        val sijoitteluTulos = response.bodyAsCaseClass[SijoitteluPagination].toOption
         logger.debug("got response from [url={}, ticket={}]", Array(url, ticket))
 
-        hakemus
+        sijoitteluTulos
       } else {
         logger.error("call to sijoittelu-service [url={}, ticket={}] failed: {}", url, ticket, response.code)
         throw new RuntimeException("virhe kutsuttaessa sijoittelupalvelua: %s".format(response.code))
