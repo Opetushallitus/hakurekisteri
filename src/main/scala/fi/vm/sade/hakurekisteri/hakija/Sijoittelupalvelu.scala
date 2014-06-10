@@ -62,7 +62,7 @@ class RestSijoittelupalvelu(serviceUrl: String = "https://itest-virkailija.oph.w
     GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
       if (response.code == HttpResponseCode.Ok) {
         val hakemus = response.bodyAsCaseClass[SijoitteluPagination].toOption
-        logger.debug("got response: [{}]", hakemus)
+        logger.debug("got response from [url={}, ticket={}]", Array(url, ticket))
 
         hakemus
       } else {
