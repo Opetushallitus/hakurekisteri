@@ -48,7 +48,8 @@ class RestSijoittelupalvelu(serviceUrl: String = "https://itest-virkailija.oph.w
   val logger = LoggerFactory.getLogger(getClass)
   import scala.concurrent.duration._
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
-  protected implicit def jsonFormats: Formats = DefaultFormats
+  protected implicit def jsonFormats: Formats = DefaultFormats + new org.json4s.ext.EnumNameSerializer(SijoitteluValintatuloksenTila) +
+    new org.json4s.ext.EnumNameSerializer(SijoitteluHakemuksenTila)
 
   def getProxyTicket(user: Option[User]): String = {
     user.flatMap(_.attributePrincipal.map(_.getProxyTicketFor(serviceUrl + "/j_spring_cas_security_check"))).getOrElse("")
