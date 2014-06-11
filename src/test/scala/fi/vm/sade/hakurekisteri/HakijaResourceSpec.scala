@@ -11,7 +11,8 @@ class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger
 
   val orgs = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
-  val hakijat = system.actorOf(Props(new HakijaActor(hakupalvelu, orgs, koodistopalvelu)))
+  val sijoittelu = system.actorOf(Props(new SijoitteluActor(sijoittelupalvelu)))
+  val hakijat = system.actorOf(Props(new HakijaActor(hakupalvelu, orgs, koodistopalvelu, sijoittelu)))
   addServlet(new HakijaResource(hakijat), "/")
 
   test("result is XML") {

@@ -46,27 +46,24 @@ class ScalatraBootstrap extends LifeCycle {
   implicit val ec:ExecutionContext = system.dispatcher
   val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
   val OPH = "1.2.246.562.10.00000000001"
-  val organisaatioServiceUrlQa = "https://testi.virkailija.opintopolku.fi/organisaatio-service"
-  val hakuappServiceUrlQa = "https://testi.virkailija.opintopolku.fi/haku-app"
-  val koodistoServiceUrlQa = "https://testi.virkailija.opintopolku.fi/koodisto-service"
+  val hostQa = "testi.virkailija.opintopolku.fi"
 
+  val organisaatioServiceUrlQa = s"https://$hostQa/organisaatio-service"
+  val hakuappServiceUrlQa = s"https://$hostQa/haku-app"
+  val koodistoServiceUrlQa = s"https://$hostQa/koodisto-service"
+  val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
 
-  private val NumThreads = 1000
-  private val threadNumber = new AtomicInteger(1)
-  lazy val webPool = Executors.newFixedThreadPool(NumThreads, new ThreadFactory() {
-    override def newThread(r: Runnable): Thread = {
-      new Thread(r, "webpool-" + threadNumber.getAndIncrement)
-    }
-  })
-
-  lazy val webExec = ExecutionContext.fromExecutorService(webPool)
 
   override def init(context: ServletContext) {
     OPHSecurity init context
-    val orgServiceUrl = OPHSecurity.config.properties.get("cas.service.organisaatio-service").getOrElse(organisaatioServiceUrlQa) + "/services/organisaatioService"
+    val orgServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa) + "/services/organisaatioService"
     val database = Try(Database.forName(jndiName)).recover {
       case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
     }.get
+
+    val sijoitteluUser = OPHSecurity.config.properties.get("tiedonsiirto.app.username.to.suoritusrekisteri")
+    val sijoitteluPw = OPHSecurity.config.properties.get("tiedonsiirto.app.password.to.suoritusrekisteri")
+
 
 
     //val camel = CamelExtension(system)
@@ -118,10 +115,14 @@ class ScalatraBootstrap extends LifeCycle {
     val hakuappServiceUrl = OPHSecurity.config.properties.get("cas.service.haku").getOrElse(hakuappServiceUrlQa)
     val organisaatioServiceUrl = OPHSecurity.config.properties.get("cas.service.organisaatio-service").getOrElse(organisaatioServiceUrlQa)
     val koodistoServiceUrl = OPHSecurity.config.properties.get("cas.service.koodisto-service").getOrElse(koodistoServiceUrlQa)
-    val organisaatiopalvelu: RestOrganisaatiopalvelu = new RestOrganisaatiopalvelu(organisaatioServiceUrl)(webExec)
+    val organisaatiopalvelu: RestOrganisaatiopalvelu = new RestOrganisaatiopalvelu(organisaatioServiceUrl)
     val organisaatiot = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
     val maxApplications = OPHSecurity.config.properties.get("suoritusrekisteri.hakijat.max.applications").getOrElse("2000").toInt
-    val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu(hakuappServiceUrl, maxApplications)(webExec), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl)(webExec))))
+    val sijoitteluServiceUrl = OPHSecurity.config.properties.get("cas.service.sijoittelu-service").getOrElse(sijoitteluServiceUrlQa)
+    val serviceAccessUrl = "https://" + OPHSecurity.config.properties.get("host.virkailija").getOrElse(hostQa) + "/service-access"
+
+    val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(serviceAccessUrl, sijoitteluServiceUrl,sijoitteluUser,sijoitteluPw))))
+    val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu(hakuappServiceUrl, maxApplications), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl), sijoittelu)))
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, suoritusRekisteri, new ArvosanaJournal(database))), "perusopetus-sanity")
 

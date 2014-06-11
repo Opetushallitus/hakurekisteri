@@ -11,7 +11,6 @@ import scala.concurrent.ExecutionContext
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
-import java.util.concurrent.TimeUnit
 import scala.util.Try
 import javax.servlet.http.HttpServletResponse
 import scala.xml._
@@ -21,12 +20,11 @@ import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.joda.time.{DateTimeFieldType, LocalDate}
 import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
-import scala.concurrent.duration.Duration
 
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
-  val Kaikki, Hyväksytyt, Vastaanottaneet = Value
+  val Kaikki, Hyvaksytyt, Vastaanottaneet = Value
 }
 
 object Tyyppi extends Enumeration {
@@ -38,11 +36,11 @@ case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakuk
 
 object HakijaQuery {
   def apply(params: Map[String,String], user: Option[User]): HakijaQuery = HakijaQuery(
-    params.get("haku"),
-    params.get("organisaatio"),
-    params.get("hakukohdekoodi"),
-    Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki}.get,
-    user)
+      params.get("haku"),
+      params.get("organisaatio"),
+      params.get("hakukohdekoodi"),
+      Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki}.get,
+      user)
 }
 
 class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
@@ -137,11 +135,20 @@ case class XMLHakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[
 }
 
 object XMLHakutoive {
-  def apply(ht: Hakutoive, jno: Integer, o: Organisaatio, k: String): XMLHakutoive =
-    XMLHakutoive((jno + 1).toShort, k, o.toimipistekoodi, o.nimi.get("fi").orElse(o.nimi.get("sv").orElse(o.nimi.get("en"))),
-                 ht.hakukohde.hakukohdekoodi, ht.harkinnanvaraisuusperuste, ht.urheilijanammatillinenkoulutus,
-                 None, None, None, None,
-                 ht.terveys, ht.aiempiperuminen, ht.kaksoistutkinto)
+  def apply(ht: Hakutoive, o: Organisaatio, k: String): XMLHakutoive = XMLHakutoive(ht.jno.toShort, k, o.toimipistekoodi, o.nimi.get("fi").orElse(o.nimi.get("sv").orElse(o.nimi.get("en"))),
+      ht.hakukohde.hakukohdekoodi, ht.harkinnanvaraisuusperuste, ht.urheilijanammatillinenkoulutus,
+      None, valittu(ht), None, None,
+      ht.terveys, ht.aiempiperuminen, ht.kaksoistutkinto)
+
+  def valittu(ht:Hakutoive) = ht match {
+    case v:Valittu => Some("1")
+    case v:Varalla => Some("2")
+    case v:Hylatty=> Some("3")
+    case v:Perunut => Some("4")
+    case v:Peruutettu => Some("5")
+    case v:Peruuntunut => Some("4")
+    case t:Toive => None
+  }
 }
 
 case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahtokoulu: Option[String], lahtokoulunnimi: Option[String], luokka: Option[String],

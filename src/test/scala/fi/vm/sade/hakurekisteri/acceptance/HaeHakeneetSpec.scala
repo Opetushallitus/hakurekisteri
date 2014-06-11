@@ -51,13 +51,14 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       Given("N henkilöä täyttää hakemuksen")
       hakupalvelu has (FullHakemus1, FullHakemus2)
 
+      println("haetaan hyväksytyt")
       When("rajaan muodostusta valitsemalla 'Hyväksytyt hakijat'")
-      val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Hyväksytyt, None)),
+      val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Hyvaksytyt, None)),
         Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
       println("hyväksytyt: " + hakijat)
 
       Then("saan siirtotiedoston, jossa on vain hyväksytyt hakijat")
-      hakijat.hakijat.size should equal (0)
+      hakijat.hakijat.size should equal (1)
     }
 
     scenario("Paikan vastaanottaneet hakijat") {

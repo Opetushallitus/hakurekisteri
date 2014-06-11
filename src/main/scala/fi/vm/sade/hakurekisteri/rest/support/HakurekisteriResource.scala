@@ -102,7 +102,7 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
 
   def createResource(authorities:Seq[String], user:Option[String]): Object = {
     (command[C] >> (_.toValidatedResource)).fold(
-      errors => {logger.warn(errors.toString()); BadRequest("Malformed Resource")},
+      errors => {logger.warn(errors.toString()); BadRequest(body = errors, reason = "Malformed Resource")},
       resource => new ActorResult(AuthorizedCreate(resource, authorities, user.getOrElse("anonymous")), ResourceCreated(request.getRequestURL)))
   }
 
@@ -121,7 +121,7 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
 
   def updateResource(id:UUID, authorities:Seq[String], user: Option[String]): Object = {
     (command[C] >> (_.toValidatedResource)).fold(
-      errors => BadRequest("Malformed Resource + " + errors),
+      errors => BadRequest(body = errors, reason = "Malformed Resource"),
       resource => new ActorResult[A with Identified](AuthorizedUpdate(identifyResource(resource, id), authorities, user.getOrElse("anonymous")), Ok(_)))
   }
 

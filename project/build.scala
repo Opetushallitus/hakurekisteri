@@ -109,6 +109,9 @@ object HakuJaValintarekisteriBuild extends Build {
 
   val cleanNodeModules = cleanFiles <+= baseDirectory { base => base / "node_modules" }
 
+
+
+
   val mochaTestSources =  unmanagedSourceDirectories in Test <+= (sourceDirectory in Test) {sd => sd / "coffee"}
 
   val artifactoryPublish = publishTo <<= version apply {
@@ -161,6 +164,7 @@ object HakuJaValintarekisteriBuild extends Build {
       file("."),
       settings = Defaults.defaultSettings ++ ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
         ++ org.scalastyle.sbt.ScalastylePlugin.Settings
+        ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"))
         ++ Seq(unmanagedSourceDirectories in Compile <+= (sourceDirectory in Runtime) { sd => sd / "js"})
         ++ Seq(com.earldouglas.xsbtwebplugin.PluginKeys.webappResources in Compile <+= (sourceDirectory in Runtime)(sd => sd / "js"))
         ++ Seq(mochaTask, installMochaTask, installCoffeeTask, cleanNodeModules, mochaTestSources)

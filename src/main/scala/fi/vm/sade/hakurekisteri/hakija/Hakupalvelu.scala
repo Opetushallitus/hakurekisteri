@@ -43,7 +43,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
     }
     val user = q.user
 
-    val future: Future[Option[List[FullHakemus]]] = restRequest[List[FullHakemus]](user, getUrl())
+    val responseFuture: Future[Option[List[FullHakemus]]] = restRequest[List[FullHakemus]](user, getUrl())
 
     def getAll(cur: List[FullHakemus])(res: Option[List[FullHakemus]]):Future[Option[List[FullHakemus]]] = res match {
       case None                                   => Future.successful(None)
@@ -51,12 +51,26 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
       case Some(l)                                => restRequest[List[FullHakemus]](user, getUrl((cur.length / maxApplications) + 1)).flatMap(getAll(cur ++ l))
     }
 
-    def f(foo: Option[List[FullHakemus]]): Seq[Hakija] = {
+    val Pattern = "preference(\\d+).*".r
 
-      foo.getOrElse(Seq()).map(RestHakupalvelu.getHakija)
-    }
+    def filterHakemus(optionField: Option[String], filterFunc: (String) => (Map[String, String]) => Map[String, String] )(fh: FullHakemus): FullHakemus =
+      optionField match {
+        case Some(field) => fh.copy(answers = newAnswers(fh.answers, filterFunc(field)))
+        case None => fh
+      }
 
-    future.flatMap(getAll(List())).map(f)
+    def newAnswers(answers:  Option[Map[String, Map[String, String]]], toiveFilter: (Map[String, String]) => Map[String, String]) :  Option[Map[String, Map[String, String]]] =
+      answers.map((ans) => ans.get("hakutoiveet").fold(ans)((hts: Map[String, String]) => ans + ("hakutoiveet" -> toiveFilter(hts))))
+
+    def newToiveet(oid: String)(toiveet: Map[String, String]): Map[String, String] =
+      toiveet.filterKeys{case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Opetuspiste-id-parents", "").split(",").toSet.contains(oid) || toiveet.getOrElse(s"preference$jno-Opetuspiste-id", "") == oid}
+
+    def newToiveetForKoodi(koodi: String)(toiveet: Map[String, String]): Map[String, String] =
+      toiveet.filterKeys{case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Koulutus-id-aoIdentifier", "") == koodi}
+
+    responseFuture.flatMap(getAll(List())).map(_.getOrElse(Seq()).map(filterHakemus(q.organisaatio, newToiveet)).map(filterHakemus(q.hakukohdekoodi, newToiveetForKoodi)).map(RestHakupalvelu.getHakija))
+
+
   }
 
 
@@ -182,7 +196,7 @@ object RestHakupalvelu {
         ))
         case _ => Seq()
       },
-      (for (a <- v; t <- a.get("hakutoiveet")) yield Hakemus(convertToiveet(t), hakemus.oid, julkaisulupa)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa))
+      (for (a <- v; t <- a.get("hakutoiveet")) yield Hakemus(convertToiveet(t), hakemus.oid, julkaisulupa, hakemus.applicationSystemId)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId))
     )
   }
 
@@ -205,23 +219,24 @@ object RestHakupalvelu {
       case (Pattern(n), notEmpty(opetusPisteId)) => (n.toShort, opetusPisteId)
     }.toSeq
 
-    opetusPisteet.sortBy(_._1).map((t) => {
-      val koulutukset = Set(Komoto("", "", t._2, "2014", Kausi.Syksy))
-      val hakukohdekoodi = toiveet("preference" + t._1 + "-Koulutus-id-aoIdentifier")
-      val kaksoistutkinto = toiveet.get("preference" + t._1 + "_kaksoistutkinnon_lisakysymys").map(s => Try(s.toBoolean).getOrElse(false))
-      val urheilijanammatillinenkoulutus = toiveet.get("preference" + t._1 + "_urheilijan_ammatillisen_koulutuksen_lisakysymys").
+    opetusPisteet.sortBy(_._1).map { case (jno, tarjoajaoid) =>
+      val koulutukset = Set(Komoto("", "", tarjoajaoid, "2014", Kausi.Syksy))
+      val hakukohdekoodi = toiveet(s"preference$jno-Koulutus-id-aoIdentifier")
+      val kaksoistutkinto = toiveet.get(s"preference${jno}_kaksoistutkinnon_lisakysymys").map(s => Try(s.toBoolean).getOrElse(false))
+      val urheilijanammatillinenkoulutus = toiveet.get(s"preference${jno}_urheilijan_ammatillisen_koulutuksen_lisakysymys").
         map(s => Try(s.toBoolean).getOrElse(false))
-      val harkinnanvaraisuusperuste: Option[String] = toiveet.get("preference" + t._1 + "-discretionary-follow-up").flatMap(s => s match {
+      val harkinnanvaraisuusperuste: Option[String] = toiveet.get(s"preference$jno-discretionary-follow-up").flatMap {
         case "oppimisvaikudet" => Some("1")
         case "sosiaalisetsyyt" => Some("2")
         case "todistustenvertailuvaikeudet" => Some("3")
         case "todistustenpuuttuminen" => Some("4")
-        case _ => logger.error(s"invalid discretionary-follow-up value $s"); None
-      })
-      val aiempiperuminen = toiveet.get("preference" + t._1 + "_sora_oikeudenMenetys").map(s => Try(s.toBoolean).getOrElse(false))
-      val terveys = toiveet.get("preference" + t._1 + "_sora_terveys").map(s => Try(s.toBoolean).getOrElse(false))
-      Hakutoive(Hakukohde(koulutukset, hakukohdekoodi), kaksoistutkinto, urheilijanammatillinenkoulutus, harkinnanvaraisuusperuste, aiempiperuminen, terveys)
-    })
+        case s => logger.error(s"invalid discretionary-follow-up value $s"); None
+      }
+      val aiempiperuminen = toiveet.get(s"preference${jno}_sora_oikeudenMenetys").map(s => Try(s.toBoolean).getOrElse(false))
+      val terveys = toiveet.get(s"preference${jno}_sora_terveys").map(s => Try(s.toBoolean).getOrElse(false))
+      val hakukohdeOid = toiveet.get(s"preference$jno-Koulutus-id").getOrElse("")
+      Toive(jno, Hakukohde(koulutukset, hakukohdekoodi, hakukohdeOid), kaksoistutkinto, urheilijanammatillinenkoulutus, harkinnanvaraisuusperuste, aiempiperuminen, terveys)
+    }
   }
 
   def getValue(key: String, subKey: String, default: String = "")(implicit answers: Option[Map[String, Map[String, String]]]): String = {
