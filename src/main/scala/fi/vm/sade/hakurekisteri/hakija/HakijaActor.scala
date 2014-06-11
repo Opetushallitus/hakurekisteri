@@ -15,6 +15,7 @@ import ForkedSeq._
 import TupledFuture._
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakemuksenTila._
+import scala.collection.immutable.Iterable
 
 
 case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String, oid: String)
@@ -245,18 +246,11 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     case Some(SijoitteluPagination(Some(results), _)) => matchSijoitteluAndHakemus(results, hakijas)
   }
 
-  def combine2sijoittelunTulos(hakijat: Seq[Hakija])(user: Option[User]): Future[Seq[Hakija]] = {
-    val hakemuksetByHakuOids = hakijat.groupBy(_.hakemus.hakuOid) // hakuOid -> lista hakijoista
-    log.debug("hakemuksetByHakuOids keys: " + hakemuksetByHakuOids.keys)
+  def combine2sijoittelunTulos(hakijat: Seq[Hakija])(user: Option[User]): Future[Seq[Hakija]] = Future.fold(
+    hakijat.groupBy(_.hakemus.hakuOid).
+      map { case (hakuOid, hakijas) => sijoittelupalvelu.getSijoitteluTila(hakuOid, user).map(handleSijoittelu(hakijas))}
+  )(Seq[Hakija]())(_ ++ _)
 
-    Future.sequence(hakemuksetByHakuOids.map((t: (String, Seq[Hakija])) => {
-      log.debug("hakuOid: " + t._1)
-      sijoittelupalvelu.getSijoitteluTila(t._1, user).map(handleSijoittelu(t._2))
-    })).map((m: Iterable[Seq[Hakija]]) => {
-      if (m.isEmpty) Seq()
-      else m.reduce(_ ++ _)
-    })
-  }
 
   def hakijaWithValittu(xh:XMLHakija):XMLHakija = xh.copy(hakemus = xh.hakemus.copy(hakutoiveet = xh.hakemus.hakutoiveet.filter(_.valinta == Some("1"))))
 
