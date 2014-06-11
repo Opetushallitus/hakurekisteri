@@ -240,8 +240,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def handleSijoittelu(hakijas: Seq[Hakija])(sp: Option[SijoitteluPagination]): Seq[Hakija] = sp match {
     case None  => matchSijoitteluAndHakemus(Seq(), hakijas)
-    case Some(s) if s.results.isEmpty => matchSijoitteluAndHakemus(Seq(), hakijas)
-    case Some(s) if s.results.isDefined => matchSijoitteluAndHakemus(s.results.get, hakijas)
+    case Some(SijoitteluPagination(None, _)) => matchSijoitteluAndHakemus(Seq(), hakijas)
+    case Some(SijoitteluPagination(Some(results), _)) => matchSijoitteluAndHakemus(results, hakijas) 
   }
 
   def combine2sijoittelunTulos(hakijat: Seq[Hakija])(user: Option[User]): Future[Seq[Hakija]] = {
