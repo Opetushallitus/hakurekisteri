@@ -63,10 +63,18 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
       answers.map((ans) => ans.get("hakutoiveet").fold(ans)((hts: Map[String, String]) => ans + ("hakutoiveet" -> toiveFilter(hts))))
 
     def newToiveet(oid: String)(toiveet: Map[String, String]): Map[String, String] =
-      toiveet.filterKeys{case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Opetuspiste-id-parents", "").split(",").toSet.contains(oid) || toiveet.getOrElse(s"preference$jno-Opetuspiste-id", "") == oid}
+      toiveet.filterKeys
+      {
+        case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Opetuspiste-id-parents", "").split(",").toSet.contains(oid) || toiveet.getOrElse(s"preference$jno-Opetuspiste-id", "") == oid
+        case _ => true
+      }
 
     def newToiveetForKoodi(koodi: String)(toiveet: Map[String, String]): Map[String, String] =
-      toiveet.filterKeys{case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Koulutus-id-aoIdentifier", "") == koodi}
+      toiveet.filterKeys
+      {
+        case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Koulutus-id-aoIdentifier", "") == koodi
+        case _ => true
+      }
 
     responseFuture.flatMap(getAll(List())).map(_.getOrElse(Seq()).map(filterHakemus(q.organisaatio, newToiveet)).map(filterHakemus(q.hakukohdekoodi, newToiveetForKoodi)).map(RestHakupalvelu.getHakija))
 
