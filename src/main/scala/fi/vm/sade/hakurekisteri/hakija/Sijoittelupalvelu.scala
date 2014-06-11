@@ -107,12 +107,11 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu) extends Actor {
 
 case class SijoitteluQuery(hakuOid: String)
 
-class RestSijoittelupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/sijoittelu-service", user: Option[String], password: Option[String])(implicit val ec: ExecutionContext) extends Sijoittelupalvelu {
+class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "https://itest-virkailija.oph.ware.fi/sijoittelu-service", user: Option[String], password: Option[String])(implicit val ec: ExecutionContext) extends Sijoittelupalvelu {
   val logger = LoggerFactory.getLogger(getClass)
   import scala.concurrent.duration._
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
 
-  val serviceAccessUrl = ""
 
   def getProxyTicket: Future[String] = (user, password) match {
     case (Some(u), Some(p)) =>

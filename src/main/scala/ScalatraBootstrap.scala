@@ -46,10 +46,12 @@ class ScalatraBootstrap extends LifeCycle {
   implicit val ec:ExecutionContext = system.dispatcher
   val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
   val OPH = "1.2.246.562.10.00000000001"
-  val organisaatioServiceUrlQa = "https://testi.virkailija.opintopolku.fi/organisaatio-service"
-  val hakuappServiceUrlQa = "https://testi.virkailija.opintopolku.fi/haku-app"
-  val koodistoServiceUrlQa = "https://testi.virkailija.opintopolku.fi/koodisto-service"
-  val sijoitteluServiceUrlQa = "https://testi.virkailija.opintopolku.fi/sijoittelu-service"
+  val hostQa = "testi.virkailija.opintopolku.fi"
+
+  val organisaatioServiceUrlQa = s"https://$hostQa/organisaatio-service"
+  val hakuappServiceUrlQa = s"https://$hostQa/haku-app"
+  val koodistoServiceUrlQa = s"https://$hostQa/koodisto-service"
+  val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
 
 
   private val NumThreads = 1000
@@ -127,7 +129,9 @@ class ScalatraBootstrap extends LifeCycle {
     val organisaatiot = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
     val maxApplications = OPHSecurity.config.properties.get("suoritusrekisteri.hakijat.max.applications").getOrElse("2000").toInt
     val sijoitteluServiceUrl = OPHSecurity.config.properties.get("cas.service.sijoittelu-service").getOrElse(sijoitteluServiceUrlQa)
-    val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(sijoitteluServiceUrl,sijoitteluUser,sijoitteluPw)(webExec))))
+    val serviceAccessUrl = "https://" + OPHSecurity.config.properties.get("host.virkailija").getOrElse(hostQa) + "/service-access"
+
+    val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(serviceAccessUrl, sijoitteluServiceUrl,sijoitteluUser,sijoitteluPw)(webExec))))
     val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu(hakuappServiceUrl, maxApplications)(webExec), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl)(webExec), sijoittelu)))
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, suoritusRekisteri, new ArvosanaJournal(database))), "perusopetus-sanity")
