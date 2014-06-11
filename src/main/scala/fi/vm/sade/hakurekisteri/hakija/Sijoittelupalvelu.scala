@@ -149,11 +149,11 @@ class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "http
   override def getSijoitteluTila(hakuOid: String): Future[Option[SijoitteluPagination]] = {
     val url = new URL(serviceUrl + "/resources/sijoittelu/" + hakuOid + "/sijoitteluajo/latest/hakemukset")
     getProxyTicket.flatMap((ticket) => {
-      logger.debug("calling sijoittelu-service [url={}, ticket={}]", url, ticket)
+      logger.debug("calling sijoittelu-service [url={}, ticket={}]", Seq(url, ticket):_*)
       GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
       if (response.code == HttpResponseCode.Ok) {
         val sijoitteluTulos = response.bodyAsCaseClass[SijoitteluPagination].toOption
-        logger.debug("got response from [url={}, ticket={}]", url, ticket)
+        logger.debug("got response from [url={}, ticket={}]", Seq(url, ticket):_*)
 
         sijoitteluTulos
       } else {
