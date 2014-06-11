@@ -207,28 +207,12 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def hakijat2XmlHakijat(hakijat: Seq[Hakija]): Future[XMLHakijat] = hakijat.map(hakija2XMLHakija).join.map(XMLHakijat)
 
-  def matchSijoitteluAndHakemus(shakijas: Seq[SijoitteluHakija], hakijas: Seq[Hakija]): Seq[Hakija] = {
-    val sijoittelu = getValintatapaMap(shakijas, _.tila)
-    val pisteet = getValintatapaMap(shakijas, _.pisteet)
 
-    hakijas.map(tila(sijoittelu)).map(yhteispisteet(pisteet))
-  }
+  def matchSijoitteluAndHakemus(hakijas: Seq[Hakija])(tulos: SijoitteluTulos): Seq[Hakija] =
+    hakijas.map(tila(tulos.tilat)).map(yhteispisteet(tulos.pisteet))
 
 
-  def getValintatapaMap[A](shakijas: Seq[SijoitteluHakija], extractor: (SijoitteluHakutoiveenValintatapajono) => Option[A]): Map[String, Map[String, A]] = shakijas.groupBy(_.hakemusOid).
-    collect {
-    case (Some(hakemusOid), sijoitteluHakijas) =>
 
-
-      def getIndex(toive: SijoitteluHakutoive): Option[(String, A)] = (toive.hakukohdeOid, toive.hakutoiveenValintatapajonot.flatMap(_.headOption))  match {
-        case (Some(hakukohde), Some(vtjono)) => extractor(vtjono).map((hakukohde, _))
-        case _ => None
-
-      }
-
-      (hakemusOid, (for (hakija <- sijoitteluHakijas;
-                         toive <- hakija.hakutoiveet.getOrElse(Seq())) yield getIndex(toive)).flatten.toMap)
-  }
 
   def yhteispisteet(pisteet: Map[String, Map[String, BigDecimal]])(h:Hakija) : Hakija = {
     val toiveet = h.hakemus.hakutoiveet.map((ht) => ht withPisteet pisteet.getOrElse(h.hakemus.hakemusnumero, Map()).get(ht.hakukohde.oid))
@@ -240,17 +224,13 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     h.copy(hakemus = h.hakemus.copy(hakutoiveet = toiveet))
   }
 
-  def handleSijoittelu(hakijas: Seq[Hakija])(sp: Option[SijoitteluPagination]): Seq[Hakija] = sp match {
-    case None  => matchSijoitteluAndHakemus(Seq(), hakijas)
-    case Some(SijoitteluPagination(None, _)) => matchSijoitteluAndHakemus(Seq(), hakijas)
-    case Some(SijoitteluPagination(Some(results), _)) => matchSijoitteluAndHakemus(results, hakijas)
-  }
+
 
   import scala.concurrent.duration._
 
   def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.fold(
     hakijat.groupBy(_.hakemus.hakuOid).
-      map { case (hakuOid, hakijas) => sijoittelupalvelu.?(SijoitteluQuery(hakuOid))(30.seconds).mapTo[Option[SijoitteluPagination]].map(handleSijoittelu(hakijas))}
+      map { case (hakuOid, hakijas) => sijoittelupalvelu.?(SijoitteluQuery(hakuOid))(30.seconds).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
   )(Seq[Hakija]())(_ ++ _)
 
 
