@@ -140,6 +140,7 @@ class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "http
   def getProxyTicket: Future[String] = (user, password) match {
     case (Some(u), Some(p)) =>
       POST(new URL(s"$serviceAccessUrl/accessTicket")).
+        addHeaders("Content-Type" -> "application/x-www-form-urlencoded").
         setBodyString(s"client_id=${URLEncoder.encode(u, "UTF8")}&client_secret=${URLEncoder.encode(p, "UTF8")}&service_url=${URLEncoder.encode(serviceUrl, "UTF8")}").
         apply.map((response) => response.bodyString)
     case _ => Future.successful("")
