@@ -212,15 +212,20 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     hakijas.map(tila(sijoittelu)).map(yhteispisteet(pisteet))
   }
 
-  def getValintatapaMap[A](shakijas: Seq[SijoitteluHakija], f: (SijoitteluHakutoiveenValintatapajono) => Option[A]): Map[String, Map[String, A]] = shakijas.groupBy(_.hakemusOid).
+
+  def getValintatapaMap[A](shakijas: Seq[SijoitteluHakija], extractor: (SijoitteluHakutoiveenValintatapajono) => Option[A]): Map[String, Map[String, A]] = shakijas.groupBy(_.hakemusOid).
     collect {
-    case (Some(s), hs) =>
-      (s, hs.
-        flatMap(_.hakutoiveet.getOrElse(Seq())).
-        flatMap((ht: SijoitteluHakutoive) => ht.hakukohdeOid.
-        map((oid) => ht.hakutoiveenValintatapajonot.getOrElse(Seq()).
-        map((vtj: SijoitteluHakutoiveenValintatapajono) => (oid, f(vtj))).
-        collect { case (hakemusOid, Some(t)) => (hakemusOid, t)}.toMap)).flatten.toMap)
+    case (Some(hakemusOid), sijoitteluHakijas) =>
+
+
+      def getIndex(toive: SijoitteluHakutoive): Option[(String, A)] = (toive.hakukohdeOid, toive.hakutoiveenValintatapajonot.flatMap(_.headOption))  match {
+        case (Some(hakukohde), Some(vtjono)) => extractor(vtjono).map((hakukohde, _))
+        case _ => None
+
+      }
+
+      (hakemusOid, (for (hakija <- sijoitteluHakijas;
+                         toive <- hakija.hakutoiveet.getOrElse(Seq())) yield getIndex(toive)).flatten.toMap)
   }
 
   def yhteispisteet(pisteet: Map[String, Map[String, BigDecimal]])(h:Hakija) : Hakija = {
