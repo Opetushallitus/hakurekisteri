@@ -54,16 +54,6 @@ class ScalatraBootstrap extends LifeCycle {
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
 
 
-  private val NumThreads = 1000
-  private val threadNumber = new AtomicInteger(1)
-  lazy val webPool = Executors.newFixedThreadPool(NumThreads, new ThreadFactory() {
-    override def newThread(r: Runnable): Thread = {
-      new Thread(r, "webpool-" + threadNumber.getAndIncrement)
-    }
-  })
-
-  lazy val webExec = ExecutionContext.fromExecutorService(webPool)
-
   override def init(context: ServletContext) {
     OPHSecurity init context
     val orgServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa) + "/services/organisaatioService"
@@ -125,14 +115,14 @@ class ScalatraBootstrap extends LifeCycle {
     val hakuappServiceUrl = OPHSecurity.config.properties.get("cas.service.haku").getOrElse(hakuappServiceUrlQa)
     val organisaatioServiceUrl = OPHSecurity.config.properties.get("cas.service.organisaatio-service").getOrElse(organisaatioServiceUrlQa)
     val koodistoServiceUrl = OPHSecurity.config.properties.get("cas.service.koodisto-service").getOrElse(koodistoServiceUrlQa)
-    val organisaatiopalvelu: RestOrganisaatiopalvelu = new RestOrganisaatiopalvelu(organisaatioServiceUrl)(webExec)
+    val organisaatiopalvelu: RestOrganisaatiopalvelu = new RestOrganisaatiopalvelu(organisaatioServiceUrl)
     val organisaatiot = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
     val maxApplications = OPHSecurity.config.properties.get("suoritusrekisteri.hakijat.max.applications").getOrElse("2000").toInt
     val sijoitteluServiceUrl = OPHSecurity.config.properties.get("cas.service.sijoittelu-service").getOrElse(sijoitteluServiceUrlQa)
     val serviceAccessUrl = "https://" + OPHSecurity.config.properties.get("host.virkailija").getOrElse(hostQa) + "/service-access"
 
-    val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(serviceAccessUrl, sijoitteluServiceUrl,sijoitteluUser,sijoitteluPw)(webExec))))
-    val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu(hakuappServiceUrl, maxApplications)(webExec), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl)(webExec), sijoittelu)))
+    val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(serviceAccessUrl, sijoitteluServiceUrl,sijoitteluUser,sijoitteluPw))))
+    val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu(hakuappServiceUrl, maxApplications), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl), sijoittelu)))
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, suoritusRekisteri, new ArvosanaJournal(database))), "perusopetus-sanity")
 
