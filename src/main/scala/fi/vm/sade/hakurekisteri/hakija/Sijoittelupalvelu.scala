@@ -142,18 +142,18 @@ class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "http
       POST(new URL(s"$serviceAccessUrl/accessTicket")).
         addHeaders("Content-Type" -> "application/x-www-form-urlencoded").
         setBodyString(s"client_id=${URLEncoder.encode(u, "UTF8")}&client_secret=${URLEncoder.encode(p, "UTF8")}&service_url=${URLEncoder.encode(serviceUrl, "UTF8")}").
-        apply.map((response) => response.bodyString)
+        apply.map((response) => response.bodyString.trim)
     case _ => Future.successful("")
   }
 
   override def getSijoitteluTila(hakuOid: String): Future[Option[SijoitteluPagination]] = {
     val url = new URL(serviceUrl + "/resources/sijoittelu/" + hakuOid + "/sijoitteluajo/latest/hakemukset")
     getProxyTicket.flatMap((ticket) => {
-      logger.debug("calling sijoittelu-service [url={}, ticket={}]", Array(url, ticket))
+      logger.debug("calling sijoittelu-service [url={}, ticket={}]", url, ticket)
       GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
       if (response.code == HttpResponseCode.Ok) {
         val sijoitteluTulos = response.bodyAsCaseClass[SijoitteluPagination].toOption
-        logger.debug("got response from [url={}, ticket={}]", Array(url, ticket))
+        logger.debug("got response from [url={}, ticket={}]", url, ticket)
 
         sijoitteluTulos
       } else {
