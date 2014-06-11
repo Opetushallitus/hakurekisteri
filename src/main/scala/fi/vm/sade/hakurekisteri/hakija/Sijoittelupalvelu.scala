@@ -3,13 +3,11 @@ package fi.vm.sade.hakurekisteri.hakija
 import scala.concurrent.{ExecutionContext, Future}
 import org.slf4j.LoggerFactory
 import com.stackmob.newman.ApacheHttpClient
-import org.json4s.{DefaultFormats, Formats}
-import java.net.URL
+import java.net.{URLEncoder, URL}
 import com.stackmob.newman.dsl._
-import fi.vm.sade.hakurekisteri.rest.support.User
 import com.stackmob.newman.response.HttpResponseCode
-import SijoitteluValintatuloksenTila.SijoitteluValintatuloksenTila
-import SijoitteluHakemuksenTila.SijoitteluHakemuksenTila
+import akka.actor.Actor
+import scala.compat.Platform
 
 object SijoitteluValintatuloksenTila extends Enumeration {
   type SijoitteluValintatuloksenTila = Value
@@ -40,24 +38,95 @@ case class SijoitteluPagination(results: Option[Seq[SijoitteluHakija]], totalCou
 
 trait Sijoittelupalvelu {
 
-  def getSijoitteluTila(hakuOid: String, user: Option[User]): Future[Option[SijoitteluPagination]]
+  def getSijoitteluTila(hakuOid: String): Future[Option[SijoitteluPagination]]
 
 }
 
-class RestSijoittelupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/sijoittelu-service")(implicit val ec: ExecutionContext) extends Sijoittelupalvelu {
+
+class SijoitteluActor(cachedService: Sijoittelupalvelu) extends Actor {
+
+
+  import akka.pattern._
+
+  import scala.concurrent.duration._
+
+  implicit val ec = context.dispatcher
+
+  val retry: FiniteDuration = 10.seconds
+
+  var cache = Map[String, Future[Option[SijoitteluPagination]]]()
+  var cacheHistory = Map[String, Long]()
+  val expiration = 1.hour
+  private val refetch: FiniteDuration = 30.minutes
+
+  override def receive: Receive = {
+    case SijoitteluQuery(haku) =>
+      getSijoittelu(haku) pipeTo sender
+    case Update(haku) if !inUse(haku) =>
+      cache - haku
+    case Update(haku) =>
+      val result = cachedService.getSijoitteluTila(haku).map(Sijoittelu(haku, _))
+      result.onFailure{ case t => rescheduleHaku(haku, retry)}
+      result pipeTo self
+    case Sijoittelu(haku, sp) =>
+      cache + (haku -> Future.successful(sp))
+      rescheduleHaku(haku)
+  }
+
+  def inUse(haku: String):Boolean = cacheHistory.getOrElse(haku,0L) > (Platform.currentTime - expiration.toMillis)
+
+  def getSijoittelu(haku:String):  Future[Option[SijoitteluPagination]] = {
+    cacheHistory = cacheHistory + (haku -> Platform.currentTime)
+    cache.get(haku) match {
+      case Some(s)  =>
+        s
+      case None =>
+        updateCacheFor(haku)
+    }
+
+  }
+
+
+  def updateCacheFor(haku: String): Future[Option[SijoitteluPagination]] = {
+    val result = cachedService.getSijoitteluTila(haku)
+    cache = cache + (haku -> result)
+    rescheduleHaku(haku)
+    result.onFailure{ case t => rescheduleHaku(haku, retry)}
+    result
+  }
+
+
+  def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
+    context.system.scheduler.scheduleOnce(time, self, Update(haku))
+  }
+
+  case class Update(haku:String)
+  case class Sijoittelu(haku: String, sp: Option[SijoitteluPagination])
+
+}
+
+case class SijoitteluQuery(hakuOid: String)
+
+class RestSijoittelupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/sijoittelu-service", user: Option[String], password: Option[String])(implicit val ec: ExecutionContext) extends Sijoittelupalvelu {
   val logger = LoggerFactory.getLogger(getClass)
   import scala.concurrent.duration._
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
 
-  def getProxyTicket(user: Option[User]): String = {
-    user.flatMap(_.attributePrincipal.map(_.getProxyTicketFor(serviceUrl + "/j_spring_cas_security_check"))).getOrElse("")
+  val serviceAccessUrl = ""
+
+  def getProxyTicket: Future[String] = (user, password) match {
+    case (Some(u), Some(p)) =>
+      POST(new URL(s"$serviceAccessUrl/accessTicket")).
+        setBodyString(s"client_id=${URLEncoder.encode(u, "UTF8")}&client_secret=${URLEncoder.encode(p, "UTF8")}&service_url=${URLEncoder.encode(serviceUrl, "UTF8")}").
+        apply.map((response) => response.bodyString)
+    case _ => Future.successful("")
   }
 
-  override def getSijoitteluTila(hakuOid: String, user: Option[User]): Future[Option[SijoitteluPagination]] = {
+  override def getSijoitteluTila(hakuOid: String): Future[Option[SijoitteluPagination]] = {
     val url = new URL(serviceUrl + "/resources/sijoittelu/" + hakuOid + "/sijoitteluajo/latest/hakemukset")
-    val ticket = getProxyTicket(user)
-    logger.debug("calling sijoittelu-service [url={}, ticket={}]", Array(url, ticket))
-    GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
+    getProxyTicket.flatMap((ticket) => {
+      logger.debug("calling sijoittelu-service [url={}, ticket={}]", Array(url, ticket))
+      GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
       if (response.code == HttpResponseCode.Ok) {
         val sijoitteluTulos = response.bodyAsCaseClass[SijoitteluPagination].toOption
         logger.debug("got response from [url={}, ticket={}]", Array(url, ticket))
@@ -67,7 +136,7 @@ class RestSijoittelupalvelu(serviceUrl: String = "https://itest-virkailija.oph.w
         logger.error("call to sijoittelu-service [url={}, ticket={}] failed: {}", url, ticket, response.code)
         throw new RuntimeException("virhe kutsuttaessa sijoittelupalvelua: %s".format(response.code))
       }
-    })
+    })})
   }
 
 }

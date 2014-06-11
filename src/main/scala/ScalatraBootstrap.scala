@@ -64,10 +64,14 @@ class ScalatraBootstrap extends LifeCycle {
 
   override def init(context: ServletContext) {
     OPHSecurity init context
-    val orgServiceUrl = OPHSecurity.config.properties.get("cas.service.organisaatio-service").getOrElse(organisaatioServiceUrlQa) + "/services/organisaatioService"
+    val orgServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa) + "/services/organisaatioService"
     val database = Try(Database.forName(jndiName)).recover {
       case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
     }.get
+
+    val sijoitteluUser = OPHSecurity.config.properties.get("tiedonsiirto.app.username.to.suoritusrekisteri")
+    val sijoitteluPw = OPHSecurity.config.properties.get("tiedonsiirto.app.password.to.suoritusrekisteri")
+
 
 
     //val camel = CamelExtension(system)
@@ -123,7 +127,8 @@ class ScalatraBootstrap extends LifeCycle {
     val organisaatiot = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
     val maxApplications = OPHSecurity.config.properties.get("suoritusrekisteri.hakijat.max.applications").getOrElse("2000").toInt
     val sijoitteluServiceUrl = OPHSecurity.config.properties.get("cas.service.sijoittelu-service").getOrElse(sijoitteluServiceUrlQa)
-    val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu(hakuappServiceUrl, maxApplications)(webExec), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl)(webExec), new RestSijoittelupalvelu(sijoitteluServiceUrl)(webExec))))
+    val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(sijoitteluServiceUrl,sijoitteluUser,sijoitteluPw)(webExec))))
+    val hakijat = system.actorOf(Props(new HakijaActor(new RestHakupalvelu(hakuappServiceUrl, maxApplications)(webExec), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl)(webExec), sijoittelu)))
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, suoritusRekisteri, new ArvosanaJournal(database))), "perusopetus-sanity")
 

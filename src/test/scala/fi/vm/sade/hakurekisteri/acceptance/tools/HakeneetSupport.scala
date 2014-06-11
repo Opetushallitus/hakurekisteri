@@ -206,7 +206,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   }
 
   object sijoittelupalvelu extends Sijoittelupalvelu {
-    override def getSijoitteluTila(hakuOid: String, user: Option[User]): Future[Option[SijoitteluPagination]] = hakuOid match {
+    override def getSijoitteluTila(hakuOid: String): Future[Option[SijoitteluPagination]] = hakuOid match {
       case _ => Future.successful(
         Some(SijoitteluPagination(
           Some(Seq(
@@ -248,7 +248,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
 
     val orgAct = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
-    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodistopalvelu, sijoittelupalvelu)))
+    val sijoittelu = system.actorOf(Props(new SijoitteluActor(sijoittelupalvelu)))
+    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodistopalvelu, sijoittelu)))
 
     def get(q: HakijaQuery) = {
       hakijaActor ? q

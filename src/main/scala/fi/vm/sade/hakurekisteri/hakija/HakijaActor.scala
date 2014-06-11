@@ -120,7 +120,7 @@ case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String, julkaisul
 
 case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria: Seq[Opiskelija], hakemus: Hakemus)
 
-class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistopalvelu: Koodistopalvelu, sijoittelupalvelu: Sijoittelupalvelu) extends Actor {
+class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistopalvelu: Koodistopalvelu, sijoittelupalvelu: ActorRef) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
 
@@ -246,9 +246,11 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     case Some(SijoitteluPagination(Some(results), _)) => matchSijoitteluAndHakemus(results, hakijas)
   }
 
-  def combine2sijoittelunTulos(hakijat: Seq[Hakija])(user: Option[User]): Future[Seq[Hakija]] = Future.fold(
+  import scala.concurrent.duration._
+
+  def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.fold(
     hakijat.groupBy(_.hakemus.hakuOid).
-      map { case (hakuOid, hakijas) => sijoittelupalvelu.getSijoitteluTila(hakuOid, user).map(handleSijoittelu(hakijas))}
+      map { case (hakuOid, hakijas) => sijoittelupalvelu.?(SijoitteluQuery(hakuOid))(30.seconds).mapTo[Option[SijoitteluPagination]].map(handleSijoittelu(hakijas))}
   )(Seq[Hakija]())(_ ++ _)
 
 
@@ -266,6 +268,6 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
   def getHakijat(q: HakijaQuery): Future[XMLHakijat] = {
-    hakupalvelu.getHakijat(q).flatMap(combine2sijoittelunTulos(_)(q.user)).flatMap(hakijat2XmlHakijat)
+    hakupalvelu.getHakijat(q).flatMap(combine2sijoittelunTulos(q.user)).flatMap(hakijat2XmlHakijat)
   }
 }
