@@ -16,16 +16,16 @@ class RestHakupalveluSpec extends ScalatraFunSuite {
    implicit val system = ActorSystem()
    implicit def executor: ExecutionContext = system.dispatcher
 
-   val client = new RestHakupalvelu("https://itest-virkailija.oph.ware.fi/haku-app")
+   //val client:Hakupalvelu = new RestHakupalvelu("https://itest-virkailija.oph.ware.fi/haku-app")
 
    ignore("haku-app should return list of applications") {
-     val future = client.find(HakijaQuery(None, None, None, Hakuehto.Kaikki, Some(User("testi", Seq(), None))))
+     /*val future = client.find(HakijaQuery(None, None, None, Hakuehto.Kaikki, Some(User("testi", Seq(), None))))
 
      // TODO improve this to also test successful query
      val t = intercept[RuntimeException] {
        Await.result(future, Duration(length = 5, unit = TimeUnit.SECONDS))
      }
-     t.getMessage should equal ("virhe kutsuttaessa hakupalvelua: Unauthorized")
+     t.getMessage should equal ("virhe kutsuttaessa hakupalvelua: Unauthorized")*/
    }
 
  }

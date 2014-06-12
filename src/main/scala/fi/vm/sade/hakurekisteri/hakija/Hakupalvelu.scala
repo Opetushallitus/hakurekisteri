@@ -7,7 +7,7 @@ import java.net.{URL, URLEncoder}
 import com.stackmob.newman.ApacheHttpClient
 import com.stackmob.newman.response.HttpResponseCode
 import com.stackmob.newman.dsl._
-import fi.vm.sade.hakurekisteri.rest.support.{Kausi, User}
+import fi.vm.sade.hakurekisteri.rest.support.{Resource, Kausi, User}
 import org.slf4j.LoggerFactory
 import fi.vm.sade.hakurekisteri.henkilo._
 import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Komoto, Suoritus}
@@ -19,114 +19,67 @@ import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
 import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import scala.annotation.tailrec
+import java.util.UUID
+import fi.vm.sade.hakurekisteri.storage.Identified
+import akka.actor.ActorRef
+import akka.util.Timeout
 
 trait Hakupalvelu {
 
   def getHakijat(q: HakijaQuery): Future[Seq[Hakija]]
 
+
 }
 
-class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000)(implicit val ec: ExecutionContext) extends Hakupalvelu {
+class AkkaHakupalvelu(hakemusActor:ActorRef)(implicit val ec: ExecutionContext) extends Hakupalvelu {
   val logger = LoggerFactory.getLogger(getClass)
 
 
   import scala.concurrent.duration._
 
-  implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
-  protected implicit def jsonFormats: Formats = DefaultFormats
+
+
+  val Pattern = "preference(\\d+).*".r
+
+  def filterHakemus(optionField: Option[String], filterFunc: (String) => (Map[String, String]) => Map[String, String] )(fh: FullHakemus): FullHakemus = optionField match {
+    case Some(field) => fh.copy(answers = newAnswers(fh.answers, filterFunc(field)))
+    case None => fh
+  }
+
+  def newAnswers(answers:  Option[Map[String, Map[String, String]]], toiveFilter: (Map[String, String]) => Map[String, String]) :  Option[Map[String, Map[String, String]]] =
+    answers.map((ans) => ans.get("hakutoiveet").fold(ans)((hts: Map[String, String]) => ans + ("hakutoiveet" -> toiveFilter(hts))))
+
+  def newToiveet(oid: String)(toiveet: Map[String, String]): Map[String, String] = toiveet.filterKeys {
+    case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Opetuspiste-id-parents", "").split(",").toSet.contains(oid) || toiveet.getOrElse(s"preference$jno-Opetuspiste-id", "") == oid
+    case _ => true
+  }
+
+  def newToiveetForKoodi(koodi: String)(toiveet: Map[String, String]): Map[String, String] = toiveet.filterKeys {
+    case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Koulutus-id-aoIdentifier", "") == koodi
+    case _ => true
+  }
+
+  def filterState(fh: FullHakemus): Boolean = fh.state.map((s) => s == "ACTIVE" || s == "INCOMPLETE").getOrElse(false)
+
+
 
 
 
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
-    def getUrl(page: Int = 0): URL = {
-      new URL(serviceUrl + "/applications/listfull?" + getQueryParams(q, page))
-    }
-    val user = q.user
-
-    val responseFuture: Future[Option[List[FullHakemus]]] = restRequest[List[FullHakemus]](user, getUrl())
-
-    def getAll(cur: List[FullHakemus])(res: Option[List[FullHakemus]]):Future[Option[List[FullHakemus]]] = res match {
-      case None                                   => Future.successful(None)
-      case Some(l) if l.length < maxApplications  => Future.successful(Some(cur ++ l))
-      case Some(l)                                => restRequest[List[FullHakemus]](user, getUrl((cur.length / maxApplications) + 1)).flatMap(getAll(cur ++ l))
-    }
-
-    val Pattern = "preference(\\d+).*".r
-
-    def filterHakemus(optionField: Option[String], filterFunc: (String) => (Map[String, String]) => Map[String, String] )(fh: FullHakemus): FullHakemus = optionField match {
-      case Some(field) => fh.copy(answers = newAnswers(fh.answers, filterFunc(field)))
-      case None => fh
-    }
-
-    def newAnswers(answers:  Option[Map[String, Map[String, String]]], toiveFilter: (Map[String, String]) => Map[String, String]) :  Option[Map[String, Map[String, String]]] =
-      answers.map((ans) => ans.get("hakutoiveet").fold(ans)((hts: Map[String, String]) => ans + ("hakutoiveet" -> toiveFilter(hts))))
-
-    def newToiveet(oid: String)(toiveet: Map[String, String]): Map[String, String] = toiveet.filterKeys {
-      case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Opetuspiste-id-parents", "").split(",").toSet.contains(oid) || toiveet.getOrElse(s"preference$jno-Opetuspiste-id", "") == oid
-      case _ => true
-    }
-
-    def newToiveetForKoodi(koodi: String)(toiveet: Map[String, String]): Map[String, String] = toiveet.filterKeys {
-      case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Koulutus-id-aoIdentifier", "") == koodi
-      case _ => true
-    }
-
-    def filterState(fh: FullHakemus): Boolean = fh.state.map((s) => s == "ACTIVE" || s == "INCOMPLETE").getOrElse(false)
-
-    responseFuture.
-      flatMap(getAll(List())).
-      map(_.getOrElse(Seq()).
+    import akka.pattern._
+    implicit val timeout: Timeout = 60.seconds
+    (hakemusActor ? HakemusQuery(q)).mapTo[Seq[FullHakemus]]
+      .map(_.
       withFilter(filterState).
       map(filterHakemus(q.organisaatio, newToiveet)).
       map(filterHakemus(q.hakukohdekoodi, newToiveetForKoodi)).
-      map(RestHakupalvelu.getHakija))
+      map(AkkaHakupalvelu.getHakija))
   }
 
-  def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
-  def getQueryParams(q: HakijaQuery, page: Int = 0): String = {
-    val params: Seq[String] = Seq(
-      Some("orgSearchExpanded=true"), Some("checkAllApplications=false"),
-      Some(s"start=${page * maxApplications}"), Some(s"rows=$maxApplications"),
-      q.haku.map(s => s"asId=${urlencode(s)}"),
-      q.organisaatio.map(s => s"lopoid=${urlencode(s)}"),
-      q.hakukohdekoodi.map(s => s"aoid=${urlencode(s)}")
-    ).flatten
-
-    Try((for(i <- params; p <- List("&", i)) yield p).tail.reduce(_ + _)).getOrElse("")
-  }
-
-  def getProxyTicket(user: Option[User]): Future[String] = {
-    Future(user.flatMap(_.attributePrincipal.map(_.getProxyTicketFor(serviceUrl + "/j_spring_cas_security_check"))).getOrElse(""))
-  }
-
-  def find(q: HakijaQuery): Future[Seq[ListHakemus]] = {
-    val url = new URL(serviceUrl + "/applications/list/fullName/asc?" + getQueryParams(q))
-    val user = q.user
-    restRequest[HakemusHaku](user, url).map(_.map(_.results).getOrElse(Seq()))
-  }
-
-  def restRequest[A <: AnyRef](user: Option[User], url: URL)(implicit mf : Manifest[A]): Future[Option[A]] = {
-    getProxyTicket(user).flatMap((ticket) => {
-      logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
-
-      GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
-        if (response.code == HttpResponseCode.Ok) {
-          val hakemusHaku = response.bodyAsCaseClass[A].toOption
-          logger.debug("got response for url: [{}]", url)
-
-          hakemusHaku
-        } else {
-          logger.error("call to haku-app [url={}, ticket={}] failed: {}", url, ticket, response.code)
-
-          throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
-        }
-      })
-    })
-  }
 }
 
-object RestHakupalvelu {
+object AkkaHakupalvelu {
   val logger = LoggerFactory.getLogger(getClass)
 
   val DEFAULT_POHJA_KOULUTUS: String = "1"
@@ -246,4 +199,27 @@ case class ListHakemus(oid: String)
 
 case class HakemusHaku(totalCount: Long, results: Seq[ListHakemus])
 
-case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[Map[String, Map[String, String]]], state: Option[String])
+case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[Map[String, Map[String, String]]], state: Option[String]) extends Resource {
+  override def identify(id: UUID): this.type with Identified = FullHakemus.identify(this,id).asInstanceOf[this.type with Identified]
+}
+
+
+object FullHakemus {
+
+  def identify(o:FullHakemus): FullHakemus with Identified = o match {
+    case o: FullHakemus with Identified => o
+    case _ => o.identify(UUID.randomUUID)
+  }
+
+  def identify(o:FullHakemus, identity:UUID) =
+  new FullHakemus(
+      o.oid: String,
+      o.personOid: Option[String],
+      o.applicationSystemId: String,
+      o.answers: Option[Map[String, Map[String, String]]],
+      o.state: Option[String]) with Identified {
+        val id: UUID = identity
+      }
+
+
+}

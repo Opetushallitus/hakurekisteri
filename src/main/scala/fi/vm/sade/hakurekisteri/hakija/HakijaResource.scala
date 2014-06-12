@@ -265,7 +265,7 @@ object XMLHakija {
       yhteystiedot.get("YHTEYSTIETO_PUHELINNUMERO"),
       yhteystiedot.get("YHTEYSTIETO_SAHKOPOSTI"),
       yhteystiedot.get("YHTEYSTIETO_KAUPUNKI"),
-      if (hakija.henkilo.sukupuoli == "MIES") "1" else "2", hakija.henkilo.asiointiKieli.kieliKoodi,
+      hakija.henkilo.sukupuoli, hakija.henkilo.asiointiKieli.kieliKoodi,
       hakija.henkilo.markkinointilupa.getOrElse(false),
       hakemus
     )

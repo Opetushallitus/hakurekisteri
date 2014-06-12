@@ -91,7 +91,7 @@ case class Deleted[T](id:UUID) extends Delta[T]
 
 class InMemJournal[T] extends Journal[T] {
 
-  private var deltas: Seq[Delta[T]] = Seq()
+  protected var deltas: Seq[Delta[T]] = Seq()
 
   override def journal(latest:Option[Long]): Seq[Delta[T]] = deltas
 
