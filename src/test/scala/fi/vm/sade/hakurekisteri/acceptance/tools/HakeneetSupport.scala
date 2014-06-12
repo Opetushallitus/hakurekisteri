@@ -74,7 +74,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
         "preference1_kaksoistutkinnon_lisakysymys" -> "true"),
       "lisatiedot" -> Map(
         "lupaMarkkinointi" -> "true",
-        "lupaJulkaisu" -> "true")))
+        "lupaJulkaisu" -> "true"))),
+    state = Some("ACTIVE")
   )
   object FullHakemus2 extends FullHakemus("1.25.2", Some("1.24.2"), "1.2",
     Some(Map(
@@ -124,7 +125,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
         "preference1_kaksoistutkinnon_lisakysymys" -> "true"),
       "lisatiedot" -> Map(
         "lupaMarkkinointi" -> "true",
-        "lupaJulkaisu" -> "true")))
+        "lupaJulkaisu" -> "true"))),
+    Some("INCOMPLETE")
   )
 
   object notEmpty

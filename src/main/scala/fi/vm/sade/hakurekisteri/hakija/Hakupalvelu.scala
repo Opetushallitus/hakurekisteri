@@ -53,45 +53,44 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 
     val Pattern = "preference(\\d+).*".r
 
-    def filterHakemus(optionField: Option[String], filterFunc: (String) => (Map[String, String]) => Map[String, String] )(fh: FullHakemus): FullHakemus =
-      optionField match {
-        case Some(field) => fh.copy(answers = newAnswers(fh.answers, filterFunc(field)))
-        case None => fh
-      }
+    def filterHakemus(optionField: Option[String], filterFunc: (String) => (Map[String, String]) => Map[String, String] )(fh: FullHakemus): FullHakemus = optionField match {
+      case Some(field) => fh.copy(answers = newAnswers(fh.answers, filterFunc(field)))
+      case None => fh
+    }
 
     def newAnswers(answers:  Option[Map[String, Map[String, String]]], toiveFilter: (Map[String, String]) => Map[String, String]) :  Option[Map[String, Map[String, String]]] =
       answers.map((ans) => ans.get("hakutoiveet").fold(ans)((hts: Map[String, String]) => ans + ("hakutoiveet" -> toiveFilter(hts))))
 
-    def newToiveet(oid: String)(toiveet: Map[String, String]): Map[String, String] =
-      toiveet.filterKeys
-      {
-        case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Opetuspiste-id-parents", "").split(",").toSet.contains(oid) || toiveet.getOrElse(s"preference$jno-Opetuspiste-id", "") == oid
-        case _ => true
-      }
+    def newToiveet(oid: String)(toiveet: Map[String, String]): Map[String, String] = toiveet.filterKeys {
+      case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Opetuspiste-id-parents", "").split(",").toSet.contains(oid) || toiveet.getOrElse(s"preference$jno-Opetuspiste-id", "") == oid
+      case _ => true
+    }
 
-    def newToiveetForKoodi(koodi: String)(toiveet: Map[String, String]): Map[String, String] =
-      toiveet.filterKeys
-      {
-        case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Koulutus-id-aoIdentifier", "") == koodi
-        case _ => true
-      }
+    def newToiveetForKoodi(koodi: String)(toiveet: Map[String, String]): Map[String, String] = toiveet.filterKeys {
+      case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Koulutus-id-aoIdentifier", "") == koodi
+      case _ => true
+    }
 
-    responseFuture.flatMap(getAll(List())).map(_.getOrElse(Seq()).map(filterHakemus(q.organisaatio, newToiveet)).map(filterHakemus(q.hakukohdekoodi, newToiveetForKoodi)).map(RestHakupalvelu.getHakija))
+    def filterState(fh: FullHakemus): Boolean = fh.state.map((s) => s == "ACTIVE" || s == "INCOMPLETE").getOrElse(false)
 
-
+    responseFuture.
+      flatMap(getAll(List())).
+      map(_.getOrElse(Seq()).
+      withFilter(filterState).
+      map(filterHakemus(q.organisaatio, newToiveet)).
+      map(filterHakemus(q.hakukohdekoodi, newToiveetForKoodi)).
+      map(RestHakupalvelu.getHakija))
   }
-
-
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
   def getQueryParams(q: HakijaQuery, page: Int = 0): String = {
     val params: Seq[String] = Seq(
-      Some("appState=ACTIVE"), Some("orgSearchExpanded=true"), Some("checkAllApplications=false"),
-      Some("start=%d" format (page * maxApplications)), Some("rows=" + maxApplications),
-      q.haku.map(s => "asId=" + urlencode(s)),
-      q.organisaatio.map(s => "lopoid=" + urlencode(s)),
-      q.hakukohdekoodi.map(s => "aoid=" + urlencode(s))
+      Some("orgSearchExpanded=true"), Some("checkAllApplications=false"),
+      Some(s"start=${page * maxApplications}"), Some(s"rows=$maxApplications"),
+      q.haku.map(s => s"asId=${urlencode(s)}"),
+      q.organisaatio.map(s => s"lopoid=${urlencode(s)}"),
+      q.hakukohdekoodi.map(s => s"aoid=${urlencode(s)}")
     ).flatten
 
     Try((for(i <- params; p <- List("&", i)) yield p).tail.reduce(_ + _)).getOrElse("")
@@ -101,16 +100,11 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
     Future(user.flatMap(_.attributePrincipal.map(_.getProxyTicketFor(serviceUrl + "/j_spring_cas_security_check"))).getOrElse(""))
   }
 
-
-
-
-
   def find(q: HakijaQuery): Future[Seq[ListHakemus]] = {
     val url = new URL(serviceUrl + "/applications/list/fullName/asc?" + getQueryParams(q))
     val user = q.user
     restRequest[HakemusHaku](user, url).map(_.map(_.results).getOrElse(Seq()))
   }
-
 
   def restRequest[A <: AnyRef](user: Option[User], url: URL)(implicit mf : Manifest[A]): Future[Option[A]] = {
     getProxyTicket(user).flatMap((ticket) => {
@@ -130,8 +124,6 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
       })
     })
   }
-
-
 }
 
 object RestHakupalvelu {
@@ -144,8 +136,6 @@ object RestHakupalvelu {
     case "7" => Some((LocalDate.now.getYear + 1).toString)
     case _ => vastaukset.flatMap(_.get("PK_PAATTOTODISTUSVUOSI"))
   }
-
-
 
   def getHakija(hakemus: FullHakemus): Hakija = {
     val kesa = new MonthDay(6,4)
@@ -250,11 +240,10 @@ object RestHakupalvelu {
   def getValue(key: String, subKey: String, default: String = "")(implicit answers: Option[Map[String, Map[String, String]]]): String = {
     (for (m <- answers; c <- m.get(key); v <- c.get(subKey)) yield v).getOrElse(default)
   }
-
 }
 
 case class ListHakemus(oid: String)
 
 case class HakemusHaku(totalCount: Long, results: Seq[ListHakemus])
 
-case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[Map[String, Map[String, String]]])
+case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[Map[String, Map[String, String]]], state: Option[String])
