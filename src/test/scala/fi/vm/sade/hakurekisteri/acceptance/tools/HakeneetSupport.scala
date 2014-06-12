@@ -162,7 +162,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
 
     def hakijat: Seq[Hakija] = {
-      tehdytHakemukset.map(RestHakupalvelu.getHakija(_))
+      tehdytHakemukset.map(AkkaHakupalvelu.getHakija(_))
     }
 
     def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {
