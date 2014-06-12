@@ -258,8 +258,8 @@ object XMLHakija {
   val valid = "([12])".r
 
   def resolveSukupuoli(hakija:Hakija):String = (hakija.henkilo.hetu, hakija.henkilo.sukupuoli) match {
-    case (mies, _) => "1"
-    case (nainen, _) => "2"
+    case (mies(), _) => "1"
+    case (nainen(), _) => "2"
     case (_, valid(sukupuoli)) => sukupuoli
     case _ => "0"
   }
