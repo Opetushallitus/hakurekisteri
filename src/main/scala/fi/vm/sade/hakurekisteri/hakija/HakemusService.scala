@@ -27,6 +27,12 @@ import com.stackmob.newman.ApacheHttpClient
 trait HakemusService extends ResourceService[FullHakemus] with JournaledRepository[FullHakemus] {
 
 
+  override def loadJournal(time: Option[Long]): Unit = {
+    snapShot = Map()
+    reverseSnapShot = Map()
+    super.loadJournal()
+
+  }
 
   def filterField[F](field: Option[F], fieldExctractor: (FullHakemus) => F)(hakemus:FullHakemus) = field match {
 
@@ -103,10 +109,14 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
   import akka.pattern._
 
   override def receive: Receive = super.receive.orElse({
-    case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) map ((hs) => NewHakemukset(hs)) pipeTo self
+    case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) map ((hs) => {
+      logger.debug(s"found ${hs.length} applications")
+      NewHakemukset(hs)}) pipeTo self
     case NewHakemukset(hakemukset) =>
       logger.debug(s"reloaded ${hakemukset.length} applications")
       change(hakemukset)
+
+      loadJournal()
       logger.debug(s"cache now has ${listAll().length} applications")
   })
 
