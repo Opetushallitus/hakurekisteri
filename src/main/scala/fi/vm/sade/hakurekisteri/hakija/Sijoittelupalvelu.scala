@@ -6,7 +6,7 @@ import com.stackmob.newman.ApacheHttpClient
 import java.net.{URLEncoder, URL}
 import com.stackmob.newman.dsl._
 import com.stackmob.newman.response.HttpResponseCode
-import akka.actor.Actor
+import akka.actor.{Cancellable, Actor}
 import scala.compat.Platform
 
 object SijoitteluValintatuloksenTila extends Enumeration {
@@ -46,7 +46,7 @@ trait Sijoittelupalvelu {
 case class SijoitteluTulos(tilat: Map[String, Map[String, String]], pisteet: Map[String, Map[String, BigDecimal]])
 
 
-class SijoitteluActor(cachedService: Sijoittelupalvelu) extends Actor {
+class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) extends Actor {
 
 
   import akka.pattern._
@@ -55,12 +55,27 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu) extends Actor {
 
   implicit val ec = context.dispatcher
 
+  var keepAlives: Seq[Cancellable] = Seq()
+
+  val expiration = 1.hour
+
+  val touchInterval = expiration / 2
+
+  override def preStart(): Unit = {
+    keepAlives = keepAlive.map((haku) => context.system.scheduler.schedule(1.minutes, touchInterval, self, SijoitteluQuery(haku)))
+
+  }
+
+
+  override def postStop(): Unit = {
+    keepAlives.foreach(_.cancel())
+  }
+
   val retry: FiniteDuration = 10.seconds
 
 
   var cache = Map[String, Future[SijoitteluTulos]]()
   var cacheHistory = Map[String, Long]()
-  val expiration = 1.hour
   private val refetch: FiniteDuration = 30.minutes
 
   override def receive: Receive = {
