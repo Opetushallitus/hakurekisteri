@@ -81,6 +81,11 @@ trait HakemusService extends ResourceService[FullHakemus] with JournaledReposito
 
 case class HakemusQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String]) extends Query[FullHakemus]
 
+object HakemusQuery {
+
+  def apply(hq:HakijaQuery) = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
+
+}
 
 class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: Option[String], password:Option[String]) extends ResourceActor[FullHakemus] with HakemusService  {
 

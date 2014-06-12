@@ -68,7 +68,7 @@ class AkkaHakupalvelu(hakemusActor:ActorRef)(implicit val ec: ExecutionContext) 
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     import akka.pattern._
     implicit val timeout: Timeout = 60.seconds
-    (hakemusActor ? q).mapTo[Seq[FullHakemus]]
+    (hakemusActor ? HakemusQuery(q)).mapTo[Seq[FullHakemus]]
       .map(_.
       withFilter(filterState).
       map(filterHakemus(q.organisaatio, newToiveet)).
