@@ -66,24 +66,24 @@ trait HakemusService extends ResourceService[FullHakemus] with JournaledReposito
 
   override def identify(o: FullHakemus): FullHakemus with Identified = FullHakemus.identify(o)
 
-  override val journal: Journal[FullHakemus] = new InMemJournal[FullHakemus]{
+  def change(hakemukset: Seq[FullHakemus]) = journal.change(hakemukset)
 
+  override val journal: HakemusJournal = new HakemusJournal()
 
-
+  class HakemusJournal extends InMemJournal[FullHakemus] {
     def change(hakemukset: Seq[FullHakemus]) {
       deltas = hakemukset.map(identify(_)).map(Updated[FullHakemus](_))
     }
 
-
-
   }
+
 }
 
 case class HakemusQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String]) extends Query[FullHakemus]
 
 object HakemusQuery {
 
-  def apply(hq:HakijaQuery) = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
+  def apply(hq:HakijaQuery):HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
 
 }
 
@@ -96,12 +96,14 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
 
   val logger = Logging(context.system, this)
 
-  override def receive: Receive = super.receive.orElse({
-    case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None))
+  import akka.pattern._
 
+  override def receive: Receive = super.receive.orElse({
+    case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) map ((hs) => NewHakemukset(hs)) pipeTo self
+    case NewHakemukset(hakemukset) => change(hakemukset)
   })
 
-
+  case class NewHakemukset(hakemukset:Seq[FullHakemus])
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
