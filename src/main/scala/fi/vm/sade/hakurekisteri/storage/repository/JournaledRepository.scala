@@ -5,6 +5,7 @@ import scala.slick.lifted.{ColumnOrdered, Ordered, AbstractTable}
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 import java.util.UUID
 import scala.slick.lifted
+import scala.util.Try
 
 
 trait JournaledRepository[T <: Resource] extends InMemRepository[T] {
@@ -163,6 +164,6 @@ trait JDBCJournal[T, P <: AbstractTable[_], O <: Ordered] extends Journal[T] {
     val dbList: List[P#TableElementType] = loadFromDb(latest)
 
     latestReload = dbList.lastOption.map(timestamp(_))
-    dbList.map(delta)
+    dbList.map((row) => Try(delta(row)).toOption).flatten
   }
 }
