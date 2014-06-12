@@ -250,6 +250,20 @@ case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etuni
 }
 
 object XMLHakija {
+
+
+  val mies = "\\d{6}[-A]\\d{2}[13579].".r
+  val nainen = "\\d{6}[-A]\\d{2}[24680].".r
+
+  val valid = "([12])".r
+
+  def resolveSukupuoli(hakija:Hakija):String = (hakija.henkilo.hetu, hakija.henkilo.sukupuoli) match {
+    case (mies, _) => "1"
+    case (nainen, _) => "2"
+    case (_, valid(sukupuoli)) => sukupuoli
+    case _ => "0"
+  }
+
   def apply(hakija: Hakija, yhteystiedot: Map[String, String], maa: String, kansalaisuus: String, hakemus: XMLHakemus): XMLHakija =
     XMLHakija(
       hakija.henkilo.hetu,
@@ -265,7 +279,7 @@ object XMLHakija {
       yhteystiedot.get("YHTEYSTIETO_PUHELINNUMERO"),
       yhteystiedot.get("YHTEYSTIETO_SAHKOPOSTI"),
       yhteystiedot.get("YHTEYSTIETO_KAUPUNKI"),
-      hakija.henkilo.sukupuoli, hakija.henkilo.asiointiKieli.kieliKoodi,
+      resolveSukupuoli(hakija), hakija.henkilo.asiointiKieli.kieliKoodi,
       hakija.henkilo.markkinointilupa.getOrElse(false),
       hakemus
     )
