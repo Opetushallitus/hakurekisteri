@@ -66,16 +66,6 @@ trait HakemusService extends ResourceService[FullHakemus] with JournaledReposito
 
   override def identify(o: FullHakemus): FullHakemus with Identified = FullHakemus.identify(o)
 
-  def change(hakemukset: Seq[FullHakemus]) = journal.change(hakemukset)
-
-  override val journal: HakemusJournal = new HakemusJournal()
-
-  class HakemusJournal extends InMemJournal[FullHakemus] {
-    def change(hakemukset: Seq[FullHakemus]) {
-      deltas = hakemukset.map(identify(_)).map(Updated[FullHakemus](_))
-    }
-
-  }
 
 }
 
@@ -87,11 +77,25 @@ object HakemusQuery {
 
 }
 
-class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: Option[String], password:Option[String]) extends ResourceActor[FullHakemus] with HakemusService  {
+class HakemusJournal extends InMemJournal[FullHakemus] {
+  def change(hakemukset: Seq[FullHakemus]) {
+    deltas = hakemukset.map(FullHakemus.identify(_)).map(Updated[FullHakemus](_))
+  }
+
+}
+
+
+class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: Option[String], password:Option[String], override val journal: HakemusJournal = new HakemusJournal()) extends ResourceActor[FullHakemus] with HakemusService  {
 
   import scala.concurrent.duration._
 
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
+
+  def change(hakemukset: Seq[FullHakemus]) = journal.change(hakemukset)
+
+
+
+
 
 
   val logger = Logging(context.system, this)
