@@ -104,7 +104,10 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
 
   override def receive: Receive = super.receive.orElse({
     case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) map ((hs) => NewHakemukset(hs)) pipeTo self
-    case NewHakemukset(hakemukset) => change(hakemukset)
+    case NewHakemukset(hakemukset) =>
+      logger.debug(s"reloaded ${hakemukset.length} applications")
+      change(hakemukset)
+      logger.debug(s"cache now has ${listAll().length} applications")
   })
 
   case class NewHakemukset(hakemukset:Seq[FullHakemus])
