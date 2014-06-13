@@ -118,3 +118,7 @@ body #raamit-header .header-content {
 .datepicker + ul.dropdown-menu {
     width: 290px;
 }
+
+.input-group-btn .btn-default.btn-sm {
+    height: 30px;
+}
