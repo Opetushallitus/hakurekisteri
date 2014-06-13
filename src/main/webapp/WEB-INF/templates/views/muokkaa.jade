@@ -57,7 +57,7 @@ form(ng-submit="save()")
                   select(class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.suoritusKieli" required="required" ng-options="k.value as k.text for k in kielet")
                 div(class="form-group col-sm-5")
                   strong(oph-msg="suoritusrekisteri.muokkaa.valmistumispaiva") Valmistumispäivä
-                  input(type="text" class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.valmistuminen" datepicker-popup="{{format}}" datepicker-options="dateOptions" show-button-bar="false")
+                  input(type="text" class="form-control input-sm datepicker" ng-disabled="suoritus.delete" ng-model="suoritus.valmistuminen" datepicker-popup="{{format}}" datepicker-options="dateOptions" show-button-bar="false" onfocus="this.blur()")
                 div(class="form-group col-sm-4")
                   strong(oph-msg="suoritusrekisteri.muokkaa.tila") Tila
                   select(class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.tila" required="required" ng-options="t.value as t.text for t in tilat")
@@ -94,10 +94,10 @@ form(ng-submit="save()")
               div(class="row")
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.alkupaiva") Alkupäivä
-                  input(type="text" class="form-control input-sm" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.alkuPaiva" datepicker-popup="{{format}}" datepicker-options="dateOptions" required show-button-bar="false")
+                  input(type="text" class="form-control input-sm datepicker" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.alkuPaiva" datepicker-popup="{{format}}" datepicker-options="dateOptions" required show-button-bar="false" onfocus="this.blur()")
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.loppupaiva") Loppupäivä
-                  input(type="text" class="form-control input-sm" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.loppuPaiva" datepicker-popup="{{format}}" datepicker-options="dateOptions" show-button-bar="false" min="luokkatieto.alkuPaiva")
+                  input(type="text" class="form-control input-sm datepicker" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.loppuPaiva" datepicker-popup="{{format}}" datepicker-options="dateOptions" show-button-bar="false" min="luokkatieto.alkuPaiva" onfocus="this.blur()")
                 div(class="form-group col-sm-6")
                   div(class="pull-right")
                     button(ng-show="isOPH()" type="button" class="btn btn-default arvosana-button" ng-disabled="luokkatieto.delete" ng-click="luokkatieto.delete = true")
