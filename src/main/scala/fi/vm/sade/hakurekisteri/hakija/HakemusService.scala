@@ -182,7 +182,7 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
     def getAll(cur: List[FullHakemus])(res: Option[List[FullHakemus]]):Future[Option[List[FullHakemus]]] = res match {
       case None                                   => Future.successful(None)
       case Some(l) if l.length < maxApplications  => Future.successful(Some(cur ++ l))
-      case Some(l)                                => restRequest[List[FullHakemus]](user, getUrl((cur.length / maxApplications) + 1)).flatMap(getAll(cur ++ l))
+      case Some(l)                                => restRequest[List[FullHakemus]](user, getUrl((cur.length / maxApplications) + 1)).recoverWith{case error => getAll(cur)(res)}.flatMap(getAll(cur ++ l))
     }
 
 

@@ -100,7 +100,7 @@ object AkkaHakupalvelu {
     val kieli = getValue("koulutustausta", "perusopetuksen_kieli", "FI")
     val myontaja = lahtokoulu.getOrElse("")
     val suorittaja = hakemus.personOid.getOrElse("")
-    val valmistuminen = todistusVuosi.map(vuosi => kesa.toLocalDate(vuosi.toInt)).getOrElse(new LocalDate(0))
+    val valmistuminen = todistusVuosi.flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption).getOrElse(new LocalDate(0))
     val julkaisulupa = Some(getValue("lisatiedot", "lupaJulkaisu", "false").toBoolean)
 
     Hakija(

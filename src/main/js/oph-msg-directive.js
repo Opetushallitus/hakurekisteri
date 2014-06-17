@@ -1,14 +1,13 @@
-// NOTE! this directive is used from multiple apps (tiedonsiirto+suoritusrekisteri)
 
-app.factory('lokalisointiService', function($log) {
-    var getMsg = function(key, def, callback) {
-        var msg = "";
-        callback(msg);
-    }
-});
+app.factory('LokalisointiService', function($log, $http) {
+    var backendUrl = location.host.indexOf('localhost') == 0 ? "https://itest-virkailija.oph.ware.fi" : "";
+    var localisationBackend = backendUrl + "/lokalisointi/cxf/rest/v1/localisation";
+    var msgResource = localisationBackend + "?category=" + msgCategory;
+    var localisationMyroles = [];
+    var translations = { inited: false };
+    $log.info("backend: " + backendUrl);
 
-// localisation
-app.directive('ophMsg', function($log, $http) {
+    var service = { lang: "fi" };
 
     function getLang() {
         var lang;
@@ -18,22 +17,39 @@ app.directive('ophMsg', function($log, $http) {
             }
         }
         lang = lang ? lang : (navigator.language || navigator.userLanguage).substr(0, 2).toLowerCase();
-        if (!lang || ["fi","sv","en"].indexOf(lang) == -1) {
+        if (!lang || ["fi", "sv", "en"].indexOf(lang) == -1) {
             lang = "fi";
         }
         return lang;
     }
 
+    service.loadMessages = function(callback) {
+        $http.get(msgResource, { cache: true }).success(function (data) {
+            $http.get(backendUrl + "/cas/myroles", { cache: true }).success(function (myroles) {
+                if (!translations.inited) {
+                    localisationMyroles = myroles;
+                    service.lang = getLang();
+                    for (var i = 0; i < data.length; i++) {
+                        var t = data[i];
+                        if (!translations[t.key]) translations[t.key] = [];
+                        translations[t.key][t.locale] = t;
+                    }
+                    translations.inited = true;
+                    $log.info("localisations inited, lang: " + service.lang + ", localisationBackend: " + localisationBackend + ", translations: " + translations.length);
+                }
+
+                if (callback) callback();
+            });
+        });
+    };
+
     function addTranslation(msgKey, lang, elemText, oldTranslation) {
-        var allowEmptyTranslationUpdate = false; // voi laittaa päälle alustavan kääntämisen ajaksi
-//        $log.info("addTranslation, key: "+msgKey+", lang: "+lang+", elemText: "+elemText+", allowEmptyTranslationUpdate: "+allowEmptyTranslationUpdate+", old: "+oldTranslation);
-        if (!oldTranslation || allowEmptyTranslationUpdate && (!oldTranslation.value || $.trim(oldTranslation).length == 0)) { // dont update existing translation
-            //var createValue = lang == "fi" ? elemText : ""; // suomenkielisille käännöksille oletuksena elementin sisältöteksti, muut käännökset tyhjiksi
-            var createValue = elemText; // kaikille käännöksille oletuksena elementin sisältöteksti
-            var data = { "value": createValue, "key": msgKey, "locale": lang, "category": msgCategory };
+        var allowEmptyTranslationUpdate = false;
+        if (!oldTranslation || allowEmptyTranslationUpdate && (!oldTranslation.value || $.trim(oldTranslation).length == 0)) {
+            var data = { "value": elemText, "key": msgKey, "locale": lang, "category": msgCategory };
             $.ajax({
                 type: oldTranslation ? "PUT" : "POST",
-                url: localisationBackend + (oldTranslation ? "/"+oldTranslation.id : ""),
+                url: localisationBackend + (oldTranslation ? "/" + oldTranslation.id : ""),
                 data: JSON.stringify(data),
                 contentType: 'application/json; charset=UTF-8',
                 dataType: "json"
@@ -48,39 +64,17 @@ app.directive('ophMsg', function($log, $http) {
         addTranslation(msgKey, "en", elemText, oldTranslation);
     }
 
-    function getTranslation(msgKey, lang, elemText) {
-
-        /*
-        // note: devkoodia kielistyksien lisäämiseksi lokalisointipalveluun
-        function tempregexp(key, txt) {
-//            translations[key] = {};
-//            translations[key][lang]={value: txt};
-            addTranslations(key, txt, null);
-        }
-        tempregexp(
-            "cvc-complex-type.*?\'(.*?)\'.*:(.*?)}\' is expected.",
-            "elementti $1 > $2 puuttuu"
-        );
-        tempregexp(
-            "cvc-pattern-valid: Value \'(.*?)\'.*?\'(.*?)\' for type \'(.*?)\'.*",
-            "$3 -elementin arvo '$1' ei täsmää ehdon kanssa: $2"
-        );
-        tempregexp(
-            "cvc-enumeration-valid: Value \'(.*?)\'.*?\'(.*?)\'.*?\'(.*?)\'.*?\'(.*?)\'.*",
-            "$4 -elementin arvo '$1' ei ole sallittu, pitää olla joku näistä: $2"
-        );
-        */
-
+    service.getTranslation = function(msgKey, lang, elemText) {
         /*
          Korvataan elementin sisältö regexpillä jos ophMsg avaimenea 'regexp', esim:
-            directiivi:             <span oph-msg="regexp">...</span>
-            html elementin sisältö: cvc-complex-type.2.4.b: The content of element 'ROW' is not complete. One of '{"http://service.henkilo.sade.vm.fi/types/perusopetus/henkilotiedot":LUOKKATASO}' is expected.
-            lokalisointi key:       cvc-complex-type.*?'(.*?)'.*:(.*?)}' is expected.
-            lokalisointi teksti:    $1 > $2 puuttuu
-            tuottaa käännöksen:     ROW > LUOKKATASO puuttuu
-        Huom! toimii myös normikäännöksille
-        */
-        if (msgKey=="regexp") {
+         directiivi:             <span oph-msg="regexp">...</span>
+         html elementin sisältö: cvc-complex-type.2.4.b: The content of element 'ROW' is not complete. One of '{"http://service.henkilo.sade.vm.fi/types/perusopetus/henkilotiedot":LUOKKATASO}' is expected.
+         lokalisointi key:       cvc-complex-type.*?'(.*?)'.*:(.*?)}' is expected.
+         lokalisointi teksti:    $1 > $2 puuttuu
+         tuottaa käännöksen:     ROW > LUOKKATASO puuttuu
+         Huom! toimii myös normikäännöksille
+         */
+        if (msgKey == "regexp") {
             for (var key in translations) {
                 var translation = translations[key];
                 if (translation[lang]) {
@@ -96,89 +90,58 @@ app.directive('ophMsg', function($log, $http) {
             return elemText;
         }
 
-        /////////////////////////////////////////////////
-
         var xLangs = translations[msgKey];
-        if (!xLangs) { // ei käännöksiä millekään kielelle -> luodaan kaikille kielille
+        if (!xLangs) {
             addTranslations(msgKey, elemText);
-            return "["+msgKey+"-NA]"
+            return "[" + msgKey + "-NA]";
         }
         var oldTranslation = xLangs[lang];
         var x = oldTranslation.value;
-        if (x === "" || !x) { // ko kielen käännöstä ei löydy, koitetaan luoda silti kaikki, muut luonnit ei mene läpi jos käännös olemassa jo jollain kielellä
+        if (x === "" || !x) {
             addTranslations(msgKey, elemText, oldTranslation);
-            return "["+msgKey+"-"+lang+"]"
+            return "[" + msgKey + "-" + lang + "]";
         }
 
-        $log.debug("getTranslation, lang: "+lang+", key: "+msgKey+" => "+x);
+        $log.debug("getTranslation, lang: " + lang + ", key: " + msgKey + " => " + x);
         return x;
-    }
+    };
 
-    function loadMessages(callback) {
-        // huomaa cachen käyttö, myöhemmät kutsut tapahtuvat samantien
-        $http.get(msgResource, { cache: true}).success(function (data) {
-            $http.get(backendUrl+"/cas/myroles", { cache: true}).success(function (myroles) {
-                // init stuff
-                if (!translations.inited) {
-                    localisationMyroles = myroles;
-                    lang = getLang();
-                    for (var i = 0; i < data.length; i++) {
-                        var t = data[i];
-                        if (!translations[t.key]) translations[t.key] = [];
-                        translations[t.key][t.locale] = t;
-                    }
-                    translations.inited=true;
-                    $log.info("localisations inited, lang: "+lang+", localisationBackend: "+localisationBackend+", translations: "+translations.length);
-                }
-
-                // get msg
-                if (callback) callback();
-            });
-        });
-    }
-
-    // check we have msgCategory defined
     if (window.msgCategory === undefined) {
         $log.error("ERROR! msgCategory global variable not defined!!!");
         return;
     }
-    // init vars
-    var backendUrl = location.host.indexOf('localhost') == 0 ? "https://itest-virkailija.oph.ware.fi" : ""; // use itest backend in local dev
-    var localisationBackend = backendUrl + "/lokalisointi/cxf/rest/v1/localisation";
-    var msgResource = localisationBackend + "?category="+msgCategory;
-    var localisationMyroles = [];
-    var lang = "fi";
-    var translations = {inited:false};
-    $log.info("backend: "+backendUrl);
 
-    // also publish ophMsg function so we can call it programmatically from inside controllers - NOTE! saman varmaan voisi tehdä nätimminkin
     window.globalInitOphMsg = function(callback){
-        loadMessages(function () {
+        service.loadMessages(function () {
             callback();
         });
     };
-    window.globalGetOphMsg = function(msgKey,defaultText){
-        if (!translations.inited) {
-            $log.error("translations not inited, globalGetOphMsg must be called after globalInitOphMsg, returning key "+msgKey);
-            return msgKey;
+    window.globalGetOphMsg = function(msgKey, defaultText){
+        if (translations.inited) {
+            return service.getTranslation(msgKey, service.lang, defaultText ? defaultText : msgKey);
         } else {
-            return getTranslation(msgKey, lang, defaultText ? defaultText : msgKey);
+            $log.error("translations not inited, globalGetOphMsg must be called after globalInitOphMsg, returning key " + msgKey);
+            return msgKey;
         }
     };
 
+    return service;
+});
+
+app.directive('ophMsg', function($log, LokalisointiService) {
     return {
         scope: {
             msgKey: '@ophMsg'
         },
         link: function($scope, element, attrs) {
-            attrs.$observe('ophMsg', function(msgKey) { // pitää käyttää observia jotta dynaamisissa tapauksissakin toimii (oph-msg -attribuutti muuttuu sivun latauksen jälkeen)
+            attrs.$observe('ophMsg', function(msgKey) {
                 $scope.msgKey = msgKey;
-                loadMessages(function () {
-                    if ($scope.msgKey.indexOf(msgCategory) == 0 || $scope.msgKey=='regexp') {
-                        element.text(getTranslation($scope.msgKey, lang, element.text()));
+                LokalisointiService.loadMessages(function () {
+                    if ($scope.msgKey.indexOf(msgCategory) == 0 || $scope.msgKey == 'regexp') {
+                        element.text(LokalisointiService.getTranslation($scope.msgKey, LokalisointiService.lang, element.text()));
                     } else {
-                        $log.warn("localisation directive, key doesn't start with the category!, cat: "+msgCategory+", key: "+$scope.msgKey+", element:");
-//                        $log.info(element);
+                        $log.warn("localisation directive, key doesn't start with the category!, cat: "
+                            + msgCategory + ", key: " + $scope.msgKey + ", element:");
                     }
                 });
             });
