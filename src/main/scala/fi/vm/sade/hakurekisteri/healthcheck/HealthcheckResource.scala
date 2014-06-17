@@ -14,7 +14,7 @@ import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.format.{DateTimeFormatter, DateTimeFormat}
-import java.util.Locale
+import java.util.{UUID, Locale}
 import org.joda.time.DateTimeZone
 import scala.concurrent.duration.Duration
 import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
@@ -78,7 +78,7 @@ class HealthcheckActor(suoritusRekisteri: ActorRef, opiskelijaRekisteri: ActorRe
 
   def getSuoritusCount: Future[ItemCount] = {
     val suoritusFuture = (suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(None, None, None, None), authorities, "healthcheck"))
-      .mapTo[Seq[Suoritus with Identified]]
+      .mapTo[Seq[Suoritus with Identified[UUID]]]
     suoritusFuture.map((s) => { new ItemCount(Status.OK, s.length.toLong) }).recover {
       case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
       case e: Throwable => println("error getting suoritus count: " + e); new ItemCount(Status.FAILURE, 0)
@@ -87,7 +87,7 @@ class HealthcheckActor(suoritusRekisteri: ActorRef, opiskelijaRekisteri: ActorRe
 
   def getOpiskelijaCount: Future[ItemCount] = {
     val opiskelijaFuture = (opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaQuery(None, None, None, None, None, None), authorities, "healthcheck"))
-      .mapTo[Seq[Opiskelija with Identified]]
+      .mapTo[Seq[Opiskelija with Identified[UUID]]]
     opiskelijaFuture.map((o) => { ItemCount(Status.OK, o.length.toLong) }).recover {
       case e: AskTimeoutException => ItemCount(Status.TIMEOUT, 0)
       case e: Throwable => println("error getting opiskelija count: " + e); ItemCount(Status.FAILURE, 0)

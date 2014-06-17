@@ -13,8 +13,8 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.{TestSecurity, FakeAuthorizer}
 class SuoritusServletSpec extends ScalatraFunSuite {
   val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now,"1.2.4")
   implicit val system = ActorSystem()
-  implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource](s:Seq[R]) = {
-    val journal = new InMemJournal[R]
+  implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID]](s:Seq[R]) = {
+    val journal = new InMemJournal[R, UUID]
     s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
     journal
   }

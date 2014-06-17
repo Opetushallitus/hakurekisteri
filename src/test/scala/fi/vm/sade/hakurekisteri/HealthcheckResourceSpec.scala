@@ -36,8 +36,8 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
     }
   }
 
-  def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource](s:Seq[R]) = {
-    val journal = new InMemJournal[R]
+  def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID]](s:Seq[R]) = {
+    val journal = new InMemJournal[R, UUID]
     s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
     journal
   }

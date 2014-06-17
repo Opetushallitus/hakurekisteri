@@ -11,15 +11,15 @@ import java.util.UUID
 import scala.compat.Platform
 import scala.slick.lifted
 
-class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, SuoritusTable, ColumnOrdered[Long]] {
-  override def delta(row: SuoritusTable#TableElementType): Delta[Suoritus] =
+class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, SuoritusTable, ColumnOrdered[Long], UUID] {
+  override def delta(row: SuoritusTable#TableElementType): Delta[Suoritus, UUID] =
     row match {
       case (resourceId, _, _, _, _, _, _, _, _, true) => Deleted(UUID.fromString(resourceId))
       case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yks, suoritusKieli, _, _) => Updated(Suoritus(komo, myontaja, tila, LocalDate.parse(valmistuminen), henkiloOid, yksilollistaminen.withName(yks), suoritusKieli).identify(UUID.fromString(resourceId)))
     }
 
 
-  override def update(o: Suoritus with Identified): SuoritusTable#TableElementType = (o.id.toString, o.komo, o.myontaja, o.tila, o.valmistuminen.toString, o.henkiloOid, o.yksilollistaminen.toString, o.suoritusKieli, Platform.currentTime, false)
+  override def update(o: Suoritus with Identified[UUID]): SuoritusTable#TableElementType = (o.id.toString, o.komo, o.myontaja, o.tila, o.valmistuminen.toString, o.henkiloOid, o.yksilollistaminen.toString, o.suoritusKieli, Platform.currentTime, false)
   override def delete(id:UUID) = currentState(id) match
   { case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, _, _) =>
       (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, Platform.currentTime,true)}

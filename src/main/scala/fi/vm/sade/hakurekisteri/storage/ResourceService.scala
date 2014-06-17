@@ -5,24 +5,24 @@ import scala.concurrent.{ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.storage.repository.Repository
 
 
-trait ResourceService[T] { this: Repository[T] =>
+trait ResourceService[T, I] { this: Repository[T, I] =>
 
   implicit val executionContext:ExecutionContext
 
-  val matcher: PartialFunction[Query[T], (T with Identified) => Boolean]
+  val matcher: PartialFunction[Query[T], (T with Identified[I]) => Boolean]
 
 
 
 
-  def check(q: Query[T])(item: T with Identified): Future[Option[T with Identified]] = {
+  def check(q: Query[T])(item: T with Identified[I]): Future[Option[T with Identified[I]]] = {
     Future{
       if (matcher(q)(item)) Some(item) else None
     }
   }
 
-  val optimize:PartialFunction[Query[T], Future[Seq[T with Identified]]] = Map()
+  val optimize:PartialFunction[Query[T], Future[Seq[T with Identified[I]]]] = Map()
 
-  def findBy(o: Query[T]):Future[Seq[T with Identified]] = {
+  def findBy(o: Query[T]):Future[Seq[T with Identified[I]]] = {
 
     val current = listAll()
     optimize.applyOrElse(o, executeQuery(current))
@@ -30,9 +30,9 @@ trait ResourceService[T] { this: Repository[T] =>
   }
 
 
-  def executeQuery(current: Seq[T with Identified])( o: Query[T]): Future[Seq[T with Identified]] = {
+  def executeQuery(current: Seq[T with Identified[I]])( o: Query[T]): Future[Seq[T with Identified[I]]] = {
     Future.traverse(current)(check(o)).map(_.collect {
-      case Some(a: T with Identified) => a
+      case Some(a: T with Identified[I]) => a
     })
   }
 }

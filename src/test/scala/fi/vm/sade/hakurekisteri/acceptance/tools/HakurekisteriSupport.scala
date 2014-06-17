@@ -65,8 +65,8 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
       if (!initialized) {
         println ("Initializing db with: " + tehdytSuoritukset)
         implicit val system = ActorSystem()
-        implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource](s:Seq[R]) = {
-          var journal = new InMemJournal[R]
+        implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID]](s:Seq[R]) = {
+          var journal = new InMemJournal[R, UUID]
           s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
           journal
         }

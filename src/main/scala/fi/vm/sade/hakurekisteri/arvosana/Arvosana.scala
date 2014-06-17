@@ -5,20 +5,20 @@ import java.util.UUID
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 import scala.util.Try
 
-case class Arvosana(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: Option[String], valinnainen: Boolean) extends Resource {
-  override def identify(id: UUID): this.type with Identified= Arvosana.identify(this,id).asInstanceOf[this.type with Identified]
+case class Arvosana(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: Option[String], valinnainen: Boolean) extends Resource[UUID] {
+  override def identify(id: UUID): this.type with Identified[UUID]= Arvosana.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
 }
 
 object Arvosana {
-  def identify(o:Arvosana): Arvosana with Identified = o match {
-    case o: Arvosana with Identified => println(o.id);o
+  def identify(o:Arvosana): Arvosana with Identified[UUID] = o match {
+    case o: Arvosana with Identified[UUID] => println(o.id);o
     case _ => o.identify(UUID.randomUUID)
   }
 
   def identify(o:Arvosana, identity:UUID) = {
 
 
-    new Arvosana(o.suoritus, o.arvio , o.aine, o.lisatieto, o.valinnainen) with Identified {
+    new Arvosana(o.suoritus, o.arvio , o.aine, o.lisatieto, o.valinnainen) with Identified[UUID] {
       val id: UUID = identity
     }
   }

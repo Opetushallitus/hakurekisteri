@@ -18,18 +18,18 @@ import yksilollistaminen._
 
 case class Komoto(oid: String, komo: String, tarjoaja: String, alkamisvuosi: String, alkamiskausi: Kausi)
 
-case class Suoritus(komo: String, myontaja: String, tila: String, valmistuminen: LocalDate, henkiloOid: String, yksilollistaminen: Yksilollistetty, suoritusKieli: String) extends Resource {
-  override def identify(id: UUID): this.type with Identified =  Suoritus.identify(this,id).asInstanceOf[this.type with Identified]
+case class Suoritus(komo: String, myontaja: String, tila: String, valmistuminen: LocalDate, henkiloOid: String, yksilollistaminen: Yksilollistetty, suoritusKieli: String) extends Resource[UUID] {
+  override def identify(id: UUID): this.type with Identified[UUID] =  Suoritus.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
 }
 
 object Suoritus {
-  def identify(o:Suoritus): Suoritus with Identified = o match {
-    case o: Suoritus with Identified => println(o.id);o
+  def identify(o:Suoritus): Suoritus with Identified[UUID] = o match {
+    case o: Suoritus with Identified[UUID] => println(o.id);o
     case _ => o.identify(UUID.randomUUID)
   }
 
   def identify(o:Suoritus, identity:UUID) = {
-    new Suoritus(o.komo: String, o.myontaja: String, o.tila: String, o.valmistuminen, o.henkiloOid: String, o.yksilollistaminen, o.suoritusKieli) with Identified {
+    new Suoritus(o.komo: String, o.myontaja: String, o.tila: String, o.valmistuminen, o.henkiloOid: String, o.yksilollistaminen, o.suoritusKieli) with Identified[UUID] {
       val id: UUID = identity
     }
   }

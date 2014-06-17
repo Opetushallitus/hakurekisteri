@@ -14,9 +14,9 @@ import akka.event.Logging
 import com.ning.http.client.Response
 import fi.vm.sade.hakurekisteri.storage.DeleteResource
 
-class OrganizationHierarchy[A <: Resource :Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A,String]) extends FutureOrganizationHierarchy[A](serviceUrl, filteredActor, (item: A) => Future.successful(organizationFinder(item)) )
+class OrganizationHierarchy[A <: Resource[I] :Manifest, I](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A,String]) extends FutureOrganizationHierarchy[A, I](serviceUrl, filteredActor, (item: A) => Future.successful(organizationFinder(item)) )
 
-class FutureOrganizationHierarchy[A <: Resource :Manifest ](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A, concurrent.Future[String]]) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
+class FutureOrganizationHierarchy[A <: Resource[I] :Manifest, I ](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A, concurrent.Future[String]]) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
 
 
   val logger = Logging(context.system, this)
@@ -50,8 +50,8 @@ class FutureOrganizationHierarchy[A <: Resource :Manifest ](serviceUrl:String, f
   override def receive: Receive = {
     case a:Update => fetch()
     case a:OrganizationAuthorizer => logger.info("org paths loaded");authorizer = a
-    case AuthorizedQuery(q,orgs,_) => (filteredActor ? q).mapTo[Seq[A with Identified]].flatMap((i: Seq[A with Identified]) => futfilt(i, isAuthorized(orgs))) pipeTo sender
-    case AuthorizedRead(id, orgs,_) => (filteredActor ? id).mapTo[Option[A with Identified]].flatMap(checkRights(orgs)) pipeTo sender
+    case AuthorizedQuery(q,orgs,_) => (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(futfilt(_, isAuthorized(orgs))) pipeTo sender
+    case AuthorizedRead(id, orgs,_) => (filteredActor ? id).mapTo[Option[A with Identified[UUID]]].flatMap(checkRights(orgs)) pipeTo sender
     case AuthorizedDelete(id, orgs, _)  => val checkedRights = for (resourceToDelete <- filteredActor ? id;
                                                                     rights <- checkRights(orgs)(resourceToDelete.asInstanceOf[Option[A]]);
                                                                     result <- if (rights.isDefined) filteredActor ? DeleteResource(id) else Future.successful(Unit)
@@ -60,7 +60,7 @@ class FutureOrganizationHierarchy[A <: Resource :Manifest ](serviceUrl:String, f
 
                                                checkedRights pipeTo sender
     case AuthorizedCreate(resource:A, orgs , _) => filteredActor forward resource
-    case AuthorizedUpdate(resource:A with Identified, orgs , _) => val checked = for (resourceToUpdate <- filteredActor ? resource.id;
+    case AuthorizedUpdate(resource:A with Identified[I], orgs , _) => val checked = for (resourceToUpdate <- filteredActor ? resource.id;
                                                                      rightsForOld <- checkRights(orgs)(resourceToUpdate.asInstanceOf[Option[A]]);
                                                                      rightsForNew <- checkRights(orgs)(Some(resource));
                                                                      result <- if (rightsForOld.isDefined && rightsForNew.isDefined) filteredActor ? resource else Future.successful(rightsForOld)
@@ -189,11 +189,11 @@ class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organiza
 }
 
 case class AuthorizedQuery[A](q:Query[A], orgs: Seq[String], user:String)
-case class AuthorizedRead(id:UUID, orgs:Seq[String], user:String)
+case class AuthorizedRead[I](id:I, orgs:Seq[String], user:String)
 
-case class AuthorizedDelete(id:UUID, orgs:Seq[String], user:String)
-case class AuthorizedCreate[A <: Resource](q:A, orgs: Seq[String], user:String)
-case class AuthorizedUpdate[A <: Resource](q:A with Identified, orgs: Seq[String], user:String)
+case class AuthorizedDelete[I](id:I, orgs:Seq[String], user:String)
+case class AuthorizedCreate[A <: Resource[_]](q:A, orgs: Seq[String], user:String)
+case class AuthorizedUpdate[A <: Resource[_]](q:A with Identified[_], orgs: Seq[String], user:String)
 
 
 

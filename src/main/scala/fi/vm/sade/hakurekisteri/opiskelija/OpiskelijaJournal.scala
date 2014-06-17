@@ -16,14 +16,14 @@ import scala.slick.lifted.ColumnOrdered
 import scala.compat.Platform
 import scala.slick.lifted
 
-class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, OpiskelijaTable, ColumnOrdered[Long]] {
-  override def delta(row: OpiskelijaTable#TableElementType): Delta[Opiskelija] =
+class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, OpiskelijaTable, ColumnOrdered[Long], UUID] {
+  override def delta(row: OpiskelijaTable#TableElementType): Delta[Opiskelija, UUID] =
     row match {
       case (resourceId, _, _, _, _, _, _, _, true) => Deleted(UUID.fromString(resourceId))
       case (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, _, _) => Updated(Opiskelija(oppilaitosOid, luokkataso, luokka, henkiloOid,new DateTime(alkuPaiva), loppuPaiva.map(new DateTime(_))).identify(UUID.fromString(resourceId)))
     }
 
-  override def update(o: Opiskelija with Identified): OpiskelijaTable#TableElementType = (o.id.toString, o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva.getMillis, o.loppuPaiva.map(_.getMillis), Platform.currentTime, false)
+  override def update(o: Opiskelija with Identified[UUID]): OpiskelijaTable#TableElementType = (o.id.toString, o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva.getMillis, o.loppuPaiva.map(_.getMillis), Platform.currentTime, false)
   override def delete(id:UUID) = currentState(id) match
     { case (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, _, _)  =>
       (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, Platform.currentTime,true)}

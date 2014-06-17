@@ -38,7 +38,7 @@ class IdentifiableSerializationSpec extends WordSpec with ShouldMatchers with Ha
     val s = Suoritus.identify(suoritus)
     "serialized" should {
       val result = serializeDeserialize[Suoritus, Suoritus](s)
-      val identity = serializeDeserialize[Identified, Suoritus](s)
+      val identity = serializeDeserialize[Identified[UUID], Suoritus](s)
       "retain henkiloOid" in {
         result.henkiloOid should equal (s.henkiloOid)
       }
@@ -56,7 +56,7 @@ class IdentifiableSerializationSpec extends WordSpec with ShouldMatchers with Ha
     val o = Opiskelija.identify(opiskelija, identifier)
     "serialized" should {
       val result = serializeDeserialize[Opiskelija, Opiskelija](o)
-      val identity = serializeDeserialize[Identified, Opiskelija](o)
+      val identity = serializeDeserialize[Identified[UUID], Opiskelija](o)
       "retain henkiloOid" in {
         result.henkiloOid should equal (o.henkiloOid)
       }
@@ -90,7 +90,7 @@ class IdentifiableSerializationSpec extends WordSpec with ShouldMatchers with Ha
   }
 
 
-  def serializeDeserialize[A: Manifest, B: Manifest](o: B with Identified)  = {
+  def serializeDeserialize[A: Manifest, B: Manifest](o: B with Identified[UUID])  = {
     val json = write(o)
     read[A](json)
   }
