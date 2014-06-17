@@ -1,22 +1,12 @@
 'use strict';
 
-function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset) {
+function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, LokalisointiService) {
     $scope.henkiloOid = $routeParams.henkiloOid;
-    $scope.yksilollistamiset = [
-        {value: "Ei", text: getOphMsg("suoritusrekisteri.yks.ei", "Ei")},
-        {value: "Osittain", text: getOphMsg("suoritusrekisteri.yks.osittain", "Osittain")},
-        {value: "Alueittain", text: getOphMsg("suoritusrekisteri.yks.alueittain", "Alueittain")},
-        {value: "Kokonaan", text: getOphMsg("suoritusrekisteri.yks.kokonaan", "Kokonaan")}
-    ];
-    $scope.koulutukset = [
-        {value: "1.2.246.562.13.86722481404", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.13.86722481404", "Ulkomainen")},
-        {value: "1.2.246.562.13.62959769647", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.13.62959769647", "Peruskoulu")},
-        {value: "1.2.246.562.5.2013112814572435044876", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572435044876", "Perusopetuksen lisäopetus")},
-        {value: "1.2.246.562.5.2013112814572438136372", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572438136372", "Ammattistartti")},
-        {value: "1.2.246.562.5.2013112814572441001730", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572441001730", "Maahanmuuttaja")},
-        {value: "1.2.246.562.5.2013112814572435755085", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572435755085", "Valmentava")},
-        {value: "1.2.246.562.5.2013061010184880799984", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013061010184880799984", "Lukio")}
-    ];
+    $scope.myRoles = [];
+    $scope.messages = [];
+    $scope.suoritukset = [];
+    $scope.luokkatiedot = [];
+    $scope.kielet = [];
     $scope.luokkatasot = [
         {value: "9", text: "9"},
         {value: "10", text: "10"},
@@ -24,16 +14,29 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         {value: "M", text: "M"},
         {value: "V", text: "V"}
     ];
-    $scope.tilat = [
-        {value: "KESKEN", text: getOphMsg("suoritusrekisteri.tila.KESKEN", "Kesken")},
-        {value: "KESKEYTYNYT", text: getOphMsg("suoritusrekisteri.tila.KESKEYTYNYT", "Keskeytynyt")},
-        {value: "VALMIS", text: getOphMsg("suoritusrekisteri.tila.VALMIS", "Valmis")}
-    ];
-    $scope.myRoles = [];
-    $scope.messages = [];
-    $scope.suoritukset = [];
-    $scope.luokkatiedot = [];
-    $scope.kielet = [];
+    function loadMenuTexts() {
+        $scope.yksilollistamiset = [
+            {value: "Ei", text: getOphMsg("suoritusrekisteri.yks.ei", "Ei")},
+            {value: "Osittain", text: getOphMsg("suoritusrekisteri.yks.osittain", "Osittain")},
+            {value: "Alueittain", text: getOphMsg("suoritusrekisteri.yks.alueittain", "Alueittain")},
+            {value: "Kokonaan", text: getOphMsg("suoritusrekisteri.yks.kokonaan", "Kokonaan")}
+        ];
+        $scope.koulutukset = [
+            {value: "1.2.246.562.13.86722481404", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.13.86722481404", "Ulkomainen")},
+            {value: "1.2.246.562.13.62959769647", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.13.62959769647", "Peruskoulu")},
+            {value: "1.2.246.562.5.2013112814572435044876", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572435044876", "Perusopetuksen lisäopetus")},
+            {value: "1.2.246.562.5.2013112814572438136372", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572438136372", "Ammattistartti")},
+            {value: "1.2.246.562.5.2013112814572441001730", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572441001730", "Maahanmuuttaja")},
+            {value: "1.2.246.562.5.2013112814572435755085", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572435755085", "Valmentava")},
+            {value: "1.2.246.562.5.2013061010184880799984", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013061010184880799984", "Lukio")}
+        ];
+        $scope.tilat = [
+            {value: "KESKEN", text: getOphMsg("suoritusrekisteri.tila.KESKEN", "Kesken")},
+            {value: "KESKEYTYNYT", text: getOphMsg("suoritusrekisteri.tila.KESKEYTYNYT", "Keskeytynyt")},
+            {value: "VALMIS", text: getOphMsg("suoritusrekisteri.tila.VALMIS", "Valmis")}
+        ];
+    }
+    LokalisointiService.loadMessages(loadMenuTexts);
 
     getKoodistoAsOptionArray($http, 'kieli', 'fi', $scope.kielet, 'koodiArvo');
 

@@ -15,7 +15,7 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
 
   var keepAlives: Seq[Cancellable] = Seq()
 
-  val expiration = 1.hour
+  val expiration = 48.hour
 
   val touchInterval = expiration / 2
 
@@ -29,12 +29,12 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
     keepAlives.foreach(_.cancel())
   }
 
-  val retry: FiniteDuration = 10.seconds
+  val retry: FiniteDuration = 60.seconds
 
 
   var cache = Map[String, Future[SijoitteluTulos]]()
   var cacheHistory = Map[String, Long]()
-  private val refetch: FiniteDuration = 30.minutes
+  private val refetch: FiniteDuration = 24.hours
 
   override def receive: Receive = {
     case SijoitteluQuery(haku) =>

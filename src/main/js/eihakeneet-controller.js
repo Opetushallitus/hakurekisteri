@@ -79,7 +79,6 @@ function EihakeneetCtrl($scope, $rootScope, $routeParams, $http, $q) {
             var deferredHakemukset = $q.defer();
             var luokanHakemukset = [];
             var hakemusConfig = { params: {
-                appState: 'ACTIVE',
                 discretionaryOnly: false,
                 checkAllApplications: false,
                 start: 0,
@@ -91,7 +90,7 @@ function EihakeneetCtrl($scope, $rootScope, $routeParams, $http, $q) {
             $http.get(hakuAppServiceUrl + "/applications/listshort", hakemusConfig)
                 .success(function(hakemukset) {
                     if (hakemukset && hakemukset.results) {
-                        luokanHakemukset = hakemukset.results;
+                        luokanHakemukset = hakemukset.results.filter(function(h) { return h.state === 'ACTIVE' || h.state === 'INCOMPLETE' });
                     }
                     deferredHakemukset.resolve("done");
                 })
