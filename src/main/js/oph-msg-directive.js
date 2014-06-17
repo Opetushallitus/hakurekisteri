@@ -4,9 +4,10 @@ app.factory('LokalisointiService', function($log, $http) {
     var localisationBackend = backendUrl + "/lokalisointi/cxf/rest/v1/localisation";
     var msgResource = localisationBackend + "?category=" + msgCategory;
     var localisationMyroles = [];
-    var lang = "fi";
     var translations = { inited: false };
     $log.info("backend: " + backendUrl);
+
+    var service = { lang: "fi" };
 
     function getLang() {
         var lang;
@@ -22,19 +23,19 @@ app.factory('LokalisointiService', function($log, $http) {
         return lang;
     }
 
-    var loadMessages = function(callback) {
+    service.loadMessages = function(callback) {
         $http.get(msgResource, { cache: true }).success(function (data) {
             $http.get(backendUrl + "/cas/myroles", { cache: true }).success(function (myroles) {
                 if (!translations.inited) {
                     localisationMyroles = myroles;
-                    lang = getLang();
+                    service.lang = getLang();
                     for (var i = 0; i < data.length; i++) {
                         var t = data[i];
                         if (!translations[t.key]) translations[t.key] = [];
                         translations[t.key][t.locale] = t;
                     }
                     translations.inited = true;
-                    $log.info("localisations inited, lang: " + lang + ", localisationBackend: " + localisationBackend + ", translations: " + translations.length);
+                    $log.info("localisations inited, lang: " + service.lang + ", localisationBackend: " + localisationBackend + ", translations: " + translations.length);
                 }
 
                 if (callback) callback();
@@ -45,8 +46,7 @@ app.factory('LokalisointiService', function($log, $http) {
     function addTranslation(msgKey, lang, elemText, oldTranslation) {
         var allowEmptyTranslationUpdate = false;
         if (!oldTranslation || allowEmptyTranslationUpdate && (!oldTranslation.value || $.trim(oldTranslation).length == 0)) {
-            var createValue = elemText;
-            var data = { "value": createValue, "key": msgKey, "locale": lang, "category": msgCategory };
+            var data = { "value": elemText, "key": msgKey, "locale": lang, "category": msgCategory };
             $.ajax({
                 type: oldTranslation ? "PUT" : "POST",
                 url: localisationBackend + (oldTranslation ? "/" + oldTranslation.id : ""),
@@ -64,7 +64,7 @@ app.factory('LokalisointiService', function($log, $http) {
         addTranslation(msgKey, "en", elemText, oldTranslation);
     }
 
-    var getTranslation = function(msgKey, lang, elemText) {
+    service.getTranslation = function(msgKey, lang, elemText) {
         /*
          Korvataan elementin sisältö regexpillä jos ophMsg avaimenea 'regexp', esim:
          directiivi:             <span oph-msg="regexp">...</span>
@@ -112,19 +112,20 @@ app.factory('LokalisointiService', function($log, $http) {
     }
 
     window.globalInitOphMsg = function(callback){
-        loadMessages(function () {
+        service.loadMessages(function () {
             callback();
         });
     };
     window.globalGetOphMsg = function(msgKey, defaultText){
-        if (!translations.inited) {
-            $log.error("translations not inited, globalGetOphMsg must be called after globalInitOphMsg, returning key "+msgKey);
-            return msgKey;
+        if (translations.inited) {
+            return service.getTranslation(msgKey, service.lang, defaultText ? defaultText : msgKey);
         } else {
-            return getTranslation(msgKey, lang, defaultText ? defaultText : msgKey);
+            $log.error("translations not inited, globalGetOphMsg must be called after globalInitOphMsg, returning key " + msgKey);
+            return msgKey;
         }
     };
 
+    return service;
 });
 
 app.directive('ophMsg', function($log, LokalisointiService) {
