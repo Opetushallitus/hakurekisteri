@@ -55,7 +55,7 @@ case class SijoitteluQuery(hakuOid: String)
 class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "https://itest-virkailija.oph.ware.fi/sijoittelu-service", user: Option[String], password: Option[String])(implicit val ec: ExecutionContext) extends Sijoittelupalvelu {
   val logger = LoggerFactory.getLogger(getClass)
   import scala.concurrent.duration._
-  implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
+  implicit val httpClient = new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
 
 
   def getProxyTicket: Future[String] = (user, password) match {
