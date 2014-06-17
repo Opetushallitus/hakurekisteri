@@ -20,20 +20,20 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
     TestResource(java.util.UUID.randomUUID.toString)
   }
 
-  def itemUpdater(original:TestResource with Identified):TestResource with Identified = {
+  def itemUpdater(original:TestResource with Identified[UUID]):TestResource with Identified[UUID] = {
     TestResource(original.id, original.name + " updated")
   }
 
   it should behave like basicRepoBehaviors(repoConstructor, itemConstructor, itemUpdater)
 
   abstract class Repo {
-    val journal:Journal[TestResource]
+    val journal:Journal[TestResource, UUID]
     lazy val repo = TestRepo(journal)
 
   }
 
   trait EmptyJournal extends Repo {
-    override val journal = new InMemJournal[TestResource]
+    override val journal = new InMemJournal[TestResource, UUID]
   }
 
   trait JournalWithEntries extends Repo {
@@ -47,7 +47,7 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
   it should "add the modification to the journal" in new EmptyJournal {
 
     val idResource = repo.save(TestResource("first item"))
-    val delta:Delta[TestResource] = Updated(idResource)
+    val delta:Delta[TestResource, UUID] = Updated(idResource)
     journal.journal(None).last should be (delta)
 
   }
@@ -90,7 +90,7 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
   it should "mark a delete delta in journal when deleted" in new JournalWithEntries {
     val resource = repo.get(ids.tail.head).get
     repo.delete(ids.head)
-    val delta:Delta[TestResource] = Deleted(ids.head)
+    val delta:Delta[TestResource, UUID] = Deleted(ids.head)
     journal.journal(None).last should be (delta)
   }
 

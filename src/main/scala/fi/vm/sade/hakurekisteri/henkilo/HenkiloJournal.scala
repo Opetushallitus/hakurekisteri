@@ -13,13 +13,13 @@ import scala.compat.Platform
 import scala.slick.lifted
 
 
-class HenkiloJournal(database: Database) extends JDBCJournal[Henkilo, HenkiloTable, ColumnOrdered[Long]] with HakurekisteriJsonSupport {
-  override def delta(row: HenkiloTable#TableElementType): Delta[Henkilo] =
+class HenkiloJournal(database: Database) extends JDBCJournal[Henkilo, HenkiloTable, ColumnOrdered[Long], UUID] with HakurekisteriJsonSupport {
+  override def delta(row: HenkiloTable#TableElementType): Delta[Henkilo, UUID] =
     row match {
       case (resourceId, _, _, true) => Deleted(UUID.fromString(resourceId))
       case (resourceId, henkilo, inserted, deleted) => fi.vm.sade.hakurekisteri.storage.repository.Updated(read[Henkilo](henkilo).identify(UUID.fromString(resourceId)))
     }
-  override def update(o: Henkilo with Identified): HenkiloTable#TableElementType = (o.id.toString, write(o), Platform.currentTime, false)
+  override def update(o: Henkilo with Identified[UUID]): HenkiloTable#TableElementType = (o.id.toString, write(o), Platform.currentTime, false)
   override def delete(id:UUID) = currentState(id) match
   { case (resourceId, henkilo, _, _)  =>
       (resourceId, henkilo, Platform.currentTime,true)}

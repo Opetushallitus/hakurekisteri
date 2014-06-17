@@ -13,22 +13,22 @@ import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import org.joda.time.DateTime
 import scala.slick.lifted
 
-class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, ArvosanaTable, ColumnOrdered[Long]] {
+class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, ArvosanaTable, ColumnOrdered[Long], UUID] {
 
   val logger = LoggerFactory.getLogger(getClass)
 
-  override def delta(row: ArvosanaTable#TableElementType): Delta[Arvosana] =
+  override def delta(row: ArvosanaTable#TableElementType): Delta[Arvosana, UUID] =
     row match {
       case (resourceId, _, _, _, _, _, _, _, true) => Deleted(UUID.fromString(resourceId))
       case (id,suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, _, _) =>
         Updated(Arvosana(UUID.fromString(suoritus), Arvio(arvosana, asteikko), aine, lisatieto, valinnainen).identify(UUID.fromString(id)))
     }
 
-  def delete(id:UUID) =  currentState(id) match
+  override def delete(id:UUID) =  currentState(id) match
   { case (id,suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, _, _)  =>
       (id,suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, Platform.currentTime,true)}
 
-  def update(o:Arvosana with Identified) = o.arvio match {
+  override def update(o:Arvosana with Identified[UUID]) = o.arvio match {
     case Arvio410(arvosana) =>
       logger.debug("toRow lisatieto {}", o.lisatieto)
       (o.id.toString, o.suoritus.toString, arvosana, Arvio.ASTEIKKO_4_10 , o.aine, o.lisatieto, o.valinnainen, Platform.currentTime, false)

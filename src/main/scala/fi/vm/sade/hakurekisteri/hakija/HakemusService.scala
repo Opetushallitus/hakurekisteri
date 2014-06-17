@@ -1,30 +1,21 @@
 package fi.vm.sade.hakurekisteri.hakija
 
-import akka.actor.{Cancellable, Actor}
-import scala.concurrent.{ExecutionContext, Future}
-import scala.compat.Platform
+import akka.actor.Actor
+import scala.concurrent.Future
 import fi.vm.sade.hakurekisteri.storage.{ResourceActor, Identified, ResourceService}
 import fi.vm.sade.hakurekisteri.storage.repository._
-import fi.vm.sade.hakurekisteri.rest.support.{User, Query}
-import java.util.UUID
-import fi.vm.sade.hakurekisteri.hakija.HakemusQuery
-import scala.Some
-import fi.vm.sade.hakurekisteri.hakija.FullHakemus
+import fi.vm.sade.hakurekisteri.rest.support.Query
 import java.net.{URL, URLEncoder}
 import scala.util.Try
 import com.stackmob.newman.dsl._
-import fi.vm.sade.hakurekisteri.hakija.HakemusQuery
-import fi.vm.sade.hakurekisteri.hakija.HakemusHaku
 import scala.Some
-import fi.vm.sade.hakurekisteri.hakija.ListHakemus
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import com.stackmob.newman.response.HttpResponseCode
-import akka.event.slf4j.Logger
 import akka.event.Logging
 import com.stackmob.newman.ApacheHttpClient
 
-trait HakemusService extends ResourceService[FullHakemus] with JournaledRepository[FullHakemus] {
+trait HakemusService extends ResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
 
 
   override def loadJournal(time: Option[Long]): Unit = {
@@ -48,7 +39,7 @@ trait HakemusService extends ResourceService[FullHakemus] with JournaledReposito
   }
 
 
-  override val matcher: PartialFunction[Query[FullHakemus], (FullHakemus with Identified) => Boolean] = {
+  override val matcher: PartialFunction[Query[FullHakemus], (FullHakemus with Identified[String]) => Boolean] = {
 
     case HakemusQuery(haku, organisaatio, hakukohdekoodi) =>
       (hakemus) =>
@@ -70,7 +61,7 @@ trait HakemusService extends ResourceService[FullHakemus] with JournaledReposito
 
   }
 
-  override def identify(o: FullHakemus): FullHakemus with Identified = FullHakemus.identify(o)
+  override def identify(o: FullHakemus): FullHakemus with Identified[String] = FullHakemus.identify(o)
 
 
 }
@@ -83,15 +74,15 @@ object HakemusQuery {
 
 }
 
-class HakemusJournal extends InMemJournal[FullHakemus] {
+class HakemusJournal extends InMemJournal[FullHakemus, String] {
   def change(hakemukset: Seq[FullHakemus]) {
-    deltas = hakemukset.map(FullHakemus.identify(_)).map(Updated[FullHakemus](_))
+    deltas = hakemukset.map(FullHakemus.identify(_)).map(Updated[FullHakemus, String](_))
   }
 
 }
 
 
-class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: Option[String], password:Option[String], override val journal: HakemusJournal = new HakemusJournal()) extends ResourceActor[FullHakemus] with HakemusService  {
+class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: Option[String], password:Option[String], override val journal: HakemusJournal = new HakemusJournal()) extends ResourceActor[FullHakemus, String] with HakemusService  {
 
   import scala.concurrent.duration._
 

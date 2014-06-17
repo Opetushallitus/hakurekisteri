@@ -199,26 +199,23 @@ case class ListHakemus(oid: String)
 
 case class HakemusHaku(totalCount: Long, results: Seq[ListHakemus])
 
-case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[Map[String, Map[String, String]]], state: Option[String]) extends Resource {
-  override def identify(id: UUID): this.type with Identified = FullHakemus.identify(this,id).asInstanceOf[this.type with Identified]
+case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[Map[String, Map[String, String]]], state: Option[String]) extends Resource[String] {
+  override def identify(id: String): this.type with Identified[String] = FullHakemus.identify(this,id).asInstanceOf[this.type with Identified[String]]
 }
 
 
 object FullHakemus {
 
-  def identify(o:FullHakemus): FullHakemus with Identified = o match {
-    case o: FullHakemus with Identified => o
-    case _ => o.identify(UUID.randomUUID)
-  }
+  def identify(o:FullHakemus): FullHakemus with Identified[String] = o.identify(o.oid)
 
-  def identify(o:FullHakemus, identity:UUID) =
+  def identify(o:FullHakemus, identity:String) =
   new FullHakemus(
       o.oid: String,
       o.personOid: Option[String],
       o.applicationSystemId: String,
       o.answers: Option[Map[String, Map[String, String]]],
-      o.state: Option[String]) with Identified {
-        val id: UUID = identity
+      o.state: Option[String]) with Identified[String] {
+        val id: String = identity
       }
 
 

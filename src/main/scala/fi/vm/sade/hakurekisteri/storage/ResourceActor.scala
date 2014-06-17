@@ -12,7 +12,7 @@ import java.util.UUID
 import akka.event.Logging
 
 
-abstract class ResourceActor[T <: Resource : Manifest ] extends Actor { this: JournaledRepository[T] with ResourceService[T] =>
+abstract class ResourceActor[T <: Resource[I] : Manifest, I : Manifest] extends Actor { this: JournaledRepository[T, I] with ResourceService[T, I] =>
 
   val log = Logging(context.system, this)
 
@@ -41,9 +41,9 @@ abstract class ResourceActor[T <: Resource : Manifest ] extends Actor { this: Jo
       val saved = Try(save(o))
       log.debug("saved: " + saved)
       sender ! saved.recover{ case e:Exception => Failure(e)}.get
-    case id:UUID =>
+    case id:I =>
       sender ! get(id)
-    case DeleteResource(id) =>
+    case DeleteResource(id:I) =>
       log.debug(s"received delete request for resource: $id from $sender")
       sender ! delete(id)
       log.debug(s"deleted $id answered to $sender")
@@ -57,6 +57,6 @@ abstract class ResourceActor[T <: Resource : Manifest ] extends Actor { this: Jo
 
 }
 
-case class DeleteResource(id:UUID)
+case class DeleteResource[I](id:I)
 
 object Reload

@@ -8,22 +8,23 @@ import scala.Some
 import fi.vm.sade.hakurekisteri.storage.repository._
 import scala.Some
 import fi.vm.sade.hakurekisteri.henkilo.Henkilo
+import java.util.UUID
 
 
-trait OpiskelijaRepository extends JournaledRepository[Opiskelija] {
+trait OpiskelijaRepository extends JournaledRepository[Opiskelija, UUID] {
 
-  def identify(o: Opiskelija): Opiskelija with Identified = {
+  def identify(o: Opiskelija): Opiskelija with Identified[UUID] = {
     Opiskelija.identify(o)
   }
 
 }
 
 
-trait OpiskelijaService extends ResourceService[Opiskelija] { this: Repository[Opiskelija] =>
+trait OpiskelijaService extends ResourceService[Opiskelija, UUID] { this: Repository[Opiskelija, UUID] =>
 
-  val matcher: PartialFunction[Query[Opiskelija], (Opiskelija with Identified) => Boolean] = {
+  val matcher: PartialFunction[Query[Opiskelija], (Opiskelija with Identified[UUID]) => Boolean] = {
     case OpiskelijaQuery(henkilo, kausi, vuosi, paiva, oppilaitosOid, luokka) =>
-      (o: Opiskelija with Identified) => checkHenkilo(henkilo)(o) &&
+      (o: Opiskelija with Identified[UUID]) => checkHenkilo(henkilo)(o) &&
                                          checkVuosiAndKausi(vuosi, kausi)(o) &&
                                          checkPaiva(paiva)(o) &&
                                          checkOppilaitos(oppilaitosOid)(o) &&
@@ -104,6 +105,6 @@ trait OpiskelijaService extends ResourceService[Opiskelija] { this: Repository[O
 
 
 
-class OpiskelijaActor(val journal:Journal[Opiskelija] = new InMemJournal[Opiskelija]) extends ResourceActor[Opiskelija] with OpiskelijaRepository with OpiskelijaService {
+class OpiskelijaActor(val journal:Journal[Opiskelija, UUID] = new InMemJournal[Opiskelija, UUID]) extends ResourceActor[Opiskelija, UUID] with OpiskelijaRepository with OpiskelijaService {
 
 }

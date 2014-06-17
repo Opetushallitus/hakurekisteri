@@ -8,12 +8,12 @@ import java.util.UUID
 import scala.concurrent.Future
 
 
-trait ArvosanaRepository extends JournaledRepository[Arvosana] {
+trait ArvosanaRepository extends JournaledRepository[Arvosana, UUID] {
 
-  var suoritusIndex: Map[UUID, Seq[Arvosana with Identified]] = Option(suoritusIndex).getOrElse(Map())
+  var suoritusIndex: Map[UUID, Seq[Arvosana with Identified[UUID]]] = Option(suoritusIndex).getOrElse(Map())
   //var suoritusIndexSnapShot: Map[UUID, Seq[Arvosana with Identified]] = Option(suoritusIndexSnapShot).getOrElse(Map())
 
-  def addNew(arvosana: Arvosana with Identified) = {
+  def addNew(arvosana: Arvosana with Identified[UUID]) = {
     suoritusIndex = Option(suoritusIndex).getOrElse(Map())
     suoritusIndex = suoritusIndex  + (arvosana.suoritus -> (arvosana +: suoritusIndex.get(arvosana.suoritus).getOrElse(Seq())))
 
@@ -21,9 +21,9 @@ trait ArvosanaRepository extends JournaledRepository[Arvosana] {
   }
 
 
-  override def index(old: Option[Arvosana with Identified], current: Option[Arvosana with Identified]) {
+  override def index(old: Option[Arvosana with Identified[UUID]], current: Option[Arvosana with Identified[UUID]]) {
 
-    def removeOld(arvosana: Arvosana with Identified) = {
+    def removeOld(arvosana: Arvosana with Identified[UUID]) = {
       suoritusIndex = Option(suoritusIndex).getOrElse(Map())
       suoritusIndex = suoritusIndex.get(arvosana.suoritus).
         map(_.filter((a) => a != arvosana || a.id != arvosana.id)).
@@ -38,13 +38,13 @@ trait ArvosanaRepository extends JournaledRepository[Arvosana] {
 
   }
 
-    def identify(o:Arvosana): Arvosana with Identified = Arvosana.identify(o)
+    def identify(o:Arvosana): Arvosana with Identified[UUID] = Arvosana.identify(o)
 }
 
-trait ArvosanaService extends ResourceService[Arvosana]  with ArvosanaRepository {
+trait ArvosanaService extends ResourceService[Arvosana, UUID]  with ArvosanaRepository {
 
 
-  override val optimize:PartialFunction[Query[Arvosana], Future[Seq[Arvosana with Identified]]] = {
+  override val optimize:PartialFunction[Query[Arvosana], Future[Seq[Arvosana with Identified[UUID]]]] = {
     case ArvosanaQuery(Some(suoritus)) =>
       Future.successful(suoritusIndex.get(suoritus).getOrElse(Seq()))
     case ArvosanaQuery(None) => Future.successful(listAll())
@@ -52,13 +52,13 @@ trait ArvosanaService extends ResourceService[Arvosana]  with ArvosanaRepository
   }
 
 
-  override val matcher: PartialFunction[Query[Arvosana], (Arvosana with Identified) => Boolean] = {
+  override val matcher: PartialFunction[Query[Arvosana], (Arvosana with Identified[UUID]) => Boolean] = {
     case ArvosanaQuery(None) => (a) => true
     case ArvosanaQuery(Some(suoritus)) => (a) => a.suoritus == suoritus
   }
 }
 
-class ArvosanaActor(val journal:Journal[Arvosana] = new InMemJournal[Arvosana]) extends ResourceActor[Arvosana] with ArvosanaRepository with ArvosanaService {
+class ArvosanaActor(val journal:Journal[Arvosana, UUID] = new InMemJournal[Arvosana, UUID]) extends ResourceActor[Arvosana, UUID] with ArvosanaRepository with ArvosanaService {
 }
 
 

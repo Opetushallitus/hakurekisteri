@@ -1,10 +1,9 @@
 package fi.vm.sade.hakurekisteri.storage
 
-import java.util.UUID
 
 
-trait Identified {
+trait Identified[T] {
 
-  val id:UUID
+  val id:T
 
 }

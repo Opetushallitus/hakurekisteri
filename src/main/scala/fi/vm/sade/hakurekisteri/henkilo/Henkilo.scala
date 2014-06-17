@@ -28,9 +28,9 @@ case class Henkilo (
                      turvakielto: Boolean,
                      hetu: String,
                      syntymaaika: String,
-                     markkinointilupa: Option[Boolean]) extends Resource{
+                     markkinointilupa: Option[Boolean]) extends Resource[UUID]{
 
-  override def identify(id: UUID): this.type with Identified = Henkilo.identify(this,id).asInstanceOf[this.type with Identified]
+  override def identify(id: UUID): this.type with Identified[UUID] = Henkilo.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
 }
 
 
@@ -77,12 +77,12 @@ case class Yksilointitieto (
 
 
 object Henkilo extends {
-  def identify(o:Henkilo): Henkilo with Identified = o match {
-    case o: Henkilo with Identified => o
+  def identify(o:Henkilo): Henkilo with Identified[UUID] = o match {
+    case o: Henkilo with Identified[UUID] => o
     case _ => o.identify(UUID.randomUUID())
   }
 
-  def identify(o:Henkilo, identity: UUID): Henkilo with Identified = {
+  def identify(o:Henkilo, identity: UUID): Henkilo with Identified[UUID] = {
     new Henkilo(o.yhteystiedotRyhma,
       o.yksiloity: Boolean,
       o.sukunimi: String,
@@ -104,7 +104,7 @@ object Henkilo extends {
       o.turvakielto: Boolean,
       o.hetu: String,
       o.syntymaaika: String,
-      o.markkinointilupa: Option[Boolean]) with Identified{
+      o.markkinointilupa: Option[Boolean]) with Identified[UUID] {
       override val id: UUID = identity
     }
   }

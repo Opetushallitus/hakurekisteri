@@ -29,7 +29,7 @@ object AuditUri {
 
 import scala.reflect.runtime.universe._
 
-class AuditLog[A <: Resource](resource:String)(implicit val audit:AuditUri, ct: ClassTag[A], tt: TypeTag[A]) extends Actor with Producer  {
+class AuditLog[A <: Resource[I], I](resource:String)(implicit val audit:AuditUri, ct: ClassTag[A], tt: TypeTag[A], cti: ClassTag[I], tti: TypeTag[I]) extends Actor with Producer  {
 
 
   sealed trait AuditMessage[T] {
@@ -60,26 +60,26 @@ class AuditLog[A <: Resource](resource:String)(implicit val audit:AuditUri, ct: 
     override def tapahtuma(resource: String,original: Query[_], user:String): Tapahtuma =  createREAD("hakurekisteri", user, resource, original.toString)
   }
 
-  object ReadEvent extends AuditMessage[UUID] {
-    override def tapahtuma(resource: String,original: UUID, user:String): Tapahtuma =  createREAD("hakurekisteri", user, resource, original.toString)
+  object ReadEvent extends AuditMessage[I] {
+    override def tapahtuma(resource: String,original: I, user:String): Tapahtuma =  createREAD("hakurekisteri", user, resource, original.toString)
   }
 
-  object DeleteEvent extends AuditMessage[UUID] {
-    override def tapahtuma(resource: String,original: UUID, user:String): Tapahtuma =  createDELETE("hakurekisteri", user, resource, original.toString)
+  object DeleteEvent extends AuditMessage[I] {
+    override def tapahtuma(resource: String,original: I, user:String): Tapahtuma =  createDELETE("hakurekisteri", user, resource, original.toString)
   }
 
   object CreateEvent extends AuditMessage[A] {
     override def tapahtuma(resource: String,original: A, user:String): Tapahtuma =  createCREATE("hakurekisteri", user, resource, original.toString)
   }
 
-  object UpdateEvent extends AuditMessage[A with Identified] {
+  object UpdateEvent extends AuditMessage[A with Identified[I]] {
     def casMap[T: ClassTag: TypeTag](value: T) = {
       val m = runtimeMirror(getClass.getClassLoader)
       val im = m.reflect(value)
       typeOf[T].members.collect{ case m:MethodSymbol if m.isCaseAccessor => m}.map(im.reflectMethod).map((m) => m.symbol.name.toString -> m()).toMap
     }
 
-    override def tapahtuma(resource: String,original: A with Identified, user:String): Tapahtuma =  {
+    override def tapahtuma(resource: String,original: A with Identified[I], user:String): Tapahtuma =  {
       val event = createUPDATE("hakurekisteri", user, resource, original.id.toString)
       log.debug(s"creating tapahtuma for: $original")
       try {
@@ -135,10 +135,10 @@ class AuditLog[A <: Resource](resource:String)(implicit val audit:AuditUri, ct: 
 
   def createAuditMsg(original: Any) = original match {
     case AuthorizedQuery(q,orgs, user) => QueryEvent(q,user)
-    case AuthorizedRead(id, orgs, user) => ReadEvent(id,user)
-    case AuthorizedDelete(id, orgs, user) => DeleteEvent(id, user)
+    case AuthorizedRead(id: I, orgs, user) => ReadEvent(id,user)
+    case AuthorizedDelete(id: I, orgs, user) => DeleteEvent(id, user)
     case AuthorizedCreate(res : A, orgs, user) => CreateEvent(res, user)
-    case AuthorizedUpdate(res: A with Identified, orgs, user) => UpdateEvent(res, user)
+    case AuthorizedUpdate(res: A with Identified[I], orgs, user) => UpdateEvent(res, user)
 
     case a => UnknownEvent(a)
   }

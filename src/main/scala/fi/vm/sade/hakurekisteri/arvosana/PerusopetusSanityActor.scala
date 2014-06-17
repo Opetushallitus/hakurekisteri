@@ -14,7 +14,7 @@ import java.net.URL
 import net.liftweb.json.JsonAST.JValue
 import akka.event.Logging
 
-class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.oph.ware.fi/koodisto-service", val suoritusRekisteri: ActorRef, val journal:Journal[Arvosana] = new InMemJournal[Arvosana]) extends Actor with ArvosanaService with JournaledRepository[Arvosana] {
+class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.oph.ware.fi/koodisto-service", val suoritusRekisteri: ActorRef, val journal:Journal[Arvosana, UUID] = new InMemJournal[Arvosana, UUID]) extends Actor with ArvosanaService with JournaledRepository[Arvosana, UUID] {
 
   override val deduplicate = false
 
@@ -108,7 +108,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
                      sender ! problems
     case s:Stream[_] => for (first <- s.headOption) goThrough(first, s.tail)
     case s::rest  => goThrough(s, rest)
-    case s: Suoritus with Identified =>
+    case s: Suoritus with Identified[UUID] =>
       findBy(ArvosanaQuery(Some(s.id))).map(Todistus(s, _)) pipeTo self
     case Todistus(suoritus, arvosanas) =>
       (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {
@@ -204,7 +204,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
     aine.groupBy(_.valinnainen)
   }
 
-  override def identify(o: Arvosana): Arvosana with Identified = ???
+  override def identify(o: Arvosana): Arvosana with Identified[UUID] = ???
 
 }
 
@@ -219,7 +219,7 @@ case class VoluntaryWithoutGeneral(henkilo: String, suoritus: UUID, aine:String)
 
 
 
-case class Todistus(suoritus:Suoritus with Identified, arvosanas: Seq[Arvosana])
+case class Todistus(suoritus:Suoritus with Identified[UUID], arvosanas: Seq[Arvosana])
 
 object Problems
 

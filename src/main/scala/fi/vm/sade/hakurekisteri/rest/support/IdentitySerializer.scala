@@ -6,7 +6,7 @@ import java.util.UUID
 import fi.vm.sade.hakurekisteri.storage.Identified
 
 
-class IdentitySerializer extends CustomSerializer[Identified](format => (
+class IdentitySerializer extends CustomSerializer[Identified[UUID]](format => (
   IdentitySerializer.deserialize,
   Map.empty
   )) {
@@ -14,8 +14,8 @@ class IdentitySerializer extends CustomSerializer[Identified](format => (
 }
 
 object IdentitySerializer {
-  val deserialize: PartialFunction[JValue, Identified] = (json:JValue) => json \ "id" match {
-    case JString(identifier)  => new Identified {
+  val deserialize: PartialFunction[JValue, Identified[UUID]] = (json:JValue) => json \ "id" match {
+    case JString(identifier)  => new Identified[UUID] {
       val id: UUID = UUID.fromString(identifier)
     }
   }

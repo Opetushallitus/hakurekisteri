@@ -11,22 +11,22 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
 
   trait RepoContext {
-    val repoConstructor:Seq[T] => Repository[T]
+    val repoConstructor:Seq[T] => Repository[T,UUID]
     val initialItems:Seq[T]
     lazy val repo = repoConstructor(initialItems)
   }
 
   object RepoContext {
-    def apply(constr: Seq[T] => Repository[T], ii: Seq[T]) = {
+    def apply(constr: Seq[T] => Repository[T,UUID], ii: Seq[T]) = {
       new RepoContext {
-        override val repoConstructor: (Seq[T]) => Repository[T] = constr
+        override val repoConstructor: (Seq[T]) => Repository[T,UUID] = constr
         override val initialItems: Seq[T] = ii
       }
     }
 
   }
 
-  def repositorywithItems(repoContext: ((Repository[T], Seq[T], => T,  (T with Identified) => T with Identified) => Any) => Unit)  {
+  def repositorywithItems(repoContext: ((Repository[T,UUID], Seq[T], => T,  (T with Identified[UUID]) => T with Identified[UUID]) => Any) => Unit)  {
 
 
     it should "have same amount of items as saved" in repoContext {
@@ -164,8 +164,8 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
 
   }
 
-  def beforeAndAfterAdds(initialState:String, repoContext: ((Repository[T], Seq[T], => T,  (T with Identified) => T with Identified) => Any) => Unit) {
-    def addContext(repoModifier: (Repository[T], Seq[T],  => T) => (Repository[T], Seq[T]))(test: (Repository[T], Seq[T],  => T,  (T with Identified) => T with Identified) => Any ) {
+  def beforeAndAfterAdds(initialState:String, repoContext: ((Repository[T,UUID], Seq[T], => T,  (T with Identified[UUID]) => T with Identified[UUID]) => Any) => Unit) {
+    def addContext(repoModifier: (Repository[T,UUID], Seq[T],  => T) => (Repository[T,UUID], Seq[T]))(test: (Repository[T,UUID], Seq[T],  => T,  (T with Identified[UUID]) => T with Identified[UUID]) => Any ) {
       repoContext((repo,items, itemConstructor, itemUpdater) =>
       {
         val (modRepo, modItems) = repoModifier(repo,items, itemConstructor)
@@ -175,13 +175,13 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
       )
     }
 
-    def repoAdder(amount:Int)(repo: Repository[T], items: Seq[T], itemConstructor: => T) = {
+    def repoAdder(amount:Int)(repo: Repository[T,UUID], items: Seq[T], itemConstructor: => T) = {
       val adds = Stream.continually(itemConstructor).take(amount)
       adds.foreach((item) => repo.save(item))
       (repo, items ++ adds)
     }
 
-    def repoRemover(amount:Int)(repo: Repository[T], items: Seq[T], itemConstructor: => T) = {
+    def repoRemover(amount:Int)(repo: Repository[T,UUID], items: Seq[T], itemConstructor: => T) = {
       val deletes = repo.listAll().take(amount)
       deletes.foreach((item) => repo.delete(item.id))
       (repo, items filter ( !deletes.contains(_)))
@@ -192,8 +192,8 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
     "%s with 10 removals".format(initialState) should behave like repositorywithItems(addContext(repoRemover(10)))
   }
 
-  def basicRepoBehaviors(repoConstructor: Seq[T] => Repository[T], itemConstructor: => T, itemUpdater: (T with Identified) => T with Identified ) {
-    def withRepo(items:Seq[T])(test: (Repository[T], Seq[T],  => T,  (T with Identified) => T with Identified) => Any  ) {
+  def basicRepoBehaviors(repoConstructor: Seq[T] => Repository[T, UUID], itemConstructor: => T, itemUpdater: (T with Identified[UUID]) => T with Identified[UUID] ) {
+    def withRepo(items:Seq[T])(test: (Repository[T, UUID], Seq[T],  => T,  (T with Identified[UUID]) => T with Identified[UUID]) => Any  ) {
       test(repoConstructor(items), items, itemConstructor, itemUpdater)
     }
     it should behave like beforeAndAfterAdds("empty repo",withRepo(Seq()))

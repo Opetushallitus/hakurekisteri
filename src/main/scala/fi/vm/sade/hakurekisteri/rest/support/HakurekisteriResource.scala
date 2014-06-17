@@ -27,7 +27,7 @@ import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.organization.AuthorizedCreate
 import fi.vm.sade.hakurekisteri.organization.AuthorizedDelete
 
-trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
+trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
 
   before() {
     contentType = formats("json")
@@ -80,7 +80,7 @@ trait HakurekisteriCrudCommands[A <: Resource, C <: HakurekisteriCommand[A]] ext
 
 }
 
-abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]](actor:ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with JacksonJsonParsing with CorsSupport {
+abstract class HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriCommand[A]](actor:ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with JacksonJsonParsing with CorsSupport {
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
@@ -111,18 +111,18 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
 
 
   object ResourceCreated {
-    def apply(baseUri:StringBuffer)(createdResource: A with Identified) =   Created(createdResource, headers = Map("Location" -> baseUri.append("/").append(createdResource.id).toString))
+    def apply(baseUri:StringBuffer)(createdResource: A with Identified[UUID]) =   Created(createdResource, headers = Map("Location" -> baseUri.append("/").append(createdResource.id).toString))
   }
 
 
-  def identifyResource(resource : A, id: UUID): A with Identified = {println("identifying: " + id);resource.identify(id)}
+  def identifyResource(resource : A, id: UUID): A with Identified[UUID] = {println("identifying: " + id);resource.identify(id)}
 
 
 
   def updateResource(id:UUID, authorities:Seq[String], user: Option[String]): Object = {
     (command[C] >> (_.toValidatedResource)).fold(
       errors => BadRequest(body = errors, reason = "Malformed Resource"),
-      resource => new ActorResult[A with Identified](AuthorizedUpdate(identifyResource(resource, id), authorities, user.getOrElse("anonymous")), Ok(_)))
+      resource => new ActorResult[A with Identified[UUID]](AuthorizedUpdate(identifyResource(resource, id), authorities, user.getOrElse("anonymous")), Ok(_)))
   }
 
   def deleteResource(id:UUID, authorities: Seq[String], user:Option[String]): Object = {
@@ -131,7 +131,7 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
 
 
   def readResource(id:UUID, authorities: Seq[String], user:Option[String]): Object = {
-    new ActorResult[Option[A with Identified]](AuthorizedRead(id, authorities, user.getOrElse("anonymous")), {
+    new ActorResult[Option[A with Identified[UUID]]](AuthorizedRead(id, authorities, user.getOrElse("anonymous")), {
       case Some(data) => Ok(data)
       case None => NotFound()
       case result =>
@@ -156,7 +156,7 @@ abstract class HakurekisteriResource[A <: Resource, C <: HakurekisteriCommand[A]
 
 
     val is = {
-      val future = (actor ? AuthorizedQuery(query, authorities, user.getOrElse("anonymous"))).mapTo[Seq[R with Identified]]
+      val future = (actor ? AuthorizedQuery(query, authorities, user.getOrElse("anonymous"))).mapTo[Seq[R with Identified[UUID]]]
 
       future.map(Ok(_)).
         recover {
