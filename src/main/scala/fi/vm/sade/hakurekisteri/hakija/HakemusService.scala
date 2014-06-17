@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.hakija
 
-import akka.actor.Actor
 import scala.concurrent.Future
 import fi.vm.sade.hakurekisteri.storage.{ResourceActor, Identified, ResourceService}
 import fi.vm.sade.hakurekisteri.storage.repository._
@@ -10,7 +9,6 @@ import scala.util.Try
 import com.stackmob.newman.dsl._
 import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
-import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import com.stackmob.newman.response.HttpResponseCode
 import akka.event.Logging
 import com.stackmob.newman.ApacheHttpClient
@@ -18,12 +16,6 @@ import com.stackmob.newman.ApacheHttpClient
 trait HakemusService extends ResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
 
 
-  override def loadJournal(time: Option[Long]): Unit = {
-    snapShot = Map()
-    reverseSnapShot = Map()
-    super.loadJournal()
-
-  }
 
   def filterField[F](field: Option[F], fieldExctractor: (FullHakemus) => F)(hakemus:FullHakemus) = field match {
 
@@ -74,44 +66,23 @@ object HakemusQuery {
 
 }
 
-class HakemusJournal extends InMemJournal[FullHakemus, String] {
-  def change(hakemukset: Seq[FullHakemus]) {
-    deltas = hakemukset.map(FullHakemus.identify(_)).map(Updated[FullHakemus, String](_))
-  }
-
-}
 
 
-class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: Option[String], password:Option[String], override val journal: HakemusJournal = new HakemusJournal()) extends ResourceActor[FullHakemus, String] with HakemusService  {
+class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: Option[String], password:Option[String], override val journal: Journal[FullHakemus, String] = new InMemJournal[FullHakemus, String]()) extends ResourceActor[FullHakemus, String] with HakemusService  {
 
   import scala.concurrent.duration._
 
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
 
-  def change(hakemukset: Seq[FullHakemus]) = journal.change(hakemukset)
-
-
-
-
 
 
   val logger = Logging(context.system, this)
 
-  import akka.pattern._
 
   override def receive: Receive = super.receive.orElse({
     case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) map ((hs) => {
-      logger.debug(s"found ${hs.length} applications")
-      NewHakemukset(hs)}) pipeTo self
-    case NewHakemukset(hakemukset) =>
-      logger.debug(s"reloaded ${hakemukset.length} applications")
-      change(hakemukset)
-
-      loadJournal()
-      logger.debug(s"cache now has ${listAll().length} applications")
-  })
-
-  case class NewHakemukset(hakemukset:Seq[FullHakemus])
+      logger.debug(s"found ${hs} applications")
+  })})
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
@@ -161,7 +132,7 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
     })
   }
 
-  def getHakemukset(q: HakijaQuery): Future[Seq[FullHakemus]] = {
+  def getHakemukset(q: HakijaQuery): Future[Int] = {
 
     def getUrl(page: Int = 0): URL = {
       new URL(serviceUrl + "/applications/listfull?" + getQueryParams(q, page))
@@ -170,17 +141,26 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
 
     val responseFuture: Future[Option[List[FullHakemus]]] = restRequest[List[FullHakemus]](user, getUrl())
 
-    def getAll(cur: List[FullHakemus])(res: Option[List[FullHakemus]]):Future[Option[List[FullHakemus]]] = res match {
+    def getAll(cur: Int)(res: Option[List[FullHakemus]]):Future[Option[Int]] = res match {
       case None                                   => Future.successful(None)
-      case Some(l) if l.length < maxApplications  => Future.successful(Some(cur ++ l))
-      case Some(l)                                => restRequest[List[FullHakemus]](user, getUrl((cur.length / maxApplications) + 1)).recoverWith{case error => getAll(cur)(res)}.flatMap(getAll(cur ++ l))
+      case Some(l) if l.length < maxApplications  =>
+        handleNew(l)
+        Future.successful(Some(cur + l.length))
+      case Some(l)                                =>
+        handleNew(l)
+        restRequest[List[FullHakemus]](user, getUrl((cur / maxApplications) + 1)).flatMap(getAll(cur + l.length))
     }
 
 
     responseFuture.
-      flatMap(getAll(List())).
-      map(_.getOrElse(Seq()))
+      flatMap(getAll(0)).
+      map(_.getOrElse(0))
 
+
+  }
+
+  def handleNew(hakemukset: List[FullHakemus]):Unit = {
+    hakemukset.foreach(self ! _)
 
   }
 
