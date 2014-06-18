@@ -3,13 +3,12 @@ package fi.vm.sade.hakurekisteri.hakija
 import scala.concurrent.Future
 import fi.vm.sade.hakurekisteri.storage.{ResourceActor, Identified, ResourceService}
 import fi.vm.sade.hakurekisteri.storage.repository._
-import fi.vm.sade.hakurekisteri.rest.support.Query
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query, User}
 import java.net.{URL, URLEncoder}
 import scala.util.Try
 import com.stackmob.newman.dsl._
 import scala.Some
-import fi.vm.sade.hakurekisteri.rest.support.User
-import com.stackmob.newman.response.HttpResponseCode
+import com.stackmob.newman.response.{HttpResponse, HttpResponseCode}
 import akka.event.Logging
 import com.stackmob.newman.ApacheHttpClient
 
@@ -75,7 +74,7 @@ class HakemusJournal extends InMemJournal[FullHakemus, String] {
 }
 
 
-class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: Option[String], password:Option[String], override val journal: Journal[FullHakemus, String] = new HakemusJournal()) extends ResourceActor[FullHakemus, String] with HakemusService  {
+class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: Option[String], password:Option[String], override val journal: Journal[FullHakemus, String] = new HakemusJournal()) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
 
   import scala.concurrent.duration._
 
@@ -126,7 +125,7 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
 
       GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
         if (response.code == HttpResponseCode.Ok) {
-          val hakemusHaku = response.bodyAsCaseClass[A].toOption
+          val hakemusHaku: Option[A] = readBody[A](response)
           logger.debug("got response for url: [{}]", url)
 
           hakemusHaku
@@ -137,6 +136,17 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
         }
       })
     })
+  }
+
+
+  def readBody[A <: AnyRef: Manifest](response: HttpResponse): Option[A] = {
+    import org.json4s.jackson.Serialization.read
+    val rawResult = Try(read[A](response.bodyString))
+
+    if (rawResult.isFailure) logger.warning("Failed to deserialize", rawResult.failed.get)
+
+    val result = rawResult.toOption
+    result
   }
 
   def getHakemukset(q: HakijaQuery): Future[Int] = {
