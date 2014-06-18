@@ -49,6 +49,12 @@ case class Kieli (
                    kieliKoodi: String,
                    kieliTyyppi: String)
 
+object Kieli {
+
+  def apply(kieli:String) =  new Kieli(kieli, kieli)
+
+}
+
 case class YhteystiedotRyhma (
                                id: Int,
                                ryhmaKuvaus: String,

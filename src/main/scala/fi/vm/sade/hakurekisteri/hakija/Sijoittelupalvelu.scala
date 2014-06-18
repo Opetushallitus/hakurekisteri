@@ -5,9 +5,18 @@ import org.slf4j.LoggerFactory
 import com.stackmob.newman.ApacheHttpClient
 import java.net.{URLEncoder, URL}
 import com.stackmob.newman.dsl._
-import com.stackmob.newman.response.HttpResponseCode
+import com.stackmob.newman.response.{HttpResponse, HttpResponseCode}
 import akka.actor.{Cancellable, Actor}
 import scala.compat.Platform
+import scala.util.Try
+import org.json4s.jackson.Serialization._
+import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakutoive
+import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakija
+import scala.Some
+import fi.vm.sade.hakurekisteri.hakija.SijoitteluPistetieto
+import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakutoiveenValintatapajono
+import fi.vm.sade.hakurekisteri.hakija.SijoitteluPagination
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 
 object SijoitteluValintatuloksenTila extends Enumeration {
   type SijoitteluValintatuloksenTila = Value
@@ -38,7 +47,7 @@ case class SijoitteluPagination(results: Option[Seq[SijoitteluHakija]], totalCou
 
 trait Sijoittelupalvelu {
 
-  def getSijoitteluTila(hakuOid: String): Future[Option[SijoitteluPagination]]
+  def getSijoitteluTila(hakuOid: String): Future[SijoitteluPagination]
 
 }
 
@@ -52,7 +61,7 @@ case class SijoitteluTulos(tilat: Map[String, Map[String, String]], pisteet: Map
 
 case class SijoitteluQuery(hakuOid: String)
 
-class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "https://itest-virkailija.oph.ware.fi/sijoittelu-service", user: Option[String], password: Option[String])(implicit val ec: ExecutionContext) extends Sijoittelupalvelu {
+class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "https://itest-virkailija.oph.ware.fi/sijoittelu-service", user: Option[String], password: Option[String])(implicit val ec: ExecutionContext) extends Sijoittelupalvelu with HakurekisteriJsonSupport {
   val logger = LoggerFactory.getLogger(getClass)
   import scala.concurrent.duration._
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
@@ -67,13 +76,25 @@ class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "http
     case _ => Future.successful("")
   }
 
-  override def getSijoitteluTila(hakuOid: String): Future[Option[SijoitteluPagination]] = {
+  def readBody[A <: AnyRef: Manifest](response: HttpResponse): A = {
+    import org.json4s.jackson.Serialization.read
+    val rawResult = Try(read[A](response.bodyString))
+
+    if (rawResult.isFailure) logger.warn("Failed to deserialize", rawResult.failed.get)
+
+    val result = rawResult.get
+    result
+  }
+
+  override def getSijoitteluTila(hakuOid: String): Future[SijoitteluPagination] = {
     val url = new URL(serviceUrl + "/resources/sijoittelu/" + hakuOid + "/sijoitteluajo/latest/hakemukset")
     getProxyTicket.flatMap((ticket) => {
       logger.debug("calling sijoittelu-service [url={}, ticket={}]", Seq(url, ticket):_*)
       GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
       if (response.code == HttpResponseCode.Ok) {
-        val sijoitteluTulos = response.bodyAsCaseClass[SijoitteluPagination].toOption
+
+
+        val sijoitteluTulos = readBody[SijoitteluPagination](response)
         logger.debug("got response from [url={}, ticket={}]", Seq(url, ticket):_*)
 
         sijoitteluTulos

@@ -15,6 +15,8 @@ import ForkedSeq._
 import TupledFuture._
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakemuksenTila._
+import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
+import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
 
 
 case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String, oid: String)
@@ -174,7 +176,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def data2XmlHakija(hakija: Hakija)(hakemus: XMLHakemus, yhteystiedot: Seq[Yhteystiedot], kotimaa: String, kansalaisuus: String) =
     XMLHakija(hakija, yhteystiedot, kotimaa, kansalaisuus, hakemus)
 
-  def hakijat2XmlHakijat(hakijat: Seq[Hakija]): Future[XMLHakijat] = hakijat.map(hakija2XMLHakija).join.map(XMLHakijat)
+  def hakijat2XmlHakijat(hakijat: Seq[Hakija]): Future[Seq[XMLHakija]] = hakijat.map(hakija2XMLHakija).join
 
 
   def matchSijoitteluAndHakemus(hakijas: Seq[Hakija])(tulos: SijoitteluTulos): Seq[Hakija] =
@@ -206,17 +208,13 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def hakijaWithValittu(xh:XMLHakija):XMLHakija = xh.copy(hakemus = xh.hakemus.copy(hakutoiveet = xh.hakemus.hakutoiveet.filter(_.valinta == Some("1"))))
 
   def XMLQuery(q: HakijaQuery): Future[XMLHakijat] = q.hakuehto match {
-    case Hakuehto.Kaikki => getHakijat(q)
-    case Hakuehto.Hyvaksytyt => getHakijat(q).map((xhakijat) => {
-      val withOnlyValitut: Seq[XMLHakija] = xhakijat.hakijat.map(hakijaWithValittu)
-      val valitut: Seq[XMLHakija] = withOnlyValitut.filter(_.hakemus.hakutoiveet.size > 0)
-      XMLHakijat(valitut)
-    })
+    case Hakuehto.Kaikki => getHakijat(q).map((hakijat) => XMLHakijat(hakijat.filter(_.hakemus.hakutoiveet.size > 0)))
+    case Hakuehto.Hyvaksytyt => getHakijat(q).map(_.map(hakijaWithValittu)).map((hakijat) => XMLHakijat(hakijat.filter(_.hakemus.hakutoiveet.size > 0)))
     // TODO Hakuehto.Vastaanottaneet
     case _ => Future.successful(XMLHakijat(Seq()))
   }
 
-  def getHakijat(q: HakijaQuery): Future[XMLHakijat] = {
+  def getHakijat(q: HakijaQuery) = {
     hakupalvelu.getHakijat(q).flatMap(combine2sijoittelunTulos(q.user)).flatMap(hakijat2XmlHakijat)
   }
 }
