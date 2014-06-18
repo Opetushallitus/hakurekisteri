@@ -139,7 +139,7 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
   }
 
 
-  def readBody[A <: AnyRef](response: HttpResponse): Option[A] = {
+  def readBody[A <: AnyRef: Manifest](response: HttpResponse): Option[A] = {
     import org.json4s.jackson.Serialization.read
     val rawResult = Try(read[A](response.bodyString))
 
