@@ -8,7 +8,7 @@ import java.net.{URL, URLEncoder}
 import scala.util.Try
 import com.stackmob.newman.dsl._
 import scala.Some
-import com.stackmob.newman.response.HttpResponseCode
+import com.stackmob.newman.response.{HttpResponse, HttpResponseCode}
 import akka.event.Logging
 import com.stackmob.newman.ApacheHttpClient
 
@@ -125,12 +125,7 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
 
       GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
         if (response.code == HttpResponseCode.Ok) {
-          import org.json4s.jackson.Serialization.read
-          val rawHaku = Try(read[A](response.bodyString))
-
-          if (rawHaku.isFailure) logger.warning("Failed to deserialize", rawHaku.failed.get)
-
-          val hakemusHaku = rawHaku.toOption
+          val hakemusHaku: Option[A] = readBody[A](response)
           logger.debug("got response for url: [{}]", url)
 
           hakemusHaku
@@ -141,6 +136,17 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
         }
       })
     })
+  }
+
+
+  def readBody[A <: AnyRef](response: HttpResponse): Option[A] = {
+    import org.json4s.jackson.Serialization.read
+    val rawResult = Try(read[A](response.bodyString))
+
+    if (rawResult.isFailure) logger.warning("Failed to deserialize", rawResult.failed.get)
+
+    val result = rawResult.toOption
+    result
   }
 
   def getHakemukset(q: HakijaQuery): Future[Int] = {
