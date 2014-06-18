@@ -40,14 +40,15 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
     case SijoitteluQuery(haku) =>
       getSijoittelu(haku) pipeTo sender
     case Update(haku) if !inUse(haku) =>
-      cache - haku
+      cache = cache - haku
     case Update(haku) =>
       val result = sijoitteluTulos(haku)
       result.onFailure{ case t => rescheduleHaku(haku, retry)}
-      result pipeTo self
-    case Sijoittelu(haku, sp) =>
-      cache + (haku -> Future.successful(sp))
+      result map (Sijoittelu(haku, _)) pipeTo self
+    case Sijoittelu(haku, st) =>
+      cache = cache + (haku -> Future.successful(st))
       rescheduleHaku(haku)
+
   }
   def getValintatapaMap[A](shakijas: Seq[SijoitteluHakija], extractor: (SijoitteluHakutoiveenValintatapajono) => Option[A]): Map[String, Map[String, A]] = shakijas.groupBy(_.hakemusOid).
     collect {
@@ -99,7 +100,7 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
   }
 
   case class Update(haku:String)
-  case class Sijoittelu(haku: String, sp: Option[SijoitteluPagination])
+  case class Sijoittelu(haku: String, st: SijoitteluTulos)
 
 }
 
