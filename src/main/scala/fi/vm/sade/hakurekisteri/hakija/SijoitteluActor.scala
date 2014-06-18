@@ -40,14 +40,15 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
     case SijoitteluQuery(haku) =>
       getSijoittelu(haku) pipeTo sender
     case Update(haku) if !inUse(haku) =>
-      cache - haku
+      cache = cache - haku
     case Update(haku) =>
-      val result = sijoitteluTulos(haku).map(_.get)
+      val result = sijoitteluTulos(haku)
       result.onFailure{ case t => rescheduleHaku(haku, retry)}
-      result pipeTo self
-    case Sijoittelu(haku, sp) =>
-      cache + (haku -> Future.successful(sp))
+      result map (Sijoittelu(haku, _)) pipeTo self
+    case Sijoittelu(haku, st) =>
+      cache = cache + (haku -> Future.successful(st))
       rescheduleHaku(haku)
+
   }
   def getValintatapaMap[A](shakijas: Seq[SijoitteluHakija], extractor: (SijoitteluHakutoiveenValintatapajono) => Option[A]): Map[String, Map[String, A]] = shakijas.groupBy(_.hakemusOid).
     collect {
@@ -79,9 +80,8 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
 
 
   def updateCacheFor(haku: String): Future[SijoitteluTulos] = {
-    val resultOpt: Future[Option[SijoitteluTulos]] = sijoitteluTulos(haku)
+    val result: Future[SijoitteluTulos] = sijoitteluTulos(haku)
 
-    val result = resultOpt.map(_.get)
     cache = cache + (haku -> result)
     rescheduleHaku(haku)
     result.onFailure{ case t => rescheduleHaku(haku, retry)}
@@ -89,12 +89,10 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
   }
 
 
-  def sijoitteluTulos(haku: String): Future[Option[SijoitteluTulos]] = {
+  def sijoitteluTulos(haku: String): Future[SijoitteluTulos] = {
     cachedService.getSijoitteluTila(haku).map(
       _.results)
-
-
-      .map((shso: Option[Seq[SijoitteluHakija]]) => shso.map((shs) => SijoitteluTulos(getValintatapaMap(shs, _.tila), getValintatapaMap(shs, _.pisteet))))
+      .map((shs) => SijoitteluTulos(getValintatapaMap(shs, _.tila), getValintatapaMap(shs, _.pisteet)))
   }
 
   def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
@@ -102,7 +100,7 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
   }
 
   case class Update(haku:String)
-  case class Sijoittelu(haku: String, sp: Option[SijoitteluPagination])
+  case class Sijoittelu(haku: String, st: SijoitteluTulos)
 
 }
 

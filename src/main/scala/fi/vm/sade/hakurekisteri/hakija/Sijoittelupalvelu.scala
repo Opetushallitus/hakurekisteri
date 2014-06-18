@@ -43,7 +43,7 @@ case class SijoitteluHakutoive(hakutoiveenValintatapajonot: Option[Seq[Sijoittel
 
 case class SijoitteluHakija(hakutoiveet: Option[Seq[SijoitteluHakutoive]], sukunimi: Option[String], etunimi: Option[String], hakemusOid: Option[String])
 
-case class SijoitteluPagination(results: Option[Seq[SijoitteluHakija]], totalCount: Option[Int])
+case class SijoitteluPagination(results: Seq[SijoitteluHakija], totalCount: Int)
 
 trait Sijoittelupalvelu {
 
