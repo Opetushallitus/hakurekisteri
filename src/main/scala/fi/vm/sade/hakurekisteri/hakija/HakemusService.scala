@@ -67,8 +67,15 @@ object HakemusQuery {
 }
 
 
+class HakemusJournal extends InMemJournal[FullHakemus, String] {
 
-class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: Option[String], password:Option[String], override val journal: Journal[FullHakemus, String] = new InMemJournal[FullHakemus, String]()) extends ResourceActor[FullHakemus, String] with HakemusService  {
+
+  override def addModification(delta:Delta[FullHakemus, String]): Unit =  {
+  }
+}
+
+
+class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: Option[String], password:Option[String], override val journal: Journal[FullHakemus, String] = new HakemusJournal[FullHakemus, String]()) extends ResourceActor[FullHakemus, String] with HakemusService  {
 
   import scala.concurrent.duration._
 
