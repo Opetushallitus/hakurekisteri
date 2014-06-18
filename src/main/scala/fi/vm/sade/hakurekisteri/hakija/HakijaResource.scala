@@ -34,11 +34,14 @@ object Tyyppi extends Enumeration {
 
 case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, user: Option[User])
 
+import org.scalatra.util.RicherString._
+
+
 object HakijaQuery {
   def apply(params: Map[String,String], user: Option[User]): HakijaQuery = HakijaQuery(
-      params.get("haku"),
-      params.get("organisaatio"),
-      params.get("hakukohdekoodi"),
+      params.get("haku").flatMap(_.blankOption),
+      params.get("organisaatio").flatMap(_.blankOption),
+      params.get("hakukohdekoodi").flatMap(_.blankOption),
       Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki}.get,
       user)
 }
