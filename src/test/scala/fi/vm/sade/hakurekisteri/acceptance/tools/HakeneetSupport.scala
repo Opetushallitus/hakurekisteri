@@ -208,9 +208,9 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   }
 
   object sijoittelupalvelu extends Sijoittelupalvelu {
-    override def getSijoitteluTila(hakuOid: String): Future[Option[SijoitteluPagination]] = hakuOid match {
+    override def getSijoitteluTila(hakuOid: String): Future[SijoitteluPagination] = hakuOid match {
       case _ => Future.successful(
-        Some(SijoitteluPagination(
+        SijoitteluPagination(
           Some(Seq(
             SijoitteluHakija(
               hakemusOid = Some(FullHakemus1.oid),
@@ -241,7 +241,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
                   hakutoive = None))),
               etunimi = None,
               sukunimi = None))),
-          Some(1))))
+          Some(1)))
     }
   }
 
