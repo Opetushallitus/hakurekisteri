@@ -42,7 +42,7 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
     case Update(haku) if !inUse(haku) =>
       cache - haku
     case Update(haku) =>
-      val result = sijoitteluTulos(haku).map(_.get)
+      val result = sijoitteluTulos(haku)
       result.onFailure{ case t => rescheduleHaku(haku, retry)}
       result pipeTo self
     case Sijoittelu(haku, sp) =>
@@ -79,9 +79,8 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
 
 
   def updateCacheFor(haku: String): Future[SijoitteluTulos] = {
-    val resultOpt: Future[Option[SijoitteluTulos]] = sijoitteluTulos(haku)
+    val result: Future[SijoitteluTulos] = sijoitteluTulos(haku)
 
-    val result = resultOpt.map(_.get)
     cache = cache + (haku -> result)
     rescheduleHaku(haku)
     result.onFailure{ case t => rescheduleHaku(haku, retry)}
@@ -89,12 +88,10 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
   }
 
 
-  def sijoitteluTulos(haku: String): Future[Option[SijoitteluTulos]] = {
+  def sijoitteluTulos(haku: String): Future[SijoitteluTulos] = {
     cachedService.getSijoitteluTila(haku).map(
       _.results)
-
-
-      .map((shso: Option[Seq[SijoitteluHakija]]) => shso.map((shs) => SijoitteluTulos(getValintatapaMap(shs, _.tila), getValintatapaMap(shs, _.pisteet))))
+      .map((shs) => SijoitteluTulos(getValintatapaMap(shs, _.tila), getValintatapaMap(shs, _.pisteet)))
   }
 
   def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
