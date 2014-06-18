@@ -47,7 +47,7 @@ case class SijoitteluPagination(results: Option[Seq[SijoitteluHakija]], totalCou
 
 trait Sijoittelupalvelu {
 
-  def getSijoitteluTila(hakuOid: String): Future[Option[SijoitteluPagination]]
+  def getSijoitteluTila(hakuOid: String): Future[SijoitteluPagination]
 
 }
 
@@ -76,17 +76,17 @@ class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "http
     case _ => Future.successful("")
   }
 
-  def readBody[A <: AnyRef: Manifest](response: HttpResponse): Option[A] = {
+  def readBody[A <: AnyRef: Manifest](response: HttpResponse): A = {
     import org.json4s.jackson.Serialization.read
     val rawResult = Try(read[A](response.bodyString))
 
     if (rawResult.isFailure) logger.warn("Failed to deserialize", rawResult.failed.get)
 
-    val result = rawResult.toOption
+    val result = rawResult.get
     result
   }
 
-  override def getSijoitteluTila(hakuOid: String): Future[Option[SijoitteluPagination]] = {
+  override def getSijoitteluTila(hakuOid: String): Future[SijoitteluPagination] = {
     val url = new URL(serviceUrl + "/resources/sijoittelu/" + hakuOid + "/sijoitteluajo/latest/hakemukset")
     getProxyTicket.flatMap((ticket) => {
       logger.debug("calling sijoittelu-service [url={}, ticket={}]", Seq(url, ticket):_*)
