@@ -21,7 +21,7 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
   val touchInterval = expiration / 2
 
   override def preStart(): Unit = {
-    keepAlives = keepAlive.map((haku) => context.system.scheduler.schedule(1.minutes, touchInterval, self, SijoitteluQuery(haku)))
+    keepAlives = keepAlive.map((haku) => context.system.scheduler.schedule(1.seconds, touchInterval, self, SijoitteluQuery(haku)))
 
   }
 
@@ -54,16 +54,22 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
       rescheduleHaku(haku)
 
   }
-  def getValintatapaMap[A](shakijas: Seq[SijoitteluHakija], extractor: (SijoitteluHakutoiveenValintatapajono) => Option[A]): Map[String, Map[String, A]] = shakijas.groupBy(_.hakemusOid).
+  def getValintatapaMap[A](shakijas: Seq[SijoitteluHakija], extractor: (SijoitteluHakutoiveenValintatapajono) => Option[A], useLog:Boolean = false): Map[String, Map[String, A]] = shakijas.groupBy(_.hakemusOid).
     collect {
     case (Some(hakemusOid), sijoitteluHakijas) =>
 
 
-      def getIndex(toive: SijoitteluHakutoive): Option[(String, A)] = (toive.hakukohdeOid, toive.hakutoiveenValintatapajonot.flatMap(_.headOption))  match {
-        case (Some(hakukohde), Some(vtjono)) => extractor(vtjono).map((hakukohde, _))
-        case _ => None
+      def getIndex(toive: SijoitteluHakutoive): Option[(String, A)] = {
+        (toive.hakukohdeOid, toive.hakutoiveenValintatapajonot.flatMap(_.headOption)) match {
+          case (Some(hakukohde), Some(vtjono)) => val tuple = extractor(vtjono).map((hakukohde, _))
+            if (useLog) log.debug(s"indextuple: ${extractor(vtjono)}")
+            tuple
+          case _ => None
 
+        }
       }
+
+
 
       (hakemusOid, (for (hakija <- sijoitteluHakijas;
                          toive <- hakija.hakutoiveet.getOrElse(Seq())) yield getIndex(toive)).flatten.toMap)
@@ -97,7 +103,7 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
   def sijoitteluTulos(haku: String): Future[SijoitteluTulos] = {
     cachedService.getSijoitteluTila(haku).map(
       _.results)
-      .map((shs) => SijoitteluTulos(getValintatapaMap(shs, _.tila), getValintatapaMap(shs, _.pisteet)))
+      .map((shs) => SijoitteluTulos(getValintatapaMap(shs, _.tila), getValintatapaMap(shs, _.pisteet, true)))
   }
 
   def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {

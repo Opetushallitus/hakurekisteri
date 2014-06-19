@@ -222,7 +222,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
                       hyvaksytty = None,
                       hakeneet = None,
                       alinHyvaksyttyPistemaara = None,
-                      pisteet = None,
+                      pisteet = Some(26.0),
                       tasasijaJonosija = None,
                       hyvaksyttyHarkinnanvaraisesti = None,
                       vastaanottotieto = None,

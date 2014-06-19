@@ -17,6 +17,7 @@ import fi.vm.sade.hakurekisteri.hakija.SijoitteluPistetieto
 import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakutoiveenValintatapajono
 import fi.vm.sade.hakurekisteri.hakija.SijoitteluPagination
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import java.io.PrintWriter
 
 object SijoitteluValintatuloksenTila extends Enumeration {
   type SijoitteluValintatuloksenTila = Value
@@ -69,6 +70,8 @@ class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "http
 
   def getProxyTicket: Future[String] = (user, password) match {
     case (Some(u), Some(p)) =>
+      logger.debug(s"$u $p")
+      logger.debug(serviceAccessUrl)
       POST(new URL(s"$serviceAccessUrl/accessTicket")).
         addHeaders("Content-Type" -> "application/x-www-form-urlencoded").
         setBodyString(s"client_id=${URLEncoder.encode(u, "UTF8")}&client_secret=${URLEncoder.encode(p, "UTF8")}&service_url=${URLEncoder.encode(serviceUrl, "UTF8")}").
@@ -96,7 +99,9 @@ class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "http
 
         val sijoitteluTulos = readBody[SijoitteluPagination](response)
         logger.debug("got response from [url={}, ticket={}]", Seq(url, ticket):_*)
-
+        val MyFileTxtTarget = new PrintWriter("output.json")
+        MyFileTxtTarget.print(response.bodyString)
+        MyFileTxtTarget.close()
         sijoitteluTulos
       } else {
         logger.error("call to sijoittelu-service [url={}, ticket={}] failed: {}", url, ticket, response.code)
