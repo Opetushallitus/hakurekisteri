@@ -186,7 +186,11 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
 
   def yhteispisteet(pisteet: Map[String, Map[String, BigDecimal]])(h:Hakija) : Hakija = {
-    val toiveet = h.hakemus.hakutoiveet.map((ht) => ht withPisteet pisteet.getOrElse(h.hakemus.hakemusnumero, Map()).get(ht.hakukohde.oid))
+    val toiveet = h.hakemus.hakutoiveet.map((ht) => {
+      val oid: String = ht.hakukohde.oid
+      val yhteispisteet: Option[BigDecimal] = pisteet.getOrElse(h.hakemus.hakemusnumero, Map()).get(oid)
+      ht withPisteet yhteispisteet
+    })
     h.copy(hakemus = h.hakemus.copy(hakutoiveet = toiveet))
   }
 

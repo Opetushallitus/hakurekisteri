@@ -53,14 +53,18 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
       rescheduleHaku(haku)
 
   }
-  def getValintatapaMap[A](shakijas: Seq[SijoitteluHakija], extractor: (SijoitteluHakutoiveenValintatapajono) => Option[A]): Map[String, Map[String, A]] = shakijas.groupBy(_.hakemusOid).
+  def getValintatapaMap[A](shakijas: Seq[SijoitteluHakija], extractor: (SijoitteluHakutoiveenValintatapajono) => Option[A], useLog: Boolean = false): Map[String, Map[String, A]] = shakijas.groupBy(_.hakemusOid).
     collect {
     case (Some(hakemusOid), sijoitteluHakijas) =>
 
 
       def getIndex(toive: SijoitteluHakutoive): Option[(String, A)] = {
         (toive.hakukohdeOid, toive.hakutoiveenValintatapajonot.flatMap(_.headOption)) match {
-          case (Some(hakukohde), Some(vtjono)) => extractor(vtjono).map((hakukohde, _))
+          case (Some(hakukohde), Some(vtjono)) =>
+
+            val blaa = extractor(vtjono).map((hakukohde, _))
+            //if (useLog) log.debug(blaa.toString)
+            blaa
 
           case _ => None
 
@@ -100,7 +104,7 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
   def sijoitteluTulos(haku: String): Future[SijoitteluTulos] = {
     cachedService.getSijoitteluTila(haku).map(
       _.results)
-      .map((shs) => SijoitteluTulos(getValintatapaMap(shs, _.tila), getValintatapaMap(shs, _.pisteet)))
+      .map((shs) => SijoitteluTulos(getValintatapaMap(shs, _.tila), getValintatapaMap(shs, _.pisteet, true)))
   }
 
   def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
