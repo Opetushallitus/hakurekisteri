@@ -99,9 +99,7 @@ class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "http
 
         val sijoitteluTulos = readBody[SijoitteluPagination](response)
         logger.debug("got response from [url={}, ticket={}]", Seq(url, ticket):_*)
-        val MyFileTxtTarget = new PrintWriter("output.json")
-        MyFileTxtTarget.print(response.bodyString)
-        MyFileTxtTarget.close()
+
         sijoitteluTulos
       } else {
         logger.error("call to sijoittelu-service [url={}, ticket={}] failed: {}", url, ticket, response.code)
