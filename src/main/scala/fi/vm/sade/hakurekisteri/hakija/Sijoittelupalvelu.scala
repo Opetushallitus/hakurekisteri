@@ -17,6 +17,7 @@ import fi.vm.sade.hakurekisteri.hakija.SijoitteluPistetieto
 import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakutoiveenValintatapajono
 import fi.vm.sade.hakurekisteri.hakija.SijoitteluPagination
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import java.io.PrintWriter
 
 object SijoitteluValintatuloksenTila extends Enumeration {
   type SijoitteluValintatuloksenTila = Value
