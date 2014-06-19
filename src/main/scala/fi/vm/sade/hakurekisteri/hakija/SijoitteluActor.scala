@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.hakija
 import akka.actor.{Cancellable, Actor}
 import scala.concurrent.Future
 import scala.compat.Platform
+import akka.event.Logging
 
 class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) extends Actor {
 
@@ -31,6 +32,8 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
 
   val retry: FiniteDuration = 60.seconds
 
+  val log = Logging(context.system, this)
+
 
   var cache = Map[String, Future[SijoitteluTulos]]()
   var cacheHistory = Map[String, Long]()
@@ -46,6 +49,7 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
       result.onFailure{ case t => rescheduleHaku(haku, retry)}
       result map (Sijoittelu(haku, _)) pipeTo self
     case Sijoittelu(haku, st) =>
+      log.debug(s"found pisteet: ${st.pisteet} for $haku")
       cache = cache + (haku -> Future.successful(st))
       rescheduleHaku(haku)
 
@@ -85,6 +89,7 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
     cache = cache + (haku -> result)
     rescheduleHaku(haku)
     result.onFailure{ case t => rescheduleHaku(haku, retry)}
+    result.onSuccess{ case SijoitteluTulos(_, pisteet) => log.debug(s"found pisteet: $pisteet for $haku")}
     result
   }
 
