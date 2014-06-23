@@ -18,16 +18,26 @@ import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakutoiveenValintatapajono
 import fi.vm.sade.hakurekisteri.hakija.SijoitteluPagination
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import java.io.PrintWriter
+import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakemuksenTila.SijoitteluHakemuksenTila
+import fi.vm.sade.hakurekisteri.hakija.SijoitteluValintatuloksenTila.SijoitteluValintatuloksenTila
 
 object SijoitteluValintatuloksenTila extends Enumeration {
   type SijoitteluValintatuloksenTila = Value
   val ILMOITETTU, VASTAANOTTANUT, VASTAANOTTANUT_LASNA, VASTAANOTTANUT_POISSAOLEVA,
     EI_VASTAANOTETTU_MAARA_AIKANA, PERUNUT, PERUUTETTU, EHDOLLISESTI_VASTAANOTTANUT = Value
+
+  def valueOption(t: String): Option[SijoitteluValintatuloksenTila.Value] = {
+    Try(withName(t)).toOption
+  }
 }
 
 object SijoitteluHakemuksenTila extends Enumeration {
   type SijoitteluHakemuksenTila = Value
   val HYLATTY, VARALLA, PERUUNTUNUT, HYVAKSYTTY, PERUNUT, PERUUTETTU = Value
+
+  def valueOption(t: String): Option[SijoitteluHakemuksenTila.Value] = {
+    Try(withName(t)).toOption
+  }
 }
 
 case class SijoitteluPistetieto(osallistuminen: Option[String], laskennallinenArvo: Option[String], arvo: Option[String], tunniste: Option[String])
@@ -53,7 +63,16 @@ trait Sijoittelupalvelu {
 }
 
 
-case class SijoitteluTulos(tilat: Map[String, Map[String, String]], pisteet: Map[String, Map[String, BigDecimal]])
+case class SijoitteluTulos(hakemuksenTilat: Map[String, Map[String, SijoitteluHakemuksenTila]], valinnanTilat: Map[String, Map[String, SijoitteluValintatuloksenTila]], pisteet: Map[String, Map[String, BigDecimal]]) {
+  def hakemus(hakemus: String, kohde: String): Option[SijoitteluHakemuksenTila] = {
+    hakemuksenTilat.getOrElse(hakemus, Map()).get(kohde)
+  }
+
+  def valinta(hakemus: String, kohde: String): Option[SijoitteluValintatuloksenTila] = {
+    valinnanTilat.getOrElse(hakemus, Map()).get(kohde)
+  }
+
+}
 
 
 /**

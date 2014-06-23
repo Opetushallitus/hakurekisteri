@@ -66,5 +66,4 @@ class ExcelUtilSpec extends ScalatraFunSuite {
 
     out.size() should not equal(0)
   }
-
 }
