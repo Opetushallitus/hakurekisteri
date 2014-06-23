@@ -7,7 +7,7 @@ import akka.event.Logging
 import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakutoiveenValintatapajono
 import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakemuksenTila.SijoitteluHakemuksenTila
 import fi.vm.sade.hakurekisteri.hakija.SijoitteluValintatuloksenTila.SijoitteluValintatuloksenTila
-import fi.vm.sade.hakurekisteri.hakija.SijoitteluTulos.InvalidSijoitteluTulos
+import fi.vm.sade.hakurekisteri.hakija.InvalidSijoitteluTulos
 
 class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) extends Actor {
   import akka.pattern._

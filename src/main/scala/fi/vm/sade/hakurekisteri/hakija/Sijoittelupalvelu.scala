@@ -91,7 +91,7 @@ object SijoitteluTulos {
                          toive <- hakija.hakutoiveet.getOrElse(Seq())) yield  try {
         getIndex(toive)
       } catch {
-        case InvalidValintatapajonoException(vtj) => throw InvalidSijoitteluTulos(hakija, vtj)
+        case ive: InvalidValintatapajonoException => throw InvalidSijoitteluTulos(hakija, ive)
       }).flatten.toMap)
   }
 
@@ -105,9 +105,10 @@ object SijoitteluTulos {
     ) yield (hakemus, valinnantila(vtj))
   }
 
-  case class InvalidValintatapajonoException(vtj: SijoitteluHakutoiveenValintatapajono) extends Exception
+  case class InvalidValintatapajonoException(vtj: SijoitteluHakutoiveenValintatapajono) extends Exception {
+    override def getMessage: String = s"Valintatapajono ${vtj.valintatapajonoOid} on virheellinen. valinnan tila on ${valinnantila(vtj)} vaikka hakemuksen tila on ${hakemuksenTila(vtj)}"
+  }
 
-  case class InvalidSijoitteluTulos(hakija: SijoitteluHakija, vtj: SijoitteluHakutoiveenValintatapajono) extends Exception
 
   def hakemuksenTila(vtj: SijoitteluHakutoiveenValintatapajono): Option[SijoitteluHakemuksenTila] = for (
     hakemusRaw <- vtj.tila;
@@ -133,6 +134,10 @@ object SijoitteluTulos {
     }
   }
 
+}
+
+case class InvalidSijoitteluTulos(hakija: SijoitteluHakija, cause: Exception) extends Exception(cause) {
+  override def getMessage: String = s"Sijoittelun tulos hakemukselle ${hakija.hakemusOid} on virheellinen"
 }
 
 
