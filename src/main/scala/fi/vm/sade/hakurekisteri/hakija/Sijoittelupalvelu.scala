@@ -63,13 +63,74 @@ trait Sijoittelupalvelu {
 }
 
 
-case class SijoitteluTulos(hakemuksenTilat: Map[String, Map[String, SijoitteluHakemuksenTila]], valinnanTilat: Map[String, Map[String, SijoitteluValintatuloksenTila]], pisteet: Map[String, Map[String, BigDecimal]]) {
-  def hakemus(hakemus: String, kohde: String): Option[SijoitteluHakemuksenTila] = {
-    hakemuksenTilat.getOrElse(hakemus, Map()).get(kohde)
+trait SijoitteluTulos {
+
+  def pisteet(hakemus: String, kohde: String): Option[BigDecimal]
+
+  def hakemus(hakemus: String, kohde: String): Option[SijoitteluHakemuksenTila]
+
+  def valinta(hakemus: String, kohde: String): Option[SijoitteluValintatuloksenTila]
+
+
+
+}
+
+object SijoitteluTulos {
+
+  def getValintatapaMap[A](shakijas: Seq[SijoitteluHakija], extractor: (SijoitteluHakutoiveenValintatapajono) => Option[A]): Map[String, Map[String, A]] = shakijas.groupBy(_.hakemusOid).
+    collect {
+    case (Some(hakemusOid), sijoitteluHakijas) =>
+      def getIndex(toive: SijoitteluHakutoive): Option[(String, A)] = {
+        (toive.hakukohdeOid, toive.hakutoiveenValintatapajonot.flatMap(_.headOption)) match {
+          case (Some(hakukohde), Some(vtjono)) => extractor(vtjono).map((hakukohde, _))
+          case _ => None
+        }
+      }
+
+      (hakemusOid, (for (hakija <- sijoitteluHakijas;
+                         toive <- hakija.hakutoiveet.getOrElse(Seq())) yield  try {
+        getIndex(toive)
+      } catch {
+        case InvalidValintatapajonoException(vtj) => throw InvalidSijoitteluTulos(hakija, vtj)
+      }).flatten.toMap)
   }
 
-  def valinta(hakemus: String, kohde: String): Option[SijoitteluValintatuloksenTila] = {
-    valinnanTilat.getOrElse(hakemus, Map()).get(kohde)
+
+  def tilat(vtj: SijoitteluHakutoiveenValintatapajono): Option[(SijoitteluHakemuksenTila, Option[SijoitteluValintatuloksenTila])] = {
+
+    if (hakemuksenTila(vtj) != Some(SijoitteluHakemuksenTila.HYVAKSYTTY) && valinnantila(vtj).isDefined) throw InvalidValintatapajonoException(vtj)
+
+    for (
+      hakemus <- hakemuksenTila(vtj)
+    ) yield (hakemus, valinnantila(vtj))
+  }
+
+  case class InvalidValintatapajonoException(vtj: SijoitteluHakutoiveenValintatapajono) extends Exception
+
+  case class InvalidSijoitteluTulos(hakija: SijoitteluHakija, vtj: SijoitteluHakutoiveenValintatapajono) extends Exception
+
+  def hakemuksenTila(vtj: SijoitteluHakutoiveenValintatapajono): Option[SijoitteluHakemuksenTila] = for (
+    hakemusRaw <- vtj.tila;
+    hakemus <- SijoitteluHakemuksenTila.valueOption(hakemusRaw)
+  ) yield hakemus
+
+
+  def valinnantila(vtj: SijoitteluHakutoiveenValintatapajono): Option[SijoitteluValintatuloksenTila] = vtj.vastaanottotieto.flatMap(SijoitteluValintatuloksenTila.valueOption)
+
+  def apply(shs:Seq[SijoitteluHakija]) = new SijoitteluTulos {
+
+    private val sijoitteluTilat = getValintatapaMap(shs, tilat)
+    private val pistetila: Map[String, Map[String, BigDecimal]] = getValintatapaMap(shs, _.pisteet)
+
+    override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = pistetila.getOrElse(hakemus, Map()).get(kohde)
+
+    override def hakemus(hakemus: String, kohde: String): Option[SijoitteluHakemuksenTila] = {
+      sijoitteluTilat.getOrElse(hakemus, Map()).get(kohde).map(_._1)
+    }
+
+    override def valinta(hakemus: String, kohde: String): Option[SijoitteluValintatuloksenTila] = {
+      sijoitteluTilat.getOrElse(hakemus, Map()).get(kohde).flatMap(_._2)
+    }
   }
 
 }

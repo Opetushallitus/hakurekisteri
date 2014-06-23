@@ -61,10 +61,9 @@ object Hakutoive{
     case (Some(SijoitteluHakemuksenTila.PERUUTETTU), None) => Peruutettu(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
     case (Some(SijoitteluHakemuksenTila.PERUUNTUNUT), None)  => Peruuntunut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
     case (Some(SijoitteluHakemuksenTila.PERUNUT), None) => Perunut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
-    case _ => {
-      log.warn(s"Unknown combination for hakemus ($hakemus) and valinta ($vastaanotto)")
+    case (_, vastaanotonTila) =>
+      if (vastaanotonTila.isDefined) log.warn(s"Unknown combination for hakemus ($hakemus) and valinta ($vastaanotonTila)")
       Toive(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
-    }
   }
 
 
@@ -239,15 +238,15 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
 
   def matchSijoitteluAndHakemus(hakijas: Seq[Hakija])(tulos: SijoitteluTulos): Seq[Hakija] =
-    hakijas.map(tila(tulos.hakemus, tulos.valinta)).map(yhteispisteet(tulos.pisteet))
+    hakijas.map(tila(tulos.hakemus, tulos.valinta)).map(yhteispisteet(tulos.pisteet _))
 
 
 
 
-  def yhteispisteet(pisteet: Map[String, Map[String, BigDecimal]])(h:Hakija) : Hakija = {
+  def yhteispisteet(pisteet: (String, String) => Option[BigDecimal])(h:Hakija) : Hakija = {
     val toiveet = h.hakemus.hakutoiveet.map((ht) => {
       val oid: String = ht.hakukohde.oid
-      val yhteispisteet: Option[BigDecimal] = pisteet.getOrElse(h.hakemus.hakemusnumero, Map()).get(oid)
+      val yhteispisteet: Option[BigDecimal] = pisteet(h.hakemus.hakemusnumero, oid)
       ht withPisteet yhteispisteet
     })
     h.copy(hakemus = h.hakemus.copy(hakutoiveet = toiveet))
