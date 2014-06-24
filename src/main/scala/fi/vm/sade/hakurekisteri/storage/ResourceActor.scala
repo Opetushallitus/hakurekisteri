@@ -19,12 +19,26 @@ abstract class ResourceActor[T <: Resource[I] : Manifest, I : Manifest] extends 
   import scala.concurrent.duration._
   val reloadInterval = 10.seconds
 
-  override def postStop(): Unit = reload.foreach((c) => if (!c.isCancelled) c.cancel())
+  override def postStop(): Unit = {
+    report.foreach((c) => if (!c.isCancelled) c.cancel())
+    reload.foreach((c) => if (!c.isCancelled) c.cancel())
+  }
+
+
+  object Report
+
+  var report:Option[Cancellable] = None
 
   var reload:Option[Cancellable] = None
 
 
-  override def preStart(): Unit = reload = Some(context.system.scheduler.schedule(reloadInterval, reloadInterval, self, Reload))
+  var saved =0
+
+  override def preStart(): Unit = {
+
+    report = Some(context.system.scheduler.schedule(1.minute, 1.minute, self, Report))
+    reload = Some(context.system.scheduler.schedule(reloadInterval, reloadInterval, self, Reload))
+  }
 
   implicit val executionContext: ExecutionContext = context.dispatcher
 
@@ -38,18 +52,21 @@ abstract class ResourceActor[T <: Resource[I] : Manifest, I : Manifest] extends 
         case s => log.debug(s"answered query $q with ${s.size} results to $recipient")
       }
     case o:T =>
-      val saved = Try(save(o))
-      if (saved.isSuccess)
-        log.debug("saved: " + saved.get.id)
-      else
-        log.error("save failed", saved.failed.get)
-      sender ! saved.recover{ case e:Exception => Failure(e)}.get
+      saved = saved + 1
+      val saveTry = Try(save(o))
+      if (saveTry.isFailure)
+        log.error("save failed", saveTry.failed.get)
+      //else
+        //log.debug("saved: " + saved.get.id)
+      sender ! saveTry.recover{ case e:Exception => Failure(e)}.get
     case id:I =>
       sender ! get(id)
     case DeleteResource(id:I) =>
       log.debug(s"received delete request for resource: $id from $sender")
       sender ! delete(id)
       log.debug(s"deleted $id answered to $sender")
+    case Report =>
+      log.debug(s"saved: $saved")
     case Reload  =>
       //log.debug(s"reloading from ${journal.latestReload}")
       //loadJournal(journal.latestReload)
