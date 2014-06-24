@@ -140,7 +140,7 @@ case class XMLHakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[
 object XMLHakutoive {
   def apply(ht: Hakutoive, o: Organisaatio, k: String): XMLHakutoive = XMLHakutoive(ht.jno.toShort, k, o.toimipistekoodi, o.nimi.get("fi").orElse(o.nimi.get("sv").orElse(o.nimi.get("en"))),
       ht.hakukohde.hakukohdekoodi, ht.harkinnanvaraisuusperuste, ht.urheilijanammatillinenkoulutus,
-      None, valittu(ht), None, None,
+      ht.yhteispisteet, valittu(ht), vastaanotto(ht), lasna(ht),
       ht.terveys, ht.aiempiperuminen, ht.kaksoistutkinto)
 
   def valittu(ht:Hakutoive) = ht match {
@@ -151,6 +151,21 @@ object XMLHakutoive {
     case v:Peruutettu => Some("5")
     case v:Peruuntunut => Some("4")
     case t:Toive => None
+  }
+
+  def vastaanotto(ht:Hakutoive) = ht match {
+    case v:Hyvaksytty => Some("1")
+    case v:Ilmoitettu => Some("2")
+    case v:Vastaanottanut => Some("3")
+    case v:PerunutValinnan => Some("4")
+    case v:EiVastaanotettu => Some("5")
+    case v:PeruutettuValinta => Some("6")
+    case _ => None
+  }
+
+  def lasna(ht:Hakutoive) = ht match {
+    case v: VastaanottanutPaikan => for (lasnaolo <- v.lasna) yield if (lasnaolo) "1" else "2"
+    case _ => None
   }
 }
 
