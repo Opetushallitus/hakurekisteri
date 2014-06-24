@@ -130,7 +130,7 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
   }
 
   def handleNew(hakemukset: List[FullHakemus]):Unit = {
-    hakemukset.foreach(self ! _)
+    hakemukset.foreach(self.tell(_, ActorRef.noSender))
 
   }
 
