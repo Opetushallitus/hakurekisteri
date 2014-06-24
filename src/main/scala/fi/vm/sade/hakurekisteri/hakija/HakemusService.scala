@@ -11,6 +11,8 @@ import scala.Some
 import com.stackmob.newman.response.{HttpResponse, HttpResponseCode}
 import akka.event.Logging
 import com.stackmob.newman.ApacheHttpClient
+import fi.vm.sade.hakurekisteri.healthcheck.{Health, Hakemukset}
+import akka.actor.ActorRef
 
 trait HakemusService extends ResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
 
@@ -74,13 +76,13 @@ class HakemusJournal extends InMemJournal[FullHakemus, String] {
 }
 
 
-class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: Option[String], password:Option[String], override val journal: Journal[FullHakemus, String] = new HakemusJournal()) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
+class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: Option[String], password:Option[String],  override val journal: Journal[FullHakemus, String] = new HakemusJournal()) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
 
   import scala.concurrent.duration._
 
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
 
-
+  var healthCheck: Option[ActorRef] = None
 
   val logger = Logging(context.system, this)
 
@@ -88,7 +90,69 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
   override def receive: Receive = super.receive.orElse({
     case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) map ((hs) => {
       logger.debug(s"found ${hs} applications")
-  })})
+    })
+    case Health(actor) => healthCheck = Some(actor)
+  })
+
+
+
+
+
+  def getHakemukset(q: HakijaQuery): Future[Int] = {
+
+    def getUrl(page: Int = 0): URL = {
+      new URL(serviceUrl + "/applications/listfull?" + getQueryParams(q, page))
+    }
+    val user = q.user
+
+    val responseFuture: Future[Option[List[FullHakemus]]] = restRequest[List[FullHakemus]](user, getUrl())
+
+    def getAll(cur: Int)(res: Option[List[FullHakemus]]):Future[Option[Int]] = res match {
+      case None                                   => Future.successful(None)
+      case Some(l) if l.length < maxApplications  =>
+        for (actor <- healthCheck)
+          actor ! Hakemukset(cur + l.length)
+        handleNew(l)
+        Future.successful(Some(cur + l.length))
+      case Some(l)                                =>
+        for (actor <- healthCheck)
+          actor ! Hakemukset(cur + l.length)
+        handleNew(l)
+        restRequest[List[FullHakemus]](user, getUrl((cur / maxApplications) + 1)).flatMap(getAll(cur + l.length))
+    }
+
+
+    responseFuture.
+      flatMap(getAll(0)).
+      map(_.getOrElse(0))
+
+
+  }
+
+  def handleNew(hakemukset: List[FullHakemus]):Unit = {
+    hakemukset.foreach(self.tell(_, ActorRef.noSender))
+
+  }
+
+
+  def restRequest[A <: AnyRef](user: Option[User], url: URL)(implicit mf : Manifest[A]): Future[Option[A]] = {
+    getProxyTicket.flatMap((ticket) => {
+      logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
+
+      GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
+        if (response.code == HttpResponseCode.Ok) {
+          val hakemusHaku: Option[A] = readBody[A](response)
+          logger.debug("got response for url: [{}]", url)
+
+          hakemusHaku
+        } else {
+          logger.error("call to haku-app [url={}, ticket={}] failed: {}", url, ticket, response.code)
+
+          throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
+        }
+      })
+    })
+  }
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
@@ -119,26 +183,6 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
     restRequest[HakemusHaku](user, url).map(_.map(_.results).getOrElse(Seq()))
   }
 
-  def restRequest[A <: AnyRef](user: Option[User], url: URL)(implicit mf : Manifest[A]): Future[Option[A]] = {
-    getProxyTicket.flatMap((ticket) => {
-      logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
-
-      GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
-        if (response.code == HttpResponseCode.Ok) {
-          val hakemusHaku: Option[A] = readBody[A](response)
-          logger.debug("got response for url: [{}]", url)
-
-          hakemusHaku
-        } else {
-          logger.error("call to haku-app [url={}, ticket={}] failed: {}", url, ticket, response.code)
-
-          throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
-        }
-      })
-    })
-  }
-
-
   def readBody[A <: AnyRef: Manifest](response: HttpResponse): Option[A] = {
     import org.json4s.jackson.Serialization.read
     val rawResult = Try(read[A](response.bodyString))
@@ -148,39 +192,6 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
     val result = rawResult.toOption
     result
   }
-
-  def getHakemukset(q: HakijaQuery): Future[Int] = {
-
-    def getUrl(page: Int = 0): URL = {
-      new URL(serviceUrl + "/applications/listfull?" + getQueryParams(q, page))
-    }
-    val user = q.user
-
-    val responseFuture: Future[Option[List[FullHakemus]]] = restRequest[List[FullHakemus]](user, getUrl())
-
-    def getAll(cur: Int)(res: Option[List[FullHakemus]]):Future[Option[Int]] = res match {
-      case None                                   => Future.successful(None)
-      case Some(l) if l.length < maxApplications  =>
-        handleNew(l)
-        Future.successful(Some(cur + l.length))
-      case Some(l)                                =>
-        handleNew(l)
-        restRequest[List[FullHakemus]](user, getUrl((cur / maxApplications) + 1)).flatMap(getAll(cur + l.length))
-    }
-
-
-    responseFuture.
-      flatMap(getAll(0)).
-      map(_.getOrElse(0))
-
-
-  }
-
-  def handleNew(hakemukset: List[FullHakemus]):Unit = {
-    hakemukset.foreach(self ! _)
-
-  }
-
 
 
 }
