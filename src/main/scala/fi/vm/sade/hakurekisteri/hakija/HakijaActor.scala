@@ -271,12 +271,16 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   )(Seq[Hakija]())(_ ++ _)
 
 
-  def hakijaWithValittu(xh:XMLHakija):XMLHakija = xh.copy(hakemus = xh.hakemus.copy(hakutoiveet = xh.hakemus.hakutoiveet.filter(_.valinta == Some("1"))))
+  def hakutoiveFilter(predicate: (XMLHakutoive) => Boolean)(xh:XMLHakija):XMLHakija = xh.copy(hakemus = xh.hakemus.copy(hakutoiveet = xh.hakemus.hakutoiveet.filter(predicate)))
+
+  val hakijaWithValittu: (XMLHakija) => XMLHakija = hakutoiveFilter(_.valinta == Some("1")) _
+
+  val hakijaWithVastaanotettu = hakutoiveFilter(_.vastaanotto == Some("3")) _
 
   def XMLQuery(q: HakijaQuery): Future[XMLHakijat] = q.hakuehto match {
     case Hakuehto.Kaikki => getHakijat(q).map((hakijat) => XMLHakijat(hakijat.filter(_.hakemus.hakutoiveet.size > 0)))
     case Hakuehto.Hyvaksytyt => getHakijat(q).map(_.map(hakijaWithValittu)).map((hakijat) => XMLHakijat(hakijat.filter(_.hakemus.hakutoiveet.size > 0)))
-    // TODO Hakuehto.Vastaanottaneet
+    case Hakuehto.Vastaanottaneet => getHakijat(q).map(_.map(hakijaWithVastaanotettu)).map((hakijat) => XMLHakijat(hakijat.filter(_.hakemus.hakutoiveet.size > 0)))
     case _ => Future.successful(XMLHakijat(Seq()))
   }
 
