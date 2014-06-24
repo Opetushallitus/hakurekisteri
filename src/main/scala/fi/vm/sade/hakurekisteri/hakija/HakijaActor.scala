@@ -47,7 +47,7 @@ sealed trait VastaanottanutPaikan extends IlmoitusLahetetty {
 object Hakutoive{
   val log = LoggerFactory.getLogger(classOf[Hakutoive])
 
-  def apply(ht:Hakutoive, hakemus: Option[SijoitteluHakemuksenTila], vastaanotto: Option[SijoitteluValintatuloksenTila]) = (hakemus, vastaanotto) match {
+  def apply(ht:Hakutoive, hakemus: Option[SijoitteluHakemuksenTila], vastaanotto: Option[SijoitteluValintatuloksenTila]):Hakutoive = (hakemus, vastaanotto) match {
     case (Some(SijoitteluHakemuksenTila.HYVAKSYTTY), None) => Hyvaksytty(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
     case (Some(SijoitteluHakemuksenTila.HYVAKSYTTY), Some(SijoitteluValintatuloksenTila.ILMOITETTU)) => Ilmoitettu(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
     case (Some(SijoitteluHakemuksenTila.HYVAKSYTTY), Some(SijoitteluValintatuloksenTila.VASTAANOTTANUT)) => Vastaanottanut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
