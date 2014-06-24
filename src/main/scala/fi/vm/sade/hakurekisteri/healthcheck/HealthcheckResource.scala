@@ -2,9 +2,8 @@ package fi.vm.sade.hakurekisteri.healthcheck
 
 import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import org.scalatra._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import scala.concurrent.{Await, Future, ExecutionContext}
+import scala.concurrent.{Future, ExecutionContext}
 import _root_.akka.actor.{Actor, ActorRef, ActorSystem}
 import _root_.akka.pattern.{AskTimeoutException, ask}
 import java.util.concurrent.TimeUnit
@@ -16,8 +15,10 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.format.{DateTimeFormatter, DateTimeFormat}
 import java.util.{UUID, Locale}
 import org.joda.time.DateTimeZone
-import scala.concurrent.duration.Duration
+import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
+import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
+import fi.vm.sade.hakurekisteri.hakija.{Hakemus, HakemusQuery}
 
 class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -43,34 +44,42 @@ class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSyst
   }
 }
 
-class HealthcheckActor(suoritusRekisteri: ActorRef, opiskelijaRekisteri: ActorRef)(implicit system: ActorSystem) extends Actor {
+class HealthcheckActor(suoritusRekisteri: ActorRef, opiskelijaRekisteri: ActorRef, hakemukset: ActorRef)(implicit system: ActorSystem) extends Actor {
   protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(30, TimeUnit.SECONDS)
   val authorities = Seq("1.2.246.562.10.00000000001")
+  var foundHakemukset = 0L
+
+
+  override def preStart(): Unit = {
+    hakemukset ! Health(self)
+    super.preStart()
+  }
 
   def receive = {
+    case Hakemukset(count) => foundHakemukset = count
     case "healthcheck" => {
       val combinedFuture =
         for {
           suoritusCount <- getSuoritusCount
           opiskelijaCount <- getOpiskelijaCount
-        } yield (suoritusCount, opiskelijaCount)
+          hakemusCount <- getHakemusCount
+        } yield (suoritusCount, opiskelijaCount, hakemusCount)
 
-      val (suoritusCount, opiskelijaCount) = Await.result(combinedFuture, Duration(60, TimeUnit.SECONDS))
-
-      sender ! Healhcheck(System.currentTimeMillis(),
-        "anonymousUser",
-        "/suoritusrekisteri",
-        Checks(Resources(suoritusCount.count, opiskelijaCount.count)),
-        resolveStatus(suoritusCount.status, opiskelijaCount.status),
-        "")
+      combinedFuture map { case (suoritusCount, opiskelijaCount, hakemusCount) =>
+        Healhcheck(System.currentTimeMillis(),
+          "anonymousUser",
+          "/suoritusrekisteri",
+          Checks(Resources(suoritusCount.count, opiskelijaCount.count, hakemusCount.count, foundHakemukset)),
+          resolveStatus(suoritusCount.status, opiskelijaCount.status, hakemusCount.status),
+          "")} pipeTo sender
     }
   }
 
-  def resolveStatus(suoritusStatus: Status, opiskelijaStatus: Status) = {
-    if (suoritusStatus == Status.TIMEOUT || opiskelijaStatus == Status.TIMEOUT)
+  def resolveStatus(suoritusStatus: Status, opiskelijaStatus: Status, hakemusStatus: Status) = {
+    if (suoritusStatus == Status.TIMEOUT || opiskelijaStatus == Status.TIMEOUT || hakemusStatus == Status.TIMEOUT)
       Status.TIMEOUT
-    else if (suoritusStatus == Status.FAILURE || opiskelijaStatus == Status.FAILURE)
+    else if (suoritusStatus == Status.FAILURE || opiskelijaStatus == Status.FAILURE || hakemusStatus == Status.FAILURE)
       Status.FAILURE
     else
       Status.OK
@@ -93,6 +102,15 @@ class HealthcheckActor(suoritusRekisteri: ActorRef, opiskelijaRekisteri: ActorRe
       case e: Throwable => println("error getting opiskelija count: " + e); ItemCount(Status.FAILURE, 0)
     }
   }
+
+  def getHakemusCount: Future[ItemCount] = {
+    val hakemusFuture = (hakemukset ? HakemusQuery(None, None, None))
+      .mapTo[Seq[Hakemus with Identified[String]]]
+    hakemusFuture.map((s) => { new ItemCount(Status.OK, s.length.toLong) }).recover {
+      case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
+      case e: Throwable => println("error getting hakemus count: " + e); new ItemCount(Status.FAILURE, 0)
+    }
+  }
 }
 
 object Status extends Enumeration {
@@ -104,6 +122,11 @@ case class ItemCount(status: Status, count: Long)
 
 case class Checks(resources: Resources)
 
-case class Resources(suoritukset: Long, opiskelijat: Long)
+case class Resources(suoritukset: Long, opiskelijat: Long, hakemukset: Long, foundHakemukset: Long)
 
 case class Healhcheck(timestamp: Long, user: String, contextPath: String, checks: Checks, status: Status, info: String)
+
+
+case class Hakemukset(count: Long)
+
+case class Health(actor: ActorRef)
