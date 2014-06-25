@@ -39,11 +39,28 @@ class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, Suoritus
 
   override val table = suoritukset
   override val db: JdbcDriver.simple.Database = database
-  override val journalSort = (o: SuoritusTable) => o.inserted.asc
+  override val sortColumn = (s: SuoritusTable) => s.inserted
 
   override def timestamp(resource: SuoritusTable): lifted.Column[Long] = resource.inserted
 
   override def timestamp(resource: SuoritusTable#TableElementType): Long = resource._9
+
+  override val idColumn: (SuoritusTable) => JdbcDriver.simple.Column[String] = _.resourceId
+
+  override def latestResources  = {
+    val latest = for {
+      (id, resource) <- table.groupBy(idColumn)
+    } yield (id, resource.map(sortColumn).max)
+
+    val result = for {
+      delta <- table
+      (id, timestamp) <- latest
+      if idColumn(delta) === id && sortColumn(delta) === timestamp.getOrElse(0)
+
+    } yield delta
+
+    result.sortBy(sortColumn(_).asc)
+  }
 }
 
 class SuoritusTable(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, Long, Boolean)](tag, "suoritus") {

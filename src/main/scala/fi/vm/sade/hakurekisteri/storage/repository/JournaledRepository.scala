@@ -6,6 +6,7 @@ import fi.vm.sade.hakurekisteri.rest.support.Resource
 import java.util.UUID
 import scala.slick.lifted
 import scala.util.Try
+import scala.slick.driver.JdbcDriver
 
 
 trait JournaledRepository[T <: Resource[I], I] extends InMemRepository[T, I] {
@@ -105,7 +106,8 @@ import scala.slick.driver.JdbcDriver.simple._
 trait JDBCJournal[T, P <: AbstractTable[_], O <: Ordered, I] extends Journal[T, I] {
   val db: Database
   val table: scala.slick.lifted.TableQuery[P]
-  val journalSort: P => O
+  val sortColumn: P => Column[Long]
+  val idColumn: P => Column[String]
 
   private[this] def toRow(delta:Delta[T, I]): P#TableElementType = delta match {
     case Updated(resource) => update(resource)
@@ -141,18 +143,20 @@ trait JDBCJournal[T, P <: AbstractTable[_], O <: Ordered, I] extends Journal[T, 
   def timestamp(resource: P): lifted.Column[Long]
   def timestamp(resource: P#TableElementType): Long
 
+  def latestResources: lifted.Query[P, P#TableElementType]
 
   def loadFromDb(latest:Option[Long]): List[P#TableElementType] = latest match  {
     case None =>
       db withSession {
         implicit session =>
-          table.sortBy(journalSort).list
+          latestResources.list
+
       }
     case Some(latest) =>
 
       db withSession {
         implicit session =>
-          table.filter(timestamp(_) >= latest).sortBy(journalSort).list
+          table.filter(timestamp(_) >= latest).sortBy(sortColumn(_).asc).list
       }
 
 

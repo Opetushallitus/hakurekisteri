@@ -40,11 +40,28 @@ class HenkiloJournal(database: Database) extends JDBCJournal[Henkilo, HenkiloTab
 
   override val table = henkilot
   override val db: JdbcDriver.simple.Database = database
-  override val journalSort = (o: HenkiloTable) => o.inserted.asc
+  override val sortColumn = (h: HenkiloTable) => h.inserted
 
   override def timestamp(resource: HenkiloTable): lifted.Column[Long] = resource.inserted
 
   override def timestamp(resource: HenkiloTable#TableElementType): Long = resource._3
+
+  override val idColumn: (HenkiloTable) => Column[String] = _.resourceId
+
+  override def latestResources  = {
+    val latest = for {
+      (id, resource) <- table.groupBy(idColumn)
+    } yield (id, resource.map(sortColumn).max)
+
+    val result = for {
+      delta <- table
+      (id, timestamp) <- latest
+      if idColumn(delta) === id && sortColumn(delta) === timestamp.getOrElse(0)
+
+    } yield delta
+
+    result.sortBy(sortColumn(_).asc)
+  }
 }
 
 class HenkiloTable(tag: Tag) extends Table[(String, String, Long, Boolean)](tag, "henkilo") {

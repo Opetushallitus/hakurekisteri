@@ -164,7 +164,7 @@ object XMLHakutoive {
   }
 
   def lasna(ht:Hakutoive) = ht match {
-    case v: VastaanottanutPaikan => for (lasnaolo <- v.lasna) yield if (lasnaolo) "1" else "2"
+    case v: Vastaanottanut => for (lasnaolo <- v.lasna) yield if (lasnaolo) "1" else "2"
     case _ => None
   }
 }

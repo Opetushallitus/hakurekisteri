@@ -9,8 +9,6 @@ import scala.slick.driver.JdbcDriver
 import java.util.UUID
 import scala.compat.Platform
 import org.slf4j.LoggerFactory
-import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import org.joda.time.DateTime
 import scala.slick.lifted
 
 class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, ArvosanaTable, ColumnOrdered[Long], UUID] {
@@ -46,6 +44,8 @@ class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, Arvosana
       }
     )
 
+
+
   override def newest: (ArvosanaTable) => ColumnOrdered[Long] = _.inserted.desc
 
   override def filterByResourceId(id: UUID): (ArvosanaTable) => Column[Boolean] = _.resourceId === id.toString
@@ -53,12 +53,31 @@ class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, Arvosana
 
   override val table = arvosanat
   override val db: JdbcDriver.simple.Database = database
-  override val journalSort = (o: ArvosanaTable) => o.inserted.asc
+  override val sortColumn = (a: ArvosanaTable) => a.inserted
 
-  override def timestamp(resource: ArvosanaTable): lifted.Column[Long] =  resource.inserted
+  override def timestamp(resource: ArvosanaTable): Column[Long] =  resource.inserted
 
   override def timestamp(resource: ArvosanaTable#TableElementType): Long = resource._8
-}
+
+  override val idColumn: (ArvosanaTable) => Column[String] = _.resourceId
+
+
+  override def latestResources  = {
+    val latest = for {
+      (id, resource) <- table.groupBy(idColumn)
+    } yield (id, resource.map(sortColumn).max)
+
+    val result = for {
+      delta <- table
+      (id, timestamp) <- latest
+      if idColumn(delta) === id && sortColumn(delta) === timestamp.getOrElse(0)
+
+    } yield delta
+
+    result.sortBy(sortColumn(_).asc)
+  }
+
+  }
 
 class ArvosanaTable(tag: Tag) extends Table[(String, String, String, String, String, Option[String], Boolean, Long, Boolean)](tag, "arvosana") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
