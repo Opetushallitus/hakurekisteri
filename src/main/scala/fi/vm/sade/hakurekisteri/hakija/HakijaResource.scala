@@ -140,7 +140,7 @@ case class XMLHakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[
 object XMLHakutoive {
   def apply(ht: Hakutoive, o: Organisaatio, k: String): XMLHakutoive = XMLHakutoive(ht.jno.toShort, k, o.toimipistekoodi, o.nimi.get("fi").orElse(o.nimi.get("sv").orElse(o.nimi.get("en"))),
       ht.hakukohde.hakukohdekoodi, ht.harkinnanvaraisuusperuste, ht.urheilijanammatillinenkoulutus,
-      ht.yhteispisteet, valittu(ht), vastaanotto(ht), lasna(ht),
+      ht.yhteispisteet, valittu(ht), vastaanotto(ht), None,
       ht.terveys, ht.aiempiperuminen, ht.kaksoistutkinto)
 
   def valittu(ht:Hakutoive) = ht match {
@@ -163,10 +163,7 @@ object XMLHakutoive {
     case _ => None
   }
 
-  def lasna(ht:Hakutoive) = ht match {
-    case v: Vastaanottanut => for (lasnaolo <- v.lasna) yield if (lasnaolo) "1" else "2"
-    case _ => None
-  }
+
 }
 
 case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahtokoulu: Option[String], lahtokoulunnimi: Option[String], luokka: Option[String],
