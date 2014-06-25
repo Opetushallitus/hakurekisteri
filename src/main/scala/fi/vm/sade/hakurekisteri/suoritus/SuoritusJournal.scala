@@ -59,7 +59,7 @@ class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, Suoritus
 
     } yield delta
 
-    result
+    result.sortBy(sortColumn(_).asc)
   }
 }
 

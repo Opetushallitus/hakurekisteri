@@ -60,7 +60,7 @@ class HenkiloJournal(database: Database) extends JDBCJournal[Henkilo, HenkiloTab
 
     } yield delta
 
-    result
+    result.sortBy(sortColumn(_).asc)
   }
 }
 

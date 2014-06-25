@@ -74,7 +74,7 @@ class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, Arvosana
 
     } yield delta
 
-    result
+    result.sortBy(sortColumn(_).asc)
   }
 
   }

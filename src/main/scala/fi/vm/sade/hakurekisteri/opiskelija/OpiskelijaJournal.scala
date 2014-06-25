@@ -64,7 +64,7 @@ class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, Opis
 
     } yield delta
 
-    result
+    result.sortBy(sortColumn(_).asc)
   }
 
 }
