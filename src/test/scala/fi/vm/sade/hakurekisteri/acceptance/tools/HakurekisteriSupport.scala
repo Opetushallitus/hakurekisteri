@@ -20,9 +20,7 @@ import org.joda.time.format.DateTimeFormat
 
 import com.github.nscala_time.time.Imports._
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
-import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
-import org.joda.time
 
 
 object kausi extends Enumeration {
@@ -30,18 +28,15 @@ object kausi extends Enumeration {
   val Keväällä, Syksyllä = Value
   val Kevät = Keväällä
   val Syksy = Syksyllä
-
-
 }
 
 import kausi._
 
-trait TestSecurity extends SecuritySupport{
-  override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(User("testaaja", Seq("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001"), None))
-
+trait TestSecurity extends SecuritySupport {
+  override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(User("testaaja", Seq("ROLE_APP_SUORITUSREKISTERI_CRUD", "ROLE_APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001"), None))
 }
 
-trait HakurekisteriSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport  {
+trait HakurekisteriSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport {
   override def withFixture(test: NoArgTest) {
     tehdytSuoritukset = Seq()
     db.initialized = false
@@ -50,15 +45,11 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
   implicit val swagger = new HakurekisteriSwagger
 
-
-
   def addServlet(servlet: HttpServlet, path: String):Unit
-
 
   object empty
 
   object db {
-
     var initialized = false
 
     def init() {
@@ -78,10 +69,7 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
         addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](guardedOpiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with TestSecurity , "/rest/v1/opiskelijat")
         initialized = true
       }
-
-
     }
-
 
     def is(token:Any) = token match {
       case empty => has()
@@ -90,15 +78,11 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
     def has(suoritukset: Suoritus*) = {
       tehdytSuoritukset = suoritukset
     }
-
   }
-
 
   def allSuoritukset: Seq[Suoritus] = get("/rest/v1/suoritukset") {
     hae(suoritukset)
   }
-
-
 
   def create (suoritus: Suoritus){
     db.init()
@@ -110,17 +94,10 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
     post("/rest/v1/opiskelijat", write(opiskelija), Map("Content-Type" -> "application/json; charset=utf-8")) {}
   }
 
-
-
   val kevatJuhla = new MonthDay(6,4).toLocalDate(DateTime.now.getYear)
-
-
   val suoritus = Peruskoulu("1.2.3", "KESKEN",  kevatJuhla, "1.2.4")
-
   val suoritus2 =  Peruskoulu("1.2.5", "KESKEN", kevatJuhla, "1.2.3")
-
   val suoritus3 =  Peruskoulu("1.2.5", "KESKEN",  kevatJuhla, "1.2.6")
-
 
   def hae[T: Manifest](query:ResourceQuery[T]):Seq[T] = {
     db.init()
@@ -128,7 +105,6 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
   }
 
   trait ResourceQuery[T] {
-
     def arvot:Map[String,String]
     def resourcePath:String
 
@@ -139,22 +115,17 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
         parse(body)
       }.extract[Seq[R]]
     }
-
   }
 
   case class OpiskelijaQuery(arvot:Map[String,String]) extends ResourceQuery[Opiskelija] {
-
     def resourcePath: String = "/rest/v1/opiskelijat"
 
     def koululle(oid: String): OpiskelijaQuery = {
       OpiskelijaQuery(arvot + ("koulu" -> oid))
     }
-
   }
 
   case class SuoritusQuery(arvot:Map[String, String]) extends ResourceQuery[Suoritus]{
-
-
     def vuodelta(vuosi:Int): SuoritusQuery = {
       new SuoritusQuery(arvot + ("vuosi" -> vuosi.toString))
     }
@@ -177,25 +148,18 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
     }
 
     def resourcePath: String = "/rest/v1/suoritukset"
-
   }
 
   val suoritukset = SuoritusQuery(Map())
-
   val opiskelijat = OpiskelijaQuery(Map())
-
-
   var tehdytSuoritukset:Seq[Suoritus] = Seq()
 
   case class Valmistuja(oid:String, vuosi:String, kausi: Kausi) {
-
     val date: LocalDate =
       kausi match {
         case Kevät => new MonthDay(6,4).toLocalDate(vuosi.toInt)
         case Syksy => new MonthDay(12,21).toLocalDate(vuosi.toInt)
       }
-
-
 
     def koulusta(koulu:String) {
       val list = tehdytSuoritukset.toList
@@ -204,41 +168,31 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
       tehdytSuoritukset = (list :+ valmistuminen).toSeq
       println(tehdytSuoritukset)
     }
-
-
-
   }
 
   trait Henkilo {
-
     def oid:String
     def hetu: String
 
     def valmistuu(kausi:Kausi, vuosi:Int) = {
       println(oid + " valmistuu " + kausi + " vuonna " + vuosi)
       new Valmistuja(oid, "" + vuosi, kausi)
-
-
     }
-
   }
 
   object Mikko extends Henkilo{
     val hetu: String = "291093-9159"
-
     def oid: String = "1.2.3"
   }
 
   object Matti extends Henkilo {
     val hetu: String = "121298-869R"
-
     def oid: String = "1.2.4"
   }
 
   def beBefore(s:String) =
     new Matcher[LocalDate] {
       def apply(left: LocalDate): MatchResult = {
-
         val pattern = DateTimeFormat.forPattern("dd.MM.yyyy")
         MatchResult(
           left < pattern.parseLocalDate(s),
@@ -248,27 +202,18 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
       }
     }
 
-
-
   object koulu {
-
     val koodi = "05536"
-
     val id ="1.2.3"
-
-
 
     implicit def nodeSeq2String(seq:NodeSeq) : String = {
       seq.text
     }
 
-
     object oppilaitosRekisteri {
       def findOrg(koulukoodi: String): String   = koulukoodi match {
         case "05536" => "1.2.3"
       }
-
-
     }
 
     object henkiloRekisteri {
@@ -279,7 +224,6 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
     }
 
     def parseSuoritukset(rowset: Node):Seq[Suoritus]  =  {
-
       rowset \ "ROW" map ((row) =>
         Peruskoulu(
           oppilaitos = oppilaitosRekisteri.findOrg(row \ "LAHTOKOULU") ,
@@ -297,7 +241,6 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
       case "S" => new MonthDay(1, 1).toLocalDate(vuosi.toInt).toDateTimeAtStartOfDay
       case "K" => new MonthDay(8, 1).toLocalDate(vuosi.toInt).toDateTimeAtStartOfDay
       case default => throw new RuntimeException("unknown kausi")
-
     }
 
     def parseOpiskelijat(rowset: Node):Seq[Opiskelija] = rowset \ "ROW" map ((row) =>
@@ -307,15 +250,12 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
         luokka = row \ "LUOKKA",
         henkiloOid = henkiloRekisteri.find(row \ "HETU"),
         alkuPaiva = getStartDate(row \ "VUOSI", row \"KAUSI"))
-
       )
-
   }
   val dateformat = new SimpleDateFormat("dd.MM.yyyy")
 
   implicit def string2Date(s:String):Date = {
     dateformat.parse(s)
-
   }
 
   implicit def string2LocalDate(s: String): LocalDate = {
@@ -325,7 +265,4 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
   implicit def string2DateTime(s: String): DateTime = {
     DateTime.parse(s, DateTimeFormat.forPattern("dd.MM.yyyy"))
   }
-
 }
-
-
