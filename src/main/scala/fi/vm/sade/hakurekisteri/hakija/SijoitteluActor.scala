@@ -4,10 +4,6 @@ import akka.actor.{Cancellable, Actor}
 import scala.concurrent.Future
 import scala.compat.Platform
 import akka.event.Logging
-import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakutoiveenValintatapajono
-import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakemuksenTila.SijoitteluHakemuksenTila
-import fi.vm.sade.hakurekisteri.hakija.SijoitteluValintatuloksenTila.SijoitteluValintatuloksenTila
-import fi.vm.sade.hakurekisteri.hakija.InvalidSijoitteluTulos
 
 class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) extends Actor {
   import akka.pattern._
@@ -15,16 +11,12 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
   import scala.concurrent.duration._
 
   implicit val ec = context.dispatcher
-
   var keepAlives: Seq[Cancellable] = Seq()
-
   val expiration = 48.hour
-
   val touchInterval = expiration / 2
 
   override def preStart(): Unit = {
     keepAlives = keepAlive.map((haku) => context.system.scheduler.schedule(1.seconds, touchInterval, self, SijoitteluQuery(haku)))
-
   }
 
   override def postStop(): Unit = {
@@ -32,10 +24,7 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
   }
 
   val retry: FiniteDuration = 60.seconds
-
   val log = Logging(context.system, this)
-
-
   var cache = Map[String, Future[SijoitteluTulos]]()
   var cacheHistory = Map[String, Long]()
   private val refetch: FiniteDuration = 24.hours
@@ -54,9 +43,7 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
     case Sijoittelu(haku, st) =>
       cache = cache + (haku -> Future.successful(st))
       rescheduleHaku(haku)
-
   }
-
 
   def inUse(haku: String):Boolean = cacheHistory.getOrElse(haku,0L) > (Platform.currentTime - expiration.toMillis)
 
@@ -82,9 +69,6 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
     }
     result
   }
-
-
-
 
   def sijoitteluTulos(haku: String): Future[SijoitteluTulos] = {
     cachedService.getSijoitteluTila(haku).map(

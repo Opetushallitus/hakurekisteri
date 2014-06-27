@@ -15,12 +15,7 @@ trait HakurekisteriCommand[R] extends  JsonCommand  with HakurekisteriJsonSuppor
 
   def toValidatedResource: ModelValidation[R] = {
     allCatch.withApply(errorFail) {
-      val resource = toResource
-      println("extracted resource: " + resource)
-      resource.successNel
+      toResource.successNel
     }
-
-
   }
-
 }
