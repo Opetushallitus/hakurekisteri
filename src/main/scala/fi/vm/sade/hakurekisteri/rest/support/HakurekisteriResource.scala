@@ -49,7 +49,6 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
 
   post("/", operation(create)) {
     if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE"))) Forbidden
-    println("creating" + request.body)
     createResource(getKnownOrganizations(currentUser), currentUser.map(_.username))
   }
 
@@ -106,7 +105,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriComm
     def apply(baseUri:StringBuffer)(createdResource: A with Identified[UUID]) =   Created(createdResource, headers = Map("Location" -> baseUri.append("/").append(createdResource.id).toString))
   }
 
-  def identifyResource(resource : A, id: UUID): A with Identified[UUID] = {println("identifying: " + id);resource.identify(id)}
+  def identifyResource(resource : A, id: UUID): A with Identified[UUID] = resource.identify(id)
 
   def updateResource(id:UUID, authorities:Seq[String], user: Option[String]): Object = {
     (command[C] >> (_.toValidatedResource)).fold(
@@ -164,7 +163,6 @@ trait SecuritySupport {
   val regex = new Regex("\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+")
 
   def isOid(x:String) = {
-    println(x)
     (regex findFirstIn x).nonEmpty
   }
 

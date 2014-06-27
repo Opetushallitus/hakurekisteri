@@ -36,7 +36,6 @@ case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakuk
 
 import org.scalatra.util.RicherString._
 
-
 object HakijaQuery {
   def apply(params: Map[String,String], user: Option[User]): HakijaQuery = HakijaQuery(
       params.get("haku").flatMap(_.blankOption),
@@ -140,30 +139,26 @@ case class XMLHakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[
 object XMLHakutoive {
   def apply(ht: Hakutoive, o: Organisaatio, k: String): XMLHakutoive = XMLHakutoive(ht.jno.toShort, k, o.toimipistekoodi, o.nimi.get("fi").orElse(o.nimi.get("sv").orElse(o.nimi.get("en"))),
       ht.hakukohde.hakukohdekoodi, ht.harkinnanvaraisuusperuste, ht.urheilijanammatillinenkoulutus,
-      ht.yhteispisteet, valittu(ht), vastaanotto(ht), None,
+      ht.yhteispisteet, valinta.lift(ht), vastaanotto.lift(ht), None,
       ht.terveys, ht.aiempiperuminen, ht.kaksoistutkinto)
 
-  def valittu(ht:Hakutoive) = ht match {
-    case v:Valittu => Some("1")
-    case v:Varalla => Some("2")
-    case v:Hylatty=> Some("3")
-    case v:Perunut => Some("4")
-    case v:Peruutettu => Some("5")
-    case v:Peruuntunut => Some("4")
-    case t:Toive => None
+  def valinta: PartialFunction[Hakutoive, String] = {
+    case v: Valittu     => "1"
+    case v: Varalla     => "2"
+    case v: Hylatty     => "3"
+    case v: Perunut     => "4"
+    case v: Peruuntunut => "4"
+    case v: Peruutettu  => "5"
   }
 
-  def vastaanotto(ht:Hakutoive) = ht match {
-    case v:Hyvaksytty => Some("1")
-    case v:Ilmoitettu => Some("2")
-    case v:Vastaanottanut => Some("3")
-    case v:PerunutValinnan => Some("4")
-    case v:EiVastaanotettu => Some("5")
-    case v:PeruutettuValinta => Some("6")
-    case _ => None
+  def vastaanotto: PartialFunction[Hakutoive, String] = {
+    case v: Hyvaksytty        => "1"
+    case v: Ilmoitettu        => "2"
+    case v: Vastaanottanut    => "3"
+    case v: PerunutValinnan   => "4"
+    case v: EiVastaanotettu   => "5"
+    case v: PeruutettuValinta => "6"
   }
-
-
 }
 
 case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahtokoulu: Option[String], lahtokoulunnimi: Option[String], luokka: Option[String],
@@ -265,11 +260,8 @@ case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etuni
 }
 
 object XMLHakija {
-
-
   val mies = "\\d{6}[-A]\\d{2}[13579].".r
   val nainen = "\\d{6}[-A]\\d{2}[24680].".r
-
   val valid = "([12])".r
 
   def resolveSukupuoli(hakija:Hakija):String = (hakija.henkilo.hetu, hakija.henkilo.sukupuoli) match {

@@ -11,7 +11,7 @@ case class Arvosana(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: Optio
 
 object Arvosana {
   def identify(o:Arvosana): Arvosana with Identified[UUID] = o match {
-    case o: Arvosana with Identified[UUID] => println(o.id);o
+    case o: Arvosana with Identified[UUID] => o
     case _ => o.identify(UUID.randomUUID)
   }
 

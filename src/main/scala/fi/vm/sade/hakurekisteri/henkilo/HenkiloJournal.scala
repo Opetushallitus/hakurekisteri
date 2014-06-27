@@ -28,7 +28,6 @@ class HenkiloJournal(database: Database) extends JDBCJournal[Henkilo, HenkiloTab
     database withSession(
       implicit session =>
         if (MTable.getTables("henkilo").list().isEmpty) {
-          println("creating henkilo table")
           henkilot.ddl.create
         }
     )
