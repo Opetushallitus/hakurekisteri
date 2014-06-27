@@ -12,7 +12,7 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
 
   implicit val ec = context.dispatcher
   var keepAlives: Seq[Cancellable] = Seq()
-  val expiration = 48.hour
+  val expiration = 4.hour
   val touchInterval = expiration / 2
 
   override def preStart(): Unit = {
@@ -27,7 +27,7 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
   val log = Logging(context.system, this)
   var cache = Map[String, Future[SijoitteluTulos]]()
   var cacheHistory = Map[String, Long]()
-  private val refetch: FiniteDuration = 24.hours
+  private val refetch: FiniteDuration = 2.hours
 
   override def receive: Receive = {
     case SijoitteluQuery(haku) =>
