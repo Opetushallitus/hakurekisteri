@@ -34,6 +34,10 @@ class GuiServlet extends HakuJaValintarekisteriStack with ScalateSupport {
     super.templateAttributes ++ mutable.Map.empty // Add extra attributes here, they need bindings in the build file
   }
 
+  before("*") {
+    response.setHeader("Cache-Control", "max-age=3600, public")
+  }
+
   get("/") {
     contentType="text/html"
     jade("/index.jade")
