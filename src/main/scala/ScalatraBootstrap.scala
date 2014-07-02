@@ -1,59 +1,50 @@
-import _root_.akka.actor.{ActorRef, Actor, Props, ActorSystem}
-import _root_.akka.camel.CamelExtension
-import _root_.akka.dispatch.PinnedDispatcher
-import _root_.akka.routing.BroadcastRouter
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+import javax.servlet.{DispatcherType, ServletContext, ServletContextEvent}
+
+import _root_.akka.actor.{ActorRef, ActorSystem, Props}
 import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana._
-import fi.vm.sade.hakurekisteri.Audit
-import fi.vm.sade.hakurekisteri.audit.{AuditLog, AuditUri}
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.henkilo._
-import fi.vm.sade.hakurekisteri.henkilo.Henkilo
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, OrganizationHierarchy}
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
-
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{TimeUnit, ThreadFactory, Executors}
-import java.util.UUID
-import org.apache.activemq.camel.component.ActiveMQComponent
 import org.scalatra._
-import javax.servlet.{ServletContextEvent, DispatcherType, ServletContext}
 import org.scalatra.swagger.Swagger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.MutablePropertyValues
 import org.springframework.beans.factory.support.RootBeanDefinition
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader
-import org.springframework.beans.MutablePropertyValues
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer
 import org.springframework.core.io.FileSystemResource
-import org.springframework.web.context.support.XmlWebApplicationContext
 import org.springframework.web.context._
+import org.springframework.web.context.support.XmlWebApplicationContext
 import org.springframework.web.filter.DelegatingFilterProxy
+
 import scala.collection.JavaConverters._
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContextExecutor, ExecutionContext}
 import scala.reflect.ClassTag
 import scala.slick.driver.JdbcDriver.simple._
 import scala.util.Try
 
 
 class ScalatraBootstrap extends LifeCycle {
-
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("hakurekisteri")
   implicit val ec:ExecutionContext = system.dispatcher
   val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
   val OPH = "1.2.246.562.10.00000000001"
-  val hostQa = "testi.virkailija.opintopolku.fi"
 
+  val hostQa = "testi.virkailija.opintopolku.fi"
   val organisaatioServiceUrlQa = s"https://$hostQa/organisaatio-service"
   val hakuappServiceUrlQa = s"https://$hostQa/haku-app"
   val koodistoServiceUrlQa = s"https://$hostQa/koodisto-service"
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
-
 
   override def init(context: ServletContext) {
     OPHSecurity init context
@@ -65,8 +56,6 @@ class ScalatraBootstrap extends LifeCycle {
     val sijoitteluUser = OPHSecurity.config.properties.get("tiedonsiirto.app.username.to.suoritusrekisteri")
     val sijoitteluPw = OPHSecurity.config.properties.get("tiedonsiirto.app.password.to.suoritusrekisteri")
 
-
-
     //val camel = CamelExtension(system)
     //val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
     //val broker = "activemq"
@@ -76,13 +65,9 @@ class ScalatraBootstrap extends LifeCycle {
     //implicit val audit = AuditUri(broker, OPHSecurity.config.properties.get("activemq.queue.name.log").getOrElse("Sade.Log"))
     //log.debug(s"AuditLog using uri: $amqUrl")
 
-
-
     import scala.reflect.runtime.universe._
 
     def getBroadcastForLogger[A <: Resource[I]: TypeTag: ClassTag, I](rekisteri: ActorRef) = {
-
-      //
       // system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog[A](typeOf[A].typeSymbol.name.toString)).withDispatcher("akka.hakurekisteri.audit-dispatcher"), typeOf[A].typeSymbol.name.toString.toLowerCase+"-audit") ))))
       rekisteri
     }
@@ -95,9 +80,6 @@ class ScalatraBootstrap extends LifeCycle {
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))), "suoritukset")
     val filteredSuoritusRekisteri = authorizer[Suoritus, UUID](suoritusRekisteri, (suoritus) => suoritus.myontaja)
 
-
-
-
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))), "opiskelijat")
     val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija, UUID](orgServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid )), "opiskelijat-authorizer")
 
@@ -106,11 +88,8 @@ class ScalatraBootstrap extends LifeCycle {
 
     val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(new ArvosanaJournal(database))), "arvosanat")
 
-
-
     import _root_.akka.pattern.ask
     val filteredArvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](orgServiceUrl, arvosanaRekisteri, (arvosana) => suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).mapTo[Option[Suoritus]].map(_.map(_.myontaja).getOrElse("")))), "arvosana-authorizer")
-
 
     val hakuappServiceUrl = OPHSecurity.config.properties.get("cas.service.haku").getOrElse(hakuappServiceUrlQa)
     val organisaatioServiceUrl = OPHSecurity.config.properties.get("cas.service.organisaatio-service").getOrElse(organisaatioServiceUrlQa)
@@ -122,18 +101,16 @@ class ScalatraBootstrap extends LifeCycle {
     val serviceAccessUrl = "https://" + OPHSecurity.config.properties.get("host.virkailija").getOrElse(hostQa) + "/service-access"
 
     val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(serviceAccessUrl, sijoitteluServiceUrl,sijoitteluUser,sijoitteluPw), "1.2.246.562.5.2013080813081926341927")))
-
     val hakemukset = system.actorOf(Props(new HakemusActor(serviceAccessUrl, hakuappServiceUrl, maxApplications, sijoitteluUser,sijoitteluPw)), "hakemus")
 
     val healthcheck = system.actorOf(Props(new HealthcheckActor(filteredSuoritusRekisteri, filteredOpiskelijaRekisteri, hakemukset)), "healthcheck")
 
-
     system.scheduler.schedule(1.second, 2.hours, hakemukset, ReloadHaku("1.2.246.562.5.2013080813081926341927"))
+    system.scheduler.schedule(5.minutes, 2.hours, hakemukset, ReloadHaku("1.2.246.562.5.2014022711042555034240"))
 
     val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(hakemukset), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl), sijoittelu)))
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, suoritusRekisteri, new ArvosanaJournal(database))), "perusopetus-sanity")
-
 
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](getBroadcastForLogger[Suoritus, UUID](filteredSuoritusRekisteri), SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
     context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](getBroadcastForLogger[Opiskelija, UUID](filteredOpiskelijaRekisteri), OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")
@@ -146,9 +123,6 @@ class ScalatraBootstrap extends LifeCycle {
     context mount(classOf[GuiServlet], "/")
   }
 
-
-
-
   override def destroy(context: ServletContext) {
     system.shutdown()
     system.awaitTermination(15.seconds)
@@ -158,7 +132,6 @@ class ScalatraBootstrap extends LifeCycle {
 
 
 object OPHSecurity extends ContextLoader with LifeCycle {
-
   val config = OPHConfig(
     "cas_mode" -> "front",
     "cas_key" -> "suoritusrekisteri",
@@ -170,13 +143,11 @@ object OPHSecurity extends ContextLoader with LifeCycle {
   val cleanupListener = new ContextCleanupListener
 
   override def init(context: ServletContext) {
-
     initWebApplicationContext(context)
 
     val security = context.addFilter("springSecurityFilterChain", classOf[DelegatingFilterProxy])
     security.addMappingForUrlPatterns(java.util.EnumSet.of(DispatcherType.REQUEST, DispatcherType.ASYNC), true, "/*")
     security.setAsyncSupported(true)
-
   }
 
 
@@ -186,22 +157,14 @@ object OPHSecurity extends ContextLoader with LifeCycle {
   }
 
   override def createWebApplicationContext(sc: ServletContext): WebApplicationContext = {
-
     config
   }
-
-
 }
 
 case class OPHConfig(props:(String, String)*) extends XmlWebApplicationContext {
-
-
   val propertyLocations = Seq("override.properties", "suoritusrekisteri.properties", "common.properties")
-
   val localProperties = (new java.util.Properties /: Map(props: _*)) {case (newProperties, (k,v)) => newProperties.put(k,v); newProperties}
-
   val homeDir = sys.props.get("user.home").getOrElse("")
-
   val ophConfDir = homeDir + "/oph-configuration/"
 
   setConfigLocation("file:" + ophConfDir + "security-context-backend.xml")
@@ -236,19 +199,14 @@ case class OPHConfig(props:(String, String)*) extends XmlWebApplicationContext {
   )
 
   override def initBeanDefinitionReader(beanDefinitionReader: XmlBeanDefinitionReader) {
-
     beanDefinitionReader.getRegistry.registerBeanDefinition("propertyPlaceHolder", placeholder)
-
   }
 
   object Bean {
-
     def apply[C,A,B](clazz:Class[C], props: (A,B)*) = {
       val definition = new RootBeanDefinition(clazz)
       definition.setPropertyValues(new MutablePropertyValues(Map(props: _*).asJava))
       definition
     }
-
   }
-
 }

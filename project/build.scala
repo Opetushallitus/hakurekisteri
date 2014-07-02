@@ -1,5 +1,3 @@
-import com.mojolly.scalate.ScalatePlugin.Binding
-import com.mojolly.scalate.ScalatePlugin.TemplateConfig
 import info.schleichardt.sbt.sonar.SbtSonarPlugin._
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -7,8 +5,6 @@ import sbt._
 import sbt.Keys._
 import org.scalatra.sbt._
 import com.mojolly.scalate.ScalatePlugin._
-import scala.Some
-import scala.Some
 import ScalateKeys._
 
 
@@ -52,9 +48,7 @@ object HakuJaValintarekisteriBuild extends Build {
     "org.jasig.cas" % "cas-client-support-distributed-ehcache" % "3.1.10" exclude("net.sf.ehcache", "ehcache"))
 
   val akkaVersion = "2.2.3"
-
   val AkkaStack = Seq("akka-testkit", "akka-slf4j","akka-camel").map("com.typesafe.akka" %% _ % akkaVersion)
-
 
   val dependencies = Seq(
     "org.slf4j" % "slf4j-api" % "1.6.1",
@@ -75,25 +69,20 @@ object HakuJaValintarekisteriBuild extends Build {
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion, "org.scalamock" %% "scalamock-scalatest-support" % "3.0.1")
 
   lazy val mocha = taskKey[Unit]("run mocha tests")
-
   lazy val installMocha = taskKey[Unit]("install mocha")
-
   lazy val installCoffee = taskKey[Unit]("install mocha")
-
   val installMochaTask = installMocha := {
     import sys.process._
     val pb = Seq("npm", "install",  "mocha")
     if ((pb!) !=  0)
       sys.error("failed installing mocha")
   }
-
   val installCoffeeTask = installCoffee := {
     import sys.process._
     val pb = Seq("npm", "install",  "coffee-script")
     if ((pb!) !=  0)
       sys.error("failed installing coffee script")
   }
-
   val mochaTask = mocha <<= (installMocha, installCoffee) map {
     (Unit1, Unit2) =>
       import sys.process._
@@ -108,10 +97,6 @@ object HakuJaValintarekisteriBuild extends Build {
   }
 
   val cleanNodeModules = cleanFiles <+= baseDirectory { base => base / "node_modules" }
-
-
-
-
   val mochaTestSources =  unmanagedSourceDirectories in Test <+= (sourceDirectory in Test) {sd => sd / "coffee"}
 
   val artifactoryPublish = publishTo <<= version apply {
@@ -155,7 +140,6 @@ object HakuJaValintarekisteriBuild extends Build {
       "sonar.core.codeCoveragePlugin" -> "cobertura",
       "sonar.java.coveragePlugin"  -> "cobertura",
       "sonar.cobertura.reportPath" -> (target.value.getAbsolutePath +"/scala-" +scalaBinaryVersion.value + "/coverage-report/cobertura.xml")))
-
 
 
   lazy val project = {
