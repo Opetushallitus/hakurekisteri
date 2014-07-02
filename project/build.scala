@@ -7,7 +7,6 @@ import sbt._
 import sbt.Keys._
 import org.scalatra.sbt._
 import com.mojolly.scalate.ScalatePlugin._
-import sbt.ScalaVersion
 import scala.Some
 import scala.Some
 import ScalateKeys._
@@ -15,9 +14,10 @@ import ScalateKeys._
 
 object HakuJaValintarekisteriBuild extends Build {
   val Organization = "fi.vm.sade"
-  val Name = "Haku- ja valintarekisteri"
+  val Name = "hakurekisteri"
   val Version = "LATEST-SNAPSHOT"
   val ScalaVersion = "2.10.3"
+  val ArtifactName = (s: ScalaVersion, m: ModuleID, a: Artifact) => s"${a.name}-${m.revision}.${a.extension}"
   val ScalatraVersion = "2.2.2"
   val SpringVersion = "3.2.1.RELEASE"
 
@@ -173,6 +173,7 @@ object HakuJaValintarekisteriBuild extends Build {
           name := Name,
           version := Version,
           scalaVersion := ScalaVersion,
+          artifactName := ArtifactName,
           resolvers += Classpaths.typesafeReleases,
           resolvers += "oph-snapshots" at "http://penaali.hard.ware.fi/artifactory/oph-sade-snapshot-local",
           resolvers += "oph-releases" at "http://penaali.hard.ware.fi/artifactory/oph-sade-release-local",
