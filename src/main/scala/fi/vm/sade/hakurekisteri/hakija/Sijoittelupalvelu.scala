@@ -57,28 +57,19 @@ case class SijoitteluHakija(hakutoiveet: Option[Seq[SijoitteluHakutoive]], sukun
 case class SijoitteluPagination(results: Seq[SijoitteluHakija], totalCount: Int)
 
 trait Sijoittelupalvelu {
-
   def getSijoitteluTila(hakuOid: String): Future[SijoitteluPagination]
-
 }
 
-
 trait SijoitteluTulos {
-
   def pisteet(hakemus: String, kohde: String): Option[BigDecimal]
 
   def hakemus(hakemus: String, kohde: String): Option[SijoitteluHakemuksenTila]
 
   def valinta(hakemus: String, kohde: String): Option[SijoitteluValintatuloksenTila]
-
-
-
 }
 
 object SijoitteluTulos {
-
-  def getValintatapaMap[A](shakijas: Seq[SijoitteluHakija], extractor: (SijoitteluHakutoiveenValintatapajono) => Option[A]): Map[String, Map[String, A]] = shakijas.groupBy(_.hakemusOid).
-    collect {
+  def getValintatapaMap[A](shakijas: Seq[SijoitteluHakija], extractor: (SijoitteluHakutoiveenValintatapajono) => Option[A]): Map[String, Map[String, A]] = shakijas.groupBy(_.hakemusOid).collect {
     case (Some(hakemusOid), sijoitteluHakijas) =>
       def getIndex(toive: SijoitteluHakutoive): Option[(String, A)] = {
         (toive.hakukohdeOid, toive.hakutoiveenValintatapajonot.flatMap(_.headOption)) match {
@@ -88,33 +79,19 @@ object SijoitteluTulos {
       }
 
       (hakemusOid, (for (hakija <- sijoitteluHakijas;
-                         toive <- hakija.hakutoiveet.getOrElse(Seq())) yield  try {
-        getIndex(toive)
-      } catch {
-        case ive: InvalidValintatapajonoException => throw InvalidSijoitteluTulos(hakija, ive)
-      }).flatten.toMap)
+                         toive <- hakija.hakutoiveet.getOrElse(Seq())) yield getIndex(toive)).flatten.toMap)
   }
 
-
   def tilat(vtj: SijoitteluHakutoiveenValintatapajono): Option[(SijoitteluHakemuksenTila, Option[SijoitteluValintatuloksenTila])] = {
-
-    if (hakemuksenTila(vtj) != Some(SijoitteluHakemuksenTila.HYVAKSYTTY) && valinnantila(vtj).isDefined) throw InvalidValintatapajonoException(vtj)
-
     for (
       hakemus <- hakemuksenTila(vtj)
     ) yield (hakemus, valinnantila(vtj))
   }
 
-  case class InvalidValintatapajonoException(vtj: SijoitteluHakutoiveenValintatapajono) extends Exception {
-    override def getMessage: String = s"Valintatapajono ${vtj.valintatapajonoOid} on virheellinen. valinnan tila on ${valinnantila(vtj)} vaikka hakemuksen tila on ${hakemuksenTila(vtj)}"
-  }
-
-
   def hakemuksenTila(vtj: SijoitteluHakutoiveenValintatapajono): Option[SijoitteluHakemuksenTila] = for (
     hakemusRaw <- vtj.tila;
     hakemus <- SijoitteluHakemuksenTila.valueOption(hakemusRaw)
   ) yield hakemus
-
 
   def valinnantila(vtj: SijoitteluHakutoiveenValintatapajono): Option[SijoitteluValintatuloksenTila] = vtj.vastaanottotieto.flatMap(SijoitteluValintatuloksenTila.valueOption)
 
@@ -133,17 +110,7 @@ object SijoitteluTulos {
       sijoitteluTilat.getOrElse(hakemus, Map()).get(kohde).flatMap(_._2)
     }
   }
-
 }
-
-case class InvalidSijoitteluTulos(hakija: SijoitteluHakija, cause: Exception) extends Exception(cause) {
-  override def getMessage: String = s"Sijoittelun tulos hakemukselle ${hakija.hakemusOid} on virheellinen"
-}
-
-
-/**
- * Created by verneri on 12.6.2014.
- */
 
 case class SijoitteluQuery(hakuOid: String)
 
@@ -152,13 +119,16 @@ class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "http
   import scala.concurrent.duration._
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
 
-
   def getProxyTicket: Future[String] = (user, password) match {
     case (Some(u), Some(p)) =>
       POST(new URL(s"$serviceAccessUrl/accessTicket")).
         addHeaders("Content-Type" -> "application/x-www-form-urlencoded").
         setBodyString(s"client_id=${URLEncoder.encode(u, "UTF8")}&client_secret=${URLEncoder.encode(p, "UTF8")}&service_url=${URLEncoder.encode(serviceUrl, "UTF8")}").
-        apply.map((response) => response.bodyString.trim)
+        apply.map((response) => {
+          val st = response.bodyString.trim
+          if (TicketValidator.isValidSt(st)) st
+          else throw InvalidServiceTicketException(st)
+        })
     case _ => Future.successful("")
   }
 
@@ -190,6 +160,5 @@ class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "http
       }
     })})
   }
-
 }
 

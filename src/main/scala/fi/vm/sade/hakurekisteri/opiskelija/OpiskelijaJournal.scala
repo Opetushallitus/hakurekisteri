@@ -44,11 +44,29 @@ class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, Opis
 
   override val table = opiskelijat
   override val db: JdbcDriver.simple.Database = database
-  override val journalSort = (o: OpiskelijaTable) => o.inserted.asc
+  override val sortColumn = (o: OpiskelijaTable) => o.inserted
 
   override def timestamp(resource: OpiskelijaTable): lifted.Column[Long] = resource.inserted
 
   override def timestamp(resource: OpiskelijaTable#TableElementType): Long = resource._8
+
+  override val idColumn: (OpiskelijaTable) => Column[String] = _.resourceId
+
+  override def latestResources  = {
+    val latest = for {
+      (id, resource) <- table.groupBy(idColumn)
+    } yield (id, resource.map(sortColumn).max)
+
+    val result = for {
+      delta <- table
+      (id, timestamp) <- latest
+      if idColumn(delta) === id && sortColumn(delta) === timestamp.getOrElse(0)
+
+    } yield delta
+
+    result.sortBy(sortColumn(_).asc)
+  }
+
 }
 
 class OpiskelijaTable(tag: Tag) extends Table[(String, String, String, String, String, Long, Option[Long], Long, Boolean)](tag, "opiskelija") {

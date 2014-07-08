@@ -15,7 +15,7 @@ import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakemuksenTila.SijoitteluHakemu
 import fi.vm.sade.hakurekisteri.hakija.SijoitteluValintatuloksenTila._
 import scala.util.Failure
 import scala.Some
-import fi.vm.sade.hakurekisteri.rest.support.User
+import fi.vm.sade.hakurekisteri.rest.support.{Kausi, User}
 import scala.util.Success
 import fi.vm.sade.hakurekisteri.suoritus.Komoto
 import org.slf4j.LoggerFactory
@@ -36,37 +36,57 @@ sealed abstract class Hakutoive {
   def withPisteet(pisteet: Option[BigDecimal]): Hakutoive
 }
 
+
+sealed trait Lasnaolo
+
+case class Lasna(kausi: Kausi) extends Lasnaolo
+case class Poissa(kausi: Kausi) extends Lasnaolo
+
+sealed trait Kausi
+case class Kevat(vuosi:Int) extends Kausi
+case class Syksy(vuosi:Int) extends Kausi
+
+
 sealed trait Valittu
 
 sealed trait IlmoitusLahetetty extends Valittu
 
 sealed trait VastaanottanutPaikan extends IlmoitusLahetetty {
-  val lasna: Option[Boolean]
+  val lasna: Seq[Lasnaolo]
 }
 
 object Hakutoive{
   val log = LoggerFactory.getLogger(classOf[Hakutoive])
 
-  def apply(ht:Hakutoive, hakemus: Option[SijoitteluHakemuksenTila], vastaanotto: Option[SijoitteluValintatuloksenTila]):Hakutoive = (hakemus, vastaanotto) match {
+  def resolveLasnaolot(lasna:Boolean)(ht: Hakutoive):Seq[Lasnaolo] = {
+    ht.hakukohde.koulutukset.map((komoto) => (lasna, komoto.alkamisvuosi, komoto.alkamiskausi)).map
+      {
+        case (true, vuosi, Kausi.Syksy) => Try(Lasna(Syksy(vuosi.toInt))).toOption
+        case (false, vuosi, Kausi.Syksy) => Try(Poissa(Syksy(vuosi.toInt))).toOption
+        case (true, vuosi, Kausi.Kevät) => Try(Lasna(Kevat(vuosi.toInt))).toOption
+        case (false, vuosi, Kausi.Kevät) => Try(Poissa(Kevat(vuosi.toInt))).toOption
+        case _ => None
+      }.flatten.toSeq
+  }
+
+  def apply(ht: Hakutoive, hakemus: Option[SijoitteluHakemuksenTila], vastaanotto: Option[SijoitteluValintatuloksenTila]) = (hakemus, vastaanotto) match {
     case (Some(SijoitteluHakemuksenTila.HYVAKSYTTY), None) => Hyvaksytty(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
     case (Some(SijoitteluHakemuksenTila.HYVAKSYTTY), Some(SijoitteluValintatuloksenTila.ILMOITETTU)) => Ilmoitettu(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
     case (Some(SijoitteluHakemuksenTila.HYVAKSYTTY), Some(SijoitteluValintatuloksenTila.VASTAANOTTANUT)) => Vastaanottanut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
-    case (Some(SijoitteluHakemuksenTila.HYVAKSYTTY), Some(SijoitteluValintatuloksenTila.VASTAANOTTANUT_LASNA)) => Vastaanottanut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, Some(true))
-    case (Some(SijoitteluHakemuksenTila.HYVAKSYTTY), Some(SijoitteluValintatuloksenTila.VASTAANOTTANUT_POISSAOLEVA)) => Vastaanottanut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, Some(false))
+    case (Some(SijoitteluHakemuksenTila.HYVAKSYTTY), Some(SijoitteluValintatuloksenTila.VASTAANOTTANUT_LASNA)) => Vastaanottanut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, resolveLasnaolot(true)(ht))
+    case (Some(SijoitteluHakemuksenTila.HYVAKSYTTY), Some(SijoitteluValintatuloksenTila.VASTAANOTTANUT_POISSAOLEVA)) => Vastaanottanut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, resolveLasnaolot(false)(ht))
     case (Some(SijoitteluHakemuksenTila.HYVAKSYTTY), Some(SijoitteluValintatuloksenTila.EI_VASTAANOTETTU_MAARA_AIKANA)) => EiVastaanotettu(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
     case (Some(SijoitteluHakemuksenTila.HYVAKSYTTY), Some(SijoitteluValintatuloksenTila.PERUNUT)) => PerunutValinnan(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
     case (Some(SijoitteluHakemuksenTila.HYVAKSYTTY), Some(SijoitteluValintatuloksenTila.PERUUTETTU)) => PeruutettuValinta(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
-    case (Some(SijoitteluHakemuksenTila.VARALLA), None) => Varalla(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
-    case (Some(SijoitteluHakemuksenTila.HYLATTY), None) => Hylatty(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
-    case (Some(SijoitteluHakemuksenTila.PERUUTETTU), None) => Peruutettu(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
-    case (Some(SijoitteluHakemuksenTila.PERUUNTUNUT), None)  => Peruuntunut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
-    case (Some(SijoitteluHakemuksenTila.PERUNUT), None) => Perunut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
-    case (_, vastaanotonTila) =>
-      if (vastaanotonTila.isDefined) log.warn(s"Unknown combination for hakemus ($hakemus) and valinta ($vastaanotonTila)")
+    case (Some(SijoitteluHakemuksenTila.VARALLA), _) => Varalla(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
+    case (Some(SijoitteluHakemuksenTila.HYLATTY), _) => Hylatty(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
+    case (Some(SijoitteluHakemuksenTila.PERUUTETTU), _) => Peruutettu(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
+    case (Some(SijoitteluHakemuksenTila.PERUUNTUNUT), _)  => Peruuntunut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
+    case (Some(SijoitteluHakemuksenTila.PERUNUT), _) => Perunut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
+    case (hakemuksenTila, vastaanotonTila) =>
+      if (vastaanotonTila.isDefined) log.warn(s"Unknown combination for hakemus ($hakemuksenTila) and valinta ($vastaanotonTila)")
       Toive(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
   }
-
-
 }
 
 case class Toive(jno: Int, hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
@@ -111,7 +131,7 @@ case class EiVastaanotettu(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Optio
 
 case class Vastaanottanut(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
                       harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],
-                      yhteispisteet: Option[BigDecimal], lasna: Option[Boolean] = None) extends Hakutoive with VastaanottanutPaikan {
+                      yhteispisteet: Option[BigDecimal], lasna: Seq[Lasnaolo] = Seq()) extends Hakutoive with VastaanottanutPaikan {
   override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
 }
 
