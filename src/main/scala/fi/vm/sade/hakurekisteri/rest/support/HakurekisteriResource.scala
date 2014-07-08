@@ -41,7 +41,12 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
 
   delete("/:id", operation(delete)) {
     if (!hasAnyRoles(currentUser, Seq("CRUD"))) Forbidden
-    Try(UUID.fromString(params("id"))).map(deleteResource(_ ,getKnownOrganizations(currentUser), currentUser.map(_.username))).
+    else deleteResource
+  }
+
+
+  def deleteResource: Object = {
+    Try(UUID.fromString(params("id"))).map(deleteResource(_, getKnownOrganizations(currentUser), currentUser.map(_.username))).
       recover {
       case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
     }.get
@@ -49,12 +54,17 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
 
   post("/", operation(create)) {
     if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE"))) Forbidden
-    createResource(getKnownOrganizations(currentUser), currentUser.map(_.username))
+    else createResource(getKnownOrganizations(currentUser), currentUser.map(_.username))
   }
 
   post("/:id", operation(update)) {
     if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE"))) Forbidden
-    Try(UUID.fromString(params("id"))).map(updateResource(_ , getKnownOrganizations(currentUser), currentUser.map(_.username))).
+    else updateResource
+  }
+
+
+  def updateResource: Object = {
+    Try(UUID.fromString(params("id"))).map(updateResource(_, getKnownOrganizations(currentUser), currentUser.map(_.username))).
       recover {
       case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
     }.get
@@ -62,7 +72,12 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
 
   get("/:id", operation(read)) {
     if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE", "READ"))) Forbidden
-    Try(UUID.fromString(params("id"))).map(readResource(_ ,getKnownOrganizations(currentUser), currentUser.map(_.username))).
+    else getResource
+  }
+
+
+  def getResource: Object = {
+    Try(UUID.fromString(params("id"))).map(readResource(_, getKnownOrganizations(currentUser), currentUser.map(_.username))).
       recover {
       case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
     }.get
