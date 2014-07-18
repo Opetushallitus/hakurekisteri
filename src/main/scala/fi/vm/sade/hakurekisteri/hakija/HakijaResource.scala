@@ -24,7 +24,7 @@ import fi.vm.sade.hakurekisteri.rest.support.User
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
-  val Kaikki, Hyvaksytyt, Vastaanottaneet = Value
+  val Kaikki, Hyvaksytyt, Vastaanottaneet, Hylatyt = Value
 }
 
 object Tyyppi extends Enumeration {
