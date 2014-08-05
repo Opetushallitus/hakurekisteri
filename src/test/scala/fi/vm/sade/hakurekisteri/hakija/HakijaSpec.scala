@@ -78,7 +78,7 @@ class HakijaSpec extends FlatSpec with ShouldMatchers {
 
     val xmlht = xmlHTFor(SijoitteluHakemuksenTila.HYVAKSYTTY, SijoitteluValintatuloksenTila.VASTAANOTTANUT_LASNA)
 
-    xmlht.lasnaolo should be (Some("1"))
+    xmlht.lasnaolo should be (None)
 
   }
 
@@ -86,7 +86,7 @@ class HakijaSpec extends FlatSpec with ShouldMatchers {
 
     val xmlht = xmlHTFor(SijoitteluHakemuksenTila.HYVAKSYTTY, SijoitteluValintatuloksenTila.VASTAANOTTANUT_POISSAOLEVA)
 
-    xmlht.lasnaolo should be (Some("2"))
+    xmlht.lasnaolo should be (None)
 
   }
 
