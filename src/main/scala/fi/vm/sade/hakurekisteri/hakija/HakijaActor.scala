@@ -178,7 +178,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     case q: HakijaQuery => XMLQuery(q) pipeTo sender
   }
 
-  def resolveOppilaitosKoodi(o:Organisaatio): Future[Option[String]] =  o.oppilaitosKoodi match {
+  def resolveOppilaitosKoodi(o: Organisaatio): Future[Option[String]] = o.oppilaitosKoodi match {
     case None => findOppilaitoskoodi(o.parentOid)
     case Some(k) => Future.successful(Some(k))
   }
@@ -189,17 +189,18 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     Try((organisaatioActor ? oid).mapTo[Option[Organisaatio]]).getOrElse(Future.successful(None))
   }
 
+  val tuntematonOppilaitos = "00000"
   def findOppilaitoskoodi(parentOid: Option[String]): Future[Option[String]] = parentOid match {
-    case None => Future.successful(None)
-    case Some(oid) => getOrg(oid).flatMap(_.fold[Future[Option[String]]](Future.successful(None))(resolveOppilaitosKoodi))
+    case None => Future.successful(Some(tuntematonOppilaitos))
+    case Some(oid) => getOrg(oid).flatMap(_.fold[Future[Option[String]]](Future.successful(Some(tuntematonOppilaitos)))(resolveOppilaitosKoodi))
   }
 
-  def hakutoive2XMLHakutoive(ht: Hakutoive): Future[Option[XMLHakutoive]] =  {
+  def hakutoive2XMLHakutoive(ht: Hakutoive): Future[Option[XMLHakutoive]] = {
    for(
-      orgData: Option[(Organisaatio, String)] <- findOrgData(ht.hakukohde.koulutukset.head.tarjoaja)
-    ) yield
+     orgData: Option[(Organisaatio, String)] <- findOrgData(ht.hakukohde.koulutukset.head.tarjoaja)
+   ) yield
      for ((org: Organisaatio, oppilaitos: String) <- orgData)
-      yield XMLHakutoive(ht,org,oppilaitos)
+       yield XMLHakutoive(ht, org, oppilaitos)
   }
 
   def getXmlHakutoiveet(hakija: Hakija): Future[Seq[XMLHakutoive]] = {
@@ -221,7 +222,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def getXmlHakemus(hakija: Hakija): Future[XMLHakemus] = {
     val (opiskelutieto, lahtokoulu) = getOpiskelijaTiedot(hakija)
     val ht: Future[Seq[XMLHakutoive]] = getXmlHakutoiveet(hakija)
-    val data = (opiskelutieto,lahtokoulu,ht).join
+    val data = (opiskelutieto, lahtokoulu, ht).join
 
     data.tupledMap(createHakemus(hakija))
   }
