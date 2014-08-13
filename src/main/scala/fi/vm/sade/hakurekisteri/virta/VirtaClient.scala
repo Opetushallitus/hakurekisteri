@@ -1,0 +1,55 @@
+package fi.vm.sade.hakurekisteri.virta
+
+import java.net.URL
+
+import com.stackmob.newman.dsl._
+import com.stackmob.newman.HttpClient
+import com.stackmob.newman.response.HttpResponse
+import fi.vm.sade.generic.common.HetuUtils
+import org.slf4j.LoggerFactory
+
+import scala.concurrent.{ExecutionContext, Future}
+import scala.xml.Elem
+
+case class VirtaConfig(serviceUrl: String = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot",
+                       jarjestelma: String = "",
+                       tunnus: String = "",
+                       avain: String = "salaisuus")
+
+class VirtaClient(config: VirtaConfig)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) {
+  val logger = LoggerFactory.getLogger(getClass)
+
+  def getOpiskelijanKaikkiTiedot(oppijanumero: Option[String] = None, hetu: Option[String] = None): Future[HttpResponse] = {
+    if ((oppijanumero.isEmpty && hetu.isEmpty) || (oppijanumero.isDefined && hetu.isDefined)) throw new IllegalArgumentException("either oppijanumero or hetu is required")
+    if (hetu.isDefined && !HetuUtils.isHetuValid(hetu.get)) throw new IllegalArgumentException("hetu is not valid")
+
+    val operation =
+<OpiskelijanKaikkiTiedotRequest xmlns="http://tietovaranto.csc.fi/luku">
+  <Kutsuja>
+    <jarjestelma>{config.jarjestelma}</jarjestelma>
+    <tunnus>{config.tunnus}</tunnus>
+    <avain>{config.avain}</avain>
+  </Kutsuja>
+  <Hakuehdot>
+    {if (oppijanumero.isDefined) <kansallinenOppijanumero>{oppijanumero.get}</kansallinenOppijanumero>}
+    {if (hetu.isDefined) <henkilotunnus>{hetu.get}</henkilotunnus>}
+  </Hakuehdot>
+</OpiskelijanKaikkiTiedotRequest>
+
+    val envelope = wrapSoapEnvelope(operation)
+    logger.debug(s"POST url: ${config.serviceUrl}, body: $envelope")
+
+    POST(new URL(config.serviceUrl)).setBodyString(envelope).apply
+  }
+
+  def wrapSoapEnvelope(operation: Elem): String = {
+    val buf = new StringBuilder
+    buf.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n")
+    buf.append("<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n")
+    buf.append("<SOAP-ENV:Body>\n")
+    buf.append(operation.toString)
+    buf.append("\n</SOAP-ENV:Body>\n")
+    buf.append("</SOAP-ENV:Envelope>\n")
+    buf.toString
+  }
+}
