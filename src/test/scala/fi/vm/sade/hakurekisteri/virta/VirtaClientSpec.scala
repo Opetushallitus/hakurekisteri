@@ -8,13 +8,17 @@ import com.stackmob.newman.request._
 import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
 import com.stackmob.newman.{RawBody, Headers, HttpClient}
 import org.scalatest.FlatSpec
+import org.scalatest.concurrent.AsyncAssertions.Waiter
 import org.scalatest.matchers.ShouldMatchers
 
 import scala.concurrent.Future
+import scala.util.{Success, Failure}
 
 class MockHttpClient extends HttpClient {
+  var capturedRequestBody: String = ""
   override def post(url: URL, headers: Headers, body: RawBody): PostRequest = PostRequest(url, headers, body) {
-    Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(body), new Date()))
+    capturedRequestBody = new String(body)
+    Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(""), new Date()))
   }
   override def head(url: URL, headers: Headers): HeadRequest = ???
   override def get(url: URL, headers: Headers): GetRequest = ???
@@ -36,7 +40,8 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers {
     val response: Future[HttpResponse] = virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some(oppijanumero))
 
     response.onComplete(r => {
-      r.get.bodyString should include(s"<kansallinenOppijanumero>$oppijanumero</kansallinenOppijanumero>")
+      //FIXME with waiter
+      httpClient.capturedRequestBody should include(s"<kansallinenOppijanumero>$oppijanumero</kansallinenOppijanumero>")
     })
   }
 
@@ -45,7 +50,8 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers {
     val response: Future[HttpResponse] = virtaClient.getOpiskelijanKaikkiTiedot(hetu = Some(hetu))
 
     response.onComplete(r => {
-      r.get.bodyString should include(s"<henkilotunnus>$hetu</henkilotunnus>")
+      //FIXME with waiter
+      httpClient.capturedRequestBody should include(s"<henkilotunnus>$hetu</henkilotunnus>")
     })
   }
 
@@ -53,25 +59,35 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers {
     val response: Future[HttpResponse] = virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some("1.2.3"))
 
     response.onComplete(r => {
-      r.get.bodyString should include("<SOAP-ENV:Envelope")
+      //FIXME with waiter
+      httpClient.capturedRequestBody should include("<SOAP-ENV:Envelope")
     })
   }
 
   it should "throw IllegalArgumentException if no oppijanumero or hetu is provided" in {
     intercept[IllegalArgumentException] {
-      virtaClient.getOpiskelijanKaikkiTiedot()
+      waitForException(virtaClient.getOpiskelijanKaikkiTiedot()).await
     }
   }
 
   it should "throw IllegalArgumentException if both oppijanumero and hetu are provided" in {
     intercept[IllegalArgumentException] {
-      virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some("1.2.3"), hetu = Some("111111-1975"))
+      waitForException(virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some("1.2.3"), hetu = Some("111111-1975"))).await
     }
   }
 
   it should "throw IllegalArgumentException if provided hetu is not valid" in {
     intercept[IllegalArgumentException] {
-      virtaClient.getOpiskelijanKaikkiTiedot(hetu = Some("invalid"))
+      waitForException(virtaClient.getOpiskelijanKaikkiTiedot(hetu = Some("invalid"))).await
     }
+  }
+
+  def waitForException(f: Future[HttpResponse]): Waiter = {
+    val w = new Waiter
+    f.onComplete {
+      case Failure(e) => w(throw e); w.dismiss()
+      case Success(_) => w.dismiss()
+    }
+    w
   }
 }
