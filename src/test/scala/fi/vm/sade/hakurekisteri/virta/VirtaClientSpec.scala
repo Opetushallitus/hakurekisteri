@@ -11,14 +11,14 @@ import org.scalatest.FlatSpec
 import org.scalatest.concurrent.AsyncAssertions.Waiter
 import org.scalatest.matchers.ShouldMatchers
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import scala.util.{Success, Failure}
 
 class MockHttpClient extends HttpClient {
   var capturedRequestBody: String = ""
   override def post(url: URL, headers: Headers, body: RawBody): PostRequest = PostRequest(url, headers, body) {
     capturedRequestBody = new String(body)
-    Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(""), new Date()))
+    Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(TestResponse.xml.toString), new Date()))
   }
   override def head(url: URL, headers: Headers): HeadRequest = ???
   override def get(url: URL, headers: Headers): GetRequest = ???
@@ -65,7 +65,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers {
     val response: Future[OpiskelijanTiedot] = virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some("1.2.3"))
 
     waitFuture(response) {o => {
-      o.suoritukset.size should not be(0)
+      o.suoritukset.size should be(0)
     }}
   }
 

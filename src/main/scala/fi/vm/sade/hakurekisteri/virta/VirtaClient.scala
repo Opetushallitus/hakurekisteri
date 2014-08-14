@@ -44,12 +44,18 @@ class VirtaClient(config: VirtaConfig)(implicit val httpClient: HttpClient, impl
     val envelope = wrapSoapEnvelope(operation)
     logger.debug(s"POST url: ${config.serviceUrl}, body: $envelope")
 
-    val r: Future[HttpResponse] = POST(new URL(config.serviceUrl)).setBodyString(envelope).apply
-    r.map((response) => {
-      val xml: Elem = XML.loadString(response.bodyString)
-      xml.child
-      null
-    })
+    POST(new URL(config.serviceUrl)).
+      setBodyString(envelope).
+      apply.
+      map((response) => {
+        val envelope: Elem = XML.loadString(response.bodyString)
+
+        val h = envelope \ "Body" \ "OpiskelijanKaikkiTiedotResponse" \ "Virta" \ "Opiskelija" \ "Henkilotunnus"
+        logger.debug(s"h: $h")
+
+        // TODO parse information from XML
+        OpiskelijanTiedot(Some("111111-1975"), Some("1.2.3"), Set())
+      })
   }
 
   def wrapSoapEnvelope(operation: Elem): String = {
