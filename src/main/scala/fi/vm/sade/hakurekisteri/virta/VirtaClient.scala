@@ -6,20 +6,25 @@ import com.stackmob.newman.dsl._
 import com.stackmob.newman.HttpClient
 import com.stackmob.newman.response.HttpResponse
 import fi.vm.sade.generic.common.HetuUtils
+import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.Elem
+import scala.xml.{XML, Elem}
 
 case class VirtaConfig(serviceUrl: String = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot",
                        jarjestelma: String = "",
                        tunnus: String = "",
                        avain: String = "salaisuus")
 
+case class OpiskelijanTiedot(hetu: Option[String],
+                             oppijanumero: Option[String],
+                             suoritukset: Set[Suoritus])
+
 class VirtaClient(config: VirtaConfig)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) {
   val logger = LoggerFactory.getLogger(getClass)
 
-  def getOpiskelijanKaikkiTiedot(oppijanumero: Option[String] = None, hetu: Option[String] = None): Future[HttpResponse] = {
+  def getOpiskelijanKaikkiTiedot(oppijanumero: Option[String] = None, hetu: Option[String] = None): Future[OpiskelijanTiedot] = {
     if ((oppijanumero.isEmpty && hetu.isEmpty) || (oppijanumero.isDefined && hetu.isDefined)) throw new IllegalArgumentException("either oppijanumero or hetu is required")
     if (hetu.isDefined && !HetuUtils.isHetuValid(hetu.get)) throw new IllegalArgumentException("hetu is not valid")
 
@@ -39,7 +44,12 @@ class VirtaClient(config: VirtaConfig)(implicit val httpClient: HttpClient, impl
     val envelope = wrapSoapEnvelope(operation)
     logger.debug(s"POST url: ${config.serviceUrl}, body: $envelope")
 
-    POST(new URL(config.serviceUrl)).setBodyString(envelope).apply
+    val r: Future[HttpResponse] = POST(new URL(config.serviceUrl)).setBodyString(envelope).apply
+    r.map((response) => {
+      val xml: Elem = XML.loadString(response.bodyString)
+      xml.child
+      null
+    })
   }
 
   def wrapSoapEnvelope(operation: Elem): String = {

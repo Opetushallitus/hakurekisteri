@@ -11,7 +11,7 @@ import org.scalatest.FlatSpec
 import org.scalatest.concurrent.AsyncAssertions.Waiter
 import org.scalatest.matchers.ShouldMatchers
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.util.{Success, Failure}
 
 class MockHttpClient extends HttpClient {
@@ -37,39 +37,36 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers {
 
   it should "call Virta with provided oppijanumero" in {
     val oppijanumero = "1.2.3"
-    val response: Future[HttpResponse] = virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some(oppijanumero))
+    val response = virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some(oppijanumero))
 
-    waitFuture(response) {
+    waitFuture(response) {o => {
       httpClient.capturedRequestBody should include(s"<kansallinenOppijanumero>$oppijanumero</kansallinenOppijanumero>")
-    }
+    }}
   }
 
   it should "call Virta with provided henkilotunnus" in {
     val hetu = "111111-1975"
-    val response: Future[HttpResponse] = virtaClient.getOpiskelijanKaikkiTiedot(hetu = Some(hetu))
+    val response = virtaClient.getOpiskelijanKaikkiTiedot(hetu = Some(hetu))
 
-    waitFuture(response) {
+    waitFuture(response) {o => {
       httpClient.capturedRequestBody should include(s"<henkilotunnus>$hetu</henkilotunnus>")
-    }
+    }}
   }
 
   it should "wrap the operation in a SOAP envelope" in {
-    val response: Future[HttpResponse] = virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some("1.2.3"))
+    val response = virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some("1.2.3"))
 
-    waitFuture(response) {
+    waitFuture(response) {o => {
       httpClient.capturedRequestBody should include("<SOAP-ENV:Envelope")
-    }
+    }}
   }
 
-  def waitFuture[A](fut: Future[A])(fun : => Unit) = {
-    val w = new Waiter
+  it should "return student information" in {
+    val response: Future[OpiskelijanTiedot] = virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some("1.2.3"))
 
-    fut.onComplete(r => {
-      w(fun)
-      w.dismiss()
-    })
-
-    w.await()
+    waitFuture(response) {o => {
+      o.suoritukset.size should not be(0)
+    }}
   }
 
   it should "throw IllegalArgumentException if no oppijanumero or hetu is provided" in {
@@ -90,7 +87,18 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers {
     }
   }
 
-  def waitFutureFailure(f: Future[HttpResponse]): Waiter = {
+  def waitFuture[A](f: Future[A])(assertion: A => Unit) = {
+    val w = new Waiter
+
+    f.onComplete(r => {
+      w(assertion(r.get))
+      w.dismiss()
+    })
+
+    w.await()
+  }
+
+  def waitFutureFailure[A](f: Future[A]): Waiter = {
     val w = new Waiter
     
     f.onComplete {
