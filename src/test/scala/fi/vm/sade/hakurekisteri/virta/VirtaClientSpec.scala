@@ -39,55 +39,65 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers {
     val oppijanumero = "1.2.3"
     val response: Future[HttpResponse] = virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some(oppijanumero))
 
-    response.onComplete(r => {
-      //FIXME with waiter
+    waitFuture(response) {
       httpClient.capturedRequestBody should include(s"<kansallinenOppijanumero>$oppijanumero</kansallinenOppijanumero>")
-    })
+    }
   }
 
   it should "call Virta with provided henkilotunnus" in {
     val hetu = "111111-1975"
     val response: Future[HttpResponse] = virtaClient.getOpiskelijanKaikkiTiedot(hetu = Some(hetu))
 
-    response.onComplete(r => {
-      //FIXME with waiter
+    waitFuture(response) {
       httpClient.capturedRequestBody should include(s"<henkilotunnus>$hetu</henkilotunnus>")
-    })
+    }
   }
 
   it should "wrap the operation in a SOAP envelope" in {
     val response: Future[HttpResponse] = virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some("1.2.3"))
 
-    response.onComplete(r => {
-      //FIXME with waiter
+    waitFuture(response) {
       httpClient.capturedRequestBody should include("<SOAP-ENV:Envelope")
+    }
+  }
+
+  def waitFuture[A](fut: Future[A])(fun : => Unit) = {
+    val w = new Waiter
+
+    fut.onComplete(r => {
+      w(fun)
+      w.dismiss()
     })
+
+    w.await()
   }
 
   it should "throw IllegalArgumentException if no oppijanumero or hetu is provided" in {
     intercept[IllegalArgumentException] {
-      waitForException(virtaClient.getOpiskelijanKaikkiTiedot()).await
+      waitFutureFailure(virtaClient.getOpiskelijanKaikkiTiedot()).await
     }
   }
 
   it should "throw IllegalArgumentException if both oppijanumero and hetu are provided" in {
     intercept[IllegalArgumentException] {
-      waitForException(virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some("1.2.3"), hetu = Some("111111-1975"))).await
+      waitFutureFailure(virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some("1.2.3"), hetu = Some("111111-1975"))).await
     }
   }
 
   it should "throw IllegalArgumentException if provided hetu is not valid" in {
     intercept[IllegalArgumentException] {
-      waitForException(virtaClient.getOpiskelijanKaikkiTiedot(hetu = Some("invalid"))).await
+      waitFutureFailure(virtaClient.getOpiskelijanKaikkiTiedot(hetu = Some("invalid"))).await
     }
   }
 
-  def waitForException(f: Future[HttpResponse]): Waiter = {
+  def waitFutureFailure(f: Future[HttpResponse]): Waiter = {
     val w = new Waiter
+    
     f.onComplete {
       case Failure(e) => w(throw e); w.dismiss()
       case Success(_) => w.dismiss()
     }
+    
     w
   }
 }
