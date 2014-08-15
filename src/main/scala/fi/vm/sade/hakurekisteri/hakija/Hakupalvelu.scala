@@ -97,7 +97,7 @@ object AkkaHakupalvelu {
     val lahtokoulu: Option[String] = for(k <- koulutustausta; l <- k.get("lahtokoulu")) yield l
     val pohjakoulutus: Option[String] = for (k <- koulutustausta; p <- k.get("POHJAKOULUTUS")) yield p
     val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus; v <- getVuosi(koulutustausta)(p)) yield v
-    val kieli: String = getValue("koulutustausta", "perusopetuksen_kieli", "FI")
+    val kieli: String = getValue("henkilotiedot", "aidinkieli", "FI")
     val myontaja = lahtokoulu.getOrElse("")
     val suorittaja = hakemus.personOid.getOrElse("")
     val valmistuminen = todistusVuosi.flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption).getOrElse(new LocalDate(0))
