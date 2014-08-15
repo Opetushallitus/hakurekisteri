@@ -8,8 +8,9 @@ import com.stackmob.newman.request._
 import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
 import com.stackmob.newman.{RawBody, Headers, HttpClient}
 import org.scalatest.FlatSpec
-import org.scalatest.concurrent.AsyncAssertions.Waiter
+import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.time.{Millis, Span}
 
 import scala.concurrent.Future
 import scala.util.{Success, Failure}
@@ -18,7 +19,7 @@ class MockHttpClient extends HttpClient {
   var capturedRequestBody: String = ""
   override def post(url: URL, headers: Headers, body: RawBody): PostRequest = PostRequest(url, headers, body) {
     capturedRequestBody = new String(body)
-    Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(TestResponse.xml.toString), new Date()))
+    Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(scala.io.Source.fromFile("src/test/resources/test-response.xml").mkString), new Date()))
   }
   override def head(url: URL, headers: Headers): HeadRequest = ???
   override def get(url: URL, headers: Headers): GetRequest = ???
@@ -26,7 +27,7 @@ class MockHttpClient extends HttpClient {
   override def delete(url: URL, headers: Headers): DeleteRequest = ???
 }
 
-class VirtaClientSpec extends FlatSpec with ShouldMatchers {
+class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions {
   implicit val system = ActorSystem("test-virta-system")
   implicit val ec = system.dispatcher
   val c = VirtaConfig()
@@ -37,7 +38,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers {
 
   it should "call Virta with provided oppijanumero" in {
     val oppijanumero = "1.2.3"
-    val response = virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some(oppijanumero))
+    val response = virtaClient.getOpiskelijanTiedot(oppijanumero = Some(oppijanumero))
 
     waitFuture(response) {o => {
       httpClient.capturedRequestBody should include(s"<kansallinenOppijanumero>$oppijanumero</kansallinenOppijanumero>")
@@ -46,7 +47,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers {
 
   it should "call Virta with provided henkilotunnus" in {
     val hetu = "111111-1975"
-    val response = virtaClient.getOpiskelijanKaikkiTiedot(hetu = Some(hetu))
+    val response = virtaClient.getOpiskelijanTiedot(hetu = Some(hetu))
 
     waitFuture(response) {o => {
       httpClient.capturedRequestBody should include(s"<henkilotunnus>$hetu</henkilotunnus>")
@@ -54,7 +55,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers {
   }
 
   it should "wrap the operation in a SOAP envelope" in {
-    val response = virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some("1.2.3"))
+    val response = virtaClient.getOpiskelijanTiedot(oppijanumero = Some("1.2.3"))
 
     waitFuture(response) {o => {
       httpClient.capturedRequestBody should include("<SOAP-ENV:Envelope")
@@ -62,28 +63,28 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers {
   }
 
   it should "return student information" in {
-    val response: Future[OpiskelijanTiedot] = virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some("1.2.3"))
+    val response: Future[Option[OpiskelijanTiedot]] = virtaClient.getOpiskelijanTiedot(oppijanumero = Some("1.2.3"))
 
     waitFuture(response) {o => {
-      o.suoritukset.size should be(0)
+      o.get.suoritukset.size should be(3)
     }}
   }
 
   it should "throw IllegalArgumentException if no oppijanumero or hetu is provided" in {
     intercept[IllegalArgumentException] {
-      waitFutureFailure(virtaClient.getOpiskelijanKaikkiTiedot()).await
+      waitFutureFailure(virtaClient.getOpiskelijanTiedot()).await
     }
   }
 
   it should "throw IllegalArgumentException if both oppijanumero and hetu are provided" in {
     intercept[IllegalArgumentException] {
-      waitFutureFailure(virtaClient.getOpiskelijanKaikkiTiedot(oppijanumero = Some("1.2.3"), hetu = Some("111111-1975"))).await
+      waitFutureFailure(virtaClient.getOpiskelijanTiedot(oppijanumero = Some("1.2.3"), hetu = Some("111111-1975"))).await
     }
   }
 
   it should "throw IllegalArgumentException if provided hetu is not valid" in {
     intercept[IllegalArgumentException] {
-      waitFutureFailure(virtaClient.getOpiskelijanKaikkiTiedot(hetu = Some("invalid"))).await
+      waitFutureFailure(virtaClient.getOpiskelijanTiedot(hetu = Some("invalid"))).await
     }
   }
 
@@ -95,7 +96,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers {
       w.dismiss()
     })
 
-    w.await()
+    w.await(timeout(Span(1000, Millis)), dismissals(1))
   }
 
   def waitFutureFailure[A](f: Future[A]): Waiter = {
