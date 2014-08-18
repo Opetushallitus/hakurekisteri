@@ -47,7 +47,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
 
   it should "call Virta with provided henkilotunnus" in {
     val hetu = "111111-1975"
-    val response = virtaClient.getOpiskelijanTiedot(hetu = Some(hetu))
+    val response = virtaClient.getOpiskelijanTiedot(hetu = Some(hetu), oppijanumero = Some("1.2.3"))
 
     waitFuture(response) {o => {
       httpClient.capturedRequestBody should include(s"<henkilotunnus>$hetu</henkilotunnus>")
@@ -76,15 +76,9 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
     }
   }
 
-  it should "throw IllegalArgumentException if both oppijanumero and hetu are provided" in {
-    intercept[IllegalArgumentException] {
-      waitFutureFailure(virtaClient.getOpiskelijanTiedot(oppijanumero = Some("1.2.3"), hetu = Some("111111-1975"))).await
-    }
-  }
-
   it should "throw IllegalArgumentException if provided hetu is not valid" in {
     intercept[IllegalArgumentException] {
-      waitFutureFailure(virtaClient.getOpiskelijanTiedot(hetu = Some("invalid"))).await
+      waitFutureFailure(virtaClient.getOpiskelijanTiedot(hetu = Some("invalid"), oppijanumero = Some("1.2.3"))).await
     }
   }
 
