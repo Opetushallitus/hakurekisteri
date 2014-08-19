@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.virta
 
 import java.net.URL
+import java.nio.charset.Charset
 import java.util.Date
 
 import akka.actor.ActorSystem
@@ -19,7 +20,11 @@ class MockHttpClient extends HttpClient {
   var capturedRequestBody: String = ""
   override def post(url: URL, headers: Headers, body: RawBody): PostRequest = PostRequest(url, headers, body) {
     capturedRequestBody = new String(body)
-    Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(scala.io.Source.fromFile("src/test/resources/test-response.xml").mkString), new Date()))
+    capturedRequestBody match {
+      case s: String if s.contains("1.2.4") => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(scala.io.Source.fromFile("src/test/resources/test-empty-response.xml").mkString), new Date()))
+      case s: String if s.contains("1.2.5") => Future.successful(HttpResponse(HttpResponseCode.InternalServerError, Headers(List()), RawBody("Infernal server error", Charset.forName("UTF-8")), new Date()))
+      case _ => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(scala.io.Source.fromFile("src/test/resources/test-response.xml").mkString), new Date()))
+    }
   }
   override def head(url: URL, headers: Headers): HeadRequest = ???
   override def get(url: URL, headers: Headers): GetRequest = ???
@@ -30,9 +35,8 @@ class MockHttpClient extends HttpClient {
 class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions {
   implicit val system = ActorSystem("test-virta-system")
   implicit val ec = system.dispatcher
-  val c = VirtaConfig()
-  val httpClient = new MockHttpClient
-  val virtaClient = new VirtaClient(c)(httpClient, ec)
+  implicit val httpClient = new MockHttpClient
+  val virtaClient = new VirtaClient
 
   behavior of "VirtaClient"
 
@@ -63,22 +67,39 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
   }
 
   it should "return student information" in {
-    val response: Future[Option[OpiskelijanTiedot]] = virtaClient.getOpiskelijanTiedot(oppijanumero = Some("1.2.3"))
+    val response: Future[Option[VirtaResult]] = virtaClient.getOpiskelijanTiedot(oppijanumero = Some("1.2.3"))
 
     waitFuture(response) {o => {
-      o.get.suoritukset.size should be(3)
+      o.get.opiskeluoikeudet.size should be(2)
+      o.get.tutkinnot.size should be(1)
     }}
+  }
+
+  it should "return None if no data is found" in {
+    val response: Future[Option[VirtaResult]] = virtaClient.getOpiskelijanTiedot(oppijanumero = Some("1.2.4"))
+
+    waitFuture(response) {(o: Option[VirtaResult]) => {
+      o should be(None)
+    }}
+  }
+
+  it should "throw VirtaConnectionErrorException if an connection error occurred" in {
+    val response = virtaClient.getOpiskelijanTiedot(oppijanumero = Some("1.2.5"))
+
+    intercept[VirtaConnectionErrorException] {
+      waitFutureFailure(response)
+    }
   }
 
   it should "throw IllegalArgumentException if no oppijanumero or hetu is provided" in {
     intercept[IllegalArgumentException] {
-      waitFutureFailure(virtaClient.getOpiskelijanTiedot()).await
+      waitFutureFailure(virtaClient.getOpiskelijanTiedot())
     }
   }
 
   it should "throw IllegalArgumentException if provided hetu is not valid" in {
     intercept[IllegalArgumentException] {
-      waitFutureFailure(virtaClient.getOpiskelijanTiedot(hetu = Some("invalid"), oppijanumero = Some("1.2.3"))).await
+      waitFutureFailure(virtaClient.getOpiskelijanTiedot(hetu = Some("invalid"), oppijanumero = Some("1.2.3")))
     }
   }
 
@@ -93,14 +114,14 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
     w.await(timeout(Span(1000, Millis)), dismissals(1))
   }
 
-  def waitFutureFailure[A](f: Future[A]): Waiter = {
+  def waitFutureFailure[A](f: Future[A]) {
     val w = new Waiter
     
     f.onComplete {
       case Failure(e) => w(throw e); w.dismiss()
-      case Success(_) => w.dismiss()
+      case Success(s) => w.dismiss()
     }
     
-    w
+    w.await(timeout(Span(1000, Millis)), dismissals(1))
   }
 }
