@@ -66,7 +66,9 @@ object HakuJaValintarekisteriBuild extends Build {
     "fi.vm.sade.log" % "log-client" % "7.0"
   )
 
-  val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion, "org.scalamock" %% "scalamock-scalatest-support" % "3.0.1")
+  val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion,
+                             "org.scalamock" %% "scalamock-scalatest-support" % "3.0.1",
+                             "org.scala-tools.testing" %% "specs" % "1.6.9")
 
   lazy val mocha = taskKey[Unit]("run mocha tests")
   lazy val installMocha = taskKey[Unit]("install mocha")

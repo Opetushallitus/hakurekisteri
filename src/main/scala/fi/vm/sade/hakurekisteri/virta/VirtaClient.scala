@@ -120,10 +120,10 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     buf.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n")
     buf.append("<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n")
     buf.append("<SOAP-ENV:Body>\n")
-    buf.append(operation.toString)
+    buf.append(operation.toString())
     buf.append("\n</SOAP-ENV:Body>\n")
     buf.append("</SOAP-ENV:Envelope>\n")
-    buf.toString
+    buf.toString()
   }
 }
 
