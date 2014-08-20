@@ -14,21 +14,17 @@ class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph
 
   implicit val httpClient = new ApacheHttpClient()()
 
-
-
   override def getAll: Future[Seq[String]] = {
     val url = new URL(serviceUrl + "/rest/organisaatio")
     logger.info(s"fetching all organizations: $url")
-    GET(url).apply.map(response =>
-    if (response.code == HttpResponseCode.Ok) {
-      response.bodyAsCaseClass[List[String]].toOption.getOrElse(Seq())
-    } else {
-      logger.error(s"call to organisaatio-service $url failed: ${response.code}")
-      throw new RuntimeException(s"virhe kutsuttaessa organisaatiopalvelua: ${response.code}")
-    }
-
-    )
-
+    GET(url).apply.map(response => {
+      if (response.code == HttpResponseCode.Ok) {
+        response.bodyAsCaseClass[List[String]].toOption.getOrElse(Seq())
+      } else {
+        logger.error(s"call to organisaatio-service $url failed: ${response.code}")
+        throw new RuntimeException(s"virhe kutsuttaessa organisaatiopalvelua: ${response.code}")
+      }
+    })
   }
 
   override def get(str: String): Future[Option[Organisaatio]] = {
@@ -43,5 +39,4 @@ class RestOrganisaatiopalvelu(serviceUrl: String = "https://itest-virkailija.oph
       }
     })
   }
-
 }

@@ -40,7 +40,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     logger.debug(s"POST url: ${config.serviceUrl}, body: $requestEnvelope")
 
     POST(new URL(config.serviceUrl)).setBodyString(requestEnvelope).apply.map((response) => {
-      logger.debug(s"got response from url [${config.serviceUrl}], response: $response, body: ${response.bodyString}")
+      logger.debug(s"got response from url [${config.serviceUrl}], response: $response") //, body: ${response.bodyString}")
       if (response.code == HttpResponseCode.Ok) {
         val responseEnvelope: Elem = XML.loadString(response.bodyString)
         val opiskeluoikeudet = getOpiskeluoikeudet(responseEnvelope)
