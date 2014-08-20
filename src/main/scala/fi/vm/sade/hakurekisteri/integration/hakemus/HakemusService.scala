@@ -9,7 +9,7 @@ import com.stackmob.newman.dsl._
 import com.stackmob.newman.response.{HttpResponse, HttpResponseCode}
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, HakijaQuery}
 import fi.vm.sade.hakurekisteri.healthcheck.{Hakemukset, Health}
-import fi.vm.sade.hakurekisteri.integration.{InvalidServiceTicketException, TicketValidator}
+import fi.vm.sade.hakurekisteri.integration.cas.{CasClient, TicketValidator, InvalidServiceTicketException}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query, User}
 import fi.vm.sade.hakurekisteri.storage.repository._
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceActor, ResourceService}
@@ -66,6 +66,7 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
   var healthCheck: Option[ActorRef] = None
   val logger = Logging(context.system, this)
+  val casClient = new CasClient(serviceAccessUrl, serviceUrl, user, password)
 
   override def receive: Receive = super.receive.orElse({
     case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) map ((hs) => {
@@ -106,7 +107,7 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
   }
 
   def restRequest[A <: AnyRef](user: Option[User], url: URL)(implicit mf : Manifest[A]): Future[Option[A]] = {
-    getProxyTicket.flatMap((ticket) => {
+    casClient.getProxyTicket.flatMap((ticket) => {
       logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
 
       GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
@@ -136,19 +137,6 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
     ).flatten
 
     Try((for(i <- params; p <- List("&", i)) yield p).tail.reduce(_ + _)).getOrElse("")
-  }
-
-  def getProxyTicket: Future[String] = (user, password) match {
-    case (Some(u), Some(p)) =>
-      POST(new URL(s"$serviceAccessUrl/accessTicket")).
-        addHeaders("Content-Type" -> "application/x-www-form-urlencoded").
-        setBodyString(s"client_id=${URLEncoder.encode(u, "UTF8")}&client_secret=${URLEncoder.encode(p, "UTF8")}&service_url=${URLEncoder.encode(serviceUrl, "UTF8")}").
-        apply.map((response) => {
-          val st = response.bodyString.trim
-          if (TicketValidator.isValidSt(st)) st
-          else throw InvalidServiceTicketException(st)
-        })
-    case _ => Future.successful("")
   }
 
   def find(q: HakijaQuery): Future[Seq[ListHakemus]] = {

@@ -5,7 +5,7 @@ import java.net.{URL, URLEncoder}
 import com.stackmob.newman.ApacheHttpClient
 import com.stackmob.newman.dsl._
 import com.stackmob.newman.response.{HttpResponse, HttpResponseCode}
-import fi.vm.sade.hakurekisteri.integration.{InvalidServiceTicketException, TicketValidator}
+import fi.vm.sade.hakurekisteri.integration.cas.{CasClient, TicketValidator, InvalidServiceTicketException}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluValintatuloksenTila.SijoitteluValintatuloksenTila
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluHakemuksenTila.SijoitteluHakemuksenTila
@@ -111,19 +111,7 @@ class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "http
   val logger = LoggerFactory.getLogger(getClass)
   import scala.concurrent.duration._
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
-
-  def getProxyTicket: Future[String] = (user, password) match {
-    case (Some(u), Some(p)) =>
-      POST(new URL(s"$serviceAccessUrl/accessTicket")).
-        addHeaders("Content-Type" -> "application/x-www-form-urlencoded").
-        setBodyString(s"client_id=${URLEncoder.encode(u, "UTF8")}&client_secret=${URLEncoder.encode(p, "UTF8")}&service_url=${URLEncoder.encode(serviceUrl, "UTF8")}").
-        apply.map((response) => {
-          val st = response.bodyString.trim
-          if (TicketValidator.isValidSt(st)) st
-          else throw InvalidServiceTicketException(st)
-        })
-    case _ => Future.successful("")
-  }
+  val casClient = new CasClient(serviceAccessUrl, serviceUrl, user, password)
 
   def readBody[A <: AnyRef: Manifest](response: HttpResponse): A = {
     import org.json4s.jackson.Serialization.read
@@ -137,7 +125,7 @@ class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "http
 
   override def getSijoitteluTila(hakuOid: String): Future[SijoitteluPagination] = {
     val url = new URL(serviceUrl + "/resources/sijoittelu/" + hakuOid + "/sijoitteluajo/latest/hakemukset")
-    getProxyTicket.flatMap((ticket) => {
+    casClient.getProxyTicket.flatMap((ticket) => {
       logger.debug("calling sijoittelu-service [url={}, ticket={}]", Seq(url, ticket):_*)
       GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
       if (response.code == HttpResponseCode.Ok) {
