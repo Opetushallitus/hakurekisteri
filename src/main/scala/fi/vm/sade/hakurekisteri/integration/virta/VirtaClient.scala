@@ -1,28 +1,17 @@
-package fi.vm.sade.hakurekisteri.virta
+package fi.vm.sade.hakurekisteri.integration.virta
 
 import java.net.URL
 
-import com.stackmob.newman.dsl._
 import com.stackmob.newman.HttpClient
+import com.stackmob.newman.dsl._
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.generic.common.HetuUtils
-import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Success, Failure, Try}
-import scala.xml.{Node, NodeSeq, XML, Elem}
-
-case class VirtaConfig(serviceUrl: String, jarjestelma: String, tunnus: String, avain: String)
-
-case class VirtaOpiskeluoikeus(alkuPvm: LocalDate, loppuPvm: Option[LocalDate], myontaja: String, koulutuskoodit: Seq[String], opintoala1995: Option[String],
-                               koulutusala2002: Option[String], kieli: String)
-
-case class VirtaTutkinto(suoritusPvm: LocalDate, koulutuskoodi: Option[String], opintoala1995: Option[String], koulutusala2002: Option[String],
-                         myontaja: String, kieli: String)
-
-case class VirtaResult(opiskeluoikeudet: Seq[VirtaOpiskeluoikeus], tutkinnot: Seq[VirtaTutkinto])
+import scala.util.{Failure, Success, Try}
+import scala.xml.{Elem, Node, NodeSeq, XML}
 
 class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot",
                                                     jarjestelma = "",
@@ -126,7 +115,3 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     buf.toString()
   }
 }
-
-case class InvalidVirtaResponseException(message: String) extends RuntimeException(message)
-
-case class VirtaConnectionErrorException(message: String) extends RuntimeException(message)

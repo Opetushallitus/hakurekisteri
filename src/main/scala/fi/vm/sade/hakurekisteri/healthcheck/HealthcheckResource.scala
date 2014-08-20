@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.healthcheck
 
 import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import scala.concurrent.{Future, ExecutionContext}
 import _root_.akka.actor.{Actor, ActorRef, ActorSystem}
@@ -18,7 +19,7 @@ import org.joda.time.DateTimeZone
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
 import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
-import fi.vm.sade.hakurekisteri.hakija.{Hakemus, HakemusQuery}
+import fi.vm.sade.hakurekisteri.hakija.Hakemus
 
 class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher

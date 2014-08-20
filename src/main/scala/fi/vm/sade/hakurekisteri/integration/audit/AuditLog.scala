@@ -1,4 +1,4 @@
-package fi.vm.sade.hakurekisteri.audit
+package fi.vm.sade.hakurekisteri.integration.audit
 
 import fi.vm.sade.log.model.{Tapahtuma, LogEvent}
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}

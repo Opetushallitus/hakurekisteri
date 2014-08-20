@@ -23,7 +23,7 @@ trait HakijaSwaggerApi extends SwaggerSupport {
     ModelField("aiempiperuminen", null, DataType.Boolean, None, AnyValue, required = false),
     ModelField("kaksoistutkinto", null, DataType.Boolean, None, AnyValue, required = false))
 
-  registerModel(Model("XMLHakutoive", "Hakutoive", hakutoiveFields map { t => (t.name, t) } toMap))
+  registerModel(Model("XMLHakutoive", "Hakutoive", hakutoiveFields.map{ t => (t.name, t) }.toMap))
 
   val hakemusFields = Seq(ModelField("vuosi", null, DataType.String, None, AnyValue, required = true),
     ModelField("kausi", null, DataType.String, None, AnyValue, required = true),
@@ -42,7 +42,7 @@ trait HakijaSwaggerApi extends SwaggerSupport {
     ModelField("painotettavataineet", null, DataType("double"), None, AnyValue, required = false),
     ModelField("hakutoiveet", null, DataType.GenList(DataType("XMLHakutoive")), None, AnyValue, required = true))
 
-  registerModel(Model("XMLHakemus", "Hakemus", hakemusFields map { t => (t.name, t) } toMap))
+  registerModel(Model("XMLHakemus", "Hakemus", hakemusFields.map{ t => (t.name, t) }.toMap))
 
   val hakijaFields = Seq(ModelField("hetu", null, DataType.String, None, AnyValue, required = true),
     ModelField("oppijanumero", null, DataType.String, None, AnyValue, required = true),
@@ -61,11 +61,11 @@ trait HakijaSwaggerApi extends SwaggerSupport {
     ModelField("koulutusmarkkinointilupa", null, DataType.Boolean, None, AnyValue, required = true),
     ModelField("hakemus", null, DataType("XMLHakemus"), None, AnyValue, required = true))
 
-  registerModel(Model("XMLHakija", "Hakija", hakijaFields map { t => (t.name, t) } toMap))
+  registerModel(Model("XMLHakija", "Hakija", hakijaFields.map{ t => (t.name, t) }.toMap))
 
   val hakijatFields = Seq(ModelField("hakijat", null, DataType.GenList(DataType("XMLHakija")), None, AnyValue, required = true))
 
-  registerModel(Model("XMLHakijat", "Hakijat", hakijatFields map { t => (t.name, t) } toMap))
+  registerModel(Model("XMLHakijat", "Hakijat", hakijatFields.map{ t => (t.name, t) }.toMap))
 
   val query: OperationBuilder = apiOperation[XMLHakijat]("haeHakijat")
     .summary("näyttää kaikki hakijat")
@@ -76,6 +76,4 @@ trait HakijaSwaggerApi extends SwaggerSupport {
     .parameter(queryParam[String]("hakuehto").description("hakuehto").allowableValues(Hakuehto.values.toList).required)
     .parameter(queryParam[String]("tyyppi").description("tietotyyppi").allowableValues(Tyyppi.values.toList).required)
     .parameter(queryParam[Option[Boolean]]("tiedosto").description("palautetaanko vastaus tiedostona").optional)
-
-
 }

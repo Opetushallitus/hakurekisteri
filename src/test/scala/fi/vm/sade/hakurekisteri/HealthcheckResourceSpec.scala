@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri
 
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, FullHakemus}
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.{LocalDate, DateTime}
@@ -10,7 +11,6 @@ import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaActor, Opiskelija}
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.hakija.{FullHakemus, HakemusQuery}
 
 class HealthcheckResourceSpec extends ScalatraFunSuite {
   val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now,"1.2.4")
@@ -27,7 +27,7 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
 
   val hakemukset = system.actorOf(Props(new Actor {
     override def receive: Actor.Receive = {
-      case h:HakemusQuery => sender ! Seq(FullHakemus.identify(hakemus))
+      case h: HakemusQuery => sender ! Seq(FullHakemus.identify(hakemus))
     }
   }))
 

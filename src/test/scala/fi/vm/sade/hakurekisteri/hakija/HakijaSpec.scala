@@ -1,5 +1,8 @@
 package fi.vm.sade.hakurekisteri.hakija
 
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import fi.vm.sade.hakurekisteri.integration.hakemus._
+import fi.vm.sade.hakurekisteri.integration.sijoittelu._
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 
@@ -97,6 +100,7 @@ class HakijaSpec extends FlatSpec with ShouldMatchers {
     xmlht.lasnaolo should be (None)
 
   }
+
 
   def xmlHTFor(hyvaksytty: SijoitteluHakemuksenTila.Value, vastaanottanut_lasna: SijoitteluValintatuloksenTila.Value): XMLHakutoive = {
     XMLHakutoive(Hakutoive(toive,

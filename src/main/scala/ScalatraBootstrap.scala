@@ -8,6 +8,10 @@ import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.henkilo._
+import fi.vm.sade.hakurekisteri.integration.hakemus.{AkkaHakupalvelu, ReloadHaku, HakemusActor}
+import fi.vm.sade.hakurekisteri.integration.koodisto.RestKoodistopalvelu
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{OrganisaatioActor, RestOrganisaatiopalvelu}
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.{RestSijoittelupalvelu, SijoitteluActor}
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, OrganizationHierarchy}
 import fi.vm.sade.hakurekisteri.rest.support._

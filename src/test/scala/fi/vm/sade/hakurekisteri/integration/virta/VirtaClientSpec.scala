@@ -1,4 +1,4 @@
-package fi.vm.sade.hakurekisteri.virta
+package fi.vm.sade.hakurekisteri.integration.virta
 
 import java.net.URL
 import java.nio.charset.Charset

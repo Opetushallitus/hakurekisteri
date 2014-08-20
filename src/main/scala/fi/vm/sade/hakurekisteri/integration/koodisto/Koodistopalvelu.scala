@@ -1,11 +1,13 @@
-package fi.vm.sade.hakurekisteri.hakija
+package fi.vm.sade.hakurekisteri.integration.koodisto
 
-import scala.concurrent.{Future, ExecutionContext}
-import org.slf4j.LoggerFactory
-import com.stackmob.newman.ApacheHttpClient
 import java.net.URL
+
+import com.stackmob.newman.ApacheHttpClient
 import com.stackmob.newman.dsl._
 import com.stackmob.newman.response.HttpResponseCode
+import org.slf4j.LoggerFactory
+
+import scala.concurrent.{ExecutionContext, Future}
 
 case class Koodisto(koodistoUri: String)
 case class Koodi(koodiArvo: String, koodiUri: String, koodisto: Koodisto)

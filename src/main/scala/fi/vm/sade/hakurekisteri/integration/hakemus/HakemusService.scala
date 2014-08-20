@@ -1,17 +1,21 @@
-package fi.vm.sade.hakurekisteri.hakija
+package fi.vm.sade.hakurekisteri.integration.hakemus
 
-import scala.concurrent.Future
-import fi.vm.sade.hakurekisteri.storage.{ResourceActor, Identified, ResourceService}
-import fi.vm.sade.hakurekisteri.storage.repository._
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query, User}
 import java.net.{URL, URLEncoder}
-import scala.util.Try
-import com.stackmob.newman.dsl._
-import com.stackmob.newman.response.{HttpResponse, HttpResponseCode}
+
+import akka.actor.ActorRef
 import akka.event.Logging
 import com.stackmob.newman.ApacheHttpClient
-import fi.vm.sade.hakurekisteri.healthcheck.{Health, Hakemukset}
-import akka.actor.ActorRef
+import com.stackmob.newman.dsl._
+import com.stackmob.newman.response.{HttpResponse, HttpResponseCode}
+import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, HakijaQuery}
+import fi.vm.sade.hakurekisteri.healthcheck.{Hakemukset, Health}
+import fi.vm.sade.hakurekisteri.integration.{InvalidServiceTicketException, TicketValidator}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query, User}
+import fi.vm.sade.hakurekisteri.storage.repository._
+import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceActor, ResourceService}
+
+import scala.concurrent.Future
+import scala.util.Try
 
 trait HakemusService extends ResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
   def filterField[F](field: Option[F], fieldExctractor: (FullHakemus) => F)(hakemus:FullHakemus) = field match {
@@ -49,7 +53,7 @@ trait HakemusService extends ResourceService[FullHakemus, String] with Journaled
 case class HakemusQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String]) extends Query[FullHakemus]
 
 object HakemusQuery {
-  def apply(hq:HakijaQuery):HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
+  def apply(hq: HakijaQuery):HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
 }
 
 class HakemusJournal extends InMemJournal[FullHakemus, String] {

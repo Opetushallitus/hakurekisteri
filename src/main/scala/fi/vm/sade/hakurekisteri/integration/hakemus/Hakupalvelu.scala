@@ -1,44 +1,26 @@
-package fi.vm.sade.hakurekisteri.hakija
+package fi.vm.sade.hakurekisteri.integration.hakemus
 
-import org.json4s._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
-import java.net.{URL, URLEncoder}
-import com.stackmob.newman.ApacheHttpClient
-import com.stackmob.newman.response.HttpResponseCode
-import com.stackmob.newman.dsl._
-import fi.vm.sade.hakurekisteri.rest.support.{Resource, Kausi, User}
-import org.slf4j.LoggerFactory
-import fi.vm.sade.hakurekisteri.henkilo._
-import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Komoto, Suoritus}
-import org.joda.time.{MonthDay, DateTime, LocalDate}
-import fi.vm.sade.hakurekisteri.henkilo.Kansalaisuus
-import scala.Some
-import fi.vm.sade.hakurekisteri.henkilo.Kieli
-import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
-import fi.vm.sade.hakurekisteri.henkilo.YhteystiedotRyhma
-import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import scala.annotation.tailrec
-import java.util.UUID
-import fi.vm.sade.hakurekisteri.storage.Identified
 import akka.actor.ActorRef
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.henkilo.{Kansalaisuus, Kieli, Yhteystiedot, YhteystiedotRyhma, _}
+import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
+import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, yksilollistaminen}
+import org.joda.time.{DateTime, LocalDate, MonthDay}
+import org.slf4j.LoggerFactory
+
+import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
+import scala.util.Try
 
 trait Hakupalvelu {
-
   def getHakijat(q: HakijaQuery): Future[Seq[Hakija]]
-
-
 }
 
 class AkkaHakupalvelu(hakemusActor:ActorRef)(implicit val ec: ExecutionContext) extends Hakupalvelu {
   val logger = LoggerFactory.getLogger(getClass)
-
-
-  import scala.concurrent.duration._
-
-
-
   val Pattern = "preference(\\d+).*".r
 
   def filterHakemus(optionField: Option[String], filterFunc: (String) => (Map[String, String]) => Map[String, String] )(fh: FullHakemus): FullHakemus = optionField match {
@@ -61,10 +43,6 @@ class AkkaHakupalvelu(hakemusActor:ActorRef)(implicit val ec: ExecutionContext) 
 
   def filterState(fh: FullHakemus): Boolean = fh.state.map((s) => s == "ACTIVE" || s == "INCOMPLETE").getOrElse(false)
 
-
-
-
-
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     import akka.pattern._
     implicit val timeout: Timeout = 60.seconds
@@ -75,8 +53,6 @@ class AkkaHakupalvelu(hakemusActor:ActorRef)(implicit val ec: ExecutionContext) 
       map(filterHakemus(q.hakukohdekoodi, newToiveetForKoodi)).
       map(AkkaHakupalvelu.getHakija))
   }
-
-
 }
 
 object AkkaHakupalvelu {
@@ -151,7 +127,6 @@ object AkkaHakupalvelu {
     )
   }
 
-
   def getSuoritukset(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String): Seq[Suoritus] = {
     Seq(pohjakoulutus).collect {
       case Some("0") => Suoritus("ulkomainen", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli)
@@ -203,9 +178,7 @@ case class FullHakemus(oid: String, personOid: Option[String], applicationSystem
   override def identify(id: String): this.type with Identified[String] = FullHakemus.identify(this,id).asInstanceOf[this.type with Identified[String]]
 }
 
-
 object FullHakemus {
-
   def identify(o:FullHakemus): FullHakemus with Identified[String] = o.identify(o.oid)
 
   def identify(o:FullHakemus, identity:String) =
@@ -217,6 +190,4 @@ object FullHakemus {
       o.state: Option[String]) with Identified[String] {
         val id: String = identity
       }
-
-
 }

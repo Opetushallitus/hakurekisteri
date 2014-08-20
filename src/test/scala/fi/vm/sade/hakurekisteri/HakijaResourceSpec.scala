@@ -1,8 +1,10 @@
 package fi.vm.sade.hakurekisteri
 
+import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluActor
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import fi.vm.sade.hakurekisteri.hakija._
-import akka.actor.{ActorSystem, Props}
+import akka.actor.Props
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import org.scalatra.swagger.Swagger
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriSwagger

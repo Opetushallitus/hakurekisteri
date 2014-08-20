@@ -1,8 +1,9 @@
-package fi.vm.sade.hakurekisteri.virta
+package fi.vm.sade.hakurekisteri.integration.virta
 
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorRef, ActorSystem, Props}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, Organisaatiopalvelu}
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import org.joda.time.{LocalDate}
 import org.scalatest.FlatSpec
@@ -51,7 +52,7 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with AsyncAssertions w
       )
     )
 
-    val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient)))
+    val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatiopalvelu)))
 
     val result: Future[Seq[Suoritus]] = (virtaActor ? (Some("1.2.3"), Some("111111-1975")))(akka.util.Timeout(3, TimeUnit.SECONDS)).mapTo[Seq[Suoritus]]
 
@@ -73,4 +74,15 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with AsyncAssertions w
 
   override def forExample: Examples = ???
   override def lastExample: Option[Examples] = ???
+
+  object organisaatiopalvelu extends Organisaatiopalvelu {
+    override def getAll() = ???
+    override def get(str: String): Future[Option[Organisaatio]] = Future.successful(doTheMatch(str))
+
+    def doTheMatch(str: String): Option[Organisaatio] = str match {
+      case "01901" => Some(Organisaatio(oid = "1.3.0", nimi = Map("fi" -> "Helsingin yliopisto"), toimipistekoodi = None, oppilaitosKoodi = Some("01901"), parentOid = None))
+      case default => None
+    }
+  }
 }
+

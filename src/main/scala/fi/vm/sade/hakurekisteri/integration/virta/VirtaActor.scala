@@ -1,15 +1,15 @@
-package fi.vm.sade.hakurekisteri.virta
+package fi.vm.sade.hakurekisteri.integration.virta
 
 import akka.actor.Actor
-import akka.dispatch.Futures
 import akka.event.Logging
-import akka.pattern.pipe
-import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatiopalvelu
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, yksilollistaminen}
 import org.joda.time.LocalDate
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
+import akka.pattern.pipe
 
-class VirtaActor(virtaClient: VirtaClient) extends Actor {
+class VirtaActor(virtaClient: VirtaClient, organisaatiopalvelu: Organisaatiopalvelu) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
 
@@ -68,10 +68,13 @@ class VirtaActor(virtaClient: VirtaClient) extends Actor {
   }
 
   def resolveOppilaitosOid(oppilaitosnumero: String): Future[String] = {
-    Future.successful(oppilaitosnumero) // FIXME search from organisaatio-service
+    organisaatiopalvelu.get(oppilaitosnumero).map((o) => o match {
+      case Some(org) => org.oid
+      case _ => throw OppilaitosNotFoundException(s"oppilaitos not found with oppilaitosnumero $oppilaitosnumero")
+    })
   }
 
   def resolveKomoOid(koulutuskoodi: String, opintoala1995: Option[String], koulutusala2002: Option[String]): Future[String] = {
-    Future.successful("") // FIXME search from tarjonta-service
+    Future.successful(koulutuskoodi) // FIXME search from tarjonta-service
   }
 }

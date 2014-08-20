@@ -1,20 +1,18 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
 import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.hakija
+import fi.vm.sade.hakurekisteri.integration.hakemus.{AkkaHakupalvelu, Hakupalvelu, ListHakemus, FullHakemus}
+import fi.vm.sade.hakurekisteri.integration.koodisto.Koodistopalvelu
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatiopalvelu, Organisaatio, OrganisaatioActor}
+import fi.vm.sade.hakurekisteri.integration.sijoittelu._
 import org.scalatra.swagger.Swagger
 import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport, HakurekisteriSwagger}
 import akka.actor.{Props, ActorSystem}
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
-import fi.vm.sade.hakurekisteri.hakija.XMLHakemus
-import fi.vm.sade.hakurekisteri.hakija.XMLHakutoive
-import scala.Some
 import org.scalatest.Suite
 import org.scalatra.test.HttpComponentsClient
-import akka.actor.Status.Success
-import akka.actor.FSM.Failure
 import scala.concurrent.{Future, ExecutionContext}
 
 trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport {

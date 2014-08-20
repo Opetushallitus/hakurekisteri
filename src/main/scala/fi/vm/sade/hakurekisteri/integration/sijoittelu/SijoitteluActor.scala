@@ -1,4 +1,4 @@
-package fi.vm.sade.hakurekisteri.hakija
+package fi.vm.sade.hakurekisteri.integration.sijoittelu
 
 import akka.actor.{Cancellable, Actor}
 import scala.concurrent.Future

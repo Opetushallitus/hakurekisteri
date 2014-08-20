@@ -1,4 +1,4 @@
-package fi.vm.sade.hakurekisteri.hakija
+package fi.vm.sade.hakurekisteri.integration
 
 case class InvalidServiceTicketException(m: String) extends Exception {
   override def getMessage() = s"Service ticket is not valid: $m"

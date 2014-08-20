@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.hakija
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.Tyyppi.Tyyppi
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, SpringSecuritySupport, HakurekisteriJsonSupport}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}

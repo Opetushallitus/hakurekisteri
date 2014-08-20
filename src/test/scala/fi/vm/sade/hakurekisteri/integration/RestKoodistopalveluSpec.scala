@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration
 
+import fi.vm.sade.hakurekisteri.integration.koodisto.RestKoodistopalvelu
 import org.scalatra.test.scalatest.ScalatraFunSuite
-import fi.vm.sade.hakurekisteri.hakija.RestKoodistopalvelu
 import scala.concurrent.{ExecutionContext, Future, Await}
 import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit

@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration
 
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{RestOrganisaatiopalvelu, Organisaatio}
 import org.scalatra.test.scalatest.ScalatraFunSuite
-import fi.vm.sade.hakurekisteri.hakija.{Organisaatio, RestOrganisaatiopalvelu}
 import scala.concurrent.{Future, ExecutionContext, Await}
 import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit

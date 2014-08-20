@@ -1,6 +1,12 @@
 package fi.vm.sade.hakurekisteri.hakija
 
 import akka.actor.{ActorRef, Actor}
+import fi.vm.sade.hakurekisteri.integration.hakemus.Hakupalvelu
+import fi.vm.sade.hakurekisteri.integration.koodisto.Koodistopalvelu
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.{SijoitteluQuery, SijoitteluTulos, SijoitteluValintatuloksenTila, SijoitteluHakemuksenTila}
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluValintatuloksenTila.SijoitteluValintatuloksenTila
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluHakemuksenTila.SijoitteluHakemuksenTila
 import scala.concurrent.{Future, ExecutionContext}
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
@@ -11,10 +17,7 @@ import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
 import akka.pattern.{pipe, ask}
 import ForkedSeq._
 import TupledFuture._
-import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakemuksenTila.SijoitteluHakemuksenTila
-import fi.vm.sade.hakurekisteri.hakija.SijoitteluValintatuloksenTila._
 import scala.util.Failure
-import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, User}
 import scala.util.Success
 import fi.vm.sade.hakurekisteri.suoritus.Komoto
