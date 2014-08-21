@@ -16,8 +16,12 @@ class VirtaActor(virtaClient: VirtaClient, organisaatiopalvelu: Organisaatiopalv
 
   def receive: Receive = {
     case (oppijanumero: Option[String], hetu: Option[String]) =>
-      log.debug(s"query oppijanumero $oppijanumero, hetu $hetu")
       virtaResult2suoritukset(virtaClient.getOpiskelijanTiedot(oppijanumero = oppijanumero, hetu = hetu))(oppijanumero) pipeTo sender
+    case suoritukset: Seq[Suoritus] => onkoEnsikertalainen(suoritukset) pipeTo sender
+  }
+
+  def onkoEnsikertalainen(suoritukset: Seq[Suoritus]): Future[Boolean] = {
+    Future.successful(false)
   }
 
   def opiskeluoikeus2suoritus(oppijanumero: Option[String])(o: VirtaOpiskeluoikeus): Future[Suoritus] = {
