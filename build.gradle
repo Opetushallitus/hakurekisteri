@@ -27,7 +27,7 @@ task(zipIt, type: Zip) {
     destinationDir new File(buildDir, "distributions")
     archiveName zipFileName
     from 'src/main/resources'
-    from 'scala-2.10'
+    from 'target/scala-2.10'
 }
 
 // Task for copying the .zip file to
