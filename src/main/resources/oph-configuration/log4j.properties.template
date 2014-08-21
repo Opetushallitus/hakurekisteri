@@ -8,13 +8,23 @@ log4j.appender.STDOUT.Threshold=ERROR
 log4j.appender.STDOUT.layout.ConversionPattern=%d{ISO8601} %-5p {%X{user}} [%t] %-5p %c: %m%n
 # File output
 log4j.appender.FILE.Threshold=ERROR
-log4j.appender.FILE.File=${user.home}/tomcat/logs/oph-tiedonsiirto.log
+log4j.appender.FILE.File=${user.home}/tomcat/logs/oph-suoritusrekisteri.log
 log4j.appender.FILE=org.apache.log4j.RollingFileAppender
 log4j.appender.FILE.Append=true
 log4j.appender.FILE.layout=org.apache.log4j.PatternLayout
 log4j.appender.FILE.layout.ConversionPattern=%d{ISO8601} %-5p {%X{user}} [%t] %-5p %c: %m%n
-log4j.appender.FILE.MaxFileSize=10MB
+log4j.appender.FILE.MaxFileSize=50MB
 log4j.appender.FILE.MaxBackupIndex=20
+# Problem output
+log4j.appender.P.Threshold=WARN
+log4j.appender.P.File=${user.home}/tomcat/logs/oph-suoritusrekisteri-problems.log
+log4j.appender.P=org.apache.log4j.RollingFileAppender
+log4j.appender.P.Append=true
+log4j.appender.P.layout=org.apache.log4j.PatternLayout
+log4j.appender.P.layout.ConversionPattern=%d{ISO8601} %-5p {%X{user}} [%t] %-5p %c: %m%n
+log4j.appender.P.MaxFileSize=20MB
+log4j.appender.P.MaxBackupIndex=20
+log4j.logger.fi.vm.sade.hakurekisteri.arvosana.PerusopetusSanityActor=WARN, P
 {% endraw %}
 # By default hide these spammers by default
 log4j.logger.org.apache.cxf=ERROR
