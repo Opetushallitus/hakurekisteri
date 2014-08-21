@@ -17,7 +17,7 @@ ldap.manager.password={{ldap_manager_password}}
 ldap.manager-password={{ldap_manager_password}}
 ldap.manager.userdn={{ldap_manager_userdn}}
 server.name={{ansible_hostname}}
-suoritusrekisteri.hakijat.max.applications=100
+suoritusrekisteri.hakijat.max.applications=2000
 tiedonsiirto.filestorage.wip={{tiedonsiirto_filestorage_wip}}
 tiedonsiirto.filestorage.archive={{tiedonsiirto_filestorage_archive}}
 
@@ -36,10 +36,7 @@ activeMq.targetDestination.learningopportunityprovider.public=fi.vm.sade.learnin
 activeMq.targetDestination.organisaatio=fi.vm.sade.organisaatio.service
 activeMq.targetDestinationAdmin.tarjonta=fi.vm.sade.tarjonta.admin.service
 activeMq.targetDestinationPublic.tarjonta=fi.vm.sade.tarjonta.public.service
-cas.callback.organisaatio-app=http://${server.name}:8301/organisaatio-app
-cas.callback.organisaatio-service=http://${server.name}:8301/organisaatio-service
-cas.callback.authentication-service=http://${server.name}:8308/authentication-service
-cas.callback.registration-ui=http://${server.name}:8308/registration-ui
+cas.callback.suoritusrekisteri=http://${server.name}:8309/suoritusrekisteri
 cas.group-role-attribute=cn
 cas.group-search-base=ou\=groups
 cas.group-search-filter=(uniqueMember\={0})
@@ -47,14 +44,14 @@ cas.sendRenew=false
 cas.user-search-base=ou\=people
 cas.user-search-filter=(|(mail\={0})(uid\={0}))
 cas.service.authentication-service=https\://${host.virkailija}/authentication-service
-cas.service.authentication-ui=https://${host.virkailija}/authentication-ui
-cas.service.organisaatio-app==https://${host.virkailija}/organisaatio-app
+cas.service.haku-service=https://${host.virkailija}/haku-app
+cas.service.koodisto-service=https://${host.virkailija}/koodisto-service
 cas.service.organisaatio-service=https\://${host.virkailija}/organisaatio-service
-cas.service.registration-ui=https://${host.virkailija}/registration-ui
+cas.service.sijoittelu-service=https://${host.virkailija}/sijoittelu-service
+cas.service.suoritusrekisteri=https://${host.virkailija}/suoritusrekisteri
+cas.service.tarjonta-service=https://${host.virkailija}/tarjonta-service
 customAttribute.webservice.url.backend=https://${host.virkailija}/authentication-service/services/customAttributeService
 flyway.initOnMigrate=true
-koodi.public.webservice.url.backend=https://${host.virkailija}/koodisto-service/services/koodiService
-koodisto.public.webservice.url.backend=https://${host.virkailija}/koodisto-service/services/koodistoService
 jpa.schemaUpdate=validate
 jpa.showSql=false
 ldap.cache.size=10000
