@@ -68,8 +68,8 @@ class OpiskeluoikeusJournal(database: Database) extends JDBCJournal[Opiskeluoike
 class OpiskeluoikeusTable(tag: Tag) extends Table[(String, Long, Option[Long], String, String, String, Long, Boolean)](tag, "opiskeluoikeus") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def resourceId = column[String]("resource_id")
-  def alkuPaiva = column[Long]("alkuPaiva")
-  def loppuPaiva = column[Option[Long]]("loppuPaiva")
+  def alkuPaiva = column[Long]("alku_paiva")
+  def loppuPaiva = column[Option[Long]]("loppu_paiva")
   def henkiloOid = column[String]("henkilo_oid")
   def komo = column[String]("komo")
   def myontaja = column[String]("myontaja")
