@@ -13,6 +13,7 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.RestKoodistopalvelu
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{OrganisaatioActor, RestOrganisaatiopalvelu}
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.{RestSijoittelupalvelu, SijoitteluActor}
 import fi.vm.sade.hakurekisteri.opiskelija._
+import fi.vm.sade.hakurekisteri.opiskeluoikeus._
 import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, OrganizationHierarchy}
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -85,7 +86,10 @@ class ScalatraBootstrap extends LifeCycle {
     val filteredSuoritusRekisteri = authorizer[Suoritus, UUID](suoritusRekisteri, (suoritus) => suoritus.myontaja)
 
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))), "opiskelijat")
-    val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija, UUID](orgServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid )), "opiskelijat-authorizer")
+    val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija, UUID](orgServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid)), "opiskelijat-authorizer")
+
+    val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusActor(new OpiskeluoikeusJournal(database))), "opiskeluoikeudet")
+    val filteredOpiskeluoikeusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskeluoikeus, UUID](orgServiceUrl, opiskeluoikeusRekisteri, (opiskeluoikeus) => opiskeluoikeus.myontaja)), "opiskeluoikeus-authorizer")
 
     val henkiloRekisteri = system.actorOf(Props(new HenkiloActor(new HenkiloJournal(database))), "henkilot")
     val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo, UUID](orgServiceUrl, henkiloRekisteri, (henkilo) => OPH )), "henkilo-authorizer")
@@ -118,6 +122,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](getBroadcastForLogger[Suoritus, UUID](filteredSuoritusRekisteri), SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
     context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](getBroadcastForLogger[Opiskelija, UUID](filteredOpiskelijaRekisteri), OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")
+    context mount(new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](getBroadcastForLogger[Opiskeluoikeus, UUID](filteredOpiskeluoikeusRekisteri), OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport, "/rest/v1/opiskeluoikeudet")
     context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](getBroadcastForLogger[Henkilo, UUID](filteredHenkiloRekisteri), HenkiloQuery(_)) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand] with SpringSecuritySupport, "/rest/v1/henkilot")
     context mount(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](getBroadcastForLogger[Arvosana, UUID](filteredArvosanaRekisteri), ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport, "/rest/v1/arvosanat")
     context mount(new HakijaResource(hakijat), "/rest/v1/hakijat")

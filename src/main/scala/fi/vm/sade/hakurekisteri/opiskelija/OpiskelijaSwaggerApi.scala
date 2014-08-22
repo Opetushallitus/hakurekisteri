@@ -42,7 +42,7 @@ trait OpiskelijaSwaggerApi
 
   val update = apiOperation[Opiskelija]("päivitäOpiskelija")
     .summary("päivittää olemassa olevaa opiskelijatietoa ja palauttaa sen tiedot")
-    .parameter(pathParam[String]("id").description("opiskelijan uuid").required)
+    .parameter(pathParam[String]("id").description("opiskelijatiedon uuid").required)
     .parameter(bodyParam[Opiskelija]("opiskelija").description("päivitettävä opiskelijatieto").required)
 
   val read = apiOperation[Opiskelija]("haeOpiskelija")
@@ -53,4 +53,4 @@ trait OpiskelijaSwaggerApi
     .summary("poistaa olemassa olevan opiskelutiedon")
     .parameter(pathParam[String]("id").description("opiskelutiedon uuid").required)
 
-    }
+}
