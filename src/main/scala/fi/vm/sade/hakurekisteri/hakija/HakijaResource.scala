@@ -1,10 +1,13 @@
 package fi.vm.sade.hakurekisteri.hakija
 
+import java.text.SimpleDateFormat
+
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.Tyyppi.Tyyppi
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, SpringSecuritySupport, HakurekisteriJsonSupport}
+import org.joda.time.format.DateTimeFormat
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra._
@@ -274,7 +277,7 @@ object XMLHakija {
 
   def apply(hakija: Hakija, yhteystiedot: Map[String, String], maa: String, kansalaisuus: String, hakemus: XMLHakemus): XMLHakija =
     XMLHakija(
-      hakija.henkilo.hetu,
+      hetu(hakija.henkilo.hetu, hakija.henkilo.syntymaaika),
       hakija.henkilo.oidHenkilo,
       hakija.henkilo.sukunimi,
       hakija.henkilo.etunimet,
@@ -291,6 +294,12 @@ object XMLHakija {
       hakija.henkilo.markkinointilupa.getOrElse(false),
       hakemus
     )
+
+  def hetu(hetu: String, syntymaaika: String): String = hetu match {
+    case "" => Try(new SimpleDateFormat("ddMMyyyy").format(new SimpleDateFormat("dd.MM.yyyy").parse(syntymaaika))).getOrElse("")
+    case _ => hetu
+  }
+
 }
 
 case class XMLHakijat(hakijat: Seq[XMLHakija]) {
