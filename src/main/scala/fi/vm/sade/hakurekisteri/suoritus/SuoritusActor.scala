@@ -11,24 +11,17 @@ import java.util.UUID
 
 
 trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
-
-
   var tiedonSiirtoIndex: Map[String, Map[String, Seq[Suoritus with Identified[UUID]]]] = Option(tiedonSiirtoIndex).getOrElse(Map())
   //var tiedonSiirtoIndexSnapShot: Map[String, Map[String, Seq[Suoritus with Identified]]] = Option(tiedonSiirtoIndexSnapShot).getOrElse(Map())
-
-
 
   def addNew(suoritus: Suoritus with Identified[UUID]) = {
     tiedonSiirtoIndex = Option(tiedonSiirtoIndex).getOrElse(Map())
     val newIndexSeq =  suoritus +: tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).getOrElse(Seq())
     val newHenk = tiedonSiirtoIndex.get(suoritus.henkiloOid).getOrElse(Map()) + (suoritus.valmistuminen.getYear.toString -> newIndexSeq)
     tiedonSiirtoIndex = tiedonSiirtoIndex + (suoritus.henkiloOid -> newHenk)
-
   }
 
-
   override def index(old: Option[Suoritus with Identified[UUID]], current: Option[Suoritus with Identified[UUID]]) {
-
     def removeOld(suoritus: Suoritus with Identified[UUID]) = {
       tiedonSiirtoIndex = Option(tiedonSiirtoIndex).getOrElse(Map())
       val newIndexSeq = tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).map(_.filter((s) => s != suoritus || s.id != suoritus.id))
@@ -44,16 +37,12 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
 
     old.foreach(removeOld)
     current.foreach(addNew)
-
   }
 
-
   def identify(o:Suoritus): Suoritus with Identified[UUID] = Suoritus.identify(o)
-
 }
 
 trait SuoritusService extends ResourceService[Suoritus, UUID] with SuoritusRepository {
-
   override val optimize:PartialFunction[Query[Suoritus], Future[Seq[Suoritus with Identified[UUID]]]] = {
     case SuoritusQuery(Some(henkilo), None, Some(vuosi), None) => Future.successful(tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq()))
     case SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja) =>
@@ -64,20 +53,19 @@ trait SuoritusService extends ResourceService[Suoritus, UUID] with SuoritusRepos
     case SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja) =>
       val filtered = tiedonSiirtoIndex.get(henkilo).map(_.values.reduce(_ ++ _)).getOrElse(Seq())
       executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja))
-
   }
 
   val matcher: PartialFunction[Query[Suoritus], (Suoritus with Identified[UUID]) => Boolean] = {
     case SuoritusQuery(henkilo, kausi, vuosi, myontaja) =>  (s: Suoritus with Identified[UUID]) =>
-      checkHenkilo(henkilo)(s) && checkVuosi(vuosi)(s) && checkKausi(kausi)(s) &&checkMyontaja(myontaja)(s)
+      checkHenkilo(henkilo)(s) && checkVuosi(vuosi)(s) && checkKausi(kausi)(s) && checkMyontaja(myontaja)(s)
   }
 
-  def checkMyontaja(myontaja: Option[String])(s:Suoritus):Boolean  =  myontaja match {
+  def checkMyontaja(myontaja: Option[String])(s: Suoritus):Boolean = myontaja match {
     case Some(oid) => s.myontaja.equals(oid)
     case None => true
   }
 
-  def checkHenkilo(henkilo: Option[String])(s:Suoritus):Boolean  =  henkilo match {
+  def checkHenkilo(henkilo: Option[String])(s: Suoritus):Boolean = henkilo match {
     case Some(oid) => s.henkiloOid.equals(oid)
     case None => true
   }

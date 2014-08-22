@@ -11,5 +11,4 @@ object SuoritusQuery{
   def apply(params: Map[String,String]): SuoritusQuery = {
     SuoritusQuery(params.get("henkilo"), params.get("kausi").map(Kausi.withName), params.get("vuosi"), params.get("myontaja"))
   }
-
 }

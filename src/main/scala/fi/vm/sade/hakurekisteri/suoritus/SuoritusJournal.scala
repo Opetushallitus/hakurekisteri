@@ -12,26 +12,23 @@ import scala.compat.Platform
 import scala.slick.lifted
 
 class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, SuoritusTable, ColumnOrdered[Long], UUID] {
-  override def delta(row: SuoritusTable#TableElementType): Delta[Suoritus, UUID] =
-    row match {
-      case (resourceId, _, _, _, _, _, _, _, _, true) => Deleted(UUID.fromString(resourceId))
-      case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yks, suoritusKieli, _, _) => Updated(Suoritus(komo, myontaja, tila, LocalDate.parse(valmistuminen), henkiloOid, yksilollistaminen.withName(yks), suoritusKieli).identify(UUID.fromString(resourceId)))
-    }
-
+  override def delta(row: SuoritusTable#TableElementType): Delta[Suoritus, UUID] = row match {
+    case (resourceId, _, _, _, _, _, _, _, _, true) => Deleted(UUID.fromString(resourceId))
+    case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yks, suoritusKieli, _, _) => Updated(Suoritus(komo, myontaja, tila, LocalDate.parse(valmistuminen), henkiloOid, yksilollistaminen.withName(yks), suoritusKieli).identify(UUID.fromString(resourceId)))
+  }
 
   override def update(o: Suoritus with Identified[UUID]): SuoritusTable#TableElementType = (o.id.toString, o.komo, o.myontaja, o.tila, o.valmistuminen.toString, o.henkiloOid, o.yksilollistaminen.toString, o.suoritusKieli, Platform.currentTime, false)
-  override def delete(id:UUID) = currentState(id) match
-  { case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, _, _) =>
-      (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, Platform.currentTime,true)}
-
+  override def delete(id:UUID) = currentState(id) match {
+    case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, _, _) =>
+      (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, Platform.currentTime, true)
+  }
 
   val suoritukset = TableQuery[SuoritusTable]
-  database withSession(
-    implicit session =>
-      if (MTable.getTables("suoritus").list().isEmpty) {
-        suoritukset.ddl.create
-      }
-    )
+  database withSession(implicit session =>
+    if (MTable.getTables("suoritus").list().isEmpty) {
+      suoritukset.ddl.create
+    }
+  )
 
   override def newest: (SuoritusTable) => ColumnOrdered[Long] = _.inserted.desc
 
