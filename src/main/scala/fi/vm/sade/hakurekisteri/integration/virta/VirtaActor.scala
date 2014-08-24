@@ -20,12 +20,7 @@ class VirtaActor(virtaClient: VirtaClient, organisaatiopalvelu: Organisaatiopalv
       convertVirtaResult(virtaClient.getOpiskelijanTiedot(oppijanumero = oppijanumero, hetu = hetu))(oppijanumero) pipeTo sender
   }
 
-  def onkoEnsikertalainen(suoritukset: Seq[Suoritus]): Future[Boolean] = {
-    Future.successful(false)
-  }
-
   def opiskeluoikeus(oppijanumero: Option[String])(o: VirtaOpiskeluoikeus): Future[Opiskeluoikeus] = {
-    val valm: LocalDate = valmistuminen(o)
     resolveOppilaitosOid(o.myontaja).flatMap((oppilaitosOid) => {
       resolveKomoOid(o.koulutuskoodit.head, o.opintoala1995, o.koulutusala2002).map((komoOid) => {
         Opiskeluoikeus(
@@ -37,11 +32,6 @@ class VirtaActor(virtaClient: VirtaClient, organisaatiopalvelu: Organisaatiopalv
         )
       })
     })
-  }
-
-  def valmistuminen(o: VirtaOpiskeluoikeus): LocalDate = o.loppuPvm match {
-    case None => new LocalDate(1900 + o.alkuPvm.getYear + 7, 12, 31)
-    case Some(l) => l
   }
 
   def tutkinto(oppijanumero: Option[String])(t: VirtaTutkinto): Future[Suoritus] = {
@@ -78,14 +68,14 @@ class VirtaActor(virtaClient: VirtaClient, organisaatiopalvelu: Organisaatiopalv
   def resolveOppilaitosOid(oppilaitosnumero: String): Future[String] = {
     organisaatiopalvelu.get(oppilaitosnumero).map(_ match {
       case Some(org) => org.oid
-      case _ => throw OppilaitosNotFoundException(s"oppilaitos not found with oppilaitosnumero $oppilaitosnumero")
+      case _ => log.error(s"oppilaitos not found with oppilaitosnumero $oppilaitosnumero"); throw OppilaitosNotFoundException(s"oppilaitos not found with oppilaitosnumero $oppilaitosnumero")
     })
   }
 
   def resolveKomoOid(koulutuskoodi: String, opintoala1995: Option[String], koulutusala2002: Option[String]): Future[String] = {
     tarjontaClient.searchKomo(koulutuskoodi, opintoala1995, koulutusala2002).map(_ match {
       case Some(koulutus) => koulutus.oid
-      case None => "unknown"
+      case None => log.warning(s"komo oid not found with koulutuskoodi $koulutuskoodi, fall back to 'kk $koulutuskoodi'"); s"kk $koulutuskoodi"
     })
   }
 }
