@@ -9,6 +9,7 @@ import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
 import com.stackmob.newman.{RawBody, Headers, HttpClient}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, Organisaatiopalvelu}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaClient
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import org.joda.time.{LocalDate}
 import org.scalatest.FlatSpec
@@ -59,10 +60,11 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with AsyncAssertions w
 
     val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatiopalvelu, tarjontapalvelu)))
 
-    val result: Future[Seq[Suoritus]] = (virtaActor ? (Some("1.2.3"), Some("111111-1975")))(akka.util.Timeout(3, TimeUnit.SECONDS)).mapTo[Seq[Suoritus]]
+    val result = (virtaActor ? (Some("1.2.3"), Some("111111-1975")))(akka.util.Timeout(3, TimeUnit.SECONDS)).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])]
 
-    waitFuture(result) {(r: Seq[Suoritus]) => {
-      r.size should be(2)
+    waitFuture(result) {(r: (Seq[Opiskeluoikeus], Seq[Suoritus])) => {
+      r._1.size should be(1)
+      r._2.size should be(1)
     }}
   }
 
