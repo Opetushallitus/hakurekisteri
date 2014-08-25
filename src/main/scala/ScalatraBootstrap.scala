@@ -58,8 +58,8 @@ class ScalatraBootstrap extends LifeCycle {
       case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
     }.get
 
-    val sijoitteluUser = OPHSecurity.config.properties.get("tiedonsiirto.app.username.to.suoritusrekisteri")
-    val sijoitteluPw = OPHSecurity.config.properties.get("tiedonsiirto.app.password.to.suoritusrekisteri")
+    val sijoitteluUser = OPHSecurity.config.properties("tiedonsiirto.app.username.to.suoritusrekisteri")
+    val sijoitteluPw = OPHSecurity.config.properties("tiedonsiirto.app.password.to.suoritusrekisteri")
 
     //val camel = CamelExtension(system)
     //val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
@@ -108,8 +108,8 @@ class ScalatraBootstrap extends LifeCycle {
     val sijoitteluServiceUrl = OPHSecurity.config.properties.get("cas.service.sijoittelu-service").getOrElse(sijoitteluServiceUrlQa)
     val serviceAccessUrl = "https://" + OPHSecurity.config.properties.get("host.virkailija").getOrElse(hostQa) + "/service-access"
 
-    val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(serviceAccessUrl, sijoitteluServiceUrl,sijoitteluUser,sijoitteluPw), "1.2.246.562.5.2013080813081926341927")))
-    val hakemukset = system.actorOf(Props(new HakemusActor(serviceAccessUrl, hakuappServiceUrl, maxApplications, sijoitteluUser,sijoitteluPw)), "hakemus")
+    val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(serviceAccessUrl, sijoitteluServiceUrl, sijoitteluUser, sijoitteluPw), "1.2.246.562.5.2013080813081926341927")))
+    val hakemukset = system.actorOf(Props(new HakemusActor(serviceAccessUrl, hakuappServiceUrl, maxApplications, sijoitteluUser, sijoitteluPw)), "hakemus")
 
     val healthcheck = system.actorOf(Props(new HealthcheckActor(filteredSuoritusRekisteri, filteredOpiskelijaRekisteri, hakemukset)), "healthcheck")
 

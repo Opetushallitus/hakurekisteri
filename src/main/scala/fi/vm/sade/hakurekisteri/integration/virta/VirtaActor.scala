@@ -11,13 +11,17 @@ import org.joda.time.LocalDate
 import scala.concurrent.{ExecutionContext, Future}
 import akka.pattern.pipe
 
+case class VirtaQuery(oppijanumero: Option[String], hetu: Option[String]) {
+  if (oppijanumero.isEmpty && hetu.isEmpty) throw new IllegalArgumentException(s"oppijanumero and hetu are both empty")
+}
+
 class VirtaActor(virtaClient: VirtaClient, organisaatiopalvelu: Organisaatiopalvelu, tarjontaClient: TarjontaClient) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
 
   def receive: Receive = {
-    case (oppijanumero: Option[String], hetu: Option[String]) =>
-      convertVirtaResult(virtaClient.getOpiskelijanTiedot(oppijanumero = oppijanumero, hetu = hetu))(oppijanumero) pipeTo sender
+    case q: VirtaQuery =>
+      convertVirtaResult(virtaClient.getOpiskelijanTiedot(oppijanumero = q.oppijanumero, hetu = q.hetu))(q.oppijanumero) pipeTo sender
   }
 
   def opiskeluoikeus(oppijanumero: Option[String])(o: VirtaOpiskeluoikeus): Future[Opiskeluoikeus] = {
@@ -58,9 +62,11 @@ class VirtaActor(virtaClient: VirtaClient, organisaatiopalvelu: Organisaatiopalv
   def convertVirtaResult(f: Future[Option[VirtaResult]])(oppijanumero: Option[String]): Future[(Seq[Opiskeluoikeus], Seq[Suoritus])] = f.flatMap {
     case None => Future.successful((Seq(), Seq()))
     case Some(r) => {
+      val opiskeluoikeudet: Future[Seq[Opiskeluoikeus]] = Future.sequence(r.opiskeluoikeudet.map(opiskeluoikeus(oppijanumero)))
+      val suoritukset: Future[Seq[Suoritus]] = Future.sequence(r.tutkinnot.map(tutkinto(oppijanumero)))
       for {
-        o: Seq[Opiskeluoikeus] <- Future.sequence(r.opiskeluoikeudet.map(opiskeluoikeus(oppijanumero)))
-        s: Seq[Suoritus] <- Future.sequence(r.tutkinnot.map(tutkinto(oppijanumero)))
+        o <- opiskeluoikeudet
+        s <- suoritukset
       } yield (o, s)
     }
   }

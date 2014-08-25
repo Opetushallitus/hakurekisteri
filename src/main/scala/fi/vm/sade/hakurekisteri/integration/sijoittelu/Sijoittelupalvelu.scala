@@ -107,7 +107,7 @@ object SijoitteluTulos {
 
 case class SijoitteluQuery(hakuOid: String)
 
-class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "https://itest-virkailija.oph.ware.fi/sijoittelu-service", user: Option[String], password: Option[String])(implicit val ec: ExecutionContext) extends Sijoittelupalvelu with HakurekisteriJsonSupport {
+class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "https://itest-virkailija.oph.ware.fi/sijoittelu-service", user: String, password: String)(implicit val ec: ExecutionContext) extends Sijoittelupalvelu with HakurekisteriJsonSupport {
   val logger = LoggerFactory.getLogger(getClass)
   import scala.concurrent.duration._
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
@@ -127,10 +127,8 @@ class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "http
     val url = new URL(serviceUrl + "/resources/sijoittelu/" + hakuOid + "/sijoitteluajo/latest/hakemukset")
     casClient.getProxyTicket.flatMap((ticket) => {
       logger.debug("calling sijoittelu-service [url={}, ticket={}]", Seq(url, ticket):_*)
-      GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
+      GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map((response: HttpResponse) => {
       if (response.code == HttpResponseCode.Ok) {
-
-
         val sijoitteluTulos = readBody[SijoitteluPagination](response)
         logger.debug("got response from [url={}, ticket={}]", Seq(url, ticket):_*)
 

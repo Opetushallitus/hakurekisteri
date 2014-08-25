@@ -60,7 +60,7 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with AsyncAssertions w
 
     val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatiopalvelu, tarjontapalvelu)))
 
-    val result = (virtaActor ? (Some("1.2.3"), Some("111111-1975")))(akka.util.Timeout(3, TimeUnit.SECONDS)).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])]
+    val result = (virtaActor ? VirtaQuery(Some("1.2.3"), Some("111111-1975")))(akka.util.Timeout(3, TimeUnit.SECONDS)).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])]
 
     waitFuture(result) {(r: (Seq[Opiskeluoikeus], Seq[Suoritus])) => {
       r._1.size should be(1)
