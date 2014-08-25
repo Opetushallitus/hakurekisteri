@@ -6,9 +6,10 @@ import fi.vm.sade.generic.common.HetuUtils
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaQuery
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{OpiskeluoikeusQuery, Opiskeluoikeus}
 import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
-import fi.vm.sade.hakurekisteri.suoritus.Suoritus
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
+import org.joda.time.LocalDate
 import org.scalatra.swagger.{SwaggerEngine, Swagger}
 import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
 import org.scalatra.json.JacksonJsonSupport
@@ -57,9 +58,19 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
     case None => throw HetuNotFoundException(s"hetu not found with oid $henkilo")
   })
 
-  def getKkTutkinnot(henkiloOid: String): Future[Seq[Suoritus]] = ???
+  def getKkTutkinnot(henkiloOid: String): Future[Seq[Suoritus]] = {
+    for (
+      suoritukset <- (suoritusActor ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]]
+    ) yield suoritukset.filter(_.komo.startsWith("kk ")) // FIXME millä filtteröidään kk-tutkinnot?
+  }
 
-  def getKkOpiskeluoikeudet2014KesaJalkeen(henkiloOid: String): Future[Seq[Opiskeluoikeus]] = ???
+  val kesa2014: LocalDate = new LocalDate(2014, 6, 30)
+
+  def getKkOpiskeluoikeudet2014KesaJalkeen(henkiloOid: String): Future[Seq[Opiskeluoikeus]] = {
+    for (
+      opiskeluoikeudet <- (opiskeluoikeusActor ? OpiskeluoikeusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Opiskeluoikeus]]
+    ) yield opiskeluoikeudet.filter(_.alkuPaiva.isAfter(kesa2014))
+  }
 
   def onkoEnsikertalainen(henkiloOid: String): Future[Boolean] = {
     val tutkinnot: Future[Seq[Suoritus]] = getKkTutkinnot(henkiloOid)
