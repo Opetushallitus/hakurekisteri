@@ -15,6 +15,8 @@ case class VirtaQuery(oppijanumero: Option[String], hetu: Option[String]) {
   if (oppijanumero.isEmpty && hetu.isEmpty) throw new IllegalArgumentException(s"oppijanumero and hetu are both empty")
 }
 
+case class KomoNotFoundException(message: String) extends Exception(message)
+
 class VirtaActor(virtaClient: VirtaClient, organisaatiopalvelu: Organisaatiopalvelu, tarjontaClient: TarjontaClient) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
@@ -26,7 +28,7 @@ class VirtaActor(virtaClient: VirtaClient, organisaatiopalvelu: Organisaatiopalv
 
   def opiskeluoikeus(oppijanumero: Option[String])(o: VirtaOpiskeluoikeus): Future[Opiskeluoikeus] = {
     resolveOppilaitosOid(o.myontaja).flatMap((oppilaitosOid) => {
-      resolveKomoOid(o.koulutuskoodit.head, o.opintoala1995, o.koulutusala2002).map((komoOid) => {
+      resolveKomoOid(o.koulutuskoodit.head).map((komoOid) => {
         Opiskeluoikeus(
           alkuPaiva = o.alkuPvm,
           loppuPaiva = o.loppuPvm,
@@ -40,7 +42,7 @@ class VirtaActor(virtaClient: VirtaClient, organisaatiopalvelu: Organisaatiopalv
 
   def tutkinto(oppijanumero: Option[String])(t: VirtaTutkinto): Future[Suoritus] = {
     resolveOppilaitosOid(t.myontaja).flatMap((oppilaitosOid) => {
-      resolveKomoOid(t.koulutuskoodi.get, t.opintoala1995, t.koulutusala2002).map((komoOid) => {
+      resolveKomoOid(t.koulutuskoodi.get).map((komoOid) => {
         Suoritus(
           komo = komoOid,
           myontaja = oppilaitosOid,
@@ -78,10 +80,10 @@ class VirtaActor(virtaClient: VirtaClient, organisaatiopalvelu: Organisaatiopalv
     })
   }
 
-  def resolveKomoOid(koulutuskoodi: String, opintoala1995: Option[String], koulutusala2002: Option[String]): Future[String] = {
-    tarjontaClient.searchKomo(koulutuskoodi, opintoala1995, koulutusala2002).map(_ match {
-      case Some(koulutus) => koulutus.oid
-      case None => log.warning(s"komo oid not found with koulutuskoodi $koulutuskoodi, fall back to 'kk $koulutuskoodi'"); s"kk $koulutuskoodi"
+  def resolveKomoOid(koulutuskoodi: String): Future[String] = {
+    tarjontaClient.searchKomo(koulutuskoodi).map(_.headOption match {
+      case Some(komo) => komo.oid
+      case _ => throw KomoNotFoundException(s"komo not found with koulutuskoodi $koulutuskoodi")
     })
   }
 }

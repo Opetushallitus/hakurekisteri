@@ -4,14 +4,19 @@ import javax.servlet.{DispatcherType, ServletContext, ServletContextEvent}
 
 import _root_.akka.actor.{ActorRef, ActorSystem, Props}
 import _root_.akka.util.Timeout
+import com.stackmob.newman.ApacheHttpClient
 import fi.vm.sade.hakurekisteri.arvosana._
+import fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenResource
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.henkilo._
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AkkaHakupalvelu, ReloadHaku, HakemusActor}
+import fi.vm.sade.hakurekisteri.integration.{VirkailijaRestClient, henkilo}
 import fi.vm.sade.hakurekisteri.integration.koodisto.RestKoodistopalvelu
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{OrganisaatioActor, RestOrganisaatiopalvelu}
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.{RestSijoittelupalvelu, SijoitteluActor}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaClient
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaConfig, VirtaClient, VirtaActor}
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
 import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, OrganizationHierarchy}
@@ -50,6 +55,8 @@ class ScalatraBootstrap extends LifeCycle {
   val hakuappServiceUrlQa = s"https://$hostQa/haku-app"
   val koodistoServiceUrlQa = s"https://$hostQa/koodisto-service"
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
+  val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
+  val henkiloServiceUrlQa = s"https://$hostQa/authentication-service"
 
   override def init(context: ServletContext) {
     OPHSecurity init context
@@ -120,12 +127,24 @@ class ScalatraBootstrap extends LifeCycle {
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, suoritusRekisteri, new ArvosanaJournal(database))), "perusopetus-sanity")
 
+    val tarjontaServiceUrl = OPHSecurity.config.properties.get("cas.service.tarjonta-service").getOrElse(tarjontaServiceUrlQa)
+
+    implicit val httpClient = new ApacheHttpClient()
+    val virtaConfig = VirtaConfig(serviceUrl = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot", jarjestelma = "", tunnus = "", avain = "salaisuus")
+    val tarjontaClient = new TarjontaClient(tarjontaServiceUrl)
+    val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig), organisaatiopalvelu, tarjontaClient)), "virta")
+
+    val henkiloServiceUrl = OPHSecurity.config.properties.get("cas.service.authentication-service").getOrElse(henkiloServiceUrlQa)
+    val henkiloClient = new VirkailijaRestClient(serviceAccessUrl = serviceAccessUrl, serviceUrl = henkiloServiceUrl, user = sijoitteluUser, password = sijoitteluPw)
+    val henkiloActor = system.actorOf(Props(new henkilo.HenkiloActor(henkiloClient)), "henkilo")
+
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](getBroadcastForLogger[Suoritus, UUID](filteredSuoritusRekisteri), SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
     context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](getBroadcastForLogger[Opiskelija, UUID](filteredOpiskelijaRekisteri), OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")
     context mount(new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](getBroadcastForLogger[Opiskeluoikeus, UUID](filteredOpiskeluoikeusRekisteri), OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport, "/rest/v1/opiskeluoikeudet")
     context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](getBroadcastForLogger[Henkilo, UUID](filteredHenkiloRekisteri), HenkiloQuery(_)) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand] with SpringSecuritySupport, "/rest/v1/henkilot")
     context mount(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](getBroadcastForLogger[Arvosana, UUID](filteredArvosanaRekisteri), ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport, "/rest/v1/arvosanat")
     context mount(new HakijaResource(hakijat), "/rest/v1/hakijat")
+    context mount(new EnsikertalainenResource(suoritusRekisteri, opiskeluoikeusRekisteri, virta, henkiloActor, tarjontaClient), "/rest/v1/ensikertalainen")
     context mount(new HealthcheckResource(healthcheck), "/healthcheck")
     context mount(new ResourcesApp, "/rest/v1/api-docs/*")
     context mount(new SanityResource(sanity), "/sanity")

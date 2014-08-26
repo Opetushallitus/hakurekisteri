@@ -1,10 +1,12 @@
 package fi.vm.sade.hakurekisteri.ensikertalainen
 
 import akka.actor.{ActorRef, ActorSystem}
+import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.generic.common.HetuUtils
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{TarjontaClient, Komo}
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaQuery
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{OpiskeluoikeusQuery, Opiskeluoikeus}
 import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
@@ -15,13 +17,20 @@ import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
 import org.scalatra.json.JacksonJsonSupport
 
 import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.duration._
 
 case class Ensikertalainen(ensikertalainen: Boolean)
 
-class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef)(implicit val sw: Swagger, system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
+case class HetuNotFoundException(message: String) extends Exception(message)
+
+class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaClient: TarjontaClient)
+                             (implicit val sw: Swagger, system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
+
   override protected def applicationDescription: String = "Korkeakouluopintojen ensikertalaisuuden kyselyrajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
+  implicit val defaultTimeout: Timeout = 15.seconds
+  val kesa2014: LocalDate = new LocalDate(2014, 6, 30)
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
@@ -31,40 +40,46 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
     val henkiloOid = params("henkilo")
     val ensikertalainen = onkoEnsikertalainen(henkiloOid)
     new AsyncResult() {
-      override val is = ensikertalainen
+      override implicit def timeout: Duration = 20.seconds
+      override val is = ensikertalainen.map((b) => Ensikertalainen(b))
     }
   }
 
   error {
+    case t: HetuNotFoundException =>
+      logger.error(t.toString)
+      response.sendError(400, t.getMessage)
     case t: Throwable =>
       logger.error("error in service", t)
       response.sendError(500, t.getMessage)
   }
 
-  import akka.pattern.ask
-
-
-  case class HetuNotFoundException(message: String) extends Exception(message)
-
-  import scala.concurrent.duration._
-
-  implicit val defaultTimeout: Timeout = 299.seconds
-
-
-
   def getHetu(henkilo: String): Future[String] = (henkiloActor ? henkilo).mapTo[HenkiloResponse].map(_.hetu match {
     case Some(hetu) if HetuUtils.isHetuValid(hetu) => hetu
-    case Some(hetu) => throw HetuNotFoundException(s"hetu $hetu not valid for oid $henkilo")
+    case Some(hetu) => logger.error(s"hetu $hetu not valid for oid $henkilo"); throw HetuNotFoundException(s"hetu not valid for oid $henkilo")
     case None => throw HetuNotFoundException(s"hetu not found with oid $henkilo")
   })
 
   def getKkTutkinnot(henkiloOid: String): Future[Seq[Suoritus]] = {
     for (
-      suoritukset <- (suoritusActor ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]]
-    ) yield suoritukset.filter(_.komo.startsWith("kk ")) // FIXME millä filtteröidään kk-tutkinnot?
+      suoritukset <- getSuoritukset(henkiloOid);
+      tupled <- findKomos(suoritukset)
+    ) yield tupled collect {
+      case (Some(komo), suoritus) if komo.isKorkeakoulututkinto => suoritus
+    }
   }
 
-  val kesa2014: LocalDate = new LocalDate(2014, 6, 30)
+  def findKomos(suoritukset: Seq[Suoritus]): Future[Seq[(Option[Komo], Suoritus)]] = {
+    Future.sequence(for (
+      suoritus <- suoritukset
+    ) yield getKomo(suoritus.komo).map((_, suoritus)))
+  }
+
+  def getKomo(oid: String): Future[Option[Komo]] = tarjontaClient.getKomo(oid)
+
+  def getSuoritukset(henkiloOid: String): Future[Seq[Suoritus]] = {
+    (suoritusActor ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]]
+  }
 
   def getKkOpiskeluoikeudet2014KesaJalkeen(henkiloOid: String): Future[Seq[Opiskeluoikeus]] = {
     for (
@@ -82,7 +97,6 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
     )
   }
 
-
   def checkEnsikertalainenFromVirta(henkiloOid: String): Future[Boolean] = {
     val x: Future[(Seq[Opiskeluoikeus], Seq[Suoritus])] = getHetu(henkiloOid).flatMap((hetu) => (virtaActor ? VirtaQuery(Some(henkiloOid), Some(hetu))).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])])
     for ((oikeudet, tutkinnot) <- x) yield {
@@ -91,10 +105,13 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
     }
   }
 
-  def saveVirtaResult(oikeudet:Seq[Opiskeluoikeus], tutkinnot: Seq[Suoritus]) {}
+  def saveVirtaResult(oikeudet: Seq[Opiskeluoikeus], tutkinnot: Seq[Suoritus]): Unit = {
+    // TODO
+  }
 
-  def anyHasElements(futures: Future[Seq[_]]*):Future[Boolean] = Future.find(futures){!_.isEmpty}.map{
+  def anyHasElements(futures: Future[Seq[_]]*): Future[Boolean] = Future.find(futures){!_.isEmpty}.map{
     case None => false
     case Some(_) => true
   }
 }
+

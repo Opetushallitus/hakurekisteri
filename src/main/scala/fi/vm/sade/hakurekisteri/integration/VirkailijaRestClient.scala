@@ -12,10 +12,13 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.{Future, ExecutionContext}
 import scala.util.Try
 
+case class PreconditionFailedException(message: String) extends Exception(message)
+
 class VirkailijaRestClient(serviceAccessUrl: String,
                            serviceUrl: String,
                            user: String,
                            password: String)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) extends HakurekisteriJsonSupport {
+
   val logger = LoggerFactory.getLogger(getClass)
   val casClient = new CasClient(serviceAccessUrl, serviceUrl, user, password)
 
@@ -38,14 +41,10 @@ class VirkailijaRestClient(serviceAccessUrl: String,
     rawResult.get
   }
 
-
-
   def readObject[A <: AnyRef: Manifest](uri: String, precondition: (HttpResponseCode) => Boolean): Future[A] = executeGet(uri).map((resp) =>
     if (precondition(resp.code)) resp
-    else throw new Exception("failed")
+    else throw PreconditionFailedException(s"precondition failed: ${resp.code}")
   ).map(readBody[A])
 
-  def readObject[A <: AnyRef: Manifest](uri: String, okCodes: HttpResponseCode*):Future[A] = readObject[A](uri, (code:HttpResponseCode) => okCodes.contains(code))
-
-
+  def readObject[A <: AnyRef: Manifest](uri: String, okCodes: HttpResponseCode*): Future[A] = readObject[A](uri, (code: HttpResponseCode) => okCodes.contains(code))
 }
