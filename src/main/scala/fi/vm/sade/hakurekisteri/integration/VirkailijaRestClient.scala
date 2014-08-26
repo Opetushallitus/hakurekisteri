@@ -43,7 +43,7 @@ class VirkailijaRestClient(serviceAccessUrl: String,
 
   def readObject[A <: AnyRef: Manifest](uri: String, precondition: (HttpResponseCode) => Boolean): Future[A] = executeGet(uri).map((resp) =>
     if (precondition(resp.code)) resp
-    else throw PreconditionFailedException(s"precondition failed: ${resp.code}")
+    else throw PreconditionFailedException(s"precondition failed for uri: $uri, response code: ${resp.code}")
   ).map(readBody[A])
 
   def readObject[A <: AnyRef: Manifest](uri: String, okCodes: HttpResponseCode*): Future[A] = readObject[A](uri, (code: HttpResponseCode) => okCodes.contains(code))

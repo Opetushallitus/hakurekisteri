@@ -1,19 +1,20 @@
 package fi.vm.sade.hakurekisteri.ensikertalainen
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.pattern.ask
-import akka.util.Timeout
+import _root_.akka.actor.{ActorRef, ActorSystem}
+import _root_.akka.pattern.ask
+import _root_.akka.util.Timeout
 import fi.vm.sade.generic.common.HetuUtils
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{TarjontaClient, Komo}
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaQuery
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{OpiskeluoikeusQuery, Opiskeluoikeus}
-import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.{IncidentReporting, SpringSecuritySupport, HakurekisteriJsonSupport}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
 import org.joda.time.LocalDate
 import org.scalatra.swagger.{SwaggerEngine, Swagger}
-import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
+import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 
 import scala.concurrent.{Future, ExecutionContext}
@@ -24,7 +25,7 @@ case class Ensikertalainen(ensikertalainen: Boolean)
 case class HetuNotFoundException(message: String) extends Exception(message)
 
 class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaClient: TarjontaClient)
-                             (implicit val sw: Swagger, system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
+                             (implicit val sw: Swagger, system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with IncidentReporting {
 
   override protected def applicationDescription: String = "Korkeakouluopintojen ensikertalaisuuden kyselyrajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
@@ -36,23 +37,29 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
+  before() {
+    contentType = formats("json")
+  }
+
+  case class ParamMissingException(message: String) extends IllegalArgumentException(message)
+
   get("/", operation(query)) {
-    val henkiloOid = params("henkilo")
-    val ensikertalainen = onkoEnsikertalainen(henkiloOid)
-    new AsyncResult() {
-      override implicit def timeout: Duration = 20.seconds
-      contentType = formats("json")
-      override val is = ensikertalainen.map((b) => Ensikertalainen(b))
+    try {
+      val henkiloOid = params("henkilo")
+      val ensikertalainen = onkoEnsikertalainen(henkiloOid)
+      new AsyncResult() {
+        override implicit def timeout: Duration = 20.seconds
+        override val is = ensikertalainen.map((b) => Ensikertalainen(b))
+      }
+    } catch {
+      case t: NoSuchElementException => throw ParamMissingException("parameter henkilo missing")
     }
   }
 
-  error {
-    case t: HetuNotFoundException =>
-      logger.error(t.toString)
-      response.sendError(400, t.getMessage)
-    case t: Throwable =>
-      logger.error("error in service", t)
-      response.sendError(500, t.getMessage)
+  incident {
+    case t: ParamMissingException => (id) => BadRequest(IncidentReport(id, t.getMessage))
+    case t: HetuNotFoundException => (id) => BadRequest(IncidentReport(id, "error validating hetu"))
+    case t: PreconditionFailedException => (id) => InternalServerError(IncidentReport(id, "backend service failed"))
   }
 
   def getHetu(henkilo: String): Future[String] = (henkiloActor ? henkilo).mapTo[HenkiloResponse].map(_.hetu match {
