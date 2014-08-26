@@ -21,7 +21,6 @@ import fi.vm.sade.hakurekisteri.organization._
 import scala.util.matching.Regex
 import org.springframework.security.cas.authentication.CasAuthenticationToken
 import org.jasig.cas.client.authentication.AttributePrincipal
-import scala.Some
 import fi.vm.sade.hakurekisteri.organization.AuthorizedRead
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.organization.AuthorizedCreate
@@ -33,144 +32,132 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
     contentType = formats("json")
   }
 
-  val create:OperationBuilder
-  val update:OperationBuilder
-  val query:OperationBuilder
-  val read:OperationBuilder
-  val delete:OperationBuilder
+  val create: OperationBuilder
+  val update: OperationBuilder
+  val query: OperationBuilder
+  val read: OperationBuilder
+  val delete: OperationBuilder
 
   delete("/:id", operation(delete)) {
-    if (!hasAnyRoles(currentUser, Seq("CRUD"))) Forbidden
+    if (!hasAnyRoles(currentUser, Seq("CRUD"))) throw UserNotAuthorized("not authorized")
     else deleteResource
   }
 
-
   def deleteResource: Object = {
-    Try(UUID.fromString(params("id"))).map(deleteResource(_, getKnownOrganizations(currentUser), currentUser.map(_.username))).
-      recover {
-      case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
-    }.get
+    Try(UUID.fromString(params("id"))).map(deleteResource(_, getKnownOrganizations(currentUser), currentUser.map(_.username))).get
   }
 
   post("/", operation(create)) {
-    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE"))) Forbidden
+    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE"))) throw UserNotAuthorized("not authorized")
     else createResource(getKnownOrganizations(currentUser), currentUser.map(_.username))
   }
 
   post("/:id", operation(update)) {
-    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE"))) Forbidden
+    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE"))) throw UserNotAuthorized("not authorized")
     else updateResource
   }
 
-
   def updateResource: Object = {
-    Try(UUID.fromString(params("id"))).map(updateResource(_, getKnownOrganizations(currentUser), currentUser.map(_.username))).
-      recover {
-      case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
-    }.get
+    Try(UUID.fromString(params("id"))).map(updateResource(_, getKnownOrganizations(currentUser), currentUser.map(_.username))).get
   }
 
   get("/:id", operation(read)) {
-    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE", "READ"))) Forbidden
+    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE", "READ"))) throw UserNotAuthorized("not authorized")
     else getResource
   }
 
-
   def getResource: Object = {
-    Try(UUID.fromString(params("id"))).map(readResource(_, getKnownOrganizations(currentUser), currentUser.map(_.username))).
-      recover {
-      case e: Exception => logger.warn("unparseable request", e); BadRequest("Not an uuid")
-    }.get
+    Try(UUID.fromString(params("id"))).map(readResource(_, getKnownOrganizations(currentUser), currentUser.map(_.username))).get
   }
 
   get("/", operation(query))(
-    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE", "READ"))) Forbidden
+    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE", "READ"))) throw UserNotAuthorized("not authorized")
     else queryResource(getKnownOrganizations(currentUser), currentUser.map(_.username))
   )
 
+  case class NotFoundException() extends Exception
+
   notFound {
-    response.setStatus(404)
-    response.getWriter.println("Resource not found")
+    throw NotFoundException()
+  }
+
+  incident {
+    case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
+    case t: MalformedResourceException => (id) => BadRequest(IncidentReport(id, t.getMessage))
+    case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, "not authorized"))
+    case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
   }
 }
 
-abstract class HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriCommand[A]](actor:ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with JacksonJsonParsing with CorsSupport {
+abstract class HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriCommand[A]](actor: ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with JacksonJsonParsing with CorsSupport {
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
-  incident {
-    case t: Throwable => (id) => InternalServerError(IncidentReport(id, "internal server error"))
-  }
+  case class UserNotAuthorized(message: String) extends Exception(message)
+  case class MalformedResourceException(message: String) extends Exception(message)
 
   protected implicit def executor: ExecutionContext = system.dispatcher
   val timeout = 60
   implicit val defaultTimeout = Timeout(timeout, TimeUnit.SECONDS)
 
-  class ActorResult[B:Manifest](message: AnyRef, success: (B) => AnyRef) extends AsyncResult() {
+  class ActorResult[B: Manifest](message: AnyRef, success: (B) => AnyRef) extends AsyncResult() {
     val is = (actor ? message).mapTo[B].
-      map(success).
-      recover { case e: Throwable => logger.warn("failure in actor operation", e); InternalServerError("Operation failed") }
+      map(success)
   }
 
-  def createResource(authorities:Seq[String], user:Option[String]): Object = {
+  def createResource(authorities: Seq[String], user: Option[String]): Object = {
     (command[C] >> (_.toValidatedResource)).fold(
-      errors => {logger.warn(errors.toString()); BadRequest(body = errors, reason = "Malformed Resource")},
+      errors => throw MalformedResourceException(errors.toString()),
       resource => new ActorResult(AuthorizedCreate(resource, authorities, user.getOrElse("anonymous")), ResourceCreated(request.getRequestURL)))
   }
 
   object ResourceCreated {
-    def apply(baseUri:StringBuffer)(createdResource: A with Identified[UUID]) = Created(createdResource, headers = Map("Location" -> baseUri.append("/").append(createdResource.id).toString))
+    def apply(baseUri: StringBuffer)(createdResource: A with Identified[UUID]) = Created(createdResource, headers = Map("Location" -> baseUri.append("/").append(createdResource.id).toString))
   }
 
   def identifyResource(resource : A, id: UUID): A with Identified[UUID] = resource.identify(id)
 
-  def updateResource(id:UUID, authorities:Seq[String], user: Option[String]): Object = {
+  def updateResource(id: UUID, authorities: Seq[String], user: Option[String]): Object = {
     (command[C] >> (_.toValidatedResource)).fold(
-      errors => BadRequest(body = errors, reason = "Malformed Resource"),
+      errors => throw MalformedResourceException(errors.toString()),
       resource => new ActorResult[A with Identified[UUID]](AuthorizedUpdate(identifyResource(resource, id), authorities, user.getOrElse("anonymous")), Ok(_)))
   }
 
-  def deleteResource(id:UUID, authorities: Seq[String], user:Option[String]): Object = {
+  def deleteResource(id: UUID, authorities: Seq[String], user: Option[String]): Object = {
     new ActorResult[Unit](AuthorizedDelete(id, authorities, user.getOrElse("anonymous")), (unit) => Ok())
   }
 
-  def readResource(id:UUID, authorities: Seq[String], user:Option[String]): Object = {
+  def readResource(id: UUID, authorities: Seq[String], user: Option[String]): Object = {
     new ActorResult[Option[A with Identified[UUID]]](AuthorizedRead(id, authorities, user.getOrElse("anonymous")), {
       case Some(data) => Ok(data)
       case None => NotFound()
-      case result =>
-        logger.warn("unexpected result from actor: " + result)
-        InternalServerError()
     })
   }
 
-  def queryResource(authorities: Seq[String], user:Option[String]): Product with Serializable = {
+  def queryResource(authorities: Seq[String], user: Option[String]): Product with Serializable = {
     (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q, authorities,user)) recover {
-      case e: Exception => logger.warn("Bad query: " + params, e); BadRequest("Illegal Query")
+      case e: Exception => logger.warn("Bad query: " + params, e); throw new IllegalArgumentException("illegal query params")
     }).get
   }
 
-  case class ResourceQuery[R](query: Query[R], authorities: Seq[String], user:Option[String]) extends AsyncResult {
+  case class ResourceQuery[R](query: Query[R], authorities: Seq[String], user: Option[String]) extends AsyncResult {
     val is = {
       val future = (actor ? AuthorizedQuery(query, authorities, user.getOrElse("anonymous"))).mapTo[Seq[R with Identified[UUID]]]
-      future.map(Ok(_)).
-        recover {
-        case e: Throwable => logger.warn("failure in actor operation", e); InternalServerError("Operation failed")
-      }
+      future.map(Ok(_))
     }
   }
 
    protected implicit def swagger: SwaggerEngine[_] = sw
 }
 
-case class User(username:String, authorities: Seq[String], attributePrincipal: Option[AttributePrincipal])
+case class User(username: String, authorities: Seq[String], attributePrincipal: Option[AttributePrincipal])
 
 trait SecuritySupport {
   def currentUser(implicit request: HttpServletRequest): Option[User]
 
-  def getKnownOrganizations(user:Option[User]):Seq[String] = {
+  def getKnownOrganizations(user: Option[User]): Seq[String] = {
     user.map(_.authorities.
       map(splitAuthority).
       filter(isSuoritusRekisteri).
@@ -181,7 +168,7 @@ trait SecuritySupport {
 
   val regex = new Regex("\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+")
 
-  def isOid(x:String) = {
+  def isOid(x: String) = {
     (regex findFirstIn x).nonEmpty
   }
 
