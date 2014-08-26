@@ -55,7 +55,7 @@ class RestHakupalvelu(serviceUrl: String = "https://itest-virkailija.oph.ware.fi
 
   def getQueryParams(q: HakijaQuery, page: Int = 0): String = {
     val params: Seq[String] = Seq(
-      Some("appState=ACTIVE"), Some("orgSearchExpanded=true"), Some("checkAllApplications=false"),
+      Some("orgSearchExpanded=true"), Some("checkAllApplications=false"),
       Some("start=%d" format (page * maxApplications)), Some("rows=" + maxApplications),
       q.haku.map(s => "asId=" + urlencode(s)),
       q.organisaatio.map(s => "lopoid=" + urlencode(s)),
