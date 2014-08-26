@@ -49,7 +49,8 @@ class ScalatraBootstrap extends LifeCycle {
   implicit val ec:ExecutionContext = system.dispatcher
   val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
   val OPH = "1.2.246.562.10.00000000001"
-
+  
+  // by default the service urls point to QA
   val hostQa = "testi.virkailija.opintopolku.fi"
   val organisaatioServiceUrlQa = s"https://$hostQa/organisaatio-service"
   val hakuappServiceUrlQa = s"https://$hostQa/haku-app"
@@ -57,24 +58,41 @@ class ScalatraBootstrap extends LifeCycle {
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
   val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
   val henkiloServiceUrlQa = s"https://$hostQa/authentication-service"
+  val virtaServiceUrlTest = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot"
+  val virtaJarjestelmaTest = ""
+  val virtaTunnusTest = ""
+  val virtaAvainTest = "salaisuus"
+  
+  // props
+  val serviceUser = OPHSecurity.config.properties("tiedonsiirto.app.username.to.suoritusrekisteri")
+  val servicePassword = OPHSecurity.config.properties("tiedonsiirto.app.password.to.suoritusrekisteri")
+  val serviceAccessUrl = "https://" + OPHSecurity.config.properties.getOrElse("host.virkailija", hostQa) + "/service-access"
+  val sijoitteluServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.sijoittelu-service", sijoitteluServiceUrlQa)
+  val tarjontaServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.tarjonta-service", tarjontaServiceUrlQa)
+  val henkiloServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.authentication-service", henkiloServiceUrlQa)
+  val hakuappServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.haku-service", hakuappServiceUrlQa)
+  val koodistoServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.koodisto-service", koodistoServiceUrlQa)
+  val organisaatioServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa)
+  val organisaatioSoapServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa) + "/services/organisaatioService"
+  val maxApplications = OPHSecurity.config.properties.getOrElse("suoritusrekisteri.hakijat.max.applications", "2000").toInt
+  val virtaServiceUrl = OPHSecurity.config.properties.getOrElse("suoritusrekisteri.virta.service.url", virtaServiceUrlTest)
+  val virtaJarjestelma = OPHSecurity.config.properties.getOrElse("suoritusrekisteri.virta.jarjestelma", virtaJarjestelmaTest)
+  val virtaTunnus = OPHSecurity.config.properties.getOrElse("suoritusrekisteri.virta.tunnus", virtaTunnusTest)
+  val virtaAvain = OPHSecurity.config.properties.getOrElse("suoritusrekisteri.virta.avain", virtaAvainTest)
+  //val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
+  //implicit val audit = AuditUri(broker, OPHSecurity.config.properties.getOrElse("activemq.queue.name.log", "Sade.Log"))
 
   override def init(context: ServletContext) {
     OPHSecurity init context
-    val orgServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa) + "/services/organisaatioService"
     val database = Try(Database.forName(jndiName)).recover {
       case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
     }.get
 
-    val sijoitteluUser = OPHSecurity.config.properties("tiedonsiirto.app.username.to.suoritusrekisteri")
-    val sijoitteluPw = OPHSecurity.config.properties("tiedonsiirto.app.password.to.suoritusrekisteri")
-
     //val camel = CamelExtension(system)
-    //val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
     //val broker = "activemq"
     //camel.context.addComponent(broker, ActiveMQComponent.activeMQComponent(amqUrl))
     val log = LoggerFactory.getLogger(getClass)
 
-    //implicit val audit = AuditUri(broker, OPHSecurity.config.properties.get("activemq.queue.name.log").getOrElse("Sade.Log"))
     //log.debug(s"AuditLog using uri: $amqUrl")
 
     import scala.reflect.runtime.universe._
@@ -86,37 +104,31 @@ class ScalatraBootstrap extends LifeCycle {
 
     def authorizer[A <: Resource[I] : ClassTag: Manifest, I](guarded: ActorRef, orgFinder: A => String): ActorRef = {
       val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-      system.actorOf(Props(new OrganizationHierarchy[A, I](orgServiceUrl, guarded, orgFinder)), s"$resource-authorizer")
+      system.actorOf(Props(new OrganizationHierarchy[A, I](organisaatioSoapServiceUrl, guarded, orgFinder)), s"$resource-authorizer")
     }
 
     val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))), "suoritukset")
     val filteredSuoritusRekisteri = authorizer[Suoritus, UUID](suoritusRekisteri, (suoritus) => suoritus.myontaja)
 
     val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))), "opiskelijat")
-    val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija, UUID](orgServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid)), "opiskelijat-authorizer")
+    val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija, UUID](organisaatioSoapServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid)), "opiskelijat-authorizer")
 
     val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusActor(new OpiskeluoikeusJournal(database))), "opiskeluoikeudet")
-    val filteredOpiskeluoikeusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskeluoikeus, UUID](orgServiceUrl, opiskeluoikeusRekisteri, (opiskeluoikeus) => opiskeluoikeus.myontaja)), "opiskeluoikeus-authorizer")
+    val filteredOpiskeluoikeusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskeluoikeus, UUID](organisaatioSoapServiceUrl, opiskeluoikeusRekisteri, (opiskeluoikeus) => opiskeluoikeus.myontaja)), "opiskeluoikeus-authorizer")
 
     val henkiloRekisteri = system.actorOf(Props(new HenkiloActor(new HenkiloJournal(database))), "henkilot")
-    val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo, UUID](orgServiceUrl, henkiloRekisteri, (henkilo) => OPH )), "henkilo-authorizer")
+    val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo, UUID](organisaatioSoapServiceUrl, henkiloRekisteri, (henkilo) => OPH )), "henkilo-authorizer")
 
     val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(new ArvosanaJournal(database))), "arvosanat")
 
     import _root_.akka.pattern.ask
-    val filteredArvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](orgServiceUrl, arvosanaRekisteri, (arvosana) => suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).mapTo[Option[Suoritus]].map(_.map(_.myontaja).getOrElse("")))), "arvosana-authorizer")
+    val filteredArvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, arvosanaRekisteri, (arvosana) => suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).mapTo[Option[Suoritus]].map(_.map(_.myontaja).getOrElse("")))), "arvosana-authorizer")
 
-    val hakuappServiceUrl = OPHSecurity.config.properties.get("cas.service.haku-service").getOrElse(hakuappServiceUrlQa)
-    val organisaatioServiceUrl = OPHSecurity.config.properties.get("cas.service.organisaatio-service").getOrElse(organisaatioServiceUrlQa)
-    val koodistoServiceUrl = OPHSecurity.config.properties.get("cas.service.koodisto-service").getOrElse(koodistoServiceUrlQa)
     val organisaatiopalvelu: RestOrganisaatiopalvelu = new RestOrganisaatiopalvelu(organisaatioServiceUrl)
     val organisaatiot = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
-    val maxApplications = OPHSecurity.config.properties.get("suoritusrekisteri.hakijat.max.applications").getOrElse("2000").toInt
-    val sijoitteluServiceUrl = OPHSecurity.config.properties.get("cas.service.sijoittelu-service").getOrElse(sijoitteluServiceUrlQa)
-    val serviceAccessUrl = "https://" + OPHSecurity.config.properties.get("host.virkailija").getOrElse(hostQa) + "/service-access"
 
-    val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(serviceAccessUrl, sijoitteluServiceUrl, sijoitteluUser, sijoitteluPw), "1.2.246.562.5.2013080813081926341927")))
-    val hakemukset = system.actorOf(Props(new HakemusActor(serviceAccessUrl, hakuappServiceUrl, maxApplications, sijoitteluUser, sijoitteluPw)), "hakemus")
+    val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(serviceAccessUrl, sijoitteluServiceUrl, serviceUser, servicePassword), "1.2.246.562.5.2013080813081926341927")))
+    val hakemukset = system.actorOf(Props(new HakemusActor(serviceAccessUrl, hakuappServiceUrl, maxApplications, serviceUser, servicePassword)), "hakemus")
 
     val healthcheck = system.actorOf(Props(new HealthcheckActor(filteredSuoritusRekisteri, filteredOpiskelijaRekisteri, hakemukset)), "healthcheck")
 
@@ -127,15 +139,11 @@ class ScalatraBootstrap extends LifeCycle {
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, suoritusRekisteri, new ArvosanaJournal(database))), "perusopetus-sanity")
 
-    val tarjontaServiceUrl = OPHSecurity.config.properties.get("cas.service.tarjonta-service").getOrElse(tarjontaServiceUrlQa)
-
     implicit val httpClient = new ApacheHttpClient()
-    val virtaConfig = VirtaConfig(serviceUrl = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot", jarjestelma = "", tunnus = "", avain = "salaisuus")
+    val virtaConfig = VirtaConfig(serviceUrl = virtaServiceUrl, jarjestelma = virtaJarjestelma, tunnus = virtaTunnus, avain = virtaAvain)
     val tarjontaClient = new TarjontaClient(tarjontaServiceUrl)
     val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig), organisaatiopalvelu, tarjontaClient)), "virta")
-
-    val henkiloServiceUrl = OPHSecurity.config.properties.get("cas.service.authentication-service").getOrElse(henkiloServiceUrlQa)
-    val henkiloClient = new VirkailijaRestClient(serviceAccessUrl = serviceAccessUrl, serviceUrl = henkiloServiceUrl, user = sijoitteluUser, password = sijoitteluPw)
+    val henkiloClient = new VirkailijaRestClient(serviceAccessUrl = serviceAccessUrl, serviceUrl = henkiloServiceUrl, user = serviceUser, password = servicePassword)
     val henkiloActor = system.actorOf(Props(new henkilo.HenkiloActor(henkiloClient)), "henkilo")
 
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](getBroadcastForLogger[Suoritus, UUID](filteredSuoritusRekisteri), SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
