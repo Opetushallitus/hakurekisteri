@@ -41,6 +41,7 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
     val ensikertalainen = onkoEnsikertalainen(henkiloOid)
     new AsyncResult() {
       override implicit def timeout: Duration = 20.seconds
+      contentType = formats("json")
       override val is = ensikertalainen.map((b) => Ensikertalainen(b))
     }
   }
