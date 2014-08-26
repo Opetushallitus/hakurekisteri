@@ -12,7 +12,7 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport {
 
   registerModel(Model("Ensikertalainen", "Ensikertalainen", fields.map{ t => (t.name, t) }.toMap))
 
-  val query: OperationBuilder = apiOperation[XMLHakijat]("haeEnsikertalaisuus")
+  val query: OperationBuilder = apiOperation[Ensikertalainen]("haeEnsikertalaisuus")
     .summary("näyttää onko hakija ensikertalainen")
     .notes("Näyttää onko hakija ensikertalainen parametrien mukaisesti.")
     .parameter(queryParam[Option[String]]("henkilo").description("henkilön oppijanumero").optional)
