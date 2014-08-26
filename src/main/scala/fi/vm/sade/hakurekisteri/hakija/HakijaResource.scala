@@ -7,7 +7,6 @@ import fi.vm.sade.hakurekisteri.hakija.Tyyppi.Tyyppi
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, SpringSecuritySupport, HakurekisteriJsonSupport}
-import org.joda.time.format.DateTimeFormat
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra._
@@ -22,7 +21,6 @@ import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.joda.time.{DateTimeFieldType, LocalDate}
-import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
 
 
@@ -45,7 +43,7 @@ object HakijaQuery {
       params.get("haku").flatMap(_.blankOption),
       params.get("organisaatio").flatMap(_.blankOption),
       params.get("hakukohdekoodi").flatMap(_.blankOption),
-      Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki}.get,
+      Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki }.get,
       user)
 }
 
@@ -102,10 +100,8 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     }
   }
 
-  error {
-    case t: Throwable =>
-      logger.error("error in service", t)
-      response.sendError(500, t.getMessage)
+  incident {
+    case t: Throwable => (id) => InternalServerError(IncidentReport(id, "internal server error"))
   }
 }
 

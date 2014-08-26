@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{TarjontaClient, Komo}
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaQuery
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{OpiskeluoikeusQuery, Opiskeluoikeus}
-import fi.vm.sade.hakurekisteri.rest.support.{IncidentReporting, SpringSecuritySupport, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
 import org.joda.time.LocalDate
 import org.scalatra.swagger.{SwaggerEngine, Swagger}
@@ -25,7 +25,7 @@ case class Ensikertalainen(ensikertalainen: Boolean)
 case class HetuNotFoundException(message: String) extends Exception(message)
 
 class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaClient: TarjontaClient)
-                             (implicit val sw: Swagger, system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with IncidentReporting {
+                             (implicit val sw: Swagger, system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
 
   override protected def applicationDescription: String = "Korkeakouluopintojen ensikertalaisuuden kyselyrajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw

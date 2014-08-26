@@ -100,6 +100,10 @@ abstract class HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriComm
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
+  incident {
+    case t: Throwable => (id) => InternalServerError(IncidentReport(id, "internal server error"))
+  }
+
   protected implicit def executor: ExecutionContext = system.dispatcher
   val timeout = 60
   implicit val defaultTimeout = Timeout(timeout, TimeUnit.SECONDS)
@@ -107,7 +111,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriComm
   class ActorResult[B:Manifest](message: AnyRef, success: (B) => AnyRef) extends AsyncResult() {
     val is = (actor ? message).mapTo[B].
       map(success).
-      recover { case e:Throwable => logger.warn("failure in actor operation", e); InternalServerError("Operation failed") }
+      recover { case e: Throwable => logger.warn("failure in actor operation", e); InternalServerError("Operation failed") }
   }
 
   def createResource(authorities:Seq[String], user:Option[String]): Object = {
@@ -117,7 +121,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriComm
   }
 
   object ResourceCreated {
-    def apply(baseUri:StringBuffer)(createdResource: A with Identified[UUID]) =   Created(createdResource, headers = Map("Location" -> baseUri.append("/").append(createdResource.id).toString))
+    def apply(baseUri:StringBuffer)(createdResource: A with Identified[UUID]) = Created(createdResource, headers = Map("Location" -> baseUri.append("/").append(createdResource.id).toString))
   }
 
   def identifyResource(resource : A, id: UUID): A with Identified[UUID] = resource.identify(id)
