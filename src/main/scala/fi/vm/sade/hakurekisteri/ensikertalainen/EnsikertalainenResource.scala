@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{TarjontaClient, Komo}
-import fi.vm.sade.hakurekisteri.integration.virta.{VirtaClient, VirtaQuery}
+import fi.vm.sade.hakurekisteri.integration.virta.VirtaQuery
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{OpiskeluoikeusQuery, Opiskeluoikeus}
 import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
@@ -27,7 +27,7 @@ case class ParamMissingException(message: String) extends IllegalArgumentExcepti
 class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaClient: TarjontaClient)
                              (implicit val sw: Swagger, system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
 
-  override protected def applicationDescription: String = "Korkeakouluopintojen ensikertalaisuuden kyselyrajapinta"
+  override protected def applicationDescription: String = "Korkeakouluhakujen kiintiöiden ensikertalaisuuden kyselyrajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 15.seconds
