@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.ensikertalainen
 
-import fi.vm.sade.hakurekisteri.hakija.XMLHakijat
 import org.scalatra.swagger.AllowableValues.AnyValue
 import org.scalatra.swagger.{Model, DataType, ModelField, SwaggerSupport}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
@@ -13,7 +12,7 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport {
   registerModel(Model("Ensikertalainen", "Ensikertalainen", fields.map{ t => (t.name, t) }.toMap))
 
   val query: OperationBuilder = apiOperation[Ensikertalainen]("haeEnsikertalaisuus")
-    .summary("näyttää onko hakija ensikertalainen")
-    .notes("Näyttää onko hakija ensikertalainen parametrien mukaisesti.")
-    .parameter(queryParam[Option[String]]("henkilo").description("henkilön oppijanumero").optional)
+    .summary("tarkistaa onko hakija ensikertalainen")
+    .notes("Tarkistaa onko hakija ensikertalainen.")
+    .parameter(queryParam[Option[String]]("henkilo").description("hakijan oppijanumero").optional)
 }

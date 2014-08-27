@@ -6,6 +6,7 @@ import com.stackmob.newman.HttpClient
 import com.stackmob.newman.dsl._
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.generic.common.HetuUtils
+import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
 
