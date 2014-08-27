@@ -49,7 +49,7 @@ object Config {
     file <- propertyLocations.reverse
   } yield ophConfDir.resolve(file)
 
-  def loadProperties(resources:Seq[InputStream]):Map[String, String] = {
+  def loadProperties(resources: Seq[InputStream]): Map[String, String] = {
     import scala.collection.JavaConversions._
     val rawMap = resources.map((reader) => {val prop = new java.util.Properties; prop.load(reader); Map(prop.toList: _*)}).
       reduce(_ ++ _)
@@ -57,7 +57,7 @@ object Config {
     resolve(rawMap)
   }
 
-  def resolve(source: Map[String, String]):Map[String,String] = {
+  def resolve(source: Map[String, String]): Map[String, String] = {
     val converted = source.mapValues(_.replace("${","€{"))
     val unResolved = Set(converted.map((s) => (for (found <- "€\\{(.*?)\\}".r findAllMatchIn s._2) yield found.group(1)).toList).reduce(_ ++ _):_*)
     val unResolvable = unResolved.filter((s) => converted.get(s).isEmpty)

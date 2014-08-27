@@ -103,15 +103,16 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
 
   def checkEnsikertalainenFromVirta(henkiloOid: String): Future[Boolean] = {
     val virtaResult: Future[(Seq[Opiskeluoikeus], Seq[Suoritus])] = getHetu(henkiloOid).flatMap((hetu) => (virtaActor ? VirtaQuery(Some(henkiloOid), Some(hetu))).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])])
-    for ((oikeudet, tutkinnot) <- virtaResult) yield {
-      val filteredOikeudet = oikeudet.filter(_.alkuPaiva.isAfter(kesa2014))
-      saveVirtaResult(filteredOikeudet, tutkinnot)
-      filteredOikeudet.isEmpty && tutkinnot.isEmpty
+    for ((opiskeluoikeudet, suoritukset) <- virtaResult) yield {
+      val filteredOpiskeluoikeudet = opiskeluoikeudet.filter(_.alkuPaiva.isAfter(kesa2014))
+      // TODO saveVirtaResult(filteredOpiskeluoikeudet, suoritukset)
+      filteredOpiskeluoikeudet.isEmpty && suoritukset.isEmpty
     }
   }
 
-  def saveVirtaResult(oikeudet: Seq[Opiskeluoikeus], tutkinnot: Seq[Suoritus]): Unit = {
-    // TODO
+  def saveVirtaResult(opiskeluoikeudet: Seq[Opiskeluoikeus], suoritukset: Seq[Suoritus]) {
+    opiskeluoikeudet.foreach(opiskeluoikeusActor ! _)
+    suoritukset.foreach(suoritusActor ! _)
   }
 
   def anySequenceHasElements(futures: Future[Seq[_]]*): Future[Boolean] = Future.find(futures){!_.isEmpty}.map{
