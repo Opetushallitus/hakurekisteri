@@ -3,7 +3,6 @@ import java.nio.file.{Files, Paths}
 
 
 object Config {
-
   val homeDir = sys.props.get("user.home").getOrElse("")
   val ophConfDir = Paths.get(homeDir, "/oph-configuration/")
 
@@ -25,6 +24,8 @@ object Config {
   val virtaTunnusTest = ""
   val virtaAvainTest = "salaisuus"
 
+  lazy val properties: Map[String, String] = loadProperties(resources.map(Files.newInputStream(_)))
+
   // props
   val serviceUser = properties("tiedonsiirto.app.username.to.suoritusrekisteri")
   val servicePassword = properties("tiedonsiirto.app.password.to.suoritusrekisteri")
@@ -44,7 +45,6 @@ object Config {
   //val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
   //implicit val audit = AuditUri(broker, OPHSecurity.config.properties.getOrElse("activemq.queue.name.log", "Sade.Log"))
 
-
   val resources = for {
     file <- propertyLocations.reverse
   } yield ophConfDir.resolve(file)
@@ -55,11 +55,6 @@ object Config {
       reduce(_ ++ _)
 
     resolve(rawMap)
-
-  }
-
-  def properties: Map[String, String] =  {
-    loadProperties(resources.map(Files.newInputStream(_)))
   }
 
   def resolve(source: Map[String, String]):Map[String,String] = {
@@ -71,5 +66,4 @@ object Config {
     else
       resolve(converted.mapValues((s) => "€\\{(.*?)\\}".r replaceAllIn (s, m => {converted.getOrElse(m.group(1), "€{" + m.group(1) + "}") })))
   }
-
 }
