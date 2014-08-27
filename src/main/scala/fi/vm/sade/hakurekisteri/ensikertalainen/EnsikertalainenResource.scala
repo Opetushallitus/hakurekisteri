@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{TarjontaClient, Komo}
-import fi.vm.sade.hakurekisteri.integration.virta.VirtaQuery
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaClient, VirtaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{OpiskeluoikeusQuery, Opiskeluoikeus}
 import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
@@ -21,8 +21,8 @@ import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 
 case class Ensikertalainen(ensikertalainen: Boolean)
-
 case class HetuNotFoundException(message: String) extends Exception(message)
+case class ParamMissingException(message: String) extends IllegalArgumentException(message)
 
 class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaClient: TarjontaClient)
                              (implicit val sw: Swagger, system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
@@ -33,15 +33,13 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
   implicit val defaultTimeout: Timeout = 15.seconds
   val kesa2014: LocalDate = new LocalDate(2014, 6, 30)
 
-  options("/*") {
-    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
-  }
-
   before() {
     contentType = formats("json")
   }
 
-  case class ParamMissingException(message: String) extends IllegalArgumentException(message)
+  options("/*") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+  }
 
   get("/", operation(query)) {
     try {
@@ -80,10 +78,8 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
   def findKomos(suoritukset: Seq[Suoritus]): Future[Seq[(Option[Komo], Suoritus)]] = {
     Future.sequence(for (
       suoritus <- suoritukset
-    ) yield getKomo(suoritus.komo).map((_, suoritus)))
+    ) yield tarjontaClient.getKomo(suoritus.komo).map((_, suoritus)))
   }
-
-  def getKomo(oid: String): Future[Option[Komo]] = tarjontaClient.getKomo(oid)
 
   def getSuoritukset(henkiloOid: String): Future[Seq[Suoritus]] = {
     (suoritusActor ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]]
@@ -99,17 +95,18 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
     val tutkinnot: Future[Seq[Suoritus]] = getKkTutkinnot(henkiloOid)
     val opiskeluoikeudet: Future[Seq[Opiskeluoikeus]] = getKkOpiskeluoikeudet2014KesaJalkeen(henkiloOid)
 
-    anyHasElements(tutkinnot, opiskeluoikeudet).flatMap (
+    anySequenceHasElements(tutkinnot, opiskeluoikeudet).flatMap (
       if (_) Future.successful(false)
       else checkEnsikertalainenFromVirta(henkiloOid)
     )
   }
 
   def checkEnsikertalainenFromVirta(henkiloOid: String): Future[Boolean] = {
-    val x: Future[(Seq[Opiskeluoikeus], Seq[Suoritus])] = getHetu(henkiloOid).flatMap((hetu) => (virtaActor ? VirtaQuery(Some(henkiloOid), Some(hetu))).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])])
-    for ((oikeudet, tutkinnot) <- x) yield {
-      saveVirtaResult(oikeudet, tutkinnot)
-      oikeudet.isEmpty && tutkinnot.isEmpty
+    val virtaResult: Future[(Seq[Opiskeluoikeus], Seq[Suoritus])] = getHetu(henkiloOid).flatMap((hetu) => (virtaActor ? VirtaQuery(Some(henkiloOid), Some(hetu))).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])])
+    for ((oikeudet, tutkinnot) <- virtaResult) yield {
+      val filteredOikeudet = oikeudet.filter(_.alkuPaiva.isAfter(kesa2014))
+      saveVirtaResult(filteredOikeudet, tutkinnot)
+      filteredOikeudet.isEmpty && tutkinnot.isEmpty
     }
   }
 
@@ -117,7 +114,7 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
     // TODO
   }
 
-  def anyHasElements(futures: Future[Seq[_]]*): Future[Boolean] = Future.find(futures){!_.isEmpty}.map{
+  def anySequenceHasElements(futures: Future[Seq[_]]*): Future[Boolean] = Future.find(futures){!_.isEmpty}.map{
     case None => false
     case Some(_) => true
   }
