@@ -8,13 +8,14 @@ import akka.actor.Props
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import org.scalatra.swagger.Swagger
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriSwagger
+import org.specs.specification.Examples
 
 class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger
 
   val orgs = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
   val sijoittelu = system.actorOf(Props(new SijoitteluActor(sijoittelupalvelu)))
-  val hakijat = system.actorOf(Props(new HakijaActor(hakupalvelu, orgs, koodistopalvelu, sijoittelu)))
+  val hakijat = system.actorOf(Props(new HakijaActor(hakupalvelu, orgs, koodisto, sijoittelu)))
   addServlet(new HakijaResource(hakijat), "/")
 
   test("result is XML") {
