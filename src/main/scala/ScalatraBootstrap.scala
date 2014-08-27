@@ -54,6 +54,7 @@ import scala.util.Try
 class ScalatraBootstrap extends LifeCycle {
 
   import Config._
+  import AuthorizedRegisters._
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("hakurekisteri")
   implicit val ec:ExecutionContext = system.dispatcher
@@ -61,18 +62,15 @@ class ScalatraBootstrap extends LifeCycle {
   override def init(context: ServletContext) {
     OPHSecurity init context
 
-
-
-
-
-
-
-    val journals = new DbJournals
+    val journals = new DbJournals(jndiName)
     val registers = new BareRegisters(system, journals)
-    val authorizedRegisters = new AuthorizedRegisters(registers, system)
+    val authorizedRegisters = filter(registers) withAuthorizationDataFrom organisaatioSoapServiceUrl
+
+
 
     val organisaatiopalvelu: RestOrganisaatiopalvelu = new RestOrganisaatiopalvelu(organisaatioServiceUrl)
     val organisaatiot = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
+
 
     val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(serviceAccessUrl, sijoitteluServiceUrl, serviceUser, servicePassword), "1.2.246.562.5.2013080813081926341927")))
     val hakemukset = system.actorOf(Props(new HakemusActor(serviceAccessUrl, hakuappServiceUrl, maxApplications, serviceUser, servicePassword)), "hakemus")
@@ -186,9 +184,8 @@ trait Journals {
 
 }
 
-class DbJournals extends Journals {
+class DbJournals(jndiName:String) extends Journals {
 
-  import Config._
 
   val database = Try(Database.forName(jndiName)).recover {
     case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
@@ -219,8 +216,9 @@ class BareRegisters(system:ActorSystem, journals: Journals) extends Registers {
   override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(journals.arvosanaJournal)), "arvosanat")
 }
 
-class AuthorizedRegisters(unauthorized:Registers, system: ActorSystem) extends Registers {
-  import Config._
+class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized:Registers, system: ActorSystem) extends Registers {
+
+  val OPH = "1.2.246.562.10.00000000001"
 
   override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, (suoritus) => suoritus.myontaja)
 
@@ -246,6 +244,16 @@ class AuthorizedRegisters(unauthorized:Registers, system: ActorSystem) extends R
   }
 
 
+}
+
+object AuthorizedRegisters {
+  def filter(unauthorized:Registers): AuthorizerBuilder = new AuthorizerBuilder(unauthorized)
+
+  class AuthorizerBuilder(registers:Registers) {
+    def withAuthorizationDataFrom(url:String)(implicit system:ActorSystem) = new AuthorizedRegisters(url, registers, system)
+
+
+  }
 }
 
 class AuditedRegisters(amqUrl:String, amqQueue:String, authorizedRegisters:Registers, system:ActorSystem) extends Registers {

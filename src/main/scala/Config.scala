@@ -9,7 +9,6 @@ object Config {
   val propertyLocations = Seq("override.properties", "suoritusrekisteri.properties", "common.properties")
 
   val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
-  val OPH = "1.2.246.562.10.00000000001"
 
   // by default the service urls point to QA
   val hostQa = "testi.virkailija.opintopolku.fi"
