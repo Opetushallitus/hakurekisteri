@@ -3,7 +3,6 @@ import java.nio.file.{Files, Paths}
 
 
 object Config {
-
   val homeDir = sys.props.get("user.home").getOrElse("")
   val ophConfDir = Paths.get(homeDir, "/oph-configuration/")
 
@@ -24,6 +23,8 @@ object Config {
   val virtaJarjestelmaTest = ""
   val virtaTunnusTest = ""
   val virtaAvainTest = "salaisuus"
+
+  lazy val properties: Map[String, String] = loadProperties(resources.map(Files.newInputStream(_)))
 
   // props
   val serviceUser = properties("tiedonsiirto.app.username.to.suoritusrekisteri")
@@ -47,25 +48,19 @@ object Config {
   // val amqQueue = properties.getOrElse("activemq.queue.name.log", "Sade.Log")
 
 
-
   val resources = for {
     file <- propertyLocations.reverse
   } yield ophConfDir.resolve(file)
 
-  def loadProperties(resources:Seq[InputStream]):Map[String, String] = {
+  def loadProperties(resources: Seq[InputStream]): Map[String, String] = {
     import scala.collection.JavaConversions._
     val rawMap = resources.map((reader) => {val prop = new java.util.Properties; prop.load(reader); Map(prop.toList: _*)}).
       reduce(_ ++ _)
 
     resolve(rawMap)
-
   }
 
-  def properties: Map[String, String] =  {
-    loadProperties(resources.map(Files.newInputStream(_)))
-  }
-
-  def resolve(source: Map[String, String]):Map[String,String] = {
+  def resolve(source: Map[String, String]): Map[String, String] = {
     val converted = source.mapValues(_.replace("${","€{"))
     val unResolved = Set(converted.map((s) => (for (found <- "€\\{(.*?)\\}".r findAllMatchIn s._2) yield found.group(1)).toList).reduce(_ ++ _):_*)
     val unResolvable = unResolved.filter((s) => converted.get(s).isEmpty)
@@ -74,5 +69,4 @@ object Config {
     else
       resolve(converted.mapValues((s) => "€\\{(.*?)\\}".r replaceAllIn (s, m => {converted.getOrElse(m.group(1), "€{" + m.group(1) + "}") })))
   }
-
 }
