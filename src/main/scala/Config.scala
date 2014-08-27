@@ -41,8 +41,11 @@ object Config {
   val virtaJarjestelma = properties.getOrElse("suoritusrekisteri.virta.jarjestelma", virtaJarjestelmaTest)
   val virtaTunnus = properties.getOrElse("suoritusrekisteri.virta.tunnus", virtaTunnusTest)
   val virtaAvain = properties.getOrElse("suoritusrekisteri.virta.avain", virtaAvainTest)
+
+
   //val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
-  //implicit val audit = AuditUri(broker, OPHSecurity.config.properties.getOrElse("activemq.queue.name.log", "Sade.Log"))
+  // val amqQueue = properties.getOrElse("activemq.queue.name.log", "Sade.Log")
+
 
 
   val resources = for {

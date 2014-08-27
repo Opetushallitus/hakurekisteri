@@ -1,5 +1,7 @@
-import java.io.{Reader, File, InputStream}
-import java.nio.file.{Path, Files, Paths}
+import _root_.akka.camel.CamelExtension
+import _root_.akka.routing.BroadcastRouter
+import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
+import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.servlet.{DispatcherType, ServletContext, ServletContextEvent}
@@ -25,6 +27,7 @@ import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, Organ
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
+import org.apache.activemq.camel.component.ActiveMQComponent
 import org.scalatra._
 import org.scalatra.swagger.Swagger
 import org.slf4j.LoggerFactory
@@ -57,45 +60,16 @@ class ScalatraBootstrap extends LifeCycle {
 
   override def init(context: ServletContext) {
     OPHSecurity init context
-    val database = Try(Database.forName(jndiName)).recover {
-      case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
-    }.get
 
-    //val camel = CamelExtension(system)
-    //val broker = "activemq"
-    //camel.context.addComponent(broker, ActiveMQComponent.activeMQComponent(amqUrl))
-    val log = LoggerFactory.getLogger(getClass)
 
-    //log.debug(s"AuditLog using uri: $amqUrl")
 
-    import scala.reflect.runtime.universe._
 
-    def getBroadcastForLogger[A <: Resource[I]: TypeTag: ClassTag, I](rekisteri: ActorRef) = {
-      // system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog[A](typeOf[A].typeSymbol.name.toString)).withDispatcher("akka.hakurekisteri.audit-dispatcher"), typeOf[A].typeSymbol.name.toString.toLowerCase+"-audit") ))))
-      rekisteri
-    }
 
-    def authorizer[A <: Resource[I] : ClassTag: Manifest, I](guarded: ActorRef, orgFinder: A => String): ActorRef = {
-      val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-      system.actorOf(Props(new OrganizationHierarchy[A, I](organisaatioSoapServiceUrl, guarded, orgFinder)), s"$resource-authorizer")
-    }
 
-    val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(new SuoritusJournal(database))), "suoritukset")
-    val filteredSuoritusRekisteri = authorizer[Suoritus, UUID](suoritusRekisteri, (suoritus) => suoritus.myontaja)
 
-    val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(new OpiskelijaJournal(database))), "opiskelijat")
-    val filteredOpiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija, UUID](organisaatioSoapServiceUrl,opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid)), "opiskelijat-authorizer")
-
-    val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusActor(new OpiskeluoikeusJournal(database))), "opiskeluoikeudet")
-    val filteredOpiskeluoikeusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskeluoikeus, UUID](organisaatioSoapServiceUrl, opiskeluoikeusRekisteri, (opiskeluoikeus) => opiskeluoikeus.myontaja)), "opiskeluoikeus-authorizer")
-
-    val henkiloRekisteri = system.actorOf(Props(new HenkiloActor(new HenkiloJournal(database))), "henkilot")
-    val filteredHenkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo, UUID](organisaatioSoapServiceUrl, henkiloRekisteri, (henkilo) => OPH )), "henkilo-authorizer")
-
-    val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(new ArvosanaJournal(database))), "arvosanat")
-
-    import _root_.akka.pattern.ask
-    val filteredArvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, arvosanaRekisteri, (arvosana) => suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).mapTo[Option[Suoritus]].map(_.map(_.myontaja).getOrElse("")))), "arvosana-authorizer")
+    val journals = new DbJournals
+    val registers = new BareRegisters(system, journals)
+    val authorizedRegisters = new AuthorizedRegisters(registers, system)
 
     val organisaatiopalvelu: RestOrganisaatiopalvelu = new RestOrganisaatiopalvelu(organisaatioServiceUrl)
     val organisaatiot = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
@@ -103,14 +77,14 @@ class ScalatraBootstrap extends LifeCycle {
     val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(serviceAccessUrl, sijoitteluServiceUrl, serviceUser, servicePassword), "1.2.246.562.5.2013080813081926341927")))
     val hakemukset = system.actorOf(Props(new HakemusActor(serviceAccessUrl, hakuappServiceUrl, maxApplications, serviceUser, servicePassword)), "hakemus")
 
-    val healthcheck = system.actorOf(Props(new HealthcheckActor(filteredSuoritusRekisteri, filteredOpiskelijaRekisteri, hakemukset)), "healthcheck")
+    val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.suoritusRekisteri, authorizedRegisters.opiskelijaRekisteri, hakemukset)), "healthcheck")
 
     system.scheduler.schedule(1.second, 2.hours, hakemukset, ReloadHaku("1.2.246.562.5.2013080813081926341927"))
     system.scheduler.schedule(5.minutes, 2.hours, hakemukset, ReloadHaku("1.2.246.562.5.2014022711042555034240"))
 
     val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(hakemukset), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl), sijoittelu)))
 
-    val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, suoritusRekisteri, new ArvosanaJournal(database))), "perusopetus-sanity")
+    val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, registers.suoritusRekisteri, journals.arvosanaJournal)), "perusopetus-sanity")
 
     implicit val httpClient = new ApacheHttpClient()
     val virtaConfig = VirtaConfig(serviceUrl = virtaServiceUrl, jarjestelma = virtaJarjestelma, tunnus = virtaTunnus, avain = virtaAvain)
@@ -119,13 +93,15 @@ class ScalatraBootstrap extends LifeCycle {
     val henkiloClient = new VirkailijaRestClient(serviceAccessUrl = serviceAccessUrl, serviceUrl = henkiloServiceUrl, user = serviceUser, password = servicePassword)
     val henkiloActor = system.actorOf(Props(new henkilo.HenkiloActor(henkiloClient)), "henkilo")
 
-    context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](getBroadcastForLogger[Suoritus, UUID](filteredSuoritusRekisteri), SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
-    context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](getBroadcastForLogger[Opiskelija, UUID](filteredOpiskelijaRekisteri), OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")
-    context mount(new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](getBroadcastForLogger[Opiskeluoikeus, UUID](filteredOpiskeluoikeusRekisteri), OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport, "/rest/v1/opiskeluoikeudet")
-    context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](getBroadcastForLogger[Henkilo, UUID](filteredHenkiloRekisteri), HenkiloQuery(_)) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand] with SpringSecuritySupport, "/rest/v1/henkilot")
-    context mount(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](getBroadcastForLogger[Arvosana, UUID](filteredArvosanaRekisteri), ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport, "/rest/v1/arvosanat")
+
+
+    context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
+    context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")
+    context mount(new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport, "/rest/v1/opiskeluoikeudet")
+    context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](authorizedRegisters.henkiloRekisteri, HenkiloQuery(_)) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand] with SpringSecuritySupport, "/rest/v1/henkilot")
+    context mount(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport, "/rest/v1/arvosanat")
     context mount(new HakijaResource(hakijat), "/rest/v1/hakijat")
-    context mount(new EnsikertalainenResource(suoritusRekisteri, opiskeluoikeusRekisteri, virta, henkiloActor, tarjontaClient), "/rest/v1/ensikertalainen")
+    context mount(new EnsikertalainenResource(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, virta, henkiloActor, tarjontaClient), "/rest/v1/ensikertalainen")
     context mount(new HealthcheckResource(healthcheck), "/healthcheck")
     context mount(new ResourcesApp, "/rest/v1/api-docs/*")
     context mount(new SanityResource(sanity), "/sanity")
@@ -198,4 +174,107 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
       definition
     }
   }
+}
+
+trait Journals {
+
+  val suoritusJournal:SuoritusJournal
+  val opiskelijaJournal:OpiskelijaJournal
+  val opiskeluoikeusJournal:OpiskeluoikeusJournal
+  val henkiloJournal:HenkiloJournal
+  val arvosanaJournal:ArvosanaJournal
+
+}
+
+class DbJournals extends Journals {
+
+  import Config._
+
+  val database = Try(Database.forName(jndiName)).recover {
+    case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
+  }.get
+
+  override val suoritusJournal = new SuoritusJournal(database)
+  override val opiskelijaJournal = new OpiskelijaJournal(database)
+  override val opiskeluoikeusJournal = new OpiskeluoikeusJournal(database)
+  override val henkiloJournal = new HenkiloJournal(database)
+  override val arvosanaJournal = new ArvosanaJournal(database)
+}
+
+
+trait Registers {
+  val suoritusRekisteri:ActorRef
+  val opiskelijaRekisteri:ActorRef
+  val opiskeluoikeusRekisteri:ActorRef
+  val henkiloRekisteri:ActorRef
+  val arvosanaRekisteri:ActorRef
+}
+
+
+class BareRegisters(system:ActorSystem, journals: Journals) extends Registers {
+  override val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(journals.suoritusJournal)), "suoritukset")
+  override val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(journals.opiskelijaJournal)), "opiskelijat")
+  override val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusActor(journals.opiskeluoikeusJournal)), "opiskeluoikeudet")
+  override val henkiloRekisteri = system.actorOf(Props(new HenkiloActor(journals.henkiloJournal)), "henkilot")
+  override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(journals.arvosanaJournal)), "arvosanat")
+}
+
+class AuthorizedRegisters(unauthorized:Registers, system: ActorSystem) extends Registers {
+  import Config._
+
+  override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, (suoritus) => suoritus.myontaja)
+
+  override val opiskelijaRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskelija, UUID](organisaatioSoapServiceUrl,unauthorized.opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid)), "opiskelijat-authorizer")
+
+  override val opiskeluoikeusRekisteri = system.actorOf(Props(new OrganizationHierarchy[Opiskeluoikeus, UUID](organisaatioSoapServiceUrl, unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus) => opiskeluoikeus.myontaja)), "opiskeluoikeus-authorizer")
+
+  override val henkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo, UUID](organisaatioSoapServiceUrl, unauthorized.henkiloRekisteri, (henkilo) => OPH )), "henkilo-authorizer")
+
+
+  import _root_.akka.pattern.ask
+  implicit val ec:ExecutionContext = system.dispatcher
+
+
+  override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, unauthorized.arvosanaRekisteri, (arvosana) => unauthorized.suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).mapTo[Option[Suoritus]].map(_.map(_.myontaja).getOrElse("")))), "arvosana-authorizer")
+
+
+  import scala.reflect.runtime.universe._
+
+  def authorizer[A <: Resource[I] : ClassTag: Manifest, I](guarded: ActorRef, orgFinder: A => String): ActorRef = {
+    val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
+    system.actorOf(Props(new OrganizationHierarchy[A, I](organisaatioSoapServiceUrl, guarded, orgFinder)), s"$resource-authorizer")
+  }
+
+
+}
+
+class AuditedRegisters(amqUrl:String, amqQueue:String, authorizedRegisters:Registers, system:ActorSystem) extends Registers {
+
+  val log = LoggerFactory.getLogger(getClass)
+
+
+  //audit
+  val camel = CamelExtension(system)
+  val broker = "activemq"
+  camel.context.addComponent(broker, ActiveMQComponent.activeMQComponent(amqUrl))
+  implicit val audit = AuditUri(broker, amqQueue)
+
+
+  log.debug(s"AuditLog using uri: $amqUrl")
+
+  val suoritusRekisteri = getBroadcastForLogger[Suoritus, UUID](authorizedRegisters.suoritusRekisteri)
+  val opiskelijaRekisteri = getBroadcastForLogger[Opiskelija, UUID](authorizedRegisters.opiskelijaRekisteri)
+  val opiskeluoikeusRekisteri = getBroadcastForLogger[Opiskeluoikeus, UUID](authorizedRegisters.opiskeluoikeusRekisteri)
+  val henkiloRekisteri = getBroadcastForLogger[Henkilo, UUID](authorizedRegisters.henkiloRekisteri)
+  val arvosanaRekisteri = getBroadcastForLogger[Arvosana, UUID](authorizedRegisters.arvosanaRekisteri)
+
+  import fi.vm.sade.hakurekisteri.integration.audit.AuditLog
+
+  import scala.reflect.runtime.universe._
+
+  def getBroadcastForLogger[A <: Resource[I]: TypeTag: ClassTag, I: TypeTag: ClassTag](rekisteri: ActorRef) = {
+    system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog[A,I](typeOf[A].typeSymbol.name.toString)).withDispatcher("akka.hakurekisteri.audit-dispatcher"), typeOf[A].typeSymbol.name.toString.toLowerCase+"-audit") ))))
+
+  }
+
 }
