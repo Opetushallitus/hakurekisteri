@@ -1,3 +1,5 @@
+import java.io.{Reader, File, InputStream}
+import java.nio.file.{Path, Files, Paths}
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.servlet.{DispatcherType, ServletContext, ServletContextEvent}
@@ -43,44 +45,15 @@ import scala.slick.driver.JdbcDriver.simple._
 import scala.util.Try
 
 
+
+
+
 class ScalatraBootstrap extends LifeCycle {
+
+  import Config._
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("hakurekisteri")
   implicit val ec:ExecutionContext = system.dispatcher
-  val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
-  val OPH = "1.2.246.562.10.00000000001"
-  
-  // by default the service urls point to QA
-  val hostQa = "testi.virkailija.opintopolku.fi"
-  val organisaatioServiceUrlQa = s"https://$hostQa/organisaatio-service"
-  val hakuappServiceUrlQa = s"https://$hostQa/haku-app"
-  val koodistoServiceUrlQa = s"https://$hostQa/koodisto-service"
-  val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
-  val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
-  val henkiloServiceUrlQa = s"https://$hostQa/authentication-service"
-  val virtaServiceUrlTest = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot"
-  val virtaJarjestelmaTest = ""
-  val virtaTunnusTest = ""
-  val virtaAvainTest = "salaisuus"
-  
-  // props
-  val serviceUser = OPHSecurity.config.properties("tiedonsiirto.app.username.to.suoritusrekisteri")
-  val servicePassword = OPHSecurity.config.properties("tiedonsiirto.app.password.to.suoritusrekisteri")
-  val serviceAccessUrl = "https://" + OPHSecurity.config.properties.getOrElse("host.virkailija", hostQa) + "/service-access"
-  val sijoitteluServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.sijoittelu-service", sijoitteluServiceUrlQa)
-  val tarjontaServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.tarjonta-service", tarjontaServiceUrlQa)
-  val henkiloServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.authentication-service", henkiloServiceUrlQa)
-  val hakuappServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.haku-service", hakuappServiceUrlQa)
-  val koodistoServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.koodisto-service", koodistoServiceUrlQa)
-  val organisaatioServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa)
-  val organisaatioSoapServiceUrl = OPHSecurity.config.properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa) + "/services/organisaatioService"
-  val maxApplications = OPHSecurity.config.properties.getOrElse("suoritusrekisteri.hakijat.max.applications", "2000").toInt
-  val virtaServiceUrl = OPHSecurity.config.properties.getOrElse("suoritusrekisteri.virta.service.url", virtaServiceUrlTest)
-  val virtaJarjestelma = OPHSecurity.config.properties.getOrElse("suoritusrekisteri.virta.jarjestelma", virtaJarjestelmaTest)
-  val virtaTunnus = OPHSecurity.config.properties.getOrElse("suoritusrekisteri.virta.tunnus", virtaTunnusTest)
-  val virtaAvain = OPHSecurity.config.properties.getOrElse("suoritusrekisteri.virta.avain", virtaAvainTest)
-  //val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
-  //implicit val audit = AuditUri(broker, OPHSecurity.config.properties.getOrElse("activemq.queue.name.log", "Sade.Log"))
 
   override def init(context: ServletContext) {
     OPHSecurity init context
@@ -168,7 +141,8 @@ class ScalatraBootstrap extends LifeCycle {
 
 
 object OPHSecurity extends ContextLoader with LifeCycle {
-  val config = OPHConfig(
+  val config = OPHConfig(Config.ophConfDir,
+    Config.propertyLocations,
     "cas_mode" -> "front",
     "cas_key" -> "suoritusrekisteri",
     "spring_security_default_access" -> "hasRole('ROLE_APP_SUORITUSREKISTERI')",
@@ -197,35 +171,14 @@ object OPHSecurity extends ContextLoader with LifeCycle {
   }
 }
 
-case class OPHConfig(props:(String, String)*) extends XmlWebApplicationContext {
-  val propertyLocations = Seq("override.properties", "suoritusrekisteri.properties", "common.properties")
+case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, String)*) extends XmlWebApplicationContext {
   val localProperties = (new java.util.Properties /: Map(props: _*)) {case (newProperties, (k,v)) => newProperties.put(k,v); newProperties}
-  val homeDir = sys.props.get("user.home").getOrElse("")
-  val ophConfDir = homeDir + "/oph-configuration/"
+  setConfigLocation("file:" + confDir + "security-context-backend.xml")
 
-  setConfigLocation("file:" + ophConfDir + "security-context-backend.xml")
 
-  val resources = for {
-    file <- propertyLocations.reverse
-  } yield new FileSystemResource(ophConfDir + file)
-
-  def properties: Map[String, String] =  {
-    import scala.collection.JavaConversions._
-    val rawMap = resources.map((fsr) => {val prop = new java.util.Properties; prop.load(fsr.getInputStream); Map(prop.toList: _*)}).
-      reduce(_ ++ _)
-
-    resolve(rawMap)
-  }
-
-  def resolve(source: Map[String, String]):Map[String,String] = {
-    val converted = source.mapValues(_.replace("${","€{"))
-    val unResolved = Set(converted.map((s) => (for (found <- "€\\{(.*?)\\}".r findAllMatchIn s._2) yield found.group(1)).toList).reduce(_ ++ _):_*)
-    val unResolvable = unResolved.filter((s) => converted.get(s).isEmpty)
-    if ((unResolved -- unResolvable).isEmpty)
-      converted.mapValues(_.replace("€{","${"))
-    else
-      resolve(converted.mapValues((s) => "€\\{(.*?)\\}".r replaceAllIn (s, m => {converted.getOrElse(m.group(1), "€{" + m.group(1) + "}") })))
-  }
+  val resources:Seq[FileSystemResource] = for (
+    fileName <- propertyFiles.reverse
+  ) yield new FileSystemResource(confDir.resolve(fileName).toAbsolutePath.toString)
 
   val placeholder = Bean(
     classOf[PropertySourcesPlaceholderConfigurer],
