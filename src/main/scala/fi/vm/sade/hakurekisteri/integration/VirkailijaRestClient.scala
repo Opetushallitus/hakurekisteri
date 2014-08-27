@@ -14,20 +14,27 @@ import scala.util.Try
 
 case class PreconditionFailedException(message: String) extends Exception(message)
 
-class VirkailijaRestClient(serviceAccessUrl: String,
+class VirkailijaRestClient(serviceAccessUrl: Option[String] = None,
                            serviceUrl: String,
-                           user: String,
-                           password: String)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) extends HakurekisteriJsonSupport {
+                           user: Option[String] = None,
+                           password: Option[String] = None)
+                          (implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) extends HakurekisteriJsonSupport {
 
   val logger = LoggerFactory.getLogger(getClass)
   val casClient = new CasClient(serviceAccessUrl, serviceUrl, user, password)
 
   def executeGet(uri: String): Future[HttpResponse] = {
-    casClient.getProxyTicket.flatMap((ticket) => {
-      val url = new URL(serviceUrl + uri)
-      logger.debug(s"calling url $url with ticket $ticket")
-      GET(url).addHeaders("CasSecurityTicket" -> ticket).apply
-    })
+    val url = new URL(serviceUrl + uri)
+    (user, password) match {
+      case (None, None) =>
+        logger.debug(s"calling url $url"); GET(url).apply
+      case (Some(u), Some(p)) =>
+        casClient.getProxyTicket.flatMap((ticket) => {
+          logger.debug(s"calling url $url with ticket $ticket");
+          GET(url).addHeaders("CasSecurityTicket" -> ticket).apply
+        })
+      case _ => throw new IllegalArgumentException("either user or password is not defined")
+    }
   }
 
   def tryReadBody[A <: AnyRef: Manifest](response: HttpResponse): Try[A] = {

@@ -1,14 +1,16 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
-import akka.actor.Actor
+import akka.actor.{ActorRef, Actor}
 import akka.event.Logging
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatiopalvelu
-import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaClient
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{Komo, SearchKomoQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, yksilollistaminen}
 import org.joda.time.LocalDate
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
 import akka.pattern.pipe
 
 case class VirtaQuery(oppijanumero: Option[String], hetu: Option[String]) {
@@ -17,7 +19,7 @@ case class VirtaQuery(oppijanumero: Option[String], hetu: Option[String]) {
 
 case class KomoNotFoundException(message: String) extends Exception(message)
 
-class VirtaActor(virtaClient: VirtaClient, organisaatiopalvelu: Organisaatiopalvelu, tarjontaClient: TarjontaClient) extends Actor {
+class VirtaActor(virtaClient: VirtaClient, organisaatiopalvelu: Organisaatiopalvelu, tarjontaActor: ActorRef) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
 
@@ -81,7 +83,10 @@ class VirtaActor(virtaClient: VirtaClient, organisaatiopalvelu: Organisaatiopalv
   }
 
   def resolveKomoOid(koulutuskoodi: String): Future[String] = {
-    tarjontaClient.searchKomo(koulutuskoodi).map(_.headOption match {
+    import akka.pattern.ask
+    implicit val defaultTimeout: Timeout = 10.seconds
+
+    (tarjontaActor ? SearchKomoQuery(koulutuskoodi)).mapTo[Seq[Komo]].map(_.headOption match {
       case Some(komo) => komo.oid
       case _ => throw KomoNotFoundException(s"komo not found with koulutuskoodi $koulutuskoodi") // FIXME should fallback to saving koulutuskoodi instead
     })

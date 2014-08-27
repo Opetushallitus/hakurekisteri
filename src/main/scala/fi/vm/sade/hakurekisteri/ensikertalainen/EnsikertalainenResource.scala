@@ -7,7 +7,7 @@ import fi.vm.sade.generic.common.HetuUtils
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{TarjontaClient, Komo}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo}
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaQuery
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{OpiskeluoikeusQuery, Opiskeluoikeus}
 import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
@@ -24,7 +24,7 @@ case class Ensikertalainen(ensikertalainen: Boolean)
 case class HetuNotFoundException(message: String) extends Exception(message)
 case class ParamMissingException(message: String) extends IllegalArgumentException(message)
 
-class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaClient: TarjontaClient)
+class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaActor: ActorRef)
                              (implicit val sw: Swagger, system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
 
   override protected def applicationDescription: String = "Korkeakouluhakujen kiintiöiden ensikertalaisuuden kyselyrajapinta"
@@ -71,14 +71,14 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
       suoritukset <- getSuoritukset(henkiloOid);
       tupled <- findKomos(suoritukset)
     ) yield tupled collect {
-      case (Some(komo), suoritus) if komo.isKorkeakoulututkinto => suoritus
+      case (komo, suoritus) if komo.isKorkeakoulututkinto => suoritus
     }
   }
 
-  def findKomos(suoritukset: Seq[Suoritus]): Future[Seq[(Option[Komo], Suoritus)]] = {
+  def findKomos(suoritukset: Seq[Suoritus]): Future[Seq[(Komo, Suoritus)]] = {
     Future.sequence(for (
       suoritus <- suoritukset
-    ) yield tarjontaClient.getKomo(suoritus.komo).map((_, suoritus)))
+    ) yield (tarjontaActor ? GetKomoQuery(suoritus.komo)).mapTo[Komo].map((_, suoritus)))
   }
 
   def getSuoritukset(henkiloOid: String): Future[Seq[Suoritus]] = {
