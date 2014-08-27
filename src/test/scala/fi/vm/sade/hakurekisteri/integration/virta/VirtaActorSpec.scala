@@ -7,8 +7,9 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import com.stackmob.newman.request._
 import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
 import com.stackmob.newman.{RawBody, Headers, HttpClient}
+import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, Organisaatiopalvelu}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaClient
+import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import org.joda.time.{LocalDate}
@@ -58,7 +59,8 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with AsyncAssertions w
       )
     )
 
-    val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatiopalvelu, tarjontapalvelu)))
+    val tarjontaActor: ActorRef = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(serviceUrl = "http://localhost")(tarjontaHttpClient, ec))))
+    val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatiopalvelu, tarjontaActor)))
 
     val result = (virtaActor ? VirtaQuery(Some("1.2.3"), Some("111111-1975")))(akka.util.Timeout(3, TimeUnit.SECONDS)).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])]
 
@@ -106,7 +108,6 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with AsyncAssertions w
     override def post(url: URL, headers: Headers, body: RawBody): PostRequest = ???
     override def head(url: URL, headers: Headers): HeadRequest = ???
   }
-  val tarjontapalvelu = new TarjontaClient("http://localhost/tarjonta-service")(tarjontaHttpClient, ec)
 
   val json782603 = """{
     |"result":[

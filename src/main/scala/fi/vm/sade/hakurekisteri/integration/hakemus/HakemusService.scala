@@ -62,7 +62,7 @@ class HakemusJournal extends InMemJournal[FullHakemus, String] {
   }
 }
 
-class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: String, password: String, override val journal: Journal[FullHakemus, String] = new HakemusJournal()) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
+class HakemusActor(serviceAccessUrl: Option[String], serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: Option[String], password: Option[String], override val journal: Journal[FullHakemus, String] = new HakemusJournal()) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
   def this(config:ServiceConfig, maxApplications: Int) = this(config.serviceAccessUrl, config.serviceUrl, maxApplications, config.user, config.password)
   import scala.concurrent.duration._
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
@@ -104,13 +104,13 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
       map(_.getOrElse(0))
   }
 
-  def handleNew(hakemukset: List[FullHakemus]):Unit = {
+  def handleNew(hakemukset: List[FullHakemus]) {
     hakemukset.foreach(self.tell(_, ActorRef.noSender))
   }
 
   def restRequest[A <: AnyRef](user: Option[User], url: URL)(implicit mf : Manifest[A]): Future[Option[A]] = {
     casClient.getProxyTicket.flatMap((ticket) => {
-      logger.debug("calling haku-app [url={}, ticket={}]", url, ticket)
+      logger.debug(s"calling haku-app url $url, ticket $ticket")
 
       GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(response => {
         if (response.code == HttpResponseCode.Ok) {
@@ -119,9 +119,9 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
 
           hakemusHaku
         } else {
-          logger.error("call to haku-app [url={}, ticket={}] failed: {}", url, ticket, response.code)
+          logger.error(s"call to haku-app url $url failed: ${response.code}")
 
-          throw new RuntimeException("virhe kutsuttaessa hakupalvelua: %s".format(response.code))
+          throw new RuntimeException(s"virhe kutsuttaessa hakupalvelua: ${response.code}")
         }
       })
     })
@@ -158,4 +158,4 @@ class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest
   }
 }
 
-case class ReloadHaku(haku:String)
+case class ReloadHaku(haku: String)

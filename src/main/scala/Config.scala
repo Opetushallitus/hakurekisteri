@@ -30,9 +30,9 @@ object Config {
   lazy val properties: Map[String, String] = loadProperties(resources.map(Files.newInputStream(_)))
 
   // props
-  val serviceUser = properties("tiedonsiirto.app.username.to.suoritusrekisteri")
-  val servicePassword = properties("tiedonsiirto.app.password.to.suoritusrekisteri")
-  val serviceAccessUrl = "https://" + properties.getOrElse("host.virkailija", hostQa) + "/service-access"
+  val serviceUser = Some(properties("tiedonsiirto.app.username.to.suoritusrekisteri"))
+  val servicePassword = Some(properties("tiedonsiirto.app.password.to.suoritusrekisteri"))
+  val serviceAccessUrl = Some("https://" + properties.getOrElse("host.virkailija", hostQa) + "/service-access")
   val sijoitteluServiceUrl = properties.getOrElse("cas.service.sijoittelu-service", sijoitteluServiceUrlQa)
   val tarjontaServiceUrl = properties.getOrElse("cas.service.tarjonta-service", tarjontaServiceUrlQa)
   val henkiloServiceUrl = properties.getOrElse("cas.service.authentication-service", henkiloServiceUrlQa)

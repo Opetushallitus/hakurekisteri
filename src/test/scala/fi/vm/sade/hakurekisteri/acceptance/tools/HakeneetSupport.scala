@@ -1,8 +1,10 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
+import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AkkaHakupalvelu, Hakupalvelu, ListHakemus, FullHakemus}
-import fi.vm.sade.hakurekisteri.integration.koodisto.Koodistopalvelu
+import fi.vm.sade.hakurekisteri.integration.koodisto.{Koodisto, Koodi, KoodistoActor, Koodistopalvelu}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatiopalvelu, Organisaatio, OrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.sijoittelu._
 import org.scalatra.swagger.Swagger
@@ -13,9 +15,13 @@ import java.util.concurrent.TimeUnit
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
 import org.scalatest.Suite
 import org.scalatra.test.HttpComponentsClient
+import org.specs.mock.Mockito
+import org.specs.specification.Examples
 import scala.concurrent.{Future, ExecutionContext}
 
-trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport {
+trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport with Mockito {
+  override def forExample: Examples = ???
+  override def lastExample: Option[Examples] = ???
 
   object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None)
   object OppilaitosY extends Organisaatio("1.10.2", Map("fi" -> "Oppilaitos Y"), None, Some("00002"), None)
@@ -199,11 +205,9 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     }
   }
 
-  object koodistopalvelu extends Koodistopalvelu {
-    override def getRinnasteinenKoodiArvo(koodiUri: String, rinnasteinenKoodistoUri: String): Future[String] = koodiUri match {
-      case _ => Future.successful("246")
-    }
-  }
+  val koodistoClient = mock[VirkailijaRestClient]
+  koodistoClient.readObject[Seq[Koodi]]("", HttpResponseCode.Ok) returns Future.successful(Seq(Koodi("246", "", Koodisto(""))))
+  val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient)))
 
   object sijoittelupalvelu extends Sijoittelupalvelu {
     override def getSijoitteluTila(hakuOid: String): Future[SijoitteluPagination] = hakuOid match {
@@ -246,10 +250,9 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object hakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
-
     val orgAct = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
     val sijoittelu = system.actorOf(Props(new SijoitteluActor(sijoittelupalvelu)))
-    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodistopalvelu, sijoittelu)))
+    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodisto, sijoittelu)))
 
     def get(q: HakijaQuery) = {
       hakijaActor ? q

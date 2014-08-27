@@ -129,16 +129,17 @@ class RestSijoittelupalvelu(config:ServiceConfig)(implicit val ec: ExecutionCont
   override def getSijoitteluTila(hakuOid: String): Future[SijoitteluPagination] = {
     val url = new URL(config.serviceUrl + "/resources/sijoittelu/" + hakuOid + "/sijoitteluajo/latest/hakemukset")
     casClient.getProxyTicket.flatMap((ticket) => {
-      logger.debug("calling sijoittelu-service [url={}, ticket={}]", Seq(url, ticket):_*)
+      logger.debug(s"calling sijoittelu-service url $url, ticket $ticket")
+
       GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map((response: HttpResponse) => {
       if (response.code == HttpResponseCode.Ok) {
         val sijoitteluTulos = readBody[SijoitteluPagination](response)
-        logger.debug("got response from [url={}, ticket={}]", Seq(url, ticket):_*)
+        logger.debug(s"got response from url $url, ticket $ticket")
 
         sijoitteluTulos
       } else {
-        logger.error("call to sijoittelu-service [url={}, ticket={}] failed: {}", url, ticket, response.code)
-        throw new RuntimeException("virhe kutsuttaessa sijoittelupalvelua: %s".format(response.code))
+        logger.error(s"call to sijoittelu-service url $url, ticket $ticket failed: ${response.code}")
+        throw new RuntimeException(s"virhe kutsuttaessa sijoittelupalvelua: ${response.code}")
       }
     })})
   }

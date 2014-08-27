@@ -17,11 +17,13 @@ import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.henkilo._
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AkkaHakupalvelu, ReloadHaku, HakemusActor}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
+import fi.vm.sade.hakurekisteri.integration.{VirkailijaRestClient, henkilo}
+import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient, henkilo}
 import fi.vm.sade.hakurekisteri.integration.koodisto.RestKoodistopalvelu
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{OrganisaatioActor, RestOrganisaatiopalvelu}
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.{RestSijoittelupalvelu, SijoitteluActor}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaClient
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaConfig, VirtaClient, VirtaActor}
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
@@ -309,6 +311,9 @@ class BaseIntegrations(virtaConfig: VirtaConfig, henkiloConfig: ServiceConfig, t
 
 
   val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(hakemukset), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl), sijoittelu)))
+
+  val tarjontaActor = system.actorOf(Props(new TarjontaActor(tarjontaClient)), "tarjonta")
+
 
 
 

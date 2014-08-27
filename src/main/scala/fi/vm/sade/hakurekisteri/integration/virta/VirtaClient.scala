@@ -6,7 +6,6 @@ import com.stackmob.newman.HttpClient
 import com.stackmob.newman.dsl._
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.generic.common.HetuUtils
-import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
 
@@ -17,7 +16,8 @@ import scala.xml.{Elem, Node, NodeSeq, XML}
 class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot",
                                                     jarjestelma = "",
                                                     tunnus = "",
-                                                    avain = "salaisuus"))(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) {
+                                                    avain = "salaisuus"))
+                 (implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) {
   val logger = LoggerFactory.getLogger(getClass)
 
   def getOpiskelijanTiedot(oppijanumero: Option[String] = None, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
