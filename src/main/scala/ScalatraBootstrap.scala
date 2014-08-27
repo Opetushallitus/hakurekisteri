@@ -1,6 +1,8 @@
 import _root_.akka.camel.CamelExtension
 import _root_.akka.routing.BroadcastRouter
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
+import fi.vm.sade.hakurekisteri.integration.hakemus.ReloadHaku
+import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -15,7 +17,7 @@ import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.henkilo._
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AkkaHakupalvelu, ReloadHaku, HakemusActor}
-import fi.vm.sade.hakurekisteri.integration.{VirkailijaRestClient, henkilo}
+import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient, henkilo}
 import fi.vm.sade.hakurekisteri.integration.koodisto.RestKoodistopalvelu
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{OrganisaatioActor, RestOrganisaatiopalvelu}
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.{RestSijoittelupalvelu, SijoitteluActor}
@@ -66,31 +68,13 @@ class ScalatraBootstrap extends LifeCycle {
     val registers = new BareRegisters(system, journals)
     val authorizedRegisters = filter(registers) withAuthorizationDataFrom organisaatioSoapServiceUrl
 
-
-
-    val organisaatiopalvelu: RestOrganisaatiopalvelu = new RestOrganisaatiopalvelu(organisaatioServiceUrl)
-    val organisaatiot = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
-
-
-    val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(serviceAccessUrl, sijoitteluServiceUrl, serviceUser, servicePassword), "1.2.246.562.5.2013080813081926341927")))
-    val hakemukset = system.actorOf(Props(new HakemusActor(serviceAccessUrl, hakuappServiceUrl, maxApplications, serviceUser, servicePassword)), "hakemus")
-
-    val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.suoritusRekisteri, authorizedRegisters.opiskelijaRekisteri, hakemukset)), "healthcheck")
-
-    system.scheduler.schedule(1.second, 2.hours, hakemukset, ReloadHaku("1.2.246.562.5.2013080813081926341927"))
-    system.scheduler.schedule(5.minutes, 2.hours, hakemukset, ReloadHaku("1.2.246.562.5.2014022711042555034240"))
-
-    val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(hakemukset), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl), sijoittelu)))
-
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, registers.suoritusRekisteri, journals.arvosanaJournal)), "perusopetus-sanity")
 
-    implicit val httpClient = new ApacheHttpClient()
-    val virtaConfig = VirtaConfig(serviceUrl = virtaServiceUrl, jarjestelma = virtaJarjestelma, tunnus = virtaTunnus, avain = virtaAvain)
-    val tarjontaClient = new TarjontaClient(tarjontaServiceUrl)
-    val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig), organisaatiopalvelu, tarjontaClient)), "virta")
-    val henkiloClient = new VirkailijaRestClient(serviceAccessUrl = serviceAccessUrl, serviceUrl = henkiloServiceUrl, user = serviceUser, password = servicePassword)
-    val henkiloActor = system.actorOf(Props(new henkilo.HenkiloActor(henkiloClient)), "henkilo")
+    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaServiceUrl, organisaatioServiceUrl, sijoitteluConfig, hakemusConfig, maxApplications, koodistoServiceUrl, system)
+    val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.suoritusRekisteri, authorizedRegisters.opiskelijaRekisteri, integrations.hakemukset)), "healthcheck")
 
+    system.scheduler.schedule(1.second, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.5.2013080813081926341927"))
+    system.scheduler.schedule(5.minutes, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.5.2014022711042555034240"))
 
 
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
@@ -98,8 +82,8 @@ class ScalatraBootstrap extends LifeCycle {
     context mount(new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport, "/rest/v1/opiskeluoikeudet")
     context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](authorizedRegisters.henkiloRekisteri, HenkiloQuery(_)) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand] with SpringSecuritySupport, "/rest/v1/henkilot")
     context mount(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport, "/rest/v1/arvosanat")
-    context mount(new HakijaResource(hakijat), "/rest/v1/hakijat")
-    context mount(new EnsikertalainenResource(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, virta, henkiloActor, tarjontaClient), "/rest/v1/ensikertalainen")
+    context mount(new HakijaResource(integrations.hakijat), "/rest/v1/hakijat")
+    context mount(new EnsikertalainenResource(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkiloActor, integrations.tarjontaClient), "/rest/v1/ensikertalainen")
     context mount(new HealthcheckResource(healthcheck), "/healthcheck")
     context mount(new ResourcesApp, "/rest/v1/api-docs/*")
     context mount(new SanityResource(sanity), "/sanity")
@@ -284,5 +268,48 @@ class AuditedRegisters(amqUrl:String, amqQueue:String, authorizedRegisters:Regis
     system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog[A,I](typeOf[A].typeSymbol.name.toString)).withDispatcher("akka.hakurekisteri.audit-dispatcher"), typeOf[A].typeSymbol.name.toString.toLowerCase+"-audit") ))))
 
   }
+
+
+
+
+}
+
+trait Integrations {
+  val virta:ActorRef
+  val henkiloActor:ActorRef
+  val organisaatiot:ActorRef
+
+  val sijoittelu:ActorRef
+  val hakemukset:ActorRef
+
+  val hakijat:ActorRef
+
+}
+
+class BaseIntegrations(virtaConfig: VirtaConfig, henkiloConfig: ServiceConfig, tarjontaServiceUrl: String,organisaatioServiceUrl:String, sijoitteluConfig: ServiceConfig, hakemusConfig: ServiceConfig, maxApplications: Int,  koodistoServiceUrl: String,  system:ActorSystem) extends Integrations {
+
+  implicit val ec:ExecutionContext = system.dispatcher
+  implicit val httpClient = new ApacheHttpClient()
+
+
+  val tarjontaClient = new TarjontaClient(tarjontaServiceUrl)
+  val henkiloClient = new VirkailijaRestClient(henkiloConfig)
+  val organisaatiopalvelu: RestOrganisaatiopalvelu = new RestOrganisaatiopalvelu(organisaatioServiceUrl)
+
+
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig), organisaatiopalvelu, tarjontaClient)), "virta")
+
+  val henkiloActor = system.actorOf(Props(new henkilo.HenkiloActor(henkiloClient)), "henkilo")
+
+  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
+
+
+  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(sijoitteluConfig), "1.2.246.562.5.2013080813081926341927")))
+  val hakemukset = system.actorOf(Props(new HakemusActor(hakemusConfig, maxApplications)), "hakemus")
+
+
+  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(hakemukset), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl), sijoittelu)))
+
+
 
 }

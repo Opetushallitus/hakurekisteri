@@ -1,3 +1,5 @@
+import fi.vm.sade.hakurekisteri.integration.ServiceConfig
+import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import java.io.InputStream
 import java.nio.file.{Files, Paths}
 
@@ -23,6 +25,8 @@ object Config {
   val virtaTunnusTest = ""
   val virtaAvainTest = "salaisuus"
 
+
+
   lazy val properties: Map[String, String] = loadProperties(resources.map(Files.newInputStream(_)))
 
   // props
@@ -42,6 +46,11 @@ object Config {
   val virtaTunnus = properties.getOrElse("suoritusrekisteri.virta.tunnus", virtaTunnusTest)
   val virtaAvain = properties.getOrElse("suoritusrekisteri.virta.avain", virtaAvainTest)
 
+
+  val virtaConfig = VirtaConfig(serviceUrl = virtaServiceUrl, jarjestelma = virtaJarjestelma, tunnus = virtaTunnus, avain = virtaAvain)
+  val henkiloConfig = ServiceConfig(serviceAccessUrl = serviceAccessUrl, serviceUrl = henkiloServiceUrl, user = serviceUser, password = servicePassword)
+  val sijoitteluConfig = ServiceConfig(serviceAccessUrl, sijoitteluServiceUrl, serviceUser, servicePassword)
+  val hakemusConfig = ServiceConfig(serviceAccessUrl, hakuappServiceUrl, serviceUser, servicePassword)
 
   //val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
   // val amqQueue = properties.getOrElse("activemq.queue.name.log", "Sade.Log")

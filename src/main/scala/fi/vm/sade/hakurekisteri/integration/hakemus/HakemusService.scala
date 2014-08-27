@@ -16,6 +16,7 @@ import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceActor, ResourceServ
 
 import scala.concurrent.Future
 import scala.util.Try
+import fi.vm.sade.hakurekisteri.integration.ServiceConfig
 
 trait HakemusService extends ResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
   def filterField[F](field: Option[F], fieldExctractor: (FullHakemus) => F)(hakemus:FullHakemus) = field match {
@@ -62,6 +63,7 @@ class HakemusJournal extends InMemJournal[FullHakemus, String] {
 }
 
 class HakemusActor(serviceAccessUrl:String,  serviceUrl: String = "https://itest-virkailija.oph.ware.fi/haku-app", maxApplications: Int = 2000, user: String, password: String, override val journal: Journal[FullHakemus, String] = new HakemusJournal()) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
+  def this(config:ServiceConfig, maxApplications: Int) = this(config.serviceAccessUrl, config.serviceUrl, maxApplications, config.user, config.password)
   import scala.concurrent.duration._
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
   var healthCheck: Option[ActorRef] = None

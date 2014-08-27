@@ -14,10 +14,17 @@ import scala.util.Try
 
 case class PreconditionFailedException(message: String) extends Exception(message)
 
-class VirkailijaRestClient(serviceAccessUrl: String,
-                           serviceUrl: String,
-                           user: String,
-                           password: String)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) extends HakurekisteriJsonSupport {
+case class ServiceConfig(serviceAccessUrl: String,
+                         serviceUrl: String,
+                         user: String,
+                         password: String)
+
+class VirkailijaRestClient(config:ServiceConfig)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) extends HakurekisteriJsonSupport {
+
+  val serviceAccessUrl: String = config.serviceAccessUrl
+  val serviceUrl: String = config.serviceUrl
+  val user: String = config.user
+  val password: String = config.password
 
   val logger = LoggerFactory.getLogger(getClass)
   val casClient = new CasClient(serviceAccessUrl, serviceUrl, user, password)

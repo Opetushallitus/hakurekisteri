@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
+import fi.vm.sade.hakurekisteri.integration.ServiceConfig
 
 object SijoitteluValintatuloksenTila extends Enumeration {
   type SijoitteluValintatuloksenTila = Value
@@ -107,11 +108,13 @@ object SijoitteluTulos {
 
 case class SijoitteluQuery(hakuOid: String)
 
-class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "https://itest-virkailija.oph.ware.fi/sijoittelu-service", user: String, password: String)(implicit val ec: ExecutionContext) extends Sijoittelupalvelu with HakurekisteriJsonSupport {
+class RestSijoittelupalvelu(config:ServiceConfig)(implicit val ec: ExecutionContext) extends Sijoittelupalvelu with HakurekisteriJsonSupport {
+
+
   val logger = LoggerFactory.getLogger(getClass)
   import scala.concurrent.duration._
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
-  val casClient = new CasClient(serviceAccessUrl, serviceUrl, user, password)
+  val casClient = new CasClient(config.serviceAccessUrl, config.serviceUrl, config.user, config.password)
 
   def readBody[A <: AnyRef: Manifest](response: HttpResponse): A = {
     import org.json4s.jackson.Serialization.read
@@ -124,7 +127,7 @@ class RestSijoittelupalvelu(serviceAccessUrl: String, serviceUrl: String = "http
   }
 
   override def getSijoitteluTila(hakuOid: String): Future[SijoitteluPagination] = {
-    val url = new URL(serviceUrl + "/resources/sijoittelu/" + hakuOid + "/sijoitteluajo/latest/hakemukset")
+    val url = new URL(config.serviceUrl + "/resources/sijoittelu/" + hakuOid + "/sijoitteluajo/latest/hakemukset")
     casClient.getProxyTicket.flatMap((ticket) => {
       logger.debug("calling sijoittelu-service [url={}, ticket={}]", Seq(url, ticket):_*)
       GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map((response: HttpResponse) => {
