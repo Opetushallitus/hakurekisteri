@@ -3,8 +3,11 @@ import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import java.io.InputStream
 import java.nio.file.{Files, Paths}
 
+import org.slf4j.LoggerFactory
+
 
 object Config {
+  val log = LoggerFactory.getLogger(getClass)
   val homeDir = sys.props.get("user.home").getOrElse("")
   val ophConfDir = Paths.get(homeDir, "/oph-configuration/")
 
@@ -25,8 +28,11 @@ object Config {
   val virtaTunnusTest = ""
   val virtaAvainTest = "salaisuus"
 
+  val resources = for {
+    file <- propertyLocations.reverse
+  } yield ophConfDir.resolve(file)
 
-
+  log.info(s"lazy loading properties from paths $resources")
   lazy val properties: Map[String, String] = loadProperties(resources.map(Files.newInputStream(_)))
 
   // props
@@ -56,11 +62,6 @@ object Config {
 
   //val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
   // val amqQueue = properties.getOrElse("activemq.queue.name.log", "Sade.Log")
-
-
-  val resources = for {
-    file <- propertyLocations.reverse
-  } yield ophConfDir.resolve(file)
 
   def loadProperties(resources: Seq[InputStream]): Map[String, String] = {
     import scala.collection.JavaConversions._

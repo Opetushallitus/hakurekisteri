@@ -124,7 +124,7 @@ object OPHSecurity extends ContextLoader with LifeCycle {
 
 case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, String)*) extends XmlWebApplicationContext {
   val localProperties = (new java.util.Properties /: Map(props: _*)) {case (newProperties, (k,v)) => newProperties.put(k,v); newProperties}
-  setConfigLocation("file:" + confDir + "security-context-backend.xml")
+  setConfigLocation("file:" + confDir + "/security-context-backend.xml")
 
 
   val resources: Seq[FileSystemResource] = for (
