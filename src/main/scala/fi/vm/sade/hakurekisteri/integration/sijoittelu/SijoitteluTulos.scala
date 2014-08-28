@@ -50,10 +50,6 @@ case class SijoitteluHakija(hakutoiveet: Option[Seq[SijoitteluHakutoive]], sukun
 
 case class SijoitteluPagination(results: Seq[SijoitteluHakija], totalCount: Int)
 
-trait Sijoittelupalvelu {
-  def getSijoitteluTila(hakuOid: String): Future[SijoitteluPagination]
-}
-
 trait SijoitteluTulos {
   def pisteet(hakemus: String, kohde: String): Option[BigDecimal]
 
@@ -107,39 +103,4 @@ object SijoitteluTulos {
 }
 
 case class SijoitteluQuery(hakuOid: String)
-
-class RestSijoittelupalvelu(config: ServiceConfig)(implicit val ec: ExecutionContext) extends Sijoittelupalvelu with HakurekisteriJsonSupport {
-  val logger = LoggerFactory.getLogger(getClass)
-  import scala.concurrent.duration._
-  implicit val httpClient = new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
-  val casClient = new CasClient(config.serviceAccessUrl, config.serviceUrl, config.user, config.password)
-
-  def readBody[A <: AnyRef: Manifest](response: HttpResponse): A = {
-    import org.json4s.jackson.Serialization.read
-    val rawResult = Try(read[A](response.bodyString))
-
-    if (rawResult.isFailure) logger.warn("Failed to deserialize", rawResult.failed.get)
-
-    val result = rawResult.get
-    result
-  }
-
-  override def getSijoitteluTila(hakuOid: String): Future[SijoitteluPagination] = {
-    val url = new URL(config.serviceUrl + "/resources/sijoittelu/" + hakuOid + "/sijoitteluajo/latest/hakemukset")
-    casClient.getProxyTicket.flatMap((ticket) => {
-      logger.debug(s"calling sijoittelu-service url $url, ticket $ticket")
-
-      GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map((response: HttpResponse) => {
-      if (response.code == HttpResponseCode.Ok) {
-        val sijoitteluTulos = readBody[SijoitteluPagination](response)
-        logger.debug(s"got response from url $url, ticket $ticket")
-
-        sijoitteluTulos
-      } else {
-        logger.error(s"call to sijoittelu-service url $url, ticket $ticket failed: ${response.code}")
-        throw new RuntimeException(s"virhe kutsuttaessa sijoittelupalvelua: ${response.code}")
-      }
-    })})
-  }
-}
 

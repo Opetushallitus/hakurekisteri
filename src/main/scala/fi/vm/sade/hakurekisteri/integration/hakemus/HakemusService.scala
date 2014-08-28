@@ -65,8 +65,6 @@ class HakemusJournal extends InMemJournal[FullHakemus, String] {
 class HakemusActor(hakemusClient: VirkailijaRestClient,
                    maxApplications: Int = 2000,
                    override val journal: Journal[FullHakemus, String] = new HakemusJournal()) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
-  import scala.concurrent.duration._
-  implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
   var healthCheck: Option[ActorRef] = None
   val logger = Logging(context.system, this)
 

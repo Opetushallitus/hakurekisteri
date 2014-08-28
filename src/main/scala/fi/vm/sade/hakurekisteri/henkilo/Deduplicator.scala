@@ -58,7 +58,7 @@ class Deduplicator(suoritusRekisteri:ActorRef, opiskelijaRekisteri:ActorRef) ext
         val retry = context.system.scheduler.schedule(1.minute, 1.minute)(askForDuplicates)
 
         override def receive: Actor.Receive = {
-          case suoritukset:Seq[Suoritus with Identified[UUID]] =>
+          case suoritukset: Seq[Suoritus with Identified[UUID]] =>
             for (s <- suoritukset )  if (s.henkiloOid != newOid) {
               suoritusRekisteri ! Suoritus(s.komo: String, s.myontaja: String, s.tila: String, s.valmistuminen, newOid, s.yksilollistaminen, s.suoritusKieli).identify(s.id)
               updatedSuoritukset.put(s.id,Promise[Unit])
@@ -67,8 +67,7 @@ class Deduplicator(suoritusRekisteri:ActorRef, opiskelijaRekisteri:ActorRef) ext
             }
             sentSuoritukset.success(())
 
-
-          case opiskelijat:Seq[Opiskelija with Identified[UUID]] =>
+          case opiskelijat: Seq[Opiskelija with Identified[UUID]] =>
             for (o <- opiskelijat) if (o.henkiloOid != newOid) {
               opiskelijaRekisteri ! Opiskelija(o.oppilaitosOid, o.luokkataso, o.luokka, newOid, o.alkuPaiva, o.loppuPaiva).identify(o.id)
               updatedOpiskelijat.put(o.id, Promise[Unit])

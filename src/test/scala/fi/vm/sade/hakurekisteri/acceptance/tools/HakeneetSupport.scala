@@ -198,9 +198,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   koodistoClient.readObject[Seq[Koodi]]("", HttpResponseCode.Ok) returns Future.successful(Seq(Koodi("246", "", Koodisto(""))))
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient)))
 
-  object sijoittelupalvelu extends Sijoittelupalvelu {
-    override def getSijoitteluTila(hakuOid: String): Future[SijoitteluPagination] = hakuOid match {
-      case _ => Future.successful(
+  val f = Future.successful(
         SijoitteluPagination(
           Seq(
             SijoitteluHakija(
@@ -233,14 +231,16 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
               etunimi = None,
               sukunimi = None)),
           1))
-    }
-  }
+
+  val sijoitteluClient = mock[VirkailijaRestClient]
+  sijoitteluClient.readObject[SijoitteluPagination]("/resources/sijoittelu/1.1/sijoitteluajo/latest/hakemukset", HttpResponseCode.Ok) returns f
+  sijoitteluClient.readObject[SijoitteluPagination]("/resources/sijoittelu/1.2/sijoitteluajo/latest/hakemukset", HttpResponseCode.Ok) returns f
 
   object hakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
     val orgAct = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
-    val sijoittelu = system.actorOf(Props(new SijoitteluActor(sijoittelupalvelu)))
+    val sijoittelu = system.actorOf(Props(new SijoitteluActor(sijoitteluClient)))
     val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodisto, sijoittelu)))
 
     def get(q: HakijaQuery) = {

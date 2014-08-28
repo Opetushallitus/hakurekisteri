@@ -19,7 +19,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{OrganisaatioActor, RestOrganisaatiopalvelu}
-import fi.vm.sade.hakurekisteri.integration.sijoittelu.{RestSijoittelupalvelu, SijoitteluActor}
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluActor
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaConfig, VirtaClient, VirtaActor}
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
@@ -262,7 +262,8 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        system: ActorSystem) extends Integrations {
 
   implicit val ec:ExecutionContext = system.dispatcher
-  implicit val httpClient = new ApacheHttpClient()
+
+  implicit val httpClient = new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)
 
   val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig))), "tarjonta")
 
@@ -274,7 +275,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val organisaatiot = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
 
-  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(sijoitteluConfig), "1.2.246.562.5.2013080813081926341927")))
+  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig), "1.2.246.562.5.2013080813081926341927")))
 
   val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig), maxApplications)), "hakemus")
 

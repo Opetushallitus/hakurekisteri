@@ -1,11 +1,13 @@
 package fi.vm.sade.hakurekisteri.integration.sijoittelu
 
 import akka.actor.{Cancellable, Actor}
+import com.stackmob.newman.response.HttpResponseCode
+import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import scala.concurrent.Future
 import scala.compat.Platform
 import akka.event.Logging
 
-class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) extends Actor {
+class SijoitteluActor(sijoitteluClient: VirkailijaRestClient, keepAlive: String*) extends Actor {
   import akka.pattern._
 
   import scala.concurrent.duration._
@@ -71,9 +73,9 @@ class SijoitteluActor(cachedService: Sijoittelupalvelu, keepAlive: String*) exte
   }
 
   def sijoitteluTulos(haku: String): Future[SijoitteluTulos] = {
-    cachedService.getSijoitteluTila(haku).map(
-      _.results)
-      .map(SijoitteluTulos(_))
+    sijoitteluClient.readObject[SijoitteluPagination](s"/resources/sijoittelu/$haku/sijoitteluajo/latest/hakemukset", HttpResponseCode.Ok).
+      map(_.results).
+      map(SijoitteluTulos(_))
   }
 
   def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
