@@ -19,7 +19,7 @@ case class ServiceConfig(serviceAccessUrl: Option[String] = None,
                          user: Option[String] = None,
                          password: Option[String] = None)
 
-class VirkailijaRestClient(config:ServiceConfig)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) extends HakurekisteriJsonSupport {
+class VirkailijaRestClient(config: ServiceConfig)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) extends HakurekisteriJsonSupport {
 
   val serviceAccessUrl: Option[String] = config.serviceAccessUrl
   val serviceUrl: String = config.serviceUrl

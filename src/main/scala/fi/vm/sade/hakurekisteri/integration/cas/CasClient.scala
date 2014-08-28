@@ -16,7 +16,7 @@ class CasClient(serviceAccessUrl: Option[String] = None,
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
 
   def getProxyTicket: Future[String] = {
-    if (serviceAccessUrl.isEmpty || user.isEmpty || password.isEmpty) throw new IllegalArgumentException("user or password is not defined")
+    if (serviceAccessUrl.isEmpty || user.isEmpty || password.isEmpty) throw new IllegalArgumentException("serviceAccessUrl, user or password is not defined")
 
     POST(new URL(s"${serviceAccessUrl.get}/accessTicket")).
       addHeaders("Content-Type" -> "application/x-www-form-urlencoded").

@@ -4,7 +4,7 @@ import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AkkaHakupalvelu, Hakupalvelu, ListHakemus, FullHakemus}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{Koodisto, Koodi, KoodistoActor, Koodistopalvelu}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{Koodisto, Koodi, KoodistoActor}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatiopalvelu, Organisaatio, OrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.sijoittelu._
 import org.scalatra.swagger.Swagger
@@ -140,30 +140,20 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   }
 
   import _root_.akka.pattern.ask
-
   implicit val system = ActorSystem()
   implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(60, TimeUnit.SECONDS)
 
-
   object hakupalvelu extends Hakupalvelu {
-
-
     var tehdytHakemukset: Seq[FullHakemus] = Seq()
 
-
-    
-    
     override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = q.organisaatio match {
-
       case Some(org) => {
         println("Haetaan tarjoajalta %s".format(org))
         Future(hakijat.filter(_.hakemus.hakutoiveet.exists(_.hakukohde.koulutukset.exists((kohde) => {println(kohde);kohde.tarjoaja == org}))))
       }
       case _ => Future(hakijat)
-      
     }
-
 
     def hakijat: Seq[Hakija] = {
       tehdytHakemukset.map(AkkaHakupalvelu.getHakija(_))
@@ -188,7 +178,6 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     def has(hakemukset: FullHakemus*) = {
       tehdytHakemukset = hakemukset
     }
-
   }
 
   object organisaatiopalvelu extends Organisaatiopalvelu {

@@ -51,6 +51,8 @@ object Config {
   val henkiloConfig = ServiceConfig(serviceAccessUrl = serviceAccessUrl, serviceUrl = henkiloServiceUrl, user = serviceUser, password = servicePassword)
   val sijoitteluConfig = ServiceConfig(serviceAccessUrl, sijoitteluServiceUrl, serviceUser, servicePassword)
   val hakemusConfig = ServiceConfig(serviceAccessUrl, hakuappServiceUrl, serviceUser, servicePassword)
+  val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl)
+  val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl)
 
   //val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
   // val amqQueue = properties.getOrElse("activemq.queue.name.log", "Sade.Log")

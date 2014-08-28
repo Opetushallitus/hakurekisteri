@@ -108,9 +108,7 @@ object SijoitteluTulos {
 
 case class SijoitteluQuery(hakuOid: String)
 
-class RestSijoittelupalvelu(config:ServiceConfig)(implicit val ec: ExecutionContext) extends Sijoittelupalvelu with HakurekisteriJsonSupport {
-
-
+class RestSijoittelupalvelu(config: ServiceConfig)(implicit val ec: ExecutionContext) extends Sijoittelupalvelu with HakurekisteriJsonSupport {
   val logger = LoggerFactory.getLogger(getClass)
   import scala.concurrent.duration._
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()

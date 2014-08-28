@@ -7,7 +7,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import com.stackmob.newman.request._
 import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
 import com.stackmob.newman.{RawBody, Headers, HttpClient}
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, Organisaatiopalvelu}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
@@ -59,10 +59,10 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with AsyncAssertions w
       )
     )
 
-    val tarjontaActor: ActorRef = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(serviceUrl = "http://localhost")(tarjontaHttpClient, ec))))
+    val tarjontaActor: ActorRef = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost"))(tarjontaHttpClient, ec))))
     val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatiopalvelu, tarjontaActor)))
 
-    val result = (virtaActor ? VirtaQuery(Some("1.2.3"), Some("111111-1975")))(akka.util.Timeout(3, TimeUnit.SECONDS)).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])]
+    val result = (virtaActor ? VirtaQuery(Some("1.2.3"), Some("111111-1975")))(akka.util.Timeout(10, TimeUnit.SECONDS)).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])]
 
     waitFuture(result) {(r: (Seq[Opiskeluoikeus], Seq[Suoritus])) => {
       r._1.size should be(1)
@@ -78,7 +78,7 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with AsyncAssertions w
       w.dismiss()
     })
 
-    w.await(timeout(Span(4000, Millis)), dismissals(1))
+    w.await(timeout(Span(10000, Millis)), dismissals(1))
   }
 
   override def forExample: Examples = ???

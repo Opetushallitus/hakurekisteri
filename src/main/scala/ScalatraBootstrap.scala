@@ -1,8 +1,6 @@
 import _root_.akka.camel.CamelExtension
 import _root_.akka.routing.BroadcastRouter
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
-import fi.vm.sade.hakurekisteri.integration.hakemus.ReloadHaku
-import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -18,10 +16,8 @@ import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResour
 import fi.vm.sade.hakurekisteri.henkilo._
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AkkaHakupalvelu, ReloadHaku, HakemusActor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
-import fi.vm.sade.hakurekisteri.integration.{VirkailijaRestClient, henkilo}
+import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
-import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient, henkilo}
-import fi.vm.sade.hakurekisteri.integration.koodisto.RestKoodistopalvelu
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{OrganisaatioActor, RestOrganisaatiopalvelu}
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.{RestSijoittelupalvelu, SijoitteluActor}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaConfig, VirtaClient, VirtaActor}
@@ -52,11 +48,7 @@ import scala.slick.driver.JdbcDriver.simple._
 import scala.util.Try
 
 
-
-
-
 class ScalatraBootstrap extends LifeCycle {
-
   import Config._
   import AuthorizedRegisters._
   implicit val swagger: Swagger = new HakurekisteriSwagger
@@ -72,12 +64,11 @@ class ScalatraBootstrap extends LifeCycle {
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, registers.suoritusRekisteri, journals.arvosanaJournal)), "perusopetus-sanity")
 
-    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaServiceUrl, organisaatioServiceUrl, sijoitteluConfig, hakemusConfig, maxApplications, koodistoServiceUrl, system)
+    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioServiceUrl, sijoitteluConfig, hakemusConfig, maxApplications, koodistoConfig, system)
     val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.suoritusRekisteri, authorizedRegisters.opiskelijaRekisteri, integrations.hakemukset)), "healthcheck")
 
     system.scheduler.schedule(1.second, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.5.2013080813081926341927"))
     system.scheduler.schedule(5.minutes, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.5.2014022711042555034240"))
-
 
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
     context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")
@@ -85,7 +76,7 @@ class ScalatraBootstrap extends LifeCycle {
     context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](authorizedRegisters.henkiloRekisteri, HenkiloQuery(_)) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand] with SpringSecuritySupport, "/rest/v1/henkilot")
     context mount(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport, "/rest/v1/arvosanat")
     context mount(new HakijaResource(integrations.hakijat), "/rest/v1/hakijat")
-    context mount(new EnsikertalainenResource(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkiloActor, integrations.tarjontaClient), "/rest/v1/ensikertalainen")
+    context mount(new EnsikertalainenResource(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta), "/rest/v1/ensikertalainen")
     context mount(new HealthcheckResource(healthcheck), "/healthcheck")
     context mount(new ResourcesApp, "/rest/v1/api-docs/*")
     context mount(new SanityResource(sanity), "/sanity")
@@ -136,7 +127,7 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
   setConfigLocation("file:" + confDir + "security-context-backend.xml")
 
 
-  val resources:Seq[FileSystemResource] = for (
+  val resources: Seq[FileSystemResource] = for (
     fileName <- propertyFiles.reverse
   ) yield new FileSystemResource(confDir.resolve(fileName).toAbsolutePath.toString)
 
@@ -152,7 +143,7 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
   }
 
   object Bean {
-    def apply[C,A,B](clazz:Class[C], props: (A,B)*) = {
+    def apply[C, A, B](clazz: Class[C], props: (A, B)*) = {
       val definition = new RootBeanDefinition(clazz)
       definition.setPropertyValues(new MutablePropertyValues(Map(props: _*).asJava))
       definition
@@ -161,18 +152,14 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
 }
 
 trait Journals {
-
-  val suoritusJournal:SuoritusJournal
-  val opiskelijaJournal:OpiskelijaJournal
-  val opiskeluoikeusJournal:OpiskeluoikeusJournal
-  val henkiloJournal:HenkiloJournal
-  val arvosanaJournal:ArvosanaJournal
-
+  val suoritusJournal: SuoritusJournal
+  val opiskelijaJournal: OpiskelijaJournal
+  val opiskeluoikeusJournal: OpiskeluoikeusJournal
+  val henkiloJournal: HenkiloJournal
+  val arvosanaJournal: ArvosanaJournal
 }
 
 class DbJournals(jndiName:String) extends Journals {
-
-
   val database = Try(Database.forName(jndiName)).recover {
     case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
   }.get
@@ -184,17 +171,15 @@ class DbJournals(jndiName:String) extends Journals {
   override val arvosanaJournal = new ArvosanaJournal(database)
 }
 
-
 trait Registers {
-  val suoritusRekisteri:ActorRef
-  val opiskelijaRekisteri:ActorRef
-  val opiskeluoikeusRekisteri:ActorRef
-  val henkiloRekisteri:ActorRef
-  val arvosanaRekisteri:ActorRef
+  val suoritusRekisteri: ActorRef
+  val opiskelijaRekisteri: ActorRef
+  val opiskeluoikeusRekisteri: ActorRef
+  val henkiloRekisteri: ActorRef
+  val arvosanaRekisteri: ActorRef
 }
 
-
-class BareRegisters(system:ActorSystem, journals: Journals) extends Registers {
+class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
   override val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(journals.suoritusJournal)), "suoritukset")
   override val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(journals.opiskelijaJournal)), "opiskelijat")
   override val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusActor(journals.opiskeluoikeusJournal)), "opiskeluoikeudet")
@@ -202,8 +187,7 @@ class BareRegisters(system:ActorSystem, journals: Journals) extends Registers {
   override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(journals.arvosanaJournal)), "arvosanat")
 }
 
-class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized:Registers, system: ActorSystem) extends Registers {
-
+class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Registers, system: ActorSystem) extends Registers {
   val OPH = "1.2.246.562.10.00000000001"
 
   override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, (suoritus) => suoritus.myontaja)
@@ -214,13 +198,10 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized:Regis
 
   override val henkiloRekisteri =  system.actorOf(Props(new OrganizationHierarchy[Henkilo, UUID](organisaatioSoapServiceUrl, unauthorized.henkiloRekisteri, (henkilo) => OPH )), "henkilo-authorizer")
 
-
   import _root_.akka.pattern.ask
   implicit val ec:ExecutionContext = system.dispatcher
 
-
   override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, unauthorized.arvosanaRekisteri, (arvosana) => unauthorized.suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).mapTo[Option[Suoritus]].map(_.map(_.myontaja).getOrElse("")))), "arvosana-authorizer")
-
 
   import scala.reflect.runtime.universe._
 
@@ -228,31 +209,24 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized:Regis
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
     system.actorOf(Props(new OrganizationHierarchy[A, I](organisaatioSoapServiceUrl, guarded, orgFinder)), s"$resource-authorizer")
   }
-
-
 }
 
 object AuthorizedRegisters {
-  def filter(unauthorized:Registers): AuthorizerBuilder = new AuthorizerBuilder(unauthorized)
+  def filter(unauthorized: Registers): AuthorizerBuilder = new AuthorizerBuilder(unauthorized)
 
-  class AuthorizerBuilder(registers:Registers) {
-    def withAuthorizationDataFrom(url:String)(implicit system:ActorSystem) = new AuthorizedRegisters(url, registers, system)
-
-
+  class AuthorizerBuilder(registers: Registers) {
+    def withAuthorizationDataFrom(url: String)(implicit system: ActorSystem) = new AuthorizedRegisters(url, registers, system)
   }
 }
 
-class AuditedRegisters(amqUrl:String, amqQueue:String, authorizedRegisters:Registers, system:ActorSystem) extends Registers {
-
+class AuditedRegisters(amqUrl: String, amqQueue: String, authorizedRegisters: Registers, system: ActorSystem) extends Registers {
   val log = LoggerFactory.getLogger(getClass)
-
 
   //audit
   val camel = CamelExtension(system)
   val broker = "activemq"
   camel.context.addComponent(broker, ActiveMQComponent.activeMQComponent(amqUrl))
   implicit val audit = AuditUri(broker, amqQueue)
-
 
   log.debug(s"AuditLog using uri: $amqUrl")
 
@@ -263,58 +237,52 @@ class AuditedRegisters(amqUrl:String, amqQueue:String, authorizedRegisters:Regis
   val arvosanaRekisteri = getBroadcastForLogger[Arvosana, UUID](authorizedRegisters.arvosanaRekisteri)
 
   import fi.vm.sade.hakurekisteri.integration.audit.AuditLog
-
   import scala.reflect.runtime.universe._
 
   def getBroadcastForLogger[A <: Resource[I]: TypeTag: ClassTag, I: TypeTag: ClassTag](rekisteri: ActorRef) = {
-    system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog[A,I](typeOf[A].typeSymbol.name.toString)).withDispatcher("akka.hakurekisteri.audit-dispatcher"), typeOf[A].typeSymbol.name.toString.toLowerCase+"-audit") ))))
-
+    system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog[A, I](typeOf[A].typeSymbol.name.toString)).withDispatcher("akka.hakurekisteri.audit-dispatcher"), typeOf[A].typeSymbol.name.toString.toLowerCase+"-audit") ))))
   }
-
-
-
-
 }
 
 trait Integrations {
-  val virta:ActorRef
-  val henkiloActor:ActorRef
-  val organisaatiot:ActorRef
-
-  val sijoittelu:ActorRef
-  val hakemukset:ActorRef
-
-  val hakijat:ActorRef
-
+  val virta: ActorRef
+  val henkilo: ActorRef
+  val organisaatiot: ActorRef
+  val sijoittelu: ActorRef
+  val hakemukset: ActorRef
+  val hakijat: ActorRef
+  val tarjonta: ActorRef
+  val koodisto: ActorRef
 }
 
-class BaseIntegrations(virtaConfig: VirtaConfig, henkiloConfig: ServiceConfig, tarjontaServiceUrl: String,organisaatioServiceUrl:String, sijoitteluConfig: ServiceConfig, hakemusConfig: ServiceConfig, maxApplications: Int,  koodistoServiceUrl: String,  system:ActorSystem) extends Integrations {
+class BaseIntegrations(virtaConfig: VirtaConfig,
+                       henkiloConfig: ServiceConfig,
+                       tarjontaConfig: ServiceConfig,
+                       organisaatioServiceUrl: String,
+                       sijoitteluConfig: ServiceConfig,
+                       hakemusConfig: ServiceConfig,
+                       maxApplications: Int,
+                       koodistoConfig: ServiceConfig,
+                       system: ActorSystem) extends Integrations {
 
   implicit val ec:ExecutionContext = system.dispatcher
   implicit val httpClient = new ApacheHttpClient()
 
+  val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig))), "tarjonta")
 
-  val tarjontaClient = new TarjontaClient(tarjontaServiceUrl)
-  val henkiloClient = new VirkailijaRestClient(henkiloConfig)
   val organisaatiopalvelu: RestOrganisaatiopalvelu = new RestOrganisaatiopalvelu(organisaatioServiceUrl)
 
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig), organisaatiopalvelu, tarjonta)), "virta")
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig), organisaatiopalvelu, tarjontaClient)), "virta")
-
-  val henkiloActor = system.actorOf(Props(new henkilo.HenkiloActor(henkiloClient)), "henkilo")
+  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig))), "henkilo")
 
   val organisaatiot = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
 
-
   val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(sijoitteluConfig), "1.2.246.562.5.2013080813081926341927")))
+
   val hakemukset = system.actorOf(Props(new HakemusActor(hakemusConfig, maxApplications)), "hakemus")
 
+  val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig))), "koodisto")
 
-  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(hakemukset), organisaatiot, new RestKoodistopalvelu(koodistoServiceUrl), sijoittelu)))
-
-  val tarjontaActor = system.actorOf(Props(new TarjontaActor(tarjontaClient)), "tarjonta")
-
-
-
-
+  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(hakemukset), organisaatiot, koodisto, sijoittelu)), "hakijat")
 }
