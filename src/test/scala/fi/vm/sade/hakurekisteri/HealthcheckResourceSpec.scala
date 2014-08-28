@@ -48,7 +48,7 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
   test("healthcheck should return OK and correct resource counts") {
     get("/") {
       status should equal (200)
-      body should include ("OK")
+      body should include ("\"status\":\"OK\"")
       body should include ("\"arvosanat\":1")
       body should include ("\"opiskelijat\":1")
       body should include ("\"opiskeluoikeudet\":1")

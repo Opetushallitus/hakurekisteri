@@ -91,21 +91,10 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
     }
   }
 
-  def resolveStatus(arvosanaStatus: Status, opiskelijaStatus: Status, opiskeluoikeusStatus: Status, suoritusStatus: Status, hakemusStatus: Status) = {
-    if (arvosanaStatus == Status.TIMEOUT
-      || opiskelijaStatus == Status.TIMEOUT
-      || opiskeluoikeusStatus == Status.TIMEOUT
-      || suoritusStatus == Status.TIMEOUT
-      || hakemusStatus == Status.TIMEOUT)
-      Status.TIMEOUT
-    else if (arvosanaStatus == Status.FAILURE
-      || opiskelijaStatus == Status.FAILURE
-      || opiskeluoikeusStatus == Status.FAILURE
-      || suoritusStatus == Status.FAILURE
-      || hakemusStatus == Status.FAILURE)
-      Status.FAILURE
-    else
-      Status.OK
+  def resolveStatus(statuses: Status*) = {
+    if (statuses.contains(Status.TIMEOUT)) Status.TIMEOUT
+    else if (statuses.contains(Status.FAILURE)) Status.FAILURE
+    else Status.OK
   }
 
   def getArvosanaCount: Future[ItemCount] = {
