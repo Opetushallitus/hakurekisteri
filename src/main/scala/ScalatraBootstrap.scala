@@ -65,7 +65,7 @@ class ScalatraBootstrap extends LifeCycle {
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, registers.suoritusRekisteri, journals.arvosanaJournal)), "perusopetus-sanity")
 
     val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioServiceUrl, sijoitteluConfig, hakemusConfig, maxApplications, koodistoConfig, system)
-    val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.suoritusRekisteri, authorizedRegisters.opiskelijaRekisteri, integrations.hakemukset)), "healthcheck")
+    val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.hakemukset)), "healthcheck")
 
     system.scheduler.schedule(1.second, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.5.2013080813081926341927"))
     system.scheduler.schedule(1.second, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.5.2014022711042555034240"))
