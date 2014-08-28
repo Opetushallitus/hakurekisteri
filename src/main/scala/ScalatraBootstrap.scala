@@ -276,7 +276,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val sijoittelu = system.actorOf(Props(new SijoitteluActor(new RestSijoittelupalvelu(sijoitteluConfig), "1.2.246.562.5.2013080813081926341927")))
 
-  val hakemukset = system.actorOf(Props(new HakemusActor(hakemusConfig, maxApplications)), "hakemus")
+  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig), maxApplications)), "hakemus")
 
   val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig))), "koodisto")
 
