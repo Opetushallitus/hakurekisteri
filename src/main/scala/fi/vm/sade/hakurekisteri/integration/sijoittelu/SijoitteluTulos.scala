@@ -1,19 +1,9 @@
 package fi.vm.sade.hakurekisteri.integration.sijoittelu
 
-import java.net.{URL, URLEncoder}
-
-import com.stackmob.newman.ApacheHttpClient
-import com.stackmob.newman.dsl._
-import com.stackmob.newman.response.{HttpResponse, HttpResponseCode}
-import fi.vm.sade.hakurekisteri.integration.cas.{CasClient, TicketValidator, InvalidServiceTicketException}
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluValintatuloksenTila.SijoitteluValintatuloksenTila
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluHakemuksenTila.SijoitteluHakemuksenTila
-import org.slf4j.LoggerFactory
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
-import fi.vm.sade.hakurekisteri.integration.ServiceConfig
 
 object SijoitteluValintatuloksenTila extends Enumeration {
   type SijoitteluValintatuloksenTila = Value

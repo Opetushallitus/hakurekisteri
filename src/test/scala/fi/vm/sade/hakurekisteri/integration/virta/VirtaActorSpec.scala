@@ -3,12 +3,12 @@ package fi.vm.sade.hakurekisteri.integration.virta
 import java.net.URL
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import com.stackmob.newman.request._
 import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
 import com.stackmob.newman.{RawBody, Headers, HttpClient}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, Organisaatiopalvelu}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
@@ -60,7 +60,7 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with AsyncAssertions w
     )
 
     val tarjontaActor: ActorRef = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost"))(tarjontaHttpClient, ec))))
-    val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatiopalvelu, tarjontaActor)))
+    val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatioActor, tarjontaActor)))
 
     val result = (virtaActor ? VirtaQuery(Some("1.2.3"), Some("111111-1975")))(akka.util.Timeout(10, TimeUnit.SECONDS)).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])]
 
@@ -84,15 +84,15 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with AsyncAssertions w
   override def forExample: Examples = ???
   override def lastExample: Option[Examples] = ???
 
-  object organisaatiopalvelu extends Organisaatiopalvelu {
-    override def getAll() = ???
-    override def get(str: String): Future[Option[Organisaatio]] = Future.successful(doTheMatch(str))
-
-    def doTheMatch(str: String): Option[Organisaatio] = str match {
-      case "01901" => Some(Organisaatio(oid = "1.3.0", nimi = Map("fi" -> "Helsingin yliopisto"), toimipistekoodi = None, oppilaitosKoodi = Some("01901"), parentOid = None))
-      case default => None
+  class MockedOrganisaatioActor extends Actor {
+    import akka.pattern.pipe
+    override def receive: Receive = {
+      case "01901" => Future.successful(Some(Organisaatio(oid = "1.3.0", nimi = Map("fi" -> "Helsingin yliopisto"), toimipistekoodi = None, oppilaitosKoodi = Some("01901"), parentOid = None))) pipeTo sender
+      case default => Future.successful(None) pipeTo sender
     }
   }
+
+  val organisaatioActor = system.actorOf(Props(new MockedOrganisaatioActor))
 
   val tarjontaHttpClient = new HttpClient {
     override def get(url: URL, headers: Headers): GetRequest = GetRequest(url, headers) {

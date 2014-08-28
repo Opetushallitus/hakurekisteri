@@ -5,11 +5,11 @@ import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AkkaHakupalvelu, Hakupalvelu, ListHakemus, FullHakemus}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{Koodisto, Koodi, KoodistoActor}
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatiopalvelu, Organisaatio, OrganisaatioActor}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.sijoittelu._
 import org.scalatra.swagger.Swagger
 import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport, HakurekisteriSwagger}
-import akka.actor.{Props, ActorSystem}
+import akka.actor.{Props, Actor, ActorSystem}
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
@@ -180,19 +180,18 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     }
   }
 
-  object organisaatiopalvelu extends Organisaatiopalvelu {
-    override def getAll() =  Future.successful(Seq(OppilaitosX,OppilaitosY,OpetuspisteX, OpetuspisteY).map(_.oid))
-
-    override def get(str: String): Future[Option[Organisaatio]] = Future.successful(doTheMatch(str))
-
-    def doTheMatch(str: String): Option[Organisaatio] = str match {
-      case OppilaitosX.oid => Some(OppilaitosX)
-      case OppilaitosY.oid => Some(OppilaitosY)
-      case OpetuspisteX.oid => Some(OpetuspisteX)
-      case OpetuspisteY.oid => Some(OpetuspisteY)
-      case default => None
+  class MockedOrganisaatioActor extends Actor {
+    import akka.pattern.pipe
+    override def receive: Receive = {
+      case OppilaitosX.oid => Future.successful(Some(OppilaitosX)) pipeTo sender
+      case OppilaitosY.oid => Future.successful(Some(OppilaitosY)) pipeTo sender
+      case OpetuspisteX.oid => Future.successful(Some(OpetuspisteX)) pipeTo sender
+      case OpetuspisteY.oid => Future.successful(Some(OpetuspisteY)) pipeTo sender
+      case default => Future.successful(None) pipeTo sender
     }
   }
+
+  val organisaatioActor = system.actorOf(Props(new MockedOrganisaatioActor()))
 
   val koodistoClient = mock[VirkailijaRestClient]
   koodistoClient.readObject[Seq[Koodi]]("", HttpResponseCode.Ok) returns Future.successful(Seq(Koodi("246", "", Koodisto(""))))
@@ -239,7 +238,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object hakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
-    val orgAct = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
+    val orgAct = system.actorOf(Props(new MockedOrganisaatioActor()))
     val sijoittelu = system.actorOf(Props(new SijoitteluActor(sijoitteluClient)))
     val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodisto, sijoittelu)))
 

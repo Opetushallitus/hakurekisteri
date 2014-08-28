@@ -1,22 +1,19 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
-import java.net.{URL, URLEncoder}
+import java.net.URLEncoder
 
 import akka.actor.ActorRef
 import akka.event.Logging
-import com.stackmob.newman.ApacheHttpClient
-import com.stackmob.newman.dsl._
-import com.stackmob.newman.response.{HttpResponse, HttpResponseCode}
+import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, HakijaQuery}
 import fi.vm.sade.hakurekisteri.healthcheck.{Hakemukset, Health}
-import fi.vm.sade.hakurekisteri.integration.cas.{CasClient, TicketValidator, InvalidServiceTicketException}
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query, User}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.hakurekisteri.storage.repository._
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceActor, ResourceService}
 
 import scala.concurrent.Future
 import scala.util.Try
-import fi.vm.sade.hakurekisteri.integration.{VirkailijaRestClient, ServiceConfig}
+import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
 trait HakemusService extends ResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
   def filterField[F](field: Option[F], fieldExctractor: (FullHakemus) => F)(hakemus:FullHakemus) = field match {

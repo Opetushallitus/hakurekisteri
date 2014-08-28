@@ -8,7 +8,7 @@ import akka.actor.Actor
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.organization._
 import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
-import java.util.{Date, UUID}
+import java.util.Date
 import akka.event.Logging
 import java.nio.charset.Charset
 import scala.reflect.ClassTag

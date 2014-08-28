@@ -18,7 +18,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{AkkaHakupalvelu, ReloadHaku
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{OrganisaatioActor, RestOrganisaatiopalvelu}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluActor
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaConfig, VirtaClient, VirtaActor}
 import fi.vm.sade.hakurekisteri.opiskelija._
@@ -64,7 +64,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, registers.suoritusRekisteri, journals.arvosanaJournal)), "perusopetus-sanity")
 
-    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioServiceUrl, sijoitteluConfig, hakemusConfig, maxApplications, koodistoConfig, system)
+    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, hakemusConfig, maxApplications, koodistoConfig, system)
     val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.hakemukset)), "healthcheck")
 
     system.scheduler.schedule(1.second, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.5.2013080813081926341927"))
@@ -254,7 +254,7 @@ trait Integrations {
 class BaseIntegrations(virtaConfig: VirtaConfig,
                        henkiloConfig: ServiceConfig,
                        tarjontaConfig: ServiceConfig,
-                       organisaatioServiceUrl: String,
+                       organisaatioConfig: ServiceConfig,
                        sijoitteluConfig: ServiceConfig,
                        hakemusConfig: ServiceConfig,
                        maxApplications: Int,
@@ -267,13 +267,11 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig))), "tarjonta")
 
-  val organisaatiopalvelu: RestOrganisaatiopalvelu = new RestOrganisaatiopalvelu(organisaatioServiceUrl)
+  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig))))
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig), organisaatiopalvelu, tarjonta)), "virta")
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig), organisaatiot, tarjonta)), "virta")
 
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig))), "henkilo")
-
-  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
 
   val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig), "1.2.246.562.5.2013080813081926341927")))
 
