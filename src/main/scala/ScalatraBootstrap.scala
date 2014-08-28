@@ -68,7 +68,9 @@ class ScalatraBootstrap extends LifeCycle {
     val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.suoritusRekisteri, authorizedRegisters.opiskelijaRekisteri, integrations.hakemukset)), "healthcheck")
 
     system.scheduler.schedule(1.second, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.5.2013080813081926341927"))
-    system.scheduler.schedule(5.minutes, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.5.2014022711042555034240"))
+    system.scheduler.schedule(1.second, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.5.2014022711042555034240"))
+    system.scheduler.schedule(1.second, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.29.32820950486"))
+    system.scheduler.schedule(1.second, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.29.48221303398"))
 
     context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
     context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")
