@@ -1,10 +1,12 @@
+import javax.servlet.ServletRegistration.Dynamic
+
 import _root_.akka.camel.CamelExtension
 import _root_.akka.routing.BroadcastRouter
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
 import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-import javax.servlet.{DispatcherType, ServletContext, ServletContextEvent}
+import javax.servlet.{Servlet, DispatcherType, ServletContext, ServletContextEvent}
 
 import _root_.akka.actor.{ActorRef, ActorSystem, Props}
 import _root_.akka.util.Timeout
@@ -72,17 +74,33 @@ class ScalatraBootstrap extends LifeCycle {
     system.scheduler.schedule(1.second, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.29.32820950486"))
     system.scheduler.schedule(1.second, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.29.48221303398"))
 
-    context mount(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport, "/rest/v1/suoritukset")
-    context mount(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport, "/rest/v1/opiskelijat")
-    context mount(new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport, "/rest/v1/opiskeluoikeudet")
-    context mount(new HakurekisteriResource[Henkilo, CreateHenkiloCommand](authorizedRegisters.henkiloRekisteri, HenkiloQuery(_)) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand] with SpringSecuritySupport, "/rest/v1/henkilot")
-    context mount(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport, "/rest/v1/arvosanat")
-    context mount(new HakijaResource(integrations.hakijat), "/rest/v1/hakijat")
-    context mount(new EnsikertalainenResource(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta), "/rest/v1/ensikertalainen")
-    context mount(new HealthcheckResource(healthcheck), "/healthcheck")
-    context mount(new ResourcesApp, "/rest/v1/api-docs/*")
-    context mount(new SanityResource(sanity), "/sanity")
-    context mount(classOf[GuiServlet], "/")
+    mountServlets(context) (
+      "/" -> new GuiServlet,
+      "/healthcheck" -> new HealthcheckResource(healthcheck),
+      "/rest/v1/api-docs/*" -> new ResourcesApp,
+      "/rest/v1/arvosanat" -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
+      "/rest/v1/ensikertalainen" -> new EnsikertalainenResource(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta),
+      "/rest/v1/hakijat" -> new HakijaResource(integrations.hakijat),
+      "/rest/v1/henkilot" -> new HakurekisteriResource[Henkilo, CreateHenkiloCommand](authorizedRegisters.henkiloRekisteri, HenkiloQuery(_)) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand] with SpringSecuritySupport,
+      "/rest/v1/opiskelijat" -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
+      "/rest/v1/opiskeluoikeudet" -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
+      "/rest/v1/suoritukset" -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport,
+      "/sanity" -> new SanityResource(sanity)
+    )
+  }
+
+  def mountServlets(context: ServletContext)(servlets: (String, Servlet with Handler)*) = {
+    implicit val sc = context
+    for (
+      (path, servlet) <- servlets
+    ) mountServlet(servlet, path)
+
+  }
+
+  def mountServlet(servlet: Servlet with Handler, path: String = "/")(implicit context: ServletContext) {
+    val s = Option(context.addServlet(servlet.getClass.getName, servlet))
+    s foreach (_.setLoadOnStartup(1))
+    context.mount(servlet, path)
   }
 
   override def destroy(context: ServletContext) {
