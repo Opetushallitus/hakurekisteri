@@ -81,7 +81,6 @@ class ScalatraBootstrap extends LifeCycle {
       "/rest/v1/arvosanat" -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
       "/rest/v1/ensikertalainen" -> new EnsikertalainenResource(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta),
       "/rest/v1/hakijat" -> new HakijaResource(integrations.hakijat),
-      "/rest/v1/henkilot" -> new HakurekisteriResource[Henkilo, CreateHenkiloCommand](authorizedRegisters.henkiloRekisteri, HenkiloQuery(_)) with HenkiloSwaggerApi with HakurekisteriCrudCommands[Henkilo, CreateHenkiloCommand] with SpringSecuritySupport,
       "/rest/v1/opiskelijat" -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
       "/rest/v1/opiskeluoikeudet" -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
       "/rest/v1/suoritukset" -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport,
@@ -175,7 +174,6 @@ trait Journals {
   val suoritusJournal: SuoritusJournal
   val opiskelijaJournal: OpiskelijaJournal
   val opiskeluoikeusJournal: OpiskeluoikeusJournal
-  val henkiloJournal: HenkiloJournal
   val arvosanaJournal: ArvosanaJournal
 }
 
@@ -187,7 +185,6 @@ class DbJournals(jndiName:String) extends Journals {
   override val suoritusJournal = new SuoritusJournal(database)
   override val opiskelijaJournal = new OpiskelijaJournal(database)
   override val opiskeluoikeusJournal = new OpiskeluoikeusJournal(database)
-  override val henkiloJournal = new HenkiloJournal(database)
   override val arvosanaJournal = new ArvosanaJournal(database)
 }
 
@@ -195,7 +192,6 @@ trait Registers {
   val suoritusRekisteri: ActorRef
   val opiskelijaRekisteri: ActorRef
   val opiskeluoikeusRekisteri: ActorRef
-  val henkiloRekisteri: ActorRef
   val arvosanaRekisteri: ActorRef
 }
 
@@ -203,7 +199,6 @@ class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
   override val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(journals.suoritusJournal)), "suoritukset")
   override val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(journals.opiskelijaJournal)), "opiskelijat")
   override val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusActor(journals.opiskeluoikeusJournal)), "opiskeluoikeudet")
-  override val henkiloRekisteri = system.actorOf(Props(new HenkiloActor(journals.henkiloJournal)), "henkilot")
   override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(journals.arvosanaJournal)), "arvosanat")
 }
 
@@ -221,7 +216,6 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Regi
   override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, (suoritus) => suoritus.myontaja)
   override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid)
   override val opiskeluoikeusRekisteri = authorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus) => opiskeluoikeus.myontaja)
-  override val henkiloRekisteri = authorizer[Henkilo, UUID](unauthorized.henkiloRekisteri, (henkilo) => OPH )
   override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, unauthorized.arvosanaRekisteri, (arvosana) => unauthorized.suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).mapTo[Option[Suoritus]].map(_.map(_.myontaja).getOrElse("")))), "arvosana-authorizer")
 }
 
@@ -247,7 +241,6 @@ class AuditedRegisters(amqUrl: String, amqQueue: String, authorizedRegisters: Re
   val suoritusRekisteri = getBroadcastForLogger[Suoritus, UUID](authorizedRegisters.suoritusRekisteri)
   val opiskelijaRekisteri = getBroadcastForLogger[Opiskelija, UUID](authorizedRegisters.opiskelijaRekisteri)
   val opiskeluoikeusRekisteri = getBroadcastForLogger[Opiskeluoikeus, UUID](authorizedRegisters.opiskeluoikeusRekisteri)
-  val henkiloRekisteri = getBroadcastForLogger[Henkilo, UUID](authorizedRegisters.henkiloRekisteri)
   val arvosanaRekisteri = getBroadcastForLogger[Arvosana, UUID](authorizedRegisters.arvosanaRekisteri)
 
   import fi.vm.sade.hakurekisteri.integration.audit.AuditLog
