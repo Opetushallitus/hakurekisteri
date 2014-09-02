@@ -98,7 +98,10 @@ class ScalatraBootstrap extends LifeCycle {
 
   def mountServlet(servlet: Servlet with Handler, path: String = "/")(implicit context: ServletContext) {
     val s = Option(context.addServlet(servlet.getClass.getName, servlet))
-    s foreach (_.setLoadOnStartup(1))
+    s foreach (d => {
+      d.setLoadOnStartup(1)
+      d.setAsyncSupported(true)
+    })
     context.mount(servlet, path)
   }
 
