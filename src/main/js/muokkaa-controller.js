@@ -337,6 +337,24 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             $log.info("modal closed")
         });
     };
+    $scope.editYoarvosana = function(suoritusId) {
+        function openModal(template, controller) {
+            $rootScope.modalInstance = $modal.open({
+                templateUrl: template,
+                controller: controller,
+                resolve: {
+                    suoritusId: function() { return suoritusId }
+                }
+            });
+        }
+        openModal('templates/yoarvosanat', YoarvosanaCtrl);
+
+        $rootScope.modalInstance.result.then(function (yoarvosanaRet) {
+            if (yoarvosanaRet) $scope.messages.push(yoarvosanaRet)
+        }, function () {
+            $log.info("yo modal closed")
+        });
+    };
     $scope.addLuokkatieto = function() {
         $scope.luokkatiedot.push(new Opiskelijat({ henkiloOid: $scope.henkiloOid, oppilaitosOid: "na" }))
     };
