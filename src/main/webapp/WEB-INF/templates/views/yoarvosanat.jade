@@ -16,9 +16,9 @@ form(ng-submit="save()")
         td
           select(class="form-control input-sm" ng-model="a.arvosana" required="required" ng-options="a.value as a.text for a in arvosanat" ng-disabled="a.delete")
         td
-          input(class="form-control input-sm" ng-model="a.pisteet" required="required" ng-disabled="a.delete")
+          input(class="form-control input-sm" ng-model="a.pisteet" ng-disabled="a.delete")
         td
-          select(class="form-control input-sm" ng-model="a.tutkintokerta" required="required" ng-options="t in tutkintokerrat()" ng-disabled="a.delete")
+          select(class="form-control input-sm" ng-model="a.tutkintokerta" required="required" ng-options="t.value as t.text for t in tutkintokerrat" ng-disabled="a.delete")
         td
           button(type="button" class="btn btn-default btn-xs" ng-click="a.delete = true" ng-disabled="a.delete")
             span(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.poista") Poista

@@ -22,13 +22,13 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             {value: "Kokonaan", text: getOphMsg("suoritusrekisteri.yks.kokonaan", "Kokonaan")}
         ];
         $scope.koulutukset = [
-            {value: "1.2.246.562.13.86722481404", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.13.86722481404", "Ulkomainen")},
-            {value: "1.2.246.562.13.62959769647", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.13.62959769647", "Peruskoulu")},
-            {value: "1.2.246.562.5.2013112814572435044876", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572435044876", "Perusopetuksen lisäopetus")},
-            {value: "1.2.246.562.5.2013112814572438136372", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572438136372", "Ammattistartti")},
-            {value: "1.2.246.562.5.2013112814572441001730", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572441001730", "Maahanmuuttaja")},
-            {value: "1.2.246.562.5.2013112814572435755085", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572435755085", "Valmentava")},
-            {value: "1.2.246.562.5.2013061010184880799984", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013061010184880799984", "Lukio")}
+            {value: komo.ulkomainen, text: getOphMsg("suoritusrekisteri.komo." + komo.ulkomainen, "Ulkomainen")},
+            {value: komo.peruskoulu, text: getOphMsg("suoritusrekisteri.komo." + komo.peruskoulu, "Peruskoulu")},
+            {value: komo.lisaopetus, text: getOphMsg("suoritusrekisteri.komo." + komo.lisaopetus, "Perusopetuksen lisäopetus")},
+            {value: komo.ammattistartti, text: getOphMsg("suoritusrekisteri.komo." + komo.ammattistartti, "Ammattistartti")},
+            {value: komo.maahanmuuttaja, text: getOphMsg("suoritusrekisteri.komo." + komo.maahanmuuttaja, "Maahanmuuttaja")},
+            {value: komo.valmentava, text: getOphMsg("suoritusrekisteri.komo." + komo.valmentava, "Valmentava")},
+            {value: komo.ylioppilastutkinto, text: getOphMsg("suoritusrekisteri.komo." + komo.ylioppilastutkinto, "Ylioppilastutkinto")}
         ];
         $scope.tilat = [
             {value: "KESKEN", text: getOphMsg("suoritusrekisteri.tila.KESKEN", "Kesken")},

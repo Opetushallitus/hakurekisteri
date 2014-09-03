@@ -12,14 +12,16 @@ function YoarvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, suoritus
         $rootScope.modalInstance.close()
     };
 
-    $scope.tutkintokerrat = function() {
+    $scope.tutkintokerrat = tutkintokerrat();
+
+    function tutkintokerrat() {
         var kerrat = [];
-        for (var i = 1990; i > 1900; i--) {
-            kerrat.push(i + "S");
-            kerrat.push(i + "K");
+        for (var i = 1989; i > 1900; i--) {
+            kerrat.push({value: i + "S", text: i + "S"});
+            kerrat.push({value: i + "K", text: i + "K"});
         }
         return kerrat;
-    };
+    }
 
     $scope.kokeet = [
         {value: "A", text: "Äidinkielen koe, suomi"},
@@ -105,12 +107,7 @@ function YoarvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, suoritus
         {value: "C", text: "(C) Cum laude approbatur"},
         {value: "B", text: "(B) Lubenter approbatur"},
         {value: "A", text: "(A) Approbatur"},
-        {value: "I+", text: "(I+) Improbatur plus"},
-        {value: "I", text: "(I) Improbatur"},
-        {value: "I-", text: "(I-) Improbatur miinus"},
-        {value: "I=", text: "(I=) Improbatur miinusmiinus"},
-        {value: "K", text: "(K) Keskeyttänyt"},
-        {value: "P", text: "(P) Poissa luvalla"}
+        {value: "I", text: "(I) Improbatur"}
     ];
 }
 

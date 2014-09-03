@@ -12,6 +12,16 @@ var organisaatioServiceUrl = getBaseUrl() + "/organisaatio-service";
 var hakuAppServiceUrl = getBaseUrl() + "/haku-app";
 var koodistoServiceUrl = getBaseUrl() + "/koodisto-service";
 
+var komo = {
+    ulkomainen: "1.2.246.562.13.86722481404",
+    peruskoulu: "1.2.246.562.13.62959769647",
+    lisaopetus: "1.2.246.562.5.2013112814572435044876",
+    ammattistartti: "1.2.246.562.5.2013112814572438136372",
+    maahanmuuttaja: "1.2.246.562.5.2013112814572441001730",
+    valmentava: "1.2.246.562.5.2013112814572435755085",
+    ylioppilastutkinto: "1.2.246.562.5.2013061010184237348007"
+};
+
 if (!Array.prototype.diff)
     Array.prototype.diff = function(a) {
         return this.filter(function(i) { return a.indexOf(i) < 0; });

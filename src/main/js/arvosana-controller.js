@@ -31,7 +31,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
 
     Suoritukset.get({ suoritusId: suoritusId }, function(suoritus) {
         var pohjakoulutusFilter = "onperusasteenoppiaine_1";
-        if (suoritus.komo === "1.2.246.562.5.2013061010184880799984") {
+        if (suoritus.komo === komo.ylioppilastutkinto) {
             pohjakoulutusFilter = "onlukionoppiaine_1";
         }
 

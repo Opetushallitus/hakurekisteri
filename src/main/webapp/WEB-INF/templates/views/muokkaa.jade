@@ -71,7 +71,7 @@ form(ng-submit="save()")
                     button(type="button" class="btn btn-default arvosana-button" ng-disabled="!suoritus.id || suoritus.delete" ng-click="editArvosana(suoritus.id)")
                       span(oph-msg="suoritusrekisteri.muokkaa.muokkaaarvosanoja") Muokkaa arvosanoja
                       span(class="glyphicon glyphicon-edit")
-                    button(ng-show="suoritus.komo === '1.2.246.562.5.2013061010184880799984'" type="button" class="btn btn-default arvosana-button" ng-disabled="!suoritus.id || suoritus.delete" ng-click="editYoarvosana(suoritus.id)")
+                    button(ng-show="suoritus.komo === '1.2.246.562.5.2013061010184237348007'" type="button" class="btn btn-default arvosana-button" ng-disabled="!suoritus.id || suoritus.delete" ng-click="editYoarvosana(suoritus.id)")
                       span(oph-msg="suoritusrekisteri.muokkaa.muokkaayoarvosanoja") Muokkaa YO-arvosanoja
                       span(class="glyphicon glyphicon-edit")
                     button(ng-show="isOPH()" type="button" class="btn btn-default arvosana-button" ng-disabled="suoritus.delete" ng-click="suoritus.delete = true")
