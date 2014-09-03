@@ -111,7 +111,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
       w.dismiss()
     })
 
-    w.await(timeout(Span(1000, Millis)), dismissals(1))
+    w.await(timeout(Span(5000, Millis)), dismissals(1))
   }
 
   def waitFutureFailure[A](f: Future[A]) {
@@ -122,6 +122,6 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
       case Success(s) => w.dismiss()
     }
     
-    w.await(timeout(Span(1000, Millis)), dismissals(1))
+    w.await(timeout(Span(5000, Millis)), dismissals(1))
   }
 }
