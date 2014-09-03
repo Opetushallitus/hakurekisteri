@@ -76,11 +76,13 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, tarjonta
 
   import akka.pattern.ask
 
-  def resolveOppilaitosOid(oppilaitosnumero: String): Future[String] = {
-    (organisaatioActor ? oppilaitosnumero)(10.seconds).mapTo[Option[Organisaatio]].map(_ match {
-      case Some(org) => org.oid
-      case _ => log.error(s"oppilaitos not found with oppilaitosnumero $oppilaitosnumero"); throw OppilaitosNotFoundException(s"oppilaitos not found with oppilaitosnumero $oppilaitosnumero")
-    })
+  def resolveOppilaitosOid(oppilaitosnumero: String): Future[String] = oppilaitosnumero match {
+    case o if Seq("XX", "UK", "UM").contains(o) => Future.successful(o)
+    case o =>
+      (organisaatioActor ? o)(10.seconds).mapTo[Option[Organisaatio]].map(_ match {
+        case Some(org) => org.oid
+        case _ => log.error(s"oppilaitos not found with oppilaitosnumero $o"); throw OppilaitosNotFoundException(s"oppilaitos not found with oppilaitosnumero $o")
+      })
   }
 
   def resolveKomoOid(koulutuskoodi: String): Future[String] = {

@@ -6,7 +6,7 @@ import akka.actor.{Actor, Cancellable}
 import akka.event.Logging
 import akka.pattern.pipe
 import com.stackmob.newman.response.HttpResponseCode
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
 
 import scala.compat.Platform
 import scala.concurrent.duration._
@@ -63,6 +63,9 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
   }
 
   def newValue(oid: String): (Long, Future[Option[Organisaatio]]) = {
-    (Platform.currentTime + timeToLive.toMillis, organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(oid, "UTF-8")}", HttpResponseCode.Ok).map(Some(_)))
+    val organisaatio: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(oid, "UTF-8")}", HttpResponseCode.Ok).map(Option(_)).recover {
+      case p: PreconditionFailedException => log.warning(s"organisaatio not found with oid $oid"); None
+    }
+    (Platform.currentTime + timeToLive.toMillis, organisaatio)
   }
 }
