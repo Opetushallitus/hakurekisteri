@@ -97,6 +97,9 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
     val tutkinnot: Future[Seq[Suoritus]] = getKkTutkinnot(henkiloOid)
     val opiskeluoikeudet: Future[Seq[Opiskeluoikeus]] = getKkOpiskeluoikeudet2014KesaJalkeen(henkiloOid)
 
+    tutkinnot.foreach(t => logger.debug(s"tutkinnot: $t"))
+    opiskeluoikeudet.foreach(o => logger.debug(s"opiskeluoikeudet: $o"))
+
     anySequenceHasElements(tutkinnot, opiskeluoikeudet).flatMap (
       if (_) {
         logger.debug(s"has tutkinto or opiskeluoikeus")
