@@ -98,8 +98,10 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
     val opiskeluoikeudet: Future[Seq[Opiskeluoikeus]] = getKkOpiskeluoikeudet2014KesaJalkeen(henkiloOid)
 
     anySequenceHasElements(tutkinnot, opiskeluoikeudet).flatMap (
-      if (_) Future.successful(false)
-      else checkEnsikertalainenFromVirta(henkiloOid)
+      if (_) {
+        logger.debug(s"has tutkinto or opiskeluoikeus")
+        Future.successful(false)
+      } else checkEnsikertalainenFromVirta(henkiloOid)
     )
   }
 
@@ -108,11 +110,13 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
     for ((opiskeluoikeudet, suoritukset) <- virtaResult) yield {
       val filteredOpiskeluoikeudet = opiskeluoikeudet.filter(_.alkuPaiva.isAfter(kesa2014))
       saveVirtaResult(filteredOpiskeluoikeudet, suoritukset)
+      logger.debug(s"checked from virta: opiskeluoikeudet.isEmpty ${filteredOpiskeluoikeudet.isEmpty}, suoritukset.isEmpty ${suoritukset.isEmpty}")
       filteredOpiskeluoikeudet.isEmpty && suoritukset.isEmpty
     }
   }
 
   def saveVirtaResult(opiskeluoikeudet: Seq[Opiskeluoikeus], suoritukset: Seq[Suoritus]) {
+    logger.debug(s"saving virta result: opiskeluoikeudet size ${opiskeluoikeudet.size}, suoritukset size ${suoritukset.size}")
     opiskeluoikeudet.foreach(opiskeluoikeusActor ! _)
     suoritukset.foreach(suoritusActor ! _)
   }
