@@ -24,12 +24,12 @@ form(ng-submit="save()")
             span(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.poista") Poista
             span(class="glyphicon glyphicon-remove")
       tr
-        td(colspan="3")
+        td(colspan="5")
           button(type="button" class="btn btn-default btn-xs" ng-click="arvosanataulukko.push({})")
             span(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.lisaauusikoe") Lisää uusi koe
             span(class="glyphicon glyphicon-plus")
       tr(ng-show="loading")
-        td(class="loading-td" colspan="3")
+        td(class="loading-td" colspan="5")
           div(class="loading-large")
   div(class="modal-footer")
     button(type="button" class="btn btn-default" ng-click="cancel()")
