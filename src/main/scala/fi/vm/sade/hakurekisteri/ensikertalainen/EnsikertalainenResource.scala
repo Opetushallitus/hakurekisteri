@@ -78,7 +78,9 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
   def findKomos(suoritukset: Seq[Suoritus]): Future[Seq[(Komo, Suoritus)]] = {
     Future.sequence(for (
       suoritus <- suoritukset
-    ) yield (tarjontaActor ? GetKomoQuery(suoritus.komo))(10.seconds).mapTo[Komo].map((_, suoritus)))
+    ) yield (tarjontaActor ? GetKomoQuery(suoritus.komo))(10.seconds).mapTo[Option[Komo]].map((_, suoritus)).collect {
+      case (Some(komo), suoritus) => (komo, suoritus)
+    })
   }
 
   def getSuoritukset(henkiloOid: String): Future[Seq[Suoritus]] = {
@@ -105,7 +107,7 @@ class EnsikertalainenResource(suoritusActor: ActorRef, opiskeluoikeusActor: Acto
     val virtaResult: Future[(Seq[Opiskeluoikeus], Seq[Suoritus])] = getHetu(henkiloOid).flatMap((hetu) => (virtaActor ? VirtaQuery(Some(henkiloOid), Some(hetu)))(10.seconds).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])])
     for ((opiskeluoikeudet, suoritukset) <- virtaResult) yield {
       val filteredOpiskeluoikeudet = opiskeluoikeudet.filter(_.alkuPaiva.isAfter(kesa2014))
-      // TODO saveVirtaResult(filteredOpiskeluoikeudet, suoritukset)
+      saveVirtaResult(filteredOpiskeluoikeudet, suoritukset)
       filteredOpiskeluoikeudet.isEmpty && suoritukset.isEmpty
     }
   }
