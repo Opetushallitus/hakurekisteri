@@ -1,5 +1,3 @@
-import javax.servlet.ServletRegistration.Dynamic
-
 import _root_.akka.camel.CamelExtension
 import _root_.akka.routing.BroadcastRouter
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
@@ -15,7 +13,6 @@ import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenResource
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
-import fi.vm.sade.hakurekisteri.henkilo._
 import fi.vm.sade.hakurekisteri.integration.hakemus.{AkkaHakupalvelu, ReloadHaku, HakemusActor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.integration._
@@ -209,7 +206,6 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Regi
   import _root_.akka.pattern.ask
   import scala.reflect.runtime.universe._
   implicit val ec:ExecutionContext = system.dispatcher
-  val OPH = "1.2.246.562.10.00000000001"
 
   def authorizer[A <: Resource[I] : ClassTag: Manifest, I](guarded: ActorRef, orgFinder: A => String): ActorRef = {
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase

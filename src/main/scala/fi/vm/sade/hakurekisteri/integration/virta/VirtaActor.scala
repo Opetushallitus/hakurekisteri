@@ -75,9 +75,10 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, tarjonta
   }
 
   import akka.pattern.ask
+  val OPH = "1.2.246.562.10.00000000001"
 
   def resolveOppilaitosOid(oppilaitosnumero: String): Future[String] = oppilaitosnumero match {
-    case o if Seq("XX", "UK", "UM").contains(o) => Future.successful(o)
+    case o if Seq("XX", "UK", "UM").contains(o) => Future.successful(OPH) // FIXME lisää vastaavat organisaatiot organisaatiopuuhun
     case o =>
       (organisaatioActor ? o)(10.seconds).mapTo[Option[Organisaatio]].map(_ match {
         case Some(org) => org.oid
