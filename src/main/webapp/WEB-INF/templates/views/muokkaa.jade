@@ -35,6 +35,25 @@ div(class="row")
 form(ng-submit="save()")
   div(class="row")
     div(class="col-sm-6")
+      section(ng-show="opiskeluoikeudet" class="panel panel-default")
+        header(class="panel-heading")
+          h2(class="panel-title" oph-msg="suoritusrekisteri.muokkaa.opiskeluoikeudet") Opiskeluoikeudet
+        div(class="panel-body")
+          ul(class="list-styled")
+            li(ng-repeat="opiskeluoikeus in opiskeluoikeudet")
+              div(class="row")
+                div(class="col-sm-2")
+                  strong(oph-msg="suoritusrekisteri.muokkaa.alkupaiva") Alkupäivä
+                  span {{opiskeluoikeus.alkuPaiva}}
+                div(class="col-sm-2")
+                  strong(oph-msg="suoritusrekisteri.muokkaa.loppupaiva") Loppupäivä
+                  span {{opiskeluoikeus.loppuPaiva}}
+                div(class="col-sm-3")
+                  strong(oph-msg="suoritusrekisteri.muokkaa.myontaja") Myöntäjä
+                  span {{opiskeluoikeus.oppilaitos || opiskeluoikeus.myontaja}}
+                div(class="col-sm-3")
+                  strong(oph-msg="suoritusrekisteri.muokkaa.koulutus") Koulutus
+                  span(oph-msg="suoritusrekisteri.komo.{{opiskeluoikeus.komo}}") {{opiskeluoikeus.komo}}
       section(class="panel panel-default")
         header(class="panel-heading")
           h2(class="panel-title" oph-msg="suoritusrekisteri.muokkaa.suoritukset") Suoritukset

@@ -1,6 +1,6 @@
 'use strict';
 
-function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, LokalisointiService) {
+function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService) {
     $scope.henkiloOid = $routeParams.henkiloOid;
     $scope.myRoles = [];
     $scope.messages = [];
@@ -116,10 +116,29 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             confirm(getOphMsg("suoritusrekisteri.muokkaa.suoritustietojenhakeminen", "Suoritustietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchSuoritukset() : back();
         });
     }
+    function fetchOpiskeluoikeudet() {
+        function enrich() {
+            if ($scope.opiskeluoikeudet) {
+                angular.forEach($scope.opiskeluoikeudet, function(opiskeluoikeus) {
+                    if (opiskeluoikeus.myontaja) {
+                        getOrganisaatio($http, opiskeluoikeus.myontaja, function(organisaatio) {
+                            opiskeluoikeus.oppilaitos = organisaatio.oppilaitosKoodi;
+                        });
+                    }
+                });
+            }
+        }
+
+        Opiskeluoikeudet.query({henkilo: $scope.henkiloOid}, function(opiskeluoikeudet) {
+            $scope.opiskeluoikeudet = opiskeluoikeudet;
+            enrich();
+        })
+    }
 
     fetchHenkilotiedot();
     fetchLuokkatiedot();
     fetchSuoritukset();
+    fetchOpiskeluoikeudet();
 
     $scope.getOppilaitos = function(searchStr) {
         if (searchStr && searchStr.trim().match(/^\d{5}$/))
