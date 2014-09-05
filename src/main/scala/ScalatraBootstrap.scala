@@ -1,6 +1,7 @@
 import _root_.akka.camel.CamelExtension
 import _root_.akka.routing.BroadcastRouter
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
+import fi.vm.sade.hakurekisteri.integration.ytl.{KokelasRequest, YtlActor}
 import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -63,7 +64,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, registers.suoritusRekisteri, journals.arvosanaJournal)), "perusopetus-sanity")
 
-    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, hakemusConfig, maxApplications, koodistoConfig, system)
+    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, hakemusConfig, maxApplications, koodistoConfig, registers, system)
     val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.hakemukset)), "healthcheck")
 
     system.scheduler.schedule(1.second, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.5.2013080813081926341927"))
@@ -168,6 +169,10 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
       definition
     }
   }
+
+
+
+
 }
 
 trait Journals {
@@ -269,6 +274,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        hakemusConfig: ServiceConfig,
                        maxApplications: Int,
                        koodistoConfig: ServiceConfig,
+                       rekisterit: Registers,
                        system: ActorSystem) extends Integrations {
 
   implicit val ec:ExecutionContext = system.dispatcher
@@ -285,7 +291,9 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig), "1.2.246.562.5.2013080813081926341927")))
 
-  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig), maxApplications)), "hakemus")
+  val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef)), "ytl")
+
+  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig), maxApplications, newApplicant = (oid: String, hetu: String) => ytl ! KokelasRequest(oid, hetu))), "hakemus")
 
   val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig))), "koodisto")
 

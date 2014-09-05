@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
-import org.joda.time.{LocalDate}
+import org.joda.time.LocalDate
 import org.scalatest.FlatSpec
 import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.matchers.ShouldMatchers
@@ -22,10 +22,11 @@ import org.specs.specification.Examples
 import akka.pattern.ask
 
 import scala.concurrent.Future
+import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 
-class VirtaActorSpec extends FlatSpec with ShouldMatchers with AsyncAssertions with Mockito {
+class VirtaActorSpec extends FlatSpec with ShouldMatchers with FutureWaiting with Mockito {
   implicit val system = ActorSystem("test-virta-system")
-  implicit val ec = system.dispatcher
+  override implicit val ec = system.dispatcher
 
   behavior of "VirtaActor"
 
@@ -70,16 +71,7 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with AsyncAssertions w
     }}
   }
 
-  def waitFuture[A](f: Future[A])(assertion: A => Unit) = {
-    val w = new Waiter
 
-    f.onComplete(r => {
-      w(assertion(r.get))
-      w.dismiss()
-    })
-
-    w.await(timeout(Span(10000, Millis)), dismissals(1))
-  }
 
   override def forExample: Examples = ???
   override def lastExample: Option[Examples] = ???

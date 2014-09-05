@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import java.net.URLEncoder
 
-import akka.actor.ActorRef
+import akka.actor.{Actor, Props, ActorRef}
 import akka.event.Logging
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, HakijaQuery}
@@ -61,9 +61,12 @@ class HakemusJournal extends InMemJournal[FullHakemus, String] {
 
 class HakemusActor(hakemusClient: VirkailijaRestClient,
                    maxApplications: Int = 2000,
-                   override val journal: Journal[FullHakemus, String] = new HakemusJournal()) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
+                   override val journal: Journal[FullHakemus, String] = new HakemusJournal(),
+                   newApplicant: (String, String) => Unit = (s,s1) => {}) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
   var healthCheck: Option[ActorRef] = None
   val logger = Logging(context.system, this)
+
+  val hakijaTrigger = context.actorOf(Props(new HakijaTrigger(newApplicant)))
 
   override def receive: Receive = super.receive.orElse({
     case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) map ((hs) => {
@@ -99,7 +102,15 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   }
 
   def handleNew(hakemukset: List[FullHakemus]) {
-    hakemukset.foreach(self.tell(_, ActorRef.noSender))
+
+    for (
+      hakemus <- hakemukset
+    ) {
+      self ! (hakemus, ActorRef.noSender)
+      hakijaTrigger ! hakemus
+    }
+
+
   }
 
   def restRequest[A <: AnyRef](uri: String)(implicit mf : Manifest[A]): Future[A] = hakemusClient.readObject[A](uri, HttpResponseCode.Ok)
@@ -120,3 +131,17 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
 }
 
 case class ReloadHaku(haku: String)
+
+class HakijaTrigger(newApplicant: (String, String) => Unit) extends Actor {
+
+  override def receive: Actor.Receive = {
+    case FullHakemus(_, Some(personOid), _, Some(answers), _) =>
+      for (
+        henkilo <- answers.get("henkilotiedot");
+        hetu <- henkilo.get("Henkilotunnus")
+      ) newApplicant(personOid, hetu)
+
+
+
+  }
+}
