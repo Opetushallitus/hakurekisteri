@@ -4,7 +4,7 @@ import akka.actor.{ActorRef, Actor}
 import java.util.UUID
 import scala.xml.{Node, Elem}
 import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus}
-import fi.vm.sade.hakurekisteri.arvosana.Arvosana
+import fi.vm.sade.hakurekisteri.arvosana.{ArvioYo, Arvosana}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 import akka.event.Logging
@@ -13,6 +13,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{HenkiloResponse, HetuQuery}
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import org.joda.time.{MonthDay, LocalDate}
+import fi.vm.sade.hakurekisteri.storage.Identified
 
 
 class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef) extends Actor {
@@ -25,7 +26,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
 
   val log = Logging(context.system, this)
 
-
+  var kokelaat = Map[String, Kokelas]()
 
   override def receive: Actor.Receive = {
     case k:KokelasRequest => batch = k +: batch
@@ -37,14 +38,21 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
       val requested = sent.find(_.id == id)
       sent = sent.filterNot(_.id == id)
       handleResponse(requested, data)
-    case Kokelas(oid, yo, lukio, yotodistus) =>
-      log.debug(s"sending ytl data for $oid yo: $yo lukio: $lukio todistus: $yotodistus")
-      yo foreach {
+    case k: Kokelas =>
+      log.debug(s"sending ytl data for ${k.oid} yo: ${k.yo} lukio: ${k.lukio}")
+      k.yo foreach {
         yotutkinto =>
           suoritusRekisteri ! yotutkinto
-          yotodistus foreach (arvosanaRekisteri ! _)
+          kokelaat = kokelaat + (k.oid -> k)
       }
-      lukio foreach (suoritusRekisteri ! _)
+      k.lukio foreach (suoritusRekisteri ! _)
+    case s: Suoritus with Identified[UUID] if s.komo == "YOTUTKINTO" =>
+      for (
+        kokelas <- kokelaat.get(s.henkiloOid)
+      ) {
+        kokelas.yoTodistus.map(_.toArvosana(s)) foreach (arvosanaRekisteri ! _)
+        kokelaat = kokelaat - s.henkiloOid
+      }
 
 
   }
@@ -116,7 +124,7 @@ case class YtlResult(batch: UUID, data: Elem)
 case class Kokelas(oid: String,
                    yo: Option[Suoritus],
                    lukio: Option[Suoritus],
-                   yoTodistus: Seq[Arvosana])
+                   yoTodistus: Seq[Koe])
 
 object Send
 
@@ -141,7 +149,10 @@ object YTLXml {
   def parseKokelas(oidFuture: Future[String], kokelas: Node)(implicit ec: ExecutionContext): Future[Kokelas] = {
     for {
       oid <- oidFuture
-    } yield Kokelas(oid, extractYo(oid, kokelas), extractLukio(oid, kokelas), extractTodistus(oid, kokelas))
+    } yield {
+      val yo = extractYo(oid, kokelas)
+      Kokelas(oid, yo , extractLukio(oid, kokelas), yo.map((tutkinto) => extractTodistus(tutkinto, kokelas)).getOrElse(Seq()) )
+    }
   }
 
   object YoTutkinto {
@@ -195,5 +206,24 @@ object YTLXml {
 
   def extractLukio(oid:String, kokelas:Node): Option[Suoritus] = None
 
-  def extractTodistus(oid:String, kokelas: Node): Seq[Arvosana] = Seq()
+  def extractTodistus(yo: Suoritus, kokelas: Node): Seq[Koe] = {
+    (kokelas \\ "KOE").map{
+      (koe: Node) =>
+       val arvio = ArvioYo((koe \ "ARVOSANA").text, (koe \ "YHTEISPISTEMAARA").text.toInt)
+       val valinnaisuus = (koe \ "AINEYHDISTELMAROOLI").text.toInt >= 60
+        Koe(arvio, (koe \ "KOETUNNUS").text, valinnainen = valinnaisuus, parseKausi((koe \ "TUTKINTOKERTA").text).get)
+    }
+
+  }
+
+
+
+
+}
+
+case class Koe(arvio: ArvioYo, aine: String, valinnainen: Boolean, myonnetty: LocalDate) {
+
+  def toArvosana(suoritus: Suoritus with Identified[UUID]) = {
+    Arvosana(suoritus.id, arvio, aine: String, None, valinnainen: Boolean, Some(myonnetty))
+  }
 }
