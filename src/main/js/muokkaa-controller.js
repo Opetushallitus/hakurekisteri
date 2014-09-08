@@ -97,14 +97,30 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         });
     }
     function fetchSuoritukset() {
+        function getKoulutusNimi($http, komo, successCallback) {
+            $http.get(tarjontaServiceUrl + '/rest/v1/komo/' + encodeURIComponent(komo), {cache: true})
+                .success(successCallback)
+        }
         function enrich() {
             if ($scope.suoritukset) {
                 angular.forEach($scope.suoritukset, function(suoritus) {
                     if (suoritus.myontaja) {
                         getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
                             suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
-                        });
+                        })
                     }
+                    if (suoritus.komo) {
+                        getKoulutusNimi($http, suoritus.komo, function(komo) {
+                            if (komo.result && komo.result.koulutuskoodi && komo.result.koulutuskoodi.meta)
+                                if (komo.result.koulutuskoodi.meta.kieli_fi)
+                                    suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_fi.nimi;
+                                else if (komo.result.koulutuskoodi.meta.kieli_sv)
+                                    suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_sv.nimi;
+                                else if (suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_en)
+                                    suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_en.nimi;
+                        })
+                    }
+                    if (suoritus.source !== "1.2.246.562.10.00000000001") suoritus.editable = true;
                 });
             }
         }

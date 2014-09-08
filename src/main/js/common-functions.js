@@ -11,6 +11,7 @@ var henkiloServiceUrl = getBaseUrl() + "/authentication-service";
 var organisaatioServiceUrl = getBaseUrl() + "/organisaatio-service";
 var hakuAppServiceUrl = getBaseUrl() + "/haku-app";
 var koodistoServiceUrl = getBaseUrl() + "/koodisto-service";
+var tarjontaServiceUrl = getBaseUrl() + "/tarjonta-service";
 
 var komo = {
     ulkomainen: "1.2.246.562.13.86722481404",
