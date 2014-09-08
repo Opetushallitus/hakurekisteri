@@ -96,33 +96,32 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             confirm(getOphMsg("suoritusrekisteri.muokkaa.luokkatietojenhakeminen", "Luokkatietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchLuokkatiedot() : back();
         });
     }
-    function fetchSuoritukset() {
-        function getKoulutusNimi($http, komo, successCallback) {
-            $http.get(tarjontaServiceUrl + '/rest/v1/komo/' + encodeURIComponent(komo), {cache: true})
-                .success(successCallback)
+    function getKoulutusNimi(komo, successCallback) {
+        $http.get(tarjontaServiceUrl + '/rest/v1/komo/' + encodeURIComponent(komo), {cache: true})
+            .success(successCallback)
+    }
+    function enrichSuoritus(suoritus) {
+        if (suoritus.myontaja) {
+            getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
+                suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
+            })
         }
+        if (suoritus.komo) {
+            getKoulutusNimi(suoritus.komo, function(komo) {
+                if (komo.result && komo.result.koulutuskoodi && komo.result.koulutuskoodi.meta)
+                    if (komo.result.koulutuskoodi.meta.kieli_fi)
+                        suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_fi.nimi;
+                    else if (komo.result.koulutuskoodi.meta.kieli_sv)
+                        suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_sv.nimi;
+                    else if (suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_en)
+                        suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_en.nimi;
+            })
+        }
+        if (suoritus.source !== "1.2.246.562.10.00000000001") suoritus.editable = true; // FIXME vaihda virran käyttäjä-oidiin?
+    }
+    function fetchSuoritukset() {
         function enrich() {
-            if ($scope.suoritukset) {
-                angular.forEach($scope.suoritukset, function(suoritus) {
-                    if (suoritus.myontaja) {
-                        getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
-                            suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
-                        })
-                    }
-                    if (suoritus.komo) {
-                        getKoulutusNimi($http, suoritus.komo, function(komo) {
-                            if (komo.result && komo.result.koulutuskoodi && komo.result.koulutuskoodi.meta)
-                                if (komo.result.koulutuskoodi.meta.kieli_fi)
-                                    suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_fi.nimi;
-                                else if (komo.result.koulutuskoodi.meta.kieli_sv)
-                                    suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_sv.nimi;
-                                else if (suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_en)
-                                    suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_en.nimi;
-                        })
-                    }
-                    if (suoritus.source !== "1.2.246.562.10.00000000001") suoritus.editable = true;
-                });
-            }
+            if ($scope.suoritukset) angular.forEach($scope.suoritukset, enrichSuoritus);
         }
 
         Suoritukset.query({henkilo: $scope.henkiloOid}, function(suoritukset) {
@@ -249,10 +248,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                         }
                     } else {
                         suoritus.$save(function () {
-                            getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
-                                suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
-                            });
-                            suoritus.editable = true;
+                            enrichSuoritus(suoritus);
                             d.resolve("done");
                         }, function () {
                             $scope.messages.push({
