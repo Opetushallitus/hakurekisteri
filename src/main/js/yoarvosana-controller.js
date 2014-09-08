@@ -1,11 +1,110 @@
 'use strict';
 
-function YoarvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, suoritusId) {
-    $scope.arvosanataulukko = [];
-    $scope.loading = false;
+function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
+    $scope.koetaulukko = [];
+    $scope.loading = true;
+
+    Arvosanat.query({ suoritus: suoritusId }, function(arvosanat) {
+        $scope.koetaulukko = arvosanat.filter(function(a) { return a.arvio.asteikko === "YO" }).map(function(a) {
+            return {
+                id: a.id,
+                koe: a.aine,
+                suoritus: a.suoritus,
+                pakollinen: !a.valinnainen,
+                myonnetty: a.myonnetty,
+                arvio: a.arvio
+            }
+        });
+        $scope.loading = false;
+    }, function() {
+        $scope.loading = false;
+        $rootScope.modalInstance.close({
+            type: "danger",
+            messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.arvosanapalveluongelma",
+            message: "Arvosanapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
+        });
+    });
+
+    $scope.addKoe = function() {
+        $scope.koetaulukko.push({ pakollinen: true })
+    };
 
     $scope.save = function() {
-        alert("about to save:\n\n" + $scope.arvosanataulukko);
+        var arvosanat = [];
+        for (var i = 0; i < $scope.koetaulukko.length; i++) {
+            var k = $scope.koetaulukko[i];
+            if (k.koe && k.arvio.arvosana && k.myonnetty) {
+                arvosanat.push(new Arvosana({
+                    id: k.id,
+                    aine: k.koe,
+                    suoritus: suoritusId,
+                    valinnainen: !k.pakollinen,
+                    myonnetty: k.myonnetty,
+                    "delete": k.delete,
+                    arvio: {
+                        arvosana: k.arvio.arvosana,
+                        asteikko: "YO",
+                        pisteet: k.arvio.pisteet
+                    }
+                }))
+            }
+        }
+
+        function removeArvosana(arvosana, d) {
+            arvosana.$remove(function () {
+                d.resolve("remove ok")
+            }, function (err) {
+                $log.error("error removing, retrying to remove: " + err);
+                arvosana.$remove(function () {
+                    d.resolve("retry remove ok");
+                }, function (retryErr) {
+                    $log.error("retry remove failed: " + retryErr);
+                    d.reject("retry save failed");
+                });
+            })
+        }
+        function saveArvosana(arvosana, d) {
+            arvosana.$save(function (saved) {
+                d.resolve("save ok: " + saved.id)
+            }, function (err) {
+                $log.error("error saving, retrying to save: " + err);
+                arvosana.$save(function (retriedSave) {
+                    d.resolve("retry save ok: " + retriedSave.id);
+                }, function (retryErr) {
+                    $log.error("retry save failed: " + retryErr);
+                    d.reject("retry save failed");
+                });
+            })
+        }
+        var deferreds = [];
+        function saveArvosanat() {
+            angular.forEach(arvosanat, function(arvosana) {
+                var d = $q.defer();
+                this.push(d);
+                if (arvosana.delete) {
+                    if (arvosana.id) removeArvosana(arvosana, d)
+                } else saveArvosana(arvosana, d);
+
+            }, deferreds);
+        }
+        saveArvosanat();
+
+        var allSaved = $q.all(deferreds.map(function(d) { return d.promise }));
+        allSaved.then(function() {
+            $log.debug("all saved");
+            $rootScope.modalInstance.close({
+                type: "success",
+                messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.tallennettu",
+                message: "Arvosanat tallennettu."
+            });
+        }, function() {
+            $log.error("saving failed");
+            $rootScope.modalInstance.close({
+                type: "danger",
+                messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.tallennuseionnistunut",
+                message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen."
+            });
+        });
     };
 
     $scope.cancel = function() {
@@ -17,11 +116,19 @@ function YoarvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, suoritus
     function tutkintokerrat() {
         var kerrat = [];
         for (var i = 1989; i > 1900; i--) {
-            kerrat.push({value: i + "S", text: i + "S"});
-            kerrat.push({value: i + "K", text: i + "K"});
+            kerrat.push({value: "01.12." + i, text: "01.12." + i + " (" + i + "S)"});
+            kerrat.push({value: "01.06." + i, text: "01.06." + i + " (" + i + "K)"});
         }
         return kerrat;
     }
+
+    $scope.getText = function(value, values) {
+        values.some(function(v) { return v.value === value })
+    };
+
+    $scope.isEditable = function(koe) {
+        return !koe.myonnetty || koe.myonnetty.match(/[0-9.]*\.19[0-8][0-9]/)
+    };
 
     $scope.kokeet = [
         {value: "A", text: "Äidinkielen koe, suomi"},
