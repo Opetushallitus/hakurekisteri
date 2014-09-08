@@ -11,50 +11,43 @@ case class Arvosana(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: Optio
 }
 
 object Arvosana {
-  def identify(o:Arvosana): Arvosana with Identified[UUID] = o match {
+  def identify(o: Arvosana): Arvosana with Identified[UUID] = o match {
     case o: Arvosana with Identified[UUID] => o
     case _ => o.identify(UUID.randomUUID)
   }
 
-  def identify(o:Arvosana, identity:UUID) = {
-
-
-    new Arvosana(o.suoritus, o.arvio , o.aine, o.lisatieto, o.valinnainen, o.myonnetty,  o.source) with Identified[UUID] {
+  def identify(o: Arvosana, identity: UUID) = {
+    new Arvosana(o.suoritus, o.arvio , o.aine, o.lisatieto, o.valinnainen, o.myonnetty, o.source) with Identified[UUID] {
       val id: UUID = identity
     }
   }
 }
 
-sealed abstract class Arvio(val arvosana:String)
+sealed abstract class Arvio(val arvosana: String)
 
 object Arvio {
-
   val ASTEIKKO_4_10 = "4-10"
   val ASTEIKKOYO = "YO"
   val asteikot = Seq(ASTEIKKO_4_10, ASTEIKKOYO)
 
   object NA extends Arvio("NA")
 
-  def apply(arvosana:String, asteikko:String, pisteet:Option[Int] = None):Arvio = asteikko match {
+  def apply(arvosana: String, asteikko: String, pisteet: Option[Int] = None): Arvio = asteikko match {
     case ASTEIKKO_4_10 => Arvio410(arvosana)
-    case ASTEIKKOYO if pisteet.isDefined => ArvioYo(arvosana, pisteet.get)
-    case ASTEIKKOYO if pisteet.isEmpty => throw new IllegalArgumentException("pisteet missing for YO arvosana")
+    case ASTEIKKOYO => ArvioYo(arvosana, pisteet)
     case _ => throw UnknownScaleException(asteikko)
   }
 }
 
-case class UnknownScaleException(scale:String) extends IllegalArgumentException("unknown scale: %s" format scale)
+case class UnknownScaleException(scale: String) extends IllegalArgumentException(s"unknown scale: $scale")
 
-case class Arvio410(override val arvosana:String) extends Arvio(arvosana) {
+case class Arvio410(override val arvosana: String) extends Arvio(arvosana) {
   require(Try(arvosana.toInt).isSuccess, "arvosana must be a number")
   require(arvosana.toInt >= 4, "the arvosana must be greater than or equal to 4")
   require(arvosana.toInt <= 10, "the arvosana must be less than or equal to 10")
-
 }
 
-case class ArvioYo(override val arvosana:String, pisteet: Int) extends Arvio(arvosana) {
-
-  val allowable = Set[String]("L","E","M", "C", "B", "A", "I+", "I", "I-", "I=", "K", "P" )
+case class ArvioYo(override val arvosana: String, pisteet: Option[Int]) extends Arvio(arvosana) {
+  val allowable = Set[String]("L", "E", "M", "C", "B", "A", "I+", "I", "I-", "I=", "K", "P" )
   require(allowable.contains(arvosana), s"$arvosana is not in (${allowable.mkString(", ")})")
-
 }

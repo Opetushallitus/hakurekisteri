@@ -210,7 +210,7 @@ object YTLXml {
   def extractTodistus(yo: Suoritus, kokelas: Node): Seq[Koe] = {
     (kokelas \\ "KOE").map{
       (koe: Node) =>
-       val arvio = ArvioYo((koe \ "ARVOSANA").text, (koe \ "YHTEISPISTEMAARA").text.toInt)
+       val arvio = ArvioYo((koe \ "ARVOSANA").text, Some((koe \ "YHTEISPISTEMAARA").text.toInt))
        val valinnaisuus = (koe \ "AINEYHDISTELMAROOLI").text.toInt >= 60
         Koe(arvio, (koe \ "KOETUNNUS").text, valinnainen = valinnaisuus, parseKausi((koe \ "TUTKINTOKERTA").text).get)
     }

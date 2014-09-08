@@ -25,7 +25,7 @@ class TodistusParserSpec extends FlatSpec with ShouldMatchers {
   }
 
   it should "produce correct points for each test" in {
-    val pisteet = (ylioppilas \\ "KOE" \ "YHTEISPISTEMAARA").map(_.text.toInt)
+    val pisteet = (ylioppilas \\ "KOE" \ "YHTEISPISTEMAARA").map(p => Some(p.text.toInt))
     extractTodistus(tutkinto, ylioppilas).map(_.arvio.pisteet) should equal(pisteet)
 
 

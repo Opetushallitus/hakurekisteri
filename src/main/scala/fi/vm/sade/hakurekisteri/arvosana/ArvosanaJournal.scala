@@ -32,7 +32,7 @@ class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, Arvosana
       logger.debug("toRow lisatieto {}", o.lisatieto)
       (o.id.toString, o.suoritus.toString, arvosana, Arvio.ASTEIKKO_4_10 , o.aine, o.lisatieto, o.valinnainen, None, o.myonnetty.map(_.toString), o.source, Platform.currentTime, false)
     case ArvioYo(arvosana, pisteet) =>
-      (o.id.toString, o.suoritus.toString, arvosana, Arvio.ASTEIKKO_4_10 , o.aine, o.lisatieto, o.valinnainen, Some(pisteet), o.myonnetty.map(_.toString), o.source, Platform.currentTime, false)
+      (o.id.toString, o.suoritus.toString, arvosana, Arvio.ASTEIKKOYO , o.aine, o.lisatieto, o.valinnainen, pisteet, o.myonnetty.map(_.toString), o.source, Platform.currentTime, false)
     case a:Arvio if a == Arvio.NA => throw UnknownAssessmentResultException
   }
 
