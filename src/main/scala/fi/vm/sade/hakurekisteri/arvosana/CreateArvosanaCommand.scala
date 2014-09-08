@@ -10,7 +10,7 @@ class CreateArvosanaCommand extends HakurekisteriCommand[Arvosana] with LocalDat
 
   val arvio: Field[String] = asType[String]("arvio.arvosana").notBlank
   val asteikko: Field[String] = asType[String]("arvio.asteikko").required.allowableValues(Arvio.asteikot:_*)
-  val pisteet: Field[Int] = asType[Int]("arvio.asteikko").optional
+  val pisteet: Field[Int] = asType[Int]("arvio.pisteet").optional
   val suoritus: Field[String] = asType[String]("suoritus").required.validForFormat("([a-f\\d]{8}(-[a-f\\d]{4}){3}-[a-f\\d]{12}?)".r,"%s is not a valid UUID")
   val aine: Field[String] = asType[String]("aine").notBlank
   val myonnetty: Field[LocalDate] = asType[LocalDate]("myonnetty").optional
