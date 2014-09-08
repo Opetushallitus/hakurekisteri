@@ -161,9 +161,9 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
 
     import scala.reflect.runtime.universe._
 
-    def apply[C : TypeTag](props: (_, _)*) = {
+    def apply[C](props: (_, _)*)(implicit m: Manifest[C]) = {
 
-      val clazz = typeOf[C].erasure.asInstanceOf[Class[C]]
+      val clazz = m.runtimeClass
 
       val definition = new RootBeanDefinition(clazz)
 
@@ -175,10 +175,6 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
 
   }
 
-
-  override def initBeanDefinitionReader(beanDefinitionReader: XmlBeanDefinitionReader) {
-    beanDefinitionReader.getRegistry.registerBeanDefinition("propertyPlaceHolder", placeholder)
-  }
 
 
 
