@@ -151,24 +151,36 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
     fileName <- propertyFiles.reverse
   ) yield new FileSystemResource(confDir.resolve(fileName).toAbsolutePath.toString)
 
-  val placeholder = Bean(
-    classOf[PropertySourcesPlaceholderConfigurer],
+  val placeholder = Bean[PropertySourcesPlaceholderConfigurer](
     "localOverride" -> true,
     "properties" -> localProperties,
     "locations" -> resources.toArray
   )
 
+  object Bean {
+
+    import scala.reflect.runtime.universe._
+
+    def apply[C : TypeTag](props: (_, _)*) = {
+
+      val clazz = typeOf[C].erasure.asInstanceOf[Class[C]]
+
+      val definition = new RootBeanDefinition(clazz)
+
+      definition.setPropertyValues(new MutablePropertyValues(Map(props: _*).asJava))
+
+      definition
+
+    }
+
+  }
+
+
   override def initBeanDefinitionReader(beanDefinitionReader: XmlBeanDefinitionReader) {
     beanDefinitionReader.getRegistry.registerBeanDefinition("propertyPlaceHolder", placeholder)
   }
 
-  object Bean {
-    def apply[C, A, B](clazz: Class[C], props: (A, B)*) = {
-      val definition = new RootBeanDefinition(clazz)
-      definition.setPropertyValues(new MutablePropertyValues(Map(props: _*).asJava))
-      definition
-    }
-  }
+
 
 
 
