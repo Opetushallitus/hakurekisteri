@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 
 import akka.actor._
 import java.util.UUID
-import scala.xml.{Node, Elem}
+import scala.xml.{XML, Node, Elem}
 import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus}
 import fi.vm.sade.hakurekisteri.arvosana.{ArvosanaQuery, Arvosana}
 import scala.concurrent.{ExecutionContext, Future}
@@ -10,7 +10,7 @@ import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
-import org.joda.time.{MonthDay, LocalDate}
+import org.joda.time.{DateTime, MonthDay, LocalDate}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.arvosana.ArvioYo
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
@@ -18,15 +18,45 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.HetuQuery
 import scala.util.Failure
 import scala.Some
 import scala.util.Success
+import fr.janalyse.ssh.{SSHPassword, SSH}
+import java.io.{PrintWriter, ByteArrayOutputStream}
+import scala.concurrent.duration._
 
 
-class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef) extends Actor {
+
+class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, config: Option[YTLConfig]) extends Actor {
 
   implicit val ec = context.dispatcher
 
   var batch = Batch[KokelasRequest]()
   var sent = Seq[Batch[KokelasRequest]]()
 
+  val sendTicker = context.system.scheduler.schedule(1.millisecond, 30.minutes, self, CheckSend)
+  val pollTicker = context.system.scheduler.schedule(20.minutes, 30.minutes, self, CheckPoll)
+
+  var nextPoll: Option[Int] = nextPollTime
+  var nextSend: Option[Int] = nextPollTime
+
+
+  def nextPollTime: Option[Int] = {
+    config.flatMap {
+      (conf) =>
+        val poll = conf.pollTimes
+
+        if (poll.isEmpty) None
+        else {
+          val searchTime = now
+          Some(poll.sorted.find(_ > searchTime).getOrElse(poll.head))
+        }
+
+
+    }
+  }
+
+
+  def now: Int = {
+    DateTime.now.hourOfDay.get
+  }
 
   val log = Logging(context.system, this)
 
@@ -34,16 +64,22 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   var suoritusKokelaat = Map[UUID, (Suoritus with Identified[UUID], Kokelas)]()
 
   override def receive: Actor.Receive = {
+    case CheckPoll if nextPoll.getOrElse(10000) < now =>
+      self ! Poll
+      nextPoll = nextPollTime
+    case CheckSend if nextSend.getOrElse(10000) < now =>
+      self ! Send
+      nextSend = nextPollTime
     case k:KokelasRequest => batch = k +: batch
-    case Send => send(batch)
+    case Send if config.isDefined => send(batch)
                  sent = batch +: sent
                  batch = Batch[KokelasRequest]()
-    case Poll => poll(sent)
-    case YtlResult(id, data) =>
+    case Poll if config.isDefined  => poll(sent)
+    case YtlResult(id, data) if config.isDefined  =>
       val requested = sent.find(_.id == id)
       sent = sent.filterNot(_.id == id)
       handleResponse(requested, data)
-    case k: Kokelas =>
+    case k: Kokelas if config.isDefined  =>
       log.debug(s"sending ytl data for ${k.oid} yo: ${k.yo} lukio: ${k.lukio}")
       k.yo foreach {
         yotutkinto =>
@@ -51,7 +87,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
           kokelaat = kokelaat + (k.oid -> k)
       }
       k.lukio foreach (suoritusRekisteri ! _)
-    case s: Suoritus with Identified[UUID] if s.komo == YTLXml.yotutkinto =>
+    case s: Suoritus with Identified[UUID] if s.komo == YTLXml.yotutkinto && config.isDefined =>
       for (
         kokelas <- kokelaat.get(s.henkiloOid)
       ) {
@@ -60,14 +96,14 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
         suoritusKokelaat = suoritusKokelaat + (s.id -> (s, kokelas))
       }
 
-    case ActorIdentity(id: UUID, Some(ref)) => for (
+    case ActorIdentity(id: UUID, Some(ref)) if config.isDefined  => for (
       (suoritus, kokelas) <- suoritusKokelaat.get(id)
     ) {
       ref ! kokelas
       suoritusKokelaat = suoritusKokelaat - id
     }
 
-    case ActorIdentity(id: UUID, None) => try {
+    case ActorIdentity(id: UUID, None) if config.isDefined => try {
       for (
         (suoritus, kokelas) <- suoritusKokelaat.get(id)
       ) {
@@ -85,9 +121,46 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
 
   }
 
-  def send(batch: Batch[KokelasRequest]) {}
+  def batchMessage(batch: Batch[KokelasRequest]) =
+    <Haku id={batch.id.toString}>
+      {for (kokelas <- batch.items) yield <Hetu>{kokelas.hetu}</Hetu>}
+    </Haku>
 
-  def poll(batches: Seq[Batch[KokelasRequest]]): Unit = {}
+
+
+  def uploadFile(message: Elem): Array[Byte] = {
+    val os = new ByteArrayOutputStream()
+    val writer = new PrintWriter(os)
+    try XML.write(writer, message, "ISO-8859-1", xmlDecl = true, doctype = null)
+    finally writer.close()
+    os.toByteArray
+  }
+
+  def send(batch: Batch[KokelasRequest]): Unit = config match {
+    case Some(YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, _)) =>
+      SSH.ftp(host = host, username =username, password = SSHPassword(Some(password))){
+        (sftp) =>
+          sftp.putBytes(uploadFile(batchMessage(batch)), s"$inbox/siirto${batch.id.toString}.xml")
+      }
+    case None => log.warning("sending files to YTL called without config")
+  }
+
+  def poll(batches: Seq[Batch[KokelasRequest]]): Unit = config match {
+    case Some(YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, _)) =>
+      SSH.ftp(host = host, username =username, password = SSHPassword(Some(password))){
+        (sftp) =>
+          for (
+            batch <- batches
+          ) for (
+            result <- sftp.get(s"$outbox/outsiirto${batch.id.toString}.xml")
+          ) {
+            val response = XML.loadString(result)
+            handleResponse(Some(batch), response)
+            sent = sent.filterNot(_.id == batch.id)
+          }
+      }
+    case None => log.warning("polling of files from YTL called without config")
+  }
 
   def handleResponse(requested: Option[Batch[KokelasRequest]], data: Elem) = {
 
@@ -157,6 +230,10 @@ case class Kokelas(oid: String,
 object Send
 
 object Poll
+
+object CheckSend
+
+object CheckPoll
 
 
 object YTLXml {
@@ -292,7 +369,6 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
 
   var fetch: Option[Cancellable] = None
 
-  import scala.concurrent.duration._
 
   override def preStart(): Unit = {
 
@@ -302,3 +378,5 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
 
 
 }
+
+case class YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, pollTimes: Seq[Int])

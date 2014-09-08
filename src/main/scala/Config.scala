@@ -1,5 +1,6 @@
 import fi.vm.sade.hakurekisteri.integration.ServiceConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
+import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
 import java.io.InputStream
 import java.nio.file.{Files, Paths}
 
@@ -59,6 +60,15 @@ object Config {
   val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl)
   val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl)
   val organisaatioConfig = ServiceConfig(serviceUrl = organisaatioServiceUrl)
+
+  val ytlConfig = for (
+    host <- properties.get("suoritusrekisteri.ytl.host");
+    user <- properties.get("suoritusrekisteri.ytl.user");
+    password <- properties.get("suoritusrekisteri.ytl.password");
+    inbox <- properties.get("suoritusrekisteri.ytl.inbox");
+    outbox <- properties.get("suoritusrekisteri.ytl.outbox");
+    poll <- properties.get("suoritusrekisteri.ytl.poll")
+  ) yield YTLConfig(host, user, password, inbox, outbox, poll.split(":").map(_.toInt))
 
   //val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
   // val amqQueue = properties.getOrElse("activemq.queue.name.log", "Sade.Log")

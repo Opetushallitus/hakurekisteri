@@ -63,7 +63,8 @@ object HakuJaValintarekisteriBuild extends Build {
     "info.folone" %% "poi-scala" % "0.9",
     "org.apache.activemq" % "activemq-all" % "5.9.1",
     "org.apache.camel" % "camel-jms" % "2.13.0",
-    "fi.vm.sade.log" % "log-client" % "7.0"
+    "fi.vm.sade.log" % "log-client" % "7.0",
+    "fr.janalyse" %% "janalyse-ssh" % "0.9.10"
   )
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion,
