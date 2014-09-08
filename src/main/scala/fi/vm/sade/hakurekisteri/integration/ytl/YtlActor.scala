@@ -46,7 +46,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
         if (poll.isEmpty) None
         else {
           val searchTime = now
-          Some(poll.sorted.find(_ > searchTime).getOrElse(poll.head))
+          poll.sorted.find(_ > searchTime)
         }
 
 
@@ -64,12 +64,19 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   var suoritusKokelaat = Map[UUID, (Suoritus with Identified[UUID], Kokelas)]()
 
   override def receive: Actor.Receive = {
-    case CheckPoll if nextPoll.getOrElse(10000) < now =>
-      self ! Poll
-      nextPoll = nextPollTime
-    case CheckSend if nextSend.getOrElse(10000) < now =>
-      self ! Send
-      nextSend = nextPollTime
+    case CheckPoll  =>
+      if (nextPoll.isEmpty) nextPoll = nextPollTime
+      else if (nextPoll.get < now) {
+        self ! Poll
+        nextPoll = nextPollTime
+      }
+
+    case CheckSend =>
+      if (nextSend.isEmpty) nextSend = nextPollTime
+      else if (nextSend.get < now) {
+        self ! Send
+        nextSend = nextPollTime
+      }
     case k:KokelasRequest => batch = k +: batch
     case Send if config.isDefined => send(batch)
                  sent = batch +: sent
