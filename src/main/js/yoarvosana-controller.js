@@ -9,10 +9,10 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
             return {
                 id: a.id,
                 koe: a.aine,
-                suoritus: a.suoritus,
                 pakollinen: !a.valinnainen,
                 myonnetty: a.myonnetty,
-                arvio: a.arvio
+                arvosana: a.arvio.arvosana,
+                pisteet: a.arvio.pisteet
             }
         });
         $scope.loading = false;
@@ -33,7 +33,7 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
         var arvosanat = [];
         for (var i = 0; i < $scope.koetaulukko.length; i++) {
             var k = $scope.koetaulukko[i];
-            if (k.koe && k.arvio.arvosana && k.myonnetty) {
+            if (k.koe && k.arvosana && k.myonnetty) {
                 arvosanat.push(new Arvosana({
                     id: k.id,
                     aine: k.koe,
@@ -42,9 +42,9 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
                     myonnetty: k.myonnetty,
                     "delete": k.delete,
                     arvio: {
-                        arvosana: k.arvio.arvosana,
+                        arvosana: k.arvosana,
                         asteikko: "YO",
-                        pisteet: k.arvio.pisteet
+                        pisteet: k.pisteet
                     }
                 }))
             }
@@ -127,7 +127,7 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
     };
 
     $scope.isEditable = function(koe) {
-        return !koe.myonnetty || koe.myonnetty.match(/[0-9.]*\.19[0-8][0-9]/)
+        return !koe.myonnetty || koe.myonnetty.match(/^[0-9.]*\.19[0-8][0-9]$/)
     };
 
     $scope.kokeet = [
