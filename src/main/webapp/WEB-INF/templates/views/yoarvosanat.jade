@@ -14,22 +14,22 @@ form(ng-submit="save()")
     tbody
       tr(ng-repeat="k in koetaulukko")
         td
-          select(ng-show="isEditable(k)" class="form-control" ng-model="k.koe" required="required" ng-options="k.value as k.text for k in kokeet" ng-disabled="k.delete")
-          span(ng-hide="isEditable(k)") {{getText(k.koe, kokeet) || k.koe}}
+          select(ng-show="k.editable" class="form-control" ng-model="k.koe" required="required" ng-options="k.value as k.text for k in kokeet" ng-disabled="k.delete")
+          span(ng-hide="k.editable") {{getText(k.koe, kokeet) || k.koe}}
         td
-          select(ng-show="isEditable(k)" class="form-control" ng-model="k.arvosana" required="required" ng-options="a.value as a.text for a in arvosanat" ng-disabled="k.delete")
-          span(ng-hide="isEditable(k)") {{k.arvosana}}
+          select(ng-show="k.editable" class="form-control" ng-model="k.arvosana" required="required" ng-options="a.value as a.text for a in arvosanat" ng-disabled="k.delete")
+          span(ng-hide="k.editable") {{k.arvosana}}
         td
-          input(ng-show="isEditable(k)" class="form-control" ng-model="k.pisteet" ng-disabled="k.delete")
-          span(ng-hide="isEditable(k)") {{k.pisteet}}
+          input(ng-show="k.editable" class="form-control" ng-model="k.pisteet" ng-disabled="k.delete")
+          span(ng-hide="k.editable") {{k.pisteet}}
         td
-          select(ng-show="isEditable(k)" class="form-control" ng-model="k.myonnetty" required="required" ng-options="t.value as t.text for t in tutkintokerrat" ng-disabled="k.delete")
-          span(ng-hide="isEditable(k)") {{k.myonnetty}}
+          select(ng-show="k.editable" class="form-control" ng-model="k.myonnetty" required="required" ng-options="t.value as t.text for t in tutkintokerrat" ng-disabled="k.delete")
+          span(ng-hide="k.editable") {{k.myonnetty}}
         td
-          input(ng-show="isEditable(k)" class="form-control" type="checkbox" ng-model="k.pakollinen" ng-disabled="k.delete")
-          span(ng-hide="isEditable(k)") {{k.pakollinen}}
+          input(ng-show="k.editable" class="form-control" type="checkbox" ng-model="k.pakollinen" ng-disabled="k.delete")
+          span(ng-hide="k.editable") {{k.pakollinen}}
         td
-          button(ng-show="isEditable(k)" type="button" class="btn btn-default btn-xs" ng-click="k.delete = true" ng-disabled="k.delete")
+          button(ng-show="k.editable" type="button" class="btn btn-default btn-xs" ng-click="k.delete = true" ng-disabled="k.delete")
             span(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.poista") Poista
             span(class="glyphicon glyphicon-remove")
       tr

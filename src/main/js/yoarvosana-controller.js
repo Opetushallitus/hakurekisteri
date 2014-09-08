@@ -4,6 +4,10 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
     $scope.koetaulukko = [];
     $scope.loading = true;
 
+    function isEditable(myonnetty) {
+        return !myonnetty || myonnetty.match(/^[0-9.]*\.19[0-8][0-9]$/)
+    }
+
     Arvosanat.query({ suoritus: suoritusId }, function(arvosanat) {
         $scope.koetaulukko = arvosanat.filter(function(a) { return a.arvio.asteikko === "YO" }).map(function(a) {
             return {
@@ -12,7 +16,8 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
                 pakollinen: !a.valinnainen,
                 myonnetty: a.myonnetty,
                 arvosana: a.arvio.arvosana,
-                pisteet: a.arvio.pisteet
+                pisteet: a.arvio.pisteet,
+                editable: isEditable(a.myonnetty)
             }
         });
         $scope.loading = false;
@@ -26,7 +31,7 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
     });
 
     $scope.addKoe = function() {
-        $scope.koetaulukko.push({ pakollinen: true })
+        $scope.koetaulukko.push({ pakollinen: true, editable: true })
     };
 
     $scope.save = function() {
@@ -115,7 +120,7 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
 
     function tutkintokerrat() {
         var kerrat = [];
-        for (var i = 1989; i > 1900; i--) {
+        for (var i = 1989; i > 1899; i--) {
             kerrat.push({value: "01.12." + i, text: "01.12." + i + " (" + i + "S)"});
             kerrat.push({value: "01.06." + i, text: "01.06." + i + " (" + i + "K)"});
         }
@@ -124,10 +129,6 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
 
     $scope.getText = function(value, values) {
         values.some(function(v) { return v.value === value })
-    };
-
-    $scope.isEditable = function(koe) {
-        return !koe.myonnetty || koe.myonnetty.match(/^[0-9.]*\.19[0-8][0-9]$/)
     };
 
     $scope.kokeet = [
