@@ -34,7 +34,7 @@ class OpiskelijaActorSpec extends FunSuite {
     val alkuPaiva = startDates(Random.nextInt(startDates.size));
     val loppuPaiva = None;
     
-    return new Opiskelija(genOppilaitosOid(), genLuokkataso(), genLuokka(), genHenkiloOid(), genAlkuPaiva(), genLoppuPaiva());
+    return new Opiskelija(genOppilaitosOid(), genLuokkataso(), genLuokka(), genHenkiloOid(), genAlkuPaiva(), genLoppuPaiva(), source = "Test");
   }
 
   def genOppilaitosOid():String = {

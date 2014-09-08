@@ -6,7 +6,7 @@ import fi.vm.sade.hakurekisteri.rest.support.Resource
 import scala.util.Try
 import org.joda.time.LocalDate
 
-case class Arvosana(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: Option[String], valinnainen: Boolean, myonnetty: Option[LocalDate] = None) extends Resource[UUID] {
+case class Arvosana(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: Option[String], valinnainen: Boolean, myonnetty: Option[LocalDate] = None, source: String) extends Resource[UUID] {
   override def identify(id: UUID): this.type with Identified[UUID]= Arvosana.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
 }
 
@@ -19,7 +19,7 @@ object Arvosana {
   def identify(o:Arvosana, identity:UUID) = {
 
 
-    new Arvosana(o.suoritus, o.arvio , o.aine, o.lisatieto, o.valinnainen) with Identified[UUID] {
+    new Arvosana(o.suoritus, o.arvio , o.aine, o.lisatieto, o.valinnainen, o.myonnetty,  o.source) with Identified[UUID] {
       val id: UUID = identity
     }
   }

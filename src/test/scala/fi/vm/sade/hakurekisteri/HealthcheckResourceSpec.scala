@@ -8,16 +8,16 @@ import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.{LocalDate, DateTime}
 import akka.actor.{Actor, Props, ActorSystem}
 
-import fi.vm.sade.hakurekisteri.acceptance.tools.{FakeAuthorizer}
+import fi.vm.sade.hakurekisteri.acceptance.tools.{Peruskoulu, FakeAuthorizer}
 import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaActor, Opiskelija}
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
 import java.util.UUID
 
 class HealthcheckResourceSpec extends ScalatraFunSuite {
-  val arvosana = Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", None, false)
-  val opiskelija = Opiskelija("1.2.3", "9", "9A", "1.2.4", DateTime.now, None)
-  val opiskeluoikeus = Opiskeluoikeus(LocalDate.now(), None, "1.2.4", "1.2.5", "1.2.3")
+  val arvosana = Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", None, false, source = "Test")
+  val opiskelija = Opiskelija("1.2.3", "9", "9A", "1.2.4", DateTime.now, None, source = "Test")
+  val opiskeluoikeus = Opiskeluoikeus(LocalDate.now(), None, "1.2.4", "1.2.5", "1.2.3", source = "Test")
   val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now,"1.2.4")
   val hakemus = FullHakemus("1.2.5", Some("1.2.4"), ("1.2.5"), None, state =  Some("ACTIVE"))
 

@@ -210,8 +210,8 @@ object XMLHakemus {
   }
 
   def resolveYear(suoritus: Suoritus) = suoritus match {
-    case Suoritus("ulkomainen", _,  _, _, _, _, _, _) => None
-    case Suoritus(_, _, _,date, _, _, _, _)  => Some(date.getYear.toString)
+    case Suoritus("ulkomainen", _,  _, _, _, _, _, _, _) => None
+    case Suoritus(_, _, _,date, _, _, _,  _, _)  => Some(date.getYear.toString)
   }
 
   def apply(hakija: Hakija, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive]): XMLHakemus =

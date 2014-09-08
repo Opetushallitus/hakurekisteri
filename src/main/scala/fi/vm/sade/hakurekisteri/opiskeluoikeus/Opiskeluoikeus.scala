@@ -10,7 +10,8 @@ case class Opiskeluoikeus(alkuPaiva: LocalDate,
                           loppuPaiva: Option[LocalDate],
                           henkiloOid: String,
                           komo: String,
-                          myontaja: String) extends Resource[UUID] {
+                          myontaja: String,
+                          source : String) extends Resource[UUID] {
   override def identify(id: UUID): this.type with Identified[UUID] = Opiskeluoikeus.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
 }
 
@@ -21,7 +22,7 @@ object Opiskeluoikeus {
   }
 
   def identify(o: Opiskeluoikeus, identity: UUID) = {
-    new Opiskeluoikeus(o.alkuPaiva, o.loppuPaiva, o.henkiloOid, o.komo, o.myontaja) with Identified[UUID] {
+    new Opiskeluoikeus(o.alkuPaiva, o.loppuPaiva, o.henkiloOid, o.komo, o.myontaja, o.source) with Identified[UUID] {
       val id: UUID = identity
     }
   }

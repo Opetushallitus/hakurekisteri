@@ -35,7 +35,8 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, tarjonta
           loppuPaiva = o.loppuPvm,
           henkiloOid = oppijanumero.get,
           komo = komoOid,
-          myontaja = oppilaitosOid
+          myontaja = oppilaitosOid,
+          source = OPH
         )
       })
     })
@@ -51,7 +52,8 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, tarjonta
           tila = tila(t.suoritusPvm),
           henkiloOid = oppijanumero.get,
           yksilollistaminen = yksilollistaminen.Ei,
-          suoritusKieli = t.kieli
+          suoritusKieli = t.kieli,
+          source = OPH
         )
       })
     })

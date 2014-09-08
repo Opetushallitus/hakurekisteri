@@ -89,7 +89,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
   }
 }
 
-abstract class HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriCommand[A]](actor: ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with JacksonJsonParsing with CorsSupport {
+abstract class  HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriCommand[A]](actor: ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with JacksonJsonParsing with CorsSupport {
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
@@ -108,7 +108,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriComm
   }
 
   def createResource(authorities: Seq[String], user: Option[String]): Object = {
-    (command[C] >> (_.toValidatedResource)).fold(
+    (command[C] >> (_.toValidatedResource(user.get))).fold(
       errors => throw MalformedResourceException(errors.toString()),
       resource => new ActorResult(AuthorizedCreate(resource, authorities, user.getOrElse("anonymous")), ResourceCreated(request.getRequestURL)))
   }
@@ -120,7 +120,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriComm
   def identifyResource(resource : A, id: UUID): A with Identified[UUID] = resource.identify(id)
 
   def updateResource(id: UUID, authorities: Seq[String], user: Option[String]): Object = {
-    (command[C] >> (_.toValidatedResource)).fold(
+    (command[C] >> (_.toValidatedResource(user.get))).fold(
       errors => throw MalformedResourceException(errors.toString()),
       resource => new ActorResult[A with Identified[UUID]](AuthorizedUpdate(identifyResource(resource, id), authorities, user.getOrElse("anonymous")), Ok(_)))
   }

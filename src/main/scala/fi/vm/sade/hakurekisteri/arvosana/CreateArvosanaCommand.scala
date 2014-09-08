@@ -18,7 +18,7 @@ class CreateArvosanaCommand extends HakurekisteriCommand[Arvosana] with LocalDat
   val lisatieto: Field[String] = asType[String]("lisatieto").optional
   val valinnainen: Field[Boolean] = asType[Boolean]("valinnainen").optional
 
-  override def toResource: Arvosana = Arvosana(suoritus.value.map(UUID.fromString).get, Arvio(arvio.value.get, asteikko.value.get, pisteet.value), aine.value.get, lisatieto.value, valinnainen.value.getOrElse(false), myonnetty.value)
+  override def toResource(user: String): Arvosana = Arvosana(suoritus.value.map(UUID.fromString).get, Arvio(arvio.value.get, asteikko.value.get, pisteet.value), aine.value.get, lisatieto.value, valinnainen.value.getOrElse(false), myonnetty.value, source = user)
 }
 
 

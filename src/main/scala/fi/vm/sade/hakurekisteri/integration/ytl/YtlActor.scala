@@ -164,7 +164,8 @@ object YTLXml {
     valmistuminen = valmistuminen,
     henkiloOid = suorittaja,
     yksilollistaminen = yksilollistaminen.Ei,
-    suoritusKieli = kieli)
+    suoritusKieli = kieli,
+    source = "YTL")
   }
 
   val kevat = "(\\d{4})K".r
@@ -224,6 +225,6 @@ object YTLXml {
 case class Koe(arvio: ArvioYo, aine: String, valinnainen: Boolean, myonnetty: LocalDate) {
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]) = {
-    Arvosana(suoritus.id, arvio, aine: String, None, valinnainen: Boolean, Some(myonnetty))
+    Arvosana(suoritus.id, arvio, aine: String, None, valinnainen: Boolean, Some(myonnetty), "YTL")
   }
 }

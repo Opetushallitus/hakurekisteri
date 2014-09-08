@@ -25,7 +25,7 @@ case class Suoritus(komo: String,
                     henkiloOid: String,
                     yksilollistaminen: Yksilollistetty,
                     suoritusKieli: String,
-                    opiskeluoikeus: Option[UUID] = None) extends Resource[UUID] {
+                    opiskeluoikeus: Option[UUID] = None, source: String ) extends Resource[UUID] {
   override def identify(id: UUID): this.type with Identified[UUID] = Suoritus.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
 }
 
@@ -36,36 +36,9 @@ object Suoritus {
   }
 
   def identify(o: Suoritus, identity: UUID) = {
-    new Suoritus(o.komo, o.myontaja, o.tila, o.valmistuminen, o.henkiloOid, o.yksilollistaminen, o.suoritusKieli) with Identified[UUID] {
+    new Suoritus(o.komo, o.myontaja, o.tila, o.valmistuminen, o.henkiloOid, o.yksilollistaminen, o.suoritusKieli, o.opiskeluoikeus, o.source) with Identified[UUID] {
       val id: UUID = identity
     }
   }
 }
 
-
-// FIXME move to test
-object PerusopetuksenToteutus2005S {
-  def apply (oppilaitos: String) : Komoto = {
-    Komoto("komotoid", "peruskoulu", oppilaitos, "2005", Kausi.Syksy)
-  }
-}
-object Peruskoulu {
-  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
-    Suoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, Ei, "fi")
-  }
-}
-object OsittainYksilollistettyPerusopetus {
-  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
-    Suoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, Osittain, "fi")
-  }
-}
-object AlueittainYksilollistettyPerusopetus {
-  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
-    Suoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, Alueittain, "fi")
-  }
-}
-object KokonaanYksillollistettyPerusopetus {
-  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
-    Suoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, Kokonaan, "fi")
-  }
-}

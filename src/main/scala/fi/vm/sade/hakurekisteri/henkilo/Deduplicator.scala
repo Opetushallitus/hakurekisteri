@@ -60,7 +60,7 @@ class Deduplicator(suoritusRekisteri:ActorRef, opiskelijaRekisteri:ActorRef) ext
         override def receive: Actor.Receive = {
           case suoritukset: Seq[Suoritus with Identified[UUID]] =>
             for (s <- suoritukset )  if (s.henkiloOid != newOid) {
-              suoritusRekisteri ! Suoritus(s.komo: String, s.myontaja: String, s.tila: String, s.valmistuminen, newOid, s.yksilollistaminen, s.suoritusKieli).identify(s.id)
+              suoritusRekisteri ! Suoritus(s.komo: String, s.myontaja: String, s.tila: String, s.valmistuminen, newOid, s.yksilollistaminen, s.suoritusKieli, s.opiskeluoikeus, s.source).identify(s.id)
               updatedSuoritukset.put(s.id,Promise[Unit])
             } else {
               updatedSuoritukset.remove(s.id)
@@ -69,7 +69,7 @@ class Deduplicator(suoritusRekisteri:ActorRef, opiskelijaRekisteri:ActorRef) ext
 
           case opiskelijat: Seq[Opiskelija with Identified[UUID]] =>
             for (o <- opiskelijat) if (o.henkiloOid != newOid) {
-              opiskelijaRekisteri ! Opiskelija(o.oppilaitosOid, o.luokkataso, o.luokka, newOid, o.alkuPaiva, o.loppuPaiva).identify(o.id)
+              opiskelijaRekisteri ! Opiskelija(o.oppilaitosOid, o.luokkataso, o.luokka, newOid, o.alkuPaiva, o.loppuPaiva, o.source).identify(o.id)
               updatedOpiskelijat.put(o.id, Promise[Unit])
             } else {
               updatedOpiskelijat.remove(o.id)

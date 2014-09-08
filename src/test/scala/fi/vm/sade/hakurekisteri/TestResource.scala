@@ -6,6 +6,8 @@ import fi.vm.sade.hakurekisteri.storage.repository._
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 
 case class TestResource(name:String) extends fi.vm.sade.hakurekisteri.rest.support.Resource[UUID] {
+
+  val source = "Test"
   override def identify(id: UUID): this.type with Identified[UUID] = TestResource.identify(this, id).asInstanceOf[this.type with Identified[UUID]]
 }
 
@@ -32,7 +34,7 @@ object TestResource {
 
 case class TestJournal[T <: Resource[UUID]](state: Seq[T with Identified[UUID]] = Seq(), deleted:Seq[UUID] = Seq()) extends InMemJournal[T, UUID] {
   state foreach {(resource) => addModification(Updated(resource))}
-  deleted foreach {(id) => addModification(Deleted(id))}
+  deleted foreach {(id) => addModification(Deleted(id, source = "Test"))}
 }
 
 

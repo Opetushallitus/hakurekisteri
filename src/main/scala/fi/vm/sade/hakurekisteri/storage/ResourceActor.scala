@@ -51,9 +51,9 @@ abstract class ResourceActor[T <: Resource[I] : Manifest, I : Manifest] extends 
       sender ! saveTry.recover{ case e: Exception => Failure(e)}.get
     case id: I =>
       sender ! get(id)
-    case DeleteResource(id: I) =>
+    case DeleteResource(id: I, user: String) =>
       log.debug(s"received delete request for resource: $id from $sender")
-      sender ! delete(id)
+      sender ! delete(id, user)
       log.debug(s"deleted $id answered to $sender")
     case Report =>
       log.debug(s"saved: $saved")
@@ -63,6 +63,6 @@ abstract class ResourceActor[T <: Resource[I] : Manifest, I : Manifest] extends 
   }
 }
 
-case class DeleteResource[I](id: I)
+case class DeleteResource[I](id: I, source: String)
 
 object Reload

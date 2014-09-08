@@ -96,7 +96,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
     it should "remove item when item is deleted" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
         val saved = repo.save(itemConstructor)
-        repo.delete(saved.id)
+        repo.delete(saved.id, source = "Test")
         repo.listAll should not(contain(saved))
     }
 
@@ -125,7 +125,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
 
         val saved = repo.save(item)
         val start = repo.cursor(item)
-        repo.delete(saved.id)
+        repo.delete(saved.id, source = "Test")
         repo.cursor(item) should not (be (start))
     }
 
@@ -136,7 +136,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
           if (repo.listAll().map(_.id).contains(id)) newId else id
         }
         val start = repo.listAll().map(repo.cursor)
-        repo.delete(newId)
+        repo.delete(newId, source = "Test")
         repo.listAll().map(repo.cursor) should be (start)
     }
 
@@ -183,7 +183,7 @@ trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
 
     def repoRemover(amount:Int)(repo: Repository[T,UUID], items: Seq[T], itemConstructor: => T) = {
       val deletes = repo.listAll().take(amount)
-      deletes.foreach((item) => repo.delete(item.id))
+      deletes.foreach((item) => repo.delete(item.id, source = "Test"))
       (repo, items filter ( !deletes.contains(_)))
     }
 

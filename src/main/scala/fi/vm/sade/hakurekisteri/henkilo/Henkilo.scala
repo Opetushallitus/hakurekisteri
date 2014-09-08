@@ -30,6 +30,8 @@ case class Henkilo (
                      syntymaaika: String,
                      markkinointilupa: Option[Boolean]) extends Resource[UUID]{
 
+  val source = ""
+
   override def identify(id: UUID): this.type with Identified[UUID] = Henkilo.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
 }
 

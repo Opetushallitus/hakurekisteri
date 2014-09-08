@@ -119,7 +119,8 @@ object AkkaHakupalvelu {
           luokkataso = getValue("koulutustausta", "luokkataso"),
           luokka = getValue("koulutustausta", "lahtoluokka"),
           alkuPaiva = DateTime.now.minus(org.joda.time.Duration.standardDays(1)),
-          loppuPaiva = None
+          loppuPaiva = None,
+          source = "1.2.246.562.10.00000000001"
         ))
         case _ => Seq()
       },
@@ -129,12 +130,12 @@ object AkkaHakupalvelu {
 
   def getSuoritukset(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String): Seq[Suoritus] = {
     Seq(pohjakoulutus).collect {
-      case Some("0") => Suoritus("ulkomainen", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli)
-      case Some("1") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli)
-      case Some("2") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Osittain, kieli)
-      case Some("3") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Alueittain, kieli)
-      case Some("6") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Kokonaan, kieli)
-      case Some("9") => Suoritus("lukio", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli)
+      case Some("0") => Suoritus("ulkomainen", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, source = "1.2.246.562.10.00000000001")
+      case Some("1") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, source = "1.2.246.562.10.00000000001")
+      case Some("2") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Osittain, kieli, source = "1.2.246.562.10.00000000001")
+      case Some("3") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Alueittain, kieli, source = "1.2.246.562.10.00000000001")
+      case Some("6") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Kokonaan, kieli, source = "1.2.246.562.10.00000000001")
+      case Some("9") => Suoritus("lukio", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, source = "1.2.246.562.10.00000000001")
     }
   }
 
@@ -175,6 +176,7 @@ case class ListHakemus(oid: String)
 case class HakemusHaku(totalCount: Long, results: Seq[ListHakemus])
 
 case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[Map[String, Map[String, String]]], state: Option[String]) extends Resource[String] {
+  val source = "1.2.246.562.10.00000000001"
   override def identify(id: String): this.type with Identified[String] = FullHakemus.identify(this,id).asInstanceOf[this.type with Identified[String]]
 }
 

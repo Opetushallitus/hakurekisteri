@@ -52,9 +52,9 @@ class FutureOrganizationHierarchy[A <: Resource[I] :Manifest, I ](serviceUrl:Str
     case a:OrganizationAuthorizer => logger.info("org paths loaded");authorizer = a
     case AuthorizedQuery(q,orgs,_) => (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(futfilt(_, isAuthorized(orgs))) pipeTo sender
     case AuthorizedRead(id, orgs,_) => (filteredActor ? id).mapTo[Option[A with Identified[UUID]]].flatMap(checkRights(orgs)) pipeTo sender
-    case AuthorizedDelete(id, orgs, _)  => val checkedRights = for (resourceToDelete <- filteredActor ? id;
+    case AuthorizedDelete(id, orgs, user)  => val checkedRights = for (resourceToDelete <- filteredActor ? id;
                                                                     rights <- checkRights(orgs)(resourceToDelete.asInstanceOf[Option[A]]);
-                                                                    result <- if (rights.isDefined) filteredActor ? DeleteResource(id) else Future.successful(Unit)
+                                                                    result <- if (rights.isDefined) filteredActor ? DeleteResource(id, user) else Future.successful(Unit)
                                                                     )
                                                                     yield result.asInstanceOf[Unit]
 

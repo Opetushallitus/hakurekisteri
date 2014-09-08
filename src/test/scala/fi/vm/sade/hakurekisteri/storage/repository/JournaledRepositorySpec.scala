@@ -89,8 +89,8 @@ class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with Reposito
 
   it should "mark a delete delta in journal when deleted" in new JournalWithEntries {
     val resource = repo.get(ids.tail.head).get
-    repo.delete(ids.head)
-    val delta:Delta[TestResource, UUID] = Deleted(ids.head)
+    repo.delete(ids.head, source = "Test")
+    val delta:Delta[TestResource, UUID] = Deleted(ids.head, source = "Test")
     journal.journal(None).last should be (delta)
   }
 

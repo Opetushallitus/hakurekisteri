@@ -9,13 +9,14 @@ import scalaz._, Scalaz._
 
 trait HakurekisteriCommand[R] extends  JsonCommand  with HakurekisteriJsonSupport{
 
-  def toResource: R
+  def toResource(user: String): R
 
   def errorFail(ex: Throwable) = ValidationError(ex.getMessage, UnknownError).failNel
 
-  def toValidatedResource: ModelValidation[R] = {
+  def toValidatedResource(user: String): ModelValidation[R] =  {
+
     allCatch.withApply(errorFail) {
-      toResource.successNel
+      toResource(user).successNel
     }
   }
 }

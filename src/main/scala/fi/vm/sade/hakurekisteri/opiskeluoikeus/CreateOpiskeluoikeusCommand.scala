@@ -21,5 +21,5 @@ class CreateOpiskeluoikeusCommand extends HakurekisteriCommand[Opiskeluoikeus] {
   val komo: Field[String] = asType[String]("komo").notBlank
   val myontaja: Field[String] = asType[String]("myontaja").notBlank
 
-  override def toResource: Opiskeluoikeus = Opiskeluoikeus(alkuPvm.value.get, loppuPvm.value, henkiloOid.value.get, komo.value.get, myontaja.value.get)
+  override def toResource(user: String): Opiskeluoikeus = Opiskeluoikeus(alkuPvm.value.get, loppuPvm.value, henkiloOid.value.get, komo.value.get, myontaja.value.get, source = user)
 }
