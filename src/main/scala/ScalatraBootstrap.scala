@@ -159,16 +159,10 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
 
   object Bean {
 
-    import scala.reflect.runtime.universe._
-
     def apply[C](props: (_, _)*)(implicit m: Manifest[C]) = {
 
-      val clazz = m.runtimeClass
-
-      val definition = new RootBeanDefinition(clazz)
-
+      val definition = new RootBeanDefinition(m.runtimeClass)
       definition.setPropertyValues(new MutablePropertyValues(Map(props: _*).asJava))
-
       definition
 
     }
@@ -176,7 +170,9 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
   }
 
 
-
+  override def initBeanDefinitionReader(beanDefinitionReader: XmlBeanDefinitionReader) {
+    beanDefinitionReader.getRegistry.registerBeanDefinition("propertyPlaceHolder", placeholder)
+  }
 
 
 
