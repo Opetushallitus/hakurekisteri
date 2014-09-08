@@ -155,17 +155,19 @@ object YTLXml {
     }
   }
 
+  val YTL: String = "1.2.246.562.10.43628088406"
+
   object YoTutkinto {
 
     def apply(suorittaja:String, valmistuminen: LocalDate, kieli:String) = Suoritus(
-      komo = "YOTUTKINTO",
-    myontaja = "YTL",
+      komo = "1.2.246.562.5.2013061010184237348007",
+    myontaja = YTL,
     tila = "VALMIS",
     valmistuminen = valmistuminen,
     henkiloOid = suorittaja,
     yksilollistaminen = yksilollistaminen.Ei,
     suoritusKieli = kieli,
-    source = "YTL")
+    source = YTL)
   }
 
   val kevat = "(\\d{4})K".r
@@ -225,6 +227,6 @@ object YTLXml {
 case class Koe(arvio: ArvioYo, aine: String, valinnainen: Boolean, myonnetty: LocalDate) {
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]) = {
-    Arvosana(suoritus.id, arvio, aine: String, None, valinnainen: Boolean, Some(myonnetty), "YTL")
+    Arvosana(suoritus.id, arvio, aine: String, None, valinnainen: Boolean, Some(myonnetty), YTLXml.YTL)
   }
 }
