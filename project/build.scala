@@ -165,6 +165,7 @@ object HakuJaValintarekisteriBuild extends Build {
           resolvers += "oph-snapshots" at "http://penaali.hard.ware.fi/artifactory/oph-sade-snapshot-local",
           resolvers += "oph-releases" at "http://penaali.hard.ware.fi/artifactory/oph-sade-release-local",
           resolvers += "Sonatype" at "http://oss.sonatype.org/content/repositories/releases/",
+          resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
           credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
           artifactoryPublish,
           buildversionTask,
