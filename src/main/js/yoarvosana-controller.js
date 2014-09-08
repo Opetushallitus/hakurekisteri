@@ -39,7 +39,7 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
         for (var i = 0; i < $scope.koetaulukko.length; i++) {
             var k = $scope.koetaulukko[i];
             if (k.koe && k.arvosana && k.myonnetty) {
-                arvosanat.push(new Arvosana({
+                arvosanat.push(new Arvosanat({
                     id: k.id,
                     aine: k.koe,
                     suoritus: suoritusId,
