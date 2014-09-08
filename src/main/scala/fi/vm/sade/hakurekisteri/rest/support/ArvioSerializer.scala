@@ -7,13 +7,15 @@ import org.json4s.JsonAST.{JInt, JString, JField, JObject}
 
 class ArvioSerializer extends CustomSerializer[Arvio](format => (
   {
-    case JObject(JField("arvosana", JString(arvosana)) :: JField("asteikko", JString(asteikko)) :: Nil)  => Arvio(arvosana, asteikko, None)
+    case arvio:JObject  =>
+      val JString(arvosana) = arvio \ "arvosana"
+      val JString(asteikko) = arvio \ "asteikko"
+      val pisteet = (arvio \ "pisteet").toOption.flatMap{
+        case JInt(yhteispisteet) => Some(yhteispisteet.toInt)
+        case _ => None
+      }
+      Arvio(arvosana, asteikko, pisteet)
 
-    case JObject(JField("asteikko", JString(asteikko)) :: JField("arvosana", JString(arvosana)) :: Nil) => Arvio(arvosana, asteikko, None)
-
-    case JObject(JField("arvosana", JString(arvosana)) :: JField("asteikko", JString(asteikko)) :: JField("pisteet", JInt(pisteet)) :: Nil)  => Arvio(arvosana, asteikko, Some(pisteet.toInt))
-
-    case JObject(JField("asteikko", JString(asteikko)) :: JField("arvosana", JString(arvosana)) :: JField("pisteet", JInt(pisteet)) ::  Nil) => Arvio(arvosana, asteikko, Some(pisteet.toInt))
 
 
   },
