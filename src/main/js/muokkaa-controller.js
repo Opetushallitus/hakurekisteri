@@ -339,7 +339,12 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         back()
     };
     $scope.addSuoritus = function() {
-        $scope.suoritukset.push(new Suoritukset({ henkiloOid: $scope.henkiloOid, tila: "KESKEN", yksilollistaminen: "Ei", myontaja: "na" }));
+        $scope.suoritukset.push(new Suoritukset({
+            henkiloOid: $scope.henkiloOid,
+            tila: "KESKEN",
+            yksilollistaminen: "Ei",
+            myontaja: "na",
+            editable: true }));
     };
     $scope.editArvosana = function(suoritusId) {
         function openModal(template, controller) {
