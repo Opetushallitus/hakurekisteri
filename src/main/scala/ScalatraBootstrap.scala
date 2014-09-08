@@ -31,6 +31,7 @@ import org.apache.activemq.camel.component.ActiveMQComponent
 import org.scalatra._
 import org.scalatra.swagger.Swagger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.config.BeanDefinition
 import org.springframework.beans.MutablePropertyValues
 import org.springframework.beans.factory.support.RootBeanDefinition
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader
@@ -159,7 +160,7 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
 
   object Bean {
 
-    def apply[C](props: (_, _)*)(implicit m: Manifest[C]) = {
+    def apply[C](props: (_, _)*)(implicit m: Manifest[C]): BeanDefinition = {
 
       val definition = new RootBeanDefinition(m.runtimeClass)
       definition.setPropertyValues(new MutablePropertyValues(Map(props: _*).asJava))
