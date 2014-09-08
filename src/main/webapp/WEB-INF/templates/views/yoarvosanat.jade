@@ -15,22 +15,22 @@ form(ng-submit="save()")
       tr(ng-repeat="k in koetaulukko")
         td
           div(ng-show="isEditable(k)")
-            select(class="form-control input-sm" ng-model="k.koe" required="required" ng-options="k.value as k.text for k in kokeet" ng-disabled="k.delete")
+            select(class="form-control" ng-model="k.koe" required="required" ng-options="k.value as k.text for k in kokeet" ng-disabled="k.delete")
           div(ng-hide="isEditable(k)")
             span {{getText(k.koe, kokeet) || k.koe}}
         td
           div(ng-show="isEditable(k)")
-            select(class="form-control input-sm" ng-model="k.arvio.arvosana" required="required" ng-options="a.value as a.text for a in arvosanat" ng-disabled="k.delete")
+            select(class="form-control" ng-model="k.arvio.arvosana" required="required" ng-options="a.value as a.text for a in arvosanat" ng-disabled="k.delete")
           div(ng-hide="isEditable(k)")
             span {{a.arvio.arvosana}}
         td
           div(ng-show="isEditable(k)")
-            input(class="form-control input-sm" ng-model="k.arvio.pisteet" ng-disabled="k.delete")
+            input(class="form-control" ng-model="k.arvio.pisteet" ng-disabled="k.delete")
           div(ng-hide="isEditable(k)")
             span {{k.arvio.pisteet}}
         td
           div(ng-show="isEditable(k)")
-            select(class="form-control input-sm" ng-model="k.myonnetty" required="required" ng-options="t.value as t.text for t in tutkintokerrat" ng-disabled="k.delete")
+            select(class="form-control" ng-model="k.myonnetty" required="required" ng-options="t.value as t.text for t in tutkintokerrat" ng-disabled="k.delete")
           div(ng-hide="isEditable(k)")
             span {{k.myonnetty}}
         td
