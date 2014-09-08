@@ -1,0 +1,213 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <virtaluku:OpiskelijanKaikkiTiedotResponse xmlns:virtaluku="http://tietovaranto.csc.fi/luku">
+            <virta:Virta xmlns:virta="urn:mace:funet.fi:virta/2013/01/29">
+                <virta:Opiskelija avain="123456">
+                    <virta:Henkilotunnus>111111-1975</virta:Henkilotunnus>
+                    <virta:Opiskeluoikeudet>
+                        <virta:Opiskeluoikeus avain="12345" opiskelijaAvain="123456">
+                            <virta:AlkuPvm>2001-08-27</virta:AlkuPvm>
+                            <virta:LoppuPvm>2005-04-20</virta:LoppuPvm>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2001-08-27</virta:AlkuPvm>
+                                <virta:LoppuPvm>2005-04-20</virta:LoppuPvm>
+                                <virta:Koodi>1</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2005-04-21</virta:AlkuPvm>
+                                <virta:Koodi>3</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tyyppi>1</virta:Tyyppi>
+                            <virta:Myontaja>
+                                <virta:Koodi>02537</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Jakso koulutusmoduulitunniste="2085">
+                                <virta:AlkuPvm>2001-08-27</virta:AlkuPvm>
+                                <virta:LoppuPvm>2005-04-20</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>651301</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>297</virta:Koulutuskunta>
+                                <virta:Rahoituslahde>1</virta:Rahoituslahde>
+                            </virta:Jakso>
+                            <virta:Koulutusala2002>5</virta:Koulutusala2002>
+                        </virta:Opiskeluoikeus>
+                    </virta:Opiskeluoikeudet>
+                    <virta:Opintosuoritukset>
+                        <virta:Opintosuoritus avain="TUT_22222" koulutusmoduulitunniste="2085" opiskelijaAvain="123456" opiskeluoikeusAvain="12345">
+                            <virta:SuoritusPvm>2005-04-20</virta:SuoritusPvm>
+                            <virta:Laajuus>
+                                <virta:Opintopiste>240.000000</virta:Opintopiste>
+                            </virta:Laajuus>
+                            <virta:Arvosana>
+                                <virta:EiKaytossa>Arvosana ei kaytossa</virta:EiKaytossa>
+                            </virta:Arvosana>
+                            <virta:Myontaja>
+                                <virta:Koodi>02537</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Laji>1</virta:Laji>
+                            <virta:Nimi>Ins. (AMK), tietotekniikka</virta:Nimi>
+                            <virta:Kieli>en</virta:Kieli>
+                            <virta:Koulutuskoodi>651301</virta:Koulutuskoodi>
+                            <virta:Koulutusala2002>
+                                <virta:Koodi>5</virta:Koodi>
+                            </virta:Koulutusala2002>
+                        </virta:Opintosuoritus>
+                    </virta:Opintosuoritukset>
+                </virta:Opiskelija>
+                <virta:Opiskelija avain="11111111">
+                    <virta:Henkilotunnus>111111-1975</virta:Henkilotunnus>
+                    <virta:Opiskeluoikeudet>
+                        <virta:Opiskeluoikeus avain="99999999" opiskelijaAvain="11111111">
+                            <virta:AlkuPvm>2003-08-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2009-03-10</virta:LoppuPvm>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2009-03-11</virta:AlkuPvm>
+                                <virta:Koodi>3</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2003-08-01</virta:AlkuPvm>
+                                <virta:LoppuPvm>2009-02-19</virta:LoppuPvm>
+                                <virta:Koodi>2</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2009-02-20</virta:AlkuPvm>
+                                <virta:LoppuPvm>2009-03-10</virta:LoppuPvm>
+                                <virta:Koodi>1</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tyyppi>4</virta:Tyyppi>
+                            <virta:Myontaja>
+                                <virta:Koodi>10088</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Jakso koulutusmoduulitunniste="$#YHKA/A1999/YTM/SP">
+                                <virta:AlkuPvm>2003-08-01</virta:AlkuPvm>
+                                <virta:LoppuPvm>2008-06-29</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>733203</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>297</virta:Koulutuskunta>
+                            </virta:Jakso>
+                            <virta:Jakso koulutusmoduulitunniste="$#YHKA/A2004/YTM/SP">
+                                <virta:AlkuPvm>2008-06-30</virta:AlkuPvm>
+                                <virta:LoppuPvm>2009-03-10</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>733203</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>297</virta:Koulutuskunta>
+                            </virta:Jakso>
+                            <virta:Ensisijaisuus>
+                                <virta:AlkuPvm>2009-02-20</virta:AlkuPvm>
+                                <virta:LoppuPvm>2112-12-21</virta:LoppuPvm>
+                            </virta:Ensisijaisuus>
+                            <virta:Opintoala1995>82</virta:Opintoala1995>
+                            <virta:AvoinVayla>0</virta:AvoinVayla>
+                            <virta:AsetusMaisteriohjelma>0</virta:AsetusMaisteriohjelma>
+                        </virta:Opiskeluoikeus>
+                        <virta:Opiskeluoikeus avain="99999998" opiskelijaAvain="11111111">
+                            <virta:AlkuPvm>2003-08-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2009-02-19</virta:LoppuPvm>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2009-02-20</virta:AlkuPvm>
+                                <virta:Koodi>3</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2003-08-01</virta:AlkuPvm>
+                                <virta:LoppuPvm>2009-02-19</virta:LoppuPvm>
+                                <virta:Koodi>1</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tyyppi>2</virta:Tyyppi>
+                            <virta:Myontaja>
+                                <virta:Koodi>10088</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Jakso koulutusmoduulitunniste="$#YHKA/YTK/SP">
+                                <virta:AlkuPvm>2003-08-01</virta:AlkuPvm>
+                                <virta:LoppuPvm>2008-06-29</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>633203</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>297</virta:Koulutuskunta>
+                            </virta:Jakso>
+                            <virta:Jakso koulutusmoduulitunniste="$#YHKA/A2004/YTK/SP">
+                                <virta:AlkuPvm>2008-06-30</virta:AlkuPvm>
+                                <virta:LoppuPvm>2009-02-19</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>633203</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>297</virta:Koulutuskunta>
+                            </virta:Jakso>
+                            <virta:Ensisijaisuus>
+                                <virta:AlkuPvm>2003-08-01</virta:AlkuPvm>
+                                <virta:LoppuPvm>2009-02-19</virta:LoppuPvm>
+                            </virta:Ensisijaisuus>
+                            <virta:Opintoala1995>82</virta:Opintoala1995>
+                            <virta:Liittyvyys liittyvaOpiskeluoikeusAvain="99999999"/>
+                            <virta:AvoinVayla>0</virta:AvoinVayla>
+                            <virta:AsetusMaisteriohjelma>0</virta:AsetusMaisteriohjelma>
+                        </virta:Opiskeluoikeus>
+                    </virta:Opiskeluoikeudet>
+                    <virta:Opintosuoritukset>
+                        <virta:Opintosuoritus avain="22222222" koulutusmoduulitunniste="100059" opiskelijaAvain="11111111" opiskeluoikeusAvain="99999998">
+                            <virta:SuoritusPvm>2009-02-19</virta:SuoritusPvm>
+                            <virta:Laajuus>
+                                <virta:Opintopiste>186.000000</virta:Opintopiste>
+                                <virta:Opintoviikko>0.000000</virta:Opintoviikko>
+                            </virta:Laajuus>
+                            <virta:Arvosana>
+                                <virta:Muu>
+                                    <virta:Asteikko avain="11">
+                                        <virta:Nimi>HYL-HYV</virta:Nimi>
+                                        <virta:AsteikkoArvosana avain="10979859">
+                                            <virta:Koodi>HYV</virta:Koodi>
+                                            <virta:LaskennallinenArvo>2.000000</virta:LaskennallinenArvo>
+                                        </virta:AsteikkoArvosana>
+                                        <virta:AsteikkoArvosana avain="10979861">
+                                            <virta:Koodi>HYL</virta:Koodi>
+                                            <virta:LaskennallinenArvo>0.000000</virta:LaskennallinenArvo>
+                                        </virta:AsteikkoArvosana>
+                                    </virta:Asteikko>
+                                    <virta:Koodi>10979859</virta:Koodi>
+                                </virta:Muu>
+                            </virta:Arvosana>
+                            <virta:Myontaja>
+                                <virta:Koodi>10088</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Laji>1</virta:Laji>
+                            <virta:Nimi kieli="fi">Yhteiskuntatieteiden kandidaatti</virta:Nimi>
+                            <virta:Nimi kieli="en">Bachelor of Social Sciences</virta:Nimi>
+                            <virta:Kieli>fi</virta:Kieli>
+                            <virta:Koulutuskoodi>633203</virta:Koulutuskoodi>
+                            <virta:Opintoala1995>
+                                <virta:Koodi>82</virta:Koodi>
+                            </virta:Opintoala1995>
+                        </virta:Opintosuoritus>
+                        <virta:Opintosuoritus avain="22222223" koulutusmoduulitunniste="100023" opiskelijaAvain="11111111" opiskeluoikeusAvain="99999999">
+                            <virta:SuoritusPvm>2009-03-10</virta:SuoritusPvm>
+                            <virta:Laajuus>
+                                <virta:Opintopiste>129.000000</virta:Opintopiste>
+                                <virta:Opintoviikko>0.000000</virta:Opintoviikko>
+                            </virta:Laajuus>
+                            <virta:Arvosana>
+                                <virta:Muu>
+                                    <virta:Asteikko avain="11">
+                                        <virta:Nimi>HYL-HYV</virta:Nimi>
+                                        <virta:AsteikkoArvosana avain="10979859">
+                                            <virta:Koodi>HYV</virta:Koodi>
+                                            <virta:LaskennallinenArvo>2.000000</virta:LaskennallinenArvo>
+                                        </virta:AsteikkoArvosana>
+                                        <virta:AsteikkoArvosana avain="10979861">
+                                            <virta:Koodi>HYL</virta:Koodi>
+                                            <virta:LaskennallinenArvo>0.000000</virta:LaskennallinenArvo>
+                                        </virta:AsteikkoArvosana>
+                                    </virta:Asteikko>
+                                    <virta:Koodi>10979859</virta:Koodi>
+                                </virta:Muu>
+                            </virta:Arvosana>
+                            <virta:Myontaja>
+                                <virta:Koodi>10088</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Laji>1</virta:Laji>
+                            <virta:Nimi kieli="fi">Yhteiskuntatieteiden maisteri</virta:Nimi>
+                            <virta:Nimi kieli="en">Master of Social Sciences</virta:Nimi>
+                            <virta:Kieli>fi</virta:Kieli>
+                            <virta:Koulutuskoodi>733203</virta:Koulutuskoodi>
+                            <virta:Opintoala1995>
+                                <virta:Koodi>82</virta:Koodi>
+                            </virta:Opintoala1995>
+                        </virta:Opintosuoritus>
+                    </virta:Opintosuoritukset>
+                </virta:Opiskelija>
+            </virta:Virta>
+        </virtaluku:OpiskelijanKaikkiTiedotResponse>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

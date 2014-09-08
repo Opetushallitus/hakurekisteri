@@ -96,17 +96,32 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             confirm(getOphMsg("suoritusrekisteri.muokkaa.luokkatietojenhakeminen", "Luokkatietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchLuokkatiedot() : back();
         });
     }
+    function getKoulutusNimi(komo, successCallback) {
+        $http.get(tarjontaServiceUrl + '/rest/v1/komo/' + encodeURIComponent(komo), {cache: true})
+            .success(successCallback)
+    }
+    function enrichSuoritus(suoritus) {
+        if (suoritus.myontaja) {
+            getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
+                suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
+            })
+        }
+        if (suoritus.komo) {
+            getKoulutusNimi(suoritus.komo, function(komo) {
+                if (komo.result && komo.result.koulutuskoodi && komo.result.koulutuskoodi.meta)
+                    if (komo.result.koulutuskoodi.meta.kieli_fi)
+                        suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_fi.nimi;
+                    else if (komo.result.koulutuskoodi.meta.kieli_sv)
+                        suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_sv.nimi;
+                    else if (suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_en)
+                        suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_en.nimi;
+            })
+        }
+        if (suoritus.source !== "1.2.246.562.10.00000000001") suoritus.editable = true; // FIXME vaihda virran käyttäjä-oidiin?
+    }
     function fetchSuoritukset() {
         function enrich() {
-            if ($scope.suoritukset) {
-                angular.forEach($scope.suoritukset, function(suoritus) {
-                    if (suoritus.myontaja) {
-                        getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
-                            suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
-                        });
-                    }
-                });
-            }
+            if ($scope.suoritukset) angular.forEach($scope.suoritukset, enrichSuoritus);
         }
 
         Suoritukset.query({henkilo: $scope.henkiloOid}, function(suoritukset) {
@@ -210,13 +225,32 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                 $log.debug("save suoritus: " + suoritus.id);
                 var d = $q.defer();
                 this.push(d);
-                if (suoritus.delete) {
-                    if (suoritus.id) {
-                        suoritus.$remove(function() {
+                if (suoritus.editable)
+                    if (suoritus.delete) {
+                        if (suoritus.id) {
+                            suoritus.$remove(function() {
+                                deleteFromArray(suoritus, $scope.suoritukset);
+                                $log.debug("suoritus removed");
+                                d.resolve("done");
+                            }, function() {
+                                $scope.messages.push({
+                                    type: "danger",
+                                    messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
+                                    message: "Virhe tallennettaessa suoritustietoja.",
+                                    descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
+                                    description: "Yritä uudelleen."
+                                });
+                                d.reject("error deleting suoritus: " + suoritus);
+                            })
+                        } else {
                             deleteFromArray(suoritus, $scope.suoritukset);
-                            $log.debug("suoritus removed");
                             d.resolve("done");
-                        }, function() {
+                        }
+                    } else {
+                        suoritus.$save(function () {
+                            enrichSuoritus(suoritus);
+                            d.resolve("done");
+                        }, function () {
                             $scope.messages.push({
                                 type: "danger",
                                 messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
@@ -224,29 +258,9 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                                 descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
                                 description: "Yritä uudelleen."
                             });
-                            d.reject("error deleting suoritus: " + suoritus);
+                            d.reject("error saving suoritus: " + suoritus);
                         })
-                    } else {
-                        deleteFromArray(suoritus, $scope.suoritukset);
-                        d.resolve("done");
                     }
-                } else {
-                    suoritus.$save(function () {
-                        getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
-                            suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
-                        });
-                        d.resolve("done");
-                    }, function () {
-                        $scope.messages.push({
-                            type: "danger",
-                            messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
-                            message: "Virhe tallennettaessa suoritustietoja.",
-                            descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
-                            description: "Yritä uudelleen."
-                        });
-                        d.reject("error saving suoritus: " + suoritus);
-                    })
-                }
             }, deferreds)
         }
         function saveLuokkatiedot() {
@@ -323,7 +337,12 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         back()
     };
     $scope.addSuoritus = function() {
-        $scope.suoritukset.push(new Suoritukset({ henkiloOid: $scope.henkiloOid, tila: "KESKEN", yksilollistaminen: "Ei", myontaja: "na" }));
+        $scope.suoritukset.push(new Suoritukset({
+            henkiloOid: $scope.henkiloOid,
+            tila: "KESKEN",
+            yksilollistaminen: "Ei",
+            myontaja: "na",
+            editable: true }));
     };
     $scope.editArvosana = function(suoritusId) {
         function openModal(template, controller) {
