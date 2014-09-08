@@ -127,7 +127,7 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
     };
 
     $scope.isEditable = function(koe) {
-        return koe.myonnetty && koe.myonnetty.match(/[0-9.]*\.19[0-8][0-9]/)
+        return !koe.myonnetty || koe.myonnetty.match(/[0-9.]*\.19[0-8][0-9]/)
     };
 
     $scope.kokeet = [
