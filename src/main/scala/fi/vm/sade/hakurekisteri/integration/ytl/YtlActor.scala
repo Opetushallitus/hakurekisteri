@@ -1,19 +1,23 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import akka.actor.{ActorRef, Actor}
+import akka.actor._
 import java.util.UUID
 import scala.xml.{Node, Elem}
 import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus}
-import fi.vm.sade.hakurekisteri.arvosana.{ArvioYo, Arvosana}
+import fi.vm.sade.hakurekisteri.arvosana.{ArvosanaQuery, Arvosana}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 import akka.event.Logging
 import akka.pattern.ask
-import fi.vm.sade.hakurekisteri.integration.henkilo.{HenkiloResponse, HetuQuery}
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import org.joda.time.{MonthDay, LocalDate}
 import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.arvosana.ArvioYo
+import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
+import fi.vm.sade.hakurekisteri.integration.henkilo.HetuQuery
+import scala.util.Failure
+import scala.Some
+import scala.util.Success
 
 
 class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef) extends Actor {
@@ -27,6 +31,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   val log = Logging(context.system, this)
 
   var kokelaat = Map[String, Kokelas]()
+  var suoritusKokelaat = Map[UUID, (Suoritus with Identified[UUID], Kokelas)]()
 
   override def receive: Actor.Receive = {
     case k:KokelasRequest => batch = k +: batch
@@ -46,13 +51,36 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
           kokelaat = kokelaat + (k.oid -> k)
       }
       k.lukio foreach (suoritusRekisteri ! _)
-    case s: Suoritus with Identified[UUID] if s.komo == "YOTUTKINTO" =>
+    case s: Suoritus with Identified[UUID] if s.komo == YTLXml.yotutkinto =>
       for (
         kokelas <- kokelaat.get(s.henkiloOid)
       ) {
-        kokelas.yoTodistus.map(_.toArvosana(s)) foreach (arvosanaRekisteri ! _)
-        kokelaat = kokelaat - s.henkiloOid
+        context.actorSelection(s.id.toString) ! Identify(s.id)
+        kokelaat = kokelaat - kokelas.oid
+        suoritusKokelaat = suoritusKokelaat + (s.id -> (s, kokelas))
       }
+
+    case ActorIdentity(id: UUID, Some(ref)) => for (
+      (suoritus, kokelas) <- suoritusKokelaat.get(id)
+    ) {
+      ref ! kokelas
+      suoritusKokelaat = suoritusKokelaat - id
+    }
+
+    case ActorIdentity(id: UUID, None) => try {
+      for (
+        (suoritus, kokelas) <- suoritusKokelaat.get(id)
+      ) {
+        context.actorOf(Props(new ArvosanaUpdateActor(suoritus, kokelas.yoTodistus, arvosanaRekisteri)), id.toString)
+        suoritusKokelaat = suoritusKokelaat - id
+      }
+
+    } catch {
+      case t: Throwable =>
+        context.actorSelection(id.toString) ! Identify(id)
+        log.warning(s"problem creating arvosana update for ${id.toString} retrying search", t)
+    }
+
 
 
   }
@@ -155,19 +183,25 @@ object YTLXml {
     }
   }
 
+
   val YTL: String = "1.2.246.562.10.43628088406"
+
+  val yotutkinto = "1.2.246.562.5.2013061010184237348007"
+
 
   object YoTutkinto {
 
-    def apply(suorittaja:String, valmistuminen: LocalDate, kieli:String) = Suoritus(
-      komo = "1.2.246.562.5.2013061010184237348007",
-    myontaja = YTL,
-    tila = "VALMIS",
-    valmistuminen = valmistuminen,
-    henkiloOid = suorittaja,
-    yksilollistaminen = yksilollistaminen.Ei,
-    suoritusKieli = kieli,
-    source = YTL)
+    def apply(suorittaja:String, valmistuminen: LocalDate, kieli:String) = {
+      Suoritus(
+        komo = yotutkinto,
+        myontaja = YTL,
+        tila = "VALMIS",
+        valmistuminen = valmistuminen,
+        henkiloOid = suorittaja,
+        yksilollistaminen = yksilollistaminen.Ei,
+        suoritusKieli = kieli,
+        source = YTL)
+    }
   }
 
   val kevat = "(\\d{4})K".r
@@ -229,4 +263,42 @@ case class Koe(arvio: ArvioYo, aine: String, valinnainen: Boolean, myonnetty: Lo
   def toArvosana(suoritus: Suoritus with Identified[UUID]) = {
     Arvosana(suoritus.id, arvio, aine: String, None, valinnainen: Boolean, Some(myonnetty), YTLXml.YTL)
   }
+}
+
+
+class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: Seq[Koe], arvosanaRekisteri: ActorRef) extends Actor {
+
+  def isKorvaava(old:Arvosana) = (uusi:Arvosana) => uusi.aine == old.aine && uusi.myonnetty == old.myonnetty
+
+  override def receive: Actor.Receive = {
+
+    case s:Seq[_] =>
+      fetch.foreach(_.cancel())
+      val uudet = kokeet.map(_.toArvosana(suoritus))
+      s.map{
+        case (a:Arvosana with Identified[UUID]) =>
+          val korvaava = uudet.find(isKorvaava(a))
+          if (korvaava.isDefined) korvaava.get.identify(a.id)
+          else a
+      } foreach (arvosanaRekisteri ! _)
+      uudet.filterNot((uusi) => s.exists{case old: Arvosana => isKorvaava(old)(uusi)}) foreach (arvosanaRekisteri ! _)
+      context.stop(self)
+    case Kokelas(_, _, _ , todistus) => kokeet = todistus
+
+
+
+  }
+
+
+  var fetch: Option[Cancellable] = None
+
+  import scala.concurrent.duration._
+
+  override def preStart(): Unit = {
+
+    implicit val ec = context.dispatcher
+     fetch = Some(context.system.scheduler.schedule(1.millisecond, 1.minute, arvosanaRekisteri, ArvosanaQuery(Some(suoritus.id))))
+  }
+
+
 }
