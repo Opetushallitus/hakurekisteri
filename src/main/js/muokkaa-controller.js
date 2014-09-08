@@ -226,13 +226,35 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                 $log.debug("save suoritus: " + suoritus.id);
                 var d = $q.defer();
                 this.push(d);
-                if (suoritus.delete) {
-                    if (suoritus.id) {
-                        suoritus.$remove(function() {
+                if (suoritus.editable)
+                    if (suoritus.delete) {
+                        if (suoritus.id) {
+                            suoritus.$remove(function() {
+                                deleteFromArray(suoritus, $scope.suoritukset);
+                                $log.debug("suoritus removed");
+                                d.resolve("done");
+                            }, function() {
+                                $scope.messages.push({
+                                    type: "danger",
+                                    messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
+                                    message: "Virhe tallennettaessa suoritustietoja.",
+                                    descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
+                                    description: "Yritä uudelleen."
+                                });
+                                d.reject("error deleting suoritus: " + suoritus);
+                            })
+                        } else {
                             deleteFromArray(suoritus, $scope.suoritukset);
-                            $log.debug("suoritus removed");
                             d.resolve("done");
-                        }, function() {
+                        }
+                    } else {
+                        suoritus.$save(function () {
+                            getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
+                                suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
+                            });
+                            suoritus.editable = true;
+                            d.resolve("done");
+                        }, function () {
                             $scope.messages.push({
                                 type: "danger",
                                 messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
@@ -240,29 +262,9 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                                 descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
                                 description: "Yritä uudelleen."
                             });
-                            d.reject("error deleting suoritus: " + suoritus);
+                            d.reject("error saving suoritus: " + suoritus);
                         })
-                    } else {
-                        deleteFromArray(suoritus, $scope.suoritukset);
-                        d.resolve("done");
                     }
-                } else {
-                    suoritus.$save(function () {
-                        getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
-                            suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
-                        });
-                        d.resolve("done");
-                    }, function () {
-                        $scope.messages.push({
-                            type: "danger",
-                            messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
-                            message: "Virhe tallennettaessa suoritustietoja.",
-                            descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
-                            description: "Yritä uudelleen."
-                        });
-                        d.reject("error saving suoritus: " + suoritus);
-                    })
-                }
             }, deferreds)
         }
         function saveLuokkatiedot() {
