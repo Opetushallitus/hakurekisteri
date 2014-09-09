@@ -62,10 +62,10 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   var suoritusKokelaat = Map[UUID, (Suoritus with Identified[UUID], Kokelas)]()
 
   override def receive: Actor.Receive = {
-    case CheckSend  if nextSend.get.isBefore(DateTime.now()) =>
+    case CheckSend  if nextSend.exists(_.isBefore(DateTime.now())) =>
       self ! Send
       nextSend = nextSendTime
-    case k:KokelasRequest =>
+    case k:KokelasRequest if config.isDefined =>
       batch = k +: batch
     case Send if config.isDefined && !batch.items.isEmpty =>
                  log.debug(s"sending batch ${batch.id} with ${batch.items.size} applicants")
