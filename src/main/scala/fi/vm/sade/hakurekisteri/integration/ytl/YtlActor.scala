@@ -10,7 +10,7 @@ import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
-import org.joda.time.{DateTime, MonthDay, LocalDate}
+import org.joda.time.{LocalTime, DateTime, MonthDay, LocalDate}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.arvosana.ArvioYo
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
@@ -31,23 +31,20 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   var batch = Batch[KokelasRequest]()
   var sent = Seq[Batch[KokelasRequest]]()
 
-  val sendTicker = context.system.scheduler.schedule(1.millisecond, 30.minutes, self, CheckSend)
-  val pollTicker = context.system.scheduler.schedule(20.minutes, 30.minutes, self, CheckPoll)
+  val sendTicker = context.system.scheduler.schedule(1.millisecond, 1.minutes, self, CheckSend)
+  val pollTicker = context.system.scheduler.schedule(1.minutes, 1.minutes, self, Poll)
 
-  var nextPoll: Option[Int] = nextPollTime
-  var nextSend: Option[Int] = nextPollTime
+  var nextSend: Option[DateTime] = nextSendTime
 
 
-  def nextPollTime: Option[Int] = {
-    config.flatMap {
-      (conf) =>
-        val poll = conf.pollTimes
+  def nextSendTime: Option[DateTime] = {
+    config.map(_.sendTimes).filter(!_.isEmpty).map{
+      (times) =>
+        times.map(_.toDateTimeToday).find((t) => {
+          val searchTime: DateTime = DateTime.now
+          t.isAfter(searchTime)
+        }).getOrElse(times.head.toDateTimeToday.plusDays(1))
 
-        if (poll.isEmpty) None
-        else {
-          val searchTime = now
-          poll.sorted.find(_ > searchTime)
-        }
 
 
     }
@@ -60,27 +57,22 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
 
   val log = Logging(context.system, this)
 
+
   var kokelaat = Map[String, Kokelas]()
   var suoritusKokelaat = Map[UUID, (Suoritus with Identified[UUID], Kokelas)]()
 
   override def receive: Actor.Receive = {
-    case CheckPoll  =>
-      if (nextPoll.isEmpty) nextPoll = nextPollTime
-      else if (nextPoll.get < now) {
-        self ! Poll
-        nextPoll = nextPollTime
-      }
-
-    case CheckSend =>
-      if (nextSend.isEmpty) nextSend = nextPollTime
-      else if (nextSend.get < now) {
-        self ! Send
-        nextSend = nextPollTime
-      }
-    case k:KokelasRequest => batch = k +: batch
-    case Send if config.isDefined => send(batch)
+    case CheckSend  if nextSend.get.isBefore(DateTime.now()) =>
+      self ! Send
+      nextSend = nextSendTime
+    case k:KokelasRequest =>
+      batch = k +: batch
+    case Send if config.isDefined && !batch.items.isEmpty =>
+                 log.debug(s"sending batch ${batch.id} with ${batch.items.size} applicants")
+                 send(batch)
                  sent = batch +: sent
                  batch = Batch[KokelasRequest]()
+                 log.debug(s"new batch ${batch.id} with ${batch.items.size} applicants")
     case Poll if config.isDefined  => poll(sent)
     case YtlResult(id, data) if config.isDefined  =>
       val requested = sent.find(_.id == id)
@@ -151,6 +143,8 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
       }
     case None => log.warning("sending files to YTL called without config")
   }
+
+
 
   def poll(batches: Seq[Batch[KokelasRequest]]): Unit = config match {
     case Some(YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, _)) =>
@@ -386,4 +380,4 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
 
 }
 
-case class YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, pollTimes: Seq[Int])
+case class YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, sendTimes: Seq[LocalTime])
