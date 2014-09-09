@@ -50,11 +50,6 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     }
   }
 
-
-  def now: Int = {
-    DateTime.now.hourOfDay.get
-  }
-
   val log = Logging(context.system, this)
 
 
