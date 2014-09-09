@@ -14,16 +14,6 @@ import java.util.Locale
 
 class CreateSuoritusCommand extends HakurekisteriCommand[Suoritus] with LocalDateSupport {
 
-  import util.RicherString._
-
-
-
-  implicit def YksilollistaminenDefaultValue: DefaultValue[Yksilollistetty] = org.scalatra.DefaultValueMethods.default(Ei)
-
-  implicit val stringToYksilollistaminen: TypeConverter[String, Yksilollistetty] = safeOption(_.blankOption.map (yksilollistaminen.withName))
-  implicit val jsonToYksilollistaminen: TypeConverter[JValue, Yksilollistetty] = safeOption(_.extractOpt[Yksilollistetty])
-
-
   val komo: Field[String] = asType[String]("komo").notBlank
   val myontaja: Field[String] = asType[String]("myontaja").notBlank
   val tila: Field[String] = asType[String]("tila").notBlank
