@@ -7,7 +7,7 @@ form(ng-submit="save()")
     thead
       th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.koe") Koe
       th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.arvosana") Arvosana
-      th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.arvosananpisteet") Arvosanan pisteet
+      th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.pisteet") Yhteispistemäärä
       th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.tutkintokerta") Tutkintokerta
       th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.pakollinen") Pakollinen
       th
@@ -20,7 +20,7 @@ form(ng-submit="save()")
           select(ng-show="k.editable" class="form-control" ng-model="k.arvosana" required="required" ng-options="a.value as a.text for a in arvosanat" ng-disabled="k.delete")
           span(ng-hide="k.editable") {{k.arvosana}}
         td
-          input(ng-show="k.editable" class="form-control" ng-model="k.pisteet" ng-disabled="k.delete")
+          input(ng-show="k.editable" type="number" step="1" min="0" max="999" maxlength="3" class="form-control" ng-model="k.pisteet" ng-disabled="k.delete")
           span(ng-hide="k.editable") {{k.pisteet}}
         td
           select(ng-show="k.editable" class="form-control" ng-model="k.myonnetty" required="required" ng-options="t.value as t.text for t in tutkintokerrat" ng-disabled="k.delete")

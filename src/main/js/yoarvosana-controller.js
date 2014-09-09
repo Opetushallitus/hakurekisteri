@@ -49,7 +49,7 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
                     arvio: {
                         arvosana: k.arvosana,
                         asteikko: "YO",
-                        pisteet: k.pisteet
+                        pisteet: (k.pisteet === '' ? null : k.pisteet)
                     }
                 }))
             }
