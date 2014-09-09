@@ -4,6 +4,7 @@ import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
 import java.io.InputStream
 import java.nio.file.{Files, Paths}
 
+import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
 
 
@@ -68,7 +69,7 @@ object Config {
     inbox <- properties.get("suoritusrekisteri.ytl.inbox");
     outbox <- properties.get("suoritusrekisteri.ytl.outbox");
     poll <- properties.get("suoritusrekisteri.ytl.poll")
-  ) yield YTLConfig(host, user, password, inbox, outbox, poll.split(":").map(_.toInt))
+  ) yield YTLConfig(host, user, password, inbox, outbox, poll.split(";").map(LocalTime.parse))
 
   //val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
   // val amqQueue = properties.getOrElse("activemq.queue.name.log", "Sade.Log")

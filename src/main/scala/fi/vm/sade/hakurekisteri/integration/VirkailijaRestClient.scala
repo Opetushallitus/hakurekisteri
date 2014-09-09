@@ -33,10 +33,11 @@ class VirkailijaRestClient(config: ServiceConfig)(implicit val httpClient: HttpC
     val url = new URL(serviceUrl + uri)
     (user, password) match {
       case (None, None) =>
-        logger.debug(s"calling url $url"); GET(url).apply
+        //logger.debug(s"calling url $url");
+        GET(url).apply
       case (Some(u), Some(p)) =>
         casClient.getProxyTicket.flatMap((ticket) => {
-          logger.debug(s"calling url $url with ticket $ticket");
+          //logger.debug(s"calling url $url with ticket $ticket");
           GET(url).addHeaders("CasSecurityTicket" -> ticket).apply
         })
       case _ => throw new IllegalArgumentException("either user or password is not defined")

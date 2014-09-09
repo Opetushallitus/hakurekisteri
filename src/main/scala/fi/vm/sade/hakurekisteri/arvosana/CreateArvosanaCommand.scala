@@ -50,20 +50,5 @@ class CreateArvosanaCommand extends HakurekisteriCommand[Arvosana] with LocalDat
 }
 
 
-import org.scalatra.json.JacksonJsonValueReaderProperty
-import fi.vm.sade.hakurekisteri.rest.support._
-import org.scalatra.util.ParamsValueReaderProperties._
-import org.json4s.jackson.JsonMethods
-
-object Parser extends JacksonJsonValueReaderProperty with JsonMethods with HakurekisteriJsonSupport {
-  val body = "{\"id\":\"a57c647f-0e09-4d04-9330-bed646f6cab8\",\"suoritus\":\"69b5cdc0-2549-45ec-b11e-63387c8a6963\",\"valinnainen\":false,\"myonnetty\":\"01.12.1989\",\"arvio\":{\"arvosana\":\"L\",\"asteikko\":\"YO\",\"pisteet\":99}}"
-
-  val parsed = parse(body)
-
-  val cmd = new CreateArvosanaCommand
-
-  def test = cmd.bindTo(parsed)
-
-}
 
 
