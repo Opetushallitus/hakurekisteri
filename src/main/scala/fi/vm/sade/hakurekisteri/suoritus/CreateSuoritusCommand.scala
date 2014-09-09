@@ -2,13 +2,8 @@ package fi.vm.sade.hakurekisteri.suoritus
 
 import org.scalatra.commands._
 import fi.vm.sade.hakurekisteri.rest.support.{LocalDateSupport, HakurekisteriCommand}
-import org.joda.time.{LocalDate, DateTime}
+import org.joda.time.LocalDate
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
-import yksilollistaminen.Ei
-import org.scalatra.{util, DefaultValue}
-import org.scalatra.util.conversion.TypeConverter
-import org.joda.time.format.DateTimeFormat
-import org.json4s.JValue
 import java.util.Locale
 
 

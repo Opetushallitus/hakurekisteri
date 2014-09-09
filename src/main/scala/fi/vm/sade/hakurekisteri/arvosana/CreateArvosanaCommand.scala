@@ -4,11 +4,6 @@ import org.scalatra.commands._
 import fi.vm.sade.hakurekisteri.rest.support.{LocalDateSupport, HakurekisteriCommand}
 import java.util.UUID
 import org.joda.time.LocalDate
-import org.scalatra.util.conversion.TypeConverter
-import org.json4s._
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
-import org.scalatra.{util, DefaultValue}
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 
 
 class CreateArvosanaCommand extends HakurekisteriCommand[Arvosana] with LocalDateSupport {
