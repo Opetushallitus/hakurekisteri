@@ -227,7 +227,7 @@ object XMLHakemus {
       julkaisulupa = hakija.hakemus.julkaisulupa,
       yhteisetaineet = None,
       lukiontasapisteet = None,
-      lisapistekoulutus = None,
+      lisapistekoulutus = hakija.hakemus.lisapistekoulutus,
       yleinenkoulumenestys = None,
       painotettavataineet = None,
       hakutoiveet = toiveet)

@@ -66,18 +66,30 @@ object AkkaHakupalvelu {
     case _ => vastaukset.flatMap(_.get("PK_PAATTOTODISTUSVUOSI"))
   }
 
+  val lisakoulutukset = Set("LISAKOULUTUS_KYMPPI", "LISAKOULUTUS_VAMMAISTEN", "LISAKOULUTUS_TALOUS", "LISAKOULUTUS_AMMATTISTARTTI", "LISAKOULUTUS_KANSANOPISTO", "LISAKOULUTUS_MAAHANMUUTTO")
+
+  def kaydytLisapisteKoulutukset(tausta: Map[String,String]) =
+    for (
+      (tieto, arvo) <- tausta
+      if lisakoulutukset(tieto) && arvo == "true"
+    ) yield tieto
+
   def getHakija(hakemus: FullHakemus): Hakija = {
-    val kesa = new MonthDay(6,4)
+    val kesa = new MonthDay(6, 4)
     implicit val v = hakemus.answers
     val koulutustausta = for (a <- v; k <- a.get("koulutustausta")) yield k
     val lahtokoulu: Option[String] = for(k <- koulutustausta; l <- k.get("lahtokoulu")) yield l
     val pohjakoulutus: Option[String] = for (k <- koulutustausta; p <- k.get("POHJAKOULUTUS")) yield p
     val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus; v <- getVuosi(koulutustausta)(p)) yield v
-    val kieli: String = getValue("henkilotiedot", "aidinkieli", "FI")
+    val kieli = getValue("henkilotiedot", "aidinkieli", "FI")
     val myontaja = lahtokoulu.getOrElse("")
     val suorittaja = hakemus.personOid.getOrElse("")
     val valmistuminen = todistusVuosi.flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption).getOrElse(new LocalDate(0))
     val julkaisulupa = Some(getValue("lisatiedot", "lupaJulkaisu", "false").toBoolean)
+    val lisapistekoulutus = for (
+      tausta <- koulutustausta;
+      lisatausta <- kaydytLisapisteKoulutukset(tausta).headOption
+    ) yield lisatausta
 
     Hakija(
       Henkilo(
@@ -124,7 +136,7 @@ object AkkaHakupalvelu {
         ))
         case _ => Seq()
       },
-      (for (a <- v; t <- a.get("hakutoiveet")) yield Hakemus(convertToiveet(t), hakemus.oid, julkaisulupa, hakemus.applicationSystemId)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId))
+      (for (a <- v; t <- a.get("hakutoiveet")) yield Hakemus(convertToiveet(t), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus))
     )
   }
 
