@@ -1,4 +1,5 @@
 import fi.vm.sade.hakurekisteri.integration.ServiceConfig
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
 import java.io.InputStream
@@ -57,7 +58,7 @@ object Config {
   val virtaConfig = VirtaConfig(serviceUrl = virtaServiceUrl, jarjestelma = virtaJarjestelma, tunnus = virtaTunnus, avain = virtaAvain)
   val henkiloConfig = ServiceConfig(serviceAccessUrl = serviceAccessUrl, serviceUrl = henkiloServiceUrl, user = serviceUser, password = servicePassword)
   val sijoitteluConfig = ServiceConfig(serviceAccessUrl, sijoitteluServiceUrl, serviceUser, servicePassword)
-  val hakemusConfig = ServiceConfig(serviceAccessUrl, hakuappServiceUrl, serviceUser, servicePassword)
+  val hakemusConfig = HakemusConfig(ServiceConfig(serviceAccessUrl, hakuappServiceUrl, serviceUser, servicePassword), maxApplications)
   val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl)
   val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl)
   val organisaatioConfig = ServiceConfig(serviceUrl = organisaatioServiceUrl)
