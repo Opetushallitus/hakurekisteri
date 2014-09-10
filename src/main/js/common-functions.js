@@ -54,7 +54,7 @@ function getOrganisaatio($http, organisaatioOid, successCallback, errorCallback)
 }
 
 function getKoulutusNimi($http, koulutusUri, successCallback) {
-    $http.get(koodistoServiceUrl + '/rest/koulutus/koodi/' + encodeURIComponent(koulutusUri), {cache: true})
+    $http.get(koodistoServiceUrl + '/rest/json/koulutus/koodi/' + encodeURIComponent(koulutusUri), {cache: true})
         .success(function(koodi) {
             if (koodi.metadata) {
                 for (var i = 0; i < koodi.metadata.length; i++) {
