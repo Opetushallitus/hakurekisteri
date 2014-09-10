@@ -106,6 +106,18 @@ function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options, valueFro
         });
 }
 
+function parseFinDate(d) {
+    return (d && d.match(/[0-3][0-9]\.[0-1][0-9]\.[0-9]{4}/)) ? new Date(parseInt(d.substr(6, 4), 10), parseInt(d.substr(3, 2), 10) - 1, parseInt(d.substr(0, 2), 10)) : null;
+}
+
+function sortByFinDateDesc(a, b) {
+    var aDate = parseFinDate(a);
+    if (!aDate) aDate = new Date(3000, 0, 1);
+    var bDate = parseFinDate(b);
+    if (!bDate) bDate = new Date(1000, 0, 1);
+    return aDate > bDate ? 1 : aDate < bDate ? -1 : 0;
+}
+
 function ensureConsoleMethods() {
     var method;
     var noop = function () {};
