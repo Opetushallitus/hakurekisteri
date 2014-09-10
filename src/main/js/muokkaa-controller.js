@@ -90,9 +90,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         }
 
         Opiskelijat.query({henkilo: $scope.henkiloOid}, function(luokkatiedot) {
-            $scope.luokkatiedot = luokkatiedot.sort(function(a, b) {
-                return sortByFinDateDesc(a.alkuPaiva, b.alkuPaiva)
-            });
+            $scope.luokkatiedot = luokkatiedot;
             enrich();
         }, function() {
             confirm(getOphMsg("suoritusrekisteri.muokkaa.luokkatietojenhakeminen", "Luokkatietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchLuokkatiedot() : back()
