@@ -16,7 +16,6 @@ import fi.vm.sade.hakurekisteri.arvosana.ArvioYo
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.henkilo.HetuQuery
 import scala.util.Failure
-import scala.Some
 import scala.util.Success
 import fr.janalyse.ssh.{SSHPassword, SSH}
 import java.io.{PrintWriter, ByteArrayOutputStream}
@@ -62,7 +61,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   var suoritusKokelaat = Map[UUID, (Suoritus with Identified[UUID], Kokelas)]()
 
   override def receive: Actor.Receive = {
-    case CheckSend  if nextSend.get.isBefore(DateTime.now()) =>
+    case CheckSend if nextSend.getOrElse(DateTime.now.plusDays(1)).isBefore(DateTime.now()) =>
       self ! Send
       nextSend = nextSendTime
     case k:KokelasRequest =>
