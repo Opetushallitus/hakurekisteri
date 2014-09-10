@@ -96,28 +96,19 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             confirm(getOphMsg("suoritusrekisteri.muokkaa.luokkatietojenhakeminen", "Luokkatietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchLuokkatiedot() : back();
         });
     }
-    function getKoulutusNimi(komo, successCallback) {
-        $http.get(tarjontaServiceUrl + '/rest/v1/komo/' + encodeURIComponent(komo), {cache: true})
-            .success(successCallback)
-    }
     function enrichSuoritus(suoritus) {
         if (suoritus.myontaja) {
             getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
                 suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
             })
         }
-        if (suoritus.komo) {
-            getKoulutusNimi(suoritus.komo, function(komo) {
-                if (komo.result && komo.result.koulutuskoodi && komo.result.koulutuskoodi.meta)
-                    if (komo.result.koulutuskoodi.meta.kieli_fi)
-                        suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_fi.nimi;
-                    else if (komo.result.koulutuskoodi.meta.kieli_sv)
-                        suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_sv.nimi;
-                    else if (suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_en)
-                        suoritus.koulutus = komo.result.koulutuskoodi.meta.kieli_en.nimi;
+        if (suoritus.komo && suoritus.komo.match(/^koulutus_\d*$/)) {
+            getKoulutusNimi($http, suoritus.komo, function(koulutusNimi) {
+                suoritus.koulutus = koulutusNimi
             })
+        } else {
+            suoritus.editable = true
         }
-        if (suoritus.source !== "1.2.246.562.10.00000000001") suoritus.editable = true; // FIXME vaihda virran käyttäjä-oidiin?
     }
     function fetchSuoritukset() {
         function enrich() {
@@ -138,9 +129,14 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                     if (opiskeluoikeus.myontaja) {
                         getOrganisaatio($http, opiskeluoikeus.myontaja, function(organisaatio) {
                             opiskeluoikeus.oppilaitos = organisaatio.oppilaitosKoodi;
-                        });
+                        })
                     }
-                });
+                    if (opiskeluoikeus.komo && opiskeluoikeus.komo.match(/^koulutus_\d*$/)) {
+                        getKoulutusNimi($http, opiskeluoikeus.komo, function(koulutusNimi) {
+                            opiskeluoikeus.koulutus = koulutusNimi
+                        })
+                    }
+                })
             }
         }
 

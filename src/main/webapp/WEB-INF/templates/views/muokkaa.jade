@@ -53,7 +53,7 @@ form(ng-submit="save()")
                   div {{opiskeluoikeus.oppilaitos || opiskeluoikeus.myontaja}}
                 div(class="col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.koulutus") Koulutus
-                  div(oph-msg="suoritusrekisteri.komo.{{opiskeluoikeus.komo}}") {{opiskeluoikeus.komo}}
+                  div {{opiskeluoikeus.koulutus || opiskeluoikeus.komo}}
       section(class="panel panel-default")
         header(class="panel-heading")
           h2(class="panel-title" oph-msg="suoritusrekisteri.muokkaa.suoritukset") Suoritukset

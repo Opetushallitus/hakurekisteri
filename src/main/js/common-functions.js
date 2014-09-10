@@ -50,7 +50,22 @@ if(!Array.isArray)
 function getOrganisaatio($http, organisaatioOid, successCallback, errorCallback) {
     $http.get(organisaatioServiceUrl + '/rest/organisaatio/' + encodeURIComponent(organisaatioOid), {cache: true})
         .success(successCallback)
-        .error(errorCallback);
+        .error(errorCallback)
+}
+
+function getKoulutusNimi($http, koulutusUri, successCallback) {
+    $http.get(koodistoServiceUrl + '/rest/koulutus/koodi/' + encodeURIComponent(koulutusUri), {cache: true})
+        .success(function(koodi) {
+            if (koodi.metadata) {
+                for (var i = 0; i < koodi.metadata.length; i++) {
+                    var meta = koodi.metadata[i];
+                    if (meta.kieli === 'FI') {
+                        return successCallback(meta.nimi);
+                    }
+                }
+            }
+            return successCallback("");
+        })
 }
 
 function authenticateToAuthenticationService($http, successCallback, errorCallback) {
