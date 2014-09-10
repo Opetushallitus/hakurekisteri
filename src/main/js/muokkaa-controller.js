@@ -60,7 +60,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             .success(function(henkilo) {
                 if (henkilo) {
                     if (henkilo.duplicate === false) {
-                        $scope.henkilo = henkilo;
+                        $scope.henkilo = henkilo
                     } else {
                         $http.get(henkiloServiceUrl + '/resources/s2s/' + encodeURIComponent($scope.henkiloOid), {cache: false})
                             .success(function(masterHenkilo) {
@@ -82,10 +82,10 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                 angular.forEach($scope.luokkatiedot, function(luokkatieto) {
                     if (luokkatieto.oppilaitosOid) {
                         getOrganisaatio($http, luokkatieto.oppilaitosOid, function(organisaatio) {
-                            luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi;
-                        });
+                            luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi
+                        })
                     }
-                });
+                })
             }
         }
 
@@ -93,13 +93,14 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             $scope.luokkatiedot = luokkatiedot;
             enrich();
         }, function() {
-            confirm(getOphMsg("suoritusrekisteri.muokkaa.luokkatietojenhakeminen", "Luokkatietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchLuokkatiedot() : back();
+            confirm(getOphMsg("suoritusrekisteri.muokkaa.luokkatietojenhakeminen", "Luokkatietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchLuokkatiedot() : back()
         });
     }
     function enrichSuoritus(suoritus) {
         if (suoritus.myontaja) {
             getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
                 suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
+                suoritus.organisaatio = organisaatio;
             })
         }
         if (suoritus.komo && suoritus.komo.match(/^koulutus_\d*$/)) {
@@ -112,7 +113,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
     }
     function fetchSuoritukset() {
         function enrich() {
-            if ($scope.suoritukset) angular.forEach($scope.suoritukset, enrichSuoritus);
+            if ($scope.suoritukset) angular.forEach($scope.suoritukset, enrichSuoritus)
         }
 
         Suoritukset.query({henkilo: $scope.henkiloOid}, function(suoritukset) {
@@ -129,6 +130,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                     if (opiskeluoikeus.myontaja) {
                         getOrganisaatio($http, opiskeluoikeus.myontaja, function(organisaatio) {
                             opiskeluoikeus.oppilaitos = organisaatio.oppilaitosKoodi;
+                            opiskeluoikeus.organisaatio = organisaatio;
                         })
                     }
                     if (opiskeluoikeus.komo && opiskeluoikeus.komo.match(/^koulutus_\d*$/)) {
