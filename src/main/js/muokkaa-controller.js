@@ -226,10 +226,10 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         var deferreds = [];
         function saveSuoritukset() {
             angular.forEach($scope.suoritukset, function(suoritus) {
-                $log.debug("save suoritus: " + suoritus.id);
                 var d = $q.defer();
                 this.push(d);
                 if (suoritus.editable)
+                    $log.debug("save suoritus: " + suoritus.id);
                     if (suoritus.delete) {
                         if (suoritus.id) {
                             suoritus.$remove(function() {

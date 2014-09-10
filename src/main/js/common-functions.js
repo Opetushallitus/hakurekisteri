@@ -112,10 +112,10 @@ function parseFinDate(d) {
 
 function sortByFinDateDesc(a, b) {
     var aDate = parseFinDate(a);
-    if (!aDate) aDate = new Date(3000, 0, 1);
+    if (!aDate) aDate = new Date(1000, 0, 1);
     var bDate = parseFinDate(b);
     if (!bDate) bDate = new Date(1000, 0, 1);
-    return aDate > bDate ? 1 : aDate < bDate ? -1 : 0;
+    return aDate > bDate ? -1 : aDate < bDate ? 1 : 0;
 }
 
 function ensureConsoleMethods() {
