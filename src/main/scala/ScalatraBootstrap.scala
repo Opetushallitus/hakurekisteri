@@ -9,7 +9,7 @@ import javax.servlet.{Servlet, DispatcherType, ServletContext, ServletContextEve
 
 import _root_.akka.actor.{ActorRef, ActorSystem, Props}
 import _root_.akka.util.Timeout
-import com.stackmob.newman.ApacheHttpClient
+import com.stackmob.newman.{HttpClient, ApacheHttpClient}
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenQuery, EnsikertalainenActor, EnsikertalainenResource}
 import fi.vm.sade.hakurekisteri.hakija._
@@ -284,19 +284,21 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        rekisterit: Registers,
                        system: ActorSystem) extends Integrations {
 
+  def getClient(): HttpClient = {
+    new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
+  }
+
   implicit val ec: ExecutionContext = system.dispatcher
 
-  implicit val httpClient = new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
+  val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig)(getClient, ec))), "tarjonta")
 
-  val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig))), "tarjonta")
+  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(getClient, ec))))
 
-  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig))))
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient, ec), organisaatiot, tarjonta)), "virta")
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig), organisaatiot, tarjonta)), "virta")
+  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig)(getClient, ec))), "henkilo")
 
-  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig))), "henkilo")
-
-  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig), "1.2.246.562.5.2013080813081926341927")))
+  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig)(getClient, ec), "1.2.246.562.5.2013080813081926341927")))
 
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, ytlConfig)), "ytl")
 
@@ -304,9 +306,9 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
     ytl ! KokelasRequest(oid, hetu)
 
   }
-  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf), hakemusConfig.maxApplications, newApplicant = newApplicant)), "hakemus")
+  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf)(getClient, ec), hakemusConfig.maxApplications, newApplicant = newApplicant)), "hakemus")
 
-  val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig))), "koodisto")
+  val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)(getClient, ec))), "koodisto")
 }
 
 trait Koosteet {
@@ -321,5 +323,5 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
 
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta)), "ensikertalainen")
 
-  integrations.hakemukset ! Trigger((oid, hetu) => ensikertalainen ! EnsikertalainenQuery(oid))
+  //integrations.hakemukset ! Trigger((oid, hetu) => ensikertalainen ! EnsikertalainenQuery(oid))
 }

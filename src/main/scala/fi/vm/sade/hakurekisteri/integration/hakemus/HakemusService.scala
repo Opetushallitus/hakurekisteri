@@ -107,9 +107,9 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   def handleNew(hakemukset: List[FullHakemus]) {
 
     for (
-      hakemus <- hakemukset
+      hakemus: FullHakemus <- hakemukset
     ) {
-      self ! (hakemus, ActorRef.noSender)
+      self.!(hakemus)(ActorRef.noSender)
       hakijaTrigger foreach (_ ! hakemus)
     }
 

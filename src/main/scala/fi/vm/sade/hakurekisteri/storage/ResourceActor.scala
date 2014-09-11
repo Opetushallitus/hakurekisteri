@@ -46,8 +46,6 @@ abstract class ResourceActor[T <: Resource[I] : Manifest, I : Manifest] extends 
       val saveTry = Try(save(o))
       if (saveTry.isFailure)
         log.error("save failed", saveTry.failed.get)
-      else if (log.isDebugEnabled)
-        log.debug(s"saved: ${saveTry.get.id}")
       sender ! saveTry.recover{ case e: Exception => Failure(e)}.get
     case id: I =>
       sender ! get(id)
