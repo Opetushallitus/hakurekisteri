@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, Actor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{RestHaku, GetHautQuery, RestHakuResult}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
 import akka.pattern.pipe
-import fi.vm.sade.hakurekisteri.dates.Ajanjakso
+import fi.vm.sade.hakurekisteri.dates.{InFuture, Ajanjakso}
 import org.joda.time.ReadableInstant
 import akka.event.Logging
 
@@ -34,8 +34,8 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef) extends Actor {
           if haku.oid.isDefined && !haku.hakuaikas.isEmpty
         ) yield {
           val startTime = DateTime(haku.hakuaikas.map(_.alkuPvm).sorted.head)
-          getKierrosEnd(haku.oid.get).map((end) => {
-            val ajanjakso = Ajanjakso(startTime.asInstanceOf[ReadableInstant], end.asInstanceOf[ReadableInstant])
+          getKierrosEnd(haku.oid.get).recover{ case _ => InFuture }.map((end) => {
+            val ajanjakso = Ajanjakso(startTime.asInstanceOf[ReadableInstant], end)
             Haku(haku.oid.get, ajanjakso)
           })
         }) pipeTo self
@@ -48,7 +48,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef) extends Actor {
   }
 
 
-  def getKierrosEnd(hakuOid: String): Future[DateTime] = {
+  def getKierrosEnd(hakuOid: String): Future[ReadableInstant] = {
     import akka.pattern.ask
     import akka.util.Timeout
     import scala.concurrent.duration._
