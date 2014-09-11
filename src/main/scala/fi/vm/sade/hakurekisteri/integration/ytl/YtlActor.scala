@@ -23,6 +23,9 @@ import java.io.{PrintWriter, ByteArrayOutputStream}
 import scala.concurrent.duration._
 
 
+case class YtlReport(current: Batch[KokelasRequest], waitingforAnswers: Seq[Batch[KokelasRequest]], nextSend: Option[DateTime])
+
+object Report
 
 class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, config: Option[YTLConfig]) extends Actor {
 
@@ -58,6 +61,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   var suoritusKokelaat = Map[UUID, (Suoritus with Identified[UUID], Kokelas)]()
 
   override def receive: Actor.Receive = {
+    case Report => sender ! YtlReport(batch, sent, nextSend)
     case CheckSend if nextSend.getOrElse(DateTime.now.plusDays(1)).isBefore(DateTime.now()) =>
       self ! Send
       nextSend = nextSendTime

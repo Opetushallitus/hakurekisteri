@@ -13,6 +13,7 @@ import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaActor, Opiskelija}
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
 import java.util.UUID
+import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
 
 class HealthcheckResourceSpec extends ScalatraFunSuite {
   val arvosana = Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", None, false, source = "Test")
@@ -41,7 +42,17 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
     }
   }))
 
-  val healthcheck = system.actorOf(Props(new HealthcheckActor(guardedArvosanaRekisteri, guardedOpiskelijaRekisteri, guardedOpiskeluoikeusRekisteri, guardedSuoritusRekisteri, hakemukset)))
+
+  val ytl = system.actorOf(Props(new Actor {
+
+    override def receive: Actor.Receive = {
+      case Report => sender ! YtlReport(Batch(items = Seq()), Seq(), None)
+
+
+    }
+  }))
+
+  val healthcheck = system.actorOf(Props(new HealthcheckActor(guardedArvosanaRekisteri, guardedOpiskelijaRekisteri, guardedOpiskeluoikeusRekisteri, guardedSuoritusRekisteri, ytl,  hakemukset)))
 
   addServlet(new HealthcheckResource(healthcheck), "/*")
 

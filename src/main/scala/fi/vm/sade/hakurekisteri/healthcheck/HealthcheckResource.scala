@@ -17,11 +17,12 @@ import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.format.{DateTimeFormatter, DateTimeFormat}
 import java.util.{UUID, Locale}
-import org.joda.time.DateTimeZone
+import org.joda.time.{DateTime, DateTimeZone}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
 import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
 import fi.vm.sade.hakurekisteri.hakija.Hakemus
+import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
 
 class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -51,6 +52,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
                        opiskelijaRekisteri: ActorRef,
                        opiskeluoikeusRekisteri: ActorRef,
                        suoritusRekisteri: ActorRef,
+                       ytl: ActorRef,
                        hakemukset: ActorRef)(implicit system: ActorSystem) extends Actor {
   protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(30, TimeUnit.SECONDS)
@@ -62,19 +64,17 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
     super.preStart()
   }
 
+
+
+
+
   def receive = {
     case Hakemukset(oid, count) => foundHakemukset = foundHakemukset + (oid -> count)
     case "healthcheck" => {
       val combinedFuture =
-        for {
-          arvosanaCount <- getArvosanaCount
-          opiskelijaCount <- getOpiskelijaCount
-          opiskeluoikeusCount <- getOpiskeluoikeusCount
-          suoritusCount <- getSuoritusCount
-          hakemusCount <- getHakemusCount
-        } yield (arvosanaCount, opiskelijaCount, opiskeluoikeusCount, suoritusCount, hakemusCount)
+        checkState
 
-      combinedFuture map { case (arvosanaCount, opiskelijaCount, opiskeluoikeusCount, suoritusCount, hakemusCount) =>
+      combinedFuture map { case (arvosanaCount, opiskelijaCount, opiskeluoikeusCount, suoritusCount, hakemusCount, ytlReport) =>
         Healhcheck(System.currentTimeMillis(),
           "anonymousUser",
           "/suoritusrekisteri",
@@ -84,17 +84,45 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
             opiskeluoikeudet = opiskeluoikeusCount.count,
             suoritukset = suoritusCount.count,
             hakemukset = hakemusCount.count,
-            foundHakemukset = foundHakemukset
+            foundHakemukset = foundHakemukset,
+            ytl = ytlReport
           )),
-          resolveStatus(arvosanaCount.status, opiskelijaCount.status, opiskeluoikeusCount.status, suoritusCount.status, hakemusCount.status),
+          resolveStatus(arvosanaCount.status, opiskelijaCount.status, opiskeluoikeusCount.status, suoritusCount.status, hakemusCount.status, ytlReport.status),
           "")} pipeTo sender
     }
+  }
+
+
+  def checkState: Future[(ItemCount, ItemCount, ItemCount, ItemCount, ItemCount, YtlStatus)] = {
+    for {
+      arvosanaCount <- getArvosanaCount
+      opiskelijaCount <- getOpiskelijaCount
+      opiskeluoikeusCount <- getOpiskeluoikeusCount
+      suoritusCount <- getSuoritusCount
+      hakemusCount <- getHakemusCount
+      ytl <- getYtlReport
+    } yield (arvosanaCount, opiskelijaCount, opiskeluoikeusCount, suoritusCount, hakemusCount, ytl)
   }
 
   def resolveStatus(statuses: Status*) = {
     if (statuses.contains(Status.TIMEOUT)) Status.TIMEOUT
     else if (statuses.contains(Status.FAILURE)) Status.FAILURE
     else Status.OK
+  }
+
+  def getYtlReport: Future[YtlStatus] = {
+    val ytlFuture = (ytl ? Report).mapTo[YtlReport]
+
+
+    ytlFuture.map((yr) => { YtlOk(
+      current = BatchReport(yr.current),
+      waitingForAnswer = yr.waitingforAnswers.map(BatchReport(_)),
+      yr.nextSend
+    ) }).recover {
+      case e: AskTimeoutException => new YtlFailure(Status.TIMEOUT)
+      case e: Throwable => println("error getting ytl status: " + e); new YtlFailure(Status.FAILURE)
+    }
+
   }
 
   def getArvosanaCount: Future[ItemCount] = {
@@ -150,12 +178,30 @@ object Status extends Enumeration {
 
 case class ItemCount(status: Status, count: Long)
 
+sealed abstract class YtlStatus {
+  val status: Status
+}
+
+case class YtlOk(current: BatchReport, waitingForAnswer: Seq[BatchReport], nextSendTime: Option[DateTime]) extends YtlStatus  {
+  val status = Status.OK
+}
+
+case class YtlFailure(status: Status)  extends YtlStatus
+
 case class Checks(resources: Resources)
 
-case class Resources(arvosanat: Long, opiskelijat: Long, opiskeluoikeudet: Long, suoritukset: Long, hakemukset: Long, foundHakemukset: Map[String, Long])
+case class Resources(arvosanat: Long, opiskelijat: Long, opiskeluoikeudet: Long, suoritukset: Long, hakemukset: Long, foundHakemukset: Map[String, Long], ytl: YtlStatus)
 
 case class Healhcheck(timestamp: Long, user: String, contextPath: String, checks: Checks, status: Status, info: String)
 
 case class Hakemukset(oid: String, count: Long)
 
 case class Health(actor: ActorRef)
+
+case class BatchReport(id: UUID, count: Int)
+
+object BatchReport {
+
+  def apply(batch: Batch[_]):BatchReport = BatchReport(batch.id, batch.items.size)
+
+}
