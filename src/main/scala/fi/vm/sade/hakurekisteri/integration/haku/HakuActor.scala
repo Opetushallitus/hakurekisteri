@@ -35,7 +35,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef) extends Actor {
           val startTime = new DateTime(haku.hakuaikas.map(_.alkuPvm).sorted.head)
           getKierrosEnd(haku.oid.get).recover{ case _ => InFuture }.map((end) => {
             val ajanjakso = Ajanjakso(startTime, end)
-            Haku(haku.oid.get, ajanjakso)
+            Haku(Kieliversiot(haku.nimi.get("kieli_fi"), haku.nimi.get("kieli_sv"), haku.nimi.get("kieli_en")),haku.oid.get, ajanjakso)
           })
         }) pipeTo self
 
@@ -62,5 +62,7 @@ object Update
 
 object HakuRequest
 
-case class Haku(oid: String, aika: Ajanjakso)
+case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
+
+case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso)
 
