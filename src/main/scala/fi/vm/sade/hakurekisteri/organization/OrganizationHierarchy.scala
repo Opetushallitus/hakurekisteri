@@ -14,9 +14,9 @@ import akka.event.Logging
 import com.ning.http.client.Response
 import fi.vm.sade.hakurekisteri.storage.DeleteResource
 
-class OrganizationHierarchy[A <: Resource[I] :Manifest, I](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A,String]) extends FutureOrganizationHierarchy[A, I](serviceUrl, filteredActor, (item: A) => Future.successful(organizationFinder(item)) )
+class OrganizationHierarchy[A <: Resource[I] :Manifest, I](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A,Seq[String]]) extends FutureOrganizationHierarchy[A, I](serviceUrl, filteredActor, (item: A) => Future.successful(organizationFinder(item)) )
 
-class FutureOrganizationHierarchy[A <: Resource[I] :Manifest, I ](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A, concurrent.Future[String]]) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
+class FutureOrganizationHierarchy[A <: Resource[I] :Manifest, I ](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A, concurrent.Future[Seq[String]]]) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
 
 
   val logger = Logging(context.system, this)
@@ -50,19 +50,19 @@ class FutureOrganizationHierarchy[A <: Resource[I] :Manifest, I ](serviceUrl:Str
   override def receive: Receive = {
     case a:Update => fetch()
     case a:OrganizationAuthorizer => logger.info("org paths loaded");authorizer = a
-    case AuthorizedQuery(q,orgs,_) => (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(futfilt(_, isAuthorized(orgs))) pipeTo sender
-    case AuthorizedRead(id, orgs,_) => (filteredActor ? id).mapTo[Option[A with Identified[UUID]]].flatMap(checkRights(orgs)) pipeTo sender
+    case AuthorizedQuery(q,orgs,user) => (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(futfilt(_, isAuthorized(user, orgs))) pipeTo sender
+    case AuthorizedRead(id, orgs,user) => (filteredActor ? id).mapTo[Option[A with Identified[UUID]]].flatMap(checkRights(user, orgs)) pipeTo sender
     case AuthorizedDelete(id, orgs, user)  => val checkedRights = for (resourceToDelete <- filteredActor ? id;
-                                                                    rights <- checkRights(orgs)(resourceToDelete.asInstanceOf[Option[A]]);
+                                                                    rights <- checkRights(user, orgs)(resourceToDelete.asInstanceOf[Option[A]]);
                                                                     result <- if (rights.isDefined) filteredActor ? DeleteResource(id, user) else Future.successful(Unit)
                                                                     )
                                                                     yield result.asInstanceOf[Unit]
 
                                                checkedRights pipeTo sender
-    case AuthorizedCreate(resource:A, orgs , _) => filteredActor forward resource
-    case AuthorizedUpdate(resource:A with Identified[I], orgs , _) => val checked = for (resourceToUpdate <- filteredActor ? resource.id;
-                                                                     rightsForOld <- checkRights(orgs)(resourceToUpdate.asInstanceOf[Option[A]]);
-                                                                     rightsForNew <- checkRights(orgs)(Some(resource));
+    case AuthorizedCreate(resource:A, orgs , user) => filteredActor forward resource
+    case AuthorizedUpdate(resource:A with Identified[I], orgs , user) => val checked = for (resourceToUpdate <- filteredActor ? resource.id;
+                                                                     rightsForOld <- checkRights(user,orgs)(resourceToUpdate.asInstanceOf[Option[A]]);
+                                                                     rightsForNew <- checkRights(user,orgs)(Some(resource));
                                                                      result <- if (rightsForOld.isDefined && rightsForNew.isDefined) filteredActor ? resource else Future.successful(rightsForOld)
                                                                       )
                                                                       yield result
@@ -71,10 +71,10 @@ class FutureOrganizationHierarchy[A <: Resource[I] :Manifest, I ](serviceUrl:Str
   }
 
 
-  def checkRights(orgs: Seq[String]) = (item:Option[A]) => item match {
+  def checkRights(user: String,orgs: Seq[String]) = (item:Option[A]) => item match {
 
     case None => Future.successful(None)
-    case Some(resource: A) => isAuthorized(orgs)(resource).map((authorized) => if (authorized) Some(resource) else None)
+    case Some(resource: A) => isAuthorized(user, orgs)(resource).map((authorized) => if (authorized) Some(resource) else None)
   }
 
 
@@ -90,7 +90,8 @@ class FutureOrganizationHierarchy[A <: Resource[I] :Manifest, I ](serviceUrl:Str
 
 }
 
-class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organizationFinder: A => Future[String]) {
+class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organizationFinder: A => Future[Seq[String]]) {
+
 
 
   val svc = url(serviceUrl).POST
@@ -183,7 +184,7 @@ class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organiza
 
 
 
-  def isAuthorized(orgs: Seq[String])(item: A): concurrent.Future[Boolean] = authorizer.checkAccess(orgs, organizationFinder(item))
+  def isAuthorized(user:String, orgs: Seq[String])(item: A): concurrent.Future[Boolean] = authorizer.checkAccess(user, orgs, organizationFinder(item))
 
 
 }
@@ -198,10 +199,10 @@ case class AuthorizedUpdate[A <: Resource[_]](q: A with Identified[_], orgs: Seq
 
 
 case class OrganizationAuthorizer(orgPaths: Map[String, Seq[String]]) {
-  def checkAccess(user: Seq[String], futTarget: concurrent.Future[String]) = futTarget.map {
+  def checkAccess(user: String, orgs: Seq[String], futTarget: concurrent.Future[Seq[String]]) = futTarget.map {
     (target) =>
-    val path = orgPaths.getOrElse(target, Seq())
-    path.exists { x => user.contains(x) }
+    val paths: Seq[String] = target.flatMap((oid) => orgPaths.getOrElse(oid, Seq("1.2.246.562.10.00000000001", oid)))
+    paths.exists { x => user == x || orgs.contains(x) }
   }
 }
 case class Org(oid: String, parent: Option[String], lopetusPvm: Option[DateTime] )
