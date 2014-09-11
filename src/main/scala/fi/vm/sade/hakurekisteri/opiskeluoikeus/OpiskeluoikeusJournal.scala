@@ -4,7 +4,7 @@ import java.util.UUID
 
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, Deleted, Delta, JDBCJournal}
-import org.joda.time.LocalDate
+import org.joda.time.DateTime
 
 import scala.compat.Platform
 import scala.slick.driver.JdbcDriver
@@ -24,8 +24,9 @@ class OpiskeluoikeusJournal(database: Database) extends JDBCJournal[Opiskeluoike
         }
     )
 
+
   override def update(resource: Opiskeluoikeus with Identified[UUID]): (String, Long, Option[Long], String, String, String, String, Long, Boolean) =
-    (resource.id.toString, resource.alkuPaiva.toDate.getTime, resource.loppuPaiva.map(_.toDate.getTime), resource.henkiloOid, resource.komo, resource.myontaja, resource.source, Platform.currentTime, false)
+    (resource.id.toString, resource.aika.alku.getMillis, resource.aika.loppuOption.map(_.getMillis) , resource.henkiloOid, resource.komo, resource.myontaja, resource.source, Platform.currentTime, false)
 
   override def newest: (OpiskeluoikeusTable) => ColumnOrdered[Long] = _.inserted.desc
 
@@ -48,7 +49,7 @@ class OpiskeluoikeusJournal(database: Database) extends JDBCJournal[Opiskeluoike
 
   override def delta(row: (String, Long, Option[Long], String, String, String, String, Long, Boolean)): Delta[Opiskeluoikeus, UUID] = row match {
     case (resourceId, _, _, _, _, _, source ,_, true) => Deleted(UUID.fromString(resourceId), source)
-    case (resourceId: String, alkuPaiva: Long, loppuPaiva: Option[Long], henkiloOid: String, komo: String, myontaja: String, source, foo, _) => Updated(Opiskeluoikeus(new LocalDate(alkuPaiva), loppuPaiva.map(new LocalDate(_)), henkiloOid, komo, myontaja, source).identify(UUID.fromString(resourceId)))
+    case (resourceId: String, alkuPaiva: Long, loppuPaiva: Option[Long], henkiloOid: String, komo: String, myontaja: String, source, foo, _) => Updated(Opiskeluoikeus(new DateTime(alkuPaiva), loppuPaiva.map(new DateTime(_)), henkiloOid, komo, myontaja, source).identify(UUID.fromString(resourceId)))
   }
 
   override def delete(id: UUID, source: String): (String, Long, Option[Long], String, String, String, String, Long, Boolean) = currentState(id) match {
