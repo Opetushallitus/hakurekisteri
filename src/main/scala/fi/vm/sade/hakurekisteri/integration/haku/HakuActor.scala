@@ -20,7 +20,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef) extends Actor {
 
   override def preStart(): Unit = {
     self ! Update
-    super.preStart
+    super.preStart()
   }
 
   override def receive: Actor.Receive = {
@@ -35,7 +35,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef) extends Actor {
           val startTime = new DateTime(haku.hakuaikas.map(_.alkuPvm).sorted.head)
           getKierrosEnd(haku.oid.get).recover{ case _ => InFuture }.map((end) => {
             val ajanjakso = Ajanjakso(startTime, end)
-            Haku(Kieliversiot(haku.nimi.get("kieli_fi"), haku.nimi.get("kieli_sv"), haku.nimi.get("kieli_en")),haku.oid.get, ajanjakso)
+            Haku(Kieliversiot(haku.nimi.get("kieli_fi").flatMap(Option(_)), haku.nimi.get("kieli_sv").flatMap(Option(_)), haku.nimi.get("kieli_en").flatMap(Option(_))),haku.oid.get, ajanjakso)
           })
         }) pipeTo self
 
