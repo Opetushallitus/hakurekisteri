@@ -3,8 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.haku
 import scala.concurrent.Future
 import spray.http.DateTime
 import akka.actor.{ActorRef, Actor}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.GetHautQuery
-import fi.vm.sade.hakurekisteri.integration.tarjonta.RestHakuResult
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{RestHaku, GetHautQuery, RestHakuResult}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
@@ -29,7 +28,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef) extends Actor {
 
     case Update => tarjonta ! GetHautQuery
     case HakuRequest  => sender ! activeHakus
-    case RestHakuResult(hakus) =>
+    case RestHakuResult(hakus: List[RestHaku]) =>
         Future.sequence(for (
           haku <- hakus
           if haku.oid.isDefined && !haku.hakuaikas.isEmpty

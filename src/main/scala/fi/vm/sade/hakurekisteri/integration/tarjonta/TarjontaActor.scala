@@ -16,9 +16,9 @@ case class GetKomoQuery(oid: String)
 
 object GetHautQuery
 
-case class RestHakuResult(data: Seq[RestHaku])
+case class RestHakuResult(result: List[RestHaku])
 
-case class RestHaku(oid:Option[String], hakuaikas: Seq[RestHakuAika])
+case class RestHaku(oid:Option[String], hakuaikas: List[RestHakuAika])
 
 case class RestHakuAika(alkuPvm:Long)
 
@@ -30,7 +30,7 @@ class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
   override def receive: Receive = {
     case q: SearchKomoQuery => searchKomo(q.koulutus) pipeTo sender
     case q: GetKomoQuery => getKomo(q.oid) pipeTo sender
-    case GetHautQuery => getHaut.map(RestHakuResult) pipeTo sender
+    case GetHautQuery => getHaut pipeTo sender
   }
   
   def searchKomo(koulutus: String): Future[Seq[Komo]] = {
@@ -43,7 +43,7 @@ class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
 
 
 
-  def getHaut: Future[List[RestHaku]] = restClient.readObject[List[RestHaku]]("/rest/v1/haku/findAll", HttpResponseCode.Ok)
+  def getHaut: Future[RestHakuResult] = restClient.readObject[RestHakuResult]("/rest/v1/haku/findAll", HttpResponseCode.Ok)
 
 
 }
