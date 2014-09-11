@@ -55,7 +55,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(30, TimeUnit.SECONDS)
   val authorities = Seq("1.2.246.562.10.00000000001")
-  var foundHakemukset = 0L
+  var foundHakemukset:Map[String, Long] = Map()
 
   override def preStart(): Unit = {
     hakemukset ! Health(self)
@@ -63,7 +63,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   }
 
   def receive = {
-    case Hakemukset(count) => foundHakemukset = count
+    case Hakemukset(oid, count) => foundHakemukset = foundHakemukset + (oid -> count)
     case "healthcheck" => {
       val combinedFuture =
         for {
@@ -152,10 +152,10 @@ case class ItemCount(status: Status, count: Long)
 
 case class Checks(resources: Resources)
 
-case class Resources(arvosanat: Long, opiskelijat: Long, opiskeluoikeudet: Long, suoritukset: Long, hakemukset: Long, foundHakemukset: Long)
+case class Resources(arvosanat: Long, opiskelijat: Long, opiskeluoikeudet: Long, suoritukset: Long, hakemukset: Long, foundHakemukset: Map[String, Long])
 
 case class Healhcheck(timestamp: Long, user: String, contextPath: String, checks: Checks, status: Status, info: String)
 
-case class Hakemukset(count: Long)
+case class Hakemukset(oid: String, count: Long)
 
 case class Health(actor: ActorRef)
