@@ -50,7 +50,22 @@ if(!Array.isArray)
 function getOrganisaatio($http, organisaatioOid, successCallback, errorCallback) {
     $http.get(organisaatioServiceUrl + '/rest/organisaatio/' + encodeURIComponent(organisaatioOid), {cache: true})
         .success(successCallback)
-        .error(errorCallback);
+        .error(errorCallback)
+}
+
+function getKoulutusNimi($http, koulutusUri, successCallback) {
+    $http.get(koodistoServiceUrl + '/rest/json/koulutus/koodi/' + encodeURIComponent(koulutusUri), {cache: true})
+        .success(function(koodi) {
+            if (koodi.metadata) {
+                for (var i = 0; i < koodi.metadata.length; i++) {
+                    var meta = koodi.metadata[i];
+                    if (meta.kieli === 'FI') {
+                        return successCallback(meta.nimi);
+                    }
+                }
+            }
+            return successCallback("");
+        })
 }
 
 function authenticateToAuthenticationService($http, successCallback, errorCallback) {
@@ -89,6 +104,18 @@ function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options, valueFro
                 return a.text < b.text ? -1 : 1;
             });
         });
+}
+
+function parseFinDate(d) {
+    return (d && d.match(/[0-3][0-9]\.[0-1][0-9]\.[0-9]{4}/)) ? new Date(parseInt(d.substr(6, 4), 10), parseInt(d.substr(3, 2), 10) - 1, parseInt(d.substr(0, 2), 10)) : null;
+}
+
+function sortByFinDateDesc(a, b) {
+    var aDate = parseFinDate(a);
+    if (!aDate) aDate = new Date(1000, 0, 1);
+    var bDate = parseFinDate(b);
+    if (!bDate) bDate = new Date(1000, 0, 1);
+    return aDate > bDate ? -1 : aDate < bDate ? 1 : 0;
 }
 
 function ensureConsoleMethods() {

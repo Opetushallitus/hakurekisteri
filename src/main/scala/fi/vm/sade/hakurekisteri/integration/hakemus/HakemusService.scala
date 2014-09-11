@@ -13,7 +13,7 @@ import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceActor, ResourceServ
 
 import scala.concurrent.Future
 import scala.util.Try
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 
 trait HakemusService extends ResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
   def filterField[F](field: Option[F], fieldExctractor: (FullHakemus) => F)(hakemus:FullHakemus) = field match {
@@ -54,6 +54,8 @@ object HakemusQuery {
   def apply(hq: HakijaQuery):HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
 }
 
+case class Trigger(newApplicant: (String, String) => Unit)
+
 class HakemusJournal extends InMemJournal[FullHakemus, String] {
   override def addModification(delta:Delta[FullHakemus, String]): Unit = {
   }
@@ -66,13 +68,14 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   var healthCheck: Option[ActorRef] = None
   val logger = Logging(context.system, this)
 
-  val hakijaTrigger = context.actorOf(Props(new HakijaTrigger(newApplicant)))
+  var hakijaTrigger = Seq(context.actorOf(Props(new HakijaTrigger(newApplicant))))
 
   override def receive: Receive = super.receive.orElse({
     case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) map ((hs) => {
       logger.debug(s"found $hs applications")
     })
     case Health(actor) => healthCheck = Some(actor)
+    case Trigger(trig) => hakijaTrigger = context.actorOf(Props(new HakijaTrigger(trig))) +: hakijaTrigger
   })
 
   def getHakemukset(q: HakijaQuery): Future[Int] = {
@@ -107,7 +110,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
       hakemus <- hakemukset
     ) {
       self ! (hakemus, ActorRef.noSender)
-      hakijaTrigger ! hakemus
+      hakijaTrigger foreach (_ ! hakemus)
     }
 
 
@@ -145,3 +148,5 @@ class HakijaTrigger(newApplicant: (String, String) => Unit) extends Actor {
 
   }
 }
+
+case class HakemusConfig(serviceConf: ServiceConfig, maxApplications: Int)

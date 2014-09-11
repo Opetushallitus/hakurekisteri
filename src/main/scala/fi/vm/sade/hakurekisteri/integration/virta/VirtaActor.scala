@@ -90,9 +90,10 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, tarjonta
   }
 
   def resolveKomoOid(koulutuskoodi: String): Future[String] = {
-    (tarjontaActor ? SearchKomoQuery(koulutuskoodi))(10.seconds).mapTo[Seq[Komo]].map(_.headOption match {
+    /*(tarjontaActor ? SearchKomoQuery(koulutuskoodi))(10.seconds).mapTo[Seq[Komo]].map(_.headOption match {
       case Some(komo) => komo.oid
       case _ => throw KomoNotFoundException(s"komo not found with koulutuskoodi $koulutuskoodi") // FIXME should fallback to saving koulutuskoodi instead
-    })
+    })*/
+    Future.successful(s"koulutus_$koulutuskoodi")
   }
 }

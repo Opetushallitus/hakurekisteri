@@ -50,7 +50,8 @@ table(class="table")
       td
         div(ng-repeat="s in row.suoritustiedot")
           span {{s.oppilaitos}},
-          span(oph-msg="suoritusrekisteri.komo.{{s.komo}}") {{s.komo}}
+          span(ng-hide="s.koulutus" oph-msg="suoritusrekisteri.komo.{{s.komo}}") {{s.komo}}
+          span(ng-show="s.koulutus") {{s.koulutus}}
           span(ng-show="s.hasArvosanat" oph-msg="suoritusrekisteri.opiskelijat.arvosanatsiirretty") (arvosanat siirretty)
           span(ng-show="s.noArvosanat" oph-msg="suoritusrekisteri.opiskelijat.eiarvosanoja") (ei arvosanoja)
       td

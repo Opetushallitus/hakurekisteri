@@ -11,10 +11,10 @@ import _root_.akka.actor.{ActorRef, ActorSystem, Props}
 import _root_.akka.util.Timeout
 import com.stackmob.newman.ApacheHttpClient
 import fi.vm.sade.hakurekisteri.arvosana._
-import fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenResource
+import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenQuery, EnsikertalainenActor, EnsikertalainenResource}
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{AkkaHakupalvelu, ReloadHaku, HakemusActor}
+import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
@@ -65,8 +65,11 @@ class ScalatraBootstrap extends LifeCycle {
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, registers.suoritusRekisteri, journals.arvosanaJournal)), "perusopetus-sanity")
 
-    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, hakemusConfig, ytlConfig, maxApplications, koodistoConfig, registers, system)
+    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, hakemusConfig, ytlConfig, koodistoConfig, registers, system)
+
     val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.hakemukset)), "healthcheck")
+
+    val koosteet = new BaseKoosteet(system, integrations, registers)
 
     system.scheduler.schedule(1.second, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.5.2013080813081926341927"))
     system.scheduler.schedule(1.second, 2.hours, integrations.hakemukset, ReloadHaku("1.2.246.562.5.2014022711042555034240"))
@@ -78,8 +81,8 @@ class ScalatraBootstrap extends LifeCycle {
       "/healthcheck" -> new HealthcheckResource(healthcheck),
       "/rest/v1/api-docs/*" -> new ResourcesApp,
       "/rest/v1/arvosanat" -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
-      "/rest/v1/ensikertalainen" -> new EnsikertalainenResource(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta),
-      "/rest/v1/hakijat" -> new HakijaResource(integrations.hakijat),
+      "/rest/v1/ensikertalainen" -> new EnsikertalainenResource(koosteet.ensikertalainen),
+      "/rest/v1/hakijat" -> new HakijaResource(koosteet.hakijat),
       "/rest/v1/opiskelijat" -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
       "/rest/v1/opiskeluoikeudet" -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
       "/rest/v1/suoritukset" -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport,
@@ -266,7 +269,6 @@ trait Integrations {
   val organisaatiot: ActorRef
   val sijoittelu: ActorRef
   val hakemukset: ActorRef
-  val hakijat: ActorRef
   val tarjonta: ActorRef
   val koodisto: ActorRef
 }
@@ -276,14 +278,13 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        tarjontaConfig: ServiceConfig,
                        organisaatioConfig: ServiceConfig,
                        sijoitteluConfig: ServiceConfig,
-                       hakemusConfig: ServiceConfig,
+                       hakemusConfig: HakemusConfig,
                        ytlConfig: Option[YTLConfig],
-                       maxApplications: Int,
                        koodistoConfig: ServiceConfig,
                        rekisterit: Registers,
                        system: ActorSystem) extends Integrations {
 
-  implicit val ec:ExecutionContext = system.dispatcher
+  implicit val ec: ExecutionContext = system.dispatcher
 
   implicit val httpClient = new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)
 
@@ -299,9 +300,26 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, ytlConfig)), "ytl")
 
-  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig), maxApplications, newApplicant = (oid: String, hetu: String) => ytl ! KokelasRequest(oid, hetu))), "hakemus")
+  private def newApplicant(oid: String, hetu: String) :Unit = {
+    ytl ! KokelasRequest(oid, hetu)
+
+  }
+  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf), hakemusConfig.maxApplications, newApplicant = newApplicant)), "hakemus")
 
   val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig))), "koodisto")
+}
 
-  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(hakemukset), organisaatiot, koodisto, sijoittelu)), "hakijat")
+trait Koosteet {
+  val hakijat: ActorRef
+  val ensikertalainen: ActorRef
+}
+
+class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: Registers) extends Koosteet {
+  implicit val ec: ExecutionContext = system.dispatcher
+
+  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemukset), integrations.organisaatiot, integrations.koodisto, integrations.sijoittelu)), "hakijat")
+
+  override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta)), "ensikertalainen")
+
+  integrations.hakemukset ! Trigger((oid, hetu) => ensikertalainen ! EnsikertalainenQuery(oid))
 }
