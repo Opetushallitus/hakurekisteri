@@ -16,6 +16,7 @@ import fi.vm.sade.hakurekisteri.arvosana.ArvioYo
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.henkilo.HetuQuery
 import scala.util.Failure
+import scala.Some
 import scala.util.Success
 import fr.janalyse.ssh.{SSHPassword, SSH}
 import java.io.{PrintWriter, ByteArrayOutputStream}
@@ -50,10 +51,6 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   }
 
 
-  def now: Int = {
-    DateTime.now.hourOfDay.get
-  }
-
   val log = Logging(context.system, this)
 
 
@@ -64,7 +61,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     case CheckSend if nextSend.getOrElse(DateTime.now.plusDays(1)).isBefore(DateTime.now()) =>
       self ! Send
       nextSend = nextSendTime
-    case k:KokelasRequest =>
+    case k:KokelasRequest if config.isDefined =>
       batch = k +: batch
     case Send if config.isDefined && !batch.items.isEmpty =>
                  log.debug(s"sending batch ${batch.id} with ${batch.items.size} applicants")

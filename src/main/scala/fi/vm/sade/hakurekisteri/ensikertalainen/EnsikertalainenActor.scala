@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{Komo, GetKomoQuery}
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaQuery
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
-import org.joda.time.LocalDate
+import org.joda.time.{DateTime, LocalDate}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -19,7 +19,7 @@ case class EnsikertalainenQuery(henkiloOid: String)
 
 class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaActor: ActorRef)(implicit val ec: ExecutionContext) extends Actor {
   val logger = Logging(context.system, this)
-  val kesa2014: LocalDate = new LocalDate(2014, 6, 30)
+  val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
   implicit val defaultTimeout: Timeout = 15.seconds
 
   override def receive: Receive = {
@@ -45,7 +45,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     Future.sequence(for (
       suoritus <- suoritukset
     ) yield (tarjontaActor ? GetKomoQuery(suoritus.komo))(10.seconds).mapTo[Option[Komo]].map((_, suoritus)).collect {
-        case (Some(komo), suoritus) => (komo, suoritus)
+        case (Some(komo), foundsuoritus) => (komo, foundsuoritus)
       })
   }
 
@@ -56,7 +56,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   def getKkOpiskeluoikeudet2014KesaJalkeen(henkiloOid: String): Future[Seq[Opiskeluoikeus]] = {
     for (
       opiskeluoikeudet <- (opiskeluoikeusActor ? OpiskeluoikeusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Opiskeluoikeus]]
-    ) yield opiskeluoikeudet.filter(_.alkuPaiva.isAfter(kesa2014))
+    ) yield opiskeluoikeudet.filter(_.aika.alku.isAfter(kesa2014))
   }
 
   def onkoEnsikertalainen(henkiloOid: String): Future[Boolean] = {
@@ -77,7 +77,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   def checkEnsikertalainenFromVirta(henkiloOid: String): Future[Boolean] = {
     val virtaResult: Future[(Seq[Opiskeluoikeus], Seq[Suoritus])] = getHetu(henkiloOid).flatMap((hetu) => (virtaActor ? VirtaQuery(Some(henkiloOid), Some(hetu)))(10.seconds).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])])
     for ((opiskeluoikeudet, suoritukset) <- virtaResult) yield {
-      val filteredOpiskeluoikeudet = opiskeluoikeudet.filter(_.alkuPaiva.isAfter(kesa2014))
+      val filteredOpiskeluoikeudet = opiskeluoikeudet.filter(_.aika.alku.isAfter(kesa2014))
       saveVirtaResult(filteredOpiskeluoikeudet, suoritukset)
       logger.debug(s"checked from virta: opiskeluoikeudet.isEmpty ${filteredOpiskeluoikeudet.isEmpty}, suoritukset.isEmpty ${suoritukset.isEmpty}")
       filteredOpiskeluoikeudet.isEmpty && suoritukset.isEmpty
