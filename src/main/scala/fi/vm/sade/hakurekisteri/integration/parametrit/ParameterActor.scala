@@ -1,9 +1,9 @@
 package fi.vm.sade.hakurekisteri.integration.parametrit
 
-import spray.http.DateTime
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import akka.actor.Actor
 import akka.pattern.pipe
+import org.joda.time.DateTime
 
 
 class ParameterActor(restClient:VirkailijaRestClient) extends Actor {
@@ -19,7 +19,7 @@ class ParameterActor(restClient:VirkailijaRestClient) extends Actor {
 
   def getParams(hakuOid: String) =  {
     restClient.readObject[KierrosParams](s"/api/v1/rest/parametri/$hakuOid").
-      collect { case KierrosParams(KierrosEndParams(date)) => DateTime.apply(date)}
+      collect { case KierrosParams(KierrosEndParams(date)) => new DateTime(date)}
 
   }
 
