@@ -286,7 +286,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   implicit val ec: ExecutionContext = system.dispatcher
 
-  implicit val httpClient = new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)
+  implicit val httpClient = new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
 
   val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig))), "tarjonta")
 
