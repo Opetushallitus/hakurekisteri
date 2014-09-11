@@ -1,6 +1,7 @@
 import _root_.akka.camel.CamelExtension
 import _root_.akka.routing.BroadcastRouter
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
+import fi.vm.sade.hakurekisteri.integration.haku.{HakuResource, HakuActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.ParameterActor
 import fi.vm.sade.hakurekisteri.integration.ytl.{YTLConfig, KokelasRequest, YtlActor}
 import java.nio.file.Path
@@ -85,6 +86,7 @@ class ScalatraBootstrap extends LifeCycle {
       "/rest/v1/api-docs/*" -> new ResourcesApp,
       "/rest/v1/arvosanat" -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
       "/rest/v1/ensikertalainen" -> new EnsikertalainenResource(koosteet.ensikertalainen),
+      "/rest/v1/haut" -> new HakuResource(koosteet.haut),
       "/rest/v1/hakijat" -> new HakijaResource(koosteet.hakijat),
       "/rest/v1/opiskelijat" -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
       "/rest/v1/opiskeluoikeudet" -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
@@ -321,6 +323,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 trait Koosteet {
   val hakijat: ActorRef
   val ensikertalainen: ActorRef
+  val haut: ActorRef
 }
 
 class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: Registers) extends Koosteet {
@@ -330,5 +333,6 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
 
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta)), "ensikertalainen")
 
+  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit)))
   //integrations.hakemukset ! Trigger((oid, hetu) => ensikertalainen ! EnsikertalainenQuery(oid))
 }
