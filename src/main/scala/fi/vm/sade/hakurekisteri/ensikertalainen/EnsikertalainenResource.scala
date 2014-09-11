@@ -30,7 +30,6 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef)
   override protected def applicationDescription: String = "Korkeakouluhakujen kiintiöiden ensikertalaisuuden kyselyrajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
-  implicit val defaultTimeout: Timeout = 15.seconds
 
   before() {
     contentType = formats("json")
@@ -44,8 +43,8 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef)
     try {
       val henkiloOid = params("henkilo")
       new AsyncResult() {
-        override implicit def timeout: Duration = 20.seconds
-        override val is = (ensikertalainenActor ? henkiloOid).mapTo[Ensikertalainen]
+        override implicit def timeout: Duration = 30.seconds
+        override val is = (ensikertalainenActor.?(henkiloOid)(30.seconds)).mapTo[Ensikertalainen]
       }
     } catch {
       case t: NoSuchElementException => throw ParamMissingException("parameter henkilo missing")
