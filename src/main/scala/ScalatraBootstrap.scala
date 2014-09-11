@@ -1,6 +1,7 @@
 import _root_.akka.camel.CamelExtension
 import _root_.akka.routing.BroadcastRouter
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
+import fi.vm.sade.hakurekisteri.integration.parametrit.ParameterActor
 import fi.vm.sade.hakurekisteri.integration.ytl.{YTLConfig, KokelasRequest, YtlActor}
 import java.nio.file.Path
 import java.util.UUID
@@ -65,7 +66,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, registers.suoritusRekisteri, journals.arvosanaJournal)), "perusopetus-sanity")
 
-    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, hakemusConfig, ytlConfig, koodistoConfig, registers, system)
+    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, parameterConfig, hakemusConfig, ytlConfig, koodistoConfig, registers, system)
 
 
     val koosteet = new BaseKoosteet(system, integrations, registers)
@@ -273,6 +274,7 @@ trait Integrations {
   val hakemukset: ActorRef
   val tarjonta: ActorRef
   val koodisto: ActorRef
+  val parametrit: ActorRef
 }
 
 class BaseIntegrations(virtaConfig: VirtaConfig,
@@ -280,6 +282,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        tarjontaConfig: ServiceConfig,
                        organisaatioConfig: ServiceConfig,
                        sijoitteluConfig: ServiceConfig,
+                       parameterConfig: ServiceConfig,
                        hakemusConfig: HakemusConfig,
                        ytlConfig: Option[YTLConfig],
                        koodistoConfig: ServiceConfig,
@@ -311,6 +314,8 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
   val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf)(getClient, ec), hakemusConfig.maxApplications, newApplicant = newApplicant)), "hakemus")
 
   val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)(getClient, ec))), "koodisto")
+
+  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(getClient(), ec))))
 }
 
 trait Koosteet {

@@ -23,6 +23,8 @@ object Config {
   val organisaatioServiceUrlQa = s"https://$hostQa/organisaatio-service"
   val hakuappServiceUrlQa = s"https://$hostQa/haku-app"
   val koodistoServiceUrlQa = s"https://$hostQa/koodisto-service"
+  val parameterServiceUrlQa = s"https://$hostQa/ohjausparametrit-service"
+
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
   val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
   val henkiloServiceUrlQa = s"https://$hostQa/authentication-service"
@@ -47,6 +49,7 @@ object Config {
   val henkiloServiceUrl = properties.getOrElse("cas.service.authentication-service", henkiloServiceUrlQa)
   val hakuappServiceUrl = properties.getOrElse("cas.service.haku-service", hakuappServiceUrlQa)
   val koodistoServiceUrl = properties.getOrElse("cas.service.koodisto-service", koodistoServiceUrlQa)
+  val parameterServiceUrl = properties.getOrElse("cas.service.ohjausparametrit-service", parameterServiceUrlQa)
   val organisaatioServiceUrl = properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa)
   val organisaatioSoapServiceUrl = properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa) + "/services/organisaatioService"
   val maxApplications = properties.getOrElse("suoritusrekisteri.hakijat.max.applications", "2000").toInt
@@ -58,6 +61,7 @@ object Config {
   val virtaConfig = VirtaConfig(serviceUrl = virtaServiceUrl, jarjestelma = virtaJarjestelma, tunnus = virtaTunnus, avain = virtaAvain)
   val henkiloConfig = ServiceConfig(serviceAccessUrl = serviceAccessUrl, serviceUrl = henkiloServiceUrl, user = serviceUser, password = servicePassword)
   val sijoitteluConfig = ServiceConfig(serviceAccessUrl, sijoitteluServiceUrl, serviceUser, servicePassword)
+  val parameterConfig = ServiceConfig(serviceUrl = parameterServiceUrl)
   val hakemusConfig = HakemusConfig(ServiceConfig(serviceAccessUrl, hakuappServiceUrl, serviceUser, servicePassword), maxApplications)
   val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl)
   val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl)
