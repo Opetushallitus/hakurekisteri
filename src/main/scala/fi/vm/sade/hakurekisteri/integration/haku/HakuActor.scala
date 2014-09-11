@@ -28,6 +28,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef) extends Actor {
   override def receive: Actor.Receive = {
 
     case Update => tarjonta ! GetHautQuery
+    case HakuRequest  => sender ! activeHakus
     case RestHakuResult(hakus) =>
         Future.sequence(for (
           haku <- hakus
@@ -60,6 +61,8 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef) extends Actor {
 }
 
 object Update
+
+object HakuRequest
 
 case class Haku(oid: String, aika: Ajanjakso)
 
