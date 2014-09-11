@@ -89,12 +89,12 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
       case l if l.isEmpty => Future.successful(None)
       case l if l.length < maxApplications =>
         for (actor <- healthCheck)
-          actor ! Hakemukset(cur + l.length)
+          actor ! Hakemukset(q.haku.getOrElse("unknown"), cur + l.length)
         handleNew(l)
         Future.successful(Some(cur + l.length))
       case l =>
         for (actor <- healthCheck)
-          actor ! Hakemukset(cur + l.length)
+          actor ! Hakemukset(q.haku.getOrElse("unknown"), cur + l.length)
         handleNew(l)
         restRequest[List[FullHakemus]](getUri((cur / maxApplications) + 1)).flatMap(getAll(cur + l.length))
     }
