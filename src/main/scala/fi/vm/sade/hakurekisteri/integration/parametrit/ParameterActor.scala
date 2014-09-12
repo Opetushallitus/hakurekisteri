@@ -4,6 +4,7 @@ import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import akka.actor.Actor
 import akka.pattern.pipe
 import org.joda.time.DateTime
+import com.stackmob.newman.response.HttpResponseCode
 
 
 class ParameterActor(restClient:VirkailijaRestClient) extends Actor {
@@ -18,7 +19,7 @@ class ParameterActor(restClient:VirkailijaRestClient) extends Actor {
 
 
   def getParams(hakuOid: String) =  {
-    restClient.readObject[KierrosParams](s"/api/v1/rest/parametri/$hakuOid").
+    restClient.readObject[KierrosParams](s"/api/v1/rest/parametri/$hakuOid", HttpResponseCode.Ok).
       collect { case KierrosParams(KierrosEndParams(date)) => new DateTime(date)}
 
   }

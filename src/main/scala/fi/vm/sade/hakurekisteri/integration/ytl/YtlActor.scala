@@ -56,6 +56,8 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
 
   val log = Logging(context.system, this)
 
+  if (config.isEmpty) log.warning("Starting ytlActor without config")
+
 
   var kokelaat = Map[String, Kokelas]()
   var suoritusKokelaat = Map[UUID, (Suoritus with Identified[UUID], Kokelas)]()

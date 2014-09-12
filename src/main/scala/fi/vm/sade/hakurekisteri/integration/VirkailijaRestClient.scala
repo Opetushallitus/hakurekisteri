@@ -60,5 +60,8 @@ class VirkailijaRestClient(config: ServiceConfig)(implicit val httpClient: HttpC
     else throw PreconditionFailedException(s"precondition failed for uri: $uri, response code: ${resp.code}")
   ).map(readBody[A])
 
-  def readObject[A <: AnyRef: Manifest](uri: String, okCodes: HttpResponseCode*): Future[A] = readObject[A](uri, (code: HttpResponseCode) => okCodes.contains(code))
+  def readObject[A <: AnyRef: Manifest](uri: String, okCodes: HttpResponseCode*): Future[A] = {
+    val codes = if (okCodes.isEmpty) Seq(HttpResponseCode.Ok) else okCodes
+    readObject[A](uri, (code: HttpResponseCode) => codes.contains(code))
+  }
 }
