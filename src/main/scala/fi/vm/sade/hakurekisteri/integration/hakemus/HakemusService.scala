@@ -54,7 +54,23 @@ object HakemusQuery {
   def apply(hq: HakijaQuery):HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
 }
 
-case class Trigger(newApplicant: (String, String) => Unit)
+case class Trigger(newApplicant: (FullHakemus) => Unit)
+
+object Trigger {
+
+  def apply(oidHetu: (String, String) => Unit): Trigger = Trigger(_ match {
+    case FullHakemus(_, Some(personOid), _, Some(answers), _) =>
+      for (
+        henkilo <- answers.get("henkilotiedot");
+        hetu <- henkilo.get("Henkilotunnus")
+      ) oidHetu(personOid, hetu)
+    case _ =>
+
+  })
+
+
+
+}
 
 class HakemusJournal extends InMemJournal[FullHakemus, String] {
   override def addModification(delta:Delta[FullHakemus, String]): Unit = {
@@ -63,12 +79,12 @@ class HakemusJournal extends InMemJournal[FullHakemus, String] {
 
 class HakemusActor(hakemusClient: VirkailijaRestClient,
                    maxApplications: Int = 2000,
-                   override val journal: Journal[FullHakemus, String] = new HakemusJournal(),
-                   newApplicant: (String, String) => Unit = (s,s1) => {}) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
+                   override val journal: Journal[FullHakemus, String] = new HakemusJournal()
+                   ) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
   var healthCheck: Option[ActorRef] = None
   val logger = Logging(context.system, this)
 
-  var hakijaTrigger = Seq(context.actorOf(Props(new HakijaTrigger(newApplicant))))
+  var hakijaTrigger:Seq[ActorRef] = Seq()
 
   override def receive: Receive = super.receive.orElse({
     case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) map ((hs) => {
@@ -135,18 +151,14 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
 
 case class ReloadHaku(haku: String)
 
-class HakijaTrigger(newApplicant: (String, String) => Unit) extends Actor {
+class HakijaTrigger(newApplicant: (FullHakemus) => Unit) extends Actor {
 
   override def receive: Actor.Receive = {
-    case FullHakemus(_, Some(personOid), _, Some(answers), _) =>
-      for (
-        henkilo <- answers.get("henkilotiedot");
-        hetu <- henkilo.get("Henkilotunnus")
-      ) newApplicant(personOid, hetu)
-
-
-
+    case f:FullHakemus => newApplicant(f)
   }
 }
 
 case class HakemusConfig(serviceConf: ServiceConfig, maxApplications: Int)
+
+
+
