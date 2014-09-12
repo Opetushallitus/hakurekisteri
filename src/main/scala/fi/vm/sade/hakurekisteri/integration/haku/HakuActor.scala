@@ -11,9 +11,10 @@ import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.hakemus.ReloadHaku
 import scala.concurrent.duration._
 import org.scalatra.util.RicherString._
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluQuery
 
 
-class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef) extends Actor {
+class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, sijoittelu: ActorRef) extends Actor {
 
   implicit val ec = context.dispatcher
 
@@ -22,6 +23,10 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef) 
   val reloadHakemukset = context.system.scheduler.schedule(5.minutes, 2.hours, self, ReloadHakemukset)
 
   val reloadHakus = context.system.scheduler.schedule(1.second, 1.hours, self, ReloadHakemukset)
+
+  val refreshTime = 2.hours
+
+  val refreshSijoittelu = context.system.scheduler.schedule(1.second, refreshTime, self, RefreshSijoittelu)
 
   val log = Logging(context.system, this)
 
@@ -33,7 +38,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef) 
   import FutureList._
 
   override def receive: Actor.Receive = {
-
+    case RefreshSijoittelu => refreshKeepAlives()
     case Update => tarjonta ! GetHautQuery
     case HakuRequest  => sender ! activeHakus
     case RestHakuResult(hakus: List[RestHaku]) =>
@@ -69,6 +74,10 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef) 
 
   }
 
+  def refreshKeepAlives() {
+    activeHakus.zipWithIndex foreach {case (haku:Haku, i: Int) => context.system.scheduler.scheduleOnce(i.seconds, sijoittelu, SijoitteluQuery(haku.oid))}
+  }
+
 }
 
 object Update
@@ -76,6 +85,8 @@ object Update
 object HakuRequest
 
 object ReloadHakemukset
+
+object RefreshSijoittelu
 
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
 

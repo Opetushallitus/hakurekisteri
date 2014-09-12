@@ -7,23 +7,15 @@ import scala.concurrent.Future
 import scala.compat.Platform
 import akka.event.Logging
 
-class SijoitteluActor(sijoitteluClient: VirkailijaRestClient, keepAlive: String*) extends Actor {
+class SijoitteluActor(sijoitteluClient: VirkailijaRestClient) extends Actor {
   import akka.pattern._
 
   import scala.concurrent.duration._
 
   implicit val ec = context.dispatcher
-  var keepAlives: Seq[Cancellable] = Seq()
+
   val expiration = 4.hour
   val touchInterval = expiration / 2
-
-  override def preStart(): Unit = {
-    keepAlives = keepAlive.map((haku) => context.system.scheduler.schedule(1.seconds, touchInterval, self, SijoitteluQuery(haku)))
-  }
-
-  override def postStop(): Unit = {
-    keepAlives.foreach(_.cancel())
-  }
 
   val retry: FiniteDuration = 60.seconds
   val log = Logging(context.system, this)
@@ -87,3 +79,5 @@ class SijoitteluActor(sijoitteluClient: VirkailijaRestClient, keepAlive: String*
   case class Sijoittelu(haku: String, st: SijoitteluTulos)
 }
 
+
+object Refresh
