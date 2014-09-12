@@ -117,9 +117,10 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         }
 
         Suoritukset.query({henkilo: $scope.henkiloOid}, function(suoritukset) {
-            $scope.suoritukset = suoritukset.sort(function(a, b) {
+            suoritukset.sort(function(a, b) {
                 return sortByFinDateDesc(a.valmistuminen, b.valmistuminen)
             });
+            $scope.suoritukset = suoritukset;
             enrich();
         }, function() {
             confirm(getOphMsg("suoritusrekisteri.muokkaa.suoritustietojenhakeminen", "Suoritustietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchSuoritukset() : back();
@@ -145,9 +146,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         }
 
         Opiskeluoikeudet.query({henkilo: $scope.henkiloOid}, function(opiskeluoikeudet) {
-            $scope.opiskeluoikeudet = opiskeluoikeudet.sort(function(a, b) {
-                return sortByFinDateDesc(a.alkuPaiva, b.alkuPaiva)
-            });
+            $scope.opiskeluoikeudet = opiskeluoikeudet;
             enrich();
         })
     }
