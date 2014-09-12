@@ -329,6 +329,6 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
 
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta)), "ensikertalainen")
 
-  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit)))
+  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset)))
   //integrations.hakemukset ! Trigger((oid, hetu) => ensikertalainen ! EnsikertalainenQuery(oid))
 }
