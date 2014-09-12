@@ -44,10 +44,10 @@ form(ng-submit="save()")
               div(class="row")
                 div(class="col-sm-2")
                   strong(oph-msg="suoritusrekisteri.muokkaa.alkupaiva") Alkupäivä
-                  div {{opiskeluoikeus.alkuPaiva}}
+                  div {{opiskeluoikeus.aika.alku | date:'dd.MM.yyyy'}}
                 div(class="col-sm-2")
                   strong(oph-msg="suoritusrekisteri.muokkaa.loppupaiva") Loppupäivä
-                  div {{opiskeluoikeus.loppuPaiva}}
+                  div {{opiskeluoikeus.aika.loppu | date:'dd.MM.yyyy'}}
                 div(class="col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.myontaja") Myöntäjä
                   div {{(opiskeluoikeus.organisaatio.oppilaitosKoodi + ' ' + (opiskeluoikeus.organisaatio.nimi.fi || opiskeluoikeus.organisaatio.nimi.sv || opiskeluoikeus.organisaatio.nimi.en)) || opiskeluoikeus.myontaja}}
