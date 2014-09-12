@@ -18,7 +18,8 @@ object GetHautQuery
 
 case class RestHakuResult(result: List[RestHaku])
 
-case class RestHaku(oid:Option[String], hakuaikas: List[RestHakuAika], nimi: Map[String, String])
+case class RestHaku(oid:Option[String], hakuaikas: List[RestHakuAika], nimi: Map[String, String], hakukausiUri: String,
+hakukausiVuosi: Int)
 
 case class RestHakuAika(alkuPvm:Long)
 

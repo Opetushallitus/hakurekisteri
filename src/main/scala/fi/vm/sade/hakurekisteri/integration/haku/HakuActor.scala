@@ -5,7 +5,7 @@ import akka.actor.{ActorRef, Actor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{RestHaku, GetHautQuery, RestHakuResult}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
 import akka.pattern.pipe
-import fi.vm.sade.hakurekisteri.dates.{InFuture, Ajanjakso}
+import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import org.joda.time.{DateTime, ReadableInstant}
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.hakemus.ReloadHaku
@@ -30,22 +30,14 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef) 
     super.preStart()
   }
 
+  import FutureList._
+
   override def receive: Actor.Receive = {
 
     case Update => tarjonta ! GetHautQuery
     case HakuRequest  => sender ! activeHakus
     case RestHakuResult(hakus: List[RestHaku]) =>
-        Future.sequence(for (
-          haku <- hakus
-          if haku.oid.isDefined && !haku.hakuaikas.isEmpty
-        ) yield {
-          val startTime = new DateTime(haku.hakuaikas.map(_.alkuPvm).sorted.head)
-          getKierrosEnd(haku.oid.get).recover{ case _ => InFuture }.map((end) => {
-            val ajanjakso = Ajanjakso(startTime, end)
-            Haku(Kieliversiot(haku.nimi.get("kieli_fi").flatMap(Option(_)).flatMap(_.blankOption), haku.nimi.get("kieli_sv").flatMap(Option(_)).flatMap(_.blankOption), haku.nimi.get("kieli_en").flatMap(Option(_)).flatMap(_.blankOption)),haku.oid.get, ajanjakso)
-          })
-        }) pipeTo self
-
+        enrich(hakus).waitForAll pipeTo self
     case s:Seq[Haku] =>
       activeHakus =  s.filter(_.aika.isCurrently)
       log.debug(s"current hakus ${activeHakus.mkString(", ")}")
@@ -59,12 +51,21 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef) 
   }
 
 
+  def enrich(hakus: List[RestHaku]): List[Future[Haku]] = {
+    for (
+      haku <- hakus
+      if haku.oid.isDefined && !haku.hakuaikas.isEmpty
+    ) yield getKierrosEnd(haku.oid.get).map(Haku(haku))
+  }
+
   def getKierrosEnd(hakuOid: String): Future[ReadableInstant] = {
     import akka.pattern.ask
     import akka.util.Timeout
     import scala.concurrent.duration._
     implicit val to:Timeout = 2.minutes
-    (parametrit ? KierrosRequest(hakuOid)).mapTo[HakuParams].map(_.end)
+    (parametrit ? KierrosRequest(hakuOid)).mapTo[HakuParams].map(_.end).recover {
+      case _ => InFuture
+    }
 
   }
 
@@ -78,5 +79,34 @@ object ReloadHakemukset
 
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
 
-case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso)
+case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int)
 
+object Haku {
+
+  def apply(haku: RestHaku)(loppu: ReadableInstant): Haku = {
+    val ajanjakso = Ajanjakso(findStart(haku), loppu)
+    Haku(
+      Kieliversiot(haku.nimi.get("kieli_fi").flatMap(Option(_)).flatMap(_.blankOption), haku.nimi.get("kieli_sv").flatMap(Option(_)).flatMap(_.blankOption), haku.nimi.get("kieli_en").flatMap(Option(_)).flatMap(_.blankOption)), haku.oid.get,
+      ajanjakso,
+      haku.hakukausiUri,
+      haku.hakukausiVuosi
+    )
+  }
+
+  def findStart(haku: RestHaku): DateTime = {
+    new DateTime(haku.hakuaikas.map(_.alkuPvm).sorted.head)
+  }
+}
+
+
+class FutureList[A](futures: Seq[Future[A]]) {
+
+
+  def waitForAll:Future[Seq[A]] = Future.sequence(futures)
+}
+
+object FutureList {
+
+  implicit def futures2FutureList[A](futures: Seq[Future[A]]): FutureList[A] = new FutureList(futures)
+
+}
