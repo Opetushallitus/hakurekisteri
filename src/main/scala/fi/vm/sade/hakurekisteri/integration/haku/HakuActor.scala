@@ -8,13 +8,18 @@ import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.dates.{InFuture, Ajanjakso}
 import org.joda.time.{DateTime, ReadableInstant}
 import akka.event.Logging
+import fi.vm.sade.hakurekisteri.integration.hakemus.ReloadHaku
+import scala.concurrent.duration._
 
 
-class HakuActor(tarjonta: ActorRef, parametrit: ActorRef) extends Actor {
+class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef) extends Actor {
 
   implicit val ec = context.dispatcher
 
   var activeHakus:Seq[Haku] = Seq()
+
+  val reloadHakemukset = context.system.scheduler.schedule(1.second, 2.hours, self, ReloadHakemukset)
+
 
   val log = Logging(context.system, this)
 
@@ -43,6 +48,11 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef) extends Actor {
       activeHakus =  s.filter(_.aika.isCurrently)
       log.debug(s"current hakus ${activeHakus.mkString(", ")}")
 
+    case ReloadHakemukset =>
+      for(
+        haku <- activeHakus
+      )   hakemukset ! ReloadHaku(haku.oid)
+
 
   }
 
@@ -61,6 +71,8 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef) extends Actor {
 object Update
 
 object HakuRequest
+
+object ReloadHakemukset
 
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
 
