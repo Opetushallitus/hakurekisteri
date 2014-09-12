@@ -10,6 +10,7 @@ import org.joda.time.{DateTime, ReadableInstant}
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.hakemus.ReloadHaku
 import scala.concurrent.duration._
+import org.scalatra.util.RicherString._
 
 
 class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef) extends Actor {
@@ -18,8 +19,9 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef) 
 
   var activeHakus:Seq[Haku] = Seq()
 
-  val reloadHakemukset = context.system.scheduler.schedule(1.second, 2.hours, self, ReloadHakemukset)
+  val reloadHakemukset = context.system.scheduler.schedule(5.minutes, 2.hours, self, ReloadHakemukset)
 
+  val reloadHakus = context.system.scheduler.schedule(1.second, 1.hours, self, ReloadHakemukset)
 
   val log = Logging(context.system, this)
 
@@ -40,7 +42,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef) 
           val startTime = new DateTime(haku.hakuaikas.map(_.alkuPvm).sorted.head)
           getKierrosEnd(haku.oid.get).recover{ case _ => InFuture }.map((end) => {
             val ajanjakso = Ajanjakso(startTime, end)
-            Haku(Kieliversiot(haku.nimi.get("kieli_fi").flatMap(Option(_)), haku.nimi.get("kieli_sv").flatMap(Option(_)), haku.nimi.get("kieli_en").flatMap(Option(_))),haku.oid.get, ajanjakso)
+            Haku(Kieliversiot(haku.nimi.get("kieli_fi").flatMap(Option(_)).flatMap(_.blankOption), haku.nimi.get("kieli_sv").flatMap(Option(_)).flatMap(_.blankOption), haku.nimi.get("kieli_en").flatMap(Option(_)).flatMap(_.blankOption)),haku.oid.get, ajanjakso)
           })
         }) pipeTo self
 
