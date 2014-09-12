@@ -14,16 +14,22 @@ import org.joda.time.{DateTime, LocalDate}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 
 case class EnsikertalainenQuery(henkiloOid: String)
 
-class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaActor: ActorRef)(implicit val ec: ExecutionContext) extends Actor {
+class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaActor: ActorRef, hakemukset : ActorRef)(implicit val ec: ExecutionContext) extends Actor {
   val logger = Logging(context.system, this)
   val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
   implicit val defaultTimeout: Timeout = 15.seconds
 
   override def receive: Receive = {
     case EnsikertalainenQuery(oid) => onkoEnsikertalainen(oid) map Ensikertalainen pipeTo sender
+  }
+
+  override def preStart(): Unit = {
+    hakemukset ! Trigger((oid, hetu) => self ! EnsikertalainenQuery(oid))
+    super.preStart()
   }
 
   def getHetu(henkilo: String): Future[String] = (henkiloActor ? henkilo).mapTo[HenkiloResponse].map(_.hetu match {
