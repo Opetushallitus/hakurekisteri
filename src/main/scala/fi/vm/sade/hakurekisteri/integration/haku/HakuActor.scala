@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import akka.actor.{ActorRef, Actor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{RestHaku, GetHautQuery, RestHakuResult}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
@@ -102,7 +102,7 @@ object Haku {
 class FutureList[A](futures: Seq[Future[A]]) {
 
 
-  def waitForAll:Future[Seq[A]] = Future.sequence(futures)
+  def waitForAll(implicit ec: ExecutionContext):Future[Seq[A]] = Future.sequence(futures)
 }
 
 object FutureList {
