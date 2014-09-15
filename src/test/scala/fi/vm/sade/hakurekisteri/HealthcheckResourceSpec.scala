@@ -46,7 +46,7 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
   val ytl = system.actorOf(Props(new Actor {
 
     override def receive: Actor.Receive = {
-      case Report => sender ! YtlReport(Batch(items = Seq()), Seq(), None)
+      case Report => sender ! YtlReport(Batch(items = Set()), Seq(), None)
 
 
     }
