@@ -117,32 +117,37 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
       {for (kokelas <- batch.items) yield <Hetu>{kokelas.hetu}</Hetu>}
     </Haku>
 
-  def uploadFile(message: Elem): Array[Byte] = {
-    val os = new ByteArrayOutputStream()
-    val writer = new PrintWriter(os)
-    try XML.write(writer, message, "ISO-8859-1", xmlDecl = true, doctype = null)
-    finally writer.close()
-    os.toByteArray
+  def uploadFile(batch:Batch[KokelasRequest], localStore: String): (String, String) = {
+    val xml = batchMessage(batch)
+    val fileName = s"siirto${batch.id.toString}.xml"
+    val filePath = s"${localStore}/$fileName"
+    XML.save(filePath, xml,"ISO-8859-1", xmlDecl = true, doctype = null)
+    (fileName, filePath)
   }
 
   def send(batch: Batch[KokelasRequest]): Unit = config match {
-    case Some(YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, _)) =>
+    case Some(YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, _, localStore)) =>
+
+      val (filename, localCopy) = uploadFile(batch, localStore)
       SSH.ftp(host = host, username =username, password = SSHPassword(Some(password))){
         (sftp) =>
-          sftp.putBytes(uploadFile(batchMessage(batch)), s"$inbox/siirto${batch.id.toString}.xml")
+          sftp.send(localCopy, s"$inbox/$filename")
       }
     case None => log.warning("sending files to YTL called without config")
   }
 
   def poll(batches: Seq[Batch[KokelasRequest]]): Unit = config match {
-    case Some(YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, _)) =>
+    case Some(YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, _, localStore)) =>
       SSH.ftp(host = host, username =username, password = SSHPassword(Some(password))){
         (sftp) =>
+          val filename = s"outsiirto${batch.id.toString}.xml"
+          val path: String = s"$outbox/$filename"
           for (
             batch <- batches
           ) for (
-            result <- sftp.get(s"$outbox/outsiirto${batch.id.toString}.xml")
+            result <- sftp.get(path)
           ) {
+            sftp.receive(path, s"$localStore/$filename")
             val response = XML.loadString(result)
             handleResponse(Some(batch), response)
             sent = sent.filterNot(_.id == batch.id)
@@ -325,4 +330,4 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
   }
 }
 
-case class YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, sendTimes: Seq[LocalTime])
+case class YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, sendTimes: Seq[LocalTime], localStore:String)
