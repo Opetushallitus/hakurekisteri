@@ -1,3 +1,5 @@
+import java.util.concurrent.atomic.AtomicInteger
+
 import _root_.akka.camel.CamelExtension
 import _root_.akka.routing.BroadcastRouter
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
@@ -6,7 +8,7 @@ import fi.vm.sade.hakurekisteri.integration.parametrit.ParameterActor
 import fi.vm.sade.hakurekisteri.integration.ytl.{YTLConfig, KokelasRequest, YtlActor}
 import java.nio.file.Path
 import java.util.UUID
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{ThreadFactory, Executors, TimeUnit}
 import javax.servlet.{Servlet, DispatcherType, ServletContext, ServletContextEvent}
 
 import _root_.akka.actor.{ActorRef, ActorSystem, Props}
@@ -287,8 +289,19 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        rekisterit: Registers,
                        system: ActorSystem) extends Integrations {
 
-  def getClient(): HttpClient = {
-    new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
+  def getClient: HttpClient = getClient("default")
+
+  def getClient(poolName:String = "default"): HttpClient = {
+    if (poolName == "default") new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
+    else {
+      val threadNumber = new AtomicInteger(1)
+      val pool = Executors.newFixedThreadPool(8, new ThreadFactory() {
+        override def newThread(r: Runnable): Thread = {
+          new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
+        }
+      })
+      new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)(ExecutionContext.fromExecutorService(pool))
+    }
   }
 
   implicit val ec: ExecutionContext = system.dispatcher
@@ -297,7 +310,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(getClient, ec))))
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient, ec), organisaatiot, tarjonta)), "virta")
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient("virta"), ec), organisaatiot, tarjonta)), "virta")
 
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig)(getClient, ec))), "henkilo")
 
