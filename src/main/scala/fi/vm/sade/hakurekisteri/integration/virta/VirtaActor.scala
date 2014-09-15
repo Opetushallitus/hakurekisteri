@@ -18,6 +18,8 @@ case class VirtaQuery(oppijanumero: Option[String], hetu: Option[String]) {
 
 case class KomoNotFoundException(message: String) extends Exception(message)
 
+case class VirtaData(opiskeluOikeudet: Seq[Opiskeluoikeus], suoritukset: Seq[Suoritus])
+
 class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, tarjontaActor: ActorRef) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
@@ -64,16 +66,15 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, tarjonta
     case _ => "KESKEN"
   }
 
-  def convertVirtaResult(f: Future[Option[VirtaResult]])(oppijanumero: Option[String]): Future[(Seq[Opiskeluoikeus], Seq[Suoritus])] = f.flatMap {
-    case None => Future.successful((Seq(), Seq()))
-    case Some(r) => {
+  def convertVirtaResult(f: Future[Option[VirtaResult]])(oppijanumero: Option[String]): Future[VirtaData] = f.flatMap {
+    case None => Future.successful(VirtaData(Seq(), Seq()))
+    case Some(r) =>
       val opiskeluoikeudet: Future[Seq[Opiskeluoikeus]] = Future.sequence(r.opiskeluoikeudet.map(opiskeluoikeus(oppijanumero)))
       val suoritukset: Future[Seq[Suoritus]] = Future.sequence(r.tutkinnot.map(tutkinto(oppijanumero)))
       for {
         o <- opiskeluoikeudet
         s <- suoritukset
-      } yield (o, s)
-    }
+      } yield VirtaData(o, s)
   }
 
   import akka.pattern.ask
@@ -83,10 +84,10 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, tarjonta
   def resolveOppilaitosOid(oppilaitosnumero: String): Future[String] = oppilaitosnumero match {
     case o if Seq("XX", "UK", "UM").contains(o) => Future.successful(tuntematon)
     case o =>
-      (organisaatioActor ? o)(20.seconds).mapTo[Option[Organisaatio]].map(_ match {
-        case Some(org) => org.oid
-        case _ => log.error(s"oppilaitos not found with oppilaitosnumero $o"); throw OppilaitosNotFoundException(s"oppilaitos not found with oppilaitosnumero $o")
-      })
+      (organisaatioActor ? o)(20.seconds).mapTo[Option[Organisaatio]] map {
+          case Some(org) => org.oid
+          case _ => log.error(s"oppilaitos not found with oppilaitosnumero $o"); throw OppilaitosNotFoundException(s"oppilaitos not found with oppilaitosnumero $o")
+      }
   }
 
   def resolveKomoOid(koulutuskoodi: String): Future[String] = {
