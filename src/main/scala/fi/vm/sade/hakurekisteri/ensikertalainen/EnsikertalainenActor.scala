@@ -24,7 +24,9 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   implicit val defaultTimeout: Timeout = 15.seconds
 
   override def receive: Receive = {
-    case EnsikertalainenQuery(oid) => onkoEnsikertalainen(oid) map Ensikertalainen pipeTo sender
+    case EnsikertalainenQuery(oid) =>
+      logger.debug(s"EnsikertalainenQuery($oid)")
+      onkoEnsikertalainen(oid) map Ensikertalainen pipeTo sender
   }
 
   override def preStart(): Unit = {
