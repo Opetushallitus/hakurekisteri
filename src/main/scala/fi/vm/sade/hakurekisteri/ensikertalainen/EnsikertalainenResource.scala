@@ -43,8 +43,8 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef)
     try {
       val henkiloOid = params("henkilo")
       new AsyncResult() {
-        override implicit def timeout: Duration = 30.seconds
-        override val is = (ensikertalainenActor.?(henkiloOid)(30.seconds)).mapTo[Ensikertalainen]
+        override implicit def timeout: Duration = 60.seconds
+        override val is = (ensikertalainenActor.?(henkiloOid)(60.seconds)).mapTo[Ensikertalainen]
       }
     } catch {
       case t: NoSuchElementException => throw ParamMissingException("parameter henkilo missing")

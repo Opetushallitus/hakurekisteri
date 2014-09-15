@@ -21,7 +21,6 @@ case class EnsikertalainenQuery(henkiloOid: String)
 class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaActor: ActorRef, hakemukset : ActorRef)(implicit val ec: ExecutionContext) extends Actor {
   val logger = Logging(context.system, this)
   val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
-  implicit val defaultTimeout: Timeout = 15.seconds
 
   override def receive: Receive = {
     case EnsikertalainenQuery(oid) => onkoEnsikertalainen(oid) map Ensikertalainen pipeTo sender
@@ -50,7 +49,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   def findKomos(suoritukset: Seq[Suoritus]): Future[Seq[(Komo, Suoritus)]] = {
     Future.sequence(for (
       suoritus <- suoritukset
-    ) yield (tarjontaActor ? GetKomoQuery(suoritus.komo))(10.seconds).mapTo[Option[Komo]].map((_, suoritus)).collect {
+    ) yield (tarjontaActor ? GetKomoQuery(suoritus.komo))(30.seconds).mapTo[Option[Komo]].map((_, suoritus)).collect {
         case (Some(komo), foundsuoritus) => (komo, foundsuoritus)
       })
   }
@@ -81,7 +80,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   }
 
   def checkEnsikertalainenFromVirta(henkiloOid: String): Future[Boolean] = {
-    val virtaResult: Future[(Seq[Opiskeluoikeus], Seq[Suoritus])] = getHetu(henkiloOid).flatMap((hetu) => (virtaActor ? VirtaQuery(Some(henkiloOid), Some(hetu)))(10.seconds).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])])
+    val virtaResult: Future[(Seq[Opiskeluoikeus], Seq[Suoritus])] = getHetu(henkiloOid).flatMap((hetu) => (virtaActor ? VirtaQuery(Some(henkiloOid), Some(hetu)))(60.seconds).mapTo[(Seq[Opiskeluoikeus], Seq[Suoritus])])
     for ((opiskeluoikeudet, suoritukset) <- virtaResult) yield {
       val filteredOpiskeluoikeudet = opiskeluoikeudet.filter(_.aika.alku.isAfter(kesa2014))
       saveVirtaResult(filteredOpiskeluoikeudet, suoritukset)

@@ -83,7 +83,7 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, tarjonta
   def resolveOppilaitosOid(oppilaitosnumero: String): Future[String] = oppilaitosnumero match {
     case o if Seq("XX", "UK", "UM").contains(o) => Future.successful(tuntematon)
     case o =>
-      (organisaatioActor ? o)(10.seconds).mapTo[Option[Organisaatio]].map(_ match {
+      (organisaatioActor ? o)(20.seconds).mapTo[Option[Organisaatio]].map(_ match {
         case Some(org) => org.oid
         case _ => log.error(s"oppilaitos not found with oppilaitosnumero $o"); throw OppilaitosNotFoundException(s"oppilaitos not found with oppilaitosnumero $o")
       })
