@@ -61,7 +61,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
       self ! Send
       nextSend = nextSendTime
     case k:KokelasRequest if config.isDefined =>
-      batch = k +: batch
+      batch = batch + k
     case Send if config.isDefined && !batch.items.isEmpty =>
                  log.debug(s"sending batch ${batch.id} with ${batch.items.size} applicants")
                  send(batch)
@@ -190,7 +190,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
 }
 
 case class Batch[A](id: UUID = UUID.randomUUID(), items: Set[A] = Set[A]()) {
-  def +:(elem: A): Batch[A] = Batch(this.id, this.items + elem)
+  def +(elem: A): Batch[A] = Batch(this.id, this.items + elem)
 }
 
 case class KokelasRequest(oid: String, hetu: String)
