@@ -20,13 +20,12 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
   var activeHakus:Seq[Haku] = Seq()
 
-  val reloadHakemukset = context.system.scheduler.schedule(5.minutes, 2.hours, self, ReloadHakemukset)
-
   val reloadHakus = context.system.scheduler.schedule(1.second, 1.hours, self, ReloadHakemukset)
 
   val refreshTime = 2.hours
 
-  val refreshSijoittelu = context.system.scheduler.schedule(1.second, refreshTime, self, RefreshSijoittelu)
+  var starting = true
+
 
   val log = Logging(context.system, this)
 
@@ -46,6 +45,11 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
     case s:Seq[Haku] =>
       activeHakus =  s.filter(_.aika.isCurrently)
       log.debug(s"current hakus ${activeHakus.mkString(", ")}")
+      if (starting) {
+        starting = false
+        context.system.scheduler.schedule(1.second, refreshTime, self, RefreshSijoittelu)
+        context.system.scheduler.schedule(1.second, 2.hours, self, ReloadHakemukset)
+      }
 
     case ReloadHakemukset =>
       for(
