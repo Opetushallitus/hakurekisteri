@@ -19,6 +19,7 @@ ldap.manager-password={{ldap_manager_password}}
 ldap.manager.userdn={{ldap_manager_userdn}}
 server.name={{ansible_hostname}}
 suoritusrekisteri.hakijat.max.applications=2000
+suoritusrekisteri.ytl.localstore={{suoritusrekisteri_ytl_localstore}}
 
 # Oletusarvoja
 accessRight.webservice.url.backend=https\://${host.virkailija}/authentication-service/services/accessRightService
