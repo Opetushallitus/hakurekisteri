@@ -66,8 +66,16 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   }
 
   def onkoEnsikertalainen(henkiloOid: String): Future[Boolean] = {
-    val tutkinnot: Future[Seq[Suoritus]] = getKkTutkinnot(henkiloOid)
-    val opiskeluoikeudet: Future[Seq[Opiskeluoikeus]] = getKkOpiskeluoikeudet2014KesaJalkeen(henkiloOid)
+    val tutkinnot: Future[Seq[Suoritus]] = getKkTutkinnot(henkiloOid).recover {
+      case t:Throwable =>
+        logger.warning("failed to find suoritus from local registers, checking virta", t)
+        Seq()
+    }
+    val opiskeluoikeudet: Future[Seq[Opiskeluoikeus]] = getKkOpiskeluoikeudet2014KesaJalkeen(henkiloOid).recover {
+      case t:Throwable =>
+        logger.warning("failed to find opiskeluoikeus from local registers, checking virta", t)
+        Seq()
+    }
 
     tutkinnot.foreach(t => logger.debug(s"tutkinnot: $t"))
     opiskeluoikeudet.foreach(o => logger.debug(s"opiskeluoikeudet: $o"))
