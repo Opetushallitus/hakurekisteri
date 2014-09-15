@@ -21,6 +21,7 @@ case class EnsikertalainenQuery(henkiloOid: String)
 class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaActor: ActorRef, hakemukset : ActorRef)(implicit val ec: ExecutionContext) extends Actor {
   val logger = Logging(context.system, this)
   val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
+  implicit val defaultTimeout: Timeout = 15.seconds
 
   override def receive: Receive = {
     case EnsikertalainenQuery(oid) => onkoEnsikertalainen(oid) map Ensikertalainen pipeTo sender
@@ -49,7 +50,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   def findKomos(suoritukset: Seq[Suoritus]): Future[Seq[(Komo, Suoritus)]] = {
     Future.sequence(for (
       suoritus <- suoritukset
-    ) yield (tarjontaActor ? GetKomoQuery(suoritus.komo))(30.seconds).mapTo[Option[Komo]].map((_, suoritus)).collect {
+    ) yield (tarjontaActor ? GetKomoQuery(suoritus.komo)).mapTo[Option[Komo]].map((_, suoritus)).collect {
         case (Some(komo), foundsuoritus) => (komo, foundsuoritus)
       })
   }
