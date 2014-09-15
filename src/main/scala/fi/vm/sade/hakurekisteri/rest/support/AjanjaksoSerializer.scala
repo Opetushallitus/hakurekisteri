@@ -17,7 +17,6 @@ class AjanjaksoSerializer extends CustomSerializer[Ajanjakso](format => (
   },
   {
     case Ajanjakso(alku, InFuture) =>
-      println("foo")
       JObject(JField("alku", JString(alku.toString)) :: Nil)
     case Ajanjakso(alku, loppu) =>
       JObject(JField("alku", JString(alku.toString)) :: JField("loppu", JString(loppu.toString)) :: Nil)
