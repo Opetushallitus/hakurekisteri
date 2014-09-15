@@ -20,7 +20,7 @@ class ParameterActor(restClient:VirkailijaRestClient) extends Actor {
 
   def getParams(hakuOid: String) =  {
     restClient.readObject[KierrosParams](s"/api/v1/rest/parametri/$hakuOid", HttpResponseCode.Ok).
-      collect { case KierrosParams(KierrosEndParams(date)) => new DateTime(date)}
+      collect { case KierrosParams(Some(KierrosEndParams(date))) => new DateTime(date)}
 
   }
 
@@ -33,7 +33,7 @@ case class KierrosRequest(haku: String)
 
 
 case class KierrosEndParams(date: Long)
-case class KierrosParams(PH_HKP:KierrosEndParams)
+case class KierrosParams(PH_HKP:Option[KierrosEndParams])
 
 case class HakuParams(end:DateTime)
 
