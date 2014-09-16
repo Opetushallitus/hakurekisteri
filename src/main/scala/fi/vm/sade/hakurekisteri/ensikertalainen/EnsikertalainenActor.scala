@@ -44,21 +44,19 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     val resolver = Promise[Ensikertalainen]
     val result:Future[Ensikertalainen] = resolver.future
 
-    result.onComplete(
-      _ =>
-        context.stop(self)
-    )
-
     logger.debug("starting queryActor")
 
     override def receive: Actor.Receive = {
       case henkiloOid: String =>
         oid = Some(henkiloOid)
         logger.debug(s"starting query for requestor: $sender with oid $henkiloOid")
-        result pipeTo sender
+        result pipeTo sender onComplete {res =>
+          logger.debug(s"resolved with $res")
+          context.stop(self)}
         requestSuoritukset(henkiloOid)
         requestOpiskeluOikeudet(henkiloOid)
       case s: Seq[_] =>
+        logger.debug(s"got sequence of type ${s.getClass}: ${s.toList}")
         if (s.forall(_.isInstanceOf[Suoritus])) {
           logger.debug(s"find suoritukset $s")
           val suor = s.map(_.asInstanceOf[Suoritus])
