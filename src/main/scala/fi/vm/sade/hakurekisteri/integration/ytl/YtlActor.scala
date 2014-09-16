@@ -10,16 +10,18 @@ import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
-import org.joda.time.{LocalTime, DateTime, MonthDay, LocalDate}
+import org.joda.time._
 import fi.vm.sade.hakurekisteri.storage.Identified
+import fr.janalyse.ssh.{SSHPassword, SSH}
+import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.arvosana.ArvioYo
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.henkilo.HetuQuery
 import scala.util.Failure
 import scala.Some
 import scala.util.Success
-import fr.janalyse.ssh.{SSHPassword, SSH}
-import scala.concurrent.duration._
+import akka.actor.ActorIdentity
+import akka.actor.Identify
 
 
 case class YtlReport(current: Batch[KokelasRequest], waitingforAnswers: Seq[Batch[KokelasRequest]], nextSend: Option[DateTime])
@@ -38,14 +40,12 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   var nextSend: Option[DateTime] = nextSendTime
 
   def nextSendTime: Option[DateTime] = {
-    config.map(_.sendTimes).filter(!_.isEmpty).map{
-      (times) =>
-        times.map(_.toDateTimeToday).find((t) => {
-          val searchTime: DateTime = DateTime.now
-          t.isAfter(searchTime)
-        }).getOrElse(times.head.toDateTimeToday.plusDays(1))
-    }
+    val times = config.map(_.sendTimes).filter(!_.isEmpty)
+    Timer.countNextSend(times)
   }
+
+
+
 
   val log = Logging(context.system, this)
 
@@ -119,7 +119,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   def uploadFile(batch:Batch[KokelasRequest], localStore: String): (String, String) = {
     val xml = batchMessage(batch)
     val fileName = s"siirto${batch.id.toString}.xml"
-    val filePath = s"${localStore}/$fileName"
+    val filePath = s"$localStore/$fileName"
     XML.save(filePath, xml,"ISO-8859-1", xmlDecl = true, doctype = null)
     (fileName, filePath)
   }
@@ -214,6 +214,29 @@ object CheckSend
 
 object CheckPoll
 
+object Timer {
+
+
+  implicit val dtOrder:Ordering[LocalTime] = new Ordering[LocalTime] {
+    override def compare(x: LocalTime, y: LocalTime) = x match {
+      case _ if x isEqual y => 0
+      case _ if x isAfter y => 1
+      case _ if y isAfter x => -1
+    }
+  }
+
+
+  def countNextSend(timeConf: Option[Seq[LocalTime]]): Option[DateTime] = {
+    timeConf.map {
+      (times) =>
+        times.sorted.map(_.toDateTimeToday).find((t) => {
+          val searchTime: DateTime = DateTime.now
+          t.isAfter(searchTime)
+        }).getOrElse(times.sorted.head.toDateTimeToday.plusDays(1))
+    }
+  }
+}
+
 object YTLXml {
 
   def parseKokelaat(data:Elem, oidFinder: String => Future[String])(implicit ec: ExecutionContext): Seq[Future[Kokelas]] = {
@@ -294,6 +317,8 @@ object YTLXml {
         Koe(arvio, (koe \ "KOETUNNUS").text, valinnainen = valinnaisuus, parseKausi((koe \ "TUTKINTOKERTA").text).get)
     }
   }
+
+
 }
 
 case class Koe(arvio: ArvioYo, aine: String, valinnainen: Boolean, myonnetty: LocalDate) {
