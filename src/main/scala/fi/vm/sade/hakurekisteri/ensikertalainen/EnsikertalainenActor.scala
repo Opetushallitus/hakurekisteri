@@ -1,12 +1,13 @@
 package fi.vm.sade.hakurekisteri.ensikertalainen
 
-import akka.actor.{Props, Actor, ActorRef}
+import akka.actor.{Actor, Props, ActorRef}
 import akka.event.Logging
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{KomoResponse, Komo, GetKomoQuery}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaData, VirtaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
+import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
 import org.joda.time.{DateTime, LocalDate}
 import akka.pattern.pipe
@@ -55,22 +56,18 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
           context.stop(self)}
         requestSuoritukset(henkiloOid)
         requestOpiskeluOikeudet(henkiloOid)
-      case s: Seq[_] =>
-        logger.debug(s"got sequence of type ${s.getClass}: ${s.toList}")
-        if (s.forall(_.isInstanceOf[Suoritus])) {
-          logger.debug(s"find suoritukset $s")
-          val suor = s.map(_.asInstanceOf[Suoritus])
-          suoritukset = Some(suor)
-          requestKomos(suor)
-        } else if (s.forall(_.isInstanceOf[Opiskeluoikeus])) {
-          logger.debug(s"find opiskeluoikeudet $s")
-          opiskeluOikeudet = Some(s.map(_.asInstanceOf[Opiskeluoikeus]).filter(_.aika.alku.isAfter(kesa2014)))
-          if (!opiskeluOikeudet.getOrElse(Seq()).isEmpty) resolveQuery(ensikertalainen = false)
-          else if (foundAllKomos) {
-            logger.debug("found all komos for opiskeluoikeudet, fetching hetu")
-            fetchHetu()
-          }
-        } else unhandled(s)
+      case SuoritusResponse(suor) =>
+        logger.debug(s"find suoritukset $suor")
+        suoritukset = Some(suor)
+        requestKomos(suor)
+      case OpiskeluoikeusResponse(oo) =>
+        logger.debug(s"find opiskeluoikeudet $oo")
+        opiskeluOikeudet = Some(oo.filter(_.aika.alku.isAfter(kesa2014)))
+        if (!opiskeluOikeudet.getOrElse(Seq()).isEmpty) resolveQuery(ensikertalainen = false)
+        else if (foundAllKomos) {
+          logger.debug("found all komos for opiskeluoikeudet, fetching hetu")
+          fetchHetu()
+        }
       case k:KomoResponse =>
         logger.debug(s"got komo $k")
         komos += (k.oid -> k.komo)
@@ -127,8 +124,11 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     }
 
     def requestOpiskeluOikeudet(henkiloOid: String)  {
-      opiskeluoikeusActor ! OpiskeluoikeusQuery(henkilo = Some(henkiloOid))
+      context.actorOf(Props(new FetchResource[Opiskeluoikeus, OpiskeluoikeusResponse](OpiskeluoikeusQuery(henkilo = Some(henkiloOid)), OpiskeluoikeusResponse, self, opiskeluoikeusActor)))
     }
+
+
+    case class OpiskeluoikeusResponse(opiskeluoikeudet: Seq[Opiskeluoikeus])
 
     def requestKomos(suoritukset: Seq[Suoritus]) {
       for (
@@ -137,13 +137,29 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     }
 
     def requestSuoritukset(henkiloOid: String) {
-      suoritusActor ! SuoritusQuery(henkilo = Some(henkiloOid))
+      context.actorOf(Props(new FetchResource[Suoritus, SuoritusResponse](SuoritusQuery(henkilo = Some(henkiloOid)), SuoritusResponse, self, suoritusActor)))
     }
+
+    case class SuoritusResponse(suoritukset: Seq[Suoritus])
 
     def saveVirtaResult(opiskeluoikeudet: Seq[Opiskeluoikeus], suoritukset: Seq[Suoritus]) {
       logger.debug(s"saving virta result: opiskeluoikeudet size ${opiskeluoikeudet.size}, suoritukset size ${suoritukset.size}")
       opiskeluoikeudet.foreach(opiskeluoikeusActor ! _)
       suoritukset.foreach(suoritusActor ! _)
+    }
+  }
+
+  class FetchResource[T, R](query: Query[T], wrapper: (Seq[T]) => R, receiver: ActorRef, resourceActor: ActorRef) extends Actor {
+
+    override def preStart(): Unit = {
+      resourceActor ! query
+    }
+
+    override def receive: Actor.Receive = {
+      case s:Seq[T] =>
+        receiver ! wrapper(s)
+        context.stop(self)
+
     }
   }
 
