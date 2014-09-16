@@ -27,6 +27,8 @@ case class TarjontaSearchResponse(result: Seq[Komo])
 
 case class TarjontaKomoResponse(result: Option[Komo])
 
+case class KomoResponse(oid: String, komo: Option[Komo])
+
 class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: ExecutionContext) extends Actor {
   override def receive: Receive = {
     case q: SearchKomoQuery => searchKomo(q.koulutus) pipeTo sender
@@ -38,8 +40,8 @@ class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
     restClient.readObject[TarjontaSearchResponse](s"/rest/v1/komo/search?koulutus=${URLEncoder.encode(koulutus, "UTF-8")}", HttpResponseCode.Ok).map(_.result)
   }
 
-  def getKomo(oid: String): Future[Option[Komo]] = {
-    restClient.readObject[TarjontaKomoResponse](s"/rest/v1/komo/${URLEncoder.encode(oid, "UTF-8")}", HttpResponseCode.Ok).map(_.result)
+  def getKomo(oid: String): Future[KomoResponse] = {
+    restClient.readObject[TarjontaKomoResponse](s"/rest/v1/komo/${URLEncoder.encode(oid, "UTF-8")}", HttpResponseCode.Ok).map(res => KomoResponse(oid, res.result))
   }
 
 

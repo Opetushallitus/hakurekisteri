@@ -20,7 +20,7 @@ case class KomoNotFoundException(message: String) extends Exception(message)
 
 case class VirtaData(opiskeluOikeudet: Seq[Opiskeluoikeus], suoritukset: Seq[Suoritus])
 
-class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, tarjontaActor: ActorRef) extends Actor {
+class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
 
@@ -91,10 +91,6 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, tarjonta
   }
 
   def resolveKomoOid(koulutuskoodi: String): Future[String] = {
-    /*(tarjontaActor ? SearchKomoQuery(koulutuskoodi))(10.seconds).mapTo[Seq[Komo]].map(_.headOption match {
-      case Some(komo) => komo.oid
-      case _ => throw KomoNotFoundException(s"komo not found with koulutuskoodi $koulutuskoodi") // FIXME should fallback to saving koulutuskoodi instead
-    })*/
     Future.successful(s"koulutus_$koulutuskoodi")
   }
 }
