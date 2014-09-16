@@ -43,29 +43,44 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
 
     override def receive: Actor.Receive = {
       case s:Seq[_] if s.forall(_.isInstanceOf[Suoritus]) =>
+        logger.debug(s"find suoritukset $s")
         val suor = s.map(_.asInstanceOf[Suoritus])
         suoritukset = Some(suor)
         requestKomos(suor)
       case k:Komo =>
+        logger.debug(s"got komo $k")
         komos += (k.oid -> k)
         if (foundAllKomos) {
+          logger.debug(s"found all komos")
           val kkTutkinnot = for (
             suoritus <- suoritukset.getOrElse(Seq())
             if komos.get(suoritus.komo).exists(_.isKorkeakoulututkinto)
           ) yield suoritus
           if (!kkTutkinnot.isEmpty) resolveQuery(ensikertalainen = false)
-          else if (opiskeluOikeudet.isDefined) fetchHetu()
+          else if (opiskeluOikeudet.isDefined) {
+            logger.debug("fetching hetus for suoritukset")
+            fetchHetu()
+          }
         }
       case s:Seq[_] if s.forall(_.isInstanceOf[Opiskeluoikeus]) =>
+        logger.debug(s"find opiskeluoikeudet $s")
         opiskeluOikeudet = Some(s.map(_.asInstanceOf[Opiskeluoikeus]).filter(_.aika.alku.isAfter(kesa2014)))
         if (!opiskeluOikeudet.getOrElse(Seq()).isEmpty) resolveQuery(ensikertalainen = false)
-        else if (foundAllKomos) fetchHetu()
+        else if (foundAllKomos) {
+          logger.debug("found all komos for opiskeluoikeudet, fetching hetu")
+          fetchHetu()
+        }
 
-      case HenkiloResponse(_, Some(hetu)) => fetchVirta(hetu)
+      case HenkiloResponse(_, Some(hetu)) =>
+        logger.debug(s"fetching virta with hetu $hetu")
+        fetchVirta(hetu)
 
-      case HenkiloResponse(_, None) =>  failQuery(new NoSuchElementException(s"no hetu found for oid $oid"))
+      case HenkiloResponse(_, None) =>
+        logger.error(s"henkilo response failed, no hetu for oid $oid")
+        failQuery(new NoSuchElementException(s"no hetu found for oid $oid"))
 
       case VirtaData(virtaOpiskeluOikeudet, virtaSuoritukset) =>
+        logger.debug(s"got virta result opiskeluoikeudet: $virtaOpiskeluOikeudet, suoritukset: $virtaSuoritukset")
         val filteredOpiskeluOikeudet = virtaOpiskeluOikeudet.filter(_.aika.alku.isAfter(kesa2014))
         saveVirtaResult(filteredOpiskeluOikeudet, virtaSuoritukset)
         resolveQuery(filteredOpiskeluOikeudet.isEmpty ||  virtaSuoritukset.isEmpty)
