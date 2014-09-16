@@ -9,11 +9,13 @@ import fi.vm.sade.hakurekisteri.integration.virta.{VirtaData, VirtaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
 import org.joda.time.{DateTime, LocalDate}
+import akka.pattern.pipe
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Promise, Future, ExecutionContext}
 import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
-import akka.actor.Status.Failure
+
+import scala.util.{Failure, Success, Try}
 
 case class EnsikertalainenQuery(henkiloOid: String)
 
@@ -25,12 +27,11 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   override def receive: Receive = {
     case EnsikertalainenQuery(oid) =>
       logger.debug(s"EnsikertalainenQuery($oid)")
-      context.actorOf(Props(new EnsikertalaisuusCheck(sender, oid)))
+      context.actorOf(Props(new EnsikertalaisuusCheck())).forward(oid)
   }
 
-  class EnsikertalaisuusCheck(requestor: ActorRef, oid: String)  extends Actor {
+  class EnsikertalaisuusCheck()  extends Actor {
 
-    logger.debug(s"starting query for requestor: $requestor with oid $oid")
 
     var suoritukset:Option[Seq[Suoritus]]  = None
 
@@ -38,12 +39,23 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
 
     var komos: Map[String, Option[Komo]] = Map()
 
-    override def preStart() {
-      requestSuoritukset(oid)
-      requestOpiskeluOikeudet(oid)
-    }
+    var oid:Option[String] = None
+
+    val resolver = Promise[Ensikertalainen]
+    val result:Future[Ensikertalainen] = resolver.future
+
+    result.onComplete(
+      _ =>
+        context.stop(self)
+    )
 
     override def receive: Actor.Receive = {
+      case henkiloOid:String =>
+        oid = Some(henkiloOid)
+        logger.debug(s"starting query for requestor: $sender with oid $oid")
+        result pipeTo sender
+        requestSuoritukset(henkiloOid)
+        requestOpiskeluOikeudet(henkiloOid)
       case s:Seq[_] if s.forall(_.isInstanceOf[Suoritus]) =>
         logger.debug(s"find suoritukset $s")
         val suor = s.map(_.asInstanceOf[Suoritus])
@@ -96,20 +108,19 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
 
     def fetchHetu() = henkiloActor ! oid
 
-    def fetchVirta(hetu: String) = virtaActor ! VirtaQuery(Some(oid), Some(hetu))
+    def fetchVirta(hetu: String) = virtaActor ! VirtaQuery(oid, Some(hetu))
 
     def resolveQuery(ensikertalainen: Boolean) {
-      resolve(Ensikertalainen(ensikertalainen = ensikertalainen))
+      resolve(Success(Ensikertalainen(ensikertalainen = ensikertalainen)))
     }
 
     def failQuery(failure: Throwable) {
       resolve(Failure(failure))
     }
 
-    def resolve(message: Any) {
-      logger.debug(s"resolving with message $message to $requestor")
-      requestor ! message
-      context.stop(self)
+    def resolve(message: Try[Ensikertalainen]) {
+      logger.debug(s"resolving with message $message")
+      resolver.complete(message)
     }
 
     def requestOpiskeluOikeudet(henkiloOid: String)  {
