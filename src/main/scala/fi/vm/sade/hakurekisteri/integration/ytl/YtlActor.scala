@@ -147,17 +147,21 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
       Future {
         SSH.ftp(host = host, username =username, password = SSHPassword(Some(password))){
           (sftp) =>
-            val filename = s"outsiirto${batch.id.toString}.xml"
-            val path: String = s"$outbox/$filename"
             for (
               batch <- batches
-            ) for (
-              result <- sftp.get(path)
             ) {
-              sftp.receive(path, s"$localStore/$filename")
-              val response = XML.loadString(result)
-              self ! YtlResult(batch.id, response)
 
+              val filename = s"outsiirto${batch.id.toString}.xml"
+              val path: String = s"$outbox/$filename"
+              log.debug(s"polling for $path")
+              for (
+                result <- sftp.get(path)
+              ) {
+                sftp.receive(path, s"$localStore/$filename")
+                val response = XML.loadString(result)
+                self ! YtlResult(batch.id, response)
+
+              }
             }
         }
       }(sftpPollContext)
