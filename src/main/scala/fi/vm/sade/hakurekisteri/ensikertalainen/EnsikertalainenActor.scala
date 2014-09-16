@@ -56,6 +56,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
             suoritus <- suoritukset.getOrElse(Seq())
             if komos.get(suoritus.komo).exists(_.exists(_.isKorkeakoulututkinto))
           ) yield suoritus
+          logger.debug(s"kktutkinnot: $kkTutkinnot")
           if (!kkTutkinnot.isEmpty) resolveQuery(ensikertalainen = false)
           else if (opiskeluOikeudet.isDefined) {
             logger.debug("fetching hetus for suoritukset")
@@ -104,6 +105,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     }
 
     def resolve(message: Any) {
+      logger.debug(s"resolving with message $message to $requestor")
       requestor ! message
       context.stop(self)
     }
