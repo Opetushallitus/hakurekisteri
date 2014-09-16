@@ -310,7 +310,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(getClient, ec))))
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient("virta"), ec), organisaatiot, tarjonta)), "virta")
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient("virta"), ec), organisaatiot)), "virta")
 
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig)(getClient, ec))), "henkilo")
 
