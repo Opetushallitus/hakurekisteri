@@ -5,7 +5,7 @@ import akka.event.Logging
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{KomoResponse, Komo, GetKomoQuery}
-import fi.vm.sade.hakurekisteri.integration.virta.{VirtaData, VirtaQuery}
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaConnectionErrorException, VirtaData, VirtaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
@@ -101,9 +101,9 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         saveVirtaResult(filteredOpiskeluOikeudet, virtaSuoritukset)
         resolveQuery(filteredOpiskeluOikeudet.isEmpty ||  virtaSuoritukset.isEmpty)
 
-      case t: Throwable =>
-        logger.error(s"got error $t")
-        failQuery(t)
+      case akka.actor.Status.Failure(e: VirtaConnectionErrorException) =>
+        logger.error("error in virta", e)
+        failQuery(e)
     }
 
     def foundAllKomos: Boolean = suoritukset match {
