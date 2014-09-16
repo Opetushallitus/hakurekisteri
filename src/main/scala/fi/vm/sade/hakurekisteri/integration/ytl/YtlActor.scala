@@ -19,7 +19,6 @@ import scala.util.Failure
 import scala.Some
 import scala.util.Success
 import fr.janalyse.ssh.{SSHPassword, SSH}
-import java.io.{PrintWriter, ByteArrayOutputStream}
 import scala.concurrent.duration._
 
 
