@@ -49,18 +49,30 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         context.stop(self)
     )
 
+    logger.debug("starting queryActor")
+
     override def receive: Actor.Receive = {
-      case henkiloOid:String =>
+      case henkiloOid: String =>
         oid = Some(henkiloOid)
-        logger.debug(s"starting query for requestor: $sender with oid $oid")
+        logger.debug(s"starting query for requestor: $sender with oid $henkiloOid")
         result pipeTo sender
         requestSuoritukset(henkiloOid)
         requestOpiskeluOikeudet(henkiloOid)
-      case s:Seq[_] if s.forall(_.isInstanceOf[Suoritus]) =>
-        logger.debug(s"find suoritukset $s")
-        val suor = s.map(_.asInstanceOf[Suoritus])
-        suoritukset = Some(suor)
-        requestKomos(suor)
+      case s: Seq[_] =>
+        if (s.forall(_.isInstanceOf[Suoritus])) {
+          logger.debug(s"find suoritukset $s")
+          val suor = s.map(_.asInstanceOf[Suoritus])
+          suoritukset = Some(suor)
+          requestKomos(suor)
+        } else if (s.forall(_.isInstanceOf[Opiskeluoikeus])) {
+          logger.debug(s"find opiskeluoikeudet $s")
+          opiskeluOikeudet = Some(s.map(_.asInstanceOf[Opiskeluoikeus]).filter(_.aika.alku.isAfter(kesa2014)))
+          if (!opiskeluOikeudet.getOrElse(Seq()).isEmpty) resolveQuery(ensikertalainen = false)
+          else if (foundAllKomos) {
+            logger.debug("found all komos for opiskeluoikeudet, fetching hetu")
+            fetchHetu()
+          }
+        } else unhandled(s)
       case k:KomoResponse =>
         logger.debug(s"got komo $k")
         komos += (k.oid -> k.komo)
@@ -70,21 +82,14 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
             suoritus <- suoritukset.getOrElse(Seq())
             if komos.get(suoritus.komo).exists(_.exists(_.isKorkeakoulututkinto))
           ) yield suoritus
-          logger.debug(s"kktutkinnot: $kkTutkinnot")
+          logger.debug(s"kktutkinnot: ${kkTutkinnot.toList}")
           if (!kkTutkinnot.isEmpty) resolveQuery(ensikertalainen = false)
           else if (opiskeluOikeudet.isDefined) {
             logger.debug("fetching hetus for suoritukset")
             fetchHetu()
           }
         }
-      case s:Seq[_] if s.forall(_.isInstanceOf[Opiskeluoikeus]) =>
-        logger.debug(s"find opiskeluoikeudet $s")
-        opiskeluOikeudet = Some(s.map(_.asInstanceOf[Opiskeluoikeus]).filter(_.aika.alku.isAfter(kesa2014)))
-        if (!opiskeluOikeudet.getOrElse(Seq()).isEmpty) resolveQuery(ensikertalainen = false)
-        else if (foundAllKomos) {
-          logger.debug("found all komos for opiskeluoikeudet, fetching hetu")
-          fetchHetu()
-        }
+
 
       case HenkiloResponse(_, Some(hetu)) =>
         logger.debug(s"fetching virta with hetu $hetu")
