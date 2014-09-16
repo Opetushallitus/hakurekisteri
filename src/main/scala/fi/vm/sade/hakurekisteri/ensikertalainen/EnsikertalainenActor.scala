@@ -32,8 +32,6 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   }
 
   class EnsikertalaisuusCheck()  extends Actor {
-
-
     var suoritukset:Option[Seq[Suoritus]]  = None
 
     var opiskeluOikeudet:Option[Seq[Opiskeluoikeus]] = None
@@ -56,10 +54,12 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
           context.stop(self)}
         requestSuoritukset(henkiloOid)
         requestOpiskeluOikeudet(henkiloOid)
+
       case SuoritusResponse(suor) =>
         logger.debug(s"find suoritukset $suor")
         suoritukset = Some(suor)
         requestKomos(suor)
+
       case OpiskeluoikeusResponse(oo) =>
         logger.debug(s"find opiskeluoikeudet $oo")
         opiskeluOikeudet = Some(oo.filter(_.aika.alku.isAfter(kesa2014)))
@@ -68,6 +68,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
           logger.debug("found all komos for opiskeluoikeudet, fetching hetu")
           fetchHetu()
         }
+
       case k:KomoResponse =>
         logger.debug(s"got komo $k")
         komos += (k.oid -> k.komo)
@@ -84,7 +85,6 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
             fetchHetu()
           }
         }
-
 
       case HenkiloResponse(_, Some(hetu)) =>
         logger.debug(s"fetching virta with hetu $hetu")
@@ -106,7 +106,11 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
       case Some(s) => s.forall((suoritus) => komos.get(suoritus.komo).isDefined)
     }
 
-    def fetchHetu() = henkiloActor ! oid
+    def fetchHetu() = try {
+      henkiloActor ! oid.get
+    } catch {
+      case e: Throwable => failQuery(e)
+    }
 
     def fetchVirta(hetu: String) = virtaActor ! VirtaQuery(oid, Some(hetu))
 
@@ -126,7 +130,6 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     def requestOpiskeluOikeudet(henkiloOid: String)  {
       context.actorOf(Props(new FetchResource[Opiskeluoikeus, OpiskeluoikeusResponse](OpiskeluoikeusQuery(henkilo = Some(henkiloOid)), OpiskeluoikeusResponse, self, opiskeluoikeusActor)))
     }
-
 
     case class OpiskeluoikeusResponse(opiskeluoikeudet: Seq[Opiskeluoikeus])
 
@@ -150,7 +153,6 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   }
 
   class FetchResource[T, R](query: Query[T], wrapper: (Seq[T]) => R, receiver: ActorRef, resourceActor: ActorRef) extends Actor {
-
     override def preStart(): Unit = {
       resourceActor ! query
     }
@@ -159,7 +161,6 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
       case s:Seq[T] =>
         receiver ! wrapper(s)
         context.stop(self)
-
     }
   }
 
