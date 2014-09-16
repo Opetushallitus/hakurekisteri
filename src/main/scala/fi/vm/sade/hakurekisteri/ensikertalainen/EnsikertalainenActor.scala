@@ -31,17 +31,17 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
       context.actorOf(Props(new EnsikertalaisuusCheck())).forward(oid)
   }
 
-  class EnsikertalaisuusCheck()  extends Actor {
-    var suoritukset:Option[Seq[Suoritus]]  = None
+  class EnsikertalaisuusCheck() extends Actor {
+    var suoritukset: Option[Seq[Suoritus]] = None
 
-    var opiskeluOikeudet:Option[Seq[Opiskeluoikeus]] = None
+    var opiskeluOikeudet: Option[Seq[Opiskeluoikeus]] = None
 
     var komos: Map[String, Option[Komo]] = Map()
 
-    var oid:Option[String] = None
+    var oid: Option[String] = None
 
     val resolver = Promise[Ensikertalainen]
-    val result:Future[Ensikertalainen] = resolver.future
+    val result: Future[Ensikertalainen] = resolver.future
 
     logger.debug("starting queryActor")
 
@@ -49,9 +49,10 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
       case henkiloOid: String =>
         oid = Some(henkiloOid)
         logger.debug(s"starting query for requestor: $sender with oid $henkiloOid")
-        result pipeTo sender onComplete {res =>
+        result pipeTo sender onComplete { res =>
           logger.debug(s"resolved with $res")
-          context.stop(self)}
+          context.stop(self)
+        }
         requestSuoritukset(henkiloOid)
         requestOpiskeluOikeudet(henkiloOid)
 
@@ -69,7 +70,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
           fetchHetu()
         }
 
-      case k:KomoResponse =>
+      case k: KomoResponse =>
         logger.debug(s"got komo $k")
         komos += (k.oid -> k.komo)
         if (foundAllKomos) {
@@ -99,6 +100,10 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         val filteredOpiskeluOikeudet = virtaOpiskeluOikeudet.filter(_.aika.alku.isAfter(kesa2014))
         saveVirtaResult(filteredOpiskeluOikeudet, virtaSuoritukset)
         resolveQuery(filteredOpiskeluOikeudet.isEmpty ||  virtaSuoritukset.isEmpty)
+
+      case t: Throwable =>
+        logger.error(s"got error $t")
+        failQuery(t)
     }
 
     def foundAllKomos: Boolean = suoritukset match {
@@ -158,7 +163,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     }
 
     override def receive: Actor.Receive = {
-      case s:Seq[T] =>
+      case s: Seq[T] =>
         receiver ! wrapper(s)
         context.stop(self)
     }

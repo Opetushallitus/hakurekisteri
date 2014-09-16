@@ -11,8 +11,6 @@ import scala.concurrent.ExecutionContext
 
 case class HenkiloResponse(oidHenkilo: String, hetu: Option[String])
 
-
-
 class HenkiloActor(henkiloClient: VirkailijaRestClient)(implicit val ec: ExecutionContext) extends Actor {
 
   val Hetu = "([0-9]{6}[-A][0-9]{3}[0123456789ABCDEFHJKLMNPRSTUVWXY])".r
@@ -22,6 +20,5 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient)(implicit val ec: Executi
     case HetuQuery(Hetu(hetu)) => henkiloClient.readObject[HenkiloResponse](s"/resources/s2s/byHetu/${URLEncoder.encode(hetu, "UTF-8")}", HttpResponseCode.Ok) pipeTo sender
   }
 }
-
 
 case class HetuQuery(hetu:String)
