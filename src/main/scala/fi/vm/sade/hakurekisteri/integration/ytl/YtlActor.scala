@@ -9,18 +9,20 @@ import scala.concurrent.{ExecutionContext, Future}
 import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
-import java.util.concurrent.TimeUnit
-import org.joda.time.{LocalTime, DateTime, MonthDay, LocalDate}
+import java.util.concurrent.{Executors, TimeUnit}
+import org.joda.time._
 import fi.vm.sade.hakurekisteri.storage.Identified
+import fr.janalyse.ssh.{SSHPassword, SSH}
+import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.arvosana.ArvioYo
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.henkilo.HetuQuery
 import scala.util.Failure
 import scala.Some
 import scala.util.Success
-import fr.janalyse.ssh.{SSHPassword, SSH}
-import java.io.{PrintWriter, ByteArrayOutputStream}
-import scala.concurrent.duration._
+import akka.actor.ActorIdentity
+import akka.actor.Identify
+import akka.pattern.pipe
 
 
 case class YtlReport(current: Batch[KokelasRequest], waitingforAnswers: Seq[Batch[KokelasRequest]], nextSend: Option[DateTime])
@@ -38,15 +40,17 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
 
   var nextSend: Option[DateTime] = nextSendTime
 
+  val sftpSendContext  =  ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
+
+  val sftpPollContext =  ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
+
   def nextSendTime: Option[DateTime] = {
-    config.map(_.sendTimes).filter(!_.isEmpty).map{
-      (times) =>
-        times.map(_.toDateTimeToday).find((t) => {
-          val searchTime: DateTime = DateTime.now
-          t.isAfter(searchTime)
-        }).getOrElse(times.head.toDateTimeToday.plusDays(1))
-    }
+    val times = config.map(_.sendTimes).filter(!_.isEmpty)
+    Timer.countNextSend(times)
   }
+
+
+
 
   val log = Logging(context.system, this)
 
@@ -120,39 +124,47 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   def uploadFile(batch:Batch[KokelasRequest], localStore: String): (String, String) = {
     val xml = batchMessage(batch)
     val fileName = s"siirto${batch.id.toString}.xml"
-    val filePath = s"${localStore}/$fileName"
+    val filePath = s"$localStore/$fileName"
     XML.save(filePath, xml,"ISO-8859-1", xmlDecl = true, doctype = null)
     (fileName, filePath)
   }
 
   def send(batch: Batch[KokelasRequest]): Unit = config match {
     case Some(YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, _, localStore)) =>
+      Future {
+        val (filename, localCopy) = uploadFile(batch, localStore)
+        SSH.ftp(host = host, username =username, password = SSHPassword(Some(password))){
+          (sftp) =>
+            sftp.send(localCopy, s"$inbox/$filename")
+        }
+      }(sftpSendContext)
 
-      val (filename, localCopy) = uploadFile(batch, localStore)
-      SSH.ftp(host = host, username =username, password = SSHPassword(Some(password))){
-        (sftp) =>
-          sftp.send(localCopy, s"$inbox/$filename")
-      }
     case None => log.warning("sending files to YTL called without config")
   }
 
   def poll(batches: Seq[Batch[KokelasRequest]]): Unit = config match {
     case Some(YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, _, localStore)) =>
-      SSH.ftp(host = host, username =username, password = SSHPassword(Some(password))){
-        (sftp) =>
-          val filename = s"outsiirto${batch.id.toString}.xml"
-          val path: String = s"$outbox/$filename"
-          for (
-            batch <- batches
-          ) for (
-            result <- sftp.get(path)
-          ) {
-            sftp.receive(path, s"$localStore/$filename")
-            val response = XML.loadString(result)
-            handleResponse(Some(batch), response)
-            sent = sent.filterNot(_.id == batch.id)
-          }
-      }
+      Future {
+        SSH.ftp(host = host, username =username, password = SSHPassword(Some(password))){
+          (sftp) =>
+            for (
+              batch <- batches
+            ) {
+
+              val filename = s"outsiirto${batch.id.toString}.xml"
+              val path: String = s"$outbox/$filename"
+              log.debug(s"polling for $path")
+              for (
+                result <- sftp.get(path)
+              ) {
+                sftp.receive(path, s"$localStore/$filename")
+                val response = XML.loadString(result)
+                self ! YtlResult(batch.id, response)
+
+              }
+            }
+        }
+      }(sftpPollContext)
     case None => log.warning("polling of files from YTL called without config")
   }
 
@@ -214,6 +226,29 @@ object Poll
 object CheckSend
 
 object CheckPoll
+
+object Timer {
+
+
+  implicit val dtOrder:Ordering[LocalTime] = new Ordering[LocalTime] {
+    override def compare(x: LocalTime, y: LocalTime) = x match {
+      case _ if x isEqual y => 0
+      case _ if x isAfter y => 1
+      case _ if y isAfter x => -1
+    }
+  }
+
+
+  def countNextSend(timeConf: Option[Seq[LocalTime]]): Option[DateTime] = {
+    timeConf.map {
+      (times) =>
+        times.sorted.map(_.toDateTimeToday).find((t) => {
+          val searchTime: DateTime = DateTime.now
+          t.isAfter(searchTime)
+        }).getOrElse(times.sorted.head.toDateTimeToday.plusDays(1))
+    }
+  }
+}
 
 object YTLXml {
 
@@ -295,6 +330,8 @@ object YTLXml {
         Koe(arvio, (koe \ "KOETUNNUS").text, valinnainen = valinnaisuus, parseKausi((koe \ "TUTKINTOKERTA").text).get)
     }
   }
+
+
 }
 
 case class Koe(arvio: ArvioYo, aine: String, valinnainen: Boolean, myonnetty: LocalDate) {
@@ -331,3 +368,5 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
 }
 
 case class YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, sendTimes: Seq[LocalTime], localStore:String)
+
+case class Handled(batches: Seq[UUID])
