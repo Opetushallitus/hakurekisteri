@@ -30,6 +30,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
 
   class EnsikertalaisuusCheck(requestor: ActorRef, oid: String)  extends Actor {
 
+    logger.debug(s"starting query for requestor: $requestor with oid $oid")
+
     var suoritukset:Option[Seq[Suoritus]]  = None
 
     var opiskeluOikeudet:Option[Seq[Opiskeluoikeus]] = None
