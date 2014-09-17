@@ -43,12 +43,16 @@ trait HakemusService extends ResourceService[FullHakemus, String] with Journaled
               getOrElse(Map()).
               getOrElse("hakutoiveet", Map()).
               filterKeys((k) => k.contains("Koulutus-id-aoIdentifier")).values.toSeq)(hakemus)
+    case HenkiloHakijaQuery(henkilo) =>
+      (hakemus) => hakemus.oid == henkilo
   }
 
   override def identify(o: FullHakemus): FullHakemus with Identified[String] = FullHakemus.identify(o)
 }
 
 case class HakemusQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String]) extends Query[FullHakemus]
+
+case class HenkiloHakijaQuery(henkilo:String) extends Query[FullHakemus]
 
 object HakemusQuery {
   def apply(hq: HakijaQuery):HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)

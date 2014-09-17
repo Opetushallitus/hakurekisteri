@@ -3,21 +3,24 @@ package fi.vm.sade.hakurekisteri.oppija
 import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport, Registers}
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
-import akka.actor.{ActorSystem, ActorRef}
+import org.scalatra._
+import _root_.akka.actor.{ActorSystem, ActorRef}
 import scala.concurrent.{Future, ExecutionContext}
-import akka.util.Timeout
+import _root_.akka.util.Timeout
 import org.scalatra.swagger.Swagger
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, FullHakemus}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
-import akka.pattern.ask
+import _root_.akka.pattern.ask
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
-import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
+import fi.vm.sade.hakurekisteri.ensikertalainen.Ensikertalainen
+import scala.Some
+import fi.vm.sade.hakurekisteri.integration.hakemus.HenkiloHakijaQuery
+import fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenQuery
 
 
 class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikertalaisuus: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack  with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
@@ -39,13 +42,8 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
 
   get("/") {
 
-    import akka.pattern.ask
+    import _root_.akka.pattern.ask
     val q = HakijaQuery(params, currentUser)
-
-
-
-
-
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
@@ -54,6 +52,17 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
         oppijat <- fetchOppijatFor(hakemukset)
       ) yield oppijat
     }
+  }
+
+  get("/:oid") {
+    val q = HenkiloHakijaQuery(params("oid"))
+    new AsyncResult() {
+      val is = for (
+        hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
+        oppijat <- fetchOppijatFor(hakemukset.filter(_.hetu.isDefined).slice(0,1))
+      ) yield oppijat.headOption.fold(NotFound())(Ok(_))
+    }
+
   }
 
 
