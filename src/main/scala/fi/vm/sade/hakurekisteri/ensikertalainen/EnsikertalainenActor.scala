@@ -18,7 +18,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 
 import scala.util.{Failure, Success, Try}
 
-case class EnsikertalainenQuery(henkiloOid: String)
+case class EnsikertalainenQuery(henkiloOid: String, hetu: Option[String]= None)
 
 class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaActor: ActorRef, hakemukset : ActorRef)(implicit val ec: ExecutionContext) extends Actor {
   val logger = Logging(context.system, this)
@@ -26,9 +26,9 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   implicit val defaultTimeout: Timeout = 15.seconds
 
   override def receive: Receive = {
-    case EnsikertalainenQuery(oid) =>
-      logger.debug(s"EnsikertalainenQuery($oid)")
-      context.actorOf(Props(new EnsikertalaisuusCheck())).forward(oid)
+    case q:EnsikertalainenQuery =>
+      logger.debug(s"EnsikertalainenQuery($q.oid) with ${q.hetu.map("hetu: " + _).getOrElse("no hetu")}")
+      context.actorOf(Props(new EnsikertalaisuusCheck())).forward(q)
   }
 
   class EnsikertalaisuusCheck() extends Actor {
@@ -39,6 +39,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     var komos: Map[String, Option[Komo]] = Map()
 
     var oid: Option[String] = None
+    var hetu: Option[String] = None
 
     val resolver = Promise[Ensikertalainen]
     val result: Future[Ensikertalainen] = resolver.future
@@ -46,9 +47,10 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     logger.debug("starting queryActor")
 
     override def receive: Actor.Receive = {
-      case henkiloOid: String =>
+      case EnsikertalainenQuery(henkiloOid, henkiloHetu) =>
         oid = Some(henkiloOid)
-        logger.debug(s"starting query for requestor: $sender with oid $henkiloOid")
+        hetu = henkiloHetu
+        logger.debug(s"starting query for requestor: $sender with oid $henkiloOid and ${henkiloHetu.map("hetu: " + _).getOrElse("no hetu")}")
         result pipeTo sender onComplete { res =>
           logger.debug(s"resolved with $res")
           context.stop(self)
@@ -111,8 +113,14 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
       case Some(s) => s.forall((suoritus) => komos.get(suoritus.komo).isDefined)
     }
 
-    def fetchHetu() = try {
-      henkiloActor ! oid.get
+    def fetchHetu() =
+
+
+    try {
+      if (hetu.isDefined)
+        (self ! HenkiloResponse(oid.get, hetu))(ActorRef.noSender)
+      else
+        henkiloActor ! oid.get
     } catch {
       case e: Throwable => failQuery(e)
     }
@@ -170,7 +178,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   }
 
   override def preStart(): Unit = {
-    hakemukset ! Trigger((oid, hetu) => self ! EnsikertalainenQuery(oid))
+    hakemukset ! Trigger((oid, hetu) => self ! EnsikertalainenQuery(oid, Some(hetu)))
     super.preStart()
   }
 }
