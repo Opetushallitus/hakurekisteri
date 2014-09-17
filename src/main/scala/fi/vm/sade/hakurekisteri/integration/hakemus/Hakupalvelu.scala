@@ -190,6 +190,16 @@ case class HakemusHaku(totalCount: Long, results: Seq[ListHakemus])
 case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[Map[String, Map[String, String]]], state: Option[String]) extends Resource[String] {
   val source = "1.2.246.562.10.00000000001"
   override def identify(id: String): this.type with Identified[String] = FullHakemus.identify(this,id).asInstanceOf[this.type with Identified[String]]
+
+  def hetu =
+      for (
+        foundAnswers <- answers;
+        henkilo <- foundAnswers.get("henkilotiedot");
+        henkiloHetu <- henkilo.get("Henkilotunnus")
+      ) yield henkiloHetu
+
+
+
 }
 
 object FullHakemus {

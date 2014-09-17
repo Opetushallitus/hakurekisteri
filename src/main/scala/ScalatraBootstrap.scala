@@ -204,12 +204,7 @@ class DbJournals(jndiName:String) extends Journals {
   override val arvosanaJournal = new ArvosanaJournal(database)
 }
 
-trait Registers {
-  val suoritusRekisteri: ActorRef
-  val opiskelijaRekisteri: ActorRef
-  val opiskeluoikeusRekisteri: ActorRef
-  val arvosanaRekisteri: ActorRef
-}
+
 
 class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
   override val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(journals.suoritusJournal)), "suoritukset")
