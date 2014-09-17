@@ -29,16 +29,16 @@ class VirkailijaRestClient(config: ServiceConfig)(implicit val httpClient: HttpC
   val logger = LoggerFactory.getLogger(getClass)
   val casClient = new CasClient(serviceAccessUrl, serviceUrl, user, password)
 
-  def executeGet(uri: String): Future[HttpResponse] = {
+  def executeGet(uri: String): Future[(HttpResponse, Option[String])]= {
     val url = new URL(serviceUrl + uri)
     (user, password) match {
       case (None, None) =>
         //logger.debug(s"calling url $url");
-        GET(url).apply
+        GET(url).apply.map((_, None))
       case (Some(u), Some(p)) =>
         casClient.getProxyTicket.flatMap((ticket) => {
           //logger.debug(s"calling url $url with ticket $ticket");
-          GET(url).addHeaders("CasSecurityTicket" -> ticket).apply
+          GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map((_, Some(ticket)))
         })
       case _ => throw new IllegalArgumentException("either user or password is not defined")
     }
@@ -55,10 +55,10 @@ class VirkailijaRestClient(config: ServiceConfig)(implicit val httpClient: HttpC
     rawResult.get
   }
 
-  def readObject[A <: AnyRef: Manifest](uri: String, precondition: (HttpResponseCode) => Boolean): Future[A] = executeGet(uri).map((resp) =>
+  def readObject[A <: AnyRef: Manifest](uri: String, precondition: (HttpResponseCode) => Boolean): Future[A] = executeGet(uri).map{case (resp, ticket) =>
     if (precondition(resp.code)) resp
-    else throw PreconditionFailedException(s"precondition failed for uri: $uri, response code: ${resp.code}")
-  ).map(readBody[A])
+    else throw PreconditionFailedException(s"precondition failed for uri: $uri, response code: ${resp.code} with ${ticket.map("ticket: " + _).getOrElse("no ticket")}")
+  }.map(readBody[A])
 
   def readObject[A <: AnyRef: Manifest](uri: String, okCodes: HttpResponseCode*): Future[A] = {
     val codes = if (okCodes.isEmpty) Seq(HttpResponseCode.Ok) else okCodes
