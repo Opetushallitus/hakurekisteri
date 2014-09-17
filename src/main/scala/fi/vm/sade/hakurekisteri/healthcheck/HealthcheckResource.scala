@@ -7,6 +7,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.duration._
 import _root_.akka.actor.{Actor, ActorRef, ActorSystem}
 import _root_.akka.pattern.{AskTimeoutException, ask}
 import java.util.concurrent.TimeUnit
@@ -26,7 +27,7 @@ import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
 
 class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
-  implicit val defaultTimeout = Timeout(60, TimeUnit.SECONDS)
+  implicit val defaultTimeout: Timeout = 60.seconds
   private def withLocaleTZ(format: DateTimeFormatter) = format withLocale Locale.US withZone DateTimeZone.UTC
   private def expiresHeader = "Expires"
   val RFC1123Date = withLocaleTZ(DateTimeFormat forPattern "EEE, dd MMM yyyy HH:mm:ss 'GMT'")
@@ -43,6 +44,7 @@ class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSyst
   get("/") {
     response.setHeader(expiresHeader, RFC1123Date.print(System.currentTimeMillis() + expiresTimeMillis))
     new AsyncResult() {
+      override def timeout: Duration = 60.seconds
       val is = healthcheckActor ? "healthcheck"
     }
   }
