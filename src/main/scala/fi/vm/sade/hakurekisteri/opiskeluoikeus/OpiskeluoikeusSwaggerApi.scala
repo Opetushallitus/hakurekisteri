@@ -25,7 +25,7 @@ trait OpiskeluoikeusSwaggerApi {
   val query = apiOperation[Seq[Opiskeluoikeus]]("opiskeluoikeudet")
     .summary("näyttää kaikki opiskeluoikeustiedot")
     .notes("Näyttää kaikki opiskeluoikeustiedot. Voit myös hakea eri parametreillä.")
-    .parameter(queryParam[Option[String]]("henkilo").description("haetun henkilon oid"))
+    .parameter(queryParam[Option[String]]("henkilo").description("henkilon oid"))
     .parameter(queryParam[Option[String]]("myontaja").description("myöntäneen oppilaitoksen oid"))
 
   val create = apiOperation[Opiskeluoikeus]("lisääOpiskeluoikeus")
