@@ -89,7 +89,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   override def receive: Receive = super.receive.orElse({
     case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) onComplete {
       case Success(hs) =>  logger.debug(s"found $hs applications")
-      case Failure(ex) => logger.error(ex, s"failed fecthinh Hakemukset for $haku")
+      case Failure(ex) => logger.error(ex, s"failed fetching Hakemukset for $haku")
     }
     case Health(actor) => healthCheck = Some(actor)
     case Trigger(trig) => hakijaTrigger = context.actorOf(Props(new HakijaTrigger(trig))) +: hakijaTrigger
