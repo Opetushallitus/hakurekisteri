@@ -112,6 +112,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
         for (actor <- healthCheck)
           actor ! Hakemukset(q.haku.getOrElse("unknown"), RefreshingResource(cur + l.length, reloading = true))
         handleNew(l)
+        log.debug(s"requesting $maxApplications new Hakemukset for ${q.haku.getOrElse("not specified")} current count $cur")
         restRequest[List[FullHakemus]](getUri((cur / maxApplications) + 1)).flatMap(getAll(cur + l.length))
     }
 
