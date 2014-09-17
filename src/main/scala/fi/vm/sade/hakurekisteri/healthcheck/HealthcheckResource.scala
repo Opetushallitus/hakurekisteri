@@ -48,6 +48,10 @@ class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSyst
   }
 }
 
+case class RefreshingResource(amount:Long, reloading: Boolean = false, time:DateTime = DateTime.now)
+case class RefreshingState(max: RefreshingResource, latest: RefreshingResource)
+
+
 class HealthcheckActor(arvosanaRekisteri: ActorRef,
                        opiskelijaRekisteri: ActorRef,
                        opiskeluoikeusRekisteri: ActorRef,
@@ -57,7 +61,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(30, TimeUnit.SECONDS)
   val authorities = Seq("1.2.246.562.10.00000000001")
-  var foundHakemukset:Map[String, Long] = Map()
+  var foundHakemukset:Map[String, RefreshingState] = Map()
 
   override def preStart(): Unit = {
     hakemukset ! Health(self)
@@ -67,10 +71,14 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
 
 
 
-
   def receive = {
-    case Hakemukset(oid, count) => foundHakemukset = foundHakemukset + (oid -> count)
-    case "healthcheck" => {
+    case Hakemukset(oid, count) =>
+      val curState = foundHakemukset.get(oid).map{
+        case RefreshingState(max, latest) if  max.amount <= count.amount => RefreshingState(count, count)
+        case RefreshingState(max, latest) => RefreshingState(max, count)
+      }.getOrElse(RefreshingState(count, count))
+      foundHakemukset = foundHakemukset + (oid -> curState)
+    case "healthcheck" =>
       val combinedFuture =
         checkState
 
@@ -89,7 +97,6 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
           )),
           resolveStatus(arvosanaCount.status, opiskelijaCount.status, opiskeluoikeusCount.status, suoritusCount.status, hakemusCount.status, ytlReport.status),
           "")} pipeTo sender
-    }
   }
 
 
@@ -190,11 +197,11 @@ case class YtlFailure(status: Status)  extends YtlStatus
 
 case class Checks(resources: Resources)
 
-case class Resources(arvosanat: Long, opiskelijat: Long, opiskeluoikeudet: Long, suoritukset: Long, hakemukset: Long, foundHakemukset: Map[String, Long], ytl: YtlStatus)
+case class Resources(arvosanat: Long, opiskelijat: Long, opiskeluoikeudet: Long, suoritukset: Long, hakemukset: Long, foundHakemukset: Map[String, RefreshingState], ytl: YtlStatus)
 
 case class Healhcheck(timestamp: Long, user: String, contextPath: String, checks: Checks, status: Status, info: String)
 
-case class Hakemukset(oid: String, count: Long)
+case class Hakemukset(oid: String, count: RefreshingResource)
 
 case class Health(actor: ActorRef)
 

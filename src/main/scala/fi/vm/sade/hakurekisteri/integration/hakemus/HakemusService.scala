@@ -6,7 +6,7 @@ import akka.actor.{Actor, Props, ActorRef}
 import akka.event.Logging
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, HakijaQuery}
-import fi.vm.sade.hakurekisteri.healthcheck.{Hakemukset, Health}
+import fi.vm.sade.hakurekisteri.healthcheck.{RefreshingResource, Hakemukset, Health}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.hakurekisteri.storage.repository._
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceActor, ResourceService}
@@ -105,12 +105,12 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
       case l if l.isEmpty => Future.successful(None)
       case l if l.length < maxApplications =>
         for (actor <- healthCheck)
-          actor ! Hakemukset(q.haku.getOrElse("unknown"), cur + l.length)
+          actor ! Hakemukset(q.haku.getOrElse("unknown"), RefreshingResource(cur + l.length))
         handleNew(l)
         Future.successful(Some(cur + l.length))
       case l =>
         for (actor <- healthCheck)
-          actor ! Hakemukset(q.haku.getOrElse("unknown"), cur + l.length)
+          actor ! Hakemukset(q.haku.getOrElse("unknown"), RefreshingResource(cur + l.length, reloading = true))
         handleNew(l)
         restRequest[List[FullHakemus]](getUri((cur / maxApplications) + 1)).flatMap(getAll(cur + l.length))
     }
