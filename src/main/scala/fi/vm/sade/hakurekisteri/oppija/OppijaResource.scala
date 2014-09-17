@@ -81,11 +81,11 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
 
   def fetchOppijaData(henkiloOid: String, hetu: Option[String]): Future[Oppija] = {
     for (
-      suoritukset <- (rekisterit.suoritusRekisteri ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus with Identified[UUID]]];
+      suoritukset <- fetchSuoritukset(henkiloOid);
       todistukset <- fetchTodistukset(suoritukset);
-      opiskelu <- (rekisterit.opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Opiskelija]];
-      opiskeluoikeudet <- (rekisterit.opiskeluoikeusRekisteri ? OpiskeluoikeusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Opiskeluoikeus]];
-      ensikertalainen <- (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, hetu)).mapTo[Ensikertalainen]
+      opiskelu <- fetchOpiskelu(henkiloOid);
+      opiskeluoikeudet <- fetchOpiskeluoikeudet(henkiloOid);
+      ensikertalainen <- fetchEnsikertalaisuus(henkiloOid, hetu)
     ) yield Oppija(
       oppijanumero = henkiloOid,
       opiskelu = opiskelu,
@@ -94,5 +94,22 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
       ensikertalainen = ensikertalainen.ensikertalainen
     )
 
+  }
+
+
+  def fetchEnsikertalaisuus(henkiloOid: String, hetu: Option[String]): Future[Ensikertalainen] = {
+    (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, hetu)).mapTo[Ensikertalainen]
+  }
+
+  def fetchOpiskeluoikeudet(henkiloOid: String): Future[Seq[Opiskeluoikeus]] = {
+    (rekisterit.opiskeluoikeusRekisteri ? OpiskeluoikeusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Opiskeluoikeus]]
+  }
+
+  def fetchOpiskelu(henkiloOid: String): Future[Seq[Opiskelija]] = {
+    (rekisterit.opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Opiskelija]]
+  }
+
+  def fetchSuoritukset(henkiloOid: String): Future[Seq[Suoritus with Identified[UUID]]] = {
+    (rekisterit.suoritusRekisteri ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus with Identified[UUID]]]
   }
 }
