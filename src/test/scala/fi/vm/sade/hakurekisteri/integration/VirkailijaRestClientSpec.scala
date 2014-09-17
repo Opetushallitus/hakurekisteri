@@ -22,7 +22,7 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers {
   behavior of "VirkailijaRestClient"
 
   it should "make request to specified url" in {
-    val response = client.executeGet("/rest/blaa")
+    client.executeGet("/rest/blaa")
     httpClient.capturedRequestUrl should be("http://localhost/test/rest/blaa")
   }
 
