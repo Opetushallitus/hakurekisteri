@@ -1,3 +1,4 @@
+import fi.vm.sade.hakurekisteri.oppija.OppijaResource
 import java.util.concurrent.atomic.AtomicInteger
 
 import _root_.akka.camel.CamelExtension
@@ -87,6 +88,7 @@ class ScalatraBootstrap extends LifeCycle {
       "/rest/v1/haut" -> new HakuResource(koosteet.haut),
       "/rest/v1/hakijat" -> new HakijaResource(koosteet.hakijat),
       "/rest/v1/opiskelijat" -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
+      "/rest/v1/oppijat" -> new OppijaResource(registers, integrations.hakemukset, koosteet.ensikertalainen),
       "/rest/v1/opiskeluoikeudet" -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
       "/rest/v1/suoritukset" -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport,
       "/sanity" -> new SanityResource(sanity)
