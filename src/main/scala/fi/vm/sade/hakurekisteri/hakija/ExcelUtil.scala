@@ -90,7 +90,7 @@ object ExcelUtil {
       StringCell(26, h.hakemus.yhteisetaineet.getOrElse(zero).toString),
       StringCell(27, h.hakemus.lukiontasapisteet.getOrElse(zero).toString),
       StringCell(28, h.hakemus.yleinenkoulumenestys.getOrElse(zero).toString),
-      StringCell(29, h.hakemus.lisapistekoulutus.getOrElse(zero).toString),
+      StringCell(29, h.hakemus.lisapistekoulutus.getOrElse("").toString),
       StringCell(30, h.hakemus.painotettavataineet.getOrElse(zero).toString),
       StringCell(31, ht.hakujno.toString),
       StringCell(32, ht.oppilaitos),
