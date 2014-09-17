@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.storage.repository._
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceActor, ResourceService}
 
 import scala.concurrent.Future
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 
 trait HakemusService extends ResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
@@ -87,9 +87,10 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   var hakijaTrigger:Seq[ActorRef] = Seq()
 
   override def receive: Receive = super.receive.orElse({
-    case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) map ((hs) => {
-      logger.debug(s"found $hs applications")
-    })
+    case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) onComplete {
+      case Success(hs) =>  logger.debug(s"found $hs applications")
+      case Failure(ex) => logger.error(ex, s"failed fecthinh Hakemukset for $haku")
+    }
     case Health(actor) => healthCheck = Some(actor)
     case Trigger(trig) => hakijaTrigger = context.actorOf(Props(new HakijaTrigger(trig))) +: hakijaTrigger
   })
