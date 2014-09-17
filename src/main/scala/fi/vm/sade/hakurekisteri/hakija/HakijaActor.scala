@@ -238,7 +238,12 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def getMaakoodi(koodiArvo: String): Future[String] = koodiArvo.toLowerCase match {
     case "fin" => Future.successful("246")
-    case arvo => (koodistoActor ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2"))(10.seconds).mapTo[String]
+    case arvo =>
+      val maaFuture = (koodistoActor ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2"))(10.seconds).mapTo[String]
+      maaFuture.onFailure {
+        case t: Throwable => log.error(t, s"failed to fetch country $koodiArvo")
+      }
+      maaFuture
   }
 
 
