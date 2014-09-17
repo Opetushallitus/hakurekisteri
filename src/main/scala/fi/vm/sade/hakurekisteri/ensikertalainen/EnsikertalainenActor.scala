@@ -102,7 +102,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         resolveQuery(filteredOpiskeluOikeudet.isEmpty ||  virtaSuoritukset.isEmpty)
 
       case akka.actor.Status.Failure(e: VirtaConnectionErrorException) =>
-        logger.error("error in virta", e)
+        logger.error(e, "error in virta")
         failQuery(e)
     }
 
