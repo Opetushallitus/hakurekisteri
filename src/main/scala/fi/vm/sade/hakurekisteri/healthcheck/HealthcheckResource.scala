@@ -25,6 +25,7 @@ import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
 import fi.vm.sade.hakurekisteri.hakija.Hakemus
 import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
 import akka.event.Logging
+import scala.compat.Platform
 
 class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -66,6 +67,13 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   val authorities = Seq("1.2.246.562.10.00000000001")
   var foundHakemukset:Map[String, RefreshingState] = Map()
 
+  var selfChecks: Map[UUID, Long] = Map()
+
+  case class SelfCheck(id: UUID = UUID.randomUUID())
+  case class Measure(id:UUID)
+
+  context.system.scheduler.schedule(0.seconds, 5.minutes, self, SelfCheck())
+
   override def preStart(): Unit = {
     hakemukset ! Health(self)
     super.preStart()
@@ -77,6 +85,14 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
 
 
   def receive = {
+    case SelfCheck(id) =>
+      selfChecks = selfChecks + (id -> Platform.currentTime)
+      self ! Measure(id)
+    case Measure(id) =>
+      val arrival = Platform.currentTime
+      val roundTrip = selfChecks.get(id).map(arrival - _)
+      if (!(roundTrip.getOrElse(0L) < 30000)) logger.warning(s"Healthcheck is too slow. Measured roundtrip over 30s ${roundTrip}ms")
+      selfChecks = selfChecks - id
     case Hakemukset(oid, count) =>
       val curState = foundHakemukset.get(oid).map{
         case RefreshingState(max, latest) if  max.amount <= count.amount => RefreshingState(count, count)
