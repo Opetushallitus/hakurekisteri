@@ -15,19 +15,15 @@ import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluQuery
 
 
 class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, sijoittelu: ActorRef) extends Actor {
-
   implicit val ec = context.dispatcher
+  val log = Logging(context.system, this)
 
-  var activeHakus:Seq[Haku] = Seq()
-
-  val reloadHakus = context.system.scheduler.schedule(1.second, 1.hours, self, ReloadHakemukset)
+  var activeHakus: Seq[Haku] = Seq()
 
   val refreshTime = 2.hours
+  val reloadHakus = context.system.scheduler.schedule(refreshTime, refreshTime, self, Update)
 
   var starting = true
-
-
-  val log = Logging(context.system, this)
 
   override def preStart(): Unit = {
     self ! Update
@@ -38,27 +34,28 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
   override def receive: Actor.Receive = {
     case RefreshSijoittelu => refreshKeepAlives()
+
     case Update => tarjonta ! GetHautQuery
+
     case HakuRequest  => sender ! activeHakus
-    case RestHakuResult(hakus: List[RestHaku]) =>
-        enrich(hakus).waitForAll pipeTo self
-    case s:Seq[Haku] =>
-      activeHakus =  s.filter(_.aika.isCurrently)
+
+    case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
+
+    case s: Seq[Haku] =>
+      activeHakus = s.filter(_.aika.isCurrently)
       log.debug(s"current hakus ${activeHakus.mkString(", ")}")
       if (starting) {
         starting = false
-        context.system.scheduler.schedule(1.second, refreshTime, self, RefreshSijoittelu)
-        context.system.scheduler.schedule(1.second, 2.hours, self, ReloadHakemukset)
+        context.system.scheduler.scheduleOnce(1.second, self, ReloadHakemukset)
+        context.system.scheduler.scheduleOnce(1.second, self, RefreshSijoittelu)
       }
 
     case ReloadHakemukset =>
       for(
         haku <- activeHakus
-      )   hakemukset ! ReloadHaku(haku.oid)
-
+      ) hakemukset ! ReloadHaku(haku.oid)
 
   }
-
 
   def enrich(hakus: List[RestHaku]): List[Future[Haku]] = {
     for (
@@ -71,17 +68,15 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
     import akka.pattern.ask
     import akka.util.Timeout
     import scala.concurrent.duration._
-    implicit val to:Timeout = 2.minutes
+    implicit val to: Timeout = 2.minutes
     (parametrit ? KierrosRequest(hakuOid)).mapTo[HakuParams].map(_.end).recover {
       case _ => InFuture
     }
-
   }
 
   def refreshKeepAlives() {
-    activeHakus.zipWithIndex foreach {case (haku:Haku, i: Int) => context.system.scheduler.scheduleOnce(i.seconds, sijoittelu, SijoitteluQuery(haku.oid))(context.dispatcher, ActorRef.noSender)}
+    activeHakus.zipWithIndex foreach {case (haku: Haku, i: Int) => context.system.scheduler.scheduleOnce((i * 5).seconds, sijoittelu, SijoitteluQuery(haku.oid))(context.dispatcher, ActorRef.noSender)}
   }
-
 }
 
 object Update
@@ -97,7 +92,6 @@ case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[Strin
 case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int)
 
 object Haku {
-
   def apply(haku: RestHaku)(loppu: ReadableInstant): Haku = {
     val ajanjakso = Ajanjakso(findStart(haku), loppu)
     Haku(
@@ -113,15 +107,10 @@ object Haku {
   }
 }
 
-
 class FutureList[A](futures: Seq[Future[A]]) {
-
-
-  def waitForAll(implicit ec: ExecutionContext):Future[Seq[A]] = Future.sequence(futures)
+  def waitForAll(implicit ec: ExecutionContext): Future[Seq[A]] = Future.sequence(futures)
 }
 
 object FutureList {
-
   implicit def futures2FutureList[A](futures: Seq[Future[A]]): FutureList[A] = new FutureList(futures)
-
 }
