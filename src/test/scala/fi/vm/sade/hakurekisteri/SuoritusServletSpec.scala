@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.{LocalDate, DateTime}
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
 import fi.vm.sade.hakurekisteri.opiskelija.{CreateOpiskelijaCommand, Opiskelija}
-import fi.vm.sade.hakurekisteri.acceptance.tools.{TestSecurity, FakeAuthorizer}
+import fi.vm.sade.hakurekisteri.acceptance.tools.{Peruskoulu, TestSecurity, FakeAuthorizer}
 
 class SuoritusServletSpec extends ScalatraFunSuite {
   val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now,"1.2.4")

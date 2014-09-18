@@ -3,9 +3,8 @@ package fi.vm.sade.hakurekisteri.acceptance
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import org.scalatest.GivenWhenThen
 
-import fi.vm.sade.hakurekisteri.acceptance.tools.HakurekisteriSupport
+import fi.vm.sade.hakurekisteri.acceptance.tools.{Peruskoulu, HakurekisteriSupport}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import fi.vm.sade.hakurekisteri.suoritus.Peruskoulu
 
 class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with HakurekisteriSupport {
 
@@ -138,8 +137,8 @@ class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with H
           koululle koulu.id)
 
       Then("Molemmille löytyvät opiskelijatiedot")
-      haetut should contain (Opiskelija(koulu.id, "9", "9A", Mikko.oid, "01.01.2014", None))
-      haetut should contain (Opiskelija(koulu.id, "9", "9A", Matti.oid, "01.01.2014", None))
+      haetut should contain (Opiskelija(koulu.id, "9", "9A", Mikko.oid, "01.01.2014", None, source = "Test"))
+      haetut should contain (Opiskelija(koulu.id, "9", "9A", Matti.oid, "01.01.2014", None, source = "Test"))
 
     }
 

@@ -1,0 +1,49 @@
+form(ng-submit="save()")
+  div(class="modal-header")
+    button(type="button" class="close" ng-click="modalInstance.close()" aria-hidden="true") &times;
+    h4(class="modal-title" oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.otsikko") Muokkaa YO-arvosanoja
+    span(oph-msg="suoritusrekisteri.muokkaa.yoarvosana.ohje") Alla voit lisätä ennen vuotta 1990 myönnettyjä YO-arvosanoja.
+  table(class="table table-condensed table-striped")
+    thead
+      th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.koe") Koe
+      th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.arvosana") Arvosana
+      th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.pisteet") Yhteispistemäärä
+      th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.tutkintokerta") Tutkintokerta
+      th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.pakollinen") Pakollinen
+      th
+    tbody
+      tr(ng-repeat="k in koetaulukko")
+        td
+          select(ng-show="k.editable" class="form-control" ng-model="k.koe" required="required" ng-options="k.value as k.text for k in kokeet" ng-disabled="k.delete")
+          span(ng-hide="k.editable") {{getText(k.koe, kokeet) || k.koe}}
+        td
+          select(ng-show="k.editable" class="form-control" ng-model="k.arvosana" required="required" ng-options="a.value as a.text for a in arvosanat" ng-disabled="k.delete")
+          span(ng-hide="k.editable") {{k.arvosana}}
+        td
+          input(ng-show="k.editable" type="number" step="1" min="0" max="999" maxlength="3" class="form-control" ng-model="k.pisteet" ng-disabled="k.delete")
+          span(ng-hide="k.editable") {{k.pisteet}}
+        td
+          select(ng-show="k.editable" class="form-control" ng-model="k.myonnetty" required="required" ng-options="t.value as t.text for t in tutkintokerrat" ng-disabled="k.delete")
+          span(ng-hide="k.editable") {{k.myonnetty}}
+        td
+          input(ng-show="k.editable" class="form-control" type="checkbox" ng-model="k.pakollinen" ng-disabled="k.delete")
+          span(ng-hide="k.editable") {{k.pakollinen}}
+        td
+          button(ng-show="k.editable" type="button" class="btn btn-default btn-xs" ng-click="k.delete = true" ng-disabled="k.delete")
+            span(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.poista") Poista
+            span(class="glyphicon glyphicon-remove")
+      tr
+        td(colspan="6")
+          button(type="button" class="btn btn-default btn-xs" ng-click="addKoe()")
+            span(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.lisaakoe") Lisää koe
+            span(class="glyphicon glyphicon-plus")
+      tr(ng-show="loading")
+        td(class="loading-td" colspan="5")
+          div(class="loading-large")
+  div(class="modal-footer")
+    button(type="button" class="btn btn-default" ng-click="cancel()")
+      span(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.peruuta") Peruuta
+      span(class="glyphicon glyphicon-remove")
+    button(type="submit" class="btn btn-primary")
+      span(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.tallenna") Tallenna
+      span(class="glyphicon glyphicon-saved")

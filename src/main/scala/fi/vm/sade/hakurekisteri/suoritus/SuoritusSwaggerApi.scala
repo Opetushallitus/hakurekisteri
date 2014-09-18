@@ -29,9 +29,10 @@ trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus, CreateSuoritus
   val query = apiOperation[Suoritus]("haeSuoritukset")
     .summary("näyttää kaikki suoritukset")
     .notes("Näyttää kaikki suoritukset. Voit myös hakea eri parametreillä.")
-    .parameter(queryParam[Option[String]]("henkilo").description("suorittaneen henkilon oid"))
-    .parameter(queryParam[Option[String]]("kausi").description("suorituksen päättymisen kausi").allowableValues("S", "K"))
-    .parameter(queryParam[Option[String]]("vuosi").description("suorituksen päättymisen vuosi"))
+    .parameter(queryParam[Option[String]]("henkilo").description("henkilon oid"))
+    .parameter(queryParam[Option[String]]("kausi").description("päättymisen kausi").allowableValues("S", "K"))
+    .parameter(queryParam[Option[String]]("vuosi").description("päättymisen vuosi"))
+    .parameter(queryParam[Option[String]]("myontaja").description("myöntäneen oppilaitoksen oid"))
 
   val create = apiOperation[Suoritus]("lisääSuoritus")
     .summary("luo suorituksen ja palauttaa sen tiedot")

@@ -15,12 +15,14 @@ import scala.xml.{Elem, Node, NodeSeq}
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi, Opiskelija, OpiskelijaActor}
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.joda.time.DateTime
+import org.joda.time.{LocalDate, DateTime}
 import org.joda.time.format.DateTimeFormat
 
 import com.github.nscala_time.time.Imports._
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
 import fi.vm.sade.hakurekisteri.rest.support.User
+import com.github.nscala_time.time.TypeImports.LocalDate
+import com.github.nscala_time.time.StaticForwarderImports.LocalDate
 
 
 object kausi extends Enumeration {
@@ -33,7 +35,7 @@ object kausi extends Enumeration {
 import kausi._
 
 trait TestSecurity extends SecuritySupport {
-  override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(User("testaaja", Seq("ROLE_APP_SUORITUSREKISTERI_CRUD", "ROLE_APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001"), None))
+  override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(User("Test", Seq("ROLE_APP_SUORITUSREKISTERI_CRUD", "ROLE_APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001"), None))
 }
 
 trait HakurekisteriSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport {
@@ -249,7 +251,7 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
         luokkataso = row \ "LUOKKATASO",
         luokka = row \ "LUOKKA",
         henkiloOid = henkiloRekisteri.find(row \ "HETU"),
-        alkuPaiva = getStartDate(row \ "VUOSI", row \"KAUSI"))
+        alkuPaiva = getStartDate(row \ "VUOSI", row \"KAUSI"), source = "Test")
       )
   }
   val dateformat = new SimpleDateFormat("dd.MM.yyyy")
@@ -264,5 +266,32 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
   implicit def string2DateTime(s: String): DateTime = {
     DateTime.parse(s, DateTimeFormat.forPattern("dd.MM.yyyy"))
+  }
+}
+
+
+object PerusopetuksenToteutus2005S {
+  def apply (oppilaitos: String) : Komoto = {
+    Komoto("komotoid", "peruskoulu", oppilaitos, "2005", Kausi.Syksy)
+  }
+}
+object Peruskoulu {
+  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
+    Suoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, yksilollistaminen.Ei, "fi",  source = "Test")
+  }
+}
+object OsittainYksilollistettyPerusopetus {
+  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
+    Suoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, yksilollistaminen.Osittain, "fi", source = "Test")
+  }
+}
+object AlueittainYksilollistettyPerusopetus {
+  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
+    Suoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, yksilollistaminen.Alueittain, "fi", source = "Test")
+  }
+}
+object KokonaanYksillollistettyPerusopetus {
+  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
+    Suoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, yksilollistaminen.Kokonaan, "fi", source = "Test")
   }
 }

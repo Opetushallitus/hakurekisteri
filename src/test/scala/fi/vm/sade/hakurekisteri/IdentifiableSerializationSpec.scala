@@ -3,27 +3,21 @@ package fi.vm.sade.hakurekisteri
 import org.scalatest.WordSpec
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 
-import org.json4s.FieldSerializer._
-import org.json4s.{CustomSerializer, FieldSerializer, DefaultFormats, Formats}
-import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization._
-import java.util.{UUID, Date}
+import java.util.UUID
 import org.scalatest.matchers.ShouldMatchers
-import org.json4s.JsonAST.{JValue, JField, JString, JObject}
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, IdentitySerializer, UUIDSerializer}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, Peruskoulu}
 import java.text.SimpleDateFormat
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
-import fi.vm.sade.hakurekisteri.suoritus.Komoto
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import scala.Some
 import org.joda.time.{MonthDay, DateTime}
+import fi.vm.sade.hakurekisteri.acceptance.tools.Peruskoulu
 
 class IdentifiableSerializationSpec extends WordSpec with ShouldMatchers with HakurekisteriJsonSupport {
 
   val identifier = UUID.randomUUID()
-  val opiskelija = new Opiskelija("1.2.3", "9": String, "9A": String, "2.3.4": String, DateTime.now, Some(DateTime.now))
+  val opiskelija = new Opiskelija("1.2.3", "9": String, "9A": String, "2.3.4": String, DateTime.now, Some(DateTime.now), source = "Test")
 
   val df = new SimpleDateFormat("yyyyMMdd")
 

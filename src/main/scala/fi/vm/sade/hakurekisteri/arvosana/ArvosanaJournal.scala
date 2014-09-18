@@ -10,6 +10,7 @@ import java.util.UUID
 import scala.compat.Platform
 import org.slf4j.LoggerFactory
 import scala.slick.lifted
+import org.joda.time.LocalDate
 
 class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, ArvosanaTable, ColumnOrdered[Long], UUID] {
 
@@ -17,19 +18,21 @@ class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, Arvosana
 
   override def delta(row: ArvosanaTable#TableElementType): Delta[Arvosana, UUID] =
     row match {
-      case (resourceId, _, _, _, _, _, _, _, true) => Deleted(UUID.fromString(resourceId))
-      case (id,suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, _, _) =>
-        Updated(Arvosana(UUID.fromString(suoritus), Arvio(arvosana, asteikko), aine, lisatieto, valinnainen).identify(UUID.fromString(id)))
+      case (resourceId, _, _, _, _, _, _, _,_, source,  _, true) => Deleted(UUID.fromString(resourceId), source)
+      case (id,suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, pisteet, myonnetty, source,  _, _) =>
+        Updated(Arvosana(UUID.fromString(suoritus), Arvio(arvosana, asteikko, pisteet), aine, lisatieto, valinnainen, myonnetty = myonnetty.map(LocalDate.parse), source).identify(UUID.fromString(id)))
     }
 
-  override def delete(id:UUID) =  currentState(id) match
-  { case (id,suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, _, _)  =>
-      (id,suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, Platform.currentTime,true)}
+  override def delete(id:UUID, source: String) =  currentState(id) match
+  { case (foundid,suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, pisteet, myonnetty, _ ,  _, _)  =>
+      (foundid,suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, pisteet,myonnetty, source, Platform.currentTime,true)}
 
   override def update(o:Arvosana with Identified[UUID]) = o.arvio match {
     case Arvio410(arvosana) =>
       logger.debug("toRow lisatieto {}", o.lisatieto)
-      (o.id.toString, o.suoritus.toString, arvosana, Arvio.ASTEIKKO_4_10 , o.aine, o.lisatieto, o.valinnainen, Platform.currentTime, false)
+      (o.id.toString, o.suoritus.toString, arvosana, Arvio.ASTEIKKO_4_10 , o.aine, o.lisatieto, o.valinnainen, None, o.myonnetty.map(_.toString), o.source, Platform.currentTime, false)
+    case ArvioYo(arvosana, pisteet) =>
+      (o.id.toString, o.suoritus.toString, arvosana, Arvio.ASTEIKKOYO , o.aine, o.lisatieto, o.valinnainen, pisteet, o.myonnetty.map(_.toString), o.source, Platform.currentTime, false)
     case a:Arvio if a == Arvio.NA => throw UnknownAssessmentResultException
   }
 
@@ -57,7 +60,7 @@ class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, Arvosana
 
   override def timestamp(resource: ArvosanaTable): Column[Long] =  resource.inserted
 
-  override def timestamp(resource: ArvosanaTable#TableElementType): Long = resource._8
+  override def timestamp(resource: ArvosanaTable#TableElementType): Long = resource._11
 
   override val idColumn: (ArvosanaTable) => Column[String] = _.resourceId
 
@@ -79,7 +82,7 @@ class ArvosanaJournal(database: Database) extends JDBCJournal[Arvosana, Arvosana
 
   }
 
-class ArvosanaTable(tag: Tag) extends Table[(String, String, String, String, String, Option[String], Boolean, Long, Boolean)](tag, "arvosana") {
+class ArvosanaTable(tag: Tag) extends Table[(String, String, String, String, String, Option[String], Boolean, Option[Int], Option[String], String, Long, Boolean)](tag, "arvosana") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def resourceId = column[String]("resource_id")
   def suoritus = column[String]("suoritus")
@@ -88,8 +91,11 @@ class ArvosanaTable(tag: Tag) extends Table[(String, String, String, String, Str
   def aine = column[String]("aine")
   def lisatieto = column[Option[String]]("lisatieto")
   def valinnainen = column[Boolean]("valinnainen")
+  def pisteet = column[Option[Int]]("pisteet")
+  def myonnetty = column[Option[String]]("myonnetty")
   def inserted = column[Long]("inserted")
+  def source = column[String]("source")
   def deleted = column[Boolean]("deleted")
   // Every table needs a * projection with the same type as the table's type parameter
-  def * = (resourceId, suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, inserted, deleted)
+  def * = (resourceId, suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, pisteet, myonnetty, source,  inserted, deleted)
 }

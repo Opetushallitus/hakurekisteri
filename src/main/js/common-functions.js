@@ -11,6 +11,17 @@ var henkiloServiceUrl = getBaseUrl() + "/authentication-service";
 var organisaatioServiceUrl = getBaseUrl() + "/organisaatio-service";
 var hakuAppServiceUrl = getBaseUrl() + "/haku-app";
 var koodistoServiceUrl = getBaseUrl() + "/koodisto-service";
+var tarjontaServiceUrl = getBaseUrl() + "/tarjonta-service";
+
+var komo = {
+    ulkomainen: "1.2.246.562.13.86722481404",
+    peruskoulu: "1.2.246.562.13.62959769647",
+    lisaopetus: "1.2.246.562.5.2013112814572435044876",
+    ammattistartti: "1.2.246.562.5.2013112814572438136372",
+    maahanmuuttaja: "1.2.246.562.5.2013112814572441001730",
+    valmentava: "1.2.246.562.5.2013112814572435755085",
+    ylioppilastutkinto: "1.2.246.562.5.2013061010184237348007"
+};
 
 if (!Array.prototype.diff)
     Array.prototype.diff = function(a) {
@@ -39,7 +50,22 @@ if(!Array.isArray)
 function getOrganisaatio($http, organisaatioOid, successCallback, errorCallback) {
     $http.get(organisaatioServiceUrl + '/rest/organisaatio/' + encodeURIComponent(organisaatioOid), {cache: true})
         .success(successCallback)
-        .error(errorCallback);
+        .error(errorCallback)
+}
+
+function getKoulutusNimi($http, koulutusUri, successCallback) {
+    $http.get(koodistoServiceUrl + '/rest/json/koulutus/koodi/' + encodeURIComponent(koulutusUri), {cache: true})
+        .success(function(koodi) {
+            if (koodi.metadata) {
+                for (var i = 0; i < koodi.metadata.length; i++) {
+                    var meta = koodi.metadata[i];
+                    if (meta.kieli === 'FI') {
+                        return successCallback(meta.nimi);
+                    }
+                }
+            }
+            return successCallback("");
+        })
 }
 
 function authenticateToAuthenticationService($http, successCallback, errorCallback) {
@@ -78,6 +104,18 @@ function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options, valueFro
                 return a.text < b.text ? -1 : 1;
             });
         });
+}
+
+function parseFinDate(d) {
+    return (d && d.match(/[0-3][0-9]\.[0-1][0-9]\.[0-9]{4}/)) ? new Date(parseInt(d.substr(6, 4), 10), parseInt(d.substr(3, 2), 10) - 1, parseInt(d.substr(0, 2), 10)) : null;
+}
+
+function sortByFinDateDesc(a, b) {
+    var aDate = parseFinDate(a);
+    if (!aDate) aDate = new Date(1000, 0, 1);
+    var bDate = parseFinDate(b);
+    if (!bDate) bDate = new Date(1000, 0, 1);
+    return aDate > bDate ? -1 : aDate < bDate ? 1 : 0;
 }
 
 function ensureConsoleMethods() {

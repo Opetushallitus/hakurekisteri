@@ -1,23 +1,27 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
+import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.hakija
+import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.hakemus.{AkkaHakupalvelu, Hakupalvelu, ListHakemus, FullHakemus}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{Koodisto, Koodi, KoodistoActor}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActor}
+import fi.vm.sade.hakurekisteri.integration.sijoittelu._
 import org.scalatra.swagger.Swagger
 import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport, HakurekisteriSwagger}
-import akka.actor.{Props, ActorSystem}
+import akka.actor.{Props, Actor, ActorSystem}
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
-import fi.vm.sade.hakurekisteri.hakija.XMLHakemus
-import fi.vm.sade.hakurekisteri.hakija.XMLHakutoive
-import scala.Some
 import org.scalatest.Suite
 import org.scalatra.test.HttpComponentsClient
-import akka.actor.Status.Success
-import akka.actor.FSM.Failure
+import org.specs.mock.Mockito
+import org.specs.specification.Examples
 import scala.concurrent.{Future, ExecutionContext}
 
-trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport {
+trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport with Mockito {
+  override def forExample: Examples = ???
+  override def lastExample: Option[Examples] = ???
 
   object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None)
   object OppilaitosY extends Organisaatio("1.10.2", Map("fi" -> "Oppilaitos Y"), None, Some("00002"), None)
@@ -136,30 +140,20 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   }
 
   import _root_.akka.pattern.ask
-
   implicit val system = ActorSystem()
   implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(60, TimeUnit.SECONDS)
 
-
   object hakupalvelu extends Hakupalvelu {
-
-
     var tehdytHakemukset: Seq[FullHakemus] = Seq()
 
-
-    
-    
     override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = q.organisaatio match {
-
       case Some(org) => {
         println("Haetaan tarjoajalta %s".format(org))
         Future(hakijat.filter(_.hakemus.hakutoiveet.exists(_.hakukohde.koulutukset.exists((kohde) => {println(kohde);kohde.tarjoaja == org}))))
       }
       case _ => Future(hakijat)
-      
     }
-
 
     def hakijat: Seq[Hakija] = {
       tehdytHakemukset.map(AkkaHakupalvelu.getHakija(_))
@@ -184,32 +178,26 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     def has(hakemukset: FullHakemus*) = {
       tehdytHakemukset = hakemukset
     }
-
   }
 
-  object organisaatiopalvelu extends Organisaatiopalvelu {
-    override def getAll() =  Future.successful(Seq(OppilaitosX,OppilaitosY,OpetuspisteX, OpetuspisteY).map(_.oid))
-
-    override def get(str: String): Future[Option[Organisaatio]] = Future.successful(doTheMatch(str))
-
-    def doTheMatch(str: String): Option[Organisaatio] = str match {
-      case OppilaitosX.oid => Some(OppilaitosX)
-      case OppilaitosY.oid => Some(OppilaitosY)
-      case OpetuspisteX.oid => Some(OpetuspisteX)
-      case OpetuspisteY.oid => Some(OpetuspisteY)
-      case default => None
+  class MockedOrganisaatioActor extends Actor {
+    import akka.pattern.pipe
+    override def receive: Receive = {
+      case OppilaitosX.oid => Future.successful(Some(OppilaitosX)) pipeTo sender
+      case OppilaitosY.oid => Future.successful(Some(OppilaitosY)) pipeTo sender
+      case OpetuspisteX.oid => Future.successful(Some(OpetuspisteX)) pipeTo sender
+      case OpetuspisteY.oid => Future.successful(Some(OpetuspisteY)) pipeTo sender
+      case default => Future.successful(None) pipeTo sender
     }
   }
 
-  object koodistopalvelu extends Koodistopalvelu {
-    override def getRinnasteinenKoodiArvo(koodiUri: String, rinnasteinenKoodistoUri: String): Future[String] = koodiUri match {
-      case _ => Future.successful("246")
-    }
-  }
+  val organisaatioActor = system.actorOf(Props(new MockedOrganisaatioActor()))
 
-  object sijoittelupalvelu extends Sijoittelupalvelu {
-    override def getSijoitteluTila(hakuOid: String): Future[SijoitteluPagination] = hakuOid match {
-      case _ => Future.successful(
+  val koodistoClient = mock[VirkailijaRestClient]
+  koodistoClient.readObject[Seq[Koodi]]("", HttpResponseCode.Ok) returns Future.successful(Seq(Koodi("246", "", Koodisto(""))))
+  val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient)))
+
+  val f = Future.successful(
         SijoitteluPagination(
           Seq(
             SijoitteluHakija(
@@ -242,16 +230,17 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
               etunimi = None,
               sukunimi = None)),
           1))
-    }
-  }
+
+  val sijoitteluClient = mock[VirkailijaRestClient]
+  sijoitteluClient.readObject[SijoitteluPagination]("/resources/sijoittelu/1.1/sijoitteluajo/latest/hakemukset", HttpResponseCode.Ok) returns f
+  sijoitteluClient.readObject[SijoitteluPagination]("/resources/sijoittelu/1.2/sijoitteluajo/latest/hakemukset", HttpResponseCode.Ok) returns f
 
   object hakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
-
-    val orgAct = system.actorOf(Props(new OrganisaatioActor(organisaatiopalvelu)))
-    val sijoittelu = system.actorOf(Props(new SijoitteluActor(sijoittelupalvelu)))
-    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodistopalvelu, sijoittelu)))
+    val orgAct = system.actorOf(Props(new MockedOrganisaatioActor()))
+    val sijoittelu = system.actorOf(Props(new SijoitteluActor(sijoitteluClient)))
+    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodisto, sijoittelu)))
 
     def get(q: HakijaQuery) = {
       hakijaActor ? q

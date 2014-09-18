@@ -5,7 +5,7 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.DateTime
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 
-case class Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, alkuPaiva: DateTime, loppuPaiva: Option[DateTime] = None) extends Resource[UUID] {
+case class Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, alkuPaiva: DateTime, loppuPaiva: Option[DateTime] = None, source: String) extends Resource[UUID] {
    override def identify(id: UUID): this.type with Identified[UUID] = Opiskelija.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
 }
 
@@ -13,7 +13,7 @@ case class Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String,
 object Opiskelija {
 
   def identify(o:Opiskelija, identity:UUID) = {
-    new Opiskelija(o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva, o.loppuPaiva) with Identified[UUID]{
+    new Opiskelija(o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva, o.loppuPaiva, o.source) with Identified[UUID]{
       val id: UUID = identity
     }
   }

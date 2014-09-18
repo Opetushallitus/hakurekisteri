@@ -112,10 +112,10 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
       findBy(ArvosanaQuery(Some(s.id))).map(Todistus(s, _)) pipeTo self
     case Todistus(suoritus, arvosanas) =>
       (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {
-        case (id, Suoritus(`perusopetus`, oppilaitos, _, _ ,oppilas ,_, _)) =>
+        case (id, Suoritus(`perusopetus`, oppilaitos, _, _ ,oppilas ,_,_, _, _)) =>
 
           checkTodistus(arvosanas, oppilas, id, oppilaitos, "perusopetus")
-        case (id, Suoritus(`perusopetuksenlisa`, oppilaitos, _, _ ,oppilas ,_, _)) =>
+        case (id, Suoritus(`perusopetuksenlisa`, oppilaitos, _, _ ,oppilas ,_, _, _, _)) =>
           checkTodistus(arvosanas, oppilas, id, oppilaitos, "perusopetuksen lisäopetus")
 
 

@@ -6,6 +6,8 @@ import java.util.UUID
 
 trait Resource[T] {
 
+  val source: String
+
   def identify(id:T): this.type with Identified[T]
 
 }

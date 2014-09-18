@@ -1,0 +1,437 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <virtaluku:OpiskelijanKaikkiTiedotResponse xmlns:virtaluku="http://tietovaranto.csc.fi/luku">
+            <virta:Virta xmlns:virta="urn:mace:funet.fi:virta/2013/01/29">
+                <virta:Opiskelija avain="537516325">
+                    <virta:Henkilotunnus>111111-1975</virta:Henkilotunnus>
+                    <virta:KansallinenOppijanumero>1.2.3</virta:KansallinenOppijanumero>
+                    <virta:Opiskeluoikeudet>
+                        <virta:Opiskeluoikeus avain="537519835" opiskelijaAvain="537516325">
+                            <virta:AlkuPvm>2003-11-04</virta:AlkuPvm>
+                            <virta:LoppuPvm>2114-09-26</virta:LoppuPvm>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2003-11-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2015-06-08</virta:LoppuPvm>
+                                <virta:Koodi>1</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2014-07-07</virta:AlkuPvm>
+                                <virta:Koodi>4</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tyyppi>5</virta:Tyyppi>
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Jakso koulutusmoduulitunniste="KMT13674">
+                                <virta:AlkuPvm>2003-11-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2014-10-05</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>775101</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>999</virta:Koulutuskunta>
+                            </virta:Jakso>
+                            <virta:Jakso koulutusmoduulitunniste="KMT15722">
+                                <virta:AlkuPvm>2013-11-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2114-09-26</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>775101</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>999</virta:Koulutuskunta>
+                            </virta:Jakso>
+                            <virta:Ensisijaisuus>
+                                <virta:AlkuPvm>2001-10-10</virta:AlkuPvm>
+                                <virta:LoppuPvm>2121-12-21</virta:LoppuPvm>
+                            </virta:Ensisijaisuus>
+                            <virta:Ensisijaisuus>
+                                <virta:AlkuPvm>2001-10-10</virta:AlkuPvm>
+                                <virta:LoppuPvm>2121-12-21</virta:LoppuPvm>
+                            </virta:Ensisijaisuus>
+                            <virta:Opintoala1995>90</virta:Opintoala1995>
+                            <virta:AvoinVayla>0</virta:AvoinVayla>
+                            <virta:AsetusMaisteriohjelma>0</virta:AsetusMaisteriohjelma>
+                        </virta:Opiskeluoikeus>
+                        <virta:Opiskeluoikeus avain="639004478" opiskelijaAvain="537516325">
+                            <virta:AlkuPvm>2005-04-04</virta:AlkuPvm>
+                            <virta:LoppuPvm>2014-05-05</virta:LoppuPvm>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2005-04-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2014-05-05</virta:LoppuPvm>
+                                <virta:Koodi>1</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2013-06-04</virta:AlkuPvm>
+                                <virta:Koodi>3</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tyyppi>7</virta:Tyyppi>
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Jakso koulutusmoduulitunniste="KMT17770">
+                                <virta:AlkuPvm>2005-04-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2010-05-05</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>875101</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>999</virta:Koulutuskunta>
+                            </virta:Jakso>
+                            <virta:Jakso koulutusmoduulitunniste="KMT19818">
+                                <virta:AlkuPvm>2009-06-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2014-05-05</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>875101</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>999</virta:Koulutuskunta>
+                            </virta:Jakso>
+                            <virta:Ensisijaisuus>
+                                <virta:AlkuPvm>2001-10-10</virta:AlkuPvm>
+                                <virta:LoppuPvm>2121-12-21</virta:LoppuPvm>
+                            </virta:Ensisijaisuus>
+                            <virta:Opintoala1995>90</virta:Opintoala1995>
+                            <virta:AvoinVayla>0</virta:AvoinVayla>
+                            <virta:AsetusMaisteriohjelma>0</virta:AsetusMaisteriohjelma>
+                        </virta:Opiskeluoikeus>
+                    </virta:Opiskeluoikeudet>
+                    <virta:LukukausiIlmoittautumiset>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2010-07-15</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2011-01-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2011-07-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2006-06-17</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2007-01-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2007-07-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2008-06-02</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2009-01-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2009-07-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2004-06-07</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2005-01-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2005-07-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2003-07-16</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2003-08-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2003-12-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2009-06-04</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2009-08-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2009-12-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2005-08-05</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2005-08-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2005-12-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2003-02-28</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2003-01-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2003-07-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2009-06-04</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2010-01-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2010-07-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2005-08-05</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2006-01-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2006-07-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2007-06-25</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2007-08-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2007-12-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2011-06-03</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2011-08-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2011-12-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2008-06-02</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2008-08-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2008-12-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2004-06-07</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2004-08-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2004-12-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2003-07-16</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2004-01-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2004-07-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2007-06-25</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2008-01-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2008-07-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2011-06-03</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2012-01-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2012-07-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2010-07-15</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2010-08-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2010-12-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                        <virta:LukukausiIlmoittautuminen opiskelijaAvain="537516325">
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Tila>1</virta:Tila>
+                            <virta:IlmoittautumisPvm>2006-06-17</virta:IlmoittautumisPvm>
+                            <virta:AlkuPvm>2006-08-01</virta:AlkuPvm>
+                            <virta:LoppuPvm>2006-12-31</virta:LoppuPvm>
+                            <virta:YlioppilaskuntaJasen>0</virta:YlioppilaskuntaJasen>
+                        </virta:LukukausiIlmoittautuminen>
+                    </virta:LukukausiIlmoittautumiset>
+                    <virta:Opintosuoritukset>
+                        <virta:Opintosuoritus avain="1109391512" koulutusmoduulitunniste="1108258718" opiskelijaAvain="537516325">
+                            <virta:SuoritusPvm>2011-08-28</virta:SuoritusPvm>
+                            <virta:Laajuus>
+                                <virta:Opintopiste>45.800000</virta:Opintopiste>
+                                <virta:Opintoviikko>0.000000</virta:Opintoviikko>
+                            </virta:Laajuus>
+                            <virta:Arvosana>
+                                <virta:ToinenKotimainen>HT</virta:ToinenKotimainen>
+                            </virta:Arvosana>
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Laji>2</virta:Laji>
+                            <virta:Nimi>Muu opinotsuoritus / Lääketieteellinen koulutus, (1),Ei Luokittelua</virta:Nimi>
+                            <virta:Kieli>fi</virta:Kieli>
+                            <virta:Opintoala1995>
+                                <virta:Koodi>90</virta:Koodi>
+                            </virta:Opintoala1995>
+                            <virta:Sisaltyvyys sisaltyvaOpintosuoritusAvain="1109391356">
+                                <virta:Opintopiste>34.400000</virta:Opintopiste>
+                            </virta:Sisaltyvyys>
+                            <virta:Sisaltyvyys sisaltyvaOpintosuoritusAvain="1109390771">
+                                <virta:Opintopiste>11.400000</virta:Opintopiste>
+                            </virta:Sisaltyvyys>
+                        </virta:Opintosuoritus>
+                        <virta:Opintosuoritus avain="1109391434" koulutusmoduulitunniste="1108280519" opiskelijaAvain="537516325">
+                            <virta:SuoritusPvm>2011-08-28</virta:SuoritusPvm>
+                            <virta:Laajuus>
+                                <virta:Opintopiste>34.400000</virta:Opintopiste>
+                                <virta:Opintoviikko>0.000000</virta:Opintoviikko>
+                            </virta:Laajuus>
+                            <virta:Arvosana>
+                                <virta:ToinenKotimainen>HT</virta:ToinenKotimainen>
+                            </virta:Arvosana>
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Laji>2</virta:Laji>
+                            <virta:Nimi>Muu opinotsuoritus / Lääketieteellinen koulutus, (11),Ei Luokittelua</virta:Nimi>
+                            <virta:Kieli>fi</virta:Kieli>
+                            <virta:Opintoala1995>
+                                <virta:Koodi>90</virta:Koodi>
+                            </virta:Opintoala1995>
+                        </virta:Opintosuoritus>
+                        <virta:Opintosuoritus avain="1109391356" koulutusmoduulitunniste="1097451545" opiskelijaAvain="537516325">
+                            <virta:SuoritusPvm>2011-08-28</virta:SuoritusPvm>
+                            <virta:Laajuus>
+                                <virta:Opintopiste>34.400000</virta:Opintopiste>
+                                <virta:Opintoviikko>0.000000</virta:Opintoviikko>
+                            </virta:Laajuus>
+                            <virta:Arvosana>
+                                <virta:ToinenKotimainen>HT</virta:ToinenKotimainen>
+                            </virta:Arvosana>
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Laji>2</virta:Laji>
+                            <virta:Nimi>Muu opinotsuoritus / Lääketieteellinen koulutus, (19),Ei Luokittelua</virta:Nimi>
+                            <virta:Kieli>fi</virta:Kieli>
+                            <virta:Opintoala1995>
+                                <virta:Koodi>90</virta:Koodi>
+                            </virta:Opintoala1995>
+                            <virta:Sisaltyvyys sisaltyvaOpintosuoritusAvain="1109391434">
+                                <virta:Opintopiste>34.400000</virta:Opintopiste>
+                            </virta:Sisaltyvyys>
+                        </virta:Opintosuoritus>
+                        <virta:Opintosuoritus avain="1109391317" koulutusmoduulitunniste="1108280519" opiskelijaAvain="537516325">
+                            <virta:SuoritusPvm>2010-11-28</virta:SuoritusPvm>
+                            <virta:Laajuus>
+                                <virta:Opintopiste>11.400000</virta:Opintopiste>
+                                <virta:Opintoviikko>0.000000</virta:Opintoviikko>
+                            </virta:Laajuus>
+                            <virta:Arvosana>
+                                <virta:ToinenKotimainen>HT</virta:ToinenKotimainen>
+                            </virta:Arvosana>
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Laji>2</virta:Laji>
+                            <virta:Nimi>Muu opinotsuoritus / Lääketieteellinen koulutus, (28),Ei Luokittelua</virta:Nimi>
+                            <virta:Kieli>fi</virta:Kieli>
+                            <virta:Opintoala1995>
+                                <virta:Koodi>90</virta:Koodi>
+                            </virta:Opintoala1995>
+                        </virta:Opintosuoritus>
+                        <virta:Opintosuoritus avain="1104761458" koulutusmoduulitunniste="996267033" opiskelijaAvain="537516325">
+                            <virta:SuoritusPvm>2012-06-26</virta:SuoritusPvm>
+                            <virta:Laajuus>
+                                <virta:Opintopiste>0.000000</virta:Opintopiste>
+                                <virta:Opintoviikko>0.000000</virta:Opintoviikko>
+                            </virta:Laajuus>
+                            <virta:Arvosana>
+                                <virta:ToinenKotimainen>HT</virta:ToinenKotimainen>
+                            </virta:Arvosana>
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Laji>2</virta:Laji>
+                            <virta:Nimi>Muu opinotsuoritus / Lääketieteellinen koulutus, (36),Ei Luokittelua</virta:Nimi>
+                            <virta:Kieli>fi</virta:Kieli>
+                            <virta:Opintoala1995>
+                                <virta:Koodi>90</virta:Koodi>
+                            </virta:Opintoala1995>
+                        </virta:Opintosuoritus>
+                        <virta:Opintosuoritus avain="1109390771" koulutusmoduulitunniste="1097409425" opiskelijaAvain="537516325">
+                            <virta:SuoritusPvm>2010-11-28</virta:SuoritusPvm>
+                            <virta:Laajuus>
+                                <virta:Opintopiste>11.400000</virta:Opintopiste>
+                                <virta:Opintoviikko>0.000000</virta:Opintoviikko>
+                            </virta:Laajuus>
+                            <virta:Arvosana>
+                                <virta:ToinenKotimainen>HT</virta:ToinenKotimainen>
+                            </virta:Arvosana>
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Laji>2</virta:Laji>
+                            <virta:Nimi>Muu opinotsuoritus / Lääketieteellinen koulutus, (44),Ei Luokittelua</virta:Nimi>
+                            <virta:Kieli>fi</virta:Kieli>
+                            <virta:Opintoala1995>
+                                <virta:Koodi>90</virta:Koodi>
+                            </virta:Opintoala1995>
+                            <virta:Sisaltyvyys sisaltyvaOpintosuoritusAvain="1109391317">
+                                <virta:Opintopiste>11.400000</virta:Opintopiste>
+                            </virta:Sisaltyvyys>
+                        </virta:Opintosuoritus>
+                        <virta:Opintosuoritus avain="1109391551" koulutusmoduulitunniste="26374629" opiskelijaAvain="537516325" opiskeluoikeusAvain="639004478">
+                            <virta:SuoritusPvm>2012-06-26</virta:SuoritusPvm>
+                            <virta:Laajuus>
+                                <virta:Opintopiste>0.000000</virta:Opintopiste>
+                                <virta:Opintoviikko>0.000000</virta:Opintoviikko>
+                            </virta:Laajuus>
+                            <virta:Arvosana>
+                                <virta:ToinenKotimainen>HT</virta:ToinenKotimainen>
+                            </virta:Arvosana>
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Laji>1</virta:Laji>
+                            <virta:Nimi>Lääketieteen tohtori</virta:Nimi>
+                            <virta:Kieli>fi</virta:Kieli>
+                            <virta:Koulutuskoodi>875101</virta:Koulutuskoodi>
+                            <virta:Opintoala1995>
+                                <virta:Koodi>90</virta:Koodi>
+                            </virta:Opintoala1995>
+                            <virta:Sisaltyvyys sisaltyvaOpintosuoritusAvain="1109391512">
+                                <virta:Opintopiste>45.800000</virta:Opintopiste>
+                            </virta:Sisaltyvyys>
+                            <virta:Sisaltyvyys sisaltyvaOpintosuoritusAvain="1104761458">
+                                <virta:Opintopiste>0.000000</virta:Opintopiste>
+                            </virta:Sisaltyvyys>
+                        </virta:Opintosuoritus>
+                    </virta:Opintosuoritukset>
+                </virta:Opiskelija>
+            </virta:Virta>
+        </virtaluku:OpiskelijanKaikkiTiedotResponse>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

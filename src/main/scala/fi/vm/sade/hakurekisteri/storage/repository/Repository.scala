@@ -16,7 +16,7 @@ trait Repository[T, I] {
 
   def cursor(t:T): Any
 
-  def delete(id: I)
+  def delete(id: I, source: String)
 }
 
 
@@ -71,15 +71,15 @@ trait InMemRepository[T <: Resource[I], I] extends Repository[T, I] {
   }
 
 
-  override def delete(id:I): Unit = {
+  override def delete(id:I,source :String): Unit = {
     if (store.contains(id)) {
-      val deleted = deleteFromStore(id)
+      val deleted = deleteFromStore(id, source :String)
       index(deleted, None)
       deleted.foreach((item) => cursor = cursor + (item.hashCode % 16384 -> updateCursor(item, id)))
     }
   }
 
-  def deleteFromStore(id:I) = {
+  def deleteFromStore(id:I, source: String) = {
     val item = store.get(id)
     store = store - id
     item.foreach((deleted) => {

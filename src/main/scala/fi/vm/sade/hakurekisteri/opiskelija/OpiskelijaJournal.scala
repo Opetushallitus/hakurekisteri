@@ -17,16 +17,16 @@ import scala.compat.Platform
 import scala.slick.lifted
 
 class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, OpiskelijaTable, ColumnOrdered[Long], UUID] {
-  override def delta(row: OpiskelijaTable#TableElementType): Delta[Opiskelija, UUID] =
-    row match {
-      case (resourceId, _, _, _, _, _, _, _, true) => Deleted(UUID.fromString(resourceId))
-      case (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, _, _) => Updated(Opiskelija(oppilaitosOid, luokkataso, luokka, henkiloOid,new DateTime(alkuPaiva), loppuPaiva.map(new DateTime(_))).identify(UUID.fromString(resourceId)))
-    }
+  override def delta(row: OpiskelijaTable#TableElementType): Delta[Opiskelija, UUID] = row match {
+    case (resourceId, _, _, _, _, _, _, source,  _, true) => Deleted(UUID.fromString(resourceId), source)
+    case (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source,  _, _) => Updated(Opiskelija(oppilaitosOid, luokkataso, luokka, henkiloOid,new DateTime(alkuPaiva), loppuPaiva.map(new DateTime(_)), source).identify(UUID.fromString(resourceId)))
+  }
 
-  override def update(o: Opiskelija with Identified[UUID]): OpiskelijaTable#TableElementType = (o.id.toString, o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva.getMillis, o.loppuPaiva.map(_.getMillis), Platform.currentTime, false)
-  override def delete(id:UUID) = currentState(id) match
-    { case (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, _, _)  =>
-      (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, Platform.currentTime,true)}
+  override def update(o: Opiskelija with Identified[UUID]): OpiskelijaTable#TableElementType = (o.id.toString, o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva.getMillis, o.loppuPaiva.map(_.getMillis), o.source, Platform.currentTime, false)
+  override def delete(id: UUID, source :String) = currentState(id) match {
+    case (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva,_, _, _)  =>
+      (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source, Platform.currentTime, true)
+  }
 
   val opiskelijat = TableQuery[OpiskelijaTable]
     database withSession(
@@ -48,11 +48,11 @@ class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, Opis
 
   override def timestamp(resource: OpiskelijaTable): lifted.Column[Long] = resource.inserted
 
-  override def timestamp(resource: OpiskelijaTable#TableElementType): Long = resource._8
+  override def timestamp(resource: OpiskelijaTable#TableElementType): Long = resource._9
 
   override val idColumn: (OpiskelijaTable) => Column[String] = _.resourceId
 
-  override def latestResources  = {
+  override def latestResources = {
     val latest = for {
       (id, resource) <- table.groupBy(idColumn)
     } yield (id, resource.map(sortColumn).max)
@@ -69,7 +69,7 @@ class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, Opis
 
 }
 
-class OpiskelijaTable(tag: Tag) extends Table[(String, String, String, String, String, Long, Option[Long], Long, Boolean)](tag, "opiskelija") {
+class OpiskelijaTable(tag: Tag) extends Table[(String, String, String, String, String, Long, Option[Long], String, Long, Boolean)](tag, "opiskelija") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def resourceId = column[String]("resource_id")
   def oppilaitosOid = column[String]("oppilaitos_oid")
@@ -78,8 +78,9 @@ class OpiskelijaTable(tag: Tag) extends Table[(String, String, String, String, S
   def henkiloOid = column[String]("henkilo_oid")
   def alkuPaiva = column[Long]("alku_paiva")
   def loppuPaiva = column[Option[Long]]("loppu_paiva")
+  def source = column[String]("source")
   def inserted = column[Long]("inserted")
   def deleted = column[Boolean]("deleted")
   // Every table needs a * projection with the same type as the table's type parameter
-  def * = (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, inserted, deleted)
+  def * = (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source,  inserted, deleted)
 }

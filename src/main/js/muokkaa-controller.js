@@ -1,6 +1,6 @@
 'use strict';
 
-function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, LokalisointiService) {
+function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService) {
     $scope.henkiloOid = $routeParams.henkiloOid;
     $scope.myRoles = [];
     $scope.messages = [];
@@ -22,13 +22,13 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             {value: "Kokonaan", text: getOphMsg("suoritusrekisteri.yks.kokonaan", "Kokonaan")}
         ];
         $scope.koulutukset = [
-            {value: "1.2.246.562.13.86722481404", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.13.86722481404", "Ulkomainen")},
-            {value: "1.2.246.562.13.62959769647", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.13.62959769647", "Peruskoulu")},
-            {value: "1.2.246.562.5.2013112814572435044876", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572435044876", "Perusopetuksen lisäopetus")},
-            {value: "1.2.246.562.5.2013112814572438136372", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572438136372", "Ammattistartti")},
-            {value: "1.2.246.562.5.2013112814572441001730", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572441001730", "Maahanmuuttaja")},
-            {value: "1.2.246.562.5.2013112814572435755085", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013112814572435755085", "Valmentava")},
-            {value: "1.2.246.562.5.2013061010184880799984", text: getOphMsg("suoritusrekisteri.komo.1.2.246.562.5.2013061010184880799984", "Lukio")}
+            {value: komo.ulkomainen, text: getOphMsg("suoritusrekisteri.komo." + komo.ulkomainen, "Ulkomainen")},
+            {value: komo.peruskoulu, text: getOphMsg("suoritusrekisteri.komo." + komo.peruskoulu, "Peruskoulu")},
+            {value: komo.lisaopetus, text: getOphMsg("suoritusrekisteri.komo." + komo.lisaopetus, "Perusopetuksen lisäopetus")},
+            {value: komo.ammattistartti, text: getOphMsg("suoritusrekisteri.komo." + komo.ammattistartti, "Ammattistartti")},
+            {value: komo.maahanmuuttaja, text: getOphMsg("suoritusrekisteri.komo." + komo.maahanmuuttaja, "Maahanmuuttaja")},
+            {value: komo.valmentava, text: getOphMsg("suoritusrekisteri.komo." + komo.valmentava, "Valmentava")},
+            {value: komo.ylioppilastutkinto, text: getOphMsg("suoritusrekisteri.komo." + komo.ylioppilastutkinto, "Ylioppilastutkinto")}
         ];
         $scope.tilat = [
             {value: "KESKEN", text: getOphMsg("suoritusrekisteri.tila.KESKEN", "Kesken")},
@@ -60,7 +60,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             .success(function(henkilo) {
                 if (henkilo) {
                     if (henkilo.duplicate === false) {
-                        $scope.henkilo = henkilo;
+                        $scope.henkilo = henkilo
                     } else {
                         $http.get(henkiloServiceUrl + '/resources/s2s/' + encodeURIComponent($scope.henkiloOid), {cache: false})
                             .success(function(masterHenkilo) {
@@ -82,10 +82,10 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                 angular.forEach($scope.luokkatiedot, function(luokkatieto) {
                     if (luokkatieto.oppilaitosOid) {
                         getOrganisaatio($http, luokkatieto.oppilaitosOid, function(organisaatio) {
-                            luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi;
-                        });
+                            luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi
+                        })
                     }
-                });
+                })
             }
         }
 
@@ -93,33 +93,68 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             $scope.luokkatiedot = luokkatiedot;
             enrich();
         }, function() {
-            confirm(getOphMsg("suoritusrekisteri.muokkaa.luokkatietojenhakeminen", "Luokkatietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchLuokkatiedot() : back();
+            confirm(getOphMsg("suoritusrekisteri.muokkaa.luokkatietojenhakeminen", "Luokkatietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchLuokkatiedot() : back()
         });
+    }
+    function enrichSuoritus(suoritus) {
+        if (suoritus.myontaja) {
+            getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
+                suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
+                suoritus.organisaatio = organisaatio;
+            })
+        }
+        if (suoritus.komo && suoritus.komo.match(/^koulutus_\d*$/)) {
+            getKoulutusNimi($http, suoritus.komo, function(koulutusNimi) {
+                suoritus.koulutus = koulutusNimi
+            })
+        } else {
+            suoritus.editable = true
+        }
     }
     function fetchSuoritukset() {
         function enrich() {
-            if ($scope.suoritukset) {
-                angular.forEach($scope.suoritukset, function(suoritus) {
-                    if (suoritus.myontaja) {
-                        getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
-                            suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
-                        });
-                    }
-                });
-            }
+            if ($scope.suoritukset) angular.forEach($scope.suoritukset, enrichSuoritus)
         }
 
         Suoritukset.query({henkilo: $scope.henkiloOid}, function(suoritukset) {
+            suoritukset.sort(function(a, b) {
+                return sortByFinDateDesc(a.valmistuminen, b.valmistuminen)
+            });
             $scope.suoritukset = suoritukset;
             enrich();
         }, function() {
             confirm(getOphMsg("suoritusrekisteri.muokkaa.suoritustietojenhakeminen", "Suoritustietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchSuoritukset() : back();
         });
     }
+    function fetchOpiskeluoikeudet() {
+        function enrich() {
+            if ($scope.opiskeluoikeudet) {
+                angular.forEach($scope.opiskeluoikeudet, function(opiskeluoikeus) {
+                    if (opiskeluoikeus.myontaja) {
+                        getOrganisaatio($http, opiskeluoikeus.myontaja, function(organisaatio) {
+                            opiskeluoikeus.oppilaitos = organisaatio.oppilaitosKoodi;
+                            opiskeluoikeus.organisaatio = organisaatio;
+                        })
+                    }
+                    if (opiskeluoikeus.komo && opiskeluoikeus.komo.match(/^koulutus_\d*$/)) {
+                        getKoulutusNimi($http, opiskeluoikeus.komo, function(koulutusNimi) {
+                            opiskeluoikeus.koulutus = koulutusNimi
+                        })
+                    }
+                })
+            }
+        }
+
+        Opiskeluoikeudet.query({henkilo: $scope.henkiloOid}, function(opiskeluoikeudet) {
+            $scope.opiskeluoikeudet = opiskeluoikeudet;
+            enrich();
+        })
+    }
 
     fetchHenkilotiedot();
     fetchLuokkatiedot();
     fetchSuoritukset();
+    fetchOpiskeluoikeudet();
 
     $scope.getOppilaitos = function(searchStr) {
         if (searchStr && searchStr.trim().match(/^\d{5}$/))
@@ -188,16 +223,35 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         var deferreds = [];
         function saveSuoritukset() {
             angular.forEach($scope.suoritukset, function(suoritus) {
-                $log.debug("save suoritus: " + suoritus.id);
                 var d = $q.defer();
                 this.push(d);
-                if (suoritus.delete) {
-                    if (suoritus.id) {
-                        suoritus.$remove(function() {
+                if (suoritus.editable)
+                    $log.debug("save suoritus: " + suoritus.id);
+                    if (suoritus.delete) {
+                        if (suoritus.id) {
+                            suoritus.$remove(function() {
+                                deleteFromArray(suoritus, $scope.suoritukset);
+                                $log.debug("suoritus removed");
+                                d.resolve("done");
+                            }, function() {
+                                $scope.messages.push({
+                                    type: "danger",
+                                    messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
+                                    message: "Virhe tallennettaessa suoritustietoja.",
+                                    descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
+                                    description: "Yritä uudelleen."
+                                });
+                                d.reject("error deleting suoritus: " + suoritus);
+                            })
+                        } else {
                             deleteFromArray(suoritus, $scope.suoritukset);
-                            $log.debug("suoritus removed");
                             d.resolve("done");
-                        }, function() {
+                        }
+                    } else {
+                        suoritus.$save(function () {
+                            enrichSuoritus(suoritus);
+                            d.resolve("done");
+                        }, function () {
                             $scope.messages.push({
                                 type: "danger",
                                 messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
@@ -205,29 +259,9 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                                 descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
                                 description: "Yritä uudelleen."
                             });
-                            d.reject("error deleting suoritus: " + suoritus);
+                            d.reject("error saving suoritus: " + suoritus);
                         })
-                    } else {
-                        deleteFromArray(suoritus, $scope.suoritukset);
-                        d.resolve("done");
                     }
-                } else {
-                    suoritus.$save(function () {
-                        getOrganisaatio($http, suoritus.myontaja, function(organisaatio) {
-                            suoritus.oppilaitos = organisaatio.oppilaitosKoodi;
-                        });
-                        d.resolve("done");
-                    }, function () {
-                        $scope.messages.push({
-                            type: "danger",
-                            messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
-                            message: "Virhe tallennettaessa suoritustietoja.",
-                            descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita",
-                            description: "Yritä uudelleen."
-                        });
-                        d.reject("error saving suoritus: " + suoritus);
-                    })
-                }
             }, deferreds)
         }
         function saveLuokkatiedot() {
@@ -304,7 +338,12 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         back()
     };
     $scope.addSuoritus = function() {
-        $scope.suoritukset.push(new Suoritukset({ henkiloOid: $scope.henkiloOid, tila: "KESKEN", yksilollistaminen: "Ei", myontaja: "na" }));
+        $scope.suoritukset.push(new Suoritukset({
+            henkiloOid: $scope.henkiloOid,
+            tila: "KESKEN",
+            yksilollistaminen: "Ei",
+            myontaja: "na",
+            editable: true }));
     };
     $scope.editArvosana = function(suoritusId) {
         function openModal(template, controller) {
@@ -335,6 +374,24 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             } else if (arvosanaRet) $scope.messages.push(arvosanaRet)
         }, function () {
             $log.info("modal closed")
+        });
+    };
+    $scope.editYoarvosana = function(suoritusId) {
+        function openModal(template, controller) {
+            $rootScope.modalInstance = $modal.open({
+                templateUrl: template,
+                controller: controller,
+                resolve: {
+                    suoritusId: function() { return suoritusId }
+                }
+            });
+        }
+        openModal('templates/yoarvosanat', YoarvosanaCtrl);
+
+        $rootScope.modalInstance.result.then(function (yoarvosanaRet) {
+            if (yoarvosanaRet) $scope.messages.push(yoarvosanaRet)
+        }, function () {
+            $log.info("yo modal closed")
         });
     };
     $scope.addLuokkatieto = function() {

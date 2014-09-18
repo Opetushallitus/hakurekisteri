@@ -1,7 +1,14 @@
 package fi.vm.sade.hakurekisteri.hakija
 
 import akka.actor.{ActorRef, Actor}
+import fi.vm.sade.hakurekisteri.integration.hakemus.Hakupalvelu
+import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.{SijoitteluQuery, SijoitteluTulos, SijoitteluValintatuloksenTila, SijoitteluHakemuksenTila}
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluValintatuloksenTila.SijoitteluValintatuloksenTila
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluHakemuksenTila.SijoitteluHakemuksenTila
 import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.duration._
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.henkilo._
@@ -11,10 +18,7 @@ import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
 import akka.pattern.{pipe, ask}
 import ForkedSeq._
 import TupledFuture._
-import fi.vm.sade.hakurekisteri.hakija.SijoitteluHakemuksenTila.SijoitteluHakemuksenTila
-import fi.vm.sade.hakurekisteri.hakija.SijoitteluValintatuloksenTila._
 import scala.util.Failure
-import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, User}
 import scala.util.Success
 import fi.vm.sade.hakurekisteri.suoritus.Komoto
@@ -166,11 +170,11 @@ case class Peruuntunut(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Bo
   override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
 }
 
-case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String, julkaisulupa: Option[Boolean], hakuOid: String)
+case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String, julkaisulupa: Option[Boolean], hakuOid: String, lisapistekoulutus: Option[String])
 
 case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria: Seq[Opiskelija], hakemus: Hakemus)
 
-class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistopalvelu: Koodistopalvelu, sijoittelupalvelu: ActorRef) extends Actor {
+class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistoActor: ActorRef, sijoittelupalvelu: ActorRef) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
 
@@ -178,7 +182,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     case q: HakijaQuery => XMLQuery(q) pipeTo sender
   }
 
-  def resolveOppilaitosKoodi(o:Organisaatio): Future[Option[String]] =  o.oppilaitosKoodi match {
+  def resolveOppilaitosKoodi(o: Organisaatio): Future[Option[String]] = o.oppilaitosKoodi match {
     case None => findOppilaitoskoodi(o.parentOid)
     case Some(k) => Future.successful(Some(k))
   }
@@ -189,17 +193,18 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     Try((organisaatioActor ? oid).mapTo[Option[Organisaatio]]).getOrElse(Future.successful(None))
   }
 
+  val tuntematonOppilaitos = "00000"
   def findOppilaitoskoodi(parentOid: Option[String]): Future[Option[String]] = parentOid match {
-    case None => Future.successful(None)
-    case Some(oid) => getOrg(oid).flatMap(_.fold[Future[Option[String]]](Future.successful(None))(resolveOppilaitosKoodi))
+    case None => Future.successful(Some(tuntematonOppilaitos))
+    case Some(oid) => getOrg(oid).flatMap(_.fold[Future[Option[String]]](Future.successful(Some(tuntematonOppilaitos)))(resolveOppilaitosKoodi))
   }
 
-  def hakutoive2XMLHakutoive(ht: Hakutoive): Future[Option[XMLHakutoive]] =  {
+  def hakutoive2XMLHakutoive(ht: Hakutoive): Future[Option[XMLHakutoive]] = {
    for(
-      orgData: Option[(Organisaatio, String)] <- findOrgData(ht.hakukohde.koulutukset.head.tarjoaja)
-    ) yield
+     orgData: Option[(Organisaatio, String)] <- findOrgData(ht.hakukohde.koulutukset.head.tarjoaja)
+   ) yield
      for ((org: Organisaatio, oppilaitos: String) <- orgData)
-      yield XMLHakutoive(ht,org,oppilaitos)
+       yield XMLHakutoive(ht, org, oppilaitos)
   }
 
   def getXmlHakutoiveet(hakija: Hakija): Future[Seq[XMLHakutoive]] = {
@@ -216,25 +221,29 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     getOrg(tarjoaja).flatMap((o) => findOppilaitoskoodi(o.map(_.oid)).map(k => extractOption(o, k)))
   }
 
-  def createHakemus(hakija: Hakija)(opiskelija: Option[Opiskelija], org:Option[Organisaatio], ht: Seq[XMLHakutoive]) = XMLHakemus(hakija, opiskelija, org, ht)
+  def createHakemus(hakija: Hakija)(opiskelija: Option[Opiskelija], org: Option[Organisaatio], ht: Seq[XMLHakutoive]) = XMLHakemus(hakija, opiskelija, org, ht)
 
   def getXmlHakemus(hakija: Hakija): Future[XMLHakemus] = {
     val (opiskelutieto, lahtokoulu) = getOpiskelijaTiedot(hakija)
     val ht: Future[Seq[XMLHakutoive]] = getXmlHakutoiveet(hakija)
-    val data = (opiskelutieto,lahtokoulu,ht).join
+    val data = (opiskelutieto, lahtokoulu, ht).join
 
     data.tupledMap(createHakemus(hakija))
   }
 
   def getOpiskelijaTiedot(hakija: Hakija): (Future[Option[Opiskelija]], Future[Option[Organisaatio]]) = hakija.opiskeluhistoria match {
     case opiskelijaTiedot :: _ => (Future.successful(Some(opiskelijaTiedot)), getOrg(opiskelijaTiedot.oppilaitosOid))
-    case _ => (Future.successful(None),Future.successful(None))
+    case _ => (Future.successful(None), Future.successful(None))
   }
-
 
   def getMaakoodi(koodiArvo: String): Future[String] = koodiArvo.toLowerCase match {
     case "fin" => Future.successful("246")
-    case arvo => koodistopalvelu.getRinnasteinenKoodiArvo("maatjavaltiot1_" + arvo, "maatjavaltiot2")
+    case arvo =>
+      val maaFuture = (koodistoActor ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2"))(10.seconds).mapTo[String]
+      maaFuture.onFailure {
+        case t: Throwable => log.error(t, s"failed to fetch country $koodiArvo")
+      }
+      maaFuture
   }
 
 
@@ -281,8 +290,6 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
           yield Hakutoive(ht, hakemus(hakemusnumero, ht.hakukohde.oid), valinta(hakemusnumero, ht.hakukohde.oid))))
   }
 
-
-
   import scala.concurrent.duration._
 
   def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.fold(
@@ -301,6 +308,10 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     case Hakuehto.Kaikki => getHakijat(q).map((hakijat) => XMLHakijat(hakijat.filter(_.hakemus.hakutoiveet.size > 0)))
     case Hakuehto.Hyvaksytyt => getHakijat(q).map(_.map(hakijaWithValittu)).map((hakijat) => XMLHakijat(hakijat.filter(_.hakemus.hakutoiveet.size > 0)))
     case Hakuehto.Vastaanottaneet => getHakijat(q).map(_.map(hakijaWithVastaanotettu)).map((hakijat) => XMLHakijat(hakijat.filter(_.hakemus.hakutoiveet.size > 0)))
+    case Hakuehto.Hylatyt => for (hakijat <- getHakijat(q)) yield {
+        val hylatyt: Set[XMLHakija] =  hakijat.map(hakijaWithValittu).filter(_.hakemus.hakutoiveet == 0).toSet
+        XMLHakijat(hakijat.filter(hylatyt contains _))
+      }
     case _ => Future.successful(XMLHakijat(Seq()))
   }
 

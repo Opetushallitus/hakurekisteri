@@ -1,8 +1,11 @@
 package fi.vm.sade.hakurekisteri.hakija
 
+import java.text.SimpleDateFormat
+
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.Tyyppi.Tyyppi
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, SpringSecuritySupport, HakurekisteriJsonSupport}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
@@ -18,13 +21,12 @@ import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.joda.time.{DateTimeFieldType, LocalDate}
-import scala.Some
 import fi.vm.sade.hakurekisteri.rest.support.User
 
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
-  val Kaikki, Hyvaksytyt, Vastaanottaneet = Value
+  val Kaikki, Hyvaksytyt, Vastaanottaneet, Hylatyt = Value
 }
 
 object Tyyppi extends Enumeration {
@@ -41,7 +43,7 @@ object HakijaQuery {
       params.get("haku").flatMap(_.blankOption),
       params.get("organisaatio").flatMap(_.blankOption),
       params.get("hakukohdekoodi").flatMap(_.blankOption),
-      Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki}.get,
+      Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki }.get,
       user)
 }
 
@@ -98,10 +100,8 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     }
   }
 
-  error {
-    case t: Throwable =>
-      logger.error("error in service", t)
-      response.sendError(500, t.getMessage)
+  incident {
+    case t: Throwable => (id) => InternalServerError(IncidentReport(id, "internal server error"))
   }
 }
 
@@ -209,9 +209,9 @@ object XMLHakemus {
     suoritukset.map(s => (s, resolvePohjakoulutus(Some(s)).toInt)).sortBy(_._2).map(_._1).headOption
   }
 
-  def resolveYear(suoritus:Suoritus) = suoritus match {
-    case Suoritus("ulkomainen", _,  _, _, _, _, _) => None
-    case Suoritus(_, _, _,date, _, _, _)  => Some(date.getYear.toString)
+  def resolveYear(suoritus: Suoritus) = suoritus match {
+    case Suoritus("ulkomainen", _,  _, _, _, _, _, _, _) => None
+    case Suoritus(_, _, _,date, _, _, _,  _, _)  => Some(date.getYear.toString)
   }
 
   def apply(hakija: Hakija, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive]): XMLHakemus =
@@ -227,7 +227,7 @@ object XMLHakemus {
       julkaisulupa = hakija.hakemus.julkaisulupa,
       yhteisetaineet = None,
       lukiontasapisteet = None,
-      lisapistekoulutus = None,
+      lisapistekoulutus = hakija.hakemus.lisapistekoulutus,
       yleinenkoulumenestys = None,
       painotettavataineet = None,
       hakutoiveet = toiveet)
@@ -273,7 +273,7 @@ object XMLHakija {
 
   def apply(hakija: Hakija, yhteystiedot: Map[String, String], maa: String, kansalaisuus: String, hakemus: XMLHakemus): XMLHakija =
     XMLHakija(
-      hakija.henkilo.hetu,
+      hetu(hakija.henkilo.hetu, hakija.henkilo.syntymaaika),
       hakija.henkilo.oidHenkilo,
       hakija.henkilo.sukunimi,
       hakija.henkilo.etunimet,
@@ -290,6 +290,12 @@ object XMLHakija {
       hakija.henkilo.markkinointilupa.getOrElse(false),
       hakemus
     )
+
+  def hetu(hetu: String, syntymaaika: String): String = hetu match {
+    case "" => Try(new SimpleDateFormat("ddMMyyyy").format(new SimpleDateFormat("dd.MM.yyyy").parse(syntymaaika))).getOrElse("")
+    case _ => hetu
+  }
+
 }
 
 case class XMLHakijat(hakijat: Seq[XMLHakija]) {

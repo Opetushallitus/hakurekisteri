@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.hakija
 
+import fi.vm.sade.hakurekisteri.integration.cas.TicketValidator
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 import TicketValidator.isValidSt

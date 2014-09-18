@@ -1,11 +1,11 @@
 package fi.vm.sade.hakurekisteri.load
 
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusHaku, ListHakemus}
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import fi.vm.sade.authentication.cas.CasClient
 import com.stackmob.newman.dsl._
 import java.net.URL
-import com.stackmob.newman.response.{HttpResponse, HttpResponseCode}
-import fi.vm.sade.hakurekisteri.hakija.{Koodi, ListHakemus, HakemusHaku}
+import com.stackmob.newman.response.HttpResponseCode
 import scala.concurrent.{Await, ExecutionContext, Future}
 import com.stackmob.newman.ApacheHttpClient
 import java.util.concurrent.Executors

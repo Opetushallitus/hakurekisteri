@@ -12,26 +12,23 @@ import scala.compat.Platform
 import scala.slick.lifted
 
 class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, SuoritusTable, ColumnOrdered[Long], UUID] {
-  override def delta(row: SuoritusTable#TableElementType): Delta[Suoritus, UUID] =
-    row match {
-      case (resourceId, _, _, _, _, _, _, _, _, true) => Deleted(UUID.fromString(resourceId))
-      case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yks, suoritusKieli, _, _) => Updated(Suoritus(komo, myontaja, tila, LocalDate.parse(valmistuminen), henkiloOid, yksilollistaminen.withName(yks), suoritusKieli).identify(UUID.fromString(resourceId)))
-    }
+  override def delta(row: SuoritusTable#TableElementType): Delta[Suoritus, UUID] = row match {
+    case (resourceId, _, _, _, _, _, _, _,source,  _, true) => Deleted(UUID.fromString(resourceId), source)
+    case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yks, suoritusKieli,source,  _, _) => Updated(Suoritus(komo, myontaja, tila, LocalDate.parse(valmistuminen), henkiloOid, yksilollistaminen.withName(yks), suoritusKieli, source = source).identify(UUID.fromString(resourceId)))
+  }
 
-
-  override def update(o: Suoritus with Identified[UUID]): SuoritusTable#TableElementType = (o.id.toString, o.komo, o.myontaja, o.tila, o.valmistuminen.toString, o.henkiloOid, o.yksilollistaminen.toString, o.suoritusKieli, Platform.currentTime, false)
-  override def delete(id:UUID) = currentState(id) match
-  { case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, _, _) =>
-      (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, Platform.currentTime,true)}
-
+  override def update(o: Suoritus with Identified[UUID]): SuoritusTable#TableElementType = (o.id.toString, o.komo, o.myontaja, o.tila, o.valmistuminen.toString, o.henkiloOid, o.yksilollistaminen.toString, o.suoritusKieli, o.source, Platform.currentTime, false)
+  override def delete(id:UUID, source: String) = currentState(id) match {
+    case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli,_,  _, _) =>
+      (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, source, Platform.currentTime, true)
+  }
 
   val suoritukset = TableQuery[SuoritusTable]
-  database withSession(
-    implicit session =>
-      if (MTable.getTables("suoritus").list().isEmpty) {
-        suoritukset.ddl.create
-      }
-    )
+  database withSession(implicit session =>
+    if (MTable.getTables("suoritus").list().isEmpty) {
+      suoritukset.ddl.create
+    }
+  )
 
   override def newest: (SuoritusTable) => ColumnOrdered[Long] = _.inserted.desc
 
@@ -43,7 +40,7 @@ class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, Suoritus
 
   override def timestamp(resource: SuoritusTable): lifted.Column[Long] = resource.inserted
 
-  override def timestamp(resource: SuoritusTable#TableElementType): Long = resource._9
+  override def timestamp(resource: SuoritusTable#TableElementType): Long = resource._10
 
   override val idColumn: (SuoritusTable) => JdbcDriver.simple.Column[String] = _.resourceId
 
@@ -63,7 +60,7 @@ class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, Suoritus
   }
 }
 
-class SuoritusTable(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, Long, Boolean)](tag, "suoritus") {
+class SuoritusTable(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, String,  Long, Boolean)](tag, "suoritus") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def resourceId = column[String]("resource_id")
   def komo = column[String]("komo")
@@ -73,8 +70,9 @@ class SuoritusTable(tag: Tag) extends Table[(String, String, String, String, Str
   def henkiloOid = column[String]("henkilo_oid")
   def yksilollistaminen = column[String]("yksilollistaminen")
   def suoritusKieli = column[String]("suoritus_kieli")
+  def source = column[String]("source")
   def inserted = column[Long]("inserted")
   def deleted = column[Boolean]("deleted")
   // Every table needs a * projection with the same type as the table's type parameter
-  def * = (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, inserted, deleted)
+  def * = (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, source, inserted, deleted)
 }

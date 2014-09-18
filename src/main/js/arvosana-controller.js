@@ -31,7 +31,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
 
     Suoritukset.get({ suoritusId: suoritusId }, function(suoritus) {
         var pohjakoulutusFilter = "onperusasteenoppiaine_1";
-        if (suoritus.komo === "lukio") {
+        if (suoritus.komo === komo.ylioppilastutkinto) {
             pohjakoulutusFilter = "onlukionoppiaine_1";
         }
 
@@ -65,6 +65,7 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                     }
                     function fetchArvosanat() {
                         Arvosanat.query({ suoritus: suoritusId }, function(arvosanat) {
+                            var kouluArvosanat = arvosanat.filter(function(a) { return a.arvio.asteikko === "4-10" });
                             var oppiainekoodit = $scope.oppiaineet.filter(function(o) {
                                 return o.alaKoodit.some(function(alakoodi) {
                                     return alakoodi.koodiUri === pohjakoulutusFilter;
@@ -74,9 +75,9 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                             opp: for (var j = 0; j < oppiainekoodit.length; j++) {
                                 var oppiainekoodi = oppiainekoodit[j];
                                 var aine = oppiainekoodi.koodi.koodiArvo;
-                                for (var i = 0; i < arvosanat.length; i++) {
-                                    if (arvosanat[i].aine === aine) {
-                                        var lisatieto = arvosanat[i].lisatieto;
+                                for (var i = 0; i < kouluArvosanat.length; i++) {
+                                    if (kouluArvosanat[i].aine === aine) {
+                                        var lisatieto = kouluArvosanat[i].lisatieto;
                                         var a = arvosanataulukko[aine + ';' + lisatieto];
                                         if (!a) a = {};
 
@@ -84,15 +85,15 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                                         a.aineNimi = getOppiaineNimi(oppiainekoodi);
                                         a.lisatieto = lisatieto;
 
-                                        var arvosana = findArvosana(aine, lisatieto, arvosanat, false);
+                                        var arvosana = findArvosana(aine, lisatieto, kouluArvosanat, false);
                                         a.arvosana = arvosana ? arvosana.arvio.arvosana : null;
                                         a.arvosanaId = arvosana ? arvosana.id : null;
 
-                                        var valinnainen = findArvosana(aine, lisatieto, arvosanat, true);
+                                        var valinnainen = findArvosana(aine, lisatieto, kouluArvosanat, true);
                                         a.arvosanaValinnainen = valinnainen ? valinnainen.arvio.arvosana : null;
                                         a.valinnainenId = valinnainen ? valinnainen.id : null;
 
-                                        var toinenValinnainen = findArvosana(aine, lisatieto, arvosanat, true);
+                                        var toinenValinnainen = findArvosana(aine, lisatieto, kouluArvosanat, true);
                                         a.arvosanaToinenValinnainen = toinenValinnainen ? toinenValinnainen.arvio.arvosana : null;
                                         a.toinenValinnainenId = toinenValinnainen ? toinenValinnainen.id : null;
 
@@ -108,12 +109,12 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
                                 }
                             }
 
-                            function hasRedundantArvosana(arvosanat) {
-                                return arvosanat.some(function(a) { return !a.taken })
+                            function hasRedundantArvosana(kouluArvosanat) {
+                                return kouluArvosanat.some(function(a) { return !a.taken })
                             }
 
-                            if (hasRedundantArvosana(arvosanat)) {
-                                $rootScope.modalInstance.close(arvosanat);
+                            if (hasRedundantArvosana(kouluArvosanat)) {
+                                $rootScope.modalInstance.close(kouluArvosanat);
                                 return;
                             }
                             $scope.arvosanataulukko = Object.keys(arvosanataulukko).map(function(key) {

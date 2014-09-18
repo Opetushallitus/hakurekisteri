@@ -38,7 +38,7 @@ trait JournaledRepository[T <: Resource[I], I] extends InMemRepository[T, I] {
       val newSeq =  reverseSnapShot.get(resource).getOrElse(Set()) + resource.id
       reverseSnapShot = reverseSnapShot + (resource -> newSeq)
       index(old, Some(resource))
-    case Deleted(id) =>
+    case Deleted(id, source) =>
       val old = snapShot.get(id)
       for (deleted <- old) {
 
@@ -60,7 +60,7 @@ trait JournaledRepository[T <: Resource[I], I] extends InMemRepository[T, I] {
     if (time.isEmpty && deduplicate)
       for (oids <- reverseSnapShot.values
            if oids.size > 1;
-           duplicate <- oids.tail) delete(duplicate)
+           duplicate <- oids.tail) delete(duplicate, source = "1.2.246.562.10.00000000001")
     indexSwapSnapshot()
   }
 
@@ -69,9 +69,9 @@ trait JournaledRepository[T <: Resource[I], I] extends InMemRepository[T, I] {
     super.saveIdentified(o)
   }
 
-  override def deleteFromStore(id: I): Option[T with Identified[I]] = {
-    journal.addModification(Deleted[T,I](id))
-    super.deleteFromStore(id)
+  override def deleteFromStore(id: I, source: String): Option[T with Identified[I]] = {
+    journal.addModification(Deleted[T,I](id, source))
+    super.deleteFromStore(id, source)
   }
 
 }
@@ -88,7 +88,7 @@ trait Journal[T, I] {
 
 sealed abstract class Delta[T, I]
 case class Updated[T, I](current:T with Identified[I]) extends Delta[T, I]
-case class Deleted[T, I](id:I) extends Delta[T, I]
+case class Deleted[T, I](id:I, source: String) extends Delta[T, I]
 
 class InMemJournal[T, I] extends Journal[T, I] {
 
@@ -111,7 +111,7 @@ trait JDBCJournal[T, P <: AbstractTable[_], O <: Ordered, I] extends Journal[T, 
 
   private[this] def toRow(delta:Delta[T, I]): P#TableElementType = delta match {
     case Updated(resource) => update(resource)
-    case Deleted(id) => delete(id)
+    case Deleted(id, source) => delete(id, source)
   }
 
 
@@ -127,7 +127,7 @@ trait JDBCJournal[T, P <: AbstractTable[_], O <: Ordered, I] extends Journal[T, 
 
   def update(resource:T with Identified[I]): P#TableElementType
 
-  def delete(id:I): P#TableElementType
+  def delete(id:I, source: String): P#TableElementType
 
   //def toResource(row: P#TableElementType): T with Identified
 

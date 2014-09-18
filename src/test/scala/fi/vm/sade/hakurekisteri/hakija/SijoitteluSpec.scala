@@ -1,43 +1,29 @@
 package fi.vm.sade.hakurekisteri.hakija
 
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluPagination
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 
-/**
- * Created by tomi on 19.6.2014.
- */
 class SijoitteluSpec extends FlatSpec with ShouldMatchers {
-
   behavior of "Sijoittelu parsinta"
 
-
-
-
   trait Parsed extends HakurekisteriJsonSupport {
-
     def casMap[T: ClassTag: TypeTag](value: T) = {
       val m = runtimeMirror(getClass.getClassLoader)
       val im = m.reflect(value)
       typeOf[T].members.collect{ case m:MethodSymbol if m.isCaseAccessor => m}.map(im.reflectMethod).map((m) => m.symbol.name.toString -> m()).toMap
     }
 
-
     import org.json4s.jackson.Serialization.read
     val resource = read[SijoitteluPagination](json)
-
   }
-
 
   it should "find pisteet" in new Parsed() {
-
     resource.results.head.hakutoiveet.get.flatMap(_.hakutoiveenValintatapajonot.get.map(_.pisteet.get)) should be(List(26.0, 24.0, 24.0, 24.0, 24.0))
-
   }
-
-
 
   val json = """{"totalCount": 4932, "results": [
                |    {
@@ -259,6 +245,4 @@ class SijoitteluSpec extends FlatSpec with ShouldMatchers {
                |        ]
                |    }
                |]}""".stripMargin
-
-
 }
