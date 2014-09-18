@@ -224,7 +224,7 @@ object XMLHakemus {
       luokkataso = opiskelutieto.map(_.luokkataso),
       pohjakoulutus = resolvePohjakoulutus(getRelevantSuoritus(hakija.suoritukset)),
       todistusvuosi = getRelevantSuoritus(hakija.suoritukset).flatMap(resolveYear),
-      julkaisulupa = hakija.hakemus.julkaisulupa,
+      julkaisulupa = Some(hakija.hakemus.julkaisulupa),
       yhteisetaineet = None,
       lukiontasapisteet = None,
       lisapistekoulutus = hakija.hakemus.lisapistekoulutus,

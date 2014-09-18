@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.acceptance.tools
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
-import fi.vm.sade.hakurekisteri.integration.hakemus.{AkkaHakupalvelu, Hakupalvelu, ListHakemus, FullHakemus}
+import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.koodisto.{Koodisto, Koodi, KoodistoActor}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.sijoittelu._
@@ -18,6 +18,17 @@ import org.scalatra.test.HttpComponentsClient
 import org.specs.mock.Mockito
 import org.specs.specification.Examples
 import scala.concurrent.{Future, ExecutionContext}
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluHakija
+import scala.Some
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import fi.vm.sade.hakurekisteri.integration.hakemus.ListHakemus
+import fi.vm.sade.hakurekisteri.integration.koodisto.Koodisto
+import fi.vm.sade.hakurekisteri.hakija.Hakija
+import fi.vm.sade.hakurekisteri.rest.support.User
+import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluHakutoiveenValintatapajono
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluPagination
+import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluHakutoive
 
 trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport with Mockito {
   override def forExample: Examples = ???
@@ -31,31 +42,41 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object OpetuspisteY extends Organisaatio("1.10.4", Map("fi" -> "Opetuspiste Y"), Some("0000201"), None, Some("1.10.2"))
 
   object FullHakemus1 extends FullHakemus("1.25.1", None, "1.1",
-    Some(Map(
-      "henkilotiedot" -> Map(
-        "kansalaisuus" -> "FIN",
-        "asuinmaa" -> "FIN",
-        "matkapuhelinnumero1" -> "0401234567",
-        "Sukunimi" -> "Mäkinen",
-        "Henkilotunnus" -> "200394-9839",
-        "Postinumero" -> "00100",
-        "lahiosoite" -> "Katu 1",
-        "sukupuoli" -> "1",
-        "Sähköposti" -> "mikko@testi.oph.fi",
-        "Kutsumanimi" -> "Mikko",
-        "Etunimet" -> "Mikko",
-        "kotikunta" -> "098",
-        "aidinkieli" -> "FI",
-        "syntymaaika" -> "20.03.1994",
-        "onkoSinullaSuomalainenHetu" -> "true"),
-      "koulutustausta" -> Map(
-        "PK_PAATTOTODISTUSVUOSI" -> "2014",
-        "POHJAKOULUTUS" -> "1",
-        "perusopetuksen_kieli" -> "FI",
-        "lahtokoulu" -> OppilaitosX.oid,
-        "lahtoluokka" -> "9A",
-        "luokkataso" -> "9"),
-      "hakutoiveet" -> Map(
+    answers = Some(
+      HakemusAnswers(
+        henkilotiedot = Some(
+          HakemusHenkilotiedot(
+            kansalaisuus =  Some("FIN"),
+            asuinmaa = Some("FIN"),
+            matkapuhelinnumero1 = Some("0401234567"),
+            Sukunimi = Some("Mäkinen"),
+            Henkilotunnus = Some("200394-9839"),
+        Postinumero = Some("00100"),
+        lahiosoite = Some("Katu 1"),
+        sukupuoli = Some("1"),
+        Sähköposti = Some("mikko@testi.oph.fi"),
+        Kutsumanimi = Some("Mikko"),
+        Etunimet = Some("Mikko"),
+        kotikunta = Some("098"),
+        aidinkieli = Some("FI"),
+        syntymaaika = Some("20.03.1994"),
+        onkoSinullaSuomalainenHetu = Some("true"))),
+      koulutustausta = Some(
+        Koulutustausta(
+          PK_PAATTOTODISTUSVUOSI = Some("2014"),
+          POHJAKOULUTUS = Some("1"),
+          lahtokoulu = Some(OppilaitosX.oid),
+          luokkataso = Some("9"),
+          LISAKOULUTUS_KYMPPI = None,
+          LISAKOULUTUS_VAMMAISTEN = None,
+          LISAKOULUTUS_TALOUS = None,
+          LISAKOULUTUS_AMMATTISTARTTI = None,
+          LISAKOULUTUS_KANSANOPISTO = None,
+          LISAKOULUTUS_MAAHANMUUTTO = None,
+          lahtoluokka = Some("9A"),
+          lukioPaattotodistusVuosi = None
+        )),
+      hakutoiveet =  Some(Map(
         "preference2-Opetuspiste" -> "Ammattikoulu Lappi2",
         "preference2-Opetuspiste-id" -> "1.10.4",
         "preference2-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)4",
@@ -75,62 +96,74 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
         "preference1_sora_oikeudenMenetys" -> "true",
         "preference1-discretionary-follow-up" -> "sosiaalisetsyyt",
         "preference1_urheilijan_ammatillisen_koulutuksen_lisakysymys" -> "true",
-        "preference1_kaksoistutkinnon_lisakysymys" -> "true"),
-      "lisatiedot" -> Map(
-        "lupaMarkkinointi" -> "true",
-        "lupaJulkaisu" -> "true"))),
+        "preference1_kaksoistutkinnon_lisakysymys" -> "true")),
+      lisatiedot = Some(
+        Lisatiedot(
+          lupaMarkkinointi = Some("true"),
+          lupaJulkaisu = Some("true"))))),
     state = Some("ACTIVE")
   )
   object FullHakemus2 extends FullHakemus("1.25.2", Some("1.24.2"), "1.2",
-    Some(Map(
-      "henkilotiedot" -> Map(
-        "kansalaisuus" -> "FIN",
-        "asuinmaa" -> "FIN",
-        "matkapuhelinnumero1" -> "0401234568",
-        "Sukunimi" -> "Virtanen",
-        "Henkilotunnus" -> "200394-959H",
-        "Postinumero" -> "00100",
-        "lahiosoite" -> "Katu 2",
-        "sukupuoli" -> "1",
-        "Sähköposti" -> "ville@testi.oph.fi",
-        "Kutsumanimi" -> "Ville",
-        "Etunimet" -> "Ville",
-        "kotikunta" -> "098",
-        "aidinkieli" -> "FI",
-        "syntymaaika" -> "20.03.1994",
-        "onkoSinullaSuomalainenHetu" -> "true"),
-      "koulutustausta" -> Map(
-        "PK_PAATTOTODISTUSVUOSI" -> "2014",
-        "POHJAKOULUTUS" -> "1",
-        "perusopetuksen_kieli" -> "FI",
-        "lahtokoulu" -> OppilaitosY.oid,
-        "lahtoluokka" -> "9A",
-        "luokkataso" -> "9"),
-      "hakutoiveet" -> Map(
-        "preference2-Opetuspiste" -> "Ammattiopisto Loppi2\"",
-        "preference2-Opetuspiste-id" -> "1.10.5",
-        "preference2-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)2",
-        "preference2-Koulutus-id" -> "1.11.1",
-        "preference2-Koulutus-id-aoIdentifier" -> "460",
-        "preference2-Koulutus-id-educationcode" -> "koulutus_321204",
-        "preference2-Koulutus-id-lang" -> "FI",
-        "preference1-Opetuspiste" -> "Ammattiopisto Loppi",
-        "preference1-Opetuspiste-id" -> "1.10.4",
-        "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
-        "preference1-Koulutus-id" -> "1.11.2",
-        "preference1-Koulutus-id-aoIdentifier" -> "460",
-        "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
-        "preference1-Koulutus-id-lang" -> "FI",
-        "preference1-Koulutus-id-sora" -> "true",
-        "preference1_sora_terveys" -> "true",
-        "preference1_sora_oikeudenMenetys" -> "true",
-        "preference1-discretionary-follow-up" -> "oppimisvaikudet",
-        "preference1_urheilijan_ammatillisen_koulutuksen_lisakysymys" -> "true",
-        "preference1_kaksoistutkinnon_lisakysymys" -> "true"),
-      "lisatiedot" -> Map(
-        "lupaMarkkinointi" -> "true",
-        "lupaJulkaisu" -> "true"))),
-    Some("INCOMPLETE")
+    answers = Some(
+      HakemusAnswers(
+        henkilotiedot = Some(
+          HakemusHenkilotiedot(
+            kansalaisuus =  Some("FIN"),
+            asuinmaa = Some("FIN"),
+            matkapuhelinnumero1 = Some("0401234567"),
+            Sukunimi = Some("Mäkinen"),
+            Henkilotunnus = Some("200394-9839"),
+            Postinumero = Some("00100"),
+            lahiosoite = Some("Katu 1"),
+            sukupuoli = Some("1"),
+            Sähköposti = Some("mikko@testi.oph.fi"),
+            Kutsumanimi = Some("Mikko"),
+            Etunimet = Some("Mikko"),
+            kotikunta = Some("098"),
+            aidinkieli = Some("FI"),
+            syntymaaika = Some("20.03.1994"),
+            onkoSinullaSuomalainenHetu = Some("true"))),
+        koulutustausta = Some(
+          Koulutustausta(
+            PK_PAATTOTODISTUSVUOSI = Some("2014"),
+            POHJAKOULUTUS = Some("1"),
+            lahtokoulu = Some(OppilaitosY.oid),
+            luokkataso = Some("9"),
+            LISAKOULUTUS_KYMPPI = None,
+            LISAKOULUTUS_VAMMAISTEN = None,
+            LISAKOULUTUS_TALOUS = None,
+            LISAKOULUTUS_AMMATTISTARTTI = None,
+            LISAKOULUTUS_KANSANOPISTO = None,
+            LISAKOULUTUS_MAAHANMUUTTO = None,
+            lahtoluokka = Some("9A"),
+              lukioPaattotodistusVuosi = None
+          )),
+        hakutoiveet =  Some(Map(
+          "preference2-Opetuspiste" -> "Ammattiopisto Loppi2\"",
+          "preference2-Opetuspiste-id" -> "1.10.5",
+          "preference2-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)2",
+          "preference2-Koulutus-id" -> "1.11.1",
+          "preference2-Koulutus-id-aoIdentifier" -> "460",
+          "preference2-Koulutus-id-educationcode" -> "koulutus_321204",
+          "preference2-Koulutus-id-lang" -> "FI",
+          "preference1-Opetuspiste" -> "Ammattiopisto Loppi",
+          "preference1-Opetuspiste-id" -> "1.10.4",
+          "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
+          "preference1-Koulutus-id" -> "1.11.2",
+          "preference1-Koulutus-id-aoIdentifier" -> "460",
+          "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
+          "preference1-Koulutus-id-lang" -> "FI",
+          "preference1-Koulutus-id-sora" -> "true",
+          "preference1_sora_terveys" -> "true",
+          "preference1_sora_oikeudenMenetys" -> "true",
+          "preference1-discretionary-follow-up" -> "oppimisvaikudet",
+          "preference1_urheilijan_ammatillisen_koulutuksen_lisakysymys" -> "true",
+          "preference1_kaksoistutkinnon_lisakysymys" -> "true")),
+        lisatiedot = Some(
+          Lisatiedot(
+            lupaMarkkinointi = Some("true"),
+            lupaJulkaisu = Some("true"))))),
+    state = Some("INCOMPLETE")
   )
 
   object notEmpty
