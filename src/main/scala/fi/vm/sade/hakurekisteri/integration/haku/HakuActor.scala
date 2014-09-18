@@ -21,7 +21,6 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   var activeHakus: Seq[Haku] = Seq()
 
   val refreshTime = 2.hours
-  val reloadHakus = context.system.scheduler.schedule(refreshTime, refreshTime, self, Update)
 
   var starting = true
 
@@ -33,11 +32,9 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   import FutureList._
 
   override def receive: Actor.Receive = {
-    case RefreshSijoittelu => refreshKeepAlives()
-
     case Update => tarjonta ! GetHautQuery
 
-    case HakuRequest  => sender ! activeHakus
+    case HakuRequest => sender ! activeHakus
 
     case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
 
@@ -46,9 +43,11 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
       log.debug(s"current hakus ${activeHakus.mkString(", ")}")
       if (starting) {
         starting = false
-        context.system.scheduler.scheduleOnce(1.second, self, ReloadHakemukset)
-        context.system.scheduler.scheduleOnce(1.second, self, RefreshSijoittelu)
+        context.system.scheduler.schedule(1.second, refreshTime, self, RefreshSijoittelu)
+        context.system.scheduler.schedule(1.second, refreshTime, self, ReloadHakemukset)
       }
+
+    case RefreshSijoittelu => refreshKeepAlives()
 
     case ReloadHakemukset =>
       for(
