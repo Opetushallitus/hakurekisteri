@@ -22,10 +22,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   val refreshTime = 2.hours
   var starting = true
 
-  override def preStart(): Unit = {
-    self ! Update
-    super.preStart()
-  }
+  context.system.scheduler.schedule(1.second, refreshTime, self, Update)
 
   import FutureList._
 
