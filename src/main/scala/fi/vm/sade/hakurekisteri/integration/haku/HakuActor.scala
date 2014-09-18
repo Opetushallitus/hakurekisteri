@@ -19,9 +19,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   val log = Logging(context.system, this)
 
   var activeHakus: Seq[Haku] = Seq()
-
   val refreshTime = 2.hours
-
   var starting = true
 
   override def preStart(): Unit = {
