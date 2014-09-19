@@ -109,8 +109,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         saveVirtaResult(filteredOpiskeluOikeudet, virtaSuoritukset)
         resolveQuery(filteredOpiskeluOikeudet.isEmpty ||  virtaSuoritukset.isEmpty)
 
-      case akka.actor.Status.Failure(e: VirtaConnectionErrorException) =>
-        logger.error(e, "error in virta")
+      case akka.actor.Status.Failure(e: Throwable) =>
+        logger.error(e, s"got error from $sender")
         failQuery(e)
     }
 
@@ -120,16 +120,14 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     }
 
     def fetchHetu() =
-
-
-    try {
-      if (hetu.isDefined)
-        (self ! HenkiloResponse(oid.get, hetu))(ActorRef.noSender)
-      else
-        henkiloActor ! oid.get
-    } catch {
-      case e: Throwable => failQuery(e)
-    }
+      try {
+        if (hetu.isDefined)
+          (self ! HenkiloResponse(oid.get, hetu))(ActorRef.noSender)
+        else
+          henkiloActor ! oid.get
+      } catch {
+        case e: Throwable => failQuery(e)
+      }
 
     def fetchVirta(hetu: String) = virtaActor ! VirtaQuery(oid, Some(hetu))
 
