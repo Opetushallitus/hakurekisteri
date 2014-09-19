@@ -26,8 +26,7 @@ import fi.vm.sade.hakurekisteri.hakija.Hakemus
 import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
 import akka.event.Logging
 import scala.compat.Platform
-import fi.vm.sade.hakurekisteri.ensikertalainen.{QueryStatus, QueriesRunning, QueryCount}
-import java.util
+import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
 
 class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
