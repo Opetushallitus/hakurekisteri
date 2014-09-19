@@ -1,13 +1,15 @@
 # Logger
 log4j.rootLogger={{env_loglevel}}, FILE
+
 {# raw-endraw -välillä template engine ei tee mitään! #} 
 {% raw %}
 # Console output
 log4j.appender.STDOUT=org.apache.log4j.ConsoleAppender
 log4j.appender.STDOUT.Threshold=ERROR
 log4j.appender.STDOUT.layout.ConversionPattern=%d{ISO8601} %-5p {%X{user}} [%t] %-5p %c: %m%n
-# File output
-log4j.appender.FILE.Threshold=ERROR
+
+# Main file output
+log4j.appender.FILE.Threshold=WARN
 log4j.appender.FILE.File=${user.home}/tomcat/logs/oph-suoritusrekisteri.log
 log4j.appender.FILE=org.apache.log4j.RollingFileAppender
 log4j.appender.FILE.Append=true
@@ -15,6 +17,21 @@ log4j.appender.FILE.layout=org.apache.log4j.PatternLayout
 log4j.appender.FILE.layout.ConversionPattern=%d{ISO8601} %-5p {%X{user}} [%t] %-5p %c: %m%n
 log4j.appender.FILE.MaxFileSize=50MB
 log4j.appender.FILE.MaxBackupIndex=20
+
+# Virta query log
+log4j.appender.VIRTA.Threshold=INFO
+log4j.appender.VIRTA.File=${user.home}/tomcat/logs/oph-virta.log
+log4j.appender.VIRTA=org.apache.log4j.RollingFileAppender
+log4j.appender.VIRTA.Append=true
+log4j.appender.VIRTA.layout=org.apache.log4j.PatternLayout
+log4j.appender.VIRTA.layout.ConversionPattern=%d{ISO8601} %-5p {%X{user}} [%t] %-5p %c: %m%n
+log4j.appender.VIRTA.MaxFileSize=50MB
+log4j.appender.VIRTA.MaxBackupIndex=20
+log4j.category.fi.vm.sade.hakurekisteri.ensikertalainen=INFO, VIRTA
+log4j.additivity.fi.vm.sade.hakurekisteri.ensikertalainen=false
+log4j.category.fi.vm.sade.hakurekisteri.integration.virta=INFO, VIRTA
+log4j.additivity.fi.vm.sade.hakurekisteri.integration.virta=false
+
 # Problem output
 log4j.appender.P.Threshold=WARN
 log4j.appender.P.File=${user.home}/tomcat/logs/oph-suoritusrekisteri-problems.log
@@ -24,7 +41,9 @@ log4j.appender.P.layout=org.apache.log4j.PatternLayout
 log4j.appender.P.layout.ConversionPattern=%d{ISO8601} %-5p {%X{user}} [%t] %-5p %c: %m%n
 log4j.appender.P.MaxFileSize=20MB
 log4j.appender.P.MaxBackupIndex=20
-log4j.logger.fi.vm.sade.hakurekisteri.arvosana.PerusopetusSanityActor=WARN, P
+log4j.category.fi.vm.sade.hakurekisteri.arvosana.PerusopetusSanityActor=WARN, P
+log4j.additivity.fi.vm.sade.hakurekisteri.arvosana.PerusopetusSanityActor=false
+
 {% endraw %}
 # By default hide these spammers by default
 log4j.logger.org.apache.cxf=ERROR
