@@ -17,8 +17,13 @@ import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 
 import scala.util.{Failure, Success, Try}
+import scala.compat.Platform
 
 case class EnsikertalainenQuery(henkiloOid: String, hetu: Option[String]= None)
+
+object QueryCount
+
+case class QueriesRunning(count: Int, timestamp: Long = Platform.currentTime)
 
 class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaActor: ActorRef, hakemukset : ActorRef)(implicit val ec: ExecutionContext) extends Actor {
   val logger = Logging(context.system, this)
@@ -29,6 +34,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     case q:EnsikertalainenQuery =>
       logger.debug(s"EnsikertalainenQuery($q.oid) with ${q.hetu.map("hetu: " + _).getOrElse("no hetu")}")
       context.actorOf(Props(new EnsikertalaisuusCheck())).forward(q)
+    case QueryCount => sender ! QueriesRunning(context.children.size)
   }
 
   class EnsikertalaisuusCheck() extends Actor {

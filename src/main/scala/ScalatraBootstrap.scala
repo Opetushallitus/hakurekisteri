@@ -75,7 +75,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val koosteet = new BaseKoosteet(system, integrations, registers)
 
-    val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.ytl ,  integrations.hakemukset)), "healthcheck")
+    val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.ytl ,  integrations.hakemukset, koosteet.ensikertalainen)), "healthcheck")
 
 
 
