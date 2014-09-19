@@ -27,13 +27,15 @@ log4j.appender.VIRTA.layout=org.apache.log4j.PatternLayout
 log4j.appender.VIRTA.layout.ConversionPattern=%d{ISO8601} %-5p {%X{user}} [%t] %-5p %c: %m%n
 log4j.appender.VIRTA.MaxFileSize=50MB
 log4j.appender.VIRTA.MaxBackupIndex=20
-log4j.category.fi.vm.sade.hakurekisteri.ensikertalainen=INFO, VIRTA
-log4j.additivity.fi.vm.sade.hakurekisteri.ensikertalainen=false
-log4j.category.fi.vm.sade.hakurekisteri.integration.virta=INFO, VIRTA
-log4j.additivity.fi.vm.sade.hakurekisteri.integration.virta=false
+log4j.category.fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenActor=INFO, VIRTA
+log4j.category.fi.vm.sade.hakurekisteri.integration.virta.VirtaActor=INFO, VIRTA
+log4j.category.fi.vm.sade.hakurekisteri.integration.virta.VirtaClient=INFO, VIRTA
+log4j.additivity.fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenActor=false
+log4j.additivity.fi.vm.sade.hakurekisteri.integration.virta.VirtaActor=false
+log4j.additivity.fi.vm.sade.hakurekisteri.integration.virta.VirtaClient=false
 
 # Problem output
-log4j.appender.P.Threshold=WARN
+log4j.appender.P.Threshold=INFO
 log4j.appender.P.File=${user.home}/tomcat/logs/oph-suoritusrekisteri-problems.log
 log4j.appender.P=org.apache.log4j.RollingFileAppender
 log4j.appender.P.Append=true
@@ -41,7 +43,7 @@ log4j.appender.P.layout=org.apache.log4j.PatternLayout
 log4j.appender.P.layout.ConversionPattern=%d{ISO8601} %-5p {%X{user}} [%t] %-5p %c: %m%n
 log4j.appender.P.MaxFileSize=20MB
 log4j.appender.P.MaxBackupIndex=20
-log4j.category.fi.vm.sade.hakurekisteri.arvosana.PerusopetusSanityActor=WARN, P
+log4j.category.fi.vm.sade.hakurekisteri.arvosana.PerusopetusSanityActor=INFO, P
 log4j.additivity.fi.vm.sade.hakurekisteri.arvosana.PerusopetusSanityActor=false
 
 {% endraw %}
