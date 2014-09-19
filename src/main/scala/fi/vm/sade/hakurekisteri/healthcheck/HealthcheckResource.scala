@@ -26,6 +26,7 @@ import fi.vm.sade.hakurekisteri.hakija.Hakemus
 import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
 import akka.event.Logging
 import scala.compat.Platform
+import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
 
 class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -61,7 +62,8 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
                        opiskeluoikeusRekisteri: ActorRef,
                        suoritusRekisteri: ActorRef,
                        ytl: ActorRef,
-                       hakemukset: ActorRef)(implicit system: ActorSystem) extends Actor {
+                       hakemukset: ActorRef,
+                       ensikertalainenActor: ActorRef)(implicit system: ActorSystem) extends Actor {
   protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(30, TimeUnit.SECONDS)
   val authorities = Seq("1.2.246.562.10.00000000001")
@@ -116,6 +118,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       suoritusCount <- getSuoritusCount
       hakemusCount <- getHakemusCount
       ytlReport <- getYtlReport
+      ensikertalaiset <- getEnsikertalainenReport
     } yield Healhcheck(startTime,
       "anonymousUser",
       "/suoritusrekisteri",
@@ -126,11 +129,17 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
         suoritukset = suoritusCount,
         hakemukset = hakemusCount,
         foundHakemukset = foundHakemukset,
+        ensikertalaiset,
         ytl = ytlReport
       )),"")}
 
 
 
+  def getEnsikertalainenReport: Future[ItemCount] = (ensikertalainenActor ? QueryCount).map{
+    case QueriesRunning(count, time) => ItemCount(Status.OK, count,time)}.recover {
+    case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
+    case e: Throwable => logger.error(e, "error getting ytl status"); ItemCount(Status.FAILURE, 0)
+  }
 
   def getYtlReport: Future[YtlStatus] = {
     val ytlFuture = (ytl ? Report).mapTo[YtlReport]
@@ -212,7 +221,14 @@ case class YtlFailure(status: Status)  extends YtlStatus
 
 case class Checks(resources: Resources)
 
-case class Resources(arvosanat: ItemCount, opiskelijat: ItemCount, opiskeluoikeudet: ItemCount, suoritukset: ItemCount, hakemukset: ItemCount, foundHakemukset: Map[String, RefreshingState], ytl: YtlStatus)
+case class Resources(arvosanat: ItemCount,
+                     opiskelijat: ItemCount,
+                     opiskeluoikeudet: ItemCount,
+                     suoritukset: ItemCount,
+                     hakemukset: ItemCount,
+                     foundHakemukset: Map[String, RefreshingState],
+                     ensikertalainenQueries: ItemCount,
+                     ytl: YtlStatus)
 
 case class Healhcheck(start: Long, user: String, contextPath: String, checks: Checks, info: String, end: Long = Platform.currentTime) {
 
