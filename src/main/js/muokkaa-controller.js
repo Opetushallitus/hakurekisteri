@@ -185,37 +185,33 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         var validations = [];
         function validateOppilaitoskoodit() {
             angular.forEach($scope.luokkatiedot.concat($scope.suoritukset), function(obj) {
-                if (!obj.delete && obj.editable) {
+                if (!obj.delete && obj.editable && !(obj.komo && obj.komo === komo.ylioppilastutkinto)) {
                     var d = $q.defer();
                     this.push(d);
-                    if (obj.myontaja && obj.myontaja === komo.ylioppilastutkinto) {
-                        d.resolve("yo");
+                    if (!obj.oppilaitos || !obj.oppilaitos.match(/^\d{5}$/)) {
+                        $scope.messages.push({
+                            type: "danger",
+                            messageKey: "suoritusrekisteri.muokkaa.oppilaitoskoodipuuttuu",
+                            message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
+                            descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi",
+                            description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
+                        });
+                        d.reject("validationerror");
                     } else {
-                        if (!obj.oppilaitos || !obj.oppilaitos.match(/^\d{5}$/)) {
+                        getOrganisaatio($http, obj.oppilaitos, function (organisaatio) {
+                            if (obj.myontaja) obj.myontaja = organisaatio.oid;
+                            else obj.oppilaitosOid = organisaatio.oid;
+                            d.resolve("validated against organisaatio");
+                        }, function () {
                             $scope.messages.push({
                                 type: "danger",
-                                messageKey: "suoritusrekisteri.muokkaa.oppilaitoskoodipuuttuu",
-                                message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
+                                messageKey: "suoritusrekisteri.muokkaa.oppilaitostaeiloytynyt",
+                                message: "Oppilaitosta ei löytynyt oppilaitoskoodilla.",
                                 descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi",
                                 description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
                             });
-                            d.reject("validationerror");
-                        } else {
-                            getOrganisaatio($http, obj.oppilaitos, function (organisaatio) {
-                                if (obj.myontaja) obj.myontaja = organisaatio.oid;
-                                else obj.oppilaitosOid = organisaatio.oid;
-                                d.resolve("validated against organisaatio");
-                            }, function () {
-                                $scope.messages.push({
-                                    type: "danger",
-                                    messageKey: "suoritusrekisteri.muokkaa.oppilaitostaeiloytynyt",
-                                    message: "Oppilaitosta ei löytynyt oppilaitoskoodilla.",
-                                    descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi",
-                                    description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
-                                });
-                                d.reject("validationerror in call to organisaatio");
-                            });
-                        }
+                            d.reject("validationerror in call to organisaatio");
+                        });
                     }
                 }
             }, validations)
@@ -344,9 +340,9 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
     };
     $scope.checkYlioppilastutkinto = function(suoritus) {
         if (suoritus.komo === komo.ylioppilastutkinto) {
-            suoritus.myontaja = komo.ylioppilastutkinto;
-            getOrganisaatio($http, komo.ylioppilastutkinto, function(org) {
-                suoritus.organisaatio = org
+            suoritus.myontaja = ylioppilastutkintolautakunta;
+            getOrganisaatio($http, ylioppilastutkintolautakunta, function(org) {
+                suoritus.organisaatio = org;
             });
         }
     };
