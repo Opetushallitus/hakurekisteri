@@ -14,6 +14,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         {value: "M", text: "M"},
         {value: "V", text: "V"}
     ];
+    $scope.komo = komo;
     function loadMenuTexts() {
         $scope.yksilollistamiset = [
             {value: "Ei", text: getOphMsg("suoritusrekisteri.yks.ei", "Ei")},
@@ -76,16 +77,18 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                 confirm(getOphMsg("suoritusrekisteri.muokkaa.henkilotietojenhakeminen", "Henkilötietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchHenkilotiedot() : back();
             });
     }
+    function enrichLuokkatieto(luokkatieto) {
+        if (luokkatieto.oppilaitosOid) {
+            getOrganisaatio($http, luokkatieto.oppilaitosOid, function(organisaatio) {
+                luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi
+            })
+        }
+        luokkatieto.editable = true;
+    }
     function fetchLuokkatiedot() {
         function enrich() {
             if ($scope.luokkatiedot) {
-                angular.forEach($scope.luokkatiedot, function(luokkatieto) {
-                    if (luokkatieto.oppilaitosOid) {
-                        getOrganisaatio($http, luokkatieto.oppilaitosOid, function(organisaatio) {
-                            luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi
-                        })
-                    }
-                })
+                angular.forEach($scope.luokkatiedot, enrichLuokkatieto)
             }
         }
 
@@ -182,33 +185,37 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         var validations = [];
         function validateOppilaitoskoodit() {
             angular.forEach($scope.luokkatiedot.concat($scope.suoritukset), function(obj) {
-                if (!obj.delete) {
+                if (!obj.delete && obj.editable) {
                     var d = $q.defer();
                     this.push(d);
-                    if (!obj.oppilaitos || !obj.oppilaitos.match(/^\d{5}$/)) {
-                        $scope.messages.push({
-                            type: "danger",
-                            messageKey: "suoritusrekisteri.muokkaa.oppilaitoskoodipuuttuu",
-                            message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
-                            descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi",
-                            description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
-                        });
-                        d.reject("validationerror");
+                    if (obj.myontaja && obj.myontaja === komo.ylioppilastutkinto) {
+                        d.resolve("yo");
                     } else {
-                        getOrganisaatio($http, obj.oppilaitos, function (organisaatio) {
-                            if (obj.myontaja) obj.myontaja = organisaatio.oid;
-                            else obj.oppilaitosOid = organisaatio.oid;
-                            d.resolve("validated against organisaatio");
-                        }, function () {
+                        if (!obj.oppilaitos || !obj.oppilaitos.match(/^\d{5}$/)) {
                             $scope.messages.push({
                                 type: "danger",
-                                messageKey: "suoritusrekisteri.muokkaa.oppilaitostaeiloytynyt",
-                                message: "Oppilaitosta ei löytynyt oppilaitoskoodilla.",
+                                messageKey: "suoritusrekisteri.muokkaa.oppilaitoskoodipuuttuu",
+                                message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
                                 descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi",
                                 description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
                             });
-                            d.reject("validationerror in call to organisaatio");
-                        });
+                            d.reject("validationerror");
+                        } else {
+                            getOrganisaatio($http, obj.oppilaitos, function (organisaatio) {
+                                if (obj.myontaja) obj.myontaja = organisaatio.oid;
+                                else obj.oppilaitosOid = organisaatio.oid;
+                                d.resolve("validated against organisaatio");
+                            }, function () {
+                                $scope.messages.push({
+                                    type: "danger",
+                                    messageKey: "suoritusrekisteri.muokkaa.oppilaitostaeiloytynyt",
+                                    message: "Oppilaitosta ei löytynyt oppilaitoskoodilla.",
+                                    descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi",
+                                    description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
+                                });
+                                d.reject("validationerror in call to organisaatio");
+                            });
+                        }
                     }
                 }
             }, validations)
@@ -291,9 +298,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                     }
                 } else {
                     luokkatieto.$save(function () {
-                        getOrganisaatio($http, luokkatieto.oppilaitosOid, function(organisaatio) {
-                            luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi;
-                        });
+                        enrichLuokkatieto(luokkatieto);
                         d.resolve("done");
                     }, function () {
                         $scope.messages.push({
@@ -336,6 +341,14 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
     };
     $scope.cancel = function() {
         back()
+    };
+    $scope.checkYlioppilastutkinto = function(suoritus) {
+        if (suoritus.komo === komo.ylioppilastutkinto) {
+            suoritus.myontaja = komo.ylioppilastutkinto;
+            getOrganisaatio($http, komo.ylioppilastutkinto, function(org) {
+                suoritus.organisaatio = org
+            });
+        }
     };
     $scope.addSuoritus = function() {
         $scope.suoritukset.push(new Suoritukset({
