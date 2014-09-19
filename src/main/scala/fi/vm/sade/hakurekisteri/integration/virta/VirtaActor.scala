@@ -26,6 +26,7 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef) extends 
 
   def receive: Receive = {
     case VirtaQuery(o, h) =>
+      log.info(s"querying from virta: $o")
       convertVirtaResult(virtaClient.getOpiskelijanTiedot(oppijanumero = o, hetu = h))(o) pipeTo sender
   }
 
