@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQu
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
-import _root_.akka.actor.{Actor, ActorRef, ActorSystem}
+import akka.actor.{Props, Actor, ActorRef, ActorSystem}
 import _root_.akka.pattern.{AskTimeoutException, ask}
 import java.util.concurrent.TimeUnit
 import org.scalatra.json._
@@ -71,6 +71,8 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
 
   var selfChecks: Map[UUID, Long] = Map()
 
+  val writer = context.actorOf(Props(new HealthCheckWriter(self)))
+
   case class SelfCheck(id: UUID = UUID.randomUUID())
   case class Measure(id:UUID)
 
@@ -90,6 +92,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
     case SelfCheck(id) =>
       selfChecks = selfChecks + (id -> Platform.currentTime)
       self ! Measure(id)
+      writer ! Query
     case Measure(id) =>
       val arrival = Platform.currentTime
       val roundTrip = selfChecks.get(id).map(arrival - _)
