@@ -192,8 +192,8 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
         val found = parsed.map(_.oid).toSet
         val missing = batch.items.map(_.oid).toSet -- found
         for (problem <- missing) log.warning(s"Missing result from YTL for oid $problem in batch ${batch.id}")
-      case Failure(t) if requested.isDefined => log.error(s"failure in fetching results for ${requested.get.id}", t)
-      case Failure(t) => log.error("failure fetching results from YTL", t)
+      case Failure(t) if requested.isDefined => log.error(t, s"failure in fetching results for ${requested.get.id}")
+      case Failure(t) => log.error(t, "failure fetching results from YTL")
       case _ =>  log.warning("no request in memory for a result from YTL")
     }
   }

@@ -151,15 +151,11 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
       case Some(s) => s.forall((suoritus) => komos.get(suoritus.komo).isDefined)
     }
 
-    def fetchHetu() =
-      try {
-        if (hetu.isDefined)
-          (self ! HenkiloResponse(oid.get, hetu))(ActorRef.noSender)
-        else
-          henkiloActor ! oid.get
-      } catch {
-        case e: Throwable => failQuery(e)
-      }
+    def fetchHetu() = (oid, hetu) match {
+      case (_, Some(hetu)) => fetchVirta(hetu)
+      case (Some(oid), None) => henkiloActor ! oid
+      case (None, None) => failQuery(new NoSuchElementException("No oid or hetu"))
+    }
 
     def fetchVirta(hetu: String) = {
       virtaActor ! VirtaQuery(oid, Some(hetu))
