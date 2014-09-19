@@ -34,7 +34,7 @@ class HealthCheckWriter(health: ActorRef) extends Actor with HakurekisteriJsonSu
     case Query => health ! "healthcheck"
     case h:Healhcheck => save(h).onFailure{
       case e:Throwable => logger.error(e, "error writing health check to temp dir")
-    }
+    }(context.dispatcher)
 
   }
 }
