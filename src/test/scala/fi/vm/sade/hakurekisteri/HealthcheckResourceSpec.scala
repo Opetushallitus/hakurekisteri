@@ -46,7 +46,7 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
 
   val ensikertalainen = system.actorOf(Props(new Actor {
     override def receive: Actor.Receive = {
-      case QueryCount => sender ! QueriesRunning(1)
+      case QueryCount => sender ! QueriesRunning(Map("status" -> 1))
     }
 
   }))
@@ -69,6 +69,7 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
 
   test("healthcheck should return OK and correct resource counts") {
     get("/") {
+      println (pretty(parse(body)))
       status should equal (200)
       body should include ("\"status\":\"OK\"")
       parse(body) \\ "arvosanat" \ "count"   should equal(JInt(1))
