@@ -19,6 +19,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 import scala.util.{Failure, Success, Try}
 import scala.compat.Platform
 import scala.collection.immutable.Iterable
+import java.io.Serializable
 
 case class EnsikertalainenQuery(henkiloOid: String, hetu: Option[String]= None)
 
@@ -70,14 +71,15 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     override def receive: Actor.Receive = {
       case ReportStatus =>
         val state = this match {
+          case _ if result.isCompleted => result.value.flatMap(
+            _.recover{case ex => "failed: " + ex.getMessage}.map((queryRes) => "done " + queryRes).toOption).getOrElse("empty")
+          case _ if virtaQuerySent => "querying virta"
           case _ if suoritukset.isEmpty && opiskeluOikeudet.isEmpty =>  "resolving suoritukset and opinto-oikeudet"
           case _ if suoritukset.isEmpty =>  "resolving suoritukset"
           case _ if opiskeluOikeudet.isEmpty && !foundAllKomos =>  "resolving opinto-oikeudet and komos"
           case _ if opiskeluOikeudet.isDefined && !foundAllKomos =>  "resolving komos"
           case _ if hetu.isEmpty && !virtaQuerySent => "resolving hetu"
           case _ if hetu.isDefined && !virtaQuerySent => "resolving hetu internally"
-          case _ if virtaQuerySent && !result.isCompleted => "querying virta"
-          case _ if result.isCompleted => "done"
           case _ => "unknown"
         }
         sender ! QueryStatus(state)
