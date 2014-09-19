@@ -186,7 +186,7 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
             Opiskelijat.query({henkilo: row.henkiloOid}, function(opiskelijat) {
                 angular.forEach(opiskelijat, function(o) {
                     getOrganisaatio($http, o.oppilaitosOid, function(oppilaitos) {
-                        o.oppilaitos = oppilaitos.oppilaitosKoodi + ' ' + (oppilaitos.nimi.fi ? oppilaitos.nimi.fi : oppilaitos.nimi.sv)
+                        o.oppilaitos = (oppilaitos.oppilaitosKoodi ? oppilaitos.oppilaitosKoodi + ' ' : '') + (oppilaitos.nimi.fi ? oppilaitos.nimi.fi : oppilaitos.nimi.sv)
                     })
                 });
                 row.opiskelijatiedot = opiskelijat;
