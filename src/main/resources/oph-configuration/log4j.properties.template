@@ -15,7 +15,7 @@ log4j.appender.FILE=org.apache.log4j.RollingFileAppender
 log4j.appender.FILE.Append=true
 log4j.appender.FILE.layout=org.apache.log4j.PatternLayout
 log4j.appender.FILE.layout.ConversionPattern=%d{ISO8601} %-5p {%X{user}} [%t] %-5p %c: %m%n
-log4j.appender.FILE.MaxFileSize=50MB
+log4j.appender.FILE.MaxFileSize=20MB
 log4j.appender.FILE.MaxBackupIndex=20
 
 # Virta query log
