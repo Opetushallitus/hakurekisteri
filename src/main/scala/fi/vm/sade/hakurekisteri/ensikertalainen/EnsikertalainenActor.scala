@@ -74,9 +74,9 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
           case _ if suoritukset.isEmpty =>  "resolving suoritukset"
           case _ if opiskeluOikeudet.isEmpty && !foundAllKomos =>  "resolving opinto-oikeudet and komos"
           case _ if opiskeluOikeudet.isDefined && !foundAllKomos =>  "resolving komos"
-          case _ if hetu.isEmpty => "resolving hetu"
+          case _ if hetu.isEmpty && !virtaQuerySent => "resolving hetu"
           case _ if hetu.isDefined && !virtaQuerySent => "resolving hetu internally"
-          case _ if !result.isCompleted => "querying virta"
+          case _ if virtaQuerySent && !result.isCompleted => "querying virta"
           case _ if result.isCompleted => "done"
           case _ => "unknown"
         }
@@ -159,7 +159,10 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         case e: Throwable => failQuery(e)
       }
 
-    def fetchVirta(hetu: String) = virtaActor ! VirtaQuery(oid, Some(hetu))
+    def fetchVirta(hetu: String) = {
+      virtaActor ! VirtaQuery(oid, Some(hetu))
+      virtaQuerySent = true
+    }
 
     def resolveQuery(ensikertalainen: Boolean) {
       resolve(Success(Ensikertalainen(ensikertalainen = ensikertalainen)))
