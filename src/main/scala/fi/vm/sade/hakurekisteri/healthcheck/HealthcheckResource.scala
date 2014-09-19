@@ -103,40 +103,34 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       val combinedFuture =
         checkState
 
-      combinedFuture map { case (arvosanaCount, opiskelijaCount, opiskeluoikeusCount, suoritusCount, hakemusCount, ytlReport) =>
-        Healhcheck(System.currentTimeMillis(),
-          "anonymousUser",
-          "/suoritusrekisteri",
-          Checks(Resources(
-            arvosanat = arvosanaCount.count,
-            opiskelijat = opiskelijaCount.count,
-            opiskeluoikeudet = opiskeluoikeusCount.count,
-            suoritukset = suoritusCount.count,
-            hakemukset = hakemusCount.count,
-            foundHakemukset = foundHakemukset,
-            ytl = ytlReport
-          )),
-          resolveStatus(arvosanaCount.status, opiskelijaCount.status, opiskeluoikeusCount.status, suoritusCount.status, hakemusCount.status, ytlReport.status),
-          "")} pipeTo sender
+      combinedFuture pipeTo sender
   }
 
 
-  def checkState: Future[(ItemCount, ItemCount, ItemCount, ItemCount, ItemCount, YtlStatus)] = {
+  def checkState: Future[Healhcheck] = {
+    val startTime = Platform.currentTime
     for {
       arvosanaCount <- getArvosanaCount
       opiskelijaCount <- getOpiskelijaCount
       opiskeluoikeusCount <- getOpiskeluoikeusCount
       suoritusCount <- getSuoritusCount
       hakemusCount <- getHakemusCount
-      ytl <- getYtlReport
-    } yield (arvosanaCount, opiskelijaCount, opiskeluoikeusCount, suoritusCount, hakemusCount, ytl)
-  }
+      ytlReport <- getYtlReport
+    } yield Healhcheck(startTime,
+      "anonymousUser",
+      "/suoritusrekisteri",
+      Checks(Resources(
+        arvosanat = arvosanaCount,
+        opiskelijat = opiskelijaCount,
+        opiskeluoikeudet = opiskeluoikeusCount,
+        suoritukset = suoritusCount,
+        hakemukset = hakemusCount,
+        foundHakemukset = foundHakemukset,
+        ytl = ytlReport
+      )),"")}
 
-  def resolveStatus(statuses: Status*) = {
-    if (statuses.contains(Status.TIMEOUT)) Status.TIMEOUT
-    else if (statuses.contains(Status.FAILURE)) Status.FAILURE
-    else Status.OK
-  }
+
+
 
   def getYtlReport: Future[YtlStatus] = {
     val ytlFuture = (ytl ? Report).mapTo[YtlReport]
@@ -204,7 +198,7 @@ object Status extends Enumeration {
   val OK, TIMEOUT, FAILURE = Value
 }
 
-case class ItemCount(status: Status, count: Long)
+case class ItemCount(status: Status, count: Long, endTime: Long = Platform.currentTime)
 
 sealed abstract class YtlStatus {
   val status: Status
@@ -218,9 +212,19 @@ case class YtlFailure(status: Status)  extends YtlStatus
 
 case class Checks(resources: Resources)
 
-case class Resources(arvosanat: Long, opiskelijat: Long, opiskeluoikeudet: Long, suoritukset: Long, hakemukset: Long, foundHakemukset: Map[String, RefreshingState], ytl: YtlStatus)
+case class Resources(arvosanat: ItemCount, opiskelijat: ItemCount, opiskeluoikeudet: ItemCount, suoritukset: ItemCount, hakemukset: ItemCount, foundHakemukset: Map[String, RefreshingState], ytl: YtlStatus)
 
-case class Healhcheck(timestamp: Long, user: String, contextPath: String, checks: Checks, status: Status, info: String)
+case class Healhcheck(start: Long, user: String, contextPath: String, checks: Checks, info: String, end: Long = Platform.currentTime) {
+
+  val status = resolveStatus(checks.resources.arvosanat.status, checks.resources.opiskelijat.status, checks.resources.opiskeluoikeudet.status, checks.resources.suoritukset.status, checks.resources.hakemukset.status, checks.resources.ytl.status)
+
+  def resolveStatus(statuses: Status*) = {
+    if (statuses.contains(Status.TIMEOUT)) Status.TIMEOUT
+    else if (statuses.contains(Status.FAILURE)) Status.FAILURE
+    else Status.OK
+  }
+
+}
 
 case class Hakemukset(oid: String, count: RefreshingResource)
 

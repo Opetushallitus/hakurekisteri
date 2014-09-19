@@ -14,6 +14,7 @@ import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResour
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
+import org.json4s.JsonAST.JInt
 
 class HealthcheckResourceSpec extends ScalatraFunSuite {
   val arvosana = Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", None, false, source = "Test")
@@ -56,15 +57,17 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
 
   addServlet(new HealthcheckResource(healthcheck), "/*")
 
+  import org.json4s.jackson.JsonMethods._
+
   test("healthcheck should return OK and correct resource counts") {
     get("/") {
       status should equal (200)
       body should include ("\"status\":\"OK\"")
-      body should include ("\"arvosanat\":1")
-      body should include ("\"opiskelijat\":1")
-      body should include ("\"opiskeluoikeudet\":1")
-      body should include ("\"suoritukset\":1")
-      body should include ("\"hakemukset\":1")
+      parse(body) \\ "arvosanat" \ "count"   should equal(JInt(1))
+      parse(body) \\ "opiskelijat" \ "count" should equal(JInt(1))
+      parse(body) \\ "opiskeluoikeudet" \ "count" should equal(JInt(1))
+      parse(body) \\ "suoritukset" \ "count" should equal(JInt(1))
+      parse(body) \\ "hakemukset" \ "count" should equal(JInt(1))
       //body should include ("\"foundHakemukset\":1")
       response.getHeader("Expires") should not be null
     }
