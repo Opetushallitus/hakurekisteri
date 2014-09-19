@@ -26,7 +26,8 @@ import fi.vm.sade.hakurekisteri.hakija.Hakemus
 import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
 import akka.event.Logging
 import scala.compat.Platform
-import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{QueryStatus, QueriesRunning, QueryCount}
+import java.util
 
 class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -138,10 +139,10 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
 
 
 
-  def getEnsikertalainenReport: Future[ItemCount] = (ensikertalainenActor ? QueryCount).map{
-    case QueriesRunning(count, time) => ItemCount(Status.OK, count,time)}.recover {
-    case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
-    case e: Throwable => logger.error(e, "error getting ytl status"); ItemCount(Status.FAILURE, 0)
+  def getEnsikertalainenReport: Future[QueryReport] = (ensikertalainenActor ? QueryCount).map{
+    case QueriesRunning(count, time) => QueryReport(Status.OK, count,time)}.recover {
+    case e: AskTimeoutException => new QueryReport(Status.TIMEOUT, Map())
+    case e: Throwable => logger.error(e, "error getting ensikertalainen status"); QueryReport(Status.FAILURE, Map())
   }
 
   def getYtlReport: Future[YtlStatus] = {
@@ -212,6 +213,9 @@ object Status extends Enumeration {
 
 case class ItemCount(status: Status, count: Long, endTime: Long = Platform.currentTime)
 
+case class QueryReport(status: Status, count: Map[String, Int], endTime: Long = Platform.currentTime)
+
+
 sealed abstract class YtlStatus {
   val status: Status
 }
@@ -230,7 +234,7 @@ case class Resources(arvosanat: ItemCount,
                      suoritukset: ItemCount,
                      hakemukset: ItemCount,
                      foundHakemukset: Map[String, RefreshingState],
-                     ensikertalainenQueries: ItemCount,
+                     ensikertalainenQueries: QueryReport,
                      ytl: YtlStatus)
 
 case class Healhcheck(start: Long, user: String, contextPath: String, checks: Checks, info: String, end: Long = Platform.currentTime) {

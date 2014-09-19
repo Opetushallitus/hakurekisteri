@@ -18,12 +18,13 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 
 import scala.util.{Failure, Success, Try}
 import scala.compat.Platform
+import scala.collection.immutable.Iterable
 
 case class EnsikertalainenQuery(henkiloOid: String, hetu: Option[String]= None)
 
 object QueryCount
 
-case class QueriesRunning(count: Int, timestamp: Long = Platform.currentTime)
+case class QueriesRunning(count: Map[String, Int], timestamp: Long = Platform.currentTime)
 
 class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaActor: ActorRef, hakemukset : ActorRef)(implicit val ec: ExecutionContext) extends Actor {
   val logger = Logging(context.system, this)
@@ -34,7 +35,19 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     case q:EnsikertalainenQuery =>
       logger.debug(s"EnsikertalainenQuery($q.oid) with ${q.hetu.map("hetu: " + _).getOrElse("no hetu")}")
       context.actorOf(Props(new EnsikertalaisuusCheck())).forward(q)
-    case QueryCount => sender ! QueriesRunning(context.children.size)
+    case QueryCount =>
+      import akka.pattern.ask
+      implicit val ec = context.dispatcher
+      val statusRequests: Iterable[Future[String]] = for (
+        query: ActorRef <- context.children
+      ) yield (query ? ReportStatus)(5.seconds).mapTo[QueryStatus].map(_.status).recover{case _ => "status query failed"}
+
+      val statuses = Future.sequence(statusRequests)
+
+      val counts: Future[Map[String, Int]] = statuses.
+        map(_.groupBy(i => i).
+        map((t) => (t._1, t._2.toList.length)))
+      counts.map(QueriesRunning(_)) pipeTo sender
   }
 
   class EnsikertalaisuusCheck() extends Actor {
@@ -50,9 +63,26 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     val resolver = Promise[Ensikertalainen]
     val result: Future[Ensikertalainen] = resolver.future
 
+    var virtaQuerySent = false
+
     logger.debug("starting queryActor")
 
     override def receive: Actor.Receive = {
+      case ReportStatus =>
+        val state = this match {
+          case _ if suoritukset.isEmpty && opiskeluOikeudet.isEmpty =>  "resolving suoritukset and opinto-oikeudet"
+          case _ if suoritukset.isEmpty =>  "resolving suoritukset"
+          case _ if opiskeluOikeudet.isEmpty && !foundAllKomos =>  "resolving opinto-oikeudet and komos"
+          case _ if opiskeluOikeudet.isDefined && !foundAllKomos =>  "resolving komos"
+          case _ if hetu.isEmpty => "resolving hetu"
+          case _ if hetu.isDefined && !virtaQuerySent => "resolving hetu internally"
+          case _ if !result.isCompleted => "querying virta"
+          case _ if result.isCompleted => "done"
+          case _ => "unknown"
+        }
+        sender ! QueryStatus(state)
+
+
       case EnsikertalainenQuery(henkiloOid, henkiloHetu) =>
         oid = Some(henkiloOid)
         hetu = henkiloHetu
@@ -186,3 +216,14 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     super.preStart()
   }
 }
+
+
+case class QueryStatus(status: String)
+
+object ReportStatus
+
+
+
+
+
+
