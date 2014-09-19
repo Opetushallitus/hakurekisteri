@@ -100,6 +100,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         logger.debug(s"find suoritukset $suor")
         suoritukset = Some(suor)
         requestKomos(suor)
+        if (suor.isEmpty && opiskeluOikeudet.isDefined) fetchHetu()
+
 
       case OpiskeluoikeusResponse(oo) =>
         logger.debug(s"find opiskeluoikeudet $oo")
@@ -158,8 +160,9 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     }
 
     def fetchVirta(hetu: String) = {
-      virtaActor ! VirtaQuery(oid, Some(hetu))
       virtaQuerySent = true
+      virtaActor ! VirtaQuery(oid, Some(hetu))
+
     }
 
     def resolveQuery(ensikertalainen: Boolean) {
