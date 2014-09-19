@@ -27,10 +27,8 @@ log4j.appender.VIRTA.layout=org.apache.log4j.PatternLayout
 log4j.appender.VIRTA.layout.ConversionPattern=%d{ISO8601} %-5p {%X{user}} [%t] %-5p %c: %m%n
 log4j.appender.VIRTA.MaxFileSize=50MB
 log4j.appender.VIRTA.MaxBackupIndex=20
-log4j.category.fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenActor=INFO, VIRTA
 log4j.category.fi.vm.sade.hakurekisteri.integration.virta.VirtaActor=INFO, VIRTA
 log4j.category.fi.vm.sade.hakurekisteri.integration.virta.VirtaClient=INFO, VIRTA
-log4j.additivity.fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenActor=false
 log4j.additivity.fi.vm.sade.hakurekisteri.integration.virta.VirtaActor=false
 log4j.additivity.fi.vm.sade.hakurekisteri.integration.virta.VirtaClient=false
 
