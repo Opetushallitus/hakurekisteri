@@ -31,6 +31,13 @@ class TodistusParserSpec extends FlatSpec with ShouldMatchers {
 
   }
 
+  it should "produce None for points if info is missing" in {
+    extractTodistus(tutkinto, eiPisteita).map(_.arvio.pisteet).head should equal(None)
+
+
+  }
+
+
   it should "produce correct date for each test" in {
     val paivat = (ylioppilas \\ "KOE" \ "TUTKINTOKERTA").map((e) => YTLXml.parseKausi(e.text)).flatten
     extractTodistus(tutkinto, ylioppilas).map(_.myonnetty) should equal(paivat)
