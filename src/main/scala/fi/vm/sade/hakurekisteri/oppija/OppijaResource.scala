@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.oppija
 
+import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport, Registers}
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.scalatra.json.JacksonJsonSupport
@@ -66,14 +67,14 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
   }
 
   incident {
-    case t => (id) => InternalServerError(IncidentReport(id, "error"))
+    case t: VirtaConnectionErrorException => (id) => InternalServerError(IncidentReport(id, "virta error"))
   }
 
 
   def fetchOppijatFor(hakemukset: Seq[FullHakemus]): Future[Seq[Oppija]] =
     Future.sequence(for (
       hakemus <- hakemukset
-      if hakemus.personOid.isDefined
+      if hakemus.personOid.isDefined && hakemus.state.exists((state) => state == "ACTIVE")
     ) yield fetchOppijaData(hakemus.personOid.get, hakemus.hetu))
 
 
