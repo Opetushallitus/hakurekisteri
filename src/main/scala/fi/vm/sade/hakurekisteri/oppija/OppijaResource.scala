@@ -59,8 +59,8 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
     new AsyncResult() {
       val is = for (
         hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
-        oppijat <- fetchOppijatFor(hakemukset.filter(_.hetu.isDefined).slice(0,1))
-      ) yield oppijat.headOption.fold(NotFound())(Ok(_))
+        oppijat <- fetchOppijatFor(hakemukset.filter((fh) => fh.personOid.isDefined && fh.hetu.isDefined).slice(0,1))
+      ) yield oppijat.headOption.fold(NotFound(body = ""))(Ok(_))
     }
 
   }
@@ -69,7 +69,8 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
   def fetchOppijatFor(hakemukset: Seq[FullHakemus]): Future[Seq[Oppija]] =
     Future.sequence(for (
       hakemus <- hakemukset
-    ) yield fetchOppijaData(hakemus.oid, hakemus.hetu))
+      if hakemus.personOid.isDefined
+    ) yield fetchOppijaData(hakemus.personOid.get, hakemus.hetu))
 
 
   def fetchTodistukset(suoritukset: Seq[Suoritus with Identified[UUID]]):Future[Seq[Todistus]] = Future.sequence(
