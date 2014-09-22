@@ -65,6 +65,10 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
 
   }
 
+  incident {
+    case t => (id) => InternalServerError(IncidentReport(id, "error"))
+  }
+
 
   def fetchOppijatFor(hakemukset: Seq[FullHakemus]): Future[Seq[Oppija]] =
     Future.sequence(for (
