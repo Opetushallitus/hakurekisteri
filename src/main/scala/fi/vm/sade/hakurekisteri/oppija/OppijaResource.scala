@@ -18,10 +18,9 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQu
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.ensikertalainen.Ensikertalainen
+import fi.vm.sade.hakurekisteri.ensikertalainen.{NoHetuException, Ensikertalainen, EnsikertalainenQuery}
 import scala.Some
 import fi.vm.sade.hakurekisteri.integration.hakemus.HenkiloHakijaQuery
-import fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenQuery
 
 
 class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikertalaisuus: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack  with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
@@ -97,14 +96,20 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
       opiskelu = opiskelu,
       suoritukset = todistukset,
       opiskeluoikeudet = opiskeluoikeudet,
-      ensikertalainen = ensikertalainen.ensikertalainen
+      ensikertalainen = ensikertalainen.map(_.ensikertalainen)
     )
 
   }
 
 
-  def fetchEnsikertalaisuus(henkiloOid: String, hetu: Option[String]): Future[Ensikertalainen] = {
-    (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, hetu)).mapTo[Ensikertalainen]
+  def fetchEnsikertalaisuus(henkiloOid: String, hetu: Option[String]): Future[Option[Ensikertalainen]] = {
+    (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, hetu)).mapTo[Ensikertalainen].
+      map(Some(_)).
+      recover{
+        case NoHetuException(oid, message) =>
+          logger.info(s"trying to resolve ensikertalaisuus for $henkiloOid, no hetu found")
+          None
+      }
   }
 
   def fetchOpiskeluoikeudet(henkiloOid: String): Future[Seq[Opiskeluoikeus]] = {

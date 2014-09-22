@@ -135,7 +135,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
 
       case HenkiloResponse(_, None) =>
         logger.error(s"henkilo response failed, no hetu for oid $oid")
-        failQuery(new NoSuchElementException(s"no hetu found for oid $oid"))
+        failQuery(NoHetuException(oid, s"no hetu found for oid $oid"))
 
       case VirtaData(virtaOpiskeluOikeudet, virtaSuoritukset) =>
         logger.debug(s"got virta result opiskeluoikeudet: $virtaOpiskeluOikeudet, suoritukset: $virtaSuoritukset")
@@ -156,7 +156,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     def fetchHetu() = (oid, hetu) match {
       case (_, Some(hetu)) => fetchVirta(hetu)
       case (Some(oid), None) => henkiloActor ! oid
-      case (None, None) => failQuery(new NoSuchElementException("No oid or hetu"))
+      case (None, None) => failQuery(NoHetuException(None, "No oid or hetu"))
     }
 
     def fetchVirta(hetu: String) = {
@@ -227,7 +227,6 @@ case class QueryStatus(status: String)
 object ReportStatus
 
 
-
-
+case class NoHetuException(oid: Option[String], message: String) extends NoSuchElementException(message)
 
 
