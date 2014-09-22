@@ -34,7 +34,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
 
   override def receive: Receive = {
     case q:EnsikertalainenQuery =>
-      logger.debug(s"EnsikertalainenQuery($q.oid) with ${q.hetu.map("hetu: " + _).getOrElse("no hetu")}")
+      logger.debug(s"EnsikertalainenQuery(${q.henkiloOid}) with ${q.hetu.map("hetu: " + _).getOrElse("no hetu")}")
       context.actorOf(Props(new EnsikertalaisuusCheck())).forward(q)
     case QueryCount =>
       import akka.pattern.ask
