@@ -9,6 +9,7 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import java.nio.file.{Paths, Files}
 import java.nio.charset.StandardCharsets
 import akka.event.Logging
+import scala.compat.Platform
 
 class HealthCheckWriter(health: ActorRef) extends Actor with HakurekisteriJsonSupport {
 
@@ -25,7 +26,7 @@ class HealthCheckWriter(health: ActorRef) extends Actor with HakurekisteriJsonSu
     val json = Extraction.decompose(healthcheck)
     import scala.collection.JavaConversions._
     val serialized: java.lang.Iterable[String] = pretty(json).lines.toList
-    Files.write(tmpDir.resolve("healthcheck.json"), serialized, StandardCharsets.UTF_8)
+    Files.write(tmpDir.resolve(s"healthcheck${Platform.currentTime}.json"), serialized, StandardCharsets.UTF_8)
 
 
   }(ioEc)
