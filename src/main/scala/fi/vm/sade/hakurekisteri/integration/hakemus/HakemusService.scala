@@ -40,7 +40,7 @@ trait HakemusService extends ResourceService[FullHakemus, String] with Journaled
             _.answers.flatMap(_.hakutoiveet).getOrElse(Map()).
               filterKeys((k) => k.contains("Koulutus-id-aoIdentifier")).values.toSeq)(hakemus)
     case HenkiloHakijaQuery(henkilo) =>
-      (hakemus) => hakemus.oid == henkilo
+      (hakemus) => hakemus.personOid.exists(_ == henkilo)
   }
 
   override def identify(o: FullHakemus): FullHakemus with Identified[String] = FullHakemus.identify(o)
