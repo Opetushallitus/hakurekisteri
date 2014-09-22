@@ -118,7 +118,9 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
 
   def batchMessage(batch: Batch[KokelasRequest]) =
     <Haku id={batch.id.toString}>
-      {for (kokelas <- batch.items) yield <Hetu>{kokelas.hetu}</Hetu>}
+      {for (kokelas <- batch.items) yield
+      <Hetu>{kokelas.hetu}</Hetu>
+      }
     </Haku>
 
   def uploadFile(batch:Batch[KokelasRequest], localStore: String): (String, String) = {
