@@ -149,7 +149,6 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
 
 
     ytlFuture.map((yr) => { YtlOk(
-      current = BatchReport(yr.current),
       waitingForAnswer = yr.waitingforAnswers.map(BatchReport(_)),
       yr.nextSend
     ) }).recover {
@@ -219,7 +218,7 @@ sealed abstract class YtlStatus {
   val status: Status
 }
 
-case class YtlOk(current: BatchReport, waitingForAnswer: Seq[BatchReport], nextSendTime: Option[DateTime]) extends YtlStatus  {
+case class YtlOk(waitingForAnswer: Seq[BatchReport], nextSendTime: Option[DateTime]) extends YtlStatus  {
   val status = Status.OK
 }
 

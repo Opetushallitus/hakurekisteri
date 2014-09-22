@@ -23,16 +23,19 @@ import scala.util.Success
 import akka.actor.ActorIdentity
 import akka.actor.Identify
 import akka.pattern.pipe
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
+import java.io.IOException
 
 
-case class YtlReport(current: Batch[KokelasRequest], waitingforAnswers: Seq[Batch[KokelasRequest]], nextSend: Option[DateTime])
+case class YtlReport(waitingforAnswers: Seq[Batch[KokelasRequest]], nextSend: Option[DateTime])
 
 object Report
 
-class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, config: Option[YTLConfig]) extends Actor {
+class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemukset: ActorRef, config: Option[YTLConfig]) extends Actor {
   implicit val ec = context.dispatcher
 
-  var batch = Batch[KokelasRequest]()
+
+  var haut = Set[String]()
   var sent = Seq[Batch[KokelasRequest]]()
 
   val sendTicker = context.system.scheduler.schedule(1.millisecond, 1.minutes, self, CheckSend)
@@ -59,19 +62,44 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   var kokelaat = Map[String, Kokelas]()
   var suoritusKokelaat = Map[UUID, (Suoritus with Identified[UUID], Kokelas)]()
 
+  def getNewBatch(haut: Set[String]) = {
+
+    implicit val to: Timeout = 300.seconds
+    val haetaan: Set[Future[Seq[FullHakemus]]] = for (
+      haku <- haut
+    ) yield (hakemukset ? HakemusQuery(Some(haku), None, None)).mapTo[Seq[FullHakemus]].
+        recoverWith{case t: Throwable => Future.failed(new HakuException(s"failed to find applications for applicationID $haku", haku, t))}
+
+
+    Future.sequence(haetaan).map(
+      _.toSeq.flatten.
+        map((hakemus) => (hakemus.personOid, hakemus.hetu)).
+        collect{case (Some(oid), Some(hetu)) => KokelasRequest(oid, hetu)}).
+      map((rs) => Batch(items = rs.toSet))
+
+
+  }
+
   override def receive: Actor.Receive = {
-    case Report => sender ! YtlReport(batch, sent, nextSend)
+    case HakuList(current) => haut = current
+    case Report => sender ! YtlReport(sent, nextSend)
     case CheckSend if nextSend.getOrElse(DateTime.now.plusDays(1)).isBefore(DateTime.now()) =>
       self ! Send
       nextSend = nextSendTime
-    case k:KokelasRequest if config.isDefined =>
-      batch = batch + k
-    case Send if config.isDefined && !batch.items.isEmpty =>
-                 log.debug(s"sending batch ${batch.id} with ${batch.items.size} applicants")
-                 send(batch)
-                 sent = batch +: sent
-                 batch = Batch[KokelasRequest]()
-                 log.debug(s"new batch ${batch.id} with ${batch.items.size} applicants")
+    case Send if config.isDefined  =>
+      val result = for (
+        b <- getNewBatch(haut);
+        sent <- send(b)
+      ) yield SentBatch(sent)
+      result pipeTo self
+    case SentBatch(batch) =>
+      sent = batch +: sent
+    case akka.actor.Status.Failure(h: HakuException) =>
+      log.info(s"retrying after haku exception ${h.getCause.getMessage}")
+      self ! Send
+    case akka.actor.Status.Failure(h: FtpException) =>
+      log.info(s"retrying after FTP exception: ${h.getCause.getMessage}")
+      self ! Send
     case Poll if config.isDefined  => poll(sent)
     case YtlResult(id, data) if config.isDefined  =>
       val requested = sent.find(_.id == id)
@@ -118,9 +146,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
 
   def batchMessage(batch: Batch[KokelasRequest]) =
     <Haku id={batch.id.toString}>
-      {for (kokelas <- batch.items) yield
-      <Hetu>{kokelas.hetu}</Hetu>
-      }
+      {for (kokelas <- batch.items) yield <Hetu>{kokelas.hetu}</Hetu>}
     </Haku>
 
   def uploadFile(batch:Batch[KokelasRequest], localStore: String): (String, String) = {
@@ -131,7 +157,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     (fileName, filePath)
   }
 
-  def send(batch: Batch[KokelasRequest]): Unit = config match {
+  def send(batch: Batch[KokelasRequest]) = config match {
     case Some(YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, _, localStore)) =>
       Future {
         val (filename, localCopy) = uploadFile(batch, localStore)
@@ -139,9 +165,13 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
           (sftp) =>
             sftp.send(localCopy, s"$inbox/$filename")
         }
-      }(sftpSendContext)
+        batch
+      }(sftpSendContext).recoverWith{
+        case t:Throwable => Future.failed(FtpException(t))
+      }
 
     case None => log.warning("sending files to YTL called without config")
+      Future.failed(new NoSuchElementException("No Config"))
   }
 
   def poll(batches: Seq[Batch[KokelasRequest]]): Unit = config match {
@@ -374,3 +404,11 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
 case class YTLConfig(host:String, username: String, password: String, inbox: String, outbox: String, sendTimes: Seq[LocalTime], localStore:String)
 
 case class Handled(batches: Seq[UUID])
+
+case class SentBatch(batch: Batch[KokelasRequest])
+
+case class HakuList(haut: Set[String])
+
+case class HakuException(message: String, haku: String, cause: Throwable) extends Exception(message, cause)
+
+case class FtpException(cause:Throwable) extends IOException("problem with SFTP send", cause)

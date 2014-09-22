@@ -12,9 +12,10 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.ReloadHaku
 import scala.concurrent.duration._
 import org.scalatra.util.RicherString._
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluQuery
+import fi.vm.sade.hakurekisteri.integration.ytl.HakuList
 
 
-class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, sijoittelu: ActorRef) extends Actor {
+class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, sijoittelu: ActorRef, ytl: ActorRef) extends Actor {
   implicit val ec = context.dispatcher
   val log = Logging(context.system, this)
 
@@ -35,6 +36,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
     case s: Seq[Haku] =>
       activeHakus = s.filter(_.aika.isCurrently)
+      ytl ! HakuList(activeHakus.filter(_.kkHaku).map(_.oid).toSet)
       log.debug(s"current hakus ${activeHakus.mkString(", ")}")
       if (starting) {
         starting = false
@@ -83,7 +85,7 @@ object RefreshSijoittelu
 
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
 
-case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int)
+case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int, kkHaku: Boolean)
 
 object Haku {
   def apply(haku: RestHaku)(loppu: ReadableInstant): Haku = {
@@ -92,7 +94,8 @@ object Haku {
       Kieliversiot(haku.nimi.get("kieli_fi").flatMap(Option(_)).flatMap(_.blankOption), haku.nimi.get("kieli_sv").flatMap(Option(_)).flatMap(_.blankOption), haku.nimi.get("kieli_en").flatMap(Option(_)).flatMap(_.blankOption)), haku.oid.get,
       ajanjakso,
       haku.hakukausiUri,
-      haku.hakukausiVuosi
+      haku.hakukausiVuosi,
+      kkHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_12"))
     )
   }
 

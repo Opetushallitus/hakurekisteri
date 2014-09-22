@@ -271,6 +271,7 @@ trait Integrations {
   val hakemukset: ActorRef
   val tarjonta: ActorRef
   val koodisto: ActorRef
+  val ytl: ActorRef
   val parametrit: ActorRef
 }
 
@@ -313,15 +314,9 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig)(getClient, ec))))
 
-  val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, ytlConfig)), "ytl")
-
-  private def newApplicant(oid: String, hetu: String) :Unit = {
-    ytl ! KokelasRequest(oid, hetu)
-
-  }
   val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf)(getClient, ec), hakemusConfig.maxApplications)), "hakemus")
 
-  hakemukset ! Trigger(newApplicant _)
+  val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, ytlConfig)), "ytl")
 
   val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)(getClient, ec))), "koodisto")
 
@@ -341,7 +336,7 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
 
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta, integrations.hakemukset)), "ensikertalainen")
 
-  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.sijoittelu)))
+  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.sijoittelu, integrations.ytl)))
 
 
 }
