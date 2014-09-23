@@ -1,12 +1,10 @@
 package fi.vm.sade.hakurekisteri.ensikertalainen
 
-import java.util.NoSuchElementException
 
 import akka.actor.{Actor, ActorRef, Props}
 import akka.event.Logging
 import akka.pattern.pipe
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaData, VirtaQuery}
@@ -15,11 +13,13 @@ import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
 import org.joda.time.{DateTime, LocalDate}
 
-import scala.collection.immutable.Iterable
-import scala.compat.Platform
+import scala.concurrent.{Promise, Future, ExecutionContext}
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
+
 import scala.util.{Failure, Success, Try}
+import scala.compat.Platform
+import scala.collection.immutable.Iterable
 
 case class EnsikertalainenQuery(henkiloOid: String, hetu: Option[String]= None)
 
@@ -228,6 +228,5 @@ object ReportStatus
 
 
 case class NoHetuException(oid: Option[String], message: String) extends NoSuchElementException(message)
-
 
 
