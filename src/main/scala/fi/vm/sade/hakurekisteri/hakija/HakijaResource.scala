@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.hakija
 
+import java.io.OutputStream
 import java.text.SimpleDateFormat
 
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
@@ -71,14 +72,20 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   }
 
   def setContentDisposition(t: Tyyppi, response: HttpServletResponse, filename: String) {
-    response.setHeader("Content-Disposition", "attachment;filename=%s.%s".format(filename, getFileExtension(t)))
+    response.setHeader("Content-Disposition", s"attachment;filename=$filename.${getFileExtension(t)}")
     response.addCookie(Cookie("fileDownload", "true")(CookieOptions(path = "/")))
   }
 
-  override protected def renderPipeline: RenderPipeline = renderCustom orElse super.renderPipeline
-  private def renderCustom: RenderPipeline = {
+  override protected def renderPipeline: RenderPipeline = renderCustom orElse  renderExcel orElse super.renderPipeline
+
+  val streamingRender: (OutputStream, XMLHakijat) => Unit = ExcelUtil.write _
+  
+  private def renderExcel: RenderPipeline = {
+    case hakijat: XMLHakijat if responseFormat == "binary" => streamingRender(response.outputStream, hakijat)
+  }
+  
+  protected def renderCustom: RenderPipeline = {
     case hakijat: XMLHakijat if responseFormat == "xml" => XML.write(response.writer, Utility.trim(hakijat.toXml), response.characterEncoding.get, xmlDecl = true, doctype = null)
-    case hakijat: XMLHakijat if responseFormat == "binary" => ExcelUtil.write(response.outputStream, hakijat)
   }
 
   get("/", operation(query)) {

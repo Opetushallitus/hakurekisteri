@@ -116,7 +116,7 @@ object ExcelUtil {
     val wb = new Workbook(Set(sheet))
     logger.debug("writing workbook: " + wb)
 
-    wb.safeToStream(out).unsafePerformIO
+    wb.safeToStream(out).unsafePerformIO()
   }
 
 }

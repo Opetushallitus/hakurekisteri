@@ -32,7 +32,7 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with FutureWaiting wit
 
   it should "convert VirtaResult into sequence of Suoritus" in {
     val virtaClient = mock[VirtaClient]
-    virtaClient.getOpiskelijanTiedot(Some("1.2.3"), Some("111111-1975")) returns Future.successful(
+    virtaClient.getOpiskelijanTiedot("1.2.3", Some("111111-1975")) returns Future.successful(
       Some(
         VirtaResult(
           opiskeluoikeudet = Seq(
@@ -63,7 +63,7 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with FutureWaiting wit
     val tarjontaActor: ActorRef = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost"))(tarjontaHttpClient, ec))))
     val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatioActor)))
 
-    val result = (virtaActor ? VirtaQuery(Some("1.2.3"), Some("111111-1975")))(akka.util.Timeout(10, TimeUnit.SECONDS)).mapTo[VirtaData]
+    val result = (virtaActor ? VirtaQuery("1.2.3", Some("111111-1975")))(akka.util.Timeout(10, TimeUnit.SECONDS)).mapTo[VirtaData]
 
     waitFuture(result) {(r: VirtaData) => {
       r.opiskeluOikeudet.size should be(1)
