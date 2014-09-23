@@ -20,10 +20,8 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
                  (implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) {
   val logger = LoggerFactory.getLogger(getClass)
 
-  def getOpiskelijanTiedot(oppijanumero: Option[String] = None, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
-    if (oppijanumero.isEmpty && hetu.isEmpty) throw new IllegalArgumentException("either oppijanumero or hetu is required")
+  def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
     if (hetu.isDefined && !HetuUtils.isHetuValid(hetu.get)) throw new IllegalArgumentException("hetu is not valid")
-    if (oppijanumero.isEmpty) throw new IllegalArgumentException("oppijanumero is always required")
 
     val operation =
 <OpiskelijanKaikkiTiedotRequest xmlns="http://tietovaranto.csc.fi/luku">
@@ -33,7 +31,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     <avain>{config.avain}</avain>
   </Kutsuja>
   <Hakuehdot>
-    {if (hetu.isDefined) <henkilotunnus>{hetu.get}</henkilotunnus> else <kansallinenOppijanumero>{oppijanumero.get}</kansallinenOppijanumero>}
+    {if (hetu.isDefined) <henkilotunnus>{hetu.get}</henkilotunnus> else <kansallinenOppijanumero>{oppijanumero}</kansallinenOppijanumero>}
   </Hakuehdot>
 </OpiskelijanKaikkiTiedotRequest>
 

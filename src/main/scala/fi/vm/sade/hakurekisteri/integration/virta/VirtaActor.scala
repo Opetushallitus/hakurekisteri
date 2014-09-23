@@ -8,13 +8,12 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, yksilollistaminen}
 import org.joda.time.LocalDate
 
+import scala.collection.IterableLike
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import akka.pattern.pipe
 
-case class VirtaQuery(oppijanumero: Option[String], hetu: Option[String]) {
-  if (oppijanumero.isEmpty && hetu.isEmpty) throw new IllegalArgumentException(s"oppijanumero and hetu are both empty")
-}
+case class VirtaQuery(oppijanumero: String, hetu: Option[String])
 
 case class KomoNotFoundException(message: String) extends Exception(message)
 
@@ -30,44 +29,45 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef) extends 
       convertVirtaResult(virtaClient.getOpiskelijanTiedot(oppijanumero = o, hetu = h))(o) pipeTo sender
   }
 
-  def opiskeluoikeus(oppijanumero: Option[String])(o: VirtaOpiskeluoikeus): Future[Opiskeluoikeus] = {
-    resolveOppilaitosOid(o.myontaja).flatMap((oppilaitosOid) => {
-      resolveKomoOid(o.koulutuskoodit.head).map((komoOid) => {
-        Opiskeluoikeus(
-          alkuPaiva = o.alkuPvm,
-          loppuPaiva = o.loppuPvm,
-          henkiloOid = oppijanumero.get,
-          komo = komoOid,
-          myontaja = oppilaitosOid,
-          source = CSC
-        )
-      })
-    })
+  def getKoulutusUri(koulutuskoodi: Option[String]): String = s"koulutus_${resolveKoulutusKoodiOrUnknown(koulutuskoodi)}"
+
+
+  def resolveKoulutusKoodiOrUnknown(koulutuskoodi: Option[String]): String = {
+    val tuntematon = "999999"
+    koulutuskoodi.getOrElse(tuntematon)
   }
 
-  def tutkinto(oppijanumero: Option[String])(t: VirtaTutkinto): Future[Suoritus] = {
-    resolveOppilaitosOid(t.myontaja).flatMap((oppilaitosOid) => {
-      resolveKomoOid(t.koulutuskoodi.get).map((komoOid) => {
-        Suoritus(
-          komo = komoOid,
+  def opiskeluoikeus(oppijanumero: String)(o: VirtaOpiskeluoikeus): Future[Opiskeluoikeus] =
+    for (
+      oppilaitosOid <- resolveOppilaitosOid(o.myontaja)
+    ) yield Opiskeluoikeus(
+          alkuPaiva = o.alkuPvm,
+          loppuPaiva = o.loppuPvm,
+          henkiloOid = oppijanumero,
+          komo = getKoulutusUri(o.koulutuskoodit.headOption),
+          myontaja = oppilaitosOid,
+          source = CSC)
+
+
+  def tutkinto(oppijanumero: String)(t: VirtaTutkinto): Future[Suoritus] =
+    for (
+      oppilaitosOid <- resolveOppilaitosOid(t.myontaja)
+    ) yield Suoritus(
+          komo = getKoulutusUri(t.koulutuskoodi),
           myontaja = oppilaitosOid,
           valmistuminen = t.suoritusPvm,
           tila = tila(t.suoritusPvm),
-          henkiloOid = oppijanumero.get,
+          henkiloOid = oppijanumero,
           yksilollistaminen = yksilollistaminen.Ei,
           suoritusKieli = t.kieli,
-          source = CSC
-        )
-      })
-    })
-  }
+          source = CSC)
 
   def tila(valmistuminen: LocalDate): String = valmistuminen match {
     case v: LocalDate if v.isBefore(new LocalDate()) => "VALMIS"
     case _ => "KESKEN"
   }
 
-  def convertVirtaResult(f: Future[Option[VirtaResult]])(oppijanumero: Option[String]): Future[VirtaData] = f.flatMap {
+  def convertVirtaResult(f: Future[Option[VirtaResult]])(oppijanumero: String): Future[VirtaData] = f.flatMap {
     case None => Future.successful(VirtaData(Seq(), Seq()))
     case Some(r) =>
       val opiskeluoikeudet: Future[Seq[Opiskeluoikeus]] = Future.sequence(r.opiskeluoikeudet.map(opiskeluoikeus(oppijanumero)))
@@ -91,7 +91,4 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef) extends 
       }
   }
 
-  def resolveKomoOid(koulutuskoodi: String): Future[String] = {
-    Future.successful(s"koulutus_$koulutuskoodi")
-  }
 }
