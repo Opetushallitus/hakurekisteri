@@ -311,7 +311,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
     HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeout)
     HttpConnectionParams.setSoTimeout(httpParams, socketTimeout)
     HttpConnectionParams.setStaleCheckingEnabled(httpParams, false)
-    HttpConnectionParams.setSoKeepalive(httpParams, true)
+    HttpConnectionParams.setSoKeepalive(httpParams, false)
     client.setReuseStrategy(new NoConnectionReuseStrategy())
     client
   }
