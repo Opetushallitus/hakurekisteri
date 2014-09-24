@@ -294,13 +294,13 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   def getClient: HttpClient = getClient("default")
   
-  val timeToLive = 60000
-  val timeout = 20000
+  val socketTimeout = 120000
+  val connectionTimeout = 10000
   val maxConnections = 100
 
   def createApacheHttpClient: org.apache.http.client.HttpClient = {
     val connManager: ClientConnectionManager = {
-      val cm = new PoolingClientConnectionManager(SchemeRegistryFactory.createDefault(), timeToLive, TimeUnit.MILLISECONDS)
+      val cm = new PoolingClientConnectionManager()
       cm.setDefaultMaxPerRoute(maxConnections)
       cm.setMaxTotal(maxConnections)
       cm
@@ -308,10 +308,10 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
     val client = new DefaultHttpClient(connManager)
     val httpParams = client.getParams
-    HttpConnectionParams.setConnectionTimeout(httpParams, timeout)
-    HttpConnectionParams.setSoTimeout(httpParams, timeout)
+    HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeout)
+    HttpConnectionParams.setSoTimeout(httpParams, socketTimeout)
     HttpConnectionParams.setStaleCheckingEnabled(httpParams, false)
-    HttpConnectionParams.setSoKeepalive(httpParams, false)
+    HttpConnectionParams.setSoKeepalive(httpParams, true)
     client.setReuseStrategy(NoConnectionReuseStrategy)
     client
   }
