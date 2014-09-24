@@ -33,6 +33,11 @@ import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
 import org.apache.activemq.camel.component.ActiveMQComponent
+import org.apache.http.conn.ClientConnectionManager
+import org.apache.http.impl.NoConnectionReuseStrategy
+import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.http.impl.conn.{SchemeRegistryFactory, PoolingClientConnectionManager}
+import org.apache.http.params.HttpConnectionParams
 import org.scalatra._
 import org.scalatra.swagger.Swagger
 import org.slf4j.LoggerFactory
@@ -288,9 +293,31 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        system: ActorSystem) extends Integrations {
 
   def getClient: HttpClient = getClient("default")
+  
+  val timeToLive = 60000
+  val timeout = 20000
+  val maxConnections = 100
+
+  def createApacheHttpClient: org.apache.http.client.HttpClient = {
+    val connManager: ClientConnectionManager = {
+      val cm = new PoolingClientConnectionManager(SchemeRegistryFactory.createDefault(), timeToLive, TimeUnit.MILLISECONDS)
+      cm.setDefaultMaxPerRoute(maxConnections)
+      cm.setMaxTotal(maxConnections)
+      cm
+    }
+
+    val client = new DefaultHttpClient(connManager)
+    val httpParams = client.getParams
+    HttpConnectionParams.setConnectionTimeout(httpParams, timeout)
+    HttpConnectionParams.setSoTimeout(httpParams, timeout)
+    HttpConnectionParams.setStaleCheckingEnabled(httpParams, false)
+    HttpConnectionParams.setSoKeepalive(httpParams, false)
+    client.setReuseStrategy(NoConnectionReuseStrategy)
+    client
+  }
 
   def getClient(poolName:String = "default"): HttpClient = {
-    if (poolName == "default") new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
+    if (poolName == "default") new ApacheHttpClient(createApacheHttpClient)()
     else {
       val threadNumber = new AtomicInteger(1)
       val pool = Executors.newFixedThreadPool(8, new ThreadFactory() {
@@ -298,7 +325,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
           new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
         }
       })
-      new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)(ExecutionContext.fromExecutorService(pool))
+      new ApacheHttpClient(createApacheHttpClient)(ExecutionContext.fromExecutorService(pool))
     }
   }
 
