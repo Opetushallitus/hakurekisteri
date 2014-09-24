@@ -296,9 +296,8 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
   
   val socketTimeout = 120000
   val connectionTimeout = 10000
-  val maxConnections = 100
 
-  def createApacheHttpClient: org.apache.http.client.HttpClient = {
+  def createApacheHttpClient(maxConnections: Int): org.apache.http.client.HttpClient = {
     val connManager: ClientConnectionManager = {
       val cm = new PoolingClientConnectionManager()
       cm.setDefaultMaxPerRoute(maxConnections)
@@ -316,16 +315,16 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
     client
   }
 
-  def getClient(poolName:String = "default"): HttpClient = {
-    if (poolName == "default") new ApacheHttpClient(createApacheHttpClient)()
+  def getClient(poolName: String = "default", threads: Int = 8, maxConnections: Int = 100): HttpClient = {
+    if (poolName == "default") new ApacheHttpClient(createApacheHttpClient(maxConnections))()
     else {
       val threadNumber = new AtomicInteger(1)
-      val pool = Executors.newFixedThreadPool(8, new ThreadFactory() {
+      val pool = Executors.newFixedThreadPool(threads, new ThreadFactory() {
         override def newThread(r: Runnable): Thread = {
           new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
         }
       })
-      new ApacheHttpClient(createApacheHttpClient)(ExecutionContext.fromExecutorService(pool))
+      new ApacheHttpClient(createApacheHttpClient(maxConnections))(ExecutionContext.fromExecutorService(pool))
     }
   }
 
@@ -335,7 +334,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(getClient, ec))))
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient("virta"), ec), organisaatiot)), "virta")
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient(poolName = "virta", threads = 100), ec), organisaatiot)), "virta")
 
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig)(getClient, ec))), "henkilo")
 
