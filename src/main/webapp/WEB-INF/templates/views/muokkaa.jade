@@ -63,15 +63,16 @@ form(ng-submit="save()")
               div(class="row")
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.myontaja") Myöntäjä
-                  input(ng-show="suoritus.editable" type="text" class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv || organisaatio.nimi.en)) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingSuoritusOppilaitos" typeahead-wait-ms="500" required="required")
+                  input(ng-show="suoritus.editable && suoritus.komo !== komo.ylioppilastutkinto" type="text" class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv || organisaatio.nimi.en)) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingSuoritusOppilaitos" typeahead-wait-ms="500")
                   div(ng-hide="suoritus.editable") {{(suoritus.organisaatio.oppilaitosKoodi + ' ' + (suoritus.organisaatio.nimi.fi || suoritus.organisaatio.nimi.sv || suoritus.organisaatio.nimi.en)) || suoritus.myontaja}}
+                  div(ng-show="suoritus.komo === komo.ylioppilastutkinto") {{(suoritus.organisaatio.nimi.fi || suoritus.organisaatio.nimi.sv || suoritus.organisaatio.nimi.en) || suoritus.myontaja}}
                 div(class="form-group col-sm-5")
                   strong(oph-msg="suoritusrekisteri.muokkaa.koulutus") Koulutus
-                  select(ng-show="suoritus.editable" class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.komo" ng-options="koulutus.value as koulutus.text for koulutus in koulutukset" required="required")
+                  select(ng-show="suoritus.editable" class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.komo" ng-options="koulutus.value as koulutus.text for koulutus in koulutukset" ng-change="checkYlioppilastutkinto(suoritus)" required="required")
                   div(ng-hide="suoritus.editable") {{suoritus.koulutus || suoritus.komo}}
                 div(class="form-group col-sm-4")
                   strong(oph-msg="suoritusrekisteri.muokkaa.yksilollistetty") Yksilöllistetty
-                  select(ng-show="suoritus.editable" class="form-control input-sm" ng-model="suoritus.yksilollistaminen" ng-options="yks.value as yks.text for yks in yksilollistamiset" required="required" ng-disabled="suoritus.delete || (suoritus.komo !== '1.2.246.562.13.62959769647' && suoritus.komo !== '1.2.246.562.5.2013112814572435044876')")
+                  select(ng-show="suoritus.editable" class="form-control input-sm" ng-model="suoritus.yksilollistaminen" ng-options="yks.value as yks.text for yks in yksilollistamiset" required="required" ng-disabled="suoritus.delete || (suoritus.komo !== komo.peruskoulu && suoritus.komo !== komo.lisaopetus)")
                   div(ng-hide="suoritus.editable") {{suoritus.yksilollistaminen}}
               div(class="row")
                 div(class="form-group col-sm-3")
@@ -93,10 +94,10 @@ form(ng-submit="save()")
               div(ng-show="suoritus.editable" class="row")
                 div(class="form-group col-sm-12")
                   div(class="pull-right")
-                    button(type="button" class="btn btn-default arvosana-button" ng-disabled="!suoritus.id || suoritus.delete" ng-click="editArvosana(suoritus.id)")
+                    button(ng-hide="suoritus.komo === komo.ylioppilastutkinto" type="button" class="btn btn-default arvosana-button" ng-disabled="!suoritus.id || suoritus.delete" ng-click="editArvosana(suoritus.id)")
                       span(oph-msg="suoritusrekisteri.muokkaa.muokkaaarvosanoja") Muokkaa arvosanoja
                       span(class="glyphicon glyphicon-edit")
-                    button(ng-show="suoritus.komo === '1.2.246.562.5.2013061010184237348007'" type="button" class="btn btn-default arvosana-button" ng-disabled="!suoritus.id || suoritus.delete" ng-click="editYoarvosana(suoritus.id)")
+                    button(ng-show="suoritus.komo === komo.ylioppilastutkinto" type="button" class="btn btn-default arvosana-button" ng-disabled="!suoritus.id || suoritus.delete" ng-click="editYoarvosana(suoritus.id)")
                       span(oph-msg="suoritusrekisteri.muokkaa.muokkaayoarvosanoja") Muokkaa YO-arvosanoja
                       span(class="glyphicon glyphicon-edit")
                     button(ng-show="isOPH()" type="button" class="btn btn-default arvosana-button" ng-disabled="suoritus.delete" ng-click="suoritus.delete = true")

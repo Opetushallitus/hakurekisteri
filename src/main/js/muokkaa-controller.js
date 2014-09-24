@@ -14,6 +14,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         {value: "M", text: "M"},
         {value: "V", text: "V"}
     ];
+    $scope.komo = komo;
     function loadMenuTexts() {
         $scope.yksilollistamiset = [
             {value: "Ei", text: getOphMsg("suoritusrekisteri.yks.ei", "Ei")},
@@ -76,16 +77,18 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                 confirm(getOphMsg("suoritusrekisteri.muokkaa.henkilotietojenhakeminen", "Henkilötietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchHenkilotiedot() : back();
             });
     }
+    function enrichLuokkatieto(luokkatieto) {
+        if (luokkatieto.oppilaitosOid) {
+            getOrganisaatio($http, luokkatieto.oppilaitosOid, function(organisaatio) {
+                luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi
+            })
+        }
+        luokkatieto.editable = true;
+    }
     function fetchLuokkatiedot() {
         function enrich() {
             if ($scope.luokkatiedot) {
-                angular.forEach($scope.luokkatiedot, function(luokkatieto) {
-                    if (luokkatieto.oppilaitosOid) {
-                        getOrganisaatio($http, luokkatieto.oppilaitosOid, function(organisaatio) {
-                            luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi
-                        })
-                    }
-                })
+                angular.forEach($scope.luokkatiedot, enrichLuokkatieto)
             }
         }
 
@@ -182,7 +185,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         var validations = [];
         function validateOppilaitoskoodit() {
             angular.forEach($scope.luokkatiedot.concat($scope.suoritukset), function(obj) {
-                if (!obj.delete) {
+                if (!obj.delete && obj.editable && !(obj.komo && obj.komo === komo.ylioppilastutkinto)) {
                     var d = $q.defer();
                     this.push(d);
                     if (!obj.oppilaitos || !obj.oppilaitos.match(/^\d{5}$/)) {
@@ -291,9 +294,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                     }
                 } else {
                     luokkatieto.$save(function () {
-                        getOrganisaatio($http, luokkatieto.oppilaitosOid, function(organisaatio) {
-                            luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi;
-                        });
+                        enrichLuokkatieto(luokkatieto);
                         d.resolve("done");
                     }, function () {
                         $scope.messages.push({
@@ -336,6 +337,14 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
     };
     $scope.cancel = function() {
         back()
+    };
+    $scope.checkYlioppilastutkinto = function(suoritus) {
+        if (suoritus.komo === komo.ylioppilastutkinto) {
+            suoritus.myontaja = ylioppilastutkintolautakunta;
+            getOrganisaatio($http, ylioppilastutkintolautakunta, function(org) {
+                suoritus.organisaatio = org;
+            });
+        }
     };
     $scope.addSuoritus = function() {
         $scope.suoritukset.push(new Suoritukset({

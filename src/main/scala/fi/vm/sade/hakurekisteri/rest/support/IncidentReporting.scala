@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import java.util.UUID
 
+import akka.pattern.AskTimeoutException
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.joda.time.DateTime
 import org.joda.time.DateTime._
@@ -14,6 +15,9 @@ trait IncidentReporting { this: HakuJaValintarekisteriStack =>
 
   def incident(handler: PartialFunction[Throwable, (UUID) => ActionResult]): Unit = {
     error {
+      case t: AskTimeoutException =>
+        val resultGenerator = handler.applyOrElse[Throwable, (UUID) => ActionResult](t, (anything) => (id) => InternalServerError(IncidentReport(id, "back-end service timed out")))
+        processError(t) (resultGenerator)
       case t: Throwable =>
         val resultGenerator = handler.applyOrElse[Throwable, (UUID) => ActionResult](t, (anything) => (id) => InternalServerError(IncidentReport(id, "error in service")))
         processError(t) (resultGenerator)

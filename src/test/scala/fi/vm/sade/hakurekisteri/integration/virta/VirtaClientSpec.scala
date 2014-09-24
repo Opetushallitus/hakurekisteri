@@ -43,7 +43,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
 
   it should "call Virta with provided oppijanumero" in {
     val oppijanumero = "1.2.3"
-    val response = virtaClient.getOpiskelijanTiedot(oppijanumero = Some(oppijanumero))
+    val response = virtaClient.getOpiskelijanTiedot(oppijanumero = oppijanumero)
 
     waitFuture(response) {o => {
       httpClient.capturedRequestBody should include(s"<kansallinenOppijanumero>$oppijanumero</kansallinenOppijanumero>")
@@ -52,7 +52,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
 
   it should "call Virta with provided henkilotunnus" in {
     val hetu = "111111-1975"
-    val response = virtaClient.getOpiskelijanTiedot(hetu = Some(hetu), oppijanumero = Some("1.2.3"))
+    val response = virtaClient.getOpiskelijanTiedot(hetu = Some(hetu), oppijanumero = "1.2.3")
 
     waitFuture(response) {o => {
       httpClient.capturedRequestBody should include(s"<henkilotunnus>$hetu</henkilotunnus>")
@@ -60,7 +60,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
   }
 
   it should "wrap the operation in a SOAP envelope" in {
-    val response = virtaClient.getOpiskelijanTiedot(oppijanumero = Some("1.2.3"))
+    val response = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.3")
 
     waitFuture(response) {o => {
       httpClient.capturedRequestBody should include("<SOAP-ENV:Envelope")
@@ -68,7 +68,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
   }
 
   it should "return student information" in {
-    val response: Future[Option[VirtaResult]] = virtaClient.getOpiskelijanTiedot(oppijanumero = Some("1.2.3"))
+    val response: Future[Option[VirtaResult]] = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.3")
 
     waitFuture(response) {o => {
       o.get.opiskeluoikeudet.size should be(2)
@@ -77,7 +77,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
   }
 
   it should "return None if no data is found" in {
-    val response: Future[Option[VirtaResult]] = virtaClient.getOpiskelijanTiedot(oppijanumero = Some("1.2.4"))
+    val response: Future[Option[VirtaResult]] = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.4")
 
     waitFuture(response) {(o: Option[VirtaResult]) => {
       o should be(None)
@@ -85,7 +85,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
   }
 
   it should "combine multiple student records into one opiskeluoikeus sequence" in {
-    val response: Future[Option[VirtaResult]] = virtaClient.getOpiskelijanTiedot(oppijanumero = Some("1.3.0"))
+    val response: Future[Option[VirtaResult]] = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.3.0")
 
     waitFuture(response) {(o: Option[VirtaResult]) => {
       o.get.opiskeluoikeudet.size should be(3)
@@ -94,22 +94,18 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
   }
 
   it should "throw VirtaConnectionErrorException if an connection error occurred" in {
-    val response = virtaClient.getOpiskelijanTiedot(oppijanumero = Some("1.2.5"))
+    val response = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.5")
 
     intercept[VirtaConnectionErrorException] {
       waitFutureFailure(response)
     }
   }
 
-  it should "throw IllegalArgumentException if no oppijanumero or hetu is provided" in {
-    intercept[IllegalArgumentException] {
-      waitFutureFailure(virtaClient.getOpiskelijanTiedot())
-    }
-  }
+
 
   it should "throw IllegalArgumentException if provided hetu is not valid" in {
     intercept[IllegalArgumentException] {
-      waitFutureFailure(virtaClient.getOpiskelijanTiedot(hetu = Some("invalid"), oppijanumero = Some("1.2.3")))
+      waitFutureFailure(virtaClient.getOpiskelijanTiedot(hetu = Some("invalid"), oppijanumero = "1.2.3"))
     }
   }
 

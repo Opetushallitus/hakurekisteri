@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQu
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
-import _root_.akka.actor.{Actor, ActorRef, ActorSystem}
+import akka.actor.{Props, Actor, ActorRef, ActorSystem}
 import _root_.akka.pattern.{AskTimeoutException, ask}
 import java.util.concurrent.TimeUnit
 import org.scalatra.json._
@@ -25,6 +25,8 @@ import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
 import fi.vm.sade.hakurekisteri.hakija.Hakemus
 import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
 import akka.event.Logging
+import scala.compat.Platform
+import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
 
 class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -60,11 +62,21 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
                        opiskeluoikeusRekisteri: ActorRef,
                        suoritusRekisteri: ActorRef,
                        ytl: ActorRef,
-                       hakemukset: ActorRef)(implicit system: ActorSystem) extends Actor {
+                       hakemukset: ActorRef,
+                       ensikertalainenActor: ActorRef)(implicit system: ActorSystem) extends Actor {
   protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(30, TimeUnit.SECONDS)
   val authorities = Seq("1.2.246.562.10.00000000001")
   var foundHakemukset:Map[String, RefreshingState] = Map()
+
+  var selfChecks: Map[UUID, Long] = Map()
+
+  val writer = context.actorOf(Props(new HealthCheckWriter(self)))
+
+  case class SelfCheck(id: UUID = UUID.randomUUID())
+  case class Measure(id:UUID)
+
+  context.system.scheduler.schedule(0.seconds, 5.minutes, self, SelfCheck())
 
   override def preStart(): Unit = {
     hakemukset ! Health(self)
@@ -77,6 +89,15 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
 
 
   def receive = {
+    case SelfCheck(id) =>
+      selfChecks = selfChecks + (id -> Platform.currentTime)
+      self ! Measure(id)
+      writer ! Query
+    case Measure(id) =>
+      val arrival = Platform.currentTime
+      val roundTrip = selfChecks.get(id).map(arrival - _)
+      if (!(roundTrip.getOrElse(0L) < 30000)) logger.warning(s"Healthcheck is too slow. Measured roundtrip over 30s ${roundTrip}ms")
+      selfChecks = selfChecks - id
     case Hakemukset(oid, count) =>
       val curState = foundHakemukset.get(oid).map{
         case RefreshingState(max, latest) if  max.amount <= count.amount => RefreshingState(count, count)
@@ -87,39 +108,40 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       val combinedFuture =
         checkState
 
-      combinedFuture map { case (arvosanaCount, opiskelijaCount, opiskeluoikeusCount, suoritusCount, hakemusCount, ytlReport) =>
-        Healhcheck(System.currentTimeMillis(),
-          "anonymousUser",
-          "/suoritusrekisteri",
-          Checks(Resources(
-            arvosanat = arvosanaCount.count,
-            opiskelijat = opiskelijaCount.count,
-            opiskeluoikeudet = opiskeluoikeusCount.count,
-            suoritukset = suoritusCount.count,
-            hakemukset = hakemusCount.count,
-            foundHakemukset = foundHakemukset,
-            ytl = ytlReport
-          )),
-          resolveStatus(arvosanaCount.status, opiskelijaCount.status, opiskeluoikeusCount.status, suoritusCount.status, hakemusCount.status, ytlReport.status),
-          "")} pipeTo sender
+      combinedFuture pipeTo sender
   }
 
 
-  def checkState: Future[(ItemCount, ItemCount, ItemCount, ItemCount, ItemCount, YtlStatus)] = {
+  def checkState: Future[Healhcheck] = {
+    val startTime = Platform.currentTime
     for {
       arvosanaCount <- getArvosanaCount
       opiskelijaCount <- getOpiskelijaCount
       opiskeluoikeusCount <- getOpiskeluoikeusCount
       suoritusCount <- getSuoritusCount
       hakemusCount <- getHakemusCount
-      ytl <- getYtlReport
-    } yield (arvosanaCount, opiskelijaCount, opiskeluoikeusCount, suoritusCount, hakemusCount, ytl)
-  }
+      ytlReport <- getYtlReport
+      ensikertalaiset <- getEnsikertalainenReport
+    } yield Healhcheck(startTime,
+      "anonymousUser",
+      "/suoritusrekisteri",
+      Checks(Resources(
+        arvosanat = arvosanaCount,
+        opiskelijat = opiskelijaCount,
+        opiskeluoikeudet = opiskeluoikeusCount,
+        suoritukset = suoritusCount,
+        hakemukset = hakemusCount,
+        foundHakemukset = foundHakemukset,
+        ensikertalaiset,
+        ytl = ytlReport
+      )),"")}
 
-  def resolveStatus(statuses: Status*) = {
-    if (statuses.contains(Status.TIMEOUT)) Status.TIMEOUT
-    else if (statuses.contains(Status.FAILURE)) Status.FAILURE
-    else Status.OK
+
+
+  def getEnsikertalainenReport: Future[QueryReport] = (ensikertalainenActor ? QueryCount).map{
+    case QueriesRunning(count, time) => QueryReport(Status.OK, count,time)}.recover {
+    case e: AskTimeoutException => new QueryReport(Status.TIMEOUT, Map())
+    case e: Throwable => logger.error(e, "error getting ensikertalainen status"); QueryReport(Status.FAILURE, Map())
   }
 
   def getYtlReport: Future[YtlStatus] = {
@@ -127,7 +149,6 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
 
 
     ytlFuture.map((yr) => { YtlOk(
-      current = BatchReport(yr.current),
       waitingForAnswer = yr.waitingforAnswers.map(BatchReport(_)),
       yr.nextSend
     ) }).recover {
@@ -188,13 +209,16 @@ object Status extends Enumeration {
   val OK, TIMEOUT, FAILURE = Value
 }
 
-case class ItemCount(status: Status, count: Long)
+case class ItemCount(status: Status, count: Long, endTime: Long = Platform.currentTime)
+
+case class QueryReport(status: Status, count: Map[String, Int], endTime: Long = Platform.currentTime)
+
 
 sealed abstract class YtlStatus {
   val status: Status
 }
 
-case class YtlOk(current: BatchReport, waitingForAnswer: Seq[BatchReport], nextSendTime: Option[DateTime]) extends YtlStatus  {
+case class YtlOk(waitingForAnswer: Seq[BatchReport], nextSendTime: Option[DateTime]) extends YtlStatus  {
   val status = Status.OK
 }
 
@@ -202,9 +226,26 @@ case class YtlFailure(status: Status)  extends YtlStatus
 
 case class Checks(resources: Resources)
 
-case class Resources(arvosanat: Long, opiskelijat: Long, opiskeluoikeudet: Long, suoritukset: Long, hakemukset: Long, foundHakemukset: Map[String, RefreshingState], ytl: YtlStatus)
+case class Resources(arvosanat: ItemCount,
+                     opiskelijat: ItemCount,
+                     opiskeluoikeudet: ItemCount,
+                     suoritukset: ItemCount,
+                     hakemukset: ItemCount,
+                     foundHakemukset: Map[String, RefreshingState],
+                     ensikertalainenQueries: QueryReport,
+                     ytl: YtlStatus)
 
-case class Healhcheck(timestamp: Long, user: String, contextPath: String, checks: Checks, status: Status, info: String)
+case class Healhcheck(start: Long, user: String, contextPath: String, checks: Checks, info: String, end: Long = Platform.currentTime) {
+
+  val status = resolveStatus(checks.resources.arvosanat.status, checks.resources.opiskelijat.status, checks.resources.opiskeluoikeudet.status, checks.resources.suoritukset.status, checks.resources.hakemukset.status, checks.resources.ytl.status)
+
+  def resolveStatus(statuses: Status*) = {
+    if (statuses.contains(Status.TIMEOUT)) Status.TIMEOUT
+    else if (statuses.contains(Status.FAILURE)) Status.FAILURE
+    else Status.OK
+  }
+
+}
 
 case class Hakemukset(oid: String, count: RefreshingResource)
 

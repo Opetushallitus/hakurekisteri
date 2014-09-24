@@ -7,7 +7,7 @@ import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 
-case class Oppija(oppijanumero: String, opiskelu:Seq[Opiskelija], suoritukset: Seq[Todistus], opiskeluoikeudet: Seq[Opiskeluoikeus], ensikertalainen: Boolean) extends Resource[String]{
+case class Oppija(oppijanumero: String, opiskelu:Seq[Opiskelija], suoritukset: Seq[Todistus], opiskeluoikeudet: Seq[Opiskeluoikeus], ensikertalainen: Option[Boolean]) extends Resource[String]{
   override def identify(id: String): this.type with Identified[String] = Oppija.identify(this,id).asInstanceOf[this.type with Identified[String]]
 
   override val source = "1.2.246.562.10.00000000001"

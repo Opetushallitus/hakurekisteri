@@ -33,6 +33,11 @@ import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
 import org.apache.activemq.camel.component.ActiveMQComponent
+import org.apache.http.conn.ClientConnectionManager
+import org.apache.http.impl.NoConnectionReuseStrategy
+import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.http.impl.conn.{SchemeRegistryFactory, PoolingClientConnectionManager}
+import org.apache.http.params.HttpConnectionParams
 import org.scalatra._
 import org.scalatra.swagger.Swagger
 import org.slf4j.LoggerFactory
@@ -75,7 +80,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val koosteet = new BaseKoosteet(system, integrations, registers)
 
-    val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.ytl ,  integrations.hakemukset)), "healthcheck")
+    val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.ytl ,  integrations.hakemukset, koosteet.ensikertalainen)), "healthcheck")
 
 
 
@@ -271,6 +276,7 @@ trait Integrations {
   val hakemukset: ActorRef
   val tarjonta: ActorRef
   val koodisto: ActorRef
+  val ytl: ActorRef
   val parametrit: ActorRef
 }
 
@@ -287,9 +293,31 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        system: ActorSystem) extends Integrations {
 
   def getClient: HttpClient = getClient("default")
+  
+  val socketTimeout = 120000
+  val connectionTimeout = 10000
+  val maxConnections = 100
+
+  def createApacheHttpClient: org.apache.http.client.HttpClient = {
+    val connManager: ClientConnectionManager = {
+      val cm = new PoolingClientConnectionManager()
+      cm.setDefaultMaxPerRoute(maxConnections)
+      cm.setMaxTotal(maxConnections)
+      cm
+    }
+
+    val client = new DefaultHttpClient(connManager)
+    val httpParams = client.getParams
+    HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeout)
+    HttpConnectionParams.setSoTimeout(httpParams, socketTimeout)
+    HttpConnectionParams.setStaleCheckingEnabled(httpParams, false)
+    HttpConnectionParams.setSoKeepalive(httpParams, false)
+    client.setReuseStrategy(new NoConnectionReuseStrategy())
+    client
+  }
 
   def getClient(poolName:String = "default"): HttpClient = {
-    if (poolName == "default") new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
+    if (poolName == "default") new ApacheHttpClient(createApacheHttpClient)()
     else {
       val threadNumber = new AtomicInteger(1)
       val pool = Executors.newFixedThreadPool(8, new ThreadFactory() {
@@ -297,7 +325,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
           new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
         }
       })
-      new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)(ExecutionContext.fromExecutorService(pool))
+      new ApacheHttpClient(createApacheHttpClient)(ExecutionContext.fromExecutorService(pool))
     }
   }
 
@@ -313,15 +341,9 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig)(getClient, ec))))
 
-  val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, ytlConfig)), "ytl")
-
-  private def newApplicant(oid: String, hetu: String) :Unit = {
-    ytl ! KokelasRequest(oid, hetu)
-
-  }
   val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf)(getClient, ec), hakemusConfig.maxApplications)), "hakemus")
 
-  hakemukset ! Trigger(newApplicant _)
+  val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, ytlConfig)), "ytl")
 
   val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)(getClient, ec))), "koodisto")
 
@@ -341,7 +363,7 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
 
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta, integrations.hakemukset)), "ensikertalainen")
 
-  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.sijoittelu)))
+  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.sijoittelu, integrations.ytl)))
 
 
 }

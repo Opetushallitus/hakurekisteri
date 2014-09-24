@@ -24,7 +24,7 @@ class AkkaHakupalvelu(hakemusActor:ActorRef)(implicit val ec: ExecutionContext) 
   val Pattern = "preference(\\d+).*".r
 
   def filterHakemus(optionField: Option[String], filterFunc: (String) => (Map[String, String]) => Map[String, String] )(fh: FullHakemus): FullHakemus = optionField match {
-    case Some(field) => fh.copy(answers = newAnswers(fh.answers, filterFunc(field)))
+    case Some(field) => fh.copy(/*answers = newAnswers(fh.answers, filterFunc(field))*/)
     case None => fh
   }
 
@@ -41,7 +41,7 @@ class AkkaHakupalvelu(hakemusActor:ActorRef)(implicit val ec: ExecutionContext) 
     case _ => true
   }
 
-  def filterState(fh: FullHakemus): Boolean = fh.state.map((s) => s == "ACTIVE" || s == "INCOMPLETE").getOrElse(false)
+  def filterState(fh: FullHakemus): Boolean = fh.state.exists((s) => s == "ACTIVE" || s == "INCOMPLETE")
 
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     import akka.pattern._
@@ -60,51 +60,69 @@ object AkkaHakupalvelu {
 
   val DEFAULT_POHJA_KOULUTUS: String = "1"
 
-  def getVuosi(vastaukset:Option[Map[String,String]])(pohjakoulutus:String): Option[String] = pohjakoulutus match {
-    case "9" => vastaukset.flatMap(_.get("lukioPaattotodistusVuosi"))
+  def getVuosi(vastaukset:Koulutustausta)(pohjakoulutus:String): Option[String] = pohjakoulutus match {
+    case "9" => vastaukset.lukioPaattotodistusVuosi
     case "7" => Some((LocalDate.now.getYear + 1).toString)
-    case _ => vastaukset.flatMap(_.get("PK_PAATTOTODISTUSVUOSI"))
+    case _ => vastaukset.PK_PAATTOTODISTUSVUOSI
   }
 
-  val lisakoulutukset = Set("LISAKOULUTUS_KYMPPI", "LISAKOULUTUS_VAMMAISTEN", "LISAKOULUTUS_TALOUS", "LISAKOULUTUS_AMMATTISTARTTI", "LISAKOULUTUS_KANSANOPISTO", "LISAKOULUTUS_MAAHANMUUTTO")
 
-  def kaydytLisapisteKoulutukset(tausta: Map[String,String]) =
-    for (
-      (tieto, arvo) <- tausta
-      if lisakoulutukset(tieto) && arvo == "true"
-    ) yield tieto
+  def kaydytLisapisteKoulutukset(tausta: Koulutustausta) =
+    {
+
+      def checkKoulutus(lisakoulutus: Option[String]): Boolean = {
+        Try(lisakoulutus.getOrElse("false").toBoolean).getOrElse(false)
+      }
+      Map(
+        "LISAKOULUTUS_KYMPPI" -> tausta.LISAKOULUTUS_KYMPPI,
+        "LISAKOULUTUS_VAMMAISTEN" -> tausta.LISAKOULUTUS_VAMMAISTEN,
+        "LISAKOULUTUS_TALOUS" -> tausta.LISAKOULUTUS_TALOUS,
+        "LISAKOULUTUS_AMMATTISTARTTI" -> tausta.LISAKOULUTUS_AMMATTISTARTTI,
+        "LISAKOULUTUS_KANSANOPISTO" -> tausta.LISAKOULUTUS_KANSANOPISTO,
+        "LISAKOULUTUS_MAAHANMUUTTO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO
+      ).mapValues(checkKoulutus).filter{case (_, done) => done}.keys
+    }
 
   def getHakija(hakemus: FullHakemus): Hakija = {
     val kesa = new MonthDay(6, 4)
     implicit val v = hakemus.answers
-    val koulutustausta = for (a <- v; k <- a.get("koulutustausta")) yield k
-    val lahtokoulu: Option[String] = for(k <- koulutustausta; l <- k.get("lahtokoulu")) yield l
-    val pohjakoulutus: Option[String] = for (k <- koulutustausta; p <- k.get("POHJAKOULUTUS")) yield p
-    val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus; v <- getVuosi(koulutustausta)(p)) yield v
-    val kieli = getValue("henkilotiedot", "aidinkieli", "FI")
+    val koulutustausta = for (a: HakemusAnswers <- v; k: Koulutustausta <- a.koulutustausta) yield k
+    val lahtokoulu: Option[String] = for(k <- koulutustausta; l <- k.lahtokoulu) yield l
+    val pohjakoulutus: Option[String] = for (k <- koulutustausta; p <- k.POHJAKOULUTUS) yield p
+    val todistusVuosi: Option[String] = for (p: String <- pohjakoulutus;k <- koulutustausta; v <- getVuosi(k)(p)) yield v
+    val kieli = (for(a <- v; henkilotiedot: HakemusHenkilotiedot <- a.henkilotiedot; aidinkieli <- henkilotiedot.aidinkieli) yield aidinkieli).getOrElse("FI")
     val myontaja = lahtokoulu.getOrElse("")
     val suorittaja = hakemus.personOid.getOrElse("")
     val valmistuminen = todistusVuosi.flatMap(vuosi => Try(kesa.toLocalDate(vuosi.toInt)).toOption).getOrElse(new LocalDate(0))
-    val julkaisulupa = Some(getValue("lisatiedot", "lupaJulkaisu", "false").toBoolean)
+    val julkaisulupa = (for(
+      a <- v;
+      lisatiedot <- a.lisatiedot;
+      julkaisu <- lisatiedot.lupaJulkaisu
+    ) yield julkaisu).getOrElse("false").toBoolean
+
     val lisapistekoulutus = for (
       tausta <- koulutustausta;
       lisatausta <- kaydytLisapisteKoulutukset(tausta).headOption
     ) yield lisatausta
+    val henkilotiedot: Option[HakemusHenkilotiedot] = for(a <- v; henkilotiedot <- a.henkilotiedot) yield henkilotiedot
+    def getHenkiloTietoOrElse(f: (HakemusHenkilotiedot) => Option[String], orElse: String) =
+      (for (h <- henkilotiedot; osoite <- f(h)) yield osoite).getOrElse(orElse)
 
+    def getHenkiloTietoOrBlank(f: (HakemusHenkilotiedot) => Option[String]): String = getHenkiloTietoOrElse(f, "")
     Hakija(
       Henkilo(
         yhteystiedotRyhma = Seq(YhteystiedotRyhma(0, "yhteystietotyyppi1", "hakemus", readOnly = true, Seq(
-          Yhteystiedot(0, "YHTEYSTIETO_KATUOSOITE", getValue("henkilotiedot", "lahiosoite")),
-          Yhteystiedot(1, "YHTEYSTIETO_POSTINUMERO", getValue("henkilotiedot", "Postinumero")),
-          Yhteystiedot(2, "YHTEYSTIETO_MAA", getValue("henkilotiedot", "asuinmaa", "FIN")),
-          Yhteystiedot(3, "YHTEYSTIETO_MATKAPUHELIN", getValue("henkilotiedot", "matkapuhelinnumero1")),
-          Yhteystiedot(4, "YHTEYSTIETO_SAHKOPOSTI", getValue("henkilotiedot", "Sähköposti")),
-          Yhteystiedot(5, "YHTEYSTIETO_KAUPUNKI", getValue("henkilotiedot", "kotikunta"))
+          Yhteystiedot(0, "YHTEYSTIETO_KATUOSOITE", getHenkiloTietoOrBlank(_.lahiosoite)),
+          Yhteystiedot(1, "YHTEYSTIETO_POSTINUMERO", getHenkiloTietoOrBlank(_.Postinumero)),
+          Yhteystiedot(2, "YHTEYSTIETO_MAA", getHenkiloTietoOrElse(_.asuinmaa,"FIN")),
+          Yhteystiedot(3, "YHTEYSTIETO_MATKAPUHELIN", getHenkiloTietoOrBlank(_.matkapuhelinnumero1)),
+          Yhteystiedot(4, "YHTEYSTIETO_SAHKOPOSTI", getHenkiloTietoOrBlank(_.Sähköposti)),
+          Yhteystiedot(5, "YHTEYSTIETO_KAUPUNKI", getHenkiloTietoOrBlank(_.kotikunta))
         ))),
         yksiloity = false,
-        sukunimi = getValue("henkilotiedot", "Sukunimi"),
-        etunimet = getValue("henkilotiedot", "Etunimet"),
-        kutsumanimi = getValue("henkilotiedot", "Kutsumanimi"),
+        sukunimi = getHenkiloTietoOrBlank(_.Sukunimi),
+        etunimet = getHenkiloTietoOrBlank(_.Etunimet),
+        kutsumanimi = getHenkiloTietoOrBlank(_.Kutsumanimi),
         kielisyys = Seq(),
         yksilointitieto = None,
         henkiloTyyppi = "OPPIJA",
@@ -112,32 +130,37 @@ object AkkaHakupalvelu {
         duplicate = false,
         oppijanumero = hakemus.personOid.getOrElse(""),
         kayttajatiedot = None,
-        kansalaisuus = Seq(Kansalaisuus(getValue("henkilotiedot", "kansalaisuus", "FIN"))),
+        kansalaisuus = Seq(Kansalaisuus(getHenkiloTietoOrElse(_.kansalaisuus, "FIN"))),
         passinnumero = "",
         asiointiKieli = Kieli(kieli),
         passivoitu = false,
-        eiSuomalaistaHetua = getValue("henkilotiedot", "onkoSinullaSuomalainenHetu", "false").toBoolean,
-        sukupuoli = getValue("henkilotiedot", "sukupuoli"),
-        hetu = getValue("henkilotiedot", "Henkilotunnus"),
-        syntymaaika = getValue("henkilotiedot", "syntymaaika"),
+        eiSuomalaistaHetua = getHenkiloTietoOrElse(_.onkoSinullaSuomalainenHetu, "false").toBoolean,
+        sukupuoli = getHenkiloTietoOrBlank(_.sukupuoli),
+        hetu = getHenkiloTietoOrBlank(_.Henkilotunnus),
+        syntymaaika = getHenkiloTietoOrBlank(_.syntymaaika),
         turvakielto = false,
-        markkinointilupa = Some(getValue("lisatiedot", "lupaMarkkinointi", "false").toBoolean)
+        markkinointilupa = Some(getValue(_.lisatiedot,(l:Lisatiedot) => l.lupaMarkkinointi, "false").toBoolean)
       ),
       getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli),
       lahtokoulu match {
         case Some(oid) => Seq(Opiskelija(
           oppilaitosOid = lahtokoulu.get,
           henkiloOid = hakemus.personOid.getOrElse(""),
-          luokkataso = getValue("koulutustausta", "luokkataso"),
-          luokka = getValue("koulutustausta", "lahtoluokka"),
+          luokkataso = getValue(_.koulutustausta,(k:Koulutustausta) =>  k.luokkataso),
+          luokka = getValue(_.koulutustausta, (k:Koulutustausta) => k.lahtoluokka),
           alkuPaiva = DateTime.now.minus(org.joda.time.Duration.standardDays(1)),
           loppuPaiva = None,
           source = "1.2.246.562.10.00000000001"
         ))
         case _ => Seq()
       },
-      (for (a <- v; t <- a.get("hakutoiveet")) yield Hakemus(convertToiveet(t), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus))
+      (for (a: HakemusAnswers <- v; t <- a.hakutoiveet) yield Hakemus(convertToiveet(t), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus))
     )
+
+  }
+
+  def getValue[A](key: (HakemusAnswers) => Option[A], subKey: (A) => Option[String], default: String = "")(implicit answers: Option[HakemusAnswers]): String = {
+    (for (m <- answers; c <- key(m); v <- subKey(c)) yield v).getOrElse(default)
   }
 
   def getSuoritukset(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String): Seq[Suoritus] = {
@@ -178,24 +201,55 @@ object AkkaHakupalvelu {
     }
   }
 
-  def getValue(key: String, subKey: String, default: String = "")(implicit answers: Option[Map[String, Map[String, String]]]): String = {
-    (for (m <- answers; c <- m.get(key); v <- c.get(subKey)) yield v).getOrElse(default)
-  }
+
 }
 
 case class ListHakemus(oid: String)
 
 case class HakemusHaku(totalCount: Long, results: Seq[ListHakemus])
 
-case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[Map[String, Map[String, String]]], state: Option[String]) extends Resource[String] {
+case class HakemusHenkilotiedot(Henkilotunnus: Option[String],
+                                aidinkieli: Option[String],
+                                lahiosoite: Option[String],
+                                Postinumero: Option[String],
+                                asuinmaa: Option[String],
+                                matkapuhelinnumero1: Option[String],
+                                Sähköposti: Option[String],
+                                kotikunta: Option[String],
+                                Sukunimi: Option[String],
+                                Etunimet: Option[String],
+                                Kutsumanimi: Option[String],
+                                kansalaisuus: Option[String],
+                                onkoSinullaSuomalainenHetu: Option[String],
+                                sukupuoli: Option[String],
+                                syntymaaika: Option[String])
+
+case class Koulutustausta(lahtokoulu:Option[String],
+                          POHJAKOULUTUS: Option[String],
+                          lukioPaattotodistusVuosi: Option[String],
+                          PK_PAATTOTODISTUSVUOSI: Option[String],
+                          LISAKOULUTUS_KYMPPI: Option[String],
+                          LISAKOULUTUS_VAMMAISTEN: Option[String],
+                          LISAKOULUTUS_TALOUS: Option[String],
+                          LISAKOULUTUS_AMMATTISTARTTI: Option[String],
+                          LISAKOULUTUS_KANSANOPISTO: Option[String],
+                          LISAKOULUTUS_MAAHANMUUTTO: Option[String],
+                          luokkataso: Option[String],
+                          lahtoluokka: Option[String])
+
+case class Lisatiedot(lupaJulkaisu: Option[String], lupaMarkkinointi: Option[String])
+
+case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot], koulutustausta: Option[Koulutustausta], lisatiedot: Option[Lisatiedot], hakutoiveet: Option[Map[String, String]])
+
+case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String]) extends Resource[String] {
   val source = "1.2.246.562.10.00000000001"
   override def identify(id: String): this.type with Identified[String] = FullHakemus.identify(this,id).asInstanceOf[this.type with Identified[String]]
 
   def hetu =
       for (
         foundAnswers <- answers;
-        henkilo <- foundAnswers.get("henkilotiedot");
-        henkiloHetu <- henkilo.get("Henkilotunnus")
+        henkilo <- foundAnswers.henkilotiedot;
+        henkiloHetu <- henkilo.Henkilotunnus
       ) yield henkiloHetu
 
 
@@ -210,7 +264,7 @@ object FullHakemus {
       o.oid: String,
       o.personOid: Option[String],
       o.applicationSystemId: String,
-      o.answers: Option[Map[String, Map[String, String]]],
+      o.answers,
       o.state: Option[String]) with Identified[String] {
         val id: String = identity
       }

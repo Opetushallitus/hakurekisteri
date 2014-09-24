@@ -32,19 +32,15 @@ trait HakemusService extends ResourceService[FullHakemus, String] with Journaled
         filterField(haku, _.applicationSystemId)(hakemus)  &&
           someField(
             organisaatio,
-            _.answers.
-              getOrElse(Map()).
-              getOrElse("hakutoiveet", Map()).
+            _.answers.flatMap(_.hakutoiveet).getOrElse(Map()).
               filterKeys((k) => k.contains("Opetuspiste-id-parents")).
               flatMap(_._2.split(",")).toSeq)(hakemus) &&
           someField(
             hakukohdekoodi,
-            _.answers.
-              getOrElse(Map()).
-              getOrElse("hakutoiveet", Map()).
+            _.answers.flatMap(_.hakutoiveet).getOrElse(Map()).
               filterKeys((k) => k.contains("Koulutus-id-aoIdentifier")).values.toSeq)(hakemus)
     case HenkiloHakijaQuery(henkilo) =>
-      (hakemus) => hakemus.oid == henkilo
+      (hakemus) => hakemus.personOid.exists(_ == henkilo)
   }
 
   override def identify(o: FullHakemus): FullHakemus with Identified[String] = FullHakemus.identify(o)
@@ -65,8 +61,8 @@ object Trigger {
   def apply(oidHetu: (String, String) => Unit): Trigger = Trigger(_ match {
     case FullHakemus(_, Some(personOid), _, Some(answers), _) =>
       for (
-        henkilo <- answers.get("henkilotiedot");
-        hetu <- henkilo.get("Henkilotunnus")
+        henkilo <- answers.henkilotiedot;
+        hetu <- henkilo.Henkilotunnus
       ) oidHetu(personOid, hetu)
     case _ =>
 

@@ -22,6 +22,7 @@ var komo = {
     valmentava: "1.2.246.562.5.2013112814572435755085",
     ylioppilastutkinto: "1.2.246.562.5.2013061010184237348007"
 };
+var ylioppilastutkintolautakunta = "1.2.246.562.10.43628088406";
 
 if (!Array.prototype.diff)
     Array.prototype.diff = function(a) {

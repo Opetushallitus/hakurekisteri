@@ -1,24 +1,31 @@
 package fi.vm.sade.hakurekisteri.ensikertalainen
 
-import akka.actor.{Actor, Props, ActorRef}
+import java.util.NoSuchElementException
+
+import akka.actor.{Actor, ActorRef, Props}
 import akka.event.Logging
+import akka.pattern.pipe
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{KomoResponse, Komo, GetKomoQuery}
-import fi.vm.sade.hakurekisteri.integration.virta.{VirtaConnectionErrorException, VirtaData, VirtaQuery}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse}
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaData, VirtaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
 import fi.vm.sade.hakurekisteri.rest.support.Query
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
 import org.joda.time.{DateTime, LocalDate}
-import akka.pattern.pipe
 
-import scala.concurrent.{Promise, Future, ExecutionContext}
+import scala.collection.immutable.Iterable
+import scala.compat.Platform
 import scala.concurrent.duration._
-import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
-
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
 case class EnsikertalainenQuery(henkiloOid: String, hetu: Option[String]= None)
+
+object QueryCount
+
+case class QueriesRunning(count: Map[String, Int], timestamp: Long = Platform.currentTime)
 
 class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaActor: ActorRef, hakemukset : ActorRef)(implicit val ec: ExecutionContext) extends Actor {
   val logger = Logging(context.system, this)
@@ -29,6 +36,19 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     case q:EnsikertalainenQuery =>
       logger.debug(s"EnsikertalainenQuery($q.oid) with ${q.hetu.map("hetu: " + _).getOrElse("no hetu")}")
       context.actorOf(Props(new EnsikertalaisuusCheck())).forward(q)
+    case QueryCount =>
+      import akka.pattern.ask
+      implicit val ec = context.dispatcher
+      val statusRequests: Iterable[Future[String]] = for (
+        query: ActorRef <- context.children
+      ) yield (query ? ReportStatus)(5.seconds).mapTo[QueryStatus].map(_.status).recover{case _ => "status query failed"}
+
+      val statuses = Future.sequence(statusRequests)
+
+      val counts: Future[Map[String, Int]] = statuses.
+        map(_.groupBy(i => i).
+        map((t) => (t._1, t._2.toList.length)))
+      counts.map(QueriesRunning(_)) pipeTo sender
   }
 
   class EnsikertalaisuusCheck() extends Actor {
@@ -44,9 +64,27 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     val resolver = Promise[Ensikertalainen]
     val result: Future[Ensikertalainen] = resolver.future
 
+    var virtaQuerySent = false
+
     logger.debug("starting queryActor")
 
     override def receive: Actor.Receive = {
+      case ReportStatus =>
+        val state = this match {
+          case _ if result.isCompleted => result.value.flatMap(
+            _.recover{case ex => "failed: " + ex.getMessage}.map((queryRes) => "done " + queryRes).toOption).getOrElse("empty")
+          case _ if virtaQuerySent => "querying virta"
+          case _ if suoritukset.isEmpty && opiskeluOikeudet.isEmpty =>  "resolving suoritukset and opinto-oikeudet"
+          case _ if suoritukset.isEmpty =>  "resolving suoritukset"
+          case _ if opiskeluOikeudet.isEmpty && !foundAllKomos =>  "resolving opinto-oikeudet and komos"
+          case _ if opiskeluOikeudet.isDefined && !foundAllKomos =>  "resolving komos"
+          case _ if hetu.isEmpty && !virtaQuerySent => "resolving hetu"
+          case _ if hetu.isDefined && !virtaQuerySent => "resolving hetu internally"
+          case _ => "unknown"
+        }
+        sender ! QueryStatus(state)
+
+
       case EnsikertalainenQuery(henkiloOid, henkiloHetu) =>
         oid = Some(henkiloOid)
         hetu = henkiloHetu
@@ -62,6 +100,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         logger.debug(s"find suoritukset $suor")
         suoritukset = Some(suor)
         requestKomos(suor)
+        if (suor.isEmpty && opiskeluOikeudet.isDefined) fetchHetu()
+
 
       case OpiskeluoikeusResponse(oo) =>
         logger.debug(s"find opiskeluoikeudet $oo")
@@ -95,7 +135,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
 
       case HenkiloResponse(_, None) =>
         logger.error(s"henkilo response failed, no hetu for oid $oid")
-        failQuery(new NoSuchElementException(s"no hetu found for oid $oid"))
+        failQuery(NoHetuException(oid, s"no hetu found for oid $oid"))
 
       case VirtaData(virtaOpiskeluOikeudet, virtaSuoritukset) =>
         logger.debug(s"got virta result opiskeluoikeudet: $virtaOpiskeluOikeudet, suoritukset: $virtaSuoritukset")
@@ -103,8 +143,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         saveVirtaResult(filteredOpiskeluOikeudet, virtaSuoritukset)
         resolveQuery(filteredOpiskeluOikeudet.isEmpty ||  virtaSuoritukset.isEmpty)
 
-      case akka.actor.Status.Failure(e: VirtaConnectionErrorException) =>
-        logger.error(e, "error in virta")
+      case akka.actor.Status.Failure(e: Throwable) =>
+        logger.error(e, s"got error from $sender")
         failQuery(e)
     }
 
@@ -113,19 +153,17 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
       case Some(s) => s.forall((suoritus) => komos.get(suoritus.komo).isDefined)
     }
 
-    def fetchHetu() =
-
-
-    try {
-      if (hetu.isDefined)
-        (self ! HenkiloResponse(oid.get, hetu))(ActorRef.noSender)
-      else
-        henkiloActor ! oid.get
-    } catch {
-      case e: Throwable => failQuery(e)
+    def fetchHetu() = (oid, hetu) match {
+      case (_, Some(hetu)) => fetchVirta(hetu)
+      case (Some(oid), None) => henkiloActor ! oid
+      case (None, None) => failQuery(NoHetuException(None, "No oid or hetu"))
     }
 
-    def fetchVirta(hetu: String) = virtaActor ! VirtaQuery(oid, Some(hetu))
+    def fetchVirta(hetu: String) = {
+      virtaActor ! VirtaQuery(oid.get, Some(hetu))
+      virtaQuerySent = true
+
+    }
 
     def resolveQuery(ensikertalainen: Boolean) {
       resolve(Success(Ensikertalainen(ensikertalainen = ensikertalainen)))
@@ -182,3 +220,14 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     super.preStart()
   }
 }
+
+
+case class QueryStatus(status: String)
+
+object ReportStatus
+
+
+case class NoHetuException(oid: Option[String], message: String) extends NoSuchElementException(message)
+
+
+
