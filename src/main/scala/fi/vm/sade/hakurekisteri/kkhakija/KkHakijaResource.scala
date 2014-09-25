@@ -4,7 +4,8 @@ import akka.actor.{ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, HakijaQ}
+import fi.vm.sade.hakurekisteri.hakija.Hakuehto
+import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.rest.support.{User, SpringSecuritySupport, HakurekisteriJsonSupport}
 import org.scalatra.swagger.Swagger
@@ -44,12 +45,7 @@ class KkHakijaResource()(implicit system: ActorSystem, sw: Swagger)
     case t: Throwable => (id) => InternalServerError(IncidentReport(id, "kk hakija error")) // TODO kerro virhetilanteesta
   }
 
-  case class KkHakijaQuery(oppijanumero: Option[String],
-                           override val haku: Option[String],
-                           override val organisaatio: Option[String],
-                           override val hakukohdekoodi: Option[String],
-                           override val hakuehto: Hakuehto,
-                           override val user: Option[User]) extends HakijaQ
+  case class KkHakijaQuery(oppijanumero: Option[String], haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, user: Option[User])
 
   object KkHakijaQuery {
     def apply(params: Map[String,String], user: Option[User]): KkHakijaQuery = KkHakijaQuery(
