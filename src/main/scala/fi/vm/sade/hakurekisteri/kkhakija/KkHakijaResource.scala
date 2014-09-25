@@ -36,7 +36,7 @@ class KkHakijaResource()(implicit system: ActorSystem, sw: Swagger)
 
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
-      val is = Future.successful(Hakijat(Seq()))
+      val is = Future.successful(Seq[Hakija]())
     }
   }
 
@@ -110,9 +110,6 @@ class KkHakijaResource()(implicit system: ActorSystem, sw: Swagger)
     kkKelpoisuusTarkastettava: Boolean,
     onYlioppilas: Boolean,
     hakemukset: Seq[Hakemus]
-  )
-  case class Hakijat(
-    hakijat: Seq[Hakija]
   )
 }
 
