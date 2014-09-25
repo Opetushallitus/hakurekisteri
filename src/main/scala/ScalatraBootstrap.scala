@@ -1,3 +1,4 @@
+import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaResource
 import fi.vm.sade.hakurekisteri.oppija.OppijaResource
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -77,12 +78,9 @@ class ScalatraBootstrap extends LifeCycle {
 
     val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, parameterConfig, hakemusConfig, ytlConfig, koodistoConfig, registers, system)
 
-
     val koosteet = new BaseKoosteet(system, integrations, registers)
 
     val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.ytl ,  integrations.hakemukset, koosteet.ensikertalainen)), "healthcheck")
-
-
 
     mountServlets(context) (
       "/" -> new GuiServlet,
@@ -92,6 +90,7 @@ class ScalatraBootstrap extends LifeCycle {
       "/rest/v1/ensikertalainen" -> new EnsikertalainenResource(koosteet.ensikertalainen),
       "/rest/v1/haut" -> new HakuResource(koosteet.haut),
       "/rest/v1/hakijat" -> new HakijaResource(koosteet.hakijat),
+      "/rest/v1/kkhakijat" -> new KkHakijaResource(),
       "/rest/v1/opiskelijat" -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
       "/rest/v1/oppijat" -> new OppijaResource(registers, integrations.hakemukset, koosteet.ensikertalainen),
       "/rest/v1/opiskeluoikeudet" -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
@@ -124,7 +123,6 @@ class ScalatraBootstrap extends LifeCycle {
   }
 }
 
-
 object OPHSecurity extends ContextLoader with LifeCycle {
   val config = OPHConfig(Config.ophConfDir,
     Config.propertyLocations,
@@ -145,7 +143,6 @@ object OPHSecurity extends ContextLoader with LifeCycle {
     security.setAsyncSupported(true)
   }
 
-
   override def destroy(context: ServletContext) {
     closeWebApplicationContext(context)
     cleanupListener.contextDestroyed(new ServletContextEvent(context))
@@ -160,7 +157,6 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
   val localProperties = (new java.util.Properties /: Map(props: _*)) {case (newProperties, (k,v)) => newProperties.put(k,v); newProperties}
   setConfigLocation("file:" + confDir + "/security-context-backend.xml")
 
-
   val resources: Seq[FileSystemResource] = for (
     fileName <- propertyFiles.reverse
   ) yield new FileSystemResource(confDir.resolve(fileName).toAbsolutePath.toString)
@@ -172,25 +168,16 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
   )
 
   object Bean {
-
     def apply[C](props: (_, _)*)(implicit m: Manifest[C]): BeanDefinition = {
-
       val definition = new RootBeanDefinition(m.runtimeClass)
       definition.setPropertyValues(new MutablePropertyValues(Map(props: _*).asJava))
       definition
-
     }
-
   }
-
 
   override def initBeanDefinitionReader(beanDefinitionReader: XmlBeanDefinitionReader) {
     beanDefinitionReader.getRegistry.registerBeanDefinition("propertyPlaceHolder", placeholder)
   }
-
-
-
-
 }
 
 trait Journals {
@@ -210,8 +197,6 @@ class DbJournals(jndiName:String) extends Journals {
   override val opiskeluoikeusJournal = new OpiskeluoikeusJournal(database)
   override val arvosanaJournal = new ArvosanaJournal(database)
 }
-
-
 
 class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
   override val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(journals.suoritusJournal)), "suoritukset")
@@ -363,6 +348,4 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta, integrations.hakemukset)), "ensikertalainen")
 
   val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.sijoittelu, integrations.ytl)))
-
-
 }

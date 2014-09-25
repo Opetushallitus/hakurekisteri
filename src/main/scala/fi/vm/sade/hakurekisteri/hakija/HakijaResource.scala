@@ -35,7 +35,19 @@ object Tyyppi extends Enumeration {
   val Xml, Excel, Json = Value
 }
 
-case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, user: Option[User])
+trait HakijaQ {
+  def haku: Option[String]
+  def organisaatio: Option[String]
+  def hakukohdekoodi: Option[String]
+  def hakuehto: Hakuehto
+  def user: Option[User]
+}
+
+case class HakijaQuery(override val haku: Option[String],
+                       override val organisaatio: Option[String],
+                       override val hakukohdekoodi: Option[String],
+                       override val hakuehto: Hakuehto,
+                       override val user: Option[User]) extends HakijaQ
 
 import org.scalatra.util.RicherString._
 
