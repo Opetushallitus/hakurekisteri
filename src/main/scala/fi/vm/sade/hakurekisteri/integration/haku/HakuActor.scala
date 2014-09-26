@@ -27,10 +27,19 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
   import FutureList._
 
+  def getHaku(q: GetHaku): Haku = {
+    activeHakus.find(_.oid == q.oid) match {
+      case None => throw HakuNotFoundException(s"haku not found with oid ${q.oid}")
+      case Some(h) => h
+    }
+  }
+
   override def receive: Actor.Receive = {
     case Update => tarjonta ! GetHautQuery
 
     case HakuRequest => sender ! activeHakus
+
+    case q: GetHaku => sender ! getHaku(q)
 
     case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
 
@@ -82,6 +91,10 @@ object HakuRequest
 object ReloadHakemukset
 
 object RefreshSijoittelu
+
+case class HakuNotFoundException(m: String) extends Exception(m)
+
+case class GetHaku(oid: String)
 
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
 

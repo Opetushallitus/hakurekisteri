@@ -9,9 +9,9 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto
 import fi.vm.sade.hakurekisteri.integration.hakemus._
+import fi.vm.sade.hakurekisteri.integration.haku.{Haku, GetHaku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohteenKoulutukset, HakukohdeOid, TarjontaException, Hakukohteenkoulutus}
 import fi.vm.sade.hakurekisteri.rest.support.{Query, User, SpringSecuritySupport, HakurekisteriJsonSupport}
-import org.joda.time.format.DateTimeFormatter
 import org.scalatra.swagger.Swagger
 import org.scalatra.{AsyncResult, InternalServerError, CorsSupport, FutureSupport}
 import org.scalatra.json.JacksonJsonSupport
@@ -40,8 +40,8 @@ case class Ilmoittautuminen(kausi: String, // 2014S
                             tila: Int) // tilat (1 = läsnä; 2 = poissa; 3 = poissa, ei kuluta opintoaikaa; 4 = puuttuu)
 
 case class Hakemus(haku: String,
-                   hakuVuosi: Option[Int],
-                   hakuKausi: Option[String],
+                   hakuVuosi: Int,
+                   hakuKausi: String,
                    hakemusnumero: String,
                    organisaatio: String,
                    hakukohde: String,
@@ -77,7 +77,7 @@ case class Hakija(hetu: String,
                   onYlioppilas: Boolean,
                   hakemukset: Seq[Hakemus])
 
-class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef)(implicit system: ActorSystem, sw: Swagger)
+class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef, haut: ActorRef)(implicit system: ActorSystem, sw: Swagger)
     extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -103,6 +103,7 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef)(implicit system
 
   incident {
     case t: TarjontaException => (id) => InternalServerError(IncidentReport(id, s"error with tarjonta: $t"))
+    case t: HakuNotFoundException => (id) => InternalServerError(IncidentReport(id, s"error: $t"))
     case t: InvalidSyntymaaikaException => (id) => InternalServerError(IncidentReport(id, s"error: $t"))
   }
 
@@ -143,9 +144,10 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef)(implicit system
         val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
         for {
           hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
+          haku <- (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
         } yield Hakemus(haku = hakemus.applicationSystemId,
-            hakuVuosi = None, // TODO hausta
-            hakuKausi = None, // TODO hausta
+            hakuVuosi = haku.vuosi,
+            hakuKausi = haku.kausi,
             hakemusnumero = hakemus.oid,
             organisaatio = hakutoiveet(s"preference$jno-Opetuspiste-id"),
             hakukohde = hakutoiveet(s"preference$jno-Koulutus-id"),
