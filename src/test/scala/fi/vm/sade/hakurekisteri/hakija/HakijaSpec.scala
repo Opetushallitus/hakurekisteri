@@ -30,7 +30,8 @@ class HakijaSpec extends FlatSpec with ShouldMatchers {
             kotikunta = Some("098"),
             aidinkieli = Some("FI"),
             syntymaaika = Some("20.03.1994"),
-            onkoSinullaSuomalainenHetu = Some("true"))),
+            onkoSinullaSuomalainenHetu = Some("true"),
+            koulusivistyskieli = Some("FI"))),
         koulutustausta = Some(
           Koulutustausta(
             PK_PAATTOTODISTUSVUOSI = Some("2014"),

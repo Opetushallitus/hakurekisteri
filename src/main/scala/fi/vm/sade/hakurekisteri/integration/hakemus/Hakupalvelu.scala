@@ -222,7 +222,8 @@ case class HakemusHenkilotiedot(Henkilotunnus: Option[String],
                                 kansalaisuus: Option[String],
                                 onkoSinullaSuomalainenHetu: Option[String],
                                 sukupuoli: Option[String],
-                                syntymaaika: Option[String])
+                                syntymaaika: Option[String],
+                                koulusivistyskieli: Option[String])
 
 case class Koulutustausta(lahtokoulu:Option[String],
                           POHJAKOULUTUS: Option[String],

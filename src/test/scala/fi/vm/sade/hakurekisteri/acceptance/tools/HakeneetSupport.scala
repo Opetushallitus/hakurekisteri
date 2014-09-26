@@ -60,7 +60,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
         kotikunta = Some("098"),
         aidinkieli = Some("FI"),
         syntymaaika = Some("20.03.1994"),
-        onkoSinullaSuomalainenHetu = Some("true"))),
+        onkoSinullaSuomalainenHetu = Some("true"),
+        koulusivistyskieli = Some("FI"))),
       koulutustausta = Some(
         Koulutustausta(
           PK_PAATTOTODISTUSVUOSI = Some("2014"),
@@ -129,7 +130,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             kotikunta = Some("098"),
             aidinkieli = Some("FI"),
             syntymaaika = Some("20.03.1994"),
-            onkoSinullaSuomalainenHetu = Some("true"))),
+            onkoSinullaSuomalainenHetu = Some("true"),
+            koulusivistyskieli = Some("FI"))),
         koulutustausta = Some(
           Koulutustausta(
             PK_PAATTOTODISTUSVUOSI = Some("2014"),
@@ -241,7 +243,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   val organisaatioActor = system.actorOf(Props(new MockedOrganisaatioActor()))
 
   val koodistoClient = mock[VirkailijaRestClient]
-  koodistoClient.readObject[Seq[Koodi]]("", HttpResponseCode.Ok) returns Future.successful(Seq(Koodi("246", "", Koodisto(""))))
+  koodistoClient.readObject[Seq[Koodi]]("", HttpResponseCode.Ok) returns Future.successful(Seq(Koodi("246", "", Koodisto(""), Seq())))
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient)))
 
   val f = Future.successful(

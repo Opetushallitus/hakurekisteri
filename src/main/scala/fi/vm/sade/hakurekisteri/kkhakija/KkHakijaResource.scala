@@ -10,8 +10,11 @@ import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{Haku, GetHaku, HakuNotFoundException}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{Koodi, GetKoodi}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohteenKoulutukset, HakukohdeOid, TarjontaException, Hakukohteenkoulutus}
+import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 import fi.vm.sade.hakurekisteri.rest.support.{Query, User, SpringSecuritySupport, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
 import org.scalatra.swagger.Swagger
 import org.scalatra.{AsyncResult, InternalServerError, CorsSupport, FutureSupport}
 import org.scalatra.json.JacksonJsonSupport
@@ -51,7 +54,7 @@ case class Hakemus(haku: String,
                    vastaanottotieto: Option[String],
                    ilmoittautumiset: Seq[Ilmoittautuminen],
                    pohjakoulutus: Seq[String],
-                   julkaisulupa: Boolean,
+                   julkaisulupa: Option[Boolean],
                    hakukohteenKoulutukset: Seq[Hakukohteenkoulutus])
 
 case class Hakija(hetu: String,
@@ -73,11 +76,12 @@ case class Hakija(hetu: String,
                   asiointikieli: String,
                   koulusivistyskieli: String,
                   koulutusmarkkinointilupa: Option[Boolean],
-                  kkKelpoisuusTarkastettava: Boolean,
+                  hKelpoisuus: String,
+                  // hKelpoisuusLahde: Option[String], // FIXME muuta normaaliksi luokaksi, koska case classissa voi olla vain 22 kenttää
                   onYlioppilas: Boolean,
                   hakemukset: Seq[Hakemus])
 
-class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef, haut: ActorRef)(implicit system: ActorSystem, sw: Swagger)
+class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef, haut: ActorRef, koodisto: ActorRef, suoritukset: ActorRef)(implicit system: ActorSystem, sw: Swagger)
     extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -157,7 +161,7 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef, haut: ActorRef)
             vastaanottotieto = None, // TODO valinnoista
             ilmoittautumiset = Seq(), // TODO valinnoista
             pohjakoulutus = getPohjakoulutukset(koulutustausta),
-            julkaisulupa = lisatiedot.lupaJulkaisu.exists(_ == "true"),
+            julkaisulupa = lisatiedot.lupaJulkaisu.map(_ == "true"),
             hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset)
     }.toSeq).getOrElse(Seq()))
 
@@ -188,7 +192,29 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef, haut: ActorRef)
     }
   }
 
-  def getKkHakija(hakemus: FullHakemus): Future[Hakija] = {
+  def getAsiointikieli(kielikoodi: String): String = kielikoodi match {
+    case "FI" => "1"
+    case "SV" => "2"
+    case "EN" => "3"
+    case _ => "9"
+  }
+  
+  def getPostitoimipaikka(koodi: Option[Koodi]): String = koodi match {
+    case None => ""
+    case Some(k) => k.metadata.find(_.kieli == "FI") match {
+      case None => ""
+      case Some(m) => m.nimi
+    }
+  }
+
+  def isYlioppilas(suoritukset: Seq[Suoritus]): Boolean = {
+    suoritukset.find(s => s.komo == "1.2.246.562.5.2013061010184237348007" && s.tila == "VALMIS") match {
+      case Some(_) => true
+      case None => false
+    }
+  }
+
+  def getKkHakija(hakemus: FullHakemus): Future[Hakija] =
     (for {
       answers: HakemusAnswers <- hakemus.answers
     } yield for {
@@ -197,29 +223,31 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef, haut: ActorRef)
         lisatiedot: Lisatiedot <- answers.lisatiedot
       } yield for {
           hakemukset <- getHakemukset(hakemus)
+          toimipaikka <- (koodisto ? GetKoodi("posti", s"posti_${henkilotiedot.Postinumero.get}")).mapTo[Option[Koodi]]
+          suoritukset <- (suoritukset ? SuoritusQuery(henkilo = hakemus.personOid, myontaja = Some(YTLXml.YTL))).mapTo[Seq[Suoritus]]
         } yield Hakija(hetu = getHetu(henkilotiedot.Henkilotunnus, henkilotiedot.syntymaaika, hakemus.oid),
             oppijanumero = hakemus.personOid.get,
             sukunimi = henkilotiedot.Sukunimi.get,
             etunimet = henkilotiedot.Etunimet.get,
-            kutsumanimi = henkilotiedot.Kutsumanimi.get,
-            lahiosoite = henkilotiedot.lahiosoite.get,
-            postinumero = henkilotiedot.Postinumero.get,
-            postitoimipaikka = "", // TODO postinumerokoodistosta
-            maa = henkilotiedot.asuinmaa.get,
-            kansalaisuus = henkilotiedot.kansalaisuus.get,
+            kutsumanimi = henkilotiedot.Kutsumanimi.getOrElse(""),
+            lahiosoite = henkilotiedot.lahiosoite.getOrElse(""),
+            postinumero = henkilotiedot.Postinumero.getOrElse(""),
+            postitoimipaikka = getPostitoimipaikka(toimipaikka),
+            maa = henkilotiedot.asuinmaa.getOrElse(""),
+            kansalaisuus = henkilotiedot.kansalaisuus.getOrElse(""),
             matkapuhelin = henkilotiedot.matkapuhelinnumero1,
             puhelin = None,
             sahkoposti = henkilotiedot.Sähköposti,
-            kotikunta = henkilotiedot.kotikunta.get,
-            sukupuoli = henkilotiedot.sukupuoli.get,
+            kotikunta = henkilotiedot.kotikunta.getOrElse(""),
+            sukupuoli = henkilotiedot.sukupuoli.getOrElse(""),
             aidinkieli = henkilotiedot.aidinkieli.get,
-            asiointikieli = henkilotiedot.aidinkieli.get, // FIXME konvertoi arvoiksi 1=fi, 2=sv, 3=en, 9=muu
-            koulusivistyskieli = henkilotiedot.aidinkieli.get,
+            asiointikieli = getAsiointikieli(henkilotiedot.aidinkieli.get),
+            koulusivistyskieli = henkilotiedot.koulusivistyskieli.get,
             koulutusmarkkinointilupa = lisatiedot.lupaMarkkinointi.map(_ == "true"),
-            kkKelpoisuusTarkastettava = true, // FIXME
-            onYlioppilas = false, // FIXME
-            hakemukset = hakemukset)).get.get // FIXME
-  }
+            hKelpoisuus = "NOT_CHECKED", // FIXME tulossa listfull-rajapintaan
+            //hKelpoisuusLahde = None, // FIXME tulossa listfull-rajapintaan
+            onYlioppilas = isYlioppilas(suoritukset),
+            hakemukset = hakemukset)).get.get
 
   def getKkHakijat(hakemukset: Seq[FullHakemus]): Future[Seq[Hakija]] = Future.sequence(hakemukset.map(getKkHakija))
 }
