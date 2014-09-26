@@ -21,13 +21,13 @@ import scala.util.Try
 case class KkHakijaQuery(oppijanumero: Option[String], haku: Option[String], organisaatio: Option[String], hakukohde: Option[String], hakuehto: Hakuehto, user: Option[User])
 
 object KkHakijaQuery {
-  def apply(params: Map[String,String], user: Option[User]): KkHakijaQuery = KkHakijaQuery(
-    params.get("oppijanumero").flatMap(_.blankOption),
-    params.get("haku").flatMap(_.blankOption),
-    params.get("organisaatio").flatMap(_.blankOption),
-    params.get("hakukohde").flatMap(_.blankOption),
-    Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki }.get,
-    user
+  def apply(params: Map[String,String], currentUser: Option[User]): KkHakijaQuery = new KkHakijaQuery(
+    oppijanumero = params.get("oppijanumero").flatMap(_.blankOption),
+    haku = params.get("haku").flatMap(_.blankOption),
+    organisaatio = params.get("organisaatio").flatMap(_.blankOption),
+    hakukohde = params.get("hakukohde").flatMap(_.blankOption),
+    hakuehto = Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki }.get,
+    user = currentUser
   )
 }
 

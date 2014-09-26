@@ -94,7 +94,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   var hakijaTrigger:Seq[ActorRef] = Seq()
 
   override def receive: Receive = super.receive.orElse({
-    case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) onComplete {
+    case ReloadHaku(haku) => getHakemukset(HakijaQuery(haku = Some(haku), organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None)) onComplete {
       case Success(hs) =>  logger.debug(s"found $hs applications")
       case Failure(ex) => logger.error(ex, s"failed fetching Hakemukset for $haku")
     }

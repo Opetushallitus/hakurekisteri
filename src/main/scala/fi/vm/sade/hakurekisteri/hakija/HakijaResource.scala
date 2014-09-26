@@ -40,12 +40,12 @@ case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakuk
 import org.scalatra.util.RicherString._
 
 object HakijaQuery {
-  def apply(params: Map[String,String], user: Option[User]): HakijaQuery = HakijaQuery(
-      params.get("haku").flatMap(_.blankOption),
-      params.get("organisaatio").flatMap(_.blankOption),
-      params.get("hakukohdekoodi").flatMap(_.blankOption),
-      Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki }.get,
-      user)
+  def apply(params: Map[String,String], currentUser: Option[User]): HakijaQuery = new HakijaQuery(
+      haku = params.get("haku").flatMap(_.blankOption),
+      organisaatio = params.get("organisaatio").flatMap(_.blankOption),
+      hakukohdekoodi = params.get("hakukohdekoodi").flatMap(_.blankOption),
+      hakuehto = Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki }.get,
+      user = currentUser)
 }
 
 class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
