@@ -1,5 +1,8 @@
 package fi.vm.sade.hakurekisteri.kkhakija
 
+import java.text.{ParseException, SimpleDateFormat}
+import java.util.{Calendar, Date}
+
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -8,6 +11,7 @@ import fi.vm.sade.hakurekisteri.hakija.Hakuehto
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohteenKoulutukset, HakukohdeOid, TarjontaException, Hakukohteenkoulutus}
 import fi.vm.sade.hakurekisteri.rest.support.{Query, User, SpringSecuritySupport, HakurekisteriJsonSupport}
+import org.joda.time.format.DateTimeFormatter
 import org.scalatra.swagger.Swagger
 import org.scalatra.{AsyncResult, InternalServerError, CorsSupport, FutureSupport}
 import org.scalatra.json.JacksonJsonSupport
@@ -29,6 +33,49 @@ object KkHakijaQuery {
     user = currentUser
   )
 }
+
+case class InvalidSyntymaaikaException(m: String) extends Exception(m)
+
+case class Ilmoittautuminen(kausi: String, // 2014S
+                            tila: Int) // tilat (1 = läsnä; 2 = poissa; 3 = poissa, ei kuluta opintoaikaa; 4 = puuttuu)
+
+case class Hakemus(haku: String,
+                   hakuVuosi: Option[Int],
+                   hakuKausi: Option[String],
+                   hakemusnumero: String,
+                   organisaatio: String,
+                   hakukohde: String,
+                   hakukohdeKkId: Option[String],
+                   avoinVayla: Option[Boolean],
+                   valinnanTila: Option[String],
+                   vastaanottotieto: Option[String],
+                   ilmoittautumiset: Seq[Ilmoittautuminen],
+                   pohjakoulutus: Seq[String],
+                   julkaisulupa: Boolean,
+                   hakukohteenKoulutukset: Seq[Hakukohteenkoulutus])
+
+case class Hakija(hetu: String,
+                  oppijanumero: String,
+                  sukunimi: String,
+                  etunimet: String,
+                  kutsumanimi: String,
+                  lahiosoite: String,
+                  postinumero: String,
+                  postitoimipaikka: String,
+                  maa: String,
+                  kansalaisuus: String,
+                  matkapuhelin: Option[String],
+                  puhelin: Option[String],
+                  sahkoposti: Option[String],
+                  kotikunta: String,
+                  sukupuoli: String,
+                  aidinkieli: String,
+                  asiointikieli: String,
+                  koulusivistyskieli: String,
+                  koulutusmarkkinointilupa: Option[Boolean],
+                  kkKelpoisuusTarkastettava: Boolean,
+                  onYlioppilas: Boolean,
+                  hakemukset: Seq[Hakemus])
 
 class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef)(implicit system: ActorSystem, sw: Swagger)
     extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
@@ -56,6 +103,7 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef)(implicit system
 
   incident {
     case t: TarjontaException => (id) => InternalServerError(IncidentReport(id, s"error with tarjonta: $t"))
+    case t: InvalidSyntymaaikaException => (id) => InternalServerError(IncidentReport(id, s"error: $t"))
   }
 
   def getKkHakijat(q: KkHakijaQuery): Future[Seq[Hakija]] = {
@@ -70,6 +118,18 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef)(implicit system
     ) yield hakijat
   }
 
+  def getPohjakoulutukset(k: Koulutustausta): Seq[String] = {
+    Map(
+      "yo" -> k.pohjakoulutus_yo,
+      "am" -> k.pohjakoulutus_am,
+      "amt" -> k.pohjakoulutus_amt,
+      "kk" -> k.pohjakoulutus_kk,
+      "ulk" -> k.pohjakoulutus_ulk,
+      "avoin" -> k.pohjakoulutus_avoin,
+      "muu" -> k.pohjakoulutus_muu
+    ).filter(t => t._2 == "true").keys.toSeq
+  }
+
   val Pattern = "preference(\\d+)-Koulutus-id".r
 
   def getHakemukset(hakemus: FullHakemus): Future[Seq[Hakemus]] =
@@ -77,29 +137,53 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef)(implicit system
       answers: HakemusAnswers <- hakemus.answers
       hakutoiveet: Map[String, String] <- answers.hakutoiveet
       lisatiedot: Lisatiedot <- answers.lisatiedot
+      koulutustausta: Koulutustausta <- answers.koulutustausta
     } yield hakutoiveet.keys.collect {
       case Pattern(jno) if hakutoiveet(s"preference$jno-Koulutus-id") != "" =>
         val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
         for {
-          hakukohteenkoulutukset: Seq[Hakukohteenkoulutus] <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset].map(_.koulutukset)
+          hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
         } yield Hakemus(haku = hakemus.applicationSystemId,
             hakuVuosi = None, // TODO hausta
             hakuKausi = None, // TODO hausta
             hakemusnumero = hakemus.oid,
             organisaatio = hakutoiveet(s"preference$jno-Opetuspiste-id"),
             hakukohde = hakutoiveet(s"preference$jno-Koulutus-id"),
-            hakukohdeKkId = None, // TODO tarjonnasta
+            hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
             avoinVayla = None, // TODO valinnoista?
             valinnanTila = None, // TODO valinnoista
             vastaanottotieto = None, // TODO valinnoista
             ilmoittautumiset = Seq(), // TODO valinnoista
-            pohjakoulutus = "", // TODO arvot?
+            pohjakoulutus = getPohjakoulutukset(koulutustausta),
             julkaisulupa = lisatiedot.lupaJulkaisu.exists(_ == "true"),
-            hakukohteenKoulutukset = hakukohteenkoulutukset)
+            hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset)
     }.toSeq).getOrElse(Seq()))
 
   def getHakukohdeOids(hakutoiveet: Map[String, String]): Seq[String] = {
     hakutoiveet.filter((t) => t._1.endsWith("Koulutus-id") && t._2 != "").map((t) => t._2).toSeq
+  }
+
+  def toKkSyntymaaika(d: Date): String = {
+    val c = Calendar.getInstance()
+    c.setTime(d)
+    new SimpleDateFormat("ddMMyy").format(d) + (c.get(Calendar.YEAR) match {
+      case y if y >= 2000 => "A"
+      case y if y >= 1900 && y < 2000 => "-"
+      case _ => ""
+    })
+  }
+
+  def getHetu(hetu: Option[String], syntymaaika: Option[String], hakemusnumero: String): String = hetu match {
+    case Some(h) => h
+    case None => syntymaaika match {
+      case Some(s) =>
+        try {
+          toKkSyntymaaika(new SimpleDateFormat("dd.MM.yyyy").parse(s))
+        } catch {
+          case t: ParseException => throw InvalidSyntymaaikaException(s"could not parse syntymäaika $s in hakemus $hakemusnumero")
+        }
+      case None => throw InvalidSyntymaaikaException(s"syntymäaika and hetu missing from hakemus $hakemusnumero")
+    }
   }
 
   def getKkHakija(hakemus: FullHakemus): Future[Hakija] = {
@@ -111,7 +195,7 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef)(implicit system
         lisatiedot: Lisatiedot <- answers.lisatiedot
       } yield for {
           hakemukset <- getHakemukset(hakemus)
-        } yield Hakija(hetu = henkilotiedot.Henkilotunnus,
+        } yield Hakija(hetu = getHetu(henkilotiedot.Henkilotunnus, henkilotiedot.syntymaaika, hakemus.oid),
             oppijanumero = hakemus.personOid.get,
             sukunimi = henkilotiedot.Sukunimi.get,
             etunimet = henkilotiedot.Etunimet.get,
@@ -127,7 +211,7 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef)(implicit system
             kotikunta = henkilotiedot.kotikunta.get,
             sukupuoli = henkilotiedot.sukupuoli.get,
             aidinkieli = henkilotiedot.aidinkieli.get,
-            asiointikieli = henkilotiedot.aidinkieli.get, // FIXME konvertoi arvoiksi 1, 2, 3
+            asiointikieli = henkilotiedot.aidinkieli.get, // FIXME konvertoi arvoiksi 1=fi, 2=sv, 3=en, 9=muu
             koulusivistyskieli = henkilotiedot.aidinkieli.get,
             koulutusmarkkinointilupa = lisatiedot.lupaMarkkinointi.map(_ == "true"),
             kkKelpoisuusTarkastettava = true, // FIXME
@@ -136,45 +220,4 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef)(implicit system
   }
 
   def getKkHakijat(hakemukset: Seq[FullHakemus]): Future[Seq[Hakija]] = Future.sequence(hakemukset.map(getKkHakija))
-
-  case class Ilmoittautuminen(kausi: String, // 2014S
-                              tila: Int) // tilat (1 = läsnä; 2 = poissa; 3 = poissa, ei kuluta opintoaikaa; 4 = puuttuu)
-  case class Hakemus(haku: String,
-                     hakuVuosi: Option[Int],
-                     hakuKausi: Option[String],
-                     hakemusnumero: String,
-                     organisaatio: String,
-                     hakukohde: String,
-                     hakukohdeKkId: Option[String],
-                     avoinVayla: Option[Boolean],
-                     valinnanTila: Option[String],
-                     vastaanottotieto: Option[String],
-                     ilmoittautumiset: Seq[Ilmoittautuminen],
-                     pohjakoulutus: String,
-                     julkaisulupa: Boolean,
-                     hakukohteenKoulutukset: Seq[Hakukohteenkoulutus])
-  case class Hakija(hetu: Option[String],
-                    oppijanumero: String,
-                    sukunimi: String,
-                    etunimet: String,
-                    kutsumanimi: String,
-                    lahiosoite: String,
-                    postinumero: String,
-                    postitoimipaikka: String,
-                    maa: String,
-                    kansalaisuus: String,
-                    matkapuhelin: Option[String],
-                    puhelin: Option[String],
-                    sahkoposti: Option[String],
-                    kotikunta: String,
-                    sukupuoli: String,
-                    aidinkieli: String,
-                    asiointikieli: String,
-                    koulusivistyskieli: String,
-                    koulutusmarkkinointilupa: Option[Boolean],
-                    kkKelpoisuusTarkastettava: Boolean,
-                    onYlioppilas: Boolean,
-                    hakemukset: Seq[Hakemus])
-
 }
-

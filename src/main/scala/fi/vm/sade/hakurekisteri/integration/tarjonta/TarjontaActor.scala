@@ -8,6 +8,7 @@ import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
 import scala.concurrent.{ExecutionContext, Future}
 import akka.pattern.pipe
+import org.scalatra.util.RicherString._
 
 case class SearchKomoQuery(koulutus: String)
 
@@ -28,17 +29,17 @@ case class TarjontaKomoResponse(result: Option[Komo])
 
 case class KomoResponse(oid: String, komo: Option[Komo])
 
-case class Koulutus(oid: String, komoOid: String)
+case class Koulutus(oid: String, komoOid: String, tunniste: Option[String])
 case class KoulutusResponse(result: Option[Koulutus])
 
 case class HakukohdeOid(oid: String)
-case class Hakukohde(oid: String, hakukohdeKoulutusOids: Seq[String])
+case class Hakukohde(oid: String, hakukohdeKoulutusOids: Seq[String], ulkoinenTunniste: Option[String])
 case class HakukohdeResponse(result: Option[Hakukohde])
 
 case class Hakukohteenkoulutus(komoOid: String,
                                tkKoulutuskoodi: String,
                                kkKoulutusId: Option[String])
-case class HakukohteenKoulutukset(hakukohdeOid: String, koulutukset: Seq[Hakukohteenkoulutus])
+case class HakukohteenKoulutukset(hakukohdeOid: String, ulkoinenTunniste: Option[String], koulutukset: Seq[Hakukohteenkoulutus])
 
 class TarjontaException(val m: String) extends Exception(m)
 case class HakukohdeNotFoundException(message: String) extends TarjontaException(message)
@@ -71,10 +72,10 @@ class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
       case None => Future.failed(KoulutusNotFoundException(s"koulutus not found with oid $oid"))
       case Some(k) =>
         val fk: Future[Option[Komo]] = getKomo(k.komoOid).map(r => r.komo)
-        fk.flatMap(_ match {
-          case None => Future.failed(KomoNotFoundException(s"komo not found with oid ${k.komoOid}"))
+        fk.map(_ match {
+          case None => throw KomoNotFoundException(s"komo not found with oid ${k.komoOid}")
           case Some(komo) =>
-            Future.successful(Hakukohteenkoulutus(komo.oid, komo.koulutuskoodi.arvo, None))
+            Hakukohteenkoulutus(komo.oid, komo.koulutuskoodi.arvo, k.tunniste.flatMap(_.blankOption))
         })
     })
   }
@@ -89,7 +90,7 @@ class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
         case None => Future.failed(HakukohdeNotFoundException(s"hakukohde not found with oid ${hk.oid}"))
         case Some(h) => for (
           hakukohteenkoulutukset: Seq[Hakukohteenkoulutus] <- getHakukohteenkoulutukset(h.hakukohdeKoulutusOids)
-        ) yield HakukohteenKoulutukset(hk.oid, hakukohteenkoulutukset)
+        ) yield HakukohteenKoulutukset(h.oid, h.ulkoinenTunniste, hakukohteenkoulutukset)
       })
 
       //hakukohteenKoulutukset = hakukohteenKoulutukset + (hk.oid -> hks)

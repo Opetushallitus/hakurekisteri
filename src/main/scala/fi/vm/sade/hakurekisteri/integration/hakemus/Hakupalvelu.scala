@@ -235,7 +235,14 @@ case class Koulutustausta(lahtokoulu:Option[String],
                           LISAKOULUTUS_KANSANOPISTO: Option[String],
                           LISAKOULUTUS_MAAHANMUUTTO: Option[String],
                           luokkataso: Option[String],
-                          lahtoluokka: Option[String])
+                          lahtoluokka: Option[String],
+                          pohjakoulutus_yo: Option[String],
+                          pohjakoulutus_am: Option[String],
+                          pohjakoulutus_amt: Option[String],
+                          pohjakoulutus_kk: Option[String],
+                          pohjakoulutus_ulk: Option[String],
+                          pohjakoulutus_avoin: Option[String],
+                          pohjakoulutus_muu: Option[String])
 
 case class Lisatiedot(lupaJulkaisu: Option[String], lupaMarkkinointi: Option[String])
 

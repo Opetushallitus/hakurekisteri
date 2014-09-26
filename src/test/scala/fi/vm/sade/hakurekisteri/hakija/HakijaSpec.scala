@@ -44,7 +44,14 @@ class HakijaSpec extends FlatSpec with ShouldMatchers {
             LISAKOULUTUS_KANSANOPISTO = None,
             LISAKOULUTUS_MAAHANMUUTTO = None,
             lahtoluokka = Some("9A"),
-            lukioPaattotodistusVuosi = None
+            lukioPaattotodistusVuosi = None,
+            pohjakoulutus_yo = None,
+            pohjakoulutus_am = None,
+            pohjakoulutus_amt = None,
+            pohjakoulutus_kk = None,
+            pohjakoulutus_avoin = None,
+            pohjakoulutus_ulk = None,
+            pohjakoulutus_muu = None
           )),
         hakutoiveet =  Some(Map(
           "preference2-Opetuspiste" -> "Ammattikoulu Lappi2",
