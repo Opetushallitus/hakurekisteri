@@ -4,8 +4,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.hakija.{Hakukohde, Hakuehto}
-import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
+import fi.vm.sade.hakurekisteri.hakija.Hakuehto
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohteenKoulutukset, HakukohdeOid, TarjontaException, Hakukohteenkoulutus}
 import fi.vm.sade.hakurekisteri.rest.support.{Query, User, SpringSecuritySupport, HakurekisteriJsonSupport}
@@ -18,7 +17,7 @@ import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 import scala.util.Try
 
-case class KkHakijaQuery(oppijanumero: Option[String], haku: Option[String], organisaatio: Option[String], hakukohde: Option[String], hakuehto: Hakuehto, user: Option[User])
+case class KkHakijaQuery(oppijanumero: Option[String], haku: Option[String], organisaatio: Option[String], hakukohde: Option[String], hakuehto: Hakuehto.Hakuehto, user: Option[User])
 
 object KkHakijaQuery {
   def apply(params: Map[String,String], currentUser: Option[User]): KkHakijaQuery = new KkHakijaQuery(
