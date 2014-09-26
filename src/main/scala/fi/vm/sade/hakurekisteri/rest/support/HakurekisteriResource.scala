@@ -9,9 +9,10 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import org.scalatra._
 import _root_.akka.pattern.ask
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
+import scala.concurrent.duration.Duration
 import scala.util.Try
 import fi.vm.sade.hakurekisteri.storage.Identified
-import java.util.concurrent.TimeUnit
+import scala.concurrent.duration._
 import javax.servlet.http.HttpServletRequest
 import org.springframework.security.core.Authentication
 
@@ -99,10 +100,11 @@ abstract class  HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriCom
   case class MalformedResourceException(message: String) extends Exception(message)
 
   protected implicit def executor: ExecutionContext = system.dispatcher
-  val timeout = 60
-  implicit val defaultTimeout = Timeout(timeout, TimeUnit.SECONDS)
+  val timeOut = 120
+  implicit val defaultTimeout: Timeout = timeOut.seconds
 
   class ActorResult[B: Manifest](message: AnyRef, success: (B) => AnyRef) extends AsyncResult() {
+    override implicit def timeout: Duration = timeOut.seconds
     val is = (actor ? message).mapTo[B].
       map(success)
   }
@@ -143,6 +145,7 @@ abstract class  HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriCom
   }
 
   case class ResourceQuery[R](query: Query[R], authorities: Seq[String], user: Option[String]) extends AsyncResult {
+    override implicit def timeout: Duration = timeOut.seconds
     val is = {
       val future = (actor ? AuthorizedQuery(query, authorities, user.getOrElse("anonymous"))).mapTo[Seq[R with Identified[UUID]]]
       future.map(Ok(_))

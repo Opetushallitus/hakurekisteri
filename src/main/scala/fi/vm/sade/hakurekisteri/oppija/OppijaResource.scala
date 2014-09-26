@@ -69,11 +69,10 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
     case t: VirtaConnectionErrorException => (id) => InternalServerError(IncidentReport(id, "virta error"))
   }
 
-
   def fetchOppijatFor(hakemukset: Seq[FullHakemus]): Future[Seq[Oppija]] =
     Future.sequence(for (
       hakemus <- hakemukset
-      if hakemus.personOid.isDefined && hakemus.state.exists((state) => state == "ACTIVE")
+      if hakemus.personOid.isDefined && hakemus.stateValid
     ) yield fetchOppijaData(hakemus.personOid.get, hakemus.hetu))
 
 

@@ -7,6 +7,7 @@ import akka.event.Logging
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, HakijaQuery}
 import fi.vm.sade.hakurekisteri.healthcheck.{RefreshingResource, Hakemukset, Health}
+import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaQuery
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.hakurekisteri.storage.repository._
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceActor, ResourceService}
@@ -27,9 +28,9 @@ trait HakemusService extends ResourceService[FullHakemus, String] with Journaled
   }
 
   override val matcher: PartialFunction[Query[FullHakemus], (FullHakemus with Identified[String]) => Boolean] = {
-    case HakemusQuery(haku, organisaatio, hakukohdekoodi) =>
+    case HakemusQuery(haku, organisaatio, hakukohdekoodi, hakukohde) =>
       (hakemus) =>
-        filterField(haku, _.applicationSystemId)(hakemus)  &&
+        filterField(haku, _.applicationSystemId)(hakemus) &&
           someField(
             organisaatio,
             _.answers.flatMap(_.hakutoiveet).getOrElse(Map()).
@@ -38,7 +39,12 @@ trait HakemusService extends ResourceService[FullHakemus, String] with Journaled
           someField(
             hakukohdekoodi,
             _.answers.flatMap(_.hakutoiveet).getOrElse(Map()).
-              filterKeys((k) => k.contains("Koulutus-id-aoIdentifier")).values.toSeq)(hakemus)
+              filterKeys((k) => k.contains("Koulutus-id-aoIdentifier")).values.toSeq)(hakemus) &&
+          someField(
+            hakukohde,
+            _.answers.flatMap(_.hakutoiveet).getOrElse(Map()).
+              filterKeys((k) => k.contains("Koulutus-id")).values.toSeq)(hakemus)
+
     case HenkiloHakijaQuery(henkilo) =>
       (hakemus) => hakemus.personOid.exists(_ == henkilo)
   }
@@ -46,12 +52,13 @@ trait HakemusService extends ResourceService[FullHakemus, String] with Journaled
   override def identify(o: FullHakemus): FullHakemus with Identified[String] = FullHakemus.identify(o)
 }
 
-case class HakemusQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String]) extends Query[FullHakemus]
+case class HakemusQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakukohde: Option[String] = None) extends Query[FullHakemus]
 
-case class HenkiloHakijaQuery(henkilo:String) extends Query[FullHakemus]
+case class HenkiloHakijaQuery(henkilo: String) extends Query[FullHakemus]
 
 object HakemusQuery {
-  def apply(hq: HakijaQuery):HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
+  def apply(hq: HakijaQuery): HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
+  def apply(hq: KkHakijaQuery): HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, None, hq.hakukohde)
 }
 
 case class Trigger(newApplicant: (FullHakemus) => Unit)
@@ -87,7 +94,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   var hakijaTrigger:Seq[ActorRef] = Seq()
 
   override def receive: Receive = super.receive.orElse({
-    case ReloadHaku(haku) => getHakemukset(HakijaQuery(Some(haku), None, None, Hakuehto.Kaikki, None)) onComplete {
+    case ReloadHaku(haku) => getHakemukset(HakijaQuery(haku = Some(haku), organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None)) onComplete {
       case Success(hs) =>  logger.debug(s"found $hs applications")
       case Failure(ex) => logger.error(ex, s"failed fetching Hakemukset for $haku")
     }

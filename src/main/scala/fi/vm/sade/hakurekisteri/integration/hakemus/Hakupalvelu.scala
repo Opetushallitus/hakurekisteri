@@ -41,7 +41,7 @@ class AkkaHakupalvelu(hakemusActor:ActorRef)(implicit val ec: ExecutionContext) 
     case _ => true
   }
 
-  def filterState(fh: FullHakemus): Boolean = fh.state.exists((s) => s == "ACTIVE" || s == "INCOMPLETE")
+  def filterState(fh: FullHakemus): Boolean = fh.stateValid
 
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     import akka.pattern._
@@ -252,8 +252,10 @@ case class FullHakemus(oid: String, personOid: Option[String], applicationSystem
         henkiloHetu <- henkilo.Henkilotunnus
       ) yield henkiloHetu
 
-
-
+  def stateValid: Boolean = state match {
+    case Some(s) if Seq("ACTIVE", "INCOMPLETE").contains(s) => true
+    case _ => false
+  }
 }
 
 object FullHakemus {

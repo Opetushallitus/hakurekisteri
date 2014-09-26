@@ -121,7 +121,7 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
     function tutkintokerrat() {
         var kerrat = [];
         for (var i = 1989; i > 1899; i--) {
-            kerrat.push({value: "01.12." + i, text: "01.12." + i + " (" + i + "S)"});
+            kerrat.push({value: "21.12." + i, text: "21.12." + i + " (" + i + "S)"});
             kerrat.push({value: "01.06." + i, text: "01.06." + i + " (" + i + "K)"});
         }
         return kerrat;

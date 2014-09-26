@@ -1,3 +1,4 @@
+import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaResource
 import fi.vm.sade.hakurekisteri.oppija.OppijaResource
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -6,7 +7,7 @@ import _root_.akka.routing.BroadcastRouter
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
 import fi.vm.sade.hakurekisteri.integration.haku.{HakuResource, HakuActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.ParameterActor
-import fi.vm.sade.hakurekisteri.integration.ytl.{YTLConfig, KokelasRequest, YtlActor}
+import fi.vm.sade.hakurekisteri.integration.ytl.{YTLConfig, YtlActor}
 import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.{ThreadFactory, Executors, TimeUnit}
@@ -16,7 +17,7 @@ import _root_.akka.actor.{ActorRef, ActorSystem, Props}
 import _root_.akka.util.Timeout
 import com.stackmob.newman.{HttpClient, ApacheHttpClient}
 import fi.vm.sade.hakurekisteri.arvosana._
-import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenQuery, EnsikertalainenActor, EnsikertalainenResource}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, EnsikertalainenResource}
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.integration.hakemus._
@@ -33,6 +34,11 @@ import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
 import org.apache.activemq.camel.component.ActiveMQComponent
+import org.apache.http.conn.ClientConnectionManager
+import org.apache.http.impl.NoConnectionReuseStrategy
+import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.http.impl.conn.PoolingClientConnectionManager
+import org.apache.http.params.HttpConnectionParams
 import org.scalatra._
 import org.scalatra.swagger.Swagger
 import org.slf4j.LoggerFactory
@@ -72,12 +78,9 @@ class ScalatraBootstrap extends LifeCycle {
 
     val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, parameterConfig, hakemusConfig, ytlConfig, koodistoConfig, registers, system)
 
-
     val koosteet = new BaseKoosteet(system, integrations, registers)
 
     val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.ytl ,  integrations.hakemukset, koosteet.ensikertalainen)), "healthcheck")
-
-
 
     mountServlets(context) (
       "/" -> new GuiServlet,
@@ -87,6 +90,7 @@ class ScalatraBootstrap extends LifeCycle {
       "/rest/v1/ensikertalainen" -> new EnsikertalainenResource(koosteet.ensikertalainen),
       "/rest/v1/haut" -> new HakuResource(koosteet.haut),
       "/rest/v1/hakijat" -> new HakijaResource(koosteet.hakijat),
+      "/rest/v1/kkhakijat" -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta),
       "/rest/v1/opiskelijat" -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
       "/rest/v1/oppijat" -> new OppijaResource(registers, integrations.hakemukset, koosteet.ensikertalainen),
       "/rest/v1/opiskeluoikeudet" -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
@@ -119,7 +123,6 @@ class ScalatraBootstrap extends LifeCycle {
   }
 }
 
-
 object OPHSecurity extends ContextLoader with LifeCycle {
   val config = OPHConfig(Config.ophConfDir,
     Config.propertyLocations,
@@ -140,7 +143,6 @@ object OPHSecurity extends ContextLoader with LifeCycle {
     security.setAsyncSupported(true)
   }
 
-
   override def destroy(context: ServletContext) {
     closeWebApplicationContext(context)
     cleanupListener.contextDestroyed(new ServletContextEvent(context))
@@ -155,7 +157,6 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
   val localProperties = (new java.util.Properties /: Map(props: _*)) {case (newProperties, (k,v)) => newProperties.put(k,v); newProperties}
   setConfigLocation("file:" + confDir + "/security-context-backend.xml")
 
-
   val resources: Seq[FileSystemResource] = for (
     fileName <- propertyFiles.reverse
   ) yield new FileSystemResource(confDir.resolve(fileName).toAbsolutePath.toString)
@@ -167,25 +168,16 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
   )
 
   object Bean {
-
     def apply[C](props: (_, _)*)(implicit m: Manifest[C]): BeanDefinition = {
-
       val definition = new RootBeanDefinition(m.runtimeClass)
       definition.setPropertyValues(new MutablePropertyValues(Map(props: _*).asJava))
       definition
-
     }
-
   }
-
 
   override def initBeanDefinitionReader(beanDefinitionReader: XmlBeanDefinitionReader) {
     beanDefinitionReader.getRegistry.registerBeanDefinition("propertyPlaceHolder", placeholder)
   }
-
-
-
-
 }
 
 trait Journals {
@@ -205,8 +197,6 @@ class DbJournals(jndiName:String) extends Journals {
   override val opiskeluoikeusJournal = new OpiskeluoikeusJournal(database)
   override val arvosanaJournal = new ArvosanaJournal(database)
 }
-
-
 
 class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
   override val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(journals.suoritusJournal)), "suoritukset")
@@ -288,17 +278,38 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        system: ActorSystem) extends Integrations {
 
   def getClient: HttpClient = getClient("default")
+  
+  val socketTimeout = 120000
+  val connectionTimeout = 10000
 
-  def getClient(poolName:String = "default"): HttpClient = {
-    if (poolName == "default") new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)()
+  def createApacheHttpClient(maxConnections: Int): org.apache.http.client.HttpClient = {
+    val connManager: ClientConnectionManager = {
+      val cm = new PoolingClientConnectionManager()
+      cm.setDefaultMaxPerRoute(maxConnections)
+      cm.setMaxTotal(maxConnections)
+      cm
+    }
+
+    val client = new DefaultHttpClient(connManager)
+    val httpParams = client.getParams
+    HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeout)
+    HttpConnectionParams.setSoTimeout(httpParams, socketTimeout)
+    HttpConnectionParams.setStaleCheckingEnabled(httpParams, false)
+    HttpConnectionParams.setSoKeepalive(httpParams, false)
+    client.setReuseStrategy(new NoConnectionReuseStrategy())
+    client
+  }
+
+  def getClient(poolName: String = "default", threads: Int = 8, maxConnections: Int = 100): HttpClient = {
+    if (poolName == "default") new ApacheHttpClient(createApacheHttpClient(maxConnections))()
     else {
       val threadNumber = new AtomicInteger(1)
-      val pool = Executors.newFixedThreadPool(8, new ThreadFactory() {
+      val pool = Executors.newFixedThreadPool(threads, new ThreadFactory() {
         override def newThread(r: Runnable): Thread = {
           new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
         }
       })
-      new ApacheHttpClient(socketTimeout = 120.seconds.toMillis.toInt)(ExecutionContext.fromExecutorService(pool))
+      new ApacheHttpClient(createApacheHttpClient(maxConnections))(ExecutionContext.fromExecutorService(pool))
     }
   }
 
@@ -308,7 +319,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(getClient, ec))))
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient("virta"), ec), organisaatiot)), "virta")
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient(poolName = "virta", threads = 100), ec), organisaatiot)), "virta")
 
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig)(getClient, ec))), "henkilo")
 
@@ -337,6 +348,4 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta, integrations.hakemukset)), "ensikertalainen")
 
   val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.sijoittelu, integrations.ytl)))
-
-
 }
