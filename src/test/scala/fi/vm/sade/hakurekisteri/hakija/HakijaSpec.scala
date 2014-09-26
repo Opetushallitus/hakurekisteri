@@ -19,6 +19,7 @@ class HakijaSpec extends FlatSpec with ShouldMatchers {
             kansalaisuus =  Some("FIN"),
             asuinmaa = Some("FIN"),
             matkapuhelinnumero1 = Some("0401234567"),
+            matkapuhelinnumero2 = None,
             Sukunimi = Some("Mäkinen"),
             Henkilotunnus = Some("200394-9839"),
             Postinumero = Some("00100"),
