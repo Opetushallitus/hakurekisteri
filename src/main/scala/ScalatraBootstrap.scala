@@ -7,7 +7,7 @@ import _root_.akka.routing.BroadcastRouter
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
 import fi.vm.sade.hakurekisteri.integration.haku.{HakuResource, HakuActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.ParameterActor
-import fi.vm.sade.hakurekisteri.integration.ytl.{YTLConfig, KokelasRequest, YtlActor}
+import fi.vm.sade.hakurekisteri.integration.ytl.{YTLConfig, YtlActor}
 import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.{ThreadFactory, Executors, TimeUnit}
@@ -17,7 +17,7 @@ import _root_.akka.actor.{ActorRef, ActorSystem, Props}
 import _root_.akka.util.Timeout
 import com.stackmob.newman.{HttpClient, ApacheHttpClient}
 import fi.vm.sade.hakurekisteri.arvosana._
-import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenQuery, EnsikertalainenActor, EnsikertalainenResource}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, EnsikertalainenResource}
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.integration.hakemus._
@@ -37,7 +37,7 @@ import org.apache.activemq.camel.component.ActiveMQComponent
 import org.apache.http.conn.ClientConnectionManager
 import org.apache.http.impl.NoConnectionReuseStrategy
 import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.impl.conn.{SchemeRegistryFactory, PoolingClientConnectionManager}
+import org.apache.http.impl.conn.PoolingClientConnectionManager
 import org.apache.http.params.HttpConnectionParams
 import org.scalatra._
 import org.scalatra.swagger.Swagger
@@ -90,7 +90,7 @@ class ScalatraBootstrap extends LifeCycle {
       "/rest/v1/ensikertalainen" -> new EnsikertalainenResource(koosteet.ensikertalainen),
       "/rest/v1/haut" -> new HakuResource(koosteet.haut),
       "/rest/v1/hakijat" -> new HakijaResource(koosteet.hakijat),
-      "/rest/v1/kkhakijat" -> new KkHakijaResource(),
+      "/rest/v1/kkhakijat" -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta),
       "/rest/v1/opiskelijat" -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
       "/rest/v1/oppijat" -> new OppijaResource(registers, integrations.hakemukset, koosteet.ensikertalainen),
       "/rest/v1/opiskeluoikeudet" -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
