@@ -404,7 +404,11 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         });
     };
     $scope.addLuokkatieto = function() {
-        $scope.luokkatiedot.push(new Opiskelijat({ henkiloOid: $scope.henkiloOid, oppilaitosOid: null, editable: true }))
+        $scope.luokkatiedot.push(new Opiskelijat({
+            henkiloOid: $scope.henkiloOid,
+            oppilaitosOid: null,
+            editable: true
+        }))
     };
     $scope.removeMessage = function(message) {
         var index = $scope.messages.indexOf(message);
