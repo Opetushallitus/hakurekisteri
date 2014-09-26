@@ -56,7 +56,6 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef)(implicit system
 
   incident {
     case t: TarjontaException => (id) => InternalServerError(IncidentReport(id, s"error with tarjonta: $t"))
-    case t: Throwable => (id) => InternalServerError(IncidentReport(id, "kk hakija error")) // TODO kerro virhetilanteesta
   }
 
   def getKkHakijat(q: KkHakijaQuery): Future[Seq[Hakija]] = {
@@ -79,7 +78,7 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef)(implicit system
       hakutoiveet: Map[String, String] <- answers.hakutoiveet
       lisatiedot: Lisatiedot <- answers.lisatiedot
     } yield hakutoiveet.keys.collect {
-      case Pattern(jno) if hakutoiveet(s"preference$jno-Koulutus-id") != "" => {
+      case Pattern(jno) if hakutoiveet(s"preference$jno-Koulutus-id") != "" =>
         val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
         for {
           hakukohteenkoulutukset: Seq[Hakukohteenkoulutus] <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset].map(_.koulutukset)
@@ -97,7 +96,6 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef)(implicit system
             pohjakoulutus = "", // TODO arvot?
             julkaisulupa = lisatiedot.lupaJulkaisu.exists(_ == "true"),
             hakukohteenKoulutukset = hakukohteenkoulutukset)
-      }
     }.toSeq).getOrElse(Seq()))
 
   def getHakukohdeOids(hakutoiveet: Map[String, String]): Seq[String] = {
