@@ -46,13 +46,16 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       HakemusAnswers(
         henkilotiedot = Some(
           HakemusHenkilotiedot(
-            kansalaisuus =  Some("FIN"),
+            kansalaisuus = Some("FIN"),
             asuinmaa = Some("FIN"),
             matkapuhelinnumero1 = Some("0401234567"),
             matkapuhelinnumero2 = None,
             Sukunimi = Some("Mäkinen"),
             Henkilotunnus = Some("200394-9839"),
             Postinumero = Some("00100"),
+            osoiteUlkomaa = None,
+            postinumeroUlkomaa = None,
+            kaupunkiUlkomaa = None,
             lahiosoite = Some("Katu 1"),
             sukupuoli = Some("1"),
             Sähköposti = Some("mikko@testi.oph.fi"),
@@ -124,6 +127,9 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             Sukunimi = Some("Mäkinen"),
             Henkilotunnus = Some("200394-9839"),
             Postinumero = Some("00100"),
+            osoiteUlkomaa = None,
+            postinumeroUlkomaa = None,
+            kaupunkiUlkomaa = None,
             lahiosoite = Some("Katu 1"),
             sukupuoli = Some("1"),
             Sähköposti = Some("mikko@testi.oph.fi"),
