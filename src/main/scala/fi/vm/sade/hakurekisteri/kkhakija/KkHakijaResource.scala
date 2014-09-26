@@ -128,7 +128,7 @@ class KkHakijaResource(hakemukset: ActorRef, tarjonta: ActorRef, haut: ActorRef)
       "ulk" -> k.pohjakoulutus_ulk,
       "avoin" -> k.pohjakoulutus_avoin,
       "muu" -> k.pohjakoulutus_muu
-    ).filter(t => t._2 == "true").keys.toSeq
+    ).filter(t => t._2.exists(_ == "true")).keys.toSeq
   }
 
   val Pattern = "preference(\\d+)-Koulutus-id".r
