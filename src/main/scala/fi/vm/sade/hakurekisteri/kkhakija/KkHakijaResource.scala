@@ -39,6 +39,7 @@ object KkHakijaQuery {
 }
 
 case class InvalidSyntymaaikaException(m: String) extends Exception(m)
+case class InvalidKausiException(m: String) extends Exception(m)
 
 case class Ilmoittautuminen(kausi: String, // 2014S
                             tila: Int) // tilat (1 = läsnä; 2 = poissa; 3 = poissa, ei kuluta opintoaikaa; 4 = puuttuu)
@@ -115,6 +116,7 @@ class KkHakijaResource(hakemukset: ActorRef,
     case t: TarjontaException => (id) => InternalServerError(IncidentReport(id, s"error with tarjonta: $t"))
     case t: HakuNotFoundException => (id) => InternalServerError(IncidentReport(id, s"error: $t"))
     case t: InvalidSyntymaaikaException => (id) => InternalServerError(IncidentReport(id, s"error: $t"))
+    case t: InvalidKausiException => (id) => InternalServerError(IncidentReport(id, s"error: $t"))
   }
 
   def getKkHakijat(q: KkHakijaQuery): Future[Seq[Hakija]] = {
@@ -123,10 +125,10 @@ class KkHakijaResource(hakemukset: ActorRef,
       case None => HakemusQuery(q)
     }
 
-    for (
-      fullHakemukset: Seq[FullHakemus] <- (hakemukset ? hakemusQuery).mapTo[Seq[FullHakemus]];
-      hakijat <- getKkHakijat(fullHakemukset)
-    ) yield hakijat
+    for {
+      fullHakemukset: Seq[FullHakemus] <- (hakemukset ? hakemusQuery).mapTo[Seq[FullHakemus]]
+      hakijat <- fullHakemukset2hakijat(fullHakemukset)
+    } yield hakijat
   }
 
   def getPohjakoulutukset(k: Koulutustausta): Seq[String] = {
@@ -153,6 +155,15 @@ class KkHakijaResource(hakemukset: ActorRef,
         }
       case None => Seq()
     }
+  }
+
+  def getKausi(kausiKoodi: String, hakemusOid: String): Future[String] =
+    kausiKoodi.split('#').headOption match {
+      case None => throw new InvalidKausiException(s"invalid kausi koodi $kausiKoodi on hakemus $hakemusOid")
+      case Some(k) => (koodisto ? GetKoodi("kausi", k)).mapTo[Option[Koodi]].map(_ match {
+        case None => throw new InvalidKausiException(s"kausi not found with koodi $kausiKoodi on hakemus $hakemusOid")
+        case Some(kausi) => kausi.koodiArvo
+    })
   }
 
   val Pattern = "preference(\\d+)-Koulutus-id".r
@@ -290,5 +301,5 @@ class KkHakijaResource(hakemukset: ActorRef,
           onYlioppilas = isYlioppilas(suoritukset),
           hakemukset = hakemukset)
 
-  def getKkHakijat(hakemukset: Seq[FullHakemus]): Future[Seq[Hakija]] = Future.sequence(hakemukset.map(getKkHakija).flatten)
+  def fullHakemukset2hakijat(hakemukset: Seq[FullHakemus]): Future[Seq[Hakija]] = Future.sequence(hakemukset.map(getKkHakija).flatten)
 }
