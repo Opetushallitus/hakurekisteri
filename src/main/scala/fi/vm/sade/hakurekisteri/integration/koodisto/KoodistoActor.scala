@@ -8,7 +8,9 @@ import akka.pattern.pipe
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
+import scala.compat.Platform
 import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.duration._
 
 case class GetRinnasteinenKoodiArvoQuery(koodiUri: String, rinnasteinenKoodistoUri: String)
 case class Koodisto(koodistoUri: String)
@@ -18,8 +20,13 @@ case class RinnasteinenKoodiNotFoundException(message: String) extends Exception
 
 case class GetKoodi(koodistoUri: String, koodiUri: String)
 
+case class CachedKoodi(addedTimeMillis: Long, koodi: Future[Option[Koodi]])
+
 class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: ExecutionContext) extends Actor {
   val log = Logging(context.system, this)
+
+  var koodiCache: Map[String, CachedKoodi] = Map()
+  val expirationDurationMillis = 10.minutes.toMillis
 
   override def receive: Receive = {
     case q: GetRinnasteinenKoodiArvoQuery =>
@@ -30,10 +37,18 @@ class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
   }
 
   def getKoodi(koodistoUri: String, koodiUri: String): Future[Option[Koodi]] = {
-    try {
-      restClient.readObject[Koodi](s"/rest/json/${URLEncoder.encode(koodistoUri, "UTF-8")}/koodi/${URLEncoder.encode(koodiUri, "UTF-8")}", HttpResponseCode.Ok).map(Some(_))
+    if (koodiCache.contains(koodiUri) && koodiCache(koodiUri).addedTimeMillis + expirationDurationMillis > Platform.currentTime) {
+      koodiCache(koodiUri).koodi
+    } else try {
+      val koodi = restClient.readObject[Koodi](s"/rest/json/${URLEncoder.encode(koodistoUri, "UTF-8")}/koodi/${URLEncoder.encode(koodiUri, "UTF-8")}", HttpResponseCode.Ok).map(Some(_))
+      koodiCache += (koodiUri -> CachedKoodi(Platform.currentTime, koodi))
+      koodi
     } catch {
-      case t: Throwable => log.warning(s"koodi not found with koodiUri $koodiUri"); Future.successful(None)
+      case t: Throwable =>
+        log.warning(s"koodi not found with koodiUri $koodiUri")
+        val koodi = Future.successful(None)
+        koodiCache += (koodiUri -> CachedKoodi(Platform.currentTime, koodi))
+        koodi
     }
   }
 
