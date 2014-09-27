@@ -1,3 +1,4 @@
+import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
 import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaResource
 import fi.vm.sade.hakurekisteri.oppija.OppijaResource
 import java.util.concurrent.atomic.AtomicInteger
@@ -76,7 +77,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, registers.suoritusRekisteri, journals.arvosanaJournal)), "perusopetus-sanity")
 
-    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, parameterConfig, hakemusConfig, ytlConfig, koodistoConfig, registers, system)
+    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, parameterConfig, hakemusConfig, ytlConfig, koodistoConfig, valintaTulosConfig, registers, system)
 
     val koosteet = new BaseKoosteet(system, integrations, registers)
 
@@ -90,7 +91,7 @@ class ScalatraBootstrap extends LifeCycle {
       "/rest/v1/ensikertalainen" -> new EnsikertalainenResource(koosteet.ensikertalainen),
       "/rest/v1/haut" -> new HakuResource(koosteet.haut),
       "/rest/v1/hakijat" -> new HakijaResource(koosteet.hakijat),
-      "/rest/v1/kkhakijat" -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri),
+      "/rest/v1/kkhakijat" -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),
       "/rest/v1/opiskelijat" -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
       "/rest/v1/oppijat" -> new OppijaResource(registers, integrations.hakemukset, koosteet.ensikertalainen),
       "/rest/v1/opiskeluoikeudet" -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
@@ -263,6 +264,7 @@ trait Integrations {
   val koodisto: ActorRef
   val ytl: ActorRef
   val parametrit: ActorRef
+  val valintaTulos: ActorRef
 }
 
 class BaseIntegrations(virtaConfig: VirtaConfig,
@@ -274,6 +276,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        hakemusConfig: HakemusConfig,
                        ytlConfig: Option[YTLConfig],
                        koodistoConfig: ServiceConfig,
+                       valintaTulosConfig: ServiceConfig,
                        rekisterit: Registers,
                        system: ActorSystem) extends Integrations {
 
@@ -317,13 +320,13 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig)(getClient, ec))), "tarjonta")
 
-  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(getClient, ec))))
+  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(getClient, ec))), "organisaatio")
 
   val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient(poolName = "virta", threads = 100), ec), organisaatiot)), "virta")
 
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig)(getClient, ec))), "henkilo")
 
-  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig)(getClient, ec))))
+  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig)(getClient, ec))), "sijoittelu")
 
   val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf)(getClient, ec), hakemusConfig.maxApplications)), "hakemus")
 
@@ -331,7 +334,9 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)(getClient, ec))), "koodisto")
 
-  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(getClient(), ec))))
+  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(getClient(), ec))), "parametrit")
+
+  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(getClient, ec))), "valintaTulos")
 }
 
 trait Koosteet {

@@ -24,6 +24,7 @@ object Config {
   val hakuappServiceUrlQa = s"https://$hostQa/haku-app"
   val koodistoServiceUrlQa = s"https://$hostQa/koodisto-service"
   val parameterServiceUrlQa = s"https://$hostQa/ohjausparametrit-service"
+  val valintaTulosServiceUrlQa = s"https://$hostQa/valinta-tulos-service"
 
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
   val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
@@ -51,6 +52,7 @@ object Config {
   val koodistoServiceUrl = properties.getOrElse("cas.service.koodisto-service", koodistoServiceUrlQa)
   val parameterServiceUrl = properties.getOrElse("cas.service.ohjausparametrit-service", parameterServiceUrlQa)
   val organisaatioServiceUrl = properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa)
+  val valintaTulosServiceUrl = properties.getOrElse("cas.service.valintatulos-service", valintaTulosServiceUrlQa)
   val organisaatioSoapServiceUrl = properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa) + "/services/organisaatioService"
   val maxApplications = properties.getOrElse("suoritusrekisteri.hakijat.max.applications", "2000").toInt
   val virtaServiceUrl = properties.getOrElse("suoritusrekisteri.virta.service.url", virtaServiceUrlTest)
@@ -66,6 +68,7 @@ object Config {
   val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl)
   val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl)
   val organisaatioConfig = ServiceConfig(serviceUrl = organisaatioServiceUrl)
+  val valintaTulosConfig = ServiceConfig(serviceUrl = valintaTulosServiceUrl)
 
   val ytlConfig = for (
     host <- properties.get("suoritusrekisteri.ytl.host");
@@ -77,7 +80,7 @@ object Config {
     localStore <- properties.get("suoritusrekisteri.ytl.localstore")
   ) yield YTLConfig(host, user, password, inbox, outbox, poll.split(";").map(LocalTime.parse), localStore)
 
-  //val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
+  // val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
   // val amqQueue = properties.getOrElse("activemq.queue.name.log", "Sade.Log")
 
   def loadProperties(resources: Seq[InputStream]): Map[String, String] = {
