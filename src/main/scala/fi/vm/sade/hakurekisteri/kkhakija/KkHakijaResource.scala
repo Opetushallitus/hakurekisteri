@@ -233,9 +233,9 @@ class KkHakijaResource(hakemukset: ActorRef,
   }
   
   def getPostitoimipaikka(koodi: Option[Koodi]): String = koodi match {
-    case None => logger.debug("kieli koodi not found"); ""
+    case None => ""
     case Some(k) => k.metadata.find(_.kieli == "FI") match {
-      case None => logger.debug("kieli FI not found"); ""
+      case None => ""
       case Some(m) => m.nimi
     }
   }
@@ -258,16 +258,9 @@ class KkHakijaResource(hakemukset: ActorRef,
   }
 
   def getToimipaikka(maa: String, postinumero: Option[String], kaupunkiUlkomaa: Option[String]): Future[String] = {
-    if (maa == "246") {
-      logger.debug(s"maa FIN, fetching postitoimipaikka from koodisto with koodiUri posti_${postinumero.getOrElse("00000")}")
-      (koodisto ? GetKoodi("posti", s"posti_${postinumero.getOrElse("00000")}")).mapTo[Option[Koodi]].map(getPostitoimipaikka)
-    } else if (kaupunkiUlkomaa.isDefined) {
-      logger.debug("maa not FIN, fall-back to kaupunkiUlkomaa")
-      Future.successful(kaupunkiUlkomaa.get)
-    } else {
-      logger.debug("empty postitoimipaikka")
-      Future.successful("")
-    }
+    if (maa == "246") (koodisto ? GetKoodi("posti", s"posti_${postinumero.getOrElse("00000")}")).mapTo[Option[Koodi]].map(getPostitoimipaikka)
+    else if (kaupunkiUlkomaa.isDefined) Future.successful(kaupunkiUlkomaa.get)
+    else Future.successful("")
   }
 
   def getKkHakija(hakemus: FullHakemus): Option[Future[Hakija]] =
