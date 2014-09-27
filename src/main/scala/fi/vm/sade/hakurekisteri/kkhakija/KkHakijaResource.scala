@@ -181,9 +181,10 @@ class KkHakijaResource(hakemukset: ActorRef,
           hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
           haku: Haku <- (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
           valintaTulos: ValintaTulos <- (valintaTulos ? ValintaTulosQuery(hakemus.applicationSystemId, hakemus.oid)).mapTo[ValintaTulos]
+          kausi: String <- getKausi(haku.kausi, hakemus.oid)
         } yield Hakemus(haku = hakemus.applicationSystemId,
             hakuVuosi = haku.vuosi,
-            hakuKausi = haku.kausi,
+            hakuKausi = kausi,
             hakemusnumero = hakemus.oid,
             organisaatio = hakutoiveet(s"preference$jno-Opetuspiste-id"),
             hakukohde = hakutoiveet(s"preference$jno-Koulutus-id"),

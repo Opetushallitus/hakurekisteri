@@ -6,7 +6,7 @@ import akka.actor.Actor
 import akka.event.Logging
 import akka.pattern.pipe
 import com.stackmob.newman.response.HttpResponseCode
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
 
 import scala.compat.Platform
 import scala.concurrent.{Future, ExecutionContext}
@@ -49,8 +49,8 @@ class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
       addToCache(koodiUri, koodi)
       koodi
     } catch {
-      case t: Throwable =>
-        log.warning(s"koodi not found with koodiUri $koodiUri")
+      case t: PreconditionFailedException =>
+        log.warning(s"koodi not found with koodiUri $koodiUri: $t")
         val koodi = Future.successful(None)
         addToCache(koodiUri, koodi)
         koodi
