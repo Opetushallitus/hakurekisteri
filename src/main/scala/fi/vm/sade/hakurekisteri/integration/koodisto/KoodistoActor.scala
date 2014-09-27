@@ -36,18 +36,23 @@ class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
       getKoodi(q.koodistoUri, q.koodiUri) pipeTo sender
   }
 
+  def addToCache(koodiUri: String, koodi: Future[Option[Koodi]]) = {
+    log.debug(s"adding koodi $koodiUri to cache")
+    koodiCache = koodiCache + (koodiUri -> CachedKoodi(Platform.currentTime, koodi))
+  }
+
   def getKoodi(koodistoUri: String, koodiUri: String): Future[Option[Koodi]] = {
     if (koodiCache.contains(koodiUri) && koodiCache(koodiUri).addedTimeMillis + expirationDurationMillis > Platform.currentTime) {
       koodiCache(koodiUri).koodi
     } else try {
       val koodi = restClient.readObject[Koodi](s"/rest/json/${URLEncoder.encode(koodistoUri, "UTF-8")}/koodi/${URLEncoder.encode(koodiUri, "UTF-8")}", HttpResponseCode.Ok).map(Some(_))
-      koodiCache += (koodiUri -> CachedKoodi(Platform.currentTime, koodi))
+      addToCache(koodiUri, koodi)
       koodi
     } catch {
       case t: Throwable =>
         log.warning(s"koodi not found with koodiUri $koodiUri")
         val koodi = Future.successful(None)
-        koodiCache += (koodiUri -> CachedKoodi(Platform.currentTime, koodi))
+        addToCache(koodiUri, koodi)
         koodi
     }
   }
