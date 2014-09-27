@@ -26,7 +26,7 @@ class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
   val log = Logging(context.system, this)
 
   var koodiCache: Map[String, CachedKoodi] = Map()
-  val expirationDurationMillis = 10.minutes.toMillis
+  val expirationDurationMillis = 30.minutes.toMillis
 
   override def receive: Receive = {
     case q: GetRinnasteinenKoodiArvoQuery =>
