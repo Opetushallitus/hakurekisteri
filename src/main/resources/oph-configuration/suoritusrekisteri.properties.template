@@ -51,6 +51,7 @@ cas.service.organisaatio-service=https\://${host.virkailija}/organisaatio-servic
 cas.service.sijoittelu-service=https://${host.virkailija}/sijoittelu-service
 cas.service.suoritusrekisteri=https://${host.virkailija}/suoritusrekisteri
 cas.service.tarjonta-service=https://${host.virkailija}/tarjonta-service
+cas.service.valintatulos-service=https://${host.virkailija}/valinta-tulos-service
 customAttribute.webservice.url.backend=https://${host.virkailija}/authentication-service/services/customAttributeService
 flyway.initOnMigrate=true
 jpa.schemaUpdate=validate

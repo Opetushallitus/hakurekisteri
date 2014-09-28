@@ -8,7 +8,7 @@ import akka.pattern.pipe
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{Koulutuskoodi, GetKomoQuery, Komo, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaData, VirtaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
 import fi.vm.sade.hakurekisteri.rest.support.Query
@@ -187,7 +187,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     def requestKomos(suoritukset: Seq[Suoritus]) {
       for (
         suoritus <- suoritukset
-      ) if (suoritus.komo.startsWith("koulutus_")) self ! KomoResponse(suoritus.komo, Some(Komo(suoritus.komo, "TUTKINTO", "KORKEAKOULUTUS"))) else tarjontaActor ! GetKomoQuery(suoritus.komo)
+      ) if (suoritus.komo.startsWith("koulutus_")) self ! KomoResponse(suoritus.komo, Some(Komo(suoritus.komo, Koulutuskoodi(suoritus.komo.substring(9)), "TUTKINTO", "KORKEAKOULUTUS"))) else tarjontaActor ! GetKomoQuery(suoritus.komo)
     }
 
     def requestSuoritukset(henkiloOid: String) {
