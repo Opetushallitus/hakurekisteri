@@ -6,7 +6,9 @@ import akka.actor.Actor
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
+import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
 import akka.pattern.pipe
 import org.scalatra.util.RicherString._
 
@@ -40,6 +42,7 @@ case class Hakukohteenkoulutus(komoOid: String,
                                tkKoulutuskoodi: String,
                                kkKoulutusId: Option[String])
 case class HakukohteenKoulutukset(hakukohdeOid: String, ulkoinenTunniste: Option[String], koulutukset: Seq[Hakukohteenkoulutus])
+case class CachedKoulutukset(inserted: Long, koulutukset: Future[HakukohteenKoulutukset])
 
 class TarjontaException(val m: String) extends Exception(m)
 case class HakukohdeNotFoundException(message: String) extends TarjontaException(message)
@@ -47,7 +50,8 @@ case class KoulutusNotFoundException(message: String) extends TarjontaException(
 case class KomoNotFoundException(message: String) extends TarjontaException(message)
 
 class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: ExecutionContext) extends Actor {
-  //var hakukohteenKoulutukset: Map[String, Future[HakukohteenKoulutukset]] = Map()
+  var hakukohteenKoulutukset: Map[String, CachedKoulutukset] = Map()
+  val expirationDurationMillis = 60.minutes.toMillis
 
   override def receive: Receive = {
     case q: SearchKomoQuery => searchKomo(q.koulutus) pipeTo sender
@@ -80,11 +84,15 @@ class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
     })
   }
   def getHakukohteenkoulutukset(oids: Seq[String]): Future[Seq[Hakukohteenkoulutus]] = Future.sequence(oids.map(getKoulutus))
+  
+  def addToCache(oid: String, hks: Future[HakukohteenKoulutukset]) = {
+    hakukohteenKoulutukset = hakukohteenKoulutukset + (oid -> CachedKoulutukset(Platform.currentTime, hks))
+  }
 
   def getHakukohteenKoulutukset(hk: HakukohdeOid): Future[HakukohteenKoulutukset] = {
-    //if (hakukohteenKoulutukset.contains(hk.oid))
-    //  hakukohteenKoulutukset(hk.oid)
-    //else {
+    if (hakukohteenKoulutukset.contains(hk.oid) && hakukohteenKoulutukset(hk.oid).inserted + expirationDurationMillis > Platform.currentTime)
+      hakukohteenKoulutukset(hk.oid).koulutukset
+    else {
       val fh: Future[Option[Hakukohde]] = restClient.readObject[HakukohdeResponse](s"/rest/v1/hakukohde/${URLEncoder.encode(hk.oid, "UTF-8")}", HttpResponseCode.Ok).map(r => r.result)
       val hks: Future[HakukohteenKoulutukset] = fh.flatMap(_ match {
         case None => Future.failed(HakukohdeNotFoundException(s"hakukohde not found with oid ${hk.oid}"))
@@ -92,11 +100,9 @@ class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
           hakukohteenkoulutukset: Seq[Hakukohteenkoulutus] <- getHakukohteenkoulutukset(h.hakukohdeKoulutusOids)
         ) yield HakukohteenKoulutukset(h.oid, h.ulkoinenTunniste, hakukohteenkoulutukset)
       })
-
-      //hakukohteenKoulutukset = hakukohteenKoulutukset + (hk.oid -> hks)
-
+      addToCache(hk.oid, hks)
       hks
-    //}
+    }
   }
 }
 

@@ -20,13 +20,13 @@ case class RinnasteinenKoodiNotFoundException(message: String) extends Exception
 
 case class GetKoodi(koodistoUri: String, koodiUri: String)
 
-case class CachedKoodi(addedTimeMillis: Long, koodi: Future[Option[Koodi]])
+case class CachedKoodi(inserted: Long, koodi: Future[Option[Koodi]])
 
 class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: ExecutionContext) extends Actor {
   val log = Logging(context.system, this)
 
   var koodiCache: Map[String, CachedKoodi] = Map()
-  val expirationDurationMillis = 30.minutes.toMillis
+  val expirationDurationMillis = 60.minutes.toMillis
 
   override def receive: Receive = {
     case q: GetRinnasteinenKoodiArvoQuery =>
@@ -42,7 +42,7 @@ class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
   }
 
   def getKoodi(koodistoUri: String, koodiUri: String): Future[Option[Koodi]] = {
-    if (koodiCache.contains(koodiUri) && koodiCache(koodiUri).addedTimeMillis + expirationDurationMillis > Platform.currentTime) {
+    if (koodiCache.contains(koodiUri) && koodiCache(koodiUri).inserted + expirationDurationMillis > Platform.currentTime) {
       koodiCache(koodiUri).koodi
     } else try {
       val koodi = restClient.readObject[Koodi](s"/rest/json/${URLEncoder.encode(koodistoUri, "UTF-8")}/koodi/${URLEncoder.encode(koodiUri, "UTF-8")}", HttpResponseCode.Ok).map(Some(_))
