@@ -16,12 +16,16 @@ class HakijaSpec extends FlatSpec with ShouldMatchers {
       HakemusAnswers(
         henkilotiedot = Some(
           HakemusHenkilotiedot(
-            kansalaisuus =  Some("FIN"),
+            kansalaisuus = Some("FIN"),
             asuinmaa = Some("FIN"),
             matkapuhelinnumero1 = Some("0401234567"),
+            matkapuhelinnumero2 = None,
             Sukunimi = Some("Mäkinen"),
             Henkilotunnus = Some("200394-9839"),
             Postinumero = Some("00100"),
+            osoiteUlkomaa = None,
+            postinumeroUlkomaa = None,
+            kaupunkiUlkomaa = None,
             lahiosoite = Some("Katu 1"),
             sukupuoli = Some("1"),
             Sähköposti = Some("mikko@testi.oph.fi"),
@@ -30,7 +34,8 @@ class HakijaSpec extends FlatSpec with ShouldMatchers {
             kotikunta = Some("098"),
             aidinkieli = Some("FI"),
             syntymaaika = Some("20.03.1994"),
-            onkoSinullaSuomalainenHetu = Some("true"))),
+            onkoSinullaSuomalainenHetu = Some("true"),
+            koulusivistyskieli = Some("FI"))),
         koulutustausta = Some(
           Koulutustausta(
             PK_PAATTOTODISTUSVUOSI = Some("2014"),
@@ -44,7 +49,14 @@ class HakijaSpec extends FlatSpec with ShouldMatchers {
             LISAKOULUTUS_KANSANOPISTO = None,
             LISAKOULUTUS_MAAHANMUUTTO = None,
             lahtoluokka = Some("9A"),
-            lukioPaattotodistusVuosi = None
+            lukioPaattotodistusVuosi = None,
+            pohjakoulutus_yo = None,
+            pohjakoulutus_am = None,
+            pohjakoulutus_amt = None,
+            pohjakoulutus_kk = None,
+            pohjakoulutus_avoin = None,
+            pohjakoulutus_ulk = None,
+            pohjakoulutus_muu = None
           )),
         hakutoiveet =  Some(Map(
           "preference2-Opetuspiste" -> "Ammattikoulu Lappi2",
