@@ -127,7 +127,7 @@ class KkHakijaResource(hakemukset: ActorRef,
 
     for {
       fullHakemukset: Seq[FullHakemus] <- (hakemukset ? hakemusQuery).mapTo[Seq[FullHakemus]]
-      hakijat <- fullHakemukset2hakijat(fullHakemukset)
+      hakijat <- fullHakemukset2hakijat(fullHakemukset.filter(h => h.personOid.isDefined && h.stateValid))
     } yield hakijat
   }
 
