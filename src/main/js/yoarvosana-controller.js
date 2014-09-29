@@ -226,7 +226,7 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
             {"value": "REAALI", "text": "Reaalikoe (VANHA)"},
             {"value": "AINEREAALI", "text": "Ainemuotoinen reaali"}
         ],
-        "QC": [
+        "QS": [
             {"value": "C", "text": "Lyhyt oppimäärä (KIELI)"}
         ],
         "KR": [
@@ -250,12 +250,48 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
             {"value": "AINEREAALI", "text": "Ainemuotoinen reaali"}
         ]
     };
-    
-    $scope.aineet = function() {
-        Object.keys(function(k) {
-            return {value: k, text: k}
-        })
+
+    var aineKielistykset = {
+        "RU": "Ruotsi",
+        "FI": "Suomi",
+        "ZA": "Pohjoissaame",
+        "EN": "Englanti",
+        "RA": "Ranska",
+        "PG": "Portugali",
+        "UN": "Unkari",
+        "IS": "Inarinsaame",
+        "KR": "Kreikka",
+        "LA": "Latina",
+        "MA": "Matematiikka",
+        "ES": "Espanja",
+        "SA": "Saksa",
+        "IT": "Italia",
+        "VE": "Venäjä",
+        "QS": "Koltansaame",
+        "RR": "Reaali",
+        "UE": "Ev.lut. uskonto",
+        "UO": "Ortodoksiuskonto",
+        "ET": "Elämänkatsomustieto",
+        "FF": "Filosofia",
+        "PS": "Psykologia",
+        "HI": "Historia",
+        "YH": "Yhteiskuntaoppi",
+        "FY": "Fysiikka",
+        "KE": "Kemia",
+        "BI": "Biologia",
+        "GE": "Maantiede",
+        "TE": "Terveystieto"
     };
+
+    function getAineet() {
+        return Object.keys(aineet).map(function(k) {
+            return {value: k, text: aineKielistykset[k]}
+        }).sort(function(a, b) {
+            return a.text === b.text ? 0 : a.text < b.text ? -1 : 1;
+        })
+    }
+    
+    $scope.aineet = getAineet();
 
     $scope.getTasot = function(yoAine) {
         return aineet[yoAine] ? aineet[yoAine] : []
