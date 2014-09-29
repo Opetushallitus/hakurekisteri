@@ -25,6 +25,7 @@ import akka.actor.Identify
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
 import java.io.IOException
+import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.Aine
 
 
 case class YtlReport(waitingforAnswers: Seq[Batch[KokelasRequest]], nextSend: Option[DateTime])
@@ -284,6 +285,22 @@ object Timer {
 
 object YTLXml {
 
+  case class Aine(aine: String, lisatiedot: String)
+
+  object Aine {
+
+    val aineet = Map("SA" -> Aine("A", "SA"),"EA" -> Aine("A", "EN"),"EB" -> Aine("B", "EN"),"HA" -> Aine("A", "UN"),"FB" -> Aine("B", "RA"),"E2" -> Aine("B", "EN"),"M" -> Aine("PITKA", "MA"),"SC" -> Aine("C", "SA"),"VA" -> Aine("A", "VE"),"F2" -> Aine("B", "RA"),"GB" -> Aine("B", "PG"),"PS" -> Aine("AINEREAALI", "PS"),"I" -> Aine("AI", "IS"),"HI" -> Aine("AINEREAALI", "HI"),"V2" -> Aine("B", "VE"),"RY" -> Aine("REAALI", "ET"),"TA" -> Aine("A", "IT"),"CB" -> Aine("B", "FI"),"CC" -> Aine("C", "FI"),"S9" -> Aine("SAKSALKOUL", "SA"),"G2" -> Aine("B", "PG"),"V1" -> Aine("A", "VE"),"HB" -> Aine("B", "UN"),"TB" -> Aine("B", "IT"),"O" -> Aine("AI", "RU"),"A" -> Aine("AI", "FI"),"P1" -> Aine("A", "ES"),"GC" -> Aine("C", "PG"),"S2" -> Aine("B", "SA"),"PC" -> Aine("C", "ES"),"FY" -> Aine("AINEREAALI", "FY"),"EC" -> Aine("C", "EN"),"L1" -> Aine("D", "LA"),"H1" -> Aine("A", "UN"),"O5" -> Aine("VI2", "RU"),"FA" -> Aine("A", "RA"),"CA" -> Aine("A", "FI"),"F1" -> Aine("A", "RA"),"J" -> Aine("KYPSYYS", "EN"),"A5" -> Aine("VI2", "FI"),"Z" -> Aine("AI", "ZA"),"IC" -> Aine("C", "IS"),"KE" -> Aine("AINEREAALI", "KE"),"T1" -> Aine("A", "IT"),"RO" -> Aine("REAALI", "UO"),"YH" -> Aine("AINEREAALI", "YH"),"BA" -> Aine("A", "RU"),"H2" -> Aine("B", "UN"),"BI" -> Aine("AINEREAALI", "BI"),"VC" -> Aine("C", "VE"),"FF" -> Aine("AINEREAALI", "FF"),"BB" -> Aine("B", "RU"),"E1" -> Aine("A", "EN"),"T2" -> Aine("B", "IT"),"DC" -> Aine("C", "ZA"),"GE" -> Aine("AINEREAALI", "GE"),"P2" -> Aine("B", "ES"),"TC" -> Aine("C", "IT"),"G1" -> Aine("A", "PG"),"UO" -> Aine("AINEREAALI", "UO"),"RR" -> Aine("REAALI", "UE"),"VB" -> Aine("B", "VE"),"KC" -> Aine("C", "KR"),"ET" -> Aine("AINEREAALI", "ET"),"PB" -> Aine("B", "ES"),"SB" -> Aine("B", "SA"),"S1" -> Aine("A", "SA"),"QC" -> Aine("C", "QC"),"N" -> Aine("LYHYT", "MA"),"L7" -> Aine("C", "LA"),"PA" -> Aine("A", "ES"),"FC" -> Aine("C", "RA"),"TE" -> Aine("AINEREAALI", "TE"),"GA" -> Aine("A", "PG"),"UE" -> Aine("AINEREAALI", "UE"))
+
+    def apply(koetunnus:String, aineyhdistelmärooli: Option[String] = None):Aine =
+      if (aineyhdistelmärooli == Some("22"))
+        Aine("TOINENKIELI", aineet(koetunnus).lisatiedot)
+      else
+        aineet(koetunnus)
+  }
+
+
+
+
   def parseKokelaat(data:Elem, oidFinder: String => Future[String])(implicit ec: ExecutionContext): Seq[Future[Kokelas]] = {
     val kokelaat = data \\ "YLIOPPILAS"
     kokelaat map {
@@ -360,17 +377,21 @@ object YTLXml {
     (kokelas \\ "KOE").map{
       (koe: Node) =>
        val arvio = ArvioYo((koe \ "ARVOSANA").text, (koe \ "YHTEISPISTEMAARA").text.blankOption.map(_.toInt))
-       val valinnaisuus = (koe \ "AINEYHDISTELMAROOLI").text.toInt >= 60
-        Koe(arvio, (koe \ "KOETUNNUS").text, valinnainen = valinnaisuus, parseKausi((koe \ "TUTKINTOKERTA").text).get)
+        Koe(arvio, (koe \ "KOETUNNUS").text, (koe \ "AINEYHDISTELMAROOLI").text, parseKausi((koe \ "TUTKINTOKERTA").text).get)
     }
   }
 
 
 }
 
-case class Koe(arvio: ArvioYo, aine: String, valinnainen: Boolean, myonnetty: LocalDate) {
+case class Koe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String, myonnetty: LocalDate) {
+
+  val aine = Aine(koetunnus, Some(aineyhdistelmarooli))
+
+  val valinnainen = aineyhdistelmarooli.toInt >= 60
+
   def toArvosana(suoritus: Suoritus with Identified[UUID]) = {
-    Arvosana(suoritus.id, arvio, aine: String, None, valinnainen: Boolean, Some(myonnetty), YTLXml.YTL)
+    Arvosana(suoritus.id, arvio, aine.aine: String, Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL)
   }
 }
 
@@ -412,3 +433,4 @@ case class HakuList(haut: Set[String])
 case class HakuException(message: String, haku: String, cause: Throwable) extends Exception(message, cause)
 
 case class FtpException(cause:Throwable) extends IOException("problem with SFTP send", cause)
+
