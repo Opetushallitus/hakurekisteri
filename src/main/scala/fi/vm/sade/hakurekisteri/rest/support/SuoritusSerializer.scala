@@ -98,7 +98,7 @@ object SuoritusSerializer {
         val valmistuminen: LocalDate = (suoritus \ "valmistuminen").extract[LocalDate]
         val yksilollistaminen = (suoritus \ "yksilollistaminen").extract[Yksilollistetty]
         val JString(suoritusKieli) = suoritus \ "suoritusKieli"
-        val opiskeluoikeus = (suoritus \ "opiskeluoikeus") match {
+        val opiskeluoikeus = suoritus \ "opiskeluoikeus" match {
           case jv: JString => Try(jv.extract[UUID]).toOption
           case _ => None
         }
