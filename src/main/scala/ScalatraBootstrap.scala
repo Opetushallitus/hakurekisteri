@@ -283,7 +283,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
   def getClient: HttpClient = getClient("default")
   
   val socketTimeout = 120000
-  val connectionTimeout = 10000
+  val connectionTimeout = 15000
 
   def createApacheHttpClient(maxConnections: Int): org.apache.http.client.HttpClient = {
     val connManager: ClientConnectionManager = {
