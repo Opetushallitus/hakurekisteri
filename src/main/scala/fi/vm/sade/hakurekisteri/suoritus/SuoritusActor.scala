@@ -8,25 +8,32 @@ import fi.vm.sade.hakurekisteri.storage.repository._
 import scala.Some
 import scala.concurrent.Future
 import java.util.UUID
+import scala.util.Try
 
 
 trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
   var tiedonSiirtoIndex: Map[String, Map[String, Seq[Suoritus with Identified[UUID]]]] = Option(tiedonSiirtoIndex).getOrElse(Map())
   //var tiedonSiirtoIndexSnapShot: Map[String, Map[String, Seq[Suoritus with Identified]]] = Option(tiedonSiirtoIndexSnapShot).getOrElse(Map())
 
+  def year(suoritus:Suoritus): String = suoritus match {
+    case s: VirallinenSuoritus =>  s.valmistuminen.getYear.toString
+    case s: VapaamuotoinenSuoritus => s.vuosi.toString
+  }
+
   def addNew(suoritus: Suoritus with Identified[UUID]) = {
     tiedonSiirtoIndex = Option(tiedonSiirtoIndex).getOrElse(Map())
-    val newIndexSeq =  suoritus +: tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).getOrElse(Seq())
-    val newHenk = tiedonSiirtoIndex.get(suoritus.henkiloOid).getOrElse(Map()) + (suoritus.valmistuminen.getYear.toString -> newIndexSeq)
+
+    val newIndexSeq =  suoritus +: tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(year(suoritus))).getOrElse(Seq())
+    val newHenk = tiedonSiirtoIndex.get(suoritus.henkiloOid).getOrElse(Map()) + (year(suoritus) -> newIndexSeq)
     tiedonSiirtoIndex = tiedonSiirtoIndex + (suoritus.henkiloOid -> newHenk)
   }
 
   override def index(old: Option[Suoritus with Identified[UUID]], current: Option[Suoritus with Identified[UUID]]) {
     def removeOld(suoritus: Suoritus with Identified[UUID]) = {
       tiedonSiirtoIndex = Option(tiedonSiirtoIndex).getOrElse(Map())
-      val newIndexSeq = tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(suoritus.valmistuminen.getYear.toString)).map(_.filter((s) => s != suoritus || s.id != suoritus.id))
+      val newIndexSeq = tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(year(suoritus))).map(_.filter((s) => s != suoritus || s.id != suoritus.id))
       val newHenkiloIndex: Option[Map[String, Seq[Suoritus with Identified[UUID]]]] = newIndexSeq.flatMap((newSeq) =>
-        tiedonSiirtoIndex.get(suoritus.henkiloOid).map((henk) => henk + (suoritus.valmistuminen.getYear.toString -> newSeq))
+        tiedonSiirtoIndex.get(suoritus.henkiloOid).map((henk) => henk + (year(suoritus) -> newSeq))
       )
       val newIndex = newHenkiloIndex.map((henk)=>
         tiedonSiirtoIndex + (suoritus.henkiloOid -> henk)
@@ -39,7 +46,10 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
     current.foreach(addNew)
   }
 
-  def identify(o:Suoritus): Suoritus with Identified[UUID] = Suoritus.identify(o)
+  def identify(o:Suoritus): Suoritus with Identified[UUID] = o match {
+    case s: VirallinenSuoritus => VirallinenSuoritus.identify(s)
+    case s: VapaamuotoinenSuoritus => VapaamuotoinenSuoritus.identify(s)
+  }
 }
 
 trait SuoritusService extends ResourceService[Suoritus, UUID] with SuoritusRepository {
@@ -60,9 +70,10 @@ trait SuoritusService extends ResourceService[Suoritus, UUID] with SuoritusRepos
       checkHenkilo(henkilo)(s) && checkVuosi(vuosi)(s) && checkKausi(kausi)(s) && checkMyontaja(myontaja)(s)
   }
 
-  def checkMyontaja(myontaja: Option[String])(s: Suoritus):Boolean = myontaja match {
-    case Some(oid) => s.myontaja.equals(oid)
-    case None => true
+  def checkMyontaja(myontaja: Option[String])(suoritus: Suoritus):Boolean = (suoritus, myontaja) match {
+    case (s:VirallinenSuoritus, Some(oid)) => s.myontaja.equals(oid)
+    case (s:VapaamuotoinenSuoritus, Some(oid)) => false
+    case (_, None) => true
   }
 
   def checkHenkilo(henkilo: Option[String])(s: Suoritus):Boolean = henkilo match {
@@ -74,16 +85,18 @@ trait SuoritusService extends ResourceService[Suoritus, UUID] with SuoritusRepos
     date.getYear <= vuosi.toInt
   }
 
-  def checkVuosi(vuosi: Option[String])(s:Suoritus):Boolean = vuosi match {
-    case Some(vuosi:String) => beforeYearEnd(vuosi)(s.valmistuminen)
-    case None => true
+  def checkVuosi(vuosi: Option[String])(suoritus:Suoritus):Boolean = (suoritus, vuosi) match {
+    case (s:VirallinenSuoritus, Some(vuosi:String)) => beforeYearEnd(vuosi)(s.valmistuminen)
+    case (s:VapaamuotoinenSuoritus, Some(vuosi:String)) => Try(vuosi.toInt).map((hakuvuosi) => s.vuosi <= hakuvuosi).getOrElse(false)
+    case (_, None) => true
   }
 
-  def checkKausi(kausi: Option[Kausi])(s: Suoritus):Boolean = kausi match{
-    case Some(Kevät) => duringFirstHalf(s.valmistuminen)
-    case Some(Syksy) => !duringFirstHalf(s.valmistuminen)
-    case None => true
-    case _ => true
+  def checkKausi(kausi: Option[Kausi])(suoritus: Suoritus):Boolean = (suoritus,kausi) match{
+    case (s: VirallinenSuoritus, Some(Kevät)) => duringFirstHalf(s.valmistuminen)
+    case (s: VirallinenSuoritus, Some(Syksy)) => !duringFirstHalf(s.valmistuminen)
+    case (s: VirallinenSuoritus, Some(_)) => true
+    case (s: VapaamuotoinenSuoritus, Some(_)) => false
+    case (_, None) => true
   }
 
   def duringFirstHalf(date: LocalDate):Boolean = {

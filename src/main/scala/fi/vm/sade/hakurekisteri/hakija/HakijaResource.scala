@@ -18,7 +18,7 @@ import scala.util.Try
 import javax.servlet.http.HttpServletResponse
 import scala.xml._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import fi.vm.sade.hakurekisteri.suoritus.Suoritus
+import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.joda.time.{DateTimeFieldType, LocalDate}
 import fi.vm.sade.hakurekisteri.rest.support.User
@@ -196,7 +196,7 @@ case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahto
 }
 
 object XMLHakemus {
-  def resolvePohjakoulutus(suoritus: Option[Suoritus]): String = suoritus match {
+  def resolvePohjakoulutus(suoritus: Option[VirallinenSuoritus]): String = suoritus match {
     case Some(s) =>
       s.komo match {
         case "ulkomainen" => "0"
@@ -211,13 +211,13 @@ object XMLHakemus {
     case None => "7"
   }
 
-  def getRelevantSuoritus(suoritukset:Seq[Suoritus]) = {
-    suoritukset.map(s => (s, resolvePohjakoulutus(Some(s)).toInt)).sortBy(_._2).map(_._1).headOption
+  def getRelevantSuoritus(suoritukset:Seq[Suoritus]): Option[VirallinenSuoritus] = {
+    suoritukset.collect{case s: VirallinenSuoritus => (s, resolvePohjakoulutus(Some(s)).toInt)}.sortBy(_._2).map(_._1).headOption
   }
 
-  def resolveYear(suoritus: Suoritus) = suoritus match {
-    case Suoritus("ulkomainen", _,  _, _, _, _, _, _, _) => None
-    case Suoritus(_, _, _,date, _, _, _,  _, _)  => Some(date.getYear.toString)
+  def resolveYear(suoritus: VirallinenSuoritus) = suoritus match {
+    case VirallinenSuoritus("ulkomainen", _,  _, _, _, _, _, _,  _, _) => None
+    case VirallinenSuoritus(_, _, _,date, _, _, _,_,  _, _)  => Some(date.getYear.toString)
   }
 
   def apply(hakija: Hakija, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive]): XMLHakemus =

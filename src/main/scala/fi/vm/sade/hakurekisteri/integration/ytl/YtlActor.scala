@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 import akka.actor._
 import java.util.UUID
 import scala.xml.{XML, Node, Elem}
-import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen, Suoritus}
 import fi.vm.sade.hakurekisteri.arvosana.{ArvosanaQuery, Arvosana}
 import scala.concurrent.{ExecutionContext, Future}
 import akka.event.Logging
@@ -114,7 +114,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
           kokelaat = kokelaat + (k.oid -> k)
       }
       k.lukio foreach (suoritusRekisteri ! _)
-    case s: Suoritus with Identified[UUID] if s.komo == YTLXml.yotutkinto && config.isDefined =>
+    case s: VirallinenSuoritus with Identified[UUID] if s.komo == YTLXml.yotutkinto && config.isDefined =>
       for (
         kokelas <- kokelaat.get(s.henkiloOid)
       ) {
@@ -324,16 +324,17 @@ object YTLXml {
   val yotutkinto = "1.2.246.562.5.2013061010184237348007"
 
   object YoTutkinto {
-    def apply(suorittaja:String, valmistuminen: LocalDate, kieli:String) = {
-      Suoritus(
+    def apply(suorittaja:String, valmistuminen: LocalDate, kieli:String, vahvistettu: Boolean = true) = {
+      VirallinenSuoritus(
         komo = yotutkinto,
         myontaja = YTL,
         tila = "VALMIS",
         valmistuminen = valmistuminen,
-        henkiloOid = suorittaja,
+        henkilo = suorittaja,
         yksilollistaminen = yksilollistaminen.Ei,
         suoritusKieli = kieli,
-        source = YTL)
+        vahv = vahvistettu,
+        lahde = YTL)
     }
   }
 
@@ -347,7 +348,7 @@ object YTLXml {
     case _ => None
   }
 
-  def extractYo(oid: String, kokelas: Node): Option[Suoritus] =
+  def extractYo(oid: String, kokelas: Node): Option[VirallinenSuoritus] =
     for (
       valmistuminen <- parseValmistuminen(kokelas)
     ) yield {

@@ -15,7 +15,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohteenKoulutukset, Ha
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosHakutoive, ValintaTulos, ValintaTulosQuery}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 import fi.vm.sade.hakurekisteri.rest.support.{Query, User, SpringSecuritySupport, HakurekisteriJsonSupport}
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
+import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus, SuoritusQuery}
 import org.scalatra.swagger.Swagger
 import org.scalatra.{AsyncResult, InternalServerError, CorsSupport, FutureSupport}
 import org.scalatra.json.JacksonJsonSupport
@@ -241,7 +241,11 @@ class KkHakijaResource(hakemukset: ActorRef,
   }
 
   def isYlioppilas(suoritukset: Seq[Suoritus]): Boolean = {
-    suoritukset.find(s => s.komo == "1.2.246.562.5.2013061010184237348007" && s.tila == "VALMIS") match {
+    suoritukset.find{
+      case s:VirallinenSuoritus =>
+        s.komo == "1.2.246.562.5.2013061010184237348007" && s.tila == "VALMIS" && s.vahvistettu
+      case _ => false
+    } match {
       case Some(_) => true
       case None => false
     }

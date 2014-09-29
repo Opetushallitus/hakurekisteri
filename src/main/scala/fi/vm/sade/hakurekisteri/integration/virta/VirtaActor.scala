@@ -4,7 +4,7 @@ import akka.actor.{ActorRef, Actor}
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus, yksilollistaminen}
 import org.joda.time.LocalDate
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -50,15 +50,16 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef) extends 
   def tutkinto(oppijanumero: String)(t: VirtaTutkinto): Future[Suoritus] =
     for (
       oppilaitosOid <- resolveOppilaitosOid(t.myontaja)
-    ) yield Suoritus(
+    ) yield VirallinenSuoritus(
           komo = getKoulutusUri(t.koulutuskoodi),
           myontaja = oppilaitosOid,
           valmistuminen = t.suoritusPvm,
           tila = tila(t.suoritusPvm),
-          henkiloOid = oppijanumero,
+          henkilo = oppijanumero,
           yksilollistaminen = yksilollistaminen.Ei,
           suoritusKieli = t.kieli,
-          source = CSC)
+          vahv = true,
+          lahde = CSC)
 
   def tila(valmistuminen: LocalDate): String = valmistuminen match {
     case v: LocalDate if v.isBefore(new LocalDate()) => "VALMIS"

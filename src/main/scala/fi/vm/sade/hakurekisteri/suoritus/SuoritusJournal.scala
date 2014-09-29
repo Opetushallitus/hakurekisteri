@@ -14,10 +14,14 @@ import scala.slick.lifted
 class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, SuoritusTable, ColumnOrdered[Long], UUID] {
   override def delta(row: SuoritusTable#TableElementType): Delta[Suoritus, UUID] = row match {
     case (resourceId, _, _, _, _, _, _, _,source,  _, true) => Deleted(UUID.fromString(resourceId), source)
-    case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yks, suoritusKieli,source,  _, _) => Updated(Suoritus(komo, myontaja, tila, LocalDate.parse(valmistuminen), henkiloOid, yksilollistaminen.withName(yks), suoritusKieli, source = source).identify(UUID.fromString(resourceId)))
+    case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yks, suoritusKieli,source,  _, _) => Updated(VirallinenSuoritus(komo, myontaja, tila, LocalDate.parse(valmistuminen), henkiloOid, yksilollistaminen.withName(yks), suoritusKieli, lahde = source).identify(UUID.fromString(resourceId)))
   }
 
-  override def update(o: Suoritus with Identified[UUID]): SuoritusTable#TableElementType = (o.id.toString, o.komo, o.myontaja, o.tila, o.valmistuminen.toString, o.henkiloOid, o.yksilollistaminen.toString, o.suoritusKieli, o.source, Platform.currentTime, false)
+  override def update(suoritus: Suoritus with Identified[UUID]): SuoritusTable#TableElementType = suoritus match {
+    case o: VirallinenSuoritus =>  (o.id.toString, o.komo, o.myontaja, o.tila, o.valmistuminen.toString, o.henkiloOid, o.yksilollistaminen.toString, o.suoritusKieli, o.source, Platform.currentTime, false)
+    case s: VapaamuotoinenSuoritus => ???
+
+  }
   override def delete(id:UUID, source: String) = currentState(id) match {
     case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli,_,  _, _) =>
       (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, source, Platform.currentTime, true)

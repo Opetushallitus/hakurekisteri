@@ -7,7 +7,7 @@ import fi.vm.sade.hakurekisteri.henkilo.{Kansalaisuus, Kieli, Yhteystiedot, Yhte
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Komoto, Suoritus, yksilollistaminen}
 import org.joda.time.{DateTime, LocalDate, MonthDay}
 import org.slf4j.LoggerFactory
 
@@ -141,7 +141,7 @@ object AkkaHakupalvelu {
         turvakielto = false,
         markkinointilupa = Some(getValue(_.lisatiedot,(l:Lisatiedot) => l.lupaMarkkinointi, "false").toBoolean)
       ),
-      getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli),
+      getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli,hakemus.personOid),
       lahtokoulu match {
         case Some(oid) => Seq(Opiskelija(
           oppilaitosOid = lahtokoulu.get,
@@ -163,14 +163,14 @@ object AkkaHakupalvelu {
     (for (m <- answers; c <- key(m); v <- subKey(c)) yield v).getOrElse(default)
   }
 
-  def getSuoritukset(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String): Seq[Suoritus] = {
+  def getSuoritukset(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String, hakija: Option[String]): Seq[Suoritus] = {
     Seq(pohjakoulutus).collect {
-      case Some("0") => Suoritus("ulkomainen", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, source = "1.2.246.562.10.00000000001")
-      case Some("1") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, source = "1.2.246.562.10.00000000001")
-      case Some("2") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Osittain, kieli, source = "1.2.246.562.10.00000000001")
-      case Some("3") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Alueittain, kieli, source = "1.2.246.562.10.00000000001")
-      case Some("6") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Kokonaan, kieli, source = "1.2.246.562.10.00000000001")
-      case Some("9") => Suoritus("lukio", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, source = "1.2.246.562.10.00000000001")
+      case Some("0") => VirallinenSuoritus("ulkomainen", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, vahv = false, lahde = hakija.getOrElse("1.2.246.562.10.00000000001"))
+      case Some("1") => VirallinenSuoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli,  vahv = false, lahde = hakija.getOrElse("1.2.246.562.10.00000000001"))
+      case Some("2") => VirallinenSuoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Osittain, kieli,vahv = false, lahde = hakija.getOrElse("1.2.246.562.10.00000000001"))
+      case Some("3") => VirallinenSuoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Alueittain, kieli, vahv = false,lahde = hakija.getOrElse("1.2.246.562.10.00000000001"))
+      case Some("6") => VirallinenSuoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Kokonaan, kieli, vahv = false,lahde = hakija.getOrElse("1.2.246.562.10.00000000001"))
+      case Some("9") => VirallinenSuoritus("lukio", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, vahv = false,lahde = hakija.getOrElse("1.2.246.562.10.00000000001"))
     }
   }
 

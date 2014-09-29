@@ -40,6 +40,7 @@ import org.apache.http.impl.NoConnectionReuseStrategy
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.impl.conn.PoolingClientConnectionManager
 import org.apache.http.params.HttpConnectionParams
+import org.joda.time.LocalDate
 import org.scalatra._
 import org.scalatra.swagger.Swagger
 import org.slf4j.LoggerFactory
@@ -211,15 +212,38 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Regi
   import scala.reflect.runtime.universe._
   implicit val ec:ExecutionContext = system.dispatcher
 
-  def authorizer[A <: Resource[I] : ClassTag: Manifest, I](guarded: ActorRef, orgFinder: A => String): ActorRef = {
+  def authorizer[A <: Resource[I] : ClassTag: Manifest, I](guarded: ActorRef, orgFinder: A => Option[String]): ActorRef = {
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-    system.actorOf(Props(new OrganizationHierarchy[A, I](organisaatioSoapServiceUrl, guarded, (i: A) => Seq(orgFinder(i)))), s"$resource-authorizer")
+    system.actorOf(Props(new OrganizationHierarchy[A, I](organisaatioSoapServiceUrl, guarded, (i: A) => orgFinder(i).map(Seq(_)).getOrElse(Seq()))), s"$resource-authorizer")
   }
 
-  override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, (suoritus) => suoritus.myontaja)
-  override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid)
-  override val opiskeluoikeusRekisteri = authorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus) => opiskeluoikeus.myontaja)
-  override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, unauthorized.arvosanaRekisteri, (arvosana) => unauthorized.suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).mapTo[Option[Suoritus]].map(_.map((s) => Seq(s.myontaja, s.source, arvosana.source)).getOrElse(Seq())))), "arvosana-authorizer")
+  val suoritusOrgResolver: PartialFunction[Suoritus, String] = {
+    case VirallinenSuoritus(komo: String,
+    myontaja: String,
+    tila: String,
+    valmistuminen: LocalDate,
+    henkilo: String,
+    yksilollistaminen,
+    suoritusKieli: String,
+    opiskeluoikeus: Option[UUID],
+    vahv: Boolean,
+    lahde: String) => myontaja
+  }
+
+  val resolve = (arvosana:Arvosana) =>
+    unauthorized.suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).
+      mapTo[Option[Suoritus]].map(
+        _.map{
+          case (s: VirallinenSuoritus) => Seq(s.myontaja, s.source, arvosana.source)
+          case (s: VapaamuotoinenSuoritus) => Seq(s.source, arvosana.source)
+        }.getOrElse(Seq()))
+
+  override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusOrgResolver.lift)
+  override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija) => Some(opiskelija.oppilaitosOid))
+  override val opiskeluoikeusRekisteri = authorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus) => Some(opiskeluoikeus.myontaja))
+  override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, unauthorized.arvosanaRekisteri,
+    resolve
+    )), "arvosana-authorizer")
 }
 
 object AuthorizedRegisters {
