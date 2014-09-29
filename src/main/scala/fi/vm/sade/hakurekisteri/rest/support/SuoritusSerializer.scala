@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
 import org.json4s.{Extraction, Formats, CustomSerializer}
-import fi.vm.sade.hakurekisteri.arvosana.Arvio
 import org.json4s.JsonAST._
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, VapaamuotoinenSuoritus, Suoritus}
 import org.json4s.JsonAST.JString
