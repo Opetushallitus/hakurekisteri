@@ -5,7 +5,8 @@ form(ng-submit="save()")
     span(oph-msg="suoritusrekisteri.muokkaa.yoarvosana.ohje") Alla voit lisätä ennen vuotta 1990 myönnettyjä YO-arvosanoja.
   table(class="table table-condensed table-striped")
     thead
-      th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.koe") Koe
+      th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.aine") Aine
+      th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.taso") Taso
       th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.arvosana") Arvosana
       th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.pisteet") Yhteispistemäärä
       th(oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.tutkintokerta") Tutkintokerta
@@ -14,8 +15,11 @@ form(ng-submit="save()")
     tbody
       tr(ng-repeat="k in koetaulukko")
         td
-          select(ng-show="k.editable" class="form-control" ng-model="k.koe" required="required" ng-options="k.value as k.text for k in kokeet" ng-disabled="k.delete")
-          span(ng-hide="k.editable") {{getText(k.koe, kokeet) || k.koe}}
+          select(ng-show="k.editable" class="form-control" ng-model="k.lisatieto" required="required" ng-options="a.value as a.text for a in aineet" ng-disabled="k.delete")
+          span(ng-hide="k.editable") {{getText(k.lisatieto, aineet) || k.lisatieto}}
+        td
+          select(ng-show="k.editable" class="form-control" ng-model="k.aine" required="required" ng-options="t.value as t.text for t in getTasot(k.lisatieto)" ng-disabled="k.delete")
+          span(ng-hide="k.editable") {{getText(k.aine, getTasot(k.lisatieto)) || k.aine}}
         td
           select(ng-show="k.editable" class="form-control" ng-model="k.arvosana" required="required" ng-options="a.value as a.text for a in arvosanat" ng-disabled="k.delete")
           span(ng-hide="k.editable") {{k.arvosana}}

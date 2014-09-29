@@ -12,7 +12,8 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
         $scope.koetaulukko = arvosanat.filter(function(a) { return a.arvio.asteikko === "YO" }).map(function(a) {
             return {
                 id: a.id,
-                koe: a.aine,
+                aine: a.aine,
+                lisatieto: a.lisatieto,
                 pakollinen: !a.valinnainen,
                 myonnetty: a.myonnetty,
                 arvosana: a.arvio.arvosana,
@@ -38,10 +39,11 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
         var arvosanat = [];
         for (var i = 0; i < $scope.koetaulukko.length; i++) {
             var k = $scope.koetaulukko[i];
-            if (k.koe && k.arvosana && k.myonnetty) {
+            if (k.lisatieto && k.aine && k.arvosana && k.myonnetty) {
                 arvosanat.push(new Arvosanat({
                     id: k.id,
-                    aine: k.koe,
+                    aine: k.aine,
+                    lisatieto: k.lisatieto,
                     suoritus: suoritusId,
                     valinnainen: !k.pakollinen,
                     myonnetty: k.myonnetty,
@@ -131,83 +133,169 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
         values.some(function(v) { return v.value === value })
     };
 
-    $scope.kokeet = [
-        {value: "A", text: "Äidinkielen koe, suomi"},
-        {value: "A5", text: "Suomi toisena kielenä"},
-        {value: "O", text: "Äidinkielen koe, ruotsi"},
-        {value: "O5", text: "Ruotsi toisena kielenä"},
-        {value: "BA", text: "Ruotsi, pitkä oppimäärä"},
-        {value: "BB", text: "Ruotsi, keskipitkä oppimäärä"},
-        {value: "CA", text: "Suomi, pitkä oppimäärä"},
-        {value: "CB", text: "Suomi, keskipitkä oppimäärä"},
-        {value: "CC", text: "Suomi, lyhyt oppimäärä"},
-        {value: "DC", text: "Pohjoissaame, lyhyt oppimäärä"},
-        {value: "EA", text: "Englanti, pitkä oppimäärä"},
-        {value: "EB", text: "Englanti, keskipitkä oppimäärä"},
-        {value: "EC", text: "Englanti, lyhyt oppimäärä"},
-        {value: "FA", text: "Ranska, pitkä oppimäärä"},
-        {value: "FB", text: "Ranska, keskipitkä oppimäärä"},
-        {value: "FC", text: "Ranska, lyhyt oppimäärä"},
-        {value: "GA", text: "Portugali, pitkä oppimäärä"},
-        {value: "GB", text: "Portugali, keskipitkä oppimäärä"},
-        {value: "GC", text: "Portugali, lyhyt oppimäärä"},
-        {value: "HA", text: "Unkari, pitkä oppimäärä"},
-        {value: "HB", text: "Unkari, keskipitkä oppimäärä"},
-        {value: "I", text: "Äidinkielen koe, inarinsaame"},
-        {value: "IC", text: "Inarinsaame, lyhyt oppimäärä"},
-        {value: "QC", text: "Koltan saame, lyhyt oppimäärä"},
-        {value: "J", text: "Englanninkielinen kypsyyskoe"},
-        {value: "KC", text: "Kreikka, lyhyt oppimäärä"},
-        {value: "L1", text: "Latina, lyhyt oppimäärä"},
-        {value: "L7", text: "Latina, laajempi oppimäärä"},
-        {value: "M", text: "Matematiikan koe, pitkä oppimäärä"},
-        {value: "N", text: "Matematiikan koe, lyhyt oppimäärä"},
-        {value: "PA", text: "Espanja, pitkä oppimäärä"},
-        {value: "PB", text: "Espanja, keskipitkä oppimäärä"},
-        {value: "PC", text: "Espanja, lyhyt oppimäärä"},
-        {value: "RR", text: "Reaali, ev lut uskonnon kysymykset"},
-        {value: "RO", text: "Reaali, ortod.uskonnon kysymykset"},
-        {value: "RY", text: "Reaali, elämänkatsomustiedon kysymykset"},
-        {value: "SA", text: "Saksa, pitkä oppimäärä"},
-        {value: "SB", text: "Saksa, keskipitkä oppimäärä"},
-        {value: "SC", text: "Saksa, lyhyt oppimäärä"},
-        {value: "S9", text: "Saksalaisen koulun saksan kielen koe"},
-        {value: "TA", text: "Italia, pitkä oppimäärä"},
-        {value: "TB", text: "Italia, keskipitkä oppimäärä"},
-        {value: "TC", text: "Italia, lyhyt oppimäärä"},
-        {value: "VA", text: "Venäjä, pitkä oppimäärä"},
-        {value: "VB", text: "Venäjä, keskipitkä oppimäärä"},
-        {value: "VC", text: "Venäjä, lyhyt oppimäärä"},
-        {value: "Z", text: "Äidinkielen koe, pohjoissaame"},
-        {value: "UE", text: "Ev.lut. Uskonto"},
-        {value: "UO", text: "Ortodoksiuskonto"},
-        {value: "ET", text: "Elämänkatsomustieto"},
-        {value: "FF", text: "Filosofia"},
-        {value: "PS", text: "Psykologia"},
-        {value: "HI", text: "Historia"},
-        {value: "FY", text: "Fysiikka"},
-        {value: "KE", text: "Kemia"},
-        {value: "BI", text: "Biologia"},
-        {value: "GE", text: "Maantiede"},
-        {value: "TE", text: "Terveystieto"},
-        {value: "YH", text: "Yhteiskuntaoppi"},
-        {value: "E1", text: "Englanti, pitkä oppimäärä"},
-        {value: "E2", text: "Englanti, keskipitkä oppimäärä"},
-        {value: "F1", text: "Ranska, pitkä oppimäärä"},
-        {value: "F2", text: "Ranska, keskipitkä oppimäärä"},
-        {value: "G1", text: "Portugali, pitkä oppimäärä"},
-        {value: "G2", text: "Portugali, keskipitkä oppimäärä"},
-        {value: "H1", text: "Unkari, pitkä oppimäärä"},
-        {value: "H2", text: "Unkari, keskipitkä oppimäärä"},
-        {value: "P1", text: "Espanja, pitkä oppimäärä"},
-        {value: "P2", text: "Espanja, keskipitkä oppimäärä"},
-        {value: "S1", text: "Saksa, pitkä oppimäärä"},
-        {value: "S2", text: "Saksa, keskipitkä oppimäärä"},
-        {value: "T1", text: "Italia, pitkä oppimäärä"},
-        {value: "T2", text: "Italia, keskipitkä oppimäärä"},
-        {value: "V1", text: "Venäjä, pitkä oppimäärä"},
-        {value: "V2", text: "Venäjä, keskipitkä oppimäärä"}
-    ];
+    var aineet = {
+        "SA": [
+            {"value": "SAKSALKOUL", "text": "Saksalaisen koulun oppimäärä"},
+            {"value": "A", "text": "Pitkä oppimäärä (KIELI)"},
+            {"value": "B", "text": "Keskipitkä oppimäärä (KIELI)"},
+            {"value": "C", "text": "Lyhyt oppimäärä (KIELI)"}
+        ],
+        "IT": [
+            {"value": "A", "text": "Pitkä oppimäärä (KIELI)"},
+            {"value": "B", "text": "Keskipitkä oppimäärä (KIELI)"},
+            {"value": "C", "text": "Lyhyt oppimäärä (KIELI)"}
+        ],
+        "PS": [
+            {"value": "AINEREAALI", "text": "Ainemuotoinen reaali"}
+        ],
+        "HI": [
+            {"value": "AINEREAALI", "text": "Ainemuotoinen reaali"}
+        ],
+        "LA": [
+            {"value": "D", "text": "Lyhyt oppimäärä (LATINA)"},
+            {"value": "C", "text": "Laajempi oppimäärä"}
+        ],
+        "UN": [
+            {"value": "A", "text": "Pitkä oppimäärä (KIELI)"},
+            {"value": "B", "text": "Keskipitkä oppimäärä (KIELI)"}
+        ],
+        "FY": [
+            {"value": "AINEREAALI", "text": "Ainemuotoinen reaali"}
+        ],
+        "MA": [
+            {"value": "PITKA", "text": "Pitkä oppimäärä (MA)"},
+            {"value": "LYHYT", "text": "Lyhyt oppimäärä (MA)"}
+        ],
+        "IS": [
+            {"value": "AI", "text": "Äidinkieli"},
+            {"value": "C", "text": "Lyhyt oppimäärä (KIELI)"}
+        ],
+        "EN": [
+            {"value": "A", "text": "Pitkä oppimäärä (KIELI)"},
+            {"value": "B", "text": "Keskipitkä oppimäärä (KIELI)"},
+            {"value": "C", "text": "Lyhyt oppimäärä (KIELI)"},
+            {"value": "KYPSYYS", "text": "Kypsyyskoe (VAIN EN)"}
+        ],
+        "KE": [
+            {"value": "AINEREAALI", "text": "Ainemuotoinen reaali"}
+        ],
+        "VE": [
+            {"value": "A", "text": "Pitkä oppimäärä (KIELI)"},
+            {"value": "B", "text": "Keskipitkä oppimäärä (KIELI)"},
+            {"value": "C", "text": "Lyhyt oppimäärä (KIELI)"}
+        ],
+        "YH": [
+            {"value": "AINEREAALI", "text": "Ainemuotoinen reaali"}
+        ],
+        "BI": [
+            {"value": "AINEREAALI", "text": "Ainemuotoinen reaali"}
+        ],
+        "RU": [
+            {"value": "A", "text": "Pitkä oppimäärä (KIELI)"},
+            {"value": "AI", "text": "Äidinkieli"},
+            {"value": "B", "text": "Keskipitkä oppimäärä (KIELI)"},
+            {"value": "VI2", "text": "toisena kielenä (FI/RU)"}
+        ],
+        "FF": [
+            {"value": "AINEREAALI", "text": "Ainemuotoinen reaali"}
+        ],
+        "ES": [
+            {"value": "A", "text": "Pitkä oppimäärä (KIELI)"},
+            {"value": "B", "text": "Keskipitkä oppimäärä (KIELI)"},
+            {"value": "C", "text": "Lyhyt oppimäärä (KIELI)"}
+        ],
+        "ZA": [
+            {"value": "AI", "text": "Äidinkieli"},
+            {"value": "C", "text": "Lyhyt oppimäärä (KIELI)"}
+        ],
+        "GE": [
+            {"value": "AINEREAALI", "text": "Ainemuotoinen reaali"}
+        ],
+        "UO": [
+            {"value": "REAALI", "text": "Reaalikoe (VANHA)"},
+            {"value": "AINEREAALI", "text": "Ainemuotoinen reaali"}
+        ],
+        "FI": [
+            {"value": "A", "text": "Pitkä oppimäärä (KIELI)"},
+            {"value": "AI", "text": "Äidinkieli"},
+            {"value": "B", "text": "Keskipitkä oppimäärä (KIELI)"},
+            {"value": "C", "text": "Lyhyt oppimäärä (KIELI)"},
+            {"value": "VI2", "text": "toisena kielenä (FI/RU)"}
+        ],
+        "ET": [
+            {"value": "REAALI", "text": "Reaalikoe (VANHA)"},
+            {"value": "AINEREAALI", "text": "Ainemuotoinen reaali"}
+        ],
+        "QS": [
+            {"value": "C", "text": "Lyhyt oppimäärä (KIELI)"}
+        ],
+        "KR": [
+            {"value": "C", "text": "Lyhyt oppimäärä (KIELI)"}
+        ],
+        "PG": [
+            {"value": "A", "text": "Pitkä oppimäärä (KIELI)"},
+            {"value": "B", "text": "Keskipitkä oppimäärä (KIELI)"},
+            {"value": "C", "text": "Lyhyt oppimäärä (KIELI)"}
+        ],
+        "TE": [
+            {"value": "AINEREAALI", "text": "Ainemuotoinen reaali"}
+        ],
+        "RA": [
+            {"value": "A", "text": "Pitkä oppimäärä (KIELI)"},
+            {"value": "B", "text": "Keskipitkä oppimäärä (KIELI)"},
+            {"value": "C", "text": "Lyhyt oppimäärä (KIELI)"}
+        ],
+        "UE": [
+            {"value": "REAALI", "text": "Reaalikoe (VANHA)"},
+            {"value": "AINEREAALI", "text": "Ainemuotoinen reaali"}
+        ]
+    };
+
+    var aineKielistykset = {
+        "RU": "Ruotsi",
+        "FI": "Suomi",
+        "ZA": "Pohjoissaame",
+        "EN": "Englanti",
+        "RA": "Ranska",
+        "PG": "Portugali",
+        "UN": "Unkari",
+        "IS": "Inarinsaame",
+        "KR": "Kreikka",
+        "LA": "Latina",
+        "MA": "Matematiikka",
+        "ES": "Espanja",
+        "SA": "Saksa",
+        "IT": "Italia",
+        "VE": "Venäjä",
+        "QS": "Koltansaame",
+        "RR": "Reaali",
+        "UE": "Ev.lut. uskonto",
+        "UO": "Ortodoksiuskonto",
+        "ET": "Elämänkatsomustieto",
+        "FF": "Filosofia",
+        "PS": "Psykologia",
+        "HI": "Historia",
+        "YH": "Yhteiskuntaoppi",
+        "FY": "Fysiikka",
+        "KE": "Kemia",
+        "BI": "Biologia",
+        "GE": "Maantiede",
+        "TE": "Terveystieto"
+    };
+
+    function getAineet() {
+        return Object.keys(aineet).map(function(k) {
+            return {value: k, text: aineKielistykset[k]}
+        }).sort(function(a, b) {
+            return a.text === b.text ? 0 : a.text < b.text ? -1 : 1;
+        })
+    }
+    
+    $scope.aineet = getAineet();
+
+    $scope.getTasot = function(yoAine) {
+        return aineet[yoAine] ? aineet[yoAine] : []
+    };
 
     $scope.arvosanat = [
         {value: "L", text: "(L) Laudatur"},
