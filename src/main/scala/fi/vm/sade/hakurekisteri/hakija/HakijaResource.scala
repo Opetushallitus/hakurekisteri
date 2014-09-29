@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.hakija
 import java.io.OutputStream
 import java.text.SimpleDateFormat
 
-import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.Tyyppi.Tyyppi
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
@@ -35,7 +34,7 @@ object Tyyppi extends Enumeration {
   val Xml, Excel, Json = Value
 }
 
-case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, user: Option[User])
+case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto.Hakuehto, user: Option[User])
 
 import org.scalatra.util.RicherString._
 
@@ -44,7 +43,7 @@ object HakijaQuery {
       haku = params.get("haku").flatMap(_.blankOption),
       organisaatio = params.get("organisaatio").flatMap(_.blankOption),
       hakukohdekoodi = params.get("hakukohdekoodi").flatMap(_.blankOption),
-      hakuehto = Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki }.get,
+      hakuehto = Try(Hakuehto.withName(s = params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki }.get,
       user = currentUser)
 }
 

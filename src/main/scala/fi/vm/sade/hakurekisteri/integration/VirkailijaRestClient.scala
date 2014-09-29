@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration
 
+import java.io.InterruptedIOException
 import java.net.URL
 
 import com.stackmob.newman.HttpClient
@@ -29,16 +30,24 @@ class VirkailijaRestClient(config: ServiceConfig)(implicit val httpClient: HttpC
   val logger = LoggerFactory.getLogger(getClass)
   val casClient = new CasClient(serviceAccessUrl, serviceUrl, user, password)
 
+  def logConnectionFailure[T](f: Future[T], url: URL) = f.onFailure {
+    case t: InterruptedIOException => logger.error(s"connection error calling url [$url]: $t")
+  }
+
   def executeGet(uri: String): Future[(HttpResponse, Option[String])]= {
     val url = new URL(serviceUrl + uri)
     (user, password) match {
       case (None, None) =>
         //logger.debug(s"calling url $url");
-        GET(url).apply.map((_, None))
+        val f = GET(url).apply.map((_, None))
+        logConnectionFailure(f, url)
+        f
       case (Some(u), Some(p)) =>
         casClient.getProxyTicket.flatMap((ticket) => {
           //logger.debug(s"calling url $url with ticket $ticket");
-          GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map((_, Some(ticket)))
+          val f = GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map((_, Some(ticket)))
+          logConnectionFailure(f, url)
+          f
         })
       case _ => throw new IllegalArgumentException("either user or password is not defined")
     }

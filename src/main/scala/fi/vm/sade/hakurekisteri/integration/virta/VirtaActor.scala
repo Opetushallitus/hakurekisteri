@@ -3,12 +3,10 @@ package fi.vm.sade.hakurekisteri.integration.virta
 import akka.actor.{ActorRef, Actor}
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{Komo, SearchKomoQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, yksilollistaminen}
 import org.joda.time.LocalDate
 
-import scala.collection.IterableLike
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import akka.pattern.pipe
@@ -90,5 +88,4 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef) extends 
           case _ => log.error(s"oppilaitos not found with oppilaitosnumero $o"); throw OppilaitosNotFoundException(s"oppilaitos not found with oppilaitosnumero $o")
       }
   }
-
 }

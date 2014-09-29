@@ -212,8 +212,12 @@ case class HakemusHenkilotiedot(Henkilotunnus: Option[String],
                                 aidinkieli: Option[String],
                                 lahiosoite: Option[String],
                                 Postinumero: Option[String],
+                                osoiteUlkomaa: Option[String],
+                                postinumeroUlkomaa: Option[String],
+                                kaupunkiUlkomaa: Option[String],
                                 asuinmaa: Option[String],
                                 matkapuhelinnumero1: Option[String],
+                                matkapuhelinnumero2: Option[String],
                                 Sähköposti: Option[String],
                                 kotikunta: Option[String],
                                 Sukunimi: Option[String],
@@ -222,7 +226,8 @@ case class HakemusHenkilotiedot(Henkilotunnus: Option[String],
                                 kansalaisuus: Option[String],
                                 onkoSinullaSuomalainenHetu: Option[String],
                                 sukupuoli: Option[String],
-                                syntymaaika: Option[String])
+                                syntymaaika: Option[String],
+                                koulusivistyskieli: Option[String])
 
 case class Koulutustausta(lahtokoulu:Option[String],
                           POHJAKOULUTUS: Option[String],
@@ -235,7 +240,14 @@ case class Koulutustausta(lahtokoulu:Option[String],
                           LISAKOULUTUS_KANSANOPISTO: Option[String],
                           LISAKOULUTUS_MAAHANMUUTTO: Option[String],
                           luokkataso: Option[String],
-                          lahtoluokka: Option[String])
+                          lahtoluokka: Option[String],
+                          pohjakoulutus_yo: Option[String],
+                          pohjakoulutus_am: Option[String],
+                          pohjakoulutus_amt: Option[String],
+                          pohjakoulutus_kk: Option[String],
+                          pohjakoulutus_ulk: Option[String],
+                          pohjakoulutus_avoin: Option[String],
+                          pohjakoulutus_muu: Option[String])
 
 case class Lisatiedot(lupaJulkaisu: Option[String], lupaMarkkinointi: Option[String])
 
