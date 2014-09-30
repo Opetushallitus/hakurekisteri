@@ -13,10 +13,10 @@ import scala.slick.lifted
 
 class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, SuoritusTable, ColumnOrdered[Long], UUID] {
   override def delta(row: SuoritusTable#TableElementType): Delta[Suoritus, UUID] = row match {
-    case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, kuvaus, vuosi, tyyppi, source, inserted, deleted) => Deleted(UUID.fromString(resourceId), source)
-    case (resourceId, Some(komo), myontaja, Some(tila), Some(valmistuminen), henkiloOid, Some(yks), Some(suoritusKieli), _, _, _, source, inserted, deleted) =>
+    case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, kuvaus, vuosi, tyyppi, source, inserted, true) => Deleted(UUID.fromString(resourceId), source)
+    case (resourceId, Some(komo), myontaja, Some(tila), Some(valmistuminen), henkiloOid, Some(yks), Some(suoritusKieli), _, _, _, source, inserted, false) =>
       Updated(VirallinenSuoritus(komo, myontaja, tila, LocalDate.parse(valmistuminen), henkiloOid, yksilollistaminen.withName(yks), suoritusKieli, lahde = source).identify(UUID.fromString(resourceId)))
-    case (resourceId, _, myontaja, _, _, henkiloOid, _, _, Some(kuvaus), Some(vuosi), Some(tyyppi), source, inserted, deleted) =>
+    case (resourceId, _, myontaja, _, _, henkiloOid, _, _, Some(kuvaus), Some(vuosi), Some(tyyppi), source, inserted, false) =>
       Updated(VapaamuotoinenSuoritus(henkiloOid,kuvaus, myontaja, vuosi, tyyppi, lahde = source).identify(UUID.fromString(resourceId)))
   }
 
