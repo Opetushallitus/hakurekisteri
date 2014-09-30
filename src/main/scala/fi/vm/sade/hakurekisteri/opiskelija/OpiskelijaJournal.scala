@@ -9,52 +9,56 @@ import scala.compat.Platform
 import scala.Some
 import fi.vm.sade.hakurekisteri.storage.repository.Deleted
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import scala.slick.driver.JdbcDriver
 
-class OpiskelijaJournal(database: Database) extends Journal[Opiskelija,  UUID] {
+abstract class JournalTable[R, I](tag: Tag, name: String) extends Table[Delta[R,I]](tag, name) {
 
-  val opiskelijat = TableQuery[OpiskelijaTable]
-    database withSession(
+  def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+  def resourceId = column[String]("resource_id")
+
+  def source = column[String]("source")
+  def inserted = column[Long]("inserted")
+  def deleted = column[Boolean]("deleted")
+
+
+
+}
+
+trait NewJDBCJournal[R, I, T <: JournalTable[R, I]] extends Journal[R,  I] {
+
+  val table: TableQuery[T]
+
+  val db: Database
+
+  override def addModification(o: Delta[R, I]): Unit = db withSession(
       implicit session =>
-        if (MTable.getTables("opiskelija").list().isEmpty) {
-          opiskelijat.ddl.create
-        }
+        table += o
     )
 
-
-  override def addModification(delta:Delta[Opiskelija, UUID]) {
-    database withSession {
-      implicit session =>
-        opiskelijat += delta
-    }
-  }
-
-
-  def loadFromDb(latestQuery:Option[Long]): List[OpiskelijaTable#TableElementType] = latestQuery match  {
+  override def journal(latestQuery: Option[Long]): Seq[Delta[R, I]] =  latestQuery match  {
     case None =>
-      database withSession {
+      db withSession {
         implicit session =>
           latestResources.list
 
       }
     case Some(latest) =>
 
-      database withSession {
+      db withSession {
         implicit session =>
-          opiskelijat.filter(_.inserted >= latest).sortBy(_.inserted.asc).list
+          table.filter(_.inserted >= latest).sortBy(_.inserted.asc).list
       }
 
 
   }
 
-  override def journal(latest:Option[Long]): Seq[Delta[Opiskelija, UUID]] = loadFromDb(latest)
-
   def latestResources = {
     val latest = for {
-      (id, resource) <- opiskelijat.groupBy(_.resourceId)
+      (id, resource) <- table.groupBy(_.resourceId)
     } yield (id, resource.map(_.inserted).max)
 
     val result = for {
-      delta <- opiskelijat
+      delta <- table
       (id, timestamp) <- latest
       if delta.resourceId === id && delta.inserted === timestamp.getOrElse(0)
 
@@ -63,28 +67,33 @@ class OpiskelijaJournal(database: Database) extends Journal[Opiskelija,  UUID] {
     result.sortBy(_.inserted.asc)
   }
 
+
 }
 
-class OpiskelijaTable(tag: Tag) extends Table[Delta[Opiskelija, UUID]](tag, "opiskelija") {
-  def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
-  def resourceId = column[String]("resource_id")
+class OpiskelijaJournal(database: Database) extends NewJDBCJournal[Opiskelija,  UUID, OpiskelijaTable] {
+
+  val table = TableQuery[OpiskelijaTable]
+  database withSession(
+    implicit session =>
+      if (MTable.getTables("opiskelija").list().isEmpty) {
+        table.ddl.create
+      }
+  )
+  override val db: JdbcDriver.simple.Database = database
+}
+
+class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID](tag, "opiskelija") {
   def oppilaitosOid = column[String]("oppilaitos_oid")
   def luokkataso = column[String]("luokkataso")
   def luokka = column[String]("luokka")
   def henkiloOid = column[String]("henkilo_oid")
   def alkuPaiva = column[Long]("alku_paiva")
   def loppuPaiva = column[Option[Long]]("loppu_paiva")
-  def source = column[String]("source")
-  def inserted = column[Long]("inserted")
-  def deleted = column[Boolean]("deleted")
-  // Every table needs a * projection with the same type as the table's type parameter
+
   def * =
     (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source,  inserted, deleted) <>
       ((OpiskelijaTable.apply _ ).tupled , OpiskelijaTable.unapply)
 }
-
-case class Foo(bar:String, bax: Int)
-
 
 
 object OpiskelijaTable {
