@@ -90,8 +90,8 @@ object SuoritusSerializer {
     suoritus \ "kuvaus" match {
       case JString(kuvaus) =>
         val JInt(vuosi) = suoritus \ "vuosi"
-        val JBool(kkTutkinto) = suoritus \ "kkTutkinto"
-        VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi.toInt: Int, kkTutkinto: Boolean, lahde: String)
+        val JString(tyyppi) = suoritus \ "tyyppi"
+        VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi.toInt: Int, tyyppi: String, lahde: String)
       case JNothing =>
         val JString(komo) = suoritus \ "komo"
         val JString(tila) = suoritus \ "tila"
