@@ -360,7 +360,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(getClient(), ec))), "parametrit")
 
-  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(getClient, ec))), "valintaTulos")
+  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(getClient("valintatulos", 10, 100), ec))), "valintaTulos")
 }
 
 trait Koosteet {
