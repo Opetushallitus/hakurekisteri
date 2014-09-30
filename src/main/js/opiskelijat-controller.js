@@ -196,7 +196,7 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
             Suoritukset.query({henkilo: row.henkiloOid}, function(suoritukset) {
                 angular.forEach(suoritukset, function(o) {
                     getOrganisaatio($http, o.myontaja, function(oppilaitos) {
-                        o.oppilaitos = oppilaitos.oppilaitosKoodi + ' ' + (oppilaitos.nimi.fi ? oppilaitos.nimi.fi : oppilaitos.nimi.sv)
+                        o.oppilaitos = (oppilaitos.oppilaitosKoodi ? oppilaitos.oppilaitosKoodi + ' ' : '') + ' ' + (oppilaitos.nimi.fi ? oppilaitos.nimi.fi : oppilaitos.nimi.sv)
                     });
                     if (o.komo.match(/^koulutus_\d*$/))
                         getKoulutusNimi($http, o.komo, function(koulutusNimi) {
