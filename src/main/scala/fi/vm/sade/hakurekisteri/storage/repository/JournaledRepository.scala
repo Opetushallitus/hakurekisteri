@@ -76,7 +76,7 @@ trait JournaledRepository[T <: Resource[I], I] extends InMemRepository[T, I] {
 
 }
 
-trait Journal[T, I] {
+trait Journal[T <: Resource[I], I] {
 
   def journal(latest:Option[Long]):Seq[Delta[T, I]]
 
@@ -86,11 +86,11 @@ trait Journal[T, I] {
 
 }
 
-sealed abstract class Delta[T, I]
-case class Updated[T, I](current:T with Identified[I]) extends Delta[T, I]
-case class Deleted[T, I](id:I, source: String) extends Delta[T, I]
+sealed abstract class Delta[T <: Resource[I], I]
+case class Updated[T <: Resource[I], I](current:T with Identified[I]) extends Delta[T, I]
+case class Deleted[T <: Resource[I], I](id:I, source: String) extends Delta[T, I]
 
-class InMemJournal[T, I] extends Journal[T, I] {
+class InMemJournal[T <: Resource[I], I] extends Journal[T, I] {
 
   protected var deltas: Seq[Delta[T, I]] = Seq()
 
@@ -103,7 +103,7 @@ class InMemJournal[T, I] extends Journal[T, I] {
 
 import scala.slick.driver.JdbcDriver.simple._
 
-trait JDBCJournal[T, P <: AbstractTable[_], O <: Ordered, I] extends Journal[T, I] {
+trait JDBCJournal[T <: Resource[I], P <: AbstractTable[_], O <: Ordered, I] extends Journal[T, I] {
   val db: Database
   val table: scala.slick.lifted.TableQuery[P]
   val sortColumn: P => Column[Long]

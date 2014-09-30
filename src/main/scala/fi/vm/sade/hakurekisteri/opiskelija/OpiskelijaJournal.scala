@@ -6,11 +6,17 @@ import scala.slick.driver.JdbcDriver.simple._
 import java.util.UUID
 import scala.slick.jdbc.meta.MTable
 import scala.compat.Platform
+import scala.slick.lifted.{ProvenShape, TableQuery}
+import scala.slick.lifted
 import scala.Some
 import fi.vm.sade.hakurekisteri.storage.repository.Deleted
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import scala.slick.lifted.ShapedValue
+import fi.vm.sade.hakurekisteri.rest.support.Resource
+import fi.vm.sade.hakurekisteri.storage.Identified
+import scala.slick.ast.Node
 
-abstract class JournalTable[R, I](tag: Tag, name: String) extends Table[Delta[R,I]](tag, name) {
+abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: String) extends Table[Delta[R,I]](tag, name) {
 
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def resourceId = column[String]("resource_id")
@@ -18,14 +24,53 @@ abstract class JournalTable[R, I](tag: Tag, name: String) extends Table[Delta[R,
   def source = column[String]("source")
   def inserted = column[Long]("inserted")
   def deleted = column[Boolean]("deleted")
+  val journalEntryShape = (resourceId, source, inserted, deleted).shaped
+  type ShapedJournalRow = (lifted.Column[String], lifted.Column[String], lifted.Column[Long], lifted.Column[Boolean])
+  type JournalRow = (String, String, Long, Boolean)
 
+  def getId(serialized: String): I
+
+  val resource: ResourceRow => R
+
+  def delta(resourceId: String, source: String, inserted: Long, deleted: Boolean)(resourceData:ResourceRow):Delta[R, I] =
+    if (deleted)
+      Deleted(getId(resourceId), source)
+    else
+      {
+        val resource1 = resource(resourceData)
+        Updated(resource1.identify(getId(resourceId)))
+      }
+
+
+  def deltaShaper(j: (String, String, Long, Boolean), rd: ResourceRow): Delta[R, I] = (delta _).tupled(j)(rd)
+
+  val deletedValues: ResourceRow
+
+  def rowShaper(d: Delta[R, I]) = d match {
+    case Deleted(id, source) => Some((id.toString, source, Platform.currentTime, true), deletedValues)
+    case Updated(r: R with Identified[I]) => Some((r.id.toString, r.asInstanceOf[R].source, Platform.currentTime, false), row(r))
+
+  }
+
+  def row(resource: R): ResourceRow
+  val resourceShape: ShapedValue[_, ResourceRow]
+
+
+  val combinedShape = journalEntryShape zip resourceShape
+
+
+  def * : ProvenShape[Delta[R, I]] = {
+    combinedShape <> ((deltaShaper _).tupled, rowShaper)
+  }
 
 
 }
 
-trait NewJDBCJournal[R, I, T <: JournalTable[R, I]] extends Journal[R,  I] {
 
-  val table: TableQuery[T] = TableQuery[T]
+
+abstract class NewJDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: TableQuery[T]) extends Journal[R,  I] {
+
+
 
   val db: Database
 
@@ -69,17 +114,18 @@ trait NewJDBCJournal[R, I, T <: JournalTable[R, I]] extends Journal[R,  I] {
 
 }
 
-class OpiskelijaJournal(override val db: Database) extends NewJDBCJournal[Opiskelija,  UUID, OpiskelijaTable] {
-
+class OpiskelijaJournal(override val db: Database) extends NewJDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable]) {
   db withSession(
     implicit session =>
       if (MTable.getTables("opiskelija").list().isEmpty) {
         table.ddl.create
       }
   )
+
 }
 
-class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID](tag, "opiskelija") {
+
+class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID, (String, String, String, String, Long, Option[Long], String)](tag, "opiskelija") {
   def oppilaitosOid = column[String]("oppilaitos_oid")
   def luokkataso = column[String]("luokkataso")
   def luokka = column[String]("luokka")
@@ -87,28 +133,19 @@ class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID](tag, "opi
   def alkuPaiva = column[Long]("alku_paiva")
   def loppuPaiva = column[Option[Long]]("loppu_paiva")
 
-  def * =
-    (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source,  inserted, deleted) <>
-      ((OpiskelijaTable.apply _ ).tupled , OpiskelijaTable.unapply)
-}
+  val deletedValues = ("", "", "", "", 0L, None, "")
+
+  override val resourceShape = (oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source).shaped
 
 
-object OpiskelijaTable {
+  override def row(o: Opiskelija): (String, String, String, String, Long, Option[Long], String) = (o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva.getMillis, o.loppuPaiva.map(_.getMillis), o.source)
 
+  override def getId(serialized: String): UUID = UUID.fromString(serialized)
 
-   def apply(resourceId: String, oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, alkuPaiva: Long, loppuPaiva: Option[Long], source: String, inserted: Long, deleted: Boolean): Delta[Opiskelija, UUID] =
-     if (deleted)
-       Deleted(UUID.fromString(resourceId), source)
-    else
-       Updated(Opiskelija(oppilaitosOid, luokkataso, luokka, henkiloOid,new DateTime(alkuPaiva), loppuPaiva.map(new DateTime(_)), source).identify(UUID.fromString(resourceId)))
+  def opiskelija(oppilaitosOid: String, luokkataso:String, luokka:String, henkiloOid:String, alkuPaiva: Long, loppuPaiva: Option[Long], source: String): Opiskelija =
+  Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, new DateTime(alkuPaiva), loppuPaiva.map(new DateTime(_)),source)
 
-
-  def unapply(d:Delta[Opiskelija, UUID]): Option[(String, String, String, String, String, Long, Option[Long], String, Long, Boolean)] = d match {
-    case Deleted(id, source) => Some((id.toString, "", "", "", "", 0L, None, source, Platform.currentTime, true))
-    case Updated(o) => Some(o.id.toString, o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva.getMillis, o.loppuPaiva.map(_.getMillis), o.source,  Platform.currentTime, false)
-  }
-
-
-
+  override val resource = (opiskelija _).tupled
 
 }
+
