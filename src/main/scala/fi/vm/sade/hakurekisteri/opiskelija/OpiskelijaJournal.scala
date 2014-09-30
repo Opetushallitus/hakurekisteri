@@ -9,7 +9,6 @@ import scala.compat.Platform
 import scala.Some
 import fi.vm.sade.hakurekisteri.storage.repository.Deleted
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
-import scala.slick.driver.JdbcDriver
 
 abstract class JournalTable[R, I](tag: Tag, name: String) extends Table[Delta[R,I]](tag, name) {
 
@@ -26,7 +25,7 @@ abstract class JournalTable[R, I](tag: Tag, name: String) extends Table[Delta[R,
 
 trait NewJDBCJournal[R, I, T <: JournalTable[R, I]] extends Journal[R,  I] {
 
-  val table: TableQuery[T]
+  val table: TableQuery[T] = TableQuery[T]
 
   val db: Database
 
@@ -70,16 +69,14 @@ trait NewJDBCJournal[R, I, T <: JournalTable[R, I]] extends Journal[R,  I] {
 
 }
 
-class OpiskelijaJournal(database: Database) extends NewJDBCJournal[Opiskelija,  UUID, OpiskelijaTable] {
+class OpiskelijaJournal(override val db: Database) extends NewJDBCJournal[Opiskelija,  UUID, OpiskelijaTable] {
 
-  val table = TableQuery[OpiskelijaTable]
-  database withSession(
+  db withSession(
     implicit session =>
       if (MTable.getTables("opiskelija").list().isEmpty) {
         table.ddl.create
       }
   )
-  override val db: JdbcDriver.simple.Database = database
 }
 
 class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID](tag, "opiskelija") {
