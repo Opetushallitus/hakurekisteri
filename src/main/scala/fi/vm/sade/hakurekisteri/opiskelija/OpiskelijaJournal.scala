@@ -1,32 +1,16 @@
 package fi.vm.sade.hakurekisteri.opiskelija
 
-import fi.vm.sade.hakurekisteri.storage.repository.{Updated, Deleted, Delta, JDBCJournal}
-import scala.slick.lifted.ColumnOrdered
-import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.storage.repository._
 import org.joda.time.DateTime
-import scala.slick.driver.JdbcDriver
 import scala.slick.driver.JdbcDriver.simple._
 import java.util.UUID
 import scala.slick.jdbc.meta.MTable
-import fi.vm.sade.hakurekisteri.henkilo.Henkilo
-import org.json4s.jackson.Serialization._
+import scala.compat.Platform
+import scala.Some
 import fi.vm.sade.hakurekisteri.storage.repository.Deleted
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
-import scala.slick.lifted.ColumnOrdered
-import scala.compat.Platform
-import scala.slick.lifted
 
-class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, OpiskelijaTable, ColumnOrdered[Long], UUID] {
-  override def delta(row: OpiskelijaTable#TableElementType): Delta[Opiskelija, UUID] = row match {
-    case (resourceId, _, _, _, _, _, _, source,  _, true) => Deleted(UUID.fromString(resourceId), source)
-    case (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source,  _, _) => Updated(Opiskelija(oppilaitosOid, luokkataso, luokka, henkiloOid,new DateTime(alkuPaiva), loppuPaiva.map(new DateTime(_)), source).identify(UUID.fromString(resourceId)))
-  }
-
-  override def update(o: Opiskelija with Identified[UUID]): OpiskelijaTable#TableElementType = (o.id.toString, o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva.getMillis, o.loppuPaiva.map(_.getMillis), o.source, Platform.currentTime, false)
-  override def delete(id: UUID, source :String) = currentState(id) match {
-    case (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva,_, _, _)  =>
-      (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source, Platform.currentTime, true)
-  }
+class OpiskelijaJournal(database: Database) extends Journal[Opiskelija,  UUID] {
 
   val opiskelijat = TableQuery[OpiskelijaTable]
     database withSession(
@@ -37,39 +21,51 @@ class OpiskelijaJournal(database: Database) extends JDBCJournal[Opiskelija, Opis
     )
 
 
-  override def newest: (OpiskelijaTable) => ColumnOrdered[Long] = _.inserted.desc
+  override def addModification(delta:Delta[Opiskelija, UUID]) {
+    database withSession {
+      implicit session =>
+        opiskelijat += delta
+    }
+  }
 
-  override def filterByResourceId(id: UUID): (OpiskelijaTable) => Column[Boolean] = _.resourceId === id.toString
+
+  def loadFromDb(latestQuery:Option[Long]): List[OpiskelijaTable#TableElementType] = latestQuery match  {
+    case None =>
+      database withSession {
+        implicit session =>
+          latestResources.list
+
+      }
+    case Some(latest) =>
+
+      database withSession {
+        implicit session =>
+          opiskelijat.filter(_.inserted >= latest).sortBy(_.inserted.asc).list
+      }
 
 
-  override val table = opiskelijat
-  override val db: JdbcDriver.simple.Database = database
-  override val sortColumn = (o: OpiskelijaTable) => o.inserted
+  }
 
-  override def timestamp(resource: OpiskelijaTable): lifted.Column[Long] = resource.inserted
+  override def journal(latest:Option[Long]): Seq[Delta[Opiskelija, UUID]] = loadFromDb(latest)
 
-  override def timestamp(resource: OpiskelijaTable#TableElementType): Long = resource._9
-
-  override val idColumn: (OpiskelijaTable) => Column[String] = _.resourceId
-
-  override def latestResources = {
+  def latestResources = {
     val latest = for {
-      (id, resource) <- table.groupBy(idColumn)
-    } yield (id, resource.map(sortColumn).max)
+      (id, resource) <- opiskelijat.groupBy(_.resourceId)
+    } yield (id, resource.map(_.inserted).max)
 
     val result = for {
-      delta <- table
+      delta <- opiskelijat
       (id, timestamp) <- latest
-      if idColumn(delta) === id && sortColumn(delta) === timestamp.getOrElse(0)
+      if delta.resourceId === id && delta.inserted === timestamp.getOrElse(0)
 
     } yield delta
 
-    result.sortBy(sortColumn(_).asc)
+    result.sortBy(_.inserted.asc)
   }
 
 }
 
-class OpiskelijaTable(tag: Tag) extends Table[(String, String, String, String, String, Long, Option[Long], String, Long, Boolean)](tag, "opiskelija") {
+class OpiskelijaTable(tag: Tag) extends Table[Delta[Opiskelija, UUID]](tag, "opiskelija") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def resourceId = column[String]("resource_id")
   def oppilaitosOid = column[String]("oppilaitos_oid")
@@ -82,5 +78,31 @@ class OpiskelijaTable(tag: Tag) extends Table[(String, String, String, String, S
   def inserted = column[Long]("inserted")
   def deleted = column[Boolean]("deleted")
   // Every table needs a * projection with the same type as the table's type parameter
-  def * = (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source,  inserted, deleted)
+  def * =
+    (resourceId, oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source,  inserted, deleted) <>
+      ((OpiskelijaTable.apply _ ).tupled , OpiskelijaTable.unapply)
+}
+
+case class Foo(bar:String, bax: Int)
+
+
+
+object OpiskelijaTable {
+
+
+   def apply(resourceId: String, oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, alkuPaiva: Long, loppuPaiva: Option[Long], source: String, inserted: Long, deleted: Boolean): Delta[Opiskelija, UUID] =
+     if (deleted)
+       Deleted(UUID.fromString(resourceId), source)
+    else
+       Updated(Opiskelija(oppilaitosOid, luokkataso, luokka, henkiloOid,new DateTime(alkuPaiva), loppuPaiva.map(new DateTime(_)), source).identify(UUID.fromString(resourceId)))
+
+
+  def unapply(d:Delta[Opiskelija, UUID]): Option[(String, String, String, String, String, Long, Option[Long], String, Long, Boolean)] = d match {
+    case Deleted(id, source) => Some((id.toString, "", "", "", "", 0L, None, source, Platform.currentTime, true))
+    case Updated(o) => Some(o.id.toString, o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva.getMillis, o.loppuPaiva.map(_.getMillis), o.source,  Platform.currentTime, false)
+  }
+
+
+
+
 }
