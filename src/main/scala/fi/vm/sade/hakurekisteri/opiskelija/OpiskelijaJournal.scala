@@ -53,7 +53,7 @@ abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: St
   }
 
   def row(resource: R): ResourceRow
-  val resourceShape: ShapedValue[_, ResourceRow]
+  def resourceShape: ShapedValue[_, ResourceRow]
 
 
   val combinedShape = journalEntryShape zip resourceShape
@@ -125,6 +125,7 @@ class OpiskelijaJournal(override val db: Database) extends NewJDBCJournal[Opiske
 }
 
 
+
 class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID, (String, String, String, String, Long, Option[Long], String)](tag, "opiskelija") {
   def oppilaitosOid = column[String]("oppilaitos_oid")
   def luokkataso = column[String]("luokkataso")
@@ -135,7 +136,7 @@ class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID, (String, 
 
   val deletedValues = ("", "", "", "", 0L, None, "")
 
-  override val resourceShape = (oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source).shaped
+  override def resourceShape = (oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source).shaped
 
 
   override def row(o: Opiskelija): (String, String, String, String, Long, Option[Long], String) = (o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva.getMillis, o.loppuPaiva.map(_.getMillis), o.source)
