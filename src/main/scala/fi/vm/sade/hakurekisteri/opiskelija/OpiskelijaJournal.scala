@@ -1,120 +1,12 @@
 package fi.vm.sade.hakurekisteri.opiskelija
 
-import fi.vm.sade.hakurekisteri.storage.repository._
 import org.joda.time.DateTime
 import scala.slick.driver.JdbcDriver.simple._
 import java.util.UUID
 import scala.slick.jdbc.meta.MTable
-import scala.compat.Platform
-import scala.slick.lifted.{ProvenShape, TableQuery}
-import scala.slick.lifted
-import scala.Some
-import fi.vm.sade.hakurekisteri.storage.repository.Deleted
-import fi.vm.sade.hakurekisteri.storage.repository.Updated
-import scala.slick.lifted.ShapedValue
-import fi.vm.sade.hakurekisteri.rest.support.Resource
-import fi.vm.sade.hakurekisteri.storage.Identified
+import scala.slick.lifted.TableQuery
+import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, NewJDBCJournal, HakurekisteriColumns}
 
-abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: String) extends Table[Delta[R,I]](tag, name) {
-
-  def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
-  def resourceId = column[String]("resource_id")
-
-  def source = column[String]("source")
-  def inserted = column[Long]("inserted")
-  def deleted = column[Boolean]("deleted")
-  val journalEntryShape = (resourceId, source, inserted, deleted).shaped
-  type ShapedJournalRow = (lifted.Column[String], lifted.Column[String], lifted.Column[Long], lifted.Column[Boolean])
-  type JournalRow = (String, String, Long, Boolean)
-
-  def getId(serialized: String): I
-
-  val resource: ResourceRow => R
-
-  def delta(resourceId: String, source: String, inserted: Long, deleted: Boolean)(resourceData:ResourceRow):Delta[R, I] =
-    if (deleted)
-      Deleted(getId(resourceId), source)
-    else
-      {
-        val resource1 = resource(resourceData)
-        Updated(resource1.identify(getId(resourceId)))
-      }
-
-
-  def deltaShaper(j: (String, String, Long, Boolean), rd: ResourceRow): Delta[R, I] = (delta _).tupled(j)(rd)
-
-  val deletedValues: ResourceRow
-
-  def rowShaper(d: Delta[R, I]) = d match {
-    case Deleted(id, source) => Some((id.toString, source, Platform.currentTime, true), deletedValues)
-    case Updated(r: R with Identified[I]) => row(r).map(updateRow(r))
-
-  }
-
-
-  def updateRow(r: R with Identified[I])(resourceData: ResourceRow) = ((r.id.toString, r.asInstanceOf[R].source, Platform.currentTime, false), resourceData)
-
-  def row(resource: R): Option[ResourceRow]
-  def resourceShape: ShapedValue[_, ResourceRow]
-
-
-  val combinedShape = journalEntryShape zip resourceShape
-
-
-  def * : ProvenShape[Delta[R, I]] = {
-    combinedShape <> ((deltaShaper _).tupled, rowShaper)
-  }
-
-
-}
-
-
-
-abstract class NewJDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: TableQuery[T]) extends Journal[R,  I] {
-
-
-
-  val db: Database
-
-  override def addModification(o: Delta[R, I]): Unit = db withSession(
-      implicit session =>
-        table += o
-    )
-
-  override def journal(latestQuery: Option[Long]): Seq[Delta[R, I]] =  latestQuery match  {
-    case None =>
-      db withSession {
-        implicit session =>
-          latestResources.list
-
-      }
-    case Some(latest) =>
-
-      db withSession {
-        implicit session =>
-          table.filter(_.inserted >= latest).sortBy(_.inserted.asc).list
-      }
-
-
-  }
-
-  def latestResources = {
-    val latest = for {
-      (id, resource) <- table.groupBy(_.resourceId)
-    } yield (id, resource.map(_.inserted).max)
-
-    val result = for {
-      delta <- table
-      (id, timestamp) <- latest
-      if delta.resourceId === id && delta.inserted === timestamp.getOrElse(0)
-
-    } yield delta
-
-    result.sortBy(_.inserted.asc)
-  }
-
-
-}
 
 class OpiskelijaJournal(override val db: Database) extends NewJDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable]) {
   db withSession(
@@ -126,15 +18,9 @@ class OpiskelijaJournal(override val db: Database) extends NewJDBCJournal[Opiske
 
 }
 
-object columns {
-  implicit val datetimeLong = MappedColumnType.base[DateTime, Long](
-    _.getMillis ,    // map Bool to Int
-    new DateTime(_)  // map Int to Bool
-  )
 
-}
 
-import columns._
+import HakurekisteriColumns._
 
 class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID, (String, String, String, String, DateTime, Option[DateTime], String)](tag, "opiskelija") {
   def oppilaitosOid = column[String]("oppilaitos_oid")

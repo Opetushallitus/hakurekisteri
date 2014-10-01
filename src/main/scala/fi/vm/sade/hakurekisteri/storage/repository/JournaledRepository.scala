@@ -6,7 +6,6 @@ import fi.vm.sade.hakurekisteri.rest.support.Resource
 import java.util.UUID
 import scala.slick.lifted
 import scala.util.Try
-import scala.slick.driver.JdbcDriver
 
 
 trait JournaledRepository[T <: Resource[I], I] extends InMemRepository[T, I] {
