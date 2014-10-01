@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
 import scala.slick.driver.JdbcDriver.simple._
-import fi.vm.sade.hakurekisteri.storage.repository.Delta
 import org.joda.time.LocalDate
 import scala.slick.jdbc.meta.MTable
 import java.util.UUID
