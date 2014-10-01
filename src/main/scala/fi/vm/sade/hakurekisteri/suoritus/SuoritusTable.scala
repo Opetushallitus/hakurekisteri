@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.suoritus
 import scala.slick.driver.JdbcDriver.simple._
 import org.joda.time.LocalDate
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, JDBCJournal}
+import fi.vm.sade.hakurekisteri.rest.support.JournalTable
 import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen => yksil}
 import java.sql.SQLDataException
 
