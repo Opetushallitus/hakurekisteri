@@ -5,23 +5,9 @@ import java.util.UUID
 import org.joda.time.DateTime
 
 import scala.slick.driver.JdbcDriver.simple._
-import scala.slick.jdbc.meta.MTable
 import scala.slick.lifted
 import scala.slick.lifted.ShapedValue
-import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, JDBCJournal}
-
-class OpiskeluoikeusJournal(override val db: Database) extends JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable]) {
-
-
-
-  db withSession(
-      implicit session =>
-        if (MTable.getTables("opiskeluoikeus").list().isEmpty) {
-          log.debug("creating table for opiskeluoikeusjournal")
-          table.ddl.create
-        }
-    )
-}
+import fi.vm.sade.hakurekisteri.rest.support.JournalTable
 
 object OpiskeluoikeusRow {
   type OpiskeluoikeusType = (Long, Option[Long], String, String, String, String)

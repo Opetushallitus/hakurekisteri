@@ -1,20 +1,10 @@
 package fi.vm.sade.hakurekisteri.arvosana
 
 import scala.slick.driver.JdbcDriver.simple._
-import scala.slick.jdbc.meta.MTable
 import java.util.UUID
 import org.joda.time.LocalDate
-import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, JDBCJournal}
+import fi.vm.sade.hakurekisteri.rest.support.JournalTable
 
-class ArvosanaJournal(override val db: Database) extends JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable]) {
-
-  db withSession(
-    implicit session =>
-      if (MTable.getTables("arvosana").list().isEmpty) {
-        table.ddl.create
-      }
-    )
-}
 
 class ArvosanaTable(tag: Tag) extends JournalTable[Arvosana, UUID, (String, String, String, String, Option[String], Boolean, Option[Int], Option[String], String)](tag, "arvosana") {
 

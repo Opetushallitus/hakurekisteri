@@ -8,17 +8,24 @@ import scala.compat.Platform
 import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.language.existentials
 import org.slf4j.LoggerFactory
+import scala.slick.jdbc.meta.MTable
 
 
-abstract class JDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: TableQuery[T]) extends Journal[R,  I] {
+class JDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: TableQuery[T])(implicit val db: Database) extends Journal[R,  I] {
 
   val log = LoggerFactory.getLogger(getClass)
 
+  lazy val tableName = table.baseTableRow.tableName
 
-  log.debug(s"started ${getClass.getSimpleName} with table ${table.baseTableRow.tableName}")
+  db withSession(
+    implicit session =>
+      if (MTable.getTables(tableName).list().isEmpty) {
+        table.ddl.create
+      }
+    )
 
 
-  val db: Database
+  log.debug(s"started ${getClass.getSimpleName} with table $tableName")
 
   override def addModification(o: Delta[R, I]): Unit = db withSession(
     implicit session =>
