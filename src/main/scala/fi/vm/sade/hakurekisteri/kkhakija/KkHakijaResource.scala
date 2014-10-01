@@ -57,6 +57,8 @@ case class Hakemus(haku: String,
                    ilmoittautumiset: Seq[Ilmoittautuminen],
                    pohjakoulutus: Seq[String],
                    julkaisulupa: Option[Boolean],
+                   hKelpoisuus: String,
+                   hKelpoisuusLahde: Option[String],
                    hakukohteenKoulutukset: Seq[Hakukohteenkoulutus])
 
 case class Hakija(hetu: String,
@@ -78,8 +80,6 @@ case class Hakija(hetu: String,
                   asiointikieli: String,
                   koulusivistyskieli: String,
                   koulutusmarkkinointilupa: Option[Boolean],
-                  hKelpoisuus: String,
-                  // hKelpoisuusLahde: Option[String], // FIXME muuta normaaliksi luokaksi, koska case classissa voi olla vain 22 kenttää
                   onYlioppilas: Boolean,
                   hakemukset: Seq[Hakemus])
 
@@ -166,6 +166,13 @@ class KkHakijaResource(hakemukset: ActorRef,
     })
   }
 
+  def getHakukelpoisuus(hakukohdeOid: String, kelpoisuudet: Seq[PreferenceEligibility]): PreferenceEligibility = {
+    kelpoisuudet.find(_.aoId == hakukohdeOid) match {
+      case Some(h) => h
+      case None => PreferenceEligibility(hakukohdeOid, "NOT_CHECKED", None)
+    }
+  }
+
   val Pattern = "preference(\\d+)-Koulutus-id".r
 
   def getHakemukset(hakemus: FullHakemus): Future[Seq[Hakemus]] =
@@ -177,6 +184,7 @@ class KkHakijaResource(hakemukset: ActorRef,
     } yield hakutoiveet.keys.collect {
       case Pattern(jno) if hakutoiveet(s"preference$jno-Koulutus-id") != "" =>
         val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
+        val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities)
         for {
           hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
           haku: Haku <- (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
@@ -195,6 +203,8 @@ class KkHakijaResource(hakemukset: ActorRef,
             ilmoittautumiset = getIlmoittautumiset(valintaTulos, hakukohdeOid),
             pohjakoulutus = getPohjakoulutukset(koulutustausta),
             julkaisulupa = lisatiedot.lupaJulkaisu.map(_ == "true"),
+            hKelpoisuus = hakukelpoisuus.status,
+            hKelpoisuusLahde = hakukelpoisuus.source,
             hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset)
     }.toSeq).getOrElse(Seq()))
 
@@ -291,15 +301,13 @@ class KkHakijaResource(hakemukset: ActorRef,
           kansalaisuus = kansalaisuus,
           matkapuhelin = henkilotiedot.matkapuhelinnumero1.flatMap(_.blankOption),
           puhelin = henkilotiedot.matkapuhelinnumero2.flatMap(_.blankOption),
-          sahkoposti = henkilotiedot.Sähköposti,
+          sahkoposti = henkilotiedot.Sähköposti.flatMap(_.blankOption),
           kotikunta = henkilotiedot.kotikunta.getOrElse(""),
           sukupuoli = henkilotiedot.sukupuoli.getOrElse(""),
           aidinkieli = henkilotiedot.aidinkieli.getOrElse("FI"),
           asiointikieli = getAsiointikieli(henkilotiedot.aidinkieli.getOrElse("FI")),
           koulusivistyskieli = henkilotiedot.koulusivistyskieli.getOrElse("FI"),
           koulutusmarkkinointilupa = lisatiedot.lupaMarkkinointi.map(_ == "true"),
-          hKelpoisuus = "NOT_CHECKED", // FIXME tulossa listfull-rajapintaan
-          //hKelpoisuusLahde = None, // FIXME tulossa listfull-rajapintaan
           onYlioppilas = isYlioppilas(suoritukset),
           hakemukset = hakemukset)
 
