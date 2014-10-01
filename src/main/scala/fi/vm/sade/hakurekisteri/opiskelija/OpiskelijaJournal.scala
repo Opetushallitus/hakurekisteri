@@ -145,15 +145,11 @@ class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID, (String, 
 
   override def resourceShape = (oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source).shaped
 
-
-  override def row(o: Opiskelija): (String, String, String, String, DateTime, Option[DateTime], String) = (o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva, o.loppuPaiva, o.source)
+  override def row(o: Opiskelija): (String, String, String, String, DateTime, Option[DateTime], String) = Opiskelija.unapply(o).get
 
   override def getId(serialized: String): UUID = UUID.fromString(serialized)
 
-  def opiskelija(oppilaitosOid: String, luokkataso:String, luokka:String, henkiloOid:String, alkuPaiva: DateTime, loppuPaiva: Option[DateTime], source: String): Opiskelija =
-  Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, alkuPaiva, loppuPaiva,source)
-
-  override val resource = (opiskelija _).tupled
+  override val resource = (Opiskelija.apply _).tupled
 
 }
 
