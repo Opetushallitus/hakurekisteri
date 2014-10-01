@@ -7,10 +7,15 @@ import scala.slick.lifted
 import scala.compat.Platform
 import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.language.existentials
+import org.slf4j.LoggerFactory
 
 
 abstract class JDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: TableQuery[T]) extends Journal[R,  I] {
 
+  val log = LoggerFactory.getLogger(getClass)
+
+
+  log.debug(s"started ${getClass.getSimpleName} with table ${table.baseTableRow.tableName}")
 
 
   val db: Database

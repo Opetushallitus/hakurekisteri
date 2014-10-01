@@ -9,11 +9,9 @@ import scala.slick.jdbc.meta.MTable
 import scala.slick.lifted
 import scala.slick.lifted.ShapedValue
 import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, JDBCJournal}
-import org.slf4j.LoggerFactory
 
 class OpiskeluoikeusJournal(override val db: Database) extends JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable]) {
 
-  val log = LoggerFactory.getLogger(getClass)
 
 
   db withSession(
@@ -23,7 +21,6 @@ class OpiskeluoikeusJournal(override val db: Database) extends JDBCJournal[Opisk
           table.ddl.create
         }
     )
-    log.debug(s"started OpiskeluOikeusJournal with table ${table.baseTableRow.tableName}")
 }
 
 object OpiskeluoikeusRow {
