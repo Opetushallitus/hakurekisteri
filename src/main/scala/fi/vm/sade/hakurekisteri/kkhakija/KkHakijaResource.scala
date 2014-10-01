@@ -184,6 +184,7 @@ class KkHakijaResource(hakemukset: ActorRef,
     } yield hakutoiveet.keys.collect {
       case Pattern(jno) if hakutoiveet(s"preference$jno-Koulutus-id") != "" =>
         val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
+        val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities)
         for {
           hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
           haku: Haku <- (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
@@ -202,8 +203,8 @@ class KkHakijaResource(hakemukset: ActorRef,
             ilmoittautumiset = getIlmoittautumiset(valintaTulos, hakukohdeOid),
             pohjakoulutus = getPohjakoulutukset(koulutustausta),
             julkaisulupa = lisatiedot.lupaJulkaisu.map(_ == "true"),
-            hKelpoisuus = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities).status,
-            hKelpoisuusLahde = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities).source,
+            hKelpoisuus = hakukelpoisuus.status,
+            hKelpoisuusLahde = hakukelpoisuus.source,
             hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset)
     }.toSeq).getOrElse(Seq()))
 
