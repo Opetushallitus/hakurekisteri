@@ -9,7 +9,7 @@ import org.scalatest.matchers.ShouldMatchers
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.text.SimpleDateFormat
-import fi.vm.sade.hakurekisteri.suoritus.Suoritus
+import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus}
 import scala.Some
 import org.joda.time.{MonthDay, DateTime}
 import fi.vm.sade.hakurekisteri.acceptance.tools.Peruskoulu
@@ -24,12 +24,12 @@ class IdentifiableSerializationSpec extends WordSpec with ShouldMatchers with Ha
   val kevatJuhla = new MonthDay(6,4).toLocalDate(DateTime.now.getYear).toDateTimeAtStartOfDay
 
 
-  val suoritus = Peruskoulu("1.2.3", "KESKEN", kevatJuhla.toLocalDate, "1.2.4")
+  val suoritus: VirallinenSuoritus = Peruskoulu("1.2.3", "KESKEN", kevatJuhla.toLocalDate, "1.2.4")
 
 
 
   "An identified suoritus " when {
-    val s = Suoritus.identify(suoritus)
+    val s = VirallinenSuoritus.identify(suoritus)
     "serialized" should {
       val result = serializeDeserialize[Suoritus, Suoritus](s)
       val identity = serializeDeserialize[Identified[UUID], Suoritus](s)

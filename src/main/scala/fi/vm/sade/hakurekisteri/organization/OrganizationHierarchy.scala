@@ -117,8 +117,8 @@ class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organiza
 
   def createAuthorizer: Future[OrganizationAuthorizer] =  edgeFetch map OrganizationAuthorizer
 
-  def readXml: concurrent.Future[Elem] = {
-    val result: dispatch.Future[Response] = Http(svc << <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:typ="http://model.api.organisaatio.sade.vm.fi/types">
+  def readXml: Future[Elem] = {
+    val result: Future[Response] = Http(svc << <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:typ="http://model.api.organisaatio.sade.vm.fi/types">
       <soapenv:Header/> <soapenv:Body>
         <typ:getOrganizationStructure></typ:getOrganizationStructure>
       </soapenv:Body>

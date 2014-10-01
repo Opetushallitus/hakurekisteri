@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.arvosana
 
 import akka.actor.{ActorRef, Cancellable, Actor}
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, SuoritusQuery, Suoritus}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, JournaledRepository, Journal}
 import scala.concurrent.{Future, ExecutionContext}
@@ -112,10 +112,10 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
       findBy(ArvosanaQuery(Some(s.id))).map(Todistus(s, _)) pipeTo self
     case Todistus(suoritus, arvosanas) =>
       (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {
-        case (id, Suoritus(`perusopetus`, oppilaitos, _, _ ,oppilas ,_,_, _, _)) =>
+        case (id, VirallinenSuoritus(`perusopetus`, oppilaitos, _, _ ,oppilas ,_,_,_, _, _)) =>
 
           checkTodistus(arvosanas, oppilas, id, oppilaitos, "perusopetus")
-        case (id, Suoritus(`perusopetuksenlisa`, oppilaitos, _, _ ,oppilas ,_, _, _, _)) =>
+        case (id, VirallinenSuoritus(`perusopetuksenlisa`, oppilaitos, _, _ ,oppilas ,_,_, _, _, _)) =>
           checkTodistus(arvosanas, oppilas, id, oppilaitos, "perusopetuksen lisäopetus")
 
 
