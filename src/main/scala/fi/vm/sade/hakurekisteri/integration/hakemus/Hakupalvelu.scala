@@ -253,7 +253,9 @@ case class Lisatiedot(lupaJulkaisu: Option[String], lupaMarkkinointi: Option[Str
 
 case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot], koulutustausta: Option[Koulutustausta], lisatiedot: Option[Lisatiedot], hakutoiveet: Option[Map[String, String]])
 
-case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String]) extends Resource[String] {
+case class PreferenceEligibility(aoId: String, status: String, source: Option[String])
+
+case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String], preferenceEligibilities: Seq[PreferenceEligibility]) extends Resource[String] {
   val source = "1.2.246.562.10.00000000001"
   override def identify(id: String): this.type with Identified[String] = FullHakemus.identify(this,id).asInstanceOf[this.type with Identified[String]]
 
@@ -279,7 +281,8 @@ object FullHakemus {
       o.personOid: Option[String],
       o.applicationSystemId: String,
       o.answers,
-      o.state: Option[String]) with Identified[String] {
+      o.state: Option[String],
+      o.preferenceEligibilities) with Identified[String] {
         val id: String = identity
       }
 }

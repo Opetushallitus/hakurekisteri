@@ -113,7 +113,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           Lisatiedot(
             lupaMarkkinointi = Some("true"),
             lupaJulkaisu = Some("true"))))),
-    state = Some("ACTIVE")
+    state = Some("ACTIVE"),
+    preferenceEligibilities = Seq()
   )
   object FullHakemus2 extends FullHakemus("1.25.2", Some("1.24.2"), "1.2",
     answers = Some(
@@ -187,7 +188,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           Lisatiedot(
             lupaMarkkinointi = Some("true"),
             lupaJulkaisu = Some("true"))))),
-    state = Some("INCOMPLETE")
+    state = Some("INCOMPLETE"),
+    preferenceEligibilities = Seq()
   )
 
   object notEmpty

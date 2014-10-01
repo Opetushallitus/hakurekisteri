@@ -57,6 +57,8 @@ case class Hakemus(haku: String,
                    ilmoittautumiset: Seq[Ilmoittautuminen],
                    pohjakoulutus: Seq[String],
                    julkaisulupa: Option[Boolean],
+                   hKelpoisuus: String,
+                   hKelpoisuusLahde: Option[String],
                    hakukohteenKoulutukset: Seq[Hakukohteenkoulutus])
 
 case class Hakija(hetu: String,
@@ -78,8 +80,6 @@ case class Hakija(hetu: String,
                   asiointikieli: String,
                   koulusivistyskieli: String,
                   koulutusmarkkinointilupa: Option[Boolean],
-                  hKelpoisuus: String,
-                  // hKelpoisuusLahde: Option[String], // FIXME muuta normaaliksi luokaksi, koska case classissa voi olla vain 22 kenttää
                   onYlioppilas: Boolean,
                   hakemukset: Seq[Hakemus])
 
@@ -166,6 +166,13 @@ class KkHakijaResource(hakemukset: ActorRef,
     })
   }
 
+  def getHakukelpoisuus(hakukohdeOid: String, kelpoisuudet: Seq[PreferenceEligibility]): PreferenceEligibility = {
+    kelpoisuudet.find(_.aoId == hakukohdeOid) match {
+      case Some(h) => h
+      case None => PreferenceEligibility(hakukohdeOid, "NOT_CHECKED", None)
+    }
+  }
+
   val Pattern = "preference(\\d+)-Koulutus-id".r
 
   def getHakemukset(hakemus: FullHakemus): Future[Seq[Hakemus]] =
@@ -195,6 +202,8 @@ class KkHakijaResource(hakemukset: ActorRef,
             ilmoittautumiset = getIlmoittautumiset(valintaTulos, hakukohdeOid),
             pohjakoulutus = getPohjakoulutukset(koulutustausta),
             julkaisulupa = lisatiedot.lupaJulkaisu.map(_ == "true"),
+            hKelpoisuus = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities).status,
+            hKelpoisuusLahde = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities).source,
             hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset)
     }.toSeq).getOrElse(Seq()))
 
@@ -298,8 +307,6 @@ class KkHakijaResource(hakemukset: ActorRef,
           asiointikieli = getAsiointikieli(henkilotiedot.aidinkieli.getOrElse("FI")),
           koulusivistyskieli = henkilotiedot.koulusivistyskieli.getOrElse("FI"),
           koulutusmarkkinointilupa = lisatiedot.lupaMarkkinointi.map(_ == "true"),
-          hKelpoisuus = "NOT_CHECKED", // FIXME tulossa listfull-rajapintaan
-          //hKelpoisuusLahde = None, // FIXME tulossa listfull-rajapintaan
           onYlioppilas = isYlioppilas(suoritukset),
           hakemukset = hakemukset)
 
