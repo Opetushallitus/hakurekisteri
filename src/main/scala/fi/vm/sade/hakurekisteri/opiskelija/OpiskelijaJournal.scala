@@ -14,7 +14,6 @@ import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import scala.slick.lifted.ShapedValue
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 import fi.vm.sade.hakurekisteri.storage.Identified
-import scala.slick.ast.Node
 
 abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: String) extends Table[Delta[R,I]](tag, name) {
 
@@ -124,27 +123,35 @@ class OpiskelijaJournal(override val db: Database) extends NewJDBCJournal[Opiske
 
 }
 
+object columns {
+  implicit val datetimeLong = MappedColumnType.base[DateTime, Long](
+    _.getMillis ,    // map Bool to Int
+    new DateTime(_)  // map Int to Bool
+  )
 
+}
 
-class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID, (String, String, String, String, Long, Option[Long], String)](tag, "opiskelija") {
+import columns._
+
+class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID, (String, String, String, String, DateTime, Option[DateTime], String)](tag, "opiskelija") {
   def oppilaitosOid = column[String]("oppilaitos_oid")
   def luokkataso = column[String]("luokkataso")
   def luokka = column[String]("luokka")
   def henkiloOid = column[String]("henkilo_oid")
-  def alkuPaiva = column[Long]("alku_paiva")
-  def loppuPaiva = column[Option[Long]]("loppu_paiva")
+  def alkuPaiva = column[DateTime]("alku_paiva")
+  def loppuPaiva = column[Option[DateTime]]("loppu_paiva")
 
-  val deletedValues = ("", "", "", "", 0L, None, "")
+  val deletedValues = ("", "", "", "", DateTime.now(), None, "")
 
   override def resourceShape = (oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source).shaped
 
 
-  override def row(o: Opiskelija): (String, String, String, String, Long, Option[Long], String) = (o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva.getMillis, o.loppuPaiva.map(_.getMillis), o.source)
+  override def row(o: Opiskelija): (String, String, String, String, DateTime, Option[DateTime], String) = (o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva, o.loppuPaiva, o.source)
 
   override def getId(serialized: String): UUID = UUID.fromString(serialized)
 
-  def opiskelija(oppilaitosOid: String, luokkataso:String, luokka:String, henkiloOid:String, alkuPaiva: Long, loppuPaiva: Option[Long], source: String): Opiskelija =
-  Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, new DateTime(alkuPaiva), loppuPaiva.map(new DateTime(_)),source)
+  def opiskelija(oppilaitosOid: String, luokkataso:String, luokka:String, henkiloOid:String, alkuPaiva: DateTime, loppuPaiva: Option[DateTime], source: String): Opiskelija =
+  Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, alkuPaiva, loppuPaiva,source)
 
   override val resource = (opiskelija _).tupled
 
