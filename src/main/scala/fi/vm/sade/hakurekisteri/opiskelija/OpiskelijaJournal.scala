@@ -47,11 +47,14 @@ abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: St
 
   def rowShaper(d: Delta[R, I]) = d match {
     case Deleted(id, source) => Some((id.toString, source, Platform.currentTime, true), deletedValues)
-    case Updated(r: R with Identified[I]) => Some((r.id.toString, r.asInstanceOf[R].source, Platform.currentTime, false), row(r))
+    case Updated(r: R with Identified[I]) => row(r).map(updateRow(r))
 
   }
 
-  def row(resource: R): ResourceRow
+
+  def updateRow(r: R with Identified[I])(resourceData: ResourceRow) = ((r.id.toString, r.asInstanceOf[R].source, Platform.currentTime, false), resourceData)
+
+  def row(resource: R): Option[ResourceRow]
   def resourceShape: ShapedValue[_, ResourceRow]
 
 
@@ -145,7 +148,7 @@ class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID, (String, 
 
   override def resourceShape = (oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source).shaped
 
-  override def row(o: Opiskelija): (String, String, String, String, DateTime, Option[DateTime], String) = Opiskelija.unapply(o).get
+  override def row(o: Opiskelija): Option[(String, String, String, String, DateTime, Option[DateTime], String)] = Opiskelija.unapply(o)
 
   override def getId(serialized: String): UUID = UUID.fromString(serialized)
 
