@@ -5,10 +5,10 @@ import scala.slick.driver.JdbcDriver.simple._
 import java.util.UUID
 import scala.slick.jdbc.meta.MTable
 import scala.slick.lifted.TableQuery
-import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, NewJDBCJournal, HakurekisteriColumns}
+import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, JDBCJournal, HakurekisteriColumns}
 
 
-class OpiskelijaJournal(override val db: Database) extends NewJDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable]) {
+class OpiskelijaJournal(override val db: Database) extends JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable]) {
   db withSession(
     implicit session =>
       if (MTable.getTables("opiskelija").list().isEmpty) {

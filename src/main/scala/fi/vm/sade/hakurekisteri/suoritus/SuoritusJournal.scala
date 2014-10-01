@@ -4,11 +4,11 @@ import scala.slick.driver.JdbcDriver.simple._
 import org.joda.time.LocalDate
 import scala.slick.jdbc.meta.MTable
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, NewJDBCJournal}
+import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, JDBCJournal}
 import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen => yksil}
 import java.sql.SQLDataException
 
-class SuoritusJournal(override val db: Database) extends NewJDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable]) {
+class SuoritusJournal(override val db: Database) extends JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable]) {
 
 
   db withSession(implicit session =>

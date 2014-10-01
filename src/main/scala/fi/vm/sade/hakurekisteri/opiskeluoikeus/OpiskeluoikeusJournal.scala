@@ -8,9 +8,9 @@ import scala.slick.driver.JdbcDriver.simple._
 import scala.slick.jdbc.meta.MTable
 import scala.slick.lifted
 import scala.slick.lifted.ShapedValue
-import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, NewJDBCJournal}
+import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, JDBCJournal}
 
-class OpiskeluoikeusJournal(override val db: Database) extends NewJDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable]) {
+class OpiskeluoikeusJournal(override val db: Database) extends JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable]) {
 
     db withSession(
       implicit session =>

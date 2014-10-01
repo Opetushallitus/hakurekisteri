@@ -4,9 +4,9 @@ import scala.slick.driver.JdbcDriver.simple._
 import scala.slick.jdbc.meta.MTable
 import java.util.UUID
 import org.joda.time.LocalDate
-import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, NewJDBCJournal}
+import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, JDBCJournal}
 
-class ArvosanaJournal(override val db: Database) extends NewJDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable]) {
+class ArvosanaJournal(override val db: Database) extends JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable]) {
 
   db withSession(
     implicit session =>

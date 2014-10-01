@@ -9,7 +9,7 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.language.existentials
 
 
-abstract class NewJDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: TableQuery[T]) extends Journal[R,  I] {
+abstract class JDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: TableQuery[T]) extends Journal[R,  I] {
 
 
 
