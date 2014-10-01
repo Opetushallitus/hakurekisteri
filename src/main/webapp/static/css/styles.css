@@ -102,7 +102,7 @@ body #raamit-header .header-content {
 
 .modal-dialog {
     width: auto;
-    max-width: 850px;
+    max-width: 900px;
 }
 
 .delete-suoritus, .delete-luokkatieto {

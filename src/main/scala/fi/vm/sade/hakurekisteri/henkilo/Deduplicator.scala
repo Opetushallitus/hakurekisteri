@@ -7,7 +7,7 @@ import com.stackmob.newman.ApacheHttpClient
 import com.stackmob.newman.response.HttpResponseCode
 import akka.event.Logging
 import scala.concurrent.{Promise, Future}
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
+import fi.vm.sade.hakurekisteri.suoritus.{VapaamuotoinenSuoritus, VirallinenSuoritus, Suoritus, SuoritusQuery}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
@@ -57,15 +57,26 @@ class Deduplicator(suoritusRekisteri:ActorRef, opiskelijaRekisteri:ActorRef) ext
 
         val retry = context.system.scheduler.schedule(1.minute, 1.minute)(askForDuplicates)
 
+        def handleSuoritukset(suoritukset: Seq[Suoritus with Identified[UUID]]) {
+          for (suoritus <- suoritukset)
+            if (suoritus.henkiloOid != newOid) suoritus match {
+              case s: VirallinenSuoritus with Identified[UUID] =>
+                suoritusRekisteri ! VirallinenSuoritus(s.komo: String, s.myontaja: String, s.tila: String, s.valmistuminen, newOid, s.yksilollistaminen, s.suoritusKieli, s.opiskeluoikeus, s.vahvistettu, s.source).identify(s.id)
+                updatedSuoritukset.put(s.id, Promise[Unit])
+              case s: VapaamuotoinenSuoritus with Identified[UUID] =>
+                suoritusRekisteri ! VapaamuotoinenSuoritus(newOid, s.kuvaus: String, s.myontaja: String, s.vuosi: Int, s.tyyppi, s.source: String).identify(s.id)
+                updatedSuoritukset.put(s.id, Promise[Unit])
+
+
+            } else {
+              updatedSuoritukset.remove(suoritus.id)
+            }
+          sentSuoritukset.success(())
+        }
+
         override def receive: Actor.Receive = {
           case suoritukset: Seq[Suoritus with Identified[UUID]] =>
-            for (s <- suoritukset )  if (s.henkiloOid != newOid) {
-              suoritusRekisteri ! Suoritus(s.komo: String, s.myontaja: String, s.tila: String, s.valmistuminen, newOid, s.yksilollistaminen, s.suoritusKieli, s.opiskeluoikeus, s.source).identify(s.id)
-              updatedSuoritukset.put(s.id,Promise[Unit])
-            } else {
-              updatedSuoritukset.remove(s.id)
-            }
-            sentSuoritukset.success(())
+            handleSuoritukset(suoritukset)
 
           case opiskelijat: Seq[Opiskelija with Identified[UUID]] =>
             for (o <- opiskelijat) if (o.henkiloOid != newOid) {
@@ -112,6 +123,8 @@ class Deduplicator(suoritusRekisteri:ActorRef, opiskelijaRekisteri:ActorRef) ext
 
 
   }
+
+
 }
 
 case class Deduplicate(url:URL)

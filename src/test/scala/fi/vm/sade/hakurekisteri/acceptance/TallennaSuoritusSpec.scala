@@ -5,6 +5,7 @@ import org.scalatest.GivenWhenThen
 
 import fi.vm.sade.hakurekisteri.acceptance.tools.{Peruskoulu, HakurekisteriSupport}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
+import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 
 class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with HakurekisteriSupport {
 
@@ -74,8 +75,8 @@ class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with H
             koululle koulu.id)
 
       Then("Molemmille löytyvät peruskoulun keskeneräiset suoritukset arvioidulla valmistumisella")
-        haetut should contain (Peruskoulu(koulu.id, "KESKEN", "04.06.2014", Mikko.oid))
-        haetut should contain (Peruskoulu(koulu.id, "KESKEN", "04.06.2014", Matti.oid))
+        haetut should contain (Peruskoulu(koulu.id, "KESKEN", "04.06.2014", Mikko.oid).asInstanceOf[Suoritus])
+        haetut should contain (Peruskoulu(koulu.id, "KESKEN", "04.06.2014", Matti.oid).asInstanceOf[Suoritus])
 
     }
 
@@ -163,7 +164,7 @@ class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with H
       create(suoritus3)
 
       Then("löytyy kannasta  tallennettu suoritus")
-      allSuoritukset should contain(suoritus3)
+      allSuoritukset should contain(suoritus3.asInstanceOf[Suoritus])
     }
 
     scenario("Vanhat tiedot säilyvät") {
@@ -175,7 +176,7 @@ class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with H
       create(suoritus3)
 
       Then("löytyy kannasta  tallennettu suoritus")
-      allSuoritukset should (contain(suoritus)  and contain(suoritus2))
+      allSuoritukset should (contain(suoritus.asInstanceOf[Suoritus])  and contain(suoritus2.asInstanceOf[Suoritus]))
     }
 
   }

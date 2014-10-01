@@ -13,14 +13,24 @@ import scala.slick.lifted
 
 class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, SuoritusTable, ColumnOrdered[Long], UUID] {
   override def delta(row: SuoritusTable#TableElementType): Delta[Suoritus, UUID] = row match {
-    case (resourceId, _, _, _, _, _, _, _,source,  _, true) => Deleted(UUID.fromString(resourceId), source)
-    case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yks, suoritusKieli,source,  _, _) => Updated(Suoritus(komo, myontaja, tila, LocalDate.parse(valmistuminen), henkiloOid, yksilollistaminen.withName(yks), suoritusKieli, source = source).identify(UUID.fromString(resourceId)))
+    case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, kuvaus, vuosi, tyyppi, source, inserted, true) => Deleted(UUID.fromString(resourceId), source)
+    case (resourceId, Some(komo), myontaja, Some(tila), Some(valmistuminen), henkiloOid, Some(yks), Some(suoritusKieli), _, _, _, source, inserted, false) =>
+      Updated(VirallinenSuoritus(komo, myontaja, tila, LocalDate.parse(valmistuminen), henkiloOid, yksilollistaminen.withName(yks), suoritusKieli, lahde = source).identify(UUID.fromString(resourceId)))
+    case (resourceId, _, myontaja, _, _, henkiloOid, _, _, Some(kuvaus), Some(vuosi), Some(tyyppi), source, inserted, false) =>
+      Updated(VapaamuotoinenSuoritus(henkiloOid,kuvaus, myontaja, vuosi, tyyppi, lahde = source).identify(UUID.fromString(resourceId)))
   }
 
-  override def update(o: Suoritus with Identified[UUID]): SuoritusTable#TableElementType = (o.id.toString, o.komo, o.myontaja, o.tila, o.valmistuminen.toString, o.henkiloOid, o.yksilollistaminen.toString, o.suoritusKieli, o.source, Platform.currentTime, false)
+  override def update(suoritus: Suoritus with Identified[UUID]): SuoritusTable#TableElementType = suoritus match {
+    case o: VirallinenSuoritus =>
+      (o.id.toString, Some(o.komo), o.myontaja, Some(o.tila), Some(o.valmistuminen.toString), o.henkiloOid, Some(o.yksilollistaminen.toString), Some(o.suoritusKieli), None, None, None, o.source, Platform.currentTime, false)
+    case s: VapaamuotoinenSuoritus =>
+      (s.id.toString, None,s.myontaja, None, None, s.henkiloOid, None, None, Some(s.kuvaus), Some(s.vuosi), Some(s.tyyppi), s.source, Platform.currentTime, false)
+
+
+  }
   override def delete(id:UUID, source: String) = currentState(id) match {
-    case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli,_,  _, _) =>
-      (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, source, Platform.currentTime, true)
+    case (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, kuvaus, vuosi, tyyppi, _, _, _) =>
+      (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, kuvaus, vuosi, tyyppi, source, Platform.currentTime, true)
   }
 
   val suoritukset = TableQuery[SuoritusTable]
@@ -40,7 +50,7 @@ class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, Suoritus
 
   override def timestamp(resource: SuoritusTable): lifted.Column[Long] = resource.inserted
 
-  override def timestamp(resource: SuoritusTable#TableElementType): Long = resource._10
+  override def timestamp(resource: SuoritusTable#TableElementType): Long = resource._13
 
   override val idColumn: (SuoritusTable) => JdbcDriver.simple.Column[String] = _.resourceId
 
@@ -60,19 +70,28 @@ class SuoritusJournal(database: Database) extends JDBCJournal[Suoritus, Suoritus
   }
 }
 
-class SuoritusTable(tag: Tag) extends Table[(String, String, String, String, String, String, String, String, String,  Long, Boolean)](tag, "suoritus") {
+class SuoritusTable(tag: Tag) extends Table[(String, Option[String], String, Option[String], Option[String], String, Option[String], Option[String], Option[String], Option[Int], Option[String], String, Long, Boolean)](tag, "suoritus") {
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def resourceId = column[String]("resource_id")
-  def komo = column[String]("komo")
   def myontaja = column[String]("myontaja")
-  def tila = column[String]("tila")
-  def valmistuminen = column[String]("valmistuminen")
   def henkiloOid = column[String]("henkilo_oid")
-  def yksilollistaminen = column[String]("yksilollistaminen")
-  def suoritusKieli = column[String]("suoritus_kieli")
   def source = column[String]("source")
   def inserted = column[Long]("inserted")
   def deleted = column[Boolean]("deleted")
+
+  //virallinen
+  def komo = column[Option[String]]("komo")
+  def tila = column[Option[String]]("tila")
+  def valmistuminen = column[Option[String]]("valmistuminen")
+  def yksilollistaminen = column[Option[String]]("yksilollistaminen")
+  def suoritusKieli = column[Option[String]]("suoritus_kieli")
+
+  //vapaamuotoinen
+  def kuvaus = column[Option[String]]("kuvaus")
+  def vuosi = column[Option[Int]]("vuosi")
+  def tyyppi = column[Option[String]]("tyyppi")
+
   // Every table needs a * projection with the same type as the table's type parameter
-  def * = (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, source, inserted, deleted)
+  def *  = (resourceId, komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, kuvaus, vuosi, tyyppi, source, inserted, deleted)
 }
+
