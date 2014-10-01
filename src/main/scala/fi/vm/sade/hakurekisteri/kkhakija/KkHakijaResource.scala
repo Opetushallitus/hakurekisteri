@@ -227,7 +227,7 @@ class KkHakijaResource(hakemukset: ActorRef,
       case Pattern(jno) if hakutoiveet(s"preference$jno-Koulutus-id") != "" &&
           matchHakukohde(hakutoiveet(s"preference$jno-Koulutus-id"), q.hakukohde) &&
           isAuthorized(hakutoiveet.get(s"preference$jno-Opetuspiste-id-parents"), q.organisaatio) &&
-          isAuthorized(hakutoiveet.get(s"preference$jno-Opetuspiste-id-parents"), getKnownOrganizations(currentUser)) =>
+          isAuthorized(hakutoiveet.get(s"preference$jno-Opetuspiste-id-parents"), getKnownOrganizations(q.user)) =>
         val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
         val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities)
         for {
