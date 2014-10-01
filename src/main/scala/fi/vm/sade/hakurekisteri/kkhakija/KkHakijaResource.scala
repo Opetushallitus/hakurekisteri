@@ -231,10 +231,11 @@ class KkHakijaResource(hakemukset: ActorRef,
         val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
         val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities)
         for {
-          valintaTulos: ValintaTulos <- (valintaTulos ? ValintaTulosQuery(hakemus.applicationSystemId, hakemus.oid)).mapTo[ValintaTulos] if matchHakuehto(q.hakuehto, valintaTulos, hakukohdeOid)
+          valintaTulos: ValintaTulos <- (valintaTulos ? ValintaTulosQuery(hakemus.applicationSystemId, hakemus.oid)).mapTo[ValintaTulos]
           hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
           haku: Haku <- (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
           kausi: String <- getKausi(haku.kausi, hakemus.oid)
+          if matchHakuehto(q.hakuehto, valintaTulos, hakukohdeOid)
         } yield Hakemus(haku = hakemus.applicationSystemId,
             hakuVuosi = haku.vuosi,
             hakuKausi = kausi,
@@ -351,7 +352,7 @@ class KkHakijaResource(hakemukset: ActorRef,
       hakutoiveet: Map[String, String] <- answers.hakutoiveet
       lisatiedot: Lisatiedot <- answers.lisatiedot
     } yield for {
-        hakemukset <- getHakemukset(hakemus)(q) if hakemukset.nonEmpty
+        hakemukset <- getHakemukset(hakemus)(q)
         maa <- getMaakoodi(henkilotiedot.asuinmaa.getOrElse("FIN"))
         toimipaikka <- getToimipaikka(maa, henkilotiedot.Postinumero, henkilotiedot.kaupunkiUlkomaa)
         suoritukset <- (suoritukset ? SuoritusQuery(henkilo = hakemus.personOid, myontaja = Some(YTLXml.YTL))).mapTo[Seq[Suoritus]]
@@ -381,5 +382,5 @@ class KkHakijaResource(hakemukset: ActorRef,
           hakemukset = hakemukset)
 
   def fullHakemukset2hakijat(hakemukset: Seq[FullHakemus])(q: KkHakijaQuery): Future[Seq[Hakija]] =
-    Future.sequence(hakemukset.map(getKkHakija(q)).flatten)
+    Future.sequence(hakemukset.map(getKkHakija(q)).flatten).map(_.filter(_.hakemukset.nonEmpty))
 }
