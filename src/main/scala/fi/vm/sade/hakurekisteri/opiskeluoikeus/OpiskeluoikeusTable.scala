@@ -4,10 +4,10 @@ import java.util.UUID
 
 import org.joda.time.DateTime
 
-import scala.slick.driver.JdbcDriver.simple._
 import scala.slick.lifted
 import scala.slick.lifted.ShapedValue
-import fi.vm.sade.hakurekisteri.rest.support.JournalTable
+import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, HakurekisteriDriver}
+import HakurekisteriDriver.simple._
 
 object OpiskeluoikeusRow {
   type OpiskeluoikeusType = (Long, Option[Long], String, String, String, String)
@@ -48,5 +48,4 @@ class OpiskeluoikeusTable(tag: Tag) extends JournalTable[Opiskeluoikeus, UUID, O
   }
 
 
-  override def getId(serialized: String): UUID = UUID.fromString(serialized)
 }

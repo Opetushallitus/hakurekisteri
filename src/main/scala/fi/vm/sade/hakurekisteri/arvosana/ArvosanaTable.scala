@@ -1,9 +1,9 @@
 package fi.vm.sade.hakurekisteri.arvosana
 
-import scala.slick.driver.JdbcDriver.simple._
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriDriver, JournalTable}
+import HakurekisteriDriver.simple._
 import java.util.UUID
 import org.joda.time.LocalDate
-import fi.vm.sade.hakurekisteri.rest.support.JournalTable
 
 
 class ArvosanaTable(tag: Tag) extends JournalTable[Arvosana, UUID, (String, String, String, String, Option[String], Boolean, Option[Int], Option[String], String)](tag, "arvosana") {
@@ -30,5 +30,4 @@ class ArvosanaTable(tag: Tag) extends JournalTable[Arvosana, UUID, (String, Stri
   def arvosanaResource(suoritus: String, arvosana: String, asteikko: String, aine: String, lisatieto: Option[String], valinnainen: Boolean, pisteet: Option[Int], myonnetty: Option[String], source: String) =
     Arvosana(UUID.fromString(suoritus), Arvio(arvosana, asteikko, pisteet), aine, lisatieto, valinnainen, myonnetty = myonnetty.map(LocalDate.parse), source)
 
-  override def getId(serialized: String): UUID = UUID.fromString(serialized)
 }

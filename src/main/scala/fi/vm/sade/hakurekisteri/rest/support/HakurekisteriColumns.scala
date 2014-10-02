@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
 import org.joda.time.{LocalDate, DateTime}
-import scala.slick.driver.JdbcDriver.simple._
+import HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 

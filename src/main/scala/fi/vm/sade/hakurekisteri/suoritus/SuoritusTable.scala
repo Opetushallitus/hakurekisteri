@@ -1,10 +1,9 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
-import scala.slick.driver.JdbcDriver.simple._
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 import org.joda.time.LocalDate
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.rest.support.JournalTable
-import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen => yksil}
 import java.sql.SQLDataException
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 
@@ -46,8 +45,6 @@ class SuoritusTable(tag: Tag) extends JournalTable[Suoritus, UUID, SuoritusRow](
   }
 
   override val deletedValues = ("", "", None, None, None, None, None, None, None, None, "")
-
-  override def getId(serialized: String): UUID = UUID.fromString(serialized)
 
   override val resource: (SuoritusRow) => Suoritus = {
     case (myontaja, henkiloOid, Some(komo), Some(tila), Some(valmistuminen), Some(yks), Some(suoritusKieli), _, _, _, source) =>

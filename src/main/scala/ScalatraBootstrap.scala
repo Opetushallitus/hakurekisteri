@@ -59,7 +59,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
-import scala.slick.driver.JdbcDriver.simple._
+import HakurekisteriDriver.simple._
 import scala.util.Try
 
 
