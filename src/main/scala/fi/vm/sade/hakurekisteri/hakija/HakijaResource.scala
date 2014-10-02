@@ -47,10 +47,13 @@ object HakijaQuery {
       user = currentUser)
 }
 
+import scala.concurrent.duration._
+
 class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override protected def applicationDescription: String = "Hakijatietojen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
+  implicit val defaultTimeout: Timeout = 120.seconds
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
@@ -92,9 +95,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     logger.info("Query: " + q)
 
     new AsyncResult() {
-      import scala.concurrent.duration._
-      override implicit def timeout: Duration = 300.seconds
-      implicit val defaultTimeout: Timeout = 299.seconds
+      override implicit def timeout: Duration = 120.seconds
       import scala.concurrent.future
       val hakuResult = Try(hakijaActor ? q).get
       val is = hakuResult.flatMap((result) => future {
