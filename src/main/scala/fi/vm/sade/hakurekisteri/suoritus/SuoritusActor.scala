@@ -54,7 +54,7 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
 
 trait SuoritusService extends ResourceService[Suoritus, UUID] with SuoritusRepository {
 
-  override val emptyQuery = {
+  override val emptyQuery: PartialFunction[Query[Suoritus], Boolean] = {
     case SuoritusQuery(None, None, None, None) => true
 
   }
