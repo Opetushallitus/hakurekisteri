@@ -64,19 +64,15 @@ object HakemusQuery {
 case class Trigger(newApplicant: (FullHakemus) => Unit)
 
 object Trigger {
-
   def apply(oidHetu: (String, String) => Unit): Trigger = Trigger(_ match {
-    case FullHakemus(_, Some(personOid), _, Some(answers), _) =>
+    case FullHakemus(_, Some(personOid), _, Some(answers), _, _) =>
       for (
         henkilo <- answers.henkilotiedot;
         hetu <- henkilo.Henkilotunnus
       ) oidHetu(personOid, hetu)
+
     case _ =>
-
   })
-
-
-
 }
 
 class HakemusJournal extends InMemJournal[FullHakemus, String] {

@@ -83,7 +83,8 @@ class HakijaSpec extends FlatSpec with ShouldMatchers {
           Lisatiedot(
             lupaMarkkinointi = Some("true"),
             lupaJulkaisu = Some("true"))))),
-    state = Some("ACTIVE")
+    state = Some("ACTIVE"),
+    preferenceEligibilities = Seq()
   )
 
 

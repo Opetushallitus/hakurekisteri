@@ -53,6 +53,12 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
 }
 
 trait SuoritusService extends ResourceService[Suoritus, UUID] with SuoritusRepository {
+
+  override val emptyQuery: PartialFunction[Query[Suoritus], Boolean] = {
+    case SuoritusQuery(None, None, None, None) => true
+
+  }
+
   override val optimize:PartialFunction[Query[Suoritus], Future[Seq[Suoritus with Identified[UUID]]]] = {
     case SuoritusQuery(Some(henkilo), None, Some(vuosi), None) => Future.successful(tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq()))
     case SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja) =>
