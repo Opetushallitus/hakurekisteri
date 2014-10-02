@@ -1,6 +1,7 @@
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
 import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaResource
 import fi.vm.sade.hakurekisteri.oppija.OppijaResource
+import fi.vm.sade.hakurekisteri.storage.repository.Journal
 import java.util.concurrent.atomic.AtomicInteger
 
 import _root_.akka.camel.CamelExtension
@@ -183,21 +184,22 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
 }
 
 trait Journals {
-  val suoritusJournal: SuoritusJournal
-  val opiskelijaJournal: OpiskelijaJournal
-  val opiskeluoikeusJournal: OpiskeluoikeusJournal
-  val arvosanaJournal: ArvosanaJournal
+  val suoritusJournal: Journal[Suoritus, UUID]
+  val opiskelijaJournal: Journal[Opiskelija, UUID]
+  val opiskeluoikeusJournal: Journal[Opiskeluoikeus, UUID]
+  val arvosanaJournal: Journal[Arvosana, UUID]
 }
 
 class DbJournals(jndiName:String) extends Journals {
-  val database = Try(Database.forName(jndiName)).recover {
+  implicit val database = Try(Database.forName(jndiName)).recover {
     case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
   }.get
 
-  override val suoritusJournal = new SuoritusJournal(database)
-  override val opiskelijaJournal = new OpiskelijaJournal(database)
-  override val opiskeluoikeusJournal = new OpiskeluoikeusJournal(database)
-  override val arvosanaJournal = new ArvosanaJournal(database)
+  override val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+  override val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
+  override val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable])
+  override val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
+
 }
 
 class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {

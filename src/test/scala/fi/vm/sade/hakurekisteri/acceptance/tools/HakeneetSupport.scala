@@ -4,11 +4,10 @@ import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.integration.koodisto.{Koodisto, Koodi, KoodistoActor}
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{Organisaatio, OrganisaatioActor}
+import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.sijoittelu._
 import org.scalatra.swagger.Swagger
-import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport, HakurekisteriSwagger}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, HakurekisteriSwagger}
 import akka.actor.{Props, Actor, ActorSystem}
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
@@ -19,7 +18,6 @@ import org.specs.mock.Mockito
 import org.specs.specification.Examples
 import scala.concurrent.{Future, ExecutionContext}
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluHakija
-import scala.Some
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.hakemus.ListHakemus
 import fi.vm.sade.hakurekisteri.integration.koodisto.Koodisto
@@ -80,7 +78,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             LISAKOULUTUS_MAAHANMUUTTO = None,
             lahtoluokka = Some("9A"),
             lukioPaattotodistusVuosi = None,
-            pohjakoulutus_yo = None,
+            pohjakoulutus_yo = Some("true"),
             pohjakoulutus_am = None,
             pohjakoulutus_amt = None,
             pohjakoulutus_kk = None,
@@ -98,6 +96,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "preference2-Koulutus-id-lang" -> "FI",
           "preference1-Opetuspiste" -> "Ammattikoulu Lappi",
           "preference1-Opetuspiste-id" -> "1.10.3",
+          "preference1-Opetuspiste-id-parents" -> "1.10.3,1.2.246.562.10.00000000001",
           "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
           "preference1-Koulutus-id" -> "1.11.1",
           "preference1-Koulutus-id-aoIdentifier" -> "460",
@@ -113,7 +112,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           Lisatiedot(
             lupaMarkkinointi = Some("true"),
             lupaJulkaisu = Some("true"))))),
-    state = Some("ACTIVE")
+    state = Some("ACTIVE"),
+    preferenceEligibilities = Seq()
   )
   object FullHakemus2 extends FullHakemus("1.25.2", Some("1.24.2"), "1.2",
     answers = Some(
@@ -155,7 +155,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             lahtoluokka = Some("9A"),
             lukioPaattotodistusVuosi = None,
             pohjakoulutus_yo = None,
-            pohjakoulutus_am = None,
+            pohjakoulutus_am = Some("true"),
             pohjakoulutus_amt = None,
             pohjakoulutus_kk = None,
             pohjakoulutus_avoin = None,
@@ -172,6 +172,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "preference2-Koulutus-id-lang" -> "FI",
           "preference1-Opetuspiste" -> "Ammattiopisto Loppi",
           "preference1-Opetuspiste-id" -> "1.10.4",
+          "preference1-Opetuspiste-id-parents" -> "1.10.4,1.2.246.562.10.00000000001",
           "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
           "preference1-Koulutus-id" -> "1.11.2",
           "preference1-Koulutus-id-aoIdentifier" -> "460",
@@ -187,7 +188,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           Lisatiedot(
             lupaMarkkinointi = Some("true"),
             lupaJulkaisu = Some("true"))))),
-    state = Some("INCOMPLETE")
+    state = Some("INCOMPLETE"),
+    preferenceEligibilities = Seq()
   )
 
   object notEmpty

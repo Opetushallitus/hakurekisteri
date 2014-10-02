@@ -1,12 +1,7 @@
 package fi.vm.sade.hakurekisteri.storage.repository
 
 import fi.vm.sade.hakurekisteri.storage.Identified
-import scala.slick.lifted.{ColumnOrdered, Ordered, AbstractTable}
 import fi.vm.sade.hakurekisteri.rest.support.Resource
-import java.util.UUID
-import scala.slick.lifted
-import scala.util.Try
-import scala.slick.driver.JdbcDriver
 
 
 trait JournaledRepository[T <: Resource[I], I] extends InMemRepository[T, I] {
@@ -101,73 +96,3 @@ class InMemJournal[T <: Resource[I], I] extends Journal[T, I] {
   }
 }
 
-import scala.slick.driver.JdbcDriver.simple._
-
-trait JDBCJournal[T <: Resource[I], P <: AbstractTable[_], O <: Ordered, I] extends Journal[T, I] {
-  val db: Database
-  val table: scala.slick.lifted.TableQuery[P]
-  val sortColumn: P => Column[Long]
-  val idColumn: P => Column[String]
-
-  private[this] def toRow(delta:Delta[T, I]): P#TableElementType = delta match {
-    case Updated(resource) => update(resource)
-    case Deleted(id, source) => delete(id, source)
-  }
-
-
-  def currentState(id: UUID): P#TableElementType  = {
-    db withSession(
-      implicit session =>
-        table.filter(filterByResourceId(id)).sortBy(newest).take(1).list().head)
-  }
-
-  def newest: (P) => ColumnOrdered[Long]
-
-  def filterByResourceId(id: UUID): (P) => Column[Boolean]
-
-  def update(resource:T with Identified[I]): P#TableElementType
-
-  def delete(id:I, source: String): P#TableElementType
-
-  //def toResource(row: P#TableElementType): T with Identified
-
-  override def addModification(delta:Delta[T, I]) {
-    db withSession {
-      implicit session =>
-        table += toRow(delta)
-    }
-  }
-
-  def delta(row: P#TableElementType):Delta[T, I]
-
-  def timestamp(resource: P): lifted.Column[Long]
-  def timestamp(resource: P#TableElementType): Long
-
-  def latestResources: lifted.Query[P, P#TableElementType]
-
-  def loadFromDb(latest:Option[Long]): List[P#TableElementType] = latest match  {
-    case None =>
-      db withSession {
-        implicit session =>
-          latestResources.list
-
-      }
-    case Some(latest) =>
-
-      db withSession {
-        implicit session =>
-          table.filter(timestamp(_) >= latest).sortBy(sortColumn(_).asc).list
-      }
-
-
-  }
-
-
-
-  override def journal(latest:Option[Long]): Seq[Delta[T, I]] = {
-    val dbList: List[P#TableElementType] = loadFromDb(latest)
-
-    latestReload = dbList.lastOption.map(timestamp(_))
-    dbList.map((row) => Try(delta(row)).toOption).flatten
-  }
-}
