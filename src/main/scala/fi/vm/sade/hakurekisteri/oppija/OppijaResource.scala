@@ -1,26 +1,26 @@
 package fi.vm.sade.hakurekisteri.oppija
 
-import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
-import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport, Registers}
+import java.util.UUID
+
+import akka.actor.{ActorRef, ActorSystem}
+import akka.pattern.ask
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import org.scalatra.json.JacksonJsonSupport
-import org.scalatra._
-import _root_.akka.actor.{ActorSystem, ActorRef}
-import scala.concurrent.{Future, ExecutionContext}
-import _root_.akka.util.Timeout
-import org.scalatra.swagger.Swagger
-import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, FullHakemus}
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
-import _root_.akka.pattern.ask
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery, NoHetuException}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery, HenkiloHakijaQuery}
+import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
+import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaQuery
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Registers, SpringSecuritySupport}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import java.util.UUID
-import fi.vm.sade.hakurekisteri.ensikertalainen.{NoHetuException, Ensikertalainen, EnsikertalainenQuery}
-import scala.Some
-import fi.vm.sade.hakurekisteri.integration.hakemus.HenkiloHakijaQuery
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
+import org.scalatra._
+import org.scalatra.json.JacksonJsonSupport
+import org.scalatra.swagger.Swagger
+
+import scala.concurrent.{ExecutionContext, Future}
 
 
 class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikertalaisuus: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack  with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
@@ -41,9 +41,7 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
 
 
   get("/") {
-
-    import _root_.akka.pattern.ask
-    val q = HakijaQuery(params, currentUser)
+    val q = KkHakijaQuery(params, currentUser)
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
