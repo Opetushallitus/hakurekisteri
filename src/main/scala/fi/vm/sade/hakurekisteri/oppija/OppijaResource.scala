@@ -10,7 +10,6 @@ import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery, NoHetuException}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery, HenkiloHakijaQuery}
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
-import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaQuery
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Registers, SpringSecuritySupport}
@@ -41,12 +40,11 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
 
 
   get("/") {
-    val q = KkHakijaQuery(params, currentUser)
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
       val is = for (
-        hakemukset <- (hakemusRekisteri ? HakemusQuery(q)).mapTo[Seq[FullHakemus]];
+        hakemukset <- (hakemusRekisteri ? HakemusQuery(params)).mapTo[Seq[FullHakemus]];
         oppijat <- fetchOppijatFor(hakemukset)
       ) yield oppijat
     }
@@ -101,7 +99,7 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
 
   def fetchEnsikertalaisuus(henkiloOid: String, hetu: Option[String]): Future[Option[Ensikertalainen]] = {
     (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, hetu)).mapTo[Ensikertalainen].
-      map(Some(_)).
+      map(Some).
       recover{
         case NoHetuException(oid, message) =>
           logger.info(s"trying to resolve ensikertalaisuus for $henkiloOid, no hetu found")
