@@ -2,6 +2,8 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import org.joda.time.{LocalDate, DateTime}
 import scala.slick.driver.JdbcDriver.simple._
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 
 trait HakurekisteriColumns {
   implicit val datetimeLong = MappedColumnType.base[DateTime, Long](
@@ -12,6 +14,11 @@ trait HakurekisteriColumns {
   implicit val localDateString = MappedColumnType.base[LocalDate, String](
     _.toString ,
     LocalDate.parse
+  )
+
+  implicit val yksilollistaminenString = MappedColumnType.base[Yksilollistetty, String](
+    _.toString,
+    yksilollistaminen.withName
   )
 
 }
