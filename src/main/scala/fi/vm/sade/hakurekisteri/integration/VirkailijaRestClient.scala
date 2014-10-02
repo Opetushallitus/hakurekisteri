@@ -10,7 +10,9 @@ import fi.vm.sade.hakurekisteri.integration.cas.CasClient
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import org.slf4j.LoggerFactory
 
+import scala.compat.Platform
 import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.duration._
 import scala.util.Try
 
 case class PreconditionFailedException(message: String) extends Exception(message)
@@ -19,6 +21,8 @@ case class ServiceConfig(serviceAccessUrl: Option[String] = None,
                          serviceUrl: String,
                          user: Option[String] = None,
                          password: Option[String] = None)
+
+case class JSessionId(created: Long, sessionId: String)
 
 class VirkailijaRestClient(config: ServiceConfig)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) extends HakurekisteriJsonSupport {
 
@@ -30,25 +34,61 @@ class VirkailijaRestClient(config: ServiceConfig)(implicit val httpClient: HttpC
   val logger = LoggerFactory.getLogger(getClass)
   val casClient = new CasClient(serviceAccessUrl, serviceUrl, user, password)
 
+  val useSessionId = true
+
   def logConnectionFailure[T](f: Future[T], url: URL) = f.onFailure {
     case t: InterruptedIOException => logger.error(s"connection error calling url [$url]: $t")
+    case t: JSessionIdCookieException => logger.warn(t.getMessage)
   }
+
+  var sessionIdCookie: Option[JSessionId] = None
+  val cookieExpirationMillis = 5.minutes.toMillis
 
   def executeGet(uri: String): Future[(HttpResponse, Option[String])]= {
     val url = new URL(serviceUrl + uri)
-    (user, password) match {
-      case (None, None) =>
-        //logger.debug(s"calling url $url");
-        val f = GET(url).apply.map((_, None))
+    def executeUnauthorized: Future[(HttpResponse, Option[String])] = {
+      val f = GET(url).apply.map((_, None))
+      logConnectionFailure(f, url)
+      f
+    }
+    def executeWithJSession(c: JSessionId): Future[(HttpResponse, Option[String])] = {
+      val cookie = s"${JSessionIdCookieParser.name}=${c.sessionId}"
+      logger.debug(s"auth with cookie $cookie")
+      val f = GET(url).addHeaders("Cookie" -> cookie).apply.map((_, Some(cookie)))
+      logConnectionFailure(f, url)
+      f
+    }
+    def saveJSessionId(r: HttpResponse) {
+      sessionIdCookie = r.headers match {
+        case Some(headerList) => headerList.list.find((t) => t._1 == "Set-Cookie") match {
+          case Some((_, cookie)) if cookie.startsWith(JSessionIdCookieParser.name) => Some(JSessionIdCookieParser.fromString(cookie))
+          case None => None
+        }
+        case None => None
+      }
+    }
+    def executeWithTicket: Future[(HttpResponse, Option[String])] = {
+      casClient.getProxyTicket.flatMap((ticket) => {
+        val f = GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(r => {
+          if (useSessionId) saveJSessionId(r)
+          (r, Some(ticket))
+        })
         logConnectionFailure(f, url)
         f
+      })
+    }
+    (user, password) match {
+      case (None, None) =>
+        executeUnauthorized
       case (Some(u), Some(p)) =>
-        casClient.getProxyTicket.flatMap((ticket) => {
-          //logger.debug(s"calling url $url with ticket $ticket");
-          val f = GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map((_, Some(ticket)))
-          logConnectionFailure(f, url)
-          f
-        })
+        sessionIdCookie match {
+          case Some(c) if useSessionId && c.created + cookieExpirationMillis > Platform.currentTime =>
+            executeWithJSession(c)
+          case Some(_) =>
+            executeWithTicket
+          case None =>
+            executeWithTicket
+        }
       case _ => throw new IllegalArgumentException("either user or password is not defined")
     }
   }
@@ -64,13 +104,33 @@ class VirkailijaRestClient(config: ServiceConfig)(implicit val httpClient: HttpC
     rawResult.get
   }
 
-  def readObject[A <: AnyRef: Manifest](uri: String, precondition: (HttpResponseCode) => Boolean): Future[A] = executeGet(uri).map{case (resp, ticket) =>
+  def readObject[A <: AnyRef: Manifest](uri: String, precondition: (HttpResponseCode) => Boolean): Future[A] = executeGet(uri).map{case (resp, auth) =>
     if (precondition(resp.code)) resp
-    else throw PreconditionFailedException(s"precondition failed for uri: $uri, response code: ${resp.code} with ${ticket.map("ticket: " + _).getOrElse("no ticket")}")
+    else throw PreconditionFailedException(s"precondition failed for uri: $uri, response code: ${resp.code} with ${auth.map("auth: " + _).getOrElse("no auth")}")
   }.map(readBody[A])
 
   def readObject[A <: AnyRef: Manifest](uri: String, okCodes: HttpResponseCode*): Future[A] = {
     val codes = if (okCodes.isEmpty) Seq(HttpResponseCode.Ok) else okCodes
     readObject[A](uri, (code: HttpResponseCode) => codes.contains(code))
+  }
+}
+
+case class JSessionIdCookieException(m: String) extends Exception(m)
+
+object JSessionIdCookieParser {
+  val name = "JSESSIONID"
+  def isJSessionIdCookie(cookie: String): Boolean = {
+    cookie.startsWith(name)
+  }
+  def fromString(cookie: String): JSessionId = {
+    if (!isJSessionIdCookie(cookie)) throw JSessionIdCookieException(s"not a JSESSIONID cookie: $cookie")
+    val value = cookie.split(";").headOption match {
+      case Some(c) => c.split("=").lastOption match {
+        case Some(v) => v
+        case None => throw JSessionIdCookieException(s"JSESSIONID value not found from cookie: $cookie")
+      }
+      case None => throw JSessionIdCookieException(s"invalid JSESSIONID cookie structure: $cookie")
+    }
+    JSessionId(Platform.currentTime, value)
   }
 }
