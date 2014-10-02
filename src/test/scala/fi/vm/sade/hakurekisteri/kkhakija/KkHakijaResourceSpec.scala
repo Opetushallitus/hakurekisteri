@@ -14,9 +14,6 @@ import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, SuoritusQuery}
 import org.joda.time.LocalDate
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
-import org.specs.mock.Mockito
-
-import scala.compat.Platform
 
 class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger
