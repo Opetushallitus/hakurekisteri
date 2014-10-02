@@ -14,7 +14,7 @@ object Config {
   val homeDir = sys.props.get("user.home").getOrElse("")
   val ophConfDir = Paths.get(homeDir, "/oph-configuration/")
 
-  val propertyLocations = Seq("override.properties", "suoritusrekisteri.properties", "common.properties")
+  val propertyLocations = Seq("suoritusrekisteri.properties", "common.properties")
 
   val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
 
@@ -42,8 +42,8 @@ object Config {
   lazy val properties: Map[String, String] = loadProperties(resources.map(Files.newInputStream(_)))
 
   // props
-  val serviceUser = Some(properties("tiedonsiirto.app.username.to.suoritusrekisteri"))
-  val servicePassword = Some(properties("tiedonsiirto.app.password.to.suoritusrekisteri"))
+  val serviceUser = Some(properties("suoritusrekisteri.app.username"))
+  val servicePassword = Some(properties("suoritusrekisteri.app.password"))
   val serviceAccessUrl = Some("https://" + properties.getOrElse("host.virkailija", hostQa) + "/service-access")
   val sijoitteluServiceUrl = properties.getOrElse("cas.service.sijoittelu-service", sijoitteluServiceUrlQa)
   val tarjontaServiceUrl = properties.getOrElse("cas.service.tarjonta-service", tarjontaServiceUrlQa)
