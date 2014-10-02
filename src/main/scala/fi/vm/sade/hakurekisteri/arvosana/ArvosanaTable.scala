@@ -6,9 +6,9 @@ import java.util.UUID
 import org.joda.time.LocalDate
 
 
-class ArvosanaTable(tag: Tag) extends JournalTable[Arvosana, UUID, (String, String, String, String, Option[String], Boolean, Option[Int], Option[String], String)](tag, "arvosana") {
+class ArvosanaTable(tag: Tag) extends JournalTable[Arvosana, UUID, (UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String)](tag, "arvosana") {
 
-  def suoritus = column[String]("suoritus")
+  def suoritus = column[UUID]("suoritus")
   def arvosana = column[String]("arvosana")
   def asteikko = column[String]("asteikko")
   def aine = column[String]("aine")
@@ -19,15 +19,15 @@ class ArvosanaTable(tag: Tag) extends JournalTable[Arvosana, UUID, (String, Stri
 
   override def resourceShape = (suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, pisteet, myonnetty, source).shaped
 
-  override def row(a: Arvosana): Option[(String, String, String, String, Option[String], Boolean, Option[Int], Option[String], String)] = a.arvio match {
-    case Arvio410(arvosana) => Some(a.suoritus.toString, arvosana, Arvio.ASTEIKKO_4_10, a.aine, a.lisatieto, a.valinnainen, None, a.myonnetty.map(_.toString), a.source)
-    case ArvioYo(arvosana, pisteet) =>  Some(a.suoritus.toString, arvosana, Arvio.ASTEIKKOYO, a.aine, a.lisatieto, a.valinnainen, pisteet , a.myonnetty.map(_.toString), a.source)
+  override def row(a: Arvosana): Option[(UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String)] = a.arvio match {
+    case Arvio410(arvosana) => Some(a.suoritus, arvosana, Arvio.ASTEIKKO_4_10, a.aine, a.lisatieto, a.valinnainen, None, a.myonnetty.map(_.toString), a.source)
+    case ArvioYo(arvosana, pisteet) =>  Some(a.suoritus, arvosana, Arvio.ASTEIKKOYO, a.aine, a.lisatieto, a.valinnainen, pisteet , a.myonnetty.map(_.toString), a.source)
   }
 
-  override val deletedValues: (String, String, String, String, Option[String], Boolean, Option[Int], Option[String], String) = ("", "","", "", None, false, None, None, "")
-  override val resource: ((String, String, String, String, Option[String], Boolean, Option[Int], Option[String], String)) => Arvosana = (arvosanaResource _).tupled
+  override val deletedValues: (UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String) = (UUID.fromString("de1e7edd-e1e7-edde-1e7e-dde1e7ed1111"), "","", "", None, false, None, None, "")
+  override val resource: ((UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String)) => Arvosana = (arvosanaResource _).tupled
 
-  def arvosanaResource(suoritus: String, arvosana: String, asteikko: String, aine: String, lisatieto: Option[String], valinnainen: Boolean, pisteet: Option[Int], myonnetty: Option[String], source: String) =
-    Arvosana(UUID.fromString(suoritus), Arvio(arvosana, asteikko, pisteet), aine, lisatieto, valinnainen, myonnetty = myonnetty.map(LocalDate.parse), source)
+  def arvosanaResource(suoritus: UUID, arvosana: String, asteikko: String, aine: String, lisatieto: Option[String], valinnainen: Boolean, pisteet: Option[Int], myonnetty: Option[String], source: String) =
+    Arvosana(suoritus, Arvio(arvosana, asteikko, pisteet), aine, lisatieto, valinnainen, myonnetty = myonnetty.map(LocalDate.parse), source)
 
 }
