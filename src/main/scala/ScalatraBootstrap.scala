@@ -95,7 +95,7 @@ class ScalatraBootstrap extends LifeCycle {
       "/rest/v1/hakijat" -> new HakijaResource(koosteet.hakijat),
       "/rest/v1/kkhakijat" -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),
       "/rest/v1/opiskelijat" -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
-      "/rest/v1/oppijat" -> new OppijaResource(registers, integrations.hakemukset, koosteet.ensikertalainen),
+      "/rest/v1/oppijat" -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
       "/rest/v1/opiskeluoikeudet" -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
       "/rest/v1/suoritukset" -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport,
       "/sanity" -> new SanityResource(sanity)
