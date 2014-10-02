@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 import org.joda.time.{LocalDate, DateTime}
 import scala.slick.driver.JdbcDriver.simple._
 
-object HakurekisteriColumns {
+trait HakurekisteriColumns {
   implicit val datetimeLong = MappedColumnType.base[DateTime, Long](
     _.getMillis ,
     new DateTime(_)
@@ -15,3 +15,5 @@ object HakurekisteriColumns {
   )
 
 }
+
+object HakurekisteriColumns extends HakurekisteriColumns

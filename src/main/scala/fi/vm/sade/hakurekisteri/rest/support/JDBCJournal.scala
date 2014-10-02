@@ -67,7 +67,7 @@ class JDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: Tab
 
 }
 
-abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: String) extends Table[Delta[R,I]](tag, name) {
+abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: String) extends Table[Delta[R,I]](tag, name) with HakurekisteriColumns {
 
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def resourceId = column[String]("resource_id")

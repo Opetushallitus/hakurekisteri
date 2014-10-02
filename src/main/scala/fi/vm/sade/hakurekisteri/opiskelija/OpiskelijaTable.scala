@@ -5,12 +5,6 @@ import scala.slick.driver.JdbcDriver.simple._
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, HakurekisteriColumns}
 
-
-
-
-
-import HakurekisteriColumns._
-
 class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID, (String, String, String, String, DateTime, Option[DateTime], String)](tag, "opiskelija") {
   def oppilaitosOid = column[String]("oppilaitos_oid")
   def luokkataso = column[String]("luokkataso")

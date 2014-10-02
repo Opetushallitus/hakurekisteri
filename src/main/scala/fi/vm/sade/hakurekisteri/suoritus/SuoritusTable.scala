@@ -15,8 +15,6 @@ object SuoritusRowTypes {
 import SuoritusRowTypes._
 
 
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriColumns._
-
 class SuoritusTable(tag: Tag) extends JournalTable[Suoritus, UUID, SuoritusRow](tag, "suoritus") {
 
 
