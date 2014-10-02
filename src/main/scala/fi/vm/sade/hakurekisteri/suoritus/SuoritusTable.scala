@@ -9,10 +9,13 @@ import java.sql.SQLDataException
 
 
 object SuoritusRowTypes {
-  type SuoritusRow = (String, String, Option[String], Option[String], Option[String], Option[String], Option[String], Option[String], Option[Int], Option[String], String)
+  type SuoritusRow = (String, String, Option[String], Option[String], Option[LocalDate], Option[String], Option[String], Option[String], Option[Int], Option[String], String)
 }
 
 import SuoritusRowTypes._
+
+
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriColumns._
 
 class SuoritusTable(tag: Tag) extends JournalTable[Suoritus, UUID, SuoritusRow](tag, "suoritus") {
 
@@ -24,7 +27,7 @@ class SuoritusTable(tag: Tag) extends JournalTable[Suoritus, UUID, SuoritusRow](
   //virallinen
   def komo = column[Option[String]]("komo")
   def tila = column[Option[String]]("tila")
-  def valmistuminen = column[Option[String]]("valmistuminen")
+  def valmistuminen = column[Option[LocalDate]]("valmistuminen")
   def yksilollistaminen = column[Option[String]]("yksilollistaminen")
   def suoritusKieli = column[Option[String]]("suoritus_kieli")
 
@@ -37,7 +40,7 @@ class SuoritusTable(tag: Tag) extends JournalTable[Suoritus, UUID, SuoritusRow](
 
   override def row(s: Suoritus): Option[SuoritusRow] = s match {
     case o: VirallinenSuoritus =>
-      Some( o.myontaja, o.henkiloOid, Some(o.komo),Some(o.tila), Some(o.valmistuminen.toString), Some(o.yksilollistaminen.toString), Some(o.suoritusKieli), None, None, None, o.source)
+      Some( o.myontaja, o.henkiloOid, Some(o.komo),Some(o.tila), Some(o.valmistuminen), Some(o.yksilollistaminen.toString), Some(o.suoritusKieli), None, None, None, o.source)
     case s: VapaamuotoinenSuoritus =>
       Some(s.myontaja, s.henkiloOid, None, None, None,  None, None, Some(s.kuvaus), Some(s.vuosi), Some(s.tyyppi), s.source)
 
@@ -49,7 +52,7 @@ class SuoritusTable(tag: Tag) extends JournalTable[Suoritus, UUID, SuoritusRow](
 
   override val resource: (SuoritusRow) => Suoritus = {
     case (myontaja, henkiloOid, Some(komo), Some(tila), Some(valmistuminen), Some(yks), Some(suoritusKieli), _, _, _, source) =>
-      VirallinenSuoritus(komo, myontaja, tila, LocalDate.parse(valmistuminen), henkiloOid, yksil.withName(yks), suoritusKieli, lahde = source)
+      VirallinenSuoritus(komo, myontaja, tila, valmistuminen, henkiloOid, yksil.withName(yks), suoritusKieli, lahde = source)
     case (myontaja, henkiloOid, _, _, _, _, _, Some(kuvaus), Some(vuosi), Some(tyyppi), source)  =>
       VapaamuotoinenSuoritus(henkiloOid,kuvaus, myontaja, vuosi, tyyppi, source)
     case row => throw new InvalidSuoritusDataException(row)

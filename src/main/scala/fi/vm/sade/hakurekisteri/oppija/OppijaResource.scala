@@ -10,10 +10,9 @@ import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery, NoHetuException}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery, HenkiloHakijaQuery}
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
-import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaQuery
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Registers, SpringSecuritySupport}
+import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport, Registers, SpringSecuritySupport}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
 import org.scalatra._
@@ -21,6 +20,7 @@ import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.Swagger
 
 import scala.concurrent.{ExecutionContext, Future}
+import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 
 
 class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikertalaisuus: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack  with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
@@ -41,18 +41,19 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
 
 
   get("/") {
-    val q = KkHakijaQuery(params, currentUser)
-
+    implicit val user = currentUser
+    val q = HakemusQuery(params)
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
       val is = for (
-        hakemukset <- (hakemusRekisteri ? HakemusQuery(q)).mapTo[Seq[FullHakemus]];
+        hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
         oppijat <- fetchOppijatFor(hakemukset)
       ) yield oppijat
     }
   }
 
   get("/:oid") {
+    implicit val user = currentUser
     val q = HenkiloHakijaQuery(params("oid"))
     new AsyncResult() {
       val is = for (
@@ -67,21 +68,21 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
     case t: VirtaConnectionErrorException => (id) => InternalServerError(IncidentReport(id, "virta error"))
   }
 
-  def fetchOppijatFor(hakemukset: Seq[FullHakemus]): Future[Seq[Oppija]] =
+  def fetchOppijatFor(hakemukset: Seq[FullHakemus])(implicit user: Option[User]): Future[Seq[Oppija]] =
     Future.sequence(for (
       hakemus <- hakemukset
       if hakemus.personOid.isDefined && hakemus.stateValid
     ) yield fetchOppijaData(hakemus.personOid.get, hakemus.hetu))
 
 
-  def fetchTodistukset(suoritukset: Seq[Suoritus with Identified[UUID]]):Future[Seq[Todistus]] = Future.sequence(
+  def fetchTodistukset(suoritukset: Seq[Suoritus with Identified[UUID]])(implicit user: Option[User]):Future[Seq[Todistus]] = Future.sequence(
     for (
       suoritus <- suoritukset
     ) yield for (
-        arvosanat <- (rekisterit.arvosanaRekisteri ? ArvosanaQuery(suoritus = Some(suoritus.id))).mapTo[Seq[Arvosana]]
+        arvosanat <- (rekisterit.arvosanaRekisteri ? AuthorizedQuery(ArvosanaQuery(suoritus = Some(suoritus.id)), authorities, username)).mapTo[Seq[Arvosana]]
       ) yield Todistus(suoritus, arvosanat))
 
-  def fetchOppijaData(henkiloOid: String, hetu: Option[String]): Future[Oppija] = {
+  def fetchOppijaData(henkiloOid: String, hetu: Option[String])(implicit user: Option[User]): Future[Oppija] = {
     for (
       suoritukset <- fetchSuoritukset(henkiloOid);
       todistukset <- fetchTodistukset(suoritukset);
@@ -109,15 +110,19 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
       }
   }
 
-  def fetchOpiskeluoikeudet(henkiloOid: String): Future[Seq[Opiskeluoikeus]] = {
-    (rekisterit.opiskeluoikeusRekisteri ? OpiskeluoikeusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Opiskeluoikeus]]
+  def fetchOpiskeluoikeudet(henkiloOid: String)(implicit user: Option[User]): Future[Seq[Opiskeluoikeus]] = {
+    (rekisterit.opiskeluoikeusRekisteri ? AuthorizedQuery(OpiskeluoikeusQuery(henkilo = Some(henkiloOid)), authorities, username)).mapTo[Seq[Opiskeluoikeus]]
   }
 
-  def fetchOpiskelu(henkiloOid: String): Future[Seq[Opiskelija]] = {
-    (rekisterit.opiskelijaRekisteri ? OpiskelijaQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Opiskelija]]
+  def fetchOpiskelu(henkiloOid: String)(implicit user: Option[User]): Future[Seq[Opiskelija]] = {
+    (rekisterit.opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaQuery(henkilo = Some(henkiloOid)), authorities, username)).mapTo[Seq[Opiskelija]]
   }
 
-  def fetchSuoritukset(henkiloOid: String): Future[Seq[Suoritus with Identified[UUID]]] = {
-    (rekisterit.suoritusRekisteri ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus with Identified[UUID]]]
+  def fetchSuoritukset(henkiloOid: String)(implicit user: Option[User]): Future[Seq[Suoritus with Identified[UUID]]] = {
+    (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(henkilo = Some(henkiloOid)), authorities, username)).mapTo[Seq[Suoritus with Identified[UUID]]]
   }
+
+  def authorities(implicit user:Option[User]) = user.map(_.authorities).getOrElse(Seq())
+  def username(implicit user:Option[User]) = user.map(_.username).getOrElse("anonymous")
+
 }
