@@ -122,7 +122,8 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
     (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(henkilo = Some(henkiloOid)), authorities, username)).mapTo[Seq[Suoritus with Identified[UUID]]]
   }
 
-  def authorities(implicit user:Option[User]) = user.map(_.authorities).getOrElse(Seq())
+  def authorities(implicit user:Option[User]) = getKnownOrganizations(user)
+
   def username(implicit user:Option[User]) = user.map(_.username).getOrElse("anonymous")
 
 }
