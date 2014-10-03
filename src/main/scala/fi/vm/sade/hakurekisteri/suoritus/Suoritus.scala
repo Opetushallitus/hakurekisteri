@@ -23,13 +23,19 @@ sealed abstract class Suoritus(val henkiloOid: String, val vahvistettu: Boolean,
 }
 
 
+case class VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi: Int, tyyppi: String, index: Int = 0, lahde: String) extends Suoritus (henkilo, false, lahde) {
 
-case class VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi: Int, tyyppi: String, lahde: String) extends Suoritus (henkilo, false, lahde) {
+  private[VapaamuotoinenSuoritus] case class VapaaSisalto(henkilo: String, tyyppi: String, index: Int)
 
   val kkTutkinto = tyyppi == "kkTutkinto"
 
+  private[VapaamuotoinenSuoritus] val core = VapaaSisalto(henkilo, tyyppi, index)
+
   override def identify(id: UUID): this.type with Identified[UUID] = VapaamuotoinenSuoritus.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
 
+  override def hashCode(): Int = core.hashCode()
+
+  override def equals(obj: scala.Any): Boolean = obj.isInstanceOf[VapaamuotoinenSuoritus] && core.equals(obj.asInstanceOf[VapaamuotoinenSuoritus].core)
 }
 
 object VapaamuotoinenSuoritus {
@@ -39,7 +45,7 @@ object VapaamuotoinenSuoritus {
   }
 
   def identify(o: VapaamuotoinenSuoritus, identity: UUID) = {
-    new VapaamuotoinenSuoritus(o.henkiloOid, o.kuvaus, o.myontaja, o.vuosi, o.tyyppi,  o.source) with Identified[UUID] {
+    new VapaamuotoinenSuoritus(o.henkiloOid, o.kuvaus, o.myontaja, o.vuosi, o.tyyppi,  o.index, o.source) with Identified[UUID] {
       val id: UUID = identity
     }
   }
