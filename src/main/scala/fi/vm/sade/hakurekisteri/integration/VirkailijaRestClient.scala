@@ -3,6 +3,9 @@ package fi.vm.sade.hakurekisteri.integration
 import java.io.InterruptedIOException
 import java.net.URL
 
+import akka.actor.ActorRef
+import akka.pattern.ask
+import akka.util.Timeout
 import com.stackmob.newman.HttpClient
 import com.stackmob.newman.dsl._
 import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
@@ -22,9 +25,9 @@ case class ServiceConfig(serviceAccessUrl: Option[String] = None,
                          user: Option[String] = None,
                          password: Option[String] = None)
 
-case class JSessionId(created: Long, sessionId: String)
+class VirkailijaRestClient(config: ServiceConfig, jSessionId: Option[ActorRef] = None)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) extends HakurekisteriJsonSupport {
 
-class VirkailijaRestClient(config: ServiceConfig)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) extends HakurekisteriJsonSupport {
+  implicit val defaultTimeout: Timeout = 60.seconds
 
   val serviceAccessUrl: Option[String] = config.serviceAccessUrl
   val serviceUrl: String = config.serviceUrl
@@ -34,14 +37,11 @@ class VirkailijaRestClient(config: ServiceConfig)(implicit val httpClient: HttpC
   val logger = LoggerFactory.getLogger(getClass)
   val casClient = new CasClient(serviceAccessUrl, serviceUrl, user, password)
 
-  val useSessionId = true
-
   def logConnectionFailure[T](f: Future[T], url: URL) = f.onFailure {
     case t: InterruptedIOException => logger.error(s"connection error calling url [$url]: $t")
     case t: JSessionIdCookieException => logger.warn(t.getMessage)
   }
 
-  var sessionIdCookie: Option[JSessionId] = None
   val cookieExpirationMillis = 5.minutes.toMillis
 
   def executeGet(uri: String): Future[(HttpResponse, Option[String])]= {
@@ -59,18 +59,29 @@ class VirkailijaRestClient(config: ServiceConfig)(implicit val httpClient: HttpC
       f
     }
     def saveJSessionId(r: HttpResponse) {
-      sessionIdCookie = r.headers match {
+      if (jSessionId.isDefined) r.headers match {
         case Some(headerList) => headerList.list.find((t) => t._1 == "Set-Cookie") match {
-          case Some((_, cookie)) if cookie.startsWith(JSessionIdCookieParser.name) => Some(JSessionIdCookieParser.fromString(cookie))
+          case Some((_, cookie)) if cookie.startsWith(JSessionIdCookieParser.name) =>
+            jSessionId.get ! SaveJSessionId(JSessionKey(serviceUrl), JSessionIdCookieParser.fromString(cookie))
+
           case None => None
+
         }
         case None => None
+
       }
+    }
+    def getJSessionId: Future[Option[JSessionId]] = jSessionId match {
+      case Some(actor) =>
+        (actor ? JSessionKey(serviceUrl)).mapTo[Option[JSessionId]]
+
+      case None =>
+        Future.successful(None)
     }
     def executeWithTicket: Future[(HttpResponse, Option[String])] = {
       casClient.getProxyTicket.flatMap((ticket) => {
         val f = GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(r => {
-          if (useSessionId) saveJSessionId(r)
+          saveJSessionId(r)
           (r, Some(ticket))
         })
         logConnectionFailure(f, url)
@@ -81,14 +92,12 @@ class VirkailijaRestClient(config: ServiceConfig)(implicit val httpClient: HttpC
       case (None, None) =>
         executeUnauthorized
       case (Some(u), Some(p)) =>
-        sessionIdCookie match {
-          case Some(c) if useSessionId && c.created + cookieExpirationMillis > Platform.currentTime =>
-            executeWithJSession(c)
-          case Some(_) =>
-            executeWithTicket
+        getJSessionId.flatMap(_ match {
+          case Some(session) if session.created + cookieExpirationMillis > Platform.currentTime =>
+            executeWithJSession(session)
           case None =>
             executeWithTicket
-        }
+        })
       case _ => throw new IllegalArgumentException("either user or password is not defined")
     }
   }

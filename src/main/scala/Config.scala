@@ -60,8 +60,8 @@ object Config {
   val virtaTunnus = properties.getOrElse("suoritusrekisteri.virta.tunnus", virtaTunnusTest)
   val virtaAvain = properties.getOrElse("suoritusrekisteri.virta.avain", virtaAvainTest)
 
-  val virtaConfig = VirtaConfig(serviceUrl = virtaServiceUrl, jarjestelma = virtaJarjestelma, tunnus = virtaTunnus, avain = virtaAvain)
-  val henkiloConfig = ServiceConfig(serviceAccessUrl = serviceAccessUrl, serviceUrl = henkiloServiceUrl, user = serviceUser, password = servicePassword)
+  val virtaConfig = VirtaConfig(virtaServiceUrl, virtaJarjestelma, virtaTunnus, virtaAvain)
+  val henkiloConfig = ServiceConfig(serviceAccessUrl, henkiloServiceUrl, serviceUser, servicePassword)
   val sijoitteluConfig = ServiceConfig(serviceAccessUrl, sijoitteluServiceUrl, serviceUser, servicePassword)
   val parameterConfig = ServiceConfig(serviceUrl = parameterServiceUrl)
   val hakemusConfig = HakemusConfig(ServiceConfig(serviceAccessUrl, hakuappServiceUrl, serviceUser, servicePassword), maxApplications)
