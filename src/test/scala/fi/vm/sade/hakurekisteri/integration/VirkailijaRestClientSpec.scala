@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration
 import java.net.URL
 import java.util.Date
 
-import akka.actor.ActorSystem
+import akka.actor.{Props, ActorSystem}
 import com.stackmob.newman.request._
 import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
 import com.stackmob.newman.{RawBody, Headers, HttpClient}
@@ -17,6 +17,7 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers {
   implicit val system = ActorSystem("test-virkailija")
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val httpClient: MockHttpClient = new MockHttpClient()
+  val jSessionIdActor = system.actorOf(Props(new JSessionIdActor))
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/test"))
 
   behavior of "VirkailijaRestClient"
@@ -68,7 +69,7 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers {
     val client = new VirkailijaRestClient(ServiceConfig(serviceAccessUrl = Some("http://localhost/service-access"),
       serviceUrl = "http://localhost/test",
       user = Some("user"),
-      password = Some("pw")))
+      password = Some("pw")), Some(jSessionIdActor))
     val response = client.readObject[TestResponse]("/rest/foo", HttpResponseCode.Ok)
     val testResponse = Await.result(response, 10.seconds)
 
