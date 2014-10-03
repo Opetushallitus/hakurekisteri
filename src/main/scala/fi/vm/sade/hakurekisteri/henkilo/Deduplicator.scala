@@ -64,7 +64,7 @@ class Deduplicator(suoritusRekisteri:ActorRef, opiskelijaRekisteri:ActorRef) ext
                 suoritusRekisteri ! VirallinenSuoritus(s.komo: String, s.myontaja: String, s.tila: String, s.valmistuminen, newOid, s.yksilollistaminen, s.suoritusKieli, s.opiskeluoikeus, s.vahvistettu, s.source).identify(s.id)
                 updatedSuoritukset.put(s.id, Promise[Unit])
               case s: VapaamuotoinenSuoritus with Identified[UUID] =>
-                suoritusRekisteri ! VapaamuotoinenSuoritus(newOid, s.kuvaus: String, s.myontaja: String, s.vuosi: Int, s.tyyppi, s.source: String).identify(s.id)
+                suoritusRekisteri ! VapaamuotoinenSuoritus(newOid, s.kuvaus: String, s.myontaja: String, s.vuosi: Int, s.tyyppi, s.index, s.source: String).identify(s.id)
                 updatedSuoritukset.put(s.id, Promise[Unit])
 
 
