@@ -160,15 +160,13 @@ case class DefinedRole(service: String, rights: String, organization: String) ex
 object UnknownRole extends Role
 
 object Role {
-  def apply(authority:String) =  List(authority split "_": _*) match {
-    case _::_::service::rest if !rest.isEmpty && isOid(rest.last) => DefinedRole(service,  rest.init.mkString("_") , rest.last)
+  def apply(authority:String) =  authority match {
+    case role(service, right, org) => DefinedRole(service, right, org)
     case _ => UnknownRole
   }
-  val regex = "\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+".r
 
-  def isOid(x: String) = {
-    (regex findFirstIn x).nonEmpty
-  }
+  val role = "ROLE_APP_([^_]*)_(.*)_(\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+)".r
+
 
 }
 
