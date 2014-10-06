@@ -92,8 +92,8 @@ trait SuoritusService extends ResourceService[Suoritus, UUID] with SuoritusRepos
   }
 
   def checkVuosi(vuosi: Option[String])(suoritus:Suoritus):Boolean = (suoritus, vuosi) match {
-    case (s:VirallinenSuoritus, Some(vuosi:String)) => beforeYearEnd(vuosi)(s.valmistuminen)
-    case (s:VapaamuotoinenSuoritus, Some(vuosi:String)) => Try(vuosi.toInt).map((hakuvuosi) => s.vuosi <= hakuvuosi).getOrElse(false)
+    case (s:VirallinenSuoritus, Some(vuosi:String)) =>  duringYear(vuosi)(s.valmistuminen)
+    case (s:VapaamuotoinenSuoritus, Some(vuosi:String)) => Try(vuosi.toInt).map((hakuvuosi) => s.vuosi == hakuvuosi).getOrElse(false)
     case (_, None) => true
   }
 
@@ -106,7 +106,12 @@ trait SuoritusService extends ResourceService[Suoritus, UUID] with SuoritusRepos
   }
 
   def duringFirstHalf(date: LocalDate):Boolean = {
-    (newYear(date.getYear) to startOfAutumn(date.getYear)).contains(date.toDateTimeAtStartOfDay)
+    newYear(date.getYear) to startOfAutumn(date.getYear) contains date.toDateTimeAtStartOfDay
+  }
+
+  def duringYear(year: String)(date: LocalDate): Boolean = {
+    Try(newYear(year.toInt) to newYear(year.toInt + 1) contains date.toDateTimeAtStartOfDay).getOrElse(false)
+
   }
 
 
