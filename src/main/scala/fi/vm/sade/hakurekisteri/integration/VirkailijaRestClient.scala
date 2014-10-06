@@ -51,8 +51,8 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionId: Option[ActorRef] =
       logConnectionFailure(f, url)
       f
     }
-    def executeWithJSession(c: JSessionId): Future[(HttpResponse, Option[String])] = {
-      val cookie = s"${JSessionIdCookieParser.name}=${c.sessionId}"
+    def executeWithJSession(sessionId: String): Future[(HttpResponse, Option[String])] = {
+      val cookie = s"${JSessionIdCookieParser.name}=${sessionId}"
       logger.debug(s"auth with cookie $cookie to $url")
       val f = GET(url).addHeaders("Cookie" -> cookie).apply.map((_, Some(cookie)))
       logConnectionFailure(f, url)
@@ -92,12 +92,12 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionId: Option[ActorRef] =
       case (None, None) =>
         executeUnauthorized
       case (Some(u), Some(p)) =>
-        getJSessionId.flatMap(_ match {
-          case Some(session) if session.created + cookieExpirationMillis > Platform.currentTime =>
-            executeWithJSession(session)
-          case None =>
+        getJSessionId.flatMap {
+          case Some(JSessionId(created, sessionId)) if created + cookieExpirationMillis > Platform.currentTime =>
+            executeWithJSession(sessionId)
+          case _ =>
             executeWithTicket
-        })
+        }
       case _ => throw new IllegalArgumentException("either user or password is not defined")
     }
   }

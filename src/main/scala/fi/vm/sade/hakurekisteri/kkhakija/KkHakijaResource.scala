@@ -17,7 +17,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosHakutoive,
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 import fi.vm.sade.hakurekisteri.rest.support.{Query, User, SpringSecuritySupport, HakurekisteriJsonSupport}
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus, SuoritusQuery}
-import org.scalatra.swagger.Swagger
+import org.scalatra.swagger.{SwaggerEngine, Swagger}
 import org.scalatra.{AsyncResult, InternalServerError, CorsSupport, FutureSupport}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.util.RicherString._
@@ -90,8 +90,10 @@ class KkHakijaResource(hakemukset: ActorRef,
                        koodisto: ActorRef,
                        suoritukset: ActorRef,
                        valintaTulos: ActorRef)(implicit system: ActorSystem, sw: Swagger)
-    extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
+    extends HakuJaValintarekisteriStack with KkHakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
 
+  override protected def applicationDescription: String = "Korkeakouluhakijatietojen rajapinta"
+  override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 120.seconds
 
@@ -103,7 +105,7 @@ class KkHakijaResource(hakemukset: ActorRef,
     contentType = formats("json")
   }
 
-  get("/") {
+  get("/", operation(query)) {
     val q = KkHakijaQuery(params, currentUser)
     logger.info("Query: " + q)
 
