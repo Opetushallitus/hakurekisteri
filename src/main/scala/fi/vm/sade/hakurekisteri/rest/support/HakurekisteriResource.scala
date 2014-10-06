@@ -9,7 +9,6 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import org.scalatra._
 import _root_.akka.pattern.ask
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
-import scala.concurrent.duration.Duration
 import scala.util.Try
 import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.concurrent.duration._
@@ -19,7 +18,6 @@ import org.springframework.security.core.Authentication
 import org.scalatra.commands._
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.organization._
-import scala.util.matching.Regex
 import org.springframework.security.cas.authentication.CasAuthenticationToken
 import org.jasig.cas.client.authentication.AttributePrincipal
 import fi.vm.sade.hakurekisteri.organization.AuthorizedRead
@@ -178,21 +176,21 @@ object Role {
 
 case class User(username: String, authorities: Seq[String], attributePrincipal: Option[AttributePrincipal]) {
 
-  val roles: Seq[Role] = authorities.map(Role(_))
+  val orgFinder: PartialFunction[Role, Set[String]] = {
+    case DefinedRole("SUORITUSREKISTERI", _ ,organisaatio) => Set(organisaatio)
+    case DefinedRole("KKHAKUVIRKAILIJA", _ , _) => Set("1.2.246.562.10.43628088406")
+  }
 
-  def organizations = (suoritusrekisteriOrgs  ++ specialRights)
+  val roles: Seq[DefinedRole] = authorities.map(Role(_)).collect{
+    case d: DefinedRole => d
+  }
 
-  def suoritusrekisteriOrgs: Set[String] = roles.collect{
-    case r: DefinedRole if r.service == "SUORITUSREKISTERI" => r.organization
-  }.toSet
+  def organizations = (Set[String]() /: roles.collect(orgFinder)) (_ ++ _)
 
-  val serviceRights:Map[String, Seq[String]] = Map(
-    "KKHAKUVIRKAILIJA" -> Seq("1.2.246.562.10.43628088406")
+
+  def hasAnyRoles(checked: Seq[String]) = roles.exists((r) =>
+    r.service == "SUORITUSREKISTERI" && checked.toSet.contains(r.rights)
   )
-
-  def specialRights: Set[String] = roles.collect{
-    case DefinedRole(service,_,_) => serviceRights.getOrElse(service, Seq())
-  } .flatten.toSet
 
 }
 
@@ -202,10 +200,7 @@ trait SecuritySupport {
   def getKnownOrganizations(user: Option[User]): Seq[String] =
     user.map(_.organizations.toList).getOrElse(Seq())
 
-  def hasAnyRoles(user: Option[User], roles: Seq[String]): Boolean = user match {
-    case Some(u) => roles.map((role) => u.authorities.contains(s"ROLE_APP_SUORITUSREKISTERI_$role")).reduceLeft(_ || _)
-    case _ => false
-  }
+  def hasAnyRoles(user: Option[User], roles: Seq[String]): Boolean = user.exists(_.hasAnyRoles(roles))
 }
 
 trait SpringSecuritySupport extends SecuritySupport {
