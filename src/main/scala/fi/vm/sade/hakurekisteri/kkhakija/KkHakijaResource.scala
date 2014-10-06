@@ -105,7 +105,7 @@ class KkHakijaResource(hakemukset: ActorRef,
     contentType = formats("json")
   }
 
-  get("/") {
+  get("/", operation(query)) {
     val q = KkHakijaQuery(params, currentUser)
     logger.info("Query: " + q)
 

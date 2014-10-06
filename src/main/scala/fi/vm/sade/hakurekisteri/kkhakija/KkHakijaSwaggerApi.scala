@@ -70,7 +70,7 @@ trait KkHakijaSwaggerApi extends SwaggerSupport {
 
   registerModel(Model("Hakija", "Hakija", hakijaFields.map{ t => (t.name, t) }.toMap))
 
-  val query: OperationBuilder = apiOperation[Seq[Hakija]]("haeHakijat")
+  val query: OperationBuilder = apiOperation[Seq[Hakija]]("haeKkHakijat")
     .summary("näyttää kaikki hakijat")
     .notes("Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti.")
     .parameter(queryParam[Option[String]]("oppijanumero").description("henkilön oid / oppijanumero").optional)
