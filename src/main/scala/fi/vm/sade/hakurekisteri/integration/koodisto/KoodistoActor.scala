@@ -23,11 +23,16 @@ case class GetKoodi(koodistoUri: String, koodiUri: String)
 
 case class CachedKoodi(inserted: Long, koodi: Future[Option[Koodi]])
 
+case class KoodistoKoodiArvot(koodistoUri: String, arvot: Seq[String])
+case class GetKoodistoKoodiArvot(koodistoUri: String)
+case class CachedKoodistoKoodiArvot(inserted: Long, arvot: Future[KoodistoKoodiArvot])
+
 class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: ExecutionContext) extends Actor {
   val log = Logging(context.system, this)
 
   var koodiCache: Map[String, CachedKoodi] = Map()
   var relaatioCache: Map[GetRinnasteinenKoodiArvoQuery, CachedRelaatio] = Map()
+  var koodiArvotCache: Map[String, CachedKoodistoKoodiArvot] = Map()
   val expirationDurationMillis = 60.minutes.toMillis
 
   override def receive: Receive = {
@@ -36,6 +41,26 @@ class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
 
     case q: GetKoodi =>
       getKoodi(q.koodistoUri, q.koodiUri) pipeTo sender
+
+    case q: GetKoodistoKoodiArvot =>
+      getKoodistoKoodiArvot(q.koodistoUri) pipeTo sender
+  }
+
+  def addToKoodiArvotCache(koodistoUri: String, f: Future[KoodistoKoodiArvot]): Unit = {
+    koodiArvotCache = koodiArvotCache + (koodistoUri -> CachedKoodistoKoodiArvot(Platform.currentTime, f))
+  }
+
+  def getKoodistoKoodiArvot(koodistoUri: String): Future[KoodistoKoodiArvot] = {
+    if (koodiArvotCache.contains(koodistoUri) && koodiArvotCache(koodistoUri).inserted + expirationDurationMillis > Platform.currentTime) {
+      koodiArvotCache(koodistoUri).arvot
+    } else {
+      val f = restClient.readObject[Seq[Koodi]](s"/rest/json/${URLEncoder.encode(koodistoUri, "UTF-8")}/koodi", HttpResponseCode.Ok)
+        .map(koodit => KoodistoKoodiArvot(koodistoUri, koodit.map(_.koodiArvo)))
+
+      addToKoodiArvotCache(koodistoUri, f)
+
+      f
+    }
   }
 
   def addToKoodiCache(koodiUri: String, koodi: Future[Option[Koodi]]) = {
