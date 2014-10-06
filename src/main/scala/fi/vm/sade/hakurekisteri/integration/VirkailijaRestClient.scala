@@ -52,7 +52,7 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionId: Option[ActorRef] =
       f
     }
     def executeWithJSession(sessionId: String): Future[(HttpResponse, Option[String])] = {
-      val cookie = s"${JSessionIdCookieParser.name}=${sessionId}"
+      val cookie = s"${JSessionIdCookieParser.name}=$sessionId"
       logger.debug(s"auth with cookie $cookie to $url")
       val f = GET(url).addHeaders("Cookie" -> cookie).apply.map((_, Some(cookie)))
       logConnectionFailure(f, url)
