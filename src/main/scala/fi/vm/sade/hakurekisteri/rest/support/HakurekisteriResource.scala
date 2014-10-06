@@ -155,31 +155,52 @@ abstract class  HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriCom
    protected implicit def swagger: SwaggerEngine[_] = sw
 }
 
-case class User(username: String, authorities: Seq[String], attributePrincipal: Option[AttributePrincipal])
+sealed trait Role
 
-trait SecuritySupport {
-  def currentUser(implicit request: HttpServletRequest): Option[User]
+case class DefinedRole(service: String, rights: String, organization: String) extends Role
 
-  def getKnownOrganizations(user: Option[User]): Seq[String] = {
-    user.map(_.authorities.
-      map(splitAuthority).
-      filter(isSuoritusRekisteri).
-      map(_.reverse.head).
-      filter(isOid).toSet.toList
-    ).getOrElse(Seq())
+object UnknownRole extends Role
+
+object Role {
+  def apply(authority:String) =  List(authority split "_": _*) match {
+    case _::_::service::rest if !rest.isEmpty && isOid(rest.last) => DefinedRole(service,  rest.init.mkString("_") , rest.last)
+    case _ => UnknownRole
   }
-
-  val regex = new Regex("\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+")
+  val regex = "\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+".r
 
   def isOid(x: String) = {
     (regex findFirstIn x).nonEmpty
   }
 
-  def isSuoritusRekisteri: (Seq[String]) => Boolean = {
-    _.containsSlice(Seq("ROLE", "APP", "SUORITUSREKISTERI"))
-  }
+}
 
-  def splitAuthority(authority: String) = Seq(authority split "_": _*)
+
+
+case class User(username: String, authorities: Seq[String], attributePrincipal: Option[AttributePrincipal]) {
+
+  val roles: Seq[Role] = authorities.map(Role(_))
+
+  def organizations = (suoritusrekisteriOrgs  ++ specialRights)
+
+  def suoritusrekisteriOrgs: Set[String] = roles.collect{
+    case r: DefinedRole if r.service == "SUORITUSREKISTERI" => r.organization
+  }.toSet
+
+  val serviceRights:Map[String, Seq[String]] = Map(
+    "KKHAKUVIRKAILIJA" -> Seq("1.2.246.562.10.43628088406")
+  )
+
+  def specialRights: Set[String] = roles.collect{
+    case DefinedRole(service,_,_) => serviceRights.getOrElse(service, Seq())
+  } .flatten.toSet
+
+}
+
+trait SecuritySupport {
+  def currentUser(implicit request: HttpServletRequest): Option[User]
+
+  def getKnownOrganizations(user: Option[User]): Seq[String] =
+    user.map(_.organizations.toList).getOrElse(Seq())
 
   def hasAnyRoles(user: Option[User], roles: Seq[String]): Boolean = user match {
     case Some(u) => roles.map((role) => u.authorities.contains(s"ROLE_APP_SUORITUSREKISTERI_$role")).reduceLeft(_ || _)
