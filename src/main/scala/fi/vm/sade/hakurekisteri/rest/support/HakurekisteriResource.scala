@@ -38,7 +38,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
   val delete: OperationBuilder
 
   delete("/:id", operation(delete)) {
-    if (!hasAnyRoles(currentUser, Seq("CRUD"))) throw UserNotAuthorized("not authorized")
+    if (!currentUser.exists(_.canDelete)) throw UserNotAuthorized("not authorized")
     else deleteResource
   }
 
@@ -47,12 +47,12 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
   }
 
   post("/", operation(create)) {
-    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE"))) throw UserNotAuthorized("not authorized")
+    if (!currentUser.exists(_.canWrite)) throw UserNotAuthorized("not authorized")
     else createResource(getKnownOrganizations(currentUser), currentUser.map(_.username))
   }
 
   post("/:id", operation(update)) {
-    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE"))) throw UserNotAuthorized("not authorized")
+    if (!currentUser.exists(_.canWrite)) throw UserNotAuthorized("not authorized")
     else updateResource
   }
 
@@ -61,7 +61,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
   }
 
   get("/:id", operation(read)) {
-    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE", "READ"))) throw UserNotAuthorized("not authorized")
+    if (!currentUser.exists(_.canRead)) throw UserNotAuthorized("not authorized")
     else getResource
   }
 
@@ -70,7 +70,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
   }
 
   get("/", operation(query))(
-    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE", "READ"))) throw UserNotAuthorized("not authorized")
+    if (!currentUser.exists(_.canRead)) throw UserNotAuthorized("not authorized")
     else queryResource(getKnownOrganizations(currentUser), currentUser.map(_.username))
   )
 
@@ -188,9 +188,15 @@ case class User(username: String, authorities: Seq[String], attributePrincipal: 
   def organizations = (Set[String]() /: roles.collect(orgFinder)) (_ ++ _)
 
 
-  def hasAnyRoles(checked: Seq[String]) = roles.exists((r) =>
+  def hasAnyRoles(checked: String*) = roles.exists((r) =>
     r.service == "SUORITUSREKISTERI" && checked.toSet.contains(r.rights)
   )
+
+  def canWrite = hasAnyRoles("CRUD", "READ_UPDATE")
+
+  def canDelete = hasAnyRoles("CRUD")
+
+  def canRead = hasAnyRoles("CRUD", "READ_UPDATE", "READ")
 
 }
 
@@ -199,8 +205,6 @@ trait SecuritySupport {
 
   def getKnownOrganizations(user: Option[User]): Seq[String] =
     user.map(_.organizations.toList).getOrElse(Seq())
-
-  def hasAnyRoles(user: Option[User], roles: Seq[String]): Boolean = user.exists(_.hasAnyRoles(roles))
 }
 
 trait SpringSecuritySupport extends SecuritySupport {
