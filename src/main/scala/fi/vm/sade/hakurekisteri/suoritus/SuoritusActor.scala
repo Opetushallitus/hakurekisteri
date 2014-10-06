@@ -111,7 +111,6 @@ trait SuoritusService extends ResourceService[Suoritus, UUID] with SuoritusRepos
 
   def duringYear(year: String)(date: LocalDate): Boolean = {
     Try(newYear(year.toInt) to newYear(year.toInt + 1) contains date.toDateTimeAtStartOfDay).getOrElse(false)
-
   }
 
 
