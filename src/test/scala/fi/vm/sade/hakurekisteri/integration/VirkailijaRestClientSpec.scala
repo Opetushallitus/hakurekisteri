@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration
 import java.net.URL
 import java.util.Date
 
-import akka.actor.ActorSystem
+import akka.actor.{Props, ActorSystem}
 import com.stackmob.newman.request._
 import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
 import com.stackmob.newman.{RawBody, Headers, HttpClient}
@@ -17,6 +17,7 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers {
   implicit val system = ActorSystem("test-virkailija")
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val httpClient: MockHttpClient = new MockHttpClient()
+  val jSessionIdActor = system.actorOf(Props(new JSessionIdActor))
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/test"))
 
   behavior of "VirkailijaRestClient"
@@ -64,6 +65,23 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers {
     httpClient.capturedRequestHeaders.get.head should be(("CasSecurityTicket", "ST-123"))
   }
 
+  it should "use JSESSIONID on subsequent requests" in {
+    val client = new VirkailijaRestClient(ServiceConfig(serviceAccessUrl = Some("http://localhost/service-access"),
+      serviceUrl = "http://localhost/test",
+      user = Some("user"),
+      password = Some("pw")), Some(jSessionIdActor))
+    val response = client.readObject[TestResponse]("/rest/foo", HttpResponseCode.Ok)
+    val testResponse = Await.result(response, 10.seconds)
+
+    val response2 = client.readObject[TestResponse]("/rest/foo", HttpResponseCode.Ok)
+    val testResponse2 = Await.result(response2, 10.seconds)
+    httpClient.capturedRequestHeaders.get.head should be(("Cookie", "JSESSIONID=abcd"))
+
+    val response3 = client.readObject[TestResponse]("/rest/foo", HttpResponseCode.Ok)
+    val testResponse3 = Await.result(response3, 10.seconds)
+    httpClient.capturedRequestHeaders.get.head should be(("Cookie", "JSESSIONID=abcd"))
+  }
+
   case class TestResponse(id: String)
 
   class MockHttpClient extends HttpClient {
@@ -75,7 +93,7 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers {
       url.toString match {
         case s if s.contains("throwMe") => Future.successful(HttpResponse(HttpResponseCode.InternalServerError, Headers(List()), RawBody(""), new Date()))
         case s if s.contains("invalidContent") => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody("invalid content"), new Date()))
-        case _ => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody("{\"id\":\"abc\"}"), new Date()))
+        case _ => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List("Set-Cookie" -> "JSESSIONID=abcd")), RawBody("{\"id\":\"abc\"}"), new Date()))
       }
     }
     override def head(url: URL, headers: Headers): HeadRequest = ???

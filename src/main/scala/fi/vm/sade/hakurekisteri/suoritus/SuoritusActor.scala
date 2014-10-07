@@ -9,6 +9,7 @@ import scala.Some
 import scala.concurrent.Future
 import java.util.UUID
 import scala.util.Try
+import org.joda.time.ReadableInstant
 
 
 trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
@@ -92,8 +93,8 @@ trait SuoritusService extends ResourceService[Suoritus, UUID] with SuoritusRepos
   }
 
   def checkVuosi(vuosi: Option[String])(suoritus:Suoritus):Boolean = (suoritus, vuosi) match {
-    case (s:VirallinenSuoritus, Some(vuosi:String)) => beforeYearEnd(vuosi)(s.valmistuminen)
-    case (s:VapaamuotoinenSuoritus, Some(vuosi:String)) => Try(vuosi.toInt).map((hakuvuosi) => s.vuosi <= hakuvuosi).getOrElse(false)
+    case (s:VirallinenSuoritus, Some(vuosi:String)) =>  duringYear(vuosi)(s.valmistuminen)
+    case (s:VapaamuotoinenSuoritus, Some(vuosi:String)) => Try(vuosi.toInt).map((hakuvuosi) => s.vuosi == hakuvuosi).getOrElse(false)
     case (_, None) => true
   }
 
@@ -105,8 +106,32 @@ trait SuoritusService extends ResourceService[Suoritus, UUID] with SuoritusRepos
     case (_, None) => true
   }
 
+  implicit def local2IntervalDate(date: LocalDate): IntervalDate = IntervalDate(date)
+
+
   def duringFirstHalf(date: LocalDate):Boolean = {
-    (newYear(date.getYear) to startOfAutumn(date.getYear)).contains(date.toDateTimeAtStartOfDay)
+    date isBetween newYear(date.getYear) and startOfAutumn(date.getYear)
+  }
+
+  def duringYear(year: String)(date: LocalDate): Boolean = {
+    Try(
+      date isBetween newYear(year.toInt) and newYear(year.toInt + 1)
+    ).getOrElse(false)
+  }
+
+  case class IntervalStart(start: ReadableInstant, contained: LocalDate){
+
+    def and(end: ReadableInstant) = start to end contains contained.toDateTimeAtStartOfDay
+
+
+  }
+
+  case class IntervalDate(date: LocalDate) {
+
+
+
+    def isBetween(start: ReadableInstant) = IntervalStart(start, date)
+
   }
 
 

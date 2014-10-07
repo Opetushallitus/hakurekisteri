@@ -1,15 +1,9 @@
 package fi.vm.sade.hakurekisteri.opiskelija
 
 import org.joda.time.DateTime
-import scala.slick.driver.JdbcDriver.simple._
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, HakurekisteriColumns}
-
-
-
-
-
-import HakurekisteriColumns._
+import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, HakurekisteriDriver}
+import HakurekisteriDriver.simple._
 
 class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID, (String, String, String, String, DateTime, Option[DateTime], String)](tag, "opiskelija") {
   def oppilaitosOid = column[String]("oppilaitos_oid")
@@ -24,8 +18,6 @@ class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID, (String, 
   override def resourceShape = (oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source).shaped
 
   override def row(o: Opiskelija): Option[(String, String, String, String, DateTime, Option[DateTime], String)] = Opiskelija.unapply(o)
-
-  override def getId(serialized: String): UUID = UUID.fromString(serialized)
 
   override val resource = (Opiskelija.apply _).tupled
 

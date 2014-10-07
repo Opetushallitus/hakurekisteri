@@ -91,7 +91,8 @@ object SuoritusSerializer {
       case JString(kuvaus) =>
         val JInt(vuosi) = suoritus \ "vuosi"
         val JString(tyyppi) = suoritus \ "tyyppi"
-        VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi.toInt: Int, tyyppi: String, lahde: String)
+        val JInt(index) = suoritus \ "index"
+        VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi.toInt: Int, tyyppi: String, index.toInt: Int, lahde: String)
       case JNothing =>
         val JString(komo) = suoritus \ "komo"
         val JString(tila) = suoritus \ "tila"
@@ -116,6 +117,7 @@ object SuoritusSerializer {
           opiskeluoikeus: Option[UUID],
           vahv: Boolean,
           lahde: String)
+      case _ => throw new IllegalArgumentException("unable to extract Suoritus kuvaus is of wrong type")
     }
   }
 }

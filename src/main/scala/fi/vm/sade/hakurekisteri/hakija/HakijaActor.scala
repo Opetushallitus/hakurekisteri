@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.hakija
 
 import akka.actor.{ActorRef, Actor}
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.Hakupalvelu
 import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
@@ -177,6 +178,7 @@ case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria
 class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistoActor: ActorRef, sijoittelupalvelu: ActorRef) extends Actor {
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
+  implicit val defaultTimeout: Timeout = 120.seconds
 
   def receive = {
     case q: HakijaQuery => XMLQuery(q) pipeTo sender
@@ -188,8 +190,6 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
   def getOrg(oid: String): Future[Option[Organisaatio]] = {
-    import scala.concurrent.duration._
-    implicit val timeout: akka.util.Timeout = 30.seconds
     Try((organisaatioActor ? oid).mapTo[Option[Organisaatio]]).getOrElse(Future.successful(None))
   }
 
@@ -239,7 +239,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   def getMaakoodi(koodiArvo: String): Future[String] = koodiArvo.toLowerCase match {
     case "fin" => Future.successful("246")
     case arvo =>
-      val maaFuture = (koodistoActor ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2"))(10.seconds).mapTo[String]
+      val maaFuture = (koodistoActor ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2")).mapTo[String]
       maaFuture.onFailure {
         case t: Throwable => log.error(t, s"failed to fetch country $koodiArvo")
       }
@@ -294,7 +294,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
   def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.fold(
     hakijat.groupBy(_.hakemus.hakuOid).
-      map { case (hakuOid, hakijas) => sijoittelupalvelu.?(SijoitteluQuery(hakuOid))(30.seconds).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
+      map { case (hakuOid, hakijas) => sijoittelupalvelu.?(SijoitteluQuery(hakuOid)).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
   )(Seq[Hakija]())(_ ++ _)
 
 

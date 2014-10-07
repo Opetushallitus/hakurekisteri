@@ -57,6 +57,14 @@ case class HakemusQuery(haku: Option[String], organisaatio: Option[String], haku
 case class HenkiloHakijaQuery(henkilo: String) extends Query[FullHakemus]
 
 object HakemusQuery {
+  import org.scalatra.util.RicherString._
+
+  def apply(params: Map[String,String]): HakemusQuery = HakemusQuery(
+    haku = params.get("haku").flatMap(_.blankOption),
+    organisaatio = params.get("organisaatio").flatMap(_.blankOption),
+    None,
+    hakukohde = params.get("hakukohde").flatMap(_.blankOption)
+    )
   def apply(hq: HakijaQuery): HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
   def apply(hq: KkHakijaQuery): HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, None, hq.hakukohde)
 }

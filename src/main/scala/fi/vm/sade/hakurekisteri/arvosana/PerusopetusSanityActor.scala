@@ -13,6 +13,7 @@ import com.stackmob.newman.ApacheHttpClient
 import java.net.URL
 import net.liftweb.json.JsonAST.JValue
 import akka.event.Logging
+import org.joda.time.LocalDate
 
 class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.oph.ware.fi/koodisto-service", val suoritusRekisteri: ActorRef, val journal:Journal[Arvosana, UUID] = new InMemJournal[Arvosana, UUID]) extends Actor with ArvosanaService with JournaledRepository[Arvosana, UUID] {
 
@@ -173,7 +174,10 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
 
   def missing(arvosanas: Seq[Arvosana]): Set[String] = {
     val skaala = (4 to 10).map(_.toString).toSet
-    pakolliset.filterNot(arvosanas.withFilter((a) => skaala.contains(a.arvio.arvosana)).map(_.aine).toSet.contains(_))
+    val set = arvosanas.withFilter {
+      case Arvosana(_, Arvio410(arvosana), _, _, _, _, _) => skaala.contains(arvosana)
+    }.map(_.aine).toSet
+    pakolliset.filterNot(set.contains(_))
   }
 
   def extraMandatory(arvosanas: Seq[Arvosana]): Set[String] = {

@@ -23,14 +23,12 @@ object Arvosana {
   }
 }
 
-sealed abstract class Arvio(val arvosana: String)
+sealed abstract class Arvio
 
 object Arvio {
   val ASTEIKKO_4_10 = "4-10"
   val ASTEIKKOYO = "YO"
   val asteikot = Seq(ASTEIKKO_4_10, ASTEIKKOYO)
-
-  object NA extends Arvio("NA")
 
   def apply(arvosana: String, asteikko: String, pisteet: Option[Int] = None): Arvio = asteikko match {
     case ASTEIKKO_4_10 => Arvio410(arvosana)
@@ -41,13 +39,13 @@ object Arvio {
 
 case class UnknownScaleException(scale: String) extends IllegalArgumentException(s"unknown scale: $scale")
 
-case class Arvio410(override val arvosana: String) extends Arvio(arvosana) {
+case class Arvio410(val arvosana: String) extends Arvio {
   require(Try(arvosana.toInt).isSuccess, "arvosana must be a number")
   require(arvosana.toInt >= 4, "the arvosana must be greater than or equal to 4")
   require(arvosana.toInt <= 10, "the arvosana must be less than or equal to 10")
 }
 
-case class ArvioYo(override val arvosana: String, pisteet: Option[Int]) extends Arvio(arvosana) {
+case class ArvioYo(val arvosana: String, pisteet: Option[Int]) extends Arvio {
   val allowable = Set[String]("L", "E", "M", "C", "B", "A", "I+", "I", "I-", "I=", "K", "P" )
   require(allowable.contains(arvosana), s"$arvosana is not in (${allowable.mkString(", ")})")
 }

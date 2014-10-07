@@ -1,8 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import scala.slick.lifted.{ProvenShape, ShapedValue, TableQuery}
-import fi.vm.sade.hakurekisteri.storage.repository.{Updated, Deleted, Delta, Journal}
-import scala.slick.driver.JdbcDriver.simple._
+import scala.slick.lifted._
+import fi.vm.sade.hakurekisteri.storage.repository.{Delta, Journal}
 import scala.slick.lifted
 import scala.compat.Platform
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -10,8 +9,103 @@ import scala.language.existentials
 import org.slf4j.LoggerFactory
 import scala.slick.jdbc.meta.MTable
 
+import scala.slick.driver.JdbcDriver
+import java.util.UUID
+import scala.slick.jdbc.{PositionedResult, PositionedParameters}
+import scala.slick.ast.{BaseTypedType, TypedType}
+import scala.Some
+import fi.vm.sade.hakurekisteri.storage.repository.Deleted
+import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import scala.slick.lifted.TableQuery
+import scala.slick.lifted.ShapedValue
 
-class JDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: TableQuery[T])(implicit val db: Database) extends Journal[R,  I] {
+
+object HakurekisteriDriver extends JdbcDriver {
+
+  override val columnTypes = new super.JdbcTypes{
+
+    override val uuidJdbcType: super.UUIDJdbcType = new UUIDJdbcType
+
+    class UUIDJdbcType extends super.UUIDJdbcType {
+      override def sqlType = java.sql.Types.VARCHAR
+      override def setValue(v: UUID, p: PositionedParameters) = p.setString(v.toString)
+      override def setOption(v: Option[UUID], p: PositionedParameters) = p.setStringOption(v.map(_.toString))
+      override def nextValue(r: PositionedResult) = UUID.fromString(r.nextString)
+      override def updateValue(v: UUID, r: PositionedResult) = r.updateString(v.toString)
+      override def valueToSQLLiteral(value: UUID) = if(value eq null) "NULL" else {
+        val serialized = value.toString
+        val sb = new StringBuilder
+        sb append '\''
+        for(c <- serialized) c match {
+          case '\'' => sb append "''"
+          case _ => sb append c
+        }
+        sb append '\''
+        sb.toString
+      }
+    }
+  }
+
+}
+
+import HakurekisteriDriver.simple._
+
+abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: String)(implicit val idType: TypedType[I]) extends Table[Delta[R,I]](tag, name) with HakurekisteriColumns {
+
+  def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+  def resourceId = column[I]("resource_id")
+
+  def source = column[String]("source")
+  def inserted = column[Long]("inserted")
+  def deleted = column[Boolean]("deleted")
+  val journalEntryShape = (resourceId, source, inserted, deleted).shaped
+  type ShapedJournalRow = (lifted.Column[I], lifted.Column[String], lifted.Column[Long], lifted.Column[Boolean])
+  type JournalRow = (I, String, Long, Boolean)
+
+
+  val resource: ResourceRow => R
+
+  def delta(resourceId: I, source: String, inserted: Long, deleted: Boolean)(resourceData:ResourceRow):Delta[R, I] =
+    if (deleted)
+      Deleted(resourceId, source)
+    else
+    {
+      val resource1 = resource(resourceData)
+      Updated(resource1.identify(resourceId))
+    }
+
+
+  def deltaShaper(j: (I, String, Long, Boolean), rd: ResourceRow): Delta[R, I] = (delta _).tupled(j)(rd)
+
+  val deletedValues: ResourceRow
+
+  def rowShaper(d: Delta[R, I]) = d match {
+    case Deleted(id, source) => Some((id, source, Platform.currentTime, true), deletedValues)
+    case Updated(r: R with Identified[I]) => row(r).map(updateRow(r))
+
+  }
+
+
+  def updateRow(r: R with Identified[I])(resourceData: ResourceRow) = ((r.id, r.asInstanceOf[R].source, Platform.currentTime, false), resourceData)
+
+  def row(resource: R): Option[ResourceRow]
+  def resourceShape: ShapedValue[_, ResourceRow]
+
+
+  val combinedShape = journalEntryShape zip resourceShape
+
+
+  def * : ProvenShape[Delta[R, I]] = {
+    combinedShape <> ((deltaShaper _).tupled, rowShaper)
+  }
+
+
+}
+
+
+class JDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: TableQuery[T])(implicit val db: Database, val idType: BaseTypedType[I]) extends Journal[R,  I] {
+
+
 
   val log = LoggerFactory.getLogger(getClass)
 
@@ -57,7 +151,7 @@ class JDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: Tab
     val result = for {
       delta <- table
       (id, timestamp) <- latest
-      if delta.resourceId === id && delta.inserted === timestamp.getOrElse(0)
+      if columnExtensionMethods(delta.resourceId) === id &&  columnExtensionMethods(delta.inserted).===(optionColumnExtensionMethods(timestamp).getOrElse(0))
 
     } yield delta
 
@@ -67,55 +161,4 @@ class JDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: Tab
 
 }
 
-abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: String) extends Table[Delta[R,I]](tag, name) {
 
-  def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
-  def resourceId = column[String]("resource_id")
-
-  def source = column[String]("source")
-  def inserted = column[Long]("inserted")
-  def deleted = column[Boolean]("deleted")
-  val journalEntryShape = (resourceId, source, inserted, deleted).shaped
-  type ShapedJournalRow = (lifted.Column[String], lifted.Column[String], lifted.Column[Long], lifted.Column[Boolean])
-  type JournalRow = (String, String, Long, Boolean)
-
-  def getId(serialized: String): I
-
-  val resource: ResourceRow => R
-
-  def delta(resourceId: String, source: String, inserted: Long, deleted: Boolean)(resourceData:ResourceRow):Delta[R, I] =
-    if (deleted)
-      Deleted(getId(resourceId), source)
-    else
-    {
-      val resource1 = resource(resourceData)
-      Updated(resource1.identify(getId(resourceId)))
-    }
-
-
-  def deltaShaper(j: (String, String, Long, Boolean), rd: ResourceRow): Delta[R, I] = (delta _).tupled(j)(rd)
-
-  val deletedValues: ResourceRow
-
-  def rowShaper(d: Delta[R, I]) = d match {
-    case Deleted(id, source) => Some((id.toString, source, Platform.currentTime, true), deletedValues)
-    case Updated(r: R with Identified[I]) => row(r).map(updateRow(r))
-
-  }
-
-
-  def updateRow(r: R with Identified[I])(resourceData: ResourceRow) = ((r.id.toString, r.asInstanceOf[R].source, Platform.currentTime, false), resourceData)
-
-  def row(resource: R): Option[ResourceRow]
-  def resourceShape: ShapedValue[_, ResourceRow]
-
-
-  val combinedShape = journalEntryShape zip resourceShape
-
-
-  def * : ProvenShape[Delta[R, I]] = {
-    combinedShape <> ((deltaShaper _).tupled, rowShaper)
-  }
-
-
-}
