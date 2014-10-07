@@ -6,34 +6,21 @@ import akka.pattern.pipe
 import org.joda.time.DateTime
 import com.stackmob.newman.response.HttpResponseCode
 
-
-class ParameterActor(restClient:VirkailijaRestClient) extends Actor {
-
+class ParameterActor(restClient: VirkailijaRestClient) extends Actor {
   implicit val ec = context.dispatcher
-
+  val maxRetries = 5
 
   override def receive: Actor.Receive = {
-
     case KierrosRequest(oid) => getParams(oid).map(HakuParams) pipeTo sender
   }
 
-
   def getParams(hakuOid: String) =  {
-    restClient.readObject[KierrosParams](s"/api/v1/rest/parametri/$hakuOid", HttpResponseCode.Ok).
-      collect { case KierrosParams(Some(KierrosEndParams(date))) => new DateTime(date)}
-
+    restClient.readObject[KierrosParams](s"/api/v1/rest/parametri/$hakuOid", maxRetries, HttpResponseCode.Ok).
+      collect { case KierrosParams(Some(KierrosEndParams(date))) => new DateTime(date) }
   }
-
-
 }
 
-
 case class KierrosRequest(haku: String)
-
-
-
 case class KierrosEndParams(date: Long)
-case class KierrosParams(PH_HKP:Option[KierrosEndParams])
-
-case class HakuParams(end:DateTime)
-
+case class KierrosParams(PH_HKP: Option[KierrosEndParams])
+case class HakuParams(end: DateTime)
