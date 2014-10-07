@@ -34,13 +34,13 @@ class OpiskeluoikeusTable(tag: Tag) extends JournalTable[Opiskeluoikeus, UUID, O
     oo.source
     )
 
-  override val deletedValues: OpiskeluoikeusType = (
+  override val deletedValues: (String) => OpiskeluoikeusType = (lahde) => (
     0L,
     None,
     "",
     "",
     "",
-    ""
+    lahde
     )
   override val resource: (OpiskeluoikeusType) => Opiskeluoikeus = {
     case  (alkuPaiva: Long, loppuPaiva: Option[Long], henkiloOid: String, komo: String, myontaja: String, source) =>

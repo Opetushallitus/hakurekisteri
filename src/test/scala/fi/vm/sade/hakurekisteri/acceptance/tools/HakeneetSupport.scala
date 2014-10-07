@@ -84,7 +84,10 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             pohjakoulutus_kk = None,
             pohjakoulutus_avoin = None,
             pohjakoulutus_ulk = None,
-            pohjakoulutus_muu = None
+            pohjakoulutus_muu = None,
+            aiempitutkinto_korkeakoulu = None,
+          aiempitutkinto_tutkinto = None,
+          aiempitutkinto_vuosi = None
           )),
         hakutoiveet =  Some(Map(
           "preference2-Opetuspiste" -> "Ammattikoulu Lappi2",
@@ -160,7 +163,10 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             pohjakoulutus_kk = None,
             pohjakoulutus_avoin = None,
             pohjakoulutus_ulk = None,
-            pohjakoulutus_muu = None
+            pohjakoulutus_muu = None,
+            aiempitutkinto_korkeakoulu = None,
+            aiempitutkinto_tutkinto = None,
+            aiempitutkinto_vuosi = None
           )),
         hakutoiveet =  Some(Map(
           "preference2-Opetuspiste" -> "Ammattiopisto Loppi2\"",

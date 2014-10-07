@@ -13,7 +13,7 @@ class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID, (String, 
   def alkuPaiva = column[DateTime]("alku_paiva")
   def loppuPaiva = column[Option[DateTime]]("loppu_paiva")
 
-  val deletedValues = ("", "", "", "", DateTime.now(), None, "")
+  val deletedValues = (lahde: String) =>  ("", "", "", "", DateTime.now(), None, lahde)
 
   override def resourceShape = (oppilaitosOid, luokkataso, luokka, henkiloOid, alkuPaiva, loppuPaiva, source).shaped
 

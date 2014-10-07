@@ -58,16 +58,19 @@ abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: St
   def source = column[String]("source")
   def inserted = column[Long]("inserted")
   def deleted = column[Boolean]("deleted")
-  val journalEntryShape = (resourceId, source, inserted, deleted).shaped
+  val journalEntryShape = (resourceId, inserted, deleted).shaped
   type ShapedJournalRow = (lifted.Column[I], lifted.Column[String], lifted.Column[Long], lifted.Column[Boolean])
-  type JournalRow = (I, String, Long, Boolean)
+  type JournalRow = (I, Long, Boolean)
 
 
   val resource: ResourceRow => R
 
-  def delta(resourceId: I, source: String, inserted: Long, deleted: Boolean)(resourceData:ResourceRow):Delta[R, I] =
-    if (deleted)
-      Deleted(resourceId, source)
+  def delta(resourceId: I, inserted: Long, deleted: Boolean)(resourceData:ResourceRow):Delta[R, I] =
+    if (deleted){
+      val res = resource(resourceData)
+      Deleted(resourceId, res.source)
+    }
+
     else
     {
       val resource1 = resource(resourceData)
@@ -75,18 +78,18 @@ abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: St
     }
 
 
-  def deltaShaper(j: (I, String, Long, Boolean), rd: ResourceRow): Delta[R, I] = (delta _).tupled(j)(rd)
+  def deltaShaper(j: (I, Long, Boolean), rd: ResourceRow): Delta[R, I] = (delta _).tupled(j)(rd)
 
-  val deletedValues: ResourceRow
+  val deletedValues: (String) =>  ResourceRow
 
   def rowShaper(d: Delta[R, I]) = d match {
-    case Deleted(id, source) => Some((id, source, Platform.currentTime, true), deletedValues)
+    case Deleted(id, source) => Some((id, Platform.currentTime, true), deletedValues(source))
     case Updated(r: R with Identified[I]) => row(r).map(updateRow(r))
 
   }
 
 
-  def updateRow(r: R with Identified[I])(resourceData: ResourceRow) = ((r.id, r.asInstanceOf[R].source, Platform.currentTime, false), resourceData)
+  def updateRow(r: R with Identified[I])(resourceData: ResourceRow) = ((r.id, Platform.currentTime, false), resourceData)
 
   def row(resource: R): Option[ResourceRow]
   def resourceShape: ShapedValue[_, ResourceRow]
