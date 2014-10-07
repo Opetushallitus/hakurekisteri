@@ -68,7 +68,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   implicit val defaultTimeout = Timeout(30, TimeUnit.SECONDS)
   val authorities = Seq("1.2.246.562.10.00000000001")
 
-  val healthCheckUser = User("healthcheck", authorities.map((org) => s"ROLE_APP_SUORITUSREKISTERI_READ_$org"))
+  val healthCheckUser = User("healthcheck", authorities.map((org) => s"ROLE_APP_SUORITUSREKISTERI_READ_$org").toSet)
 
   var foundHakemukset:Map[String, RefreshingState] = Map()
 

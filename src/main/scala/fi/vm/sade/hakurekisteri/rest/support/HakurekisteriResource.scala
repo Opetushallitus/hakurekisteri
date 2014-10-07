@@ -13,7 +13,7 @@ import scala.util.Try
 import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.concurrent.duration._
 import javax.servlet.http.HttpServletRequest
-import org.springframework.security.core.Authentication
+import org.springframework.security.core.{GrantedAuthority, Authentication}
 
 import org.scalatra.commands._
 import java.util.UUID
@@ -27,6 +27,7 @@ import fi.vm.sade.hakurekisteri.organization.AuthorizedDelete
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import scala.reflect.ClassTag
+import java.security.Principal
 
 trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
 
@@ -223,13 +224,13 @@ object Roles {
 
 
 
-case class User(username: String, authorities: Seq[String]) {
+case class User(username: String, authorities: Set[String]) {
 
-  def orgsFor(action: String, resource: String): Seq[String] = roles.collect{
+  def orgsFor(action: String, resource: String): Set[String] = roles.collect{
     case DefinedRole(`action`,`resource`, org) => org
   }
 
-  val roles: Seq[DefinedRole] = authorities.map(Roles(_).toList).flatten.collect{
+  val roles: Set[DefinedRole] = authorities.map(Roles(_).toList).flatten.collect{
     case d: DefinedRole => d
   }
 
@@ -250,10 +251,29 @@ trait SecuritySupport {
 trait SpringSecuritySupport extends SecuritySupport {
   import scala.collection.JavaConverters._
 
-  def currentUser(implicit request: HttpServletRequest): Option[User] = {
-    val name = Option(request.getUserPrincipal).map(_.getName)
-    val authorities = Try(request.getUserPrincipal.asInstanceOf[Authentication].getAuthorities.asScala.toList.map(_.getAuthority))
-    val attributePrincipal: Option[AttributePrincipal] = Try(request.getUserPrincipal.asInstanceOf[CasAuthenticationToken].getAssertion.getPrincipal).toOption
-    name.map(User(_, authorities.getOrElse(Seq())))
+  def currentUser(implicit request: HttpServletRequest): Option[User] =  for(
+      user: Principal <- userPrincipal
+  ) yield user match {
+      case a: Authentication => User(username(a), authorities(a).toSet)
+      case u: Principal => User(username(u), Set())
+    }
+
+
+  def username(u: Principal): String = {
+    Option(u.getName).getOrElse("anonymous")
   }
+
+  def authorities(auth: Authentication) = for (
+    authority <- granted(auth)
+    if Option(authority.getAuthority).isDefined
+  ) yield authority.getAuthority
+
+  def granted(auth: Authentication): Iterable[GrantedAuthority] = for (
+    authority <- auth.getAuthorities.asScala
+    if Option(authority).isDefined
+  ) yield authority
+
+
+  def userPrincipal(implicit request: HttpServletRequest) = Option(request.getUserPrincipal)
+
 }

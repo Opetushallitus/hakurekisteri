@@ -192,9 +192,9 @@ class KkHakijaResource(hakemukset: ActorRef,
     case Some(o) => parents.getOrElse("").split(",").toSet.contains(o)
   }
 
-  def getKnownOrganizations(user: Option[User]):Seq[String] = user.map(_.orgsFor("READ", "Hakukohde")).getOrElse(Seq())
+  def getKnownOrganizations(user: Option[User]):Set[String] = user.map(_.orgsFor("READ", "Hakukohde")).getOrElse(Set())
 
-  def isAuthorized(parents: Option[String], oids: Seq[String]): Boolean = {
+  def isAuthorized(parents: Option[String], oids: Set[String]): Boolean = {
     oids.map(o => parents.getOrElse("").split(",").toSet.contains(o)).find(_ == true).getOrElse(false)
   }
 
