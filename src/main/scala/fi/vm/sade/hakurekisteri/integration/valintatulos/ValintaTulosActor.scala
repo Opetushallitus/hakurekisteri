@@ -37,21 +37,13 @@ class ValintaTulosActor(restClient: VirkailijaRestClient)
   }
 
   def getTulos(q: ValintaTulosQuery): Future[ValintaTulos] = {
-    val retryCount = new AtomicInteger(1)
-    tryTulos(q, retryCount)
-  }
-  
-  def tryTulos(q: ValintaTulosQuery, retryCount: AtomicInteger): Future[ValintaTulos] = {
     try {
-      restClient.readObject[ValintaTulos](s"/haku/${URLEncoder.encode(q.hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(q.hakemusOid, "UTF-8")}", HttpResponseCode.Ok)
+      restClient.readObject[ValintaTulos](s"/haku/${URLEncoder.encode(q.hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(q.hakemusOid, "UTF-8")}", maxRetries, HttpResponseCode.Ok)
     } catch {
       case t: PreconditionFailedException =>
         log.warning(s"valinta tulos not found with haku ${q.hakuOid} and hakemus ${q.hakemusOid}: $t")
         Future.successful(ValintaTulos(q.hakemusOid, Seq()))
-      case t: InterruptedIOException =>
-        if (retryCount.getAndIncrement <= maxRetries) tryTulos(q, retryCount)
-        else throw t
     }
   }
-
+  
 }

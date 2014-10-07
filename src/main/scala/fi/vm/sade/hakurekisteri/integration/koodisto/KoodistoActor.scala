@@ -34,6 +34,7 @@ class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
   var relaatioCache: Map[GetRinnasteinenKoodiArvoQuery, CachedRelaatio] = Map()
   var koodiArvotCache: Map[String, CachedKoodistoKoodiArvot] = Map()
   val expirationDurationMillis = 60.minutes.toMillis
+  val maxRetries = 5
 
   override def receive: Receive = {
     case q: GetRinnasteinenKoodiArvoQuery =>
@@ -54,7 +55,7 @@ class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
     if (koodiArvotCache.contains(koodistoUri) && koodiArvotCache(koodistoUri).inserted + expirationDurationMillis > Platform.currentTime) {
       koodiArvotCache(koodistoUri).arvot
     } else {
-      val f = restClient.readObject[Seq[Koodi]](s"/rest/json/${URLEncoder.encode(koodistoUri, "UTF-8")}/koodi", HttpResponseCode.Ok)
+      val f = restClient.readObject[Seq[Koodi]](s"/rest/json/${URLEncoder.encode(koodistoUri, "UTF-8")}/koodi", maxRetries, HttpResponseCode.Ok)
         .map(koodit => KoodistoKoodiArvot(koodistoUri, koodit.map(_.koodiArvo)))
 
       addToKoodiArvotCache(koodistoUri, f)
@@ -72,7 +73,7 @@ class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
     if (koodiCache.contains(koodiUri) && koodiCache(koodiUri).inserted + expirationDurationMillis > Platform.currentTime) {
       koodiCache(koodiUri).koodi
     } else try {
-      val koodi = restClient.readObject[Koodi](s"/rest/json/${URLEncoder.encode(koodistoUri, "UTF-8")}/koodi/${URLEncoder.encode(koodiUri, "UTF-8")}", HttpResponseCode.Ok).map(Some(_))
+      val koodi = restClient.readObject[Koodi](s"/rest/json/${URLEncoder.encode(koodistoUri, "UTF-8")}/koodi/${URLEncoder.encode(koodiUri, "UTF-8")}", maxRetries, HttpResponseCode.Ok).map(Some(_))
       addToKoodiCache(koodiUri, koodi)
       koodi
     } catch {
@@ -93,7 +94,7 @@ class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
     if (relaatioCache.contains(q) && relaatioCache(q).inserted + expirationDurationMillis > Platform.currentTime) {
       relaatioCache(q).arvo
     } else {
-      val f: Future[Seq[Koodi]] = restClient.readObject[Seq[Koodi]](s"/rest/json/relaatio/rinnasteinen/${URLEncoder.encode(q.koodiUri, "UTF-8")}", HttpResponseCode.Ok)
+      val f: Future[Seq[Koodi]] = restClient.readObject[Seq[Koodi]](s"/rest/json/relaatio/rinnasteinen/${URLEncoder.encode(q.koodiUri, "UTF-8")}", maxRetries, HttpResponseCode.Ok)
       val fs = f.map(_.find(_.koodisto.koodistoUri == q.rinnasteinenKoodistoUri) match {
         case None => throw RinnasteinenKoodiNotFoundException(s"rinnasteisia koodeja ei löytynyt koodiurilla ${q.koodiUri}")
         case Some(k) => k.koodiArvo
