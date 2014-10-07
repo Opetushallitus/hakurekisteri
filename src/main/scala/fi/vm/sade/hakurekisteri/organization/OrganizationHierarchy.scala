@@ -93,9 +93,9 @@ class FutureOrganizationHierarchy[A <: Resource[I] :Manifest, I ](serviceUrl:Str
 
 class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organizationFinder: A => Future[Set[String]]) {
 
-  def className[C](implicit m: Manifest[C]) = m.toString
-
-  val subjectFinder = (resource: A) => organizationFinder(resource).map(Subject(className[A], _))
+  def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName
+  lazy val resourceName = className[A]
+  val subjectFinder = (resource: A) => organizationFinder(resource).map(Subject(resourceName, _))
 
   val svc = url(serviceUrl).POST
   var authorizer = OrganizationAuthorizer(Map())
