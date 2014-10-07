@@ -5,7 +5,7 @@ import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
-import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.{OPHUser, User, HakurekisteriJsonSupport}
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 import akka.actor.{Props, Actor, ActorRef, ActorSystem}
@@ -68,8 +68,17 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   implicit val defaultTimeout = Timeout(30, TimeUnit.SECONDS)
   val authorities = Seq("1.2.246.562.10.00000000001")
 
-  val healthCheckUser = User("healthcheck", authorities.map((org) => s"ROLE_APP_SUORITUSREKISTERI_READ_$org").toSet)
+  val resources = Set("Arvosana", "Suoritus", "Opiskeluoikeus", "Opiskelija")
 
+  val healthCheckUser = new User {
+    override def orgsFor(action: String, resource: String): Set[String] =
+      if (resources.contains(resource) && action == "READ")
+        authorities.toSet
+      else
+        Set()
+
+    override val username: String = "healthcheck"
+  }
   var foundHakemukset:Map[String, RefreshingState] = Map()
 
   var selfChecks: Map[UUID, Long] = Map()

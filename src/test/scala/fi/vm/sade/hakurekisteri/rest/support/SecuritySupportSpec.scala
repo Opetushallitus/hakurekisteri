@@ -56,7 +56,7 @@ class SecuritySupportSpec extends FlatSpec with ShouldMatchers with MockitoSugar
 object SecurityUser {
   object  user {
 
-    def having(rights:Set[DefinedRole]) = User(username = "test",
+    def having(rights:Set[DefinedRole]) = OPHUser(username = "test",
       authorities = rights.map{case DefinedRole(service, right, org) => s"ROLE_APP_${service}_${right}_${org}"})
   }
 
