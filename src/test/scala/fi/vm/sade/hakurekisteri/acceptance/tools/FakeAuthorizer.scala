@@ -7,10 +7,10 @@ import fi.vm.sade.hakurekisteri.organization.{AuthorizedUpdate, AuthorizedCreate
 
 class FakeAuthorizer(guarded:ActorRef) extends Actor {
   override def receive: FakeAuthorizer#Receive =  {
-    case AuthorizedQuery(q,orgs, _) => guarded forward q
-    case AuthorizedRead(id, orgs, _) => guarded forward id
-    case AuthorizedCreate(resource, _ , _) => guarded forward resource
-    case AuthorizedUpdate(resource, _ , _) => guarded forward resource
+    case AuthorizedQuery(q,_) => guarded forward q
+    case AuthorizedRead(id, _) => guarded forward id
+    case AuthorizedCreate(resource, _ ) => guarded forward resource
+    case AuthorizedUpdate(resource, _ ) => guarded forward resource
     case message:AnyRef => guarded forward message
   }
 }

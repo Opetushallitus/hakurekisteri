@@ -216,7 +216,7 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Regi
 
   def authorizer[A <: Resource[I] : ClassTag: Manifest, I](guarded: ActorRef, orgFinder: A => Option[String]): ActorRef = {
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-    system.actorOf(Props(new OrganizationHierarchy[A, I](organisaatioSoapServiceUrl, guarded, (i: A) => orgFinder(i).map(Seq(_)).getOrElse(Seq()))), s"$resource-authorizer")
+    system.actorOf(Props(new OrganizationHierarchy[A, I](organisaatioSoapServiceUrl, guarded, (i: A) => orgFinder(i).map(Set(_)).getOrElse(Set()))), s"$resource-authorizer")
   }
 
   val suoritusOrgResolver: PartialFunction[Suoritus, String] = {
@@ -236,9 +236,9 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Regi
     unauthorized.suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).
       mapTo[Option[Suoritus]].map(
         _.map{
-          case (s: VirallinenSuoritus) => Seq(s.myontaja, s.source, arvosana.source)
-          case (s: VapaamuotoinenSuoritus) => Seq(s.source, arvosana.source)
-        }.getOrElse(Seq()))
+          case (s: VirallinenSuoritus) => Set(s.myontaja, s.source, arvosana.source)
+          case (s: VapaamuotoinenSuoritus) => Set(s.source, arvosana.source)
+        }.getOrElse(Set()))
 
   override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusOrgResolver.lift)
   override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija) => Some(opiskelija.oppilaitosOid))
