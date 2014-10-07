@@ -1,8 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.tarjonta
 
-import java.io.InterruptedIOException
 import java.net.URLEncoder
-import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.Actor
 import com.stackmob.newman.response.HttpResponseCode
