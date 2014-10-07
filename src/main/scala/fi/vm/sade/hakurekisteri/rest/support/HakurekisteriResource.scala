@@ -9,7 +9,6 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import org.scalatra._
 import _root_.akka.pattern.ask
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
-import scala.concurrent.duration.Duration
 import scala.util.Try
 import fi.vm.sade.hakurekisteri.storage.Identified
 import scala.concurrent.duration._
@@ -19,7 +18,6 @@ import org.springframework.security.core.Authentication
 import org.scalatra.commands._
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.organization._
-import scala.util.matching.Regex
 import org.springframework.security.cas.authentication.CasAuthenticationToken
 import org.jasig.cas.client.authentication.AttributePrincipal
 import fi.vm.sade.hakurekisteri.organization.AuthorizedRead
@@ -40,7 +38,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
   val delete: OperationBuilder
 
   delete("/:id", operation(delete)) {
-    if (!hasAnyRoles(currentUser, Seq("CRUD"))) throw UserNotAuthorized("not authorized")
+    if (!currentUser.exists(_.canDelete)) throw UserNotAuthorized("not authorized")
     else deleteResource
   }
 
@@ -49,12 +47,12 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
   }
 
   post("/", operation(create)) {
-    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE"))) throw UserNotAuthorized("not authorized")
+    if (!currentUser.exists(_.canWrite)) throw UserNotAuthorized("not authorized")
     else createResource(getKnownOrganizations(currentUser), currentUser.map(_.username))
   }
 
   post("/:id", operation(update)) {
-    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE"))) throw UserNotAuthorized("not authorized")
+    if (!currentUser.exists(_.canWrite)) throw UserNotAuthorized("not authorized")
     else updateResource
   }
 
@@ -63,7 +61,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
   }
 
   get("/:id", operation(read)) {
-    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE", "READ"))) throw UserNotAuthorized("not authorized")
+    if (!currentUser.exists(_.canRead)) throw UserNotAuthorized("not authorized")
     else getResource
   }
 
@@ -72,7 +70,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
   }
 
   get("/", operation(query))(
-    if (!hasAnyRoles(currentUser, Seq("CRUD", "READ_UPDATE", "READ"))) throw UserNotAuthorized("not authorized")
+    if (!currentUser.exists(_.canRead)) throw UserNotAuthorized("not authorized")
     else queryResource(getKnownOrganizations(currentUser), currentUser.map(_.username))
   )
 
@@ -155,36 +153,56 @@ abstract class  HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriCom
    protected implicit def swagger: SwaggerEngine[_] = sw
 }
 
-case class User(username: String, authorities: Seq[String], attributePrincipal: Option[AttributePrincipal])
+sealed trait Role
+
+case class DefinedRole(service: String, rights: String, organization: String) extends Role
+
+object UnknownRole extends Role
+
+object Role {
+  def apply(authority:String) =  authority match {
+    case role(service, right, org) => DefinedRole(service, right, org)
+    case _ => UnknownRole
+  }
+
+  val role = "ROLE_APP_([^_]*)_(.*)_(\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+)".r
+
+
+}
+
+
+
+case class User(username: String, authorities: Seq[String], attributePrincipal: Option[AttributePrincipal]) {
+
+  val orgFinder: PartialFunction[Role, Set[String]] = {
+    case DefinedRole("SUORITUSREKISTERI", _ ,organisaatio) => Set(organisaatio)
+    case DefinedRole("KKHAKUVIRKAILIJA", _ , _) => Set("1.2.246.562.10.43628088406")
+  }
+
+  val roles: Seq[DefinedRole] = authorities.map(Role(_)).collect{
+    case d: DefinedRole => d
+  }
+
+  def organizations = (Set[String]() /: roles.collect(orgFinder)) (_ ++ _)
+
+
+  def hasAnyRoles(checked: String*) = roles.exists((r) =>
+    r.service == "SUORITUSREKISTERI" && checked.toSet.contains(r.rights)
+  )
+
+  def canWrite = hasAnyRoles("CRUD", "READ_UPDATE")
+
+  def canDelete = hasAnyRoles("CRUD")
+
+  def canRead = hasAnyRoles("CRUD", "READ_UPDATE", "READ")
+
+}
 
 trait SecuritySupport {
   def currentUser(implicit request: HttpServletRequest): Option[User]
 
-  def getKnownOrganizations(user: Option[User]): Seq[String] = {
-    user.map(_.authorities.
-      map(splitAuthority).
-      filter(isSuoritusRekisteri).
-      map(_.reverse.head).
-      filter(isOid).toSet.toList
-    ).getOrElse(Seq())
-  }
-
-  val regex = new Regex("\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+")
-
-  def isOid(x: String) = {
-    (regex findFirstIn x).nonEmpty
-  }
-
-  def isSuoritusRekisteri: (Seq[String]) => Boolean = {
-    _.containsSlice(Seq("ROLE", "APP", "SUORITUSREKISTERI"))
-  }
-
-  def splitAuthority(authority: String) = Seq(authority split "_": _*)
-
-  def hasAnyRoles(user: Option[User], roles: Seq[String]): Boolean = user match {
-    case Some(u) => roles.map((role) => u.authorities.contains(s"ROLE_APP_SUORITUSREKISTERI_$role")).reduceLeft(_ || _)
-    case _ => false
-  }
+  def getKnownOrganizations(user: Option[User]): Seq[String] =
+    user.map(_.organizations.toList).getOrElse(Seq())
 }
 
 trait SpringSecuritySupport extends SecuritySupport {
