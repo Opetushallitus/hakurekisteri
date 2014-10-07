@@ -37,7 +37,7 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
 
   import scala.concurrent.duration._
 
-  implicit val defaultTimeout: Timeout = 60.seconds
+  implicit val defaultTimeout: Timeout = 120.seconds
 
 
   get("/") {
@@ -56,6 +56,7 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
     implicit val user = currentUser.get
     val q = HenkiloHakijaQuery(params("oid"))
     new AsyncResult() {
+      override implicit def timeout: Duration = 120.seconds
       val is = for (
         hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
         oppijat <- fetchOppijatFor(hakemukset.filter((fh) => fh.personOid.isDefined && fh.hetu.isDefined).slice(0,1))
