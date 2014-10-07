@@ -309,7 +309,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
   def getClient: HttpClient = getClient("default")
   
   val socketTimeout = 120000
-  val connectionTimeout = 15000
+  val connectionTimeout = 20000
 
   def createApacheHttpClient(maxConnections: Int): org.apache.http.client.HttpClient = {
     val connManager: ClientConnectionManager = {
@@ -329,7 +329,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
     client
   }
 
-  def getClient(poolName: String = "default", threads: Int = 8, maxConnections: Int = 100): HttpClient = {
+  def getClient(poolName: String = "default", threads: Int = 10, maxConnections: Int = 100): HttpClient = {
     if (poolName == "default") new ApacheHttpClient(createApacheHttpClient(maxConnections))()
     else {
       val threadNumber = new AtomicInteger(1)
@@ -350,7 +350,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(getClient, ec))), "organisaatio")
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient(poolName = "virta", threads = 100), ec), organisaatiot)), "virta")
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient("virta", 100, 100), ec), organisaatiot)), "virta")
 
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig, Some(jSessionIdActor))(getClient, ec))), "henkilo")
 
@@ -362,9 +362,9 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)(getClient, ec))), "koodisto")
 
-  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(getClient(), ec))), "parametrit")
+  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(getClient, ec))), "parametrit")
 
-  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(getClient("valintatulos", 10, 100), ec))), "valintaTulos")
+  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(getClient("valintatulos", 5, 15), ec))), "valintaTulos")
 }
 
 trait Koosteet {
