@@ -49,11 +49,8 @@ class ValintaTulosActor(restClient: VirkailijaRestClient)
         log.warning(s"valinta tulos not found with haku ${q.hakuOid} and hakemus ${q.hakemusOid}: $t")
         Future.successful(ValintaTulos(q.hakemusOid, Seq()))
       case t: InterruptedIOException =>
-        if (retryCount.getAndAdd(1) <= maxRetries) {
-          tryTulos(q, retryCount)
-        } else {
-          throw t
-        }
+        if (retryCount.getAndIncrement <= maxRetries) tryTulos(q, retryCount)
+        else throw t
     }
   }
 

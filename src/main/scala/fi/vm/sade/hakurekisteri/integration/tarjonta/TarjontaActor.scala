@@ -1,6 +1,8 @@
 package fi.vm.sade.hakurekisteri.integration.tarjonta
 
+import java.io.InterruptedIOException
 import java.net.URLEncoder
+import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.Actor
 import com.stackmob.newman.response.HttpResponseCode
@@ -54,6 +56,7 @@ class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
   var hakukohteenKoulutukset: Map[String, CachedKoulutukset] = Map()
   var komot: Map[String, CachedKomo] = Map()
   val expirationDurationMillis = 60.minutes.toMillis
+  val maxRetries = 3
 
   override def receive: Receive = {
     case q: SearchKomoQuery => searchKomo(q.koulutus) pipeTo sender
@@ -74,9 +77,20 @@ class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
     if (komot.contains(oid) && komot(oid).inserted + expirationDurationMillis > Platform.currentTime) {
       komot(oid).komo
     } else {
+      val retryCount = new AtomicInteger(1)
+      tryKomo(oid, retryCount)
+    }
+  }
+
+  def tryKomo(oid: String, retryCount: AtomicInteger): Future[KomoResponse] = {
+    try {
       val f = restClient.readObject[TarjontaKomoResponse](s"/rest/v1/komo/${URLEncoder.encode(oid, "UTF-8")}?meta=false", HttpResponseCode.Ok).map(res => KomoResponse(oid, res.result))
       addToKomoCache(oid, f)
       f
+    } catch {
+      case t: InterruptedIOException =>
+        if (retryCount.getAndIncrement <= maxRetries) tryKomo(oid, retryCount)
+        else throw t
     }
   }
 
@@ -84,16 +98,16 @@ class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
 
   def getKoulutus(oid: String): Future[Hakukohteenkoulutus] = {
     val koulutus: Future[Option[Koulutus]] = restClient.readObject[KoulutusResponse](s"/rest/v1/koulutus/${URLEncoder.encode(oid, "UTF-8")}?meta=false", HttpResponseCode.Ok).map(r => r.result)
-    koulutus.flatMap(_ match {
+    koulutus.flatMap {
       case None => Future.failed(KoulutusNotFoundException(s"koulutus not found with oid $oid"))
       case Some(k) =>
         val fk: Future[Option[Komo]] = getKomo(k.komoOid).map(r => r.komo)
-        fk.map(_ match {
+        fk.map {
           case None => throw KomoNotFoundException(s"komo not found with oid ${k.komoOid}")
           case Some(komo) =>
             Hakukohteenkoulutus(komo.oid, komo.koulutuskoodi.arvo, k.tunniste.flatMap(_.blankOption))
-        })
-    })
+        }
+    }
   }
   def getHakukohteenkoulutukset(oids: Seq[String]): Future[Seq[Hakukohteenkoulutus]] = Future.sequence(oids.map(getKoulutus))
   
@@ -105,6 +119,13 @@ class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
     if (hakukohteenKoulutukset.contains(hk.oid) && hakukohteenKoulutukset(hk.oid).inserted + expirationDurationMillis > Platform.currentTime)
       hakukohteenKoulutukset(hk.oid).koulutukset
     else {
+      val retryCount = new AtomicInteger(1)
+      tryHakukohteenKoulutukset(hk, retryCount)
+    }
+  }
+
+  def tryHakukohteenKoulutukset(hk: HakukohdeOid, retryCount: AtomicInteger): Future[HakukohteenKoulutukset] = {
+    try {
       val fh: Future[Option[Hakukohde]] = restClient.readObject[HakukohdeResponse](s"/rest/v1/hakukohde/${URLEncoder.encode(hk.oid, "UTF-8")}?meta=false", HttpResponseCode.Ok).map(r => r.result)
       val hks: Future[HakukohteenKoulutukset] = fh.flatMap(_ match {
         case None => Future.failed(HakukohdeNotFoundException(s"hakukohde not found with oid ${hk.oid}"))
@@ -114,6 +135,10 @@ class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
       })
       addToHakukohdeCache(hk.oid, hks)
       hks
+    } catch {
+      case t: InterruptedIOException =>
+        if (retryCount.getAndIncrement <= maxRetries) tryHakukohteenKoulutukset(hk, retryCount)
+        else throw t
     }
   }
 }
