@@ -24,8 +24,13 @@ import fi.vm.sade.hakurekisteri.organization.AuthorizedRead
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.organization.AuthorizedCreate
 import fi.vm.sade.hakurekisteri.organization.AuthorizedDelete
+import fi.vm.sade.hakurekisteri.arvosana.Arvosana
+import fi.vm.sade.hakurekisteri.suoritus.Suoritus
+import scala.reflect.ClassTag
 
 trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
+
+
 
   before() {
     contentType = formats("json")
@@ -38,40 +43,40 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A
   val delete: OperationBuilder
 
   delete("/:id", operation(delete)) {
-    if (!currentUser.exists(_.canDelete)) throw UserNotAuthorized("not authorized")
+    if (!currentUser.exists(_.canDelete(resourceName))) throw UserNotAuthorized("not authorized")
     else deleteResource
   }
 
   def deleteResource: Object = {
-    Try(UUID.fromString(params("id"))).map(deleteResource(_, getKnownOrganizations(currentUser), currentUser.map(_.username))).get
+    Try(UUID.fromString(params("id"))).map(deleteResource(_, currentUser)).get
   }
 
   post("/", operation(create)) {
-    if (!currentUser.exists(_.canWrite)) throw UserNotAuthorized("not authorized")
-    else createResource(getKnownOrganizations(currentUser), currentUser.map(_.username))
+    if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
+    else createResource(currentUser)
   }
 
   post("/:id", operation(update)) {
-    if (!currentUser.exists(_.canWrite)) throw UserNotAuthorized("not authorized")
+    if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
     else updateResource
   }
 
   def updateResource: Object = {
-    Try(UUID.fromString(params("id"))).map(updateResource(_, getKnownOrganizations(currentUser), currentUser.map(_.username))).get
+    Try(UUID.fromString(params("id"))).map(updateResource(_, currentUser)).get
   }
 
   get("/:id", operation(read)) {
-    if (!currentUser.exists(_.canRead)) throw UserNotAuthorized("not authorized")
+    if (!currentUser.exists(_.canRead(resourceName))) throw UserNotAuthorized("not authorized")
     else getResource
   }
 
   def getResource: Object = {
-    Try(UUID.fromString(params("id"))).map(readResource(_, getKnownOrganizations(currentUser), currentUser.map(_.username))).get
+    Try(UUID.fromString(params("id"))).map(readResource(_, currentUser)).get
   }
 
   get("/", operation(query))(
-    if (!currentUser.exists(_.canRead)) throw UserNotAuthorized("not authorized")
-    else queryResource(getKnownOrganizations(currentUser), currentUser.map(_.username))
+    if (!currentUser.exists(_.canRead(resourceName))) throw UserNotAuthorized("not authorized")
+    else queryResource(currentUser)
   )
 
   case class NotFoundException() extends Exception
@@ -97,6 +102,11 @@ abstract class  HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriCom
   case class UserNotAuthorized(message: String) extends Exception(message)
   case class MalformedResourceException(message: String) extends Exception(message)
 
+  def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName
+
+
+  lazy val resourceName = className[A]
+
   protected implicit def executor: ExecutionContext = system.dispatcher
   val timeOut = 120
   implicit val defaultTimeout: Timeout = timeOut.seconds
@@ -107,10 +117,10 @@ abstract class  HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriCom
       map(success)
   }
 
-  def createResource(authorities: Seq[String], user: Option[String]): Object = {
-    (command[C] >> (_.toValidatedResource(user.get))).fold(
+  def createResource(user: Option[User]): Object = {
+    (command[C] >> (_.toValidatedResource(user.get.username))).fold(
       errors => throw MalformedResourceException(errors.toString()),
-      resource => new ActorResult(AuthorizedCreate(resource, authorities, user.getOrElse("anonymous")), ResourceCreated(request.getRequestURL)))
+      resource => new ActorResult(AuthorizedCreate(resource, user.get), ResourceCreated(request.getRequestURL)))
   }
 
   object ResourceCreated {
@@ -119,33 +129,33 @@ abstract class  HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriCom
 
   def identifyResource(resource : A, id: UUID): A with Identified[UUID] = resource.identify(id)
 
-  def updateResource(id: UUID, authorities: Seq[String], user: Option[String]): Object = {
-    (command[C] >> (_.toValidatedResource(user.get))).fold(
+  def updateResource(id: UUID, user: Option[User]): Object = {
+    (command[C] >> (_.toValidatedResource(user.get.username))).fold(
       errors => throw MalformedResourceException(errors.toString()),
-      resource => new ActorResult[A with Identified[UUID]](AuthorizedUpdate(identifyResource(resource, id), authorities, user.getOrElse("anonymous")), Ok(_)))
+      resource => new ActorResult[A with Identified[UUID]](AuthorizedUpdate(identifyResource(resource, id), user.get), Ok(_)))
   }
 
-  def deleteResource(id: UUID, authorities: Seq[String], user: Option[String]): Object = {
-    new ActorResult[Unit](AuthorizedDelete(id, authorities, user.getOrElse("anonymous")), (unit) => Ok())
+  def deleteResource(id: UUID, user: Option[User]): Object = {
+    new ActorResult[Unit](AuthorizedDelete(id,  user.get), (unit) => Ok())
   }
 
-  def readResource(id: UUID, authorities: Seq[String], user: Option[String]): Object = {
-    new ActorResult[Option[A with Identified[UUID]]](AuthorizedRead(id, authorities, user.getOrElse("anonymous")), {
+  def readResource(id: UUID, user: Option[User]): Object = {
+    new ActorResult[Option[A with Identified[UUID]]](AuthorizedRead(id, user.get), {
       case Some(data) => Ok(data)
       case None => NotFound()
     })
   }
 
-  def queryResource(authorities: Seq[String], user: Option[String]): Product with Serializable = {
-    (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q, authorities,user)) recover {
+  def queryResource(user: Option[User]): Product with Serializable = {
+    (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q, user)) recover {
       case e: Exception => logger.warn("Bad query: " + params, e); throw new IllegalArgumentException("illegal query params")
     }).get
   }
 
-  case class ResourceQuery[R](query: Query[R], authorities: Seq[String], user: Option[String]) extends AsyncResult {
+  case class ResourceQuery[R](query: Query[R], user: Option[User]) extends AsyncResult {
     override implicit def timeout: Duration = timeOut.seconds
     val is = {
-      val future = (actor ? AuthorizedQuery(query, authorities, user.getOrElse("anonymous"))).mapTo[Seq[R with Identified[UUID]]]
+      val future = (actor ? AuthorizedQuery(query, user.get)).mapTo[Seq[R with Identified[UUID]]]
       future.map(Ok(_))
     }
   }
@@ -155,15 +165,56 @@ abstract class  HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriCom
 
 sealed trait Role
 
-case class DefinedRole(service: String, rights: String, organization: String) extends Role
+case class DefinedRole(action: String, resource: String, organization: String) extends Role
 
 object UnknownRole extends Role
 
-object Role {
-  def apply(authority:String) =  authority match {
-    case role(service, right, org) => DefinedRole(service, right, org)
-    case _ => UnknownRole
+object Roles {
+
+
+  val subjects: PartialFunction[String, PartialFunction[String, (String) => Set[String]]] =
+    Map(
+      "SUORITUSREKISTERI" -> {
+        case x if resources.contains(x)  => (org: String) => Set(org)
+      },
+      "KKHAKUVIRKAILIJA" -> {
+        case "Arvosana" | "Suoritus" =>  (_) => Set("1.2.246.562.10.43628088406")
+      }
+
+    )
+
+
+  def findSubjects(service: String, org: String)(resource: String) = for (
+    serviceResolver <- subjects.lift(service);
+    finder <- serviceResolver.lift(resource)
+  ) yield finder(org)
+
+  val resources = Set("Arvosana", "Suoritus", "Opiskeluoikeus", "Opiskelija", "Hakukohde")
+
+  def findRoles(finder: (String) => Option[Set[String]])(actions: Set[String]): Set[DefinedRole] = {
+    for (
+      action <- actions;
+      resource <- resources;
+      subject <- finder(resource).getOrElse(Set())
+    ) yield DefinedRole(action, resource,  subject)
   }
+
+
+  def apply(authority:String) =  authority match {
+    case role(service, right, org) =>
+      def roleFinder(roles: String*):Set[DefinedRole] = findRoles(findSubjects(service, org))(roles.toSet)
+      right match {
+      case "CRUD" =>  roleFinder("DELETE", "WRITE", "READ")
+
+      case "READ_UPDATE" => roleFinder("WRITE", "READ")
+      case "READ" => roleFinder("READ")
+      case _ => Set(UnknownRole)
+    }
+    case _ => Set(UnknownRole)
+  }
+
+
+
 
   val role = "ROLE_APP_([^_]*)_(.*)_(\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+)".r
 
@@ -172,37 +223,28 @@ object Role {
 
 
 
-case class User(username: String, authorities: Seq[String], attributePrincipal: Option[AttributePrincipal]) {
+case class User(username: String, authorities: Seq[String]) {
 
-  val orgFinder: PartialFunction[Role, Set[String]] = {
-    case DefinedRole("SUORITUSREKISTERI", _ ,organisaatio) => Set(organisaatio)
-    case DefinedRole("KKHAKUVIRKAILIJA", _ , _) => Set("1.2.246.562.10.43628088406")
+  def orgsFor(action: String, resource: String): Seq[String] = roles.collect{
+    case DefinedRole(`action`,`resource`, org) => org
   }
 
-  val roles: Seq[DefinedRole] = authorities.map(Role(_)).collect{
+  val roles: Seq[DefinedRole] = authorities.map(Roles(_).toList).flatten.collect{
     case d: DefinedRole => d
   }
 
-  def organizations = (Set[String]() /: roles.collect(orgFinder)) (_ ++ _)
 
+  def canWrite(resource: String) = !orgsFor("WRITE", resource).isEmpty
 
-  def hasAnyRoles(checked: String*) = roles.exists((r) =>
-    r.service == "SUORITUSREKISTERI" && checked.toSet.contains(r.rights)
-  )
+  def canDelete(resource: String) = !orgsFor("DELETE", resource).isEmpty
 
-  def canWrite = hasAnyRoles("CRUD", "READ_UPDATE")
-
-  def canDelete = hasAnyRoles("CRUD")
-
-  def canRead = hasAnyRoles("CRUD", "READ_UPDATE", "READ")
+  def canRead(resource: String) = !orgsFor("READ", resource).isEmpty
 
 }
 
 trait SecuritySupport {
   def currentUser(implicit request: HttpServletRequest): Option[User]
 
-  def getKnownOrganizations(user: Option[User]): Seq[String] =
-    user.map(_.organizations.toList).getOrElse(Seq())
 }
 
 trait SpringSecuritySupport extends SecuritySupport {
@@ -212,6 +254,6 @@ trait SpringSecuritySupport extends SecuritySupport {
     val name = Option(request.getUserPrincipal).map(_.getName)
     val authorities = Try(request.getUserPrincipal.asInstanceOf[Authentication].getAuthorities.asScala.toList.map(_.getAuthority))
     val attributePrincipal: Option[AttributePrincipal] = Try(request.getUserPrincipal.asInstanceOf[CasAuthenticationToken].getAssertion.getPrincipal).toOption
-    name.map(User(_, authorities.getOrElse(Seq()), attributePrincipal))
+    name.map(User(_, authorities.getOrElse(Seq())))
   }
 }

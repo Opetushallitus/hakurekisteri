@@ -192,6 +192,8 @@ class KkHakijaResource(hakemukset: ActorRef,
     case Some(o) => parents.getOrElse("").split(",").toSet.contains(o)
   }
 
+  def getKnownOrganizations(user: Option[User]):Seq[String] = user.map(_.orgsFor("READ", "Hakukohde")).getOrElse(Seq())
+
   def isAuthorized(parents: Option[String], oids: Seq[String]): Boolean = {
     oids.map(o => parents.getOrElse("").split(",").toSet.contains(o)).find(_ == true).getOrElse(false)
   }
@@ -233,7 +235,7 @@ class KkHakijaResource(hakemukset: ActorRef,
         val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
         val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities)
         for {
-          valintaTulos: ValintaTulos <- (valintaTulos ? ValintaTulosQuery(hakemus.applicationSystemId, hakemus.oid)).mapTo[ValintaTulos]
+          valintaTulos: ValintaTulos <- (valintaTulos ? ValintaTulosQuery(hakemus.applicationSystemId, hakemus.oid, cachedOk = q.oppijanumero.isEmpty)).mapTo[ValintaTulos]
           hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
           haku: Haku <- (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
           kausi: String <- getKausi(haku.kausi, hakemus.oid)
