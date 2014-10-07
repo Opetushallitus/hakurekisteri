@@ -26,7 +26,6 @@ case class ValintaTulos(hakemusOid: String,
                         hakutoiveet: Seq[ValintaTulosHakutoive])
 
 case class CacheKey(hakuOid: String, hakemusOid: String)
-case class CachedValintaTulos(inserted: Long, tulos: Future[ValintaTulos])
 
 class ValintaTulosActor(restClient: VirkailijaRestClient)
                        (implicit val ec: ExecutionContext) extends Actor {

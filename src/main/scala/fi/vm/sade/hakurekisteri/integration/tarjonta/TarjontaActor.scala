@@ -30,7 +30,6 @@ case class TarjontaSearchResponse(result: Seq[Komo])
 case class TarjontaKomoResponse(result: Option[Komo])
 
 case class KomoResponse(oid: String, komo: Option[Komo])
-case class CachedKomo(inserted: Long, komo: Future[KomoResponse])
 
 case class Koulutus(oid: String, komoOid: String, tunniste: Option[String])
 case class KoulutusResponse(result: Option[Koulutus])
@@ -43,7 +42,6 @@ case class Hakukohteenkoulutus(komoOid: String,
                                tkKoulutuskoodi: String,
                                kkKoulutusId: Option[String])
 case class HakukohteenKoulutukset(hakukohdeOid: String, ulkoinenTunniste: Option[String], koulutukset: Seq[Hakukohteenkoulutus])
-case class CachedKoulutukset(inserted: Long, koulutukset: Future[HakukohteenKoulutukset])
 
 class TarjontaException(val m: String) extends Exception(m)
 case class HakukohdeNotFoundException(message: String) extends TarjontaException(message)

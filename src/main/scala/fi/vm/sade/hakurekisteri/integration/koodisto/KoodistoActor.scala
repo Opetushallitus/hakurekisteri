@@ -17,15 +17,11 @@ case class Koodisto(koodistoUri: String)
 case class KoodiMetadata(nimi: String, kieli: String)
 case class Koodi(koodiArvo: String, koodiUri: String, koodisto: Koodisto, metadata: Seq[KoodiMetadata])
 case class RinnasteinenKoodiNotFoundException(message: String) extends Exception(message)
-case class CachedRelaatio(inserted: Long, arvo: Future[String])
 
 case class GetKoodi(koodistoUri: String, koodiUri: String)
 
-case class CachedKoodi(inserted: Long, koodi: Future[Option[Koodi]])
-
 case class KoodistoKoodiArvot(koodistoUri: String, arvot: Seq[String])
 case class GetKoodistoKoodiArvot(koodistoUri: String)
-case class CachedKoodistoKoodiArvot(inserted: Long, arvot: Future[KoodistoKoodiArvot])
 
 class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: ExecutionContext) extends Actor {
   val log = Logging(context.system, this)
