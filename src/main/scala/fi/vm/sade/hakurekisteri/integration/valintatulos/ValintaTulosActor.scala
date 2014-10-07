@@ -41,7 +41,7 @@ class ValintaTulosActor(restClient: VirkailijaRestClient)
 
   def getTulos(q: ValintaTulosQuery): Future[ValintaTulos] = {
     val key = CacheKey(q.hakuOid, q.hakemusOid)
-    if (cache.contains(key)) cache.get(key)
+    if (q.cachedOk && cache.contains(key)) cache.get(key)
     else try {
       val f = restClient.readObject[ValintaTulos](s"/haku/${URLEncoder.encode(q.hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(q.hakemusOid, "UTF-8")}", maxRetries, HttpResponseCode.Ok)
       cache + (key, f)
