@@ -45,7 +45,7 @@ abstract class ResourceActor[T <: Resource[I] : Manifest, I : Manifest] extends 
       saved = saved + 1
       val saveTry = Try(save(o))
       if (saveTry.isFailure)
-        log.error("save failed", saveTry.failed.get)
+        log.error(saveTry.failed.get, "save failed")
       sender ! saveTry.recover{ case e: Exception => Failure(e)}.get
     case id: I =>
       sender ! get(id)
