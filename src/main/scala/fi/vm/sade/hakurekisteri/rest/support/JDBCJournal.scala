@@ -80,10 +80,10 @@ abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: St
 
   def deltaShaper(j: (I, Long, Boolean), rd: ResourceRow): Delta[R, I] = (delta _).tupled(j)(rd)
 
-  val deletedValues: ResourceRow
+  val deletedValues: (String) =>  ResourceRow
 
   def rowShaper(d: Delta[R, I]) = d match {
-    case Deleted(id, source) => Some((id, Platform.currentTime, true), deletedValues)
+    case Deleted(id, source) => Some((id, Platform.currentTime, true), deletedValues(source))
     case Updated(r: R with Identified[I]) => row(r).map(updateRow(r))
 
   }
