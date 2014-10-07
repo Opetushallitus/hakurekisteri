@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.integration
 
 import java.io.InterruptedIOException
 import java.net.URL
+import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorRef
 import akka.pattern.ask
@@ -121,6 +122,22 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionId: Option[ActorRef] =
   def readObject[A <: AnyRef: Manifest](uri: String, okCodes: HttpResponseCode*): Future[A] = {
     val codes = if (okCodes.isEmpty) Seq(HttpResponseCode.Ok) else okCodes
     readObject[A](uri, (code: HttpResponseCode) => codes.contains(code))
+  }
+
+  def readObject[A <: AnyRef: Manifest](uri: String, maxConnectionRetries: Int, okCodes: HttpResponseCode*): Future[A] = {
+    val retryCount = new AtomicInteger(1)
+    tryRead(uri, retryCount, maxConnectionRetries, okCodes)
+  }
+
+  private def tryRead[A <: AnyRef: Manifest](uri: String, retryCount: AtomicInteger, maxConnectionRetries: Int, okCodes: Seq[HttpResponseCode]): Future[A] = {
+    try {
+      val codes = if (okCodes.isEmpty) Seq(HttpResponseCode.Ok) else okCodes
+      readObject[A](uri, (code: HttpResponseCode) => codes.contains(code))
+    } catch {
+      case t: InterruptedIOException =>
+        if (retryCount.getAndIncrement <= maxConnectionRetries) tryRead(uri, retryCount, maxConnectionRetries, okCodes)
+        else throw t
+    }
   }
 }
 

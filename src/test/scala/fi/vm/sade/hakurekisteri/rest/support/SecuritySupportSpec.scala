@@ -13,39 +13,39 @@ class SecuritySupportSpec extends FlatSpec with ShouldMatchers with MockitoSugar
 
   it should "allow read for CRUD user" in
     securitySession.withLoginBy(user having ("CRUD", "READ_UPDATE", "READ").rights)
-      {currentUser.canRead should be (true)}
+      {currentUser.canRead("Suoritus") should be (true)}
 
   it should "allow read for READ_UPDATE user" in
     securitySession.withLoginBy(user having ("READ_UPDATE", "READ").rights)
-      {currentUser.canRead should be (true)}
+      {currentUser.canRead("Suoritus") should be (true)}
 
   it should "allow read for READ user" in
     securitySession.withLoginBy(user having "READ".rights)
-    {currentUser.canRead should be (true)}
+    {currentUser.canRead("Suoritus") should be (true)}
 
   it should "allow write for CRUD user" in
     securitySession.withLoginBy(user having ("CRUD", "READ_UPDATE", "READ").rights)
-    {currentUser.canWrite should be (true)}
+    {currentUser.canWrite("Suoritus") should be (true)}
 
   it should "allow write for READ_UPDATE user" in
     securitySession.withLoginBy(user having ("READ_UPDATE", "READ").rights)
-    {currentUser.canWrite should be (true)}
+    {currentUser.canWrite("Suoritus") should be (true)}
 
   it should "not allow write for READ user" in
     securitySession.withLoginBy(user having "READ".rights)
-    {currentUser.canWrite should be (false)}
+    {currentUser.canWrite("Suoritus") should be (false)}
 
   it should "allow delete for CRUD user" in
     securitySession.withLoginBy(user having ("CRUD", "READ_UPDATE", "READ").rights)
-    {currentUser.canWrite should be (true)}
+    {currentUser.canWrite("Suoritus") should be (true)}
 
   it should "not allow delete for READ_UPDATE user" in
     securitySession.withLoginBy(user having ("READ_UPDATE", "READ").rights)
-    {currentUser.canDelete should be (false)}
+    {currentUser.canDelete("Suoritus") should be (false)}
 
   it should "not allow delete for READ user" in
     securitySession.withLoginBy(user having "READ".rights)
-    {currentUser.canDelete should be (false)}
+    {currentUser.canDelete("Suoritus") should be (false)}
 
 
 
@@ -57,8 +57,7 @@ object SecurityUser {
   object  user {
 
     def having(rights:Seq[DefinedRole]) = User(username = "test",
-      authorities = rights.map{case DefinedRole(service, right, org) => s"ROLE_APP_${service}_${right}_${org}"},
-      attributePrincipal = None)
+      authorities = rights.map{case DefinedRole(service, right, org) => s"ROLE_APP_${service}_${right}_${org}"})
   }
 
   object securitySession {

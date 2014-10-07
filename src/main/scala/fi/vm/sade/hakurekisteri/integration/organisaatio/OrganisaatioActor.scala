@@ -17,6 +17,7 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
   implicit val executionContext: ExecutionContext = context.dispatcher
   private var cache: Map[String, (Long, Future[Option[Organisaatio]])] = Map()
   val log = Logging(context.system, this)
+  val maxRetries = 5
 
   class Refresh
   private object refresh extends Refresh
@@ -26,7 +27,7 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
   var cancellable: Option[Cancellable] = None
 
   override def preStart(): Unit = {
-    organisaatioClient.readObject[Seq[String]]("/rest/organisaatio", HttpResponseCode.Ok).onSuccess {
+    organisaatioClient.readObject[Seq[String]]("/rest/organisaatio", maxRetries, HttpResponseCode.Ok).onSuccess {
       case s: Seq[String] =>
         fetchOrgs(s)
     }
@@ -63,7 +64,7 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
   }
 
   def newValue(oid: String): (Long, Future[Option[Organisaatio]]) = {
-    val organisaatio: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(oid, "UTF-8")}", HttpResponseCode.Ok).map(Option(_)).recover {
+    val organisaatio: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(oid, "UTF-8")}", maxRetries, HttpResponseCode.Ok).map(Option(_)).recover {
       case p: PreconditionFailedException => log.warning(s"organisaatio not found with oid $oid"); None
     }
     (Platform.currentTime + timeToLive.toMillis, organisaatio)

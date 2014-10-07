@@ -37,11 +37,11 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
 
   import scala.concurrent.duration._
 
-  implicit val defaultTimeout: Timeout = 60.seconds
+  implicit val defaultTimeout: Timeout = 120.seconds
 
 
   get("/") {
-    implicit val user = currentUser
+    implicit val user = currentUser.get
     val q = HakemusQuery(params)
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
@@ -53,9 +53,10 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
   }
 
   get("/:oid") {
-    implicit val user = currentUser
+    implicit val user = currentUser.get
     val q = HenkiloHakijaQuery(params("oid"))
     new AsyncResult() {
+      override implicit def timeout: Duration = 120.seconds
       val is = for (
         hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
         oppijat <- fetchOppijatFor(hakemukset.filter((fh) => fh.personOid.isDefined && fh.hetu.isDefined).slice(0,1))
@@ -68,21 +69,21 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
     case t: VirtaConnectionErrorException => (id) => InternalServerError(IncidentReport(id, "virta error"))
   }
 
-  def fetchOppijatFor(hakemukset: Seq[FullHakemus])(implicit user: Option[User]): Future[Seq[Oppija]] =
+  def fetchOppijatFor(hakemukset: Seq[FullHakemus])(implicit user: User): Future[Seq[Oppija]] =
     Future.sequence(for (
       hakemus <- hakemukset
       if hakemus.personOid.isDefined && hakemus.stateValid
     ) yield fetchOppijaData(hakemus.personOid.get, hakemus.hetu))
 
 
-  def fetchTodistukset(suoritukset: Seq[Suoritus with Identified[UUID]])(implicit user: Option[User]):Future[Seq[Todistus]] = Future.sequence(
+  def fetchTodistukset(suoritukset: Seq[Suoritus with Identified[UUID]])(implicit user: User):Future[Seq[Todistus]] = Future.sequence(
     for (
       suoritus <- suoritukset
     ) yield for (
-        arvosanat <- (rekisterit.arvosanaRekisteri ? AuthorizedQuery(ArvosanaQuery(suoritus = Some(suoritus.id)), authorities, username)).mapTo[Seq[Arvosana]]
+        arvosanat <- (rekisterit.arvosanaRekisteri ? AuthorizedQuery(ArvosanaQuery(suoritus = Some(suoritus.id)), user)).mapTo[Seq[Arvosana]]
       ) yield Todistus(suoritus, arvosanat))
 
-  def fetchOppijaData(henkiloOid: String, hetu: Option[String])(implicit user: Option[User]): Future[Oppija] = {
+  def fetchOppijaData(henkiloOid: String, hetu: Option[String])(implicit user: User): Future[Oppija] = {
     for (
       suoritukset <- fetchSuoritukset(henkiloOid);
       todistukset <- fetchTodistukset(suoritukset);
@@ -110,20 +111,17 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
       }
   }
 
-  def fetchOpiskeluoikeudet(henkiloOid: String)(implicit user: Option[User]): Future[Seq[Opiskeluoikeus]] = {
-    (rekisterit.opiskeluoikeusRekisteri ? AuthorizedQuery(OpiskeluoikeusQuery(henkilo = Some(henkiloOid)), authorities, username)).mapTo[Seq[Opiskeluoikeus]]
+  def fetchOpiskeluoikeudet(henkiloOid: String)(implicit user: User): Future[Seq[Opiskeluoikeus]] = {
+    (rekisterit.opiskeluoikeusRekisteri ? AuthorizedQuery(OpiskeluoikeusQuery(henkilo = Some(henkiloOid)), user)).mapTo[Seq[Opiskeluoikeus]]
   }
 
-  def fetchOpiskelu(henkiloOid: String)(implicit user: Option[User]): Future[Seq[Opiskelija]] = {
-    (rekisterit.opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaQuery(henkilo = Some(henkiloOid)), authorities, username)).mapTo[Seq[Opiskelija]]
+  def fetchOpiskelu(henkiloOid: String)(implicit user: User): Future[Seq[Opiskelija]] = {
+    (rekisterit.opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaQuery(henkilo = Some(henkiloOid)), user)).mapTo[Seq[Opiskelija]]
   }
 
-  def fetchSuoritukset(henkiloOid: String)(implicit user: Option[User]): Future[Seq[Suoritus with Identified[UUID]]] = {
-    (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(henkilo = Some(henkiloOid)), authorities, username)).mapTo[Seq[Suoritus with Identified[UUID]]]
+  def fetchSuoritukset(henkiloOid: String)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] = {
+    (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(henkilo = Some(henkiloOid)), user)).mapTo[Seq[Suoritus with Identified[UUID]]]
   }
 
-  def authorities(implicit user:Option[User]) = getKnownOrganizations(user)
-
-  def username(implicit user:Option[User]) = user.map(_.username).getOrElse("anonymous")
 
 }

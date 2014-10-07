@@ -216,7 +216,7 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Regi
 
   def authorizer[A <: Resource[I] : ClassTag: Manifest, I](guarded: ActorRef, orgFinder: A => Option[String]): ActorRef = {
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-    system.actorOf(Props(new OrganizationHierarchy[A, I](organisaatioSoapServiceUrl, guarded, (i: A) => orgFinder(i).map(Seq(_)).getOrElse(Seq()))), s"$resource-authorizer")
+    system.actorOf(Props(new OrganizationHierarchy[A, I](organisaatioSoapServiceUrl, guarded, (i: A) => orgFinder(i).map(Set(_)).getOrElse(Set()))), s"$resource-authorizer")
   }
 
   val suoritusOrgResolver: PartialFunction[Suoritus, String] = {
@@ -236,9 +236,9 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Regi
     unauthorized.suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).
       mapTo[Option[Suoritus]].map(
         _.map{
-          case (s: VirallinenSuoritus) => Seq(s.myontaja, s.source, arvosana.source)
-          case (s: VapaamuotoinenSuoritus) => Seq(s.source, arvosana.source)
-        }.getOrElse(Seq()))
+          case (s: VirallinenSuoritus) => Set(s.myontaja, s.source, arvosana.source)
+          case (s: VapaamuotoinenSuoritus) => Set(s.source, arvosana.source)
+        }.getOrElse(Set()))
 
   override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusOrgResolver.lift)
   override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija) => Some(opiskelija.oppilaitosOid))
@@ -309,7 +309,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
   def getClient: HttpClient = getClient("default")
   
   val socketTimeout = 120000
-  val connectionTimeout = 15000
+  val connectionTimeout = 10000
 
   def createApacheHttpClient(maxConnections: Int): org.apache.http.client.HttpClient = {
     val connManager: ClientConnectionManager = {
@@ -329,7 +329,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
     client
   }
 
-  def getClient(poolName: String = "default", threads: Int = 8, maxConnections: Int = 100): HttpClient = {
+  def getClient(poolName: String = "default", threads: Int = 10, maxConnections: Int = 100): HttpClient = {
     if (poolName == "default") new ApacheHttpClient(createApacheHttpClient(maxConnections))()
     else {
       val threadNumber = new AtomicInteger(1)
@@ -350,7 +350,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(getClient, ec))), "organisaatio")
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient(poolName = "virta", threads = 100), ec), organisaatiot)), "virta")
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient("virta", 100, 100), ec), organisaatiot)), "virta")
 
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig, Some(jSessionIdActor))(getClient, ec))), "henkilo")
 
@@ -362,9 +362,9 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)(getClient, ec))), "koodisto")
 
-  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(getClient(), ec))), "parametrit")
+  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(getClient, ec))), "parametrit")
 
-  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(getClient("valintatulos", 10, 100), ec))), "valintaTulos")
+  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(getClient("valintatulos", 5, 15), ec))), "valintaTulos")
 }
 
 trait Koosteet {

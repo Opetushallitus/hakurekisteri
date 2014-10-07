@@ -5,7 +5,7 @@ import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport}
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 import akka.actor.{Props, Actor, ActorRef, ActorSystem}
@@ -67,6 +67,9 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(30, TimeUnit.SECONDS)
   val authorities = Seq("1.2.246.562.10.00000000001")
+
+  val healthCheckUser = User("healthcheck", authorities.map((org) => s"ROLE_APP_SUORITUSREKISTERI_READ_$org"))
+
   var foundHakemukset:Map[String, RefreshingState] = Map()
 
   var selfChecks: Map[UUID, Long] = Map()
@@ -159,7 +162,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   }
 
   def getArvosanaCount: Future[ItemCount] = {
-    val arvosanaFuture = (arvosanaRekisteri ? AuthorizedQuery(ArvosanaQuery(None), authorities, "healthcheck"))
+    val arvosanaFuture = (arvosanaRekisteri ? AuthorizedQuery(ArvosanaQuery(None), healthCheckUser))
       .mapTo[Seq[Arvosana with Identified[UUID]]]
     arvosanaFuture.map((a) => { new ItemCount(Status.OK, a.length.toLong) }).recover {
       case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
@@ -168,7 +171,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   }
 
   def getSuoritusCount: Future[ItemCount] = {
-    val suoritusFuture = (suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(None, None, None, None), authorities, "healthcheck"))
+    val suoritusFuture = (suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(None, None, None, None), healthCheckUser))
       .mapTo[Seq[Suoritus with Identified[UUID]]]
     suoritusFuture.map((s) => { new ItemCount(Status.OK, s.length.toLong) }).recover {
       case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
@@ -177,7 +180,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   }
 
   def getOpiskelijaCount: Future[ItemCount] = {
-    val opiskelijaFuture = (opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaQuery(None, None, None, None, None, None), authorities, "healthcheck"))
+    val opiskelijaFuture = (opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaQuery(None, None, None, None, None, None), healthCheckUser))
       .mapTo[Seq[Opiskelija with Identified[UUID]]]
     opiskelijaFuture.map((o) => { ItemCount(Status.OK, o.length.toLong) }).recover {
       case e: AskTimeoutException => ItemCount(Status.TIMEOUT, 0)
@@ -186,7 +189,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   }
 
   def getOpiskeluoikeusCount: Future[ItemCount] = {
-    val opiskeluoikeusFuture = (opiskeluoikeusRekisteri ? AuthorizedQuery(OpiskeluoikeusQuery(None, None), authorities, "healthcheck"))
+    val opiskeluoikeusFuture = (opiskeluoikeusRekisteri ? AuthorizedQuery(OpiskeluoikeusQuery(None, None), healthCheckUser))
       .mapTo[Seq[Opiskeluoikeus with Identified[UUID]]]
     opiskeluoikeusFuture.map((o) => { ItemCount(Status.OK, o.length.toLong) }).recover {
       case e: AskTimeoutException => ItemCount(Status.TIMEOUT, 0)

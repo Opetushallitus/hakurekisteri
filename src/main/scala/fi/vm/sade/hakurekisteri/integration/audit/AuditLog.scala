@@ -134,11 +134,11 @@ class AuditLog[A <: Resource[I], I](resource:String)(implicit val audit:AuditUri
   implicit val system = resource
 
   def createAuditMsg(original: Any) = original match {
-    case AuthorizedQuery(q,orgs, user) => QueryEvent(q,user)
-    case AuthorizedRead(id: I, orgs, user) => ReadEvent(id,user)
-    case AuthorizedDelete(id: I, orgs, user) => DeleteEvent(id, user)
-    case AuthorizedCreate(res : A, orgs, user) => CreateEvent(res, user)
-    case AuthorizedUpdate(res: A with Identified[I], orgs, user) => UpdateEvent(res, user)
+    case AuthorizedQuery(q,user) => QueryEvent(q,user.username)
+    case AuthorizedRead(id: I, user) => ReadEvent(id,user.username)
+    case AuthorizedDelete(id: I, user) => DeleteEvent(id, user.username)
+    case AuthorizedCreate(res : A, user) => CreateEvent(res, user.username)
+    case AuthorizedUpdate(res: A with Identified[I], user) => UpdateEvent(res, user.username)
 
     case a => UnknownEvent(a)
   }
