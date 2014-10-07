@@ -175,7 +175,7 @@ object Roles {
   val subjects: PartialFunction[String, PartialFunction[String, (String) => Set[String]]] =
     Map(
       "SUORITUSREKISTERI" -> {
-        case "Arvosana" | "Suoritus" | "Opiskeluoikeus" | "Opiskelija" | "Hakukohde"  => ((org: String) => Set(org))
+        case x if resources.contains(x)  => (org: String) => Set(org)
       },
       "KKHAKUVIRKAILIJA" -> {
         case "Arvosana" | "Suoritus" =>  (_) => Set("1.2.246.562.10.43628088406")
