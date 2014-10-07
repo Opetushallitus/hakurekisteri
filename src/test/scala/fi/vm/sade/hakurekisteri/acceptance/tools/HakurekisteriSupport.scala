@@ -88,7 +88,9 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
   def create (suoritus: Suoritus){
     db.init()
-    post("/rest/v1/suoritukset", write(suoritus), Map("Content-Type" -> "application/json; charset=utf-8")) {}
+    val json = write(suoritus)
+    println(json)
+    post("/rest/v1/suoritukset", json, Map("Content-Type" -> "application/json; charset=utf-8")) {}
   }
 
   def create (opiskelija: Opiskelija){
@@ -109,6 +111,7 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
   trait ResourceQuery[T] {
     def arvot:Map[String,String]
     def resourcePath:String
+
 
     def find[R: Manifest]:Seq[R] = {
       get(resourcePath,arvot) {
@@ -276,22 +279,22 @@ object PerusopetuksenToteutus2005S {
   }
 }
 object Peruskoulu {
-  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
-    Suoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, yksilollistaminen.Ei, "fi",  source = "Test")
+  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): VirallinenSuoritus = {
+    VirallinenSuoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, yksilollistaminen.Ei, "fi",  lahde = "Test")
   }
 }
 object OsittainYksilollistettyPerusopetus {
-  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
-    Suoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, yksilollistaminen.Osittain, "fi", source = "Test")
+  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): VirallinenSuoritus = {
+    VirallinenSuoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, yksilollistaminen.Osittain, "fi", lahde = "Test")
   }
 }
 object AlueittainYksilollistettyPerusopetus {
-  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
-    Suoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, yksilollistaminen.Alueittain, "fi", source = "Test")
+  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): VirallinenSuoritus = {
+    VirallinenSuoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, yksilollistaminen.Alueittain, "fi", lahde = "Test")
   }
 }
 object KokonaanYksillollistettyPerusopetus {
-  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): Suoritus = {
-    Suoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, yksilollistaminen.Kokonaan, "fi", source = "Test")
+  def apply(oppilaitos: String, tila: String, valmistuminen: LocalDate, henkiloOid: String): VirallinenSuoritus = {
+    VirallinenSuoritus("peruskoulu", oppilaitos, tila, valmistuminen, henkiloOid, yksilollistaminen.Kokonaan, "fi", lahde = "Test")
   }
 }

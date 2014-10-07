@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.hakija
 import java.io.OutputStream
 import java.text.SimpleDateFormat
 
-import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.hakija.Tyyppi.Tyyppi
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
@@ -19,7 +18,7 @@ import scala.util.Try
 import javax.servlet.http.HttpServletResponse
 import scala.xml._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import fi.vm.sade.hakurekisteri.suoritus.Suoritus
+import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.joda.time.{DateTimeFieldType, LocalDate}
 import fi.vm.sade.hakurekisteri.rest.support.User
@@ -35,23 +34,26 @@ object Tyyppi extends Enumeration {
   val Xml, Excel, Json = Value
 }
 
-case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto, user: Option[User])
+case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto.Hakuehto, user: Option[User])
 
 import org.scalatra.util.RicherString._
 
 object HakijaQuery {
-  def apply(params: Map[String,String], user: Option[User]): HakijaQuery = HakijaQuery(
-      params.get("haku").flatMap(_.blankOption),
-      params.get("organisaatio").flatMap(_.blankOption),
-      params.get("hakukohdekoodi").flatMap(_.blankOption),
-      Try(Hakuehto.withName(params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki }.get,
-      user)
+  def apply(params: Map[String,String], currentUser: Option[User]): HakijaQuery = new HakijaQuery(
+      haku = params.get("haku").flatMap(_.blankOption),
+      organisaatio = params.get("organisaatio").flatMap(_.blankOption),
+      hakukohdekoodi = params.get("hakukohdekoodi").flatMap(_.blankOption),
+      hakuehto = Try(Hakuehto.withName(s = params("hakuehto"))).recover{ case _ => Hakuehto.Kaikki }.get,
+      user = currentUser)
 }
+
+import scala.concurrent.duration._
 
 class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override protected def applicationDescription: String = "Hakijatietojen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
+  implicit val defaultTimeout: Timeout = 120.seconds
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
@@ -93,9 +95,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     logger.info("Query: " + q)
 
     new AsyncResult() {
-      import scala.concurrent.duration._
-      override implicit def timeout: Duration = 300.seconds
-      implicit val defaultTimeout: Timeout = 299.seconds
+      override implicit def timeout: Duration = 120.seconds
       import scala.concurrent.future
       val hakuResult = Try(hakijaActor ? q).get
       val is = hakuResult.flatMap((result) => future {
@@ -197,7 +197,7 @@ case class XMLHakemus(vuosi: String, kausi: String, hakemusnumero: String, lahto
 }
 
 object XMLHakemus {
-  def resolvePohjakoulutus(suoritus: Option[Suoritus]): String = suoritus match {
+  def resolvePohjakoulutus(suoritus: Option[VirallinenSuoritus]): String = suoritus match {
     case Some(s) =>
       s.komo match {
         case "ulkomainen" => "0"
@@ -212,13 +212,13 @@ object XMLHakemus {
     case None => "7"
   }
 
-  def getRelevantSuoritus(suoritukset:Seq[Suoritus]) = {
-    suoritukset.map(s => (s, resolvePohjakoulutus(Some(s)).toInt)).sortBy(_._2).map(_._1).headOption
+  def getRelevantSuoritus(suoritukset:Seq[Suoritus]): Option[VirallinenSuoritus] = {
+    suoritukset.collect{case s: VirallinenSuoritus => (s, resolvePohjakoulutus(Some(s)).toInt)}.sortBy(_._2).map(_._1).headOption
   }
 
-  def resolveYear(suoritus: Suoritus) = suoritus match {
-    case Suoritus("ulkomainen", _,  _, _, _, _, _, _, _) => None
-    case Suoritus(_, _, _,date, _, _, _,  _, _)  => Some(date.getYear.toString)
+  def resolveYear(suoritus: VirallinenSuoritus) = suoritus match {
+    case VirallinenSuoritus("ulkomainen", _,  _, _, _, _, _, _,  _, _) => None
+    case VirallinenSuoritus(_, _, _,date, _, _, _,_,  _, _)  => Some(date.getYear.toString)
   }
 
   def apply(hakija: Hakija, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive]): XMLHakemus =

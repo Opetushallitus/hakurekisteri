@@ -1,4 +1,7 @@
+import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
+import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaResource
 import fi.vm.sade.hakurekisteri.oppija.OppijaResource
+import fi.vm.sade.hakurekisteri.storage.repository.Journal
 import java.util.concurrent.atomic.AtomicInteger
 
 import _root_.akka.camel.CamelExtension
@@ -6,7 +9,7 @@ import _root_.akka.routing.BroadcastRouter
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
 import fi.vm.sade.hakurekisteri.integration.haku.{HakuResource, HakuActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.ParameterActor
-import fi.vm.sade.hakurekisteri.integration.ytl.{YTLConfig, KokelasRequest, YtlActor}
+import fi.vm.sade.hakurekisteri.integration.ytl.{YTLConfig, YtlActor}
 import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.{ThreadFactory, Executors, TimeUnit}
@@ -16,7 +19,7 @@ import _root_.akka.actor.{ActorRef, ActorSystem, Props}
 import _root_.akka.util.Timeout
 import com.stackmob.newman.{HttpClient, ApacheHttpClient}
 import fi.vm.sade.hakurekisteri.arvosana._
-import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenQuery, EnsikertalainenActor, EnsikertalainenResource}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, EnsikertalainenResource}
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.integration.hakemus._
@@ -36,8 +39,9 @@ import org.apache.activemq.camel.component.ActiveMQComponent
 import org.apache.http.conn.ClientConnectionManager
 import org.apache.http.impl.NoConnectionReuseStrategy
 import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.impl.conn.{SchemeRegistryFactory, PoolingClientConnectionManager}
+import org.apache.http.impl.conn.PoolingClientConnectionManager
 import org.apache.http.params.HttpConnectionParams
+import org.joda.time.LocalDate
 import org.scalatra._
 import org.scalatra.swagger.Swagger
 import org.slf4j.LoggerFactory
@@ -55,7 +59,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
-import scala.slick.driver.JdbcDriver.simple._
+import HakurekisteriDriver.simple._
 import scala.util.Try
 
 
@@ -75,14 +79,11 @@ class ScalatraBootstrap extends LifeCycle {
 
     val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, registers.suoritusRekisteri, journals.arvosanaJournal)), "perusopetus-sanity")
 
-    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, parameterConfig, hakemusConfig, ytlConfig, koodistoConfig, registers, system)
-
+    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, parameterConfig, hakemusConfig, ytlConfig, koodistoConfig, valintaTulosConfig, registers, system)
 
     val koosteet = new BaseKoosteet(system, integrations, registers)
 
     val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.ytl ,  integrations.hakemukset, koosteet.ensikertalainen)), "healthcheck")
-
-
 
     mountServlets(context) (
       "/" -> new GuiServlet,
@@ -92,8 +93,9 @@ class ScalatraBootstrap extends LifeCycle {
       "/rest/v1/ensikertalainen" -> new EnsikertalainenResource(koosteet.ensikertalainen),
       "/rest/v1/haut" -> new HakuResource(koosteet.haut),
       "/rest/v1/hakijat" -> new HakijaResource(koosteet.hakijat),
+      "/rest/v1/kkhakijat" -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),
       "/rest/v1/opiskelijat" -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
-      "/rest/v1/oppijat" -> new OppijaResource(registers, integrations.hakemukset, koosteet.ensikertalainen),
+      "/rest/v1/oppijat" -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
       "/rest/v1/opiskeluoikeudet" -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
       "/rest/v1/suoritukset" -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport,
       "/sanity" -> new SanityResource(sanity)
@@ -124,7 +126,6 @@ class ScalatraBootstrap extends LifeCycle {
   }
 }
 
-
 object OPHSecurity extends ContextLoader with LifeCycle {
   val config = OPHConfig(Config.ophConfDir,
     Config.propertyLocations,
@@ -145,7 +146,6 @@ object OPHSecurity extends ContextLoader with LifeCycle {
     security.setAsyncSupported(true)
   }
 
-
   override def destroy(context: ServletContext) {
     closeWebApplicationContext(context)
     cleanupListener.contextDestroyed(new ServletContextEvent(context))
@@ -160,7 +160,6 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
   val localProperties = (new java.util.Properties /: Map(props: _*)) {case (newProperties, (k,v)) => newProperties.put(k,v); newProperties}
   setConfigLocation("file:" + confDir + "/security-context-backend.xml")
 
-
   val resources: Seq[FileSystemResource] = for (
     fileName <- propertyFiles.reverse
   ) yield new FileSystemResource(confDir.resolve(fileName).toAbsolutePath.toString)
@@ -172,46 +171,36 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
   )
 
   object Bean {
-
     def apply[C](props: (_, _)*)(implicit m: Manifest[C]): BeanDefinition = {
-
       val definition = new RootBeanDefinition(m.runtimeClass)
       definition.setPropertyValues(new MutablePropertyValues(Map(props: _*).asJava))
       definition
-
     }
-
   }
-
 
   override def initBeanDefinitionReader(beanDefinitionReader: XmlBeanDefinitionReader) {
     beanDefinitionReader.getRegistry.registerBeanDefinition("propertyPlaceHolder", placeholder)
   }
-
-
-
-
 }
 
 trait Journals {
-  val suoritusJournal: SuoritusJournal
-  val opiskelijaJournal: OpiskelijaJournal
-  val opiskeluoikeusJournal: OpiskeluoikeusJournal
-  val arvosanaJournal: ArvosanaJournal
+  val suoritusJournal: Journal[Suoritus, UUID]
+  val opiskelijaJournal: Journal[Opiskelija, UUID]
+  val opiskeluoikeusJournal: Journal[Opiskeluoikeus, UUID]
+  val arvosanaJournal: Journal[Arvosana, UUID]
 }
 
 class DbJournals(jndiName:String) extends Journals {
-  val database = Try(Database.forName(jndiName)).recover {
+  implicit val database = Try(Database.forName(jndiName)).recover {
     case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
   }.get
 
-  override val suoritusJournal = new SuoritusJournal(database)
-  override val opiskelijaJournal = new OpiskelijaJournal(database)
-  override val opiskeluoikeusJournal = new OpiskeluoikeusJournal(database)
-  override val arvosanaJournal = new ArvosanaJournal(database)
+  override val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+  override val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
+  override val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable])
+  override val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
+
 }
-
-
 
 class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
   override val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(journals.suoritusJournal)), "suoritukset")
@@ -225,15 +214,38 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Regi
   import scala.reflect.runtime.universe._
   implicit val ec:ExecutionContext = system.dispatcher
 
-  def authorizer[A <: Resource[I] : ClassTag: Manifest, I](guarded: ActorRef, orgFinder: A => String): ActorRef = {
+  def authorizer[A <: Resource[I] : ClassTag: Manifest, I](guarded: ActorRef, orgFinder: A => Option[String]): ActorRef = {
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-    system.actorOf(Props(new OrganizationHierarchy[A, I](organisaatioSoapServiceUrl, guarded, (i: A) => Seq(orgFinder(i)))), s"$resource-authorizer")
+    system.actorOf(Props(new OrganizationHierarchy[A, I](organisaatioSoapServiceUrl, guarded, (i: A) => orgFinder(i).map(Seq(_)).getOrElse(Seq()))), s"$resource-authorizer")
   }
 
-  override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, (suoritus) => suoritus.myontaja)
-  override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija) => opiskelija.oppilaitosOid)
-  override val opiskeluoikeusRekisteri = authorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus) => opiskeluoikeus.myontaja)
-  override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, unauthorized.arvosanaRekisteri, (arvosana) => unauthorized.suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).mapTo[Option[Suoritus]].map(_.map((s) => Seq(s.myontaja, s.source, arvosana.source)).getOrElse(Seq())))), "arvosana-authorizer")
+  val suoritusOrgResolver: PartialFunction[Suoritus, String] = {
+    case VirallinenSuoritus(komo: String,
+    myontaja: String,
+    tila: String,
+    valmistuminen: LocalDate,
+    henkilo: String,
+    yksilollistaminen,
+    suoritusKieli: String,
+    opiskeluoikeus: Option[UUID],
+    vahv: Boolean,
+    lahde: String) => myontaja
+  }
+
+  val resolve = (arvosana:Arvosana) =>
+    unauthorized.suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).
+      mapTo[Option[Suoritus]].map(
+        _.map{
+          case (s: VirallinenSuoritus) => Seq(s.myontaja, s.source, arvosana.source)
+          case (s: VapaamuotoinenSuoritus) => Seq(s.source, arvosana.source)
+        }.getOrElse(Seq()))
+
+  override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusOrgResolver.lift)
+  override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija) => Some(opiskelija.oppilaitosOid))
+  override val opiskeluoikeusRekisteri = authorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus) => Some(opiskeluoikeus.myontaja))
+  override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, unauthorized.arvosanaRekisteri,
+    resolve
+    )), "arvosana-authorizer")
 }
 
 object AuthorizedRegisters {
@@ -278,6 +290,7 @@ trait Integrations {
   val koodisto: ActorRef
   val ytl: ActorRef
   val parametrit: ActorRef
+  val valintaTulos: ActorRef
 }
 
 class BaseIntegrations(virtaConfig: VirtaConfig,
@@ -289,16 +302,16 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        hakemusConfig: HakemusConfig,
                        ytlConfig: Option[YTLConfig],
                        koodistoConfig: ServiceConfig,
+                       valintaTulosConfig: ServiceConfig,
                        rekisterit: Registers,
                        system: ActorSystem) extends Integrations {
 
   def getClient: HttpClient = getClient("default")
   
   val socketTimeout = 120000
-  val connectionTimeout = 10000
-  val maxConnections = 100
+  val connectionTimeout = 15000
 
-  def createApacheHttpClient: org.apache.http.client.HttpClient = {
+  def createApacheHttpClient(maxConnections: Int): org.apache.http.client.HttpClient = {
     val connManager: ClientConnectionManager = {
       val cm = new PoolingClientConnectionManager()
       cm.setDefaultMaxPerRoute(maxConnections)
@@ -316,38 +329,42 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
     client
   }
 
-  def getClient(poolName:String = "default"): HttpClient = {
-    if (poolName == "default") new ApacheHttpClient(createApacheHttpClient)()
+  def getClient(poolName: String = "default", threads: Int = 8, maxConnections: Int = 100): HttpClient = {
+    if (poolName == "default") new ApacheHttpClient(createApacheHttpClient(maxConnections))()
     else {
       val threadNumber = new AtomicInteger(1)
-      val pool = Executors.newFixedThreadPool(8, new ThreadFactory() {
+      val pool = Executors.newFixedThreadPool(threads, new ThreadFactory() {
         override def newThread(r: Runnable): Thread = {
           new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
         }
       })
-      new ApacheHttpClient(createApacheHttpClient)(ExecutionContext.fromExecutorService(pool))
+      new ApacheHttpClient(createApacheHttpClient(maxConnections))(ExecutionContext.fromExecutorService(pool))
     }
   }
 
   implicit val ec: ExecutionContext = system.dispatcher
 
+  val jSessionIdActor = system.actorOf(Props(new JSessionIdActor))
+
   val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig)(getClient, ec))), "tarjonta")
 
-  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(getClient, ec))))
+  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(getClient, ec))), "organisaatio")
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient("virta"), ec), organisaatiot)), "virta")
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient(poolName = "virta", threads = 100), ec), organisaatiot)), "virta")
 
-  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig)(getClient, ec))), "henkilo")
+  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig, Some(jSessionIdActor))(getClient, ec))), "henkilo")
 
-  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig)(getClient, ec))))
+  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig, Some(jSessionIdActor))(getClient, ec))), "sijoittelu")
 
-  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf)(getClient, ec), hakemusConfig.maxApplications)), "hakemus")
+  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf, Some(jSessionIdActor))(getClient, ec), hakemusConfig.maxApplications)), "hakemus")
 
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, ytlConfig)), "ytl")
 
   val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)(getClient, ec))), "koodisto")
 
-  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(getClient(), ec))))
+  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(getClient(), ec))), "parametrit")
+
+  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(getClient("valintatulos", 10, 100), ec))), "valintaTulos")
 }
 
 trait Koosteet {
@@ -364,6 +381,4 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta, integrations.hakemukset)), "ensikertalainen")
 
   val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.sijoittelu, integrations.ytl)))
-
-
 }

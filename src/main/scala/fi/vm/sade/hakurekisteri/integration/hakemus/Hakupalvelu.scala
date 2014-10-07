@@ -7,7 +7,7 @@ import fi.vm.sade.hakurekisteri.henkilo.{Kansalaisuus, Kieli, Yhteystiedot, Yhte
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Komoto, Suoritus, yksilollistaminen}
 import org.joda.time.{DateTime, LocalDate, MonthDay}
 import org.slf4j.LoggerFactory
 
@@ -41,7 +41,7 @@ class AkkaHakupalvelu(hakemusActor:ActorRef)(implicit val ec: ExecutionContext) 
     case _ => true
   }
 
-  def filterState(fh: FullHakemus): Boolean = fh.state.exists((s) => s == "ACTIVE" || s == "INCOMPLETE")
+  def filterState(fh: FullHakemus): Boolean = fh.stateValid
 
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     import akka.pattern._
@@ -141,7 +141,7 @@ object AkkaHakupalvelu {
         turvakielto = false,
         markkinointilupa = Some(getValue(_.lisatiedot,(l:Lisatiedot) => l.lupaMarkkinointi, "false").toBoolean)
       ),
-      getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli),
+      getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli,hakemus.personOid),
       lahtokoulu match {
         case Some(oid) => Seq(Opiskelija(
           oppilaitosOid = lahtokoulu.get,
@@ -163,14 +163,14 @@ object AkkaHakupalvelu {
     (for (m <- answers; c <- key(m); v <- subKey(c)) yield v).getOrElse(default)
   }
 
-  def getSuoritukset(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String): Seq[Suoritus] = {
+  def getSuoritukset(pohjakoulutus: Option[String], myontaja: String, valmistuminen: LocalDate, suorittaja: String, kieli: String, hakija: Option[String]): Seq[Suoritus] = {
     Seq(pohjakoulutus).collect {
-      case Some("0") => Suoritus("ulkomainen", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, source = "1.2.246.562.10.00000000001")
-      case Some("1") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, source = "1.2.246.562.10.00000000001")
-      case Some("2") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Osittain, kieli, source = "1.2.246.562.10.00000000001")
-      case Some("3") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Alueittain, kieli, source = "1.2.246.562.10.00000000001")
-      case Some("6") => Suoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Kokonaan, kieli, source = "1.2.246.562.10.00000000001")
-      case Some("9") => Suoritus("lukio", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, source = "1.2.246.562.10.00000000001")
+      case Some("0") => VirallinenSuoritus("ulkomainen", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, vahv = false, lahde = hakija.getOrElse("1.2.246.562.10.00000000001"))
+      case Some("1") => VirallinenSuoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli,  vahv = false, lahde = hakija.getOrElse("1.2.246.562.10.00000000001"))
+      case Some("2") => VirallinenSuoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Osittain, kieli,vahv = false, lahde = hakija.getOrElse("1.2.246.562.10.00000000001"))
+      case Some("3") => VirallinenSuoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Alueittain, kieli, vahv = false,lahde = hakija.getOrElse("1.2.246.562.10.00000000001"))
+      case Some("6") => VirallinenSuoritus("peruskoulu", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Kokonaan, kieli, vahv = false,lahde = hakija.getOrElse("1.2.246.562.10.00000000001"))
+      case Some("9") => VirallinenSuoritus("lukio", myontaja, if (LocalDate.now.isBefore(valmistuminen)) "KESKEN" else "VALMIS", valmistuminen, suorittaja, yksilollistaminen.Ei, kieli, vahv = false,lahde = hakija.getOrElse("1.2.246.562.10.00000000001"))
     }
   }
 
@@ -212,8 +212,12 @@ case class HakemusHenkilotiedot(Henkilotunnus: Option[String],
                                 aidinkieli: Option[String],
                                 lahiosoite: Option[String],
                                 Postinumero: Option[String],
+                                osoiteUlkomaa: Option[String],
+                                postinumeroUlkomaa: Option[String],
+                                kaupunkiUlkomaa: Option[String],
                                 asuinmaa: Option[String],
                                 matkapuhelinnumero1: Option[String],
+                                matkapuhelinnumero2: Option[String],
                                 Sähköposti: Option[String],
                                 kotikunta: Option[String],
                                 Sukunimi: Option[String],
@@ -222,7 +226,8 @@ case class HakemusHenkilotiedot(Henkilotunnus: Option[String],
                                 kansalaisuus: Option[String],
                                 onkoSinullaSuomalainenHetu: Option[String],
                                 sukupuoli: Option[String],
-                                syntymaaika: Option[String])
+                                syntymaaika: Option[String],
+                                koulusivistyskieli: Option[String])
 
 case class Koulutustausta(lahtokoulu:Option[String],
                           POHJAKOULUTUS: Option[String],
@@ -235,13 +240,22 @@ case class Koulutustausta(lahtokoulu:Option[String],
                           LISAKOULUTUS_KANSANOPISTO: Option[String],
                           LISAKOULUTUS_MAAHANMUUTTO: Option[String],
                           luokkataso: Option[String],
-                          lahtoluokka: Option[String])
+                          lahtoluokka: Option[String],
+                          pohjakoulutus_yo: Option[String],
+                          pohjakoulutus_am: Option[String],
+                          pohjakoulutus_amt: Option[String],
+                          pohjakoulutus_kk: Option[String],
+                          pohjakoulutus_ulk: Option[String],
+                          pohjakoulutus_avoin: Option[String],
+                          pohjakoulutus_muu: Option[String])
 
 case class Lisatiedot(lupaJulkaisu: Option[String], lupaMarkkinointi: Option[String])
 
 case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot], koulutustausta: Option[Koulutustausta], lisatiedot: Option[Lisatiedot], hakutoiveet: Option[Map[String, String]])
 
-case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String]) extends Resource[String] {
+case class PreferenceEligibility(aoId: String, status: String, source: Option[String])
+
+case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String], preferenceEligibilities: Seq[PreferenceEligibility]) extends Resource[String] {
   val source = "1.2.246.562.10.00000000001"
   override def identify(id: String): this.type with Identified[String] = FullHakemus.identify(this,id).asInstanceOf[this.type with Identified[String]]
 
@@ -252,8 +266,10 @@ case class FullHakemus(oid: String, personOid: Option[String], applicationSystem
         henkiloHetu <- henkilo.Henkilotunnus
       ) yield henkiloHetu
 
-
-
+  def stateValid: Boolean = state match {
+    case Some(s) if Seq("ACTIVE", "INCOMPLETE").contains(s) => true
+    case _ => false
+  }
 }
 
 object FullHakemus {
@@ -265,7 +281,8 @@ object FullHakemus {
       o.personOid: Option[String],
       o.applicationSystemId: String,
       o.answers,
-      o.state: Option[String]) with Identified[String] {
+      o.state: Option[String],
+      o.preferenceEligibilities) with Identified[String] {
         val id: String = identity
       }
 }

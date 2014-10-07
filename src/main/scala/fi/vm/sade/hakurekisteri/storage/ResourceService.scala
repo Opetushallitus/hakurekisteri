@@ -12,6 +12,8 @@ trait ResourceService[T, I] { this: Repository[T, I] =>
   val matcher: PartialFunction[Query[T], (T with Identified[I]) => Boolean]
 
 
+  val emptyQuery: PartialFunction[Query[T], Boolean] = Map()
+
 
 
   def check(q: Query[T])(item: T with Identified[I]): Future[Option[T with Identified[I]]] = {
@@ -25,8 +27,11 @@ trait ResourceService[T, I] { this: Repository[T, I] =>
   def findBy(o: Query[T]):Future[Seq[T with Identified[I]]] = {
 
     val current = listAll()
-    optimize.applyOrElse(o, executeQuery(current))
-
+    val empty = emptyQuery.lift(o).getOrElse(false)
+    if (empty)
+      Future.successful(current)
+    else
+      optimize.applyOrElse(o, executeQuery(current))
   }
 
 

@@ -18,25 +18,60 @@ import yksilollistaminen._
 
 case class Komoto(oid: String, komo: String, tarjoaja: String, alkamisvuosi: String, alkamiskausi: Kausi)
 
-case class Suoritus(komo: String,
-                    myontaja: String,
-                    tila: String,
-                    valmistuminen: LocalDate,
-                    henkiloOid: String,
-                    yksilollistaminen: Yksilollistetty,
-                    suoritusKieli: String,
-                    opiskeluoikeus: Option[UUID] = None, source: String ) extends Resource[UUID] {
-  override def identify(id: UUID): this.type with Identified[UUID] = Suoritus.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
+sealed abstract class Suoritus(val henkiloOid: String, val vahvistettu: Boolean, val source: String) extends Resource[UUID]{
+
 }
 
-object Suoritus {
-  def identify(o: Suoritus): Suoritus with Identified[UUID] = o match {
+
+case class VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi: Int, tyyppi: String, index: Int = 0, lahde: String) extends Suoritus (henkilo, false, lahde) {
+
+  private[VapaamuotoinenSuoritus] case class VapaaSisalto(henkilo: String, tyyppi: String, index: Int)
+
+  val kkTutkinto = tyyppi == "kkTutkinto"
+
+  private[VapaamuotoinenSuoritus] val core = VapaaSisalto(henkilo, tyyppi, index)
+
+  override def identify(id: UUID): this.type with Identified[UUID] = VapaamuotoinenSuoritus.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
+
+  override def hashCode(): Int = core.hashCode()
+
+  override def equals(obj: scala.Any): Boolean = obj.isInstanceOf[VapaamuotoinenSuoritus] && core.equals(obj.asInstanceOf[VapaamuotoinenSuoritus].core)
+}
+
+object VapaamuotoinenSuoritus {
+  def identify(o: VapaamuotoinenSuoritus): VapaamuotoinenSuoritus with Identified[UUID] = o match {
     case o: Suoritus with Identified[UUID] => o
     case _ => o.identify(UUID.randomUUID)
   }
 
-  def identify(o: Suoritus, identity: UUID) = {
-    new Suoritus(o.komo, o.myontaja, o.tila, o.valmistuminen, o.henkiloOid, o.yksilollistaminen, o.suoritusKieli, o.opiskeluoikeus, o.source) with Identified[UUID] {
+  def identify(o: VapaamuotoinenSuoritus, identity: UUID) = {
+    new VapaamuotoinenSuoritus(o.henkiloOid, o.kuvaus, o.myontaja, o.vuosi, o.tyyppi,  o.index, o.source) with Identified[UUID] {
+      val id: UUID = identity
+    }
+  }
+}
+
+case class VirallinenSuoritus(komo: String,
+                    myontaja: String,
+                    tila: String,
+                    valmistuminen: LocalDate,
+                    henkilo: String,
+                    yksilollistaminen: Yksilollistetty,
+                    suoritusKieli: String,
+                    opiskeluoikeus: Option[UUID] = None,
+                    vahv:Boolean = true,
+                    lahde: String) extends Suoritus(henkilo, vahv, lahde)  {
+  override def identify(id: UUID): this.type with Identified[UUID] = VirallinenSuoritus.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
+}
+
+object VirallinenSuoritus {
+  def identify(o: VirallinenSuoritus): VirallinenSuoritus with Identified[UUID] = o match {
+    case o: Suoritus with Identified[UUID] => o
+    case _ => o.identify(UUID.randomUUID)
+  }
+
+  def identify(o: VirallinenSuoritus, identity: UUID) = {
+    new VirallinenSuoritus(o.komo, o.myontaja, o.tila, o.valmistuminen, o.henkiloOid, o.yksilollistaminen, o.suoritusKieli, o.opiskeluoikeus, o.vahvistettu, o.source) with Identified[UUID] {
       val id: UUID = identity
     }
   }

@@ -4,8 +4,7 @@ import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import org.scalatest.GivenWhenThen
 import fi.vm.sade.hakurekisteri.acceptance.tools.{kausi, HakurekisteriSupport}
 import kausi._
-
-
+import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 
 
 class HaeValmistuvatSpec extends ScalatraFeatureSpec with GivenWhenThen with HakurekisteriSupport {
@@ -36,9 +35,9 @@ class HaeValmistuvatSpec extends ScalatraFeatureSpec with GivenWhenThen with Hak
       Then("saan hakutuloksen jossa on vain haetun henkilön suoritus")
       haettu.length should equal (1)
       haettu.head.henkiloOid should equal (Mikko.oid)
-      haettu.head.myontaja should equal ("1.2.3")
-      haettu.head.valmistuminen should not(beBefore("01.01.2014"))
-      haettu.head.valmistuminen should beBefore ("01.08.2014")
+      haettu.head.asInstanceOf[VirallinenSuoritus].myontaja should equal ("1.2.3")
+      haettu.head.asInstanceOf[VirallinenSuoritus].valmistuminen should not(beBefore("01.01.2014"))
+      haettu.head.asInstanceOf[VirallinenSuoritus].valmistuminen should beBefore ("01.08.2014")
 
     }
 
@@ -62,9 +61,9 @@ class HaeValmistuvatSpec extends ScalatraFeatureSpec with GivenWhenThen with Hak
       Then("saan hakutuloksen jossa on vain haetun henkilön suoritus")
       haettu.length should equal (1)
       haettu.head.henkiloOid should equal (Mikko.oid)
-      haettu.head.myontaja should equal ("1.2.4")
-      haettu.head.valmistuminen should not(beBefore ("01.08.2014"))
-      haettu.head.valmistuminen should beBefore ("31.12.2014")
+      haettu.head.asInstanceOf[VirallinenSuoritus].myontaja should equal ("1.2.4")
+      haettu.head.asInstanceOf[VirallinenSuoritus].valmistuminen should not(beBefore ("01.08.2014"))
+      haettu.head.asInstanceOf[VirallinenSuoritus].valmistuminen should beBefore ("31.12.2014")
 
     }
 

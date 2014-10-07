@@ -199,7 +199,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                         d.reject("validationerror");
                     } else {
                         getOrganisaatio($http, obj.oppilaitos, function (organisaatio) {
-                            if (obj.myontaja) obj.myontaja = organisaatio.oid;
+                            if (typeof obj.myontaja !== undefined) obj.myontaja = organisaatio.oid;
                             else obj.oppilaitosOid = organisaatio.oid;
                             d.resolve("validated against organisaatio");
                         }, function () {
@@ -351,7 +351,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
             henkiloOid: $scope.henkiloOid,
             tila: "KESKEN",
             yksilollistaminen: "Ei",
-            myontaja: "na",
+            myontaja: null,
             editable: true }));
     };
     $scope.editArvosana = function(suoritusId) {
@@ -404,7 +404,11 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         });
     };
     $scope.addLuokkatieto = function() {
-        $scope.luokkatiedot.push(new Opiskelijat({ henkiloOid: $scope.henkiloOid, oppilaitosOid: "na" }))
+        $scope.luokkatiedot.push(new Opiskelijat({
+            henkiloOid: $scope.henkiloOid,
+            oppilaitosOid: null,
+            editable: true
+        }))
     };
     $scope.removeMessage = function(message) {
         var index = $scope.messages.indexOf(message);

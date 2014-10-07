@@ -20,6 +20,8 @@ ldap.manager.userdn={{ldap_manager_userdn}}
 server.name={{ansible_hostname}}
 suoritusrekisteri.hakijat.max.applications=2000
 suoritusrekisteri.ytl.localstore={{suoritusrekisteri_ytl_localstore}}
+suoritusrekisteri.app.username={{suoritusrekisteri_app_username}}
+suoritusrekisteri.app.password={{suoritusrekisteri_app_password}}
 
 # Oletusarvoja
 accessRight.webservice.url.backend=https\://${host.virkailija}/authentication-service/services/accessRightService
@@ -51,6 +53,7 @@ cas.service.organisaatio-service=https\://${host.virkailija}/organisaatio-servic
 cas.service.sijoittelu-service=https://${host.virkailija}/sijoittelu-service
 cas.service.suoritusrekisteri=https://${host.virkailija}/suoritusrekisteri
 cas.service.tarjonta-service=https://${host.virkailija}/tarjonta-service
+cas.service.valintatulos-service=https://${host.virkailija}/valinta-tulos-service
 customAttribute.webservice.url.backend=https://${host.virkailija}/authentication-service/services/customAttributeService
 flyway.initOnMigrate=true
 jpa.schemaUpdate=validate

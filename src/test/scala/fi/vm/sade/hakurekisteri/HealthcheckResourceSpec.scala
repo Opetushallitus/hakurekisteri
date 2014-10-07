@@ -22,7 +22,7 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
   val opiskelija = Opiskelija("1.2.3", "9", "9A", "1.2.4", DateTime.now, None, source = "Test")
   val opiskeluoikeus = Opiskeluoikeus(LocalDate.now(), None, "1.2.4", "1.2.5", "1.2.3", source = "Test")
   val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now,"1.2.4")
-  val hakemus = FullHakemus("1.2.5", Some("1.2.4"), ("1.2.5"), None, state =  Some("ACTIVE"))
+  val hakemus = FullHakemus("1.2.5", Some("1.2.4"), ("1.2.5"), None, state =  Some("ACTIVE"), Seq())
 
   implicit val system = ActorSystem()
 
