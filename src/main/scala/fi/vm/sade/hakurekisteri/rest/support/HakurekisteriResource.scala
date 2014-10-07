@@ -189,7 +189,7 @@ object Roles {
     finder <- serviceResolver.lift(resource)
   ) yield finder(org)
 
-  val resources = Set("Arvosana", "Suoritus", "Opiskeluoikeus", "Opiskelija")
+  val resources = Set("Arvosana", "Suoritus", "Opiskeluoikeus", "Opiskelija", "Hakukohde")
 
   def findRoles(finder: (String) => Option[Set[String]])(actions: Set[String]): Set[DefinedRole] = {
     for (
