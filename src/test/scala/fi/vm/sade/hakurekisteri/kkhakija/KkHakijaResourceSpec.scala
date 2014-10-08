@@ -40,7 +40,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
     }
   }
 
-  test("should return hakija if user not in hakukohde organization hierarchy") {
+  test("should not return hakijas if user not in hakukohde organization hierarchy") {
     object TestUser extends User {
       override val username: String = "test"
       override def orgsFor(action: String, resource: String): Set[String] = Set("1.1")
