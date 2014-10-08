@@ -18,6 +18,7 @@ import fi.vm.sade.hakurekisteri.storage.repository.Deleted
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import scala.slick.lifted.TableQuery
 import scala.slick.lifted.ShapedValue
+import org.json4s.JsonAST.JValue
 
 
 object HakurekisteriDriver extends JdbcDriver {
@@ -25,6 +26,7 @@ object HakurekisteriDriver extends JdbcDriver {
   override val columnTypes = new super.JdbcTypes{
 
     override val uuidJdbcType: super.UUIDJdbcType = new UUIDJdbcType
+
 
     class UUIDJdbcType extends super.UUIDJdbcType {
       override def sqlType = java.sql.Types.VARCHAR
@@ -44,7 +46,37 @@ object HakurekisteriDriver extends JdbcDriver {
         sb.toString
       }
     }
+
+
   }
+
+
+  override val simple = new SimpleQL with Implicits
+
+  trait  Implicits extends super.Implicits{
+
+    class JValueType extends HakurekisteriDriver.MappedJdbcType[JValue, String] with BaseTypedType[JValue]{
+
+      import org.json4s.jackson.JsonMethods._
+
+      override def newSqlType: Option[Int] = Option(java.sql.Types.CLOB)
+
+      override def sqlTypeName: String = "TEXT"
+
+      override def comap(json: String): JValue = parse(json)
+
+      override def map(data: JValue): String = compact(render(data))
+    }
+
+
+    implicit val jvalueType =  new JValueType
+
+
+  }
+
+
+
+
 
 }
 
