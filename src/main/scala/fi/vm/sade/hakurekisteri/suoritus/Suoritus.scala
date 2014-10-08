@@ -23,7 +23,6 @@ sealed abstract class Suoritus(val henkiloOid: String, val vahvistettu: Boolean,
 
 }
 
-
 case class VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi: Int, tyyppi: String, index: Int = 0, lahde: String) extends Suoritus (henkilo, false, lahde) {
 
   private[VapaamuotoinenSuoritus] case class VapaaSisalto(henkilo: String, tyyppi: String, index: Int)

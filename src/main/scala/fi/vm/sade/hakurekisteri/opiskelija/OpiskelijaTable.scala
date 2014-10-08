@@ -20,6 +20,6 @@ class OpiskelijaTable(tag: Tag) extends JournalTable[Opiskelija, UUID, (String, 
   override def row(o: Opiskelija): Option[(String, String, String, String, DateTime, Option[DateTime], String)] = Opiskelija.unapply(o)
 
   override val resource = (Opiskelija.apply _).tupled
-
+  override val extractSource: ((String, String, String, String, DateTime, Option[DateTime], String)) => String = _._7
 }
 

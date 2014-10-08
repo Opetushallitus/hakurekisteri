@@ -29,13 +29,9 @@ class ArvosanaTable(tag: Tag) extends JournalTable[Arvosana, UUID, (UUID, String
   override val resource: ((UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String)) => Arvosana = (arvosanaResource _).tupled
 
   def arvosanaResource(suoritus: UUID, arvosana: String, asteikko: String, aine: String, lisatieto: Option[String], valinnainen: Boolean, pisteet: Option[Int], myonnetty: Option[String], source: String) = {
-    val arvio =  Try(Arvio(arvosana, asteikko, pisteet)).recover{
-      case e:IllegalArgumentException => NA
-      case e:UnknownScaleException  => NA
 
-    }.get
-    Arvosana(suoritus,arvio, aine, lisatieto, valinnainen, myonnetty = myonnetty.map(LocalDate.parse), source)
+    Arvosana(suoritus,Arvio(arvosana, asteikko, pisteet), aine, lisatieto, valinnainen, myonnetty = myonnetty.map(LocalDate.parse), source)
   }
 
-
+  override val extractSource: ((UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String)) => String = _._9
 }

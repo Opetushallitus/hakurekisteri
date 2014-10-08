@@ -57,5 +57,7 @@ class SuoritusTable(tag: Tag) extends JournalTable[Suoritus, UUID, SuoritusRow](
 
 
   case class InvalidSuoritusDataException(row: SuoritusRow) extends SQLDataException(s"invalid data in database ${row.toString()}")
+
+  override val extractSource: (SuoritusRowTypes.SuoritusRow) => String = _._12
 }
 
