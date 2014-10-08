@@ -128,15 +128,13 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionId: Option[ActorRef] =
     val retryCount = new AtomicInteger(1)
     tryRead(uri, retryCount, maxConnectionRetries, okCodes)
   }
-
+  
   private def tryRead[A <: AnyRef: Manifest](uri: String, retryCount: AtomicInteger, maxConnectionRetries: Int, okCodes: Seq[HttpResponseCode]): Future[A] = {
-    try {
-      val codes = if (okCodes.isEmpty) Seq(HttpResponseCode.Ok) else okCodes
-      readObject[A](uri, (code: HttpResponseCode) => codes.contains(code))
-    } catch {
+    val codes = if (okCodes.isEmpty) Seq(HttpResponseCode.Ok) else okCodes
+    readObject[A](uri, (code: HttpResponseCode) => codes.contains(code)).recoverWith {
       case t: InterruptedIOException =>
         if (retryCount.getAndIncrement <= maxConnectionRetries) tryRead(uri, retryCount, maxConnectionRetries, okCodes)
-        else throw t
+        else Future.failed(t)
     }
   }
 }
