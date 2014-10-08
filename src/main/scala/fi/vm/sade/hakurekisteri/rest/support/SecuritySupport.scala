@@ -8,6 +8,13 @@ sealed trait Role
 
 case class DefinedRole(action: String, resource: String, organization: String) extends Role
 
+object ReadRole {
+
+  def apply(resource: String, organization: String) = DefinedRole("READ", resource, organization)
+}
+
+
+
 object UnknownRole extends Role
 
 object Roles {
@@ -75,17 +82,32 @@ trait User {
 
 }
 
-case class OPHUser(username: String, authorities: Set[String]) extends User {
+trait Roles {
 
-  def orgsFor(action: String, resource: String): Set[String] = roles.collect{
+  val roles: Set[DefinedRole]
+
+}
+
+trait RoleUser extends User with Roles {
+
+  override def orgsFor(action: String, resource: String): Set[String] = roles.collect{
     case DefinedRole(`action`,`resource`, org) => org
   }
 
-  val roles: Set[DefinedRole] = authorities.map(Roles(_).toList).flatten.collect{
+}
+
+case class OPHUser(username: String, authorities: Set[String]) extends RoleUser {
+
+
+  override val roles: Set[DefinedRole] = authorities.map(Roles(_).toList).flatten.collect{
     case d: DefinedRole => d
   }
 
 }
+
+case class BasicUser(username: String, roles: Set[DefinedRole]) extends RoleUser
+
+
 
 trait SecuritySupport {
   def currentUser(implicit request: HttpServletRequest): Option[User]
