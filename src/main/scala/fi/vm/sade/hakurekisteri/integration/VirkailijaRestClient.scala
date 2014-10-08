@@ -19,7 +19,7 @@ import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 import scala.util.Try
 
-case class PreconditionFailedException(message: String) extends Exception(message)
+case class PreconditionFailedException(message: String, responseCode: HttpResponseCode) extends Exception(message)
 
 case class ServiceConfig(serviceAccessUrl: Option[String] = None,
                          serviceUrl: String,
@@ -116,7 +116,7 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionId: Option[ActorRef] =
 
   def readObject[A <: AnyRef: Manifest](uri: String, precondition: (HttpResponseCode) => Boolean): Future[A] = executeGet(uri).map{case (resp, auth) =>
     if (precondition(resp.code)) resp
-    else throw PreconditionFailedException(s"precondition failed for uri: $uri, response code: ${resp.code} with ${auth.map("auth: " + _).getOrElse("no auth")}")
+    else throw PreconditionFailedException(s"precondition failed for uri: $uri, response code: ${resp.code} with ${auth.map("auth: " + _).getOrElse("no auth")}", resp.code)
   }.map(readBody[A])
 
   def readObject[A <: AnyRef: Manifest](uri: String, okCodes: HttpResponseCode*): Future[A] = {

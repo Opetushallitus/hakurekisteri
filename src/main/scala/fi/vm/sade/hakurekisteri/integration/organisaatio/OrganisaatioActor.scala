@@ -64,8 +64,8 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
   }
 
   def newValue(oid: String): (Long, Future[Option[Organisaatio]]) = {
-    val organisaatio: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(oid, "UTF-8")}", maxRetries, HttpResponseCode.Ok).map(Option(_)).recover {
-      case p: PreconditionFailedException => log.warning(s"organisaatio not found with oid $oid"); None
+    val organisaatio: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(oid, "UTF-8")}", maxRetries, HttpResponseCode.Ok).map(Option(_)).recoverWith {
+      case p: PreconditionFailedException if p.responseCode == HttpResponseCode.NoContent => log.warning(s"organisaatio not found with oid $oid"); Future.successful(None)
     }
     (Platform.currentTime + timeToLive.toMillis, organisaatio)
   }
