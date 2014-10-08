@@ -356,7 +356,7 @@ class KkHakijaResource(hakemukset: ActorRef,
       hakutoiveet: Map[String, String] <- answers.hakutoiveet
       lisatiedot: Lisatiedot <- answers.lisatiedot
     } yield for {
-        hakemukset <- getHakemukset(hakemus)(q)
+        hakemukset <- getHakemukset(hakemus)(q) if hakemukset.nonEmpty
         maa <- getMaakoodi(henkilotiedot.asuinmaa.getOrElse("FIN"))
         toimipaikka <- getToimipaikka(maa, henkilotiedot.Postinumero, henkilotiedot.kaupunkiUlkomaa)
         suoritukset <- (suoritukset ? SuoritusQuery(henkilo = hakemus.personOid, myontaja = Some(YTLXml.YTL))).mapTo[Seq[Suoritus]]
