@@ -56,16 +56,15 @@ class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
 
   def getKoodi(koodistoUri: String, koodiUri: String): Future[Option[Koodi]] = {
     if (koodiCache.contains(koodiUri)) koodiCache.get(koodiUri)
-    else try {
+    else {
       val koodi = restClient.readObject[Koodi](s"/rest/json/${URLEncoder.encode(koodistoUri, "UTF-8")}/koodi/${URLEncoder.encode(koodiUri, "UTF-8")}", maxRetries, HttpResponseCode.Ok).map(Some(_))
+      koodi.recover {
+        case t: PreconditionFailedException if t.responseCode == HttpResponseCode.InternalServerError =>
+          log.warning(s"koodi not found with koodiUri $koodiUri: $t")
+          Future.successful(None)
+      }
       koodiCache + (koodiUri, koodi)
       koodi
-    } catch {
-      case t: PreconditionFailedException =>
-        log.warning(s"koodi not found with koodiUri $koodiUri: $t")
-        val koodi: Future[Option[Koodi]] = Future.successful(None)
-        koodiCache + (koodiUri, koodi)
-        koodi
     }
   }
 
