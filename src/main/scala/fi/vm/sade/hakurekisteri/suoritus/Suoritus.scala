@@ -5,6 +5,7 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.LocalDate
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
+import fi.vm.sade.hakurekisteri.suoritus
 
 object yksilollistaminen extends Enumeration {
   type Yksilollistetty = Value
@@ -36,6 +37,14 @@ case class VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: Str
   override def hashCode(): Int = core.hashCode()
 
   override def equals(obj: scala.Any): Boolean = obj.isInstanceOf[VapaamuotoinenSuoritus] && core.equals(obj.asInstanceOf[VapaamuotoinenSuoritus].core)
+}
+
+object VapaamuotoinenKkTutkinto {
+
+  def apply(henkilo: String, kuvaus: String, myontaja: String, vuosi: Int, index: Int = 0, lahde: String) =
+    VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi: Int, "kkTutkinto", index: Int, lahde: String)
+
+
 }
 
 object VapaamuotoinenSuoritus {
