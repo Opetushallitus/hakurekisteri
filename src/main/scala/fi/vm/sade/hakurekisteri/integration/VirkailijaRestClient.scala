@@ -39,7 +39,7 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionId: Option[ActorRef] =
   val casClient = new CasClient(serviceAccessUrl, serviceUrl, user, password)
 
   def logConnectionFailure[T](f: Future[T], url: URL) = f.onFailure {
-    case t: InterruptedIOException => logger.error(s"connection error calling url [$url]: $t")
+    case t: InterruptedIOException => logger.warn(s"connection error calling url [$url]: $t")
     case t: JSessionIdCookieException => logger.warn(t.getMessage)
   }
 
@@ -128,7 +128,7 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionId: Option[ActorRef] =
     val retryCount = new AtomicInteger(1)
     tryRead(uri, retryCount, maxConnectionRetries, okCodes)
   }
-  
+
   private def tryRead[A <: AnyRef: Manifest](uri: String, retryCount: AtomicInteger, maxConnectionRetries: Int, okCodes: Seq[HttpResponseCode]): Future[A] = {
     val codes = if (okCodes.isEmpty) Seq(HttpResponseCode.Ok) else okCodes
     readObject[A](uri, (code: HttpResponseCode) => codes.contains(code)).recoverWith {
