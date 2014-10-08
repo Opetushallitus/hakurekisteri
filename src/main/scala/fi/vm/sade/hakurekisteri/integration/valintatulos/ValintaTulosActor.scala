@@ -43,7 +43,7 @@ class ValintaTulosActor(restClient: VirkailijaRestClient)
     if (q.cachedOk && cache.contains(key)) cache.get(key)
     else {
       val f = restClient.readObject[ValintaTulos](s"/haku/${URLEncoder.encode(q.hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(q.hakemusOid, "UTF-8")}", maxRetries, HttpResponseCode.Ok)
-      f.recover {
+      f.recoverWith {
         case t: PreconditionFailedException if t.responseCode == HttpResponseCode.NotFound =>
           log.warning(s"valinta tulos not found with haku ${q.hakuOid} and hakemus ${q.hakemusOid}: $t")
           Future.successful(ValintaTulos(q.hakemusOid, Seq()))
