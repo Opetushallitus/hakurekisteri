@@ -37,15 +37,17 @@ object Arvio {
   }
 }
 
+object NA extends Arvio
+
 case class UnknownScaleException(scale: String) extends IllegalArgumentException(s"unknown scale: $scale")
 
-case class Arvio410(val arvosana: String) extends Arvio {
+case class Arvio410(arvosana: String) extends Arvio {
   require(Try(arvosana.toInt).isSuccess, "arvosana must be a number")
   require(arvosana.toInt >= 4, "the arvosana must be greater than or equal to 4")
   require(arvosana.toInt <= 10, "the arvosana must be less than or equal to 10")
 }
 
-case class ArvioYo(val arvosana: String, pisteet: Option[Int]) extends Arvio {
+case class ArvioYo(arvosana: String, pisteet: Option[Int]) extends Arvio {
   val allowable = Set[String]("L", "E", "M", "C", "B", "A", "I+", "I", "I-", "I=", "K", "P" )
   require(allowable.contains(arvosana), s"$arvosana is not in (${allowable.mkString(", ")})")
 }

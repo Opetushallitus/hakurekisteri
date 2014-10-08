@@ -4,6 +4,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriDriver, JournalTable}
 import HakurekisteriDriver.simple._
 import java.util.UUID
 import org.joda.time.LocalDate
+import scala.util.Try
 
 
 class ArvosanaTable(tag: Tag) extends JournalTable[Arvosana, UUID, (UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String)](tag, "arvosana") {
@@ -27,7 +28,14 @@ class ArvosanaTable(tag: Tag) extends JournalTable[Arvosana, UUID, (UUID, String
   override val deletedValues: (String) => (UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String) = (lahde: String) => (UUID.fromString("de1e7edd-e1e7-edde-1e7e-dde1e7ed1111"), "","", "", None, false, None, None, lahde)
   override val resource: ((UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String)) => Arvosana = (arvosanaResource _).tupled
 
-  def arvosanaResource(suoritus: UUID, arvosana: String, asteikko: String, aine: String, lisatieto: Option[String], valinnainen: Boolean, pisteet: Option[Int], myonnetty: Option[String], source: String) =
-    Arvosana(suoritus, Arvio(arvosana, asteikko, pisteet), aine, lisatieto, valinnainen, myonnetty = myonnetty.map(LocalDate.parse), source)
+  def arvosanaResource(suoritus: UUID, arvosana: String, asteikko: String, aine: String, lisatieto: Option[String], valinnainen: Boolean, pisteet: Option[Int], myonnetty: Option[String], source: String) = {
+    val arvio =  Try(Arvio(arvosana, asteikko, pisteet)).recover{
+      case e:IllegalArgumentException => NA
+      case e:UnknownScaleException  => NA
+
+    }.get
+    Arvosana(suoritus,arvio, aine, lisatieto, valinnainen, myonnetty = myonnetty.map(LocalDate.parse), source)
+  }
+
 
 }
