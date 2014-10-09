@@ -13,7 +13,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{Haku, GetHaku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetRinnasteinenKoodiArvoQuery, Koodi, GetKoodi}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohteenKoulutukset, HakukohdeOid, TarjontaException, Hakukohteenkoulutus}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosHakutoive, ValintaTulos, ValintaTulosQuery}
+import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 import fi.vm.sade.hakurekisteri.rest.support.{Query, User, SpringSecuritySupport, HakurekisteriJsonSupport}
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus, SuoritusQuery}
@@ -84,29 +84,6 @@ case class Hakija(hetu: String,
                   onYlioppilas: Boolean,
                   hakemukset: Seq[Hakemus])
 
-object Valintatila extends Enumeration {
-  type Valintatila = Value
-  val hyväksytty = Value("HYVAKSYTTY")
-  val harkinnanvaraisesti_hyväksytty = Value("HARKINNANVARAISESTI_HYVAKSYTTY")
-  val varasijalta_hyväksytty = Value("VARASIJALTA_HYVAKSYTTY")
-  val varalla = Value("VARALLA")
-  val peruutettu = Value("PERUUTETTU")
-  val perunut = Value("PERUNUT")
-  val hylätty = Value("HYLATTY")
-  val peruuntunut = Value("PERUUNTUNUT")
-  val kesken = Value("KESKEN")
-}
-
-object Vastaanottotila extends Enumeration {
-  type Vastaanottotila = Value
-  val kesken = Value("KESKEN")
-  val vastaanottanut = Value("VASTAANOTTANUT")
-  val ei_vastaanotetu_määräaikana = Value("EI_VASTAANOTETTU_MAARA_AIKANA")
-  val perunut = Value("PERUNUT")
-  val peruutettu = Value("PERUUTETTU")
-  val ehdollisesti_vastaanottanut = Value("EHDOLLISESTI_VASTAANOTTANUT")
-}
-
 class KkHakijaResource(hakemukset: ActorRef,
                        tarjonta: ActorRef,
                        haut: ActorRef,
@@ -175,14 +152,23 @@ class KkHakijaResource(hakemukset: ActorRef,
     t.hakutoiveet.withFilter(t => t.hakukohdeOid == hakukohde).map(f).headOption
   }
 
+  // TODO muuta kun valinta-tulos-service saa ilmoittautumiset sekvenssiksi
   def getIlmoittautumiset(t: ValintaTulos, hakukohde: String): Seq[Ilmoittautuminen] = {
     t.hakutoiveet.find(t => t.hakukohdeOid == hakukohde) match {
       case Some(h) =>
         h.ilmoittautumistila match {
-          case _ => Seq() // TODO muuta kun valinta-tulos-service saa ilmoittautumiset sekvenssiksi
+          case Ilmoittautumistila.ei_tehty => Seq(Ilmoittautuminen("S", 4), Ilmoittautuminen("K", 4))
+          case Ilmoittautumistila.läsnä_koko_lukuvuosi => Seq(Ilmoittautuminen("S", 1), Ilmoittautuminen("K", 1))
+          case Ilmoittautumistila.poissa_koko_lukuvuosi => Seq(Ilmoittautuminen("S", 2), Ilmoittautuminen("K", 2))
+          case Ilmoittautumistila.ei_ilmoittautunut => Seq(Ilmoittautuminen("S", 4), Ilmoittautuminen("K", 4))
+          case Ilmoittautumistila.läsnä_syksy => Seq(Ilmoittautuminen("S", 1), Ilmoittautuminen("K", 2))
+          case Ilmoittautumistila.poissa_syksy => Seq(Ilmoittautuminen("S", 2), Ilmoittautuminen("K", 1))
+          case Ilmoittautumistila.läsnä => Seq(Ilmoittautuminen("K", 1))
+          case Ilmoittautumistila.poissa => Seq(Ilmoittautuminen("K", 2))
+          case _ => Seq()
         }
 
-      case None => Seq()
+      case None => Seq(Ilmoittautuminen("S", 4), Ilmoittautuminen("K", 4))
 
     }
   }
@@ -233,14 +219,14 @@ class KkHakijaResource(hakemukset: ActorRef,
     case Hakuehto.Hyvaksytyt => valintaTulos.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid) match {
       case None => false
       case Some(h) =>
-        import Valintatila._
-        Seq[Valintatila](hyväksytty, harkinnanvaraisesti_hyväksytty, varasijalta_hyväksytty).contains(Valintatila.withName(h.valintatila))
+        import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
+        Seq[Valintatila](hyväksytty, harkinnanvaraisesti_hyväksytty, varasijalta_hyväksytty).contains(h.valintatila)
     }
     case Hakuehto.Vastaanottaneet => valintaTulos.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid) match {
       case None => false
       case Some(h) =>
         import Vastaanottotila._
-        Seq[Vastaanottotila](vastaanottanut, ehdollisesti_vastaanottanut).contains(Vastaanottotila.withName(h.vastaanottotila))
+        Seq[Vastaanottotila](vastaanottanut, ehdollisesti_vastaanottanut).contains(h.vastaanottotila)
     }
     case Hakuehto.Hylatyt => valintaTulos.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid) match {
       case None => false
@@ -283,8 +269,8 @@ class KkHakijaResource(hakemukset: ActorRef,
                 hakukohde = hakutoiveet(s"preference$jno-Koulutus-id"),
                 hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
                 avoinVayla = None, // TODO valinnoista?
-                valinnanTila = getValintaTieto(valintaTulos, hakukohdeOid)((t: ValintaTulosHakutoive) => t.valintatila),
-                vastaanottotieto = getValintaTieto(valintaTulos, hakukohdeOid)((t: ValintaTulosHakutoive) => t.vastaanottotila),
+                valinnanTila = getValintaTieto(valintaTulos, hakukohdeOid)((t: ValintaTulosHakutoive) => t.valintatila.toString),
+                vastaanottotieto = getValintaTieto(valintaTulos, hakukohdeOid)((t: ValintaTulosHakutoive) => t.vastaanottotila.toString),
                 ilmoittautumiset = getIlmoittautumiset(valintaTulos, hakukohdeOid),
                 pohjakoulutus = getPohjakoulutukset(koulutustausta),
                 julkaisulupa = lisatiedot.lupaJulkaisu.map(_ == "true"),

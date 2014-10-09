@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.kkhakija
 
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{Vastaanottotila, Valintatila}
 import org.scalatra.swagger.AllowableValues.AnyValue
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
