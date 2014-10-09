@@ -39,7 +39,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object OpetuspisteZ extends Organisaatio("1.10.5", Map("fi" -> "Opetuspiste Z"), Some("0000101"), None, Some("1.10.1"))
   object OpetuspisteY extends Organisaatio("1.10.4", Map("fi" -> "Opetuspiste Y"), Some("0000201"), None, Some("1.10.2"))
 
-  object FullHakemus1 extends FullHakemus("1.25.1", None, "1.1",
+  object FullHakemus1 extends FullHakemus("1.25.1", Some("1.24.1"), "1.1",
     answers = Some(
       HakemusAnswers(
         henkilotiedot = Some(

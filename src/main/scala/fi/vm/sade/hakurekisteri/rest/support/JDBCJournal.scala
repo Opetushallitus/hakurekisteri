@@ -65,10 +65,11 @@ abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: St
 
   val resource: ResourceRow => R
 
+  val extractSource: ResourceRow => String
+
   def delta(resourceId: I, inserted: Long, deleted: Boolean)(resourceData:ResourceRow):Delta[R, I] =
     if (deleted){
-      val res = resource(resourceData)
-      Deleted(resourceId, res.source)
+      Deleted(resourceId, extractSource(resourceData))
     }
 
     else

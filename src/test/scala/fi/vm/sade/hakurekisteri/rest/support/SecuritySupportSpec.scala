@@ -56,7 +56,7 @@ class SecuritySupportSpec extends FlatSpec with ShouldMatchers with MockitoSugar
 object SecurityUser {
   object  user {
 
-    def having(rights:Seq[DefinedRole]) = User(username = "test",
+    def having(rights:Set[DefinedRole]) = OPHUser(username = "test",
       authorities = rights.map{case DefinedRole(service, right, org) => s"ROLE_APP_${service}_${right}_${org}"})
   }
 
@@ -66,7 +66,7 @@ object SecurityUser {
 
 
   case class Rights(grantedRights: Seq[String]) {
-    def rights: List[DefinedRole] = grantedRights.map((right) => DefinedRole("SUORITUSREKISTERI", right, "1.2.246.562.10.00000000001")).toList
+    def rights: Set[DefinedRole] = grantedRights.map((right) => DefinedRole("SUORITUSREKISTERI", right, "1.2.246.562.10.00000000001")).toSet
   }
 
   implicit def tuple2Rigths(grantedRights: Product):Rights = Rights(grantedRights.productIterator.map(_.toString).toList)

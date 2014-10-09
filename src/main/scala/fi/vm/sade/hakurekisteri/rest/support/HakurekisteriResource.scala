@@ -1,32 +1,22 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import org.scalatra.swagger._
-import org.scalatra.json.{JsonSupport, JacksonJsonSupport}
-import scala.concurrent.ExecutionContext
-import _root_.akka.util.Timeout
-import _root_.akka.actor.{ActorRef, ActorSystem}
-import org.scalatra._
-import _root_.akka.pattern.ask
-import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
-import scala.util.Try
-import fi.vm.sade.hakurekisteri.storage.Identified
-import scala.concurrent.duration._
-import javax.servlet.http.HttpServletRequest
-import org.springframework.security.core.Authentication
-
-import org.scalatra.commands._
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.organization._
-import org.springframework.security.cas.authentication.CasAuthenticationToken
-import org.jasig.cas.client.authentication.AttributePrincipal
-import fi.vm.sade.hakurekisteri.organization.AuthorizedRead
-import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
-import fi.vm.sade.hakurekisteri.organization.AuthorizedCreate
-import fi.vm.sade.hakurekisteri.organization.AuthorizedDelete
-import fi.vm.sade.hakurekisteri.arvosana.Arvosana
-import fi.vm.sade.hakurekisteri.suoritus.Suoritus
-import scala.reflect.ClassTag
+
+import _root_.akka.actor.{ActorRef, ActorSystem}
+import _root_.akka.pattern.ask
+import _root_.akka.util.Timeout
+import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.organization.{AuthorizedCreate, AuthorizedDelete, AuthorizedQuery, AuthorizedRead, _}
+import fi.vm.sade.hakurekisteri.storage.Identified
+import org.scalatra._
+import org.scalatra.commands._
+import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
+import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
+import org.scalatra.swagger._
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+import scala.util.Try
 
 trait HakurekisteriCrudCommands[A <: Resource[UUID], C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
 
@@ -163,97 +153,4 @@ abstract class  HakurekisteriResource[A <: Resource[UUID], C <: HakurekisteriCom
    protected implicit def swagger: SwaggerEngine[_] = sw
 }
 
-sealed trait Role
 
-case class DefinedRole(action: String, resource: String, organization: String) extends Role
-
-object UnknownRole extends Role
-
-object Roles {
-
-
-  val subjects: PartialFunction[String, PartialFunction[String, (String) => Set[String]]] =
-    Map(
-      "SUORITUSREKISTERI" -> {
-        case x if resources.contains(x)  => (org: String) => Set(org)
-      },
-      "KKHAKUVIRKAILIJA" -> {
-        case "Arvosana" | "Suoritus" =>  (_) => Set("1.2.246.562.10.43628088406")
-      }
-
-    )
-
-
-  def findSubjects(service: String, org: String)(resource: String) = for (
-    serviceResolver <- subjects.lift(service);
-    finder <- serviceResolver.lift(resource)
-  ) yield finder(org)
-
-  val resources = Set("Arvosana", "Suoritus", "Opiskeluoikeus", "Opiskelija", "Hakukohde")
-
-  def findRoles(finder: (String) => Option[Set[String]])(actions: Set[String]): Set[DefinedRole] = {
-    for (
-      action <- actions;
-      resource <- resources;
-      subject <- finder(resource).getOrElse(Set())
-    ) yield DefinedRole(action, resource,  subject)
-  }
-
-
-  def apply(authority:String) =  authority match {
-    case role(service, right, org) =>
-      def roleFinder(roles: String*):Set[DefinedRole] = findRoles(findSubjects(service, org))(roles.toSet)
-      right match {
-      case "CRUD" =>  roleFinder("DELETE", "WRITE", "READ")
-
-      case "READ_UPDATE" => roleFinder("WRITE", "READ")
-      case "READ" => roleFinder("READ")
-      case _ => Set(UnknownRole)
-    }
-    case _ => Set(UnknownRole)
-  }
-
-
-
-
-  val role = "ROLE_APP_([^_]*)_(.*)_(\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+)".r
-
-
-}
-
-
-
-case class User(username: String, authorities: Seq[String]) {
-
-  def orgsFor(action: String, resource: String): Seq[String] = roles.collect{
-    case DefinedRole(`action`,`resource`, org) => org
-  }
-
-  val roles: Seq[DefinedRole] = authorities.map(Roles(_).toList).flatten.collect{
-    case d: DefinedRole => d
-  }
-
-
-  def canWrite(resource: String) = !orgsFor("WRITE", resource).isEmpty
-
-  def canDelete(resource: String) = !orgsFor("DELETE", resource).isEmpty
-
-  def canRead(resource: String) = !orgsFor("READ", resource).isEmpty
-
-}
-
-trait SecuritySupport {
-  def currentUser(implicit request: HttpServletRequest): Option[User]
-
-}
-
-trait SpringSecuritySupport extends SecuritySupport {
-  import scala.collection.JavaConverters._
-
-  def currentUser(implicit request: HttpServletRequest): Option[User] = {
-    val name = Option(request.getUserPrincipal).map(_.getName)
-    val authorities = Try(request.getUserPrincipal.asInstanceOf[Authentication].getAuthorities.asScala.toList.map(_.getAuthority))
-    val attributePrincipal: Option[AttributePrincipal] = Try(request.getUserPrincipal.asInstanceOf[CasAuthenticationToken].getAssertion.getPrincipal).toOption
-    name.map(User(_, authorities.getOrElse(Seq())))
-  }
-}

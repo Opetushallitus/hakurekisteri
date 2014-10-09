@@ -5,7 +5,7 @@ import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
-import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support._
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 import akka.actor.{Props, Actor, ActorRef, ActorSystem}
@@ -27,6 +27,22 @@ import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
 import akka.event.Logging
 import scala.compat.Platform
 import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
+import fi.vm.sade.hakurekisteri.integration.ytl.YtlReport
+import fi.vm.sade.hakurekisteri.healthcheck.ItemCount
+import fi.vm.sade.hakurekisteri.hakija.Hakemus
+import fi.vm.sade.hakurekisteri.healthcheck.Checks
+import fi.vm.sade.hakurekisteri.healthcheck.Hakemukset
+import fi.vm.sade.hakurekisteri.ensikertalainen.QueriesRunning
+import fi.vm.sade.hakurekisteri.healthcheck.QueryReport
+import fi.vm.sade.hakurekisteri.healthcheck.Resources
+import fi.vm.sade.hakurekisteri.integration.ytl.Batch
+import fi.vm.sade.hakurekisteri.healthcheck.Health
+import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
+import fi.vm.sade.hakurekisteri.healthcheck.RefreshingState
+import fi.vm.sade.hakurekisteri.healthcheck.YtlOk
+import fi.vm.sade.hakurekisteri.healthcheck.RefreshingResource
+import fi.vm.sade.hakurekisteri.healthcheck.YtlFailure
+import fi.vm.sade.hakurekisteri.healthcheck.Healhcheck
 
 class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -66,10 +82,11 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
                        ensikertalainenActor: ActorRef)(implicit system: ActorSystem) extends Actor {
   protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(30, TimeUnit.SECONDS)
-  val authorities = Seq("1.2.246.562.10.00000000001")
 
-  val healthCheckUser = User("healthcheck", authorities.map((org) => s"ROLE_APP_SUORITUSREKISTERI_READ_$org"))
 
+  val resources = Set("Arvosana", "Suoritus", "Opiskeluoikeus", "Opiskelija")
+
+  val healthCheckUser = BasicUser("healthcheck", resources.map(ReadRole( _, "1.2.246.562.10.00000000001")))
   var foundHakemukset:Map[String, RefreshingState] = Map()
 
   var selfChecks: Map[UUID, Long] = Map()
