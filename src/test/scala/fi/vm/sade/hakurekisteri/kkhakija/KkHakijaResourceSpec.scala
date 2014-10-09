@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
 import fi.vm.sade.hakurekisteri.integration.haku.{Haku, GetHaku}
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulos, ValintaTulosQuery}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosHakutoive, ValintaTulos, ValintaTulosQuery}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriSwagger}
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, SuoritusQuery}
@@ -62,6 +62,17 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
     hakijat.size should be (2)
   }
 
+  test("should return one hyvaksytty hakija") {
+    object TestUser extends User {
+      override val username: String = "test"
+      override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
+    }
+    val q = KkHakijaQuery(None, None, None, None, Hakuehto.Hyvaksytyt, Some(TestUser))
+    val res: Future[Seq[Hakija]] = resource.getKkHakijat(q)
+    val hakijat = Await.result(res, Duration(10, TimeUnit.SECONDS))
+    hakijat.size should be (1)
+  }
+
   import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 
   val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L)), Map("fi" -> "testihaku"), "kausi_s#1", 2014, Some("kohdejoukko_12#1"))
@@ -94,6 +105,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
 
   class MockedValintaTulosActor extends Actor {
     override def receive: Actor.Receive = {
+      case q: ValintaTulosQuery if q.hakemusOid == FullHakemus1.oid => println(q); sender ! ValintaTulos(q.hakemusOid, Seq(ValintaTulosHakutoive("1.11.1", "1.10.1", "HYVAKSYTTY", "KESKEN", "", "", false)))
       case q: ValintaTulosQuery => println(q); sender ! ValintaTulos(q.hakemusOid, Seq())
     }
   }
