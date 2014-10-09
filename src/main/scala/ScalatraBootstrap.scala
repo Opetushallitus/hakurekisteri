@@ -358,6 +358,20 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf, Some(jSessionIdActor))(getClient, ec), hakemusConfig.maxApplications)), "hakemus")
 
+  hakemukset ! Trigger{
+    (hakemus: FullHakemus) =>
+      for (
+        person <- hakemus.personOid;
+        answers <- hakemus.answers;
+        koulutus <- answers.koulutustausta;
+        myontaja <- koulutus.aiempitutkinto_korkeakoulu;
+        kuvaus <- koulutus.aiempitutkinto_tutkinto;
+        vuosiString <- koulutus.aiempitutkinto_vuosi;
+        vuosi <- Try(vuosiString.toInt).toOption
+      ) rekisterit.suoritusRekisteri ! VapaamuotoinenKkTutkinto(person, kuvaus, myontaja, vuosi, 0, person)
+
+  }
+
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, ytlConfig)), "ytl")
 
   val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)(getClient, ec))), "koodisto")

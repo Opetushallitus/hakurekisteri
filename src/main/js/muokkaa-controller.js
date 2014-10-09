@@ -199,8 +199,8 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                         d.reject("validationerror");
                     } else {
                         getOrganisaatio($http, obj.oppilaitos, function (organisaatio) {
-                            if (typeof obj.myontaja !== undefined) obj.myontaja = organisaatio.oid;
-                            else obj.oppilaitosOid = organisaatio.oid;
+                            if (obj.komo) obj.myontaja = organisaatio.oid;
+                            else if (obj.luokkataso) obj.oppilaitosOid = organisaatio.oid;
                             d.resolve("validated against organisaatio");
                         }, function () {
                             $scope.messages.push({

@@ -46,6 +46,5 @@ class OpiskeluoikeusTable(tag: Tag) extends JournalTable[Opiskeluoikeus, UUID, O
     case  (alkuPaiva: Long, loppuPaiva: Option[Long], henkiloOid: String, komo: String, myontaja: String, source) =>
       Opiskeluoikeus(new DateTime(alkuPaiva), loppuPaiva.map(new DateTime(_)), henkiloOid, komo, myontaja, source)
   }
-
-
+  override val extractSource: (OpiskeluoikeusRow.OpiskeluoikeusType) => String = _._6
 }
