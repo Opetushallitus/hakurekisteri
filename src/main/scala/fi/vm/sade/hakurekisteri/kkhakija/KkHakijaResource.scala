@@ -84,6 +84,29 @@ case class Hakija(hetu: String,
                   onYlioppilas: Boolean,
                   hakemukset: Seq[Hakemus])
 
+object Valintatila extends Enumeration {
+  type Valintatila = Value
+  val hyväksytty = Value("HYVAKSYTTY")
+  val harkinnanvaraisesti_hyväksytty = Value("HARKINNANVARAISESTI_HYVAKSYTTY")
+  val varasijalta_hyväksytty = Value("VARASIJALTA_HYVAKSYTTY")
+  val varalla = Value("VARALLA")
+  val peruutettu = Value("PERUUTETTU")
+  val perunut = Value("PERUNUT")
+  val hylätty = Value("HYLATTY")
+  val peruuntunut = Value("PERUUNTUNUT")
+  val kesken = Value("KESKEN")
+}
+
+object Vastaanottotila extends Enumeration {
+  type Vastaanottotila = Value
+  val kesken = Value("KESKEN")
+  val vastaanottanut = Value("VASTAANOTTANUT")
+  val ei_vastaanotetu_määräaikana = Value("EI_VASTAANOTETTU_MAARA_AIKANA")
+  val perunut = Value("PERUNUT")
+  val peruutettu = Value("PERUUTETTU")
+  val ehdollisesti_vastaanottanut = Value("EHDOLLISESTI_VASTAANOTTANUT")
+}
+
 class KkHakijaResource(hakemukset: ActorRef,
                        tarjonta: ActorRef,
                        haut: ActorRef,
@@ -182,7 +205,9 @@ class KkHakijaResource(hakemukset: ActorRef,
     kelpoisuudet.find(_.aoId == hakukohdeOid) match {
       case Some(h) => h
 
-      case None => PreferenceEligibility(hakukohdeOid, "NOT_CHECKED", None)
+      case None =>
+        val defaultState = "NOT_CHECKED"
+        PreferenceEligibility(hakukohdeOid, defaultState, None)
 
     }
   }
@@ -207,15 +232,19 @@ class KkHakijaResource(hakemukset: ActorRef,
     case Hakuehto.Kaikki => true
     case Hakuehto.Hyvaksytyt => valintaTulos.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid) match {
       case None => false
-      case Some(h) => Seq("HYVAKSYTTY", "HARKINNANVARAISESTI_HYVAKSYTTY", "VARASIJALTA_HYVAKSYTTY").contains(h.valintatila)
+      case Some(h) =>
+        import Valintatila._
+        Seq[Valintatila](hyväksytty, harkinnanvaraisesti_hyväksytty, varasijalta_hyväksytty).contains(Valintatila.withName(h.valintatila))
     }
     case Hakuehto.Vastaanottaneet => valintaTulos.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid) match {
       case None => false
-      case Some(h) => Seq("VASTAANOTTANUT", "EHDOLLISESTI_VASTAANOTTANUT").contains(h.vastaanottotila)
+      case Some(h) =>
+        import Vastaanottotila._
+        Seq[Vastaanottotila](vastaanottanut, ehdollisesti_vastaanottanut).contains(Vastaanottotila.withName(h.vastaanottotila))
     }
     case Hakuehto.Hylatyt => valintaTulos.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid) match {
       case None => false
-      case Some(h) => h.valintatila == "HYLATTY"
+      case Some(h) => h.valintatila == Valintatila.hylätty.toString
     }
   }
 
