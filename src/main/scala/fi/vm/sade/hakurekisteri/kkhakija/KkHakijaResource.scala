@@ -327,7 +327,7 @@ class KkHakijaResource(hakemukset: ActorRef,
   def isYlioppilas(suoritukset: Seq[Suoritus]): Boolean = {
     suoritukset.find{
       case s:VirallinenSuoritus =>
-        s.komo == "1.2.246.562.5.2013061010184237348007" && s.tila == "VALMIS" && s.vahvistettu
+        s.komo == YTLXml.yotutkinto && s.tila == "VALMIS" && s.vahvistettu
 
       case _ => false
 
