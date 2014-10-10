@@ -43,9 +43,10 @@ sealed abstract class Hakutoive {
 
 
 sealed trait Lasnaolo
-
 case class Lasna(kausi: Kausi) extends Lasnaolo
 case class Poissa(kausi: Kausi) extends Lasnaolo
+case class PoissaEiKulutaOpintoaikaa(kausi: Kausi) extends Lasnaolo
+case class Puuttuu(kausi: Kausi) extends Lasnaolo
 
 sealed trait Kausi
 case class Kevat(vuosi:Int) extends Kausi

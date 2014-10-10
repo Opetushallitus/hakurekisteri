@@ -7,7 +7,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.hakija.Hakuehto
+import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Lasnaolo, Lasna, Poissa, Puuttuu, Syksy, Kevat}
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{Haku, GetHaku, HakuNotFoundException}
@@ -42,9 +42,6 @@ object KkHakijaQuery {
 case class InvalidSyntymaaikaException(m: String) extends Exception(m)
 case class InvalidKausiException(m: String) extends Exception(m)
 
-case class Ilmoittautuminen(kausi: String, // 2014S
-                            tila: Int) // tilat (1 = läsnä; 2 = poissa; 3 = poissa, ei kuluta opintoaikaa; 4 = puuttuu)
-
 case class Hakemus(haku: String,
                    hakuVuosi: Int,
                    hakuKausi: String,
@@ -55,7 +52,7 @@ case class Hakemus(haku: String,
                    avoinVayla: Option[Boolean],
                    valinnanTila: Option[String],
                    vastaanottotieto: Option[String],
-                   ilmoittautumiset: Seq[Ilmoittautuminen],
+                   ilmoittautumiset: Seq[Lasnaolo],
                    pohjakoulutus: Seq[String],
                    julkaisulupa: Option[Boolean],
                    hKelpoisuus: String,
@@ -153,24 +150,54 @@ class KkHakijaResource(hakemukset: ActorRef,
   }
 
   // TODO muuta kun valinta-tulos-service saa ilmoittautumiset sekvenssiksi
-  def getIlmoittautumiset(t: ValintaTulos, hakukohde: String): Seq[Ilmoittautuminen] = {
-    t.hakutoiveet.find(t => t.hakukohdeOid == hakukohde) match {
-      case Some(h) =>
-        h.ilmoittautumistila match {
-          case Ilmoittautumistila.ei_tehty => Seq(Ilmoittautuminen("S", 4), Ilmoittautuminen("K", 4))
-          case Ilmoittautumistila.läsnä_koko_lukuvuosi => Seq(Ilmoittautuminen("S", 1), Ilmoittautuminen("K", 1))
-          case Ilmoittautumistila.poissa_koko_lukuvuosi => Seq(Ilmoittautuminen("S", 2), Ilmoittautuminen("K", 2))
-          case Ilmoittautumistila.ei_ilmoittautunut => Seq(Ilmoittautuminen("S", 4), Ilmoittautuminen("K", 4))
-          case Ilmoittautumistila.läsnä_syksy => Seq(Ilmoittautuminen("S", 1), Ilmoittautuminen("K", 2))
-          case Ilmoittautumistila.poissa_syksy => Seq(Ilmoittautuminen("S", 2), Ilmoittautuminen("K", 1))
-          case Ilmoittautumistila.läsnä => Seq(Ilmoittautuminen("K", 1))
-          case Ilmoittautumistila.poissa => Seq(Ilmoittautuminen("K", 2))
-          case _ => Seq()
-        }
+  def getLasnaolot(t: ValintaTulos, hakukohde: String, haku: Haku, hakemusOid: String): Future[Seq[Lasnaolo]] = {
+    val kausi: Future[String] = getKausi(haku.kausi, hakemusOid)
 
-      case None => Seq(Ilmoittautuminen("S", 4), Ilmoittautuminen("K", 4))
+    kausi.map(k => {
+      val vuosi = k match {
+        case "S" => (haku.vuosi, haku.vuosi + 1)
+        case "K" => (haku.vuosi, haku.vuosi)
+        case _ => throw new IllegalArgumentException(s"invalid kausi $k")
+      }
 
-    }
+      def kausi(v: Int, k: String): String = s"$v$k"
+
+      t.hakutoiveet.find(t => t.hakukohdeOid == hakukohde) match {
+        case Some(h) =>
+          h.ilmoittautumistila match {
+            case Ilmoittautumistila.ei_tehty =>
+              Seq(Puuttuu(Syksy(vuosi._1)), Puuttuu(Kevat(vuosi._2)))
+
+            case Ilmoittautumistila.läsnä_koko_lukuvuosi =>
+              Seq(Lasna(Syksy(vuosi._1)), Lasna(Kevat(vuosi._2)))
+
+            case Ilmoittautumistila.poissa_koko_lukuvuosi =>
+              Seq(Poissa(Syksy(vuosi._1)), Poissa(Kevat(vuosi._2)))
+
+            case Ilmoittautumistila.ei_ilmoittautunut =>
+              Seq(Puuttuu(Syksy(vuosi._1)), Puuttuu(Kevat(vuosi._2)))
+
+            case Ilmoittautumistila.läsnä_syksy =>
+              Seq(Lasna(Syksy(vuosi._1)), Poissa(Kevat(vuosi._2)))
+
+            case Ilmoittautumistila.poissa_syksy =>
+              Seq(Poissa(Syksy(vuosi._1)), Lasna(Kevat(vuosi._2)))
+
+            case Ilmoittautumistila.läsnä =>
+              Seq(Lasna(Kevat(vuosi._2)))
+
+            case Ilmoittautumistila.poissa =>
+              Seq(Poissa(Kevat(vuosi._2)))
+
+            case _ =>
+              Seq()
+
+          }
+
+        case None => Seq(Puuttuu(Syksy(vuosi._1)), Puuttuu(Kevat(vuosi._2)))
+
+      }
+    })
   }
 
   def getKausi(kausiKoodi: String, hakemusOid: String): Future[String] =
@@ -230,7 +257,7 @@ class KkHakijaResource(hakemukset: ActorRef,
     }
     case Hakuehto.Hylatyt => valintaTulos.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid) match {
       case None => false
-      case Some(h) => h.valintatila == Valintatila.hylätty.toString
+      case Some(h) => h.valintatila == Valintatila.hylätty
     }
   }
 
@@ -258,6 +285,7 @@ class KkHakijaResource(hakemukset: ActorRef,
             hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
             haku: Haku <- (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
             kausi: String <- getKausi(haku.kausi, hakemus.oid)
+            lasnaolot: Seq[Lasnaolo] <- getLasnaolot(valintaTulos, hakukohdeOid, haku, hakemus.oid)
           } yield {
             if (matchHakuehto(q.hakuehto, valintaTulos, hakukohdeOid))
               Some(Hakemus(
@@ -271,7 +299,7 @@ class KkHakijaResource(hakemukset: ActorRef,
                 avoinVayla = None, // TODO valinnoista?
                 valinnanTila = getValintaTieto(valintaTulos, hakukohdeOid)((t: ValintaTulosHakutoive) => t.valintatila.toString),
                 vastaanottotieto = getValintaTieto(valintaTulos, hakukohdeOid)((t: ValintaTulosHakutoive) => t.vastaanottotila.toString),
-                ilmoittautumiset = getIlmoittautumiset(valintaTulos, hakukohdeOid),
+                ilmoittautumiset = lasnaolot,
                 pohjakoulutus = getPohjakoulutukset(koulutustausta),
                 julkaisulupa = lisatiedot.lupaJulkaisu.map(_ == "true"),
                 hKelpoisuus = hakukelpoisuus.status,
