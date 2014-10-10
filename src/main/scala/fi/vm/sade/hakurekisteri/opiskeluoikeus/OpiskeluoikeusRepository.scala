@@ -3,14 +3,12 @@ package fi.vm.sade.hakurekisteri.opiskeluoikeus
 import java.util.UUID
 
 import fi.vm.sade.hakurekisteri.rest.support.Query
-import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceActor, ResourceService}
+import fi.vm.sade.hakurekisteri.storage.{InMemQueryingResourceService, Identified, ResourceActor, ResourceService}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Journal, JournaledRepository}
 
-trait OpiskeluoikeusRepository extends JournaledRepository[Opiskeluoikeus, UUID] {
-  def identify(o: Opiskeluoikeus): Opiskeluoikeus with Identified[UUID] = Opiskeluoikeus.identify(o)
-}
+trait OpiskeluoikeusRepository extends JournaledRepository[Opiskeluoikeus, UUID]
 
-trait OpiskeluoikeusService extends ResourceService[Opiskeluoikeus, UUID] with OpiskeluoikeusRepository {
+trait OpiskeluoikeusService extends InMemQueryingResourceService[Opiskeluoikeus, UUID] with OpiskeluoikeusRepository {
   def checkMyontaja(myontaja: Option[String])(o: Opiskeluoikeus): Boolean = myontaja match {
     case Some(oid) => o.myontaja.equals(oid)
     case None => true

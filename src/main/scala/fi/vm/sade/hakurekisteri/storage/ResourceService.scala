@@ -5,12 +5,16 @@ import scala.concurrent.{ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.storage.repository.Repository
 
 
-trait ResourceService[T, I] { this: Repository[T, I] =>
+trait ResourceService[T, I] {
 
-  implicit val executionContext:ExecutionContext
+  def findBy(o: Query[T]):Future[Seq[T with Identified[I]]]
+}
+
+trait InMemQueryingResourceService[T,I] extends ResourceService[T,I] { this: Repository[T,I] =>
 
   val matcher: PartialFunction[Query[T], (T with Identified[I]) => Boolean]
 
+  implicit val executionContext: ExecutionContext
 
   val emptyQuery: PartialFunction[Query[T], Boolean] = Map()
 
@@ -40,6 +44,7 @@ trait ResourceService[T, I] { this: Repository[T, I] =>
       case Some(a: T with Identified[I]) => a
     })
   }
+
 }
 
 

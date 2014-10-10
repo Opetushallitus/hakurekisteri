@@ -29,7 +29,7 @@ class IdentifiableSerializationSpec extends WordSpec with ShouldMatchers with Ha
 
 
   "An identified suoritus " when {
-    val s = VirallinenSuoritus.identify(suoritus)
+    val s: Suoritus with Identified[UUID] = suoritus.identify
     "serialized" should {
       val result = serializeDeserialize[Suoritus, Suoritus](s)
       val identity = serializeDeserialize[Identified[UUID], Suoritus](s)
@@ -47,7 +47,7 @@ class IdentifiableSerializationSpec extends WordSpec with ShouldMatchers with Ha
 
 
   "An identified opiskelija " when {
-    val o = Opiskelija.identify(opiskelija, identifier)
+    val o = opiskelija.identify(identifier)
     "serialized" should {
       val result = serializeDeserialize[Opiskelija, Opiskelija](o)
       val identity = serializeDeserialize[Identified[UUID], Opiskelija](o)

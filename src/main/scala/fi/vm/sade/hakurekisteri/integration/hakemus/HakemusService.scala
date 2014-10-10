@@ -10,13 +10,13 @@ import fi.vm.sade.hakurekisteri.healthcheck.{RefreshingResource, Hakemukset, Hea
 import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaQuery
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.hakurekisteri.storage.repository._
-import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceActor, ResourceService}
+import fi.vm.sade.hakurekisteri.storage.{InMemQueryingResourceService, Identified, ResourceActor, ResourceService}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 
-trait HakemusService extends ResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
+trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
   def filterField[F](field: Option[F], fieldExctractor: (FullHakemus) => F)(hakemus:FullHakemus) = field match {
     case Some(acceptedValue) =>   acceptedValue == fieldExctractor(hakemus)
     case None => true
@@ -49,7 +49,6 @@ trait HakemusService extends ResourceService[FullHakemus, String] with Journaled
       (hakemus) => hakemus.personOid.exists(_ == henkilo)
   }
 
-  override def identify(o: FullHakemus): FullHakemus with Identified[String] = FullHakemus.identify(o)
 }
 
 case class HakemusQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakukohde: Option[String] = None) extends Query[FullHakemus]

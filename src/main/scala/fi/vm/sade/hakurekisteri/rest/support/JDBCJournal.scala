@@ -16,9 +16,15 @@ import scala.slick.ast.{BaseTypedType, TypedType}
 import scala.Some
 import fi.vm.sade.hakurekisteri.storage.repository.Deleted
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import org.json4s.JsonAST.JValue
+import scala.Some
+import fi.vm.sade.hakurekisteri.storage.repository.Deleted
+import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import scala.Some
+import fi.vm.sade.hakurekisteri.storage.repository.Deleted
+import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import scala.slick.lifted.TableQuery
 import scala.slick.lifted.ShapedValue
-import org.json4s.JsonAST.JValue
 
 
 object HakurekisteriDriver extends JdbcDriver {
@@ -82,7 +88,7 @@ object HakurekisteriDriver extends JdbcDriver {
 
 import HakurekisteriDriver.simple._
 
-abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: String)(implicit val idType: TypedType[I]) extends Table[Delta[R,I]](tag, name) with HakurekisteriColumns {
+abstract class JournalTable[R <: Resource[I,R], I, ResourceRow](tag: Tag, name: String)(implicit val idType: TypedType[I]) extends Table[Delta[R,I]](tag, name) with HakurekisteriColumns {
 
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def resourceId = column[I]("resource_id")
@@ -139,7 +145,7 @@ abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: St
 }
 
 
-class JDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: TableQuery[T])(implicit val db: Database, val idType: BaseTypedType[I]) extends Journal[R,  I] {
+class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R,I, _]](val table: TableQuery[T])(implicit val db: Database, val idType: BaseTypedType[I]) extends Journal[R,  I] {
 
 
 
@@ -179,7 +185,7 @@ class JDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: Tab
 
   }
 
-  def latestResources = {
+  val latestResources = {
     val latest = for {
       (id, resource) <- table.groupBy(_.resourceId)
     } yield (id, resource.map(_.inserted).max)

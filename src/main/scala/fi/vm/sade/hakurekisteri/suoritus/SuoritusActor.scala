@@ -47,13 +47,10 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
     current.foreach(addNew)
   }
 
-  def identify(o:Suoritus): Suoritus with Identified[UUID] = o match {
-    case s: VirallinenSuoritus => VirallinenSuoritus.identify(s)
-    case s: VapaamuotoinenSuoritus => VapaamuotoinenSuoritus.identify(s)
-  }
+
 }
 
-trait SuoritusService extends ResourceService[Suoritus, UUID] with SuoritusRepository {
+trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with SuoritusRepository {
 
   override val emptyQuery: PartialFunction[Query[Suoritus], Boolean] = {
     case SuoritusQuery(None, None, None, None) => true

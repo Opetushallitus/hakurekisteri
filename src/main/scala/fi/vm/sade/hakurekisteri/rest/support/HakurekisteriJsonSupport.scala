@@ -12,3 +12,10 @@ trait HakurekisteriJsonSupport {
     FieldSerializer[Identified[UUID]]() + new UUIDSerializer + new IdentitySerializer + DateTimeSerializer + new LocalDateSerializer() + new ArvioSerializer + new AjanjaksoSerializer + new SuoritusSerializer
 
 }
+
+
+object HakurekisteriJsonSupport extends HakurekisteriJsonSupport  {
+
+  val format =jsonFormats
+
+}

@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.henkilo
 
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.rest.support.Resource
+import fi.vm.sade.hakurekisteri.rest.support.{UUIDResource, Resource}
 import scala.language.implicitConversions
 
 
@@ -28,11 +28,11 @@ case class Henkilo (
                      turvakielto: Boolean,
                      hetu: String,
                      syntymaaika: String,
-                     markkinointilupa: Option[Boolean]) extends Resource[UUID]{
+                     markkinointilupa: Option[Boolean]) extends UUIDResource[Henkilo] {
 
   val source = ""
 
-  override def identify(id: UUID): this.type with Identified[UUID] = Henkilo.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
+  override def identify(id: UUID): Henkilo with Identified[UUID] = Henkilo.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
 }
 
 

@@ -38,10 +38,9 @@ trait ArvosanaRepository extends JournaledRepository[Arvosana, UUID] {
 
   }
 
-    def identify(o:Arvosana): Arvosana with Identified[UUID] = Arvosana.identify(o)
 }
 
-trait ArvosanaService extends ResourceService[Arvosana, UUID]  with ArvosanaRepository {
+trait ArvosanaService extends InMemQueryingResourceService[Arvosana, UUID]  with ArvosanaRepository {
 
 
   override val optimize:PartialFunction[Query[Arvosana], Future[Seq[Arvosana with Identified[UUID]]]] = {

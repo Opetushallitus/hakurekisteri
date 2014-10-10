@@ -13,14 +13,12 @@ import java.util.UUID
 
 trait OpiskelijaRepository extends JournaledRepository[Opiskelija, UUID] {
 
-  def identify(o: Opiskelija): Opiskelija with Identified[UUID] = {
-    Opiskelija.identify(o)
-  }
+
 
 }
 
 
-trait OpiskelijaService extends ResourceService[Opiskelija, UUID] { this: Repository[Opiskelija, UUID] =>
+trait OpiskelijaService extends InMemQueryingResourceService[Opiskelija, UUID] { this: Repository[Opiskelija, UUID] =>
 
   val matcher: PartialFunction[Query[Opiskelija], (Opiskelija with Identified[UUID]) => Boolean] = {
     case OpiskelijaQuery(henkilo, kausi, vuosi, paiva, oppilaitosOid, luokka) =>

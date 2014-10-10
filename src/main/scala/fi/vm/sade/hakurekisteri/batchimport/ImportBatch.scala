@@ -1,21 +1,21 @@
 package fi.vm.sade.hakurekisteri.batchimport
 
-import fi.vm.sade.hakurekisteri.rest.support.Resource
+import fi.vm.sade.hakurekisteri.rest.support.UUIDResource
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.storage.{UUIDIdentifier,  Identified}
+import fi.vm.sade.hakurekisteri.storage.Identified
 import org.json4s.JsonAST.JValue
 
 
-case class ImportBatch(data: JValue, externalId: Option[String] = None, batchType: String, source: String) extends Resource[UUID]  {
+case class ImportBatch(data: JValue, externalId: Option[String] = None, batchType: String, source: String) extends UUIDResource[ImportBatch]  {
 
-  override def identify(identifier: UUID): this.type with Identified[UUID] = new ImportBatch(data,externalId,batchType,source) with Identified[UUID] {
-    val id: UUID = identifier
-  }.asInstanceOf[this.type with Identified[UUID]]
+  override def identify(identifier: UUID): ImportBatch with Identified[UUID] = new IdentifiedImportBatch(this, identifier)
 
 }
 
 
-object ImportBatch extends UUIDIdentifier[ImportBatch]
+class IdentifiedImportBatch(b: ImportBatch, identifier: UUID) extends ImportBatch(b.data,b.externalId,b.batchType,b.source) with Identified[UUID] {
+  val id: UUID = identifier
+}
 
 
 

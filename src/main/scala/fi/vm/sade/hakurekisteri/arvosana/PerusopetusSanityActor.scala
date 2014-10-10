@@ -208,7 +208,6 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
     aine.groupBy(_.valinnainen)
   }
 
-  override def identify(o: Arvosana): Arvosana with Identified[UUID] = ???
 
 }
 

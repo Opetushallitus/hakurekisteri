@@ -258,9 +258,11 @@ case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot], koulutust
 
 case class PreferenceEligibility(aoId: String, status: String, source: Option[String])
 
-case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String], preferenceEligibilities: Seq[PreferenceEligibility]) extends Resource[String] {
+case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String], preferenceEligibilities: Seq[PreferenceEligibility]) extends Resource[String, FullHakemus] with Identified[String] {
   val source = "1.2.246.562.10.00000000001"
-  override def identify(id: String): this.type with Identified[String] = FullHakemus.identify(this,id).asInstanceOf[this.type with Identified[String]]
+  override def identify(identity: String): FullHakemus with Identified[String] = this
+
+  val id = oid
 
   def hetu =
       for (
@@ -273,19 +275,7 @@ case class FullHakemus(oid: String, personOid: Option[String], applicationSystem
     case Some(s) if Seq("ACTIVE", "INCOMPLETE").contains(s) => true
     case _ => false
   }
+
+  def newId = oid
 }
 
-object FullHakemus {
-  def identify(o:FullHakemus): FullHakemus with Identified[String] = o.identify(o.oid)
-
-  def identify(o:FullHakemus, identity:String) =
-  new FullHakemus(
-      o.oid: String,
-      o.personOid: Option[String],
-      o.applicationSystemId: String,
-      o.answers,
-      o.state: Option[String],
-      o.preferenceEligibilities) with Identified[String] {
-        val id: String = identity
-      }
-}
