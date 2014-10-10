@@ -1,33 +1,22 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import org.scalatra.swagger._
-import org.scalatra.json.{JsonSupport, JacksonJsonSupport}
-import scala.concurrent.ExecutionContext
-import _root_.akka.util.Timeout
-import _root_.akka.actor.{ActorRef, ActorSystem}
-import org.scalatra._
-import _root_.akka.pattern.ask
-import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
-import scala.util.Try
-import fi.vm.sade.hakurekisteri.storage.Identified
-import scala.concurrent.duration._
-import javax.servlet.http.HttpServletRequest
-import org.springframework.security.core.{GrantedAuthority, Authentication}
-
-import org.scalatra.commands._
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.organization._
-import org.springframework.security.cas.authentication.CasAuthenticationToken
-import org.jasig.cas.client.authentication.AttributePrincipal
-import fi.vm.sade.hakurekisteri.organization.AuthorizedRead
-import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
-import fi.vm.sade.hakurekisteri.organization.AuthorizedCreate
-import fi.vm.sade.hakurekisteri.organization.AuthorizedDelete
-import fi.vm.sade.hakurekisteri.arvosana.Arvosana
-import fi.vm.sade.hakurekisteri.suoritus.Suoritus
-import scala.reflect.ClassTag
-import java.security.Principal
+
+import _root_.akka.actor.{ActorRef, ActorSystem}
+import _root_.akka.pattern.ask
+import _root_.akka.util.Timeout
+import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.organization.{AuthorizedCreate, AuthorizedDelete, AuthorizedQuery, AuthorizedRead, _}
+import fi.vm.sade.hakurekisteri.storage.Identified
+import org.scalatra._
+import org.scalatra.commands._
+import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
+import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
+import org.scalatra.swagger._
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+import scala.util.Try
 
 trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
 

@@ -7,8 +7,46 @@ import akka.event.Logging
 import akka.pattern.pipe
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedException, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
 
 import scala.concurrent.{Future, ExecutionContext}
+
+object Valintatila extends Enumeration {
+  type Valintatila = Value
+  val hyväksytty = Value("HYVAKSYTTY")
+  val harkinnanvaraisesti_hyväksytty = Value("HARKINNANVARAISESTI_HYVAKSYTTY")
+  val varasijalta_hyväksytty = Value("VARASIJALTA_HYVAKSYTTY")
+  val varalla = Value("VARALLA")
+  val peruutettu = Value("PERUUTETTU")
+  val perunut = Value("PERUNUT")
+  val hylätty = Value("HYLATTY")
+  val peruuntunut = Value("PERUUNTUNUT")
+  val kesken = Value("KESKEN")
+}
+
+object Vastaanottotila extends Enumeration {
+  type Vastaanottotila = Value
+  val kesken = Value("KESKEN")
+  val vastaanottanut = Value("VASTAANOTTANUT")
+  val ei_vastaanotetu_määräaikana = Value("EI_VASTAANOTETTU_MAARA_AIKANA")
+  val perunut = Value("PERUNUT")
+  val peruutettu = Value("PERUUTETTU")
+  val ehdollisesti_vastaanottanut = Value("EHDOLLISESTI_VASTAANOTTANUT")
+}
+
+object Ilmoittautumistila extends Enumeration {
+  type Ilmoittautumistila = Value
+  val ei_tehty = Value("EI_TEHTY") // Ei tehty
+  val läsnä_koko_lukuvuosi = Value("LASNA_KOKO_LUKUVUOSI") // Läsnä (koko lukuvuosi)
+  val poissa_koko_lukuvuosi = Value("POISSA_KOKO_LUKUVUOSI") // Poissa (koko lukuvuosi)
+  val ei_ilmoittautunut = Value("EI_ILMOITTAUTUNUT") // Ei ilmoittautunut
+  val läsnä_syksy = Value("LASNA_SYKSY") // Läsnä syksy, poissa kevät
+  val poissa_syksy = Value ("POISSA_SYKSY") // Poissa syksy, läsnä kevät
+  val läsnä = Value("LASNA") // Läsnä, keväällä alkava koulutus
+  val poissa = Value("POISSA") // Poissa, keväällä alkava koulutus
+}
 
 case class ValintaTulosQuery(hakuOid: String,
                              hakemusOid: String,
@@ -16,9 +54,9 @@ case class ValintaTulosQuery(hakuOid: String,
 
 case class ValintaTulosHakutoive(hakukohdeOid: String,
                                  tarjoajaOid: String,
-                                 valintatila: String,
-                                 vastaanottotila: String,
-                                 ilmoittautumistila: String,
+                                 valintatila: Valintatila,
+                                 vastaanottotila: Vastaanottotila,
+                                 ilmoittautumistila: Ilmoittautumistila,
                                  vastaanotettavuustila: String,
                                  julkaistavissa: Boolean)
 

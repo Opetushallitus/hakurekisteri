@@ -43,9 +43,10 @@ sealed abstract class Hakutoive {
 
 
 sealed trait Lasnaolo
-
 case class Lasna(kausi: Kausi) extends Lasnaolo
 case class Poissa(kausi: Kausi) extends Lasnaolo
+case class PoissaEiKulutaOpintoaikaa(kausi: Kausi) extends Lasnaolo
+case class Puuttuu(kausi: Kausi) extends Lasnaolo
 
 sealed trait Kausi
 case class Kevat(vuosi:Int) extends Kausi
@@ -290,8 +291,6 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
           yield Hakutoive(ht, hakemus(hakemusnumero, ht.hakukohde.oid), valinta(hakemusnumero, ht.hakukohde.oid))))
   }
 
-  import scala.concurrent.duration._
-
   def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.fold(
     hakijat.groupBy(_.hakemus.hakuOid).
       map { case (hakuOid, hakijas) => sijoittelupalvelu.?(SijoitteluQuery(hakuOid)).mapTo[SijoitteluTulos].map(matchSijoitteluAndHakemus(hakijas))}
@@ -310,7 +309,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     case Hakuehto.Vastaanottaneet => getHakijat(q).map(_.map(hakijaWithVastaanotettu)).map((hakijat) => XMLHakijat(hakijat.filter(_.hakemus.hakutoiveet.size > 0)))
     case Hakuehto.Hylatyt => for (hakijat <- getHakijat(q)) yield {
         val hylatyt: Set[XMLHakija] =  hakijat.map(hakijaWithValittu).filter(_.hakemus.hakutoiveet == 0).toSet
-        XMLHakijat(hakijat.filter(hylatyt contains _))
+        XMLHakijat(hakijat.filter(hylatyt.contains))
       }
     case _ => Future.successful(XMLHakijat(Seq()))
   }

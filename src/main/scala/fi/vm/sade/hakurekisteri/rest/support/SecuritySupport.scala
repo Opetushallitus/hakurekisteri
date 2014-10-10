@@ -2,6 +2,8 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import javax.servlet.http.HttpServletRequest
 import java.security.Principal
+import fi.vm.sade.hakurekisteri.integration.virta.Virta
+import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 import org.springframework.security.core.{GrantedAuthority, Authentication}
 
 sealed trait Role
@@ -26,7 +28,9 @@ object Roles {
         case x if resources.contains(x)  => (org: String) => Set(org)
       },
       "KKHAKUVIRKAILIJA" -> {
-        case "Arvosana" | "Suoritus" =>  (_) => Set("1.2.246.562.10.43628088406")
+        case "Arvosana" =>  (_) => Set(YTLXml.YTL)
+        case "Suoritus" => (_) => Set(YTLXml.YTL, Virta.CSC)
+        case "Opiskeluoikeus" => (_) => Set(Virta.CSC)
       }
 
     )
