@@ -108,7 +108,7 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
         case NoHetuException(oid, message) =>
           logger.info(s"trying to resolve ensikertalaisuus for $henkiloOid, no hetu found")
           None
-        case t: PreconditionFailedException =>
+        case t: VirtaConnectionErrorException =>
           logger.warn(s"could not resolve ensikertailaisuus for $henkiloOid: $t")
           None
       }
