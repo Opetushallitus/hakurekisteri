@@ -5,21 +5,21 @@ import akka.actor.{Actor, ActorRef, Props}
 import akka.event.Logging
 import akka.pattern.pipe
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.integration.FutureCache
+import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{Koulutuskoodi, GetKomoQuery, Komo, KomoResponse}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaData, VirtaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
 import fi.vm.sade.hakurekisteri.rest.support.Query
-import fi.vm.sade.hakurekisteri.suoritus.{VapaamuotoinenSuoritus, VirallinenSuoritus, Suoritus, SuoritusQuery}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VapaamuotoinenSuoritus, VirallinenSuoritus}
 import org.joda.time.{DateTime, LocalDate}
 
-import scala.concurrent.{Promise, Future, ExecutionContext}
-import scala.concurrent.duration._
-import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
-
-import scala.util.{Failure, Success, Try}
-import scala.compat.Platform
 import scala.collection.immutable.Iterable
+import scala.compat.Platform
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.util.{Failure, Success, Try}
 
 case class EnsikertalainenQuery(henkiloOid: String, hetu: Option[String]= None)
 
@@ -27,15 +27,24 @@ object QueryCount
 
 case class QueriesRunning(count: Map[String, Int], timestamp: Long = Platform.currentTime)
 
+case class CacheResult(q: EnsikertalainenQuery, f: Future[Ensikertalainen])
+
 class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaActor: ActorRef, hakemukset : ActorRef)(implicit val ec: ExecutionContext) extends Actor {
   val logger = Logging(context.system, this)
   val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
-  implicit val defaultTimeout: Timeout = 15.seconds
+  implicit val defaultTimeout: Timeout = 30.seconds
+  val cache = new FutureCache[EnsikertalainenQuery, Ensikertalainen](24.hours.toMillis)
 
   override def receive: Receive = {
-    case q:EnsikertalainenQuery =>
-      logger.debug(s"EnsikertalainenQuery(${q.henkiloOid}) with ${q.hetu.map("hetu: " + _).getOrElse("no hetu")}")
-      context.actorOf(Props(new EnsikertalaisuusCheck())).forward(q)
+    case q: EnsikertalainenQuery =>
+      if (cache.contains(q)) cache.get(q) pipeTo sender
+      else {
+        logger.debug(s"EnsikertalainenQuery(${q.henkiloOid}) with ${q.hetu.map("hetu: " + _).getOrElse("no hetu")}")
+        context.actorOf(Props(new EnsikertalaisuusCheck())).forward(q)
+      }
+
+    case CacheResult(q, f) => cache + (q, f)
+
     case QueryCount =>
       import akka.pattern.ask
       implicit val ec = context.dispatcher
@@ -61,7 +70,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     var oid: Option[String] = None
     var hetu: Option[String] = None
 
-    val resolver = Promise[Ensikertalainen]
+    val resolver = Promise[Ensikertalainen]()
     val result: Future[Ensikertalainen] = resolver.future
 
     var virtaQuerySent = false
@@ -91,6 +100,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         logger.debug(s"starting query for requestor: $sender with oid $henkiloOid and ${henkiloHetu.map("hetu: " + _).getOrElse("no hetu")}")
         result pipeTo sender onComplete { res =>
           logger.debug(s"resolved with $res")
+          if (res.isSuccess) context.parent ! CacheResult(EnsikertalainenQuery(henkiloOid, henkiloHetu), result)
           context.stop(self)
         }
         requestSuoritukset(henkiloOid)
@@ -106,7 +116,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
       case OpiskeluoikeusResponse(oo) =>
         logger.debug(s"find opiskeluoikeudet $oo")
         opiskeluOikeudet = Some(oo.filter(_.aika.alku.isAfter(kesa2014)))
-        if (!opiskeluOikeudet.getOrElse(Seq()).isEmpty) resolveQuery(ensikertalainen = false)
+        if (opiskeluOikeudet.getOrElse(Seq()).nonEmpty) resolveQuery(ensikertalainen = false)
         else if (foundAllKomos) {
           logger.debug("found all komos for opiskeluoikeudet, fetching hetu")
           fetchHetu()
@@ -122,16 +132,16 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
             if isKkTutkinto(suoritus)
           ) yield suoritus
           logger.debug(s"kktutkinnot: ${kkTutkinnot.toList}")
-          if (!kkTutkinnot.isEmpty) resolveQuery(ensikertalainen = false)
+          if (kkTutkinnot.nonEmpty) resolveQuery(ensikertalainen = false)
           else if (opiskeluOikeudet.isDefined) {
             logger.debug("fetching hetus for suoritukset")
             fetchHetu()
           }
         }
 
-      case HenkiloResponse(_, Some(hetu)) =>
-        logger.debug(s"fetching virta with hetu $hetu")
-        fetchVirta(hetu)
+      case HenkiloResponse(_, Some(h)) =>
+        logger.debug(s"fetching virta with hetu $h")
+        fetchVirta(h)
 
       case HenkiloResponse(_, None) =>
         logger.error(s"henkilo response failed, no hetu for oid $oid")
@@ -163,8 +173,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     }
 
     def fetchHetu() = (oid, hetu) match {
-      case (_, Some(hetu)) => fetchVirta(hetu)
-      case (Some(oid), None) => henkiloActor ! oid
+      case (_, Some(h)) => fetchVirta(h)
+      case (Some(o), None) => henkiloActor ! o
       case (None, None) => failQuery(NoHetuException(None, "No oid or hetu"))
     }
 
