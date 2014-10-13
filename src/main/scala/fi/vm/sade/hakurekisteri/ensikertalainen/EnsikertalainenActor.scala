@@ -33,7 +33,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   val logger = Logging(context.system, this)
   val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
   implicit val defaultTimeout: Timeout = 30.seconds
-  val cache = new FutureCache[EnsikertalainenQuery, Ensikertalainen](24.hours.toMillis)
+  private val cache = new FutureCache[EnsikertalainenQuery, Ensikertalainen](24.hours.toMillis)
 
   override def receive: Receive = {
     case q: EnsikertalainenQuery =>

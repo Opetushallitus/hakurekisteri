@@ -8,7 +8,7 @@ case class Cacheable[T](inserted: Long = Platform.currentTime, f: Future[T])
 
 class FutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.toMillis) {
 
-  var cache: Map[K, Cacheable[T]] = Map()
+  private var cache: Map[K, Cacheable[T]] = Map()
 
   def contains(key: K): Boolean = cache.contains(key) && cache(key).inserted + expirationDurationMillis > Platform.currentTime
 
