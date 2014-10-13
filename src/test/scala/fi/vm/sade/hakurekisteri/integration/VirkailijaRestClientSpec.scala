@@ -56,7 +56,7 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers {
   }
 
   it should "attach CasSecurityTicket request header into the remote request" in {
-    val client = new VirkailijaRestClient(ServiceConfig(serviceAccessUrl = Some("http://localhost/cas"),
+    val client = new VirkailijaRestClient(ServiceConfig(casUrl = Some("http://localhost/cas"),
                                                         serviceUrl = "http://localhost/test",
                                                         user = Some("user"),
                                                         password = Some("pw")))
@@ -66,7 +66,7 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers {
   }
 
   it should "use JSESSIONID on subsequent requests" in {
-    val client = new VirkailijaRestClient(ServiceConfig(serviceAccessUrl = Some("http://localhost/service-access"),
+    val client = new VirkailijaRestClient(ServiceConfig(casUrl = Some("http://localhost/service-access"),
       serviceUrl = "http://localhost/test",
       user = Some("user"),
       password = Some("pw")), Some(jSessionIdActor))

@@ -21,7 +21,7 @@ import scala.util.Try
 
 case class PreconditionFailedException(message: String, responseCode: HttpResponseCode) extends Exception(message)
 
-case class ServiceConfig(serviceAccessUrl: Option[String] = None,
+case class ServiceConfig(casUrl: Option[String] = None,
                          serviceUrl: String,
                          user: Option[String] = None,
                          password: Option[String] = None)
@@ -30,13 +30,13 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionId: Option[ActorRef] =
 
   implicit val defaultTimeout: Timeout = 60.seconds
 
-  val serviceAccessUrl: Option[String] = config.serviceAccessUrl
+  val casUrl: Option[String] = config.casUrl
   val serviceUrl: String = config.serviceUrl
   val user: Option[String] = config.user
   val password: Option[String] = config.password
 
   val logger = LoggerFactory.getLogger(getClass)
-  val casClient = new CasClient(serviceAccessUrl, serviceUrl, user, password)
+  val casClient = new CasClient(casUrl, serviceUrl, user, password)
 
   def logConnectionFailure[T](f: Future[T], url: URL) = f.onFailure {
     case t: InterruptedIOException => logger.warn(s"connection error calling url [$url]: $t")

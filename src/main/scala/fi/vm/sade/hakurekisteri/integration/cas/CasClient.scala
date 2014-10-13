@@ -35,7 +35,7 @@ class CasClient(casUrl: Option[String] = None,
     })
 
   def getProxyTicket: Future[String] = {
-    if (casUrl.isEmpty || user.isEmpty || password.isEmpty) throw new IllegalArgumentException("serviceAccessUrl, user or password is not defined")
+    if (casUrl.isEmpty || user.isEmpty || password.isEmpty) throw new IllegalArgumentException("casUrl, user or password is not defined")
 
     val retryCount = new AtomicInteger(1)
     tryProxyTicket(retryCount)

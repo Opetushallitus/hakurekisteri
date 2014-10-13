@@ -38,7 +38,7 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
 
   val oppijatConfig = ServiceConfig(
     serviceUrl = "https://testi.virkailija.opintopolku.fi/suoritusrekisteri",
-    serviceAccessUrl = Some("https://testi.virkailija.opintopolku.fi/service-access"),
+    casUrl = Some("https://testi.virkailija.opintopolku.fi/service-access"),
     user = Some("robotti"),
     password = Some("Testaaja!"))
   val httpClient = TestClient.getClient("oppija", 2, 4)
