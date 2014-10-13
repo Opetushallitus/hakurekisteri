@@ -4,13 +4,18 @@ import java.io.InterruptedIOException
 import java.net.{URLEncoder, URL}
 import java.util.concurrent.atomic.AtomicInteger
 
+import com.stackmob.newman.response.HttpResponseCode
 import com.stackmob.newman.{HttpClient, ApacheHttpClient}
 import com.stackmob.newman.dsl._
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class LocationHeaderNotFoundException(m: String) extends Exception(m)
+sealed class CasException(m: String) extends Exception(m)
+case class InvalidServiceTicketException(m: String) extends CasException(s"service ticket is not valid: $m")
+case class STWasNotCreatedException(m: String) extends CasException(m)
+case class TGTWasNotCreatedException(m: String) extends CasException(m)
+case class LocationHeaderNotFoundException(m: String) extends CasException(m)
 
 class CasClient(casUrl: Option[String] = None,
                 serviceUrl: String,
@@ -24,14 +29,14 @@ class CasClient(casUrl: Option[String] = None,
     addHeaders("Content-Type" -> "application/x-www-form-urlencoded").
     setBodyString(s"username=${URLEncoder.encode(user.get, "UTF8")}&password=${URLEncoder.encode(password.get, "UTF8")}").
     apply.map((response) => {
-      response.headers match {
+      if (response.code == HttpResponseCode.Created) response.headers match {
         case Some(headers) =>
-          headers.list.find(_._1.toLowerCase == "location") match {
+          headers.list.find(_._1 == "Location") match {
             case Some(locationHeader) => locationHeader._2
             case None => throw LocationHeaderNotFoundException("location header not found")
           }
         case None => throw LocationHeaderNotFoundException("location header not found")
-      }
+      } else throw TGTWasNotCreatedException(s"got non ok response code from cas: ${response.code}")
     })
 
   def getProxyTicket: Future[String] = {
@@ -46,9 +51,11 @@ class CasClient(casUrl: Option[String] = None,
       POST(new URL(tgtUrl)).
         addHeaders("Content-Type" -> "application/x-www-form-urlencoded").
         setBodyString(s"service=${URLEncoder.encode(serviceUrl, "UTF-8")}").apply.map(stResponse => {
-          val st = stResponse.bodyString.trim
-          if (TicketValidator.isValidSt(st)) st
-          else throw InvalidServiceTicketException(st)
+          if (stResponse.code == HttpResponseCode.Ok) {
+            val st = stResponse.bodyString.trim
+            if (TicketValidator.isValidSt(st)) st
+            else throw InvalidServiceTicketException(st)
+          } else throw STWasNotCreatedException(s"got non ok response from cas: ${stResponse.code}")
         })
     }).recoverWith {
       case t: InterruptedIOException =>

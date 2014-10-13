@@ -99,7 +99,7 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers {
     override def head(url: URL, headers: Headers): HeadRequest = ???
     override def post(url: URL, headers: Headers, body: RawBody): PostRequest = PostRequest(url, headers, body) {
       url.toString match {
-        case s if s.endsWith("/v1/tickets") => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List("Location" -> "http://localhost/cas/v1/tickets/TGT-123")), RawBody("")))
+        case s if s.endsWith("/v1/tickets") => Future.successful(HttpResponse(HttpResponseCode.Created, Headers(List("Location" -> "http://localhost/cas/v1/tickets/TGT-123")), RawBody("")))
         case s if s.endsWith("/v1/tickets/TGT-123") => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody("ST-123")))
       }
     }
