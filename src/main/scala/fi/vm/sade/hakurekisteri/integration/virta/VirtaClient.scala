@@ -15,6 +15,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 import scala.xml.{Elem, Node, NodeSeq, XML}
 
+case class VirtaValidationError(m: String) extends Exception(m)
+
 class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot",
                                                     jarjestelma = "",
                                                     tunnus = "",
@@ -45,20 +47,47 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     tryPost(config.serviceUrl, requestEnvelope, oppijanumero, hetu, retryCount)
   }
 
+  def parseFault(response: String): Unit = {
+    Try(XML.loadString(response)) match {
+      case Success(xml) =>
+        val fault: NodeSeq = xml \ "Body" \ "Fault"
+        if (fault.nonEmpty) {
+          val faultstring = fault \ "faultstring"
+          val faultdetail = fault \ "detail" \ "ValidationError"
+          if (faultstring.text.toLowerCase == "validation error") {
+            logger.warn(s"validation error: ${faultdetail.text}")
+            throw VirtaValidationError(s"validation error: ${faultdetail.text}")
+          }
+        }
+      case _ =>
+    }
+  }
+
   def tryPost(url: String, requestEnvelope: String, oppijanumero: String, hetu: Option[String], retryCount: AtomicInteger): Future[Option[VirtaResult]] = {
     POST(new URL(url)).setBodyString(requestEnvelope).apply.map((response) => {
       logger.debug(s"got response from url [${config.serviceUrl}], response: $response") //, body: ${response.bodyString}")
       if (response.code == HttpResponseCode.Ok) {
         val responseEnvelope: Elem = XML.loadString(response.bodyString)
+
         val opiskeluoikeudet = getOpiskeluoikeudet(responseEnvelope)
         val tutkinnot = getTutkinnot(responseEnvelope)
+
         (opiskeluoikeudet, tutkinnot) match {
-          case (Seq(), Seq()) => logger.debug(s"empty result for oppijanumero: $oppijanumero, hetu $hetu"); None
-          case _ => Some(VirtaResult(opiskeluoikeudet = opiskeluoikeudet, tutkinnot = tutkinnot))
+          case (Seq(), Seq()) =>
+            logger.debug(s"empty result for oppijanumero: $oppijanumero, hetu $hetu")
+            None
+
+          case _ =>
+            Some(VirtaResult(opiskeluoikeudet = opiskeluoikeudet, tutkinnot = tutkinnot))
+
         }
       } else {
-        logger.error(s"got non-ok response from virta: ${response.code}, response: ${response.bodyString}")
-        throw VirtaConnectionErrorException(s"got non-ok response from virta: ${response.code}, response: ${response.bodyString}")
+        val bodyString = response.bodyString
+
+        parseFault(bodyString)
+
+        logger.error(s"got non-ok response from virta: ${response.code}, response: $bodyString")
+        throw VirtaConnectionErrorException(s"got non-ok response from virta: ${response.code}, response: $bodyString")
       }
     }).recoverWith {
       case t: InterruptedIOException =>
