@@ -21,9 +21,10 @@ import org.scalatra.swagger.Swagger
 
 import scala.concurrent.{ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
+import org.slf4j.Logger
 
 
-class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikertalaisuus: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack  with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
+class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, val ensikertalaisuus: ActorRef)(implicit val system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with OppijaFetcher with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
 
@@ -48,12 +49,12 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
     val q = HakemusQuery(params)
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
-      val is = for (
-        hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
-        oppijat <- fetchOppijatFor(hakemukset)
-      ) yield oppijat
+      val is = fetchOppijat(q)
     }
   }
+
+
+
 
   get("/:oid") {
     implicit val user = currentUser match {
@@ -75,6 +76,31 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
     case t: VirtaConnectionErrorException => (id) => InternalServerError(IncidentReport(id, "virta error"))
   }
 
+
+
+
+}
+
+
+trait OppijaFetcher {
+
+  val rekisterit: Registers
+  val hakemusRekisteri: ActorRef
+  val ensikertalaisuus: ActorRef
+  val logger: Logger
+
+  protected implicit def executor: ExecutionContext
+  implicit val defaultTimeout: Timeout
+
+
+
+  def fetchOppijat(q: HakemusQuery)(implicit user: User): Future[Seq[Oppija]] = {
+    for (
+      hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
+      oppijat <- fetchOppijatFor(hakemukset)
+    ) yield oppijat
+  }
+
   def fetchOppijatFor(hakemukset: Seq[FullHakemus])(implicit user: User): Future[Seq[Oppija]] =
     Future.sequence(for (
       hakemus <- hakemukset
@@ -86,8 +112,8 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
     for (
       suoritus <- suoritukset
     ) yield for (
-        arvosanat <- (rekisterit.arvosanaRekisteri ? AuthorizedQuery(ArvosanaQuery(suoritus = Some(suoritus.id)), user)).mapTo[Seq[Arvosana]]
-      ) yield Todistus(suoritus, arvosanat))
+      arvosanat <- (rekisterit.arvosanaRekisteri ? AuthorizedQuery(ArvosanaQuery(suoritus = Some(suoritus.id)), user)).mapTo[Seq[Arvosana]]
+    ) yield Todistus(suoritus, arvosanat))
 
   def fetchOppijaData(henkiloOid: String, hetu: Option[String])(implicit user: User): Future[Oppija] = {
     for (
@@ -110,13 +136,13 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
     (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, hetu)).mapTo[Ensikertalainen].
       map(Some(_)).
       recover {
-        case NoHetuException(oid, message) =>
-          logger.info(s"trying to resolve ensikertalaisuus for $henkiloOid, no hetu found")
-          None
-        case t: VirtaValidationError =>
-          logger.warn(s"could not resolve ensikertalaisuus for $henkiloOid: $t")
-          None
-      }
+      case NoHetuException(oid, message) =>
+        logger.info(s"trying to resolve ensikertalaisuus for $henkiloOid, no hetu found")
+        None
+      case t: VirtaValidationError =>
+        logger.warn(s"could not resolve ensikertalaisuus for $henkiloOid: $t")
+        None
+    }
   }
 
   def fetchOpiskeluoikeudet(henkiloOid: String)(implicit user: User): Future[Seq[Opiskeluoikeus]] = {
@@ -130,6 +156,5 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
   def fetchSuoritukset(henkiloOid: String)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] = {
     (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(henkilo = Some(henkiloOid)), user)).mapTo[Seq[Suoritus with Identified[UUID]]]
   }
-
 
 }
