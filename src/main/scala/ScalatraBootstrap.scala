@@ -207,6 +207,7 @@ class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
   override val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(journals.opiskelijaJournal)), "opiskelijat")
   override val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusActor(journals.opiskeluoikeusJournal)), "opiskeluoikeudet")
   override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(journals.arvosanaJournal)), "arvosanat")
+  override val eraRekisteri: ActorRef = system.deadLetters
 }
 
 class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Registers, system: ActorSystem) extends Registers {
@@ -246,6 +247,7 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Regi
   override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, unauthorized.arvosanaRekisteri,
     resolve
     )), "arvosana-authorizer")
+  override val eraRekisteri: ActorRef = system.deadLetters
 }
 
 object AuthorizedRegisters {
@@ -278,6 +280,8 @@ class AuditedRegisters(amqUrl: String, amqQueue: String, authorizedRegisters: Re
   def getBroadcastForLogger[A <: Resource[I, A]: TypeTag: ClassTag, I: TypeTag: ClassTag](rekisteri: ActorRef) = {
     system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog[A, I](typeOf[A].typeSymbol.name.toString)).withDispatcher("akka.hakurekisteri.audit-dispatcher"), typeOf[A].typeSymbol.name.toString.toLowerCase+"-audit") ))))
   }
+
+  override val eraRekisteri: ActorRef = system.deadLetters
 }
 
 trait Integrations {
