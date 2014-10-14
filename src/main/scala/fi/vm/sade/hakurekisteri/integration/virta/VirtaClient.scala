@@ -11,6 +11,7 @@ import fi.vm.sade.generic.common.HetuUtils
 import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
 
+import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 import scala.xml.{Elem, Node, NodeSeq, XML}
@@ -40,11 +41,8 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   </Hakuehdot>
 </OpiskelijanKaikkiTiedotRequest>
 
-    val requestEnvelope = wrapSoapEnvelope(operation)
-    logger.debug(s"POST url: ${config.serviceUrl}, body: $requestEnvelope")
-
     val retryCount = new AtomicInteger(1)
-    tryPost(config.serviceUrl, requestEnvelope, oppijanumero, hetu, retryCount)
+    tryPost(config.serviceUrl, wrapSoapEnvelope(operation), oppijanumero, hetu, retryCount)
   }
 
   def parseFault(response: String): Unit = {
@@ -64,8 +62,9 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   }
 
   def tryPost(url: String, requestEnvelope: String, oppijanumero: String, hetu: Option[String], retryCount: AtomicInteger): Future[Option[VirtaResult]] = {
+    val start = Platform.currentTime
     POST(new URL(url)).setBodyString(requestEnvelope).apply.map((response) => {
-      logger.debug(s"got response from url [${config.serviceUrl}], response: $response") //, body: ${response.bodyString}")
+      logger.info(s"virta query for $oppijanumero took ${Platform.currentTime - start} ms, response code ${response.code}")
       if (response.code == HttpResponseCode.Ok) {
         val responseEnvelope: Elem = XML.loadString(response.bodyString)
 
@@ -74,7 +73,6 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
 
         (opiskeluoikeudet, tutkinnot) match {
           case (Seq(), Seq()) =>
-            logger.debug(s"empty result for oppijanumero: $oppijanumero, hetu $hetu")
             None
 
           case _ =>
@@ -93,9 +91,9 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
       case t: InterruptedIOException =>
         if (retryCount.getAndIncrement <= maxRetries) {
           logger.warn(s"got $t, retrying virta query for $oppijanumero: retryCount ${retryCount.get}")
+
           tryPost(url, requestEnvelope, oppijanumero, hetu, retryCount)
-        }
-        else Future.failed(t)
+        } else Future.failed(t)
     }
   }
 

@@ -8,7 +8,6 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import org.joda.time.LocalDate
 
-import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -26,15 +25,11 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef) extends 
     case VirtaQuery(o, h) => convertVirtaResult(getOpiskelijanTiedot(o, h))(o) pipeTo sender
   }
 
-  def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String]): Future[Option[VirtaResult]] = {
-    val start = Platform.currentTime
-    val f = virtaClient.getOpiskelijanTiedot(oppijanumero = oppijanumero, hetu = hetu)
-    f.onComplete(res => log.info(s"query for $oppijanumero from virta took ${Platform.currentTime - start} ms"))
-    f
-  }
+  def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String]): Future[Option[VirtaResult]] =
+    virtaClient.getOpiskelijanTiedot(oppijanumero = oppijanumero, hetu = hetu)
 
-  def getKoulutusUri(koulutuskoodi: Option[String]): String = s"koulutus_${resolveKoulutusKoodiOrUnknown(koulutuskoodi)}"
-
+  def getKoulutusUri(koulutuskoodi: Option[String]): String =
+    s"koulutus_${resolveKoulutusKoodiOrUnknown(koulutuskoodi)}"
 
   def resolveKoulutusKoodiOrUnknown(koulutuskoodi: Option[String]): String = {
     val tuntematon = "999999"
@@ -51,7 +46,6 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef) extends 
           komo = getKoulutusUri(o.koulutuskoodit.headOption),
           myontaja = oppilaitosOid,
           source = Virta.CSC)
-
 
   def tutkinto(oppijanumero: String)(t: VirtaTutkinto): Future[Suoritus] =
     for (
