@@ -50,6 +50,7 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
     val jsonString = scala.io.Source.fromFile("src/test/resources/test-hakukohteet.json").getLines().mkString
     val hakukohteet = parse(jsonString).extract[Hakukohteet]
     val hakukohdeOids = hakukohteet.results.map(_.oid)
+    println(s"querying for ${hakukohdeOids.size} hakukohdes")
 
     val count = new AtomicInteger(1)
     val batchStart = Platform.currentTime
@@ -64,7 +65,7 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
         }
         println(s"${count.getAndIncrement} (${(end - batchStart) / 1000} seconds): took ${end - start} ms, got $oppijas oppijas")
       })
-      val tulos = Await.result(res, Duration(500, TimeUnit.SECONDS))
+      val tulos = Await.result(res, Duration(120, TimeUnit.SECONDS))
     })
   }
 }
