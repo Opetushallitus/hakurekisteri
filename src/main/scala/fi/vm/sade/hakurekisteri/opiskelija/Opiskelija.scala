@@ -10,8 +10,4 @@ case class Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String,
 
 }
 
-class IdentifiedOpiskelija(o: Opiskelija, identity: UUID) extends Opiskelija(o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva, o.loppuPaiva, o.source) with Identified[UUID]{
-val id: UUID = identity
-}
-
-
+class IdentifiedOpiskelija(o: Opiskelija, val id: UUID) extends Opiskelija(o.oppilaitosOid, o.luokkataso, o.luokka, o.henkiloOid, o.alkuPaiva, o.loppuPaiva, o.source) with Identified[UUID]
