@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery, 
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
-import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport, Registers, SpringSecuritySupport}
+import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
 import org.scalatra._
@@ -41,7 +41,10 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
 
 
   get("/") {
-    implicit val user = currentUser.get
+    implicit val user = currentUser match {
+      case Some(u) => u
+      case None => throw UserNotAuthorized(s"anonymous access not allowed")
+    }
     val q = HakemusQuery(params)
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
@@ -53,7 +56,10 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
   }
 
   get("/:oid") {
-    implicit val user = currentUser.get
+    implicit val user = currentUser match {
+      case Some(u) => u
+      case None => throw UserNotAuthorized(s"anonymous access not allowed")
+    }
     val q = HenkiloHakijaQuery(params("oid"))
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
