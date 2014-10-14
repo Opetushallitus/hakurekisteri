@@ -11,7 +11,6 @@ import scala.concurrent.Future
 trait ArvosanaRepository extends JournaledRepository[Arvosana, UUID] {
 
   var suoritusIndex: Map[UUID, Seq[Arvosana with Identified[UUID]]] = Option(suoritusIndex).getOrElse(Map())
-  //var suoritusIndexSnapShot: Map[UUID, Seq[Arvosana with Identified]] = Option(suoritusIndexSnapShot).getOrElse(Map())
 
   def addNew(arvosana: Arvosana with Identified[UUID]) = {
     suoritusIndex = Option(suoritusIndex).getOrElse(Map())
