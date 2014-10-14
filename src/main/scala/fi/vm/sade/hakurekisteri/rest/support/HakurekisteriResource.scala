@@ -20,8 +20,6 @@ import scala.util.Try
 
 trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
 
-
-
   before() {
     contentType = formats("json")
   }
@@ -83,13 +81,14 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   }
 }
 
+case class UserNotAuthorized(message: String) extends Exception(message)
+
 abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]](actor: ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with JacksonJsonParsing with CorsSupport {
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
-  case class UserNotAuthorized(message: String) extends Exception(message)
   case class MalformedResourceException(message: String) extends Exception(message)
 
   def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName

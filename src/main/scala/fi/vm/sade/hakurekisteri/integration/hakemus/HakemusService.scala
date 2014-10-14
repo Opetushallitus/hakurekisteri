@@ -10,13 +10,60 @@ import fi.vm.sade.hakurekisteri.healthcheck.{RefreshingResource, Hakemukset, Hea
 import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaQuery
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.hakurekisteri.storage.repository._
-import fi.vm.sade.hakurekisteri.storage.{InMemQueryingResourceService, Identified, ResourceActor, ResourceService}
+import fi.vm.sade.hakurekisteri.storage.{InMemQueryingResourceService, Identified, ResourceActor}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 
 trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
+
+  var hakukohdeIndex: Map[String, Seq[FullHakemus with Identified[String]]] = Option(hakukohdeIndex).getOrElse(Map())
+
+  override val emptyQuery: PartialFunction[Query[FullHakemus], Boolean] = {
+    case HakemusQuery(None, None, None, None) => true
+  }
+
+  def getKohteet(hakemus: FullHakemus with Identified[String]): Option[Set[String]] = {
+    for (
+      answers <- hakemus.answers;
+      toiveet <- answers.hakutoiveet
+    ) yield {toiveet.filter {
+      case (avain, arvo) if avain.endsWith("Koulutus-id") && !arvo.isEmpty => true
+      case _ => false
+    }.values.toSet}
+  }
+
+  def addNew(hakemus: FullHakemus with Identified[String]) = {
+    hakukohdeIndex = Option(hakukohdeIndex).getOrElse(Map())
+    for(
+      kohde <- getKohteet(hakemus).getOrElse(Set())
+    )  hakukohdeIndex = hakukohdeIndex  + (kohde -> (hakemus +: hakukohdeIndex.getOrElse(kohde, Seq())))
+  }
+
+  override def index(old: Option[FullHakemus with Identified[String]], current: Option[FullHakemus with Identified[String]]) {
+    def removeOld(hakemus: FullHakemus with Identified[String]) = {
+      hakukohdeIndex = Option(hakukohdeIndex).getOrElse(Map())
+
+      for (
+        kohde <- getKohteet(hakemus).getOrElse(Set())
+      ) hakukohdeIndex = hakukohdeIndex.get(kohde).
+        map(_.filter((a) => a != hakemus || a.id != hakemus.id)).
+        map((ns: Seq[FullHakemus with Identified[String]]) => hakukohdeIndex + (kohde -> ns)).getOrElse(hakukohdeIndex)
+    }
+
+    old.foreach(removeOld)
+    current.foreach(addNew)
+  }
+
+  override val optimize:PartialFunction[Query[FullHakemus], Future[Seq[FullHakemus with Identified[String]]]] = {
+    case HakemusQuery(_, None, _, Some(kohde)) =>
+      Future.successful(hakukohdeIndex.getOrElse(kohde, Seq()))
+    case HakemusQuery(haku, organisaatio, kohdekoodi, Some(kohde)) =>
+      val filtered = hakukohdeIndex.getOrElse(kohde, Seq())
+      executeQuery(filtered)(HakemusQuery(haku, organisaatio, kohdekoodi, Some(kohde)))
+  }
+
   def filterField[F](field: Option[F], fieldExctractor: (FullHakemus) => F)(hakemus:FullHakemus) = field match {
     case Some(acceptedValue) =>   acceptedValue == fieldExctractor(hakemus)
     case None => true
