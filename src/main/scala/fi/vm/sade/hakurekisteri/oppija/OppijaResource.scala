@@ -100,13 +100,15 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
 
   }
 
-
   def fetchEnsikertalaisuus(henkiloOid: String, hetu: Option[String]): Future[Option[Ensikertalainen]] = {
     (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, hetu)).mapTo[Ensikertalainen].
       map(Some(_)).
-      recover{
+      recover {
         case NoHetuException(oid, message) =>
           logger.info(s"trying to resolve ensikertalaisuus for $henkiloOid, no hetu found")
+          None
+        case t: VirtaConnectionErrorException =>
+          logger.warn(s"could not resolve ensikertalaisuus for $henkiloOid: $t")
           None
       }
   }

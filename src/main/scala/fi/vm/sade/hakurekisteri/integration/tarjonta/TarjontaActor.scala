@@ -49,8 +49,8 @@ case class KoulutusNotFoundException(message: String) extends TarjontaException(
 case class KomoNotFoundException(message: String) extends TarjontaException(message)
 
 class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: ExecutionContext) extends Actor {
-  val koulutusCache = new FutureCache[String, HakukohteenKoulutukset]()
-  val komoCache = new FutureCache[String, KomoResponse]()
+  private val koulutusCache = new FutureCache[String, HakukohteenKoulutukset]()
+  private val komoCache = new FutureCache[String, KomoResponse]()
   val maxRetries = 5
 
   override def receive: Receive = {

@@ -70,7 +70,7 @@ class ValintaTulosActor(restClient: VirkailijaRestClient)
 
   val log = Logging(context.system, this)
   val maxRetries = 5
-  val cache = new FutureCache[CacheKey, ValintaTulos]()
+  private val cache = new FutureCache[CacheKey, ValintaTulos]()
 
   override def receive: Receive = {
     case q: ValintaTulosQuery => getTulos(q) pipeTo sender

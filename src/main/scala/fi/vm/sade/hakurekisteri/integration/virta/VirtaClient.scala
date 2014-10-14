@@ -1,6 +1,8 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
+import java.io.InterruptedIOException
 import java.net.URL
+import java.util.concurrent.atomic.AtomicInteger
 
 import com.stackmob.newman.HttpClient
 import com.stackmob.newman.dsl._
@@ -19,6 +21,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
                                                     avain = "salaisuus"))
                  (implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) {
   val logger = LoggerFactory.getLogger(getClass)
+  val maxRetries = 3
 
   def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
     if (hetu.isDefined && !HetuUtils.isHetuValid(hetu.get)) throw new IllegalArgumentException("hetu is not valid")
@@ -38,7 +41,12 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     val requestEnvelope = wrapSoapEnvelope(operation)
     logger.debug(s"POST url: ${config.serviceUrl}, body: $requestEnvelope")
 
-    POST(new URL(config.serviceUrl)).setBodyString(requestEnvelope).apply.map((response) => {
+    val retryCount = new AtomicInteger(1)
+    tryPost(config.serviceUrl, requestEnvelope, oppijanumero, hetu, retryCount)
+  }
+
+  def tryPost(url: String, requestEnvelope: String, oppijanumero: String, hetu: Option[String], retryCount: AtomicInteger): Future[Option[VirtaResult]] = {
+    POST(new URL(url)).setBodyString(requestEnvelope).apply.map((response) => {
       logger.debug(s"got response from url [${config.serviceUrl}], response: $response") //, body: ${response.bodyString}")
       if (response.code == HttpResponseCode.Ok) {
         val responseEnvelope: Elem = XML.loadString(response.bodyString)
@@ -52,7 +60,14 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
         logger.error(s"got non-ok response from virta: ${response.code}, response: ${response.bodyString}")
         throw VirtaConnectionErrorException(s"got non-ok response from virta: ${response.code}, response: ${response.bodyString}")
       }
-    })
+    }).recoverWith {
+      case t: InterruptedIOException =>
+        if (retryCount.getAndIncrement <= maxRetries) {
+          logger.warn(s"got $t, retrying virta query for $oppijanumero: retryCount ${retryCount.get}")
+          tryPost(url, requestEnvelope, oppijanumero, hetu, retryCount)
+        }
+        else Future.failed(t)
+    }
   }
 
   def getOpiskeluoikeudet(response: NodeSeq): Seq[VirtaOpiskeluoikeus] = {

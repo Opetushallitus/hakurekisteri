@@ -20,6 +20,7 @@ object Config {
 
   // by default the service urls point to QA
   val hostQa = "testi.virkailija.opintopolku.fi"
+  val casUrlQa = s"https://$hostQa/cas"
   val organisaatioServiceUrlQa = s"https://$hostQa/organisaatio-service"
   val hakuappServiceUrlQa = s"https://$hostQa/haku-app"
   val koodistoServiceUrlQa = s"https://$hostQa/koodisto-service"
@@ -44,7 +45,7 @@ object Config {
   // props
   val serviceUser = Some(properties("suoritusrekisteri.app.username"))
   val servicePassword = Some(properties("suoritusrekisteri.app.password"))
-  val serviceAccessUrl = Some("https://" + properties.getOrElse("host.virkailija", hostQa) + "/service-access")
+  val casUrl = Some(properties.getOrElse("web.url.cas", casUrlQa))
   val sijoitteluServiceUrl = properties.getOrElse("cas.service.sijoittelu-service", sijoitteluServiceUrlQa)
   val tarjontaServiceUrl = properties.getOrElse("cas.service.tarjonta-service", tarjontaServiceUrlQa)
   val henkiloServiceUrl = properties.getOrElse("cas.service.authentication-service", henkiloServiceUrlQa)
@@ -61,10 +62,10 @@ object Config {
   val virtaAvain = properties.getOrElse("suoritusrekisteri.virta.avain", virtaAvainTest)
 
   val virtaConfig = VirtaConfig(virtaServiceUrl, virtaJarjestelma, virtaTunnus, virtaAvain)
-  val henkiloConfig = ServiceConfig(serviceAccessUrl, henkiloServiceUrl, serviceUser, servicePassword)
-  val sijoitteluConfig = ServiceConfig(serviceAccessUrl, sijoitteluServiceUrl, serviceUser, servicePassword)
+  val henkiloConfig = ServiceConfig(casUrl, henkiloServiceUrl, serviceUser, servicePassword)
+  val sijoitteluConfig = ServiceConfig(casUrl, sijoitteluServiceUrl, serviceUser, servicePassword)
   val parameterConfig = ServiceConfig(serviceUrl = parameterServiceUrl)
-  val hakemusConfig = HakemusConfig(ServiceConfig(serviceAccessUrl, hakuappServiceUrl, serviceUser, servicePassword), maxApplications)
+  val hakemusConfig = HakemusConfig(ServiceConfig(casUrl, hakuappServiceUrl, serviceUser, servicePassword), maxApplications)
   val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl)
   val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl)
   val organisaatioConfig = ServiceConfig(serviceUrl = organisaatioServiceUrl)

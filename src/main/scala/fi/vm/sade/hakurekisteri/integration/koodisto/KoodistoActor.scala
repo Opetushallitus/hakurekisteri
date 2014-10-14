@@ -26,9 +26,9 @@ case class GetKoodistoKoodiArvot(koodistoUri: String)
 class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: ExecutionContext) extends Actor {
   val log = Logging(context.system, this)
 
-  val koodiCache = new FutureCache[String, Option[Koodi]]()
-  val relaatioCache = new FutureCache[GetRinnasteinenKoodiArvoQuery, String]()
-  val koodiArvotCache = new FutureCache[String, KoodistoKoodiArvot]()
+  private val koodiCache = new FutureCache[String, Option[Koodi]]()
+  private val relaatioCache = new FutureCache[GetRinnasteinenKoodiArvoQuery, String]()
+  private val koodiArvotCache = new FutureCache[String, KoodistoKoodiArvot]()
   val maxRetries = 5
 
   override def receive: Receive = {
