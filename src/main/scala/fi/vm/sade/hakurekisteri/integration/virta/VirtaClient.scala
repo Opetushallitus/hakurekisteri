@@ -11,9 +11,12 @@ import fi.vm.sade.generic.common.HetuUtils
 import org.joda.time.format.DateTimeFormat
 import org.slf4j.LoggerFactory
 
+import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 import scala.xml.{Elem, Node, NodeSeq, XML}
+
+case class VirtaValidationError(m: String) extends Exception(m)
 
 class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot",
                                                     jarjestelma = "",
@@ -38,35 +41,59 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   </Hakuehdot>
 </OpiskelijanKaikkiTiedotRequest>
 
-    val requestEnvelope = wrapSoapEnvelope(operation)
-    logger.debug(s"POST url: ${config.serviceUrl}, body: $requestEnvelope")
-
     val retryCount = new AtomicInteger(1)
-    tryPost(config.serviceUrl, requestEnvelope, oppijanumero, hetu, retryCount)
+    tryPost(config.serviceUrl, wrapSoapEnvelope(operation), oppijanumero, hetu, retryCount)
+  }
+
+  def parseFault(response: String): Unit = {
+    Try(XML.loadString(response)) match {
+      case Success(xml) =>
+        val fault: NodeSeq = xml \ "Body" \ "Fault"
+        if (fault.nonEmpty) {
+          val faultstring = fault \ "faultstring"
+          val faultdetail = fault \ "detail" \ "ValidationError"
+          if (faultstring.text.toLowerCase == "validation error") {
+            logger.warn(s"validation error: ${faultdetail.text}")
+            throw VirtaValidationError(s"validation error: ${faultdetail.text}")
+          }
+        }
+      case _ =>
+    }
   }
 
   def tryPost(url: String, requestEnvelope: String, oppijanumero: String, hetu: Option[String], retryCount: AtomicInteger): Future[Option[VirtaResult]] = {
+    val start = Platform.currentTime
     POST(new URL(url)).setBodyString(requestEnvelope).apply.map((response) => {
-      logger.debug(s"got response from url [${config.serviceUrl}], response: $response") //, body: ${response.bodyString}")
+      logger.info(s"virta query for $oppijanumero took ${Platform.currentTime - start} ms, response code ${response.code}")
       if (response.code == HttpResponseCode.Ok) {
         val responseEnvelope: Elem = XML.loadString(response.bodyString)
+
         val opiskeluoikeudet = getOpiskeluoikeudet(responseEnvelope)
         val tutkinnot = getTutkinnot(responseEnvelope)
+
         (opiskeluoikeudet, tutkinnot) match {
-          case (Seq(), Seq()) => logger.debug(s"empty result for oppijanumero: $oppijanumero, hetu $hetu"); None
-          case _ => Some(VirtaResult(opiskeluoikeudet = opiskeluoikeudet, tutkinnot = tutkinnot))
+          case (Seq(), Seq()) =>
+            None
+
+          case _ =>
+            Some(VirtaResult(opiskeluoikeudet = opiskeluoikeudet, tutkinnot = tutkinnot))
+
         }
       } else {
-        logger.error(s"got non-ok response from virta: ${response.code}, response: ${response.bodyString}")
-        throw VirtaConnectionErrorException(s"got non-ok response from virta: ${response.code}, response: ${response.bodyString}")
+        val bodyString = response.bodyString
+
+        parseFault(bodyString)
+
+        logger.error(s"got non-ok response from virta: ${response.code}, response: $bodyString")
+        throw VirtaConnectionErrorException(s"got non-ok response from virta: ${response.code}, response: $bodyString")
       }
     }).recoverWith {
       case t: InterruptedIOException =>
         if (retryCount.getAndIncrement <= maxRetries) {
           logger.warn(s"got $t, retrying virta query for $oppijanumero: retryCount ${retryCount.get}")
+
           tryPost(url, requestEnvelope, oppijanumero, hetu, retryCount)
-        }
-        else Future.failed(t)
+        } else Future.failed(t)
     }
   }
 

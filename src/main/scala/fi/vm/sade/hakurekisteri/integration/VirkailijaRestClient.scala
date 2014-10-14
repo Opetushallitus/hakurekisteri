@@ -32,7 +32,7 @@ case class ServiceConfig(casUrl: Option[String] = None,
                          user: Option[String] = None,
                          password: Option[String] = None)
 
-class VirkailijaRestClient(config: ServiceConfig, jSessionId: Option[ActorRef] = None)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) extends HakurekisteriJsonSupport {
+class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[ActorRef] = None)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) extends HakurekisteriJsonSupport {
 
   implicit val defaultTimeout: Timeout = 60.seconds
 
@@ -60,16 +60,15 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionId: Option[ActorRef] =
     }
     def executeWithJSession(sessionId: String): Future[(HttpResponse, Option[String])] = {
       val cookie = s"${JSessionIdCookieParser.name}=$sessionId"
-      logger.debug(s"auth with cookie $cookie to $url")
       val f = GET(url).addHeaders("Cookie" -> cookie).apply.map((_, Some(cookie)))
       logConnectionFailure(f, url)
       f
     }
     def saveJSessionId(r: HttpResponse) {
-      if (jSessionId.isDefined) r.headers match {
+      if (jSessionIdStorage.isDefined) r.headers match {
         case Some(headerList) => headerList.list.find((t) => t._1 == "Set-Cookie") match {
           case Some((_, cookie)) if cookie.startsWith(JSessionIdCookieParser.name) =>
-            jSessionId.get ! SaveJSessionId(JSessionKey(serviceUrl), JSessionIdCookieParser.fromString(cookie))
+            jSessionIdStorage.get ! SaveJSessionId(JSessionKey(serviceUrl), JSessionIdCookieParser.fromString(cookie))
 
           case None => None
 
@@ -78,7 +77,7 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionId: Option[ActorRef] =
 
       }
     }
-    def getJSessionId: Future[Option[JSessionId]] = jSessionId match {
+    def getJSessionId: Future[Option[JSessionId]] = jSessionIdStorage match {
       case Some(actor) =>
         (actor ? JSessionKey(serviceUrl)).mapTo[Option[JSessionId]]
 

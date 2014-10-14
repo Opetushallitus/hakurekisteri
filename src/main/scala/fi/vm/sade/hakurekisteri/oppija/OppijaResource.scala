@@ -9,7 +9,7 @@ import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery, NoHetuException}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery, HenkiloHakijaQuery}
-import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaValidationError, VirtaConnectionErrorException}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -113,7 +113,7 @@ class OppijaResource(rekisterit: Registers, hakemusRekisteri: ActorRef, ensikert
         case NoHetuException(oid, message) =>
           logger.info(s"trying to resolve ensikertalaisuus for $henkiloOid, no hetu found")
           None
-        case t: VirtaConnectionErrorException =>
+        case t: VirtaValidationError =>
           logger.warn(s"could not resolve ensikertalaisuus for $henkiloOid: $t")
           None
       }

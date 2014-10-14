@@ -24,6 +24,7 @@ class MockHttpClient extends HttpClient {
       case s: String if s.contains("1.2.4") => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(scala.io.Source.fromFile("src/test/resources/test-empty-response.xml").mkString), new Date()))
       case s: String if s.contains("1.2.5") => Future.successful(HttpResponse(HttpResponseCode.InternalServerError, Headers(List()), RawBody("Infernal server error", Charset.forName("UTF-8")), new Date()))
       case s: String if s.contains("1.3.0") => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(scala.io.Source.fromFile("src/test/resources/test-multiple-students-response.xml").mkString), new Date()))
+      case s: String if s.contains("1.5.0") => Future.successful(HttpResponse(HttpResponseCode.InternalServerError, Headers(List()), RawBody(scala.io.Source.fromFile("src/test/resources/test-fault.xml").mkString), new Date()))
       case _ => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(scala.io.Source.fromFile("src/test/resources/test-response.xml").mkString), new Date()))
     }
   }
@@ -93,7 +94,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
     }}
   }
 
-  it should "throw VirtaConnectionErrorException if an connection error occurred" in {
+  it should "throw VirtaConnectionErrorException if an error occurred" in {
     val response = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.5")
 
     intercept[VirtaConnectionErrorException] {
@@ -101,7 +102,13 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
     }
   }
 
+  it should "throw VirtaValidationError if validation error was returned" in {
+    val response = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.5.0")
 
+    intercept[VirtaValidationError] {
+      waitFutureFailure(response)
+    }
+  }
 
   it should "throw IllegalArgumentException if provided hetu is not valid" in {
     intercept[IllegalArgumentException] {
