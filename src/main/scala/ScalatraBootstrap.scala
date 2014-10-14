@@ -306,57 +306,23 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        rekisterit: Registers,
                        system: ActorSystem) extends Integrations {
 
-  def getClient: HttpClient = getClient("default")
-  
-  val socketTimeout = 120000
-  val connectionTimeout = 10000
-
-  def createApacheHttpClient(maxConnections: Int): org.apache.http.client.HttpClient = {
-    val connManager: ClientConnectionManager = {
-      val cm = new PoolingClientConnectionManager()
-      cm.setDefaultMaxPerRoute(maxConnections)
-      cm.setMaxTotal(maxConnections)
-      cm
-    }
-
-    val client = new DefaultHttpClient(connManager)
-    val httpParams = client.getParams
-    HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeout)
-    HttpConnectionParams.setSoTimeout(httpParams, socketTimeout)
-    HttpConnectionParams.setStaleCheckingEnabled(httpParams, false)
-    HttpConnectionParams.setSoKeepalive(httpParams, false)
-    client.setReuseStrategy(new NoConnectionReuseStrategy())
-    client
-  }
-
-  def getClient(poolName: String = "default", threads: Int = 10, maxConnections: Int = 100): HttpClient = {
-    if (poolName == "default") new ApacheHttpClient(createApacheHttpClient(maxConnections))()
-    else {
-      val threadNumber = new AtomicInteger(1)
-      val pool = Executors.newFixedThreadPool(threads, new ThreadFactory() {
-        override def newThread(r: Runnable): Thread = {
-          new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
-        }
-      })
-      new ApacheHttpClient(createApacheHttpClient(maxConnections))(ExecutionContext.fromExecutorService(pool))
-    }
-  }
+  import HttpClientUtil._
 
   implicit val ec: ExecutionContext = system.dispatcher
 
   val jSessionIdActor = system.actorOf(Props(new JSessionIdActor))
 
-  val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig)(getClient, ec))), "tarjonta")
+  val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig)(createHttpClient, ec))), "tarjonta")
 
-  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(getClient, ec))), "organisaatio")
+  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(createHttpClient, ec))), "organisaatio")
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(getClient("virta", 50, 50), ec), organisaatiot)), "virta")
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(createHttpClient("virta", 50, 50), ec), organisaatiot)), "virta")
 
-  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig, Some(jSessionIdActor))(getClient, ec))), "henkilo")
+  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig, Some(jSessionIdActor))(createHttpClient, ec))), "henkilo")
 
-  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig, Some(jSessionIdActor))(getClient, ec))), "sijoittelu")
+  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig, Some(jSessionIdActor))(createHttpClient, ec))), "sijoittelu")
 
-  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf, Some(jSessionIdActor))(getClient, ec), hakemusConfig.maxApplications)), "hakemus")
+  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf, Some(jSessionIdActor))(createHttpClient, ec), hakemusConfig.maxApplications)), "hakemus")
 
   hakemukset ! Trigger{
     (hakemus: FullHakemus) =>
@@ -374,11 +340,11 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, ytlConfig)), "ytl")
 
-  val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)(getClient, ec))), "koodisto")
+  val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)(createHttpClient, ec))), "koodisto")
 
-  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(getClient, ec))), "parametrit")
+  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(createHttpClient, ec))), "parametrit")
 
-  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(getClient("valintatulos", 5, 15), ec))), "valintaTulos")
+  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(createHttpClient("valintatulos", 5, 15), ec))), "valintaTulos")
 }
 
 trait Koosteet {

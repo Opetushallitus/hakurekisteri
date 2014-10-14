@@ -2,16 +2,22 @@ package fi.vm.sade.hakurekisteri.integration
 
 import java.io.InterruptedIOException
 import java.net.URL
+import java.util.concurrent.{ThreadFactory, Executors}
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import com.stackmob.newman.HttpClient
+import com.stackmob.newman.{ApacheHttpClient, HttpClient}
 import com.stackmob.newman.dsl._
 import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
 import fi.vm.sade.hakurekisteri.integration.cas.CasClient
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import org.apache.http.conn.ClientConnectionManager
+import org.apache.http.impl.NoConnectionReuseStrategy
+import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.http.impl.conn.PoolingClientConnectionManager
+import org.apache.http.params.HttpConnectionParams
 import org.slf4j.LoggerFactory
 
 import scala.compat.Platform
@@ -156,5 +162,43 @@ object JSessionIdCookieParser {
       case None => throw JSessionIdCookieException(s"invalid JSESSIONID cookie structure: $cookie")
     }
     JSessionId(Platform.currentTime, value)
+  }
+}
+
+object HttpClientUtil {
+  def createHttpClient: HttpClient = createHttpClient("default")
+
+  val socketTimeout = 120000
+  val connectionTimeout = 10000
+
+  private def createApacheHttpClient(maxConnections: Int): org.apache.http.client.HttpClient = {
+    val connManager: ClientConnectionManager = {
+      val cm = new PoolingClientConnectionManager()
+      cm.setDefaultMaxPerRoute(maxConnections)
+      cm.setMaxTotal(maxConnections)
+      cm
+    }
+
+    val client = new DefaultHttpClient(connManager)
+    val httpParams = client.getParams
+    HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeout)
+    HttpConnectionParams.setSoTimeout(httpParams, socketTimeout)
+    HttpConnectionParams.setStaleCheckingEnabled(httpParams, false)
+    HttpConnectionParams.setSoKeepalive(httpParams, false)
+    client.setReuseStrategy(new NoConnectionReuseStrategy())
+    client
+  }
+
+  def createHttpClient(poolName: String = "default", threads: Int = 10, maxConnections: Int = 100): HttpClient = {
+    if (poolName == "default") new ApacheHttpClient(createApacheHttpClient(maxConnections))()
+    else {
+      val threadNumber = new AtomicInteger(1)
+      val pool = Executors.newFixedThreadPool(threads, new ThreadFactory() {
+        override def newThread(r: Runnable): Thread = {
+          new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
+        }
+      })
+      new ApacheHttpClient(createApacheHttpClient(maxConnections))(ExecutionContext.fromExecutorService(pool))
+    }
   }
 }
