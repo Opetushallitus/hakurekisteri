@@ -46,7 +46,7 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
   val sessionActor = system.actorOf(Props(new JSessionIdActor()))
   val oppijaClient = new VirkailijaRestClient(oppijatConfig, Some(sessionActor))(httpClient, ec)
 
-  it should "handle loading of all hakukohteet from haku" in {
+  ignore should "handle loading of all hakukohteet from haku" in {
     val hakuOid = "1.2.246.562.29.173465377510"
     val jsonString = scala.io.Source.fromFile("src/test/resources/test-hakukohteet.json").getLines().mkString
     val hakukohteet = parse(jsonString).extract[Hakukohteet]
