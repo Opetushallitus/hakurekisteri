@@ -34,12 +34,12 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
 
   def receive: Receive = {
     case q: Query[T] =>
-      log.debug(s"received: $q from $sender")
+      //log.debug(s"received: $q from $sender")
       val result = findBy(q)
       val recipient = sender
       result pipeTo recipient
       result.onSuccess{
-        case s => log.debug(s"answered query $q with ${s.size} results to $recipient")
+        case s => //log.debug(s"answered query $q with ${s.size} results to $recipient")
       }
     case o: T =>
       saved = saved + 1
@@ -50,11 +50,11 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
     case id: I =>
       sender ! get(id)
     case DeleteResource(id: I, user: String) =>
-      log.debug(s"received delete request for resource: $id from $sender")
+      //log.debug(s"received delete request for resource: $id from $sender")
       sender ! delete(id, user)
-      log.debug(s"deleted $id answered to $sender")
+      //log.debug(s"deleted $id answered to $sender")
     case Report =>
-      log.debug(s"saved: $saved")
+      //log.debug(s"saved: $saved")
     case Reload  =>
       //log.debug(s"reloading from ${journal.latestReload}")
       //loadJournal(journal.latestReload)

@@ -1,11 +1,11 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
+import akka.event.Logging
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Kausi}
 import Kausi._
 import fi.vm.sade.hakurekisteri.storage._
 import com.github.nscala_time.time.Imports._
 import fi.vm.sade.hakurekisteri.storage.repository._
-import scala.Some
 import scala.concurrent.Future
 import java.util.UUID
 import scala.util.Try
@@ -14,7 +14,6 @@ import org.joda.time.ReadableInstant
 
 trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
   var tiedonSiirtoIndex: Map[String, Map[String, Seq[Suoritus with Identified[UUID]]]] = Option(tiedonSiirtoIndex).getOrElse(Map())
-  //var tiedonSiirtoIndexSnapShot: Map[String, Map[String, Seq[Suoritus with Identified]]] = Option(tiedonSiirtoIndexSnapShot).getOrElse(Map())
 
   def year(suoritus:Suoritus): String = suoritus match {
     case s: VirallinenSuoritus =>  s.valmistuminen.getYear.toString
@@ -25,7 +24,7 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
     tiedonSiirtoIndex = Option(tiedonSiirtoIndex).getOrElse(Map())
 
     val newIndexSeq =  suoritus +: tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(year(suoritus))).getOrElse(Seq())
-    val newHenk = tiedonSiirtoIndex.get(suoritus.henkiloOid).getOrElse(Map()) + (year(suoritus) -> newIndexSeq)
+    val newHenk = tiedonSiirtoIndex.getOrElse(suoritus.henkiloOid, Map()) + (year(suoritus) -> newIndexSeq)
     tiedonSiirtoIndex = tiedonSiirtoIndex + (suoritus.henkiloOid -> newHenk)
   }
 
@@ -57,7 +56,7 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
 
   }
 
-  override val optimize:PartialFunction[Query[Suoritus], Future[Seq[Suoritus with Identified[UUID]]]] = {
+  override val optimize: PartialFunction[Query[Suoritus], Future[Seq[Suoritus with Identified[UUID]]]] = {
     case SuoritusQuery(Some(henkilo), None, Some(vuosi), None) => Future.successful(tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq()))
     case SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja) =>
       val filtered = tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq())
@@ -142,7 +141,7 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
 }
 
 class SuoritusActor(val journal:Journal[Suoritus, UUID] = new InMemJournal[Suoritus, UUID]) extends ResourceActor[Suoritus, UUID] with SuoritusRepository with SuoritusService {
-
+  override val logger = Logging(context.system, this)
 }
 
 

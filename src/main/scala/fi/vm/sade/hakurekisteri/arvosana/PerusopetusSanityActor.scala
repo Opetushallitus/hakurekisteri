@@ -19,7 +19,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
 
   override val deduplicate = false
 
-  val log = Logging(context.system, this)
+  override val logger = Logging(context.system, this)
 
 
   implicit val executionContext: ExecutionContext = context.dispatcher
@@ -51,7 +51,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
     findPakolliset.onSuccess{
       case aineet:Set[String] => pakolliset = aineet
       suoritusRequests = scheduleSuoritusRequest(10.seconds)
-      log.info(s"perusopetus sanity actor started with mandatory subjects $pakolliset")
+      logger.info(s"perusopetus sanity actor started with mandatory subjects $pakolliset")
     }
 
 
@@ -59,7 +59,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
 
 
   def scheduleSuoritusRequest(seconds: FiniteDuration = 1.hour): Cancellable = {
-    log.info(s"scheduling suoritus fetch in $seconds")
+    logger.info(s"scheduling suoritus fetch in $seconds")
     context.system.scheduler.scheduleOnce(seconds, self, ReloadAndCheck)
   }
 
@@ -105,7 +105,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
       suoritusRekisteri ! SuoritusQuery(None, Some(Kausi.Kevät), Some("2014"), None)
       suoritusIndex = Map()
       loadJournal()
-    case Problems => log.info(s"$sender requested problem list returning ${problems.size} problems")
+    case Problems => logger.info(s"$sender requested problem list returning ${problems.size} problems")
                      sender ! problems
     case s:Stream[_] => for (first <- s.headOption) goThrough(first, s.tail)
     case s::rest  => goThrough(s, rest)
@@ -135,7 +135,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
       case _ => false
     }) ++ validation
 
-    if (!missingMandatory.isEmpty) log.warning(s"problems with suoritus $id ($opetusTyyppi) for oppilas $oppilas from $oppilaitos missing mandatory subjects (${missingMandatory.mkString(",")})")
+    if (!missingMandatory.isEmpty) logger.warning(s"problems with suoritus $id ($opetusTyyppi) for oppilas $oppilas from $oppilaitos missing mandatory subjects (${missingMandatory.mkString(",")})")
 
     val extraMan = extraMandatory(arvosanas)
     val probs = extraMan.map(ExtraGeneral(oppilas, id, _))
@@ -144,7 +144,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
       case _ => false
     }) ++ probs
 
-    if (!extraMan.isEmpty) log.warning(s"problems with suoritus $id ($opetusTyyppi) for oppilas $oppilas from $oppilaitos more than one general course for subjects (${extraMan.mkString(",")})")
+    if (!extraMan.isEmpty) logger.warning(s"problems with suoritus $id ($opetusTyyppi) for oppilas $oppilas from $oppilaitos more than one general course for subjects (${extraMan.mkString(",")})")
 
     val extraVol = extraVoluntary(arvosanas)
     val volProbs = extraVol.map(ExtraVoluntary(oppilas, id, _))
@@ -153,7 +153,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
       case _ => false
     }) ++ volProbs
 
-    if (!extraVol.isEmpty) log.warning(s"problems with suoritus $id ($opetusTyyppi) for oppilas $oppilas from $oppilaitos more than two optional courses for subjects (${extraVol.mkString(",")})")
+    if (!extraVol.isEmpty) logger.warning(s"problems with suoritus $id ($opetusTyyppi) for oppilas $oppilas from $oppilaitos more than two optional courses for subjects (${extraVol.mkString(",")})")
 
 
     val orphanVoluntary = voluntaryWithoutMandatory(arvosanas)
@@ -163,7 +163,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
       case _ => false
     }) ++ orphans
 
-    if (!orphanVoluntary.isEmpty) log.warning(s"problems with suoritus $id ($opetusTyyppi) for oppilas $oppilas from $oppilaitos optional courses without general for subjects (${orphanVoluntary.mkString(",")})")
+    if (!orphanVoluntary.isEmpty) logger.warning(s"problems with suoritus $id ($opetusTyyppi) for oppilas $oppilas from $oppilaitos optional courses without general for subjects (${orphanVoluntary.mkString(",")})")
   }
 
   def goThrough(s: Any, rest: Seq[Any]) {

@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.storage
 
+import akka.event.LoggingAdapter
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import scala.concurrent.{ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.storage.repository.Repository
@@ -16,9 +17,9 @@ trait InMemQueryingResourceService[T,I] extends ResourceService[T,I] { this: Rep
 
   implicit val executionContext: ExecutionContext
 
+  val logger: LoggingAdapter
+
   val emptyQuery: PartialFunction[Query[T], Boolean] = Map()
-
-
 
   def check(q: Query[T])(item: T with Identified[I]): Future[Option[T with Identified[I]]] = {
     Future{
@@ -44,6 +45,7 @@ trait InMemQueryingResourceService[T,I] extends ResourceService[T,I] { this: Rep
 
 
   def executeQuery(current: Seq[T with Identified[I]])( o: Query[T]): Future[Seq[T with Identified[I]]] = {
+    logger.debug(s"got query $o, going through ${current.size} items") // FIXME poista
     Future.traverse(current)(check(o)).map(_.collect {
       case Some(a: T with Identified[I]) => a
     })

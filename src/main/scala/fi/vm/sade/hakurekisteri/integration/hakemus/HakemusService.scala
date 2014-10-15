@@ -139,7 +139,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
                    override val journal: Journal[FullHakemus, String] = new HakemusJournal()
                    ) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
   var healthCheck: Option[ActorRef] = None
-  val logger = Logging(context.system, this)
+  override val logger = Logging(context.system, this)
 
   var hakijaTrigger:Seq[ActorRef] = Seq()
 

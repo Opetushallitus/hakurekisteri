@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.arvosana
 
+import akka.event.Logging
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.storage._
 import fi.vm.sade.hakurekisteri.storage.repository._
@@ -57,6 +58,7 @@ trait ArvosanaService extends InMemQueryingResourceService[Arvosana, UUID]  with
 }
 
 class ArvosanaActor(val journal:Journal[Arvosana, UUID] = new InMemJournal[Arvosana, UUID]) extends ResourceActor[Arvosana, UUID] with ArvosanaRepository with ArvosanaService {
+  override val logger = Logging(context.system, this)
 }
 
 

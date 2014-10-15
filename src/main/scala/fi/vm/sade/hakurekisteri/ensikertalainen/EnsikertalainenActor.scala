@@ -2,14 +2,14 @@ package fi.vm.sade.hakurekisteri.ensikertalainen
 
 
 import akka.actor.{Actor, ActorRef, Props}
-import akka.event.Logging
+import akka.event.{LoggingAdapter, Logging}
 import akka.pattern.pipe
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.FutureCache
 import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
-import fi.vm.sade.hakurekisteri.integration.virta.{VirtaData, VirtaQuery}
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaValidationError, VirtaData, VirtaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VapaamuotoinenSuoritus, VirallinenSuoritus}
@@ -30,7 +30,7 @@ case class QueriesRunning(count: Map[String, Int], timestamp: Long = Platform.cu
 case class CacheResult(q: EnsikertalainenQuery, f: Future[Ensikertalainen])
 
 class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaActor: ActorRef, hakemukset : ActorRef)(implicit val ec: ExecutionContext) extends Actor {
-  val logger = Logging(context.system, this)
+  val logger: LoggingAdapter = Logging(context.system, this)
   val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
   implicit val defaultTimeout: Timeout = 30.seconds
   private val cache = new FutureCache[EnsikertalainenQuery, Ensikertalainen](24.hours.toMillis)
@@ -75,8 +75,6 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
 
     var virtaQuerySent = false
 
-    logger.debug("starting queryActor")
-
     override def receive: Actor.Receive = {
       case ReportStatus =>
         val state = this match {
@@ -97,9 +95,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
       case EnsikertalainenQuery(henkiloOid, henkiloHetu) =>
         oid = Some(henkiloOid)
         hetu = henkiloHetu
-        logger.debug(s"starting query for requestor: $sender with oid $henkiloOid and ${henkiloHetu.map("hetu: " + _).getOrElse("no hetu")}")
         result pipeTo sender onComplete { res =>
-          logger.debug(s"resolved with $res")
           if (res.isSuccess) context.parent ! CacheResult(EnsikertalainenQuery(henkiloOid, henkiloHetu), result)
           context.stop(self)
         }
@@ -107,40 +103,32 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         requestOpiskeluOikeudet(henkiloOid)
 
       case SuoritusResponse(suor) =>
-        logger.debug(s"find suoritukset $suor")
         suoritukset = Some(suor)
         requestKomos(suor)
         if (suor.isEmpty && opiskeluOikeudet.isDefined) fetchHetu()
 
 
       case OpiskeluoikeusResponse(oo) =>
-        logger.debug(s"find opiskeluoikeudet $oo")
         opiskeluOikeudet = Some(oo.filter(_.aika.alku.isAfter(kesa2014)))
         if (opiskeluOikeudet.getOrElse(Seq()).nonEmpty) resolveQuery(ensikertalainen = false)
         else if (foundAllKomos) {
-          logger.debug("found all komos for opiskeluoikeudet, fetching hetu")
           fetchHetu()
         }
 
       case k: KomoResponse =>
-        logger.debug(s"got komo $k")
         komos += (k.oid -> k.komo)
         if (foundAllKomos) {
-          logger.debug(s"found all komos")
           val kkTutkinnot = for (
             suoritus <- suoritukset.getOrElse(Seq())
             if isKkTutkinto(suoritus)
           ) yield suoritus
-          logger.debug(s"kktutkinnot: ${kkTutkinnot.toList}")
           if (kkTutkinnot.nonEmpty) resolveQuery(ensikertalainen = false)
           else if (opiskeluOikeudet.isDefined) {
-            logger.debug("fetching hetus for suoritukset")
             fetchHetu()
           }
         }
 
       case HenkiloResponse(_, Some(h)) =>
-        logger.debug(s"fetching virta with hetu $h")
         fetchVirta(h)
 
       case HenkiloResponse(_, None) =>
@@ -148,9 +136,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         failQuery(NoHetuException(oid, s"no hetu found for oid $oid"))
 
       case VirtaData(virtaOpiskeluOikeudet, virtaSuoritukset) =>
-        logger.debug(s"got virta result opiskeluoikeudet: $virtaOpiskeluOikeudet, suoritukset: $virtaSuoritukset")
         val filteredOpiskeluOikeudet = virtaOpiskeluOikeudet.filter(_.aika.alku.isAfter(kesa2014))
-        saveVirtaResult(filteredOpiskeluOikeudet, virtaSuoritukset)
+        if (filteredOpiskeluOikeudet.nonEmpty || virtaSuoritukset.nonEmpty) saveVirtaResult(filteredOpiskeluOikeudet, virtaSuoritukset)
         resolveQuery(filteredOpiskeluOikeudet.isEmpty ||  virtaSuoritukset.isEmpty)
 
       case akka.actor.Status.Failure(e: Throwable) =>
@@ -167,8 +154,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     def foundAllKomos: Boolean = suoritukset match {
       case None => false
       case Some(s) => s.forall{
-        case suoritus:VirallinenSuoritus => komos.get(suoritus.komo).isDefined
-        case suoritus:VapaamuotoinenSuoritus => true
+        case suoritus: VirallinenSuoritus => komos.get(suoritus.komo).isDefined
+        case suoritus: VapaamuotoinenSuoritus => true
       }
     }
 
@@ -181,7 +168,6 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     def fetchVirta(hetu: String) = {
       virtaActor ! VirtaQuery(oid.get, Some(hetu))
       virtaQuerySent = true
-
     }
 
     def resolveQuery(ensikertalainen: Boolean) {
@@ -193,7 +179,6 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     }
 
     def resolve(message: Try[Ensikertalainen]) {
-      logger.debug(s"resolving with message $message")
       resolver.complete(message)
     }
 
@@ -216,7 +201,6 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     case class SuoritusResponse(suoritukset: Seq[Suoritus])
 
     def saveVirtaResult(opiskeluoikeudet: Seq[Opiskeluoikeus], suoritukset: Seq[Suoritus]) {
-      logger.debug(s"saving virta result: opiskeluoikeudet size ${opiskeluoikeudet.size}, suoritukset size ${suoritukset.size}")
       opiskeluoikeudet.foreach(opiskeluoikeusActor ! _)
       suoritukset.foreach(suoritusActor ! _)
     }
