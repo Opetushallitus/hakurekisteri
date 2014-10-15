@@ -8,7 +8,7 @@ import akka.util.Timeout
 import com.stackmob.newman.response.HttpResponseCode
 import com.stackmob.newman.{ApacheHttpClient, HttpClient}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.TestClient
-import fi.vm.sade.hakurekisteri.integration.{JSessionIdActor, ServiceConfig, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.{HttpClientUtil, JSessionIdActor, ServiceConfig, VirkailijaRestClient}
 import org.apache.http.conn.ClientConnectionManager
 import org.apache.http.conn.scheme.{Scheme, SchemeRegistry}
 import org.apache.http.conn.ssl.SSLSocketFactory
@@ -37,11 +37,12 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
   implicit val ec: ExecutionContext = system.dispatcher
 
   val oppijatConfig = ServiceConfig(
-    serviceUrl = "https://testi.virkailija.opintopolku.fi/suoritusrekisteri",
-    casUrl = Some("https://testi.virkailija.opintopolku.fi/cas"),
-    user = Some("robotti"),
-    password = Some("Testaaja!"))
-  val httpClient = TestClient.getClient("oppija", 2, 4)
+    serviceUrl = "http://localhost:8080"
+//    casUrl = Some("https://testi.virkailija.opintopolku.fi/cas"),
+//    user = Some("robotti"),
+//    password = Some("Testaaja!")
+  )
+  val httpClient = HttpClientUtil.createHttpClient("oppija", 1, 1)
   val sessionActor = system.actorOf(Props(new JSessionIdActor()))
   val oppijaClient = new VirkailijaRestClient(oppijatConfig, Some(sessionActor))(httpClient, ec)
 
@@ -50,7 +51,6 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
     val jsonString = scala.io.Source.fromFile("src/test/resources/test-hakukohteet.json").getLines().mkString
     val hakukohteet = parse(jsonString).extract[Hakukohteet]
     val hakukohdeOids = hakukohteet.results.map(_.oid)
-    println(s"querying for ${hakukohdeOids.size} hakukohdes")
 
     val count = new AtomicInteger(1)
     val batchStart = Platform.currentTime
