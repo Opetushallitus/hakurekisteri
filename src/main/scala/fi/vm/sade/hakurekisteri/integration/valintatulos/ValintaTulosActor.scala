@@ -15,37 +15,17 @@ import scala.concurrent.{Future, ExecutionContext}
 
 object Valintatila extends Enumeration {
   type Valintatila = Value
-  val hyväksytty = Value("HYVAKSYTTY")
-  val harkinnanvaraisesti_hyväksytty = Value("HARKINNANVARAISESTI_HYVAKSYTTY")
-  val varasijalta_hyväksytty = Value("VARASIJALTA_HYVAKSYTTY")
-  val varalla = Value("VARALLA")
-  val peruutettu = Value("PERUUTETTU")
-  val perunut = Value("PERUNUT")
-  val hylätty = Value("HYLATTY")
-  val peruuntunut = Value("PERUUNTUNUT")
-  val kesken = Value("KESKEN")
+  val HYVAKSYTTY, HARKINNANVARAISESTI_HYVAKSYTTY, VARASIJALTA_HYVAKSYTTY, VARALLA, PERUUTETTU, PERUNUT, HYLATTY, PERUUNTUNUT, KESKEN = Value
 }
 
 object Vastaanottotila extends Enumeration {
   type Vastaanottotila = Value
-  val kesken = Value("KESKEN")
-  val vastaanottanut = Value("VASTAANOTTANUT")
-  val ei_vastaanotetu_määräaikana = Value("EI_VASTAANOTETTU_MAARA_AIKANA")
-  val perunut = Value("PERUNUT")
-  val peruutettu = Value("PERUUTETTU")
-  val ehdollisesti_vastaanottanut = Value("EHDOLLISESTI_VASTAANOTTANUT")
+  val KESKEN, VASTAANOTTANUT, EI_VASTAANOTETTU_MAARA_AIKANA, PERUNUT, PERUUTETTU, EHDOLLISESTI_VASTAANOTTANUT = Value
 }
 
 object Ilmoittautumistila extends Enumeration {
   type Ilmoittautumistila = Value
-  val ei_tehty = Value("EI_TEHTY") // Ei tehty
-  val läsnä_koko_lukuvuosi = Value("LASNA_KOKO_LUKUVUOSI") // Läsnä (koko lukuvuosi)
-  val poissa_koko_lukuvuosi = Value("POISSA_KOKO_LUKUVUOSI") // Poissa (koko lukuvuosi)
-  val ei_ilmoittautunut = Value("EI_ILMOITTAUTUNUT") // Ei ilmoittautunut
-  val läsnä_syksy = Value("LASNA_SYKSY") // Läsnä syksy, poissa kevät
-  val poissa_syksy = Value ("POISSA_SYKSY") // Poissa syksy, läsnä kevät
-  val läsnä = Value("LASNA") // Läsnä, keväällä alkava koulutus
-  val poissa = Value("POISSA") // Poissa, keväällä alkava koulutus
+  val EI_TEHTY, LASNA_KOKO_LUKUVUOSI, POISSA_KOKO_LUKUVUOSI, EI_ILMOITTAUTUNUT, LASNA_SYKSY, POISSA_SYKSY, LASNA, POISSA = Value
 }
 
 case class ValintaTulosQuery(hakuOid: String,

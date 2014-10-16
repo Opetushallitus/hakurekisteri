@@ -88,9 +88,9 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
         ValintaTulosHakutoive(
           hakukohdeOid = "1.5.1",
           tarjoajaOid = "1.10.1",
-          valintatila = Valintatila.kesken,
-          vastaanottotila = Vastaanottotila.kesken,
-          ilmoittautumistila = Ilmoittautumistila.ei_tehty,
+          valintatila = Valintatila.KESKEN,
+          vastaanottotila = Vastaanottotila.KESKEN,
+          ilmoittautumistila = Ilmoittautumistila.EI_TEHTY,
           vastaanotettavuustila = "",
           julkaistavissa = false
         )
@@ -118,9 +118,9 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
         ValintaTulosHakutoive(
           hakukohdeOid = "1.5.1",
           tarjoajaOid = "1.10.1",
-          valintatila = Valintatila.kesken,
-          vastaanottotila = Vastaanottotila.kesken,
-          ilmoittautumistila = Ilmoittautumistila.läsnä_syksy,
+          valintatila = Valintatila.KESKEN,
+          vastaanottotila = Vastaanottotila.KESKEN,
+          ilmoittautumistila = Ilmoittautumistila.LASNA_SYKSY,
           vastaanotettavuustila = "",
           julkaistavissa = false
         )
@@ -165,7 +165,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
 
   class MockedValintaTulosActor extends Actor {
     override def receive: Actor.Receive = {
-      case q: ValintaTulosQuery if q.hakemusOid == FullHakemus1.oid => println(q); sender ! ValintaTulos(q.hakemusOid, Seq(ValintaTulosHakutoive("1.11.1", "1.10.1", Valintatila.hyväksytty, Vastaanottotila.kesken, Ilmoittautumistila.ei_tehty, "", false)))
+      case q: ValintaTulosQuery if q.hakemusOid == FullHakemus1.oid => println(q); sender ! ValintaTulos(q.hakemusOid, Seq(ValintaTulosHakutoive("1.11.1", "1.10.1", Valintatila.HYVAKSYTTY, Vastaanottotila.KESKEN, Ilmoittautumistila.EI_TEHTY, "", false)))
       case q: ValintaTulosQuery => println(q); sender ! ValintaTulos(q.hakemusOid, Seq())
     }
   }
