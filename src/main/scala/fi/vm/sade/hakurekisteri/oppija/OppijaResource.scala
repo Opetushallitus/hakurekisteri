@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.oppija
 
 import java.util.UUID
 
+import _root_.akka.event.{LoggingAdapter, Logging}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -21,7 +22,6 @@ import org.scalatra.swagger.Swagger
 
 import scala.concurrent.{ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
-import org.slf4j.Logger
 
 
 class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, val ensikertalaisuus: ActorRef)(implicit val system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with OppijaFetcher with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
@@ -31,6 +31,8 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
+
+  override val log: LoggingAdapter = Logging.getLogger(system, this)
 
   before() {
     contentType = formats("json")
@@ -87,7 +89,7 @@ trait OppijaFetcher {
   val rekisterit: Registers
   val hakemusRekisteri: ActorRef
   val ensikertalaisuus: ActorRef
-  val logger: Logger
+  val log: LoggingAdapter
 
   protected implicit def executor: ExecutionContext
   implicit val defaultTimeout: Timeout
@@ -137,10 +139,10 @@ trait OppijaFetcher {
       map(Some(_)).
       recover {
       case NoHetuException(oid, message) =>
-        logger.info(s"trying to resolve ensikertalaisuus for $henkiloOid, no hetu found")
+        log.info(s"trying to resolve ensikertalaisuus for $henkiloOid, no hetu found")
         None
       case t: VirtaValidationError =>
-        logger.warn(s"could not resolve ensikertalaisuus for $henkiloOid: $t")
+        log.warning(s"could not resolve ensikertalaisuus for $henkiloOid: $t")
         None
     }
   }
