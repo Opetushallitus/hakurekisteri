@@ -4,7 +4,7 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 
 
-trait JournaledRepository[T <: Resource[I], I] extends InMemRepository[T, I] {
+trait JournaledRepository[T <: Resource[I, T], I] extends InMemRepository[T, I] {
 
   val deduplicate = true
 
@@ -71,7 +71,7 @@ trait JournaledRepository[T <: Resource[I], I] extends InMemRepository[T, I] {
 
 }
 
-trait Journal[T <: Resource[I], I] {
+trait Journal[T <: Resource[I, T], I] {
 
   def journal(latest:Option[Long]):Seq[Delta[T, I]]
 
@@ -81,11 +81,11 @@ trait Journal[T <: Resource[I], I] {
 
 }
 
-sealed abstract class Delta[T <: Resource[I], I]
-case class Updated[T <: Resource[I], I](current:T with Identified[I]) extends Delta[T, I]
-case class Deleted[T <: Resource[I], I](id:I, source: String) extends Delta[T, I]
+sealed abstract class Delta[T <: Resource[I, T], I]
+case class Updated[T <: Resource[I, T], I](current:T with Identified[I]) extends Delta[T, I]
+case class Deleted[T <: Resource[I, T], I](id:I, source: String) extends Delta[T, I]
 
-class InMemJournal[T <: Resource[I], I] extends Journal[T, I] {
+class InMemJournal[T <: Resource[I, T], I] extends Journal[T, I] {
 
   protected var deltas: Seq[Delta[T, I]] = Seq()
 

@@ -7,11 +7,11 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import akka.actor.Status.Failure
 import scala.util.Try
-import fi.vm.sade.hakurekisteri.storage.repository.JournaledRepository
+import fi.vm.sade.hakurekisteri.storage.repository.{Repository, JournaledRepository}
 import akka.event.Logging
 
 
-abstract class ResourceActor[T <: Resource[I] : Manifest, I : Manifest] extends Actor { this: JournaledRepository[T, I] with ResourceService[T, I] =>
+abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] extends Actor { this: Repository[T, I] with ResourceService[T, I] =>
   implicit val executionContext: ExecutionContext = context.dispatcher
   val log = Logging(context.system, this)
   val reloadInterval = 10.seconds
@@ -34,12 +34,12 @@ abstract class ResourceActor[T <: Resource[I] : Manifest, I : Manifest] extends 
 
   def receive: Receive = {
     case q: Query[T] =>
-      log.debug(s"received: $q from $sender")
+      //log.debug(s"received: $q from $sender")
       val result = findBy(q)
       val recipient = sender
       result pipeTo recipient
       result.onSuccess{
-        case s => log.debug(s"answered query $q with ${s.size} results to $recipient")
+        case s => //log.debug(s"answered query $q with ${s.size} results to $recipient")
       }
     case o: T =>
       saved = saved + 1
@@ -50,11 +50,11 @@ abstract class ResourceActor[T <: Resource[I] : Manifest, I : Manifest] extends 
     case id: I =>
       sender ! get(id)
     case DeleteResource(id: I, user: String) =>
-      log.debug(s"received delete request for resource: $id from $sender")
+      //log.debug(s"received delete request for resource: $id from $sender")
       sender ! delete(id, user)
-      log.debug(s"deleted $id answered to $sender")
+      //log.debug(s"deleted $id answered to $sender")
     case Report =>
-      log.debug(s"saved: $saved")
+      //log.debug(s"saved: $saved")
     case Reload  =>
       //log.debug(s"reloading from ${journal.latestReload}")
       //loadJournal(journal.latestReload)

@@ -2,26 +2,15 @@ package fi.vm.sade.hakurekisteri.arvosana
 
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.rest.support.Resource
+import fi.vm.sade.hakurekisteri.rest.support.{UUIDResource, Resource}
 import scala.util.Try
 import org.joda.time.LocalDate
 
-case class Arvosana(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: Option[String], valinnainen: Boolean, myonnetty: Option[LocalDate] = None, source: String) extends Resource[UUID] {
-  override def identify(id: UUID): this.type with Identified[UUID]= Arvosana.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
+case class Arvosana(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: Option[String], valinnainen: Boolean, myonnetty: Option[LocalDate] = None, source: String) extends UUIDResource[Arvosana] {
+  override def identify(identity: UUID): Arvosana with Identified[UUID]= new IdentifiedArvosana(this, identity)
 }
 
-object Arvosana {
-  def identify(o: Arvosana): Arvosana with Identified[UUID] = o match {
-    case o: Arvosana with Identified[UUID] => o
-    case _ => o.identify(UUID.randomUUID)
-  }
-
-  def identify(o: Arvosana, identity: UUID) = {
-    new Arvosana(o.suoritus, o.arvio , o.aine, o.lisatieto, o.valinnainen, o.myonnetty, o.source) with Identified[UUID] {
-      val id: UUID = identity
-    }
-  }
-}
+class IdentifiedArvosana(a: Arvosana, val id: UUID) extends Arvosana(a.suoritus, a.arvio , a.aine, a.lisatieto, a.valinnainen, a.myonnetty, a.source) with Identified[UUID]
 
 sealed abstract class Arvio
 

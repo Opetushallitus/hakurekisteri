@@ -29,7 +29,7 @@ object AuditUri {
 
 import scala.reflect.runtime.universe._
 
-class AuditLog[A <: Resource[I], I](resource:String)(implicit val audit:AuditUri, ct: ClassTag[A], tt: TypeTag[A], cti: ClassTag[I], tti: TypeTag[I]) extends Actor with Producer  {
+class AuditLog[A <: Resource[I, A], I](resource:String)(implicit val audit:AuditUri, ct: ClassTag[A], tt: TypeTag[A], cti: ClassTag[I], tti: TypeTag[I]) extends Actor with Producer  {
 
 
   sealed trait AuditMessage[T] {
@@ -137,8 +137,8 @@ class AuditLog[A <: Resource[I], I](resource:String)(implicit val audit:AuditUri
     case AuthorizedQuery(q,user) => QueryEvent(q,user.username)
     case AuthorizedRead(id: I, user) => ReadEvent(id,user.username)
     case AuthorizedDelete(id: I, user) => DeleteEvent(id, user.username)
-    case AuthorizedCreate(res : A, user) => CreateEvent(res, user.username)
-    case AuthorizedUpdate(res: A with Identified[I], user) => UpdateEvent(res, user.username)
+    case AuthorizedCreate(res: A, user) => CreateEvent(res, user.username)
+    case AuthorizedUpdate(res: A with Identified[Any], user) if res.id.isInstanceOf[I]=> UpdateEvent(res.asInstanceOf[A with Identified[I]], user.username)
 
     case a => UnknownEvent(a)
   }

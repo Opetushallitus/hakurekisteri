@@ -1,0 +1,19 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <SOAP-ENV:Fault>
+            <faultcode>SOAP-ENV:Client</faultcode>
+            <faultstring xml:lang="en">Validation error</faultstring>
+            <detail>
+                <spring-ws:ValidationError xmlns:spring-ws="http://springframework.org/spring-ws">cvc-pattern-valid:
+                    Value '140173-928L' is not facet-valid with respect to pattern
+                    '(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])[0-9][0-9][+\-A]((00[2-9]|[0-8][1-9][0-9]|[1-8][0-9][0-9])[0-9ABCDEFHJKLMNPRSTUVWXY])?'
+                    for type 'HenkilotunnusTyyppi'.
+                </spring-ws:ValidationError>
+                <spring-ws:ValidationError xmlns:spring-ws="http://springframework.org/spring-ws">cvc-type.3.1.3: The
+                    value '140173-928L' of element 'henkilotunnus' is not valid.
+                </spring-ws:ValidationError>
+            </detail>
+        </SOAP-ENV:Fault>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

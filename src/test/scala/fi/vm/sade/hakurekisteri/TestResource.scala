@@ -5,10 +5,10 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository._
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 
-case class TestResource(name:String) extends fi.vm.sade.hakurekisteri.rest.support.Resource[UUID] {
+case class TestResource(name:String) extends fi.vm.sade.hakurekisteri.rest.support.UUIDResource[TestResource] {
 
   val source = "Test"
-  override def identify(id: UUID): this.type with Identified[UUID] = TestResource.identify(this, id).asInstanceOf[this.type with Identified[UUID]]
+  override def identify(id: UUID): TestResource with Identified[UUID] = TestResource.identify(this, id)
 }
 
 object TestResource {
@@ -32,7 +32,7 @@ object TestResource {
 }
 
 
-case class TestJournal[T <: Resource[UUID]](state: Seq[T with Identified[UUID]] = Seq(), deleted:Seq[UUID] = Seq()) extends InMemJournal[T, UUID] {
+case class TestJournal[T <: Resource[UUID, T]](state: Seq[T with Identified[UUID]] = Seq(), deleted:Seq[UUID] = Seq()) extends InMemJournal[T, UUID] {
   state foreach {(resource) => addModification(Updated(resource))}
   deleted foreach {(id) => addModification(Deleted(id, source = "Test"))}
 }
@@ -40,6 +40,5 @@ case class TestJournal[T <: Resource[UUID]](state: Seq[T with Identified[UUID]] 
 
 
 case class TestRepo(journal: Journal[TestResource, UUID]) extends JournaledRepository[TestResource, UUID]{
-  override def identify(o: TestResource): TestResource with Identified[UUID] = TestResource.identify(o)
 }
 

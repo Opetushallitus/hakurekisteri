@@ -92,7 +92,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
   get("/", operation(query)) {
     val q = HakijaQuery(params, currentUser)
-    logger.info("Query: " + q)
+    //logger.info("Query: " + q)
 
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds

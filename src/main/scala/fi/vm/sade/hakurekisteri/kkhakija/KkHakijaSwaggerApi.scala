@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.kkhakija
 
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{Vastaanottotila, Valintatila}
 import org.scalatra.swagger.AllowableValues.AnyValue
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
@@ -32,8 +33,8 @@ trait KkHakijaSwaggerApi extends SwaggerSupport {
     ModelField("hakukohde", null, DataType.String, None, AnyValue, required = true),
     ModelField("hakukohdeKkId", null, DataType.String, None, AnyValue, required = false),
     ModelField("avoinVayla", null, DataType.Boolean, None, AnyValue, required = false),
-    ModelField("valinnanTila", null, DataType.String, None, AllowableValues("KESKEN", "HYVAKSYTTY", "HARKINNANVARAISESTI_HYVAKSYTTY", "VARASIJALTA_HYVAKSYTTY", "VARALLA", "PERUUTETTU", "PERUNUT", "HYLATTY", "PERUUNTUNUT"), required = false),
-    ModelField("vastaanottotieto", null, DataType.String, None, AllowableValues("KESKEN", "VASTAANOTTANUT", "EI_VASTAANOTETTU_MAARA_AIKANA", "PERUNUT", "PERUUTETTU", "EHDOLLISESTI_VASTAANOTTANUT"), required = false),
+    ModelField("valinnanTila", null, DataType.String, None, AllowableValues(Valintatila.values.map(_.toString)), required = false),
+    ModelField("vastaanottotieto", null, DataType.String, None, AllowableValues(Vastaanottotila.values.map(_.toString)), required = false),
     ModelField("ilmoittautumiset", null, DataType.GenList(DataType("Ilmoittautuminen")), None, AnyValue, required = true),
     ModelField("pohjakoulutus", null, DataType.GenList(DataType.String), None, AllowableValues("yo", "am", "amt", "kk", "ulk", "avoin", "muu"), required = true),
     ModelField("julkaisulupa", null, DataType.Boolean, None, AnyValue, required = false),

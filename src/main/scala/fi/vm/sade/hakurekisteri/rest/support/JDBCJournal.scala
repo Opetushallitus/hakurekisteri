@@ -16,6 +16,13 @@ import scala.slick.ast.{BaseTypedType, TypedType}
 import scala.Some
 import fi.vm.sade.hakurekisteri.storage.repository.Deleted
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import org.json4s.JsonAST.JValue
+import scala.Some
+import fi.vm.sade.hakurekisteri.storage.repository.Deleted
+import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import scala.Some
+import fi.vm.sade.hakurekisteri.storage.repository.Deleted
+import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import scala.slick.lifted.TableQuery
 import scala.slick.lifted.ShapedValue
 
@@ -25,6 +32,7 @@ object HakurekisteriDriver extends JdbcDriver {
   override val columnTypes = new super.JdbcTypes{
 
     override val uuidJdbcType: super.UUIDJdbcType = new UUIDJdbcType
+
 
     class UUIDJdbcType extends super.UUIDJdbcType {
       override def sqlType = java.sql.Types.VARCHAR
@@ -44,13 +52,43 @@ object HakurekisteriDriver extends JdbcDriver {
         sb.toString
       }
     }
+
+
   }
+
+
+  override val simple = new SimpleQL with Implicits
+
+  trait  Implicits extends super.Implicits{
+
+    class JValueType extends HakurekisteriDriver.MappedJdbcType[JValue, String] with BaseTypedType[JValue]{
+
+      import org.json4s.jackson.JsonMethods._
+
+      override def newSqlType: Option[Int] = Option(java.sql.Types.CLOB)
+
+      override def sqlTypeName: String = "TEXT"
+
+      override def comap(json: String): JValue = parse(json)
+
+      override def map(data: JValue): String = compact(render(data))
+    }
+
+
+    implicit val jvalueType =  new JValueType
+
+
+  }
+
+
+
+
 
 }
 
 import HakurekisteriDriver.simple._
 
-abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: String)(implicit val idType: TypedType[I]) extends Table[Delta[R,I]](tag, name) with HakurekisteriColumns {
+abstract class JournalTable[R <: Resource[I,R], I, ResourceRow](tag: Tag, name: String)(implicit val idType: TypedType[I]) extends Table[Delta[R,I]](tag, name) with HakurekisteriColumns {
 
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def resourceId = column[I]("resource_id")
@@ -107,11 +145,11 @@ abstract class JournalTable[R <: Resource[I], I, ResourceRow](tag: Tag, name: St
 }
 
 
-class JDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: TableQuery[T])(implicit val db: Database, val idType: BaseTypedType[I]) extends Journal[R,  I] {
+class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R,I, _]](val table: TableQuery[T])(implicit val db: Database, val idType: BaseTypedType[I]) extends Journal[R,  I] {
 
 
 
-  val log = LoggerFactory.getLogger(getClass)
+  //val log = LoggerFactory.getLogger(getClass)
 
   lazy val tableName = table.baseTableRow.tableName
 
@@ -123,7 +161,7 @@ class JDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: Tab
     )
 
 
-  log.debug(s"started ${getClass.getSimpleName} with table $tableName")
+  //log.debug(s"started ${getClass.getSimpleName} with table $tableName")
 
   override def addModification(o: Delta[R, I]): Unit = db withSession(
     implicit session =>
@@ -147,7 +185,7 @@ class JDBCJournal[R <: Resource[I], I, T <: JournalTable[R,I, _]](val table: Tab
 
   }
 
-  def latestResources = {
+  val latestResources = {
     val latest = for {
       (id, resource) <- table.groupBy(_.resourceId)
     } yield (id, resource.map(_.inserted).max)
