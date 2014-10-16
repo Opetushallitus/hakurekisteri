@@ -23,7 +23,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
                                                     tunnus = "",
                                                     avain = "salaisuus"))
                  (implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) {
-  val logger = LoggerFactory.getLogger(getClass)
+  //val logger = LoggerFactory.getLogger(getClass)
   val maxRetries = 3
 
   def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
@@ -53,7 +53,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
           val faultstring = fault \ "faultstring"
           val faultdetail = fault \ "detail" \ "ValidationError"
           if (faultstring.text.toLowerCase == "validation error") {
-            logger.warn(s"validation error: ${faultdetail.text}")
+            //logger.warn(s"validation error: ${faultdetail.text}")
             throw VirtaValidationError(s"validation error: ${faultdetail.text}")
           }
         }
@@ -64,7 +64,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   def tryPost(url: String, requestEnvelope: String, oppijanumero: String, hetu: Option[String], retryCount: AtomicInteger): Future[Option[VirtaResult]] = {
     val start = Platform.currentTime
     POST(new URL(url)).setBodyString(requestEnvelope).apply.map((response) => {
-      logger.info(s"virta query for $oppijanumero took ${Platform.currentTime - start} ms, response code ${response.code}")
+      //logger.info(s"virta query for $oppijanumero took ${Platform.currentTime - start} ms, response code ${response.code}")
       if (response.code == HttpResponseCode.Ok) {
         val responseEnvelope: Elem = XML.loadString(response.bodyString)
 
@@ -84,13 +84,13 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
 
         parseFault(bodyString)
 
-        logger.error(s"got non-ok response from virta: ${response.code}, response: $bodyString")
+        //logger.error(s"got non-ok response from virta: ${response.code}, response: $bodyString")
         throw VirtaConnectionErrorException(s"got non-ok response from virta: ${response.code}, response: $bodyString")
       }
     }).recoverWith {
       case t: InterruptedIOException =>
         if (retryCount.getAndIncrement <= maxRetries) {
-          logger.warn(s"got $t, retrying virta query for $oppijanumero: retryCount ${retryCount.get}")
+          //logger.warn(s"got $t, retrying virta query for $oppijanumero: retryCount ${retryCount.get}")
 
           tryPost(url, requestEnvelope, oppijanumero, hetu, retryCount)
         } else Future.failed(t)

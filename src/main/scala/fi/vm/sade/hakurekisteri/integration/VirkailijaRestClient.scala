@@ -41,12 +41,12 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
   val user: Option[String] = config.user
   val password: Option[String] = config.password
 
-  val logger = LoggerFactory.getLogger(getClass)
+  //val logger = LoggerFactory.getLogger(getClass)
   val casClient = new CasClient(casUrl, serviceUrl, user, password)
 
   def logConnectionFailure[T](f: Future[T], url: URL) = f.onFailure {
-    case t: InterruptedIOException => logger.warn(s"connection error calling url [$url]: $t")
-    case t: JSessionIdCookieException => logger.warn(t.getMessage)
+    case t: InterruptedIOException => //logger.warn(s"connection error calling url [$url]: $t")
+    case t: JSessionIdCookieException => //logger.warn(t.getMessage)
   }
 
   val cookieExpirationMillis = 5.minutes.toMillis
@@ -115,7 +115,7 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
 
   def readBody[A <: AnyRef: Manifest](response: HttpResponse): A = {
     val rawResult = tryReadBody[A](response)
-    if (rawResult.isFailure) logger.warn("Failed to deserialize", rawResult.failed.get)
+//    if (rawResult.isFailure) logger.warn("Failed to deserialize", rawResult.failed.get)
     rawResult.get
   }
 

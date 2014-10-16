@@ -149,7 +149,7 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R,I, _]](val table: 
 
 
 
-  val log = LoggerFactory.getLogger(getClass)
+  //val log = LoggerFactory.getLogger(getClass)
 
   lazy val tableName = table.baseTableRow.tableName
 
@@ -161,7 +161,7 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R,I, _]](val table: 
     )
 
 
-  log.debug(s"started ${getClass.getSimpleName} with table $tableName")
+  //log.debug(s"started ${getClass.getSimpleName} with table $tableName")
 
   override def addModification(o: Delta[R, I]): Unit = db withSession(
     implicit session =>
