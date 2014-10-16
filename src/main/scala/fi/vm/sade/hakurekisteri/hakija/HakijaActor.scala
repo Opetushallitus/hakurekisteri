@@ -62,7 +62,7 @@ sealed trait VastaanottanutPaikan extends IlmoitusLahetetty {
 }
 
 object Hakutoive{
-  val log = LoggerFactory.getLogger(classOf[Hakutoive])
+  //val log = LoggerFactory.getLogger(classOf[Hakutoive])
 
   def resolveLasnaolot(lasna:Boolean)(ht: Hakutoive):Seq[Lasnaolo] = {
     ht.hakukohde.koulutukset.map((komoto) => (lasna, komoto.alkamisvuosi, komoto.alkamiskausi)).map
@@ -90,7 +90,7 @@ object Hakutoive{
     case (Some(SijoitteluHakemuksenTila.PERUUNTUNUT), _)  => Peruuntunut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
     case (Some(SijoitteluHakemuksenTila.PERUNUT), _) => Perunut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
     case (hakemuksenTila, vastaanotonTila) =>
-      if (vastaanotonTila.isDefined) log.warn(s"Unknown combination for hakemus ($hakemuksenTila) and valinta ($vastaanotonTila)")
+      //if (vastaanotonTila.isDefined) log.warn(s"Unknown combination for hakemus ($hakemuksenTila) and valinta ($vastaanotonTila)")
       Toive(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
   }
 }

@@ -35,7 +35,7 @@ class ValintaTulosLoadSpec extends FlatSpec with ShouldMatchers {
   implicit val ec: ExecutionContext = system.dispatcher
 
   val valintaTulosConfig = ServiceConfig(serviceUrl = "https://localhost:33000/valinta-tulos-service")
-  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(TestClient.getClient, ec))), "valintaTulos")
+  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(TestClient.getClient, ec, system))), "valintaTulos")
 
   ignore should "handle loading the status of 5000 applications" in {
     val jsonString = scala.io.Source.fromFile("src/test/resources/test-applications.json").getLines.mkString

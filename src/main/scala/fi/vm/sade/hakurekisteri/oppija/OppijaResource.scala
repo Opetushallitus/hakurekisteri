@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.oppija
 
 import java.util.UUID
 
+import _root_.akka.event.{LoggingAdapter, Logging}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -21,16 +22,18 @@ import org.scalatra.swagger.Swagger
 
 import scala.concurrent.{ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
-import org.slf4j.Logger
 
 
 class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, val ensikertalaisuus: ActorRef)(implicit val system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with OppijaFetcher with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
+  override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
+
+  override val log: LoggingAdapter = Logging.getLogger(system, this)
 
   before() {
     contentType = formats("json")
@@ -38,7 +41,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
 
   import scala.concurrent.duration._
 
-  implicit val defaultTimeout: Timeout = 120.seconds
+  implicit val defaultTimeout: Timeout = 500.seconds
 
 
   get("/") {
@@ -63,10 +66,10 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     }
     val q = HenkiloHakijaQuery(params("oid"))
     new AsyncResult() {
-      override implicit def timeout: Duration = 120.seconds
+      override implicit def timeout: Duration = 500.seconds
       val is = for (
         hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
-        oppijat <- fetchOppijatFor(hakemukset.filter((fh) => fh.personOid.isDefined && fh.hetu.isDefined).slice(0,1))
+        oppijat <- fetchOppijatFor(hakemukset.filter((fh) => fh.personOid.isDefined && fh.hetu.isDefined).slice(0, 1))
       ) yield oppijat.headOption.fold(NotFound(body = ""))(Ok(_))
     }
 
@@ -87,7 +90,7 @@ trait OppijaFetcher {
   val rekisterit: Registers
   val hakemusRekisteri: ActorRef
   val ensikertalaisuus: ActorRef
-  val logger: Logger
+  val log: LoggingAdapter
 
   protected implicit def executor: ExecutionContext
   implicit val defaultTimeout: Timeout
@@ -137,10 +140,10 @@ trait OppijaFetcher {
       map(Some(_)).
       recover {
       case NoHetuException(oid, message) =>
-        logger.info(s"trying to resolve ensikertalaisuus for $henkiloOid, no hetu found")
+        log.info(s"trying to resolve ensikertalaisuus for $henkiloOid, no hetu found")
         None
       case t: VirtaValidationError =>
-        logger.warn(s"could not resolve ensikertalaisuus for $henkiloOid: $t")
+        log.warning(s"could not resolve ensikertalaisuus for $henkiloOid: $t")
         None
     }
   }

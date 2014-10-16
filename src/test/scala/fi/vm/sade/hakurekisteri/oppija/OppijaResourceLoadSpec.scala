@@ -37,14 +37,14 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
   implicit val ec: ExecutionContext = system.dispatcher
 
   val oppijatConfig = ServiceConfig(
-    serviceUrl = "http://localhost:8080"
-//    casUrl = Some("https://testi.virkailija.opintopolku.fi/cas"),
-//    user = Some("robotti"),
-//    password = Some("Testaaja!")
+    serviceUrl = "https://testi.virkailija.opintopolku.fi/suoritusrekisteri",
+    casUrl = Some("https://testi.virkailija.opintopolku.fi/cas"),
+    user = Some("robotti"),
+    password = Some("Testaaja!")
   )
   val httpClient = HttpClientUtil.createHttpClient("oppija", 1, 1)
   val sessionActor = system.actorOf(Props(new JSessionIdActor()))
-  val oppijaClient = new VirkailijaRestClient(oppijatConfig, Some(sessionActor))(httpClient, ec)
+  val oppijaClient = new VirkailijaRestClient(oppijatConfig, Some(sessionActor))(httpClient, ec, system)
 
   ignore should "handle loading of all hakukohteet from haku" in {
     val hakuOid = "1.2.246.562.29.173465377510"
@@ -65,8 +65,9 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
         }
         println(s"${count.getAndIncrement} (${(end - batchStart) / 1000} seconds): took ${end - start} ms, got $oppijas oppijas")
       })
-      val tulos = Await.result(res, Duration(120, TimeUnit.SECONDS))
+      val tulos = Await.result(res, Duration(500, TimeUnit.SECONDS))
     })
+
   }
 }
 

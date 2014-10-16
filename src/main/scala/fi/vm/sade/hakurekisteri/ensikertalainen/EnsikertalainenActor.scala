@@ -60,6 +60,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
       counts.map(QueriesRunning(_)) pipeTo sender
   }
 
+  case class EnsikertalaisuusCheckFailed(status: QueryStatus) extends Exception(s"ensikertalaisuus check failed: $status")
+  
   class EnsikertalaisuusCheck() extends Actor {
     var suoritukset: Option[Seq[Suoritus]] = None
 
@@ -75,22 +77,27 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
 
     var virtaQuerySent = false
 
+    context.system.scheduler.scheduleOnce(2.minutes)(failQuery(EnsikertalaisuusCheckFailed(getStatus)))
+    
+    def getStatus: QueryStatus = {
+      val state = this match {
+        case _ if result.isCompleted => result.value.flatMap(
+          _.recover{case ex => "failed: " + ex.getMessage}.map((queryRes) => "done " + queryRes).toOption).getOrElse("empty")
+        case _ if virtaQuerySent => "querying virta"
+        case _ if suoritukset.isEmpty && opiskeluOikeudet.isEmpty =>  "resolving suoritukset and opinto-oikeudet"
+        case _ if suoritukset.isEmpty =>  "resolving suoritukset"
+        case _ if opiskeluOikeudet.isEmpty && !foundAllKomos =>  "resolving opinto-oikeudet and komos"
+        case _ if opiskeluOikeudet.isDefined && !foundAllKomos =>  "resolving komos"
+        case _ if hetu.isEmpty && !virtaQuerySent => "resolving hetu"
+        case _ if hetu.isDefined && !virtaQuerySent => "resolving hetu internally"
+        case _ => "unknown"
+      }
+      QueryStatus(state)
+    }
+
     override def receive: Actor.Receive = {
       case ReportStatus =>
-        val state = this match {
-          case _ if result.isCompleted => result.value.flatMap(
-            _.recover{case ex => "failed: " + ex.getMessage}.map((queryRes) => "done " + queryRes).toOption).getOrElse("empty")
-          case _ if virtaQuerySent => "querying virta"
-          case _ if suoritukset.isEmpty && opiskeluOikeudet.isEmpty =>  "resolving suoritukset and opinto-oikeudet"
-          case _ if suoritukset.isEmpty =>  "resolving suoritukset"
-          case _ if opiskeluOikeudet.isEmpty && !foundAllKomos =>  "resolving opinto-oikeudet and komos"
-          case _ if opiskeluOikeudet.isDefined && !foundAllKomos =>  "resolving komos"
-          case _ if hetu.isEmpty && !virtaQuerySent => "resolving hetu"
-          case _ if hetu.isDefined && !virtaQuerySent => "resolving hetu internally"
-          case _ => "unknown"
-        }
-        sender ! QueryStatus(state)
-
+        sender ! getStatus
 
       case EnsikertalainenQuery(henkiloOid, henkiloHetu) =>
         oid = Some(henkiloOid)
@@ -104,9 +111,14 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
 
       case SuoritusResponse(suor) =>
         suoritukset = Some(suor)
-        requestKomos(suor)
-        if (suor.isEmpty && opiskeluOikeudet.isDefined) fetchHetu()
+        if (suoritukset.exists {
+          case v: VapaamuotoinenSuoritus => v.kkTutkinto
+          case _ => false
+        }) resolveQuery(ensikertalainen = false) else {
 
+          requestKomos(suor)
+          if (suor.collect{ case v: VirallinenSuoritus => v}.isEmpty && opiskeluOikeudet.isDefined) fetchHetu()
+        }
 
       case OpiskeluoikeusResponse(oo) =>
         opiskeluOikeudet = Some(oo.filter(_.aika.alku.isAfter(kesa2014)))
@@ -179,7 +191,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     }
 
     def resolve(message: Try[Ensikertalainen]) {
-      resolver.complete(message)
+      resolver.tryComplete(message)
     }
 
     def requestOpiskeluOikeudet(henkiloOid: String)  {
@@ -223,7 +235,6 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     super.preStart()
   }
 }
-
 
 case class QueryStatus(status: String)
 

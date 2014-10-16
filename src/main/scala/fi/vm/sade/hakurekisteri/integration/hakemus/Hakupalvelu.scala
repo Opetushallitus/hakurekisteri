@@ -20,7 +20,7 @@ trait Hakupalvelu {
 }
 
 class AkkaHakupalvelu(hakemusActor:ActorRef)(implicit val ec: ExecutionContext) extends Hakupalvelu {
-  val logger = LoggerFactory.getLogger(getClass)
+  //val logger = LoggerFactory.getLogger(getClass)
   val Pattern = "preference(\\d+).*".r
 
   def filterHakemus(optionField: Option[String], filterFunc: (String) => (Map[String, String]) => Map[String, String] )(fh: FullHakemus): FullHakemus = optionField match {
@@ -56,7 +56,7 @@ class AkkaHakupalvelu(hakemusActor:ActorRef)(implicit val ec: ExecutionContext) 
 }
 
 object AkkaHakupalvelu {
-  val logger = LoggerFactory.getLogger(getClass)
+  //val logger = LoggerFactory.getLogger(getClass)
 
   val DEFAULT_POHJA_KOULUTUS: String = "1"
 
@@ -192,7 +192,8 @@ object AkkaHakupalvelu {
         case "sosiaalisetsyyt" => Some("2")
         case "todistustenvertailuvaikeudet" => Some("3")
         case "todistustenpuuttuminen" => Some("4")
-        case s => logger.error(s"invalid discretionary-follow-up value $s"); None
+        case s => //logger.error(s"invalid discretionary-follow-up value $s");
+          None
       }
       val aiempiperuminen = toiveet.get(s"preference${jno}_sora_oikeudenMenetys").map(s => Try(s.toBoolean).getOrElse(false))
       val terveys = toiveet.get(s"preference${jno}_sora_terveys").map(s => Try(s.toBoolean).getOrElse(false))

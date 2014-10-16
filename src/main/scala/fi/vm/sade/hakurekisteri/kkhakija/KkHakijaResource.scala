@@ -4,6 +4,7 @@ import java.text.{ParseException, SimpleDateFormat}
 import java.util.{Calendar, Date}
 
 import akka.actor.{ActorRef, ActorSystem}
+import akka.event.{LoggingAdapter, Logging}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
@@ -94,6 +95,8 @@ class KkHakijaResource(hakemukset: ActorRef,
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 120.seconds
 
+  override val logger: LoggingAdapter = Logging.getLogger(system, this)
+
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
@@ -165,28 +168,28 @@ class KkHakijaResource(hakemukset: ActorRef,
       t.hakutoiveet.find(t => t.hakukohdeOid == hakukohde) match {
         case Some(h) =>
           h.ilmoittautumistila match {
-            case Ilmoittautumistila.ei_tehty =>
+            case Ilmoittautumistila.EI_TEHTY =>
               Seq(Puuttuu(Syksy(vuosi._1)), Puuttuu(Kevat(vuosi._2)))
 
-            case Ilmoittautumistila.läsnä_koko_lukuvuosi =>
+            case Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI =>
               Seq(Lasna(Syksy(vuosi._1)), Lasna(Kevat(vuosi._2)))
 
-            case Ilmoittautumistila.poissa_koko_lukuvuosi =>
+            case Ilmoittautumistila.POISSA_KOKO_LUKUVUOSI =>
               Seq(Poissa(Syksy(vuosi._1)), Poissa(Kevat(vuosi._2)))
 
-            case Ilmoittautumistila.ei_ilmoittautunut =>
+            case Ilmoittautumistila.EI_ILMOITTAUTUNUT =>
               Seq(Puuttuu(Syksy(vuosi._1)), Puuttuu(Kevat(vuosi._2)))
 
-            case Ilmoittautumistila.läsnä_syksy =>
+            case Ilmoittautumistila.LASNA_SYKSY =>
               Seq(Lasna(Syksy(vuosi._1)), Poissa(Kevat(vuosi._2)))
 
-            case Ilmoittautumistila.poissa_syksy =>
+            case Ilmoittautumistila.POISSA_SYKSY =>
               Seq(Poissa(Syksy(vuosi._1)), Lasna(Kevat(vuosi._2)))
 
-            case Ilmoittautumistila.läsnä =>
+            case Ilmoittautumistila.LASNA =>
               Seq(Lasna(Kevat(vuosi._2)))
 
-            case Ilmoittautumistila.poissa =>
+            case Ilmoittautumistila.POISSA =>
               Seq(Poissa(Kevat(vuosi._2)))
 
             case _ =>
@@ -247,17 +250,17 @@ class KkHakijaResource(hakemukset: ActorRef,
       case None => false
       case Some(h) =>
         import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
-        Seq[Valintatila](hyväksytty, harkinnanvaraisesti_hyväksytty, varasijalta_hyväksytty).contains(h.valintatila)
+        Seq[Valintatila](HYVAKSYTTY, HARKINNANVARAISESTI_HYVAKSYTTY, VARASIJALTA_HYVAKSYTTY).contains(h.valintatila)
     }
     case Hakuehto.Vastaanottaneet => valintaTulos.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid) match {
       case None => false
       case Some(h) =>
         import Vastaanottotila._
-        Seq[Vastaanottotila](vastaanottanut, ehdollisesti_vastaanottanut).contains(h.vastaanottotila)
+        Seq[Vastaanottotila](VASTAANOTTANUT, EHDOLLISESTI_VASTAANOTTANUT).contains(h.vastaanottotila)
     }
     case Hakuehto.Hylatyt => valintaTulos.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid) match {
       case None => false
-      case Some(h) => h.valintatila == Valintatila.hylätty
+      case Some(h) => h.valintatila == Valintatila.HYLATTY
     }
   }
 
@@ -386,11 +389,7 @@ class KkHakijaResource(hakemukset: ActorRef,
     case "fin" => Future.successful("246")
 
     case arvo =>
-      val maaFuture = (koodisto ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2")).mapTo[String]
-      maaFuture.onFailure {
-        case t: Throwable => logger.error(s"failed to fetch country $koodiArvo", t)
-      }
-      maaFuture
+      (koodisto ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2")).mapTo[String]
 
   }
 

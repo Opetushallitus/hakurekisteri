@@ -22,7 +22,7 @@ class CasClient(casUrl: Option[String] = None,
                 user: Option[String] = None,
                 password: Option[String] = None)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) {
 
-  val logger = LoggerFactory.getLogger(getClass)
+  //val logger = LoggerFactory.getLogger(getClass)
   val maxRetries = 3
   val serviceUrlSuffix = "/j_spring_cas_security_check"
 
@@ -65,19 +65,19 @@ class CasClient(casUrl: Option[String] = None,
   }).recoverWith {
     case t: InterruptedIOException =>
       if (retryCount.getAndIncrement <= maxRetries) {
-        logger.warn(s"connection error calling cas - trying to retry: $t")
+        //logger.warn(s"connection error calling cas - trying to retry: $t")
         tryProxyTicket(retryCount)
       } else {
-        logger.error(s"connection error calling cas: $t")
+        //logger.error(s"connection error calling cas: $t")
         Future.failed(t)
       }
 
     case t: LocationHeaderNotFoundException =>
       if (retryCount.getAndIncrement <= maxRetries) {
-        logger.warn(s"call to cas was not successful - trying to retry: $t")
+        //logger.warn(s"call to cas was not successful - trying to retry: $t")
         tryProxyTicket(retryCount)
       } else {
-        logger.error(s"call to cas was not successful: $t")
+        //logger.error(s"call to cas was not successful: $t")
         Future.failed(t)
       }
   }

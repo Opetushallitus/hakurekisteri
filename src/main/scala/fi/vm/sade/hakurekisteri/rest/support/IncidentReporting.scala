@@ -26,7 +26,7 @@ trait IncidentReporting { this: HakuJaValintarekisteriStack =>
 
   def processError(t: Throwable)(handler:(UUID) => ActionResult): ActionResult = {
     val incidentId = UUID.randomUUID()
-    logger.error(s"incindent ${incidentId.toString}", t)
+    logger.error(t, s"incindent ${incidentId.toString}")
     handler(incidentId)
   }
 
