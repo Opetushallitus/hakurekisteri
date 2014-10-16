@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.ensikertalainen
 
+import _root_.akka.event.{Logging, LoggingAdapter}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
@@ -22,6 +23,7 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef)
   override protected def applicationDescription: String = "Korkeakouluhakujen kiintiöiden ensikertalaisuuden kyselyrajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
+  override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   before() {
     contentType = formats("json")

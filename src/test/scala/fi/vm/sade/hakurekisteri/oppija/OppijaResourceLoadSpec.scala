@@ -44,7 +44,7 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
   )
   val httpClient = HttpClientUtil.createHttpClient("oppija", 1, 1)
   val sessionActor = system.actorOf(Props(new JSessionIdActor()))
-  val oppijaClient = new VirkailijaRestClient(oppijatConfig, Some(sessionActor))(httpClient, ec)
+  val oppijaClient = new VirkailijaRestClient(oppijatConfig, Some(sessionActor))(httpClient, ec, system)
 
   ignore should "handle loading of all hakukohteet from haku" in {
     val hakuOid = "1.2.246.562.29.173465377510"
@@ -52,12 +52,11 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
     val hakukohteet = parse(jsonString).extract[Hakukohteet]
     val hakukohdeOids = hakukohteet.results.map(_.oid)
 
-    /*
     val count = new AtomicInteger(1)
     val batchStart = Platform.currentTime
     hakukohdeOids.foreach(h => {
       val start = Platform.currentTime
-      val res: Future[Seq[Oppija]] = oppijaClient.readObject[Seq[Oppija]](s"/rest/v1/oppijat?haku=$hakuOid", HttpResponseCode.Ok)
+      val res: Future[Seq[Oppija]] = oppijaClient.readObject[Seq[Oppija]](s"/rest/v1/oppijat?haku=$hakuOid&hakukohde=$h", HttpResponseCode.Ok)
       res.onComplete((t: Try[Seq[Oppija]]) => {
         val end = Platform.currentTime
         val oppijas = t match {
@@ -68,19 +67,6 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
       })
       val tulos = Await.result(res, Duration(500, TimeUnit.SECONDS))
     })
-    */
-
-    println(s"calling /rest/v1/oppijat?haku=$hakuOid")
-    val res: Future[Seq[Oppija]] = oppijaClient.readObject[Seq[Oppija]](s"/rest/v1/oppijat?haku=$hakuOid", HttpResponseCode.Ok)
-    res.onComplete((t: Try[Seq[Oppija]]) => {
-      val end = Platform.currentTime
-      val oppijas = t match {
-        case Success(o) => o.size
-        case _ => -1
-      }
-      println(s"got $oppijas oppijas")
-    })
-    val tulos = Await.result(res, Duration(500, TimeUnit.SECONDS))
 
   }
 }

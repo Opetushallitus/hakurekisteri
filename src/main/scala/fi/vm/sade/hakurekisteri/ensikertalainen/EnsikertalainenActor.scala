@@ -60,10 +60,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
       counts.map(QueriesRunning(_)) pipeTo sender
   }
 
-
-
-  case class EnsikertalaisuusCheckFailed(state: EnsikertalaisuusState) extends Exception(s"timeouted for ${state.toString}")
-
+  case class EnsikertalaisuusCheckFailed(status: QueryStatus) extends Exception(s"ensikertalaisuus check failed: $status")
+  
   class EnsikertalaisuusCheck() extends Actor {
     var suoritukset: Option[Seq[Suoritus]] = None
 
@@ -79,26 +77,27 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
 
     var virtaQuerySent = false
 
-    context.system.scheduler.scheduleOnce(2.minutes)({
-      failQuery(EnsikertalaisuusCheckFailed(EnsikertalaisuusState(oid, hetu, suoritukset, opiskeluOikeudet, komos, self)))
-    })
+    context.system.scheduler.scheduleOnce(2.minutes)(failQuery(EnsikertalaisuusCheckFailed(getStatus)))
+    
+    def getStatus: QueryStatus = {
+      val state = this match {
+        case _ if result.isCompleted => result.value.flatMap(
+          _.recover{case ex => "failed: " + ex.getMessage}.map((queryRes) => "done " + queryRes).toOption).getOrElse("empty")
+        case _ if virtaQuerySent => "querying virta"
+        case _ if suoritukset.isEmpty && opiskeluOikeudet.isEmpty =>  "resolving suoritukset and opinto-oikeudet"
+        case _ if suoritukset.isEmpty =>  "resolving suoritukset"
+        case _ if opiskeluOikeudet.isEmpty && !foundAllKomos =>  "resolving opinto-oikeudet and komos"
+        case _ if opiskeluOikeudet.isDefined && !foundAllKomos =>  "resolving komos"
+        case _ if hetu.isEmpty && !virtaQuerySent => "resolving hetu"
+        case _ if hetu.isDefined && !virtaQuerySent => "resolving hetu internally"
+        case _ => "unknown"
+      }
+      QueryStatus(state)
+    }
 
     override def receive: Actor.Receive = {
       case ReportStatus =>
-        val state = this match {
-          case _ if result.isCompleted => result.value.flatMap(
-            _.recover{case ex => "failed: " + ex.getMessage}.map((queryRes) => "done " + queryRes).toOption).getOrElse("empty")
-          case _ if virtaQuerySent => "querying virta"
-          case _ if suoritukset.isEmpty && opiskeluOikeudet.isEmpty =>  "resolving suoritukset and opinto-oikeudet"
-          case _ if suoritukset.isEmpty =>  "resolving suoritukset"
-          case _ if opiskeluOikeudet.isEmpty && !foundAllKomos =>  "resolving opinto-oikeudet and komos"
-          case _ if opiskeluOikeudet.isDefined && !foundAllKomos =>  "resolving komos"
-          case _ if hetu.isEmpty && !virtaQuerySent => "resolving hetu"
-          case _ if hetu.isDefined && !virtaQuerySent => "resolving hetu internally"
-          case _ => "unknown"
-        }
-        sender ! QueryStatus(state)
-
+        sender ! getStatus
 
       case EnsikertalainenQuery(henkiloOid, henkiloHetu) =>
         oid = Some(henkiloOid)
@@ -236,13 +235,6 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     super.preStart()
   }
 }
-
-case class EnsikertalaisuusState(oid: Option[String],
-                                 hetu: Option[String],
-                                 suoritukset: Option[Seq[Suoritus]],
-                                 opiskeluoikeudet: Option[Seq[Opiskeluoikeus]],
-                                 komos: Map[String, Option[Komo]],
-                                 actorRef: ActorRef)
 
 case class QueryStatus(status: String)
 

@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.hakija
 import java.io.OutputStream
 import java.text.SimpleDateFormat
 
+import _root_.akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.hakija.Tyyppi.Tyyppi
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
@@ -54,6 +55,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
   override protected def applicationDescription: String = "Hakijatietojen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
   implicit val defaultTimeout: Timeout = 120.seconds
+  override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
@@ -92,7 +94,7 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
   get("/", operation(query)) {
     val q = HakijaQuery(params, currentUser)
-    //logger.info("Query: " + q)
+    logger.info("Query: " + q)
 
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
