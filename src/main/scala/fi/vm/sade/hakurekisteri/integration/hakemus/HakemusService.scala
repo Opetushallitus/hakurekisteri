@@ -76,6 +76,8 @@ trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] w
     case HakemusQuery(haku, organisaatio, kohdekoodi, Some(kohde)) =>
       val filtered = hakukohdeIndex.getOrElse(kohde, Seq())
       executeQuery(filtered)(HakemusQuery(haku, organisaatio, kohdekoodi, Some(kohde)))
+    case HenkiloHakijaQuery(henkilo) => Future.successful(hakijaIndex.getOrElse(henkilo, Seq()))
+
   }
 
   def filterField[F](field: Option[F], fieldExctractor: (FullHakemus) => F)(hakemus:FullHakemus) = field match {
