@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 import java.util.UUID
 
 import _root_.akka.actor.{ActorRef, ActorSystem}
+import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
@@ -85,6 +86,8 @@ case class UserNotAuthorized(message: String) extends Exception(message)
 
 abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]](actor: ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with JacksonJsonParsing with CorsSupport {
 
+  override val logger: LoggingAdapter = Logging.getLogger(system, this)
+
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
@@ -140,7 +143,8 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
 
   def queryResource(user: Option[User]): Product with Serializable = {
     (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q, user)) recover {
-      case e: Exception => //logger.warn("Bad query: " + params, e);
+      case e: Exception =>
+        logger.error(e, "Bad query: " + params)
         throw new IllegalArgumentException("illegal query params")
     }).get
   }

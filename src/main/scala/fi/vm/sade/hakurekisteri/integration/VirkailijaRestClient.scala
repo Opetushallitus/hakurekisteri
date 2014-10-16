@@ -5,7 +5,8 @@ import java.net.URL
 import java.util.concurrent.{ThreadFactory, Executors}
 import java.util.concurrent.atomic.AtomicInteger
 
-import akka.actor.ActorRef
+import akka.actor.{ActorSystem, ActorRef}
+import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import com.stackmob.newman.{ApacheHttpClient, HttpClient}
@@ -18,7 +19,6 @@ import org.apache.http.impl.NoConnectionReuseStrategy
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.impl.conn.PoolingClientConnectionManager
 import org.apache.http.params.HttpConnectionParams
-import org.slf4j.LoggerFactory
 
 import scala.compat.Platform
 import scala.concurrent.{Future, ExecutionContext}
@@ -32,7 +32,7 @@ case class ServiceConfig(casUrl: Option[String] = None,
                          user: Option[String] = None,
                          password: Option[String] = None)
 
-class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[ActorRef] = None)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext) extends HakurekisteriJsonSupport {
+class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[ActorRef] = None)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {
 
   implicit val defaultTimeout: Timeout = 60.seconds
 
@@ -41,12 +41,12 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
   val user: Option[String] = config.user
   val password: Option[String] = config.password
 
-  //val logger = LoggerFactory.getLogger(getClass)
+  val logger = Logging.getLogger(system, this)
   val casClient = new CasClient(casUrl, serviceUrl, user, password)
 
   def logConnectionFailure[T](f: Future[T], url: URL) = f.onFailure {
-    case t: InterruptedIOException => //logger.warn(s"connection error calling url [$url]: $t")
-    case t: JSessionIdCookieException => //logger.warn(t.getMessage)
+    case t: InterruptedIOException => logger.warning(s"connection error calling url [$url]: $t")
+    case t: JSessionIdCookieException => logger.warning(t.getMessage)
   }
 
   val cookieExpirationMillis = 5.minutes.toMillis
@@ -113,16 +113,16 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
     Try(read[A](response.bodyString))
   }
 
-  def readBody[A <: AnyRef: Manifest](response: HttpResponse): A = {
+  def readBody[A <: AnyRef: Manifest](uri: String)(response: HttpResponse): A = {
     val rawResult = tryReadBody[A](response)
-//    if (rawResult.isFailure) logger.warn("Failed to deserialize", rawResult.failed.get)
+    if (rawResult.isFailure) logger.error(rawResult.failed.get, s"failed to deserialize response from url $serviceUrl$uri")
     rawResult.get
   }
 
   def readObject[A <: AnyRef: Manifest](uri: String, precondition: (HttpResponseCode) => Boolean): Future[A] = executeGet(uri).map{case (resp, auth) =>
     if (precondition(resp.code)) resp
     else throw PreconditionFailedException(s"precondition failed for url: $serviceUrl$uri, response code: ${resp.code} with ${auth.map("auth: " + _).getOrElse("no auth")}", resp.code)
-  }.map(readBody[A])
+  }.map(readBody[A](uri))
 
   def readObject[A <: AnyRef: Manifest](uri: String, okCodes: HttpResponseCode*): Future[A] = {
     val codes = if (okCodes.isEmpty) Seq(HttpResponseCode.Ok) else okCodes

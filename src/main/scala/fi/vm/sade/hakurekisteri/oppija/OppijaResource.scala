@@ -27,6 +27,7 @@ import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, val ensikertalaisuus: ActorRef)(implicit val system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with OppijaFetcher with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
+  override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))

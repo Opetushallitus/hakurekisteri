@@ -1,5 +1,7 @@
 package gui
 
+import akka.actor.ActorSystem
+import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.scalatra.scalate.ScalateSupport
 import org.fusesource.scalate.layout.DefaultLayoutStrategy
@@ -9,7 +11,9 @@ import scala.collection.mutable
 import org.fusesource.scalate.util.{StringResource, Resource, ResourceLoader}
 
 
-class GuiServlet extends HakuJaValintarekisteriStack with ScalateSupport {
+class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekisteriStack with ScalateSupport {
+  override val logger: LoggingAdapter = Logging.getLogger(system, this)
+
   /* wire up the precompiled templates */
   override protected def defaultTemplatePath: List[String] = List("/WEB-INF/templates/views")
 
@@ -50,13 +54,13 @@ class GuiServlet extends HakuJaValintarekisteriStack with ScalateSupport {
   }
 
   notFound {
-    //logger.warn("location not found, resolving template")
+    logger.warning("location not found, resolving template")
     // remove content type in case it was set through an action
     contentType = null
     // Try to render a ScalateTemplate if no route matched
     findTemplate(requestPath) map {
       path =>
-        //logger.warn("finding template")
+        logger.warning("finding template")
         contentType = "text/html"
         layoutTemplate(path)
     } orElse serveStaticResource() getOrElse resourceNotFound()

@@ -4,6 +4,7 @@ import java.text.{ParseException, SimpleDateFormat}
 import java.util.{Calendar, Date}
 
 import akka.actor.{ActorRef, ActorSystem}
+import akka.event.{LoggingAdapter, Logging}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
@@ -94,6 +95,8 @@ class KkHakijaResource(hakemukset: ActorRef,
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 120.seconds
 
+  override val logger: LoggingAdapter = Logging.getLogger(system, this)
+
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
@@ -104,7 +107,7 @@ class KkHakijaResource(hakemukset: ActorRef,
 
   get("/", operation(query)) {
     val q = KkHakijaQuery(params, currentUser)
-    //logger.info("Query: " + q)
+    logger.info("Query: " + q)
 
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
