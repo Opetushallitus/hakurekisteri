@@ -104,7 +104,7 @@ class KkHakijaResource(hakemukset: ActorRef,
 
   get("/", operation(query)) {
     val q = KkHakijaQuery(params, currentUser)
-    logger.info("Query: " + q)
+    //logger.info("Query: " + q)
 
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
@@ -386,11 +386,7 @@ class KkHakijaResource(hakemukset: ActorRef,
     case "fin" => Future.successful("246")
 
     case arvo =>
-      val maaFuture = (koodisto ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2")).mapTo[String]
-      maaFuture.onFailure {
-        case t: Throwable => logger.error(s"failed to fetch country $koodiArvo", t)
-      }
-      maaFuture
+      (koodisto ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2")).mapTo[String]
 
   }
 

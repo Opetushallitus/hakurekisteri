@@ -140,7 +140,8 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
 
   def queryResource(user: Option[User]): Product with Serializable = {
     (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q, user)) recover {
-      case e: Exception => logger.warn("Bad query: " + params, e); throw new IllegalArgumentException("illegal query params")
+      case e: Exception => //logger.warn("Bad query: " + params, e);
+        throw new IllegalArgumentException("illegal query params")
     }).get
   }
 
