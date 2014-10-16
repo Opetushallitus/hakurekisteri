@@ -1,30 +1,21 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import scala.slick.lifted._
-import fi.vm.sade.hakurekisteri.storage.repository.{Delta, Journal}
-import scala.slick.lifted
-import scala.compat.Platform
-import fi.vm.sade.hakurekisteri.storage.Identified
-import scala.language.existentials
-import org.slf4j.LoggerFactory
-import scala.slick.jdbc.meta.MTable
-
-import scala.slick.driver.JdbcDriver
 import java.util.UUID
-import scala.slick.jdbc.{PositionedResult, PositionedParameters}
-import scala.slick.ast.{BaseTypedType, TypedType}
-import scala.Some
-import fi.vm.sade.hakurekisteri.storage.repository.Deleted
-import fi.vm.sade.hakurekisteri.storage.repository.Updated
+
+import akka.actor.ActorSystem
+import akka.event.Logging
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, Delta, Journal, Updated}
 import org.json4s.JsonAST.JValue
-import scala.Some
-import fi.vm.sade.hakurekisteri.storage.repository.Deleted
-import fi.vm.sade.hakurekisteri.storage.repository.Updated
-import scala.Some
-import fi.vm.sade.hakurekisteri.storage.repository.Deleted
-import fi.vm.sade.hakurekisteri.storage.repository.Updated
-import scala.slick.lifted.TableQuery
-import scala.slick.lifted.ShapedValue
+
+import scala.compat.Platform
+import scala.language.existentials
+import scala.slick.ast.{BaseTypedType, TypedType}
+import scala.slick.driver.JdbcDriver
+import scala.slick.jdbc.meta.MTable
+import scala.slick.jdbc.{PositionedParameters, PositionedResult}
+import scala.slick.lifted
+import scala.slick.lifted.{ShapedValue, TableQuery, _}
 
 
 object HakurekisteriDriver extends JdbcDriver {
@@ -86,7 +77,7 @@ object HakurekisteriDriver extends JdbcDriver {
 
 }
 
-import HakurekisteriDriver.simple._
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 
 abstract class JournalTable[R <: Resource[I,R], I, ResourceRow](tag: Tag, name: String)(implicit val idType: TypedType[I]) extends Table[Delta[R,I]](tag, name) with HakurekisteriColumns {
 
@@ -145,11 +136,11 @@ abstract class JournalTable[R <: Resource[I,R], I, ResourceRow](tag: Tag, name: 
 }
 
 
-class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R,I, _]](val table: TableQuery[T])(implicit val db: Database, val idType: BaseTypedType[I]) extends Journal[R,  I] {
+class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R,I, _]](val table: TableQuery[T])(implicit val db: Database, val idType: BaseTypedType[I], implicit val system: ActorSystem) extends Journal[R,  I] {
 
 
 
-  //val log = LoggerFactory.getLogger(getClass)
+  val log = Logging.getLogger(system, this)
 
   lazy val tableName = table.baseTableRow.tableName
 
@@ -161,7 +152,7 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R,I, _]](val table: 
     )
 
 
-  //log.debug(s"started ${getClass.getSimpleName} with table $tableName")
+  log.debug(s"started ${getClass.getSimpleName} with table $tableName")
 
   override def addModification(o: Delta[R, I]): Unit = db withSession(
     implicit session =>

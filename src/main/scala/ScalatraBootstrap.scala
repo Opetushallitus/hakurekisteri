@@ -190,7 +190,7 @@ trait Journals {
   val arvosanaJournal: Journal[Arvosana, UUID]
 }
 
-class DbJournals(jndiName:String) extends Journals {
+class DbJournals(jndiName: String)(implicit val system: ActorSystem) extends Journals {
   implicit val database = Try(Database.forName(jndiName)).recover {
     case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
   }.get
@@ -316,17 +316,17 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val jSessionIdActor = system.actorOf(Props(new JSessionIdActor))
 
-  val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig)(createHttpClient, ec))), "tarjonta")
+  val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig)(createHttpClient, ec, system))), "tarjonta")
 
-  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(createHttpClient, ec))), "organisaatio")
+  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(createHttpClient, ec, system))), "organisaatio")
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(createHttpClient("virta", 50, 100), ec), organisaatiot)), "virta")
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(createHttpClient("virta", 50, 100), ec, system), organisaatiot)), "virta")
 
-  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig, None)(createHttpClient, ec))), "henkilo")
+  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig, None)(createHttpClient, ec, system))), "henkilo")
 
-  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig, None)(createHttpClient, ec))), "sijoittelu")
+  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig, None)(createHttpClient, ec, system))), "sijoittelu")
 
-  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf, None)(createHttpClient, ec), hakemusConfig.maxApplications)), "hakemus")
+  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf, None)(createHttpClient, ec, system), hakemusConfig.maxApplications)), "hakemus")
 
   hakemukset ! Trigger{
     (hakemus: FullHakemus) =>
@@ -344,11 +344,11 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, ytlConfig)), "ytl")
 
-  val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)(createHttpClient, ec))), "koodisto")
+  val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)(createHttpClient, ec, system))), "koodisto")
 
-  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(createHttpClient, ec))), "parametrit")
+  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(createHttpClient, ec, system))), "parametrit")
 
-  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(createHttpClient("valintatulos", 5, 15), ec))), "valintaTulos")
+  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(createHttpClient("valintatulos", 5, 15), ec, system))), "valintaTulos")
 }
 
 trait Koosteet {

@@ -1,52 +1,38 @@
 package fi.vm.sade.hakurekisteri.healthcheck
 
+import java.util.concurrent.TimeUnit
+import java.util.{Locale, UUID}
+
 import _root_.akka.util.Timeout
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.event.{Logging, LoggingAdapter}
+import akka.pattern.{AskTimeoutException, ask, pipe}
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
-import fi.vm.sade.hakurekisteri.rest.support._
-import scala.concurrent.{Future, ExecutionContext}
-import scala.concurrent.duration._
-import akka.actor.{Props, Actor, ActorRef, ActorSystem}
-import _root_.akka.pattern.{AskTimeoutException, ask}
-import java.util.concurrent.TimeUnit
-import org.scalatra.json._
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
-import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
-import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
-import fi.vm.sade.hakurekisteri.storage.Identified
-import org.joda.time.format.{DateTimeFormatter, DateTimeFormat}
-import java.util.{UUID, Locale}
-import org.joda.time.{DateTime, DateTimeZone}
-import akka.pattern.pipe
-import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
-import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
-import fi.vm.sade.hakurekisteri.hakija.Hakemus
-import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
-import akka.event.Logging
-import scala.compat.Platform
 import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
-import fi.vm.sade.hakurekisteri.integration.ytl.YtlReport
-import fi.vm.sade.hakurekisteri.healthcheck.ItemCount
 import fi.vm.sade.hakurekisteri.hakija.Hakemus
-import fi.vm.sade.hakurekisteri.healthcheck.Checks
-import fi.vm.sade.hakurekisteri.healthcheck.Hakemukset
-import fi.vm.sade.hakurekisteri.ensikertalainen.QueriesRunning
-import fi.vm.sade.hakurekisteri.healthcheck.QueryReport
-import fi.vm.sade.hakurekisteri.healthcheck.Resources
-import fi.vm.sade.hakurekisteri.integration.ytl.Batch
-import fi.vm.sade.hakurekisteri.healthcheck.Health
+import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
+import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
-import fi.vm.sade.hakurekisteri.healthcheck.RefreshingState
-import fi.vm.sade.hakurekisteri.healthcheck.YtlOk
-import fi.vm.sade.hakurekisteri.healthcheck.RefreshingResource
-import fi.vm.sade.hakurekisteri.healthcheck.YtlFailure
-import fi.vm.sade.hakurekisteri.healthcheck.Healhcheck
+import fi.vm.sade.hakurekisteri.rest.support._
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
+import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
+import org.joda.time.{DateTime, DateTimeZone}
+import org.scalatra.json._
+import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
+
+import scala.compat.Platform
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 60.seconds
+  override val logger: LoggingAdapter = Logging.getLogger(system, this)
   private def withLocaleTZ(format: DateTimeFormatter) = format withLocale Locale.US withZone DateTimeZone.UTC
   private def expiresHeader = "Expires"
   val RFC1123Date = withLocaleTZ(DateTimeFormat forPattern "EEE, dd MMM yyyy HH:mm:ss 'GMT'")
