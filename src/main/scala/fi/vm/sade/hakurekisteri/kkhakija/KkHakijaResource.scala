@@ -7,13 +7,13 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.hakija.Hakuehto
+import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Lasnaolo, Lasna, Poissa, Puuttuu, Syksy, Kevat}
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{Haku, GetHaku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetRinnasteinenKoodiArvoQuery, Koodi, GetKoodi}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohteenKoulutukset, HakukohdeOid, TarjontaException, Hakukohteenkoulutus}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosHakutoive, ValintaTulos, ValintaTulosQuery}
+import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 import fi.vm.sade.hakurekisteri.rest.support.{Query, User, SpringSecuritySupport, HakurekisteriJsonSupport}
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus, SuoritusQuery}
@@ -42,9 +42,6 @@ object KkHakijaQuery {
 case class InvalidSyntymaaikaException(m: String) extends Exception(m)
 case class InvalidKausiException(m: String) extends Exception(m)
 
-case class Ilmoittautuminen(kausi: String, // 2014S
-                            tila: Int) // tilat (1 = läsnä; 2 = poissa; 3 = poissa, ei kuluta opintoaikaa; 4 = puuttuu)
-
 case class Hakemus(haku: String,
                    hakuVuosi: Int,
                    hakuKausi: String,
@@ -55,7 +52,7 @@ case class Hakemus(haku: String,
                    avoinVayla: Option[Boolean],
                    valinnanTila: Option[String],
                    vastaanottotieto: Option[String],
-                   ilmoittautumiset: Seq[Ilmoittautuminen],
+                   ilmoittautumiset: Seq[Lasnaolo],
                    pohjakoulutus: Seq[String],
                    julkaisulupa: Option[Boolean],
                    hKelpoisuus: String,
@@ -107,7 +104,7 @@ class KkHakijaResource(hakemukset: ActorRef,
 
   get("/", operation(query)) {
     val q = KkHakijaQuery(params, currentUser)
-    logger.info("Query: " + q)
+    //logger.info("Query: " + q)
 
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
@@ -152,16 +149,55 @@ class KkHakijaResource(hakemukset: ActorRef,
     t.hakutoiveet.withFilter(t => t.hakukohdeOid == hakukohde).map(f).headOption
   }
 
-  def getIlmoittautumiset(t: ValintaTulos, hakukohde: String): Seq[Ilmoittautuminen] = {
-    t.hakutoiveet.find(t => t.hakukohdeOid == hakukohde) match {
-      case Some(h) =>
-        h.ilmoittautumistila match {
-          case _ => Seq() // TODO muuta kun valinta-tulos-service saa ilmoittautumiset sekvenssiksi
-        }
+  // TODO muuta kun valinta-tulos-service saa ilmoittautumiset sekvenssiksi
+  def getLasnaolot(t: ValintaTulos, hakukohde: String, haku: Haku, hakemusOid: String): Future[Seq[Lasnaolo]] = {
+    val kausi: Future[String] = getKausi(haku.kausi, hakemusOid)
 
-      case None => Seq()
+    kausi.map(k => {
+      val vuosi = k match {
+        case "S" => (haku.vuosi, haku.vuosi + 1)
+        case "K" => (haku.vuosi, haku.vuosi)
+        case _ => throw new IllegalArgumentException(s"invalid kausi $k")
+      }
 
-    }
+      def kausi(v: Int, k: String): String = s"$v$k"
+
+      t.hakutoiveet.find(t => t.hakukohdeOid == hakukohde) match {
+        case Some(h) =>
+          h.ilmoittautumistila match {
+            case Ilmoittautumistila.ei_tehty =>
+              Seq(Puuttuu(Syksy(vuosi._1)), Puuttuu(Kevat(vuosi._2)))
+
+            case Ilmoittautumistila.läsnä_koko_lukuvuosi =>
+              Seq(Lasna(Syksy(vuosi._1)), Lasna(Kevat(vuosi._2)))
+
+            case Ilmoittautumistila.poissa_koko_lukuvuosi =>
+              Seq(Poissa(Syksy(vuosi._1)), Poissa(Kevat(vuosi._2)))
+
+            case Ilmoittautumistila.ei_ilmoittautunut =>
+              Seq(Puuttuu(Syksy(vuosi._1)), Puuttuu(Kevat(vuosi._2)))
+
+            case Ilmoittautumistila.läsnä_syksy =>
+              Seq(Lasna(Syksy(vuosi._1)), Poissa(Kevat(vuosi._2)))
+
+            case Ilmoittautumistila.poissa_syksy =>
+              Seq(Poissa(Syksy(vuosi._1)), Lasna(Kevat(vuosi._2)))
+
+            case Ilmoittautumistila.läsnä =>
+              Seq(Lasna(Kevat(vuosi._2)))
+
+            case Ilmoittautumistila.poissa =>
+              Seq(Poissa(Kevat(vuosi._2)))
+
+            case _ =>
+              Seq()
+
+          }
+
+        case None => Seq(Puuttuu(Syksy(vuosi._1)), Puuttuu(Kevat(vuosi._2)))
+
+      }
+    })
   }
 
   def getKausi(kausiKoodi: String, hakemusOid: String): Future[String] =
@@ -182,7 +218,9 @@ class KkHakijaResource(hakemukset: ActorRef,
     kelpoisuudet.find(_.aoId == hakukohdeOid) match {
       case Some(h) => h
 
-      case None => PreferenceEligibility(hakukohdeOid, "NOT_CHECKED", None)
+      case None =>
+        val defaultState = "NOT_CHECKED"
+        PreferenceEligibility(hakukohdeOid, defaultState, None)
 
     }
   }
@@ -207,15 +245,19 @@ class KkHakijaResource(hakemukset: ActorRef,
     case Hakuehto.Kaikki => true
     case Hakuehto.Hyvaksytyt => valintaTulos.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid) match {
       case None => false
-      case Some(h) => Seq("HYVAKSYTTY", "HARKINNANVARAISESTI_HYVAKSYTTY", "VARASIJALTA_HYVAKSYTTY").contains(h.valintatila)
+      case Some(h) =>
+        import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
+        Seq[Valintatila](hyväksytty, harkinnanvaraisesti_hyväksytty, varasijalta_hyväksytty).contains(h.valintatila)
     }
     case Hakuehto.Vastaanottaneet => valintaTulos.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid) match {
       case None => false
-      case Some(h) => Seq("VASTAANOTTANUT", "EHDOLLISESTI_VASTAANOTTANUT").contains(h.vastaanottotila)
+      case Some(h) =>
+        import Vastaanottotila._
+        Seq[Vastaanottotila](vastaanottanut, ehdollisesti_vastaanottanut).contains(h.vastaanottotila)
     }
     case Hakuehto.Hylatyt => valintaTulos.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid) match {
       case None => false
-      case Some(h) => h.valintatila == "HYLATTY"
+      case Some(h) => h.valintatila == Valintatila.hylätty
     }
   }
 
@@ -243,6 +285,7 @@ class KkHakijaResource(hakemukset: ActorRef,
             hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
             haku: Haku <- (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
             kausi: String <- getKausi(haku.kausi, hakemus.oid)
+            lasnaolot: Seq[Lasnaolo] <- getLasnaolot(valintaTulos, hakukohdeOid, haku, hakemus.oid)
           } yield {
             if (matchHakuehto(q.hakuehto, valintaTulos, hakukohdeOid))
               Some(Hakemus(
@@ -254,9 +297,9 @@ class KkHakijaResource(hakemukset: ActorRef,
                 hakukohde = hakutoiveet(s"preference$jno-Koulutus-id"),
                 hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
                 avoinVayla = None, // TODO valinnoista?
-                valinnanTila = getValintaTieto(valintaTulos, hakukohdeOid)((t: ValintaTulosHakutoive) => t.valintatila),
-                vastaanottotieto = getValintaTieto(valintaTulos, hakukohdeOid)((t: ValintaTulosHakutoive) => t.vastaanottotila),
-                ilmoittautumiset = getIlmoittautumiset(valintaTulos, hakukohdeOid),
+                valinnanTila = getValintaTieto(valintaTulos, hakukohdeOid)((t: ValintaTulosHakutoive) => t.valintatila.toString),
+                vastaanottotieto = getValintaTieto(valintaTulos, hakukohdeOid)((t: ValintaTulosHakutoive) => t.vastaanottotila.toString),
+                ilmoittautumiset = lasnaolot,
                 pohjakoulutus = getPohjakoulutukset(koulutustausta),
                 julkaisulupa = lisatiedot.lupaJulkaisu.map(_ == "true"),
                 hKelpoisuus = hakukelpoisuus.status,
@@ -343,11 +386,7 @@ class KkHakijaResource(hakemukset: ActorRef,
     case "fin" => Future.successful("246")
 
     case arvo =>
-      val maaFuture = (koodisto ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2")).mapTo[String]
-      maaFuture.onFailure {
-        case t: Throwable => logger.error(s"failed to fetch country $koodiArvo", t)
-      }
-      maaFuture
+      (koodisto ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2")).mapTo[String]
 
   }
 

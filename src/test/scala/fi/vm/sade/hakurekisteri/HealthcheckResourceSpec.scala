@@ -16,6 +16,7 @@ import java.util.UUID
 import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
 import org.json4s.JsonAST.JInt
 import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
+import fi.vm.sade.hakurekisteri.storage.Identified
 
 class HealthcheckResourceSpec extends ScalatraFunSuite {
   val arvosana = Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", None, false, source = "Test")
@@ -40,7 +41,8 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
 
   val hakemukset = system.actorOf(Props(new Actor {
     override def receive: Actor.Receive = {
-      case h: HakemusQuery => sender ! Seq(FullHakemus.identify(hakemus))
+      case h: HakemusQuery => val identify: FullHakemus with Identified[String] = hakemus.identify
+        sender ! Seq(identify)
     }
   }))
 
@@ -82,7 +84,7 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
     }
   }
 
-  def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID]](s:Seq[R]) = {
+  def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]) = {
     val journal = new InMemJournal[R, UUID]
     s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
     journal

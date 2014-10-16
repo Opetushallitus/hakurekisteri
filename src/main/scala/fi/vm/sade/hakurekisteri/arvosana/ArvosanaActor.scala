@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.arvosana
 
+import akka.event.Logging
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.storage._
 import fi.vm.sade.hakurekisteri.storage.repository._
@@ -11,7 +12,6 @@ import scala.concurrent.Future
 trait ArvosanaRepository extends JournaledRepository[Arvosana, UUID] {
 
   var suoritusIndex: Map[UUID, Seq[Arvosana with Identified[UUID]]] = Option(suoritusIndex).getOrElse(Map())
-  //var suoritusIndexSnapShot: Map[UUID, Seq[Arvosana with Identified]] = Option(suoritusIndexSnapShot).getOrElse(Map())
 
   def addNew(arvosana: Arvosana with Identified[UUID]) = {
     suoritusIndex = Option(suoritusIndex).getOrElse(Map())
@@ -38,10 +38,9 @@ trait ArvosanaRepository extends JournaledRepository[Arvosana, UUID] {
 
   }
 
-    def identify(o:Arvosana): Arvosana with Identified[UUID] = Arvosana.identify(o)
 }
 
-trait ArvosanaService extends ResourceService[Arvosana, UUID]  with ArvosanaRepository {
+trait ArvosanaService extends InMemQueryingResourceService[Arvosana, UUID]  with ArvosanaRepository {
 
 
   override val optimize:PartialFunction[Query[Arvosana], Future[Seq[Arvosana with Identified[UUID]]]] = {
@@ -59,6 +58,7 @@ trait ArvosanaService extends ResourceService[Arvosana, UUID]  with ArvosanaRepo
 }
 
 class ArvosanaActor(val journal:Journal[Arvosana, UUID] = new InMemJournal[Arvosana, UUID]) extends ResourceActor[Arvosana, UUID] with ArvosanaRepository with ArvosanaService {
+  override val logger = Logging(context.system, this)
 }
 
 

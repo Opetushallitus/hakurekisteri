@@ -20,7 +20,7 @@ trait Hakupalvelu {
 }
 
 class AkkaHakupalvelu(hakemusActor:ActorRef)(implicit val ec: ExecutionContext) extends Hakupalvelu {
-  val logger = LoggerFactory.getLogger(getClass)
+  //val logger = LoggerFactory.getLogger(getClass)
   val Pattern = "preference(\\d+).*".r
 
   def filterHakemus(optionField: Option[String], filterFunc: (String) => (Map[String, String]) => Map[String, String] )(fh: FullHakemus): FullHakemus = optionField match {
@@ -56,7 +56,7 @@ class AkkaHakupalvelu(hakemusActor:ActorRef)(implicit val ec: ExecutionContext) 
 }
 
 object AkkaHakupalvelu {
-  val logger = LoggerFactory.getLogger(getClass)
+  //val logger = LoggerFactory.getLogger(getClass)
 
   val DEFAULT_POHJA_KOULUTUS: String = "1"
 
@@ -192,7 +192,8 @@ object AkkaHakupalvelu {
         case "sosiaalisetsyyt" => Some("2")
         case "todistustenvertailuvaikeudet" => Some("3")
         case "todistustenpuuttuminen" => Some("4")
-        case s => logger.error(s"invalid discretionary-follow-up value $s"); None
+        case s => //logger.error(s"invalid discretionary-follow-up value $s");
+          None
       }
       val aiempiperuminen = toiveet.get(s"preference${jno}_sora_oikeudenMenetys").map(s => Try(s.toBoolean).getOrElse(false))
       val terveys = toiveet.get(s"preference${jno}_sora_terveys").map(s => Try(s.toBoolean).getOrElse(false))
@@ -258,9 +259,11 @@ case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot], koulutust
 
 case class PreferenceEligibility(aoId: String, status: String, source: Option[String])
 
-case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String], preferenceEligibilities: Seq[PreferenceEligibility]) extends Resource[String] {
+case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String], preferenceEligibilities: Seq[PreferenceEligibility]) extends Resource[String, FullHakemus] with Identified[String] {
   val source = "1.2.246.562.10.00000000001"
-  override def identify(id: String): this.type with Identified[String] = FullHakemus.identify(this,id).asInstanceOf[this.type with Identified[String]]
+  override def identify(identity: String): FullHakemus with Identified[String] = this
+
+  val id = oid
 
   def hetu =
       for (
@@ -273,19 +276,7 @@ case class FullHakemus(oid: String, personOid: Option[String], applicationSystem
     case Some(s) if Seq("ACTIVE", "INCOMPLETE").contains(s) => true
     case _ => false
   }
+
+  def newId = oid
 }
 
-object FullHakemus {
-  def identify(o:FullHakemus): FullHakemus with Identified[String] = o.identify(o.oid)
-
-  def identify(o:FullHakemus, identity:String) =
-  new FullHakemus(
-      o.oid: String,
-      o.personOid: Option[String],
-      o.applicationSystemId: String,
-      o.answers,
-      o.state: Option[String],
-      o.preferenceEligibilities) with Identified[String] {
-        val id: String = identity
-      }
-}

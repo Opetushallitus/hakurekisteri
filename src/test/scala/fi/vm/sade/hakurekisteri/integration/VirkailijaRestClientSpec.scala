@@ -56,7 +56,7 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers {
   }
 
   it should "attach CasSecurityTicket request header into the remote request" in {
-    val client = new VirkailijaRestClient(ServiceConfig(serviceAccessUrl = Some("http://localhost/service-access"),
+    val client = new VirkailijaRestClient(ServiceConfig(casUrl = Some("http://localhost/cas"),
                                                         serviceUrl = "http://localhost/test",
                                                         user = Some("user"),
                                                         password = Some("pw")))
@@ -66,7 +66,7 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers {
   }
 
   it should "use JSESSIONID on subsequent requests" in {
-    val client = new VirkailijaRestClient(ServiceConfig(serviceAccessUrl = Some("http://localhost/service-access"),
+    val client = new VirkailijaRestClient(ServiceConfig(casUrl = Some("http://localhost/service-access"),
       serviceUrl = "http://localhost/test",
       user = Some("user"),
       password = Some("pw")), Some(jSessionIdActor))
@@ -99,7 +99,8 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers {
     override def head(url: URL, headers: Headers): HeadRequest = ???
     override def post(url: URL, headers: Headers, body: RawBody): PostRequest = PostRequest(url, headers, body) {
       url.toString match {
-        case s if s.endsWith("/accessTicket") => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody("ST-123")))
+        case s if s.endsWith("/v1/tickets") => Future.successful(HttpResponse(HttpResponseCode.Created, Headers(List("Location" -> "http://localhost/cas/v1/tickets/TGT-123")), RawBody("")))
+        case s if s.endsWith("/v1/tickets/TGT-123") => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody("ST-123")))
       }
     }
     override def put(url: URL, headers: Headers, body: RawBody): PutRequest = ???

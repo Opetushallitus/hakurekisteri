@@ -21,7 +21,7 @@ trait Repository[T, I] {
 
 
 
-trait InMemRepository[T <: Resource[I], I] extends Repository[T, I] {
+trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
 
   var store:Map[I,T with Identified[I]] = Map()
   var reverseStore:Map[T, Set[I]] = Map()
@@ -41,7 +41,7 @@ trait InMemRepository[T <: Resource[I], I] extends Repository[T, I] {
 
   def save(o: T ): T with Identified[I] = {
 
-    val oid = reverseStore.get(o).flatMap((ids) => ids.headOption.map((id) => o.identify(id)) ).getOrElse(identify(o))
+    val oid = reverseStore.get(o).flatMap((ids) => ids.headOption.map((id) => o.identify(id)) ).getOrElse(o.identify)
     val old = store.get(oid.id)
     val result = saveIdentified(oid)
     cursor = cursor + ((o.hashCode % 16384) -> updateCursor(o,oid.id))
@@ -60,7 +60,6 @@ trait InMemRepository[T <: Resource[I], I] extends Repository[T, I] {
 
   def index(old: Option[T with Identified[I]], oid: Option[T with Identified[I]]) {}
 
-  def identify(o: T): T with Identified[I]
 
   def listAll(): Seq[T with Identified[I]] = {
     store.values.toSeq

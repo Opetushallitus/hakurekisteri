@@ -23,6 +23,14 @@ trait HakurekisteriCommand[R] extends  JsonCommand  with HakurekisteriJsonSuppor
 
   import util.RicherString._
 
+  import org.json4s.jackson.JsonMethods.parse
+
+  implicit val stringtoJValue: TypeConverter[String, JValue] = safe((s: String) => parse(s))
+
+  implicit val jsontoJValue: TypeConverter[JValue, JValue] = safe((jvalue: JValue) => jvalue)
+
+
+
 
   implicit val stringtoOptionInt: TypeConverter[String, Option[Int]] = safe(_.blankOption.map (_.toInt))
 

@@ -7,4 +7,5 @@ trait Registers {
   val opiskelijaRekisteri: ActorRef
   val opiskeluoikeusRekisteri: ActorRef
   val arvosanaRekisteri: ActorRef
+  val eraRekisteri: ActorRef
 }

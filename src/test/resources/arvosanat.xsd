@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://www.example.org/arvosanat"
+	xmlns:arvosanat="http://www.example.org/arvosanat"
+	elementFormDefault="qualified">
+
+	<element name="arvosanat" type="arvosanat:ArvosanatType">
+		<unique name="uniqueHetu">
+  			<selector xpath="arvosanat:oppilas" />
+			<field xpath="arvosanat:hetu" />
+		</unique>
+		<unique name="uniqueOid">
+  			<selector xpath="arvosanat:oppilas" />
+			<field xpath="arvosanat:oppilasnumero" />
+		</unique>
+		<unique name="uniqueTunniste">
+  			<selector xpath="arvosanat:oppilas" />
+			<field xpath="arvosanat:tunniste" />
+		</unique>
+	</element>
+
+	<complexType name="ArvosanatType">
+		<sequence>
+			<element name="oppilas" type="arvosanat:OppilasType" maxOccurs="unbounded" minOccurs="0">
+				
+			</element>
+		</sequence>
+	</complexType>
+
+	<complexType name="OppilasType">
+		<sequence>
+			<choice maxOccurs="1" minOccurs="1">
+				<group ref="arvosanat:Hetullinen"></group>
+				<group ref="arvosanat:Oppijanumerollinen"></group>
+				<group ref="arvosanat:SyntymaAjallinen"></group>
+			</choice>
+			<element name="todistukset" type="arvosanat:TodistuksetType"
+				maxOccurs="1" minOccurs="1">
+			</element>
+		</sequence>
+	</complexType>
+
+	<group name="Hetullinen">
+		<sequence>
+			<element name="hetu" type="arvosanat:hetuType" maxOccurs="1"
+				minOccurs="1">
+			</element>
+			<element name="tunniste" type="string" maxOccurs="1"
+				minOccurs="0">
+			</element>
+		</sequence>
+	</group>
+
+
+	<group name="Oppijanumerollinen">
+		<sequence>
+			<element name="oppijanumero" type="string" maxOccurs="1"
+				minOccurs="1">
+			</element>
+			<element name="hetu" type="arvosanat:hetuType" maxOccurs="1"
+				minOccurs="0">
+			</element>
+			<element name="tunniste" type="string" maxOccurs="1"
+				minOccurs="0">
+			</element>
+		</sequence>
+	</group>
+
+	<complexType name="TodistuksetType">
+		<sequence>
+			<element name="perusopetus" type="arvosanat:PerusopetusType"
+				maxOccurs="1" minOccurs="1">
+			</element>
+			<element name="perusopetuksenlisaopetus"
+				type="arvosanat:LisaopetusType" maxOccurs="1" minOccurs="0">
+			</element>
+		</sequence>
+	</complexType>
+
+	<complexType name="PerusopetusType">
+		<sequence>
+			<element name="valmistuminen" type="date"></element>
+			<choice>
+				<sequence>
+					<element name="AI"
+						type="arvosanat:PerusOpetusAidinkieliType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="A1"
+						type="arvosanat:PerusOpetusKieliType" maxOccurs="2"
+						minOccurs="1">
+					</element>
+					<element name="A2"
+						type="arvosanat:PerusOpetusKieliType" maxOccurs="2"
+						minOccurs="0">
+					</element>
+					<element name="B1"
+						type="arvosanat:PerusOpetusKieliType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="B2"
+						type="arvosanat:PerusOpetusKieliType" maxOccurs="3"
+						minOccurs="0">
+					</element>
+					<element name="MA"
+						type="arvosanat:PerusOpetusAineType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="KS"
+						type="arvosanat:PerusOpetusAineType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="KE"
+						type="arvosanat:PerusOpetusAineType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="KU"
+						type="arvosanat:PerusOpetusAineType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="KO"
+						type="arvosanat:PerusOpetusAineType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="BI"
+						type="arvosanat:PerusOpetusAineType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="MU"
+						type="arvosanat:PerusOpetusAineType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="LI"
+						type="arvosanat:PerusOpetusAineType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="HI"
+						type="arvosanat:PerusOpetusAineType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="FY"
+						type="arvosanat:PerusOpetusAineType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="YH"
+						type="arvosanat:PerusOpetusAineType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="TE"
+						type="arvosanat:PerusOpetusAineType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="KT"
+						type="arvosanat:PerusOpetusAineType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+					<element name="GE"
+						type="arvosanat:PerusOpetusAineType" maxOccurs="1"
+						minOccurs="1">
+					</element>
+				</sequence>
+				<element name="eivalmistu" type="string"></element>
+			</choice>
+		</sequence>
+	</complexType>
+
+	<complexType name="LisaopetusType"></complexType>
+
+
+	<complexType name="PerusOpetusAineType">
+		<sequence>
+			<element name="yleinen" type="arvosanat:perusopetuksenarvosana" maxOccurs="1" minOccurs="1"></element>
+			<element name="valinnainen"
+				type="arvosanat:perusopetuksenarvosana" maxOccurs="2" minOccurs="0">
+			</element>
+		</sequence>
+	</complexType>
+
+	<simpleType name="perusopetuksenarvosana">
+		<restriction base="string">
+			<enumeration value="4"></enumeration>
+			<enumeration value="5"></enumeration>
+			<enumeration value="6"></enumeration>
+			<enumeration value="7"></enumeration>
+			<enumeration value="8"></enumeration>
+			<enumeration value="9"></enumeration>
+			<enumeration value="10"></enumeration>
+			<enumeration value="S"></enumeration>	
+		</restriction>
+	</simpleType>
+
+    
+
+	<complexType name="PerusOpetusAidinkieliType">
+		<complexContent>
+			<extension base="arvosanat:PerusOpetusAineType">
+				<sequence>
+					<element name="tyyppi"
+						type="arvosanat:AidinkielenTyyppi">
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+
+
+	<simpleType name="AidinkielenTyyppi">
+		<restriction base="string"></restriction>
+	</simpleType>
+
+	<group name="SyntymaAjallinen">
+		<sequence>
+			<element name="syntymaaika" type="arvosanat:syntymaAikaType"
+				maxOccurs="1" minOccurs="1">
+			</element>
+			<element name="tunniste" type="string" maxOccurs="1" minOccurs="1"></element>
+		</sequence>
+	</group>
+
+	<complexType name="PerusOpetusKieliType">
+		<complexContent>
+			<extension base="arvosanat:PerusOpetusAineType">
+				<sequence>
+					<element name="kieli" type="string"></element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+
+	<simpleType name="hetuType">
+        <restriction base="string">
+            <pattern value="[0-9]{6}[-A][0-9]{3}[0123456789ABCDEFHJKLMNPRSTUVWXY]" />
+        </restriction>
+	</simpleType>
+
+	<simpleType name="syntymaAikaType">
+		<restriction base="string">
+			<pattern value="[0-9]{8}" />
+		</restriction>
+	</simpleType>
+</schema>

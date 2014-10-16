@@ -50,13 +50,13 @@ class GuiServlet extends HakuJaValintarekisteriStack with ScalateSupport {
   }
 
   notFound {
-    logger.warn("location not found, resolving template")
+    //logger.warn("location not found, resolving template")
     // remove content type in case it was set through an action
     contentType = null
     // Try to render a ScalateTemplate if no route matched
     findTemplate(requestPath) map {
       path =>
-        logger.warn("finding template")
+        //logger.warn("finding template")
         contentType = "text/html"
         layoutTemplate(path)
     } orElse serveStaticResource() getOrElse resourceNotFound()

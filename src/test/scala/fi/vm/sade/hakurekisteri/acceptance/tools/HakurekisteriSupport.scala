@@ -66,14 +66,14 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
       if (!initialized) {
         println ("Initializing db with: " + tehdytSuoritukset)
         implicit val system = ActorSystem()
-        implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID]](s:Seq[R]) = {
+        implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]) = {
           var journal = new InMemJournal[R, UUID]
           s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
           journal
         }
         val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(tehdytSuoritukset)))
         val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
-        val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq())))
+        val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq[Opiskelija]())))
         val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(opiskelijaRekisteri)))
         addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](guardedSuoritusRekisteri, fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with TestSecurity, "/rest/v1/suoritukset")
         addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](guardedOpiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with TestSecurity , "/rest/v1/opiskelijat")
@@ -98,12 +98,19 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
     db.init()
     val json = write(suoritus)
     println(json)
-    post("/rest/v1/suoritukset", json, Map("Content-Type" -> "application/json; charset=utf-8")) {}
+    post("/rest/v1/suoritukset", json, Map("Content-Type" -> "application/json; charset=utf-8")) {
+      println(body)
+    }
+
   }
 
   def create (opiskelija: Opiskelija){
     db.init()
-    post("/rest/v1/opiskelijat", write(opiskelija), Map("Content-Type" -> "application/json; charset=utf-8")) {}
+    val json = write(opiskelija)
+    println(json)
+    post("/rest/v1/opiskelijat", json, Map("Content-Type" -> "application/json; charset=utf-8"))  {
+      println(body)
+    }
   }
 
   val kevatJuhla = new MonthDay(6,4).toLocalDate(DateTime.now.getYear)

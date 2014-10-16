@@ -15,10 +15,11 @@ import com.ning.http.client.Response
 import fi.vm.sade.hakurekisteri.storage.DeleteResource
 import fi.vm.sade.hakurekisteri.rest.support.User
 
-class OrganizationHierarchy[A <: Resource[I] :Manifest, I](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A,Set[String]]) extends FutureOrganizationHierarchy[A, I](serviceUrl, filteredActor, (item: A) => Future.successful(organizationFinder(item)) )
+class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A,Set[String]]) extends FutureOrganizationHierarchy[A, I](serviceUrl, filteredActor, (item: A) => Future.successful(organizationFinder(item)) )
 
-class FutureOrganizationHierarchy[A <: Resource[I] :Manifest, I ](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A, concurrent.Future[Set[String]]]) extends OrganizationHierarchyAuthorization[A](serviceUrl, organizationFinder) with Actor {
+class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](serviceUrl:String, filteredActor:ActorRef, organizationFinder: Function1[A, concurrent.Future[Set[String]]]) extends  Actor {
 
+  val authorizer = new OrganizationHierarchyAuthorization[A, I](serviceUrl, organizationFinder)
 
   val logger = Logging(context.system, this)
 
@@ -50,8 +51,8 @@ class FutureOrganizationHierarchy[A <: Resource[I] :Manifest, I ](serviceUrl:Str
   import akka.pattern.pipe
   override def receive: Receive = {
     case a:Update => fetch()
-    case a:OrganizationAuthorizer => logger.info("org paths loaded");authorizer = a
-    case AuthorizedQuery(q,user) => (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(futfilt(_, isAuthorized(user, "READ"))) pipeTo sender
+    case a:OrganizationAuthorizer => logger.info("org paths loaded");authorizer.authorizer = a
+    case AuthorizedQuery(q,user) => (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(futfilt(_, authorizer.isAuthorized(user, "READ"))) pipeTo sender
     case AuthorizedRead(id, user) => (filteredActor ? id).mapTo[Option[A with Identified[UUID]]].flatMap(checkRights(user, "READ")) pipeTo sender
     case AuthorizedDelete(id, user)  => val checkedRights = for (resourceToDelete <- filteredActor ? id;
                                                                     rights <- checkRights(user, "DELETE")(resourceToDelete.asInstanceOf[Option[A]]);
@@ -61,7 +62,7 @@ class FutureOrganizationHierarchy[A <: Resource[I] :Manifest, I ](serviceUrl:Str
 
                                                checkedRights pipeTo sender
     case AuthorizedCreate(resource:A,  user) => filteredActor forward resource
-    case AuthorizedUpdate(resource:A with Identified[I],  user) => val checked = for (resourceToUpdate <- filteredActor ? resource.id;
+    case AuthorizedUpdate(resource: A,  user) => val checked = for (resourceToUpdate <- filteredActor ? resource.identify.id;
                                                                      rightsForOld <- checkRights(user, "WRITE")(resourceToUpdate.asInstanceOf[Option[A]]);
                                                                      rightsForNew <- checkRights(user, "WRITE")(Some(resource));
                                                                      result <- if (rightsForOld.isDefined && rightsForNew.isDefined) filteredActor ? resource else Future.successful(rightsForOld)
@@ -75,15 +76,15 @@ class FutureOrganizationHierarchy[A <: Resource[I] :Manifest, I ](serviceUrl:Str
   def checkRights(user: User, action:String) = (item:Option[A]) => item match {
 
     case None => Future.successful(None)
-    case Some(resource: A) => isAuthorized(user, action)(resource).map((authorized) => if (authorized) Some(resource) else None)
+    case Some(resource) => authorizer.isAuthorized(user, action)(resource).map((authorized) => if (authorized) Some(resource) else None)
   }
 
 
   def fetch() {
-    val authorizer: Future[OrganizationAuthorizer] = createAuthorizer
+    val orgAuth: Future[OrganizationAuthorizer] = authorizer.createAuthorizer
     logger.info("fetching organizations from: " + serviceUrl)
-    authorizer pipeTo self
-    authorizer.onFailure {
+    orgAuth pipeTo self
+    orgAuth.onFailure {
       case e: Exception => logger.error("failed loading organizations", e)
     }
 
@@ -91,7 +92,7 @@ class FutureOrganizationHierarchy[A <: Resource[I] :Manifest, I ](serviceUrl:Str
 
 }
 
-class OrganizationHierarchyAuthorization[A:Manifest](serviceUrl:String, organizationFinder: A => Future[Set[String]]) {
+class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](serviceUrl:String, organizationFinder: A => Future[Set[String]]) {
 
   def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName
   lazy val resourceName = className[A]
@@ -196,8 +197,8 @@ case class AuthorizedQuery[A](q: Query[A],  user: User)
 case class AuthorizedRead[I](id: I, user: User)
 
 case class AuthorizedDelete[I](id: I, user: User)
-case class AuthorizedCreate[A <: Resource[_]](q: A,  user: User)
-case class AuthorizedUpdate[A <: Resource[_]](q: A with Identified[_], user: User)
+case class AuthorizedCreate[A <: Resource[I, A], I](q: A,  user: User)
+case class AuthorizedUpdate[A <: Resource[I, A] :Manifest, I : Manifest](q: A with Identified[I], user: User)
 
 case class Subject(resource: String, orgs: Set[String])
 

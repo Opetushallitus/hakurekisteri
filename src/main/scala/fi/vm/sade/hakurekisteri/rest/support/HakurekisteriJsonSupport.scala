@@ -8,7 +8,23 @@ import java.util.UUID
 
 trait HakurekisteriJsonSupport {
 
-  protected implicit def jsonFormats: Formats = DefaultFormats.lossless.withBigDecimal + new org.json4s.ext.EnumNameSerializer(yksilollistaminen) +
-    FieldSerializer[Identified[UUID]]() + new UUIDSerializer + new IdentitySerializer + DateTimeSerializer + new LocalDateSerializer() + new ArvioSerializer + new AjanjaksoSerializer + new SuoritusSerializer
+  protected implicit def jsonFormats: Formats = DefaultFormats.lossless.withBigDecimal +
+    new org.json4s.ext.EnumNameSerializer(yksilollistaminen) +
+    FieldSerializer[Identified[UUID]]() +
+    new UUIDSerializer +
+    new IdentitySerializer +
+    DateTimeSerializer +
+    new LocalDateSerializer() +
+    new ArvioSerializer +
+    new AjanjaksoSerializer +
+    new SuoritusSerializer +
+    new LasnaoloSerializer
+
+}
+
+
+object HakurekisteriJsonSupport extends HakurekisteriJsonSupport  {
+
+  val format =jsonFormats
 
 }
