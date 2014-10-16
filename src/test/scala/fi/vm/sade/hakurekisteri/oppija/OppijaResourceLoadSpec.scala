@@ -37,10 +37,10 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
   implicit val ec: ExecutionContext = system.dispatcher
 
   val oppijatConfig = ServiceConfig(
-    serviceUrl = "http://localhost:8080"
-//    casUrl = Some("https://testi.virkailija.opintopolku.fi/cas"),
-//    user = Some("robotti"),
-//    password = Some("Testaaja!")
+    serviceUrl = "https://testi.virkailija.opintopolku.fi/suoritusrekisteri",
+    casUrl = Some("https://testi.virkailija.opintopolku.fi/cas"),
+    user = Some("robotti"),
+    password = Some("Testaaja!")
   )
   val httpClient = HttpClientUtil.createHttpClient("oppija", 1, 1)
   val sessionActor = system.actorOf(Props(new JSessionIdActor()))
@@ -52,11 +52,12 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
     val hakukohteet = parse(jsonString).extract[Hakukohteet]
     val hakukohdeOids = hakukohteet.results.map(_.oid)
 
+    /*
     val count = new AtomicInteger(1)
     val batchStart = Platform.currentTime
     hakukohdeOids.foreach(h => {
       val start = Platform.currentTime
-      val res: Future[Seq[Oppija]] = oppijaClient.readObject[Seq[Oppija]](s"/rest/v1/oppijat?haku=$hakuOid&hakukohde=$h", HttpResponseCode.Ok)
+      val res: Future[Seq[Oppija]] = oppijaClient.readObject[Seq[Oppija]](s"/rest/v1/oppijat?haku=$hakuOid", HttpResponseCode.Ok)
       res.onComplete((t: Try[Seq[Oppija]]) => {
         val end = Platform.currentTime
         val oppijas = t match {
@@ -65,8 +66,22 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
         }
         println(s"${count.getAndIncrement} (${(end - batchStart) / 1000} seconds): took ${end - start} ms, got $oppijas oppijas")
       })
-      val tulos = Await.result(res, Duration(120, TimeUnit.SECONDS))
+      val tulos = Await.result(res, Duration(500, TimeUnit.SECONDS))
     })
+    */
+
+    println(s"calling /rest/v1/oppijat?haku=$hakuOid")
+    val res: Future[Seq[Oppija]] = oppijaClient.readObject[Seq[Oppija]](s"/rest/v1/oppijat?haku=$hakuOid", HttpResponseCode.Ok)
+    res.onComplete((t: Try[Seq[Oppija]]) => {
+      val end = Platform.currentTime
+      val oppijas = t match {
+        case Success(o) => o.size
+        case _ => -1
+      }
+      println(s"got $oppijas oppijas")
+    })
+    val tulos = Await.result(res, Duration(500, TimeUnit.SECONDS))
+
   }
 }
 

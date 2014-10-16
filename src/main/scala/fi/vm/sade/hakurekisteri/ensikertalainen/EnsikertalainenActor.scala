@@ -60,12 +60,9 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
       counts.map(QueriesRunning(_)) pipeTo sender
   }
 
-  case class EnsikertalaisuusCheckFailed(oid: Option[String],
-                                         hetu: Option[String],
-                                         suoritukset: Option[Seq[Suoritus]],
-                                         opiskeluoikeudet: Option[Seq[Opiskeluoikeus]],
-                                         komos: Map[String, Option[Komo]],
-                                         actorRef: ActorRef) extends Exception(s"timeouted for ${this.toString}")
+
+
+  case class EnsikertalaisuusCheckFailed(state: EnsikertalaisuusState) extends Exception(s"timeouted for ${state.toString}")
 
   class EnsikertalaisuusCheck() extends Actor {
     var suoritukset: Option[Seq[Suoritus]] = None
@@ -83,7 +80,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     var virtaQuerySent = false
 
     context.system.scheduler.scheduleOnce(2.minutes)({
-      failQuery(EnsikertalaisuusCheckFailed(oid, hetu, suoritukset, opiskeluOikeudet, komos, self))
+      failQuery(EnsikertalaisuusCheckFailed(EnsikertalaisuusState(oid, hetu, suoritukset, opiskeluOikeudet, komos, self)))
     })
 
     override def receive: Actor.Receive = {
@@ -235,6 +232,12 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   }
 }
 
+case class EnsikertalaisuusState(oid: Option[String],
+                                 hetu: Option[String],
+                                 suoritukset: Option[Seq[Suoritus]],
+                                 opiskeluoikeudet: Option[Seq[Opiskeluoikeus]],
+                                 komos: Map[String, Option[Komo]],
+                                 actorRef: ActorRef)
 
 case class QueryStatus(status: String)
 
