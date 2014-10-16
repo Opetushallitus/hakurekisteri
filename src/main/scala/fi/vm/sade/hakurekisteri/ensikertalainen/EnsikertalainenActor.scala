@@ -112,9 +112,14 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
 
       case SuoritusResponse(suor) =>
         suoritukset = Some(suor)
-        requestKomos(suor)
-        if (suor.isEmpty && opiskeluOikeudet.isDefined) fetchHetu()
+        if (suoritukset.exists {
+          case v: VapaamuotoinenSuoritus => v.kkTutkinto
+          case _ => false
+        }) resolveQuery(ensikertalainen = false) else {
 
+          requestKomos(suor)
+          if (suor.collect{ case v: VirallinenSuoritus => v}.isEmpty && opiskeluOikeudet.isDefined) fetchHetu()
+        }
 
       case OpiskeluoikeusResponse(oo) =>
         opiskeluOikeudet = Some(oo.filter(_.aika.alku.isAfter(kesa2014)))
@@ -187,7 +192,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     }
 
     def resolve(message: Try[Ensikertalainen]) {
-      resolver.complete(message)
+      resolver.tryComplete(message)
     }
 
     def requestOpiskeluOikeudet(henkiloOid: String)  {
