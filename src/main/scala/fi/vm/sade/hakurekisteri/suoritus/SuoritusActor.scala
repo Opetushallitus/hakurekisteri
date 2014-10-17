@@ -100,6 +100,13 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
   val matcher: PartialFunction[Query[Suoritus], (Suoritus with Identified[UUID]) => Boolean] = {
     case SuoritusQuery(henkilo, kausi, vuosi, myontaja) =>  (s: Suoritus with Identified[UUID]) =>
       checkHenkilo(henkilo)(s) && checkVuosi(vuosi)(s) && checkKausi(kausi)(s) && checkMyontaja(myontaja)(s)
+    case SuoritysTyyppiQuery(henkilo, komo) => (s: Suoritus with Identified[UUID]) =>
+      checkHenkilo(Some(henkilo))(s)  && checkKomo(komo)(s)
+  }
+
+  def checkKomo(komo:String)(s: Suoritus with Identified[UUID]) = s match {
+    case v: VirallinenSuoritus => v.komo == komo
+    case _ => false
   }
 
   def checkMyontaja(myontaja: Option[String])(suoritus: Suoritus):Boolean = (suoritus, myontaja) match {
