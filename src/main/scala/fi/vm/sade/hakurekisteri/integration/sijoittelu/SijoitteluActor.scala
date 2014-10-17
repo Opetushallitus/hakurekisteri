@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.sijoittelu
 
-import akka.actor.{Cancellable, Actor}
+import akka.actor.Actor
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import scala.concurrent.Future
