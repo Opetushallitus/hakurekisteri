@@ -361,7 +361,6 @@ class KkHakijaResource(hakemukset: ActorRef,
     case "EN" => "3"
 
     case _ => "9"
-
   }
   
   def getPostitoimipaikka(koodi: Option[Koodi]): String = koodi match {
@@ -371,13 +370,13 @@ class KkHakijaResource(hakemukset: ActorRef,
       case None => ""
 
       case Some(m) => m.nimi
-
     }
   }
 
   def isYlioppilas(suoritukset: Seq[Suoritus]): Boolean = {
     suoritukset.exists {
-      case s: VirallinenSuoritus => s.komo == YTLXml.yotutkinto && s.tila == "VALMIS" && s.vahvistettu
+      case s: VirallinenSuoritus => s.tila == "VALMIS" && s.vahvistettu
+
       case _ => false
     }
   }
@@ -387,7 +386,6 @@ class KkHakijaResource(hakemukset: ActorRef,
 
     case arvo =>
       (koodisto ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2")).mapTo[String]
-
   }
 
   def getToimipaikka(maa: String, postinumero: Option[String], kaupunkiUlkomaa: Option[String]): Future[String] = {
