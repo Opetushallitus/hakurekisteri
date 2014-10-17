@@ -7,6 +7,8 @@
     <todistukset>
       <perusopetus>
         <valmistuminen>2001-01-01</valmistuminen>
+        <myontaja>02839</myontaja>
+        <suorituskieli>fi</suorituskieli>
         <AI>
         	<yleinen>5</yleinen>
         	<tyyppi></tyyppi>
@@ -70,12 +72,27 @@
     </todistukset>
   </oppilas>
   <oppilas>
-	<oppijanumero>123.21213.2121.1212</oppijanumero>
+	<oppijanumero>1.2.246.562.24.12345678901</oppijanumero>
+	
     <todistukset>
       <perusopetus>
         <valmistuminen>2001-01-01</valmistuminen>
+        <myontaja>02839</myontaja>
+        <suorituskieli>fi</suorituskieli>
         <eivalmistu>JÄÄ LUOKALLE</eivalmistu>
       </perusopetus>
+    </todistukset>
+  </oppilas>
+  
+  <oppilas>
+	<syntymaaika>11111921</syntymaaika>
+	<tunniste>5a3fe790-55d5-11e4-8ed6-0800200c9a66</tunniste>
+    <todistukset>
+      <lukio>
+      	<valmistuminen>2001-01-01</valmistuminen>
+      	<myontaja>02839</myontaja>
+        <suorituskieli>fi</suorituskieli>
+      </lukio>
     </todistukset>
   </oppilas>
 </arvosanat>
