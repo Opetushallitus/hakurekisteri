@@ -67,6 +67,7 @@ case class VirallinenSuoritus(komo: String,
 
   override def equals(obj: scala.Any): Boolean = obj.isInstanceOf[VirallinenSuoritus] && core.equals(obj.asInstanceOf[VirallinenSuoritus].core)
 
+  override def hashCode(): Int = core.hashCode()
 
 
   override def identify(identity: UUID): VirallinenSuoritus with Identified[UUID] = new VirallinenSuoritus(komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, opiskeluoikeus, vahvistettu, source) with Identified[UUID] {
