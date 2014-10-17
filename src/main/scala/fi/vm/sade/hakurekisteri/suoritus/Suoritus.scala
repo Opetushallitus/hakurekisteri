@@ -60,6 +60,15 @@ case class VirallinenSuoritus(komo: String,
                     opiskeluoikeus: Option[UUID] = None,
                     vahv:Boolean = true,
                     lahde: String) extends Suoritus(henkilo, vahv, lahde)  {
+
+  private[VirallinenSuoritus] case class VirallinenSisalto(henkilo: String, komo: String, myontaja: String)
+
+  val core = VirallinenSisalto(henkilo, komo, myontaja)
+
+  override def equals(obj: scala.Any): Boolean = obj.isInstanceOf[VirallinenSuoritus] && core.equals(obj.asInstanceOf[VirallinenSuoritus].core)
+
+
+
   override def identify(identity: UUID): VirallinenSuoritus with Identified[UUID] = new VirallinenSuoritus(komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, opiskeluoikeus, vahvistettu, source) with Identified[UUID] {
     val id: UUID = identity
   }
