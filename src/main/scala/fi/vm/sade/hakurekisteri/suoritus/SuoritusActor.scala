@@ -15,6 +15,9 @@ import org.joda.time.ReadableInstant
 trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
   var tiedonSiirtoIndex: Map[String, Map[String, Seq[Suoritus with Identified[UUID]]]] = Option(tiedonSiirtoIndex).getOrElse(Map())
 
+  var suoritusTyyppiIndex: Map[String, Map[String, Seq[VirallinenSuoritus with Identified[UUID]]]] = Option(suoritusTyyppiIndex).getOrElse(Map())
+
+
   def year(suoritus:Suoritus): String = suoritus match {
     case s: VirallinenSuoritus =>  s.valmistuminen.getYear.toString
     case s: VapaamuotoinenSuoritus => s.vuosi.toString
@@ -23,9 +26,21 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
   def addNew(suoritus: Suoritus with Identified[UUID]) = {
     tiedonSiirtoIndex = Option(tiedonSiirtoIndex).getOrElse(Map())
 
-    val newIndexSeq =  suoritus +: tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(year(suoritus))).getOrElse(Seq())
-    val newHenk = tiedonSiirtoIndex.getOrElse(suoritus.henkiloOid, Map()) + (year(suoritus) -> newIndexSeq)
+    val newIndexSeq: Seq[Suoritus with Identified[UUID]] =  suoritus +: tiedonSiirtoIndex.get(suoritus.henkiloOid).flatMap((i) => i.get(year(suoritus))).getOrElse(Seq())
+    val newHenk: Map[String, Seq[Suoritus with Identified[UUID]]] = tiedonSiirtoIndex.getOrElse(suoritus.henkiloOid, Map()) + (year(suoritus) -> newIndexSeq)
     tiedonSiirtoIndex = tiedonSiirtoIndex + (suoritus.henkiloOid -> newHenk)
+
+    suoritusTyyppiIndex = Option(suoritusTyyppiIndex).getOrElse(Map())
+    for (
+      virallinen: VirallinenSuoritus with Identified[UUID] <- Option(suoritus).collect{case v:VirallinenSuoritus => v}
+    ) {
+      val newTyypiIndexSeq: Seq[VirallinenSuoritus with Identified[UUID]] = virallinen +: suoritusTyyppiIndex.get(virallinen.henkiloOid).flatMap(_.get(virallinen.komo)).getOrElse(Seq())
+      val newTyyppiHenk: Map[String, Seq[VirallinenSuoritus with Identified[UUID]]] =  suoritusTyyppiIndex.getOrElse(suoritus.henkiloOid, Map()) + (virallinen.komo -> newTyypiIndexSeq)
+      suoritusTyyppiIndex = suoritusTyyppiIndex + (virallinen.henkiloOid -> newTyyppiHenk)
+    }
+
+
+
   }
 
   override def index(old: Option[Suoritus with Identified[UUID]], current: Option[Suoritus with Identified[UUID]]) {
@@ -40,6 +55,14 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
       )
 
       tiedonSiirtoIndex = newIndex.getOrElse(tiedonSiirtoIndex)
+
+      suoritusTyyppiIndex = Option(suoritusTyyppiIndex).getOrElse(Map())
+      for (
+        virallinen: VirallinenSuoritus with Identified[UUID] <- Option(suoritus).collect{ case v: VirallinenSuoritus => v} ;
+        newSeq: Seq[VirallinenSuoritus with Identified[UUID]] <- suoritusTyyppiIndex.get(virallinen.henkiloOid).flatMap((i) => i.get(virallinen.komo)).map(_.filter((s) => s != virallinen || s.id != virallinen.id));
+        henk: Map[String, Seq[VirallinenSuoritus with Identified[UUID]]] <- suoritusTyyppiIndex.get(virallinen.henkiloOid).map((henk) => henk + (year(suoritus) -> newSeq))
+      ) suoritusTyyppiIndex = suoritusTyyppiIndex + (virallinen.henkiloOid -> henk)
+
     }
 
     old.foreach(removeOld)
@@ -66,6 +89,12 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
     case SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja) =>
       val filtered = tiedonSiirtoIndex.get(henkilo).map(_.values.reduce(_ ++ _)).getOrElse(Seq())
       executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja))
+    case SuoritysTyyppiQuery(henkilo, komo) => Future.successful{
+      (for (
+        henk <- suoritusTyyppiIndex.get(henkilo);
+        suoritukset <- henk.get(komo)
+      ) yield suoritukset).getOrElse(Seq())
+    }
   }
 
   val matcher: PartialFunction[Query[Suoritus], (Suoritus with Identified[UUID]) => Boolean] = {
