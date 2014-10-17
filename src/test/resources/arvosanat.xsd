@@ -54,8 +54,8 @@
 
 	<group name="Oppijanumerollinen">
 		<sequence>
-			<element name="oppijanumero" type="string" maxOccurs="1"
-				minOccurs="1">
+			<element name="oppijanumero"
+				type="arvosanat:oppijaNumeroType" maxOccurs="1" minOccurs="1">
 			</element>
 			<element name="hetu" type="arvosanat:hetuType" maxOccurs="1"
 				minOccurs="0">
@@ -67,14 +67,11 @@
 	</group>
 
 	<complexType name="TodistuksetType">
-		<sequence>
-			<element name="perusopetus" type="arvosanat:PerusopetusType"
-				maxOccurs="1" minOccurs="1">
-			</element>
-			<element name="perusopetuksenlisaopetus"
-				type="arvosanat:LisaopetusType" maxOccurs="1" minOccurs="0">
-			</element>
-		</sequence>
+
+		<choice>
+			<group ref="arvosanat:PerusopetuksenKaynyt"></group>
+			<group ref="arvosanat:LukionKaynyt"></group>
+		</choice>
 	</complexType>
 
 	<complexType name="PerusopetusType">
@@ -238,4 +235,32 @@
 			<pattern value="[0-9]{8}" />
 		</restriction>
 	</simpleType>
+
+	
+
+	<simpleType name="oppijaNumeroType">
+		<restriction base="string">
+			<pattern value="1\.2\.246\.562\.24\.[0-9]{11}"/>
+		</restriction>
+	</simpleType>
+
+	
+
+	<group name="PerusopetuksenKaynyt">
+		<sequence>
+			<element name="perusopetus" type="arvosanat:PerusopetusType"
+				maxOccurs="1" minOccurs="1">
+			</element>
+			<element name="perusopetuksenlisaopetus"
+				type="arvosanat:LisaopetusType" maxOccurs="1" minOccurs="0">
+			</element>
+		</sequence>
+	</group>
+	
+	<group name="LukionKaynyt">
+		<sequence>
+
+			<element name="lukio" type="string" maxOccurs="1" minOccurs="1"></element>
+		</sequence>
+	</group>
 </schema>
