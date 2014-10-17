@@ -13,7 +13,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriSwagger}
-import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, SuoritusQuery}
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus, SuoritusQuery}
 import org.joda.time.LocalDate
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -165,7 +165,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
 
   class MockedSuoritusActor extends Actor {
     override def receive: Actor.Receive = {
-      case q: SuoritusQuery => println(q); sender ! Seq(suoritus1)
+      case q: SuoritysTyyppiQuery => println(q); sender ! Seq(suoritus1)
     }
   }
 

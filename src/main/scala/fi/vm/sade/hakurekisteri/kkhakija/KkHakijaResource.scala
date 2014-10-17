@@ -17,7 +17,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohteenKoulutukset, Ha
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 import fi.vm.sade.hakurekisteri.rest.support.{Query, User, SpringSecuritySupport, HakurekisteriJsonSupport}
-import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus, SuoritusQuery}
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus, Suoritus, SuoritusQuery}
 import org.scalatra.swagger.{SwaggerEngine, Swagger}
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
@@ -361,7 +361,6 @@ class KkHakijaResource(hakemukset: ActorRef,
     case "EN" => "3"
 
     case _ => "9"
-
   }
   
   def getPostitoimipaikka(koodi: Option[Koodi]): String = koodi match {
@@ -371,23 +370,16 @@ class KkHakijaResource(hakemukset: ActorRef,
       case None => ""
 
       case Some(m) => m.nimi
-
     }
   }
 
-  def isYlioppilas(suoritukset: Seq[Suoritus]): Boolean = {
-    suoritukset.exists {
-      case s: VirallinenSuoritus => s.komo == YTLXml.yotutkinto && s.tila == "VALMIS" && s.vahvistettu
-      case _ => false
-    }
-  }
+  def isYlioppilas(suoritukset: Seq[VirallinenSuoritus]): Boolean = suoritukset.exists(s => s.tila == "VALMIS" && s.vahvistettu)
 
   def getMaakoodi(koodiArvo: String): Future[String] = koodiArvo.toLowerCase match {
     case "fin" => Future.successful("246")
 
     case arvo =>
       (koodisto ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2")).mapTo[String]
-
   }
 
   def getToimipaikka(maa: String, postinumero: Option[String], kaupunkiUlkomaa: Option[String]): Future[String] = {
@@ -403,11 +395,12 @@ class KkHakijaResource(hakemukset: ActorRef,
       henkilotiedot: HakemusHenkilotiedot <- answers.henkilotiedot
       hakutoiveet: Map[String, String] <- answers.hakutoiveet
       lisatiedot: Lisatiedot <- answers.lisatiedot
+      henkiloOid <- hakemus.personOid
     } yield for {
       hakemukset <- getHakemukset(hakemus)(q)
       maa <- getMaakoodi(henkilotiedot.asuinmaa.getOrElse("FIN"))
       toimipaikka <- getToimipaikka(maa, henkilotiedot.Postinumero, henkilotiedot.kaupunkiUlkomaa)
-      suoritukset <- (suoritukset ? SuoritusQuery(henkilo = hakemus.personOid)).mapTo[Seq[Suoritus]]
+      suoritukset <- (suoritukset ? SuoritysTyyppiQuery(henkilo = henkiloOid, komo = YTLXml.yotutkinto)).mapTo[Seq[VirallinenSuoritus]]
       kansalaisuus <- getMaakoodi(henkilotiedot.kansalaisuus.getOrElse("FIN"))
     } yield Hakija(
         hetu = getHetu(henkilotiedot.Henkilotunnus, henkilotiedot.syntymaaika, hakemus.oid),
