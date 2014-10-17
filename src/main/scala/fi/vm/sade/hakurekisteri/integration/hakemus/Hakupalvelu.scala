@@ -278,5 +278,7 @@ case class FullHakemus(oid: String, personOid: Option[String], applicationSystem
   }
 
   def newId = oid
+
+  override val core: AnyRef = oid
 }
 

@@ -10,6 +10,7 @@ case class ImportBatch(data: JValue, externalId: Option[String] = None, batchTyp
 
   override def identify(identifier: UUID): ImportBatch with Identified[UUID] = new IdentifiedImportBatch(this, identifier)
 
+  override val core: AnyRef = externalId
 }
 
 

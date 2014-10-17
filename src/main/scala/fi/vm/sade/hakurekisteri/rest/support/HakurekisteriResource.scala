@@ -108,7 +108,7 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
     val is = (actor ? message).mapTo[B].
       map(success)
     is.onSuccess{
-      case a => println(s"responding with $a")
+      case a => println(s"responding with $a ${Try(a.asInstanceOf[ActionResult].body.asInstanceOf[Resource[A,UUID]].core).toOption}")
     }
   }
 
