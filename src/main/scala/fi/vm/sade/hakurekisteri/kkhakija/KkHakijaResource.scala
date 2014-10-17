@@ -3,10 +3,10 @@ package fi.vm.sade.hakurekisteri.kkhakija
 import java.text.{ParseException, SimpleDateFormat}
 import java.util.{Calendar, Date}
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.{LoggingAdapter, Logging}
-import akka.pattern.ask
-import akka.util.Timeout
+import _root_.akka.actor.{ActorRef, ActorSystem}
+import _root_.akka.event.{LoggingAdapter, Logging}
+import _root_.akka.pattern.ask
+import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Lasnaolo, Lasna, Poissa, Puuttuu, Syksy, Kevat}
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
@@ -19,7 +19,7 @@ import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 import fi.vm.sade.hakurekisteri.rest.support.{Query, User, SpringSecuritySupport, HakurekisteriJsonSupport}
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus, SuoritusQuery}
 import org.scalatra.swagger.{SwaggerEngine, Swagger}
-import org.scalatra.{AsyncResult, InternalServerError, CorsSupport, FutureSupport}
+import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.util.RicherString._
 
@@ -82,6 +82,8 @@ case class Hakija(hetu: String,
                   onYlioppilas: Boolean,
                   hakemukset: Seq[Hakemus])
 
+object KkHakijaParamMissingException extends Exception
+
 class KkHakijaResource(hakemukset: ActorRef,
                        tarjonta: ActorRef,
                        haut: ActorRef,
@@ -108,6 +110,8 @@ class KkHakijaResource(hakemukset: ActorRef,
   get("/", operation(query)) {
     val q = KkHakijaQuery(params, currentUser)
     logger.info("Query: " + q)
+    
+    if (q.oppijanumero.isEmpty && q.hakukohde.isEmpty) throw KkHakijaParamMissingException
 
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
@@ -116,6 +120,7 @@ class KkHakijaResource(hakemukset: ActorRef,
   }
 
   incident {
+    case KkHakijaParamMissingException => (id) => BadRequest(IncidentReport(id, "either parameter oppijanumero or hakukohde must be given"))
     case t: TarjontaException => (id) => InternalServerError(IncidentReport(id, s"error with tarjonta: $t"))
     case t: HakuNotFoundException => (id) => InternalServerError(IncidentReport(id, s"error: $t"))
     case t: InvalidSyntymaaikaException => (id) => InternalServerError(IncidentReport(id, s"error: $t"))
