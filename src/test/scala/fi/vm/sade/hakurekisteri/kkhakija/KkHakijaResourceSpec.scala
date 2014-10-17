@@ -35,8 +35,14 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   addServlet(resource, "/")
 
   test("should return 200 OK") {
-    get("/") {
+    get("/?hakukohde=1.11.1") {
       status should be (200)
+    }
+  }
+
+  test("should return 400 Bad Request if no parameters given") {
+    get("/") {
+      status should be (400)
     }
   }
 

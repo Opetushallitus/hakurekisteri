@@ -376,17 +376,9 @@ class KkHakijaResource(hakemukset: ActorRef,
   }
 
   def isYlioppilas(suoritukset: Seq[Suoritus]): Boolean = {
-    suoritukset.find{
-      case s:VirallinenSuoritus =>
-        s.komo == YTLXml.yotutkinto && s.tila == "VALMIS" && s.vahvistettu
-
+    suoritukset.exists {
+      case s: VirallinenSuoritus => s.komo == YTLXml.yotutkinto && s.tila == "VALMIS" && s.vahvistettu
       case _ => false
-
-    } match {
-      case Some(_) => true
-
-      case None => false
-
     }
   }
 
@@ -415,7 +407,7 @@ class KkHakijaResource(hakemukset: ActorRef,
       hakemukset <- getHakemukset(hakemus)(q)
       maa <- getMaakoodi(henkilotiedot.asuinmaa.getOrElse("FIN"))
       toimipaikka <- getToimipaikka(maa, henkilotiedot.Postinumero, henkilotiedot.kaupunkiUlkomaa)
-      suoritukset <- (suoritukset ? SuoritusQuery(henkilo = hakemus.personOid, myontaja = Some(YTLXml.YTL))).mapTo[Seq[Suoritus]]
+      suoritukset <- (suoritukset ? SuoritusQuery(henkilo = hakemus.personOid)).mapTo[Seq[Suoritus]]
       kansalaisuus <- getMaakoodi(henkilotiedot.kansalaisuus.getOrElse("FIN"))
     } yield Hakija(
         hetu = getHetu(henkilotiedot.Henkilotunnus, henkilotiedot.syntymaaika, hakemus.oid),
