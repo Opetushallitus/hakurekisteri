@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.opiskeluoikeus
 
-import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
 import org.scalatra.swagger.AllowableValues.AnyValue
 import org.scalatra.swagger.{Model, DataType, ModelField}
@@ -30,12 +29,12 @@ trait OpiskeluoikeusSwaggerApi {
 
   val create = apiOperation[Opiskeluoikeus]("lisääOpiskeluoikeus")
     .summary("luo opiskeluoikeustiedon ja palauttaa sen tiedot")
-    .parameter(bodyParam[Opiskelija]("opiskeluoikeus").description("uusi opiskeluoikeustieto").required)
+    .parameter(bodyParam[Opiskeluoikeus]("opiskeluoikeus").description("uusi opiskeluoikeustieto").required)
 
   val update = apiOperation[Opiskeluoikeus]("päivitäOpiskeluoikeus")
     .summary("päivittää olemassa olevaa opiskeluoikeustietoa ja palauttaa sen tiedot")
     .parameter(pathParam[String]("id").description("opiskeluoikeustiedot uuid").required)
-    .parameter(bodyParam[Opiskelija]("opiskeluoikeus").description("päivitettävä opiskeluoikeustieto").required)
+    .parameter(bodyParam[Opiskeluoikeus]("opiskeluoikeus").description("päivitettävä opiskeluoikeustieto").required)
 
   val read = apiOperation[Opiskeluoikeus]("haeOpiskeluoikeus")
     .summary("hakee opiskeluoikeustiedon tiedot")
