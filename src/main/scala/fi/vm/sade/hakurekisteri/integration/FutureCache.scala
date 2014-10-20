@@ -4,7 +4,7 @@ import scala.compat.Platform
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-case class Cacheable[T](inserted: Long = Platform.currentTime, f: Future[T])
+case class Cacheable[T](inserted: Long = Platform.currentTime, used: Long = Platform.currentTime, f: Future[T])
 
 class FutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.toMillis) {
 
@@ -12,8 +12,16 @@ class FutureCache[K, T](val expirationDurationMillis: Long = 60.minutes.toMillis
 
   def contains(key: K): Boolean = cache.contains(key) && cache(key).inserted + expirationDurationMillis > Platform.currentTime
 
-  def get(key: K): Future[T] = cache(key).f
+  def get(key: K): Future[T] = {
+    val cached = cache(key)
+    cache = cache + (key -> Cacheable(inserted = cached.inserted, f = cached.f))
+    cached.f
+  }
+
+  def inUse(key: K): Boolean = contains(key) && (cache(key).used + expirationDurationMillis) > Platform.currentTime
 
   def +(key: K, f: Future[T]) = cache = cache + (key -> Cacheable(f = f))
+
+  def -(key: K) = if (cache.contains(key)) cache = cache - key
 
 }
