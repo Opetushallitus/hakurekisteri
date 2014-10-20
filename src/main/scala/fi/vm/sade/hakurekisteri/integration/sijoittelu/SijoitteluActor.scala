@@ -12,12 +12,10 @@ class SijoitteluActor(sijoitteluClient: VirkailijaRestClient) extends Actor {
 
   implicit val ec = context.dispatcher
 
-  val expiration = 4.hour
-
-  val retry: FiniteDuration = 60.seconds
   val log = Logging(context.system, this)
-  var cache = new FutureCache[String, SijoitteluTulos](expiration.toMillis)
+  private val cache = new FutureCache[String, SijoitteluTulos](4.hours.toMillis)
   private val refetch: FiniteDuration = 2.hours
+  private val retry: FiniteDuration = 60.seconds
 
   override def receive: Receive = {
     case SijoitteluQuery(haku) =>
@@ -28,9 +26,11 @@ class SijoitteluActor(sijoitteluClient: VirkailijaRestClient) extends Actor {
 
     case Update(haku) =>
       val result = sijoitteluTulos(haku)
-      result.onFailure{ case t =>
-        log.error(t, s"failed to fetch sijoittelu for haku $haku")
-        rescheduleHaku(haku, retry)}
+      result.onFailure {
+        case t =>
+          log.error(t, s"failed to fetch sijoittelu for haku $haku")
+          rescheduleHaku(haku, retry)
+      }
       result map (Sijoittelu(haku, _)) pipeTo self
 
     case Sijoittelu(haku, st) =>
@@ -44,17 +44,17 @@ class SijoitteluActor(sijoitteluClient: VirkailijaRestClient) extends Actor {
   }
 
   def updateCacheFor(haku: String): Future[SijoitteluTulos] = {
-    val result: Future[SijoitteluTulos] = sijoitteluTulos(haku)
-    cache + (haku, result)
-
-    result.onFailure{ case t =>
-      log.error(t, s"failed to fetch sijoittelu for haku $haku")
-      rescheduleHaku(haku, retry)}
-    result.onSuccess{
+    val tulos: Future[SijoitteluTulos] = sijoitteluTulos(haku)
+    cache + (haku, tulos)
+    tulos.onFailure {
+      case t =>
+        log.error(t, s"failed to fetch sijoittelu for haku $haku")
+        rescheduleHaku(haku, retry)
+    }
+    tulos.onSuccess {
       case _ => rescheduleHaku(haku)
     }
-
-    result
+    tulos
   }
 
   def sijoitteluTulos(haku: String): Future[SijoitteluTulos] = {
