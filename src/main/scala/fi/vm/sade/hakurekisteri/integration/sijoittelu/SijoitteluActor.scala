@@ -1,18 +1,16 @@
 package fi.vm.sade.hakurekisteri.integration.sijoittelu
 
-import akka.actor.Actor
+import akka.actor.{ActorLogging, Actor}
 import akka.pattern.pipe
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, VirkailijaRestClient}
 import scala.concurrent.duration._
 import scala.concurrent.Future
-import akka.event.Logging
 
-class SijoitteluActor(sijoitteluClient: VirkailijaRestClient) extends Actor {
+class SijoitteluActor(sijoitteluClient: VirkailijaRestClient) extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
 
-  val log = Logging(context.system, this)
   private val cache = new FutureCache[String, SijoitteluTulos](4.hours.toMillis)
   private val refetch: FiniteDuration = 2.hours
   private val retry: FiniteDuration = 60.seconds

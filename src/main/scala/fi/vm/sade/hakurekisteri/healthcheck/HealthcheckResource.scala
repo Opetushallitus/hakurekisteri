@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit
 import java.util.{Locale, UUID}
 
 import _root_.akka.util.Timeout
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.actor._
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.{AskTimeoutException, ask, pipe}
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
@@ -65,7 +65,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
                        suoritusRekisteri: ActorRef,
                        ytl: ActorRef,
                        hakemukset: ActorRef,
-                       ensikertalainenActor: ActorRef)(implicit system: ActorSystem) extends Actor {
+                       ensikertalainenActor: ActorRef)(implicit system: ActorSystem) extends Actor with ActorLogging {
   protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(30, TimeUnit.SECONDS)
 
@@ -89,10 +89,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
     super.preStart()
   }
 
-  val logger = Logging(context.system, this)
-
   def println(foo:ActorSystem){}
-
 
   def receive = {
     case SelfCheck(id) =>
@@ -102,7 +99,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
     case Measure(id) =>
       val arrival = Platform.currentTime
       val roundTrip = selfChecks.get(id).map(arrival - _)
-      if (!(roundTrip.getOrElse(0L) < 30000)) logger.warning(s"Healthcheck is too slow. Measured roundtrip over 30s ${roundTrip}ms")
+      if (!(roundTrip.getOrElse(0L) < 30000)) log.warning(s"Healthcheck is too slow. Measured roundtrip over 30s ${roundTrip}ms")
       selfChecks = selfChecks - id
     case Hakemukset(oid, count) =>
       val curState = foundHakemukset.get(oid).map{
@@ -147,7 +144,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   def getEnsikertalainenReport: Future[QueryReport] = (ensikertalainenActor ? QueryCount).map{
     case QueriesRunning(count, time) => QueryReport(Status.OK, count,time)}.recover {
     case e: AskTimeoutException => new QueryReport(Status.TIMEOUT, Map())
-    case e: Throwable => logger.error(e, "error getting ensikertalainen status"); QueryReport(Status.FAILURE, Map())
+    case e: Throwable => log.error(e, "error getting ensikertalainen status"); QueryReport(Status.FAILURE, Map())
   }
 
   def getYtlReport: Future[YtlStatus] = {
@@ -159,7 +156,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       yr.nextSend
     ) }).recover {
       case e: AskTimeoutException => new YtlFailure(Status.TIMEOUT)
-      case e: Throwable => logger.error(e, "error getting ytl status"); new YtlFailure(Status.FAILURE)
+      case e: Throwable => log.error(e, "error getting ytl status"); new YtlFailure(Status.FAILURE)
     }
 
   }
@@ -169,7 +166,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       .mapTo[Seq[Arvosana with Identified[UUID]]]
     arvosanaFuture.map((a) => { new ItemCount(Status.OK, a.length.toLong) }).recover {
       case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
-      case e: Throwable => logger.error(e,"error getting arvosana count"); new ItemCount(Status.FAILURE, 0)
+      case e: Throwable => log.error(e,"error getting arvosana count"); new ItemCount(Status.FAILURE, 0)
     }
   }
 
@@ -178,7 +175,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       .mapTo[Seq[Suoritus with Identified[UUID]]]
     suoritusFuture.map((s) => { new ItemCount(Status.OK, s.length.toLong) }).recover {
       case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
-      case e: Throwable => logger.error(e,"error getting suoritus count"); new ItemCount(Status.FAILURE, 0)
+      case e: Throwable => log.error(e,"error getting suoritus count"); new ItemCount(Status.FAILURE, 0)
     }
   }
 
@@ -187,7 +184,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       .mapTo[Seq[Opiskelija with Identified[UUID]]]
     opiskelijaFuture.map((o) => { ItemCount(Status.OK, o.length.toLong) }).recover {
       case e: AskTimeoutException => ItemCount(Status.TIMEOUT, 0)
-      case e: Throwable => logger.error(e,"error getting opiskelija count"); ItemCount(Status.FAILURE, 0)
+      case e: Throwable => log.error(e,"error getting opiskelija count"); ItemCount(Status.FAILURE, 0)
     }
   }
 
@@ -196,7 +193,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       .mapTo[Seq[Opiskeluoikeus with Identified[UUID]]]
     opiskeluoikeusFuture.map((o) => { ItemCount(Status.OK, o.length.toLong) }).recover {
       case e: AskTimeoutException => ItemCount(Status.TIMEOUT, 0)
-      case e: Throwable => logger.error(e,"error getting opiskeluoikeus count"); ItemCount(Status.FAILURE, 0)
+      case e: Throwable => log.error(e,"error getting opiskeluoikeus count"); ItemCount(Status.FAILURE, 0)
     }
   }
 
@@ -205,7 +202,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       .mapTo[Seq[Hakemus with Identified[String]]]
     hakemusFuture.map((s) => { new ItemCount(Status.OK, s.length.toLong) }).recover {
       case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
-      case e: Throwable => logger.error(e,"error getting hakemus count"); new ItemCount(Status.FAILURE, 0)
+      case e: Throwable => log.error(e,"error getting hakemus count"); new ItemCount(Status.FAILURE, 0)
     }
   }
 }

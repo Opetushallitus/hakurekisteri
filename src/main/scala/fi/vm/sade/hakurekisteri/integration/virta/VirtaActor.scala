@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
-import akka.actor.{Actor, ActorRef}
-import akka.event.Logging
+import akka.actor.{ActorLogging, Actor, ActorRef}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
@@ -17,9 +16,8 @@ case class KomoNotFoundException(message: String) extends Exception(message)
 
 case class VirtaData(opiskeluOikeudet: Seq[Opiskeluoikeus], suoritukset: Seq[Suoritus])
 
-class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef) extends Actor {
+class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
-  val log = Logging(context.system, this)
 
   def receive: Receive = {
     case VirtaQuery(o, h) => convertVirtaResult(getOpiskelijanTiedot(o, h))(o) pipeTo sender

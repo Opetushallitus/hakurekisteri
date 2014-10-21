@@ -2,8 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.valintatulos
 
 import java.net.URLEncoder
 
-import akka.actor.Actor
-import akka.event.Logging
+import akka.actor.{ActorLogging, Actor}
 import akka.pattern.pipe
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedException, VirkailijaRestClient}
@@ -66,9 +65,8 @@ case class ValintaTulos(hakemusOid: String,
 case class CacheKey(hakuOid: String, hakemusOid: String)
 
 class ValintaTulosActor(restClient: VirkailijaRestClient)
-                       (implicit val ec: ExecutionContext) extends Actor {
+                       (implicit val ec: ExecutionContext) extends Actor with ActorLogging {
 
-  val log = Logging(context.system, this)
   val maxRetries = 5
   private val cache = new FutureCache[CacheKey, ValintaTulos]()
 

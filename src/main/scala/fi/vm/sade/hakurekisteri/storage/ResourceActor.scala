@@ -1,19 +1,17 @@
 package fi.vm.sade.hakurekisteri.storage
 
-import akka.actor.{Cancellable, Actor}
+import akka.actor.{ActorLogging, Cancellable, Actor}
 import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
 import akka.pattern.pipe
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import akka.actor.Status.Failure
 import scala.util.Try
-import fi.vm.sade.hakurekisteri.storage.repository.{Repository, JournaledRepository}
-import akka.event.Logging
+import fi.vm.sade.hakurekisteri.storage.repository.Repository
 
 
-abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] extends Actor { this: Repository[T, I] with ResourceService[T, I] =>
+abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] extends Actor with ActorLogging { this: Repository[T, I] with ResourceService[T, I] =>
   implicit val executionContext: ExecutionContext = context.dispatcher
-  val log = Logging(context.system, this)
   val reloadInterval = 10.seconds
 
   override def postStop(): Unit = {

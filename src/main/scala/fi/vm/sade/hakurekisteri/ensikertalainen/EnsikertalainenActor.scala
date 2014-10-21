@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.ensikertalainen
 
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{ActorLogging, Actor, ActorRef, Props}
 import akka.event.{LoggingAdapter, Logging}
 import akka.pattern.pipe
 import akka.util.Timeout
@@ -29,8 +29,7 @@ case class QueriesRunning(count: Map[String, Int], timestamp: Long = Platform.cu
 
 case class CacheResult(q: EnsikertalainenQuery, f: Future[Ensikertalainen])
 
-class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaActor: ActorRef, hakemukset : ActorRef)(implicit val ec: ExecutionContext) extends Actor {
-  val logger: LoggingAdapter = Logging(context.system, this)
+class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, virtaActor: ActorRef, henkiloActor: ActorRef, tarjontaActor: ActorRef, hakemukset : ActorRef)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
   val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
   implicit val defaultTimeout: Timeout = 30.seconds
   private val cache = new FutureCache[EnsikertalainenQuery, Ensikertalainen](24.hours.toMillis)
@@ -39,7 +38,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
     case q: EnsikertalainenQuery =>
       if (cache.contains(q)) cache.get(q) pipeTo sender
       else {
-        logger.debug(s"EnsikertalainenQuery(${q.henkiloOid}) with ${q.hetu.map("hetu: " + _).getOrElse("no hetu")}")
+        log.debug(s"EnsikertalainenQuery(${q.henkiloOid}) with ${q.hetu.map("hetu: " + _).getOrElse("no hetu")}")
         context.actorOf(Props(new EnsikertalaisuusCheck())).forward(q)
       }
 
@@ -62,7 +61,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
 
   case class EnsikertalaisuusCheckFailed(status: QueryStatus) extends Exception(s"ensikertalaisuus check failed: $status")
   
-  class EnsikertalaisuusCheck() extends Actor {
+  class EnsikertalaisuusCheck() extends Actor with ActorLogging {
     var suoritukset: Option[Seq[Suoritus]] = None
 
     var opiskeluOikeudet: Option[Seq[Opiskeluoikeus]] = None
@@ -144,7 +143,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         fetchVirta(h)
 
       case HenkiloResponse(_, None) =>
-        logger.error(s"henkilo response failed, no hetu for oid $oid")
+        log.error(s"henkilo response failed, no hetu for oid $oid")
         failQuery(NoHetuException(oid, s"no hetu found for oid $oid"))
 
       case VirtaData(virtaOpiskeluOikeudet, virtaSuoritukset) =>
@@ -153,7 +152,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         resolveQuery(filteredOpiskeluOikeudet.isEmpty ||  virtaSuoritukset.isEmpty)
 
       case akka.actor.Status.Failure(e: Throwable) =>
-        logger.error(e, s"got error from $sender")
+        log.error(e, s"got error from $sender")
         failQuery(e)
     }
 
