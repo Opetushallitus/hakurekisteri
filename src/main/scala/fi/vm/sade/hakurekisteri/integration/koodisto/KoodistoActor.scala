@@ -2,15 +2,12 @@ package fi.vm.sade.hakurekisteri.integration.koodisto
 
 import java.net.URLEncoder
 
-import akka.actor.Actor
-import akka.event.Logging
+import akka.actor.{ActorLogging, Actor}
 import akka.pattern.pipe
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedException, VirkailijaRestClient}
 
-import scala.compat.Platform
 import scala.concurrent.{Future, ExecutionContext}
-import scala.concurrent.duration._
 
 case class GetRinnasteinenKoodiArvoQuery(koodiUri: String, rinnasteinenKoodistoUri: String)
 case class Koodisto(koodistoUri: String)
@@ -23,8 +20,7 @@ case class GetKoodi(koodistoUri: String, koodiUri: String)
 case class KoodistoKoodiArvot(koodistoUri: String, arvot: Seq[String])
 case class GetKoodistoKoodiArvot(koodistoUri: String)
 
-class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: ExecutionContext) extends Actor {
-  val log = Logging(context.system, this)
+class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
 
   private val koodiCache = new FutureCache[String, Option[Koodi]]()
   private val relaatioCache = new FutureCache[GetRinnasteinenKoodiArvoQuery, String]()
@@ -47,9 +43,7 @@ class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: Execution
     else {
       val f = restClient.readObject[Seq[Koodi]](s"/rest/json/${URLEncoder.encode(koodistoUri, "UTF-8")}/koodi", maxRetries, HttpResponseCode.Ok)
         .map(koodit => KoodistoKoodiArvot(koodistoUri, koodit.map(_.koodiArvo)))
-
       koodiArvotCache + (koodistoUri, f)
-
       f
     }
   }

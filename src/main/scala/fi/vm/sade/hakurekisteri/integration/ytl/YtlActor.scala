@@ -6,7 +6,6 @@ import scala.xml.{XML, Node, Elem}
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen, Suoritus}
 import fi.vm.sade.hakurekisteri.arvosana.{ArvosanaQuery, Arvosana}
 import scala.concurrent.{ExecutionContext, Future}
-import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import java.util.concurrent.{Executors, TimeUnit}
@@ -18,7 +17,6 @@ import fi.vm.sade.hakurekisteri.arvosana.ArvioYo
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.henkilo.HetuQuery
 import scala.util.Failure
-import scala.Some
 import scala.util.Success
 import akka.actor.ActorIdentity
 import akka.actor.Identify
@@ -32,9 +30,8 @@ case class YtlReport(waitingforAnswers: Seq[Batch[KokelasRequest]], nextSend: Op
 
 object Report
 
-class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemukset: ActorRef, config: Option[YTLConfig]) extends Actor {
+class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemukset: ActorRef, config: Option[YTLConfig]) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
-
 
   var haut = Set[String]()
   var sent = Seq[Batch[KokelasRequest]]()
@@ -52,11 +49,6 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     val times = config.map(_.sendTimes).filter(!_.isEmpty)
     Timer.countNextSend(times)
   }
-
-
-
-
-  val log = Logging(context.system, this)
 
   if (config.isEmpty) log.warning("Starting ytlActor without config")
 

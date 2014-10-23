@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.hakija
 
-import akka.actor.{ActorRef, Actor}
+import akka.actor.{ActorLogging, ActorRef, Actor}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.Hakupalvelu
 import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
@@ -176,9 +176,8 @@ case class Hakemus(hakutoiveet: Seq[Hakutoive], hakemusnumero: String, julkaisul
 
 case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria: Seq[Opiskelija], hakemus: Hakemus)
 
-class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistoActor: ActorRef, sijoittelupalvelu: ActorRef) extends Actor {
+class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistoActor: ActorRef, sijoittelupalvelu: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
-  val log = Logging(context.system, this)
   implicit val defaultTimeout: Timeout = 120.seconds
 
   def receive = {

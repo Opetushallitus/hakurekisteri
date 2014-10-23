@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
 import scala.concurrent.{ExecutionContext, Future}
-import akka.actor.{ActorRef, Actor}
+import akka.actor.{ActorLogging, ActorRef, Actor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{RestHaku, GetHautQuery, RestHakuResult}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
 import akka.pattern.pipe
@@ -15,9 +15,8 @@ import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluQuery
 import fi.vm.sade.hakurekisteri.integration.ytl.HakuList
 
 
-class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, sijoittelu: ActorRef, ytl: ActorRef) extends Actor {
+class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, sijoittelu: ActorRef, ytl: ActorRef) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
-  val log = Logging(context.system, this)
 
   var activeHakus: Seq[Haku] = Seq()
   val refreshTime = 2.hours
