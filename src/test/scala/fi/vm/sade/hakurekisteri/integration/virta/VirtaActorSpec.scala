@@ -10,25 +10,26 @@ import com.stackmob.newman.{RawBody, Headers, HttpClient}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
-import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import org.joda.time.LocalDate
 import org.scalatest.FlatSpec
-import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.matchers.ShouldMatchers
-import org.scalatest.time.{Millis, Span}
-import org.specs.mock.Mockito
-import org.specs.specification.Examples
+import org.scalatest.time.Span
 import akka.pattern.ask
 
 import scala.concurrent.Future
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
+import org.scalatest.mock.MockitoSugar
+import org.mockito.Mockito
+import fi.vm.sade.hakurekisteri.SpecsLikeMockito
 
-class VirtaActorSpec extends FlatSpec with ShouldMatchers with FutureWaiting with Mockito {
+
+class VirtaActorSpec extends FlatSpec with ShouldMatchers with FutureWaiting with SpecsLikeMockito {
   implicit val system = ActorSystem("test-virta-system")
   override implicit val ec = system.dispatcher
 
   behavior of "VirtaActor"
+
+
 
   it should "convert VirtaResult into sequence of Suoritus" in {
     val virtaClient = mock[VirtaClient]
@@ -73,8 +74,6 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with FutureWaiting wit
 
 
 
-  override def forExample: Examples = ???
-  override def lastExample: Option[Examples] = ???
 
   class MockedOrganisaatioActor extends Actor {
     import akka.pattern.pipe

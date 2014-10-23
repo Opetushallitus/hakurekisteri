@@ -14,8 +14,6 @@ import java.util.concurrent.TimeUnit
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
 import org.scalatest.Suite
 import org.scalatra.test.HttpComponentsClient
-import org.specs.mock.Mockito
-import org.specs.specification.Examples
 import scala.concurrent.{Future, ExecutionContext}
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluHakija
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
@@ -27,10 +25,10 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluHakutoiveenValintatapajono
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluPagination
 import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluHakutoive
+import fi.vm.sade.hakurekisteri.SpecsLikeMockito
 
-trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport with Mockito {
-  override def forExample: Examples = ???
-  override def lastExample: Option[Examples] = ???
+trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport with SpecsLikeMockito {
+
 
   object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None)
   object OppilaitosY extends Organisaatio("1.10.2", Map("fi" -> "Oppilaitos Y"), None, Some("00002"), None)

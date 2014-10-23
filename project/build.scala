@@ -71,8 +71,7 @@ object HakuJaValintarekisteriBuild extends Build {
   )
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion,
-                             "org.scalamock" %% "scalamock-scalatest-support" % "3.1.4",
-                             "org.scala-tools.testing" %% "specs" % "1.6.9")
+                             "org.scalamock" %% "scalamock-scalatest-support" % "3.1.4")
 
   lazy val mocha = taskKey[Unit]("run mocha tests")
   lazy val installMocha = taskKey[Unit]("install mocha")
