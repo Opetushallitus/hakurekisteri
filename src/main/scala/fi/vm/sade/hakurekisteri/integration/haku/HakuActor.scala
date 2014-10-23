@@ -7,7 +7,6 @@ import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosReque
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import org.joda.time.{DateTime, ReadableInstant}
-import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.hakemus.ReloadHaku
 import scala.concurrent.duration._
 import org.scalatra.util.RicherString._
