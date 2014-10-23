@@ -47,7 +47,7 @@ object HakuJaValintarekisteriBuild extends Build {
     "net.sf.ehcache" % "ehcache-jgroupsreplication" % "1.5",
     "org.jasig.cas" % "cas-client-support-distributed-ehcache" % "3.1.10" exclude("net.sf.ehcache", "ehcache"))
 
-  val akkaVersion = "2.2.3"
+  val akkaVersion = "2.3.6"
   val AkkaStack = Seq("akka-testkit", "akka-slf4j","akka-camel").map("com.typesafe.akka" %% _ % akkaVersion)
 
 
