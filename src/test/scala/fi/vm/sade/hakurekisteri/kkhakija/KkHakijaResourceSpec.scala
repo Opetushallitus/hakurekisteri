@@ -106,7 +106,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
 
     val ilmoittautumiset: Seq[Lasnaolo] = Await.result(f, Duration(10, TimeUnit.SECONDS))
 
-    ilmoittautumiset should (contain[Lasnaolo](Puuttuu(Syksy(2014))) and contain[Lasnaolo](Puuttuu(Kevat(2015))))
+    ilmoittautumiset should (contain(Puuttuu(Syksy(2014))) and contain(Puuttuu(Kevat(2015))))
   }
 
   test("should convert ilmoittautumiset into sequence in kevään haku") {
@@ -136,7 +136,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
 
     val ilmoittautumiset = Await.result(f, Duration(10, TimeUnit.SECONDS))
 
-    ilmoittautumiset should (contain[Lasnaolo](Lasna(Syksy(2015))) and contain[Lasnaolo](Poissa(Kevat(2015))))
+    ilmoittautumiset should (contain(Lasna(Syksy(2015))) and contain(Poissa(Kevat(2015))))
   }
 
   import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._

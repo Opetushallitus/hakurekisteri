@@ -107,9 +107,7 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
     override implicit def timeout: Duration = timeOut.seconds
     val is = (actor ? message).mapTo[B].
       map(success)
-    is.onSuccess{
-      case a => println(s"responding with $a ${Try(a.asInstanceOf[ActionResult].body.asInstanceOf[Resource[A,UUID]].core).toOption}")
-    }
+
   }
 
   def createResource(user: Option[User]): Object = {

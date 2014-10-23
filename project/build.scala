@@ -14,7 +14,7 @@ object HakuJaValintarekisteriBuild extends Build {
   val Version = "11.0-SNAPSHOT"
   val ScalaVersion = "2.10.3"
   val ArtifactName = (s: ScalaVersion, m: ModuleID, a: Artifact) => s"${a.name}-${m.revision}.${a.extension}"
-  val ScalatraVersion = "2.2.2"
+  val ScalatraVersion = "2.3.0"
   val SpringVersion = "3.2.1.RELEASE"
 
   val ScalatraStack = Seq(
@@ -50,10 +50,13 @@ object HakuJaValintarekisteriBuild extends Build {
   val akkaVersion = "2.2.3"
   val AkkaStack = Seq("akka-testkit", "akka-slf4j","akka-camel").map("com.typesafe.akka" %% _ % akkaVersion)
 
+
   val dependencies = Seq(
     "org.slf4j" % "slf4j-api" % "1.6.1",
-    "org.eclipse.jetty" % "jetty-webapp" % "8.1.8.v20121106" % "container",
-    "org.json4s" %% "json4s-jackson" % "3.2.4",
+    "org.eclipse.jetty" % "jetty-webapp" % "9.1.5.v20140505" % "container",
+    "org.eclipse.jetty" % "jetty-plus" % "9.1.5.v20140505" % "container",
+    "javax.servlet" % "javax.servlet-api" % "3.1.0",
+    "org.json4s" %% "json4s-jackson" % "3.2.10",
     "com.github.nscala-time" %% "nscala-time" % "0.8.0",
     "com.typesafe.slick" %% "slick" % "2.0.0",
     "com.h2database" % "h2" % "1.3.174",
@@ -169,8 +172,7 @@ object HakuJaValintarekisteriBuild extends Build {
           credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
           artifactoryPublish,
           buildversionTask,
-          libraryDependencies ++= Seq("org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts Artifact("javax.servlet", "jar", "jar"))
-            ++ ScalatraStack.map(_ % ScalatraVersion)
+          libraryDependencies ++=  ScalatraStack.map(_ % ScalatraVersion)
             ++ SecurityStack
             ++ AkkaStack
             ++ dependencies

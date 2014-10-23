@@ -4,8 +4,9 @@ import org.scalatra.swagger._
 import org.scalatra.swagger.AllowableValues.AnyValue
 import scala.Some
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
+import fi.vm.sade.hakurekisteri.rest.support.OldSwaggerSyntax
 
-trait HakijaSwaggerApi extends SwaggerSupport {
+trait HakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
   override protected val applicationName = Some("hakijat")
 
   val hakutoiveFields = Seq(ModelField("hakujno", null, DataType.Int, None, AnyValue, required = true),

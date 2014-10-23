@@ -52,6 +52,7 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
     val old = store.get(oid.id)
     store = store + (oid.id -> oid)
     val core = getCore(oid)
+    deleteFromDeduplication(old)
     val newSeq = reverseStore.get(core).map((s) => s + oid.id).getOrElse(Set(oid.id))
     reverseStore = reverseStore + (core -> newSeq)
     index(old, Some(oid))
@@ -80,17 +81,24 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
     }
   }
 
-  def deleteFromStore(id:I, source: String) = {
-    val item = store.get(id)
-    store = store - id
-    item.foreach((deleted) => {
-      val core = getCore(deleted)
-      val newSeq = reverseStore.get(core).map(_.filter(_ != id)).getOrElse(Set())
-      if (newSeq.isEmpty) reverseStore = reverseStore - core
-      else reverseStore = reverseStore + (core -> newSeq)
+  def deleteFromDeduplication(old: Option[T with Identified[I]]) = for (
+    item: T with Identified[I] <- old;
+    oldSeq <- reverseStore.get(getCore(item))
+  ) yield {
+    val newSeq = for (
+      indexedId <- oldSeq
+      if indexedId != item.id
+    ) yield indexedId
+    if (newSeq.isEmpty) reverseStore = reverseStore - getCore(item)
+    else reverseStore = reverseStore + (getCore(item) -> newSeq)
 
-    })
-    item
+  }
+
+  def deleteFromStore(id:I, source: String) = {
+    val old = store.get(id)
+    deleteFromDeduplication(old)
+    store = store - id
+    old
   }
 
 }
