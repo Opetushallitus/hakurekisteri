@@ -57,7 +57,7 @@ object HakuJaValintarekisteriBuild extends Build {
     "org.eclipse.jetty" % "jetty-plus" % "9.1.5.v20140505" % "container",
     "javax.servlet" % "javax.servlet-api" % "3.1.0",
     "org.json4s" %% "json4s-jackson" % "3.2.10",
-    "com.github.nscala-time" %% "nscala-time" % "0.8.0",
+    "com.github.nscala-time" %% "nscala-time" % "1.4.0",
     "com.typesafe.slick" %% "slick" % "2.0.0",
     "com.h2database" % "h2" % "1.3.174",
     "org.postgresql" % "postgresql" % "9.3-1100-jdbc4",
