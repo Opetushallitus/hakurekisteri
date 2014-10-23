@@ -12,7 +12,7 @@ object HakuJaValintarekisteriBuild extends Build {
   val Organization = "fi.vm.sade"
   val Name = "hakurekisteri"
   val Version = "11.0-SNAPSHOT"
-  val ScalaVersion = "2.10.3"
+  val ScalaVersion = "2.10.4"
   val ArtifactName = (s: ScalaVersion, m: ModuleID, a: Artifact) => s"${a.name}-${m.revision}.${a.extension}"
   val ScalatraVersion = "2.3.0"
   val SpringVersion = "3.2.1.RELEASE"
