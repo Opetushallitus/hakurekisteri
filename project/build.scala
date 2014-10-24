@@ -63,6 +63,7 @@ object HakuJaValintarekisteriBuild extends Build {
     "org.postgresql" % "postgresql" % "9.3-1100-jdbc4",
     "net.databinder.dispatch" %% "dispatch-core" % "0.11.0",
     "org.apache.poi" % "poi" % "3.10.1",
+    "org.apache.poi" % "poi-ooxml" % "3.10.1",
     "org.apache.activemq" % "activemq-all" % "5.9.1",
     "org.apache.camel" % "camel-jms" % "2.13.0",
     "fi.vm.sade.log" % "log-client" % "7.0",

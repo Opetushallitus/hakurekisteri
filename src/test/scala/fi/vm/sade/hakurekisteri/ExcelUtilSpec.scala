@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri
 
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import fi.vm.sade.hakurekisteri.hakija._
-import java.io.{ByteArrayInputStream, BufferedOutputStream, OutputStream, ByteArrayOutputStream}
+import java.io.{ByteArrayInputStream,  ByteArrayOutputStream}
 import org.apache.poi.ss.usermodel.{Workbook, WorkbookFactory}
 
 class ExcelUtilSpec extends ScalatraFunSuite {
