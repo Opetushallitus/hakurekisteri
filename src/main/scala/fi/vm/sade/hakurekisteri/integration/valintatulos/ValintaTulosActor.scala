@@ -62,7 +62,7 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
     def getSingleHakemus(hakemusOid: String): Future[SijoitteluTulos] = restClient.
       readObject[ValintaTulos](s"/haku/${URLEncoder.encode(hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(hakemusOid, "UTF-8")}", maxRetries, HttpResponseCode.Ok).
       recoverWith {
-        case t: PreconditionFailedException if t.responseCode == HttpResponseCode.NotFound =>
+        case t: PreconditionFailedException if t.responseCode == 404 =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
           Future.successful(ValintaTulos(hakemusOid, Seq()))
       }.
@@ -71,7 +71,7 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
     def getHaku(haku: String): Future[SijoitteluTulos] = restClient.
       readObject[Seq[ValintaTulos]](s"/haku/${URLEncoder.encode(haku, "UTF-8")}", maxRetries, HttpResponseCode.Ok).
       recoverWith {
-        case t: PreconditionFailedException if t.responseCode == HttpResponseCode.NotFound =>
+        case t: PreconditionFailedException if t.responseCode == 404 =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
           Future.successful(Seq[ValintaTulos]())
       }.
