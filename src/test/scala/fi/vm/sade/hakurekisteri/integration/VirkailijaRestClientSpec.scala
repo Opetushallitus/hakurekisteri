@@ -13,7 +13,7 @@ import org.hamcrest.Matcher
 import org.mockito.Mockito._
 import scala.Some
 
-class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers with MockitoSugar {
+class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers with MockitoSugar with DispatchSupport {
   implicit val system = ActorSystem("test-virkailija")
   implicit val ec: ExecutionContext = system.dispatcher
 
@@ -40,9 +40,7 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers with Mockito
 
   val endPoint = createEndpointMock
 
-  implicit def matcherToValue[T](m:Matcher[T]):T = Matchers.argThat(m)
 
-  def forUrl(url:String) = ERMatcher(Some(url))
 
   import Mockito._
 
@@ -74,8 +72,8 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers with Mockito
   }
 
   it should "throw PreconditionFailedException if undesired response code was returned from the remote service" in {
+    val response = client.readObject[TestResponse]("/rest/throwMe", 200)
     intercept[PreconditionFailedException] {
-      val response = client.readObject[TestResponse]("/rest/throwMe", 200)
       Await.result(response, 10.seconds)
     }
   }

@@ -4,7 +4,7 @@ import com.ning.http.client._
 import java.io.{ByteArrayInputStream, InputStream, OutputStream}
 import java.nio.ByteBuffer
 import java.util
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Promise, Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 import java.util.concurrent.{Callable, Executor}
 import java.net.URI
@@ -14,11 +14,18 @@ import fi.vm.sade.hakurekisteri.integration.FutureListenableFuture
 import fi.vm.sade.hakurekisteri.integration.BaseStatus
 import org.hamcrest.{BaseMatcher, Description, Matcher}
 import scala.collection.mutable
+import org.mockito.Matchers
+import scala.util.Try
 
 /**
  * Created by verneri on 23.10.2014.
  */
-class DispatchSupport {
+trait DispatchSupport {
+
+  def forUrl(url:String) = ERMatcher(Some(url), Set())
+
+  implicit def matcherToValue[T](m:Matcher[T]):T = Matchers.argThat(m)
+
 
 }
 
@@ -134,9 +141,9 @@ class BaseResponse(s: HttpResponseStatus, h: HttpResponseHeaders, bs: Seq[HttpRe
   override def getStatusCode: Int = status.get.getStatusCode
 }
 
-case class EndpointRequest(url:String, headers: List[(String, String)])
+case class EndpointRequest(url:String, body:Option[String],  headers: List[(String, String)])
 
-case class ERMatcher(url:Option[String], headers: (String, String)*) extends BaseMatcher[EndpointRequest]{
+case class ERMatcher(url:Option[String], bodyParts: Set[String],  headers: (String, String)*) extends BaseMatcher[EndpointRequest]{
   override def describeTo(description: Description): Unit = {
 
     val matchedHeaders  = headers.headOption.map((_) => "following headers: " + headers.mkString(", ")).getOrElse("any headers")
@@ -145,12 +152,17 @@ case class ERMatcher(url:Option[String], headers: (String, String)*) extends Bas
   }
 
   override def matches(item: scala.Any): Boolean = item match {
-    case EndpointRequest(rUrl, rHeaders) => url.map(_ == rUrl).getOrElse(true) && headers.map(rHeaders.contains).reduceOption(_ && _).getOrElse(true)
+    case EndpointRequest(rUrl,body,  rHeaders) =>
+      url.map(_ == rUrl).getOrElse(true) &&
+      headers.map(rHeaders.contains).reduceOption(_ && _).getOrElse(true) &&
+      !bodyParts.exists(!body.getOrElse("").contains(_))
     case _ => false
   }
 
 
-  def withHeader(header: (String,String))  = ERMatcher(url, (header +: headers):_*)
+  def withHeader(header: (String,String))  = ERMatcher(url,bodyParts, (header +: headers):_*)
+
+  def withBodyPart(part: String) = ERMatcher(url, bodyParts + part, headers:_*)
 }
 
 
@@ -179,20 +191,30 @@ class CapturingProvider(endpoint: Endpoint) extends AsyncHttpProvider{
 
     ) yield entry.getKey -> value
 
-    val er = EndpointRequest(request.getUrl, foo.toList)
+    val reqBody = Option(request.getStringData).orElse(Option(request.getByteData).map(new String(_)))
+
+    val er = EndpointRequest(request.getUrl, reqBody, foo.toList)
 
     val response = Option(endpoint.request(er))
-    println(s"response for $er  $response")
+    println(s"response for ${er.url}  ${response.map(_._1)}")
 
-    val (status, headers, body) = response.getOrElse(404, List(), "Not found")
+    def handle = {
+
+      val (status, headers, body) = response.getOrElse(404, List(), "Not found")
       handler.onStatusReceived(BaseStatus(status, "", request, this))
       handler.onHeadersReceived(new BaseHeaders(request, this, headers))
       handler.onBodyPartReceived(new BodyString(request, this, body))
+      handler.onCompleted()
+
+    }
+
+    val promise = Promise[T]
+
+    promise.tryComplete(Try(handle))
 
 
 
-
-    FutureListenableFuture(Future.successful(handler.onCompleted()))
+    FutureListenableFuture(promise.future)
   }
 }
 
