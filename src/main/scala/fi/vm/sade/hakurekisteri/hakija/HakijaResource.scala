@@ -82,14 +82,14 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
 
   override protected def renderPipeline: RenderPipeline = renderCustom orElse  renderExcel orElse super.renderPipeline
 
-  val streamingRender: (OutputStream, XMLHakijat) => Unit = ExcelUtil.write _
+  val streamingRender: (OutputStream, XMLHakijat) => Unit = ExcelUtil.write
   
   private def renderExcel: RenderPipeline = {
-    case hakijat: XMLHakijat if responseFormat == "binary" => streamingRender(response.outputStream, hakijat)
+    case hakijat: XMLHakijat if format == "binary" => streamingRender(response.outputStream, hakijat)
   }
   
   protected def renderCustom: RenderPipeline = {
-    case hakijat: XMLHakijat if responseFormat == "xml" => XML.write(response.writer, Utility.trim(hakijat.toXml), response.characterEncoding.get, xmlDecl = true, doctype = null)
+    case hakijat: XMLHakijat if format == "xml" => XML.write(response.writer, Utility.trim(hakijat.toXml), response.characterEncoding.get, xmlDecl = true, doctype = null)
   }
 
   get("/", operation(query)) {

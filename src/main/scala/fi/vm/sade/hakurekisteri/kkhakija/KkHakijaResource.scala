@@ -286,31 +286,32 @@ class KkHakijaResource(hakemukset: ActorRef,
           && isAuthorized(hakutoiveet.get(s"preference$jno-Opetuspiste-id-parents"), q.organisaatio)
           && isAuthorized(hakutoiveet.get(s"preference$jno-Opetuspiste-id-parents"), getKnownOrganizations(q.user)) =>
 
+          val hakemusOid = hakemus.oid
           val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
           val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities)
           val valintaTulosQuery = q.oppijanumero match {
-            case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemus.oid), cachedOk = false)
+            case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemusOid), cachedOk = false)
             case None => ValintaTulosQuery(hakemus.applicationSystemId, None)
           }
           for {
             sijoitteluTulos: SijoitteluTulos <- (valintaTulos ? valintaTulosQuery).mapTo[SijoitteluTulos]
             hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
             haku: Haku <- (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
-            kausi: String <- getKausi(haku.kausi, hakemus.oid)
-            lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, haku, hakemus.oid)
+            kausi: String <- getKausi(haku.kausi, hakemusOid)
+            lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, haku, hakemusOid)
           } yield {
-            if (matchHakuehto(q.hakuehto, sijoitteluTulos, hakemus.oid, hakukohdeOid))
+            if (matchHakuehto(q.hakuehto, sijoitteluTulos, hakemusOid, hakukohdeOid))
               Some(Hakemus(
                 haku = hakemus.applicationSystemId,
                 hakuVuosi = haku.vuosi,
                 hakuKausi = kausi,
-                hakemusnumero = hakemus.oid,
+                hakemusnumero = hakemusOid,
                 organisaatio = hakutoiveet(s"preference$jno-Opetuspiste-id"),
                 hakukohde = hakutoiveet(s"preference$jno-Koulutus-id"),
                 hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
                 avoinVayla = None, // TODO valinnoista?
-                valinnanTila = sijoitteluTulos.valintatila(hakemus.oid, hakukohdeOid),
-                vastaanottotieto = sijoitteluTulos.vastaanottotila(hakemus.oid, hakukohdeOid),
+                valinnanTila = sijoitteluTulos.valintatila(hakemusOid, hakukohdeOid),
+                vastaanottotieto = sijoitteluTulos.vastaanottotila(hakemusOid, hakukohdeOid),
                 ilmoittautumiset = lasnaolot,
                 pohjakoulutus = getPohjakoulutukset(koulutustausta),
                 julkaisulupa = lisatiedot.lupaJulkaisu.map(_ == "true"),
