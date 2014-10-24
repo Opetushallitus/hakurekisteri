@@ -1,57 +1,97 @@
 package fi.vm.sade.hakurekisteri.integration
 
-import java.net.URL
-import java.util.Date
-
 import akka.actor.{Props, ActorSystem}
-import com.stackmob.newman.request._
-import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
-import com.stackmob.newman.{RawBody, Headers, HttpClient}
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, ExecutionContext}
+import com.ning.http.client._
+import org.scalatest.mock.MockitoSugar
+import org.mockito.{Matchers, Mockito}
+import org.hamcrest.Matcher
+import org.mockito.Mockito._
+import scala.Some
 
-class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers {
+class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers with MockitoSugar {
   implicit val system = ActorSystem("test-virkailija")
   implicit val ec: ExecutionContext = system.dispatcher
-  implicit val httpClient: MockHttpClient = new MockHttpClient()
+
+  def createEndpointMock = {
+    val result = mock[Endpoint]
+    when(result request forUrl ("http://localhost/test/rest/blaa")).thenReturn((200, List(), "{\"id\":\"abc\"}"))
+    when(result.request(forUrl("http://localhost/test/rest/throwMe"))).thenReturn((404, List(), "Not Found"))
+    when(result.request(forUrl("http://localhost/test/rest/invalidContent"))).thenReturn((200, List(), "invalid content"))
+    when(result.request(forUrl("http://localhost/test/rest/foo").withHeader("CasSecurityTicket" -> "ST-123"))).thenReturn((200, List("Set-Cookie" -> s"${JSessionIdCookieParser.name}=abcd"), "{\"id\":\"abc\"}"))
+    when(result.request(forUrl("http://localhost/blast/rest/foo").withHeader("CasSecurityTicket" -> "ST-124"))).thenReturn((200, List("Set-Cookie" -> s"${JSessionIdCookieParser.name}=abcd"), "{\"id\":\"abc\"}"))
+    when(result.request(forUrl("http://localhost/blast/rest/foo").withHeader("Cookie" -> "JSESSIONID=abcd"))).thenReturn((200, List(), "{\"id\":\"abc\"}"))
+
+
+
+    when(result.request(forUrl("http://localhost/cas/v1/tickets"))).thenReturn((201, List("Location" -> "http://localhost/cas/v1/tickets/TGT-123"), ""))
+    when(result.request(forUrl("http://localhost/cas/v1/tickets/TGT-123"))).thenReturn((200,List(), "ST-123"))
+
+
+    when(result.request(forUrl("http://localhost/cas2/v1/tickets"))).thenReturn((201, List("Location" -> "http://localhost/cas2/v1/tickets/TGT-124"), ""))
+    when(result.request(forUrl("http://localhost/cas2/v1/tickets/TGT-124"))).thenReturn((200,List(), "ST-124"))
+    result
+
+  }
+
+  val endPoint = createEndpointMock
+
+  implicit def matcherToValue[T](m:Matcher[T]):T = Matchers.argThat(m)
+
+  def forUrl(url:String) = ERMatcher(Some(url))
+
+  import Mockito._
+
+
+
+
+
+  val asyncProvider = new CapturingProvider(endPoint)
+
   val jSessionIdActor = system.actorOf(Props(new JSessionIdActor))
-  val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/test"))
+  val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/test"), aClient = Some(new AsyncHttpClient(asyncProvider)))
 
   behavior of "VirkailijaRestClient"
 
   it should "make request to specified url" in {
-    client.executeGet("/rest/blaa")
-    httpClient.capturedRequestUrl should be("http://localhost/test/rest/blaa")
+    client.client("/rest/blaa")
+
+
+
+    Mockito.verify(endPoint, Mockito.timeout(200).atLeastOnce()).request(forUrl("http://localhost/test/rest/blaa"))
+
   }
 
+  import VirkailijaRestImplicits._
   it should "serialize response into a case class" in {
-    val response: Future[TestResponse] = client.readObject[TestResponse]("/rest/blaa", HttpResponseCode.Ok)
+    val response =  client.client("/rest/blaa".accept(200).as[TestResponse])
     val testResponse = Await.result(response, 10.seconds)
     testResponse.id should be("abc")
   }
 
   it should "throw PreconditionFailedException if undesired response code was returned from the remote service" in {
     intercept[PreconditionFailedException] {
-      val response = client.readObject[TestResponse]("/rest/throwMe", HttpResponseCode.Ok)
-      val testResponse = Await.result(response, 10.seconds)
+      val response = client.readObject[TestResponse]("/rest/throwMe", 200)
+      Await.result(response, 10.seconds)
     }
   }
 
   it should "throw Exception if invalid content was returned from the remote service" in {
     intercept[Exception] {
-      val response = client.readObject[TestResponse]("/rest/invalidContent", HttpResponseCode.Ok)
-      val testResponse = Await.result(response, 10.seconds)
+      val response = client.readObject[TestResponse]("/rest/invalidContent", 200)
+      Await.result(response, 10.seconds)
     }
   }
 
   it should "throw IllegalArgumentException if no password was supplied in the configuration" in {
     intercept[IllegalArgumentException] {
       val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/test", user = Some("user")))
-      val response = client.readObject[TestResponse]("/rest/foo", HttpResponseCode.Ok)
-      val testResponse = Await.result(response, 10.seconds)
+      val response = client.readObject[TestResponse]("/rest/foo", 200)
+      Await.result(response, 10.seconds)
     }
   }
 
@@ -59,51 +99,55 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers {
     val client = new VirkailijaRestClient(ServiceConfig(casUrl = Some("http://localhost/cas"),
                                                         serviceUrl = "http://localhost/test",
                                                         user = Some("user"),
-                                                        password = Some("pw")))
-    val response = client.readObject[TestResponse]("/rest/foo", HttpResponseCode.Ok)
-    val testResponse = Await.result(response, 10.seconds)
-    httpClient.capturedRequestHeaders.get.head should be(("CasSecurityTicket", "ST-123"))
+                                                        password = Some("pw")), aClient = Some(new AsyncHttpClient(asyncProvider)))
+
+
+    val response = client.readObject[TestResponse]("/rest/foo", 200)
+    Await.ready(response, 10.seconds)
+
+    verify(endPoint, timeout(200).atLeastOnce()).
+      request(
+        forUrl("http://localhost/test/rest/foo").
+        withHeader("CasSecurityTicket" -> "ST-123"))
+
   }
 
   it should "use JSESSIONID on subsequent requests" in {
-    val client = new VirkailijaRestClient(ServiceConfig(casUrl = Some("http://localhost/service-access"),
-      serviceUrl = "http://localhost/test",
+    val sessionEndPoint = createEndpointMock
+
+    val sessionClient = new VirkailijaRestClient(ServiceConfig(casUrl = Some("http://localhost/cas2"),
+      serviceUrl = "http://localhost/blast",
       user = Some("user"),
-      password = Some("pw")), Some(jSessionIdActor))
-    val response = client.readObject[TestResponse]("/rest/foo", HttpResponseCode.Ok)
-    val testResponse = Await.result(response, 10.seconds)
+      password = Some("pw")),
+      Some(jSessionIdActor),
+      Some(new AsyncHttpClient(new CapturingProvider(sessionEndPoint)))
+    )
 
-    val response2 = client.readObject[TestResponse]("/rest/foo", HttpResponseCode.Ok)
-    val testResponse2 = Await.result(response2, 10.seconds)
-    httpClient.capturedRequestHeaders.get.head should be(("Cookie", "JSESSIONID=abcd"))
+    println("first request")
+    val requestChain: Future[TestResponse] = sessionClient.readObject[TestResponse]("/rest/foo", 200).flatMap {
+      case _ =>
+        println("second request")
+        sessionClient.readObject[TestResponse]("/rest/foo", 200).flatMap{
+        case _ =>
+          println("third request")
+          sessionClient.readObject[TestResponse]("/rest/foo", 200)
+      }
+    }
 
-    val response3 = client.readObject[TestResponse]("/rest/foo", HttpResponseCode.Ok)
-    val testResponse3 = Await.result(response3, 10.seconds)
-    httpClient.capturedRequestHeaders.get.head should be(("Cookie", "JSESSIONID=abcd"))
+    Await.ready(
+      requestChain,
+      30.seconds
+    )
+    val ehti = requestChain.isCompleted
+    if (ehti)
+      verify(sessionEndPoint, times(2)).request(forUrl("http://localhost/blast/rest/foo").withHeader("Cookie" -> "JSESSIONID=abcd"))
+    else
+      fail("timed out")
   }
 
   case class TestResponse(id: String)
 
-  class MockHttpClient extends HttpClient {
-    var capturedRequestUrl: String = ""
-    var capturedRequestHeaders: Headers = Headers(List())
-    override def get(url: URL, headers: Headers): GetRequest = GetRequest(url, headers) {
-      capturedRequestHeaders = headers
-      capturedRequestUrl = url.toString
-      url.toString match {
-        case s if s.contains("throwMe") => Future.successful(HttpResponse(HttpResponseCode.InternalServerError, Headers(List()), RawBody(""), new Date()))
-        case s if s.contains("invalidContent") => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody("invalid content"), new Date()))
-        case _ => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List("Set-Cookie" -> "JSESSIONID=abcd")), RawBody("{\"id\":\"abc\"}"), new Date()))
-      }
-    }
-    override def head(url: URL, headers: Headers): HeadRequest = ???
-    override def post(url: URL, headers: Headers, body: RawBody): PostRequest = PostRequest(url, headers, body) {
-      url.toString match {
-        case s if s.endsWith("/v1/tickets") => Future.successful(HttpResponse(HttpResponseCode.Created, Headers(List("Location" -> "http://localhost/cas/v1/tickets/TGT-123")), RawBody("")))
-        case s if s.endsWith("/v1/tickets/TGT-123") => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody("ST-123")))
-      }
-    }
-    override def put(url: URL, headers: Headers, body: RawBody): PutRequest = ???
-    override def delete(url: URL, headers: Headers): DeleteRequest = ???
-  }
+
+
+
 }

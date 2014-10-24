@@ -1,21 +1,13 @@
 package fi.vm.sade.hakurekisteri.oppija
 
-import java.util.concurrent.{TimeUnit, ThreadFactory, Executors}
+import java.util.concurrent.{TimeUnit, Executors}
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{ActorSystem, Props}
-import akka.util.Timeout
 import com.stackmob.newman.response.HttpResponseCode
-import com.stackmob.newman.{ApacheHttpClient, HttpClient}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.TestClient
-import fi.vm.sade.hakurekisteri.integration.{HttpClientUtil, JSessionIdActor, ServiceConfig, VirkailijaRestClient}
-import org.apache.http.conn.ClientConnectionManager
-import org.apache.http.conn.scheme.{Scheme, SchemeRegistry}
-import org.apache.http.conn.ssl.SSLSocketFactory
-import org.apache.http.impl.NoConnectionReuseStrategy
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.impl.conn.PoolingClientConnectionManager
-import org.apache.http.params.HttpConnectionParams
+import com.stackmob.newman.ApacheHttpClient
+import fi.vm.sade.hakurekisteri.integration.{JSessionIdActor, ServiceConfig, VirkailijaRestClient}
+import org.apache.http.conn.scheme.SchemeRegistry
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 
@@ -23,7 +15,6 @@ import net.liftweb.json.JsonParser._
 import net.liftweb.json.DefaultFormats
 import scala.compat.Platform
 import scala.concurrent.duration._
-import akka.pattern.ask
 
 import scala.concurrent.{Await, Future, ExecutionContext}
 import scala.util.{Success, Try}
@@ -42,9 +33,8 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
     user = Some("robotti"),
     password = Some("Testaaja!")
   )
-  val httpClient = HttpClientUtil.createHttpClient("oppija", 1, 1)
   val sessionActor = system.actorOf(Props(new JSessionIdActor()))
-  val oppijaClient = new VirkailijaRestClient(oppijatConfig, Some(sessionActor))(httpClient, ec, system)
+  val oppijaClient = new VirkailijaRestClient(oppijatConfig, Some(sessionActor))( ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor()), system)
 
   ignore should "handle loading of all hakukohteet from haku" in {
     val hakuOid = "1.2.246.562.29.173465377510"

@@ -61,7 +61,7 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with FutureWaiting wit
       )
     )
 
-    val tarjontaActor: ActorRef = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost"))(tarjontaHttpClient, ec, system))))
+    val tarjontaActor: ActorRef = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost"))(ec, system))))
     val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatioActor)))
 
     val result = (virtaActor ? VirtaQuery("1.2.3", Some("111111-1975")))(akka.util.Timeout(10, TimeUnit.SECONDS)).mapTo[VirtaData]

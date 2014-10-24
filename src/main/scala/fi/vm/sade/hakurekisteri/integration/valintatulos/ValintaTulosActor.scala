@@ -64,11 +64,12 @@ case class ValintaTulos(hakemusOid: String,
 
 case class CacheKey(hakuOid: String, hakemusOid: String)
 
-class ValintaTulosActor(restClient: VirkailijaRestClient)
-                       (implicit val ec: ExecutionContext) extends Actor with ActorLogging {
+class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with ActorLogging {
 
   val maxRetries = 5
   private val cache = new FutureCache[CacheKey, ValintaTulos]()
+
+  implicit val ec: ExecutionContext = context.dispatcher
 
   override def receive: Receive = {
     case q: ValintaTulosQuery => getTulos(q) pipeTo sender

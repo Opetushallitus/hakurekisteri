@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import java.io.InterruptedIOException
-import java.net.URL
+import java.net.{URLEncoder, URL}
 import java.util.concurrent.{ThreadFactory, Executors}
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -9,30 +9,30 @@ import akka.actor.{ActorSystem, ActorRef}
 import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
-import com.stackmob.newman.{ApacheHttpClient, HttpClient}
-import com.stackmob.newman.dsl._
-import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
-import fi.vm.sade.hakurekisteri.integration.cas.CasClient
+import fi.vm.sade.hakurekisteri.integration.cas._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import org.apache.http.conn.ClientConnectionManager
-import org.apache.http.impl.NoConnectionReuseStrategy
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.impl.conn.PoolingClientConnectionManager
-import org.apache.http.params.HttpConnectionParams
 
 import scala.compat.Platform
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{Promise, Future, ExecutionContext}
 import scala.concurrent.duration._
 import scala.util.Try
+import dispatch._
+import com.ning.http.client._
+import dispatch.Req
+import scala.util.Failure
+import scala.Some
+import fi.vm.sade.hakurekisteri.integration.cas.LocationHeaderNotFoundException
+import fi.vm.sade.hakurekisteri.integration.cas.TGTWasNotCreatedException
+import com.ning.http.client.AsyncHandler.STATE
 
-case class PreconditionFailedException(message: String, responseCode: HttpResponseCode) extends Exception(message)
+case class PreconditionFailedException(message: String, responseCode: Int) extends Exception(message)
 
 case class ServiceConfig(casUrl: Option[String] = None,
                          serviceUrl: String,
                          user: Option[String] = None,
                          password: Option[String] = None)
 
-class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[ActorRef] = None)(implicit val httpClient: HttpClient, implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {
+class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[ActorRef] = None, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {
 
   implicit val defaultTimeout: Timeout = 60.seconds
 
@@ -42,7 +42,6 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
   val password: Option[String] = config.password
 
   val logger = Logging.getLogger(system, this)
-  val casClient = new CasClient(casUrl, serviceUrl, user, password)
 
   def logConnectionFailure[T](f: Future[T], url: URL) = f.onFailure {
     case t: InterruptedIOException => logger.warning(s"connection error calling url [$url]: $t")
@@ -51,97 +50,209 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
 
   val cookieExpirationMillis = 5.minutes.toMillis
 
-  def executeGet(uri: String): Future[(HttpResponse, Option[String])]= {
-    val url = new URL(serviceUrl + uri)
-    def executeUnauthorized: Future[(HttpResponse, Option[String])] = {
-      val f = GET(url).apply.map((_, None))
-      logConnectionFailure(f, url)
-      f
-    }
-    def executeWithJSession(sessionId: String): Future[(HttpResponse, Option[String])] = {
-      val cookie = s"${JSessionIdCookieParser.name}=$sessionId"
-      val f = GET(url).addHeaders("Cookie" -> cookie).apply.map((_, Some(cookie)))
-      logConnectionFailure(f, url)
-      f
-    }
-    def saveJSessionId(r: HttpResponse) {
-      if (jSessionIdStorage.isDefined) r.headers match {
-        case Some(headerList) => headerList.list.find((t) => t._1 == "Set-Cookie") match {
-          case Some((_, cookie)) if cookie.startsWith(JSessionIdCookieParser.name) =>
-            jSessionIdStorage.get ! SaveJSessionId(JSessionKey(serviceUrl), JSessionIdCookieParser.fromString(cookie))
+  private val internalClient = aClient.map(Http(_)).getOrElse(Http())
 
-          case None => None
+  object LocationHeader extends (Response => String) {
+    def apply(r: Response) =
 
+      Try(Option(r.getHeader("Location")).get).recoverWith{
+        case  e: NoSuchElementException =>  Failure(LocationHeaderNotFoundException("location header not found"))
+      }.get
+
+  }
+
+  class TgtFunctionHandler
+    extends FunctionHandler[String](LocationHeader) with TgtHandler
+
+  class StFunctionHandler extends AsyncCompletionHandler[String] {
+
+    override def onStatusReceived(status: HttpResponseStatus) = {
+      if (status.getStatusCode == 200)
+        super.onStatusReceived(status)
+      else
+        throw STWasNotCreatedException(s"got non ok response from cas: ${status.getStatusCode}")
+    }
+
+    override def onCompleted(response: Response): String = {
+      val st = response.getResponseBody.trim
+      if (TicketValidator.isValidSt(st)) st
+      else throw InvalidServiceTicketException(st)
+    }
+  }
+
+
+  trait TgtHandler extends AsyncHandler[String] {
+
+
+    abstract override def onStatusReceived(status: HttpResponseStatus) = {
+      if (status.getStatusCode == 201)
+        super.onStatusReceived(status)
+      else
+        throw TGTWasNotCreatedException(s"got non ok response code from cas: ${status.getStatusCode}")
+    }
+  }
+
+  object client  {
+
+    val TgtUrl = new TgtFunctionHandler
+
+    val ServiceTicket = new StFunctionHandler
+
+
+    def getTgtUrl() = {
+      val tgtUrlReq = dispatch.url(s"${casUrl.get}/v1/tickets") << s"username=${URLEncoder.encode(user.get, "UTF8")}&password=${URLEncoder.encode(password.get, "UTF8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
+      internalClient(tgtUrlReq > TgtUrl)
+    }
+
+
+    val serviceUrlSuffix = "/j_spring_cas_security_check"
+    val maxRetries = 3
+
+    private def postfixServiceUrl(url: String): String = url match {
+      case s if !s.endsWith(serviceUrlSuffix) => s"$url$serviceUrlSuffix"
+      case s => s
+    }
+
+    private def tryProxyTicket(retryCount: AtomicInteger): Future[String] = getTgtUrl.flatMap(tgtUrl => {
+      val proxyReq = dispatch.url(tgtUrl) << s"service=${URLEncoder.encode(postfixServiceUrl(serviceUrl), "UTF-8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
+      internalClient(proxyReq > ServiceTicket)
+    }).recoverWith {
+      case t: InterruptedIOException =>
+        if (retryCount.getAndIncrement <= maxRetries) {
+          //logger.warn(s"connection error calling cas - trying to retry: $t")
+          tryProxyTicket(retryCount)
+        } else {
+          //logger.error(s"connection error calling cas: $t")
+          Future.failed(t)
         }
-        case None => None
 
+      case t: LocationHeaderNotFoundException =>
+        if (retryCount.getAndIncrement <= maxRetries) {
+          //logger.warn(s"call to cas was not successful - trying to retry: $t")
+          tryProxyTicket(retryCount)
+        } else {
+          //logger.error(s"call to cas was not successful: $t")
+          Future.failed(t)
+        }
+    }
+
+    def getProxyTicket: Future[String] = {
+      if (casUrl.isEmpty || user.isEmpty || password.isEmpty) throw new IllegalArgumentException("casUrl, user or password is not defined")
+
+      val retryCount = new AtomicInteger(1)
+      tryProxyTicket(retryCount)
+    }
+
+    def jSessionId: Future[Option[JSessionId]] = {
+      println(s"finding session for $serviceUrl")
+
+      jSessionIdStorage match {
+        case Some(actor) =>
+
+          (actor ? JSessionKey(serviceUrl)).mapTo[Option[JSessionId]]
+
+        case None =>
+          Future.successful(None)
       }
     }
-    def getJSessionId: Future[Option[JSessionId]] = jSessionIdStorage match {
-      case Some(actor) =>
-        (actor ? JSessionKey(serviceUrl)).mapTo[Option[JSessionId]]
 
-      case None =>
-        Future.successful(None)
+    def withSession[T](request: Req)(f: (Req) => Future[T])(jsession: Option[JSessionId]):Future[T] = jsession match {
+      case Some(session) if (session.created + cookieExpirationMillis) > Platform.currentTime =>  {
+        val req = request <:< Map("Cookie" -> s"${JSessionIdCookieParser.name}=${session.sessionId}")
+        f(req)
+      }
+      case _ =>
+        println(s"no sesssion for $serviceUrl")
+        for (
+          ticket <- getProxyTicket;
+          result <- f(request <:< Map("CasSecurityTicket" -> ticket) )
+        ) yield result
     }
-    def executeWithTicket: Future[(HttpResponse, Option[String])] = {
-      casClient.getProxyTicket.flatMap((ticket) => {
-        val f = GET(url).addHeaders("CasSecurityTicket" -> ticket).apply.map(r => {
-          saveJSessionId(r)
-          (r, Some(ticket))
-        })
-        logConnectionFailure(f, url)
-        f
-      })
+
+    def apply(uri:String) = {
+      val request = dispatch.url(s"$serviceUrl$uri")
+      (user,password) match{
+        case (Some(_), None) => throw new IllegalArgumentException("password is missing")
+        case (Some(un),Some(pw)) =>
+
+
+
+          for (
+            jsession <- jSessionId;
+            result <- withSession(request)((req) => internalClient(req))(jsession)
+          ) yield result
+
+        case _ => println("blaaaa")
+          internalClient(request)
+      }
+
     }
-    (user, password) match {
-      case (None, None) =>
-        executeUnauthorized
-      case (Some(u), Some(p)) =>
-        getJSessionId.flatMap {
-          case Some(JSessionId(created, sessionId)) if created + cookieExpirationMillis > Platform.currentTime =>
-            executeWithJSession(sessionId)
-          case _ =>
-            executeWithTicket
-        }
-      case _ => throw new IllegalArgumentException("either user or password is not defined")
+
+    object NoSessionFound extends Exception("No JSession Found")
+
+
+    class SessionCapturer[T](inner: AsyncHandler[T]) extends AsyncHandler[T] {
+
+
+      private val promise = Promise[JSessionId]
+
+      val jsession = promise.future
+
+      override def onCompleted(): T = inner.onCompleted()
+
+      override def onHeadersReceived(headers: HttpResponseHeaders): STATE = {
+
+        import scala.collection.JavaConversions._
+        for (
+          header <- headers.getHeaders.entrySet() if header.getKey == "Set-Cookie";
+          value <- header.getValue if JSessionIdCookieParser.isJSessionIdCookie(value)
+        ) promise.trySuccess(JSessionIdCookieParser.fromString(value))
+
+        promise.tryFailure(NoSessionFound)
+
+        inner.onHeadersReceived(headers)
+      }
+
+      override def onStatusReceived(responseStatus: HttpResponseStatus): STATE = inner.onStatusReceived(responseStatus)
+
+      override def onBodyPartReceived(bodyPart: HttpResponseBodyPart): STATE = inner.onBodyPartReceived(bodyPart)
+
+      override def onThrowable(t: Throwable): Unit = inner.onThrowable(t)
     }
-  }
 
-  def tryReadBody[A <: AnyRef: Manifest](response: HttpResponse): Try[A] = {
-    import org.json4s.jackson.Serialization.read
-    Try(read[A](response.bodyString))
-  }
+    def apply[T](tuple: (String, AsyncHandler[T])): dispatch.Future[T] = {
+      val (uri, handler) = tuple
+      (user,password) match{
+        case (Some(_), None) => throw new IllegalArgumentException("password is missing")
+        case (Some(un),Some(pw)) =>
+          val request = dispatch.url(s"$serviceUrl$uri")
+          val sessionCapturer = new SessionCapturer(handler)
 
-  def readBody[A <: AnyRef: Manifest](uri: String)(response: HttpResponse): A = {
-    val rawResult = tryReadBody[A](response)
-    if (rawResult.isFailure) logger.error(rawResult.failed.get, s"failed to deserialize response from url $serviceUrl$uri")
-    rawResult.get
-  }
+          sessionCapturer.jsession.onSuccess{
+            case session =>
+              jSessionIdStorage.getOrElse(system.deadLetters) ! SaveJSessionId(JSessionKey(serviceUrl), session)
+          }
 
-  def readObject[A <: AnyRef: Manifest](uri: String, precondition: (HttpResponseCode) => Boolean): Future[A] = executeGet(uri).map{case (resp, auth) =>
-    if (precondition(resp.code)) resp
-    else throw PreconditionFailedException(s"precondition failed for url: $serviceUrl$uri, response code: ${resp.code} with ${auth.map("auth: " + _).getOrElse("no auth")}", resp.code)
-  }.map(readBody[A](uri))
+          for (
+            jsession <- jSessionId;
+            result <- withSession(request)((req) => internalClient(req.toRequest, sessionCapturer))(jsession)
+          ) yield result
 
-  def readObject[A <: AnyRef: Manifest](uri: String, okCodes: HttpResponseCode*): Future[A] = {
-    val codes = if (okCodes.isEmpty) Seq(HttpResponseCode.Ok) else okCodes
-    readObject[A](uri, (code: HttpResponseCode) => codes.contains(code))
-  }
+        case _ => internalClient((dispatch.url(s"$serviceUrl$uri").toRequest, handler))
 
-  def readObject[A <: AnyRef: Manifest](uri: String, maxConnectionRetries: Int, okCodes: HttpResponseCode*): Future[A] = {
-    val retryCount = new AtomicInteger(1)
-    tryRead(uri, retryCount, maxConnectionRetries, okCodes)
-  }
+      }
 
-  private def tryRead[A <: AnyRef: Manifest](uri: String, retryCount: AtomicInteger, maxConnectionRetries: Int, okCodes: Seq[HttpResponseCode]): Future[A] = {
-    val codes = if (okCodes.isEmpty) Seq(HttpResponseCode.Ok) else okCodes
-    readObject[A](uri, (code: HttpResponseCode) => codes.contains(code)).recoverWith {
-      case t: InterruptedIOException =>
-        if (retryCount.getAndIncrement <= maxConnectionRetries) tryRead(uri, retryCount, maxConnectionRetries, okCodes)
-        else Future.failed(t)
     }
+
   }
+
+  import VirkailijaRestImplicits._
+
+  def readObject[A <: AnyRef: Manifest](uri:String, codes: Int*): Future[A] = {
+    client(uri.accept(codes:_*).as[A])
+  }
+
+
 }
 
 case class JSessionIdCookieException(m: String) extends Exception(m)
@@ -164,40 +275,70 @@ object JSessionIdCookieParser {
   }
 }
 
-object HttpClientUtil {
-  def createHttpClient: HttpClient = createHttpClient("default")
 
-  val socketTimeout = 120000
-  val connectionTimeout = 10000
-
-  private def createApacheHttpClient(maxConnections: Int): org.apache.http.client.HttpClient = {
-    val connManager: ClientConnectionManager = {
-      val cm = new PoolingClientConnectionManager()
-      cm.setDefaultMaxPerRoute(maxConnections)
-      cm.setMaxTotal(maxConnections)
-      cm
-    }
-
-    val client = new DefaultHttpClient(connManager)
-    val httpParams = client.getParams
-    HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeout)
-    HttpConnectionParams.setSoTimeout(httpParams, socketTimeout)
-    HttpConnectionParams.setStaleCheckingEnabled(httpParams, false)
-    HttpConnectionParams.setSoKeepalive(httpParams, false)
-    client.setReuseStrategy(new NoConnectionReuseStrategy())
-    client
+object ExecutorUtil {
+  def createExecutor(threads: Int, poolName: String) = {
+    val threadNumber = new AtomicInteger(1)
+    val pool = Executors.newFixedThreadPool(threads, new ThreadFactory() {
+      override def newThread(r: Runnable): Thread = {
+        new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
+      }
+    })
+    ExecutionContext.fromExecutorService(pool)
   }
 
-  def createHttpClient(poolName: String = "default", threads: Int = 10, maxConnections: Int = 100): HttpClient = {
-    if (poolName == "default") new ApacheHttpClient(createApacheHttpClient(maxConnections))()
-    else {
-      val threadNumber = new AtomicInteger(1)
-      val pool = Executors.newFixedThreadPool(threads, new ThreadFactory() {
-        override def newThread(r: Runnable): Thread = {
-          new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
-        }
-      })
-      new ApacheHttpClient(createApacheHttpClient(maxConnections))(ExecutionContext.fromExecutorService(pool))
+}
+
+
+abstract class JsonExtractor(val uri: String) extends HakurekisteriJsonSupport {
+
+
+  def handler[T](f: (Response) => T):AsyncHandler[T]
+
+  def as[T:Manifest] = {
+    val f = (resp: Response) => {
+      import org.json4s.jackson.Serialization.read
+      read[T](resp.getResponseBody)
+
     }
+
+    (uri, handler(f))
+  }
+
+}
+
+class VirkailijaResultTuples(uri: String) {
+
+
+
+  def accept[T](codes: Int*): JsonExtractor = new JsonExtractor(uri) {
+
+    override def handler[T](f: (Response) => T): AsyncHandler[T] = new CodeFunctionHandler(codes.toSet, f)
+  }
+
+}
+
+
+object VirkailijaRestImplicits {
+  implicit def req2VirkailijaResulTuples(uri:String): VirkailijaResultTuples = new VirkailijaResultTuples(uri)
+
+
+}
+
+class CodeFunctionHandler[T](override val codes: Set[Int], f: Response => T)
+  extends FunctionHandler[T](f) with CodeHandler[T]
+
+
+
+trait CodeHandler[T] extends AsyncHandler[T] {
+
+  val codes: Set[Int]
+
+
+  abstract override def onStatusReceived(status: HttpResponseStatus) = {
+    if (codes.contains(status.getStatusCode))
+      super.onStatusReceived(status)
+    else
+      throw PreconditionFailedException(s"precondition failed for url: ${status.getUrl}, response code: ${status.getStatusCode}", status.getStatusCode)
   }
 }

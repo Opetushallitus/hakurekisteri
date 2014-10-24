@@ -48,10 +48,11 @@ case class HakukohdeNotFoundException(message: String) extends TarjontaException
 case class KoulutusNotFoundException(message: String) extends TarjontaException(message)
 case class KomoNotFoundException(message: String) extends TarjontaException(message)
 
-class TarjontaActor(restClient: VirkailijaRestClient)(implicit val ec: ExecutionContext) extends Actor {
+class TarjontaActor(restClient: VirkailijaRestClient) extends Actor {
   private val koulutusCache = new FutureCache[String, HakukohteenKoulutukset]()
   private val komoCache = new FutureCache[String, KomoResponse]()
   val maxRetries = 5
+  implicit val ec: ExecutionContext = context.dispatcher
 
   override def receive: Receive = {
     case q: SearchKomoQuery => searchKomo(q.koulutus) pipeTo sender

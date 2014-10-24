@@ -20,7 +20,9 @@ case class GetKoodi(koodistoUri: String, koodiUri: String)
 case class KoodistoKoodiArvot(koodistoUri: String, arvot: Seq[String])
 case class GetKoodistoKoodiArvot(koodistoUri: String)
 
-class KoodistoActor(restClient: VirkailijaRestClient)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
+class KoodistoActor(restClient: VirkailijaRestClient) extends Actor with ActorLogging {
+
+  implicit val ec: ExecutionContext =  context.dispatcher
 
   private val koodiCache = new FutureCache[String, Option[Koodi]]()
   private val relaatioCache = new FutureCache[GetRinnasteinenKoodiArvoQuery, String]()
