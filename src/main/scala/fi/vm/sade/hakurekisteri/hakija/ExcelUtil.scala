@@ -1,16 +1,48 @@
 package fi.vm.sade.hakurekisteri.hakija
 
-import info.folone.scala.poi._
-import java.io.{Writer, OutputStream}
-import info.folone.scala.poi.StringCell
+import java.io.OutputStream
 import org.slf4j.LoggerFactory
+import org.apache.poi.hssf.usermodel.HSSFWorkbook
 
 object ExcelUtil {
+
+  case class Cell(index: Int, value:String)
+  case class Row(index:Int, cells:Set[Cell])
+
+  object Row {
+
+    def apply(index:Int)(cells: Cell*): Row = Row(index, cells.toSet)
+
+  }
+
+  object StringCell{
+    def apply(i:Int, v: String) = Cell(i,v)
+  }
+
+  case class Sheet(name:String, rows:Set[Row])
+
+  class Workbook(sheets: Set[Sheet]) {
+    def writeTo(out: OutputStream) {
+      val workbook = new HSSFWorkbook()
+
+      for (sheet <- sheets) {
+        val eSheet = workbook.createSheet(sheet.name)
+        for(row <- sheet.rows) {
+          val eRow = eSheet.createRow(row.index)
+          for (cell <- row.cells) {
+            eRow.createCell(cell.index, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING).setCellValue(cell.value)
+          }
+        }
+      }
+      workbook.write(out)
+    }
+  }
+
   val logger = LoggerFactory.getLogger(getClass)
   val zero = BigDecimal.valueOf(0)
 
   def getHeaders(): Set[Row] = {
-    Set(Row(0)(Set(
+    Set(Row(0)(
       StringCell(0, "Hetu"),
       StringCell(1, "Oppijanumero"),
       StringCell(2, "Sukunimi"),
@@ -56,7 +88,7 @@ object ExcelUtil {
       StringCell(42, "Terveys"),
       StringCell(43, "Aiempiperuminen"),
       StringCell(44, "Kaksoistutkinto")
-    )))
+    ))
   }
 
   def getRows(hakijat: XMLHakijat): Set[Row] = {
@@ -107,16 +139,19 @@ object ExcelUtil {
       StringCell(43, if (ht.aiempiperuminen.getOrElse(false)) "X" else ""),
       StringCell(44, if (ht.kaksoistutkinto.getOrElse(false)) "X" else "")
     ))).toSet
-    rows.zipWithIndex.map((rowWithIndex) => Row(rowWithIndex._2 + 1)(rowWithIndex._1))
+    rows.zipWithIndex.map((rowWithIndex) => Row(rowWithIndex._2 + 1, rowWithIndex._1))
   }
 
   def write(out: OutputStream, hakijat: XMLHakijat) {
     logger.debug("about to create xls")
-    val sheet = new Sheet("Hakijat")(getHeaders ++ getRows(hakijat))
+    val sheet = Sheet("Hakijat", getHeaders ++ getRows(hakijat))
+
+
+
     val wb = new Workbook(Set(sheet))
     logger.debug("writing workbook: " + wb)
 
-    wb.safeToStream(out).unsafePerformIO()
+    wb.writeTo(out)
   }
 
 }
