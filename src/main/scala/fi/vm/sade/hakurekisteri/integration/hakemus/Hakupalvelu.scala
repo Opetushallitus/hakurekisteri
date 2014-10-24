@@ -19,7 +19,7 @@ trait Hakupalvelu {
   def getHakijat(q: HakijaQuery): Future[Seq[Hakija]]
 }
 
-class AkkaHakupalvelu(hakemusActor:ActorRef)(implicit val ec: ExecutionContext) extends Hakupalvelu {
+class AkkaHakupalvelu(hakemusActor: ActorRef)(implicit val ec: ExecutionContext) extends Hakupalvelu {
   //val logger = LoggerFactory.getLogger(getClass)
   val Pattern = "preference(\\d+).*".r
 

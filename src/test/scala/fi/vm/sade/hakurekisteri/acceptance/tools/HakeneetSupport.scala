@@ -5,7 +5,7 @@ import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
-import fi.vm.sade.hakurekisteri.integration.sijoittelu._
+import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import org.scalatra.swagger.Swagger
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, HakurekisteriSwagger}
 import akka.actor.{Props, Actor, ActorSystem}
@@ -17,16 +17,12 @@ import org.scalatra.test.HttpComponentsClient
 import org.specs.mock.Mockito
 import org.specs.specification.Examples
 import scala.concurrent.{Future, ExecutionContext}
-import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluHakija
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.hakemus.ListHakemus
 import fi.vm.sade.hakurekisteri.integration.koodisto.Koodisto
 import fi.vm.sade.hakurekisteri.hakija.Hakija
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
-import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluHakutoiveenValintatapajono
-import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluPagination
-import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluHakutoive
 
 trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport with Mockito {
   override def forExample: Examples = ???
@@ -221,7 +217,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     }
 
     def hakijat: Seq[Hakija] = {
-      tehdytHakemukset.map(AkkaHakupalvelu.getHakija(_))
+      tehdytHakemukset.map(AkkaHakupalvelu.getHakija)
     }
 
     def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {
@@ -263,48 +259,69 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient)))
 
   val f = Future.successful(
-        SijoitteluPagination(
-          Seq(
-            SijoitteluHakija(
-              hakemusOid = Some(FullHakemus1.oid),
-              hakutoiveet=Some(Seq(
-                SijoitteluHakutoive(
-                  hakutoiveenValintatapajonot = Some(Seq(
-                    SijoitteluHakutoiveenValintatapajono(
-                      varalla = None,
-                      hyvaksytty = None,
-                      hakeneet = None,
-                      alinHyvaksyttyPistemaara = None,
-                      pisteet = Some(26.0),
-                      tasasijaJonosija = None,
-                      hyvaksyttyHarkinnanvaraisesti = None,
-                      vastaanottotieto = None,
-                      tilanKuvaukset = None,
-                      tila = Some("HYVAKSYTTY"),
-                      varasijanNumero = None,
-                      paasyJaSoveltuvuusKokeenTulos = None,
-                      jonosija = None,
-                      valintatapajonoNimi = None,
-                      valintatapajonoOid = None,
-                      valintatapajonoPrioriteetti = None)
-                  )),
-                  pistetiedot = None,
-                  tarjoajaOid = None,
-                  hakukohdeOid = Some("1.11.2"),
-                  hakutoive = None))),
-              etunimi = None,
-              sukunimi = None)),
-          1))
+    Seq(
+      ValintaTulos(
+        FullHakemus1.oid,
+        Seq(
+          ValintaTulosHakutoive(
+            "1.11.2",
+            "1.10.4",
+            Valintatila.HYVAKSYTTY,
+            Vastaanottotila.KESKEN,
+            Ilmoittautumistila.EI_TEHTY,
+            "",
+            julkaistavissa = true,
+            None
+          ),
+          ValintaTulosHakutoive(
+            "1.11.1",
+            "1.10.3",
+            Valintatila.PERUUTETTU,
+            Vastaanottotila.KESKEN,
+            Ilmoittautumistila.EI_TEHTY,
+            "",
+            julkaistavissa = true,
+            None
+          )
+        )
+      ),
+      ValintaTulos(
+        FullHakemus2.oid,
+        Seq(
+          ValintaTulosHakutoive(
+            "1.11.1",
+            "1.10.5",
+            Valintatila.KESKEN,
+            Vastaanottotila.KESKEN,
+            Ilmoittautumistila.EI_TEHTY,
+            "",
+            julkaistavissa = true,
+            None
+          ),
+          ValintaTulosHakutoive(
+            "1.11.2",
+            "1.10.4",
+            Valintatila.KESKEN,
+            Vastaanottotila.KESKEN,
+            Ilmoittautumistila.EI_TEHTY,
+            "",
+            julkaistavissa = true,
+            None
+          )
+        )
+      )
+    )
+  )
 
   val sijoitteluClient = mock[VirkailijaRestClient]
-  sijoitteluClient.readObject[SijoitteluPagination]("/resources/sijoittelu/1.1/sijoitteluajo/latest/hakemukset", HttpResponseCode.Ok) returns f
-  sijoitteluClient.readObject[SijoitteluPagination]("/resources/sijoittelu/1.2/sijoitteluajo/latest/hakemukset", HttpResponseCode.Ok) returns f
+  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.1", 5, HttpResponseCode.Ok) returns f
+  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.2", 5, HttpResponseCode.Ok) returns f
 
   object hakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
     val orgAct = system.actorOf(Props(new MockedOrganisaatioActor()))
-    val sijoittelu = system.actorOf(Props(new SijoitteluActor(sijoitteluClient)))
+    val sijoittelu = system.actorOf(Props(new ValintaTulosActor(sijoitteluClient)))
     val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodisto, sijoittelu)))
 
     def get(q: HakijaQuery) = {

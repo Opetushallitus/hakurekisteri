@@ -27,7 +27,6 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
-import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluActor
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaConfig, VirtaClient, VirtaActor}
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
@@ -79,7 +78,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     //val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, registers.suoritusRekisteri, journals.arvosanaJournal)), "perusopetus-sanity")
 
-    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, parameterConfig, hakemusConfig, ytlConfig, koodistoConfig, valintaTulosConfig, registers, system)
+    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, parameterConfig, hakemusConfig, ytlConfig, koodistoConfig, valintaTulosConfig, registers, system)
 
     val koosteet = new BaseKoosteet(system, integrations, registers)
 
@@ -288,7 +287,6 @@ trait Integrations {
   val virta: ActorRef
   val henkilo: ActorRef
   val organisaatiot: ActorRef
-  val sijoittelu: ActorRef
   val hakemukset: ActorRef
   val tarjonta: ActorRef
   val koodisto: ActorRef
@@ -301,7 +299,6 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        henkiloConfig: ServiceConfig,
                        tarjontaConfig: ServiceConfig,
                        organisaatioConfig: ServiceConfig,
-                       sijoitteluConfig: ServiceConfig,
                        parameterConfig: ServiceConfig,
                        hakemusConfig: HakemusConfig,
                        ytlConfig: Option[YTLConfig],
@@ -323,8 +320,6 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
   val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(createHttpClient("virta", 50, 100), ec, system), organisaatiot)), "virta")
 
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig, None)(createHttpClient, ec, system))), "henkilo")
-
-  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig, None)(createHttpClient, ec, system))), "sijoittelu")
 
   val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf, None)(createHttpClient, ec, system), hakemusConfig.maxApplications)), "hakemus")
 
@@ -360,9 +355,9 @@ trait Koosteet {
 class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: Registers) extends Koosteet {
   implicit val ec: ExecutionContext = system.dispatcher
 
-  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemukset), integrations.organisaatiot, integrations.koodisto, integrations.sijoittelu)), "hakijat")
+  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemukset), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
 
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta, integrations.hakemukset)), "ensikertalainen")
 
-  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.sijoittelu, integrations.ytl)))
+  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.valintaTulos, integrations.ytl)))
 }

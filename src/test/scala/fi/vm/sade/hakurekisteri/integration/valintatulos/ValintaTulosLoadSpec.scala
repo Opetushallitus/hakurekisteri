@@ -38,7 +38,7 @@ class ValintaTulosLoadSpec extends FlatSpec with ShouldMatchers {
   val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(TestClient.getClient, ec, system))), "valintaTulos")
 
   ignore should "handle loading the status of 5000 applications" in {
-    val jsonString = scala.io.Source.fromFile("src/test/resources/test-applications.json").getLines.mkString
+    val jsonString = scala.io.Source.fromFile("src/test/resources/test-applications.json").mkString
     val applications = parse(jsonString).extract[Applications]
     val hakemusOids = applications.results
 
@@ -46,7 +46,7 @@ class ValintaTulosLoadSpec extends FlatSpec with ShouldMatchers {
     val batchStart = Platform.currentTime
     hakemusOids.foreach(h => {
       val start = Platform.currentTime
-      val res: Future[ValintaTulos] = (valintaTulos ? ValintaTulosQuery("1.2.246.562.29.173465377510", h.oid)).mapTo[ValintaTulos]
+      val res: Future[ValintaTulos] = (valintaTulos ? ValintaTulosQuery("1.2.246.562.29.173465377510", Some(h.oid), cachedOk = true)).mapTo[ValintaTulos]
       res.onComplete(t => {
         val end = Platform.currentTime
         println(s"${count.getAndIncrement} (${(end - batchStart) / 1000} seconds): took ${end - start} ms")
@@ -68,7 +68,7 @@ object TestClient {
   def createApacheHttpClient(maxConnections: Int): org.apache.http.client.HttpClient = {
     val connManager: ClientConnectionManager = {
       val registry = new SchemeRegistry()
-      val socketFactory = SSLSocketFactory.getSocketFactory()
+      val socketFactory = SSLSocketFactory.getSocketFactory
       val hostnameVerifier = org.apache.http.conn.ssl.SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER
       socketFactory.setHostnameVerifier(hostnameVerifier)
       registry.register(new Scheme("https", 443, socketFactory))

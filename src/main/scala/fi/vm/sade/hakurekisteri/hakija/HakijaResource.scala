@@ -162,7 +162,6 @@ object XMLHakutoive {
 
   def vastaanotto: PartialFunction[Hakutoive, String] = {
     case v: Hyvaksytty        => "1"
-    case v: Ilmoitettu        => "2"
     case v: Vastaanottanut    => "3"
     case v: PerunutValinnan   => "4"
     case v: EiVastaanotettu   => "5"
