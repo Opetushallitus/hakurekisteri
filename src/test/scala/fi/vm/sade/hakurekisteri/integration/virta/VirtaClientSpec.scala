@@ -120,11 +120,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
     }
   }
 
-  it should "throw IllegalArgumentException if provided hetu is not valid" in {
-    intercept[IllegalArgumentException] {
-      Await.result(virtaClient.getOpiskelijanTiedot(hetu = Some("invalid"), oppijanumero = "1.2.3"), 10.seconds)
-    }
-  }
+
 
   def waitFuture[A](f: Future[A])(assertion: A => Unit) = {
     val w = new Waiter

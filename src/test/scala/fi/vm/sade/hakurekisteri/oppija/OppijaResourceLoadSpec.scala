@@ -8,8 +8,8 @@ import fi.vm.sade.hakurekisteri.integration.{JSessionIdActor, ServiceConfig, Vir
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 
-import net.liftweb.json.JsonParser._
-import net.liftweb.json.DefaultFormats
+import org.json4s.DefaultFormats
+import org.json4s.jackson.JsonMethods._
 import scala.compat.Platform
 import scala.concurrent.duration._
 

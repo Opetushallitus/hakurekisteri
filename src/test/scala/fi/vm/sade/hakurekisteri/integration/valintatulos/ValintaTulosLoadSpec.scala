@@ -9,13 +9,13 @@ import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 
-import net.liftweb.json.JsonParser._
-import net.liftweb.json.DefaultFormats
 import scala.compat.Platform
 import scala.concurrent.duration._
 import akka.pattern.ask
 
 import scala.concurrent.{Await, Future, ExecutionContext}
+import org.json4s.DefaultFormats
+import org.json4s.jackson.JsonMethods._
 
 class ValintaTulosLoadSpec extends FlatSpec with ShouldMatchers {
 

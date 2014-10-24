@@ -39,7 +39,6 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   val maxRetries = 3
 
   def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
-    if (hetu.isDefined && !HetuUtils.isHetuValid(hetu.get)) throw new IllegalArgumentException("hetu is not valid")
 
     val operation =
 <OpiskelijanKaikkiTiedotRequest xmlns="http://tietovaranto.csc.fi/luku">

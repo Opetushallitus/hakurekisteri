@@ -62,7 +62,6 @@ object HakuJaValintarekisteriBuild extends Build {
     "com.h2database" % "h2" % "1.3.174",
     "org.postgresql" % "postgresql" % "9.3-1100-jdbc4",
     "net.databinder.dispatch" %% "dispatch-core" % "0.11.0",
-    "com.stackmob" %% "newman" % "1.3.5",
     "info.folone" %% "poi-scala" % "0.9",
     "org.apache.activemq" % "activemq-all" % "5.9.1",
     "org.apache.camel" % "camel-jms" % "2.13.0",

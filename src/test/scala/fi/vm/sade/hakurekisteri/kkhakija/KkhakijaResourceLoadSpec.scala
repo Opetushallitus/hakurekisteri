@@ -6,8 +6,8 @@ import java.util.concurrent.atomic.AtomicInteger
 import akka.actor.{ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.integration.{JSessionIdActor, ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.oppija.Hakukohteet
-import net.liftweb.json.DefaultFormats
-import net.liftweb.json.JsonParser._
+import org.json4s.DefaultFormats
+import org.json4s.jackson.JsonMethods._
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 
