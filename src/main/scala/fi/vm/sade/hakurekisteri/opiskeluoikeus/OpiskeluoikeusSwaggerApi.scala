@@ -1,10 +1,10 @@
 package fi.vm.sade.hakurekisteri.opiskeluoikeus
 
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
+import fi.vm.sade.hakurekisteri.rest.support.{OldSwaggerSyntax, HakurekisteriResource}
 import org.scalatra.swagger.AllowableValues.AnyValue
-import org.scalatra.swagger.{Model, DataType, ModelField}
+import org.scalatra.swagger.DataType
 
-trait OpiskeluoikeusSwaggerApi {
+trait OpiskeluoikeusSwaggerApi extends OldSwaggerSyntax {
   this: HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand] =>
 
   override protected val applicationName = Some("opiskeluoikeudet")

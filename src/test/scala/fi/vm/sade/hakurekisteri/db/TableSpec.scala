@@ -27,7 +27,7 @@ class TableSpec extends FlatSpec with ShouldMatchers{
     val tables = db withSession {
       implicit session =>
         table.ddl.create
-        MTable.getTables(table.baseTableRow.tableName).list()
+        MTable.getTables(table.baseTableRow.tableName).list
 
     }
 
@@ -93,7 +93,7 @@ class TableSpec extends FlatSpec with ShouldMatchers{
     db withSession{
       implicit session =>
 
-        if (MTable.getTables(table.baseTableRow.tableName).list().isEmpty) {
+        if (MTable.getTables(table.baseTableRow.tableName).list.isEmpty) {
           table.ddl.create
         }
 

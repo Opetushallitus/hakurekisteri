@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
 import com.stackmob.newman.response.HttpResponseCode
+import fi.vm.sade.hakurekisteri.SpecsLikeMockito
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus._
@@ -14,8 +15,6 @@ import java.util.concurrent.TimeUnit
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
 import org.scalatest.Suite
 import org.scalatra.test.HttpComponentsClient
-import org.specs.mock.Mockito
-import org.specs.specification.Examples
 import scala.concurrent.{Future, ExecutionContext}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.hakemus.ListHakemus
@@ -24,9 +23,8 @@ import fi.vm.sade.hakurekisteri.hakija.Hakija
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
 
-trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport with Mockito {
-  override def forExample: Examples = ???
-  override def lastExample: Option[Examples] = ???
+trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport with SpecsLikeMockito {
+
 
   object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None)
   object OppilaitosY extends Organisaatio("1.10.2", Map("fi" -> "Oppilaitos Y"), None, Some("00002"), None)

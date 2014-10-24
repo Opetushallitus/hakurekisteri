@@ -91,8 +91,6 @@ class InMemJournal[T <: Resource[I, T], I] extends Journal[T, I] {
 
   override def journal(latest:Option[Long]): Seq[Delta[T, I]] = deltas
 
-  override def addModification(delta:Delta[T, I]): Unit =  {
-    deltas = deltas :+ delta
-  }
+  override def addModification(delta:Delta[T, I]): Unit = deltas = deltas :+ delta
 }
 
