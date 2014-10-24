@@ -4,7 +4,6 @@ import java.net.URLEncoder
 
 import akka.actor.{ActorLogging, Actor, Cancellable}
 import akka.pattern.pipe
-import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
 
 import scala.compat.Platform
@@ -25,7 +24,7 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
   var cancellable: Option[Cancellable] = None
 
   override def preStart(): Unit = {
-    organisaatioClient.readObject[Seq[String]]("/rest/organisaatio", maxRetries, HttpResponseCode.Ok).onSuccess {
+    organisaatioClient.readObject[Seq[String]]("/rest/organisaatio", maxRetries, 200).onSuccess {
       case s: Seq[String] =>
         fetchOrgs(s)
     }
@@ -62,8 +61,8 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
   }
 
   def newValue(oid: String): (Long, Future[Option[Organisaatio]]) = {
-    val organisaatio: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(oid, "UTF-8")}", maxRetries, HttpResponseCode.Ok).map(Option(_)).recoverWith {
-      case p: PreconditionFailedException if p.responseCode == HttpResponseCode.NoContent => log.warning(s"organisaatio not found with oid $oid"); Future.successful(None)
+    val organisaatio: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(oid, "UTF-8")}", maxRetries, 200).map(Option(_)).recoverWith {
+      case p: PreconditionFailedException if p.responseCode == 204 => log.warning(s"organisaatio not found with oid $oid"); Future.successful(None)
     }
     (Platform.currentTime + timeToLive.toMillis, organisaatio)
   }

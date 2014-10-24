@@ -1,21 +1,21 @@
 package fi.vm.sade.hakurekisteri.arvosana
 
 import akka.actor.{ActorRef, Cancellable, Actor}
-import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, SuoritusQuery, Suoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, JournaledRepository, Journal}
 import scala.concurrent.{Future, ExecutionContext}
-import fi.vm.sade.hakurekisteri.rest.support.Kausi
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Kausi}
 import akka.pattern._
 import java.util.UUID
-import com.stackmob.newman.dsl._
-import com.stackmob.newman.ApacheHttpClient
-import java.net.URL
-import net.liftweb.json.JsonAST.JValue
 import akka.event.Logging
-import org.joda.time.LocalDate
 
-class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.oph.ware.fi/koodisto-service", val suoritusRekisteri: ActorRef, val journal:Journal[Arvosana, UUID] = new InMemJournal[Arvosana, UUID]) extends Actor with ArvosanaService with JournaledRepository[Arvosana, UUID] {
+import dispatch._
+import scala.Some
+import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
+import scala.util.Try
+
+class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.oph.ware.fi/koodisto-service", val suoritusRekisteri: ActorRef, val journal:Journal[Arvosana, UUID] = new InMemJournal[Arvosana, UUID]) extends Actor with ArvosanaService with JournaledRepository[Arvosana, UUID] with HakurekisteriJsonSupport {
 
   override val deduplicate = false
 
@@ -29,9 +29,6 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
   var problems: Seq[Problem]  = Seq()
 
   import scala.concurrent.duration._
-
-  implicit val httpClient = new ApacheHttpClient(socketTimeout = 60.seconds.toMillis.toInt)()
-
 
   var pakolliset:Set[String] = Set()
 
@@ -84,20 +81,32 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
       for (koodi: Koodi <- k.getOrElse(Seq())) yield
         for (s <- sisaltyy(koodi)) yield (koodi, s.getOrElse(Seq()).map(_("koodiUri").toString).toSet))
 
-    val req = GET(new URL(s"$serviceUrl/rest/json/oppiaineetyleissivistava/koodi/")).apply
-    val yl =
-      for (result <- req) yield
-        for (json <- result.bodyAs[JValue].toOption) yield json.values.asInstanceOf[Seq[Map[String, Any]]]
+    def yl: Future[Option[Seq[Map[String, Any]]]] = {
+      val req = url(s"$serviceUrl/rest/json/oppiaineetyleissivistava/koodi/")
+      val res: Future[String] = Http(req OK as.String)
+      parseBody(res)
+    }
+
+
+
+
 
     for (k: Option[Seq[Map[String, Any]]] <- yl;
          s <- withSisaltyy(k)) yield s
   }
 
 
+  def parseBody(res: Future[String]): Future[Option[Seq[Map[String, Any]]]] = {
+    import org.json4s.jackson.JsonMethods.parse
+    for (result <- res) yield
+      for (json <- Try(parse(result)).toOption) yield json.values.asInstanceOf[Seq[Map[String, Any]]]
+  }
+
   type Koodi = Map[String, Any]
   def sisaltyy(koodi: Koodi): Future[Option[Seq[Map[String, Any]]]] = {
-    for (resp <- GET(new URL(s"$serviceUrl/rest/json/relaatio/sisaltyy-alakoodit/${koodi("koodiUri")}")).apply) yield
-      for (json <- resp.bodyAs[JValue].toOption) yield json.values.asInstanceOf[Seq[Map[String, Any]]]
+    val req = url(s"$serviceUrl/rest/json/relaatio/sisaltyy-alakoodit/${koodi("koodiUri")}")
+    val res: Future[String] = Http(req OK as.String)
+    parseBody(res)
   }
 
   override def receive: Actor.Receive = {
