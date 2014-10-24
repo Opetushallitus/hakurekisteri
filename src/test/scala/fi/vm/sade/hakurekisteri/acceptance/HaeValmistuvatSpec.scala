@@ -2,12 +2,12 @@ package fi.vm.sade.hakurekisteri.acceptance
 
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import org.scalatest.GivenWhenThen
-import fi.vm.sade.hakurekisteri.acceptance.tools.{kausi, HakurekisteriSupport}
+import fi.vm.sade.hakurekisteri.acceptance.tools.{HakurekisteriContainer, kausi, HakurekisteriSupport}
 import kausi._
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 
 
-class HaeValmistuvatSpec extends ScalatraFeatureSpec with GivenWhenThen with HakurekisteriSupport {
+class HaeValmistuvatSpec extends ScalatraFeatureSpec with GivenWhenThen with  HakurekisteriContainer with HakurekisteriSupport {
 
 
 

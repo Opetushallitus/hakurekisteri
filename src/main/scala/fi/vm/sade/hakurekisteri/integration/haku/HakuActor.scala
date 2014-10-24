@@ -1,23 +1,23 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
+import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosQuery
+
 import scala.concurrent.{ExecutionContext, Future}
-import akka.actor.{ActorRef, Actor}
+import akka.actor.{ActorLogging, ActorRef, Actor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{RestHaku, GetHautQuery, RestHakuResult}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import org.joda.time.{DateTime, ReadableInstant}
-import akka.event.Logging
 import fi.vm.sade.hakurekisteri.integration.hakemus.ReloadHaku
 import scala.concurrent.duration._
 import org.scalatra.util.RicherString._
-import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluQuery
 import fi.vm.sade.hakurekisteri.integration.ytl.HakuList
+import scala.language.implicitConversions
 
 
-class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, sijoittelu: ActorRef, ytl: ActorRef) extends Actor {
+class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, valintaTulos: ActorRef, ytl: ActorRef) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
-  val log = Logging(context.system, this)
 
   var activeHakus: Seq[Haku] = Seq()
   val refreshTime = 2.hours
@@ -80,7 +80,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   }
 
   def refreshKeepAlives() {
-    activeHakus.zipWithIndex foreach {case (haku: Haku, i: Int) => context.system.scheduler.scheduleOnce((i * 5).seconds, sijoittelu, SijoitteluQuery(haku.oid))(context.dispatcher, ActorRef.noSender)}
+    activeHakus.zipWithIndex foreach {case (haku: Haku, i: Int) => context.system.scheduler.scheduleOnce((i * 5).seconds, valintaTulos, ValintaTulosQuery(haku.oid, None, cachedOk = false))(context.dispatcher, ActorRef.noSender)}
   }
 }
 

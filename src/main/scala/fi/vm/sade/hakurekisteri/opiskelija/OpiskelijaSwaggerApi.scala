@@ -1,18 +1,20 @@
 package fi.vm.sade.hakurekisteri.opiskelija
 
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
-import scala.Some
+import fi.vm.sade.hakurekisteri.rest.support.{OldSwaggerSyntax, HakurekisteriResource}
 import java.util.Date
-import org.scalatra.swagger.{DataType, ModelField, Model}
+import org.scalatra.swagger._
 import org.scalatra.swagger.AllowableValues.AnyValue
-import fi.vm.sade.hakurekisteri.suoritus.Suoritus
-import fi.vm.sade.hakurekisteri.arvosana.Arvosana
+import scala.Some
 
-trait OpiskelijaSwaggerApi
+trait OpiskelijaSwaggerApi extends OldSwaggerSyntax
     { this: HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand] =>
 
   override protected val applicationName = Some("opiskelijat")
   protected val applicationDescription = "Opiskelijatietojen rajapinta"
+
+
+
+
 
   val fields = Seq(ModelField("id", "opiskelijatiedon uuid", DataType.String, None, AnyValue, required = false),
     ModelField("oppilaitosOid", null, DataType.String, None, AnyValue, required = true),
@@ -21,6 +23,9 @@ trait OpiskelijaSwaggerApi
     ModelField("henkiloOid", null, DataType.String, None, AnyValue, required = true),
     ModelField("alkuPaiva", null, DataType.Date, None, AnyValue, required = true),
     ModelField("loppuPaiva", null, DataType.Date, None, AnyValue, required = false))
+
+
+
 
   val opiskelijaModel = Model("Opiskelija", "Opiskelijatiedot", fields.map(t => (t.name, t)).toMap)
 

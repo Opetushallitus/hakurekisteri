@@ -55,7 +55,7 @@ class KokelasParserSpec extends FlatSpec with ShouldMatchers with FutureWaiting 
 
     waitFuture(parseKokelas(Future.successful("oid"), ylioppilas)) {
       (kokelas: Kokelas) =>
-        kokelas.yoTodistus should be (YTLXml.extractTodistus(kokelas.yo.get, ylioppilas))
+        kokelas.yoTodistus should be (YTLXml.extractTodistus(kokelas.yo, ylioppilas))
 
     }
   }

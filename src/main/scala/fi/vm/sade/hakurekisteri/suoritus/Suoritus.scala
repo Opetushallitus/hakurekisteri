@@ -28,16 +28,14 @@ case class VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: Str
 
   val kkTutkinto = tyyppi == "kkTutkinto"
 
-  private[VapaamuotoinenSuoritus] val core = VapaaSisalto(henkilo, tyyppi, index)
+  override val core = VapaaSisalto(henkilo, tyyppi, index)
 
 
   override def identify(identity: UUID): VapaamuotoinenSuoritus with Identified[UUID] = new VapaamuotoinenSuoritus(henkiloOid, kuvaus, myontaja, vuosi, tyyppi, index, source) with Identified[UUID] {
     val id: UUID = identity
   }
 
-  override def hashCode(): Int = core.hashCode()
 
-  override def equals(obj: scala.Any): Boolean = obj.isInstanceOf[VapaamuotoinenSuoritus] && core.equals(obj.asInstanceOf[VapaamuotoinenSuoritus].core)
 }
 
 object VapaamuotoinenKkTutkinto {
@@ -60,6 +58,11 @@ case class VirallinenSuoritus(komo: String,
                     opiskeluoikeus: Option[UUID] = None,
                     vahv:Boolean = true,
                     lahde: String) extends Suoritus(henkilo, vahv, lahde)  {
+
+  private[VirallinenSuoritus] case class VirallinenSisalto(henkilo: String, komo: String, myontaja: String)
+
+  override  val core = VirallinenSisalto(henkilo, komo, myontaja)
+
   override def identify(identity: UUID): VirallinenSuoritus with Identified[UUID] = new VirallinenSuoritus(komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, opiskeluoikeus, vahvistettu, source) with Identified[UUID] {
     val id: UUID = identity
   }

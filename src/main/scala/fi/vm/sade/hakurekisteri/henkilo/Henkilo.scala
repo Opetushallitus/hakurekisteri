@@ -33,6 +33,8 @@ case class Henkilo (
   val source = ""
 
   override def identify(id: UUID): Henkilo with Identified[UUID] = Henkilo.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
+
+  override val core: AnyRef = oidHenkilo
 }
 
 

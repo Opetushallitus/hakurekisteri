@@ -12,9 +12,9 @@ object HakuJaValintarekisteriBuild extends Build {
   val Organization = "fi.vm.sade"
   val Name = "hakurekisteri"
   val Version = "11.0-SNAPSHOT"
-  val ScalaVersion = "2.10.3"
+  val ScalaVersion = "2.10.4"
   val ArtifactName = (s: ScalaVersion, m: ModuleID, a: Artifact) => s"${a.name}-${m.revision}.${a.extension}"
-  val ScalatraVersion = "2.2.2"
+  val ScalatraVersion = "2.3.0"
   val SpringVersion = "3.2.1.RELEASE"
 
   val ScalatraStack = Seq(
@@ -47,15 +47,18 @@ object HakuJaValintarekisteriBuild extends Build {
     "net.sf.ehcache" % "ehcache-jgroupsreplication" % "1.5",
     "org.jasig.cas" % "cas-client-support-distributed-ehcache" % "3.1.10" exclude("net.sf.ehcache", "ehcache"))
 
-  val akkaVersion = "2.2.3"
+  val akkaVersion = "2.3.6"
   val AkkaStack = Seq("akka-testkit", "akka-slf4j","akka-camel").map("com.typesafe.akka" %% _ % akkaVersion)
+
 
   val dependencies = Seq(
     "org.slf4j" % "slf4j-api" % "1.6.1",
-    "org.eclipse.jetty" % "jetty-webapp" % "8.1.8.v20121106" % "container",
-    "org.json4s" %% "json4s-jackson" % "3.2.4",
-    "com.github.nscala-time" %% "nscala-time" % "0.8.0",
-    "com.typesafe.slick" %% "slick" % "2.0.0",
+    "org.eclipse.jetty" % "jetty-webapp" % "9.1.5.v20140505" % "container",
+    "org.eclipse.jetty" % "jetty-plus" % "9.1.5.v20140505" % "container",
+    "javax.servlet" % "javax.servlet-api" % "3.1.0",
+    "org.json4s" %% "json4s-jackson" % "3.2.10",
+    "com.github.nscala-time" %% "nscala-time" % "1.4.0",
+    "com.typesafe.slick" %% "slick" % "2.1.0",
     "com.h2database" % "h2" % "1.3.174",
     "org.postgresql" % "postgresql" % "9.3-1100-jdbc4",
     "net.databinder.dispatch" %% "dispatch-core" % "0.11.0",
@@ -64,12 +67,11 @@ object HakuJaValintarekisteriBuild extends Build {
     "org.apache.activemq" % "activemq-all" % "5.9.1",
     "org.apache.camel" % "camel-jms" % "2.13.0",
     "fi.vm.sade.log" % "log-client" % "7.0",
-    "fr.janalyse" %% "janalyse-ssh" % "0.9.10"
+    "fr.janalyse" %% "janalyse-ssh" % "0.9.14"
   )
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion,
-                             "org.scalamock" %% "scalamock-scalatest-support" % "3.0.1",
-                             "org.scala-tools.testing" %% "specs" % "1.6.9")
+                             "org.scalamock" %% "scalamock-scalatest-support" % "3.1.4")
 
   lazy val mocha = taskKey[Unit]("run mocha tests")
   lazy val installMocha = taskKey[Unit]("install mocha")
@@ -169,8 +171,7 @@ object HakuJaValintarekisteriBuild extends Build {
           credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
           artifactoryPublish,
           buildversionTask,
-          libraryDependencies ++= Seq("org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts Artifact("javax.servlet", "jar", "jar"))
-            ++ ScalatraStack.map(_ % ScalatraVersion)
+          libraryDependencies ++=  ScalatraStack.map(_ % ScalatraVersion)
             ++ SecurityStack
             ++ AkkaStack
             ++ dependencies

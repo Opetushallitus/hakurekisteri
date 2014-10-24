@@ -3,11 +3,9 @@ package fi.vm.sade.hakurekisteri.arvosana
 import org.scalatra.swagger._
 import scala.Some
 import org.scalatra.swagger.AllowableValues.AnyValue
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
-import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import java.util.UUID
+import fi.vm.sade.hakurekisteri.rest.support.{OldSwaggerSyntax, HakurekisteriResource}
 
-trait ArvosanaSwaggerApi  { this: HakurekisteriResource[Arvosana, CreateArvosanaCommand] =>
+trait ArvosanaSwaggerApi extends OldSwaggerSyntax { this: HakurekisteriResource[Arvosana, CreateArvosanaCommand] =>
 
   override protected val applicationName = Some("arvosanat")
   protected val applicationDescription = "Arvosanatietojen rajapinta"

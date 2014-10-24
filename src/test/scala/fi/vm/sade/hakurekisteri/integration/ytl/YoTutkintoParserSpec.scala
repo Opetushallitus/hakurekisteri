@@ -13,20 +13,20 @@ class YoTutkintoParserSpec extends FlatSpec with ShouldMatchers {
   import YTLXml.extractYo
 
 
-  it should "return None for a person whos not YO" in {
-    extractYo("oid", eiValmis) should be (None)
+  it should "return KESKEN as tila for a person whos not YO" in {
+    extractYo("oid", eiValmis).tila should be ("KESKEN")
 
   }
 
 
   it should "parse a suoritus with given oid oid" in {
-    extractYo("oid", suorittanut).get.henkiloOid should be ("oid")
+    extractYo("oid", suorittanut).henkiloOid should be ("oid")
   }
 
   it should "use date of exam as graduation date if just marked graduating" in {
     val kevat1995 = DateTimeFormat.forPattern("dd.MM.yyyy").parseLocalDate("01.06.1995")
 
-    extractYo("oid", suorittanut).get.valmistuminen should be (kevat1995)
+    extractYo("oid", suorittanut).valmistuminen should be (kevat1995)
 
   }
 
@@ -34,12 +34,12 @@ class YoTutkintoParserSpec extends FlatSpec with ShouldMatchers {
 
     val kevat2005 = DateTimeFormat.forPattern("dd.MM.yyyy").parseLocalDate("01.06.2005")
 
-    extractYo("oid", ylioppilas).get.valmistuminen should be (kevat2005)
+    extractYo("oid", ylioppilas).valmistuminen should be (kevat2005)
   }
 
   it should "have the same language as given from YTL as exam language" in {
 
-    extractYo("oid", ylioppilas).get.suoritusKieli should be ("FI")
+    extractYo("oid", ylioppilas).suoritusKieli should be ("FI")
 
   }
 

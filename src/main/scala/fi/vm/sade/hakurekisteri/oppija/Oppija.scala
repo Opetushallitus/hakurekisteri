@@ -15,6 +15,8 @@ case class Oppija(oppijanumero: String, opiskelu:Seq[Opiskelija], suoritukset: S
   override val source = "1.2.246.562.10.00000000001"
 
   def newId = oppijanumero
+
+  override val core: AnyRef = oppijanumero
 }
 
 case class Todistus(suoritus: Suoritus, arvosanat: Seq[Arvosana])

@@ -5,8 +5,9 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.{Vastaanottotila, Valin
 import org.scalatra.swagger.AllowableValues.AnyValue
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
+import fi.vm.sade.hakurekisteri.rest.support.OldSwaggerSyntax
 
-trait KkHakijaSwaggerApi extends SwaggerSupport {
+trait KkHakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
   override protected val applicationName = Some("kkhakijat")
 
   val hakukohteenKoulutuksetFields = Seq(

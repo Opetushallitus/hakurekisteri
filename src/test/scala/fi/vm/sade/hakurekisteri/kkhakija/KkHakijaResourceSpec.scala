@@ -10,10 +10,13 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
 import fi.vm.sade.hakurekisteri.integration.haku.{Kieliversiot, Haku, GetHaku}
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriSwagger}
-import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, SuoritusQuery}
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
 import org.joda.time.LocalDate
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -35,8 +38,14 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   addServlet(resource, "/")
 
   test("should return 200 OK") {
-    get("/") {
+    get("/?hakukohde=1.11.1") {
       status should be (200)
+    }
+  }
+
+  test("should return 400 Bad Request if no parameters given") {
+    get("/") {
+      status should be (400)
     }
   }
 
@@ -82,25 +91,17 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       vuosi = 2014,
       kkHaku = true
     )
-    val valintaTulos = ValintaTulos(
-      hakemusOid = "1.20.1",
-      hakutoiveet = Seq(
-        ValintaTulosHakutoive(
-          hakukohdeOid = "1.5.1",
-          tarjoajaOid = "1.10.1",
-          valintatila = Valintatila.kesken,
-          vastaanottotila = Vastaanottotila.kesken,
-          ilmoittautumistila = Ilmoittautumistila.ei_tehty,
-          vastaanotettavuustila = "",
-          julkaistavissa = false
-        )
-      )
-    )
-    val f = resource.getLasnaolot(valintaTulos, "1.5.1", haku, "")
+    val sijoitteluTulos = new SijoitteluTulos {
+      override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.EI_TEHTY)
+      override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = Some(Vastaanottotila.KESKEN)
+      override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.KESKEN)
+      override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
+    }
+    val f = resource.getLasnaolot(sijoitteluTulos, "1.5.1", haku, "")
 
     val ilmoittautumiset: Seq[Lasnaolo] = Await.result(f, Duration(10, TimeUnit.SECONDS))
 
-    ilmoittautumiset should (contain[Lasnaolo](Puuttuu(Syksy(2014))) and contain[Lasnaolo](Puuttuu(Kevat(2015))))
+    ilmoittautumiset should (contain(Puuttuu(Syksy(2014))) and contain(Puuttuu(Kevat(2015))))
   }
 
   test("should convert ilmoittautumiset into sequence in kevään haku") {
@@ -112,25 +113,18 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       vuosi = 2015,
       kkHaku = true
     )
-    val valintaTulos = ValintaTulos(
-      hakemusOid = "1.20.1",
-      hakutoiveet = Seq(
-        ValintaTulosHakutoive(
-          hakukohdeOid = "1.5.1",
-          tarjoajaOid = "1.10.1",
-          valintatila = Valintatila.kesken,
-          vastaanottotila = Vastaanottotila.kesken,
-          ilmoittautumistila = Ilmoittautumistila.läsnä_syksy,
-          vastaanotettavuustila = "",
-          julkaistavissa = false
-        )
-      )
-    )
-    val f = resource.getLasnaolot(valintaTulos, "1.5.1", haku, "")
+    val sijoitteluTulos = new SijoitteluTulos {
+      override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.LASNA_SYKSY)
+      override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = Some(Vastaanottotila.KESKEN)
+      override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.KESKEN)
+      override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
+    }
+
+    val f = resource.getLasnaolot(sijoitteluTulos, "1.5.1", haku, "")
 
     val ilmoittautumiset = Await.result(f, Duration(10, TimeUnit.SECONDS))
 
-    ilmoittautumiset should (contain[Lasnaolo](Lasna(Syksy(2015))) and contain[Lasnaolo](Poissa(Kevat(2015))))
+    ilmoittautumiset should (contain(Lasna(Syksy(2015))) and contain(Poissa(Kevat(2015))))
   }
 
   import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
@@ -159,14 +153,28 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
 
   class MockedSuoritusActor extends Actor {
     override def receive: Actor.Receive = {
-      case q: SuoritusQuery => println(q); sender ! Seq(suoritus1)
+      case q: SuoritysTyyppiQuery => println(q); sender ! Seq(suoritus1)
     }
   }
 
   class MockedValintaTulosActor extends Actor {
     override def receive: Actor.Receive = {
-      case q: ValintaTulosQuery if q.hakemusOid == FullHakemus1.oid => println(q); sender ! ValintaTulos(q.hakemusOid, Seq(ValintaTulosHakutoive("1.11.1", "1.10.1", Valintatila.hyväksytty, Vastaanottotila.kesken, Ilmoittautumistila.ei_tehty, "", false)))
-      case q: ValintaTulosQuery => println(q); sender ! ValintaTulos(q.hakemusOid, Seq())
+      case q: ValintaTulosQuery if q.hakuOid == FullHakemus1.applicationSystemId =>
+        println(q)
+        sender ! new SijoitteluTulos {
+          override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.EI_TEHTY)
+          override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = Some(Vastaanottotila.KESKEN)
+          override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.HYVAKSYTTY)
+          override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
+        }
+      case q: ValintaTulosQuery =>
+        println(q)
+        sender ! new SijoitteluTulos {
+          override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = None
+          override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = None
+          override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = None
+          override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = None
+        }
     }
   }
 

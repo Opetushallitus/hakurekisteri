@@ -1,16 +1,16 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
-import org.scalatra.test.HttpComponentsClient
+import org.scalatra.test.{EmbeddedJettyContainer, JettyContainer, HttpComponentsClient}
 
 import javax.servlet.http.{HttpServletRequest, HttpServlet}
-import akka.actor.{Props, ActorSystem}
+import akka.actor._
 
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization._
 import java.util.{UUID, Date}
 import java.text.SimpleDateFormat
 import org.scalatest.matchers._
-import org.scalatest.Suite
+import org.scalatest.{Outcome, Suite}
 import scala.xml.{Elem, Node, NodeSeq}
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi, Opiskelija, OpiskelijaActor}
@@ -19,10 +19,18 @@ import org.joda.time.{LocalDate, DateTime}
 import org.joda.time.format.DateTimeFormat
 
 import com.github.nscala_time.time.Imports._
-import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
+import fi.vm.sade.hakurekisteri.storage.repository.{Delta, Journal, Updated, InMemJournal}
 import fi.vm.sade.hakurekisteri.rest.support.User
 import com.github.nscala_time.time.TypeImports.LocalDate
 import com.github.nscala_time.time.StaticForwarderImports.LocalDate
+import org.scalatest.words.{EmptyWord, MatcherWords}
+import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
+import scala.Some
+import fi.vm.sade.hakurekisteri.suoritus.Komoto
+import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
+import java.util.concurrent.TimeUnit
+import scala.concurrent.Await
 
 
 object kausi extends Enumeration {
@@ -46,18 +54,72 @@ trait TestSecurity extends SecuritySupport {
   override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(TestUser)
 }
 
-trait HakurekisteriSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport {
-  override def withFixture(test: NoArgTest) {
+trait HakurekisteriContainer extends EmbeddedJettyContainer {
+
+  implicit val swagger = new HakurekisteriSwagger
+
+  implicit val system: ActorSystem
+
+  val guardedSuoritusRekisteri: ActorRef
+  val guardedOpiskelijaRekisteri: ActorRef
+
+
+  override def start() {
+    super.start()
+    addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](guardedSuoritusRekisteri, fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with TestSecurity, "/rest/v1/suoritukset")
+    addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](guardedOpiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with TestSecurity , "/rest/v1/opiskelijat")
+
+  }
+
+}
+
+
+
+
+trait HakurekisteriSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport { this: HakurekisteriContainer =>
+
+
+
+  implicit val system: ActorSystem = ActorSystem()
+
+  class SuoritusReloader extends Actor {
+
+    var underlying: ActorRef = context.actorOf(Props(new SuoritusActor()))
+
+    override def receive: Actor.Receive = {
+      case j: Journal[Suoritus, UUID] =>
+        context.stop(underlying)
+        underlying = context.actorOf(Props(new SuoritusActor(j)))
+      case m => underlying.forward(m)
+
+    }
+  }
+
+
+  val suoritusRekisteri = system.actorOf(Props(new SuoritusReloader))
+
+
+  def swap(newJournal: Journal[Suoritus,UUID]) {
+    suoritusRekisteri ! newJournal
+  }
+
+  val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor()))
+
+  val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
+
+  val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(opiskelijaRekisteri)))
+
+  override def withFixture(test: NoArgTest): Outcome = {
     tehdytSuoritukset = Seq()
+
     db.initialized = false
     super.withFixture(test)
   }
 
-  implicit val swagger = new HakurekisteriSwagger
 
-  def addServlet(servlet: HttpServlet, path: String):Unit
 
-  object empty
+
+
 
   object db {
     var initialized = false
@@ -65,24 +127,18 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
     def init() {
       if (!initialized) {
         println ("Initializing db with: " + tehdytSuoritukset)
-        implicit val system = ActorSystem()
         implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]) = {
           var journal = new InMemJournal[R, UUID]
           s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
           journal
         }
-        val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(tehdytSuoritukset)))
-        val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
-        val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq[Opiskelija]())))
-        val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(opiskelijaRekisteri)))
-        addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](guardedSuoritusRekisteri, fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with TestSecurity, "/rest/v1/suoritukset")
-        addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](guardedOpiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with TestSecurity , "/rest/v1/opiskelijat")
+        swap(tehdytSuoritukset)
         initialized = true
       }
     }
 
     def is(token:Any) = token match {
-      case empty => has()
+      case e:EmptyWord => has()
     }
 
     def has(suoritukset: Suoritus*) = {
@@ -129,8 +185,9 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
 
     def find[R: Manifest]:Seq[R] = {
+      println("Haku polusta:  " + resourcePath + " arvoilla " + arvot)
+
       get(resourcePath,arvot) {
-        println("Haku polusta:  " + resourcePath + " arvoilla " + arvot)
         println("Tulos: " + body)
         parse(body)
       }.extract[Seq[R]]
@@ -184,9 +241,7 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
     def koulusta(koulu:String) {
       val list = tehdytSuoritukset.toList
       val valmistuminen = Peruskoulu(koulu, "KESKEN", date, oid)
-      println(valmistuminen)
       tehdytSuoritukset = (list :+ valmistuminen).toSeq
-      println(tehdytSuoritukset)
     }
   }
 
@@ -195,7 +250,6 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
     def hetu: String
 
     def valmistuu(kausi:Kausi, vuosi:Int) = {
-      println(oid + " valmistuu " + kausi + " vuonna " + vuosi)
       new Valmistuja(oid, "" + vuosi, kausi)
     }
   }

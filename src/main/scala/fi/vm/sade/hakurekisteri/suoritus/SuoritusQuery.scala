@@ -12,3 +12,5 @@ object SuoritusQuery{
     SuoritusQuery(params.get("henkilo"), params.get("kausi").map(Kausi.withName), params.get("vuosi"), params.get("myontaja"))
   }
 }
+
+case class SuoritysTyyppiQuery(henkilo: String, komo: String)  extends Query[Suoritus]

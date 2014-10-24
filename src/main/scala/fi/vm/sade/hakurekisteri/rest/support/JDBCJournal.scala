@@ -13,9 +13,18 @@ import scala.language.existentials
 import scala.slick.ast.{BaseTypedType, TypedType}
 import scala.slick.driver.JdbcDriver
 import scala.slick.jdbc.meta.MTable
-import scala.slick.jdbc.{PositionedParameters, PositionedResult}
+import scala.slick.jdbc.{JdbcType, PositionedParameters, PositionedResult}
 import scala.slick.lifted
-import scala.slick.lifted.{ShapedValue, TableQuery, _}
+import scala.slick.lifted._
+import java.sql.{ResultSet, PreparedStatement}
+import scala.reflect.ClassTag
+import scala.Some
+import fi.vm.sade.hakurekisteri.storage.repository.Deleted
+import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import scala.Some
+import fi.vm.sade.hakurekisteri.storage.repository.Deleted
+import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import scala.slick.lifted.TableQuery
 
 
 object HakurekisteriDriver extends JdbcDriver {
@@ -25,12 +34,14 @@ object HakurekisteriDriver extends JdbcDriver {
     override val uuidJdbcType: super.UUIDJdbcType = new UUIDJdbcType
 
 
-    class UUIDJdbcType extends super.UUIDJdbcType {
+    class UUIDJdbcType(implicit override val classTag: ClassTag[UUID]) extends super.UUIDJdbcType  {
+
+
       override def sqlType = java.sql.Types.VARCHAR
-      override def setValue(v: UUID, p: PositionedParameters) = p.setString(v.toString)
-      override def setOption(v: Option[UUID], p: PositionedParameters) = p.setStringOption(v.map(_.toString))
-      override def nextValue(r: PositionedResult) = UUID.fromString(r.nextString)
-      override def updateValue(v: UUID, r: PositionedResult) = r.updateString(v.toString)
+      override def setValue(v: UUID, p: PreparedStatement, idx: Int) = p.setString(idx, v.toString)
+      override def getValue(r: ResultSet, idx: Int) = UUID.fromString(r.getString(idx))
+      override def updateValue(v: UUID, r: ResultSet, idx: Int) = r.updateString(idx, v.toString)
+
       override def valueToSQLLiteral(value: UUID) = if(value eq null) "NULL" else {
         val serialized = value.toString
         val sb = new StringBuilder
@@ -52,7 +63,8 @@ object HakurekisteriDriver extends JdbcDriver {
 
   trait  Implicits extends super.Implicits{
 
-    class JValueType extends HakurekisteriDriver.MappedJdbcType[JValue, String] with BaseTypedType[JValue]{
+    class JValueType(implicit tmd: JdbcType[String], override val classTag: ClassTag[JValue])  extends HakurekisteriDriver.MappedJdbcType[JValue, String] with BaseTypedType[JValue]{
+
 
       import org.json4s.jackson.JsonMethods._
 
@@ -146,7 +158,7 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R,I, _]](val table: 
 
   db withSession(
     implicit session =>
-      if (MTable.getTables(tableName).list().isEmpty) {
+      if (MTable.getTables(tableName).list.isEmpty) {
         table.ddl.create
       }
     )
@@ -163,7 +175,7 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R,I, _]](val table: 
     case None =>
       db withSession {
         implicit session =>
-          latestResources.list
+          queryToAppliedQueryInvoker(latestResources).list
 
       }
     case Some(latest) =>
@@ -176,17 +188,25 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R,I, _]](val table: 
 
   }
 
+  val resourcesWithVersions =  table.groupBy[lifted.Column[I], I , lifted.Column[I], T](_.resourceId)
+
+  val latest = for {
+    (id: lifted.Column[I], resource: lifted.Query[T, T#TableElementType, Seq]) <- resourcesWithVersions
+  } yield (id, resource.map(_.inserted).max)
+
+
+  val result: lifted.Query[T, Delta[R, I], Seq] = for (
+    delta: T <- table;
+    (id, timestamp) <- latest
+    if columnExtensionMethods(delta.resourceId) === id &&  columnExtensionMethods(delta.inserted).===(optionColumnExtensionMethods(timestamp).getOrElse(0))
+
+  ) yield delta
+
   val latestResources = {
-    val latest = for {
-      (id, resource) <- table.groupBy(_.resourceId)
-    } yield (id, resource.map(_.inserted).max)
 
-    val result = for {
-      delta <- table
-      (id, timestamp) <- latest
-      if columnExtensionMethods(delta.resourceId) === id &&  columnExtensionMethods(delta.inserted).===(optionColumnExtensionMethods(timestamp).getOrElse(0))
 
-    } yield delta
+
+
 
     result.sortBy(_.inserted.asc)
   }

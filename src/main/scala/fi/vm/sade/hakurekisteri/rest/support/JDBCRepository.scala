@@ -56,5 +56,5 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
     }(dbExecutor)
 
 
-  val dbQuery: PartialFunction[Query[R], lifted.Query[T, Delta[R,I]]]
+  val dbQuery: PartialFunction[Query[R], lifted.Query[T, Delta[R,I], Seq]]
 }

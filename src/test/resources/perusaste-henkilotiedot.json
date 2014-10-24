@@ -1,6 +1,6 @@
 {
-    "eranTunniste": "2de63e14-92ee-47d2-b0af-9ec2d7cde3f1",
-    "perustiedot": [
+    "eranTunniste": "05127henkilot",
+    "henkilot": [
         {
             "henkilonTunniste": "8a08663e-1443-4b39-9056-0694dc0dbe89",
             "hetu": "131094-919B",
@@ -24,31 +24,6 @@
             "postinumero": "00100",
             "maa": "246",
             "matkapuhelin": "040 1234 567",
-            "muuPuhelin": "09 1234 567"
-        },
-        {
-            "henkilonTunniste": "dad9d3eb-f76f-4824-a1b9-bc3aac5cc720",
-            "hetu": "131094-933T",
-            "oppijanumero": "1.2.246.562.24.36820108276",
-            "lahtokoulu": "05127",
-            "luokka": "9A",
-            "luokkataso": "9",
-            "todistus": "1",
-            "todistuksenMyontaja": "05127",
-            "yksilollistaminen": "0",
-            "valmistuminen": "01.06.2015",
-            "opetuskieli": "FI",
-            "sukupuoli": "1",
-            "sukunimi": "Testinen",
-            "etunimet": "Aapo Ville",
-            "kutsumanimi": "Aapo",
-            "kotikunta": "020",
-            "aidinkieli": "FI",
-            "kansalaisuus": "246",
-            "lahiosoite": "Katu 1 A 1",
-            "postinumero": "00100",
-            "maa": "246",
-            "matkapuhelin": "040 1234 568",
             "muuPuhelin": "09 1234 567"
         }
     ]
