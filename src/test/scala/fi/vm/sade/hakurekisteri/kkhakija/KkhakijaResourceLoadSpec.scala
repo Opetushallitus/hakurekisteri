@@ -1,11 +1,11 @@
 package fi.vm.sade.hakurekisteri.kkhakija
 
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{Executors, TimeUnit}
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{ActorSystem, Props}
 import com.stackmob.newman.response.HttpResponseCode
-import fi.vm.sade.hakurekisteri.integration.{HttpClientUtil, JSessionIdActor, ServiceConfig, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.{JSessionIdActor, ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.oppija.Hakukohteet
 import net.liftweb.json.DefaultFormats
 import net.liftweb.json.JsonParser._
@@ -31,9 +31,8 @@ class KkhakijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
     user = Some("robotti"),
     password = Some("Testaaja!")
   )
-  val httpClient = HttpClientUtil.createHttpClient("kkhakija", 1, 1)
   val sessionActor = system.actorOf(Props(new JSessionIdActor()))
-  val oppijaClient = new VirkailijaRestClient(oppijatConfig, Some(sessionActor))(httpClient, ec, system)
+  val oppijaClient = new VirkailijaRestClient(oppijatConfig, Some(sessionActor))(ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor()), system)
 
   ignore should "handle loading of all hakukohteet from haku" in {
     val hakuOid = "1.2.246.562.29.173465377510"

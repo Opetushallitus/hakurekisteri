@@ -11,8 +11,10 @@ import scala.concurrent.ExecutionContext
 
 case class HenkiloResponse(oidHenkilo: String, hetu: Option[String])
 
-class HenkiloActor(henkiloClient: VirkailijaRestClient)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
+class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with ActorLogging {
   val maxRetries = 5
+
+  implicit val ec: ExecutionContext = context.dispatcher
 
   val Hetu = "([0-9]{6}[-A][0-9]{3}[0123456789ABCDEFHJKLMNPRSTUVWXY])".r
 
