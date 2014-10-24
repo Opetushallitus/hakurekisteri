@@ -4,7 +4,6 @@ import java.net.URLEncoder
 
 import akka.actor.{Actor, Props, ActorRef}
 import akka.event.Logging
-import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, HakijaQuery}
 import fi.vm.sade.hakurekisteri.healthcheck.{RefreshingResource, Hakemukset, Health}
 import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaQuery
@@ -207,7 +206,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
 
   }
 
-  def restRequest[A <: AnyRef](uri: String)(implicit mf : Manifest[A]): Future[A] = hakemusClient.readObject[A](uri, HttpResponseCode.Ok)
+  def restRequest[A <: AnyRef](uri: String)(implicit mf : Manifest[A]): Future[A] = hakemusClient.readObject[A](uri, 200)
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 

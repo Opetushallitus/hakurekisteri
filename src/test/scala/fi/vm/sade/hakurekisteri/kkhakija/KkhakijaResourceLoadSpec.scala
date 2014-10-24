@@ -4,7 +4,6 @@ import java.util.concurrent.{Executors, TimeUnit}
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{ActorSystem, Props}
-import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.integration.{JSessionIdActor, ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.oppija.Hakukohteet
 import net.liftweb.json.DefaultFormats
@@ -44,7 +43,7 @@ class KkhakijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
     val batchStart = Platform.currentTime
     hakukohdeOids.foreach(h => {
       val start = Platform.currentTime
-      val res: Future[Seq[Hakija]] = oppijaClient.readObject[Seq[Hakija]](s"/rest/v1/kkhakijat?haku=$hakuOid&hakukohde=$h", HttpResponseCode.Ok)
+      val res: Future[Seq[Hakija]] = oppijaClient.readObject[Seq[Hakija]](s"/rest/v1/kkhakijat?haku=$hakuOid&hakukohde=$h", 200)
       res.onComplete((t: Try[Seq[Hakija]]) => {
         val end = Platform.currentTime
         val hakijas = t match {

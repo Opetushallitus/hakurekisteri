@@ -4,10 +4,7 @@ import java.util.concurrent.{TimeUnit, Executors}
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{ActorSystem, Props}
-import com.stackmob.newman.response.HttpResponseCode
-import com.stackmob.newman.ApacheHttpClient
 import fi.vm.sade.hakurekisteri.integration.{JSessionIdActor, ServiceConfig, VirkailijaRestClient}
-import org.apache.http.conn.scheme.SchemeRegistry
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 
@@ -46,7 +43,7 @@ class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
     val batchStart = Platform.currentTime
     hakukohdeOids.foreach(h => {
       val start = Platform.currentTime
-      val res: Future[Seq[Oppija]] = oppijaClient.readObject[Seq[Oppija]](s"/rest/v1/oppijat?haku=$hakuOid&hakukohde=$h", HttpResponseCode.Ok)
+      val res: Future[Seq[Oppija]] = oppijaClient.readObject[Seq[Oppija]](s"/rest/v1/oppijat?haku=$hakuOid&hakukohde=$h", 200)
       res.onComplete((t: Try[Seq[Oppija]]) => {
         val end = Platform.currentTime
         val oppijas = t match {

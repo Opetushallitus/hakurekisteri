@@ -4,7 +4,6 @@ import java.net.URLEncoder
 
 import akka.actor.{ActorLogging, Actor}
 import akka.pattern.pipe
-import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
@@ -71,8 +70,8 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
   def sijoitteluTulos(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = {
 
     def getSingleHakemus(hakemusOid: String): Future[SijoitteluTulos] = {
-      val f = restClient.readObject[ValintaTulos](s"/haku/${URLEncoder.encode(hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(hakemusOid, "UTF-8")}", maxRetries, HttpResponseCode.Ok).recoverWith {
-        case t: PreconditionFailedException if t.responseCode == HttpResponseCode.NotFound =>
+      val f = restClient.readObject[ValintaTulos](s"/haku/${URLEncoder.encode(hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(hakemusOid, "UTF-8")}", maxRetries, 200).recoverWith {
+        case t: PreconditionFailedException if t.responseCode == 404 =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
           Future.successful(ValintaTulos(hakemusOid, Seq()))
       }.map(t => valintaTulokset2SijoitteluTulos(Seq(t)))
@@ -81,8 +80,8 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
 
     def getHaku(haku: String): Future[SijoitteluTulos] = {
       println(s"rest client $restClient, haku $haku")
-      val f = restClient.readObject[Seq[ValintaTulos]](s"/haku/${URLEncoder.encode(haku, "UTF-8")}", maxRetries, HttpResponseCode.Ok).recoverWith {
-        case t: PreconditionFailedException if t.responseCode == HttpResponseCode.NotFound =>
+      val f = restClient.readObject[Seq[ValintaTulos]](s"/haku/${URLEncoder.encode(haku, "UTF-8")}", maxRetries, 200).recoverWith {
+        case t: PreconditionFailedException if t.responseCode == 404 =>
           log.warning(s"valinta tulos not found with haku $haku: $t")
           Future.successful(Seq())
       }.map(valintaTulokset2SijoitteluTulos)

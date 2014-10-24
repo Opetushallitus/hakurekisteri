@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.integration.tarjonta
 import java.net.URLEncoder
 
 import akka.actor.Actor
-import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, VirkailijaRestClient}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -69,22 +68,22 @@ class TarjontaActor(restClient: VirkailijaRestClient) extends Actor {
   }
   
   def searchKomo(koulutus: String): Future[Seq[Komo]] = {
-    restClient.readObject[TarjontaResultResponse[Seq[Komo]]](s"/rest/v1/komo/search?koulutus=${URLEncoder.encode(koulutus, "UTF-8")}", maxRetries, HttpResponseCode.Ok).map(_.result)
+    restClient.readObject[TarjontaResultResponse[Seq[Komo]]](s"/rest/v1/komo/search?koulutus=${URLEncoder.encode(koulutus, "UTF-8")}", maxRetries, 200).map(_.result)
   }
 
   def getKomo(oid: String): Future[KomoResponse] = {
     if (komoCache.contains(oid)) komoCache.get(oid)
     else {
-      val f = restClient.readObject[TarjontaResultResponse[Option[Komo]]](s"/rest/v1/komo/${URLEncoder.encode(oid, "UTF-8")}?meta=false", maxRetries, HttpResponseCode.Ok).map(res => KomoResponse(oid, res.result))
+      val f = restClient.readObject[TarjontaResultResponse[Option[Komo]]](s"/rest/v1/komo/${URLEncoder.encode(oid, "UTF-8")}?meta=false", maxRetries, 200).map(res => KomoResponse(oid, res.result))
       komoCache + (oid, f)
       f
     }
   }
 
-  def getHaut: Future[RestHakuResult] = restClient.readObject[RestHakuResult]("/rest/v1/haku/findAll", HttpResponseCode.Ok)
+  def getHaut: Future[RestHakuResult] = restClient.readObject[RestHakuResult]("/rest/v1/haku/findAll", 200)
 
   def getKoulutus(oid: String): Future[Hakukohteenkoulutus] = {
-    val koulutus: Future[Option[Koulutus]] = restClient.readObject[TarjontaResultResponse[Option[Koulutus]]](s"/rest/v1/koulutus/${URLEncoder.encode(oid, "UTF-8")}?meta=false", maxRetries, HttpResponseCode.Ok).map(r => r.result)
+    val koulutus: Future[Option[Koulutus]] = restClient.readObject[TarjontaResultResponse[Option[Koulutus]]](s"/rest/v1/koulutus/${URLEncoder.encode(oid, "UTF-8")}?meta=false", maxRetries, 200).map(r => r.result)
     koulutus.flatMap {
       case None => Future.failed(KoulutusNotFoundException(s"koulutus not found with oid $oid"))
       case Some(k) =>
@@ -101,7 +100,7 @@ class TarjontaActor(restClient: VirkailijaRestClient) extends Actor {
   def getHakukohteenKoulutukset(hk: HakukohdeOid): Future[HakukohteenKoulutukset] = {
     if (koulutusCache.contains(hk.oid)) koulutusCache.get(hk.oid)
     else {
-      val fh: Future[Option[Hakukohde]] = restClient.readObject[TarjontaResultResponse[Option[Hakukohde]]](s"/rest/v1/hakukohde/${URLEncoder.encode(hk.oid, "UTF-8")}?meta=false", maxRetries, HttpResponseCode.Ok).map(r => r.result)
+      val fh: Future[Option[Hakukohde]] = restClient.readObject[TarjontaResultResponse[Option[Hakukohde]]](s"/rest/v1/hakukohde/${URLEncoder.encode(hk.oid, "UTF-8")}?meta=false", maxRetries, 200).map(r => r.result)
       val hks: Future[HakukohteenKoulutukset] = fh.flatMap {
         case None => Future.failed(HakukohdeNotFoundException(s"hakukohde not found with oid ${hk.oid}"))
         case Some(h) => for (
