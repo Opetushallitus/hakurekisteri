@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 import akka.event.Logging
-import com.stackmob.newman.HttpClient
+import com.stackmob.newman.{ApacheHttpClient, HttpClient}
 import com.stackmob.newman.dsl._
 import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.generic.common.HetuUtils
@@ -16,14 +16,56 @@ import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 import scala.xml.{Elem, Node, NodeSeq, XML}
+import java.util.concurrent.{ThreadFactory, Executors}
+import org.apache.http.conn.ClientConnectionManager
+import org.apache.http.impl.conn.PoolingClientConnectionManager
+import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.http.params.HttpConnectionParams
+import org.apache.http.impl.NoConnectionReuseStrategy
 
 case class VirtaValidationError(m: String) extends Exception(m)
+
+object VirtaClient {
+
+  val threadNumber = new AtomicInteger(1)
+  val pool = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(50, new ThreadFactory() {
+    override def newThread(r: Runnable): Thread = {
+      new Thread(r, "virta-request" + "-" + threadNumber.getAndIncrement)
+    }
+  }))
+  private def createApacheHttpClient(maxConnections: Int): org.apache.http.client.HttpClient = {
+    val connManager: ClientConnectionManager = {
+      val cm = new PoolingClientConnectionManager()
+      cm.setDefaultMaxPerRoute(maxConnections)
+      cm.setMaxTotal(maxConnections)
+      cm
+    }
+
+    val client = new DefaultHttpClient(connManager)
+    val httpParams = client.getParams
+    HttpConnectionParams.setConnectionTimeout(httpParams, 10000)
+    HttpConnectionParams.setSoTimeout(httpParams, 120000)
+    HttpConnectionParams.setStaleCheckingEnabled(httpParams, false)
+    HttpConnectionParams.setSoKeepalive(httpParams, false)
+    client.setReuseStrategy(new NoConnectionReuseStrategy())
+    client
+  }
+
+  val defaultClient: HttpClient =
+    new ApacheHttpClient(createApacheHttpClient(100))(pool)
+
+}
 
 class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot",
                                                     jarjestelma = "",
                                                     tunnus = "",
-                                                    avain = "salaisuus"))
-                 (implicit val httpClient: HttpClient, implicit val ec: ExecutionContext, implicit val system: ActorSystem) {
+                                                    avain = "salaisuus"), client: HttpClient = VirtaClient.defaultClient)
+                 (implicit val system: ActorSystem) {
+
+
+  implicit val httpClient = client
+  implicit val ec = VirtaClient.pool
+
   val logger = Logging.getLogger(system, this)
   val maxRetries = 3
 

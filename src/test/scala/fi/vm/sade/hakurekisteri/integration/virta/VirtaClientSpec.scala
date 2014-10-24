@@ -38,7 +38,7 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
   implicit val system = ActorSystem("test-virta-system")
   implicit val ec = system.dispatcher
   implicit val httpClient = new MockHttpClient
-  val virtaClient = new VirtaClient
+  val virtaClient = new VirtaClient(client = httpClient)
 
   behavior of "VirtaClient"
 

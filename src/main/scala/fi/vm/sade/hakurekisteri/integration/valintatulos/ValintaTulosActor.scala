@@ -2,92 +2,105 @@ package fi.vm.sade.hakurekisteri.integration.valintatulos
 
 import java.net.URLEncoder
 
-import akka.actor.Actor
-import akka.event.Logging
+import akka.actor.{ActorLogging, Actor}
 import akka.pattern.pipe
-import com.stackmob.newman.response.HttpResponseCode
-import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedException, VirkailijaRestClient}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
-
-import scala.concurrent.{Future, ExecutionContext}
-
-object Valintatila extends Enumeration {
-  type Valintatila = Value
-  val hyväksytty = Value("HYVAKSYTTY")
-  val harkinnanvaraisesti_hyväksytty = Value("HARKINNANVARAISESTI_HYVAKSYTTY")
-  val varasijalta_hyväksytty = Value("VARASIJALTA_HYVAKSYTTY")
-  val varalla = Value("VARALLA")
-  val peruutettu = Value("PERUUTETTU")
-  val perunut = Value("PERUNUT")
-  val hylätty = Value("HYLATTY")
-  val peruuntunut = Value("PERUUNTUNUT")
-  val kesken = Value("KESKEN")
-}
-
-object Vastaanottotila extends Enumeration {
-  type Vastaanottotila = Value
-  val kesken = Value("KESKEN")
-  val vastaanottanut = Value("VASTAANOTTANUT")
-  val ei_vastaanotetu_määräaikana = Value("EI_VASTAANOTETTU_MAARA_AIKANA")
-  val perunut = Value("PERUNUT")
-  val peruutettu = Value("PERUUTETTU")
-  val ehdollisesti_vastaanottanut = Value("EHDOLLISESTI_VASTAANOTTANUT")
-}
-
-object Ilmoittautumistila extends Enumeration {
-  type Ilmoittautumistila = Value
-  val ei_tehty = Value("EI_TEHTY") // Ei tehty
-  val läsnä_koko_lukuvuosi = Value("LASNA_KOKO_LUKUVUOSI") // Läsnä (koko lukuvuosi)
-  val poissa_koko_lukuvuosi = Value("POISSA_KOKO_LUKUVUOSI") // Poissa (koko lukuvuosi)
-  val ei_ilmoittautunut = Value("EI_ILMOITTAUTUNUT") // Ei ilmoittautunut
-  val läsnä_syksy = Value("LASNA_SYKSY") // Läsnä syksy, poissa kevät
-  val poissa_syksy = Value ("POISSA_SYKSY") // Poissa syksy, läsnä kevät
-  val läsnä = Value("LASNA") // Läsnä, keväällä alkava koulutus
-  val poissa = Value("POISSA") // Poissa, keväällä alkava koulutus
-}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
+import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, FutureCache, VirkailijaRestClient}
+import scala.concurrent.duration._
+import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 case class ValintaTulosQuery(hakuOid: String,
-                             hakemusOid: String,
+                             hakemusOid: Option[String],
                              cachedOk: Boolean = true)
 
-case class ValintaTulosHakutoive(hakukohdeOid: String,
-                                 tarjoajaOid: String,
-                                 valintatila: Valintatila,
-                                 vastaanottotila: Vastaanottotila,
-                                 ilmoittautumistila: Ilmoittautumistila,
-                                 vastaanotettavuustila: String,
-                                 julkaistavissa: Boolean)
+class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with ActorLogging {
 
-case class ValintaTulos(hakemusOid: String,
-                        hakutoiveet: Seq[ValintaTulosHakutoive])
+  implicit val ec = context.dispatcher
 
-case class CacheKey(hakuOid: String, hakemusOid: String)
-
-class ValintaTulosActor(restClient: VirkailijaRestClient)
-                       (implicit val ec: ExecutionContext) extends Actor {
-
-  val log = Logging(context.system, this)
-  val maxRetries = 5
-  private val cache = new FutureCache[CacheKey, ValintaTulos]()
+  private val maxRetries = 5
+  private val refetch: FiniteDuration = 1.hours
+  private val retry: FiniteDuration = 60.seconds
+  private val cache = new FutureCache[String, SijoitteluTulos](2.hours.toMillis)
 
   override def receive: Receive = {
-    case q: ValintaTulosQuery => getTulos(q) pipeTo sender
+    case q: ValintaTulosQuery =>
+      getSijoittelu(q) pipeTo sender
+
+    case Update(haku) if !cache.inUse(haku) =>
+      cache - haku
+
+    case Update(haku) =>
+      updateCache(haku, sijoitteluTulos(haku, None))
   }
 
-  def getTulos(q: ValintaTulosQuery): Future[ValintaTulos] = {
-    val key = CacheKey(q.hakuOid, q.hakemusOid)
-    if (q.cachedOk && cache.contains(key)) cache.get(key)
+  def updateCache(hakuOid: String, tulos: Future[SijoitteluTulos]): Unit = {
+    tulos.onComplete {
+      case Success(t) =>
+        rescheduleHaku(hakuOid)
+      case Failure(t) =>
+        log.error(t, s"failed to fetch sijoittelu for haku $hakuOid")
+        rescheduleHaku(hakuOid, retry)
+    }
+    cache + (hakuOid, tulos)
+  }
+
+  def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
+    if (q.cachedOk && cache.contains(q.hakuOid)) cache.get(q.hakuOid)
     else {
-      val f = restClient.readObject[ValintaTulos](s"/haku/${URLEncoder.encode(q.hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(q.hakemusOid, "UTF-8")}", maxRetries, HttpResponseCode.Ok).recoverWith {
-        case t: PreconditionFailedException if t.responseCode == HttpResponseCode.NotFound =>
-          log.warning(s"valinta tulos not found with haku ${q.hakuOid} and hakemus ${q.hakemusOid}: $t")
-          Future.successful(ValintaTulos(q.hakemusOid, Seq()))
-      }
-      cache + (key, f)
-      f
+      val tulos = sijoitteluTulos(q.hakuOid, q.hakemusOid)
+      if (q.hakemusOid.isEmpty) updateCache(q.hakuOid, tulos)
+      tulos
     }
   }
-  
+
+  def sijoitteluTulos(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = {
+
+    def getSingleHakemus(hakemusOid: String): Future[SijoitteluTulos] = restClient.
+      readObject[ValintaTulos](s"/haku/${URLEncoder.encode(hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(hakemusOid, "UTF-8")}", maxRetries, 200).
+      recoverWith {
+        case t: PreconditionFailedException if t.responseCode == 404 =>
+          log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
+          Future.successful(ValintaTulos(hakemusOid, Seq()))
+      }.
+      map(t => valintaTulokset2SijoitteluTulos(t))
+
+    def getHaku(haku: String): Future[SijoitteluTulos] = restClient.
+      readObject[Seq[ValintaTulos]](s"/haku/${URLEncoder.encode(haku, "UTF-8")}", maxRetries, 200).
+      recoverWith {
+        case t: PreconditionFailedException if t.responseCode == 404 =>
+          log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
+          Future.successful(Seq[ValintaTulos]())
+      }.
+      map(valintaTulokset2SijoitteluTulos)
+
+    def valintaTulokset2SijoitteluTulos(tulokset: ValintaTulos*): SijoitteluTulos = new SijoitteluTulos {
+      val hakemukset = tulokset.groupBy(t => t.hakemusOid).mapValues(_.head)
+
+      private def hakukohde(hakemusOid: String, hakukohdeOid: String): Option[ValintaTulosHakutoive] = hakemukset.get(hakemusOid).flatMap(_.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid))
+
+      override def pisteet(hakemusOid: String, hakukohdeOid: String): Option[BigDecimal] = hakukohde(hakemusOid, hakukohdeOid).flatMap(_.pisteet)
+      override def valintatila(hakemusOid: String, hakukohdeOid: String): Option[Valintatila] = hakukohde(hakemusOid, hakukohdeOid).map(_.valintatila)
+      override def vastaanottotila(hakemusOid: String, hakukohdeOid: String): Option[Vastaanottotila] = hakukohde(hakemusOid, hakukohdeOid).map(_.vastaanottotila)
+      override def ilmoittautumistila(hakemusOid: String, hakukohdeOid: String): Option[Ilmoittautumistila] = hakukohde(hakemusOid, hakukohdeOid).map(_.ilmoittautumistila)
+    }
+
+    hakemusOid match {
+      case Some(oid) =>
+        getSingleHakemus(oid)
+
+      case None =>
+        getHaku(hakuOid)
+    }
+
+  }
+
+  def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
+    log.debug(s"rescheduling haku $haku in $time")
+    context.system.scheduler.scheduleOnce(time, self, Update(haku))
+  }
+
+  case class Update(haku: String)
 }

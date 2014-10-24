@@ -4,11 +4,9 @@ package fi.vm.sade.hakurekisteri.suoritus
 import org.scalatra.swagger._
 import scala.Some
 import org.scalatra.swagger.AllowableValues.AnyValue
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriResource
-import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import java.util.UUID
+import fi.vm.sade.hakurekisteri.rest.support.{OldSwaggerSyntax, HakurekisteriResource}
 
-trait SuoritusSwaggerApi  { this: HakurekisteriResource[Suoritus, CreateSuoritusCommand] =>
+trait SuoritusSwaggerApi extends OldSwaggerSyntax { this: HakurekisteriResource[Suoritus, CreateSuoritusCommand] =>
 
   override protected val applicationName = Some("suoritukset")
   protected val applicationDescription = "Suoritustietojen rajapinta"

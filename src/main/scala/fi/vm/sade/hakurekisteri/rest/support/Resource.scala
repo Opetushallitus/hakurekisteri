@@ -17,6 +17,8 @@ trait Resource[T, R <: Resource[T, R]] {
 
   def newId: T
 
+  val core: AnyRef
+
 }
 
 trait UUIDResource[R <: Resource[UUID,R]] extends Resource[UUID, R] {

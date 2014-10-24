@@ -2,10 +2,8 @@ package fi.vm.sade.hakurekisteri.integration.organisaatio
 
 import java.net.URLEncoder
 
-import akka.actor.{Actor, Cancellable}
-import akka.event.Logging
+import akka.actor.{ActorLogging, Actor, Cancellable}
 import akka.pattern.pipe
-import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
 
 import scala.compat.Platform
@@ -13,10 +11,9 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor {
+class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
   private var cache: Map[String, (Long, Future[Option[Organisaatio]])] = Map()
-  val log = Logging(context.system, this)
   val maxRetries = 5
 
   class Refresh
@@ -27,7 +24,7 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
   var cancellable: Option[Cancellable] = None
 
   override def preStart(): Unit = {
-    organisaatioClient.readObject[Seq[String]]("/rest/organisaatio", maxRetries, HttpResponseCode.Ok).onSuccess {
+    organisaatioClient.readObject[Seq[String]]("/rest/organisaatio", maxRetries, 200).onSuccess {
       case s: Seq[String] =>
         fetchOrgs(s)
     }
@@ -64,8 +61,8 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
   }
 
   def newValue(oid: String): (Long, Future[Option[Organisaatio]]) = {
-    val organisaatio: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(oid, "UTF-8")}", maxRetries, HttpResponseCode.Ok).map(Option(_)).recoverWith {
-      case p: PreconditionFailedException if p.responseCode == HttpResponseCode.NoContent => log.warning(s"organisaatio not found with oid $oid"); Future.successful(None)
+    val organisaatio: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(oid, "UTF-8")}", maxRetries, 200).map(Option(_)).recoverWith {
+      case p: PreconditionFailedException if p.responseCode == 204 => log.warning(s"organisaatio not found with oid $oid"); Future.successful(None)
     }
     (Platform.currentTime + timeToLive.toMillis, organisaatio)
   }

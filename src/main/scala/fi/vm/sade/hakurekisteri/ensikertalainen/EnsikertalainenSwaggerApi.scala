@@ -1,10 +1,11 @@
 package fi.vm.sade.hakurekisteri.ensikertalainen
 
 import org.scalatra.swagger.AllowableValues.AnyValue
-import org.scalatra.swagger.{Model, DataType, ModelField, SwaggerSupport}
+import org.scalatra.swagger.{DataType, SwaggerSupport}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
+import fi.vm.sade.hakurekisteri.rest.support.OldSwaggerSyntax
 
-trait EnsikertalainenSwaggerApi extends SwaggerSupport {
+trait EnsikertalainenSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
   override protected val applicationName = Some("ensikertalainen")
 
   val fields = Seq(ModelField("ensikertalainen", null, DataType.Boolean, None, AnyValue, required = true))

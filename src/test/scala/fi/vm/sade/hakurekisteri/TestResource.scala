@@ -9,6 +9,8 @@ case class TestResource(name:String) extends fi.vm.sade.hakurekisteri.rest.suppo
 
   val source = "Test"
   override def identify(id: UUID): TestResource with Identified[UUID] = TestResource.identify(this, id)
+
+  override val core: AnyRef = name
 }
 
 object TestResource {

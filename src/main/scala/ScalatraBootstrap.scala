@@ -2,7 +2,6 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
 import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaResource
 import fi.vm.sade.hakurekisteri.oppija.OppijaResource
 import fi.vm.sade.hakurekisteri.storage.repository.Journal
-import java.util.concurrent.atomic.AtomicInteger
 
 import _root_.akka.camel.CamelExtension
 import _root_.akka.routing.BroadcastRouter
@@ -12,12 +11,11 @@ import fi.vm.sade.hakurekisteri.integration.parametrit.ParameterActor
 import fi.vm.sade.hakurekisteri.integration.ytl.{YTLConfig, YtlActor}
 import java.nio.file.Path
 import java.util.UUID
-import java.util.concurrent.{ThreadFactory, Executors, TimeUnit}
+import java.util.concurrent.TimeUnit
 import javax.servlet.{Servlet, DispatcherType, ServletContext, ServletContextEvent}
 
 import _root_.akka.actor.{ActorRef, ActorSystem, Props}
 import _root_.akka.util.Timeout
-import com.stackmob.newman.{HttpClient, ApacheHttpClient}
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, EnsikertalainenResource}
 import fi.vm.sade.hakurekisteri.hakija._
@@ -27,7 +25,6 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
-import fi.vm.sade.hakurekisteri.integration.sijoittelu.SijoitteluActor
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaConfig, VirtaClient, VirtaActor}
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
@@ -36,11 +33,6 @@ import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
 import org.apache.activemq.camel.component.ActiveMQComponent
-import org.apache.http.conn.ClientConnectionManager
-import org.apache.http.impl.NoConnectionReuseStrategy
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.impl.conn.PoolingClientConnectionManager
-import org.apache.http.params.HttpConnectionParams
 import org.joda.time.LocalDate
 import org.scalatra._
 import org.scalatra.swagger.Swagger
@@ -79,7 +71,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     //val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, registers.suoritusRekisteri, journals.arvosanaJournal)), "perusopetus-sanity")
 
-    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, sijoitteluConfig, parameterConfig, hakemusConfig, ytlConfig, koodistoConfig, valintaTulosConfig, registers, system)
+    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, parameterConfig, hakemusConfig, ytlConfig, koodistoConfig, valintaTulosConfig, registers, system)
 
     val koosteet = new BaseKoosteet(system, integrations, registers)
 
@@ -288,7 +280,6 @@ trait Integrations {
   val virta: ActorRef
   val henkilo: ActorRef
   val organisaatiot: ActorRef
-  val sijoittelu: ActorRef
   val hakemukset: ActorRef
   val tarjonta: ActorRef
   val koodisto: ActorRef
@@ -301,7 +292,6 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        henkiloConfig: ServiceConfig,
                        tarjontaConfig: ServiceConfig,
                        organisaatioConfig: ServiceConfig,
-                       sijoitteluConfig: ServiceConfig,
                        parameterConfig: ServiceConfig,
                        hakemusConfig: HakemusConfig,
                        ytlConfig: Option[YTLConfig],
@@ -310,23 +300,20 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        rekisterit: Registers,
                        system: ActorSystem) extends Integrations {
 
-  import HttpClientUtil._
 
-  implicit val ec: ExecutionContext = system.dispatcher
+  val ec: ExecutionContext = ExecutorUtil.createExecutor(10, "rest-client-pool")
 
   val jSessionIdActor = system.actorOf(Props(new JSessionIdActor))
 
-  val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig)(createHttpClient, ec, system))), "tarjonta")
+  val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig)( ec, system))), "tarjonta")
 
-  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)(createHttpClient, ec, system))), "organisaatio")
+  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig)( ec, system))), "organisaatio")
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(createHttpClient("virta", 50, 100), ec, system), organisaatiot)), "virta")
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(system), organisaatiot)), "virta")
 
-  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig, None)(createHttpClient, ec, system))), "henkilo")
+  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig, None)( ec, system))), "henkilo")
 
-  val sijoittelu = system.actorOf(Props(new SijoitteluActor(new VirkailijaRestClient(sijoitteluConfig, None)(createHttpClient, ec, system))), "sijoittelu")
-
-  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf, None)(createHttpClient, ec, system), hakemusConfig.maxApplications)), "hakemus")
+  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf, None)( ec, system), hakemusConfig.maxApplications)), "hakemus")
 
   hakemukset ! Trigger{
     (hakemus: FullHakemus) =>
@@ -344,11 +331,11 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, ytlConfig)), "ytl")
 
-  val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)(createHttpClient, ec, system))), "koodisto")
+  val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig)( ec, system))), "koodisto")
 
-  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)(createHttpClient, ec, system))), "parametrit")
+  val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig)( ec, system))), "parametrit")
 
-  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(createHttpClient("valintatulos", 5, 15), ec, system))), "valintaTulos")
+  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool"), system))), "valintaTulos")
 }
 
 trait Koosteet {
@@ -360,9 +347,9 @@ trait Koosteet {
 class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: Registers) extends Koosteet {
   implicit val ec: ExecutionContext = system.dispatcher
 
-  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemukset), integrations.organisaatiot, integrations.koodisto, integrations.sijoittelu)), "hakijat")
+  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemukset), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
 
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta, integrations.hakemukset)), "ensikertalainen")
 
-  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.sijoittelu, integrations.ytl)))
+  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.valintaTulos, integrations.ytl)))
 }

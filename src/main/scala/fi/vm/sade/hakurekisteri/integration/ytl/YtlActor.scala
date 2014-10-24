@@ -6,7 +6,6 @@ import scala.xml.{XML, Node, Elem}
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen, Suoritus}
 import fi.vm.sade.hakurekisteri.arvosana.{ArvosanaQuery, Arvosana}
 import scala.concurrent.{ExecutionContext, Future}
-import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import java.util.concurrent.{Executors, TimeUnit}
@@ -18,7 +17,6 @@ import fi.vm.sade.hakurekisteri.arvosana.ArvioYo
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
 import fi.vm.sade.hakurekisteri.integration.henkilo.HetuQuery
 import scala.util.Failure
-import scala.Some
 import scala.util.Success
 import akka.actor.ActorIdentity
 import akka.actor.Identify
@@ -32,9 +30,8 @@ case class YtlReport(waitingforAnswers: Seq[Batch[KokelasRequest]], nextSend: Op
 
 object Report
 
-class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemukset: ActorRef, config: Option[YTLConfig]) extends Actor {
+class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemukset: ActorRef, config: Option[YTLConfig]) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
-
 
   var haut = Set[String]()
   var sent = Seq[Batch[KokelasRequest]]()
@@ -52,11 +49,6 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     val times = config.map(_.sendTimes).filter(!_.isEmpty)
     Timer.countNextSend(times)
   }
-
-
-
-
-  val log = Logging(context.system, this)
 
   if (config.isEmpty) log.warning("Starting ytlActor without config")
 
@@ -108,11 +100,8 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
       handleResponse(requested, data)
     case k: Kokelas if config.isDefined  =>
       log.debug(s"sending ytl data for ${k.oid} yo: ${k.yo} lukio: ${k.lukio}")
-      k.yo foreach {
-        yotutkinto =>
-          suoritusRekisteri ! yotutkinto
-          kokelaat = kokelaat + (k.oid -> k)
-      }
+      suoritusRekisteri ! k.yo
+      kokelaat = kokelaat + (k.oid -> k)
       k.lukio foreach (suoritusRekisteri ! _)
     case s: VirallinenSuoritus with Identified[UUID] if s.komo == YTLXml.yotutkinto && config.isDefined =>
       for (
@@ -248,7 +237,7 @@ case class KokelasRequest(oid: String, hetu: String)
 case class YtlResult(batch: UUID, data: Elem)
 
 case class Kokelas(oid: String,
-                   yo: Option[Suoritus],
+                   yo: Suoritus,
                    lukio: Option[Suoritus],
                    yoTodistus: Seq[Koe])
 
@@ -315,7 +304,7 @@ object YTLXml {
       oid <- oidFuture
     } yield {
       val yo = extractYo(oid, kokelas)
-      Kokelas(oid, yo , extractLukio(oid, kokelas), yo.map((tutkinto) => extractTodistus(tutkinto, kokelas)).getOrElse(Seq()) )
+      Kokelas(oid, yo , extractLukio(oid, kokelas), extractTodistus(yo, kokelas) )
     }
   }
 
@@ -324,11 +313,11 @@ object YTLXml {
   val yotutkinto = "1.2.246.562.5.2013061010184237348007"
 
   object YoTutkinto {
-    def apply(suorittaja:String, valmistuminen: LocalDate, kieli:String, vahvistettu: Boolean = true) = {
+    def apply(suorittaja:String, valmistuminen: LocalDate, kieli:String, valmis: Boolean = true, vahvistettu: Boolean = true) = {
       VirallinenSuoritus(
         komo = yotutkinto,
         myontaja = YTL,
-        tila = "VALMIS",
+        tila = if (valmis) "VALMIS" else "KESKEN",
         valmistuminen = valmistuminen,
         henkilo = suorittaja,
         yksilollistaminen = yksilollistaminen.Ei,
@@ -342,19 +331,35 @@ object YTLXml {
   val syksy = "(\\d{4})S".r
   val suoritettu = "suor".r
 
+  val kevaanAlku = new MonthDay(6, 1)
+
   def parseKausi(kausi: String) = kausi match {
-    case kevat(vuosi) => Some(new MonthDay(6, 1).toLocalDate(vuosi.toInt))
+    case kevat(vuosi) => Some(kevaanAlku.toLocalDate(vuosi.toInt))
     case syksy(vuosi) => Some(new MonthDay(12, 21).toLocalDate(vuosi.toInt))
     case _ => None
   }
 
-  def extractYo(oid: String, kokelas: Node): Option[VirallinenSuoritus] =
-    for (
+  def extractYo(oid: String, kokelas: Node): VirallinenSuoritus = {
+    val kieli = (kokelas \ "TUTKINTOKIELI").text
+    val suoritettu = for (
       valmistuminen <- parseValmistuminen(kokelas)
     ) yield {
-      val kieli = (kokelas \ "TUTKINTOKIELI").text
+
       YoTutkinto(suorittaja = oid, valmistuminen = valmistuminen, kieli = kieli)
+
+    }
+    suoritettu.getOrElse(
+      YoTutkinto(suorittaja = oid, valmistuminen = parseKausi(nextKausi).get, kieli = kieli, valmis = false)
+    )
   }
+
+
+  def nextKausi: String = MonthDay.now() match {
+    case d if d.isBefore(kevaanAlku) => s"${LocalDate.now.getYear}K"
+    case _ =>  s"${LocalDate.now.getYear}S"
+
+  }
+
 
   def parseValmistuminen(kokelas: Node): Option[LocalDate] = {
     val yoSuoritettu = (kokelas \ "YLIOPPILAAKSITULOAIKA").text

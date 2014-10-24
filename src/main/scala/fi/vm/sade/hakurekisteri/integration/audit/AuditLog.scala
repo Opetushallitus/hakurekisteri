@@ -4,7 +4,7 @@ import fi.vm.sade.log.model.{Tapahtuma, LogEvent}
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.beans.{XMLDecoder, XMLEncoder}
 import akka.camel.{Producer, CamelMessage}
-import akka.actor.Actor
+import akka.actor.{ActorLogging, Actor}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.organization._
 import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
@@ -29,8 +29,7 @@ object AuditUri {
 
 import scala.reflect.runtime.universe._
 
-class AuditLog[A <: Resource[I, A], I](resource:String)(implicit val audit:AuditUri, ct: ClassTag[A], tt: TypeTag[A], cti: ClassTag[I], tti: TypeTag[I]) extends Actor with Producer  {
-
+class AuditLog[A <: Resource[I, A], I](resource:String)(implicit val audit:AuditUri, ct: ClassTag[A], tt: TypeTag[A], cti: ClassTag[I], tti: TypeTag[I]) extends Actor with Producer with ActorLogging {
 
   sealed trait AuditMessage[T] {
 
@@ -48,8 +47,6 @@ class AuditLog[A <: Resource[I, A], I](resource:String)(implicit val audit:Audit
     }
 
     def apply(original:T, user:String)(implicit system:String) = CamelMessage(encode(new LogEvent(tapahtuma(system, original, user))), Map[String,Any]())
-
-
 
     def tapahtuma(resource: String, original:T, user:String): Tapahtuma
   }
@@ -111,11 +108,9 @@ class AuditLog[A <: Resource[I, A], I](resource:String)(implicit val audit:Audit
         case ex: UnknownHostException =>
       }
 
-
       t
     }
   }
-
 
   case class AuditEvent(host: String,system: String,targetType: String,target: String,timestamp: Date, etype: String, user: String, userActsForUser: String)
 
@@ -123,11 +118,8 @@ class AuditLog[A <: Resource[I, A], I](resource:String)(implicit val audit:Audit
     def apply(responseBody:String):AuditEvent = {
       val t = new XMLDecoder(new ByteArrayInputStream(responseBody.getBytes(Charset.defaultCharset()))  ).readObject().asInstanceOf[LogEvent].getTapahtuma
       AuditEvent(t.getHost, t.getSystem, t.getTargetType, t.getTarget, t.getTimestamp, t.getType, t.getUser, t.getUserActsForUser)
-
     }
   }
-
-  val log = Logging(context.system, this)
 
   def endpointUri: String = audit.uri
   log.debug(s"Audit log for $resource initialized using endpoint $endpointUri")
@@ -153,7 +145,6 @@ class AuditLog[A <: Resource[I, A], I](resource:String)(implicit val audit:Audit
     case CamelMessage(body:String, headers) => AuditEvent(body).toString
     case a => a.getClass.getName
   }
-
 
   override protected def routeResponse(msg: Any): Unit =  log.debug(msg.toString)
 }
