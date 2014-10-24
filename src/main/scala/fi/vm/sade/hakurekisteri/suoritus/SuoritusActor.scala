@@ -10,13 +10,13 @@ import scala.concurrent.Future
 import java.util.UUID
 import scala.util.Try
 import org.joda.time.ReadableInstant
+import scala.language.implicitConversions
 
 
 trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
   var tiedonSiirtoIndex: Map[String, Map[String, Seq[Suoritus with Identified[UUID]]]] = Option(tiedonSiirtoIndex).getOrElse(Map())
 
   var suoritusTyyppiIndex: Map[String, Map[String, Seq[VirallinenSuoritus with Identified[UUID]]]] = Option(suoritusTyyppiIndex).getOrElse(Map())
-
 
   def year(suoritus:Suoritus): String = suoritus match {
     case s: VirallinenSuoritus =>  s.valmistuminen.getYear.toString
@@ -38,9 +38,6 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
       val newTyyppiHenk: Map[String, Seq[VirallinenSuoritus with Identified[UUID]]] =  suoritusTyyppiIndex.getOrElse(suoritus.henkiloOid, Map()) + (virallinen.komo -> newTyypiIndexSeq)
       suoritusTyyppiIndex = suoritusTyyppiIndex + (virallinen.henkiloOid -> newTyyppiHenk)
     }
-
-
-
   }
 
   override def index(old: Option[Suoritus with Identified[UUID]], current: Option[Suoritus with Identified[UUID]]) {
@@ -68,15 +65,12 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
     old.foreach(removeOld)
     current.foreach(addNew)
   }
-
-
 }
 
 trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with SuoritusRepository {
 
   override val emptyQuery: PartialFunction[Query[Suoritus], Boolean] = {
     case SuoritusQuery(None, None, None, None) => true
-
   }
 
   override val optimize: PartialFunction[Query[Suoritus], Future[Seq[Suoritus with Identified[UUID]]]] = {
@@ -140,7 +134,6 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
 
   implicit def local2IntervalDate(date: LocalDate): IntervalDate = IntervalDate(date)
 
-
   def duringFirstHalf(date: LocalDate):Boolean = {
     date isBetween newYear(date.getYear) and startOfAutumn(date.getYear)
   }
@@ -152,20 +145,12 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
   }
 
   case class IntervalStart(start: ReadableInstant, contained: LocalDate){
-
     def and(end: ReadableInstant) = start to end contains contained.toDateTimeAtStartOfDay
-
-
   }
 
   case class IntervalDate(date: LocalDate) {
-
-
-
     def isBetween(start: ReadableInstant) = IntervalStart(start, date)
-
   }
-
 
   def startOfAutumn(year: Int): DateTime = {
     new MonthDay(8, 1).toLocalDate(year).toDateTimeAtStartOfDay
@@ -179,8 +164,3 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
 class SuoritusActor(val journal:Journal[Suoritus, UUID] = new InMemJournal[Suoritus, UUID]) extends ResourceActor[Suoritus, UUID] with SuoritusRepository with SuoritusService {
   override val logger = Logging(context.system, this)
 }
-
-
-
-
-
