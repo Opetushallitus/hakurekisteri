@@ -1,19 +1,11 @@
 package fi.vm.sade.hakurekisteri.integration.valintatulos
 
-import java.util.concurrent.{TimeUnit, ThreadFactory, Executors}
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{ActorSystem, Props}
 import akka.util.Timeout
-import com.stackmob.newman.{ApacheHttpClient, HttpClient}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
-import org.apache.http.conn.ClientConnectionManager
-import org.apache.http.conn.scheme.{Scheme, SchemeRegistry}
-import org.apache.http.conn.ssl.SSLSocketFactory
-import org.apache.http.impl.NoConnectionReuseStrategy
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.impl.conn.PoolingClientConnectionManager
-import org.apache.http.params.HttpConnectionParams
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 
@@ -59,46 +51,3 @@ class ValintaTulosLoadSpec extends FlatSpec with ShouldMatchers {
 case class Application(oid: String)
 case class Applications(results: Seq[Application])
 
-object TestClient {
-  def getClient: HttpClient = getClient("default")
-
-  val socketTimeout = 120000
-  val connectionTimeout = 15000
-
-  def createApacheHttpClient(maxConnections: Int): org.apache.http.client.HttpClient = {
-    val connManager: ClientConnectionManager = {
-      val registry = new SchemeRegistry()
-      val socketFactory = SSLSocketFactory.getSocketFactory
-      val hostnameVerifier = org.apache.http.conn.ssl.SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER
-      socketFactory.setHostnameVerifier(hostnameVerifier)
-      registry.register(new Scheme("https", 443, socketFactory))
-
-      val cm = new PoolingClientConnectionManager(registry)
-      cm.setDefaultMaxPerRoute(maxConnections)
-      cm.setMaxTotal(maxConnections)
-      cm
-    }
-
-    val client = new DefaultHttpClient(connManager)
-    val httpParams = client.getParams
-    HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeout)
-    HttpConnectionParams.setSoTimeout(httpParams, socketTimeout)
-    HttpConnectionParams.setStaleCheckingEnabled(httpParams, false)
-    HttpConnectionParams.setSoKeepalive(httpParams, false)
-    client.setReuseStrategy(new NoConnectionReuseStrategy())
-    client
-  }
-
-  def getClient(poolName: String = "default", threads: Int = 10, maxConnections: Int = 100): HttpClient = {
-    if (poolName == "default") new ApacheHttpClient(createApacheHttpClient(maxConnections))()
-    else {
-      val threadNumber = new AtomicInteger(1)
-      val pool = Executors.newFixedThreadPool(threads, new ThreadFactory() {
-        override def newThread(r: Runnable): Thread = {
-          new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
-        }
-      })
-      new ApacheHttpClient(createApacheHttpClient(maxConnections))(ExecutionContext.fromExecutorService(pool))
-    }
-  }
-}
