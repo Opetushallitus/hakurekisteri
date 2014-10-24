@@ -15,4 +15,3 @@ resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositor
 
 addSbtPlugin("info.schleichardt" % "sbt-sonar" % "0.2.0-SNAPSHOT")
 
-addSbtPlugin("com.sqality.scct" % "sbt-scct" % "0.3")
