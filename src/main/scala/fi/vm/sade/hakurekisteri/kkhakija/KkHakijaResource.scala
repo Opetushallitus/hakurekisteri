@@ -288,8 +288,12 @@ class KkHakijaResource(hakemukset: ActorRef,
 
           val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
           val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities)
+          val valintaTulosQuery = q.oppijanumero match {
+            case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemus.oid), cachedOk = false)
+            case None => ValintaTulosQuery(hakemus.applicationSystemId, None)
+          }
           for {
-            sijoitteluTulos: SijoitteluTulos <- (valintaTulos ? ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemus.oid), cachedOk = q.oppijanumero.isEmpty)).mapTo[SijoitteluTulos]
+            sijoitteluTulos: SijoitteluTulos <- (valintaTulos ? valintaTulosQuery).mapTo[SijoitteluTulos]
             hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
             haku: Haku <- (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
             kausi: String <- getKausi(haku.kausi, hakemus.oid)

@@ -66,11 +66,8 @@ case class ValintaTulos(hakemusOid: String, hakutoiveet: Seq[ValintaTulosHakutoi
 
 trait SijoitteluTulos {
   def pisteet(hakemus: String, kohde: String): Option[BigDecimal]
-
   def valintatila(hakemus: String, kohde: String): Option[Valintatila]
-
   def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila]
-  
   def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila]
 }
 

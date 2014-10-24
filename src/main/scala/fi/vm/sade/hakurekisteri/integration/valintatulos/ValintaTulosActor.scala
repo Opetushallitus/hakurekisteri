@@ -11,6 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
 import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, FutureCache, VirkailijaRestClient}
 import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 case class ValintaTulosQuery(hakuOid: String,
                              hakemusOid: Option[String],
@@ -33,63 +34,50 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
       cache - haku
 
     case Update(haku) =>
-      val result = sijoitteluTulos(haku, None)
-      result.onFailure {
-        case t =>
-          log.error(t, s"failed to fetch sijoittelu for haku $haku")
-          rescheduleHaku(haku, retry)
-      }
-      result map (Sijoittelu(haku, _)) pipeTo self
+      updateCache(haku, sijoitteluTulos(haku, None))
+  }
 
-    case Sijoittelu(haku, st) =>
-      cache + (haku, Future.successful(st))
-      rescheduleHaku(haku)
+  def updateCache(hakuOid: String, tulos: Future[SijoitteluTulos]): Unit = {
+    tulos.onComplete {
+      case Success(t) =>
+        rescheduleHaku(hakuOid)
+      case Failure(t) =>
+        log.error(t, s"failed to fetch sijoittelu for haku $hakuOid")
+        rescheduleHaku(hakuOid, retry)
+    }
+    cache + (hakuOid, tulos)
   }
 
   def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
     if (q.cachedOk && cache.contains(q.hakuOid)) cache.get(q.hakuOid)
-    else updateCacheFor(q)
-  }
-
-  def updateCacheFor(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
-    val tulos = sijoitteluTulos(q.hakuOid, q.hakemusOid)
-    if (q.hakemusOid.isEmpty) cache + (q.hakuOid, tulos)
-    tulos.onFailure {
-      case t =>
-        log.error(t, s"failed to fetch sijoittelu for haku ${q.hakuOid}")
-        rescheduleHaku(q.hakuOid, retry)
+    else {
+      val tulos = sijoitteluTulos(q.hakuOid, q.hakemusOid)
+      if (q.hakemusOid.isEmpty) updateCache(q.hakuOid, tulos)
+      tulos
     }
-    tulos.onSuccess {
-      case _ =>
-        if (q.hakemusOid.isDefined) rescheduleHaku(q.hakuOid, retry)
-        rescheduleHaku(q.hakuOid)
-    }
-    tulos
   }
-
 
   def sijoitteluTulos(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = {
 
-    def getSingleHakemus(hakemusOid: String): Future[SijoitteluTulos] = {
-      val f = restClient.readObject[ValintaTulos](s"/haku/${URLEncoder.encode(hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(hakemusOid, "UTF-8")}", maxRetries, HttpResponseCode.Ok).recoverWith {
+    def getSingleHakemus(hakemusOid: String): Future[SijoitteluTulos] = restClient.
+      readObject[ValintaTulos](s"/haku/${URLEncoder.encode(hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(hakemusOid, "UTF-8")}", maxRetries, HttpResponseCode.Ok).
+      recoverWith {
         case t: PreconditionFailedException if t.responseCode == HttpResponseCode.NotFound =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
           Future.successful(ValintaTulos(hakemusOid, Seq()))
-      }.map(t => valintaTulokset2SijoitteluTulos(Seq(t)))
-      f
-    }
+      }.
+      map(t => valintaTulokset2SijoitteluTulos(t))
 
-    def getHaku(haku: String): Future[SijoitteluTulos] = {
-      println(s"rest client $restClient, haku $haku")
-      val f = restClient.readObject[Seq[ValintaTulos]](s"/haku/${URLEncoder.encode(haku, "UTF-8")}", maxRetries, HttpResponseCode.Ok).recoverWith {
+    def getHaku(haku: String): Future[SijoitteluTulos] = restClient.
+      readObject[Seq[ValintaTulos]](s"/haku/${URLEncoder.encode(haku, "UTF-8")}", maxRetries, HttpResponseCode.Ok).
+      recoverWith {
         case t: PreconditionFailedException if t.responseCode == HttpResponseCode.NotFound =>
-          log.warning(s"valinta tulos not found with haku $haku: $t")
-          Future.successful(Seq())
-      }.map(valintaTulokset2SijoitteluTulos)
-      f
-    }
+          log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
+          Future.successful(Seq[ValintaTulos]())
+      }.
+      map(valintaTulokset2SijoitteluTulos)
 
-    def valintaTulokset2SijoitteluTulos(tulokset: Seq[ValintaTulos]): SijoitteluTulos = new SijoitteluTulos {
+    def valintaTulokset2SijoitteluTulos(tulokset: ValintaTulos*): SijoitteluTulos = new SijoitteluTulos {
       val hakemukset = tulokset.groupBy(t => t.hakemusOid).mapValues(_.head)
 
       private def hakukohde(hakemusOid: String, hakukohdeOid: String): Option[ValintaTulosHakutoive] = hakemukset.get(hakemusOid).flatMap(_.hakutoiveet.find(_.hakukohdeOid == hakukohdeOid))
@@ -116,5 +104,4 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
   }
 
   case class Update(haku: String)
-  case class Sijoittelu(haku: String, st: SijoitteluTulos)
 }

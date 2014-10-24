@@ -159,7 +159,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
 
   class MockedValintaTulosActor extends Actor {
     override def receive: Actor.Receive = {
-      case q: ValintaTulosQuery if q.hakemusOid == Some(FullHakemus1.oid) =>
+      case q: ValintaTulosQuery if q.hakuOid == FullHakemus1.applicationSystemId =>
         println(q)
         sender ! new SijoitteluTulos {
           override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.EI_TEHTY)
