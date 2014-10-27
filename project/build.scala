@@ -6,6 +6,7 @@ import sbt.Keys._
 import org.scalatra.sbt._
 import com.mojolly.scalate.ScalatePlugin._
 import ScalateKeys._
+import scala.language.postfixOps
 
 
 object HakuJaValintarekisteriBuild extends Build {
@@ -151,9 +152,9 @@ object HakuJaValintarekisteriBuild extends Build {
     Project(
       "hakurekisteri",
       file("."),
-      settings = Defaults.defaultSettings ++ ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
+      settings =   ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
         ++ org.scalastyle.sbt.ScalastylePlugin.Settings
-        ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"))
+        ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:implicitConversions"))
         ++ Seq(unmanagedSourceDirectories in Compile <+= (sourceDirectory in Runtime) { sd => sd / "js"})
         ++ Seq(com.earldouglas.xsbtwebplugin.PluginKeys.webappResources in Compile <+= (sourceDirectory in Runtime)(sd => sd / "js"))
         ++ Seq(mochaTask, installMochaTask, installCoffeeTask, cleanNodeModules, mochaTestSources)

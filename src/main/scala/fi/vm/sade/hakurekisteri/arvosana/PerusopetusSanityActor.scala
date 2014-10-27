@@ -109,6 +109,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
     parseBody(res)
   }
 
+
   override def receive: Actor.Receive = {
     case ReloadAndCheck =>
       suoritusRekisteri ! SuoritusQuery(None, Some(Kausi.Kevät), Some("2014"), None)
@@ -118,7 +119,8 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
                      sender ! problems
     case s:Stream[_] => for (first <- s.headOption) goThrough(first, s.tail)
     case s::rest  => goThrough(s, rest)
-    case s: Suoritus with Identified[UUID] =>
+    case su: Suoritus with Identified[_] if su.id.isInstanceOf[UUID] =>
+      val s = su.asInstanceOf[Suoritus with Identified[UUID]]
       findBy(ArvosanaQuery(Some(s.id))).map(Todistus(s, _)) pipeTo self
     case Todistus(suoritus, arvosanas) =>
       (suoritus.id, suoritus.asInstanceOf[Suoritus]) match {

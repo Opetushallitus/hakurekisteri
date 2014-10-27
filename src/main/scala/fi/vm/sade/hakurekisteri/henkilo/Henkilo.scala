@@ -28,11 +28,16 @@ case class Henkilo (
                      turvakielto: Boolean,
                      hetu: String,
                      syntymaaika: String,
-                     markkinointilupa: Option[Boolean]) extends UUIDResource[Henkilo] {
+                     markkinointilupa: Option[Boolean]) extends Resource[String, Henkilo] with Identified[String] {
 
   val source = ""
 
-  override def identify(id: UUID): Henkilo with Identified[UUID] = Henkilo.identify(this,id).asInstanceOf[this.type with Identified[UUID]]
+  override def identify(id: String): Henkilo with Identified[String] = this
+
+  val id = oidHenkilo
+
+  def newId = oidHenkilo
+
 
   override val core: AnyRef = oidHenkilo
 }
@@ -85,37 +90,3 @@ object Yhteystiedot {
 case class Yksilointitieto (
                              hetu: String)
 
-
-object Henkilo extends {
-  def identify(o:Henkilo): Henkilo with Identified[UUID] = o match {
-    case o: Henkilo with Identified[UUID] => o
-    case _ => o.identify(UUID.randomUUID())
-  }
-
-  def identify(o:Henkilo, identity: UUID): Henkilo with Identified[UUID] = {
-    new Henkilo(o.yhteystiedotRyhma,
-      o.yksiloity: Boolean,
-      o.sukunimi: String,
-      o.kielisyys: Seq[Kieli],
-      o.yksilointitieto: Option[Yksilointitieto],
-      o.henkiloTyyppi: String,
-      o.oidHenkilo: String,
-      o.duplicate: Boolean,
-      o.oppijanumero: String,
-      o.kayttajatiedot: Option[Kayttajatiedot],
-      o.kansalaisuus: Seq[Kansalaisuus],
-      o.passinnumero: String,
-      o.asiointiKieli: Kieli,
-      o.kutsumanimi: String,
-      o.passivoitu: Boolean,
-      o.eiSuomalaistaHetua: Boolean,
-      o.etunimet: String,
-      o.sukupuoli: String,
-      o.turvakielto: Boolean,
-      o.hetu: String,
-      o.syntymaaika: String,
-      o.markkinointilupa: Option[Boolean]) with Identified[UUID] {
-      override val id: UUID = identity
-    }
-  }
-}
