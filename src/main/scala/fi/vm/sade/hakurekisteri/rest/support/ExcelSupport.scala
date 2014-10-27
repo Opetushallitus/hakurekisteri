@@ -6,6 +6,7 @@ import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import scala.reflect.ClassTag
+import scala.util.Try
 
 
 trait ExcelSupport[T] { this: HakuJaValintarekisteriStack with JacksonJsonSupport =>
@@ -20,7 +21,7 @@ trait ExcelSupport[T] { this: HakuJaValintarekisteriStack with JacksonJsonSuppor
 
 
   def renderExcel: RenderPipeline = {
-    case hakijat if classTag[T].runtimeClass.isInstance(hakijat) && format == "binary" =>
+    case hakijat if  classTag[T].runtimeClass.isInstance(hakijat) && format == "binary" =>
       streamingRender(response.outputStream, classTag[T].runtimeClass.cast(hakijat).asInstanceOf[T])
   }
 

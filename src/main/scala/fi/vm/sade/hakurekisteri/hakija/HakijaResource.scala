@@ -11,11 +11,11 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra._
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 import scala.xml._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus}
@@ -45,7 +45,7 @@ object HakijaQuery {
 import scala.concurrent.duration._
 
 class HakijaResource(hakijaActor: ActorRef)
-                    (implicit system: ActorSystem, sw: Swagger)
+                    (implicit system: ActorSystem, sw: Swagger, val ct: ClassTag[XMLHakijat])
     extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with ExcelSupport[XMLHakijat] with DownloadSupport {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -66,7 +66,10 @@ class HakijaResource(hakijaActor: ActorRef)
   }
 
   override protected def renderPipeline: RenderPipeline = renderCustom orElse renderExcel orElse super.renderPipeline
-  override val streamingRender: (OutputStream, XMLHakijat) => Unit = ExcelUtil.write
+  override val streamingRender: (OutputStream, XMLHakijat) => Unit = (out, hakijat) => {
+
+    ExcelUtil.write(out,hakijat)
+  }
   protected def renderCustom: RenderPipeline = {
     case hakijat: XMLHakijat if format == "xml" => XML.write(response.writer, Utility.trim(hakijat.toXml), response.characterEncoding.get, xmlDecl = true, doctype = null)
   }
@@ -81,19 +84,23 @@ class HakijaResource(hakijaActor: ActorRef)
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
       val hakuResult = hakijaActor ? q
-      hakuResult.onSuccess {
-        case _ => if (Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel) setContentDisposition(tyyppi, response, "hakijat")
+
+      val is = hakuResult.flatMap {
+        case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
+          setContentDisposition(tyyppi, response, "hakijat")
+          println("content type set to binary")
+          println(response.getHeader("Content-Type"))
+          Future.successful(result)
+        case result =>
+          println("no need for binary type")
+          Future.successful(result)
       }
-      val is = hakuResult
     }
   }
 
   incident {
     case t: Throwable => (id) => InternalServerError(IncidentReport(id, "internal server error"))
   }
-
-  import scala.reflect.classTag
-  override implicit val ct = classTag[XMLHakijat]
 }
 
 object XMLUtil {
@@ -199,7 +206,7 @@ object XMLHakemus {
     suoritukset.collect{case s: VirallinenSuoritus => (s, resolvePohjakoulutus(Some(s)).toInt)}.sortBy(_._2).map(_._1).headOption
   }
 
-  def resolveYear(suoritus: VirallinenSuoritus) = suoritus match {
+  def resolveYear(suoritus: VirallinenSuoritus):Option[String] = suoritus match {
     case VirallinenSuoritus("ulkomainen", _,  _, _, _, _, _, _,  _, _) => None
     case VirallinenSuoritus(_, _, _,date, _, _, _,_,  _, _)  => Some(date.getYear.toString)
   }

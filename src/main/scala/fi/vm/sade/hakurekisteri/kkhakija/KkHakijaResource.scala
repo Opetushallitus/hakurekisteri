@@ -117,12 +117,9 @@ class KkHakijaResource(hakemukset: ActorRef,
                        haut: ActorRef,
                        koodisto: ActorRef,
                        suoritukset: ActorRef,
-                       valintaTulos: ActorRef)(implicit system: ActorSystem, sw: Swagger)
+                       valintaTulos: ActorRef)(implicit system: ActorSystem, sw: Swagger, val ct: ClassTag[Seq[Hakija]])
     extends HakuJaValintarekisteriStack with KkHakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with ExcelSupport[Seq[Hakija]] with DownloadSupport {
 
-  import scala.reflect.classTag
-
-  override implicit val ct: ClassTag[Seq[Hakija]] = classTag[Seq[Hakija]]
   override protected def applicationDescription: String = "Korkeakouluhakijatietojen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -155,10 +152,13 @@ class KkHakijaResource(hakemukset: ActorRef,
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
       val res = getKkHakijat(q)
-      res.onSuccess {
-        case _ => if (Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel) setContentDisposition(tyyppi, response, "hakijat")
+
+      val is = res.flatMap {
+        case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
+          setContentDisposition(tyyppi, response, "hakijat")
+          Future.successful(result)
+        case result => Future.successful(result)
       }
-      val is = res
     }
   }
 
@@ -193,7 +193,7 @@ class KkHakijaResource(hakemukset: ActorRef,
       "ulk" -> k.pohjakoulutus_ulk,
       "avoin" -> k.pohjakoulutus_avoin,
       "muu" -> k.pohjakoulutus_muu
-    ).filter(t => t._2.contains("true")).keys.toSeq
+    ).collect{ case (key , Some("true")) => key}.toSeq
   }
 
   // TODO muuta kun valinta-tulos-service saa ilmoittautumiset sekvenssiksi
