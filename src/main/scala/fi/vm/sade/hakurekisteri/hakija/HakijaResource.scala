@@ -21,6 +21,7 @@ import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.joda.time.{DateTimeFieldType, LocalDate}
+import scala.reflect.ClassTag
 
 
 object Hakuehto extends Enumeration {
@@ -90,6 +91,9 @@ class HakijaResource(hakijaActor: ActorRef)
   incident {
     case t: Throwable => (id) => InternalServerError(IncidentReport(id, "internal server error"))
   }
+
+  import scala.reflect.classTag
+  override implicit val ct = classTag[XMLHakijat]
 }
 
 object XMLUtil {

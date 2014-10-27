@@ -9,19 +9,16 @@ import _root_.akka.event.{LoggingAdapter, Logging}
 import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Lasnaolo, Lasna, Poissa, Puuttuu, Syksy, Kevat}
-import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
+import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.integration.haku.{Haku, GetHaku, HakuNotFoundException}
-import fi.vm.sade.hakurekisteri.integration.koodisto.{GetRinnasteinenKoodiArvoQuery, Koodi, GetKoodi}
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosQuery, Ilmoittautumistila, Valintatila, SijoitteluTulos}
+import fi.vm.sade.hakurekisteri.integration.haku.Haku
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, Valintatila, SijoitteluTulos}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohteenKoulutukset, HakukohdeOid, TarjontaException, Hakukohteenkoulutus}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaException
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
 import org.scalatra.swagger.{SwaggerEngine, Swagger}
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
@@ -29,7 +26,34 @@ import org.scalatra.util.RicherString._
 
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
+import scala.reflect.ClassTag
+import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
+import fi.vm.sade.hakurekisteri.hakija.Hakuehto
+import fi.vm.sade.hakurekisteri.integration.koodisto.GetKoodi
+import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosQuery
+import scala.Some
+import fi.vm.sade.hakurekisteri.hakija.Kevat
+import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
+import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
+import fi.vm.sade.hakurekisteri.integration.hakemus.FullHakemus
+import fi.vm.sade.hakurekisteri.hakija.Lasna
+import fi.vm.sade.hakurekisteri.hakija.Syksy
+import fi.vm.sade.hakurekisteri.integration.hakemus.PreferenceEligibility
+import fi.vm.sade.hakurekisteri.integration.tarjonta.Hakukohteenkoulutus
+import fi.vm.sade.hakurekisteri.integration.haku.GetHaku
+import fi.vm.sade.hakurekisteri.integration.hakemus.Koulutustausta
+import fi.vm.sade.hakurekisteri.hakija.Puuttuu
+import fi.vm.sade.hakurekisteri.hakija.Poissa
+import fi.vm.sade.hakurekisteri.integration.tarjonta.HakukohdeOid
+import fi.vm.sade.hakurekisteri.integration.hakemus.HenkiloHakijaQuery
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusAnswers
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusHenkilotiedot
+import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
+import fi.vm.sade.hakurekisteri.integration.tarjonta.HakukohteenKoulutukset
+import fi.vm.sade.hakurekisteri.suoritus.SuoritysTyyppiQuery
+import fi.vm.sade.hakurekisteri.integration.hakemus.Lisatiedot
+import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 
 case class KkHakijaQuery(oppijanumero: Option[String], haku: Option[String], organisaatio: Option[String], hakukohde: Option[String], hakuehto: Hakuehto.Hakuehto, user: Option[User])
 
@@ -96,6 +120,9 @@ class KkHakijaResource(hakemukset: ActorRef,
                        valintaTulos: ActorRef)(implicit system: ActorSystem, sw: Swagger)
     extends HakuJaValintarekisteriStack with KkHakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with ExcelSupport[Seq[Hakija]] with DownloadSupport {
 
+  import scala.reflect.classTag
+
+  override implicit val ct: ClassTag[Seq[Hakija]] = classTag[Seq[Hakija]]
   override protected def applicationDescription: String = "Korkeakouluhakijatietojen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
