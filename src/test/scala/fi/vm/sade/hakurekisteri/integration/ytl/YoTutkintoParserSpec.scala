@@ -1,11 +1,11 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import org.scalatest.FlatSpec
+import org.scalatest.{Matchers, FlatSpec}
 import org.scalatest.matchers.ShouldMatchers
 import org.joda.time.format.DateTimeFormat
 import YtlData._
 
-class YoTutkintoParserSpec extends FlatSpec with ShouldMatchers {
+class YoTutkintoParserSpec extends FlatSpec with Matchers {
 
 
   behavior of "YTL YO Suoritus parser"

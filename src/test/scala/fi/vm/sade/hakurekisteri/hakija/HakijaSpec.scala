@@ -3,11 +3,10 @@ package fi.vm.sade.hakurekisteri.hakija
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{Matchers, FlatSpec}
 
 
-class HakijaSpec extends FlatSpec with ShouldMatchers {
+class HakijaSpec extends FlatSpec with Matchers {
 
   object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None)
 

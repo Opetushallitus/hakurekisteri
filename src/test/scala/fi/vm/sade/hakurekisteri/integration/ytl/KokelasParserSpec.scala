@@ -2,12 +2,12 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 
 import scala.concurrent.Future
 import fi.vm.sade.hakurekisteri.integration.ytl.YtlData._
-import org.scalatest.FlatSpec
+import org.scalatest.{Matchers, FlatSpec}
 import org.scalatest.matchers.ShouldMatchers
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 
 
-class KokelasParserSpec extends FlatSpec with ShouldMatchers with FutureWaiting {
+class KokelasParserSpec extends FlatSpec with Matchers with FutureWaiting {
 
   behavior of "Kokelas parser"
 

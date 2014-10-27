@@ -7,6 +7,7 @@ import fi.vm.sade.hakurekisteri.hakija.{XMLHakijat, Hakuehto, HakijaQuery}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import akka.util.Timeout
+import scala.language.postfixOps
 
 class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with HakeneetSupport {
 

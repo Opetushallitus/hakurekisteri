@@ -6,8 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import akka.actor.{ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{Matchers, FlatSpec}
 
 import scala.compat.Platform
 import scala.concurrent.duration._
@@ -17,7 +16,7 @@ import scala.concurrent.{Await, Future, ExecutionContext}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
 
-class ValintaTulosLoadSpec extends FlatSpec with ShouldMatchers {
+class ValintaTulosLoadSpec extends FlatSpec with Matchers {
 
   behavior of "valinta-tulos-service"
 

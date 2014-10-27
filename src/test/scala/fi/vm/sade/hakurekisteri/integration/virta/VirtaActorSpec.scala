@@ -5,8 +5,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import org.joda.time.LocalDate
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{Matchers, FlatSpec}
 import akka.pattern.ask
 
 import scala.concurrent.Future
@@ -14,7 +13,7 @@ import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import fi.vm.sade.hakurekisteri.SpecsLikeMockito
 
 
-class VirtaActorSpec extends FlatSpec with ShouldMatchers with FutureWaiting with SpecsLikeMockito {
+class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito {
   implicit val system = ActorSystem("test-virta-system")
   override implicit val ec = system.dispatcher
 

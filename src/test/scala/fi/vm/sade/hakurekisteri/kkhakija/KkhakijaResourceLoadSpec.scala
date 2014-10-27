@@ -8,15 +8,14 @@ import fi.vm.sade.hakurekisteri.integration.{JSessionIdActor, ServiceConfig, Vir
 import fi.vm.sade.hakurekisteri.oppija.Hakukohteet
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{Matchers, FlatSpec}
 
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Success, Try}
 
-class KkhakijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
+class KkhakijaResourceLoadSpec extends FlatSpec with Matchers {
 
   behavior of "kkhakijat-service"
 

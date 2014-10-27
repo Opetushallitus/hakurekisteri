@@ -1,8 +1,8 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
-import org.scalatra.test.{EmbeddedJettyContainer, JettyContainer, HttpComponentsClient}
+import org.scalatra.test.{EmbeddedJettyContainer, HttpComponentsClient}
 
-import javax.servlet.http.{HttpServletRequest, HttpServlet}
+import javax.servlet.http.HttpServletRequest
 import akka.actor._
 
 import org.json4s.jackson.JsonMethods._
@@ -13,24 +13,22 @@ import org.scalatest.matchers._
 import org.scalatest.{Outcome, Suite}
 import scala.xml.{Elem, Node, NodeSeq}
 import fi.vm.sade.hakurekisteri.rest.support._
-import fi.vm.sade.hakurekisteri.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi, Opiskelija, OpiskelijaActor}
+import fi.vm.sade.hakurekisteri.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi, OpiskelijaActor}
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.joda.time.{LocalDate, DateTime}
+import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 
 import com.github.nscala_time.time.Imports._
-import fi.vm.sade.hakurekisteri.storage.repository.{Delta, Journal, Updated, InMemJournal}
+import fi.vm.sade.hakurekisteri.storage.repository.{Delta, Journal, InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.rest.support.User
 import com.github.nscala_time.time.TypeImports.LocalDate
-import com.github.nscala_time.time.StaticForwarderImports.LocalDate
-import org.scalatest.words.{EmptyWord, MatcherWords}
+import org.scalatest.words.EmptyWord
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import scala.Some
 import fi.vm.sade.hakurekisteri.suoritus.Komoto
-import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
-import java.util.concurrent.TimeUnit
-import scala.concurrent.Await
+import scala.language.implicitConversions
+import scala.reflect.ClassTag
 
 
 object kausi extends Enumeration {
@@ -82,12 +80,14 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
   implicit val system: ActorSystem = ActorSystem()
 
-  class SuoritusReloader extends Actor {
+  class SuoritusReloader(implicit cj: ClassTag[Journal[Suoritus, UUID]] ) extends Actor {
+
 
     var underlying: ActorRef = context.actorOf(Props(new SuoritusActor()))
 
     override def receive: Actor.Receive = {
-      case j: Journal[Suoritus, UUID] =>
+      case jo: Journal[_, _] if cj.runtimeClass.isInstance(jo) =>
+        val j = cj.runtimeClass.cast(jo).asInstanceOf[Journal[Suoritus, UUID]]
         context.stop(underlying)
         underlying = context.actorOf(Props(new SuoritusActor(j)))
       case m => underlying.forward(m)

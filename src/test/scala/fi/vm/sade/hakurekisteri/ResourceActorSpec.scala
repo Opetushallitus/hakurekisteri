@@ -1,18 +1,11 @@
 package fi.vm.sade.hakurekisteri
 
-import org.scalatest.WordSpec
-import org.scalatest.matchers.ShouldMatchers
-import akka.actor.{Props, ActorSystem}
-import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService, ResourceActor}
-import java.util.UUID
-import fi.vm.sade.hakurekisteri.rest.support.Query
-import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import org.joda.time.DateTime
-import com.github.nscala_time.time.Imports._
+import org.scalatest.{Matchers, WordSpec}
+import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 
 
-class ResourceActorSpec extends WordSpec with ShouldMatchers {
+class ResourceActorSpec extends WordSpec with Matchers {
   implicit val system = ActorSystem("test-system")
 
 

@@ -9,17 +9,13 @@ import scala.concurrent.duration._
 import java.util.concurrent.{Callable, Executor}
 import java.net.URI
 import com.ning.org.jboss.netty.handler.codec.http.CookieDecoder
-import java.util.Map.Entry
-import fi.vm.sade.hakurekisteri.integration.FutureListenableFuture
-import fi.vm.sade.hakurekisteri.integration.BaseStatus
 import org.hamcrest.{BaseMatcher, Description, Matcher}
-import scala.collection.mutable
 import org.mockito.Matchers
 import scala.util.Try
+import scala.language.implicitConversions
 
-/**
- * Created by verneri on 23.10.2014.
- */
+
+
 trait DispatchSupport {
 
   def forUrl(url:String) = ERMatcher(Some(url), Set())

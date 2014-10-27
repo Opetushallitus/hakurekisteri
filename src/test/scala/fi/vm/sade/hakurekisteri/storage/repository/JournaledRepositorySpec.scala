@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.storage.repository
 
-import org.scalatest.FlatSpec
+import org.scalatest.{Matchers, FlatSpec}
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import scala.Some
@@ -9,7 +9,7 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
 
 
-class JournaledRepositorySpec extends FlatSpec with ShouldMatchers with RepositoryBehaviors[TestResource] {
+class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBehaviors[TestResource] {
 
   val repoConstructor = (items:Seq[TestResource]) => {
     val resources = items.map(TestResource.identify)

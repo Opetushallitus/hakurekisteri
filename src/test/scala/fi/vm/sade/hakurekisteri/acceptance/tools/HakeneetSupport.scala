@@ -21,6 +21,7 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.Koodisto
 import fi.vm.sade.hakurekisteri.hakija.Hakija
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
+import scala.language.implicitConversions
 
 trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport with SpecsLikeMockito {
 
@@ -220,6 +221,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {
       case Some(OpetuspisteX.oid) => Future(Seq(FullHakemus1))
       case Some(OpetuspisteY.oid) => Future(Seq(FullHakemus2))
+      case Some(_) => Future(Seq[ListHakemus]())
       case None => Future(Seq(FullHakemus1, FullHakemus2))
     }
 

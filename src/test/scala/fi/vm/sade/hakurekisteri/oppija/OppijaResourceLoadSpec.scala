@@ -5,8 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.integration.{JSessionIdActor, ServiceConfig, VirkailijaRestClient}
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{Matchers, FlatSpec}
 
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
@@ -16,7 +15,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, ExecutionContext}
 import scala.util.{Success, Try}
 
-class OppijaResourceLoadSpec extends FlatSpec with ShouldMatchers {
+class OppijaResourceLoadSpec extends FlatSpec with Matchers {
 
   behavior of "oppijat-service"
 

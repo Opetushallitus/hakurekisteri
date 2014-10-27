@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.virta
 
 
 import akka.actor.ActorSystem
-import org.scalatest.FlatSpec
+import org.scalatest.{Matchers, FlatSpec}
 import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.time.{Millis, Span}
@@ -27,7 +27,7 @@ object VirtaResults {
 
 
 
-class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions with MockitoSugar with DispatchSupport {
+class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with MockitoSugar with DispatchSupport {
   implicit val system = ActorSystem("test-virta-system")
   implicit val ec = system.dispatcher
   import Mockito._

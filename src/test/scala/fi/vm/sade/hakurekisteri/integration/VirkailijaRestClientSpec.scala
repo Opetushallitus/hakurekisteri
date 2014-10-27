@@ -1,19 +1,17 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import akka.actor.{Props, ActorSystem}
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{Matchers, FlatSpec}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, ExecutionContext}
 import com.ning.http.client._
 import org.scalatest.mock.MockitoSugar
-import org.mockito.{Matchers, Mockito}
-import org.hamcrest.Matcher
 import org.mockito.Mockito._
 import scala.Some
+import org.mockito.Mockito
 
-class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers with MockitoSugar with DispatchSupport {
+class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport {
   implicit val system = ActorSystem("test-virkailija")
   implicit val ec: ExecutionContext = system.dispatcher
 
@@ -39,13 +37,6 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers with Mockito
   }
 
   val endPoint = createEndpointMock
-
-
-
-  import Mockito._
-
-
-
 
 
   val asyncProvider = new CapturingProvider(endPoint)
