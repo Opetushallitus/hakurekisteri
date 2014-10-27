@@ -54,7 +54,7 @@
                keyfile="${ssh.keyfile}" passphrase="${ssh.keypass}" verbose="true">
 			
 			<!-- deploy lates from local maven repo -->
-            <fileset dir="target/scala-2.10/">
+            <fileset dir="target/scala-2.11/">
                 <include name="*.war"/>
             </fileset>
 		</scp>
