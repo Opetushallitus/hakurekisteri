@@ -24,6 +24,7 @@ import scala.Some
 import fi.vm.sade.hakurekisteri.integration.cas.LocationHeaderNotFoundException
 import fi.vm.sade.hakurekisteri.integration.cas.TGTWasNotCreatedException
 import com.ning.http.client.AsyncHandler.STATE
+import scala.language.implicitConversions
 
 case class PreconditionFailedException(message: String, responseCode: Int) extends Exception(message)
 
