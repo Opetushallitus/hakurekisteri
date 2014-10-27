@@ -53,7 +53,7 @@ object KkExcelUtil extends HakijatExcelWriter[Seq[Hakija]] {
       toBooleanX(hakemus.julkaisulupa),
       hakemus.hKelpoisuus,
       hakemus.hKelpoisuusLahde.getOrElse(""),
-      hakemus.hakukohteenKoulutukset.mkString(",")).zipWithIndex.toSet
+      hakemus.hakukohteenKoulutukset.map(k => s"Koulutus(${k.komoOid},${k.tkKoulutuskoodi},${k.kkKoulutusId.getOrElse("")})").mkString(",")).zipWithIndex.toSet
 
     for (sarake <- rivi) yield StringCell(sarake._2, sarake._1)
   })).zipWithIndex.toSet.map((rivi: (Set[Cell], Int)) => Row(rivi._2 + 1, rivi._1))
