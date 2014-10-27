@@ -95,29 +95,7 @@ class HakijaSpec extends FlatSpec with Matchers {
 
   behavior of "Hakemuksen lasnaolotieto"
 
-  ignore should "have vastaanotto as 3 for someone who is present" in {
 
-    //val xmlht = xmlHTFor(Valintatila.HYVAKSYTTY, Vastaanottotila.VASTAANOTTANUT_LASNA)
-
-    //xmlht.vastaanotto should be (Some("3"))
-
-  }
-
-  ignore should "have lasnaolo as 1 for someone who is present" in {
-
-    //val xmlht = xmlHTFor(Valintatila.HYVAKSYTTY, Vastaanottotila.VASTAANOTTANUT_LASNA)
-
-    //xmlht.lasnaolo should be (None)
-
-  }
-
-  ignore should "have lasnaolo as 2 for someone who is not present" in {
-
-    //val xmlht = xmlHTFor(Valintatila.HYVAKSYTTY, Vastaanottotila.VASTAANOTTANUT_POISSAOLEVA)
-
-    //xmlht.lasnaolo should be (None)
-
-  }
 
   it should "not have lasnaolo for someone who's presence is unknown" in {
 
