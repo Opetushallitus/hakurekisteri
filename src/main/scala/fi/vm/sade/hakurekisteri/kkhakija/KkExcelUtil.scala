@@ -5,14 +5,16 @@ import fi.vm.sade.hakurekisteri.rest.support.HakijatExcelWriter
 
 object KkExcelUtil extends HakijatExcelWriter[Seq[Hakija]] {
 
-  private val headers = Set("hetu", "oppijanumero", "sukunimi", "etunimet", "kutsumanimi", "lahiosoite", "postinumero",
-    "postitoimipaikka", "maa", "kansalaisuus", "matkapuhelin", "puhelin", "sahkoposti", "kotikunta", "sukupuoli",
-    "aidinkieli", "asiointikieli", "koulusivistyskieli", "koulutusmarkkinointilupa", "onYlioppilas",
-    "haku", "hakuVuosi", "hakuKausi", "hakemusnumero", "organisaatio", "hakukohde", "hakukohdeKkId", "avoinVayla",
-    "valinnanTila", "vastaanottotieto", "ilmoittautumiset", "pohjakoulutus", "julkaisulupa", "hKelpoisuus",
-    "hKelpoisuusLahde", "hakukohteenKoulutukset")
+  private val headers = Seq(
+    "Hetu", "Oppijanumero", "Sukunimi", "Etunimet", "Kutsumanimi", "Lahiosoite", "Postinumero",
+    "Postitoimipaikka", "Maa", "Kansalaisuus", "Matkapuhelin", "Puhelin", "Sahkoposti", "Kotikunta", "Sukupuoli",
+    "Aidinkieli", "Asiointikieli", "Koulusivistyskieli", "Koulutusmarkkinointilupa", "On ylioppilas",
+    "Haku", "Hakuvuosi", "Hakukausi", "Hakemusnumero", "Organisaatio", "Hakukohde", "Hakukohteen kk-id", "Avoin vayla",
+    "Valinnan tila", "Vastaanottotieto", "Ilmoittautumiset", "Pohjakoulutus", "Julkaisulupa", "Hakukelpoisuus",
+    "Hakukelpoisuuden lahde", "Hakukohteen koulutukset"
+  )
 
-  override def getHeaders: Set[Row] = Set(Row(0, headers.zipWithIndex.map(h => StringCell(h._2, h._1))))
+  override def getHeaders: Set[Row] = Set(Row(0, headers.zipWithIndex.toSet.map((h: (String, Int)) => StringCell(h._2, h._1))))
   
   override def getRows(hakijat: Seq[Hakija]): Set[Row] = hakijat.flatMap((hakija) => hakija.hakemukset.map(hakemus => {
     val rivi = Seq(
