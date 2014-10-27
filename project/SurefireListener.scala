@@ -4,6 +4,7 @@ import scala.collection.concurrent.TrieMap
 import scala.compat.Platform
 import scala.Some
 import scala.xml.{Utility, XML, Elem}
+import scala.language.implicitConversions
 
 class SurefireListener(targetDir:File) extends TestReportListener {
 
