@@ -6,7 +6,7 @@ import akka.pattern.AskTimeoutException
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.joda.time.DateTime
 import org.joda.time.DateTime._
-import org.scalatra.{InternalServerError, ActionResult}
+import org.scalatra.{BadRequest, InternalServerError, ActionResult}
 
 
 trait IncidentReporting { this: HakuJaValintarekisteriStack =>
@@ -17,6 +17,9 @@ trait IncidentReporting { this: HakuJaValintarekisteriStack =>
     error {
       case t: AskTimeoutException =>
         val resultGenerator = handler.applyOrElse[Throwable, (UUID) => ActionResult](t, (anything) => (id) => InternalServerError(IncidentReport(id, "back-end service timed out")))
+        processError(t) (resultGenerator)
+      case t: IllegalArgumentException =>
+        val resultGenerator = handler.applyOrElse[Throwable, (UUID) => ActionResult](t, (anything) => (id) => BadRequest(IncidentReport(id, t.getMessage)))
         processError(t) (resultGenerator)
       case t: Throwable =>
         val resultGenerator = handler.applyOrElse[Throwable, (UUID) => ActionResult](t, (anything) => (id) => InternalServerError(IncidentReport(id, "error in service")))

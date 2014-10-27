@@ -3,8 +3,8 @@ package fi.vm.sade.hakurekisteri.acceptance
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import org.scalatest.GivenWhenThen
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
-import fi.vm.sade.hakurekisteri.hakija.{XMLHakijat, Tyyppi, Hakuehto, HakijaQuery}
-import scala.concurrent.{Future, Await}
+import fi.vm.sade.hakurekisteri.hakija.{XMLHakijat, Hakuehto, HakijaQuery}
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import akka.util.Timeout
 
@@ -76,7 +76,7 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
 
     scenario("Vapaaehtoiset uudet tiedot tulostuvat hakemukselle") {
       Given("Henkilö täyttää hakemuksen ja valitsee hakevansa urheilijan ammatilliseen koulutukseen harkinnanvaraisessa sekä valitsee terveys, oikeudenmenetys ja kaksoistutkinto -kysymyksiin kyllä")
-      hakupalvelu has (FullHakemus1)
+      hakupalvelu has FullHakemus1
 
       When("haen kaikki hakeneet")
       val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, None)),

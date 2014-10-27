@@ -4,7 +4,7 @@ import org.scalatra.swagger._
 import org.scalatra.swagger.AllowableValues.AnyValue
 import scala.Some
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
-import fi.vm.sade.hakurekisteri.rest.support.OldSwaggerSyntax
+import fi.vm.sade.hakurekisteri.rest.support.{ApiFormat, OldSwaggerSyntax}
 
 trait HakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
   override protected val applicationName = Some("hakijat")
@@ -75,6 +75,6 @@ trait HakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
     .parameter(queryParam[Option[String]]("organisaatio").description("koulutuksen tarjoajan tai sen yläorganisaation oid").optional)
     .parameter(queryParam[Option[String]]("hakukohdekoodi").description("hakukohdekoodi").optional)
     .parameter(queryParam[String]("hakuehto").description("hakuehto").allowableValues(Hakuehto.values.toList).required)
-    .parameter(queryParam[String]("tyyppi").description("tietotyyppi").allowableValues(Tyyppi.values.toList).required)
+    .parameter(queryParam[String]("tyyppi").description("tietotyyppi").allowableValues(ApiFormat.values.toList).required)
     .parameter(queryParam[Option[Boolean]]("tiedosto").description("palautetaanko vastaus tiedostona").optional)
 }
