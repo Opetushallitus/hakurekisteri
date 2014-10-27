@@ -99,6 +99,6 @@ object ExcelUtil extends HakijatExcelWriter[XMLHakijat] {
     StringCell(42, toBooleanX(ht.terveys)),
     StringCell(43, toBooleanX(ht.aiempiperuminen)),
     StringCell(44, toBooleanX(ht.kaksoistutkinto))
-  ))).toSet.zipWithIndex.map((rowWithIndex) => Row(rowWithIndex._2 + 1, rowWithIndex._1))
+  ))).zipWithIndex.toSet.map((rivi: (Set[Cell], Int)) => Row(rivi._2 + 1, rivi._1))
 
 }
