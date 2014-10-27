@@ -6,7 +6,6 @@ import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import scala.reflect.ClassTag
-import scala.util.Try
 
 
 trait ExcelSupport[T] { this: HakuJaValintarekisteriStack with JacksonJsonSupport =>
