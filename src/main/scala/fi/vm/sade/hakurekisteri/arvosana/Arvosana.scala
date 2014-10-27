@@ -30,7 +30,6 @@ object Arvio {
   }
 }
 
-object NA extends Arvio
 
 case class UnknownScaleException(scale: String) extends IllegalArgumentException(s"unknown scale: $scale")
 

@@ -126,7 +126,8 @@ abstract class JournalTable[R <: Resource[I,R], I, ResourceRow](tag: Tag, name: 
 
   def rowShaper(d: Delta[R, I]) = d match {
     case Deleted(id, source) => Some((id, Platform.currentTime, true), deletedValues(source))
-    case Updated(r: R with Identified[I]) => row(r).map(updateRow(r))
+    case Updated(r) =>
+      row(r).map(updateRow(r))
 
   }
 
@@ -196,7 +197,7 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R,I, _]](val table: 
 
 
   val result: lifted.Query[T, Delta[R, I], Seq] = for (
-    delta: T <- table;
+    delta <- table;
     (id, timestamp) <- latest
     if columnExtensionMethods(delta.resourceId) === id &&  columnExtensionMethods(delta.inserted).===(optionColumnExtensionMethods(timestamp).getOrElse(0))
 

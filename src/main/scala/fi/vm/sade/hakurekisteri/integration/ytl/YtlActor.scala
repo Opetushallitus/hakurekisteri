@@ -103,7 +103,8 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
       suoritusRekisteri ! k.yo
       kokelaat = kokelaat + (k.oid -> k)
       k.lukio foreach (suoritusRekisteri ! _)
-    case s: VirallinenSuoritus with Identified[UUID] if s.komo == YTLXml.yotutkinto && config.isDefined =>
+    case vs: VirallinenSuoritus with Identified[_] if vs.id.isInstanceOf[UUID] && vs.komo == YTLXml.yotutkinto && config.isDefined =>
+      val s = vs.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
       for (
         kokelas <- kokelaat.get(s.henkiloOid)
       ) {
@@ -410,7 +411,8 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
       fetch.foreach(_.cancel())
       val uudet = kokeet.map(_.toArvosana(suoritus))
       s.map{
-        case (a:Arvosana with Identified[UUID]) =>
+        case (as:Arvosana with Identified[_]) if as.id.isInstanceOf[UUID] =>
+          val a = as.asInstanceOf[Arvosana with Identified[UUID]]
           val korvaava = uudet.find(isKorvaava(a))
           if (korvaava.isDefined) korvaava.get.identify(a.id)
           else a
