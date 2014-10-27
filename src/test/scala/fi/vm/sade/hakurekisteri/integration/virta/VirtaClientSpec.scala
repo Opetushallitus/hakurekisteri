@@ -106,9 +106,8 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
 
     intercept[VirtaConnectionErrorException] {
       val response = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.5")
+      Await.result(response, 10.seconds)
 
-
-      println("RESULT:::::" + Await.result(response, 10.seconds))
     }
   }
 

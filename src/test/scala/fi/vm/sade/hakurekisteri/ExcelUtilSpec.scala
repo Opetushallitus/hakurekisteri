@@ -64,7 +64,6 @@ class ExcelUtilSpec extends ScalatraFunSuite {
     ExcelUtil.write(out, hakijat)
 
     val wb: Workbook = WorkbookFactory.create(new ByteArrayInputStream(out.toByteArray))
-    println(wb.getNumberOfSheets)
     import scala.collection.JavaConversions._
     val result = for (
       index <- 0 until wb.getNumberOfSheets;

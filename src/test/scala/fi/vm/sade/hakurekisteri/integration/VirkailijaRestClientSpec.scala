@@ -112,13 +112,10 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
       Some(new AsyncHttpClient(new CapturingProvider(sessionEndPoint)))
     )
 
-    println("first request")
     val requestChain: Future[TestResponse] = sessionClient.readObject[TestResponse]("/rest/foo", 200).flatMap {
       case _ =>
-        println("second request")
         sessionClient.readObject[TestResponse]("/rest/foo", 200).flatMap{
         case _ =>
-          println("third request")
           sessionClient.readObject[TestResponse]("/rest/foo", 200)
       }
     }

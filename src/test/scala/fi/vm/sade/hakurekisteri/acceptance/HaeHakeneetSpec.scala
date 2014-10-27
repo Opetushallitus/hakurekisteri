@@ -26,7 +26,6 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       When("rajaan muodostusta valitsemalla opetuspisteeseen X")
       val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, None)),
         Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
-      println("tiedosto: " + hakijat)
 
       Then("saan siirtotiedoston, jossa on opetuspisteeseen X tai sen lapsiin hakeneet")
       hakijat.hakijat.size should equal (1)
@@ -42,7 +41,6 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       When("rajaan muodostusta valitsemalla 'Kaikki hakeneet'")
       val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, None)),
         Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
-      println("hyväksytyt: " + hakijat)
 
       Then("saan siirtotiedoston, jossa on kaksi hakijaa")
       hakijat.hakijat.size should equal (2)
@@ -52,11 +50,9 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       Given("N henkilöä täyttää hakemuksen")
       hakupalvelu has (FullHakemus1, FullHakemus2)
 
-      println("haetaan hyväksytyt")
       When("rajaan muodostusta valitsemalla 'Hyväksytyt hakijat'")
       val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Hyvaksytyt, None)),
         Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
-      println("hyväksytyt: " + hakijat)
 
       Then("saan siirtotiedoston, jossa on vain hyväksytyt hakijat")
       hakijat.hakijat.size should equal (1)
@@ -69,7 +65,6 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       When("rajaan muodostusta valitsemalla 'Paikan vastaanottaneet'")
       val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Vastaanottaneet, None)),
         Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
-      println("vastaanottaneet: " + hakijat)
 
       Then("saan siirtotiedoston, jossa on vain paikan vastaanottaneet hakijat")
       hakijat.hakijat.size should equal (0)
@@ -82,7 +77,6 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       When("haen kaikki hakeneet")
       val hakijat: XMLHakijat = Await.result(hakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, None)),
         Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
-      println("hakeneet: " + hakijat)
 
       Then("saan siirtotiedoston, jossa on vaaditut arvot")
       hakijat.hakijat.size should equal(1)

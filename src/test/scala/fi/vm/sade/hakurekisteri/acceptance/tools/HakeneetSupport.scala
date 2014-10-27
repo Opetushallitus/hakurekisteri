@@ -208,8 +208,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
     override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = q.organisaatio match {
       case Some(org) => {
-        println("Haetaan tarjoajalta %s".format(org))
-        Future(hakijat.filter(_.hakemus.hakutoiveet.exists(_.hakukohde.koulutukset.exists((kohde) => {println(kohde);kohde.tarjoaja == org}))))
+        Future(hakijat.filter(_.hakemus.hakutoiveet.exists(_.hakukohde.koulutukset.exists((kohde) => {kohde.tarjoaja == org}))))
       }
       case _ => Future(hakijat)
     }

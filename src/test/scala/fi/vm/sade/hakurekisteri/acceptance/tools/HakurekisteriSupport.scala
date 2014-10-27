@@ -126,7 +126,6 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
     def init() {
       if (!initialized) {
-        println ("Initializing db with: " + tehdytSuoritukset)
         implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]) = {
           var journal = new InMemJournal[R, UUID]
           s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
@@ -153,9 +152,7 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
   def create (suoritus: Suoritus){
     db.init()
     val json = write(suoritus)
-    println(json)
     post("/rest/v1/suoritukset", json, Map("Content-Type" -> "application/json; charset=utf-8")) {
-      println(body)
     }
 
   }
@@ -163,9 +160,7 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
   def create (opiskelija: Opiskelija){
     db.init()
     val json = write(opiskelija)
-    println(json)
     post("/rest/v1/opiskelijat", json, Map("Content-Type" -> "application/json; charset=utf-8"))  {
-      println(body)
     }
   }
 
@@ -185,10 +180,8 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
 
     def find[R: Manifest]:Seq[R] = {
-      println("Haku polusta:  " + resourcePath + " arvoilla " + arvot)
 
       get(resourcePath,arvot) {
-        println("Tulos: " + body)
         parse(body)
       }.extract[Seq[R]]
     }

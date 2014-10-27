@@ -192,7 +192,6 @@ class CapturingProvider(endpoint: Endpoint) extends AsyncHttpProvider{
     val er = EndpointRequest(request.getUrl, reqBody, foo.toList)
 
     val response = Option(endpoint.request(er))
-    println(s"response for ${er.url}  ${response.map(_._1)}")
 
     def handle = {
 
