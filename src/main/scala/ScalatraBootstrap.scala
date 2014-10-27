@@ -4,7 +4,7 @@ import fi.vm.sade.hakurekisteri.oppija.OppijaResource
 import fi.vm.sade.hakurekisteri.storage.repository.Journal
 
 import _root_.akka.camel.CamelExtension
-import _root_.akka.routing.BroadcastRouter
+import _root_.akka.routing.BroadcastGroup
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
 import fi.vm.sade.hakurekisteri.integration.haku.{HakuResource, HakuActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.ParameterActor
@@ -270,7 +270,8 @@ class AuditedRegisters(amqUrl: String, amqQueue: String, authorizedRegisters: Re
   import scala.reflect.runtime.universe._
 
   def getBroadcastForLogger[A <: Resource[I, A]: TypeTag: ClassTag, I: TypeTag: ClassTag](rekisteri: ActorRef) = {
-    system.actorOf(Props.empty.withRouter(BroadcastRouter(routees = List(rekisteri, system.actorOf(Props(new AuditLog[A, I](typeOf[A].typeSymbol.name.toString)).withDispatcher("akka.hakurekisteri.audit-dispatcher"), typeOf[A].typeSymbol.name.toString.toLowerCase+"-audit") ))))
+    val routees = List(rekisteri, system.actorOf(Props(new AuditLog[A, I](typeOf[A].typeSymbol.name.toString)).withDispatcher("akka.hakurekisteri.audit-dispatcher"), typeOf[A].typeSymbol.name.toString.toLowerCase + "-audit"))
+    system.actorOf(Props.empty.withRouter(BroadcastGroup(paths = routees map (_.path.toString))))
   }
 
   override val eraRekisteri: ActorRef = system.deadLetters
