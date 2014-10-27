@@ -145,7 +145,6 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
     }
 
     def jSessionId: Future[Option[JSessionId]] = {
-      println(s"finding session for $serviceUrl")
 
       jSessionIdStorage match {
         case Some(actor) =>
@@ -163,7 +162,6 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
         f(req)
       }
       case _ =>
-        println(s"no sesssion for $serviceUrl")
         for (
           ticket <- getProxyTicket;
           result <- f(request <:< Map("CasSecurityTicket" -> ticket) )
@@ -183,7 +181,7 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
             result <- withSession(request)((req) => internalClient(req))(jsession)
           ) yield result
 
-        case _ => println("blaaaa")
+        case _ =>
           internalClient(request)
       }
 

@@ -88,11 +88,8 @@ class HakijaResource(hakijaActor: ActorRef)
       val is = hakuResult.flatMap {
         case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
           setContentDisposition(tyyppi, response, "hakijat")
-          println("content type set to binary")
-          println(response.getHeader("Content-Type"))
           Future.successful(result)
         case result =>
-          println("no need for binary type")
           Future.successful(result)
       }
     }

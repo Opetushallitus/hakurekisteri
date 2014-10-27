@@ -8,10 +8,7 @@ object OidTools {
   val max = 10000000000L
   
   
-  def simpleMethod() = {
-    println("nuthin");
-  }
-  
+
   def genRandomLuhnCheckOID(root: String, node: String): String = {
 
     var oidBase = 0L;
