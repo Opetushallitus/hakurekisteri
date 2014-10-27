@@ -6,6 +6,7 @@ import sbt.Keys._
 import org.scalatra.sbt._
 import com.mojolly.scalate.ScalatePlugin._
 import ScalateKeys._
+import org.sbtidea.SbtIdeaPlugin._
 import scala.language.postfixOps
 
 
@@ -19,9 +20,6 @@ object HakuJaValintarekisteriBuild extends Build {
   val SpringVersion = "3.2.1.RELEASE"
 
   lazy val LoadSpecs = config("load") extend(Test)
-
-  def loadFilter(name: String): Boolean = name endsWith "LoadSpec"
-  def unitFilter(name: String): Boolean =  !loadFilter(name)
 
   val ScalatraStack = Seq(
     "org.scalatra" %% "scalatra",
@@ -159,9 +157,8 @@ object HakuJaValintarekisteriBuild extends Build {
       file("."),
       configurations = Seq(LoadSpecs),
       settings =   ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
-        ++ inConfig(LoadSpecs)(Defaults.testTasks)
-        ++ Seq(testOptions in Test := Seq(Tests.Filter(unitFilter)),
-               testOptions in LoadSpecs := Seq(Tests.Filter(loadFilter)))
+        ++ inConfig(LoadSpecs)(Defaults.testSettings)
+        ++ Seq(ideaExtraTestConfigurations := Seq(LoadSpecs))
         ++ org.scalastyle.sbt.ScalastylePlugin.Settings
         ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"))
         ++ Seq(unmanagedSourceDirectories in Compile <+= (sourceDirectory in Runtime) { sd => sd / "js"})
