@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.kkhakija
 
+import java.io.OutputStream
 import java.text.{ParseException, SimpleDateFormat}
 import java.util.{Calendar, Date}
 
@@ -10,16 +11,16 @@ import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Lasnaolo, Lasna, Poissa, Puuttuu, Syksy, Kevat}
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
+import fi.vm.sade.hakurekisteri.rest.support._
+import fi.vm.sade.hakurekisteri.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{Haku, GetHaku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetRinnasteinenKoodiArvoQuery, Koodi, GetKoodi}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosQuery, Ilmoittautumistila, Valintatila, SijoitteluTulos}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
-import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohteenKoulutukset, HakukohdeOid, TarjontaException, Hakukohteenkoulutus}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
-import fi.vm.sade.hakurekisteri.rest.support.{Query, User, SpringSecuritySupport, HakurekisteriJsonSupport}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
 import org.scalatra.swagger.{SwaggerEngine, Swagger}
 import org.scalatra._
@@ -28,7 +29,7 @@ import org.scalatra.util.RicherString._
 
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 case class KkHakijaQuery(oppijanumero: Option[String], haku: Option[String], organisaatio: Option[String], hakukohde: Option[String], hakuehto: Hakuehto.Hakuehto, user: Option[User])
 
@@ -93,7 +94,7 @@ class KkHakijaResource(hakemukset: ActorRef,
                        koodisto: ActorRef,
                        suoritukset: ActorRef,
                        valintaTulos: ActorRef)(implicit system: ActorSystem, sw: Swagger)
-    extends HakuJaValintarekisteriStack with KkHakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
+    extends HakuJaValintarekisteriStack with KkHakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with ExcelSupport[Seq[Hakija]] with DownloadSupport {
 
   override protected def applicationDescription: String = "Korkeakouluhakijatietojen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
@@ -106,19 +107,31 @@ class KkHakijaResource(hakemukset: ActorRef,
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
-  before() {
-    contentType = formats("json")
+  def getContentType(t: ApiFormat): String = t match {
+    case ApiFormat.Json => formats("json")
+    case ApiFormat.Excel => formats("binary")
+    case tyyppi => throw new IllegalArgumentException(s"tyyppi $tyyppi is not supported")
   }
+
+  override protected def renderPipeline: RenderPipeline = renderExcel orElse super.renderPipeline
+  override val streamingRender: (OutputStream, Seq[Hakija]) => Unit = KkExcelUtil.write
 
   get("/", operation(query)) {
     val q = KkHakijaQuery(params, currentUser)
     logger.info("Query: " + q)
-    
+
+    val tyyppi = Try(ApiFormat.withName(params("tyyppi"))).getOrElse(ApiFormat.Json)
+    contentType = getContentType(tyyppi)
+
     if (q.oppijanumero.isEmpty && q.hakukohde.isEmpty) throw KkHakijaParamMissingException
 
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
-      val is = getKkHakijat(q)
+      val res = getKkHakijat(q)
+      res.onSuccess {
+        case _ => if (Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel) setContentDisposition(tyyppi, response, "hakijat")
+      }
+      val is = res
     }
   }
 
@@ -153,7 +166,7 @@ class KkHakijaResource(hakemukset: ActorRef,
       "ulk" -> k.pohjakoulutus_ulk,
       "avoin" -> k.pohjakoulutus_avoin,
       "muu" -> k.pohjakoulutus_muu
-    ).filter(t => t._2.exists(_ == "true")).keys.toSeq
+    ).filter(t => t._2.contains("true")).keys.toSeq
   }
 
   // TODO muuta kun valinta-tulos-service saa ilmoittautumiset sekvenssiksi

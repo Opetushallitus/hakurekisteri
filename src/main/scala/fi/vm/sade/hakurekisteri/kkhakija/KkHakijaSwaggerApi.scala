@@ -5,7 +5,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.{Vastaanottotila, Valin
 import org.scalatra.swagger.AllowableValues.AnyValue
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
-import fi.vm.sade.hakurekisteri.rest.support.OldSwaggerSyntax
+import fi.vm.sade.hakurekisteri.rest.support.{ApiFormat, OldSwaggerSyntax}
 
 trait KkHakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
   override protected val applicationName = Some("kkhakijat")
@@ -80,5 +80,6 @@ trait KkHakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
     .parameter(queryParam[Option[String]]("organisaatio").description("koulutuksen tarjoajan tai sen yläorganisaation oid").optional)
     .parameter(queryParam[Option[String]]("hakukohde").description("hakukohteen oid").optional)
     .parameter(queryParam[String]("hakuehto").description("hakuehto").allowableValues(Hakuehto.values.toList).required)
+    .parameter(queryParam[String]("tyyppi").description("tyyppi").allowableValues(ApiFormat.Json, ApiFormat.Excel))
 
 }
