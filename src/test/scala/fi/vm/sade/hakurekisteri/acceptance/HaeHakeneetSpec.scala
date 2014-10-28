@@ -67,7 +67,7 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
         Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
 
       Then("saan siirtotiedoston, jossa on vain paikan vastaanottaneet hakijat")
-      hakijat.hakijat.size should equal (0)
+      hakijat.hakijat.size should equal (1)
     }
 
     scenario("Vapaaehtoiset uudet tiedot tulostuvat hakemukselle") {
