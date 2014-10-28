@@ -265,24 +265,25 @@ object XMLHakija {
     case _ => "0"
   }
 
-  def apply(hakija: Hakija, yhteystiedot: Map[String, String], maa: String, kansalaisuus: String, hakemus: XMLHakemus): XMLHakija =
+  def apply(hakija: Hakija, hakemus: XMLHakemus): XMLHakija =
     XMLHakija(
-      hetu(hakija.henkilo.hetu, hakija.henkilo.syntymaaika),
-      hakija.henkilo.oidHenkilo,
-      hakija.henkilo.sukunimi,
-      hakija.henkilo.etunimet,
-      Some(hakija.henkilo.kutsumanimi),
-      yhteystiedot.getOrElse("YHTEYSTIETO_KATUOSOITE", ""),
-      yhteystiedot.getOrElse("YHTEYSTIETO_POSTINUMERO", "00000"),
-      maa,
-      kansalaisuus,
-      yhteystiedot.get("YHTEYSTIETO_MATKAPUHELIN"),
-      yhteystiedot.get("YHTEYSTIETO_PUHELINNUMERO"),
-      yhteystiedot.get("YHTEYSTIETO_SAHKOPOSTI"),
-      yhteystiedot.get("YHTEYSTIETO_KAUPUNKI"),
-      resolveSukupuoli(hakija), hakija.henkilo.asiointiKieli.kieliKoodi,
-      hakija.henkilo.markkinointilupa.getOrElse(false),
-      hakemus
+      hetu = hetu(hakija.henkilo.hetu, hakija.henkilo.syntymaaika),
+      oppijanumero = hakija.henkilo.oppijanumero,
+      sukunimi = hakija.henkilo.sukunimi,
+      etunimet = hakija.henkilo.etunimet,
+      kutsumanimi = hakija.henkilo.kutsumanimi.blankOption,
+      lahiosoite = hakija.henkilo.lahiosoite,
+      postinumero = hakija.henkilo.postinumero,
+      maa = hakija.henkilo.maa,
+      kansalaisuus = hakija.henkilo.kansalaisuus,
+      matkapuhelin = hakija.henkilo.matkapuhelin.blankOption,
+      muupuhelin = hakija.henkilo.puhelin.blankOption,
+      sahkoposti = hakija.henkilo.sahkoposti.blankOption,
+      kotikunta = hakija.henkilo.kotikunta.blankOption,
+      sukupuoli = resolveSukupuoli(hakija),
+      aidinkieli = hakija.henkilo.asiointiKieli,
+      koulutusmarkkinointilupa = hakija.henkilo.markkinointilupa.getOrElse(false),
+      hakemus = hakemus
     )
 
   def hetu(hetu: String, syntymaaika: String): String = hetu match {

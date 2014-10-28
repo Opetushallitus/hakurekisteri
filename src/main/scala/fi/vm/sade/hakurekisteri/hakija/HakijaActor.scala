@@ -13,16 +13,12 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
-import fi.vm.sade.hakurekisteri.henkilo._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import scala.util.Try
-import fi.vm.sade.hakurekisteri.henkilo.Yhteystiedot
 import akka.pattern.{pipe, ask}
 import ForkedSeq._
 import TupledFuture._
-import scala.util.Failure
-import fi.vm.sade.hakurekisteri.rest.support.{Kausi, User}
-import scala.util.Success
+import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.suoritus.Komoto
 
 
@@ -64,6 +60,8 @@ sealed trait VastaanottanutPaikan extends IlmoitusLahetetty {
 object Hakutoive{
   val hyvaksyttyTilat = Seq(Valintatila.HYVAKSYTTY, Valintatila.HARKINNANVARAISESTI_HYVAKSYTTY, Valintatila.VARASIJALTA_HYVAKSYTTY)
   val vastaanottanutTilat = Seq(Vastaanottotila.VASTAANOTTANUT, Vastaanottotila.EHDOLLISESTI_VASTAANOTTANUT)
+
+  import fi.vm.sade.hakurekisteri.rest.support.Kausi
 
   private def resolveLasnaolot(lasna: Boolean)(ht: Hakutoive): Seq[Lasnaolo] = ht.hakukohde.koulutukset.map((komoto) => (lasna, komoto.alkamisvuosi, komoto.alkamiskausi)).map {
     case (true, vuosi, Kausi.Syksy) => Try(Lasna(Syksy(vuosi.toInt))).toOption
@@ -239,20 +237,11 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
 
 
   def hakija2XMLHakija(hakija: Hakija): Future[XMLHakija] = {
-    enrich(hakija).tupledMap(data2XmlHakija(hakija))
+    getXmlHakemus(hakija).map(data2XmlHakija(hakija))
   }
 
-  def enrich(hakija: Hakija) = {
-    val hakemus: Future[XMLHakemus] = getXmlHakemus(hakija)
-    val yhteystiedot: Seq[Yhteystiedot] = hakija.henkilo.yhteystiedotRyhma.getOrElse(("hakemus", "yhteystietotyyppi1"), Seq())
-    val maakoodi = Try(getMaakoodi(yhteystiedot.getOrElse("YHTEYSTIETO_MAA", "FIN"))).transform(s => Success(s), t => {log.error("%s failed to fetch country".format(hakija));Failure(t)}).get
-    val kansalaisuus = Try(getMaakoodi(Try(hakija.henkilo.kansalaisuus.head).map(k => k.kansalaisuusKoodi).getOrElse("FIN"))).transform(s => Success(s), t => {log.error("%s failed to fetch country".format(hakija));Failure(t)}).get
-
-    (hakemus, Future.successful(yhteystiedot), maakoodi, kansalaisuus).join
-  }
-
-  def data2XmlHakija(hakija: Hakija)(hakemus: XMLHakemus, yhteystiedot: Seq[Yhteystiedot], kotimaa: String, kansalaisuus: String) =
-    XMLHakija(hakija, yhteystiedot, kotimaa, kansalaisuus, hakemus)
+  def data2XmlHakija(hakija: Hakija)(hakemus: XMLHakemus) =
+    XMLHakija(hakija, hakemus)
 
   def hakijat2XmlHakijat(hakijat: Seq[Hakija]): Future[Seq[XMLHakija]] =
     hakijat.map(hakija2XMLHakija).join
@@ -300,7 +289,41 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     case _ => Future.successful(XMLHakijat(Seq()))
   }
 
+  def enrichHakijat(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.sequence(for {
+    hakija <- hakijat
+  } yield for {
+    kansalaisuus <- getMaakoodi(hakija.henkilo.kansalaisuus)
+    maa <- getMaakoodi(hakija.henkilo.maa)
+  } yield {
+    val h = hakija.henkilo
+    Hakija(
+      henkilo = Henkilo(
+        hetu = h.hetu,
+        syntymaaika = h.syntymaaika,
+        oppijanumero = h.oppijanumero,
+        sukupuoli = h.sukupuoli,
+        sukunimi = h.sukunimi,
+        etunimet = h.etunimet,
+        kutsumanimi = h.kutsumanimi,
+        lahiosoite = h.lahiosoite,
+        postinumero = h.postinumero,
+        maa = maa,
+        matkapuhelin = h.matkapuhelin,
+        puhelin = h.puhelin,
+        sahkoposti = h.sahkoposti,
+        kotikunta = h.kotikunta,
+        kansalaisuus = kansalaisuus,
+        asiointiKieli = h.asiointiKieli,
+        eiSuomalaistaHetua = h.eiSuomalaistaHetua,
+        markkinointilupa = h.markkinointilupa
+      ),
+      suoritukset = hakija.suoritukset,
+      opiskeluhistoria = hakija.opiskeluhistoria,
+      hakemus = hakija.hakemus
+    )
+  })
+
   def getHakijat(q: HakijaQuery) = {
-    hakupalvelu.getHakijat(q).flatMap(combine2sijoittelunTulos(q.user)).flatMap(hakijat2XmlHakijat)
+    hakupalvelu.getHakijat(q).flatMap(enrichHakijat).flatMap(combine2sijoittelunTulos(q.user)).flatMap(hakijat2XmlHakijat)
   }
 }
