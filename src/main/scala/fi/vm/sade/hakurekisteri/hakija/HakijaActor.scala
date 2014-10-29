@@ -58,9 +58,6 @@ sealed trait VastaanottanutPaikan extends IlmoitusLahetetty {
 }
 
 object Hakutoive{
-  val hyvaksyttyTilat = Seq(Valintatila.HYVAKSYTTY, Valintatila.HARKINNANVARAISESTI_HYVAKSYTTY, Valintatila.VARASIJALTA_HYVAKSYTTY)
-  val vastaanottanutTilat = Seq(Vastaanottotila.VASTAANOTTANUT, Vastaanottotila.EHDOLLISESTI_VASTAANOTTANUT)
-
   import fi.vm.sade.hakurekisteri.rest.support.Kausi
 
   private def resolveLasnaolot(lasna: Boolean)(ht: Hakutoive): Seq[Lasnaolo] = ht.hakukohde.koulutukset.map((komoto) => (lasna, komoto.alkamisvuosi, komoto.alkamiskausi)).map {
@@ -71,9 +68,8 @@ object Hakutoive{
     case _ => None
   }.flatten.toSeq
 
-  private def isHyvaksytty(tila: Valintatila): Boolean = hyvaksyttyTilat.contains(tila)
-
-  private def isVastaanottanut(tila: Vastaanottotila): Boolean = vastaanottanutTilat.contains(tila)
+  import Valintatila.isHyvaksytty
+  import Vastaanottotila.isVastaanottanut
 
   def apply(ht: Hakutoive, valinta: Option[Valintatila], vastaanotto: Option[Vastaanottotila]) = (valinta, vastaanotto) match {
     case (Some(v), Some(Vastaanottotila.KESKEN)) if isHyvaksytty(v) => Hyvaksytty(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet)
