@@ -3,13 +3,11 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 import akka.actor.ActorRef
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.henkilo.{Kansalaisuus, Kieli, Yhteystiedot, YhteystiedotRyhma, _}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Komoto, Suoritus, yksilollistaminen}
 import org.joda.time.{DateTime, LocalDate, MonthDay}
-import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -20,7 +18,6 @@ trait Hakupalvelu {
 }
 
 class AkkaHakupalvelu(hakemusActor: ActorRef)(implicit val ec: ExecutionContext) extends Hakupalvelu {
-  //val logger = LoggerFactory.getLogger(getClass)
   val Pattern = "preference(\\d+).*".r
 
   def filterHakemus(optionField: Option[String], filterFunc: (String) => (Map[String, String]) => Map[String, String] )(fh: FullHakemus): FullHakemus = optionField match {
@@ -56,7 +53,6 @@ class AkkaHakupalvelu(hakemusActor: ActorRef)(implicit val ec: ExecutionContext)
 }
 
 object AkkaHakupalvelu {
-  //val logger = LoggerFactory.getLogger(getClass)
 
   val DEFAULT_POHJA_KOULUTUS: String = "1"
 
@@ -111,34 +107,23 @@ object AkkaHakupalvelu {
     def getHenkiloTietoOrBlank(f: (HakemusHenkilotiedot) => Option[String]): String = getHenkiloTietoOrElse(f, "")
     Hakija(
       Henkilo(
-        yhteystiedotRyhma = Seq(YhteystiedotRyhma(0, "yhteystietotyyppi1", "hakemus", readOnly = true, Seq(
-          Yhteystiedot(0, "YHTEYSTIETO_KATUOSOITE", getHenkiloTietoOrBlank(_.lahiosoite)),
-          Yhteystiedot(1, "YHTEYSTIETO_POSTINUMERO", getHenkiloTietoOrBlank(_.Postinumero)),
-          Yhteystiedot(2, "YHTEYSTIETO_MAA", getHenkiloTietoOrElse(_.asuinmaa,"FIN")),
-          Yhteystiedot(3, "YHTEYSTIETO_MATKAPUHELIN", getHenkiloTietoOrBlank(_.matkapuhelinnumero1)),
-          Yhteystiedot(4, "YHTEYSTIETO_SAHKOPOSTI", getHenkiloTietoOrBlank(_.Sähköposti)),
-          Yhteystiedot(5, "YHTEYSTIETO_KAUPUNKI", getHenkiloTietoOrBlank(_.kotikunta))
-        ))),
-        yksiloity = false,
+        lahiosoite = getHenkiloTietoOrElse(_.lahiosoite, getHenkiloTietoOrBlank(_.osoiteUlkomaa)),
+        postinumero = getHenkiloTietoOrElse(_.Postinumero, getHenkiloTietoOrBlank(_.postinumeroUlkomaa)),
+        maa = getHenkiloTietoOrElse(_.asuinmaa, "FIN"),
+        matkapuhelin = getHenkiloTietoOrBlank(_.matkapuhelinnumero1),
+        puhelin = getHenkiloTietoOrBlank(_.matkapuhelinnumero2),
+        sahkoposti = getHenkiloTietoOrBlank(_.Sähköposti),
+        kotikunta = getHenkiloTietoOrBlank(_.kotikunta),
         sukunimi = getHenkiloTietoOrBlank(_.Sukunimi),
         etunimet = getHenkiloTietoOrBlank(_.Etunimet),
         kutsumanimi = getHenkiloTietoOrBlank(_.Kutsumanimi),
-        kielisyys = Seq(),
-        yksilointitieto = None,
-        henkiloTyyppi = "OPPIJA",
-        oidHenkilo = hakemus.personOid.getOrElse(""),
-        duplicate = false,
         oppijanumero = hakemus.personOid.getOrElse(""),
-        kayttajatiedot = None,
-        kansalaisuus = Seq(Kansalaisuus(getHenkiloTietoOrElse(_.kansalaisuus, "FIN"))),
-        passinnumero = "",
-        asiointiKieli = Kieli(kieli),
-        passivoitu = false,
+        kansalaisuus = getHenkiloTietoOrElse(_.kansalaisuus, "FIN"),
+        asiointiKieli = kieli,
         eiSuomalaistaHetua = getHenkiloTietoOrElse(_.onkoSinullaSuomalainenHetu, "false").toBoolean,
         sukupuoli = getHenkiloTietoOrBlank(_.sukupuoli),
         hetu = getHenkiloTietoOrBlank(_.Henkilotunnus),
         syntymaaika = getHenkiloTietoOrBlank(_.syntymaaika),
-        turvakielto = false,
         markkinointilupa = Some(getValue(_.lisatiedot,(l:Lisatiedot) => l.lupaMarkkinointi, "false").toBoolean)
       ),
       getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli,hakemus.personOid),

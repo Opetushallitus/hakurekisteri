@@ -1,76 +1,44 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
 import java.io.InterruptedIOException
-import java.net.URL
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 import akka.event.Logging
-import com.stackmob.newman.{ApacheHttpClient, HttpClient}
-import com.stackmob.newman.dsl._
-import com.stackmob.newman.response.HttpResponseCode
 import fi.vm.sade.generic.common.HetuUtils
 import org.joda.time.format.DateTimeFormat
 
 import scala.compat.Platform
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.Future
+import scala.util.Try
 import scala.xml.{Elem, Node, NodeSeq, XML}
-import java.util.concurrent.{ThreadFactory, Executors}
-import org.apache.http.conn.ClientConnectionManager
-import org.apache.http.impl.conn.PoolingClientConnectionManager
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.params.HttpConnectionParams
-import org.apache.http.impl.NoConnectionReuseStrategy
+import com.ning.http.client._
+import scala.util.Failure
+import scala.Some
+import scala.util.Success
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
+import dispatch.Http
 
 case class VirtaValidationError(m: String) extends Exception(m)
 
-object VirtaClient {
 
-  val threadNumber = new AtomicInteger(1)
-  val pool = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(50, new ThreadFactory() {
-    override def newThread(r: Runnable): Thread = {
-      new Thread(r, "virta-request" + "-" + threadNumber.getAndIncrement)
-    }
-  }))
-  private def createApacheHttpClient(maxConnections: Int): org.apache.http.client.HttpClient = {
-    val connManager: ClientConnectionManager = {
-      val cm = new PoolingClientConnectionManager()
-      cm.setDefaultMaxPerRoute(maxConnections)
-      cm.setMaxTotal(maxConnections)
-      cm
-    }
-
-    val client = new DefaultHttpClient(connManager)
-    val httpParams = client.getParams
-    HttpConnectionParams.setConnectionTimeout(httpParams, 10000)
-    HttpConnectionParams.setSoTimeout(httpParams, 120000)
-    HttpConnectionParams.setStaleCheckingEnabled(httpParams, false)
-    HttpConnectionParams.setSoKeepalive(httpParams, false)
-    client.setReuseStrategy(new NoConnectionReuseStrategy())
-    client
-  }
-
-  val defaultClient: HttpClient =
-    new ApacheHttpClient(createApacheHttpClient(100))(pool)
-
-}
 
 class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot",
                                                     jarjestelma = "",
                                                     tunnus = "",
-                                                    avain = "salaisuus"), client: HttpClient = VirtaClient.defaultClient)
+                                                    avain = "salaisuus"),
+                   aClient: Option[AsyncHttpClient] = None)
                  (implicit val system: ActorSystem) {
 
 
-  implicit val httpClient = client
-  implicit val ec = VirtaClient.pool
+  implicit val ec = ExecutorUtil.createExecutor(50, "virta-executor")
+
+  val client = aClient.map(Http(_)).getOrElse(Http)
 
   val logger = Logging.getLogger(system, this)
   val maxRetries = 3
 
   def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
-    if (hetu.isDefined && !HetuUtils.isHetuValid(hetu.get)) throw new IllegalArgumentException("hetu is not valid")
 
     val operation =
 <OpiskelijanKaikkiTiedotRequest xmlns="http://tietovaranto.csc.fi/luku">
@@ -104,39 +72,46 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     }
   }
 
-  def tryPost(url: String, requestEnvelope: String, oppijanumero: String, hetu: Option[String], retryCount: AtomicInteger): Future[Option[VirtaResult]] = {
+  def tryPost(requestUrl: String, requestEnvelope: String, oppijanumero: String, hetu: Option[String], retryCount: AtomicInteger): Future[Option[VirtaResult]] = {
     val start = Platform.currentTime
-    POST(new URL(url)).setBodyString(requestEnvelope).apply.map((response) => {
-      logger.info(s"virta query for $oppijanumero took ${Platform.currentTime - start} ms, response code ${response.code}")
-      if (response.code == HttpResponseCode.Ok) {
-        val responseEnvelope: Elem = XML.loadString(response.bodyString)
 
-        val opiskeluoikeudet = getOpiskeluoikeudet(responseEnvelope)
-        val tutkinnot = getTutkinnot(responseEnvelope)
+    import dispatch._
 
-        (opiskeluoikeudet, tutkinnot) match {
-          case (Seq(), Seq()) =>
-            None
+    object VirtaHandler extends AsyncCompletionHandler[Option[VirtaResult]]{
+      override def onCompleted(response: Response): Option[VirtaResult] = {
 
-          case _ =>
-            Some(VirtaResult(opiskeluoikeudet = opiskeluoikeudet, tutkinnot = tutkinnot))
+        if (response.getStatusCode == 200) {
+          val responseEnvelope: Elem = XML.loadString(response.getResponseBody)
 
+          val opiskeluoikeudet = getOpiskeluoikeudet(responseEnvelope)
+          val tutkinnot = getTutkinnot(responseEnvelope)
+
+          (opiskeluoikeudet, tutkinnot) match {
+            case (Seq(), Seq()) =>
+              None
+
+            case _ =>
+              Some(VirtaResult(opiskeluoikeudet = opiskeluoikeudet, tutkinnot = tutkinnot))
+
+          }
+        } else {
+          val bodyString = response.getResponseBody
+
+          parseFault(bodyString)
+
+          logger.error(s"got non-ok response from virta: ${response.getStatusCode}, response: $bodyString")
+          throw VirtaConnectionErrorException(s"got non-ok response from virta: ${response.getStatusCode}, response: $bodyString")
         }
-      } else {
-        val bodyString = response.bodyString
-
-        parseFault(bodyString)
-
-        logger.error(s"got non-ok response from virta: ${response.code}, response: $bodyString")
-        throw VirtaConnectionErrorException(s"got non-ok response from virta: ${response.code}, response: $bodyString")
       }
-    }).recoverWith {
+    }
+
+    client(url(requestUrl) << requestEnvelope > VirtaHandler).recoverWith {
       case t: InterruptedIOException =>
         if (retryCount.getAndIncrement <= maxRetries) {
           logger.warning(s"got $t, retrying virta query for $oppijanumero: retryCount ${retryCount.get}")
 
-          tryPost(url, requestEnvelope, oppijanumero, hetu, retryCount)
-        } else Future.failed(t)
+          tryPost(requestUrl, requestEnvelope, oppijanumero, hetu, retryCount)
+        } else concurrent.Future.failed(t)
     }
   }
 

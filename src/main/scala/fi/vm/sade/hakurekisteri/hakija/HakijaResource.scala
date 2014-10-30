@@ -4,35 +4,29 @@ import java.io.OutputStream
 import java.text.SimpleDateFormat
 
 import _root_.akka.event.{Logging, LoggingAdapter}
-import fi.vm.sade.hakurekisteri.hakija.Tyyppi.Tyyppi
+import fi.vm.sade.hakurekisteri.rest.support._
+import fi.vm.sade.hakurekisteri.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
-import fi.vm.sade.hakurekisteri.rest.support.{Kausi, SpringSecuritySupport, HakurekisteriJsonSupport}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra._
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
 import scala.util.Try
-import javax.servlet.http.HttpServletResponse
 import scala.xml._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.joda.time.{DateTimeFieldType, LocalDate}
-import fi.vm.sade.hakurekisteri.rest.support.User
+import scala.reflect.ClassTag
 
 
 object Hakuehto extends Enumeration {
   type Hakuehto = Value
   val Kaikki, Hyvaksytyt, Vastaanottaneet, Hylatyt = Value
-}
-
-object Tyyppi extends Enumeration {
-  type Tyyppi = Value
-  val Xml, Excel, Json = Value
 }
 
 case class HakijaQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakuehto: Hakuehto.Hakuehto, user: Option[User])
@@ -50,7 +44,10 @@ object HakijaQuery {
 
 import scala.concurrent.duration._
 
-class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
+class HakijaResource(hakijaActor: ActorRef)
+                    (implicit system: ActorSystem, sw: Swagger, val ct: ClassTag[XMLHakijat])
+    extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with ExcelSupport[XMLHakijat] with DownloadSupport {
+
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override protected def applicationDescription: String = "Hakijatietojen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
@@ -61,33 +58,18 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
-  addMimeMapping("application/octet-stream", "binary")
-
-  def getContentType(t: Tyyppi): String = t match {
-    case Tyyppi.Json => formats("json")
-    case Tyyppi.Xml => formats("xml")
-    case Tyyppi.Excel => formats("binary")
+  def getContentType(t: ApiFormat): String = t match {
+    case ApiFormat.Json => formats("json")
+    case ApiFormat.Xml => formats("xml")
+    case ApiFormat.Excel => formats("binary")
+    case tyyppi => throw new IllegalArgumentException(s"tyyppi $tyyppi is not supported")
   }
 
-  def getFileExtension(t: Tyyppi): String = t match {
-    case Tyyppi.Json => "json"
-    case Tyyppi.Xml => "xml"
-    case Tyyppi.Excel => "xls"
-  }
+  override protected def renderPipeline: RenderPipeline = renderCustom orElse renderExcel orElse super.renderPipeline
+  override val streamingRender: (OutputStream, XMLHakijat) => Unit = (out, hakijat) => {
 
-  def setContentDisposition(t: Tyyppi, response: HttpServletResponse, filename: String) {
-    response.setHeader("Content-Disposition", s"attachment;filename=$filename.${getFileExtension(t)}")
-    response.addCookie(Cookie("fileDownload", "true")(CookieOptions(path = "/")))
+    ExcelUtil.write(out,hakijat)
   }
-
-  override protected def renderPipeline: RenderPipeline = renderCustom orElse  renderExcel orElse super.renderPipeline
-
-  val streamingRender: (OutputStream, XMLHakijat) => Unit = ExcelUtil.write
-  
-  private def renderExcel: RenderPipeline = {
-    case hakijat: XMLHakijat if format == "binary" => streamingRender(response.outputStream, hakijat)
-  }
-  
   protected def renderCustom: RenderPipeline = {
     case hakijat: XMLHakijat if format == "xml" => XML.write(response.writer, Utility.trim(hakijat.toXml), response.characterEncoding.get, xmlDecl = true, doctype = null)
   }
@@ -96,16 +78,20 @@ class HakijaResource(hakijaActor: ActorRef)(implicit system: ActorSystem, sw: Sw
     val q = HakijaQuery(params, currentUser)
     logger.info("Query: " + q)
 
+    val tyyppi = Try(ApiFormat.withName(params("tyyppi"))).getOrElse(ApiFormat.Json)
+    contentType = getContentType(tyyppi)
+
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
-      import scala.concurrent.future
-      val hakuResult = Try(hakijaActor ? q).get
-      val is = hakuResult.flatMap((result) => future {
-        val tyyppi = Try(Tyyppi.withName(params("tyyppi"))).getOrElse(Tyyppi.Json)
-        contentType = getContentType(tyyppi)
-        if (Try(params("tiedosto").toBoolean).getOrElse(false)) setContentDisposition(tyyppi, response, "hakijat")
-        result
-      })
+      val hakuResult = hakijaActor ? q
+
+      val is = hakuResult.flatMap {
+        case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
+          setContentDisposition(tyyppi, response, "hakijat")
+          Future.successful(result)
+        case result =>
+          Future.successful(result)
+      }
     }
   }
 
@@ -217,7 +203,7 @@ object XMLHakemus {
     suoritukset.collect{case s: VirallinenSuoritus => (s, resolvePohjakoulutus(Some(s)).toInt)}.sortBy(_._2).map(_._1).headOption
   }
 
-  def resolveYear(suoritus: VirallinenSuoritus) = suoritus match {
+  def resolveYear(suoritus: VirallinenSuoritus):Option[String] = suoritus match {
     case VirallinenSuoritus("ulkomainen", _,  _, _, _, _, _, _,  _, _) => None
     case VirallinenSuoritus(_, _, _,date, _, _, _,_,  _, _)  => Some(date.getYear.toString)
   }
@@ -279,24 +265,25 @@ object XMLHakija {
     case _ => "0"
   }
 
-  def apply(hakija: Hakija, yhteystiedot: Map[String, String], maa: String, kansalaisuus: String, hakemus: XMLHakemus): XMLHakija =
+  def apply(hakija: Hakija, hakemus: XMLHakemus): XMLHakija =
     XMLHakija(
-      hetu(hakija.henkilo.hetu, hakija.henkilo.syntymaaika),
-      hakija.henkilo.oidHenkilo,
-      hakija.henkilo.sukunimi,
-      hakija.henkilo.etunimet,
-      Some(hakija.henkilo.kutsumanimi),
-      yhteystiedot.getOrElse("YHTEYSTIETO_KATUOSOITE", ""),
-      yhteystiedot.getOrElse("YHTEYSTIETO_POSTINUMERO", "00000"),
-      maa,
-      kansalaisuus,
-      yhteystiedot.get("YHTEYSTIETO_MATKAPUHELIN"),
-      yhteystiedot.get("YHTEYSTIETO_PUHELINNUMERO"),
-      yhteystiedot.get("YHTEYSTIETO_SAHKOPOSTI"),
-      yhteystiedot.get("YHTEYSTIETO_KAUPUNKI"),
-      resolveSukupuoli(hakija), hakija.henkilo.asiointiKieli.kieliKoodi,
-      hakija.henkilo.markkinointilupa.getOrElse(false),
-      hakemus
+      hetu = hetu(hakija.henkilo.hetu, hakija.henkilo.syntymaaika),
+      oppijanumero = hakija.henkilo.oppijanumero,
+      sukunimi = hakija.henkilo.sukunimi,
+      etunimet = hakija.henkilo.etunimet,
+      kutsumanimi = hakija.henkilo.kutsumanimi.blankOption,
+      lahiosoite = hakija.henkilo.lahiosoite,
+      postinumero = hakija.henkilo.postinumero,
+      maa = hakija.henkilo.maa,
+      kansalaisuus = hakija.henkilo.kansalaisuus,
+      matkapuhelin = hakija.henkilo.matkapuhelin.blankOption,
+      muupuhelin = hakija.henkilo.puhelin.blankOption,
+      sahkoposti = hakija.henkilo.sahkoposti.blankOption,
+      kotikunta = hakija.henkilo.kotikunta.blankOption,
+      sukupuoli = resolveSukupuoli(hakija),
+      aidinkieli = hakija.henkilo.asiointiKieli,
+      koulutusmarkkinointilupa = hakija.henkilo.markkinointilupa.getOrElse(false),
+      hakemus = hakemus
     )
 
   def hetu(hetu: String, syntymaaika: String): String = hetu match {

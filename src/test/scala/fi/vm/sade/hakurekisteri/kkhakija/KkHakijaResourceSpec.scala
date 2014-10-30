@@ -135,32 +135,31 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
 
   class MockedHakemusActor extends Actor {
     override def receive: Receive = {
-      case q: HakemusQuery => println(q); sender ! Seq(FullHakemus1, FullHakemus2)
+      case q: HakemusQuery =>  sender ! Seq(FullHakemus1, FullHakemus2)
     }
   }
 
   class MockedTarjontaActor extends Actor {
     override def receive: Actor.Receive = {
-      case oid: HakukohdeOid => println(oid); sender ! HakukohteenKoulutukset(oid.oid, Some("joku tunniste"), Seq(koulutus1))
+      case oid: HakukohdeOid =>  sender ! HakukohteenKoulutukset(oid.oid, Some("joku tunniste"), Seq(koulutus1))
     }
   }
 
   class MockedHakuActor extends Actor {
     override def receive: Actor.Receive = {
-      case q: GetHaku => println(q); sender ! Haku(haku1)(InFuture)
+      case q: GetHaku =>  sender ! Haku(haku1)(InFuture)
     }
   }
 
   class MockedSuoritusActor extends Actor {
     override def receive: Actor.Receive = {
-      case q: SuoritysTyyppiQuery => println(q); sender ! Seq(suoritus1)
+      case q: SuoritysTyyppiQuery => sender ! Seq(suoritus1)
     }
   }
 
   class MockedValintaTulosActor extends Actor {
     override def receive: Actor.Receive = {
       case q: ValintaTulosQuery if q.hakuOid == FullHakemus1.applicationSystemId =>
-        println(q)
         sender ! new SijoitteluTulos {
           override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.EI_TEHTY)
           override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = Some(Vastaanottotila.KESKEN)
@@ -168,7 +167,6 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
           override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
         }
       case q: ValintaTulosQuery =>
-        println(q)
         sender ! new SijoitteluTulos {
           override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = None
           override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = None
@@ -180,8 +178,8 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
 
   class MockedKoodistoActor extends Actor {
     override def receive: Actor.Receive = {
-      case q: GetRinnasteinenKoodiArvoQuery => println(q); sender ! "246"
-      case q: GetKoodi => println(q); sender ! Some(Koodi(q.koodiUri.split("_").last.split("#").head.toUpperCase, q.koodiUri, Koodisto(q.koodistoUri), Seq(KoodiMetadata(q.koodiUri, "FI"))))
+      case q: GetRinnasteinenKoodiArvoQuery => sender ! "246"
+      case q: GetKoodi =>  sender ! Some(Koodi(q.koodiUri.split("_").last.split("#").head.toUpperCase, q.koodiUri, Koodisto(q.koodistoUri), Seq(KoodiMetadata(q.koodiUri, "FI"))))
     }
   }
 }

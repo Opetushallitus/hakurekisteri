@@ -27,4 +27,12 @@ class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       body should include ("<Hakijat")
     }
   }
+
+  test("result is binary and not empty when asked in Excel") {
+    get("/?hakuehto=Kaikki&tyyppi=Excel") {
+      body.length should not be 0
+      header("Content-Type") should include ("application/octet-stream")
+      header("Content-Disposition") should be ("attachment;filename=hakijat.xls")
+    }
+  }
 }

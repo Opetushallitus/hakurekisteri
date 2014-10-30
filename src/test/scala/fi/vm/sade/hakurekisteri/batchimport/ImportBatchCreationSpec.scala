@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.batchimport
 
-import org.scalatest.matchers.ShouldMatchers
-import org.scalatest.FlatSpec
+import org.scalatest.{Matchers, FlatSpec}
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods
 import org.json4s.JsonAST.{JObject, JNothing, JValue}
@@ -10,13 +9,13 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 
 import org.scalatra.DefaultValue
 import org.scalatra.util.ParamsValueReaderProperties
-import org.scalatra.commands.{Command, ModelValidation, CommandExecutors}
+import org.scalatra.commands.{ModelValidation, CommandExecutors}
 import scalaz.NonEmptyList
 import org.scalatra.validation.{ValidationFail, FieldName, ValidationError}
-
+import scala.language.implicitConversions
 
 class ImportBatchCreationSpec extends FlatSpec
-    with ShouldMatchers with JsonCommandTestSupport {
+    with Matchers with JsonCommandTestSupport {
 
   behavior of "ImportBatchCommand"
 

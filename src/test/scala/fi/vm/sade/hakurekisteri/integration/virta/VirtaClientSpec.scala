@@ -1,44 +1,49 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
-import java.net.URL
-import java.nio.charset.Charset
-import java.util.Date
 
 import akka.actor.ActorSystem
-import com.stackmob.newman.request._
-import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
-import com.stackmob.newman.{RawBody, Headers, HttpClient}
-import org.scalatest.FlatSpec
+import org.scalatest.{Matchers, FlatSpec}
 import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.time.{Millis, Span}
 
-import scala.concurrent.Future
-import scala.util.{Success, Failure}
+import scala.concurrent.{Await, Future}
+import fi.vm.sade.hakurekisteri.integration.{Endpoint, DispatchSupport, CapturingProvider}
+import com.ning.http.client.AsyncHttpClient
+import org.mockito.Mockito
+import org.scalatest.mock.MockitoSugar
+import scala.concurrent.duration._
 
-class MockHttpClient extends HttpClient {
-  var capturedRequestBody: String = ""
-  override def post(url: URL, headers: Headers, body: RawBody): PostRequest = PostRequest(url, headers, body) {
-    capturedRequestBody = new String(body)
-    capturedRequestBody match {
-      case s: String if s.contains("1.2.4") => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(scala.io.Source.fromFile("src/test/resources/test-empty-response.xml").mkString), new Date()))
-      case s: String if s.contains("1.2.5") => Future.successful(HttpResponse(HttpResponseCode.InternalServerError, Headers(List()), RawBody("Infernal server error", Charset.forName("UTF-8")), new Date()))
-      case s: String if s.contains("1.3.0") => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(scala.io.Source.fromFile("src/test/resources/test-multiple-students-response.xml").mkString), new Date()))
-      case s: String if s.contains("1.5.0") => Future.successful(HttpResponse(HttpResponseCode.InternalServerError, Headers(List()), RawBody(scala.io.Source.fromFile("src/test/resources/test-fault.xml").mkString), new Date()))
-      case _ => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(scala.io.Source.fromFile("src/test/resources/test-response.xml").mkString), new Date()))
-    }
-  }
-  override def head(url: URL, headers: Headers): HeadRequest = ???
-  override def get(url: URL, headers: Headers): GetRequest = ???
-  override def put(url: URL, headers: Headers, body: RawBody): PutRequest = ???
-  override def delete(url: URL, headers: Headers): DeleteRequest = ???
+object VirtaResults {
+  val emptyResp = scala.io.Source.fromFile("src/test/resources/test-empty-response.xml").mkString
+
+  val multipleStudents = scala.io.Source.fromFile("src/test/resources/test-multiple-students-response.xml").mkString
+
+  val fault = scala.io.Source.fromFile("src/test/resources/test-fault.xml").mkString
+
+  val testResponse = scala.io.Source.fromFile("src/test/resources/test-response.xml").mkString
+
 }
 
-class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions {
+
+
+class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with MockitoSugar with DispatchSupport {
   implicit val system = ActorSystem("test-virta-system")
   implicit val ec = system.dispatcher
-  implicit val httpClient = new MockHttpClient
-  val virtaClient = new VirtaClient(client = httpClient)
+  import Mockito._
+
+  val endPoint = mock[Endpoint]
+
+  when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.4"))).thenReturn((200, List(), VirtaResults.emptyResp))
+  when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.5"))).thenReturn((500, List(), "Internal Server Error"))
+  when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.3.0"))).thenReturn((200, List(), VirtaResults.multipleStudents))
+  when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.5.0"))).thenReturn((500, List(), VirtaResults.fault))
+  when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.3"))).thenReturn((200, List(), VirtaResults.testResponse))
+  when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("111111-1975"))).thenReturn((200, List(), VirtaResults.testResponse))
+
+
+
+  val virtaClient = new VirtaClient(aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint))))
 
   behavior of "VirtaClient"
 
@@ -47,7 +52,8 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
     val response = virtaClient.getOpiskelijanTiedot(oppijanumero = oppijanumero)
 
     waitFuture(response) {o => {
-      httpClient.capturedRequestBody should include(s"<kansallinenOppijanumero>$oppijanumero</kansallinenOppijanumero>")
+      verify(endPoint, atLeastOnce()).request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart(s"<kansallinenOppijanumero>$oppijanumero</kansallinenOppijanumero>"))
+      //httpClient.capturedRequestBody should include(s"<kansallinenOppijanumero>$oppijanumero</kansallinenOppijanumero>")
     }}
   }
 
@@ -56,7 +62,8 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
     val response = virtaClient.getOpiskelijanTiedot(hetu = Some(hetu), oppijanumero = "1.2.3")
 
     waitFuture(response) {o => {
-      httpClient.capturedRequestBody should include(s"<henkilotunnus>$hetu</henkilotunnus>")
+      verify(endPoint, atLeastOnce()).request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart(s"<henkilotunnus>$hetu</henkilotunnus>"))
+
     }}
   }
 
@@ -64,7 +71,8 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
     val response = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.3")
 
     waitFuture(response) {o => {
-      httpClient.capturedRequestBody should include("<SOAP-ENV:Envelope")
+      verify(endPoint, atLeastOnce()).request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("<SOAP-ENV:Envelope"))
+
     }}
   }
 
@@ -95,10 +103,11 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
   }
 
   it should "throw VirtaConnectionErrorException if an error occurred" in {
-    val response = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.5")
 
     intercept[VirtaConnectionErrorException] {
-      waitFutureFailure(response)
+      val response = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.5")
+      Await.result(response, 10.seconds)
+
     }
   }
 
@@ -106,15 +115,11 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
     val response = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.5.0")
 
     intercept[VirtaValidationError] {
-      waitFutureFailure(response)
+      Await.result(response, 10.seconds)
     }
   }
 
-  it should "throw IllegalArgumentException if provided hetu is not valid" in {
-    intercept[IllegalArgumentException] {
-      waitFutureFailure(virtaClient.getOpiskelijanTiedot(hetu = Some("invalid"), oppijanumero = "1.2.3"))
-    }
-  }
+
 
   def waitFuture[A](f: Future[A])(assertion: A => Unit) = {
     val w = new Waiter
@@ -127,14 +132,5 @@ class VirtaClientSpec extends FlatSpec with ShouldMatchers with AsyncAssertions 
     w.await(timeout(Span(5000, Millis)), dismissals(1))
   }
 
-  def waitFutureFailure[A](f: Future[A]) {
-    val w = new Waiter
-    
-    f.onComplete {
-      case Failure(e) => w(throw e); w.dismiss()
-      case Success(s) => w.dismiss()
-    }
-    
-    w.await(timeout(Span(5000, Millis)), dismissals(1))
-  }
+
 }

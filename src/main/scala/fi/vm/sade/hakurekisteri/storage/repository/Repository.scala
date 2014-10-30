@@ -82,7 +82,7 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
   }
 
   def deleteFromDeduplication(old: Option[T with Identified[I]]) = for (
-    item: T with Identified[I] <- old;
+    item <- old;
     oldSeq <- reverseStore.get(getCore(item))
   ) yield {
     val newSeq = for (

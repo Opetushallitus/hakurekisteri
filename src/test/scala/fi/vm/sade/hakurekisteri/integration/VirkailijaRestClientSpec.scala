@@ -1,19 +1,17 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import akka.actor.{Props, ActorSystem}
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{Matchers, FlatSpec}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, ExecutionContext}
 import com.ning.http.client._
 import org.scalatest.mock.MockitoSugar
-import org.mockito.{Matchers, Mockito}
-import org.hamcrest.Matcher
 import org.mockito.Mockito._
 import scala.Some
+import org.mockito.Mockito
 
-class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers with MockitoSugar {
+class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport {
   implicit val system = ActorSystem("test-virkailija")
   implicit val ec: ExecutionContext = system.dispatcher
 
@@ -40,15 +38,6 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers with Mockito
 
   val endPoint = createEndpointMock
 
-  implicit def matcherToValue[T](m:Matcher[T]):T = Matchers.argThat(m)
-
-  def forUrl(url:String) = ERMatcher(Some(url))
-
-  import Mockito._
-
-
-
-
 
   val asyncProvider = new CapturingProvider(endPoint)
 
@@ -74,8 +63,8 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers with Mockito
   }
 
   it should "throw PreconditionFailedException if undesired response code was returned from the remote service" in {
+    val response = client.readObject[TestResponse]("/rest/throwMe", 200)
     intercept[PreconditionFailedException] {
-      val response = client.readObject[TestResponse]("/rest/throwMe", 200)
       Await.result(response, 10.seconds)
     }
   }
@@ -123,13 +112,10 @@ class VirkailijaRestClientSpec extends FlatSpec with ShouldMatchers with Mockito
       Some(new AsyncHttpClient(new CapturingProvider(sessionEndPoint)))
     )
 
-    println("first request")
     val requestChain: Future[TestResponse] = sessionClient.readObject[TestResponse]("/rest/foo", 200).flatMap {
       case _ =>
-        println("second request")
         sessionClient.readObject[TestResponse]("/rest/foo", 200).flatMap{
         case _ =>
-          println("third request")
           sessionClient.readObject[TestResponse]("/rest/foo", 200)
       }
     }

@@ -89,8 +89,6 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
     super.preStart()
   }
 
-  def println(foo:ActorSystem){}
-
   def receive = {
     case SelfCheck(id) =>
       selfChecks = selfChecks + (id -> Platform.currentTime)

@@ -21,6 +21,7 @@ import fi.vm.sade.hakurekisteri.integration.koodisto.Koodisto
 import fi.vm.sade.hakurekisteri.hakija.Hakija
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
+import scala.language.implicitConversions
 
 trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport with SpecsLikeMockito {
 
@@ -207,8 +208,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
     override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = q.organisaatio match {
       case Some(org) => {
-        println("Haetaan tarjoajalta %s".format(org))
-        Future(hakijat.filter(_.hakemus.hakutoiveet.exists(_.hakukohde.koulutukset.exists((kohde) => {println(kohde);kohde.tarjoaja == org}))))
+        Future(hakijat.filter(_.hakemus.hakutoiveet.exists(_.hakukohde.koulutukset.exists((kohde) => {kohde.tarjoaja == org}))))
       }
       case _ => Future(hakijat)
     }
@@ -220,6 +220,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {
       case Some(OpetuspisteX.oid) => Future(Seq(FullHakemus1))
       case Some(OpetuspisteY.oid) => Future(Seq(FullHakemus2))
+      case Some(_) => Future(Seq[ListHakemus]())
       case None => Future(Seq(FullHakemus1, FullHakemus2))
     }
 
@@ -264,7 +265,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             "1.11.2",
             "1.10.4",
             Valintatila.HYVAKSYTTY,
-            Vastaanottotila.KESKEN,
+            Vastaanottotila.VASTAANOTTANUT,
             Ilmoittautumistila.EI_TEHTY,
             "",
             julkaistavissa = true,

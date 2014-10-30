@@ -2,10 +2,8 @@ package fi.vm.sade.hakurekisteri
 
 import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito
+import scala.language.implicitConversions
 
-/**
- * Created by verneri on 23.10.2014.
- */
 trait SpecsLikeMockito extends MockitoSugar {
 
   class MockitoMock[T](method: T) {

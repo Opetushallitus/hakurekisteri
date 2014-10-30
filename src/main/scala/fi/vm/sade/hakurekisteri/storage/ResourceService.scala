@@ -46,9 +46,7 @@ trait InMemQueryingResourceService[T,I] extends ResourceService[T,I] { this: Rep
 
   def executeQuery(current: Seq[T with Identified[I]])( o: Query[T]): Future[Seq[T with Identified[I]]] = {
     logger.debug(s"got query $o, going through ${current.size} items") // FIXME poista
-    Future.traverse(current)(check(o)).map(_.collect {
-      case Some(a: T with Identified[I]) => a
-    })
+    Future.traverse(current)(check(o)).map(_.flatten)
   }
 
 }

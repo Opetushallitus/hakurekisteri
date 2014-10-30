@@ -71,7 +71,6 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
 
   test("healthcheck should return OK and correct resource counts") {
     get("/") {
-      println (pretty(parse(body)))
       status should equal (200)
       body should include ("\"status\":\"OK\"")
       parse(body) \\ "arvosanat" \ "count"   should equal(JInt(1))

@@ -3,11 +3,10 @@ package fi.vm.sade.hakurekisteri.hakija
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{Matchers, FlatSpec}
 
 
-class HakijaSpec extends FlatSpec with ShouldMatchers {
+class HakijaSpec extends FlatSpec with Matchers {
 
   object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None)
 
@@ -96,29 +95,7 @@ class HakijaSpec extends FlatSpec with ShouldMatchers {
 
   behavior of "Hakemuksen lasnaolotieto"
 
-  ignore should "have vastaanotto as 3 for someone who is present" in {
 
-    //val xmlht = xmlHTFor(Valintatila.HYVAKSYTTY, Vastaanottotila.VASTAANOTTANUT_LASNA)
-
-    //xmlht.vastaanotto should be (Some("3"))
-
-  }
-
-  ignore should "have lasnaolo as 1 for someone who is present" in {
-
-    //val xmlht = xmlHTFor(Valintatila.HYVAKSYTTY, Vastaanottotila.VASTAANOTTANUT_LASNA)
-
-    //xmlht.lasnaolo should be (None)
-
-  }
-
-  ignore should "have lasnaolo as 2 for someone who is not present" in {
-
-    //val xmlht = xmlHTFor(Valintatila.HYVAKSYTTY, Vastaanottotila.VASTAANOTTANUT_POISSAOLEVA)
-
-    //xmlht.lasnaolo should be (None)
-
-  }
 
   it should "not have lasnaolo for someone who's presence is unknown" in {
 

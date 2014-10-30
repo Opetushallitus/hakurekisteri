@@ -1,12 +1,11 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
-import javax.servlet.http.HttpServletRequest
+import org.scalatest.{Matchers, FlatSpec}
 import org.scalatest.mock.MockitoSugar
 import scala.util.DynamicVariable
+import scala.language.implicitConversions
 
-class SecuritySupportSpec extends FlatSpec with ShouldMatchers with MockitoSugar {
+class SecuritySupportSpec extends FlatSpec with Matchers with MockitoSugar {
   behavior of "User rights"
 
   import SecurityUser._

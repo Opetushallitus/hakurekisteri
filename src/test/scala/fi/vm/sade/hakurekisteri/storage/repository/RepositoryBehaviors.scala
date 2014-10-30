@@ -1,14 +1,13 @@
 package fi.vm.sade.hakurekisteri.storage.repository
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{Matchers, FlatSpec}
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.prop.Tables.Table
 import java.util.UUID
 import scala.annotation.tailrec
 import fi.vm.sade.hakurekisteri.storage.Identified
 
-trait RepositoryBehaviors[T] { this: FlatSpec with ShouldMatchers  =>
+trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
 
   trait RepoContext {
     val repoConstructor:Seq[T] => Repository[T,UUID]
