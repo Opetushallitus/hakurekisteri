@@ -27,14 +27,14 @@ class SuoritusSerializer extends CustomSerializer[Suoritus]((format: Formats) =>
   },
   {
 
-    case s: VapaamuotoinenSuoritus with Identified[UUID] =>
+    case s: VapaamuotoinenSuoritus with Identified[_] =>
       implicit val frmts = format
       SuoritusSerializer.vapaamuotoinen(s) ~
       ("id" -> Extraction.decompose(s.id))
 
     case s: VapaamuotoinenSuoritus => SuoritusSerializer.vapaamuotoinen(s)
 
-    case s: VirallinenSuoritus with Identified[UUID] =>
+    case s: VirallinenSuoritus with Identified[_] =>
       implicit val frmts = format
       SuoritusSerializer.virallinen(s) ~
       ("id" -> Extraction.decompose(s.id))

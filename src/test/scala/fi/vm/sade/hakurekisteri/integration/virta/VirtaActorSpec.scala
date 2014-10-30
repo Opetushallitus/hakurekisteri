@@ -1,29 +1,19 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
-import java.net.URL
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
-import com.stackmob.newman.request._
-import com.stackmob.newman.response.{HttpResponseCode, HttpResponse}
-import com.stackmob.newman.{RawBody, Headers, HttpClient}
-import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
-import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import org.joda.time.LocalDate
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
-import org.scalatest.time.Span
+import org.scalatest.{Matchers, FlatSpec}
 import akka.pattern.ask
 
 import scala.concurrent.Future
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
-import org.scalatest.mock.MockitoSugar
-import org.mockito.Mockito
 import fi.vm.sade.hakurekisteri.SpecsLikeMockito
 
 
-class VirtaActorSpec extends FlatSpec with ShouldMatchers with FutureWaiting with SpecsLikeMockito {
+class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito {
   implicit val system = ActorSystem("test-virta-system")
   override implicit val ec = system.dispatcher
 
@@ -61,7 +51,6 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with FutureWaiting wit
       )
     )
 
-    val tarjontaActor: ActorRef = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost"))(ec, system))))
     val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatioActor)))
 
     val result = (virtaActor ? VirtaQuery("1.2.3", Some("111111-1975")))(akka.util.Timeout(10, TimeUnit.SECONDS)).mapTo[VirtaData]
@@ -84,21 +73,6 @@ class VirtaActorSpec extends FlatSpec with ShouldMatchers with FutureWaiting wit
   }
 
   val organisaatioActor = system.actorOf(Props(new MockedOrganisaatioActor))
-
-  val tarjontaHttpClient = new HttpClient {
-    override def get(url: URL, headers: Headers): GetRequest = GetRequest(url, headers) {
-      println(s"get request $url")
-      url match {
-        case s: URL if s.getQuery.contains("koulutus=782603") => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(json782603)))
-        case s: URL if s.getQuery.contains("koulutus=725111") => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody(json725111)))
-        case _ => Future.successful(HttpResponse(HttpResponseCode.Ok, Headers(List()), RawBody("{\"result\":[]}")))
-      }
-    }
-    override def put(url: URL, headers: Headers, body: RawBody): PutRequest = ???
-    override def delete(url: URL, headers: Headers): DeleteRequest = ???
-    override def post(url: URL, headers: Headers, body: RawBody): PostRequest = ???
-    override def head(url: URL, headers: Headers): HeadRequest = ???
-  }
 
   val json782603 = """{
     |"result":[

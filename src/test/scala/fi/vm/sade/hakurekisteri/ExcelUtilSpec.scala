@@ -2,7 +2,8 @@ package fi.vm.sade.hakurekisteri
 
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import fi.vm.sade.hakurekisteri.hakija._
-import java.io.{BufferedOutputStream, OutputStream, ByteArrayOutputStream}
+import java.io.{ByteArrayInputStream,  ByteArrayOutputStream}
+import org.apache.poi.ss.usermodel.{Workbook, WorkbookFactory}
 
 class ExcelUtilSpec extends ScalatraFunSuite {
 
@@ -62,8 +63,13 @@ class ExcelUtilSpec extends ScalatraFunSuite {
     val out: ByteArrayOutputStream = new ByteArrayOutputStream()
     ExcelUtil.write(out, hakijat)
 
-    println("out size: " + out.size)
-
-    out.size() should not equal(0)
+    val wb: Workbook = WorkbookFactory.create(new ByteArrayInputStream(out.toByteArray))
+    import scala.collection.JavaConversions._
+    val result = for (
+      index <- 0 until wb.getNumberOfSheets;
+      row <- wb.getSheetAt(index).toList;
+      cell <- row.cellIterator().toList
+    ) yield (row.getRowNum, cell.getColumnIndex) -> cell.getStringCellValue
+    result.toMap.get((1,1)) should be (Some("1.1"))
   }
 }

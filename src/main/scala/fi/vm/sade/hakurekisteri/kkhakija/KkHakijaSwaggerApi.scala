@@ -5,7 +5,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.{Vastaanottotila, Valin
 import org.scalatra.swagger.AllowableValues.AnyValue
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
-import fi.vm.sade.hakurekisteri.rest.support.OldSwaggerSyntax
+import fi.vm.sade.hakurekisteri.rest.support.{ApiFormat, OldSwaggerSyntax}
 
 trait KkHakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
   override protected val applicationName = Some("kkhakijat")
@@ -75,10 +75,11 @@ trait KkHakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
   val query: OperationBuilder = apiOperation[Seq[Hakija]]("haeKkHakijat")
     .summary("näyttää kaikki hakijat")
     .notes("Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti.")
-    .parameter(queryParam[Option[String]]("oppijanumero").description("henkilön oid / oppijanumero").optional)
+    .parameter(queryParam[Option[String]]("oppijanumero").description("henkilön oid / oppijanumero, pakollinen jos hakukohdetta ei ole määritetty").optional)
     .parameter(queryParam[Option[String]]("haku").description("haun oid").optional)
     .parameter(queryParam[Option[String]]("organisaatio").description("koulutuksen tarjoajan tai sen yläorganisaation oid").optional)
-    .parameter(queryParam[Option[String]]("hakukohde").description("hakukohteen oid").optional)
+    .parameter(queryParam[Option[String]]("hakukohde").description("hakukohteen oid, pakollinen jos oppijanumeroa ei ole määritetty").optional)
     .parameter(queryParam[String]("hakuehto").description("hakuehto").allowableValues(Hakuehto.values.toList).required)
+    .parameter(queryParam[String]("tyyppi").description("tyyppi").allowableValues(ApiFormat.Json, ApiFormat.Excel))
 
 }

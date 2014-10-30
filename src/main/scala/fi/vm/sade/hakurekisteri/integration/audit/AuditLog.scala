@@ -29,7 +29,7 @@ object AuditUri {
 
 import scala.reflect.runtime.universe._
 
-class AuditLog[A <: Resource[I, A], I](resource:String)(implicit val audit:AuditUri, ct: ClassTag[A], tt: TypeTag[A], cti: ClassTag[I], tti: TypeTag[I]) extends Actor with Producer with ActorLogging {
+class AuditLog[A <: Resource[I, A] , I ](resource:String)(implicit val audit:AuditUri, ct: ClassTag[A], tt: TypeTag[A], cti: ClassTag[I], tti: TypeTag[I], ma: Manifest[A], mi : Manifest[I]) extends Actor with Producer with ActorLogging {
 
   sealed trait AuditMessage[T] {
 
@@ -125,12 +125,16 @@ class AuditLog[A <: Resource[I, A], I](resource:String)(implicit val audit:Audit
   log.debug(s"Audit log for $resource initialized using endpoint $endpointUri")
   implicit val system = resource
 
+  import scala.reflect.classTag
+
+
   def createAuditMsg(original: Any) = original match {
     case AuthorizedQuery(q,user) => QueryEvent(q,user.username)
     case AuthorizedRead(id: I, user) => ReadEvent(id,user.username)
     case AuthorizedDelete(id: I, user) => DeleteEvent(id, user.username)
     case AuthorizedCreate(res: A, user) => CreateEvent(res, user.username)
-    case AuthorizedUpdate(res: A with Identified[Any], user) if res.id.isInstanceOf[I]=> UpdateEvent(res.asInstanceOf[A with Identified[I]], user.username)
+    case AuthorizedUpdate(res: Any with Identified[Any], user) if classTag[A].runtimeClass.isInstance(res) && classTag[I].runtimeClass.isInstance(res.id) =>
+      UpdateEvent(classTag[A with Identified[I]].runtimeClass.cast(res).asInstanceOf[A with Identified[I]], user.username)
 
     case a => UnknownEvent(a)
   }

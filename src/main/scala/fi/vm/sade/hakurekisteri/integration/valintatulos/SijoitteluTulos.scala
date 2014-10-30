@@ -17,6 +17,9 @@ object Valintatila extends Enumeration {
   def valueOption(t: String): Option[Valintatila.Value] = {
     Try(withName(t)).toOption
   }
+
+  def isHyvaksytty(t: Valintatila): Boolean =
+    t == HYVAKSYTTY || t == HARKINNANVARAISESTI_HYVAKSYTTY || t == VARASIJALTA_HYVAKSYTTY
 }
 
 object Vastaanottotila extends Enumeration {
@@ -27,10 +30,14 @@ object Vastaanottotila extends Enumeration {
   val PERUNUT = Value("PERUNUT")
   val PERUUTETTU = Value("PERUUTETTU")
   val EHDOLLISESTI_VASTAANOTTANUT = Value("EHDOLLISESTI_VASTAANOTTANUT")
+  val VASTAANOTTANUT_SITOVASTI = Value("VASTAANOTTANUT_SITOVASTI")
 
   def valueOption(t: String): Option[Vastaanottotila.Value] = {
     Try(withName(t)).toOption
   }
+
+  def isVastaanottanut(t: Vastaanottotila): Boolean =
+    t == VASTAANOTTANUT || t == EHDOLLISESTI_VASTAANOTTANUT || t == VASTAANOTTANUT_SITOVASTI
 }
 
 object Ilmoittautumistila extends Enumeration {

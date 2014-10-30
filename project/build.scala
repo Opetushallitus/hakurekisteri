@@ -6,16 +6,20 @@ import sbt.Keys._
 import org.scalatra.sbt._
 import com.mojolly.scalate.ScalatePlugin._
 import ScalateKeys._
+import org.sbtidea.SbtIdeaPlugin._
+import scala.language.postfixOps
 
 
 object HakuJaValintarekisteriBuild extends Build {
   val Organization = "fi.vm.sade"
   val Name = "hakurekisteri"
   val Version = "11.0-SNAPSHOT"
-  val ScalaVersion = "2.10.4"
+  val ScalaVersion = "2.11.2"
   val ArtifactName = (s: ScalaVersion, m: ModuleID, a: Artifact) => s"${a.name}-${m.revision}.${a.extension}"
   val ScalatraVersion = "2.3.0"
   val SpringVersion = "3.2.1.RELEASE"
+
+  lazy val LoadSpecs = config("load") extend(Test)
 
   val ScalatraStack = Seq(
     "org.scalatra" %% "scalatra",
@@ -62,8 +66,8 @@ object HakuJaValintarekisteriBuild extends Build {
     "com.h2database" % "h2" % "1.3.174",
     "org.postgresql" % "postgresql" % "9.3-1100-jdbc4",
     "net.databinder.dispatch" %% "dispatch-core" % "0.11.0",
-    "com.stackmob" %% "newman" % "1.3.5",
-    "info.folone" %% "poi-scala" % "0.9",
+    "org.apache.poi" % "poi" % "3.10.1",
+    "org.apache.poi" % "poi-ooxml" % "3.10.1",
     "org.apache.activemq" % "activemq-all" % "5.9.1",
     "org.apache.camel" % "camel-jms" % "2.13.0",
     "fi.vm.sade.log" % "log-client" % "7.0",
@@ -151,7 +155,10 @@ object HakuJaValintarekisteriBuild extends Build {
     Project(
       "hakurekisteri",
       file("."),
-      settings = Defaults.defaultSettings ++ ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
+      configurations = Seq(LoadSpecs),
+      settings =   ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
+        ++ inConfig(LoadSpecs)(Defaults.testSettings)
+        ++ Seq(ideaExtraTestConfigurations := Seq(LoadSpecs))
         ++ org.scalastyle.sbt.ScalastylePlugin.Settings
         ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"))
         ++ Seq(unmanagedSourceDirectories in Compile <+= (sourceDirectory in Runtime) { sd => sd / "js"})
@@ -167,6 +174,7 @@ object HakuJaValintarekisteriBuild extends Build {
           resolvers += "oph-snapshots" at "http://penaali.hard.ware.fi/artifactory/oph-sade-snapshot-local",
           resolvers += "oph-releases" at "http://penaali.hard.ware.fi/artifactory/oph-sade-release-local",
           resolvers += "Sonatype" at "http://oss.sonatype.org/content/repositories/releases/",
+          resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
           resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
           credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
           artifactoryPublish,
@@ -191,9 +199,7 @@ object HakuJaValintarekisteriBuild extends Build {
           }
         )
         ++ sonar
-        ++ Seq(surefire)
-
-        ++ ScctPlugin.instrumentSettings).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
+        ++ Seq(surefire)).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
 
   }
 }

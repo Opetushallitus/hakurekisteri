@@ -43,7 +43,8 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
     case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
 
-    case s: Seq[Haku] =>
+    case sq: Seq[_] =>
+      val s = sq.collect{ case h:Haku => h}
       activeHakus = s.filter(_.aika.isCurrently)
       ytl ! HakuList(activeHakus.filter(_.kkHaku).map(_.oid).toSet)
       log.debug(s"current hakus ${activeHakus.mkString(", ")}")

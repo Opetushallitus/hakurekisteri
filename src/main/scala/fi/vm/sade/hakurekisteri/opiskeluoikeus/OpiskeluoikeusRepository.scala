@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.opiskeluoikeus
 import java.util.UUID
 
 import akka.event.Logging
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusQuery
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.storage.{InMemQueryingResourceService, Identified, ResourceActor}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Journal, JournaledRepository}

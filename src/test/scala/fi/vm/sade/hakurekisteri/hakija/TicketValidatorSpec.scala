@@ -1,11 +1,10 @@
 package fi.vm.sade.hakurekisteri.hakija
 
 import fi.vm.sade.hakurekisteri.integration.cas.TicketValidator
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{Matchers, FlatSpec}
 import TicketValidator.isValidSt
 
-class TicketValidatorSpec extends FlatSpec with ShouldMatchers {
+class TicketValidatorSpec extends FlatSpec with Matchers {
   behavior of "Ticket Validator"
 
   it should "return true for a valid ticket" in {

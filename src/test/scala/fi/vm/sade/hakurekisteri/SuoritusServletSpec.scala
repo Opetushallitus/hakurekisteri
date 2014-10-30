@@ -1,14 +1,14 @@
 package fi.vm.sade.hakurekisteri
 
-import org.scalatra.test.scalatest.{ScalatraFunSuite, ScalatraFlatSpec}
+import org.scalatra.test.scalatest.ScalatraFunSuite
 import akka.actor.{Props, ActorSystem}
-import java.util.{UUID, Date}
+import java.util.UUID
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriCrudCommands, HakurekisteriResource, HakurekisteriSwagger}
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.joda.time.{LocalDate, DateTime}
+import org.joda.time.LocalDate
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
-import fi.vm.sade.hakurekisteri.opiskelija.{CreateOpiskelijaCommand, Opiskelija}
 import fi.vm.sade.hakurekisteri.acceptance.tools.{Peruskoulu, TestSecurity, FakeAuthorizer}
+import scala.language.implicitConversions
 
 class SuoritusServletSpec extends ScalatraFunSuite {
   val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now,"1.2.4")

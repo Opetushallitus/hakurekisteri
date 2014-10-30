@@ -24,6 +24,7 @@ import scala.Some
 import fi.vm.sade.hakurekisteri.integration.cas.LocationHeaderNotFoundException
 import fi.vm.sade.hakurekisteri.integration.cas.TGTWasNotCreatedException
 import com.ning.http.client.AsyncHandler.STATE
+import scala.language.implicitConversions
 
 case class PreconditionFailedException(message: String, responseCode: Int) extends Exception(message)
 
@@ -144,7 +145,6 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
     }
 
     def jSessionId: Future[Option[JSessionId]] = {
-      println(s"finding session for $serviceUrl")
 
       jSessionIdStorage match {
         case Some(actor) =>
@@ -162,7 +162,6 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
         f(req)
       }
       case _ =>
-        println(s"no sesssion for $serviceUrl")
         for (
           ticket <- getProxyTicket;
           result <- f(request <:< Map("CasSecurityTicket" -> ticket) )
@@ -182,7 +181,7 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
             result <- withSession(request)((req) => internalClient(req))(jsession)
           ) yield result
 
-        case _ => println("blaaaa")
+        case _ =>
           internalClient(request)
       }
 

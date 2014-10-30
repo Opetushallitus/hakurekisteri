@@ -1,12 +1,9 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{Matchers, FlatSpec}
 import YtlData._
-import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.YoTutkinto
-import org.joda.time.LocalDate
 
-class TodistusParserSpec extends FlatSpec with ShouldMatchers {
+class TodistusParserSpec extends FlatSpec with Matchers {
 
 
   behavior of "YTL YO Todistus parser"

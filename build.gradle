@@ -25,9 +25,9 @@ task(zipIt, type: Zip) {
     zipFileName = serviceName + "_" + branchName + "_" + new Date().format("yyyyMMddHHmmss") + ".zip"
 
     destinationDir new File(buildDir, "distributions")
-    archiveName zipFileName
-    from 'src/main/resources'
-    from 'target/scala-2.10'
+	archiveName zipFileName
+	from 'src/main/resources'
+	from 'target/scala-2.11'
 }
 
 // Task for copying the .zip file to
@@ -52,18 +52,13 @@ task(scp, dependsOn: zipIt) << {
 // Task for complete "deploy", creates .zip, copies it and calls for script with ssh
 task(remoteDeploy, dependsOn: scp) << {
 
-    // Redefine sshexec
-    ant.taskdef(name: 'sshexec',
-        classname: 'org.apache.tools.ant.taskdefs.optional.ssh.SSHExec',
-        classpath: configurations.sshAntTask.asPath)
-
-    String fullPath = "/data00/releases/" + serviceName + "/" + branchName + "/" + zipFileName
-    String archiveName = zipFileName
-    String archivePath = fullPath
-    String fullCmd = remoteCommand.replace("{{archiveName}}", zipFileName).replace("{{archivePath}}", fullPath);
-    println("SSH: " + fullCmd)
-    ant.sshexec(host: host, username: user, trust: 'true', keyfile: keyFile, command: fullCmd, outputproperty: 'result')
-    def result = ant.project.properties.'result'
-    println("SSH OUTPUT: " + result);
-
+	String fullPath = "/data00/releases/" + serviceName + "/" + branchName + "/" + zipFileName
+	String archiveName = zipFileName
+	String archivePath = fullPath
+	String fullCmd = remoteCommand.replace("{{archiveName}}", zipFileName).replace("{{archivePath}}", fullPath);
+	println("SSH: " + fullCmd)
+	ant.sshexec(host: host, username: user, trust: 'true', keyfile: keyFile, command: fullCmd, outputproperty: 'result')
+	def result = ant.project.properties.'result'
+	println("SSH OUTPUT: " + result);
+	
 }
