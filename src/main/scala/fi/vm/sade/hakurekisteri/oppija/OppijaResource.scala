@@ -134,8 +134,9 @@ trait OppijaFetcher {
     )
   }
 
+  import EnsikertalainenUtil.isYsiHetu
   def fetchEnsikertalaisuus(henkiloOid: String, hetu: Option[String]): Future[Option[Ensikertalainen]] = hetu match {
-    case Some(h) if h.matches(EnsikertalainenUtil.ysiHetu) =>
+    case Some(h) if isYsiHetu(h) =>
       log.warning(s"skipping ensikertalaisuus check for test hetu on henkilo $henkiloOid")
       Future.successful(None)
     case _ =>
