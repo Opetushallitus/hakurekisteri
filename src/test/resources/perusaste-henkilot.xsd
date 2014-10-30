@@ -1,52 +1,139 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <xs:element name="perustiedot" type="perustiedotType"/>
-  <xs:complexType name="suorituksetType">
-    <xs:sequence>
-      <xs:element type="perusopetusType" name="perusopetus"/>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="perusopetusType">
-    <xs:sequence>
-      <xs:element type="xs:short" name="myontaja"/>
-      <xs:element type="xs:string" name="valmistuminen"/>
-      <xs:element type="xs:byte" name="yksilollistaminen"/>
-      <xs:element type="xs:string" name="opetuskieli"/>
-      <xs:element type="xs:string" name="tila"/>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="henkiloType">
-    <xs:sequence>
-      <xs:element type="xs:string" name="henkilonTunniste"/>
-      <xs:element type="xs:string" name="hetu"/>
-      <xs:element type="xs:string" name="oppijanumero"/>
-      <xs:element type="xs:short" name="lahtokoulu"/>
-      <xs:element type="xs:string" name="luokka"/>
-      <xs:element type="xs:byte" name="luokkataso"/>
-      <xs:element type="xs:byte" name="sukupuoli"/>
-      <xs:element type="xs:string" name="sukunimi"/>
-      <xs:element type="xs:string" name="etunimet"/>
-      <xs:element type="xs:string" name="kutsumanimi"/>
-      <xs:element type="xs:byte" name="kotikunta"/>
-      <xs:element type="xs:string" name="aidinkieli"/>
-      <xs:element type="xs:short" name="kansalaisuus"/>
-      <xs:element type="xs:string" name="lahiosoite"/>
-      <xs:element type="xs:byte" name="postinumero"/>
-      <xs:element type="xs:short" name="maa"/>
-      <xs:element type="xs:string" name="matkapuhelin"/>
-      <xs:element type="xs:string" name="muuPuhelin"/>
-      <xs:element type="suorituksetType" name="suoritukset"/>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="perustiedotType">
-    <xs:sequence>
-      <xs:element type="xs:string" name="eranTunniste"/>
-      <xs:element type="henkilotType" name="henkilot"/>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="henkilotType">
-    <xs:sequence>
-      <xs:element type="henkiloType" name="henkilo" maxOccurs="unbounded" minOccurs="0"/>
-    </xs:sequence>
-  </xs:complexType>
+<xs:schema attributeFormDefault="unqualified"
+	elementFormDefault="qualified"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:koodisto="http://service.koodisto.sade.vm.fi/types/koodisto">
+
+
+	<xs:import schemaLocation="koodisto/oppilaitosnumero.xsd"
+		namespace="http://service.koodisto.sade.vm.fi/types/koodisto">
+	</xs:import>
+	<xs:import schemaLocation="koodisto/luokkataso.xsd"
+		namespace="http://service.koodisto.sade.vm.fi/types/koodisto">
+	</xs:import>
+	<xs:import schemaLocation="koodisto/kunta.xsd"
+		namespace="http://service.koodisto.sade.vm.fi/types/koodisto">
+	</xs:import>
+	<xs:import schemaLocation="koodisto/kieli.xsd"
+		namespace="http://service.koodisto.sade.vm.fi/types/koodisto">
+	</xs:import>
+	<xs:import schemaLocation="koodisto/maatjavaltiot2.xsd"
+		namespace="http://service.koodisto.sade.vm.fi/types/koodisto">
+	</xs:import>
+	<xs:import schemaLocation="koodisto/posti.xsd"
+		namespace="http://service.koodisto.sade.vm.fi/types/koodisto">
+	</xs:import>
+	<xs:import schemaLocation="koodisto/sukupuoli.xsd" namespace="http://service.koodisto.sade.vm.fi/types/koodisto"></xs:import>
+	<xs:element name="perustiedot" type="perustiedotType" />
+
+
+	<xs:simpleType name="hetuType">
+		<xs:restriction base="xs:string">
+			<xs:pattern
+				value="[0-9]{6}[-A][0-9]{3}[0123456789ABCDEFHJKLMNPRSTUVWXY]" />
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="syntymaAikaType">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9]{8}" />
+		</xs:restriction>
+	</xs:simpleType>
+
+
+
+	<xs:simpleType name="oppijaNumeroType">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="1\.2\.246\.562\.24\.[0-9]{11}" />
+		</xs:restriction>
+	</xs:simpleType>
+
+
+	<xs:complexType name="henkiloType">
+
+		<xs:sequence>
+			<xs:choice>
+				<xs:element type="hetuType" name="hetu"></xs:element>
+				<xs:element type="oppijaNumeroType"
+					name="oppijanumero">
+				</xs:element>
+				<xs:sequence>
+					<xs:element type="xs:string"
+						name="henkiloTunniste">
+					</xs:element>
+					<xs:element type="syntymaAikaType"
+						name="syntymaAika">
+					</xs:element>
+					<xs:element type="koodisto:sukupuoli" name="sukupuoli"></xs:element>
+				</xs:sequence>
+			</xs:choice>
+			<xs:element type="koodisto:oppilaitosnumero"
+				name="lahtokoulu" maxOccurs="1" minOccurs="1" />
+			<xs:element type="xs:string" name="luokka" maxOccurs="1"
+				minOccurs="1" />
+			<xs:element type="koodisto:luokkataso" name="luokkataso"
+				maxOccurs="1" minOccurs="1" />
+			<xs:element type="xs:string" name="sukunimi" maxOccurs="1"
+				minOccurs="1" />
+			<xs:element type="xs:string" name="etunimet" maxOccurs="1"
+				minOccurs="1" />
+			<xs:element type="xs:string" name="kutsumanimi"
+				maxOccurs="1" minOccurs="1" />
+			<xs:element type="koodisto:kunta" name="kotikunta"
+				maxOccurs="1" minOccurs="1" />
+			<xs:element type="koodisto:kieli" name="aidinkieli"
+				maxOccurs="1" minOccurs="1" />
+			<xs:element type="koodisto:maatjavaltiot2"
+				name="kansalaisuus" maxOccurs="1" minOccurs="0" />
+			<xs:element type="xs:string" name="lahiosoite" maxOccurs="1"
+				minOccurs="0" />
+			<xs:element type="koodisto:posti" name="postinumero"
+				maxOccurs="1" minOccurs="0" />
+			<xs:element type="koodisto:maatjavaltiot2" name="maa"
+				maxOccurs="1" minOccurs="0" />
+			<xs:element type="xs:string" name="matkapuhelin"
+				maxOccurs="1" minOccurs="0" />
+			<xs:element type="xs:string" name="muuPuhelin" maxOccurs="1"
+				minOccurs="0" />
+		</xs:sequence>
+
+
+
+
+	</xs:complexType>
+
+
+
+	<xs:complexType name="perustiedotType">
+		<xs:all>
+			<xs:element type="xs:string" name="eranTunniste"
+				maxOccurs="1" minOccurs="1" />
+			<xs:element type="henkilotType" name="henkilot"
+				maxOccurs="1" minOccurs="1" >
+					<xs:unique name="uniqueHetu">
+  						<xs:selector xpath="henkilo" />
+						<xs:field xpath="hetu" />
+					</xs:unique>
+					<xs:unique name="uniqueOid">
+  						<xs:selector xpath="henkilo" />
+						<xs:field xpath="oppijanumero" />
+					</xs:unique>
+					<xs:unique name="uniqueTunniste">
+  						<xs:selector xpath="henkilo" />
+						<xs:field xpath="henkiloTunniste" />
+					</xs:unique>
+				
+				</xs:element>
+		</xs:all>
+	</xs:complexType>
+	<xs:complexType name="henkilotType">
+		<xs:sequence>
+			<xs:element type="henkiloType" name="henkilo"
+				maxOccurs="unbounded" minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+
+
+
+
 </xs:schema>

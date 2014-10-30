@@ -1,0 +1,208 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://service.koodisto.sade.vm.fi/types/koodisto"
+           xmlns="http://service.koodisto.sade.vm.fi/types/koodisto"
+           elementFormDefault="qualified">
+
+    <xs:simpleType name="oppiaineetyleissivistava">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="A12">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">A1-spr&#229;k</xs:documentation>
+                    <xs:documentation xml:lang="fi">A1-kieli</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="AI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">&#196;idinkieli ja kirjallisuus</xs:documentation>
+                    <xs:documentation xml:lang="sv">Modersm&#229;let och litteratur</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="MA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Matematiikka</xs:documentation>
+                    <xs:documentation xml:lang="sv">Matematik</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="FY">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Fysiikka</xs:documentation>
+                    <xs:documentation xml:lang="sv">Fysik</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="B1">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">B1-kieli</xs:documentation>
+                    <xs:documentation xml:lang="sv">B1-spr&#229;k</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="A22">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">A2-kieli</xs:documentation>
+                    <xs:documentation xml:lang="sv">A2-spr&#229;k</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kemia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kemi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Terveystieto</xs:documentation>
+                    <xs:documentation xml:lang="sv">H&#228;lsokunskap</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Huslig ekonomi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kotitalous</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="FI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Filosofia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Filosofi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KU">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kuvataide</xs:documentation>
+                    <xs:documentation xml:lang="sv">Bildkonst</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="YH">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Yhteiskuntaoppi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Samh&#228;llsl&#228;ra</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="B32">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">B3-spr&#229;k</xs:documentation>
+                    <xs:documentation xml:lang="fi">B3-kieli</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KT">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Religion eller livs&#229;sk&#229;dningskunskap</xs:documentation>
+                    <xs:documentation xml:lang="fi">Uskonto tai el&#228;m&#228;nkatsomustieto</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="A1">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">A1-spr&#229;k</xs:documentation>
+                    <xs:documentation xml:lang="fi">A1-kieli</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="A2">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">A2-kieli</xs:documentation>
+                    <xs:documentation xml:lang="sv">A2-spr&#229;k</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="B23">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">B2-spr&#229;k</xs:documentation>
+                    <xs:documentation xml:lang="fi">B2-kieli</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="BI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Biologia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Biologi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="B22">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">B2-spr&#229;k</xs:documentation>
+                    <xs:documentation xml:lang="fi">B2-kieli</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="MU">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Musik</xs:documentation>
+                    <xs:documentation xml:lang="fi">Musiikki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="GE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Maantieto</xs:documentation>
+                    <xs:documentation xml:lang="sv">Geografi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnastik</xs:documentation>
+                    <xs:documentation xml:lang="fi">Liikunta</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="B2">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">B2-kieli</xs:documentation>
+                    <xs:documentation xml:lang="sv">B2-spr&#229;k</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="HI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Historia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Historia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="PS">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Psykologia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Psykologi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="B3">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">B3-spr&#229;k</xs:documentation>
+                    <xs:documentation xml:lang="fi">B3-kieli</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KS">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Sl&#246;jd</xs:documentation>
+                    <xs:documentation xml:lang="fi">K&#228;sity&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="B33">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">B3-spr&#229;k</xs:documentation>
+                    <xs:documentation xml:lang="fi">B3-kieli</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>
