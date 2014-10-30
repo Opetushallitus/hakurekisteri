@@ -9,7 +9,6 @@ import _root_.akka.event.{LoggingAdapter, Logging}
 import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.integration.hakemus._
@@ -28,23 +27,17 @@ import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 import scala.util.Try
 import scala.reflect.ClassTag
+import fi.vm.sade.hakurekisteri.hakija.{Lasnaolo, Puuttuu, Lasna, Poissa, Syksy, Kevat, Hakuehto}
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
-import fi.vm.sade.hakurekisteri.hakija.Hakuehto
 import fi.vm.sade.hakurekisteri.integration.koodisto.GetKoodi
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosQuery
-import scala.Some
-import fi.vm.sade.hakurekisteri.hakija.Kevat
 import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
 import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
 import fi.vm.sade.hakurekisteri.integration.hakemus.FullHakemus
-import fi.vm.sade.hakurekisteri.hakija.Lasna
-import fi.vm.sade.hakurekisteri.hakija.Syksy
 import fi.vm.sade.hakurekisteri.integration.hakemus.PreferenceEligibility
 import fi.vm.sade.hakurekisteri.integration.tarjonta.Hakukohteenkoulutus
 import fi.vm.sade.hakurekisteri.integration.haku.GetHaku
 import fi.vm.sade.hakurekisteri.integration.hakemus.Koulutustausta
-import fi.vm.sade.hakurekisteri.hakija.Puuttuu
-import fi.vm.sade.hakurekisteri.hakija.Poissa
 import fi.vm.sade.hakurekisteri.integration.tarjonta.HakukohdeOid
 import fi.vm.sade.hakurekisteri.integration.hakemus.HenkiloHakijaQuery
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusAnswers
@@ -292,14 +285,14 @@ class KkHakijaResource(hakemukset: ActorRef,
     case Hakuehto.Kaikki => true
     case Hakuehto.Hyvaksytyt => valintaTulos.valintatila(hakemusOid, hakukohdeOid) match {
       case Some(t) =>
-        import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
-        Seq[Valintatila](HYVAKSYTTY, HARKINNANVARAISESTI_HYVAKSYTTY, VARASIJALTA_HYVAKSYTTY).contains(t)
+        import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.isHyvaksytty
+        isHyvaksytty(t)
       case _ => false
     }
     case Hakuehto.Vastaanottaneet => valintaTulos.vastaanottotila(hakemusOid, hakukohdeOid) match {
       case Some(t) =>
-        import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
-        Seq[Vastaanottotila](VASTAANOTTANUT, EHDOLLISESTI_VASTAANOTTANUT).contains(t)
+        import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.isVastaanottanut
+        isVastaanottanut(t)
       case _ => false
     }
     case Hakuehto.Hylatyt => valintaTulos.valintatila(hakemusOid, hakukohdeOid) match {

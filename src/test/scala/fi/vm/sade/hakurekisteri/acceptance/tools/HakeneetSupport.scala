@@ -265,7 +265,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             "1.11.2",
             "1.10.4",
             Valintatila.HYVAKSYTTY,
-            Vastaanottotila.KESKEN,
+            Vastaanottotila.VASTAANOTTANUT,
             Ilmoittautumistila.EI_TEHTY,
             "",
             julkaistavissa = true,

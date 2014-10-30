@@ -230,9 +230,15 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   }
 
   override def preStart(): Unit = {
-    hakemukset ! Trigger((oid, hetu) => self ! EnsikertalainenQuery(oid, Some(hetu)))
+    import EnsikertalainenUtil.isYsiHetu
+    hakemukset ! Trigger((oid, hetu) => if (!isYsiHetu(hetu)) self ! EnsikertalainenQuery(oid, Some(hetu)))
     super.preStart()
   }
+}
+
+object EnsikertalainenUtil {
+  val ysiHetu = "\\d{6}[+-AB]9\\d{2}[0123456789ABCDEFHJKLMNPRSTUVWXY]"
+  def isYsiHetu(hetu: String): Boolean = hetu.matches(ysiHetu)
 }
 
 case class QueryStatus(status: String)
