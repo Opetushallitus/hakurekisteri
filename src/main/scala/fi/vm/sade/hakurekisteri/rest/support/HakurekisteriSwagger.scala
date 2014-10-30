@@ -9,7 +9,7 @@ class ResourcesApp(implicit val swagger: Swagger) extends ScalatraServlet with H
   override implicit val jsonFormats = super[HakurekisteriJsonSupport].jsonFormats
 }
 
-class HakurekisteriSwagger extends Swagger("1.0", "1", ApiInfo(
+class HakurekisteriSwagger extends Swagger("1.2", "1", ApiInfo(
   title= "Haku- ja valintarekisteri",
   description =" rekisteri opiskelijavalintojen suorittamiseen tarvittaviin tietoihin",
   termsOfServiceUrl =  "",

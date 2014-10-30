@@ -1,19 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Suoritusrekisteri Swagger UI</title>
+  <title>Swagger UI</title>
   <link href='https://fonts.googleapis.com/css?family=Droid+Sans:400,700' rel='stylesheet' type='text/css'/>
-  <link href='css/highlight.default.css' media='screen' rel='stylesheet' type='text/css'/>
+  <link href='css/reset.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='css/screen.css' media='screen' rel='stylesheet' type='text/css'/>
-  <style type="text/css">
-    #header { background-color: #149ecb }
-    #header a#logo { background: url("/virkailija-raamit/virkailija-raamit/img/opintopolkufi.png") no-repeat scroll left center rgba(0, 0, 0, 0); padding-left: 165px; }
-    #header form#api_selector .input input#input_baseUrl { width: 400px; }
-    #header form#api_selector .input input#input_apiKey { width: 60px; }
-    #header form#api_selector .input a#explore { background-color: #06526b; }
-    #header form#api_selector .input a#explore:hover { background-color: #333333; }
-    .swagger-ui-wrap a { color: #149ecb; }
-  </style>
+  <link href='css/reset.css' media='print' rel='stylesheet' type='text/css'/>
+  <link href='css/screen.css' media='print' rel='stylesheet' type='text/css'/>
   <script type="text/javascript" src="lib/shred.bundle.js"></script>
   <script src='lib/jquery-1.8.0.min.js' type='text/javascript'></script>
   <script src='lib/jquery.slideto.min.js' type='text/javascript'></script>
@@ -26,65 +19,52 @@
   <script src='swagger-ui.js' type='text/javascript'></script>
   <script src='lib/highlight.7.3.pack.js' type='text/javascript'></script>
 
-  <script src='lib/yaml.js' type='text/javascript'></script>
+  <!-- enabling this will enable oauth2 implicit scope support -->
+  <script src='lib/swagger-oauth.js' type='text/javascript'></script>
+
   <script type="text/javascript">
     $(function () {
-      $.ajaxSetup({
-        xhrFields: {
-          withCredentials: true
-        }
-      });
-
       window.swaggerUi = new SwaggerUi({
-        url: "/suoritusrekisteri/rest/v1/api-docs",
-        dom_id: "swagger-ui-container",
-        supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
-        onComplete: function(swaggerApi, swaggerUi){
-          log("Loaded SwaggerUI")
-          $('pre code').each(function(i, e) {hljs.highlightBlock(e)});
-        },
-        onFailure: function(data) {
-          log("Unable to Load SwaggerUI");
-        },
-        docExpansion: "none"
-      });
+      url: "/suoritusrekisteri/rest/v1/api-docs",
+      dom_id: "swagger-ui-container",
+      supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
+      onComplete: function(swaggerApi, swaggerUi){
+        log("Loaded SwaggerUI");
 
-      $('#input_apiKey').change(function() {
-        var key = $('#input_apiKey')[0].value;
-        log("key: " + key);
-        if(key && key.trim() != "") {
-          log("added key " + key);
-          window.authorizations.add("key", new ApiKeyAuthorization("api_key", key, "query"));
+        if(typeof initOAuth == "function") {
+          /*
+          initOAuth({
+            clientId: "your-client-id",
+            realm: "your-realms",
+            appName: "your-app-name"
+          });
+          */
         }
-      });
-      window.swaggerUi.load();
+        $('pre code').each(function(i, e) {
+          hljs.highlightBlock(e)
+        });
+      },
+      onFailure: function(data) {
+        log("Unable to Load SwaggerUI");
+      },
+      docExpansion: "none"
     });
 
+    $('#input_apiKey').change(function() {
+      var key = $('#input_apiKey')[0].value;
+      log("key: " + key);
+      if(key && key.trim() != "") {
+        log("added key " + key);
+        window.authorizations.add("key", new ApiKeyAuthorization("api_key", key, "query"));
+      }
+    })
+    window.swaggerUi.load();
+  });
   </script>
 </head>
 
-<body>
-
-<div id='header'>
-  <div class="swagger-ui-wrap">
-    <a id="logo" href="#">Suoritusrekisteri</a>
-
-    <form id='api_selector'>
-      <div class='input'><input placeholder="https://virkailija.opintopolku.fi/palvelu/api/docs" id="input_baseUrl" name="baseUrl" type="text"/></div>
-      <!--div class='input'><input placeholder="api_key" id="input_apiKey" name="apiKey" type="text"/></div-->
-      <div class='input'><a id="explore" href="#">Explore</a></div>
-    </form>
-  </div>
-</div>
-
-<div id="message-bar" class="swagger-ui-wrap">
-  &nbsp;
-</div>
-
-<div id="swagger-ui-container" class="swagger-ui-wrap">
-
-</div>
-
+<body class="swagger-section">
+<div id="message-bar" class="swagger-ui-wrap">&nbsp;</div>
+<div id="swagger-ui-container" class="swagger-ui-wrap"></div>
 </body>
-
 </html>

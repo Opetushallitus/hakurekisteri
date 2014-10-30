@@ -6,7 +6,7 @@ import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import fi.vm.sade.hakurekisteri.rest.support.OldSwaggerSyntax
 
 trait EnsikertalainenSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
-  override protected val applicationName = Some("ensikertalainen")
+  override protected val applicationName = Some("rest/v1/ensikertalainen")
 
   val fields = Seq(ModelField("ensikertalainen", null, DataType.Boolean, None, AnyValue, required = true))
 

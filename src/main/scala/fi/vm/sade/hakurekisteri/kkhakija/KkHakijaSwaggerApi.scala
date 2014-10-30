@@ -8,7 +8,7 @@ import org.scalatra.swagger._
 import fi.vm.sade.hakurekisteri.rest.support.{ApiFormat, OldSwaggerSyntax}
 
 trait KkHakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
-  override protected val applicationName = Some("kkhakijat")
+  override protected val applicationName = Some("rest/v1/kkhakijat")
 
   val hakukohteenKoulutuksetFields = Seq(
     ModelField("komoOid", null, DataType.String, None, AnyValue, required = true),
@@ -81,5 +81,6 @@ trait KkHakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
     .parameter(queryParam[Option[String]]("hakukohde").description("hakukohteen oid, pakollinen jos oppijanumeroa ei ole määritetty").optional)
     .parameter(queryParam[String]("hakuehto").description("hakuehto").allowableValues(Hakuehto.values.toList).required)
     .parameter(queryParam[String]("tyyppi").description("tyyppi").allowableValues(ApiFormat.Json, ApiFormat.Excel))
+    .produces("application/json", "application/octet-stream")
 
 }
