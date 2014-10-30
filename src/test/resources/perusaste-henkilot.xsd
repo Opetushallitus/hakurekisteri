@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="perustiedot" type="perustiedotType"/>
+  <xs:complexType name="suorituksetType">
+    <xs:sequence>
+      <xs:element type="perusopetusType" name="perusopetus"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="perusopetusType">
+    <xs:sequence>
+      <xs:element type="xs:short" name="myontaja"/>
+      <xs:element type="xs:string" name="valmistuminen"/>
+      <xs:element type="xs:byte" name="yksilollistaminen"/>
+      <xs:element type="xs:string" name="opetuskieli"/>
+      <xs:element type="xs:string" name="tila"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="henkiloType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="henkilonTunniste"/>
+      <xs:element type="xs:string" name="hetu"/>
+      <xs:element type="xs:string" name="oppijanumero"/>
+      <xs:element type="xs:short" name="lahtokoulu"/>
+      <xs:element type="xs:string" name="luokka"/>
+      <xs:element type="xs:byte" name="luokkataso"/>
+      <xs:element type="xs:byte" name="sukupuoli"/>
+      <xs:element type="xs:string" name="sukunimi"/>
+      <xs:element type="xs:string" name="etunimet"/>
+      <xs:element type="xs:string" name="kutsumanimi"/>
+      <xs:element type="xs:byte" name="kotikunta"/>
+      <xs:element type="xs:string" name="aidinkieli"/>
+      <xs:element type="xs:short" name="kansalaisuus"/>
+      <xs:element type="xs:string" name="lahiosoite"/>
+      <xs:element type="xs:byte" name="postinumero"/>
+      <xs:element type="xs:short" name="maa"/>
+      <xs:element type="xs:string" name="matkapuhelin"/>
+      <xs:element type="xs:string" name="muuPuhelin"/>
+      <xs:element type="suorituksetType" name="suoritukset"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="perustiedotType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="eranTunniste"/>
+      <xs:element type="henkilotType" name="henkilot"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="henkilotType">
+    <xs:sequence>
+      <xs:element type="henkiloType" name="henkilo" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>
