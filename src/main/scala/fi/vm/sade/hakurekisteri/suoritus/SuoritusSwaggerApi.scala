@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{OldSwaggerSyntax, HakurekisteriRes
 
 trait SuoritusSwaggerApi extends OldSwaggerSyntax { this: HakurekisteriResource[Suoritus, CreateSuoritusCommand] =>
 
-  override protected val applicationName = Some("suoritukset")
+  override protected val applicationName = Some("rest/v1/suoritukset")
   protected val applicationDescription = "Suoritustietojen rajapinta"
 
   val fields = Seq(ModelField("id", "suorituksen uuid", DataType.String, None, AnyValue, required = false),

@@ -7,7 +7,7 @@ import org.scalatra.swagger.DataType
 trait OpiskeluoikeusSwaggerApi extends OldSwaggerSyntax {
   this: HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand] =>
 
-  override protected val applicationName = Some("opiskeluoikeudet")
+  override protected val applicationName = Some("rest/v1/opiskeluoikeudet")
   protected val applicationDescription = "Opiskeluoikeustietojen rajapinta"
 
   val fields = Seq(ModelField("id", "opiskeluoikeustiedon uuid", DataType.String, None, AnyValue, required = false),

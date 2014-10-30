@@ -5,7 +5,7 @@ import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 
 trait OppijaSwaggerApi extends SwaggerSupport {
 
-  override protected val applicationName = Some("oppijat")
+  override protected val applicationName = Some("rest/v1/oppijat")
   
   val query: OperationBuilder = apiOperation[Seq[Oppija]]("haeOppijat")
     .summary("näyttää oppijat")

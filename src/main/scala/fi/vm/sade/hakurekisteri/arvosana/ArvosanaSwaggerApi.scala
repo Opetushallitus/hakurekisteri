@@ -7,7 +7,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{OldSwaggerSyntax, HakurekisteriRes
 
 trait ArvosanaSwaggerApi extends OldSwaggerSyntax { this: HakurekisteriResource[Arvosana, CreateArvosanaCommand] =>
 
-  override protected val applicationName = Some("arvosanat")
+  override protected val applicationName = Some("rest/v1/arvosanat")
   protected val applicationDescription = "Arvosanatietojen rajapinta"
 
   val arvioFields = Seq(ModelField("arvosana", "arvosana", DataType.String),

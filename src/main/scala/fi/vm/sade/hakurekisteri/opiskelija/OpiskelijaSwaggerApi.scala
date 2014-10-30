@@ -9,7 +9,7 @@ import scala.Some
 trait OpiskelijaSwaggerApi extends OldSwaggerSyntax
     { this: HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand] =>
 
-  override protected val applicationName = Some("opiskelijat")
+  override protected val applicationName = Some("rest/v1/opiskelijat")
   protected val applicationDescription = "Opiskelijatietojen rajapinta"
 
 

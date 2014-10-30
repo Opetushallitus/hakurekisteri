@@ -7,7 +7,7 @@ import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import fi.vm.sade.hakurekisteri.rest.support.{ApiFormat, OldSwaggerSyntax}
 
 trait HakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
-  override protected val applicationName = Some("hakijat")
+  override protected val applicationName = Some("rest/v1/hakijat")
 
   val hakutoiveFields = Seq(ModelField("hakujno", null, DataType.Int, None, AnyValue, required = true),
     ModelField("oppilaitos", null, DataType.String, None, AnyValue, required = true),
@@ -77,4 +77,7 @@ trait HakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
     .parameter(queryParam[String]("hakuehto").description("hakuehto").allowableValues(Hakuehto.values.toList).required)
     .parameter(queryParam[String]("tyyppi").description("tietotyyppi").allowableValues(ApiFormat.values.toList).required)
     .parameter(queryParam[Option[Boolean]]("tiedosto").description("palautetaanko vastaus tiedostona").optional)
+    .produces("application/json", "application/xml", "application/octet-stream")
+  .protocols()
+
 }

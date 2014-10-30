@@ -29,7 +29,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
                     (implicit val system: ActorSystem, sw: Swagger)
     extends HakuJaValintarekisteriStack with OppijaFetcher with OppijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
 
-  override protected def applicationDescription: String = "Oppijatietojen rajapinta"
+  override protected def applicationDescription: String = "Oppijan tietojen koosterajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 500.seconds
@@ -43,11 +43,15 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     contentType = formats("json")
   }
 
-  get("/", operation(query)) {
-    implicit val user = currentUser match {
+  def getUser: User = {
+    currentUser match {
       case Some(u) => u
       case None => throw UserNotAuthorized(s"anonymous access not allowed")
     }
+  }
+
+  get("/", operation(query)) {
+    implicit val user = getUser
     val q = HakemusQuery(params)
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
@@ -56,10 +60,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
   }
 
   get("/:oid", operation(read)) {
-    implicit val user = currentUser match {
-      case Some(u) => u
-      case None => throw UserNotAuthorized(s"anonymous access not allowed")
-    }
+    implicit val user = getUser
     val q = HenkiloHakijaQuery(params("oid"))
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
@@ -74,12 +75,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
   incident {
     case t: VirtaConnectionErrorException => (id) => InternalServerError(IncidentReport(id, "virta error"))
   }
-
-
-
-
 }
-
 
 trait OppijaFetcher { this: HakuJaValintarekisteriStack =>
 
@@ -89,8 +85,6 @@ trait OppijaFetcher { this: HakuJaValintarekisteriStack =>
 
   protected implicit def executor: ExecutionContext
   implicit val defaultTimeout: Timeout
-
-
 
   def fetchOppijat(q: HakemusQuery)(implicit user: User): Future[Seq[Oppija]] = {
     for (
@@ -158,5 +152,4 @@ trait OppijaFetcher { this: HakuJaValintarekisteriStack =>
   def fetchSuoritukset(henkiloOid: String)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] = {
     (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(henkilo = Some(henkiloOid)), user)).mapTo[Seq[Suoritus with Identified[UUID]]]
   }
-
 }
