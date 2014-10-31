@@ -3,10 +3,8 @@ package fi.vm.sade.hakurekisteri.hakija
 import java.util.UUID
 
 import org.scalatra.swagger._
-import org.scalatra.swagger.AllowableValues.AnyValue
-import scala.Some
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
-import fi.vm.sade.hakurekisteri.rest.support.{IncidentReport, IncidentResponseMessage, ApiFormat, OldSwaggerSyntax}
+import fi.vm.sade.hakurekisteri.rest.support.{ApiFormat, OldSwaggerSyntax}
 
 trait HakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
 
@@ -82,8 +80,8 @@ trait HakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
     .parameter(queryParam[String]("tyyppi").description("tietotyyppi").allowableValues(ApiFormat.values.toList).required)
     .parameter(queryParam[Option[Boolean]]("tiedosto").description("palautetaanko vastaus tiedostona").optional)
     .produces("application/json", "application/xml", "application/octet-stream")
-    .responseMessage(IncidentResponseMessage(400, IncidentReport(UUID.randomUUID(), "<invalid parameter description>")))
-    .responseMessage(IncidentResponseMessage(500, IncidentReport(UUID.randomUUID(), "back-end service timed out")))
-    .responseMessage(IncidentResponseMessage(500, IncidentReport(UUID.randomUUID(), "internal server error")))
+    .responseMessage(StringResponseMessage(400, "<invalid parameter description>"))
+    .responseMessage(StringResponseMessage(500, "back-end service timed out"))
+    .responseMessage(StringResponseMessage(500, "internal server error"))
 
 }

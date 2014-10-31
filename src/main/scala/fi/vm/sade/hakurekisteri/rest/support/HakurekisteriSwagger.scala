@@ -20,5 +20,3 @@ class HakurekisteriSwagger extends Swagger(Swagger.SpecVersion, "1", ApiInfo(
   license = "" ,
   licenseUrl = "")
 )
-
-case class IncidentResponseMessage(code: Int, message: IncidentReport) extends ResponseMessage[IncidentReport]
