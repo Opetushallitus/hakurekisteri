@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://service.koodisto.sade.vm.fi/types/koodisto"
+           xmlns="http://service.koodisto.sade.vm.fi/types/koodisto"
+           elementFormDefault="qualified">
+
+    <xs:simpleType name="pohjakoulutustoinenaste">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="3">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Individualiserad l&#228;rokurs inom den grundl&#228;ggande utbildningen, som utg&#229;r fr&#229;n verksamhetsomr&#229;den</xs:documentation>
+                    <xs:documentation xml:lang="fi">Perusopetuksen yksil&#246;llistetty oppim&#228;&#228;r&#228;, opetus j&#228;rjestetty toiminta-alueittain</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="6">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Perusopetuksen p&#228;&#228;osin tai kokonaan yksil&#246;llistetty oppim&#228;&#228;r&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Helt eller i huvudsak individualiserad l&#228;rokurs inom den grundl&#228;ggande utbildningen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="9">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion p&#228;&#228;tt&#246;todistus, ylioppilastutkinto tai abiturientti</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets avg&#229;ngsbetyg, studentexamen eller abiturient</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="0">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildning utomlands</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ulkomailla suoritettu koulutus</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="1">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Perusopetuksen oppim&#228;&#228;r&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Den grundl&#228;ggande utbildningens l&#228;rokurs</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="2">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Delvis individualiserad l&#228;rokurs inom den grundl&#228;ggande utbildningen</xs:documentation>
+                    <xs:documentation xml:lang="fi">Perusopetuksen osittain yksil&#246;llistetty oppim&#228;&#228;r&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="7">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Ej fullgjord l&#228;roplikt (inget avg&#229;ngsbetyg)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Oppivelvollisuuden suorittaminen keskeytynyt (ei p&#228;&#228;tt&#246;todistusta)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

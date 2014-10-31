@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://service.koodisto.sade.vm.fi/types/koodisto"
+           xmlns="http://service.koodisto.sade.vm.fi/types/koodisto"
+           elementFormDefault="qualified">
+
+    <xs:simpleType name="kausi">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="S">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Autumn</xs:documentation>
+                    <xs:documentation xml:lang="sv">H&#246;st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Syksy</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="K">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Spring</xs:documentation>
+                    <xs:documentation xml:lang="sv">V&#229;r</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kev&#228;t</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

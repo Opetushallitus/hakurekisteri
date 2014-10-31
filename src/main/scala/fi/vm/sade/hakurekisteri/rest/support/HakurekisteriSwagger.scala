@@ -1,18 +1,22 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import org.scalatra.swagger.{ApiInfo, JacksonSwaggerBase, Swagger}
+import org.json4s.Formats
+import org.scalatra.swagger.SwaggerSerializers.{ApiSerializer, EndpointSerializer, OperationSerializer}
+import org.scalatra.swagger.{ResponseMessage, ApiInfo, JacksonSwaggerBase, Swagger}
 
 import org.scalatra.ScalatraServlet
 
 
-class ResourcesApp(implicit val swagger: Swagger) extends ScalatraServlet with HakurekisteriJsonSupport with JacksonSwaggerBase  {
-  override implicit val jsonFormats = super[HakurekisteriJsonSupport].jsonFormats
+class ResourcesApp(implicit val swagger: Swagger) extends ScalatraServlet with HakurekisteriJsonSupport with JacksonSwaggerBase {
+  val hakurekisteriFormats = super[HakurekisteriJsonSupport].jsonFormats
+  override implicit val jsonFormats: Formats = super[JacksonSwaggerBase].jsonFormats ++ hakurekisteriFormats.customSerializers
 }
 
-class HakurekisteriSwagger extends Swagger("1.0", "1", ApiInfo(
-  title= "Haku- ja valintarekisteri",
-  description =" rekisteri opiskelijavalintojen suorittamiseen tarvittaviin tietoihin",
+class HakurekisteriSwagger extends Swagger(Swagger.SpecVersion, "1", ApiInfo(
+  title = "Haku- ja valintarekisteri",
+  description = "rekisteri opiskelijavalintojen suorittamiseen tarvittaviin tietoihin",
   termsOfServiceUrl =  "",
   contact = "",
   license = "" ,
-  licenseUrl = ""))
+  licenseUrl = "")
+)

@@ -1,0 +1,3053 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://service.koodisto.sade.vm.fi/types/koodisto"
+           xmlns="http://service.koodisto.sade.vm.fi/types/koodisto"
+           elementFormDefault="qualified">
+
+    <xs:simpleType name="hakukohteet">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="053">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tekstiilimuotoilu- ja sisustusala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Textil formgivning och inredning, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="803">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r uttrycksf&#246;rm&#229;ga</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion ilmaisutaitolinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="306">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kultasep&#228;nala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Guldsmide, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="002">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Finsnickare, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Hienopuusepp&#228;, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="474">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom hotell-, restaurang- och cateringbranschen, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Hotelli-, ravintola- ja catering-alan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="363">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Fotografering, st (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Valokuvaus, yo (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="886">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom husteknik, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Talotekniikan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="188">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Textil- och bekl&#228;dnadsbranschen, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tekstiili- ja vaatetusala, yo  (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="852">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i fiskeri, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kalatalouden perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="851">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i tr&#228;dg&#229;rdssk&#246;tsel, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Puutarhatalouden perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="804">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets naturvetenskapliga linje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion luonnontiedelinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="504">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets innebandylinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion salibandylinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="416">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">R&#246;rlig bild, gr (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Liikkuva kuva, pk (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="813">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets teknologi- och industrilinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion teknologia ja teollisuuslinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="822">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets fotbollslinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion jalkapallolinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="987">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Talonrakennus ja ymp&#228;rist&#246;suunnittelu, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Husbyggnad och milj&#246;planering, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="052">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Vaatetusmuotoilu- ja stailausala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Bekl&#228;dnadsdesign och styling, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="535">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets sj&#246;linje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion merilinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="406">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Modellbygge, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Mallinrakennus, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="008">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tr&#228; och formgivning, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Puu ja muotoilu, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="025">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Inredningsv&#228;vning, sp (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sisustuskudonta, er (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="787">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">K&#228;si- ja taideteollisuusalan perustutkinto, er</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i hantverk och konstindustri, sp</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="653">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Verhoilu- ja sisustusalan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom tapetsering och inredning, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="042">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sisustusassistentti, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Interi&#246;rsassistent, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="668">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Suunnitteluassistentin perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen f&#246;r planeringsassistent, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="192">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">S&#228;hk&#246;- ja automaatiotekniikan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom el- och automationsteknik, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="278">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i natur och milj&#246;, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Luonto- ja ymp&#228;rist&#246;alan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="187">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tekstiili- ja vaatetusalan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom textil- och bekl&#228;dnadsbranschen, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="702">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Inredning, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sisustusala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="904">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom tr&#228;branschen, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Puualan perustutkinto, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="600">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom fastighetsservice, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kiinteist&#246;palvelujen perustutkinto, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="162">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r produktplanering och -tillverkning, sp (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tuotteen suunnittelun ja valmistuksen koulutusohjelma, er (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="447">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Viheralan koulutusohjelma, yo (Puutarhatalouden perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r gr&#246;nsektorn, st (Grundexamen i tr&#228;dg&#229;rdssk&#246;tsel)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="443">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tekstiilihuollon koulutusohjelma, pk (Tekstiili- ja vaatetusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r textilv&#229;rd, gr (Grundexamen inom textil- och bekl&#228;dnadsbranschen)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="512">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i hemarbets- och reng&#246;ringsservice, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kotity&#246;- ja puhdistuspalvelujen perustutkinto, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="868">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Merenkulkualan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i sj&#246;fart, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="913">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Rakennusalan perustutkinto, er</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom byggnadsbranschen, sp</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="544">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets musikteaterlinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion musiikkiteatterilinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="836">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion lentopallolinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets volleybollinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="768">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kuljetuspalvelujen koulutusohjelma, pk (Logistiikan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r transportservice, gr (Grundexamen i logistik)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="029">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Graafinen suunnittelu, pk (Kuvallisen ilmaisun perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grafisk planering, gr (Grundexamen i visuell framst&#228;llning)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="566">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Stickning, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Neulevaatetus, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="540">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion valmennuslinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets tr&#228;ningslinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="818">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion tietotekninen linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets datatekniklinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="890">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Maanmittausalan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom lantm&#228;teriteknik, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="412">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Konstinramning, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Taidekehystys, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="223">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hammastekniikan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i tandteknik, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="856">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets ekonomi- och n&#228;ringslivslinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion talous- ja elinkeinoel&#228;m&#228; -linja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="767">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Painotekniikan koulutusohjelma, pk (Painoviestinn&#228;n perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r tryckeriteknik, gr (Grundexamen i grafisk kommunikation)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="516">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tieto- ja viestint&#228;tekniikan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i informations- och kommunikationsteknik, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="848">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion teknologialinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets teknologielinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="182">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r skobranschen, st (Grundexamen inom textil- och bekl&#228;dnadsbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Jalkinealan koulutusohjelma, yo (Tekstiili- ja vaatetusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="887">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ajoneuvo- ja kuljetustekniikka, yo (Autoalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Fordons- och transportteknik, st (Grundexamen inom bilbranschen)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="408">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Best&#228;llningssnickare, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tilauspuusep&#228;nty&#246;, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="047">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Stailausala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Styling, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="954">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion telinevoimistelulinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets redskapsgymnastikslinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="319">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Restaurering, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Restaurointiala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="565">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Bekl&#228;dnad, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vaatetusala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="190">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tr&#228;, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Puuala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="771">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r k&#246;rning av skogsmaskiner, st (Grundexamen inom skogsbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Mets&#228;koneenkuljetuksen koulutusohjelma, yo (Mets&#228;alan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="165">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hiusalan perustutkinto, er</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom h&#229;rbranschen, sp</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="027">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grafisk planering, sp (Grundexamen i visuell framst&#228;llning)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Graafinen suunnittelu, er (Kuvallisen ilmaisun perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="487">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ateljee- ja asusteompelu, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Atelj&#233;- och asseccoars&#246;mnad, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="793">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Inredning, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sisustusala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="469">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pianonvirityksen koulutusohjelma, yo (Musiikkialan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r pianost&#228;mmning, st (Grundexamen i musik)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="674">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kuva ja &#228;&#228;ni, pk (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Bild och ljud, gr (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="401">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Peliala, yo (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Spelbranschen, st (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="885">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom maskin- och metallbranschen, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kone- ja metallialan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="533">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion yritt&#228;jyyslinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets f&#246;retagsamhetslinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="610">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Ljudproduktion, gr (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                    <xs:documentation xml:lang="fi">&#196;&#228;nituotanto, pk (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="420">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Nymedia, gr (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Uusmedia, pk (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="117">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Klassinen baletti, pk (Tanssialan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Klassisk balett, gr (Grundexamen i dans)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="018">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Maskin-, metall- och elbranschen, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kone-, metalli- ja s&#228;hk&#246;ala, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="826">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion taloustiedelinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets ekonomilinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="838">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion matemaattis-luonnontieteellinen linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets matematis-vetenskaplig linje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="241">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i ungdoms- och fritidsinstruktion, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Nuoriso- ja vapaa-ajan ohjauksen perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="143">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom datateknik och datakommunikationsteknik, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tieto- ja tietoliikennetekniikan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="503">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion luonnontieteellis-matemaattinen linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets matematisk-naturvetenskapliga linje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="022">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Textil- och bekl&#228;dnad samt f&#246;retagsekonomi, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tekstiili- ja vaatetus sek&#228; liiketalous, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="829">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion ratsastuslinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets ridlinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="043">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">V&#228;linehuoltoalan perustutkinto (kokeilu), er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="448">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r stenbranschen, gr (Grundexamen inom byggnadsbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kivialan koulutusohjelma, pk (Rakennusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="766">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r layout, gr (Grundexamen i grafisk kommunikation)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ulkoasun toteutuksen koulutusohjelma, pk (Painoviestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="805">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets musiklinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion musiikkilinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="126">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i idrott, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Liikunnanohjauksen perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="430">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom f&#246;retagsekonomi, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Liiketalouden perustutkinto, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="049">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tekstiilimuotoilu- ja sisustusala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Textil formgivning och inredning, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="041">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">V&#228;linehuoltoalan perustutkinto (kokeilu), yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="276">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom bilbranschen, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Autoalan perustutkinto, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="107">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Autoalan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom bilbranschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="035">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i dans, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tanssialan perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="046">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Stailausala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Styling, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="866">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom livsmedelsbranschen, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Elintarvikealan perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="778">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Internationell grundexamen inom f&#246;retagsekonomi, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kansainv&#228;linen liiketalouden perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="830">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion taito- ja taidelinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets f&#228;rdighets- och konstlinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="523">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kuvallisen ilmaisun perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i visuell framst&#228;llning, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="844">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion tiede- ja ymp&#228;rist&#246;linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets vetenskaps- och milj&#246;linje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="452">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Audiovisuaalisen viestinn&#228;n perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i audiovisuell kommunikation, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="556">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion A-saksan kielen linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r A-tyska spr&#229;ket</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="816">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion eurolinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets eurolinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="582">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kansainv&#228;lispainotteinen kotitalousopetus, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Internationell utbildning i huslig ekonomi, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="040">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">V&#228;linehuoltoalan perustutkinto (kokeilu), pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="255">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom bilbranschen, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Autoalan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="261">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Metalliala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Metall, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="696">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r sm&#229;djurssk&#246;tsel</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion pienel&#228;inlinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="601">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kiinteist&#246;palvelujen perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom fastighetsservice, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="460">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r musik, gr (Grundexamen i musik)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="524">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kirjansidonta, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Bokbinderi, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="248">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r f&#246;rs&#228;ljning av turismservice och informationstj&#228;nst, st (Grundexamen i turism)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Matkailupalvelujen myynnin ja tietopalvelujen koulutusohjelma, yo (Matkailualan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="783">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Teknisk utbildning, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tekniikan koulutus, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="023">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion B3-ven&#228;j&#228;n kielen linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiet spr&#229;klinje, B3-ryska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="295">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Videoassistent, st (Grundexamen i audiovisuell kommunikatio)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Videoassistentti, yo (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="064">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lentokoneasennuksen perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i flygplansmekanik, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="350">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Uusi kuva- ja mediataide, yo (Kuvallisen ilmaisun perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ny bild- och mediakonst, st (Grundexamen i visuell framst&#228;llning)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="324">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Mets&#228;alan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom skogsbranschen, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="800">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion urheilulinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets idrottslinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="701">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Scenbyggnad, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lavasterakentaminen, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="112">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Muovi- ja kumitekniikan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i plast- och gummiteknik, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="536">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets konstlinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion taidelinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="382">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ohjaustoiminta, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Handledning, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="483">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sisustustekstiilit, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Inredningstextilier, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="472">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom processindustrin, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Prosessiteollisuuden perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="442">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r textilteknik, st (Grundexamen inom textil- och bekl&#228;dnadsbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tekstiilitekniikan koulutusohjelma, yo (Tekstiili- ja vaatetusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="434">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Produktionsassistent inom film- och tv-branschen, gr (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Elokuva- ja tv-alan tuotanto-assistentti, pk (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="861">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Rakennusalan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom byggnadsbranschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="832">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion ICT-linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets ICT-linje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="123">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Folkdans, st (Grundexamen i dans)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kansantanssi, yo (Tanssialan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="139">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tieto- ja tietoliikennetekniikan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom datateknik och datakommunikationsteknik, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="470">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Prosessiteollisuuden perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom processindustrin, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="336">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Korukivi- ja jalometalliala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Smyckesten- och &#228;delmetallbranchen, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="285">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom sk&#246;nhetsbranschen, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kauneudenhoitoalan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="825">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion medialinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets medialinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="557">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Stickning, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Neulevaatetus, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="845">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r musik och uttryck</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion musiikin ja ilmaisun linja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="441">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Matkailualan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i turism, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="229">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Mets&#228;alan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom skogsbranschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="277">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Teatteri- ja esitystekniikka, pk (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Teater- och scenteknik, gr (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="815">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets kommunikationslinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion viestint&#228;linja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="986">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Talonrakennus ja ymp&#228;rist&#246;suunnittelu, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Husbyggnad och milj&#246;planering, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="828">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r engelska spr&#229;ket och m&#246;te av kulturer</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion englannin kielen ja kulttuurien kohtaamisen linja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="456">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Viittomakielisen ohjauksen perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i teckenspr&#229;kshandledning, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="867">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Meijerialan koulutusohjelma, pk (Elintarvikealan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r meijeribranschen, gr (Grundexamen inom livsmedelsbranschen)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="983">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kuvallisen ilmaisun perustutkinto, er</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i visuell framst&#228;llning, sp</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="163">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom h&#229;rbranschen, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Hiusalan perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="858">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Talotekniikan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom husteknik, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="124">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Logistiikan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i logistik, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="352">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Valokuvaus, pk (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Fotografering, gr (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="281">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i logistik, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Logistiikan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="541">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets ishockeylinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion j&#228;&#228;kiekkolinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="578">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Veneenrakennuksen perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i b&#229;tbyggnad, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="863">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom tr&#228;branschen, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Puualan perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="383">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Glas, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lasiala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="101">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kaivosalan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom gruvbranschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="900">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sosiaali- ja terveysalan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom social- och h&#228;lsov&#229;rdsbranschen, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="055">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion voimistelulinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets gymnastiklinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="902">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">K&#228;si- ja taideteollisuusalan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i hantverk och konstindustri, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="797">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Restaurering, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Restaurointiala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="975">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i natur och milj&#246;, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Luonto- ja ymp&#228;rist&#246;alan perustutkinto, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="849">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets flyglinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion ilmailulinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="056">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Puutarha- sek&#228; Liiketalouden perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i tr&#228;dg&#229;rdssk&#246;tsel och inom f&#246;retagsekonomi, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="774">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r transportservice, st (Grundexamen i logistik)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kuljetuspalvelujen koulutusohjelma, yo (Logistiikan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="857">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kone- ja metallialan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom maskin- och metallbranschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="359">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Korukivi- ja jalometalliala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Smyckesten- och &#228;delmetallbranschen, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="424">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Keramik, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Keramiikka-ala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="119">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Modern dans, gr (Grundexamen i dans)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Nykytanssi, pk (Tanssialan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="114">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom f&#246;retagsekonomi, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Liiketalouden perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="440">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r textilteknik, gr (Grundexamen inom textil- och bekl&#228;dnadsbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tekstiilitekniikan koulutusohjelma, pk (Tekstiili- ja vaatetusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="003">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Interi&#246;rsassistent, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sisustusassistentti, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="410">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tilauspuusep&#228;nty&#246;, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Bestllningssnickare, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="794">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sisustusrakentaminen, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Inredningssnickeri, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="009">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion tiede- ja tekniikkalinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="116">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Visualisti, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Visualist, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="835">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion hiihtolinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets skidlinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="809">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion IB-linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets IB-linje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="592">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Suunnitteluassistentin perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen f&#246;r planeringsassistent, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="480">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom h&#229;rbranschen, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Hiusalan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="583">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Laboratorioalan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom laboratoriebranschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="507">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i logistik, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Logistiikan perustutkinto, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="518">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion kieli- ja reaalipainotteinen linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gynmasiets spr&#229;k- och realbetonande linje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="810">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion taideviestint&#228;linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r konst och mediekultur</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="036">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets jakt- och fiskelinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion mets&#228;stys- ja kalastuslinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="054">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Puumuotoilu- ja puusep&#228;nala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tr&#228;formgivning och snickeribranschen, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="417">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">R&#246;rlig bild, st (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Liikkuva kuva, yo (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="450">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r grafisk palanering, gr (Grundexamen i visuell framst&#228;llning)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Graafisen suunnittelun koulutusohjelma, pk (Kuvallisen ilmaisun perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="502">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets bildkonstlinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion kuvataide ja muotoilulinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="854">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r hantverk</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion k&#228;sity&#246;linja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="806">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets danslinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion tanssilinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="914">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Maanmittausalan perustutkinto, er</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom lantm&#228;teriteknik, sp</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="462">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Musiikin koulutusohjelma, yo (Musiikkialan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r musik, st (Grundexamen i musik)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="059">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Puutarha- sek&#228; Liiketalouden perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i tr&#228;dg&#229;rdssk&#246;tsel och inom f&#246;retagsekonomi, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="425">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Digimedia, yo (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Digimedia, st (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="481">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Puu- ja metallihuonekalupepp&#228;, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tr&#228;- och metallm&#246;belsnickare, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="191">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">S&#228;hk&#246;- ja automaatiotekniikan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom el- och automationsteknik, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="282">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grafisk planering, gr (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Graafinen suunnittelu, pk (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="012">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Hantverksdesign, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">K&#228;sity&#246;muotoilu, pk (K&#228;si-ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="792">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets vetenskapslinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion tiedelinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="031">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">F&#246;rberedande gymnasieutbildning f&#246;r invandrare och personer med annat modersm&#229;l &#228;n finska och svenska</xs:documentation>
+                    <xs:documentation xml:lang="fi">Maahanmuuttajien ja vieraskielisten lukiokoulutukseen valmistava koulutus</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="038">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Finsnickare, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Hienopuusepp&#228;, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="243">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r montering av skogsmaskiner, st (Grundexamen inom skogsbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Mets&#228;koneasennuksen koulutusohjelma, yo (Mets&#228;alan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="915">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pintak&#228;sittelyalan perustutkinto, er</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom ytbehandlingsbranschen, sp</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="846">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion ymp&#228;rist&#246;tieteiden linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets milj&#246;vetenskapliga linje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="030">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildning som f&#246;rbereder invandrare f&#246;r yrkesutbildning</xs:documentation>
+                    <xs:documentation xml:lang="fi">Maahanmuuttajien ammatilliseen peruskoulutukseen valmistava koulutus</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="291">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Asesep&#228;nty&#246;, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Vapensmide, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="250">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom lantbruksbranschen, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Maatalousalan perustutkinto, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="873">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sosiaali- ja terveysalan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom social- och h&#228;lsov&#229;rdsbranschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="051">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Puumuotoilu- ja puusep&#228;nala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tr&#228;formgivning och snickeribranschen, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="028">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Orienterande och f&#246;rberedande utbildning f&#246;r grundl&#228;ggande yrkesutbildning (yrkesstarten)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ammattistartti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="862">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Maanmittausalan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom lantm&#228;teribranschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="459">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r fotografering, st (Grundexamen i visuell framst&#228;llning)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Valokuvauksen koulutusohjelma, yo (Kuvallisen ilmaisun perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="021">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gr&#246;nomr&#229;desplanering, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Viherrakennus, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="019">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kymppiluokka</xs:documentation>
+                    <xs:documentation xml:lang="sv">P&#229;byggnadsundervisning efter den grundl&#228;ggande utbildningen (tionde klassen)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="275">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Peliala, pk (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Spelbranschen, gr (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="473">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hotelli-, ravintola- ja catering-alan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom hotell-, restaurang- och cateringbranschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="024">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Viherrakennus, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gr&#246;nomr&#229;desplanering, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="242">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Veneenrakennus, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">B&#229;tbygge, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="941">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Rakennusala ja puuala, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Byggnadsbranschen och tr&#228;branschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="917">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom livsmedelsbranschen, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Elintarvikealan perustutkinto, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="396">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Instrumentbyggnad, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Soitinrakennusala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="222">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hammastekniikan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i tandteknik, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="967">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Painoviestinn&#228;n perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i grafisk kommunikation, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="538">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Textil, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tekstiiliala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="128">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Jazz- och popul&#228;rdans, st (Grundexamen i dans)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Jazz- ja populaaritanssi, yo (Tanssialan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="478">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">M&#246;belsnickare, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Huonekalupuusepp&#228;, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="183">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom textil- och bekl&#228;dnadsbranschen, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tekstiili- ja vaatetusalan perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="174">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i natur och milj&#246;, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Luonto- ja ymp&#228;rist&#246;alan perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="581">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">El&#228;intenhoidon koulutusohjelma, yo (Maatalousalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r djursk&#246;tsel, st (Grundexamen inom lantbruksbranschen)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="414">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Teknisk utbildning, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tekniikan koulutus, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="125">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Jazz- och popul&#228;rdans, gr (Grundexamen i dans)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Jazz- ja populaaritanssi, pk (Tanssialan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="296">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hopeasep&#228;nala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Silversmide, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="475">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i hemarbets- och reng&#246;ringsservice, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kotity&#246;- ja puhdistuspalvelujen perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="855">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion kansainv&#228;lisen liiketoiminnan linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets internationella f&#246;retagsverksamhetslinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="532">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Rekvisitatillverkning, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tarpeistonvalmistus, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="880">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kalatalouden perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i fiskeri, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="531">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Bokbinderi, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kirjansidonta, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="559">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Samesl&#246;jd, mjuka material, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Saamenk&#228;sity&#246;t, pehme&#228;t materiaalit, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="263">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom textil- och bekl&#228;dnadsbranschen, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tekstiili- ja vaatetusalan perustutkinto, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="246">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">B&#229;tbygge, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Veneenrakennus, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="974">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i flygledning, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lennonjohdon perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="115">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Liikunnanohjauksen perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i idrott, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="398">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sirkusalan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom cirkusbranschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="173">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i ungdoms- och fritidsinstruktion, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Nuoriso- ja vapaa-ajan ohjauksen perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="998">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion tennislinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets tennislinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="318">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Rakennusala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Byggnadsbranschen, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="384">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Muotoilu ja mallintaminen, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Formgivning och modelltillverkning, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="772">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r layout, st (Grundexamen i grafisk kommunikation)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ulkoasun toteutuksen koulutusohjelma, yo (Painoviestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="775">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r schanktningsmaskintransport, st (Grundexamen inom byggnadsbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Maarakennuskoneenkuljetuksen koulutusohjelma, yo (Rakennusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="335">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i turism, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Matkailualan perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="228">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r turismservice, st (Grundexamen i turism)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Matkailupalvelujen koulutusohjelma, yo (Matkailualan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="833">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets engelskspr&#229;kiga linje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion englanninkielinen linja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="908">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom maskin- och metallbranschen, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kone- ja metallialan perustutkinto, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="463">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogramet f&#246;r musikteknologi, gr (Grundexamen i musik)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Musiikkiteknologian koulutusohjelma, pk (Musiikkialan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="506">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r uttycksf&#246;rm&#229;ga och mediafostran</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion ilmaisutaidon ja mediakasvatuksen linja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="314">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sisustusrakentaminen, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Inredningssnickeri, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="577">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Verhoilu- ja sisustusalan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom tapetsering och inredning, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="921">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom social- och h&#228;lsov&#229;rdsbranschen, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sosiaali- ja terveysalan perustutkinto, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="007">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Puu ja muotoilu, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tr&#228; och formgivning, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="327">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Modellbygge, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Mallinrakennus, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="005">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Rumsplanering och genomf&#246;rande, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tilasuunnittelu ja toteutus, pk (K&#228;si-ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="006">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tilasuunnittelu ja toteutus, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Rumsplanering och genomf&#246;rande, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="149">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Maatalousalan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom lantbruksbranschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="534">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion esitt&#228;v&#228;n taiteen linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r scenkonst</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="010">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets veterin&#228;rmedicinska linje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion el&#228;inl&#228;&#228;ketieteellinen linja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="257">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lapsi- ja perhety&#246;n perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i barn- och familjearbete, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="953">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i grafisk kommunikation, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Painoviestinn&#228;n perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="962">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Mets&#228;alan perustutkinto, er</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom skogsbranschen, sp</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="446">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r gr&#246;nsektorn, gr (Grundexamen i tr&#228;dg&#229;rdssk&#246;tsel)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Viheralan koulutusohjelma, pk (Puutarhatalouden perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="411">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Taidekehystys, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Konstinramning, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="482">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tr&#228;- och metallm&#246;belsnickare, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Puu- ja metallihuonekalusepp&#228;, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="981">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lennonjohdon perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i flygledning, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="400">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom cirkusbranschen, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sirkusalan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="379">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Muotoilu ja mallintaminen, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Formgivning och modelltillverkning, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="419">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">&#196;&#228;ni, yo (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ljud, st (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="895">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Merenkulkualan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i sj&#246;fart, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="597">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom fastighetsservice, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kiinteist&#246;palvelujen perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="164">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r informations- och bibliotekstj&#228;nst, gr (Grundexamen inom f&#246;retagsekonomi)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tieto- ja kirjastopalvelujen koulutusohjelma, pk (Liiketalouden perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="584">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Laboratorioalan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom laboratoriebranschen, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="517">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasium och D-niv&#229; i fl&#246;jt i musikinstitut</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukio ja musiikkiopiston huilun D-tason tutkinto</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="560">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r A-ryska spr&#229;ket</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion A-ven&#228;j&#228;n kielen linja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="013">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Hantverksdesign, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">K&#228;sity&#246;muotoilu, yo (K&#228;si-ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="770">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r akutv&#229;rd, gr (Grundexamen inom social- och h&#228;lsov&#229;rdsbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ensihoidon koulutusohjelma, pk (Sosiaali- ja terveysalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="403">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grafisk planering, st (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Graafinen suunnittelu, yo (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="527">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Saamenk&#228;sity&#246;t, kovat materiaalit, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Samesl&#246;jd, h&#229;rda material, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="508">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hotelli-, ravintola- ja catering-alan perustutkinto, er</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom hotell-, restaurang- och cateringbranschen, sp</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="020">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hotelli-, ravintola- ja catering- sek&#228; elintarvikeala, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Hotell-, restaurang- och catering- samt livsmedelbranschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="530">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Forntida teknik, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Muinaistekniikka, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="910">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Talotekniikan perustutkinto, er</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom husteknik, sp</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="014">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tekstiili- ja vaatemuotoilu, pk (K&#228;si-ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Textil- och bekl&#228;dnadsdesign, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="555">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion A-ranskan kielen linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r A-franska spr&#229;ket</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="455">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r bild- och mediekonst, gr (Grundexamen i visuell framst&#228;llning)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kuva- ja mediataiteen koulutusohjelma, pk (Kuvallisen ilmaisun perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="015">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Textil- och bekl&#228;dnadsdesign, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tekstiili- ja vaatemuotoilu, yo (K&#228;si-ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="215">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hevostalouden perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom h&#228;sthush&#229;llning, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="438">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Vaatetuksen koulutusohjelma, pk (Tekstiili- ja vaatetusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r bekl&#228;dnad, gr (Grundexamen inom textil- och bekl&#228;dnadsbranschen)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="837">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion kristillinen linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets kristliga linje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="423">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Digimedia, pk (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Digimedia, gr (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="891">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Puualan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom tr&#228;branschen, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="323">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utst&#228;llnings- och m&#228;ssbyggande, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">N&#228;yttely- ja messurakentaminen, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="817">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets idrottslinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion liikuntalinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="511">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i audiovisuell kommunikation, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Audiovisuaalisen viestinn&#228;n perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="811">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets matematiska linje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion matemaattinen linja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="550">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tekstiiliala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Textil, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="776">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r akutv&#229;rd, st (Grundexamen inom social- och h&#228;lsov&#229;rdsbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ensihoidon koulutusohjelma, yo (Sosiaali- ja terveysalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="205">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">S&#228;hk&#246;- ja automaatiotekniikan perustutkinto, er</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom el- och automationsteknik, sp</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="037">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r hantverk- och konstindustri</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion k&#228;si- ja taideteollisuuslinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="032">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion mets&#228;stys- ja luontolinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets jakt- och naturlinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="421">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Uusmedia, yo (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Nymedia, st (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="564">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Soitinrakennusala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Instrumentbyggnad, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="225">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r turismservice, gr (Grundexamen i turism)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Matkailupalvelujen koulutusohjelma, pk (Matkailualan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="444">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom s&#228;kerhetsbranschen, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Turvallisuusalan perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="017">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Undervisning och handledning i tr&#228;nings- och rehabiliteringssyfte</xs:documentation>
+                    <xs:documentation xml:lang="fi">Valmentava ja kuntouttava opetus ja ohjaus</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="814">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets multimedialinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion multimedialinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="102">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kaivosalan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom gruvbranschen, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="654">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Veneenrakennuksen perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom b&#229;tbyggnad, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="033">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets cirkuslinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion sirkuslinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="563">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kiviala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Sten, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="537">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Saamenk&#228;sity&#246;t, kovat materiaalit, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Samesl&#246;jd, h&#229;rda material, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="574">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kone- ja metalliala sek&#228; auto- ja kuljetusala, er</xs:documentation>
+                    <xs:documentation xml:lang="sv">Maskin- och metallbranschen samt bil- och transportbranschen, sp</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="801">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets bildkonstlinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion kuvataidelinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="158">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r produktplanering och -tillverkning, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tuotteen suunnittelun ja valmistuksen koulutusohjelma, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="943">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Turkistalouden koulutusohjelma, yo (Maatalousalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r p&#228;lsdjursuppf&#246;dning, st (Grundexamen inom lantbruksbranschen)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="918">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Merenkulkualan perustutkinto, er</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i sj&#246;fart, sp</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="476">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i hemarbets- och reng&#246;ringsservice, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kotity&#246;- ja puhdistuspalvelujen perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="445">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r textilv&#229;rd, st (Grundexamen inom textil- och bekl&#228;dnadsbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tekstiilihuollon koulutusohjelma, yo (Tekstiili- ja vaatetusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="195">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i ur- och mikromekanik, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kello- ja mikromekaniikan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="039">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tanssialan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i dans, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="457">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kuva- ja mediataiteen koulutusohjelma, yo (Kuvallisen ilmaisun perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r bild- och mediekonst, st (Grundexamen i visuell framst&#228;llning)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="157">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tuotteen suunnittelun ja valmistuksen koulutusohjelma, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r produktplanering och -tillverkning, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="612">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">M&#229;leri och animation, gr (Grundexamen i visuell framst&#228;llning)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Maalaus ja animaatio, pk (Kuvallisen ilmaisun perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="451">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r grafisk planering, st (Grundexamen i visuell framst&#228;llning)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Graafisen suunnittelun koulutusohjelma, yo (Kuvallisen ilmaisun perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="426">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tietokoneanimaatio ja pelit, pk (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Data-animation och spel, gr (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="827">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion urheiluvalmennuslinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets idrottstr&#228;ningslinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="016">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hius- sek&#228; kauneudenhoitoalan koulutus, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">H&#229;r- samt sk&#246;nhetsbranschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="153">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom l&#228;kemedelsbranschen, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">L&#228;&#228;kealan perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="273">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Metall, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Metalliala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="497">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kuvallisen ilmaisun perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i visuell framst&#228;llning, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="834">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion b&#228;ndilinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets orkesterlinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="477">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Huonekalupuusepp&#228;, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">M&#246;belsnickare, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="211">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r montering av skogsmaskiner, gr (Grundexamen inom skogsbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Mets&#228;koneasennuksen koulutusohjelma, pk (Mets&#228;alan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="194">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kello- ja mikromekaniikan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i ur- och mikromekanik, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="613">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">M&#229;leri och animation, st (Grundexamen i visuell framst&#228;llning)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Maalaus ja animaatio, yo (Kuvallisen ilmaisun perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="185">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tekstiili- ja vaatetusala, pk  (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Textil- och bekl&#228;dnadsbranschen, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="977">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Internationell utbildning i huslig ekonomi, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kansainv&#228;lispainotteinen kotitalousopetus, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="842">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion ymp&#228;rist&#246;tieteiden ja ilmaisutaidon linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r milj&#246;venteskap och uttrycksf&#246;rm&#229;ga</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="385">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Keramik, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Keramiikka-ala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="591">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">S&#228;hk&#246;k&#228;yt&#246;n koulutusohjelma, pk (Merenkulkualan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r eldrift, gr (Grundexamen i sj&#246;fart)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="418">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Ljud, gr (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                    <xs:documentation xml:lang="fi">&#196;&#228;ni, pk (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="808">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion tekniikkalinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets tekniklinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="764">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Mets&#228;koneenkuljetuksen koulutusohjelma, pk (Mets&#228;alan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r k&#246;rning av skogsmaskiner, gr (Grundexamen inom skogsbranschen)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="217">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hevostalouden perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom h&#228;sthush&#229;llning, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="769">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Maarakennuskoneenkuljetuksen koulutusohjelma, pk (Rakennusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r schaktningsmaskintransport, gr (Grundexamen inom byggnadsbranschen)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="299">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kultasep&#228;nala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Guldsmide, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="819">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets litteraturlinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion kirjallisuuslinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="354">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lasiala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Glas, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="611">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Ljudproduktion, st (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                    <xs:documentation xml:lang="fi">&#196;&#228;nituotanto, yo (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="847">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets businesslinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion liiketalouden linja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="178">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r informations- och bibliotekstj&#228;nst, st (Grundexamen inom f&#246;retagsekonomi)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tieto- ja kirjastopalvelujen koulutusohjelma, yo (Liiketalouden perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="458">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Valokuvauksen koulutusohjelma, pk (Kuvallisen ilmaisun perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r fotografering, gr (Grundexamen i visuell framst&#228;llning)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="678">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Bild och ljud, st (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kuva ja &#228;&#228;ni, yo (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="831">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets turismlinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion matkailulinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="485">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sisustustekstiilit, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Inredningstextilier, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="911">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ajoneuvo- ja kuljetustekniikka, er</xs:documentation>
+                    <xs:documentation xml:lang="sv">Fordons- och transportteknik, sp</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="464">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r musikteknologi, st (Grundexamen i musik)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Musiikkiteknologian koulutusohjelma, yo (Musiikkialan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="067">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i flygplansmekanik, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lentokoneasennuksen perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="057">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Bekl&#228;dnadsdesign och styling, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vaatetusmuotoilu- ja stailausala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="812">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r naturvetenskaper, f&#246;retagskunskap och fostran till internationalism</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion luonnontiede, yritystieto ja kansainv&#228;lisyyskasvatus linja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="896">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Turkistalouden koulutusohjelma, pk (Maatalousalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r p&#228;lsdjursuppf&#246;dning, gr (Grundexamen inom lantbruksbranschen)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="949">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r milj&#246;planering och -byggande, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ymp&#228;rist&#246;n suunnittelun ja rakentamisen koulutusohjelma, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="773">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Painotekniikan koulutusohjelma, yo (Painoviestinn&#228;n perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r tryckeriteknik, st (Grundexamen i grafisk kommunikation)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="486">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Atelj&#233;- och asseccoarss&#246;mnad, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ateljee- ja asusteompelu, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="515">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom informations- och kommunikationsteknik, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tieto- ja viestint&#228;tekniikan perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="952">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ymp&#228;rist&#246;n suunnittelun ja rakentamisen koulutusohjelma, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r milj&#246;planering och -byggande, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="468">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Teknisk utbildning, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tekniikan koulutus, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="186">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kotitalousopetus, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildning i huslig ekonomi, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="798">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">M&#229;lning, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Maalausala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="122">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kansantanssi, pk (Tanssialan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Folkdans, gr (Grundexamen i dans)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="824">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion matematiikka/tietotekniikka-linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets matematik/datatekniklinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="522">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Forntida teknik, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Muinaistekniikka, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="543">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion koripallolinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets korgboll-linje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="206">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom f&#246;retagsekonomi, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Liiketalouden perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="449">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r stenbranschen, st (Grundexamen inom byggnadsbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kivialan koulutusohjelma, yo (Rakennusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="864">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom ytbehandlingsbranschen, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pintak&#228;sittelyalan perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="490">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kotitalousopetus, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildning i huslig ekonomi, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="000">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasium</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukio</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="991">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets linje f&#246;r h&#228;stsk&#246;tsel</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion hevoslinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="011">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion studiotekniikan linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets studiotekniska linje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="889">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Rakennusalan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom byggnadsbranschen, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="529">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion matemaattis-teollinen linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets matematisk industriell linje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="370">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Handledning, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ohjaustoiminta, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="106">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Visualisti, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Visualist, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="926">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i tr&#228;dg&#229;rdssk&#246;tsel, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Puutarhatalouden perustutkinto, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="026">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">F&#246;retagsverksamhet inom inredningss&#246;mnad, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sisustusompelun yritystoiminta, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="111">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Puuala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tr&#228;, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="439">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r bekl&#228;dnad, st (Grundexamen inom textil- och bekl&#228;dnadsbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vaatetuksen koulutusohjelma, yo (Tekstiili- ja vaatetusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="298">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Silversmide, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Hopeasep&#228;nala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="802">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion kielilinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets spr&#229;klinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="209">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom l&#228;kemedelsbranschen, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">L&#228;&#228;kealan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="402">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Teater- och scenteknik, st (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Teatteri- ja esitystekniikka, yo (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="539">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion teatteri-ilmaisun linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets teateruttrycks linje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="034">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Graafinen suunnittelu, yo (Kuvallisen ilmaisun perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grafisk planering, st (Grundexamen i visuell framst&#228;llning)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="435">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Elokuva- ja tv-alan tuotanto-assistentti, yo (Audiovisuaalisen viestinn&#228;n perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Produktionsassistent inom film- och tv-branschen, st (Grundexamen i audiovisuell kommunikation)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="203">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Muovi- ja kumitekniikan perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i plast- och gummiteknik, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="413">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tilarakennus, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utrymmesbyggnad, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="807">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets humanekologilinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion ymp&#228;rist&#246;linja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="001">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets samh&#228;lls- och ekonomilinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion yhteiskunta- ja talouslinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="322">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Maalausala, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">M&#229;lning, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="551">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Bekl&#228;dnad, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vaatetusala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="245">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Matkailupalvelujen myynnin ja tietopalvelujen koulutusohjelma, pk (Matkailualan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r f&#246;rs&#228;ljning av turismservice och informationstj&#228;nst, gr (Grundexamen i turism)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="501">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gymnasiets Eurooppalinje</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lukion Eurooppalinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="510">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i teckenspr&#229;kshandledning, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Viittomakielisen ohjauksen perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="843">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion golflinja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnasiets golflinje</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="894">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom livsmedelsbranschen, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Elintarvikealan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="796">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Byggnad, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Rakennusala, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="514">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r djursk&#246;tsel, gr (Grundexamen inom lantbruksbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">El&#228;intenhoidon koulutusohjelma, pk (Maatalousalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="905">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r meijeribranschen, st (Grundexamen inom livsmedelsbranschen)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Meijerialan koulutusohjelma, yo (Elintarvikealan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="180">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Jalkinealan koulutusohjelma, pk (Tekstiili- ja vaatetusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r skobranschen, gr (Grundexamen inom textil- och bekl&#228;dnadsbranschen)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="875">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i hantverk och konstindustri, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">K&#228;si- ja taideteollisuusalan perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="121">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Nykytanssi, yo (Tanssialan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Modern dans, st (Grundexamen i dans)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="415">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tilarakennus, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utrymmesbyggnad, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="280">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Asesep&#228;nty&#246;, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Vapensmide, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="580">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Samesl&#246;jd, mjuka material, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Saamenk&#228;sity&#246;t, pehme&#228;t materiaalit, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="927">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kalatalouden perustutkinto, er</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i fiskeri, sp</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="561">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lukion A-englannin kielen linja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gymnaisets linje f&#246;r A-engelska spr&#229;ket</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="859">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ajoneuvo- ja kuljetustekniikka, pk (Autoalan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Fordons- och transportteknik, gr (Grundexamen inom bilbranschen)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="284">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kauneudenhoitoalan perustutkinto, pk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom sk&#246;nhetsbranschen, gr</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="799">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utst&#228;llnings- och m&#228;ssbyggnad, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">N&#228;yttely- ja messurakentaminen, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="892">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom ytbehandlingsbranschen, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pintak&#228;sittelyalan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="525">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Rekvisitatillverkning, gr (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tarpeistonvalmistus, pk (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="879">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Puutarhatalouden perustutkinto, yo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grundexamen i tr&#228;dg&#229;rdssk&#246;tsel, st</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="202">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom lantbruksbranschen, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Maatalousalan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="345">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Uusi kuva- ja mediataide, pk (Kuvallisen ilmaisun perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ny bild- och mediakonst, gr (Grundexamen i visuell framst&#228;llning)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="505">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen inom s&#228;kerhetsbranschen, st</xs:documentation>
+                    <xs:documentation xml:lang="fi">Turvallisuusalan perustutkinto, yo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="498">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utbildning i huslig ekonomi, sp</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kotitalousopetus, er</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="118">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Klassisk balett, st (Grundexamen i dans)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Klassinen baletti, yo (Tanssialan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="184">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grundexamen i barn- och familjearbete, gr</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lapsi- ja perhety&#246;n perustutkinto, pk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="756">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Scenbyggnad, st (Grundexamen inom hantverk och konstindustri)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lavasterakentaminen, yo (K&#228;si- ja taideteollisuusalan perustutkinto)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="466">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pianonvirityksen koulutusohjelma, pk (Musiikkialan perustutkinto)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utbildningsprogrammet f&#246;r pianost&#228;mmning, gr (Grundexamen i musik)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

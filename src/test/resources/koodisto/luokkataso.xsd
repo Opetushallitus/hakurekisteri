@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://service.koodisto.sade.vm.fi/types/koodisto"
+           xmlns="http://service.koodisto.sade.vm.fi/types/koodisto"
+           elementFormDefault="qualified">
+
+    <xs:simpleType name="luokkataso">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="V">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">undervisning och handledning f&#246;r handikappade i tr&#228;nings- och rehabiliteringssyfte</xs:documentation>
+                    <xs:documentation xml:lang="fi">vammaisten valmentava ja kuntouttava opetus ja ohjaus</xs:documentation>
+                    <xs:documentation xml:lang="en">vammaisten valmentava ja kuntouttava opetus ja ohjaus</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="10">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">tio</xs:documentation>
+                    <xs:documentation xml:lang="en">ten</xs:documentation>
+                    <xs:documentation xml:lang="fi">kymmenen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="9">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">yhdeks&#228;n</xs:documentation>
+                    <xs:documentation xml:lang="en">nine</xs:documentation>
+                    <xs:documentation xml:lang="sv">nio</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="M">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">maahanmuuttajien ammatilliseen peruskoulutukseen valmistava koulutus</xs:documentation>
+                    <xs:documentation xml:lang="fi">maahanmuuttajien ammatilliseen peruskoulutukseen valmistava koulutus</xs:documentation>
+                    <xs:documentation xml:lang="sv">utbildning som f&#246;rbereder invandrare f&#246;r yrkesutbildning</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="A">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">ammattistartti</xs:documentation>
+                    <xs:documentation xml:lang="en">ammattistartti</xs:documentation>
+                    <xs:documentation xml:lang="sv">yrkesstarten</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

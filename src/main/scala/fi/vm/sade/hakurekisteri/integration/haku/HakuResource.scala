@@ -5,7 +5,7 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.AskTimeoutException
 import org.scalatra.swagger.Swagger
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.{IncidentReport, SpringSecuritySupport, HakurekisteriJsonSupport}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.{InternalServerError, AsyncResult, CorsSupport, FutureSupport}
 import scala.concurrent.ExecutionContext

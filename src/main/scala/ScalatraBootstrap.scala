@@ -78,37 +78,25 @@ class ScalatraBootstrap extends LifeCycle {
     val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.ytl ,  integrations.hakemukset, koosteet.ensikertalainen)), "healthcheck")
 
     mountServlets(context) (
-      "/" -> new GuiServlet,
-      "/healthcheck" -> new HealthcheckResource(healthcheck),
-      "/rest/v1/api-docs/*" -> new ResourcesApp,
-      "/rest/v1/arvosanat" -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
-      "/rest/v1/ensikertalainen" -> new EnsikertalainenResource(koosteet.ensikertalainen),
-      "/rest/v1/haut" -> new HakuResource(koosteet.haut),
-      "/rest/v1/hakijat" -> new HakijaResource(koosteet.hakijat),
-      "/rest/v1/kkhakijat" -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),
-      "/rest/v1/opiskelijat" -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
-      "/rest/v1/oppijat" -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
-      "/rest/v1/opiskeluoikeudet" -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
-      "/rest/v1/suoritukset" -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport
-      //"/sanity" -> new SanityResource(sanity)
+      ("/", "gui") -> new GuiServlet,
+      ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
+      ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
+      ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
+      ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),
+      ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(koosteet.haut),
+      ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),
+      ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),
+      ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
+      ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
+      ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
+      ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport
+      //("/sanity", "sanity") -> new SanityResource(sanity)
     )
   }
 
-  def mountServlets(context: ServletContext)(servlets: (String, Servlet with Handler)*) = {
+  def mountServlets(context: ServletContext)(servlets: ((String, String), Servlet with Handler)*) = {
     implicit val sc = context
-    for (
-      (path, servlet) <- servlets
-    ) mountServlet(servlet, path)
-
-  }
-
-  def mountServlet(servlet: Servlet with Handler, path: String = "/")(implicit context: ServletContext) {
-    val s = Option(context.addServlet(servlet.getClass.getName, servlet))
-    s foreach (d => {
-      d.setLoadOnStartup(1)
-      d.setAsyncSupported(true)
-    })
-    context.mount(servlet, path)
+    for (((path, name), servlet) <- servlets) context.mount(handler = servlet, urlPattern = path, name = name, loadOnStartup = 1)
   }
 
   override def destroy(context: ServletContext) {
@@ -184,7 +172,7 @@ trait Journals {
 
 class DbJournals(jndiName: String)(implicit val system: ActorSystem) extends Journals {
   implicit val database = Try(Database.forName(jndiName)).recover {
-    case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
+    case _: javax.naming.NameNotFoundException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
   }.get
 
   override val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
