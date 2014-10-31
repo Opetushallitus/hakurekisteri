@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.rest.support.OldSwaggerSyntax
 trait EnsikertalainenSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
   override protected val applicationName = Some("rest/v1/ensikertalainen")
 
-  val fields = Seq(ModelField("ensikertalainen", null, DataType.Boolean, None, AnyValue, required = true))
+  val fields = Seq(ModelField("ensikertalainen", null, DataType.Boolean))
 
   registerModel(Model("Ensikertalainen", "Ensikertalainen", fields.map{ t => (t.name, t) }.toMap))
 
