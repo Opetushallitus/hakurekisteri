@@ -1,11 +1,14 @@
 package fi.vm.sade.hakurekisteri.kkhakija
 
+import java.util.UUID
+
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{Vastaanottotila, Valintatila}
+import org.joda.time.DateTime
 import org.scalatra.swagger.AllowableValues.AnyValue
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
-import fi.vm.sade.hakurekisteri.rest.support.{ApiFormat, OldSwaggerSyntax}
+import fi.vm.sade.hakurekisteri.rest.support.{IncidentResponseMessage, IncidentReport, ApiFormat, OldSwaggerSyntax}
 
 trait KkHakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
 
@@ -81,5 +84,11 @@ trait KkHakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
     .parameter(queryParam[String]("hakuehto").description("hakuehto").allowableValues(Hakuehto.values.toList).required)
     .parameter(queryParam[String]("tyyppi").description("tyyppi").allowableValues(ApiFormat.Json, ApiFormat.Excel))
     .produces("application/json", "application/octet-stream")
+    .responseMessage(IncidentResponseMessage(400, IncidentReport(UUID.randomUUID(), "either parameter oppijanumero or hakukohde must be given")))
+    .responseMessage(IncidentResponseMessage(400, IncidentReport(UUID.randomUUID(), "<invalid parameter description>")))
+    .responseMessage(IncidentResponseMessage(500, IncidentReport(UUID.randomUUID(), "error with tarjonta: <tarjonta exception message>")))
+    .responseMessage(IncidentResponseMessage(500, IncidentReport(UUID.randomUUID(), "error: <error description>")))
+    .responseMessage(IncidentResponseMessage(500, IncidentReport(UUID.randomUUID(), "back-end service timed out")))
+    .responseMessage(IncidentResponseMessage(500, IncidentReport(UUID.randomUUID(), "error in service")))
 
 }

@@ -5,7 +5,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
-import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.{IncidentReport, SpringSecuritySupport, HakurekisteriJsonSupport}
 import org.scalatra.swagger.{SwaggerEngine, Swagger}
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
@@ -38,7 +38,7 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef)
       val henkiloOid = params("henkilo")
       new AsyncResult() {
         override implicit def timeout: Duration = 90.seconds
-        override val is = (ensikertalainenActor.?(EnsikertalainenQuery(henkiloOid))(90.seconds)).mapTo[Ensikertalainen]
+        override val is = (ensikertalainenActor ? EnsikertalainenQuery(henkiloOid))(90.seconds).mapTo[Ensikertalainen]
       }
     } catch {
       case t: NoSuchElementException => throw ParamMissingException("parameter henkilo missing")
@@ -47,7 +47,7 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef)
 
   incident {
     case t: ParamMissingException => (id) => BadRequest(IncidentReport(id, t.getMessage))
-    case t: HetuNotFoundException => (id) => BadRequest(IncidentReport(id, "error validating hetu"))
+    case t: HetuNotFoundException => (id) => BadRequest(IncidentReport(id, "henkilo does not have hetu; add hetu and try again"))
     case t: PreconditionFailedException => (id) => InternalServerError(IncidentReport(id, "backend service failed"))
   }
 

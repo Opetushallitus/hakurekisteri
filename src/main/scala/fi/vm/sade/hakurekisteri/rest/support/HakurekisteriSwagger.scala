@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import org.json4s.Formats
 import org.scalatra.swagger.SwaggerSerializers.{ApiSerializer, EndpointSerializer, OperationSerializer}
-import org.scalatra.swagger.{ApiInfo, JacksonSwaggerBase, Swagger}
+import org.scalatra.swagger.{ResponseMessage, ApiInfo, JacksonSwaggerBase, Swagger}
 
 import org.scalatra.ScalatraServlet
 
@@ -20,3 +20,5 @@ class HakurekisteriSwagger extends Swagger(Swagger.SpecVersion, "1", ApiInfo(
   license = "" ,
   licenseUrl = "")
 )
+
+case class IncidentResponseMessage(code: Int, message: IncidentReport) extends ResponseMessage[IncidentReport]
