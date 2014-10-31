@@ -1,0 +1,2036 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://service.koodisto.sade.vm.fi/types/koodisto"
+           xmlns="http://service.koodisto.sade.vm.fi/types/koodisto"
+           elementFormDefault="qualified">
+
+    <xs:simpleType name="maatjavaltiot2">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="760">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Syria</xs:documentation>
+                    <xs:documentation xml:lang="fi">Syyria</xs:documentation>
+                    <xs:documentation xml:lang="sv">Syrien</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="686">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Senegal</xs:documentation>
+                    <xs:documentation xml:lang="en">Senegal</xs:documentation>
+                    <xs:documentation xml:lang="sv">Senegal</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="086">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">British Indian Ocean Territory</xs:documentation>
+                    <xs:documentation xml:lang="fi">Brittil&#228;inen Intian valtameren alue</xs:documentation>
+                    <xs:documentation xml:lang="sv">Brittiska territoriet i Indiska Oceanen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="807">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Makedonien</xs:documentation>
+                    <xs:documentation xml:lang="en">Macedonia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Makedonia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="188">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Costa Rica</xs:documentation>
+                    <xs:documentation xml:lang="fi">Costa Rica</xs:documentation>
+                    <xs:documentation xml:lang="en">Costa Rica</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="324">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Guinea</xs:documentation>
+                    <xs:documentation xml:lang="fi">Guinea</xs:documentation>
+                    <xs:documentation xml:lang="sv">Guinea</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="024">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Angola</xs:documentation>
+                    <xs:documentation xml:lang="en">Angola</xs:documentation>
+                    <xs:documentation xml:lang="fi">Angola</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="833">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Mansaari</xs:documentation>
+                    <xs:documentation xml:lang="fi">Mansaari</xs:documentation>
+                    <xs:documentation xml:lang="en">Isle of Man</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="214">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Dominikaaninen tasavalta</xs:documentation>
+                    <xs:documentation xml:lang="sv">Dominikanska republiken</xs:documentation>
+                    <xs:documentation xml:lang="en">Dominican Republic</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="624">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Guinea-Bissau</xs:documentation>
+                    <xs:documentation xml:lang="fi">Guinea-Bissau</xs:documentation>
+                    <xs:documentation xml:lang="en">Guinea-Bissau</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="998">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utan nationalitet</xs:documentation>
+                    <xs:documentation xml:lang="en">Without Citizenship</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ilman kansalaisuutta</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="466">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Mali</xs:documentation>
+                    <xs:documentation xml:lang="fi">Mali</xs:documentation>
+                    <xs:documentation xml:lang="sv">Mali</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="646">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Rwanda</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ruanda</xs:documentation>
+                    <xs:documentation xml:lang="sv">Rwanda</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="780">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Trinidad ja Tobago</xs:documentation>
+                    <xs:documentation xml:lang="en">Trinidad and Tobago</xs:documentation>
+                    <xs:documentation xml:lang="sv">Trinidad och Tobago</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="092">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Brittiska Jungfru&#246;arna</xs:documentation>
+                    <xs:documentation xml:lang="en">Virgin Island, British</xs:documentation>
+                    <xs:documentation xml:lang="fi">Brittil&#228;iset Neitsytsaaret</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="136">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Caymansaaret</xs:documentation>
+                    <xs:documentation xml:lang="en">Cayman Islands</xs:documentation>
+                    <xs:documentation xml:lang="sv">Cayman&#246;arna</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="795">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Turkmenistan</xs:documentation>
+                    <xs:documentation xml:lang="en">Turkmenistan</xs:documentation>
+                    <xs:documentation xml:lang="fi">Turkmenistan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="422">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Libanon</xs:documentation>
+                    <xs:documentation xml:lang="en">Lebanon</xs:documentation>
+                    <xs:documentation xml:lang="sv">Libanon</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="275">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">De palestinska omr&#229;dena</xs:documentation>
+                    <xs:documentation xml:lang="fi">Palestiina</xs:documentation>
+                    <xs:documentation xml:lang="en">Palestine</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="076">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Brasilien</xs:documentation>
+                    <xs:documentation xml:lang="fi">Brasilia</xs:documentation>
+                    <xs:documentation xml:lang="en">Brazil</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="740">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Suriname</xs:documentation>
+                    <xs:documentation xml:lang="fi">Suriname</xs:documentation>
+                    <xs:documentation xml:lang="sv">Suninam</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="074">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Bouvet Island</xs:documentation>
+                    <xs:documentation xml:lang="sv">Bouvet&#246;n</xs:documentation>
+                    <xs:documentation xml:lang="fi">Bouvet&apos;nsaari</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="508">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Mozambique</xs:documentation>
+                    <xs:documentation xml:lang="sv">Mosambique</xs:documentation>
+                    <xs:documentation xml:lang="fi">Mosambik</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="788">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Tunisia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tunisien</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tunisia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="096">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Brunei</xs:documentation>
+                    <xs:documentation xml:lang="fi">Brunei</xs:documentation>
+                    <xs:documentation xml:lang="sv">Brunei</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="642">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Romania</xs:documentation>
+                    <xs:documentation xml:lang="en">Romania</xs:documentation>
+                    <xs:documentation xml:lang="sv">Rum&#228;nien</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="504">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Marocko</xs:documentation>
+                    <xs:documentation xml:lang="en">Morocco</xs:documentation>
+                    <xs:documentation xml:lang="fi">Marokko</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="862">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Venezuela</xs:documentation>
+                    <xs:documentation xml:lang="sv">Venezuela</xs:documentation>
+                    <xs:documentation xml:lang="en">Venezuela</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="056">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Belgien</xs:documentation>
+                    <xs:documentation xml:lang="fi">Belgia</xs:documentation>
+                    <xs:documentation xml:lang="en">Belgium</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="408">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Demokratiska folkrepubliken Korea (Nordkorea)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Korean demokraattinen kansantasavalta (Pohjois-Korea)</xs:documentation>
+                    <xs:documentation xml:lang="en">Korea, Democratic People&apos;s Republic of (North Korea)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="598">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Papua-Uusi-Guinea</xs:documentation>
+                    <xs:documentation xml:lang="en">Papua New Guinea</xs:documentation>
+                    <xs:documentation xml:lang="sv">Papua Nya Guinea</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="170">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Colombia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Columbia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kolumbia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="562">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Niger</xs:documentation>
+                    <xs:documentation xml:lang="sv">Niger</xs:documentation>
+                    <xs:documentation xml:lang="en">Niger</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="706">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Somalia</xs:documentation>
+                    <xs:documentation xml:lang="en">Somalia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Somalia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="580">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Northern Mariana Islands</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pohjois-Mariaanit</xs:documentation>
+                    <xs:documentation xml:lang="sv">Nordmarianerna</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="604">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Peru</xs:documentation>
+                    <xs:documentation xml:lang="en">Peru</xs:documentation>
+                    <xs:documentation xml:lang="fi">Peru</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="060">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Bermuda</xs:documentation>
+                    <xs:documentation xml:lang="sv">Bermuda</xs:documentation>
+                    <xs:documentation xml:lang="en">Bermuda</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="400">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Jordania</xs:documentation>
+                    <xs:documentation xml:lang="en">Jordan</xs:documentation>
+                    <xs:documentation xml:lang="sv">Jordanien</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="116">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Cambodia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kambodza</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kambodja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="478">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Mauritania</xs:documentation>
+                    <xs:documentation xml:lang="sv">Mauretanien</xs:documentation>
+                    <xs:documentation xml:lang="en">Mauritania</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="178">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kongo (Kongo-Brazzaville)</xs:documentation>
+                    <xs:documentation xml:lang="en">Congo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kongo (Kongo-Brazzaville)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="492">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Monaco</xs:documentation>
+                    <xs:documentation xml:lang="sv">Monaco</xs:documentation>
+                    <xs:documentation xml:lang="en">Monaco</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="300">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Greece</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kreikka</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grekland</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="156">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kiina</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kina</xs:documentation>
+                    <xs:documentation xml:lang="en">China</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="233">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Viro</xs:documentation>
+                    <xs:documentation xml:lang="sv">Estland</xs:documentation>
+                    <xs:documentation xml:lang="en">Estonia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="336">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Vatikanstaten</xs:documentation>
+                    <xs:documentation xml:lang="en">Holy See (Vatican City State)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vatikaani</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="120">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kamerun</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kamerun</xs:documentation>
+                    <xs:documentation xml:lang="en">Cameroon</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="270">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gambia</xs:documentation>
+                    <xs:documentation xml:lang="en">Gambia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Gambia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="566">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Nigeria</xs:documentation>
+                    <xs:documentation xml:lang="sv">Nigeria</xs:documentation>
+                    <xs:documentation xml:lang="en">Nigeria</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="162">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Christmas Island</xs:documentation>
+                    <xs:documentation xml:lang="fi">Joulusaari</xs:documentation>
+                    <xs:documentation xml:lang="sv">Jul&#246;n</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="090">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Salomon&#246;arna</xs:documentation>
+                    <xs:documentation xml:lang="en">Solomon Islands</xs:documentation>
+                    <xs:documentation xml:lang="fi">Salomonsaaret</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="004">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Afghanistan</xs:documentation>
+                    <xs:documentation xml:lang="en">Afghanistan</xs:documentation>
+                    <xs:documentation xml:lang="fi">Afganistan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="533">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Aruba</xs:documentation>
+                    <xs:documentation xml:lang="sv">Aruba</xs:documentation>
+                    <xs:documentation xml:lang="fi">Aruba</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="831">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Guernsey</xs:documentation>
+                    <xs:documentation xml:lang="fi">Guernsey</xs:documentation>
+                    <xs:documentation xml:lang="en">Guernsey</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="728">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Etel&#228;-Sudan</xs:documentation>
+                    <xs:documentation xml:lang="en">South Sudan</xs:documentation>
+                    <xs:documentation xml:lang="sv">Etel&#228;-Sudan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="203">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Czech Republic</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tjeckien</xs:documentation>
+                    <xs:documentation xml:lang="fi">T&#353;ekki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="250">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ranska</xs:documentation>
+                    <xs:documentation xml:lang="en">France</xs:documentation>
+                    <xs:documentation xml:lang="sv">Frankrike</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="516">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Namibia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Namibia</xs:documentation>
+                    <xs:documentation xml:lang="en">Namibia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="638">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">R&#233;union</xs:documentation>
+                    <xs:documentation xml:lang="sv">R&#233;union</xs:documentation>
+                    <xs:documentation xml:lang="fi">R&#233;union</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="535">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Bonaire,Sint Eustatius ja Saba</xs:documentation>
+                    <xs:documentation xml:lang="en">Bonaire, Sint Eustatius and Saba</xs:documentation>
+                    <xs:documentation xml:lang="fi">Bonaire,Sint Eustatius ja Saba</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="663">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Saint Martin (Ranska)</xs:documentation>
+                    <xs:documentation xml:lang="en">Saint Martin (French Part)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Saint Martin (Ranska)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="474">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Martinique</xs:documentation>
+                    <xs:documentation xml:lang="en">Martinique</xs:documentation>
+                    <xs:documentation xml:lang="fi">Martinique</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="308">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Grenada</xs:documentation>
+                    <xs:documentation xml:lang="en">Grenada</xs:documentation>
+                    <xs:documentation xml:lang="fi">Grenada</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="388">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Jamaica</xs:documentation>
+                    <xs:documentation xml:lang="sv">Jamaica</xs:documentation>
+                    <xs:documentation xml:lang="fi">Jamaika</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="674">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">San Marino</xs:documentation>
+                    <xs:documentation xml:lang="fi">San Marino</xs:documentation>
+                    <xs:documentation xml:lang="en">San Marino</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="231">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Etiopien</xs:documentation>
+                    <xs:documentation xml:lang="en">Ethiopia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Etiopia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="997">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kosovo</xs:documentation>
+                    <xs:documentation xml:lang="en">Kosovo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kosovo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="112">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Belarus</xs:documentation>
+                    <xs:documentation xml:lang="sv">Vitryssland</xs:documentation>
+                    <xs:documentation xml:lang="fi">Valko-Ven&#228;j&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="616">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Polen</xs:documentation>
+                    <xs:documentation xml:lang="fi">Puola</xs:documentation>
+                    <xs:documentation xml:lang="en">Poland</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="404">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Kenya</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kenya</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kenia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="084">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Belize</xs:documentation>
+                    <xs:documentation xml:lang="en">Belize</xs:documentation>
+                    <xs:documentation xml:lang="sv">Belize</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="548">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Vanuatu</xs:documentation>
+                    <xs:documentation xml:lang="sv">Vanuatu</xs:documentation>
+                    <xs:documentation xml:lang="en">Vanuatu</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="612">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pitcairn</xs:documentation>
+                    <xs:documentation xml:lang="en">Pitcairn</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pitcairn</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="292">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Gibraltar</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gibraltar</xs:documentation>
+                    <xs:documentation xml:lang="en">Gibraltar</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="174">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Komorerna</xs:documentation>
+                    <xs:documentation xml:lang="en">Comoros</xs:documentation>
+                    <xs:documentation xml:lang="fi">Komorit</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="398">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kazakstan</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kazakstan</xs:documentation>
+                    <xs:documentation xml:lang="en">Kazakhstan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="262">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Djibouti</xs:documentation>
+                    <xs:documentation xml:lang="sv">Djibouti</xs:documentation>
+                    <xs:documentation xml:lang="fi">Djibouti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="860">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Uzbekistan</xs:documentation>
+                    <xs:documentation xml:lang="fi">Uzbekistan</xs:documentation>
+                    <xs:documentation xml:lang="sv">Uzbekistan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="032">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Argentina</xs:documentation>
+                    <xs:documentation xml:lang="fi">Argentiina</xs:documentation>
+                    <xs:documentation xml:lang="en">Argentina</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="239">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">South Georgia and the South Sandwich Islands</xs:documentation>
+                    <xs:documentation xml:lang="sv">Sydgeorgien och Sydsandwich&#246;arna</xs:documentation>
+                    <xs:documentation xml:lang="fi">Etel&#228;-Georgia ja Etel&#228;iset Sandwichsaaret</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="531">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Curacao</xs:documentation>
+                    <xs:documentation xml:lang="en">Cura&#231;ao</xs:documentation>
+                    <xs:documentation xml:lang="sv">Curacao</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="372">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Irland</xs:documentation>
+                    <xs:documentation xml:lang="fi">Irlanti</xs:documentation>
+                    <xs:documentation xml:lang="en">Ireland</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="124">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kanada</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kanada</xs:documentation>
+                    <xs:documentation xml:lang="en">Canada</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="132">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Cape Verde</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kap Verde</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kap Verde</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="660">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Anguilla</xs:documentation>
+                    <xs:documentation xml:lang="en">Anguilla</xs:documentation>
+                    <xs:documentation xml:lang="fi">Anguilla</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="254">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Franska Guyana</xs:documentation>
+                    <xs:documentation xml:lang="en">French Guiana</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ranskan Guayana</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="010">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Antarctica</xs:documentation>
+                    <xs:documentation xml:lang="fi">Antarktis</xs:documentation>
+                    <xs:documentation xml:lang="sv">Antarktis</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="100">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Bulgarien</xs:documentation>
+                    <xs:documentation xml:lang="en">Bulgaria</xs:documentation>
+                    <xs:documentation xml:lang="fi">Bulgaria</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="581">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">F&#246;renta Staternas mindre &#246;ar i Oceanien och V&#228;stindien</xs:documentation>
+                    <xs:documentation xml:lang="en">United States Minor Outlying Islands</xs:documentation>
+                    <xs:documentation xml:lang="fi">Yhdysvaltain pienet erillissaaret</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="334">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Heard och McDonald&#246;arna</xs:documentation>
+                    <xs:documentation xml:lang="en">Heard Island and McDonald Islands</xs:documentation>
+                    <xs:documentation xml:lang="fi">Heard ja McDonaldinsaaret</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="320">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Guatemala</xs:documentation>
+                    <xs:documentation xml:lang="sv">Guatemala</xs:documentation>
+                    <xs:documentation xml:lang="en">Guatemala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="144">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Sri Lanka</xs:documentation>
+                    <xs:documentation xml:lang="en">Sri Lanka</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sri Lanka</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="304">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Greenland</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gr&#246;nland</xs:documentation>
+                    <xs:documentation xml:lang="fi">Gr&#246;nlanti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="907">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kosovo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kosovo</xs:documentation>
+                    <xs:documentation xml:lang="en">Kosovo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="826">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">United Kingdom</xs:documentation>
+                    <xs:documentation xml:lang="sv">Storbritannien</xs:documentation>
+                    <xs:documentation xml:lang="fi">Britannia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="512">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Oman</xs:documentation>
+                    <xs:documentation xml:lang="en">Oman</xs:documentation>
+                    <xs:documentation xml:lang="fi">Oman</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="368">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Irak</xs:documentation>
+                    <xs:documentation xml:lang="en">Iraq</xs:documentation>
+                    <xs:documentation xml:lang="fi">Irak</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="052">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Barbados</xs:documentation>
+                    <xs:documentation xml:lang="fi">Barbados</xs:documentation>
+                    <xs:documentation xml:lang="en">Barbados</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="608">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Filippiinit</xs:documentation>
+                    <xs:documentation xml:lang="sv">Filippinerna</xs:documentation>
+                    <xs:documentation xml:lang="en">Philippines</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="108">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Burundi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Burundi</xs:documentation>
+                    <xs:documentation xml:lang="en">Burundi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="682">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Saudiarabien</xs:documentation>
+                    <xs:documentation xml:lang="fi">Saudi-Arabia</xs:documentation>
+                    <xs:documentation xml:lang="en">Saudi Arabia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="232">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Eritrea</xs:documentation>
+                    <xs:documentation xml:lang="en">Eritrea</xs:documentation>
+                    <xs:documentation xml:lang="sv">Eritrea</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="620">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Portugal</xs:documentation>
+                    <xs:documentation xml:lang="fi">Portugali</xs:documentation>
+                    <xs:documentation xml:lang="sv">Portugal</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="558">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Nicaragua</xs:documentation>
+                    <xs:documentation xml:lang="fi">Nicaragua</xs:documentation>
+                    <xs:documentation xml:lang="sv">Nicaragua</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="148">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Chad</xs:documentation>
+                    <xs:documentation xml:lang="fi">T&#353;ad</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tchad</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="222">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">El Salvador</xs:documentation>
+                    <xs:documentation xml:lang="sv">El Salvador</xs:documentation>
+                    <xs:documentation xml:lang="en">El Salvador</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="016">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">American Samoa</xs:documentation>
+                    <xs:documentation xml:lang="fi">Amerikan Samoa</xs:documentation>
+                    <xs:documentation xml:lang="sv">Amerikanska Samoa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="418">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Laos</xs:documentation>
+                    <xs:documentation xml:lang="fi">Laos</xs:documentation>
+                    <xs:documentation xml:lang="en">Laos</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="804">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ukraina</xs:documentation>
+                    <xs:documentation xml:lang="en">Ukraine</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ukraina</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="288">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Ghana</xs:documentation>
+                    <xs:documentation xml:lang="en">Ghana</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ghana</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="020">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Andorra</xs:documentation>
+                    <xs:documentation xml:lang="en">Andorra</xs:documentation>
+                    <xs:documentation xml:lang="fi">Andorra</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="500">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Montserrat</xs:documentation>
+                    <xs:documentation xml:lang="sv">Montserrat</xs:documentation>
+                    <xs:documentation xml:lang="fi">Montserrat</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="446">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Macao</xs:documentation>
+                    <xs:documentation xml:lang="sv">Macao</xs:documentation>
+                    <xs:documentation xml:lang="en">Macao</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="798">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tuvalu</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tuvalu</xs:documentation>
+                    <xs:documentation xml:lang="en">Tuvalu</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="854">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Burkina Faso</xs:documentation>
+                    <xs:documentation xml:lang="sv">Burkina Faso</xs:documentation>
+                    <xs:documentation xml:lang="fi">Burkina Faso</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="028">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Antigua ja Barbuda</xs:documentation>
+                    <xs:documentation xml:lang="en">Antigua and Barbuda</xs:documentation>
+                    <xs:documentation xml:lang="sv">Antigua och Barbuda</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="784">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Arabiemiirikunnat</xs:documentation>
+                    <xs:documentation xml:lang="en">United Arab Emirates</xs:documentation>
+                    <xs:documentation xml:lang="sv">F&#246;renade Arabemirate</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="008">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Albania</xs:documentation>
+                    <xs:documentation xml:lang="sv">Albanien</xs:documentation>
+                    <xs:documentation xml:lang="en">Albania</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="184">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Cook Islands</xs:documentation>
+                    <xs:documentation xml:lang="sv">Cook&#246;arna</xs:documentation>
+                    <xs:documentation xml:lang="fi">Cookinsaaret</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="242">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Fiji</xs:documentation>
+                    <xs:documentation xml:lang="fi">Fidzi</xs:documentation>
+                    <xs:documentation xml:lang="en">Fiji</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="796">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Turks- och Caicos&#246;arna</xs:documentation>
+                    <xs:documentation xml:lang="fi">Turks- ja Caicossaaret</xs:documentation>
+                    <xs:documentation xml:lang="en">Turks and Caicos Islands</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="752">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Sverige</xs:documentation>
+                    <xs:documentation xml:lang="en">Sweden</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ruotsi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="226">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Ekvatorialguinea</xs:documentation>
+                    <xs:documentation xml:lang="fi">P&#228;iv&#228;ntasaajan Guinea</xs:documentation>
+                    <xs:documentation xml:lang="en">Equatorial Guinea</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="276">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Saksa</xs:documentation>
+                    <xs:documentation xml:lang="en">Germany</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tyskland</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="887">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Yemen</xs:documentation>
+                    <xs:documentation xml:lang="sv">Jemen</xs:documentation>
+                    <xs:documentation xml:lang="fi">Jemen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="528">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Netherlands</xs:documentation>
+                    <xs:documentation xml:lang="fi">Alankomaat</xs:documentation>
+                    <xs:documentation xml:lang="sv">Nederl&#228;nderna</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="729">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Sudan</xs:documentation>
+                    <xs:documentation xml:lang="sv">Sudan</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sudan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="012">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Algeria</xs:documentation>
+                    <xs:documentation xml:lang="fi">Algeria</xs:documentation>
+                    <xs:documentation xml:lang="sv">Algeriet</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="591">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Panama</xs:documentation>
+                    <xs:documentation xml:lang="fi">Panama</xs:documentation>
+                    <xs:documentation xml:lang="sv">Panama</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="800">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Uganda</xs:documentation>
+                    <xs:documentation xml:lang="en">Uganda</xs:documentation>
+                    <xs:documentation xml:lang="sv">Uganda</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="578">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Norja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Norge</xs:documentation>
+                    <xs:documentation xml:lang="en">Norway</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="442">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Luxemburg</xs:documentation>
+                    <xs:documentation xml:lang="sv">Luxemburg</xs:documentation>
+                    <xs:documentation xml:lang="en">Luxembourg</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="583">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Micronesia, Federated States of</xs:documentation>
+                    <xs:documentation xml:lang="fi">Mikronesia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Mikronesien</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="659">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Saint Kitts ja Nevis</xs:documentation>
+                    <xs:documentation xml:lang="sv">Saint Kitts och Nevis</xs:documentation>
+                    <xs:documentation xml:lang="en">Saint Kitts and Nevis</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="426">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Lesotho</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lesotho</xs:documentation>
+                    <xs:documentation xml:lang="en">Lesotho</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="040">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">&#214;sterrike</xs:documentation>
+                    <xs:documentation xml:lang="en">Austria</xs:documentation>
+                    <xs:documentation xml:lang="fi">It&#228;valta</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="654">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Saint Helena</xs:documentation>
+                    <xs:documentation xml:lang="sv">Saint Helena</xs:documentation>
+                    <xs:documentation xml:lang="en">Saint Helena</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="218">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Ecuador</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ecuador</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ecuador</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="678">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">S&#227;o Tom&#233; ja Pr&#237;ncipe</xs:documentation>
+                    <xs:documentation xml:lang="en">S&#227;o Tom&#233; and Pr&#237;ncipe</xs:documentation>
+                    <xs:documentation xml:lang="sv">S&#227;o Tom&#233; och Pr&#237;ncipe</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="688">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Serbien</xs:documentation>
+                    <xs:documentation xml:lang="fi">Serbia</xs:documentation>
+                    <xs:documentation xml:lang="en">Serbia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="768">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Togo</xs:documentation>
+                    <xs:documentation xml:lang="en">Togo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Togo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="694">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Sierra Leone</xs:documentation>
+                    <xs:documentation xml:lang="sv">Sierra Leone</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sierra Leone</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="792">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Turkey</xs:documentation>
+                    <xs:documentation xml:lang="fi">Turkki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Turkiet</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="716">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Zimbabwe</xs:documentation>
+                    <xs:documentation xml:lang="fi">Zimbabwe</xs:documentation>
+                    <xs:documentation xml:lang="en">Zimbabwe</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="626">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">It&#228;-Timor</xs:documentation>
+                    <xs:documentation xml:lang="sv">&#214;sttimor</xs:documentation>
+                    <xs:documentation xml:lang="en">Timor-Leste (East Timor)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="772">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tokelau</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tokelau</xs:documentation>
+                    <xs:documentation xml:lang="en">Tokelau</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="764">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Thailand</xs:documentation>
+                    <xs:documentation xml:lang="fi">Thaimaa</xs:documentation>
+                    <xs:documentation xml:lang="sv">Thailand</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="352">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Iceland</xs:documentation>
+                    <xs:documentation xml:lang="fi">Islanti</xs:documentation>
+                    <xs:documentation xml:lang="sv">Island</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="392">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Japan</xs:documentation>
+                    <xs:documentation xml:lang="sv">Japan</xs:documentation>
+                    <xs:documentation xml:lang="fi">Japani</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="554">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Uusi-Seelanti</xs:documentation>
+                    <xs:documentation xml:lang="en">New Zealand</xs:documentation>
+                    <xs:documentation xml:lang="sv">Nya Zeeland</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="732">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">V&#228;stsahara</xs:documentation>
+                    <xs:documentation xml:lang="fi">L&#228;nsi-Sahara</xs:documentation>
+                    <xs:documentation xml:lang="en">Western Sahara</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="191">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kroatia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kroatien</xs:documentation>
+                    <xs:documentation xml:lang="en">Croatia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="344">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Hong Kong</xs:documentation>
+                    <xs:documentation xml:lang="fi">Hongkong</xs:documentation>
+                    <xs:documentation xml:lang="sv">Hongkong</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="044">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Bahamas</xs:documentation>
+                    <xs:documentation xml:lang="en">Bahamas</xs:documentation>
+                    <xs:documentation xml:lang="fi">Bahama</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="204">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Benin</xs:documentation>
+                    <xs:documentation xml:lang="fi">Benin</xs:documentation>
+                    <xs:documentation xml:lang="en">Benin</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="268">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Georgien</xs:documentation>
+                    <xs:documentation xml:lang="fi">Georgia</xs:documentation>
+                    <xs:documentation xml:lang="en">Georgia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="850">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Virgin Islands, U.S.</xs:documentation>
+                    <xs:documentation xml:lang="fi">Yhdysvaltain Neitsytsaaret</xs:documentation>
+                    <xs:documentation xml:lang="sv">Amerikanska Jungfru&#246;arna</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="031">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Azerbaijan</xs:documentation>
+                    <xs:documentation xml:lang="fi">Azerbaidzan</xs:documentation>
+                    <xs:documentation xml:lang="sv">Azerbajdzjan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="212">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Dominica</xs:documentation>
+                    <xs:documentation xml:lang="sv">Dominica</xs:documentation>
+                    <xs:documentation xml:lang="fi">Dominica</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="534">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Sint Maarten(Alankomaat)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sint Maarten(Alankomaat)</xs:documentation>
+                    <xs:documentation xml:lang="en">Sint Maarten (Dutch part)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="050">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Bangladesh</xs:documentation>
+                    <xs:documentation xml:lang="fi">Bangladesh</xs:documentation>
+                    <xs:documentation xml:lang="sv">Bangladesh</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="434">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Libya</xs:documentation>
+                    <xs:documentation xml:lang="sv">Libyen</xs:documentation>
+                    <xs:documentation xml:lang="en">Libyan Arab Jamahiriya</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="410">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Korea, Republic of (South Korea)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Republiken Korea (Sydkorea)</xs:documentation>
+                    <xs:documentation xml:lang="fi">Korean Tasavalta (Etel&#228;-Korea)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="462">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Maldives</xs:documentation>
+                    <xs:documentation xml:lang="sv">Maldiverna</xs:documentation>
+                    <xs:documentation xml:lang="fi">Malediivit</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="440">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Lithuania</xs:documentation>
+                    <xs:documentation xml:lang="sv">Litauen</xs:documentation>
+                    <xs:documentation xml:lang="fi">Liettua</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="158">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Taiwan</xs:documentation>
+                    <xs:documentation xml:lang="en">Taiwan, Province of China</xs:documentation>
+                    <xs:documentation xml:lang="sv">Taiwan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="634">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Qatar</xs:documentation>
+                    <xs:documentation xml:lang="en">Qatar</xs:documentation>
+                    <xs:documentation xml:lang="fi">Qatar</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="882">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Samoa</xs:documentation>
+                    <xs:documentation xml:lang="sv">Samoa</xs:documentation>
+                    <xs:documentation xml:lang="en">Samoa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="662">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Saint Lucia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Saint Lucia</xs:documentation>
+                    <xs:documentation xml:lang="en">Saint Lucia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="152">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Chile</xs:documentation>
+                    <xs:documentation xml:lang="fi">Chile</xs:documentation>
+                    <xs:documentation xml:lang="sv">Chile</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="260">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">French Southern Territories</xs:documentation>
+                    <xs:documentation xml:lang="sv">De franska territorierna i s&#246;dra Indiska Oceanen</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ranskan etel&#228;iset alueet</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="702">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Singapore</xs:documentation>
+                    <xs:documentation xml:lang="fi">Singapore</xs:documentation>
+                    <xs:documentation xml:lang="en">Singapore</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="690">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Seychelles</xs:documentation>
+                    <xs:documentation xml:lang="fi">Seychellit</xs:documentation>
+                    <xs:documentation xml:lang="sv">Seychellerna</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="710">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Sydafrika</xs:documentation>
+                    <xs:documentation xml:lang="en">South Africa</xs:documentation>
+                    <xs:documentation xml:lang="fi">Etel&#228;-Afrikka</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="705">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Slovenien</xs:documentation>
+                    <xs:documentation xml:lang="fi">Slovenia</xs:documentation>
+                    <xs:documentation xml:lang="en">Slovenia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="234">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Faroe Islands</xs:documentation>
+                    <xs:documentation xml:lang="sv">F&#228;r&#246;arna</xs:documentation>
+                    <xs:documentation xml:lang="fi">F&#228;rsaaret</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="196">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Cypern</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kypros</xs:documentation>
+                    <xs:documentation xml:lang="en">Cyprus</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="248">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">&#197;land</xs:documentation>
+                    <xs:documentation xml:lang="en">&#197;land Islands</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ahvenanmaa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="670">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Saint Vincent och Grenadinerna</xs:documentation>
+                    <xs:documentation xml:lang="en">Saint Vincent and the Grenadines</xs:documentation>
+                    <xs:documentation xml:lang="fi">Saint Vincent ja Grenadiinit</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="312">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Guadeloupe</xs:documentation>
+                    <xs:documentation xml:lang="en">Guadeloupe</xs:documentation>
+                    <xs:documentation xml:lang="sv">Guadeloupe</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="643">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Russian Federation</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ryssland</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ven&#228;j&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="652">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Saint Barth&#233;lemy</xs:documentation>
+                    <xs:documentation xml:lang="sv">Saint Barth&#233;lemy</xs:documentation>
+                    <xs:documentation xml:lang="fi">Saint Barth&#233;lemy</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="104">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Myanmar</xs:documentation>
+                    <xs:documentation xml:lang="en">Myanmar</xs:documentation>
+                    <xs:documentation xml:lang="sv">Myanmar</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="072">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Botswana</xs:documentation>
+                    <xs:documentation xml:lang="sv">Botswana</xs:documentation>
+                    <xs:documentation xml:lang="en">Botswana</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="876">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Wallis and Futuna</xs:documentation>
+                    <xs:documentation xml:lang="sv">Wallis och Futuna</xs:documentation>
+                    <xs:documentation xml:lang="fi">Wallis ja Futuna</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="064">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Bhutan</xs:documentation>
+                    <xs:documentation xml:lang="en">Bhutan</xs:documentation>
+                    <xs:documentation xml:lang="fi">Bhutan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="524">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Nepal</xs:documentation>
+                    <xs:documentation xml:lang="en">Nepal</xs:documentation>
+                    <xs:documentation xml:lang="sv">Nepal</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="068">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Bolivia</xs:documentation>
+                    <xs:documentation xml:lang="en">Bolivia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Bolivia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="520">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Nauru</xs:documentation>
+                    <xs:documentation xml:lang="en">Nauru</xs:documentation>
+                    <xs:documentation xml:lang="sv">Nauru</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="328">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Guyana</xs:documentation>
+                    <xs:documentation xml:lang="fi">Guyana</xs:documentation>
+                    <xs:documentation xml:lang="en">Guyana</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="748">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Swaziland</xs:documentation>
+                    <xs:documentation xml:lang="en">Swaziland</xs:documentation>
+                    <xs:documentation xml:lang="fi">Swazimaa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="246">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Suomi</xs:documentation>
+                    <xs:documentation xml:lang="en">Finland</xs:documentation>
+                    <xs:documentation xml:lang="sv">Finland</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="140">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Centralafrikanska republiken</xs:documentation>
+                    <xs:documentation xml:lang="en">Central African Republic</xs:documentation>
+                    <xs:documentation xml:lang="fi">Keski-Afrikkan tasavalta</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="762">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tadzjikistan</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tadzikistan</xs:documentation>
+                    <xs:documentation xml:lang="en">Tajikistan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="454">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Malawi</xs:documentation>
+                    <xs:documentation xml:lang="en">Malawi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Malawi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="458">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Malaysia</xs:documentation>
+                    <xs:documentation xml:lang="en">Malaysia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Malesia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="540">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Nya Kaledonien</xs:documentation>
+                    <xs:documentation xml:lang="en">New Caledonia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Uusi-Kaledonia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="600">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Paraguay</xs:documentation>
+                    <xs:documentation xml:lang="en">Paraguay</xs:documentation>
+                    <xs:documentation xml:lang="sv">Paraguay</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="192">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kuba</xs:documentation>
+                    <xs:documentation xml:lang="en">Cuba</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kuuba</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="776">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tonga</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tonga</xs:documentation>
+                    <xs:documentation xml:lang="en">Tonga</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="570">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Niue</xs:documentation>
+                    <xs:documentation xml:lang="en">Niue</xs:documentation>
+                    <xs:documentation xml:lang="fi">Niue</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="208">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tanska</xs:documentation>
+                    <xs:documentation xml:lang="en">Denmark</xs:documentation>
+                    <xs:documentation xml:lang="sv">Danmark</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="498">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Moldavien</xs:documentation>
+                    <xs:documentation xml:lang="fi">Moldova</xs:documentation>
+                    <xs:documentation xml:lang="en">Moldova</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="480">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Mauritius</xs:documentation>
+                    <xs:documentation xml:lang="sv">Mauritius</xs:documentation>
+                    <xs:documentation xml:lang="en">Mauritius</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="332">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Haiti</xs:documentation>
+                    <xs:documentation xml:lang="en">Haiti</xs:documentation>
+                    <xs:documentation xml:lang="sv">Haiti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="584">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Marshallinsaaret</xs:documentation>
+                    <xs:documentation xml:lang="en">Marshall Islands</xs:documentation>
+                    <xs:documentation xml:lang="sv">Marshall&#246;arna</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="180">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Congo, The Democratic Republic of the</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kongo (Kongo-Kinshasa)</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kongo (Kongo-Kinshasa)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="704">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Vietnam</xs:documentation>
+                    <xs:documentation xml:lang="en">Viet Nam</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vietnam</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="266">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Gabon</xs:documentation>
+                    <xs:documentation xml:lang="fi">Gabon</xs:documentation>
+                    <xs:documentation xml:lang="sv">Gabon</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="048">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Bahrain</xs:documentation>
+                    <xs:documentation xml:lang="sv">Bahrain</xs:documentation>
+                    <xs:documentation xml:lang="en">Bahrain</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="036">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Australia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Australien</xs:documentation>
+                    <xs:documentation xml:lang="en">Australia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="832">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Jersey</xs:documentation>
+                    <xs:documentation xml:lang="en">Jersey</xs:documentation>
+                    <xs:documentation xml:lang="sv">Jersey</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="999">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tuntematon</xs:documentation>
+                    <xs:documentation xml:lang="en">Unknown</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ok&#228;nt land</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="818">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Egypti</xs:documentation>
+                    <xs:documentation xml:lang="sv">Egypten</xs:documentation>
+                    <xs:documentation xml:lang="en">Egypt</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="340">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Honduras</xs:documentation>
+                    <xs:documentation xml:lang="fi">Honduras</xs:documentation>
+                    <xs:documentation xml:lang="en">Honduras</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="166">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Cocos&#246;arna</xs:documentation>
+                    <xs:documentation xml:lang="en">Cocos (Keeling) Islands</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kookossaaret</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="380">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Italia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Italien</xs:documentation>
+                    <xs:documentation xml:lang="en">Italy</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="360">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Indonesien</xs:documentation>
+                    <xs:documentation xml:lang="fi">Indonesia</xs:documentation>
+                    <xs:documentation xml:lang="en">Indonesia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="414">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kuwait</xs:documentation>
+                    <xs:documentation xml:lang="en">Kuwait</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kuwait</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="834">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tansania</xs:documentation>
+                    <xs:documentation xml:lang="en">Tanzania</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tanzania</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="051">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Armenia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Armenia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Armenien</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="070">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Bosnien och Hercegovina</xs:documentation>
+                    <xs:documentation xml:lang="en">Bosnia and Herzegovina</xs:documentation>
+                    <xs:documentation xml:lang="fi">Bosnia ja Hertsegovina</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="356">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Intia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Indien</xs:documentation>
+                    <xs:documentation xml:lang="en">India</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="316">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Guam</xs:documentation>
+                    <xs:documentation xml:lang="fi">Guam</xs:documentation>
+                    <xs:documentation xml:lang="en">Guam</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="430">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Liberia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Liberia</xs:documentation>
+                    <xs:documentation xml:lang="en">Liberia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="376">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Israel</xs:documentation>
+                    <xs:documentation xml:lang="en">Israel</xs:documentation>
+                    <xs:documentation xml:lang="fi">Israel</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="630">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Puerto Rico</xs:documentation>
+                    <xs:documentation xml:lang="sv">Puerto Rico</xs:documentation>
+                    <xs:documentation xml:lang="fi">Puerto Rico</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="574">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Norfolk Island</xs:documentation>
+                    <xs:documentation xml:lang="sv">Norfolk&#246;n</xs:documentation>
+                    <xs:documentation xml:lang="fi">Norfolkinsaari</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="894">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Zambia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sambia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Zambia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="858">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Uruguay</xs:documentation>
+                    <xs:documentation xml:lang="fi">Uruguay</xs:documentation>
+                    <xs:documentation xml:lang="sv">Uruguay</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="175">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Mayotte</xs:documentation>
+                    <xs:documentation xml:lang="sv">Mayotte</xs:documentation>
+                    <xs:documentation xml:lang="en">Mayotte</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="384">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">C&#244;te d&apos;lvoire</xs:documentation>
+                    <xs:documentation xml:lang="fi">Norsunluurannikko</xs:documentation>
+                    <xs:documentation xml:lang="sv">Elfenbenskusten</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="484">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Mexiko</xs:documentation>
+                    <xs:documentation xml:lang="en">Mexico</xs:documentation>
+                    <xs:documentation xml:lang="fi">Meksiko</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="666">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Saint Pierre and Miquelon</xs:documentation>
+                    <xs:documentation xml:lang="sv">Saint Pierre och Miquelon</xs:documentation>
+                    <xs:documentation xml:lang="fi">Saint-Pierre ja Miquelon</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="840">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Yhdysvallat (USA)</xs:documentation>
+                    <xs:documentation xml:lang="en">United States, USA</xs:documentation>
+                    <xs:documentation xml:lang="sv">F&#246;renta Staterna (USA)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="470">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Malta</xs:documentation>
+                    <xs:documentation xml:lang="sv">Malta</xs:documentation>
+                    <xs:documentation xml:lang="en">Malta</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="417">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kirgizistan</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kirgisia</xs:documentation>
+                    <xs:documentation xml:lang="en">Kyrgyzstan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="744">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Svalbard ja Jan Mayen</xs:documentation>
+                    <xs:documentation xml:lang="en">Svalbard and Jan Mayen</xs:documentation>
+                    <xs:documentation xml:lang="sv">Svalbard och Jan Mayen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="496">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Mongolia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Mongolia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Mongoliet</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="585">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Palau</xs:documentation>
+                    <xs:documentation xml:lang="en">Palau</xs:documentation>
+                    <xs:documentation xml:lang="sv">Palau</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="756">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Schweiz</xs:documentation>
+                    <xs:documentation xml:lang="en">Switzerland</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sveitsi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="428">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Latvia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Lettland</xs:documentation>
+                    <xs:documentation xml:lang="fi">Latvia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="450">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Madagaskar</xs:documentation>
+                    <xs:documentation xml:lang="en">Madagascar</xs:documentation>
+                    <xs:documentation xml:lang="sv">Madagaskar</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="724">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Spanien</xs:documentation>
+                    <xs:documentation xml:lang="fi">Espanja</xs:documentation>
+                    <xs:documentation xml:lang="en">Spain</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="348">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Unkari</xs:documentation>
+                    <xs:documentation xml:lang="en">Hungary</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ungern</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="364">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Iran</xs:documentation>
+                    <xs:documentation xml:lang="fi">Iran</xs:documentation>
+                    <xs:documentation xml:lang="en">Iran</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="499">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Montenegro</xs:documentation>
+                    <xs:documentation xml:lang="sv">Montenegro</xs:documentation>
+                    <xs:documentation xml:lang="en">Montenegro</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="586">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Pakistan</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pakistan</xs:documentation>
+                    <xs:documentation xml:lang="en">Pakistan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="296">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kiribati</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kiribati</xs:documentation>
+                    <xs:documentation xml:lang="en">Kiribati</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="703">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Slovakia</xs:documentation>
+                    <xs:documentation xml:lang="en">Slovakia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Slovakien</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="438">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Liechtenstein</xs:documentation>
+                    <xs:documentation xml:lang="fi">Liechtenstein</xs:documentation>
+                    <xs:documentation xml:lang="sv">Liechtenstein</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="238">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Falklands&#246;arna</xs:documentation>
+                    <xs:documentation xml:lang="en">Falkland Islands</xs:documentation>
+                    <xs:documentation xml:lang="fi">Falklandinsaaret</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="258">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">French Plynesia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Franska Polynesien</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ranskan Polynesia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

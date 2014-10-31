@@ -18,37 +18,40 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.swagger.Swagger
+import org.scalatra.swagger.{SwaggerEngine, Swagger}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 
 
-class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, val ensikertalaisuus: ActorRef)(implicit val system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with OppijaFetcher with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
+class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, val ensikertalaisuus: ActorRef)
+                    (implicit val system: ActorSystem, sw: Swagger)
+    extends HakuJaValintarekisteriStack with OppijaFetcher with OppijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
 
+  override protected def applicationDescription: String = "Oppijan tietojen koosterajapinta"
+  override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
+  implicit val defaultTimeout: Timeout = 500.seconds
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
-  override val log: LoggingAdapter = Logging.getLogger(system, this)
-
   before() {
     contentType = formats("json")
   }
 
-  import scala.concurrent.duration._
-
-  implicit val defaultTimeout: Timeout = 500.seconds
-
-
-  get("/") {
-    implicit val user = currentUser match {
+  def getUser: User = {
+    currentUser match {
       case Some(u) => u
       case None => throw UserNotAuthorized(s"anonymous access not allowed")
     }
+  }
+
+  get("/", operation(query)) {
+    implicit val user = getUser
     val q = HakemusQuery(params)
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
@@ -56,14 +59,8 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     }
   }
 
-
-
-
-  get("/:oid") {
-    implicit val user = currentUser match {
-      case Some(u) => u
-      case None => throw UserNotAuthorized(s"anonymous access not allowed")
-    }
+  get("/:oid", operation(read)) {
+    implicit val user = getUser
     val q = HenkiloHakijaQuery(params("oid"))
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
@@ -78,24 +75,16 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
   incident {
     case t: VirtaConnectionErrorException => (id) => InternalServerError(IncidentReport(id, "virta error"))
   }
-
-
-
-
 }
 
-
-trait OppijaFetcher {
+trait OppijaFetcher { this: HakuJaValintarekisteriStack =>
 
   val rekisterit: Registers
   val hakemusRekisteri: ActorRef
   val ensikertalaisuus: ActorRef
-  val log: LoggingAdapter
 
   protected implicit def executor: ExecutionContext
   implicit val defaultTimeout: Timeout
-
-
 
   def fetchOppijat(q: HakemusQuery)(implicit user: User): Future[Seq[Oppija]] = {
     for (
@@ -137,17 +126,17 @@ trait OppijaFetcher {
   import EnsikertalainenUtil.isYsiHetu
   def fetchEnsikertalaisuus(henkiloOid: String, hetu: Option[String]): Future[Option[Ensikertalainen]] = hetu match {
     case Some(h) if isYsiHetu(h) =>
-      log.warning(s"skipping ensikertalaisuus check for test hetu on henkilo $henkiloOid")
+      logger.warning(s"skipping ensikertalaisuus check for test hetu on henkilo $henkiloOid")
       Future.successful(None)
     case _ =>
       (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, hetu)).mapTo[Ensikertalainen].
         map(Some(_)).
         recover {
         case NoHetuException(oid, message) =>
-          log.info(s"trying to resolve ensikertalaisuus for $henkiloOid, no hetu found")
+          logger.info(s"trying to resolve ensikertalaisuus for $henkiloOid, no hetu found")
           None
         case t: VirtaValidationError =>
-          log.warning(s"could not resolve ensikertalaisuus for $henkiloOid: $t")
+          logger.warning(s"could not resolve ensikertalaisuus for $henkiloOid: $t")
           None
       }
   }
@@ -163,5 +152,4 @@ trait OppijaFetcher {
   def fetchSuoritukset(henkiloOid: String)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] = {
     (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(henkilo = Some(henkiloOid)), user)).mapTo[Seq[Suoritus with Identified[UUID]]]
   }
-
 }

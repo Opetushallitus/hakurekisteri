@@ -1,0 +1,1571 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://service.koodisto.sade.vm.fi/types/koodisto"
+           xmlns="http://service.koodisto.sade.vm.fi/types/koodisto"
+           elementFormDefault="qualified">
+
+    <xs:simpleType name="kieli">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="KN">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">kannada, kanaresiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">kannada</xs:documentation>
+                    <xs:documentation xml:lang="en">Kannada</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="GA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">iriska, irl&#228;ndsk, g&#228;liska</xs:documentation>
+                    <xs:documentation xml:lang="en">Irish</xs:documentation>
+                    <xs:documentation xml:lang="fi">iiri</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="BM">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Bambara</xs:documentation>
+                    <xs:documentation xml:lang="fi">bambara</xs:documentation>
+                    <xs:documentation xml:lang="sv">bambara</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="NR">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">ndebele syd</xs:documentation>
+                    <xs:documentation xml:lang="en">South Ndebele</xs:documentation>
+                    <xs:documentation xml:lang="fi">etel&#228;ndebele</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="FI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Finnish</xs:documentation>
+                    <xs:documentation xml:lang="fi">suomi</xs:documentation>
+                    <xs:documentation xml:lang="sv">finska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="MO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">moldaviska</xs:documentation>
+                    <xs:documentation xml:lang="en">Moldavian</xs:documentation>
+                    <xs:documentation xml:lang="fi">moldavia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="GL">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Galician, Gallegan</xs:documentation>
+                    <xs:documentation xml:lang="fi">galicia</xs:documentation>
+                    <xs:documentation xml:lang="sv">galiciska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Latin</xs:documentation>
+                    <xs:documentation xml:lang="fi">latina</xs:documentation>
+                    <xs:documentation xml:lang="sv">latin</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TL">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">tagalog, pilipino</xs:documentation>
+                    <xs:documentation xml:lang="fi">tagalog, pilipino</xs:documentation>
+                    <xs:documentation xml:lang="en">Tagalog</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="NV">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Navajo, Navaho</xs:documentation>
+                    <xs:documentation xml:lang="sv">navaho</xs:documentation>
+                    <xs:documentation xml:lang="fi">navaho</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Laotian, Lao</xs:documentation>
+                    <xs:documentation xml:lang="sv">lao, laotiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">lao</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LV">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">lettiska</xs:documentation>
+                    <xs:documentation xml:lang="en">Latvian</xs:documentation>
+                    <xs:documentation xml:lang="fi">latvia, l&#228;tti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">tigrinja, tigrinya</xs:documentation>
+                    <xs:documentation xml:lang="en">Tigrinya</xs:documentation>
+                    <xs:documentation xml:lang="fi">tigrinja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="AB">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">abhaasi</xs:documentation>
+                    <xs:documentation xml:lang="sv">abchaziska</xs:documentation>
+                    <xs:documentation xml:lang="en">Abkhazian</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">sanskrit</xs:documentation>
+                    <xs:documentation xml:lang="sv">sanskrit</xs:documentation>
+                    <xs:documentation xml:lang="en">Sanskrit</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">tonga, tonganska</xs:documentation>
+                    <xs:documentation xml:lang="fi">tonga</xs:documentation>
+                    <xs:documentation xml:lang="en">Tongan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="HI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">hindi</xs:documentation>
+                    <xs:documentation xml:lang="en">Hindi</xs:documentation>
+                    <xs:documentation xml:lang="fi">hindi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="HO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">hirimotu</xs:documentation>
+                    <xs:documentation xml:lang="en">Hiri Motu</xs:documentation>
+                    <xs:documentation xml:lang="fi">hiri-motu</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TY">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">tahiti</xs:documentation>
+                    <xs:documentation xml:lang="en">Tahitian</xs:documentation>
+                    <xs:documentation xml:lang="sv">tahitiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">karjala</xs:documentation>
+                    <xs:documentation xml:lang="sv">karjala</xs:documentation>
+                    <xs:documentation xml:lang="en">Karjala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="XX">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Other languages</xs:documentation>
+                    <xs:documentation xml:lang="fi">muu kieli</xs:documentation>
+                    <xs:documentation xml:lang="sv">&#246;vrigt spr&#229;k</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="CV">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">tsuvassi</xs:documentation>
+                    <xs:documentation xml:lang="en">Chuvash</xs:documentation>
+                    <xs:documentation xml:lang="sv">tjuvasjiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KJ">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">kuanjama</xs:documentation>
+                    <xs:documentation xml:lang="en">Kwanyama, Kuanyama</xs:documentation>
+                    <xs:documentation xml:lang="sv">kuanyama</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TS">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">tsonga</xs:documentation>
+                    <xs:documentation xml:lang="sv">tsonga</xs:documentation>
+                    <xs:documentation xml:lang="en">Tsonga</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="AE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">avestiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">avesta</xs:documentation>
+                    <xs:documentation xml:lang="en">Avestan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SD">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">sindhi</xs:documentation>
+                    <xs:documentation xml:lang="en">Sindhi</xs:documentation>
+                    <xs:documentation xml:lang="sv">sindhi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="RO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">romania</xs:documentation>
+                    <xs:documentation xml:lang="en">Romanian</xs:documentation>
+                    <xs:documentation xml:lang="sv">rum&#228;nska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="VO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">volapyk</xs:documentation>
+                    <xs:documentation xml:lang="en">Volap&#252;k</xs:documentation>
+                    <xs:documentation xml:lang="fi">volap&#252;k</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="MR">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Marathi</xs:documentation>
+                    <xs:documentation xml:lang="fi">marathi</xs:documentation>
+                    <xs:documentation xml:lang="sv">marathi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="FJ">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Fijian</xs:documentation>
+                    <xs:documentation xml:lang="fi">fidzi</xs:documentation>
+                    <xs:documentation xml:lang="sv">fidianska, fiji</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="AK">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">akan</xs:documentation>
+                    <xs:documentation xml:lang="en">Akan</xs:documentation>
+                    <xs:documentation xml:lang="sv">akan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="98">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">inte officielt spr&#229;k</xs:documentation>
+                    <xs:documentation xml:lang="en">Non-official language</xs:documentation>
+                    <xs:documentation xml:lang="fi">ei virallinen kieli</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KV">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Komi</xs:documentation>
+                    <xs:documentation xml:lang="fi">komi</xs:documentation>
+                    <xs:documentation xml:lang="sv">komi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SU">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">sunda</xs:documentation>
+                    <xs:documentation xml:lang="en">Sundanese</xs:documentation>
+                    <xs:documentation xml:lang="sv">sundanesiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SQ">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">albanska</xs:documentation>
+                    <xs:documentation xml:lang="fi">albania</xs:documentation>
+                    <xs:documentation xml:lang="en">Albanian</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="IE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">interlingue</xs:documentation>
+                    <xs:documentation xml:lang="en">Interlingua</xs:documentation>
+                    <xs:documentation xml:lang="sv">interlingue</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="HR">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">kroatia</xs:documentation>
+                    <xs:documentation xml:lang="en">Croatian</xs:documentation>
+                    <xs:documentation xml:lang="sv">kroatiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="MY">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">burma</xs:documentation>
+                    <xs:documentation xml:lang="sv">burmanska, burmesiska</xs:documentation>
+                    <xs:documentation xml:lang="en">Burmese, Myanmar</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="IS">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">islanti</xs:documentation>
+                    <xs:documentation xml:lang="en">Icelandic</xs:documentation>
+                    <xs:documentation xml:lang="sv">isl&#228;ndska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="UG">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Uighur</xs:documentation>
+                    <xs:documentation xml:lang="fi">uiguuri</xs:documentation>
+                    <xs:documentation xml:lang="sv">uiguriska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TG">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">tadzikki</xs:documentation>
+                    <xs:documentation xml:lang="en">Tajiki</xs:documentation>
+                    <xs:documentation xml:lang="sv">tadzjikiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="HY">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">armeniska</xs:documentation>
+                    <xs:documentation xml:lang="en">Armenian</xs:documentation>
+                    <xs:documentation xml:lang="fi">armenia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="GD">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Gaelic, Scottish Gaelic</xs:documentation>
+                    <xs:documentation xml:lang="sv">skotsk g&#228;liska</xs:documentation>
+                    <xs:documentation xml:lang="fi">skotti, gaeli</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SV">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">ruotsi</xs:documentation>
+                    <xs:documentation xml:lang="en">Swedish</xs:documentation>
+                    <xs:documentation xml:lang="sv">svenska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">koreanska</xs:documentation>
+                    <xs:documentation xml:lang="en">Korean</xs:documentation>
+                    <xs:documentation xml:lang="fi">korea</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="NG">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">ndonga</xs:documentation>
+                    <xs:documentation xml:lang="en">Ndonga</xs:documentation>
+                    <xs:documentation xml:lang="fi">ambo, ndonga</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="YO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Yoruba</xs:documentation>
+                    <xs:documentation xml:lang="sv">joruba, yoruba</xs:documentation>
+                    <xs:documentation xml:lang="fi">joruba</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="BI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">bislama</xs:documentation>
+                    <xs:documentation xml:lang="en">Bislama</xs:documentation>
+                    <xs:documentation xml:lang="sv">bislama</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KW">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Cornish</xs:documentation>
+                    <xs:documentation xml:lang="sv">korniska</xs:documentation>
+                    <xs:documentation xml:lang="fi">korni</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Somali</xs:documentation>
+                    <xs:documentation xml:lang="fi">somali</xs:documentation>
+                    <xs:documentation xml:lang="sv">somaliska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="WO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">wolof</xs:documentation>
+                    <xs:documentation xml:lang="en">Wolof</xs:documentation>
+                    <xs:documentation xml:lang="sv">wolof</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LG">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">ganda, luganda</xs:documentation>
+                    <xs:documentation xml:lang="sv">luganda</xs:documentation>
+                    <xs:documentation xml:lang="en">Luganda, Ganda</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">telugu</xs:documentation>
+                    <xs:documentation xml:lang="sv">telugu</xs:documentation>
+                    <xs:documentation xml:lang="en">Telegu</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="AM">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">amhara</xs:documentation>
+                    <xs:documentation xml:lang="sv">amhariska, amharinya</xs:documentation>
+                    <xs:documentation xml:lang="en">Amharic</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KL">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">gr&#246;nlanti, gr&#246;nlannineskimo</xs:documentation>
+                    <xs:documentation xml:lang="en">Greenlandic, Kalaallisut</xs:documentation>
+                    <xs:documentation xml:lang="sv">gr&#246;nl&#228;ndska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="CE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">tjetjenska</xs:documentation>
+                    <xs:documentation xml:lang="en">Chechen</xs:documentation>
+                    <xs:documentation xml:lang="fi">tsetseeni</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="DZ">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">dzongkha</xs:documentation>
+                    <xs:documentation xml:lang="fi">bhutani, dzongkha</xs:documentation>
+                    <xs:documentation xml:lang="en">Bhutani, Dzongkha</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="AY">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">aymar&#225;</xs:documentation>
+                    <xs:documentation xml:lang="en">Aymara</xs:documentation>
+                    <xs:documentation xml:lang="fi">aimara, aymara</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="AZ">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Azerbaijani</xs:documentation>
+                    <xs:documentation xml:lang="sv">azerbajdzjanska</xs:documentation>
+                    <xs:documentation xml:lang="fi">azeri, azerbaidzani</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="OJ">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">ojibwa</xs:documentation>
+                    <xs:documentation xml:lang="sv">ojibwa</xs:documentation>
+                    <xs:documentation xml:lang="en">Ojibwa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="OC">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">occitanska, provensalska</xs:documentation>
+                    <xs:documentation xml:lang="en">Occitan, Provencal</xs:documentation>
+                    <xs:documentation xml:lang="fi">oksitaani, provensaali</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SK">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">slovakki</xs:documentation>
+                    <xs:documentation xml:lang="en">Slovak</xs:documentation>
+                    <xs:documentation xml:lang="sv">slovakiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="UZ">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">uzbekki, usbekki, &#246;sbekki</xs:documentation>
+                    <xs:documentation xml:lang="en">Uzbek</xs:documentation>
+                    <xs:documentation xml:lang="sv">uzbekiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="GU">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Gujarati</xs:documentation>
+                    <xs:documentation xml:lang="fi">gudzarati, gujarati</xs:documentation>
+                    <xs:documentation xml:lang="sv">gujarati</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="UK">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Ukrainian</xs:documentation>
+                    <xs:documentation xml:lang="fi">ukraina</xs:documentation>
+                    <xs:documentation xml:lang="sv">ukrainska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="GG">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">guernsey</xs:documentation>
+                    <xs:documentation xml:lang="sv">guernsey</xs:documentation>
+                    <xs:documentation xml:lang="en">Guernesiais</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="ZU">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">zulu</xs:documentation>
+                    <xs:documentation xml:lang="sv">zuluspr&#229;k, zulu</xs:documentation>
+                    <xs:documentation xml:lang="en">Zulu</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Northern Sami</xs:documentation>
+                    <xs:documentation xml:lang="sv">samiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">saame, lappi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="II">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">sichuan yi</xs:documentation>
+                    <xs:documentation xml:lang="fi">sichuan yi</xs:documentation>
+                    <xs:documentation xml:lang="en">Sichuan Yi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="UR">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Urdu</xs:documentation>
+                    <xs:documentation xml:lang="sv">urdu</xs:documentation>
+                    <xs:documentation xml:lang="fi">urdu</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="JE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Jerriais</xs:documentation>
+                    <xs:documentation xml:lang="sv">jersey</xs:documentation>
+                    <xs:documentation xml:lang="fi">jersey</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="ZH">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Chinese</xs:documentation>
+                    <xs:documentation xml:lang="fi">kiina</xs:documentation>
+                    <xs:documentation xml:lang="sv">kinesiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="EE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">ewe</xs:documentation>
+                    <xs:documentation xml:lang="sv">ewe</xs:documentation>
+                    <xs:documentation xml:lang="en">Ewe</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="MT">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Maltese</xs:documentation>
+                    <xs:documentation xml:lang="sv">maltesiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">malta</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="MG">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">malagassiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">malagasi, madagassi</xs:documentation>
+                    <xs:documentation xml:lang="en">Malagasy</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="HU">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">unkari</xs:documentation>
+                    <xs:documentation xml:lang="en">Hungarian</xs:documentation>
+                    <xs:documentation xml:lang="sv">ungerska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="PA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">pandzabi</xs:documentation>
+                    <xs:documentation xml:lang="sv">panjabi</xs:documentation>
+                    <xs:documentation xml:lang="en">Punjabi, Panjabi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SG">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">sango</xs:documentation>
+                    <xs:documentation xml:lang="fi">sango</xs:documentation>
+                    <xs:documentation xml:lang="en">Sango, Sangho</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="BN">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">bengali</xs:documentation>
+                    <xs:documentation xml:lang="sv">bengali</xs:documentation>
+                    <xs:documentation xml:lang="en">Bengali, Bangla</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LT">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">liettua</xs:documentation>
+                    <xs:documentation xml:lang="en">Lithuanian</xs:documentation>
+                    <xs:documentation xml:lang="sv">litauiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="IO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">ido</xs:documentation>
+                    <xs:documentation xml:lang="en">Ido</xs:documentation>
+                    <xs:documentation xml:lang="sv">ido</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="AA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">afar</xs:documentation>
+                    <xs:documentation xml:lang="fi">afar</xs:documentation>
+                    <xs:documentation xml:lang="en">Afar</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="EU">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">baskiska</xs:documentation>
+                    <xs:documentation xml:lang="en">Basque</xs:documentation>
+                    <xs:documentation xml:lang="fi">baski, euskera, euskara</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="99">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">tuntematon</xs:documentation>
+                    <xs:documentation xml:lang="en">Other</xs:documentation>
+                    <xs:documentation xml:lang="sv">ok&#228;nt</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="HA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">hausa</xs:documentation>
+                    <xs:documentation xml:lang="fi">hausa</xs:documentation>
+                    <xs:documentation xml:lang="en">Hausa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="ML">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">malayalam</xs:documentation>
+                    <xs:documentation xml:lang="en">Malayalam</xs:documentation>
+                    <xs:documentation xml:lang="fi">malajalam</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="RW">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Kinyarwanda, Rwanda</xs:documentation>
+                    <xs:documentation xml:lang="fi">ruanda, kinjaruanda, njaruanda</xs:documentation>
+                    <xs:documentation xml:lang="sv">kinyarwanda</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="CO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">korsikanska</xs:documentation>
+                    <xs:documentation xml:lang="en">Corsican</xs:documentation>
+                    <xs:documentation xml:lang="fi">korsika</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="MK">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Macedonian</xs:documentation>
+                    <xs:documentation xml:lang="sv">makedonska</xs:documentation>
+                    <xs:documentation xml:lang="fi">makedonia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="OR">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">oriya</xs:documentation>
+                    <xs:documentation xml:lang="en">Oriya</xs:documentation>
+                    <xs:documentation xml:lang="fi">orija</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="CR">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">cree</xs:documentation>
+                    <xs:documentation xml:lang="en">Cree</xs:documentation>
+                    <xs:documentation xml:lang="sv">cree</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">tamiliska, tamil</xs:documentation>
+                    <xs:documentation xml:lang="fi">tamili</xs:documentation>
+                    <xs:documentation xml:lang="en">Tamil</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KS">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Kashmiri</xs:documentation>
+                    <xs:documentation xml:lang="sv">kashmiriska, kashmiri</xs:documentation>
+                    <xs:documentation xml:lang="fi">kasmiri</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="IK">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">inupiak</xs:documentation>
+                    <xs:documentation xml:lang="en">Inupiaq</xs:documentation>
+                    <xs:documentation xml:lang="sv">inupiak</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="EN">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">English</xs:documentation>
+                    <xs:documentation xml:lang="sv">engelska</xs:documentation>
+                    <xs:documentation xml:lang="fi">englanti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="VI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Vietnamese</xs:documentation>
+                    <xs:documentation xml:lang="sv">vietnamesiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">vietnam</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="RU">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">ven&#228;j&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">ryska</xs:documentation>
+                    <xs:documentation xml:lang="en">Russian</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="JA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">japani</xs:documentation>
+                    <xs:documentation xml:lang="en">Japanese</xs:documentation>
+                    <xs:documentation xml:lang="sv">japanska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SC">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Sardinian</xs:documentation>
+                    <xs:documentation xml:lang="fi">sardi</xs:documentation>
+                    <xs:documentation xml:lang="sv">sardiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Georgian</xs:documentation>
+                    <xs:documentation xml:lang="fi">georgia, gruusia</xs:documentation>
+                    <xs:documentation xml:lang="sv">georgiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="BO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">tibetanska</xs:documentation>
+                    <xs:documentation xml:lang="fi">tiibet</xs:documentation>
+                    <xs:documentation xml:lang="en">Tibetan</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="NN">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Norwegian Nynorsk</xs:documentation>
+                    <xs:documentation xml:lang="sv">nynorsk</xs:documentation>
+                    <xs:documentation xml:lang="fi">uusnorja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="FY">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">frisiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">friisi</xs:documentation>
+                    <xs:documentation xml:lang="en">Frisian</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SL">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">sloveeni</xs:documentation>
+                    <xs:documentation xml:lang="en">Slovenian</xs:documentation>
+                    <xs:documentation xml:lang="sv">slovenska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="BE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Belarusian</xs:documentation>
+                    <xs:documentation xml:lang="sv">vitryska</xs:documentation>
+                    <xs:documentation xml:lang="fi">valkoven&#228;j&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="EO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">esperanto</xs:documentation>
+                    <xs:documentation xml:lang="en">Esperanto</xs:documentation>
+                    <xs:documentation xml:lang="sv">esperanto</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TN">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">tswana</xs:documentation>
+                    <xs:documentation xml:lang="fi">tswana, setswana</xs:documentation>
+                    <xs:documentation xml:lang="en">Setswana, Tswana</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="XH">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Xhosa</xs:documentation>
+                    <xs:documentation xml:lang="fi">xhosa, kafferi, hosa</xs:documentation>
+                    <xs:documentation xml:lang="sv">xhosa, xosa, kafir, kosa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="DV">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Dhivehi, Maldivian</xs:documentation>
+                    <xs:documentation xml:lang="fi">divehi, malediivi</xs:documentation>
+                    <xs:documentation xml:lang="sv">divehi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="HE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">heprea, ivrit</xs:documentation>
+                    <xs:documentation xml:lang="en">Hebrew</xs:documentation>
+                    <xs:documentation xml:lang="sv">hebreiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LN">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">lingala</xs:documentation>
+                    <xs:documentation xml:lang="en">Lingala</xs:documentation>
+                    <xs:documentation xml:lang="fi">lingala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="OS">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">ossetiska</xs:documentation>
+                    <xs:documentation xml:lang="en">Ossetian, Ossetic</xs:documentation>
+                    <xs:documentation xml:lang="fi">osseetti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="RN">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">rundi, kirundi</xs:documentation>
+                    <xs:documentation xml:lang="en">Kirundi, Rundi</xs:documentation>
+                    <xs:documentation xml:lang="fi">rundi, kirundi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="NA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">nauru</xs:documentation>
+                    <xs:documentation xml:lang="en">Nauru</xs:documentation>
+                    <xs:documentation xml:lang="fi">nauru</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="RM">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">r&#228;toromanska</xs:documentation>
+                    <xs:documentation xml:lang="en">Rhaeto-Romance</xs:documentation>
+                    <xs:documentation xml:lang="fi">retoromaani</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="HZ">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">herero</xs:documentation>
+                    <xs:documentation xml:lang="fi">herero</xs:documentation>
+                    <xs:documentation xml:lang="en">Herero</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="BS">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">bosniska</xs:documentation>
+                    <xs:documentation xml:lang="fi">bosnia</xs:documentation>
+                    <xs:documentation xml:lang="en">Bosnian</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SN">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Shona</xs:documentation>
+                    <xs:documentation xml:lang="fi">shona</xs:documentation>
+                    <xs:documentation xml:lang="sv">shona</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="JV">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Javanese</xs:documentation>
+                    <xs:documentation xml:lang="fi">jaava</xs:documentation>
+                    <xs:documentation xml:lang="sv">javanesiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="ET">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">viro, eesti</xs:documentation>
+                    <xs:documentation xml:lang="sv">estniska</xs:documentation>
+                    <xs:documentation xml:lang="en">Estonian</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="VE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">venda</xs:documentation>
+                    <xs:documentation xml:lang="fi">venda</xs:documentation>
+                    <xs:documentation xml:lang="en">Venda</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="GV">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">manx</xs:documentation>
+                    <xs:documentation xml:lang="en">Manx</xs:documentation>
+                    <xs:documentation xml:lang="sv">manx</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="AF">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">afrikaans</xs:documentation>
+                    <xs:documentation xml:lang="en">Afrikaans</xs:documentation>
+                    <xs:documentation xml:lang="sv">afrikaans</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="FF">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Fulah, Fula, Fulani</xs:documentation>
+                    <xs:documentation xml:lang="sv">fulani</xs:documentation>
+                    <xs:documentation xml:lang="fi">fulani, fulfulde</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="IA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">interlingua</xs:documentation>
+                    <xs:documentation xml:lang="en">Interlingua</xs:documentation>
+                    <xs:documentation xml:lang="sv">interlingua</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="OM">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">galla, afan oromo, oromo</xs:documentation>
+                    <xs:documentation xml:lang="en">Afan Oromo, Oromo, Galla</xs:documentation>
+                    <xs:documentation xml:lang="sv">galla, oromo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="RI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Romani</xs:documentation>
+                    <xs:documentation xml:lang="fi">romani</xs:documentation>
+                    <xs:documentation xml:lang="sv">romani</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="MN">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">mongoliska</xs:documentation>
+                    <xs:documentation xml:lang="fi">mongoli</xs:documentation>
+                    <xs:documentation xml:lang="en">Mongolian</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="MI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">maori</xs:documentation>
+                    <xs:documentation xml:lang="sv">maori</xs:documentation>
+                    <xs:documentation xml:lang="en">Maori</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="FO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">f&#228;&#228;ri</xs:documentation>
+                    <xs:documentation xml:lang="sv">f&#228;riska, f&#228;r&#246;iska</xs:documentation>
+                    <xs:documentation xml:lang="en">Faroese, Faeroese</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="ZA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">tsuang</xs:documentation>
+                    <xs:documentation xml:lang="en">Zhuang, Chuang</xs:documentation>
+                    <xs:documentation xml:lang="sv">tsuang</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KU">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Kurdish</xs:documentation>
+                    <xs:documentation xml:lang="sv">kurdiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">kurdi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="AS">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">assamesiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">assami</xs:documentation>
+                    <xs:documentation xml:lang="en">Assamese</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="ES">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">spanska</xs:documentation>
+                    <xs:documentation xml:lang="fi">espanja</xs:documentation>
+                    <xs:documentation xml:lang="en">Spanish, Castilian</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="GN">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">guarani</xs:documentation>
+                    <xs:documentation xml:lang="en">Guarani</xs:documentation>
+                    <xs:documentation xml:lang="sv">guarani</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="NE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Nepali</xs:documentation>
+                    <xs:documentation xml:lang="sv">nepalesiska, nepali</xs:documentation>
+                    <xs:documentation xml:lang="fi">nepali</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LU">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">luba-katanga</xs:documentation>
+                    <xs:documentation xml:lang="en">Luba-Katanga</xs:documentation>
+                    <xs:documentation xml:lang="fi">luba-katanga</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="CH">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Chamorro</xs:documentation>
+                    <xs:documentation xml:lang="fi">chamorro</xs:documentation>
+                    <xs:documentation xml:lang="sv">chamorro</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="AV">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">avariskt spr&#229;k</xs:documentation>
+                    <xs:documentation xml:lang="fi">avaari</xs:documentation>
+                    <xs:documentation xml:lang="en">Avar, Avarish</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LB">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Luxembourgish</xs:documentation>
+                    <xs:documentation xml:lang="sv">letzebuergesch</xs:documentation>
+                    <xs:documentation xml:lang="fi">letzeburg, luxemburg</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="DA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Danish</xs:documentation>
+                    <xs:documentation xml:lang="fi">tanska</xs:documentation>
+                    <xs:documentation xml:lang="sv">danska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">limburg</xs:documentation>
+                    <xs:documentation xml:lang="sv">limburg</xs:documentation>
+                    <xs:documentation xml:lang="en">Limburgan, Limburger</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TR">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">turkiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">turkki</xs:documentation>
+                    <xs:documentation xml:lang="en">Turkish</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="IG">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">igbo</xs:documentation>
+                    <xs:documentation xml:lang="sv">ibo</xs:documentation>
+                    <xs:documentation xml:lang="en">Igbo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="NB">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Norwegian Bokm&#229;l</xs:documentation>
+                    <xs:documentation xml:lang="fi">kirjanorja</xs:documentation>
+                    <xs:documentation xml:lang="sv">norsk bokm&#229;l</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Kikuyu, Gikuyu</xs:documentation>
+                    <xs:documentation xml:lang="sv">kikuyu</xs:documentation>
+                    <xs:documentation xml:lang="fi">kikuju</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TW">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">twi</xs:documentation>
+                    <xs:documentation xml:lang="en">Twi</xs:documentation>
+                    <xs:documentation xml:lang="fi">twi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="NO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">norska</xs:documentation>
+                    <xs:documentation xml:lang="en">Norwegian</xs:documentation>
+                    <xs:documentation xml:lang="fi">norja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SM">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Samoan</xs:documentation>
+                    <xs:documentation xml:lang="fi">samoa</xs:documentation>
+                    <xs:documentation xml:lang="sv">samoanska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SW">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">suahili</xs:documentation>
+                    <xs:documentation xml:lang="en">Swahili, Kiswahili</xs:documentation>
+                    <xs:documentation xml:lang="sv">swahili</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="EL">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">grekiska</xs:documentation>
+                    <xs:documentation xml:lang="en">Greek</xs:documentation>
+                    <xs:documentation xml:lang="fi">kreikka</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="CY">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">kymriska, walesiska</xs:documentation>
+                    <xs:documentation xml:lang="en">Welsh</xs:documentation>
+                    <xs:documentation xml:lang="fi">kymri, wales</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="MH">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">marshallese</xs:documentation>
+                    <xs:documentation xml:lang="sv">marshall</xs:documentation>
+                    <xs:documentation xml:lang="en">Marshallese</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="ND">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">North Ndebele</xs:documentation>
+                    <xs:documentation xml:lang="sv">ndebele nord</xs:documentation>
+                    <xs:documentation xml:lang="fi">pohjoisndebele</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KG">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Kongo</xs:documentation>
+                    <xs:documentation xml:lang="fi">kikongo, kongo</xs:documentation>
+                    <xs:documentation xml:lang="sv">kikongo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="WA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Walloon</xs:documentation>
+                    <xs:documentation xml:lang="sv">vallonska</xs:documentation>
+                    <xs:documentation xml:lang="fi">walloon</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="DE">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">tyska</xs:documentation>
+                    <xs:documentation xml:lang="en">German</xs:documentation>
+                    <xs:documentation xml:lang="fi">saksa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="FR">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">French</xs:documentation>
+                    <xs:documentation xml:lang="fi">ranska</xs:documentation>
+                    <xs:documentation xml:lang="sv">franska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TT">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">tataari</xs:documentation>
+                    <xs:documentation xml:lang="sv">tatariska</xs:documentation>
+                    <xs:documentation xml:lang="en">Tatar</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KM">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Cambodian, Khmer</xs:documentation>
+                    <xs:documentation xml:lang="fi">khmer, kambodza</xs:documentation>
+                    <xs:documentation xml:lang="sv">khmeriska, kambodjanska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KK">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">kazakiska</xs:documentation>
+                    <xs:documentation xml:lang="en">Kazakh</xs:documentation>
+                    <xs:documentation xml:lang="fi">kazakki, kasakki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="HT">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">haiti</xs:documentation>
+                    <xs:documentation xml:lang="en">Haitian, Haitian Creole</xs:documentation>
+                    <xs:documentation xml:lang="sv">haiti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="FA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Persian, Farsi</xs:documentation>
+                    <xs:documentation xml:lang="sv">persiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">persia, nykypersia, farsi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="CA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">katalaani</xs:documentation>
+                    <xs:documentation xml:lang="en">Catalan</xs:documentation>
+                    <xs:documentation xml:lang="sv">katalanska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="NY">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Chichewa, Cheva, Nyanja</xs:documentation>
+                    <xs:documentation xml:lang="sv">nyanja</xs:documentation>
+                    <xs:documentation xml:lang="fi">njandza, tseva</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="AN">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">aragonia</xs:documentation>
+                    <xs:documentation xml:lang="en">Aragonese</xs:documentation>
+                    <xs:documentation xml:lang="sv">aragonia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="QU">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">ketsua</xs:documentation>
+                    <xs:documentation xml:lang="sv">kechua, quechua</xs:documentation>
+                    <xs:documentation xml:lang="en">Quechua</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="BG">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Bulgarian</xs:documentation>
+                    <xs:documentation xml:lang="fi">bulgaria</xs:documentation>
+                    <xs:documentation xml:lang="sv">bulgariska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="YI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">jiddisch</xs:documentation>
+                    <xs:documentation xml:lang="fi">jiddi, jiddis</xs:documentation>
+                    <xs:documentation xml:lang="en">Yiddish</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="PT">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">portugisiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">portugali</xs:documentation>
+                    <xs:documentation xml:lang="en">Portuguese</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Singalesiska, Singhalesiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">singali</xs:documentation>
+                    <xs:documentation xml:lang="sv">singalesiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KY">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">kirgiisi</xs:documentation>
+                    <xs:documentation xml:lang="sv">kirgisiska</xs:documentation>
+                    <xs:documentation xml:lang="en">Kirghiz, Kyrgyz</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="CU">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">kirkkoslaavi</xs:documentation>
+                    <xs:documentation xml:lang="sv">kyrkoslaviska</xs:documentation>
+                    <xs:documentation xml:lang="en">Old Slavonic</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="ST">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">sotho, sesotho</xs:documentation>
+                    <xs:documentation xml:lang="en">Sesotho, Southern Sotho</xs:documentation>
+                    <xs:documentation xml:lang="sv">sotho</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SR">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Serbian</xs:documentation>
+                    <xs:documentation xml:lang="fi">serbia</xs:documentation>
+                    <xs:documentation xml:lang="sv">serbiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TH">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">thail&#228;ndska, thai</xs:documentation>
+                    <xs:documentation xml:lang="en">Thai</xs:documentation>
+                    <xs:documentation xml:lang="fi">thai</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="VK">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">teckenspr&#229;k</xs:documentation>
+                    <xs:documentation xml:lang="en">Sign language</xs:documentation>
+                    <xs:documentation xml:lang="fi">viittomakieli</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="BR">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Breton</xs:documentation>
+                    <xs:documentation xml:lang="sv">bretonska</xs:documentation>
+                    <xs:documentation xml:lang="fi">bretoni</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="BA">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">basjkiriska</xs:documentation>
+                    <xs:documentation xml:lang="en">Bashkir</xs:documentation>
+                    <xs:documentation xml:lang="fi">baskiiri</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="PS">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Pashto, Pushto</xs:documentation>
+                    <xs:documentation xml:lang="fi">afgaani, pasto</xs:documentation>
+                    <xs:documentation xml:lang="sv">pashto</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="IM">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">mansaari</xs:documentation>
+                    <xs:documentation xml:lang="sv">mansaari</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="KR">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">kanuri</xs:documentation>
+                    <xs:documentation xml:lang="en">Kanuri</xs:documentation>
+                    <xs:documentation xml:lang="fi">kanuri</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="IU">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">eskim&#229;iska</xs:documentation>
+                    <xs:documentation xml:lang="fi">eskimo</xs:documentation>
+                    <xs:documentation xml:lang="en">Inuktitut</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="IT">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">italia</xs:documentation>
+                    <xs:documentation xml:lang="sv">italienska</xs:documentation>
+                    <xs:documentation xml:lang="en">Italian</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="ID">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">indonesia, bahasa indonesia</xs:documentation>
+                    <xs:documentation xml:lang="en">Indonesian</xs:documentation>
+                    <xs:documentation xml:lang="sv">indonesiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="BH">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">bihari</xs:documentation>
+                    <xs:documentation xml:lang="fi">bihari</xs:documentation>
+                    <xs:documentation xml:lang="en">Bihari</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SS">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">siswati, swazi</xs:documentation>
+                    <xs:documentation xml:lang="sv">swazi</xs:documentation>
+                    <xs:documentation xml:lang="en">Siswati, Swazi, Swati</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="PL">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">polska</xs:documentation>
+                    <xs:documentation xml:lang="en">Polish</xs:documentation>
+                    <xs:documentation xml:lang="fi">puola</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="MS">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">malajiska</xs:documentation>
+                    <xs:documentation xml:lang="en">Malay</xs:documentation>
+                    <xs:documentation xml:lang="fi">malaiji</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="NL">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">holl&#228;ndska</xs:documentation>
+                    <xs:documentation xml:lang="en">Dutch</xs:documentation>
+                    <xs:documentation xml:lang="fi">hollanti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="AR">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">arabia</xs:documentation>
+                    <xs:documentation xml:lang="en">Arabic</xs:documentation>
+                    <xs:documentation xml:lang="sv">arabiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="SH">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Serbo-Croatian</xs:documentation>
+                    <xs:documentation xml:lang="sv">serbokroatiska</xs:documentation>
+                    <xs:documentation xml:lang="fi">serbokroatia, serbokroatiska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="TK">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">turkmeniska</xs:documentation>
+                    <xs:documentation xml:lang="fi">turkmeeni</xs:documentation>
+                    <xs:documentation xml:lang="en">Turkmen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="CS">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">tsekki</xs:documentation>
+                    <xs:documentation xml:lang="sv">tjeckiska</xs:documentation>
+                    <xs:documentation xml:lang="en">Czech</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="PI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">pali</xs:documentation>
+                    <xs:documentation xml:lang="sv">pali</xs:documentation>
+                    <xs:documentation xml:lang="en">Pali</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

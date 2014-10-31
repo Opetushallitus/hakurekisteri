@@ -7,7 +7,7 @@ import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 
-case class Oppija(oppijanumero: String, opiskelu:Seq[Opiskelija], suoritukset: Seq[Todistus], opiskeluoikeudet: Seq[Opiskeluoikeus], ensikertalainen: Option[Boolean]) extends Resource[String, Oppija] with Identified[String] {
+case class Oppija(oppijanumero: String, opiskelu: Seq[Opiskelija], suoritukset: Seq[Todistus], opiskeluoikeudet: Seq[Opiskeluoikeus], ensikertalainen: Option[Boolean]) extends Resource[String, Oppija] with Identified[String] {
 
   override val id = oppijanumero
 

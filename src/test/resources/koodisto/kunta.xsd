@@ -1,0 +1,3302 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://service.koodisto.sade.vm.fi/types/koodisto"
+           xmlns="http://service.koodisto.sade.vm.fi/types/koodisto"
+           elementFormDefault="qualified">
+
+    <xs:simpleType name="kunta">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="739">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Savitaipale</xs:documentation>
+                    <xs:documentation xml:lang="sv">Savitaipale</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="833">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">T&#246;vsala</xs:documentation>
+                    <xs:documentation xml:lang="fi">Taivassalo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="989">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">&#196;ht&#228;ri</xs:documentation>
+                    <xs:documentation xml:lang="sv">Etseri</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="905">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Vaasa</xs:documentation>
+                    <xs:documentation xml:lang="sv">Vasa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="211">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kangasala</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kangasala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="592">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pet&#228;j&#228;vesi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pet&#228;j&#228;vesi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="931">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Viitasaari</xs:documentation>
+                    <xs:documentation xml:lang="fi">Viitasaari</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="583">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pelkosenniemi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pelkosenniemi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="139">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Ii</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ii</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="288">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kruunupyy</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kronoby</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="682">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Rantsila</xs:documentation>
+                    <xs:documentation xml:lang="fi">Rantsila</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="919">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Vehmersalmi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vehmersalmi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="401">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Lammi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lammi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="173">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Joutseno</xs:documentation>
+                    <xs:documentation xml:lang="sv">Joutseno</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="220">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Karjaa</xs:documentation>
+                    <xs:documentation xml:lang="sv">Karis</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="232">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kauhajoki</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kauhajoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="699">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Rovaniemi mlk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Rovaniemi Lk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="218">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">B&#246;tom</xs:documentation>
+                    <xs:documentation xml:lang="fi">Karijoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="636">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">P&#246;yty&#228;</xs:documentation>
+                    <xs:documentation xml:lang="fi">P&#246;yty&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="732">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Salla</xs:documentation>
+                    <xs:documentation xml:lang="sv">Salla</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="145">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ilmajoki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ilmajoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="614">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Posio</xs:documentation>
+                    <xs:documentation xml:lang="fi">Posio</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="417">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Lemland</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lemland</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="988">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">&#196;ets&#228;</xs:documentation>
+                    <xs:documentation xml:lang="fi">&#196;ets&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="940">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Vuolijoki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Vuolijoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="020">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Akaa</xs:documentation>
+                    <xs:documentation xml:lang="fi">Akaa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="529">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Naantali</xs:documentation>
+                    <xs:documentation xml:lang="sv">N&#229;dendal</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="172">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Joutsa</xs:documentation>
+                    <xs:documentation xml:lang="sv">Joutsa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="226">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Karstula</xs:documentation>
+                    <xs:documentation xml:lang="fi">Karstula</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="082">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hattula</xs:documentation>
+                    <xs:documentation xml:lang="sv">Hattula</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="729">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Saarij&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Saarij&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="832">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Taivalkoski</xs:documentation>
+                    <xs:documentation xml:lang="fi">Taivalkoski</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="293">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kullaa</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kullaa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="416">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lemi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Lemi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="927">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Vichtis</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vihti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="754">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Anjalankoski</xs:documentation>
+                    <xs:documentation xml:lang="sv">Anjalankoski</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="075">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hamina</xs:documentation>
+                    <xs:documentation xml:lang="sv">Fredrikshamn</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="484">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Sastmola</xs:documentation>
+                    <xs:documentation xml:lang="fi">Merikarvia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="421">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lestij&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Lestij&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="935">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Virolahti</xs:documentation>
+                    <xs:documentation xml:lang="sv">Virolahti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="705">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Rimito</xs:documentation>
+                    <xs:documentation xml:lang="fi">Rym&#228;ttyl&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="318">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">K&#246;kar</xs:documentation>
+                    <xs:documentation xml:lang="fi">K&#246;kar</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="736">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Saltvik</xs:documentation>
+                    <xs:documentation xml:lang="fi">Saltvik</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="849">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Toholampi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Toholampi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="613">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Borg&#229; Lk</xs:documentation>
+                    <xs:documentation xml:lang="fi">Porvoo mlk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="407">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lapinj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Lapptr&#228;sk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="165">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Janakkala</xs:documentation>
+                    <xs:documentation xml:lang="fi">Janakkala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="942">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">V&#228;h&#228;kyr&#246;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Lillkyro</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="770">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Sumiainen</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sumiainen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="281">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kortesj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kortesj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="045">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Eno</xs:documentation>
+                    <xs:documentation xml:lang="fi">Eno</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="431">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Loimaa Kommun</xs:documentation>
+                    <xs:documentation xml:lang="fi">Loimaan kunta</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="177">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Juupajoki</xs:documentation>
+                    <xs:documentation xml:lang="fi">Juupajoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="254">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kiikoinen</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kiikoinen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="097">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Hirvensalmi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Hirvensalmi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="700">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ruokolahti</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ruokolahti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="004">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Alah&#228;rm&#228;</xs:documentation>
+                    <xs:documentation xml:lang="fi">Alah&#228;rm&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="244">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kempele</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kempele</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="044">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Elim&#228;ki</xs:documentation>
+                    <xs:documentation xml:lang="fi">Elim&#228;ki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="283">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">H&#228;meenkoski</xs:documentation>
+                    <xs:documentation xml:lang="sv">H&#228;meenkoski</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="217">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kannus</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kannus</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="559">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Oravais</xs:documentation>
+                    <xs:documentation xml:lang="fi">Oravainen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="615">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pudasj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pudasj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="163">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Jaala</xs:documentation>
+                    <xs:documentation xml:lang="fi">Jaala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="419">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Lemu</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lemu</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="212">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kangaslampi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kangaslampi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="442">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Luvia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Luvia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="678">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Brahestad</xs:documentation>
+                    <xs:documentation xml:lang="fi">Raahe</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="285">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kotka</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kotka</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="737">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Sammatti</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sammatti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="010">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Alavus</xs:documentation>
+                    <xs:documentation xml:lang="sv">Alavo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="586">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Bj&#228;rn&#229;</xs:documentation>
+                    <xs:documentation xml:lang="fi">Perni&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="923">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">V&#228;stanfj&#228;rd</xs:documentation>
+                    <xs:documentation xml:lang="fi">V&#228;stanfj&#228;rd</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="108">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tavastkyro</xs:documentation>
+                    <xs:documentation xml:lang="fi">H&#228;meenkyr&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="083">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hauho</xs:documentation>
+                    <xs:documentation xml:lang="sv">Hauho</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="017">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Askainen</xs:documentation>
+                    <xs:documentation xml:lang="sv">Villn&#228;s</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="276">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kontiolahti</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kontiolahti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="490">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Mietoinen</xs:documentation>
+                    <xs:documentation xml:lang="sv">Mietoinen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="231">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kaskinen</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kask&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="738">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sauvo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Sagu</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="507">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">M&#228;ntyharju</xs:documentation>
+                    <xs:documentation xml:lang="fi">M&#228;ntyharju</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="040">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Dragsfj&#228;rd</xs:documentation>
+                    <xs:documentation xml:lang="sv">Dragsfj&#228;rd</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="405">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Villmanstrand</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lappeenranta</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="895">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Uusikaupunki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Nystad</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="925">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Vierem&#228;</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vierem&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="632">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Pyh&#228;selk&#228;</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pyh&#228;selk&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="069">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Haapaj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Haapaj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="766">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Sottunga</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sottunga</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="088">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Heinola</xs:documentation>
+                    <xs:documentation xml:lang="fi">Heinola</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="543">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Nurmij&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Nurmij&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="863">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">T&#246;ys&#228;</xs:documentation>
+                    <xs:documentation xml:lang="fi">T&#246;ys&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="945">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">V&#246;yri-Maksmaa</xs:documentation>
+                    <xs:documentation xml:lang="sv">V&#246;r&#229;-Maxmo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="928">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Viiala</xs:documentation>
+                    <xs:documentation xml:lang="fi">Viiala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="300">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kuortane</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kuortane</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="772">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Suodenniemi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Suodenniemi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="287">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kristinestad</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kristiinankaupunki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="073">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Halikko</xs:documentation>
+                    <xs:documentation xml:lang="fi">Halikko</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="016">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Asikkala</xs:documentation>
+                    <xs:documentation xml:lang="sv">Asikkala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="687">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Rautavaara</xs:documentation>
+                    <xs:documentation xml:lang="sv">Rautavaara</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="537">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Norrmark</xs:documentation>
+                    <xs:documentation xml:lang="fi">Noormarkku</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="858">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tusby</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tuusula</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="273">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kolari</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kolari</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="005">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Alaj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Alaj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="423">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lieto</xs:documentation>
+                    <xs:documentation xml:lang="sv">Lundo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="538">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Nousis</xs:documentation>
+                    <xs:documentation xml:lang="fi">Nousiainen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="708">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Ruukki</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ruukki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="540">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Nummi-Pusula</xs:documentation>
+                    <xs:documentation xml:lang="sv">Nummi-Pusula</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="971">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ylih&#228;rm&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ylih&#228;rm&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="204">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kaavi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kaavi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="602">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Pikis</xs:documentation>
+                    <xs:documentation xml:lang="fi">Piikki&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="493">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Mouhij&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Mouhij&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="759">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Soini</xs:documentation>
+                    <xs:documentation xml:lang="sv">Soini</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="846">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Teuva</xs:documentation>
+                    <xs:documentation xml:lang="sv">&#214;stermark</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="564">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Oulu</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ule&#229;borg</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="742">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Savukoski</xs:documentation>
+                    <xs:documentation xml:lang="fi">Savukoski</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="683">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ranua</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ranua</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="944">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">V&#246;yri</xs:documentation>
+                    <xs:documentation xml:lang="sv">V&#246;r&#229;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="785">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Vaala</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vaala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="768">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Sulkava</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sulkava</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="594">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pieks&#228;m&#228;ki mlk</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pieks&#228;m&#228;ki Lk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="091">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Helsingfors</xs:documentation>
+                    <xs:documentation xml:lang="fi">Helsinki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="202">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">St Karins</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kaarina</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="494">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Muhos</xs:documentation>
+                    <xs:documentation xml:lang="sv">Muhos</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="443">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">L&#228;ngelm&#228;ki</xs:documentation>
+                    <xs:documentation xml:lang="sv">L&#228;ngelm&#228;ki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="577">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Paimio</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pemar</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="746">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sievi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Sievi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="933">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Vilppula</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vilppula</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="573">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Parainen</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pargas</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="322">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kemi&#246;nsaari</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kimito&#246;n</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="436">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Lumijoki</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lumijoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="089">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Heinola Lk</xs:documentation>
+                    <xs:documentation xml:lang="fi">Heinola mlk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="544">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Nurmo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Nurmo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="992">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">&#196;&#228;nekoski</xs:documentation>
+                    <xs:documentation xml:lang="fi">&#196;&#228;nekoski</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="758">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sodankyl&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Sodankyl&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="747">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Siikainen</xs:documentation>
+                    <xs:documentation xml:lang="fi">Siikainen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="561">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Orip&#228;&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Orip&#228;&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="576">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Padasjoki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Padasjoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="475">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Malax</xs:documentation>
+                    <xs:documentation xml:lang="fi">Maalahti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="975">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Ylistaro</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ylistaro</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="301">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kurikka</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kurikka</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="275">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Konnevesi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Konnevesi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="979">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Yl&#228;ne</xs:documentation>
+                    <xs:documentation xml:lang="sv">Yl&#228;ne</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="541">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Nurmes</xs:documentation>
+                    <xs:documentation xml:lang="fi">Nurmes</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="686">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Rautalampi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Rautalampi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="182">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">J&#228;ms&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">J&#228;ms&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="844">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tervo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tervo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="680">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Raisio</xs:documentation>
+                    <xs:documentation xml:lang="sv">Reso</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="920">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Velkua</xs:documentation>
+                    <xs:documentation xml:lang="fi">Velkua</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="422">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lieksa</xs:documentation>
+                    <xs:documentation xml:lang="sv">Lieksa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="315">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">K&#228;lvi&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kelvi&#229;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="506">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">M&#228;ntt&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">M&#228;ntt&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="635">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">P&#228;lk&#228;ne</xs:documentation>
+                    <xs:documentation xml:lang="sv">P&#228;lk&#228;ne</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="999">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Ok&#228;nd kommun</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ei tiedossa (kunta)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="504">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Myrskyl&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">M&#246;rskom</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="855">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tuulos</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tuulos</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="775">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Suomenniemi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Suomenniemi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="761">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Somero</xs:documentation>
+                    <xs:documentation xml:lang="fi">Somero</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="476">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Maaninka</xs:documentation>
+                    <xs:documentation xml:lang="sv">Maaninka</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="831">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Taipalsaari</xs:documentation>
+                    <xs:documentation xml:lang="sv">Taipalsaari</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="562">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Orivesi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Orivesi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="755">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Siuntio</xs:documentation>
+                    <xs:documentation xml:lang="sv">Sjunde&#229;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="728">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Saari</xs:documentation>
+                    <xs:documentation xml:lang="fi">Saari</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="279">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Korpo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Korppoo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="308">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kuusjoki</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kuusjoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="848">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tohmaj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tohmaj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="140">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Iisalmi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Idensalmi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="260">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kitee</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kitee</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="257">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kyrksl&#228;tt</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kirkkonummi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="837">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tammerfors</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tampere</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="482">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Mellil&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Mellil&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="309">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Outokumpu</xs:documentation>
+                    <xs:documentation xml:lang="sv">Outokumpu</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="143">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ikaalinen</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ikalis</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="887">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Urjala</xs:documentation>
+                    <xs:documentation xml:lang="fi">Urjala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="406">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lappi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Lappi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="103">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Humppila</xs:documentation>
+                    <xs:documentation xml:lang="sv">Humppila</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="534">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Nilsi&#228;</xs:documentation>
+                    <xs:documentation xml:lang="fi">Nilsi&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="483">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Merij&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Merij&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="601">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pihtipudas</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pihtipudas</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="049">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Espoo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Esbo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="277">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Korpilahti</xs:documentation>
+                    <xs:documentation xml:lang="sv">Korpilahti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="917">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Veckelax</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vehkalahti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="018">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Askola</xs:documentation>
+                    <xs:documentation xml:lang="fi">Askola</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="186">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">J&#228;rvenp&#228;&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tr&#228;sk&#228;nda</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="545">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">N&#228;rpes</xs:documentation>
+                    <xs:documentation xml:lang="fi">N&#228;rpi&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="536">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Nokia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Nokia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="498">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Muonio</xs:documentation>
+                    <xs:documentation xml:lang="sv">Muonio</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="317">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">K&#228;rs&#228;m&#228;ki</xs:documentation>
+                    <xs:documentation xml:lang="sv">K&#228;rs&#228;m&#228;ki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="481">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Masku</xs:documentation>
+                    <xs:documentation xml:lang="fi">Masku</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="916">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Varpaisj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Varpaisj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="845">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tervola</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tervola</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="909">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Valkeala</xs:documentation>
+                    <xs:documentation xml:lang="sv">Valkeala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="751">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Simo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Simo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="500">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Muurame</xs:documentation>
+                    <xs:documentation xml:lang="fi">Muurame</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="492">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">St Michel Lk</xs:documentation>
+                    <xs:documentation xml:lang="fi">Mikkeli mlk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="908">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Valkeakoski</xs:documentation>
+                    <xs:documentation xml:lang="sv">Valkeakoski</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="435">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Luhanka</xs:documentation>
+                    <xs:documentation xml:lang="fi">Luhanka</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="485">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Merimasku</xs:documentation>
+                    <xs:documentation xml:lang="fi">Merimasku</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="169">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Jokioinen</xs:documentation>
+                    <xs:documentation xml:lang="fi">Jokioinen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="109">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tavastehus</xs:documentation>
+                    <xs:documentation xml:lang="fi">H&#228;meenlinna</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="535">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Nivala</xs:documentation>
+                    <xs:documentation xml:lang="sv">Nivala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="213">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kangasniemi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kangasniemi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="704">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Rusko</xs:documentation>
+                    <xs:documentation xml:lang="fi">Rusko</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="214">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kankaanp&#228;&#228;</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kankaanp&#228;&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="243">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kimito</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kemi&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="310">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kylm&#228;koski</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kylm&#228;koski</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="611">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pornainen</xs:documentation>
+                    <xs:documentation xml:lang="sv">Borgn&#228;s</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="834">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tammela</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tammela</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="271">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kokem&#228;ki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kumo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="740">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Nyslott</xs:documentation>
+                    <xs:documentation xml:lang="fi">Savonlinna</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="240">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kemi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kemi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="433">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Loppi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Loppi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="292">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kuivaniemi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kuivaniemi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="072">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Karl&#246;</xs:documentation>
+                    <xs:documentation xml:lang="fi">Hailuoto</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="438">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Lumparland</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lumparland</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="241">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Keminmaa</xs:documentation>
+                    <xs:documentation xml:lang="fi">Keminmaa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="303">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kuru</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kuru</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="150">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ini&#246;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ini&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="631">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Pyh&#228;ranta</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pyh&#228;ranta</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="227">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Karttula</xs:documentation>
+                    <xs:documentation xml:lang="fi">Karttula</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="620">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Puolanka</xs:documentation>
+                    <xs:documentation xml:lang="fi">Puolanka</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="630">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Pyh&#228;nt&#228;</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pyh&#228;nt&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="426">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Liperi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Liperi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="297">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kuopio</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kuopio</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="503">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Myn&#228;m&#228;ki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Myn&#228;m&#228;ki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="265">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kivij&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kivij&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="609">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pori</xs:documentation>
+                    <xs:documentation xml:lang="sv">Bj&#246;rneborg</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="099">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Honkajoki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Honkajoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="838">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Tarvasjoki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Tarvasjoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="560">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Orimattila</xs:documentation>
+                    <xs:documentation xml:lang="sv">Orimattila</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="425">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Liminka</xs:documentation>
+                    <xs:documentation xml:lang="sv">Limingo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="174">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Juankoski</xs:documentation>
+                    <xs:documentation xml:lang="sv">Juankoski</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="413">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lavia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Lavia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="014">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Anttola</xs:documentation>
+                    <xs:documentation xml:lang="sv">Anttola</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="245">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kerava</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kervo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="730">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Sahalahti</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sahalahti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="263">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kiuruvesi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kiuruvesi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="976">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">&#214;vertorne&#229;</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ylitornio</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="400">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Laitila</xs:documentation>
+                    <xs:documentation xml:lang="sv">Laitila</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="491">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Mikkeli</xs:documentation>
+                    <xs:documentation xml:lang="sv">St Michel</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="617">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Pulkkila</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pulkkila</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="783">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">S&#228;kyl&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">S&#228;kyl&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="889">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Utaj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Utaj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="210">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kalvola</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kalvola</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="047">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Enonteki&#246;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Enontekis</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="850">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Toivakka</xs:documentation>
+                    <xs:documentation xml:lang="fi">Toivakka</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="410">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Laukaa</xs:documentation>
+                    <xs:documentation xml:lang="sv">Laukaa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="913">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Vampula</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vampula</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="399">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Laihia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Laihia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="095">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Himanka</xs:documentation>
+                    <xs:documentation xml:lang="sv">Himanka</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="567">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Oulunsalo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Oulunsalo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="921">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Vesanto</xs:documentation>
+                    <xs:documentation xml:lang="sv">Vesanto</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="841">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Temmes</xs:documentation>
+                    <xs:documentation xml:lang="sv">Temmes</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="224">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Karkkila</xs:documentation>
+                    <xs:documentation xml:lang="sv">H&#246;gfors</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="430">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Loimaa</xs:documentation>
+                    <xs:documentation xml:lang="fi">Loimaa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="262">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kiukainen</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kiukainen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="248">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kes&#228;lahti</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kes&#228;lahti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="890">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utsjoki</xs:documentation>
+                    <xs:documentation xml:lang="fi">Utsjoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="934">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Vindala</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vimpeli</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="701">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ruotsinpyht&#228;&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Str&#246;mfors</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="408">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Lappo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lapua</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="035">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Br&#228;nd&#246;</xs:documentation>
+                    <xs:documentation xml:lang="fi">Br&#228;nd&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="252">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kiikala</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kiikala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="892">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Uurainen</xs:documentation>
+                    <xs:documentation xml:lang="fi">Uurainen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="607">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Polvij&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Polvij&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="588">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Pertunmaa</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pertunmaa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="050">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Eura</xs:documentation>
+                    <xs:documentation xml:lang="fi">Eura</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="946">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">V&#246;yri</xs:documentation>
+                    <xs:documentation xml:lang="sv">V&#246;r&#229;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="684">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Raumo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Rauma</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="748">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Siikajoki</xs:documentation>
+                    <xs:documentation xml:lang="fi">Siikajoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="626">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Pyh&#228;j&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pyh&#228;j&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="098">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Hollola</xs:documentation>
+                    <xs:documentation xml:lang="fi">Hollola</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="074">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Halsua</xs:documentation>
+                    <xs:documentation xml:lang="sv">Halsua</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="445">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Parainen</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pargas</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="178">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Juva</xs:documentation>
+                    <xs:documentation xml:lang="fi">Juva</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="249">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Keuruu</xs:documentation>
+                    <xs:documentation xml:lang="sv">Keuruu</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="266">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kodisjoki</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kodisjoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="081">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Hartola</xs:documentation>
+                    <xs:documentation xml:lang="fi">Hartola</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="853">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">&#197;bo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Turku</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="771">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Sund</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sund</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="612">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Borg&#229;</xs:documentation>
+                    <xs:documentation xml:lang="fi">Porvoo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="978">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Yl&#228;maa</xs:documentation>
+                    <xs:documentation xml:lang="fi">Yl&#228;maa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="102">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Huittinen</xs:documentation>
+                    <xs:documentation xml:lang="fi">Huittinen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="851">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Torne&#229;</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tornio</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="105">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hyrynsalmi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Hyrynsalmi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="479">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Maxmo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Maksamaa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="778">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Suonenjoki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Suonenjoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="604">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Birkala</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pirkkala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="619">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Punkalaidun</xs:documentation>
+                    <xs:documentation xml:lang="sv">Punkalaidun</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="563">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Oulainen</xs:documentation>
+                    <xs:documentation xml:lang="fi">Oulainen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="440">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Luoto</xs:documentation>
+                    <xs:documentation xml:lang="sv">Larsmo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="247">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kestil&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kestil&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="891">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Uukuniemi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Uukuniemi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="170">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Jomala</xs:documentation>
+                    <xs:documentation xml:lang="sv">Jomala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="777">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Suomussalmi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Suomussalmi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="289">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kuhmalahti</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kuhmalahti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="060">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Finstr&#246;m</xs:documentation>
+                    <xs:documentation xml:lang="fi">Finstr&#246;m</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="595">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Pielavesi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pielavesi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="304">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Gustavs</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kustavi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="692">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Renko</xs:documentation>
+                    <xs:documentation xml:lang="fi">Renko</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="531">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Nakkila</xs:documentation>
+                    <xs:documentation xml:lang="sv">Nakkila</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="584">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Perho</xs:documentation>
+                    <xs:documentation xml:lang="sv">Perho</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="415">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Leivonm&#228;ki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Leivonm&#228;ki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="505">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">M&#228;nts&#228;l&#228;</xs:documentation>
+                    <xs:documentation xml:lang="fi">M&#228;nts&#228;l&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="402">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Lapinlahti</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lapinlahti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="765">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sotkamo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Sotkamo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="707">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">R&#228;&#228;kkyl&#228;</xs:documentation>
+                    <xs:documentation xml:lang="fi">R&#228;&#228;kkyl&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="299">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kuorevesi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kuorevesi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="623">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Puumala</xs:documentation>
+                    <xs:documentation xml:lang="fi">Puumala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="689">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Rautj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Rautj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="864">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Toijala</xs:documentation>
+                    <xs:documentation xml:lang="fi">Toijala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="019">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Aura</xs:documentation>
+                    <xs:documentation xml:lang="sv">Aura</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="835">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Eken&#228;s</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tammisaari</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="291">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kuhmoinen</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kuhmoinen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="090">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hein&#228;vesi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Hein&#228;vesi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="508">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">M&#228;ntt&#228;-Vilppula</xs:documentation>
+                    <xs:documentation xml:lang="sv">M&#228;ntt&#228;-Vilppula</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="429">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lohtaja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Lochte&#229;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="101">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Houtskari</xs:documentation>
+                    <xs:documentation xml:lang="sv">Houtsk&#228;r</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="937">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Virtasalmi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Virtasalmi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="151">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Isojoki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Stor&#229;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="015">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Artj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Artsj&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="043">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ecker&#246;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ecker&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="489">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Miehikk&#228;l&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Miehikk&#228;l&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="085">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Haukivuori</xs:documentation>
+                    <xs:documentation xml:lang="fi">Haukivuori</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="589">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Per&#228;sein&#228;joki</xs:documentation>
+                    <xs:documentation xml:lang="fi">Per&#228;sein&#228;joki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="633">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pylk&#246;nm&#228;ki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pylk&#246;nm&#228;ki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="071">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Haapavesi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Haapavesi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="499">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Mustasaari</xs:documentation>
+                    <xs:documentation xml:lang="sv">Korsholm</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="495">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Multia</xs:documentation>
+                    <xs:documentation xml:lang="fi">Multia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="175">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Jurva</xs:documentation>
+                    <xs:documentation xml:lang="fi">Jurva</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="280">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Korsn&#228;s</xs:documentation>
+                    <xs:documentation xml:lang="fi">Korsn&#228;s</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="681">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Rantasalmi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Rantasalmi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="216">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kannonkoski</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kannonkoski</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="164">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Jalasj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Jalasj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="980">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Yl&#246;j&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Yl&#246;j&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="922">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Vesilahti</xs:documentation>
+                    <xs:documentation xml:lang="sv">Vesilahti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="290">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kuhmo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kuhmo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="441">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Luum&#228;ki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Luum&#228;ki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="444">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Lojo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lohja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="439">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Luopioinen</xs:documentation>
+                    <xs:documentation xml:lang="fi">Luopioinen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="320">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kemij&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kemij&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="316">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">K&#228;rk&#246;l&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">K&#228;rk&#246;l&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="691">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Reisj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Reisj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="710">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Raasepori</xs:documentation>
+                    <xs:documentation xml:lang="sv">Raseborg</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="625">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Pyh&#228;joki</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pyh&#228;joki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="906">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Vahto</xs:documentation>
+                    <xs:documentation xml:lang="sv">Vahto</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="180">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Jyv&#228;skyl&#228; lk</xs:documentation>
+                    <xs:documentation xml:lang="fi">Jyv&#228;skyl&#228; mlk</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="086">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hausj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Hausj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="418">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Lemp&#228;&#228;l&#228;</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lemp&#228;&#228;l&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="885">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ullava</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ullava</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="239">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Keitele</xs:documentation>
+                    <xs:documentation xml:lang="fi">Keitele</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="246">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kerim&#228;ki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kerim&#228;ki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="176">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Juuka</xs:documentation>
+                    <xs:documentation xml:lang="sv">Juuka</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="702">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ruovesi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ruovesi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="582">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Pattijoki</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pattijoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="696">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ristiina</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ristiina</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="184">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">J&#228;ppil&#228;</xs:documentation>
+                    <xs:documentation xml:lang="fi">J&#228;ppil&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="911">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Valtimo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Valtimo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="200">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Utlandet</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ulkomaa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="478">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Mariehamn</xs:documentation>
+                    <xs:documentation xml:lang="fi">Maarianhamina</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="618">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Punkaharju</xs:documentation>
+                    <xs:documentation xml:lang="sv">Punkaharju</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="784">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Finby</xs:documentation>
+                    <xs:documentation xml:lang="fi">S&#228;rkisalo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="076">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hammarland</xs:documentation>
+                    <xs:documentation xml:lang="sv">Hammarland</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="743">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sein&#228;joki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Sein&#228;joki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="167">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Joensuu</xs:documentation>
+                    <xs:documentation xml:lang="sv">Joensuu</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="932">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Viljakkala</xs:documentation>
+                    <xs:documentation xml:lang="sv">Viljakkala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="749">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Siilinj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Siilinj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="061">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Forssa</xs:documentation>
+                    <xs:documentation xml:lang="sv">Forssa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="219">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Karinainen</xs:documentation>
+                    <xs:documentation xml:lang="fi">Karinainen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="179">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Jyv&#228;skyl&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Jyv&#228;skyl&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="741">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Savonranta</xs:documentation>
+                    <xs:documentation xml:lang="fi">Savonranta</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="638">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Porvoo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Borg&#229;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="171">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Jorois</xs:documentation>
+                    <xs:documentation xml:lang="fi">Joroinen</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="259">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kisko</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kisko</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="973">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ylikiiminki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ylikiiminki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="424">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Liljendal</xs:documentation>
+                    <xs:documentation xml:lang="sv">Liljendal</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="936">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Virrat</xs:documentation>
+                    <xs:documentation xml:lang="sv">Virdois</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="640">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pieks&#228;nmaa</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pieks&#228;nmaa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="077">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Hankasalmi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Hankasalmi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="084">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Haukipudas</xs:documentation>
+                    <xs:documentation xml:lang="fi">Haukipudas</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="046">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Enonkoski</xs:documentation>
+                    <xs:documentation xml:lang="sv">Enonkoski</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="781">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sysm&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Sysm&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="255">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kiiminki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kiiminki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="776">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Suomusj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Suomusj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="319">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">K&#246;yli&#246;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kjulo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="148">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Inari</xs:documentation>
+                    <xs:documentation xml:lang="sv">Enare</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="926">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Vihanti</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vihanti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="886">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Ulvsby</xs:documentation>
+                    <xs:documentation xml:lang="fi">Ulvila</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="142">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Iitti</xs:documentation>
+                    <xs:documentation xml:lang="sv">Iitti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="286">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kouvola</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kouvola</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="856">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tuupovaara</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tuupovaara</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="420">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lepp&#228;virta</xs:documentation>
+                    <xs:documentation xml:lang="sv">Lepp&#228;virta</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="981">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Yp&#228;j&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Yp&#228;j&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="943">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">V&#228;rtsil&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">V&#228;rtsil&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="753">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Sibbo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sipoo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="616">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pukkila</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pukkila</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="578">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Paltamo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Paltamo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="598">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pietarsaari</xs:documentation>
+                    <xs:documentation xml:lang="sv">Jakobstad</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="208">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kalajoki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kalajoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="009">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Alavieska</xs:documentation>
+                    <xs:documentation xml:lang="fi">Alavieska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="181">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">J&#228;mij&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">J&#228;mij&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="893">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Nykarleby</xs:documentation>
+                    <xs:documentation xml:lang="fi">Uusikaarlepyy</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="854">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pello</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pello</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="603">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Piippola</xs:documentation>
+                    <xs:documentation xml:lang="fi">Piippola</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="924">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Vetil</xs:documentation>
+                    <xs:documentation xml:lang="fi">Veteli</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="305">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kuusamo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kuusamo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="250">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kihni&#246;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kihni&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="791">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Siikalatva</xs:documentation>
+                    <xs:documentation xml:lang="fi">Siikalatva</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="480">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Marttila</xs:documentation>
+                    <xs:documentation xml:lang="fi">Marttila</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="146">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ilomantsi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ilomants</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="608">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pomarkku</xs:documentation>
+                    <xs:documentation xml:lang="sv">P&#229;mark</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="205">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kajaani</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kajana</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="223">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Karjalohja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Karislojo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="078">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Hanko</xs:documentation>
+                    <xs:documentation xml:lang="sv">Hang&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="698">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Rovaniemi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Rovaniemi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="235">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kauniainen</xs:documentation>
+                    <xs:documentation xml:lang="sv">Grankulla</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="941">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">V&#229;rd&#246;</xs:documentation>
+                    <xs:documentation xml:lang="sv">V&#229;rd&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="062">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">F&#246;gl&#246;</xs:documentation>
+                    <xs:documentation xml:lang="sv">F&#246;gl&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="790">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Sastamala</xs:documentation>
+                    <xs:documentation xml:lang="fi">Sastamala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="532">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Nastola</xs:documentation>
+                    <xs:documentation xml:lang="fi">Nastola</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="918">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Vehmaa</xs:documentation>
+                    <xs:documentation xml:lang="sv">Vehmaa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="501">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Muurla</xs:documentation>
+                    <xs:documentation xml:lang="sv">Muurla</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="414">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lehtim&#228;ki</xs:documentation>
+                    <xs:documentation xml:lang="sv">Lehtim&#228;ki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="403">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Lappaj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lappaj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="915">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Varkaus</xs:documentation>
+                    <xs:documentation xml:lang="sv">Varkaus</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="111">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Heinola</xs:documentation>
+                    <xs:documentation xml:lang="fi">Heinola</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="153">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Imatra</xs:documentation>
+                    <xs:documentation xml:lang="sv">Imatra</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="427">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Lojo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lohja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="272">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kokkola</xs:documentation>
+                    <xs:documentation xml:lang="sv">Karleby</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="697">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ristij&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ristij&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="065">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Geta</xs:documentation>
+                    <xs:documentation xml:lang="fi">Geta</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="734">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Salo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Salo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="051">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Eura&#229;minne</xs:documentation>
+                    <xs:documentation xml:lang="fi">Eurajoki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="593">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Pieks&#228;m&#228;ki</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pieks&#228;m&#228;ki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="092">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Vanda</xs:documentation>
+                    <xs:documentation xml:lang="fi">Vantaa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="149">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Inkoo</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ing&#229;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="606">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Pojo</xs:documentation>
+                    <xs:documentation xml:lang="fi">Pohja</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="183">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">J&#228;ms&#228;nkoski</xs:documentation>
+                    <xs:documentation xml:lang="sv">J&#228;ms&#228;nkoski</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="624">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pyht&#228;&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pyttis</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="762">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Sonkaj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="sv">Sonkaj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="052">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Evij&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Evij&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="587">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pertteli</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pertteli</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="233">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kauhava</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kauhava</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="533">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Nagu</xs:documentation>
+                    <xs:documentation xml:lang="fi">Nauvo</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="079">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Harjavalta</xs:documentation>
+                    <xs:documentation xml:lang="fi">Harjavalta</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="251">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kiihtelysvaara</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kiihtelysvaara</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="256">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kinnula</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kinnula</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="857">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tuusniemi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tuusniemi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="581">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Parkano</xs:documentation>
+                    <xs:documentation xml:lang="sv">Parkano</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="972">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Yli-Ii</xs:documentation>
+                    <xs:documentation xml:lang="fi">Yli-Ii</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="585">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Pernaja</xs:documentation>
+                    <xs:documentation xml:lang="sv">Pern&#229;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="580">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Parikkala</xs:documentation>
+                    <xs:documentation xml:lang="sv">Parikkala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="106">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Hyvinge</xs:documentation>
+                    <xs:documentation xml:lang="fi">Hyvink&#228;&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="306">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kuusankoski</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kuusankoski</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="859">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Tyrn&#228;v&#228;</xs:documentation>
+                    <xs:documentation xml:lang="fi">Tyrn&#228;v&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="912">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Vammala</xs:documentation>
+                    <xs:documentation xml:lang="sv">Vammala</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="774">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Suolahti</xs:documentation>
+                    <xs:documentation xml:lang="fi">Suolahti</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="398">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Lahti</xs:documentation>
+                    <xs:documentation xml:lang="sv">Lahtis</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="694">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Riihim&#228;ki</xs:documentation>
+                    <xs:documentation xml:lang="fi">Riihim&#228;ki</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="261">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kittil&#228;</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kittil&#228;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="295">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kumlinge</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kumlinge</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="230">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Karvia</xs:documentation>
+                    <xs:documentation xml:lang="sv">Karvia</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="599">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Peders&#246;re</xs:documentation>
+                    <xs:documentation xml:lang="sv">Peders&#246;re</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="006">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Alastaro</xs:documentation>
+                    <xs:documentation xml:lang="sv">Alastaro</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="284">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Koski Tl</xs:documentation>
+                    <xs:documentation xml:lang="sv">Koski (&#197;l)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="236">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Kaustinen</xs:documentation>
+                    <xs:documentation xml:lang="sv">Kaustby</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="434">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Lovisa</xs:documentation>
+                    <xs:documentation xml:lang="fi">Loviisa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="312">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Kyyj&#228;rvi</xs:documentation>
+                    <xs:documentation xml:lang="fi">Kyyj&#228;rvi</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="428">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Lojo kommun</xs:documentation>
+                    <xs:documentation xml:lang="fi">Lohjan kunta</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="152">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">Storkyro</xs:documentation>
+                    <xs:documentation xml:lang="fi">Isokyr&#246;</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="977">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">Ylivieska</xs:documentation>
+                    <xs:documentation xml:lang="sv">Ylivieska</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

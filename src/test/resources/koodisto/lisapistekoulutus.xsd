@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://service.koodisto.sade.vm.fi/types/koodisto" xmlns="http://service.koodisto.sade.vm.fi/types/koodisto" elementFormDefault="qualified">
+
+    <xs:simpleType name="lisapistekoulutus">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="LISAKOULUTUS_VAMMAISTEN">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">LISAKOULUTUS_VAMMAISTEN</xs:documentation>
+                    <xs:documentation xml:lang="en">LISAKOULUTUS_VAMMAISTEN</xs:documentation>
+                    <xs:documentation xml:lang="fi">LISAKOULUTUS_VAMMAISTEN</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LISAKOULUTUS_TALOUS">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">LISAKOULUTUS_TALOUS</xs:documentation>
+                    <xs:documentation xml:lang="en">LISAKOULUTUS_TALOUS</xs:documentation>
+                    <xs:documentation xml:lang="sv">LISAKOULUTUS_TALOUS</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LISAKOULUTUS_MAAHANMUUTTO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">LISAKOULUTUS_MAAHANMUUTTO</xs:documentation>
+                    <xs:documentation xml:lang="en">LISAKOULUTUS_MAAHANMUUTTO</xs:documentation>
+                    <xs:documentation xml:lang="fi">LISAKOULUTUS_MAAHANMUUTTO</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LISAKOULUTUS_AMMATTISTARTTI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">LISAKOULUTUS_AMMATTISTARTTI</xs:documentation>
+                    <xs:documentation xml:lang="sv">LISAKOULUTUS_AMMATTISTARTTI</xs:documentation>
+                    <xs:documentation xml:lang="en">LISAKOULUTUS_AMMATTISTARTTI</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LISAKOULUTUS_KANSANOPISTO">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">LISAKOULUTUS_KANSANOPISTO</xs:documentation>
+                    <xs:documentation xml:lang="sv">LISAKOULUTUS_KANSANOPISTO</xs:documentation>
+                    <xs:documentation xml:lang="fi">LISAKOULUTUS_KANSANOPISTO</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="LISAKOULUTUS_KYMPPI">
+                <xs:annotation>
+                    <xs:documentation xml:lang="sv">LISAKOULUTUS_KYMPPI</xs:documentation>
+                    <xs:documentation xml:lang="fi">LISAKOULUTUS_KYMPPI</xs:documentation>
+                    <xs:documentation xml:lang="en">LISAKOULUTUS_KYMPPI</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

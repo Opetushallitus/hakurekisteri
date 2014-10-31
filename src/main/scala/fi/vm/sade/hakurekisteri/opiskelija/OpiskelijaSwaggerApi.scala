@@ -6,28 +6,9 @@ import org.scalatra.swagger._
 import org.scalatra.swagger.AllowableValues.AnyValue
 import scala.Some
 
-trait OpiskelijaSwaggerApi extends OldSwaggerSyntax
-    { this: HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand] =>
+trait OpiskelijaSwaggerApi extends OpiskelijaSwaggerModel { this: HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand] =>
 
-  override protected val applicationName = Some("opiskelijat")
   protected val applicationDescription = "Opiskelijatietojen rajapinta"
-
-
-
-
-
-  val fields = Seq(ModelField("id", "opiskelijatiedon uuid", DataType.String, None, AnyValue, required = false),
-    ModelField("oppilaitosOid", null, DataType.String, None, AnyValue, required = true),
-    ModelField("luokkataso", null, DataType.String, None, AnyValue, required = true),
-    ModelField("luokka", null, DataType.String, None, AnyValue, required = true),
-    ModelField("henkiloOid", null, DataType.String, None, AnyValue, required = true),
-    ModelField("alkuPaiva", null, DataType.Date, None, AnyValue, required = true),
-    ModelField("loppuPaiva", null, DataType.Date, None, AnyValue, required = false))
-
-
-
-
-  val opiskelijaModel = Model("Opiskelija", "Opiskelijatiedot", fields.map(t => (t.name, t)).toMap)
 
   registerModel(opiskelijaModel)
 
@@ -57,5 +38,21 @@ trait OpiskelijaSwaggerApi extends OldSwaggerSyntax
   val delete = apiOperation[Unit]("poistaOpiskelija")
     .summary("poistaa olemassa olevan opiskelutiedon")
     .parameter(pathParam[String]("id").description("opiskelutiedon uuid").required)
+
+}
+
+trait OpiskelijaSwaggerModel extends OldSwaggerSyntax {
+
+  val opiskelijaFields = Seq(
+    ModelField("id", "opiskelijatiedon uuid", DataType.String),
+    ModelField("oppilaitosOid", null, DataType.String),
+    ModelField("luokkataso", null, DataType.String),
+    ModelField("luokka", null, DataType.String),
+    ModelField("henkiloOid", null, DataType.String),
+    ModelField("alkuPaiva", null, DataType.Date),
+    ModelField("loppuPaiva", null, DataType.Date, required = false)
+  )
+
+  def opiskelijaModel = Model("Opiskelija", "Opiskelijatiedot", opiskelijaFields.map(t => (t.name, t)).toMap)
 
 }

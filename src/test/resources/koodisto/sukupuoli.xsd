@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://service.koodisto.sade.vm.fi/types/koodisto"
+           xmlns="http://service.koodisto.sade.vm.fi/types/koodisto"
+           elementFormDefault="qualified">
+
+    <xs:simpleType name="sukupuoli">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="2">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fi">nainen</xs:documentation>
+                    <xs:documentation xml:lang="sv">kvinna</xs:documentation>
+                    <xs:documentation xml:lang="en">woman</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+            <xs:enumeration value="1">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">man</xs:documentation>
+                    <xs:documentation xml:lang="sv">man</xs:documentation>
+                    <xs:documentation xml:lang="fi">mies</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>
