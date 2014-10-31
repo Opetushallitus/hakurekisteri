@@ -81,9 +81,9 @@ trait KkHakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
     .parameter(queryParam[String]("tyyppi").description("tyyppi").allowableValues(ApiFormat.Json, ApiFormat.Excel))
     .produces("application/json", "application/octet-stream")
     .responseMessage(StringResponseMessage(400, "either parameter oppijanumero or hakukohde must be given"))
-    .responseMessage(StringResponseMessage(400, "<invalid parameter description>"))
-    .responseMessage(StringResponseMessage(500, "error with tarjonta: <tarjonta exception message>"))
-    .responseMessage(StringResponseMessage(500, "error: <error description>"))
+    .responseMessage(StringResponseMessage(400, "[invalid parameter description]"))
+    .responseMessage(StringResponseMessage(500, "error with tarjonta: [tarjonta exception message]"))
+    .responseMessage(StringResponseMessage(500, "error: [error description]"))
     .responseMessage(StringResponseMessage(500, "back-end service timed out"))
     .responseMessage(StringResponseMessage(500, "error in service"))
 

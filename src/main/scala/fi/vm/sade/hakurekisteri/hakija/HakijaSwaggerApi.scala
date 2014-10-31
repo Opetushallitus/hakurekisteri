@@ -80,7 +80,7 @@ trait HakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
     .parameter(queryParam[String]("tyyppi").description("tietotyyppi").allowableValues(ApiFormat.values.toList).required)
     .parameter(queryParam[Option[Boolean]]("tiedosto").description("palautetaanko vastaus tiedostona").optional)
     .produces("application/json", "application/xml", "application/octet-stream")
-    .responseMessage(StringResponseMessage(400, "<invalid parameter description>"))
+    .responseMessage(StringResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(StringResponseMessage(500, "back-end service timed out"))
     .responseMessage(StringResponseMessage(500, "internal server error"))
 
