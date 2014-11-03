@@ -14,8 +14,8 @@ trait OldSwaggerSyntax {
   }
 
   object Model {
-    def apply(name: String, description: String, properties: Map[String, ModelField]) =
-      org.scalatra.swagger.Model(name, description, properties = properties.mapValues(_.property).toList)
+    def apply(name: String, description: String, properties: Map[String, ModelField], baseModel: Option[String] = None, discriminator: Option[String] = None) =
+      org.scalatra.swagger.Model(id = name, name = description, properties = properties.mapValues(_.property).toList, baseModel = baseModel, discriminator = discriminator)
   }
 
 }
