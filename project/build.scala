@@ -19,7 +19,7 @@ object HakuJaValintarekisteriBuild extends Build {
   val ScalatraVersion = "2.3.0"
   val SpringVersion = "3.2.1.RELEASE"
 
-  lazy val LoadSpecs = config("load") extend(Test)
+  lazy val LoadSpecs = config("load") extend Test
 
   val ScalatraStack = Seq(
     "org.scalatra" %% "scalatra",
@@ -121,6 +121,9 @@ object HakuJaValintarekisteriBuild extends Build {
 
   val surefire = testListeners += new SurefireListener(target.value)
 
+
+ val schemas = com.earldouglas.xsbtwebplugin.PluginKeys.webappResources in Compile <+= (resourceDirectory in Runtime)(sd => sd / "schemas")
+
   val buildversionTask = buildversion <<= version map {
     (ver: String) =>
       val now: String = new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date())
@@ -163,6 +166,7 @@ object HakuJaValintarekisteriBuild extends Build {
         ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"))
         ++ Seq(unmanagedSourceDirectories in Compile <+= (sourceDirectory in Runtime) { sd => sd / "js"})
         ++ Seq(com.earldouglas.xsbtwebplugin.PluginKeys.webappResources in Compile <+= (sourceDirectory in Runtime)(sd => sd / "js"))
+        ++ Seq(schemas)
         ++ Seq(mochaTask, installMochaTask, installCoffeeTask, cleanNodeModules, mochaTestSources)
         ++ Seq(
           organization := Organization,
