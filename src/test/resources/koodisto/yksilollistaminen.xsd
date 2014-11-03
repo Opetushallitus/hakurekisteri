@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://service.koodisto.sade.vm.fi/types/koodisto" xmlns="http://service.koodisto.sade.vm.fi/types/koodisto" elementFormDefault="qualified">
+
+    <xs:simpleType name="yksilollistaminen">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="EI">
+                
+            </xs:enumeration>
+
+            <xs:enumeration value="OSITTAIN">
+            </xs:enumeration>
+
+            <xs:enumeration value="ALUEITTAIN">
+            </xs:enumeration>
+
+            <xs:enumeration value="KOKONAAN">
+            </xs:enumeration>
+            
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>
