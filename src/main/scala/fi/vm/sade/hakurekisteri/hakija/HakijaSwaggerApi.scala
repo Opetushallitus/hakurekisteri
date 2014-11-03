@@ -4,9 +4,9 @@ import java.util.UUID
 
 import org.scalatra.swagger._
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
-import fi.vm.sade.hakurekisteri.rest.support.{ApiFormat, OldSwaggerSyntax}
+import fi.vm.sade.hakurekisteri.rest.support.{IncidentReportSwaggerModel, ModelResponseMessage, ApiFormat, OldSwaggerSyntax}
 
-trait HakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
+trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel with OldSwaggerSyntax {
 
   val hakutoiveFields = Seq(
     ModelField("hakujno", null, DataType.Int),
@@ -70,6 +70,8 @@ trait HakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
 
   registerModel(Model("XMLHakijat", "Hakijat", hakijatFields.map{ t => (t.name, t) }.toMap))
 
+  registerModel(incidentReportModel)
+
   val query: OperationBuilder = apiOperation[XMLHakijat]("haeHakijat")
     .summary("näyttää kaikki hakijat")
     .notes("Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti.")
@@ -80,8 +82,8 @@ trait HakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
     .parameter(queryParam[String]("tyyppi").description("tietotyyppi").allowableValues(ApiFormat.values.toList).required)
     .parameter(queryParam[Option[Boolean]]("tiedosto").description("palautetaanko vastaus tiedostona").optional)
     .produces("application/json", "application/xml", "application/octet-stream")
-    .responseMessage(StringResponseMessage(400, "[invalid parameter description]"))
-    .responseMessage(StringResponseMessage(500, "back-end service timed out"))
-    .responseMessage(StringResponseMessage(500, "internal server error"))
+    .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
+    .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
+    .responseMessage(ModelResponseMessage(500, "internal server error"))
 
 }
