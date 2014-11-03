@@ -14,10 +14,10 @@ class ResourcesApp(implicit val swagger: Swagger) extends ScalatraServlet with H
 class HakurekisteriSwagger extends Swagger(Swagger.SpecVersion, "1", ApiInfo(
   title = "Haku- ja valintarekisteri",
   description = "rekisteri opiskelijavalintojen suorittamiseen tarvittaviin tietoihin",
-  termsOfServiceUrl =  "",
-  contact = "",
-  license = "" ,
-  licenseUrl = "")
+  termsOfServiceUrl = "https://opintopolku.fi/wp/fi/opintopolku/tietoa-palvelusta/",
+  contact = "verkkotoimitus_opintopolku@oph.fi",
+  license = "EUPL 1.1 or latest approved by the European Commission" ,
+  licenseUrl = "http://www.osor.eu/eupl/")
 )
 
 case class ModelResponseMessage(code: Int, message: String, responseModel: String = "IncidentReport") extends ResponseMessage[String]
