@@ -184,7 +184,7 @@
 			</xs:element>
 			<xs:element name="valmentava" type="SuoritusType" maxOccurs="1" minOccurs="0"></xs:element>			
 			<xs:element name="maahanmuuttajienlukioonvalmistava" type="SuoritusType" maxOccurs="1" minOccurs="0"></xs:element>
-			<xs:element name="maahanmuuttajienammatilliseenkoulutukseenvalmistava" type="SuoritusType" maxOccurs="1" minOccurs="0"></xs:element>
+			<xs:element name="maahanmuuttajienammvalmistava" type="SuoritusType" maxOccurs="1" minOccurs="0"></xs:element>
 		</xs:sequence>
 	</xs:group>
 	
