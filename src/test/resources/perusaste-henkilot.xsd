@@ -41,14 +41,6 @@
 		</xs:restriction>
 	</xs:simpleType>
 
-	<xs:simpleType name="syntymaAikaType">
-		<xs:restriction base="xs:string">
-			<xs:pattern value="[0-9]{8}" />
-		</xs:restriction>
-	</xs:simpleType>
-
-
-
 	<xs:simpleType name="oppijaNumeroType">
 		<xs:restriction base="xs:string">
 			<xs:pattern value="1\.2\.246\.562\.24\.[0-9]{11}" />
@@ -68,7 +60,7 @@
 					<xs:element type="xs:string"
 						name="henkiloTunniste">
 					</xs:element>
-					<xs:element type="syntymaAikaType"
+					<xs:element type="xs:date"
 						name="syntymaAika">
 					</xs:element>
 					<xs:element type="koodisto:sukupuoli"
@@ -190,7 +182,7 @@
 			<xs:element name="ammattistartti"
 				type="SuoritusType" maxOccurs="1" minOccurs="0">
 			</xs:element>
-			<xs:element name="valmentava" type="SuoritusType" maxOccurs="1" minOccurs="0"></xs:element>
+			<xs:element name="valmentava" type="SuoritusType" maxOccurs="1" minOccurs="0"></xs:element>			
 			<xs:element name="maahanmuuttajienlukioonvalmistava" type="SuoritusType" maxOccurs="1" minOccurs="0"></xs:element>
 			<xs:element name="maahanmuuttajienammatilliseenkoulutukseenvalmistava" type="SuoritusType" maxOccurs="1" minOccurs="0"></xs:element>
 		</xs:sequence>
