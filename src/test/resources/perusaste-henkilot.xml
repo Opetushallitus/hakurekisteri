@@ -17,6 +17,13 @@
             <postinumero>00100</postinumero>
             <matkapuhelin>040 1234 567</matkapuhelin>
             <muuPuhelin>09 1234 567</muuPuhelin>
+            <perusopetus>
+            	<valmistuminen>2015-06-04</valmistuminen>
+            	<myontaja>05127</myontaja>
+            	<suorituskieli>FI</suorituskieli>
+            	<tila>KESKEN</tila>
+            	<yksilollistaminen>ALUEITTAIN</yksilollistaminen>
+            </perusopetus>
   	</henkilo>
   	<henkilo>
   		<henkiloTunniste>TUNNISTE</henkiloTunniste>
@@ -35,6 +42,22 @@
             <postinumero>00100</postinumero>
             <matkapuhelin>040 1234 567</matkapuhelin>
             <muuPuhelin>09 1234 567</muuPuhelin>
+            <ulkomainen>
+            
+            	<valmistuminen>2014-06-04</valmistuminen>
+            	<myontaja>05127</myontaja>
+            	<suorituskieli>FI</suorituskieli>
+            	<tila>KESKEN</tila>
+            
+            </ulkomainen>
+            <maahanmuuttajienammatilliseenkoulutukseenvalmistava>
+            	<valmistuminen>2015-06-04</valmistuminen>
+            	<myontaja>05127</myontaja>
+            	<suorituskieli>FI</suorituskieli>
+            	<tila>VALMIS</tila>
+            
+            </maahanmuuttajienammatilliseenkoulutukseenvalmistava>
+            
   	</henkilo>
   	
   	<henkilo>
@@ -52,6 +75,19 @@
             <postinumero>00100</postinumero>
             <matkapuhelin>040 1234 567</matkapuhelin>
             <muuPuhelin>09 1234 567</muuPuhelin>
+            <perusopetus>
+            	<valmistuminen>2014-06-04</valmistuminen>
+            	<myontaja>05127</myontaja>
+            	<suorituskieli>FI</suorituskieli>
+            	<tila>VALMIS</tila>
+            </perusopetus>
+            <perusopetuksenlisaopetus>
+            	<valmistuminen>2015-06-04</valmistuminen>
+            	<myontaja>05127</myontaja>
+            	<suorituskieli>FI</suorituskieli>
+            	<tila>KESKEN</tila>
+            	
+            </perusopetuksenlisaopetus>
   	</henkilo>
   	
   	
