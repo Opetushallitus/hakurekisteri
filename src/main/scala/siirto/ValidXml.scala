@@ -64,7 +64,6 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
     }
 
     override def resolveResource(tyyppi: String, namespaceURI: String, publicId: String, systemId: String, baseURI: String): LSInput = {
-      println(s"$tyyppi, $namespaceURI, $publicId, $systemId $baseURI")
 
       def schemaUrl(systemId:String) = systemId match
       {
@@ -107,7 +106,6 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
         override def getCharacterStream: Reader = null
 
         def loadRemote(systemId: String): Elem = {
-          println("loading a remote resource not in cache")
           XML.load(schemaUrl(systemId))
         }
       }
