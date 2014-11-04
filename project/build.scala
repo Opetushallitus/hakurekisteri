@@ -122,7 +122,6 @@ object HakuJaValintarekisteriBuild extends Build {
   val surefire = testListeners += new SurefireListener(target.value)
 
 
- val schemas = com.earldouglas.xsbtwebplugin.PluginKeys.webappResources in Compile <+= (resourceDirectory in Runtime)(sd => sd / "schemas")
 
   val buildversionTask = buildversion <<= version map {
     (ver: String) =>
@@ -166,7 +165,6 @@ object HakuJaValintarekisteriBuild extends Build {
         ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"))
         ++ Seq(unmanagedSourceDirectories in Compile <+= (sourceDirectory in Runtime) { sd => sd / "js"})
         ++ Seq(com.earldouglas.xsbtwebplugin.PluginKeys.webappResources in Compile <+= (sourceDirectory in Runtime)(sd => sd / "js"))
-        ++ Seq(schemas)
         ++ Seq(mochaTask, installMochaTask, installCoffeeTask, cleanNodeModules, mochaTestSources)
         ++ Seq(
           organization := Organization,

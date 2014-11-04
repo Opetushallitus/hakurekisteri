@@ -11,8 +11,6 @@ class SchemaServlet(schemas: SchemaDefinition*)(implicit val system: ActorSystem
 
   val schemaCache = schemas.map((sd) => sd.schemaLocation -> sd.schema).toMap
 
-
-
   get("/:schema"){
     schemaCache.get(params("schema")).fold(NotFound()){
       contentType = "application/xml"
