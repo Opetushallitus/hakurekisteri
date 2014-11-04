@@ -24,8 +24,8 @@ div(ng-show="uploadResult")
       img(ng-show="uploadResult.type === 'danger'" class="icon-big" src="static/img/alert-icon28x29.png")
       span(oph-msg="{{uploadResult.messageKey}}") {{uploadResult.message}}
 
-div(ng-show="sending" class="modal fade" style="display: block")
-  div(class="modal-backdrop fade")
+div(ng-if="sending" class="modal fade in" style="display: block")
+  div(class="modal-backdrop fade in")
   div(class="modal-dialog")
     div(class="modal-content")
       div(class="modal-header")

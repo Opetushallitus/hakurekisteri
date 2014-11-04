@@ -42,7 +42,7 @@ class UploadResource()
   error {
     case t: SizeConstraintExceededException =>
       logger.warning(s"uploaded file is too large: $t")
-      RequestEntityTooLarge(UploadResponse("danger", s"Tiedosto on liian suuri (suurin sallittu koko $maxFileSize tavua).", s"suoritusrekisteri.tiedonsiirto.tiedostoliiansuuri_$maxFileSize").toJson)
+      RequestEntityTooLarge(UploadResponse("danger", s"Tiedosto on liian suuri (suurin sallittu koko $maxFileSize tavua)", s"suoritusrekisteri.tiedonsiirto.tiedostoliiansuuri_$maxFileSize").toJson)
     case t: Throwable =>
       logger.error(t, "error uploading file")
       InternalServerError(UploadResponse("danger", "Tuntematon virhe lähetettäessä tiedostoa", "suoritusrekisteri.tiedonsiirto.tuntematonvirhe").toJson)
