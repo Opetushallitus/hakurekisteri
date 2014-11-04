@@ -54,6 +54,7 @@ import scala.concurrent.duration._
 import scala.reflect.ClassTag
 import HakurekisteriDriver.simple._
 import scala.util.Try
+import siirto.{PerustiedotKoodisto, Perustiedot, SchemaServlet}
 
 
 class ScalatraBootstrap extends LifeCycle {
@@ -80,6 +81,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     mountServlets(context) (
       ("/", "gui") -> new GuiServlet,
+      ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
       ("/upload", "upload") -> new UploadResource(),
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
