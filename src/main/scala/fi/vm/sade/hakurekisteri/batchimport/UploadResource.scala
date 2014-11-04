@@ -49,7 +49,7 @@ class UploadResource()
   }
 
   case class UploadResponse(`type`: String = "success", message: String, messageKey: String, validationErrors: Seq[String] = Seq()) {
-    def toJson = compact(Extraction.decompose(this))
+    def toJson: String = compact(Extraction.decompose(this))
   }
 }
 

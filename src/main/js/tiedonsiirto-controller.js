@@ -1,13 +1,17 @@
-function TiedonsiirtoCtrl($scope) {
+function TiedonsiirtoCtrl($scope, $rootScope) {
+    $rootScope.addToMurupolku({key: "suoritusrekisteri.tiedonsiirto.muru", text: "Tiedonsiirto"}, true);
+
     $scope.messages = [];
 
     $scope.send = function() {
         $scope.sending = true;
+        delete $scope.uploadResult;
+        $scope.messages = [];
     };
 
     $scope.uploadComplete = function(content) {
         if (isUploadResponse(content)) {
-            $scope.uploadResult = typeof content === 'string' ? angular.fromJson(content) : content;
+            $scope.uploadResult = typeof content === 'object' ? content : angular.fromJson(content);
             document.getElementById("uploadForm").reset();
         } else {
             $scope.messages.push({
@@ -20,8 +24,9 @@ function TiedonsiirtoCtrl($scope) {
     };
 
     $scope.reset = function() {
-        delete $scope.tiedosto;
-        delete $scope.sendResult;
+        document.getElementById("uploadForm").reset();
+        delete $scope.uploadResult;
+        $scope.messages = [];
     };
 
     $scope.removeMessage = function(message) {
@@ -30,6 +35,6 @@ function TiedonsiirtoCtrl($scope) {
     };
 
     function isUploadResponse(content) {
-        return (typeof content === 'string' && content.match(/.*"type":.*/g)) || (typeof content === 'object' && content.type)
+        return (typeof content === 'string' && content.match(/.*"type":.*/g)) || (typeof content === 'object' && content.type && content.message)
     }
 }
