@@ -53,6 +53,7 @@ import scala.concurrent.duration._
 import scala.reflect.ClassTag
 import HakurekisteriDriver.simple._
 import scala.util.Try
+import siirto.{PerustiedotKoodisto, Perustiedot, SchemaServlet}
 
 
 class ScalatraBootstrap extends LifeCycle {
@@ -79,6 +80,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     mountServlets(context) (
       ("/", "gui") -> new GuiServlet,
+      ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
       ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
