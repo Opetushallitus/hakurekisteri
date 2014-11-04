@@ -15,7 +15,7 @@ class SchemaServlet(schemas: SchemaDefinition*)(implicit val system: ActorSystem
 
   get("/:schema"){
     schemaCache.get(params("schema")).fold(NotFound()){
-      contentType = formats("xml")
+      contentType = "application/xml"
       Ok(_)
     }
   }
