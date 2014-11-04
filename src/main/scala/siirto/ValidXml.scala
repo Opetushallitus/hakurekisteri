@@ -51,12 +51,17 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
 
   lazy val resolver = new LSResourceResolver {
 
-    val localSchemaSources: List[SchemaDefinition] = (List(Perustiedot) ++ imports).collect{
-      case wr: SchemaWithRemotes => wr +: wr.remotes
-      case s => Seq(s)
-    }.flatten
+    val localSchemaSources: List[SchemaDefinition] = List(Perustiedot) ++ imports
 
-    lazy val schemaCache = localSchemaSources.map((sd) => sd.schemaLocation -> sd.schema).toMap
+
+    lazy val schemaCache ={
+      val given = localSchemaSources.map(_.schemaLocation).toSet
+      localSchemaSources.collect{
+        case wr: SchemaWithRemotes => wr +: wr.remotes.filterNot((sd) => given.contains(sd.schemaLocation))
+        case s => Seq(s)
+      }.flatten.map((sd) => sd.schemaLocation -> sd.schema).toMap
+
+    }
 
     override def resolveResource(tyyppi: String, namespaceURI: String, publicId: String, systemId: String, baseURI: String): LSInput = {
       println(s"$tyyppi, $namespaceURI, $publicId, $systemId $baseURI")
