@@ -60,13 +60,13 @@ import Valintatila.Valintatila
 import Vastaanottotila.Vastaanottotila
 import Ilmoittautumistila.Ilmoittautumistila
 
+case class HakutoiveenIlmoittautumistila(ilmoittautumistila: Ilmoittautumistila)
+
 case class ValintaTulosHakutoive(hakukohdeOid: String,
                                  tarjoajaOid: String,
                                  valintatila: Valintatila,
                                  vastaanottotila: Vastaanottotila,
-                                 ilmoittautumistila: Ilmoittautumistila,
-                                 vastaanotettavuustila: String,
-                                 julkaistavissa: Boolean,
+                                 ilmoittautumistila: HakutoiveenIlmoittautumistila,
                                  pisteet: Option[BigDecimal])
 
 case class ValintaTulos(hakemusOid: String, hakutoiveet: Seq[ValintaTulosHakutoive])
