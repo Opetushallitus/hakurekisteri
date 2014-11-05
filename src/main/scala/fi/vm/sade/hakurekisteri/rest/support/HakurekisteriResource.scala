@@ -115,13 +115,15 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
   val timeOut = 120
   implicit val defaultTimeout: Timeout = timeOut.seconds
 
-  class ActorResult[B: Manifest](message: Future[AnyRef], success: (B) => AnyRef) extends AsyncResult() {
-    def this(message: AnyRef, success: (B) => AnyRef) = this(Future.successful(message), success)
+  class FutureActorResult[B: Manifest](message: Future[AnyRef], success: (B) => AnyRef) extends AsyncResult() {
     override implicit def timeout: Duration = timeOut.seconds
     val is = message.flatMap(actor ? _).mapTo[B].
       map(success)
 
   }
+
+  class ActorResult[B: Manifest](message: AnyRef, success: (B) => AnyRef) extends FutureActorResult[B](Future.successful(message), success)
+
 
   def createResource(user: Option[User]): Object = {
     val msg = (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(
@@ -130,7 +132,7 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
         resource => Future.successful(AuthorizedCreate[A,UUID](resource, user.get)))
     )
 
-    new ActorResult(msg , ResourceCreated(request.getRequestURL))
+    new FutureActorResult(msg , ResourceCreated(request.getRequestURL))
   }
 
   object ResourceCreated {
@@ -146,7 +148,7 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
         resource => Future.successful(AuthorizedUpdate[A,UUID](identifyResource(resource, id), user.get)))
     )
 
-    new ActorResult(msg , Ok(_))
+    new FutureActorResult(msg , Ok(_))
 
   }
 
