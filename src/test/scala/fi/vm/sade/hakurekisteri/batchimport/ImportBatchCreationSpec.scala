@@ -9,12 +9,14 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 
 import org.scalatra.DefaultValue
 import org.scalatra.util.ParamsValueReaderProperties
-import org.scalatra.commands.{ModelValidation, CommandExecutors}
+import org.scalatra.commands._
 import scalaz.NonEmptyList
-import org.scalatra.validation.{ValidationFail, FieldName, ValidationError}
+import org.scalatra.validation.{ValidationFail, ValidationError}
 import scala.language.implicitConversions
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
+import org.scalatra.validation.FieldName
+import scala.Some
 
 
 class ImportBatchCreationSpec extends FlatSpec
@@ -75,9 +77,20 @@ class ImportBatchCreationSpec extends FlatSpec
 
 }
 
-trait JsonCommandTestSupport extends HakurekisteriJsonSupport with JsonMethods with JacksonJsonValueReaderProperty with ParamsValueReaderProperties with CommandExecutors with JsonModifiers {
+trait JsonCommandTestSupport extends HakurekisteriJsonSupport with JsonMethods with JacksonJsonValueReaderProperty with ParamsValueReaderProperties  with JsonModifiers {
 
   implicit def JsonDefaultValue: DefaultValue[JValue] = org.scalatra.DefaultValueMethods.default(JNothing)
+
+  implicit def asyncSyncExecutor[T <: Command, S](handler: T => Future[ModelValidation[S]]): CommandExecutor[T, Future[ModelValidation[S]]] =
+    new CommandExecutor[T, Future[ModelValidation[S]]](handler) {
+      def wait(handler: T => Future[ModelValidation[S]]): T => ModelValidation[S]  = (cmd) => Await.result(handler(cmd), 30.seconds)
+
+      val inner = new BlockingCommandExecutor(wait(handler))
+
+      override def execute(command: T): Future[ModelValidation[S]] = Future.successful(inner.execute(command))
+    }
+
+
 
   case class ValidationReader[T](result: ModelValidation[T]) {
     def resource: T = result.fold[T](
