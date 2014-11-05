@@ -18,6 +18,8 @@ import org.scalatra.swagger._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.Try
+import scalaz.NonEmptyList
+import org.scalatra.validation.ValidationError
 
 trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
 
@@ -92,7 +94,17 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
-  case class MalformedResourceException(message: String) extends Exception(message)
+
+
+  case class MalformedResourceException(errors: NonEmptyList[ValidationError]) extends Exception {
+    override def getMessage: String = {
+      val messages: NonEmptyList[String] = for (
+        error <- errors
+      ) yield s"${error.field.map((field) => s"problem with $field: ").getOrElse("problem: ")} ${error.message}}}}"
+      messages.list.mkString("\n")
+    }
+  }
+
 
   def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName
 
@@ -112,7 +124,7 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
 
   def createResource(user: Option[User]): Object = {
     (command[C] >> (_.toValidatedResource(user.get.username))).fold(
-      errors => throw MalformedResourceException(errors.toString()),
+      errors => throw MalformedResourceException(errors),
       resource => new ActorResult(AuthorizedCreate[A,UUID](resource, user.get), ResourceCreated(request.getRequestURL)))
   }
 
@@ -124,7 +136,7 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
 
   def updateResource(id: UUID, user: Option[User]): Object = {
     (command[C] >> (_.toValidatedResource(user.get.username))).fold(
-      errors => throw MalformedResourceException(errors.toString()),
+      errors => throw MalformedResourceException(errors),
       resource => new ActorResult[A with Identified[UUID]](AuthorizedUpdate[A,UUID](identifyResource(resource, id), user.get), Ok(_)))
   }
 
