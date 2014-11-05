@@ -266,9 +266,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             "1.10.4",
             Valintatila.HYVAKSYTTY,
             Vastaanottotila.VASTAANOTTANUT,
-            Ilmoittautumistila.EI_TEHTY,
-            "",
-            julkaistavissa = true,
+            HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None
           ),
           ValintaTulosHakutoive(
@@ -276,9 +274,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             "1.10.3",
             Valintatila.PERUUTETTU,
             Vastaanottotila.KESKEN,
-            Ilmoittautumistila.EI_TEHTY,
-            "",
-            julkaistavissa = true,
+            HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None
           )
         )
@@ -291,9 +287,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             "1.10.5",
             Valintatila.KESKEN,
             Vastaanottotila.KESKEN,
-            Ilmoittautumistila.EI_TEHTY,
-            "",
-            julkaistavissa = true,
+            HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None
           ),
           ValintaTulosHakutoive(
@@ -301,9 +295,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             "1.10.4",
             Valintatila.KESKEN,
             Vastaanottotila.KESKEN,
-            Ilmoittautumistila.EI_TEHTY,
-            "",
-            julkaistavissa = true,
+            HakutoiveenIlmoittautumistila(Ilmoittautumistila.EI_TEHTY),
             None
           )
         )

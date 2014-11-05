@@ -1,5 +1,6 @@
 # Logger
 log4j.rootLogger={{env_loglevel}}, FILE
+log4j.logger.fi.vm.sade.hakurekisteri=INFO
 
 {# raw-endraw -välillä template engine ei tee mitään! #} 
 {% raw %}
@@ -9,7 +10,7 @@ log4j.appender.STDOUT.Threshold=ERROR
 log4j.appender.STDOUT.layout.ConversionPattern=%d{ISO8601} %-5p {%X{user}} [%t] %-5p %c: %m%n
 
 # Main file output
-log4j.appender.FILE.Threshold=WARN
+log4j.appender.FILE.Threshold=INFO
 log4j.appender.FILE.File=${user.home}/tomcat/logs/oph-suoritusrekisteri.log
 log4j.appender.FILE=org.apache.log4j.RollingFileAppender
 log4j.appender.FILE.Append=true
