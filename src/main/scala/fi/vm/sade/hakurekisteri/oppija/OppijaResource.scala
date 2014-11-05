@@ -20,6 +20,7 @@ import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{SwaggerEngine, Swagger}
 
+import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
@@ -27,7 +28,7 @@ import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 
 class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, val ensikertalaisuus: ActorRef)
                     (implicit val system: ActorSystem, sw: Swagger)
-    extends HakuJaValintarekisteriStack with OppijaFetcher with OppijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
+    extends HakuJaValintarekisteriStack with OppijaFetcher with OppijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with QueryLogging {
 
   override protected def applicationDescription: String = "Oppijan tietojen koosterajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
@@ -51,23 +52,39 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
   }
 
   get("/", operation(query)) {
+    val t0 = Platform.currentTime
     implicit val user = getUser
     val q = HakemusQuery(params)
+
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
-      val is = fetchOppijat(q)
+
+      private val oppijatFuture = fetchOppijat(q)
+
+      logQuery(q, t0, oppijatFuture)
+
+      val is = oppijatFuture
     }
   }
 
   get("/:oid", operation(read)) {
+    val t0 = Platform.currentTime
     implicit val user = getUser
     val q = HenkiloHakijaQuery(params("oid"))
+
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
-      val is = for (
+
+      private val oppijaFuture = for (
         hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
         oppijat <- fetchOppijatFor(hakemukset.filter((fh) => fh.personOid.isDefined && fh.hetu.isDefined).slice(0, 1))
-      ) yield oppijat.headOption.fold(NotFound(body = ""))(Ok(_))
+      ) yield {
+        oppijat.headOption.fold(NotFound(body = ""))(Ok(_))
+      }
+
+      logQuery(q, t0, oppijaFuture)
+
+      val is = oppijaFuture
     }
 
   }
