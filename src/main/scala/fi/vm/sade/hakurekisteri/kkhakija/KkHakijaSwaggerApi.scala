@@ -4,9 +4,9 @@ import fi.vm.sade.hakurekisteri.hakija.Hakuehto
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{Vastaanottotila, Valintatila}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
-import fi.vm.sade.hakurekisteri.rest.support.{ApiFormat, OldSwaggerSyntax}
+import fi.vm.sade.hakurekisteri.rest.support.{ApiFormat, ModelResponseMessage, OldSwaggerSyntax, IncidentReportSwaggerModel}
 
-trait KkHakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
+trait KkHakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel with OldSwaggerSyntax {
 
   val hakukohteenKoulutusFields = Seq(
     ModelField("komoOid", null, DataType.String),
@@ -70,6 +70,8 @@ trait KkHakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
 
   registerModel(Model("Hakija", "Hakija", hakijaFields.map{ t => (t.name, t) }.toMap))
 
+  registerModel(incidentReportModel)
+
   val query: OperationBuilder = apiOperation[Seq[Hakija]]("haeKkHakijat")
     .summary("näyttää kaikki hakijat")
     .notes("Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti.")
@@ -80,11 +82,11 @@ trait KkHakijaSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
     .parameter(queryParam[String]("hakuehto").description("hakuehto").allowableValues(Hakuehto.values.toList).required)
     .parameter(queryParam[String]("tyyppi").description("tyyppi").allowableValues(ApiFormat.Json, ApiFormat.Excel))
     .produces("application/json", "application/octet-stream")
-    .responseMessage(StringResponseMessage(400, "either parameter oppijanumero or hakukohde must be given"))
-    .responseMessage(StringResponseMessage(400, "[invalid parameter description]"))
-    .responseMessage(StringResponseMessage(500, "error with tarjonta: [tarjonta exception message]"))
-    .responseMessage(StringResponseMessage(500, "error: [error description]"))
-    .responseMessage(StringResponseMessage(500, "back-end service timed out"))
-    .responseMessage(StringResponseMessage(500, "error in service"))
+    .responseMessage(ModelResponseMessage(400, "either parameter oppijanumero or hakukohde must be given"))
+    .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
+    .responseMessage(ModelResponseMessage(500, "error with tarjonta: [tarjonta exception message]"))
+    .responseMessage(ModelResponseMessage(500, "error: [error description]"))
+    .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
+    .responseMessage(ModelResponseMessage(500, "error in service"))
 
 }

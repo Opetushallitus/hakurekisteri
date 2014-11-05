@@ -2,7 +2,16 @@
 <schema xmlns="http://www.w3.org/2001/XMLSchema"
 	targetNamespace="http://www.example.org/arvosanat"
 	xmlns:arvosanat="http://www.example.org/arvosanat"
+	xmlns:koodisto="http://service.koodisto.sade.vm.fi/types/koodisto"
 	elementFormDefault="qualified">
+
+	<import schemaLocation="koodisto/oppilaitosnumero.xsd"
+		namespace="http://service.koodisto.sade.vm.fi/types/koodisto">
+	</import>
+	
+	<import schemaLocation="koodisto/kieli.xsd"
+		namespace="http://service.koodisto.sade.vm.fi/types/koodisto">
+	</import>
 
 	<element name="arvosanat" type="arvosanat:ArvosanatType">
 		<unique name="uniqueHetu">
@@ -30,8 +39,8 @@
 	<complexType name="OppilasType">
 		<sequence>
 			<choice maxOccurs="1" minOccurs="1">
-				<group ref="arvosanat:Hetullinen"></group>
-				<group ref="arvosanat:Oppijanumerollinen"></group>
+				<element name="hetu" type="arvosanat:hetuType" maxOccurs="1" minOccurs="1"/>
+				<element name="oppijanumero" type="arvosanat:oppijaNumeroType" maxOccurs="1" minOccurs="1" />
 				<group ref="arvosanat:SyntymaAjallinen"></group>
 			</choice>
 			<element name="todistukset" type="arvosanat:TodistuksetType"
@@ -40,31 +49,7 @@
 		</sequence>
 	</complexType>
 
-	<group name="Hetullinen">
-		<sequence>
-			<element name="hetu" type="arvosanat:hetuType" maxOccurs="1"
-				minOccurs="1">
-			</element>
-			<element name="tunniste" type="string" maxOccurs="1"
-				minOccurs="0">
-			</element>
-		</sequence>
-	</group>
-
-
-	<group name="Oppijanumerollinen">
-		<sequence>
-			<element name="oppijanumero"
-				type="arvosanat:oppijaNumeroType" maxOccurs="1" minOccurs="1">
-			</element>
-			<element name="hetu" type="arvosanat:hetuType" maxOccurs="1"
-				minOccurs="0">
-			</element>
-			<element name="tunniste" type="string" maxOccurs="1"
-				minOccurs="0">
-			</element>
-		</sequence>
-	</group>
+	
 
 	<complexType name="TodistuksetType">
 
@@ -158,7 +143,7 @@
 						minOccurs="1">
 					</element>
 				</sequence>
-				<element name="eivalmistu" type="string"></element>
+				<element name="eivalmistu" type="arvosanat:EiValmistuType"></element>
 			</choice>
 			</extension>
 		</complexContent>
@@ -211,10 +196,19 @@
 	<simpleType name="AidinkielenTyyppi">
 		<restriction base="string"></restriction>
 	</simpleType>
+	
+	
+	<simpleType name="EiValmistuType">
+		<restriction base="string">
+            <enumeration value="JAA LUOKALLE"/>
+            <enumeration value="HYLATTY"/>
+            
+		</restriction>
+	</simpleType>
 
 	<group name="SyntymaAjallinen">
 		<sequence>
-			<element name="syntymaaika" type="arvosanat:syntymaAikaType"
+			<element name="syntymaaika" type="date"
 				maxOccurs="1" minOccurs="1">
 			</element>
 			<element name="tunniste" type="string" maxOccurs="1" minOccurs="1"></element>
@@ -282,8 +276,8 @@
 	<complexType name="SuoritusType">
 		<sequence>
 			<element name="valmistuminen" type="date"></element>
-			<element name="myontaja" type="arvosanat:oppilaitosKoodi"></element>
-			<element name="suorituskieli" type="string"></element>
+			<element name="myontaja" type="koodisto:oppilaitosnumero"></element>
+			<element name="suorituskieli" type="koodisto:kieli"></element>
 		</sequence>
 	</complexType>
 
@@ -294,11 +288,6 @@
 		</complexContent>
 	</complexType>
 
-	<simpleType name="oppilaitosKoodi">
-		<restriction base="string">
-			<pattern value="[0-9]{5}" />
-		</restriction>
-	</simpleType>
 
 	<group name="UlkomainenKorvaava">
 		<sequence>

@@ -1,3 +1,4 @@
+import fi.vm.sade.hakurekisteri.batchimport.UploadResource
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
 import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaResource
 import fi.vm.sade.hakurekisteri.oppija.OppijaResource
@@ -53,6 +54,7 @@ import scala.concurrent.duration._
 import scala.reflect.ClassTag
 import HakurekisteriDriver.simple._
 import scala.util.Try
+import siirto.{PerustiedotKoodisto, Perustiedot, SchemaServlet}
 
 
 class ScalatraBootstrap extends LifeCycle {
@@ -79,7 +81,9 @@ class ScalatraBootstrap extends LifeCycle {
 
     mountServlets(context) (
       ("/", "gui") -> new GuiServlet,
+      ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
+      ("/upload", "upload") -> new UploadResource(),
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
       ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
       ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),

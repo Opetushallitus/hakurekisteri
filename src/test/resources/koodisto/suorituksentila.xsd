@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://service.koodisto.sade.vm.fi/types/koodisto" xmlns="http://service.koodisto.sade.vm.fi/types/koodisto" elementFormDefault="qualified">
+
+    <xs:simpleType name="suorituksentila">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="KESKEN">
+            </xs:enumeration>
+
+            <xs:enumeration value="KESKEYTYNYT">
+            </xs:enumeration>
+
+            <xs:enumeration value="VALMIS">
+            </xs:enumeration>
+            
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>
