@@ -100,8 +100,8 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
     override def getMessage: String = {
       val messages: NonEmptyList[String] = for (
         error <- errors
-      ) yield s"${error.field.map((field) => s"problem with $field: ").getOrElse("problem: ")} ${error.message}}}}"
-      messages.list.mkString("\n")
+      ) yield s"${error.field.map((field) => s"problem with $field: ").getOrElse("problem: ")} ${error.message}"
+      messages.list.mkString(", ")
     }
   }
 
