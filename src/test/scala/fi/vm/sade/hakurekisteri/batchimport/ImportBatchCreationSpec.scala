@@ -3,11 +3,10 @@ package fi.vm.sade.hakurekisteri.batchimport
 import org.scalatest.{Matchers, FlatSpec}
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods
-import org.json4s.JsonAST.{JObject, JNothing, JValue}
+import org.json4s.JsonAST.{JObject, JValue}
 import org.scalatra.json.JacksonJsonValueReaderProperty
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 
-import org.scalatra.DefaultValue
 import org.scalatra.util.ParamsValueReaderProperties
 import org.scalatra.commands._
 import scalaz.NonEmptyList
@@ -79,7 +78,6 @@ class ImportBatchCreationSpec extends FlatSpec
 
 trait JsonCommandTestSupport extends HakurekisteriJsonSupport with JsonMethods with JacksonJsonValueReaderProperty with ParamsValueReaderProperties  with JsonModifiers {
 
-  implicit def JsonDefaultValue: DefaultValue[JValue] = org.scalatra.DefaultValueMethods.default(JNothing)
 
   implicit def asyncSyncExecutor[T <: Command, S](handler: T => Future[ModelValidation[S]]): CommandExecutor[T, Future[ModelValidation[S]]] =
     new CommandExecutor[T, Future[ModelValidation[S]]](handler) {
