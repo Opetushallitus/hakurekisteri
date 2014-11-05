@@ -6,6 +6,8 @@ import scala.xml.Elem
 import java.io.StringReader
 import scala.xml.Source._
 
+import scala.language.implicitConversions
+
 
 class ValidXmlSpec extends FlatSpec with Matchers {
 
@@ -281,6 +283,9 @@ object Sukupuoli extends SchemaDefinition {
 
 
     </xs:schema>
+
+
+
 }
 
 object YksilollistysKoodisto extends SchemaDefinition {
