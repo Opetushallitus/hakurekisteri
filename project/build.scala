@@ -19,7 +19,7 @@ object HakuJaValintarekisteriBuild extends Build {
   val ScalatraVersion = "2.3.0"
   val SpringVersion = "3.2.1.RELEASE"
 
-  lazy val LoadSpecs = config("load") extend(Test)
+  lazy val LoadSpecs = config("load") extend Test
 
   val ScalatraStack = Seq(
     "org.scalatra" %% "scalatra",
@@ -120,6 +120,8 @@ object HakuJaValintarekisteriBuild extends Build {
   lazy val buildversion = taskKey[Unit]("start buildversion.txt generator")
 
   val surefire = testListeners += new SurefireListener(target.value)
+
+
 
   val buildversionTask = buildversion <<= version map {
     (ver: String) =>

@@ -3,16 +3,20 @@ package fi.vm.sade.hakurekisteri.batchimport
 import org.scalatest.{Matchers, FlatSpec}
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods
-import org.json4s.JsonAST.{JObject, JNothing, JValue}
+import org.json4s.JsonAST.{JObject, JValue}
 import org.scalatra.json.JacksonJsonValueReaderProperty
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 
-import org.scalatra.DefaultValue
 import org.scalatra.util.ParamsValueReaderProperties
-import org.scalatra.commands.{ModelValidation, CommandExecutors}
+import org.scalatra.commands._
 import scalaz.NonEmptyList
-import org.scalatra.validation.{ValidationFail, FieldName, ValidationError}
+import org.scalatra.validation.{ValidationFail, ValidationError}
 import scala.language.implicitConversions
+import scala.concurrent.{Future, Await}
+import scala.concurrent.duration._
+import org.scalatra.validation.FieldName
+import scala.Some
+
 
 class ImportBatchCreationSpec extends FlatSpec
     with Matchers with JsonCommandTestSupport {
@@ -31,7 +35,7 @@ class ImportBatchCreationSpec extends FlatSpec
 
 
   it should "parse import batch successfully" in {
-    val validatedBatch = command.bindTo(json) >> (_.toValidatedResource("testuser"))
+    val validatedBatch = Await.result(command.bindTo(json) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isSuccess should be (true)
   }
 
@@ -52,14 +56,14 @@ class ImportBatchCreationSpec extends FlatSpec
 
   it should "parse data succesfully if all validation tests pass" in {
 
-    val validatedBatch  = command.withValidation("great success" -> ((json: JValue) => true)).bindTo(json) >> (_.toValidatedResource("testuser"))
+    val validatedBatch  = Await.result(command.withValidation("great success" -> ((json: JValue) => true)).bindTo(json) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isSuccess should be (true)
 
   }
 
   it should "fail parsing  if a validation test fails" in {
 
-    val validatedBatch  = command.withValidation("utter failure" -> ((json: JValue) => false)).bindTo(json) >> (_.toValidatedResource("testuser"))
+    val validatedBatch  = Await.result(command.withValidation("utter failure" -> ((json: JValue) => false)).bindTo(json) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isFailure should be (true)
   }
 
@@ -72,9 +76,19 @@ class ImportBatchCreationSpec extends FlatSpec
 
 }
 
-trait JsonCommandTestSupport extends HakurekisteriJsonSupport with JsonMethods with JacksonJsonValueReaderProperty with ParamsValueReaderProperties with CommandExecutors with JsonModifiers {
+trait JsonCommandTestSupport extends HakurekisteriJsonSupport with JsonMethods with JacksonJsonValueReaderProperty with ParamsValueReaderProperties  with JsonModifiers {
 
-  implicit def JsonDefaultValue: DefaultValue[JValue] = org.scalatra.DefaultValueMethods.default(JNothing)
+
+  implicit def asyncSyncExecutor[T <: Command, S](handler: T => Future[ModelValidation[S]]): CommandExecutor[T, Future[ModelValidation[S]]] =
+    new CommandExecutor[T, Future[ModelValidation[S]]](handler) {
+      def wait(handler: T => Future[ModelValidation[S]]): T => ModelValidation[S]  = (cmd) => Await.result(handler(cmd), 30.seconds)
+
+      val inner = new BlockingCommandExecutor(wait(handler))
+
+      override def execute(command: T): Future[ModelValidation[S]] = Future.successful(inner.execute(command))
+    }
+
+
 
   case class ValidationReader[T](result: ModelValidation[T]) {
     def resource: T = result.fold[T](
@@ -88,7 +102,7 @@ trait JsonCommandTestSupport extends HakurekisteriJsonSupport with JsonMethods w
     )
   }
 
-  implicit def validationToExtractor[T](result: ModelValidation[T]):ValidationReader[T]  = ValidationReader(result)
+  implicit def validationToExtractor[T](result: Future[ModelValidation[T]]):ValidationReader[T]  = ValidationReader(Await.result(result, 10.seconds))
 
   case class ValidationCommand(command: ImportBatchCommand) {
 

@@ -15,9 +15,11 @@ import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 import scala.util.Try
+import scalaz.NonEmptyList
+import org.scalatra.validation.{FieldName, ValidationError}
 
 trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
 
@@ -92,7 +94,17 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
-  case class MalformedResourceException(message: String) extends Exception(message)
+
+
+  case class MalformedResourceException(errors: NonEmptyList[ValidationError]) extends Exception {
+    override def getMessage: String = {
+      val messages: NonEmptyList[String] = for (
+        error <- errors
+      ) yield s"${error.field.map{case FieldName(field) => s"problem with $field: "}.getOrElse("problem: ")} ${error.message}"
+      messages.list.mkString(", ")
+    }
+  }
+
 
   def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName
 
@@ -103,17 +115,24 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
   val timeOut = 120
   implicit val defaultTimeout: Timeout = timeOut.seconds
 
-  class ActorResult[B: Manifest](message: AnyRef, success: (B) => AnyRef) extends AsyncResult() {
+  class FutureActorResult[B: Manifest](message: Future[AnyRef], success: (B) => AnyRef) extends AsyncResult() {
     override implicit def timeout: Duration = timeOut.seconds
-    val is = (actor ? message).mapTo[B].
+    val is = message.flatMap(actor ? _).mapTo[B].
       map(success)
 
   }
 
+  class ActorResult[B: Manifest](message: AnyRef, success: (B) => AnyRef) extends FutureActorResult[B](Future.successful(message), success)
+
+
   def createResource(user: Option[User]): Object = {
-    (command[C] >> (_.toValidatedResource(user.get.username))).fold(
-      errors => throw MalformedResourceException(errors.toString()),
-      resource => new ActorResult(AuthorizedCreate[A,UUID](resource, user.get), ResourceCreated(request.getRequestURL)))
+    val msg = (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(
+      _.fold(
+        errors => Future.failed(MalformedResourceException(errors)),
+        resource => Future.successful(AuthorizedCreate[A,UUID](resource, user.get)))
+    )
+
+    new FutureActorResult(msg , ResourceCreated(request.getRequestURL))
   }
 
   object ResourceCreated {
@@ -123,9 +142,14 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
   def identifyResource(resource : A, id: UUID): A with Identified[UUID] = resource.identify(id)
 
   def updateResource(id: UUID, user: Option[User]): Object = {
-    (command[C] >> (_.toValidatedResource(user.get.username))).fold(
-      errors => throw MalformedResourceException(errors.toString()),
-      resource => new ActorResult[A with Identified[UUID]](AuthorizedUpdate[A,UUID](identifyResource(resource, id), user.get), Ok(_)))
+    val msg: Future[AuthorizedUpdate[A, UUID]] = (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(
+      _.fold(
+        errors => Future.failed(MalformedResourceException(errors)),
+        resource => Future.successful(AuthorizedUpdate[A,UUID](identifyResource(resource, id), user.get)))
+    )
+
+    new FutureActorResult[A with Identified[UUID]](msg , Ok(_))
+
   }
 
   def deleteResource(id: UUID, user: Option[User]): Object = {
