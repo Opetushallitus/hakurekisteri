@@ -51,6 +51,11 @@ task(scp, dependsOn: zipIt) << {
 
 // Task for complete "deploy", creates .zip, copies it and calls for script with ssh
 task(remoteDeploy, dependsOn: scp) << {
+	
+	// Redefine sshexec
+	ant.taskdef(name:  'sshexec',
+      classname:  'org.apache.tools.ant.taskdefs.optional.ssh.SSHExec',
+      classpath:  configurations.sshAntTask.asPath)
 
 	String fullPath = "/data00/releases/" + serviceName + "/" + branchName + "/" + zipFileName
 	String archiveName = zipFileName
