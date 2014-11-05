@@ -13,6 +13,9 @@ import org.scalatra.commands.{ModelValidation, CommandExecutors}
 import scalaz.NonEmptyList
 import org.scalatra.validation.{ValidationFail, FieldName, ValidationError}
 import scala.language.implicitConversions
+import scala.concurrent.{Future, Await}
+import scala.concurrent.duration._
+
 
 class ImportBatchCreationSpec extends FlatSpec
     with Matchers with JsonCommandTestSupport {
@@ -31,7 +34,7 @@ class ImportBatchCreationSpec extends FlatSpec
 
 
   it should "parse import batch successfully" in {
-    val validatedBatch = command.bindTo(json) >> (_.toValidatedResource("testuser"))
+    val validatedBatch = Await.result(command.bindTo(json) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isSuccess should be (true)
   }
 
@@ -52,14 +55,14 @@ class ImportBatchCreationSpec extends FlatSpec
 
   it should "parse data succesfully if all validation tests pass" in {
 
-    val validatedBatch  = command.withValidation("great success" -> ((json: JValue) => true)).bindTo(json) >> (_.toValidatedResource("testuser"))
+    val validatedBatch  = Await.result(command.withValidation("great success" -> ((json: JValue) => true)).bindTo(json) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isSuccess should be (true)
 
   }
 
   it should "fail parsing  if a validation test fails" in {
 
-    val validatedBatch  = command.withValidation("utter failure" -> ((json: JValue) => false)).bindTo(json) >> (_.toValidatedResource("testuser"))
+    val validatedBatch  = Await.result(command.withValidation("utter failure" -> ((json: JValue) => false)).bindTo(json) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isFailure should be (true)
   }
 
@@ -88,7 +91,7 @@ trait JsonCommandTestSupport extends HakurekisteriJsonSupport with JsonMethods w
     )
   }
 
-  implicit def validationToExtractor[T](result: ModelValidation[T]):ValidationReader[T]  = ValidationReader(result)
+  implicit def validationToExtractor[T](result: Future[ModelValidation[T]]):ValidationReader[T]  = ValidationReader(Await.result(result, 10.seconds))
 
   case class ValidationCommand(command: ImportBatchCommand) {
 

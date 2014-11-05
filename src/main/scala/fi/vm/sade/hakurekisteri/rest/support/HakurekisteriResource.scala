@@ -142,13 +142,13 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
   def identifyResource(resource : A, id: UUID): A with Identified[UUID] = resource.identify(id)
 
   def updateResource(id: UUID, user: Option[User]): Object = {
-    val msg = (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(
+    val msg: Future[AuthorizedUpdate[A, UUID]] = (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(
       _.fold(
         errors => Future.failed(MalformedResourceException(errors)),
         resource => Future.successful(AuthorizedUpdate[A,UUID](identifyResource(resource, id), user.get)))
     )
 
-    new FutureActorResult(msg , Ok(_))
+    new FutureActorResult[A with Identified[UUID]](msg , Ok(_))
 
   }
 
