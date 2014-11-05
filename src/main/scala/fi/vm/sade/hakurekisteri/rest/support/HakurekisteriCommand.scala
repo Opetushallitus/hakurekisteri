@@ -15,6 +15,7 @@ import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.json4s.JsonAST.JString
 import org.json4s.JsonAST.JInt
 import scala.Some
+import scala.concurrent.Future
 
 trait HakurekisteriCommand[R] extends  JsonCommand  with HakurekisteriJsonSupport{
 
@@ -57,10 +58,14 @@ trait HakurekisteriCommand[R] extends  JsonCommand  with HakurekisteriJsonSuppor
 
   def errorFail(ex: Throwable) = ValidationError(ex.getMessage, UnknownError).failNel
 
-  def toValidatedResource(user: String): ModelValidation[R] =  {
+  def toValidatedResource(user: String): Future[ModelValidation[R]] =  {
 
-    allCatch.withApply(errorFail) {
-      toResource(user).successNel
-    }
+
+    Future.successful(
+      allCatch.withApply(errorFail) {
+        toResource(user).successNel
+      }
+    )
+
   }
 }
