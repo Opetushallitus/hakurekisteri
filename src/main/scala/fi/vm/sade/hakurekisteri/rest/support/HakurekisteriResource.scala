@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.Try
 import scalaz.NonEmptyList
-import org.scalatra.validation.ValidationError
+import org.scalatra.validation.{FieldName, ValidationError}
 
 trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
 
@@ -100,8 +100,8 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
     override def getMessage: String = {
       val messages: NonEmptyList[String] = for (
         error <- errors
-      ) yield s"${error.field.map((field) => s"problem with $field: ").getOrElse("problem: ")} ${error.message}}}}"
-      messages.list.mkString("\n")
+      ) yield s"${error.field.map{case FieldName(field) => s"problem with $field: "}.getOrElse("problem: ")} ${error.message}"
+      messages.list.mkString(", ")
     }
   }
 
