@@ -1,0 +1,96 @@
+h3(oph-msg="suoritusrekisteri.hakeneet.otsikko") Muodosta hakeneiden ja valituttujen opiskelijoiden siirtotiedosto
+
+div(class="alert alert-danger" ng-show="errors" ng-repeat="error in errors")
+  button(type="button" class="close" aria-hidden="true" ng-click="removeError(error)") &times;
+  img(class="icon-big" src="static/img/alert-icon28x29.png")
+  strong {{error.message}}
+  span {{error.description}}
+
+form(class="well form-horizontal" ng-submit="search()")
+  fieldset
+    div(class="form-group")
+      label(class="col-sm-2 control-label" for="kausi" oph-msg="suoritusrekisteri.hakeneet.hakukausi") Hakukausi
+      div(class="col-sm-2")
+        select(class="form-control" id="kausi" ng-model="kausi" ng-options="k as k.text for k in kaudet")
+    div(class="form-group")
+      label(class="col-sm-2 control-label" for="haku" oph-msg="suoritusrekisteri.hakeneet.haku") Haku
+      div(class="col-sm-10")
+        select(class="form-control" id="haku" ng-model="haku" ng-options="h as h.text group by (h.vuosi + ' ' + h.hakukausi) for h in haut | filter:{vuosi:kausi.vuosi,kausi:kausi.kausi}")
+    div(class="form-group")
+      label(class="col-sm-2 control-label" oph-msg="suoritusrekisteri.hakeneet.organisaatio") Organisaatio
+      div(class="col-sm-6")
+        span(ng-show="organisaatio") {{organisaatio.nimi.fi || organisaatio.nimi.sv}}
+        button(type="button" class="btn btn-sm btn-default" ng-click="avaaOrganisaatiohaku()") Valitse organisaatio
+    div(class="form-group")
+      label(class="col-sm-2 control-label" for="hakukohde" oph-msg="suoritusrekisteri.hakeneet.hakukohde") Hakukohde
+      div(class="col-sm-10")
+        input(class="form-control col-sm-2" type="text" id="hakukohde" ng-model="hakukohde" autocomplete="off" ng-change="setHakukohdenimi()" typeahead="h.koodi as (h.koodi + ' ' + h.nimi) for h in searchHakukohdekoodi($viewValue) | filter:$viewValue | limitTo:20" typeahead-on-select="setHakukohdenimi()")
+        span(id="hakukohdenimi" class="pull-left col-sm-8") {{hakukohdenimi}}
+    div(class="form-group")
+      label(class="col-sm-2 control-label" for="hakuehto" oph-msg="suoritusrekisteri.hakeneet.hakuehto") Hakuehto
+      div(class="col-sm-4")
+        select(class="form-control" id="hakuehto" ng-model="hakuehto" ng-options="h.value as h.text for h in hakuehdot")
+    div(class="form-group")
+      label(class="col-sm-2 control-label" for="tiedostotyyppi" oph-msg="suoritusrekisteri.hakeneet.tyyppi") Tiedostotyyppi
+      div(class="col-sm-2")
+        select(class="form-control" id="tiedostotyyppi" ng-model="tiedostotyyppi" ng-options="t.value as t.text for t in tiedostotyypit")
+    div(class="form-group")
+      div(class="col-sm-offset-2 col-sm-10")
+        button(type="button" class="btn btn-default" ng-click="reset()")
+          span(oph-msg="suoritusrekisteri.hakeneet.tyhjenna") Tyhjennä
+          span(class="glyphicon glyphicon-remove")
+        button(type="submit" class="btn btn-primary")
+          span(oph-msg="suoritusrekisteri.hakeneet.hae") Muodosta ja lataa
+          span(class="glyphicon glyphicon-download")
+
+script(type="text/ng-template" id="organisaatiotulos.html")
+  a(ng-click="valitse(o)")
+    span(class="glyphicon glyphicon-folder-open" ng-show="o.aliOrganisaatioMaara > 0")
+    span(ng-bind-html="(o.ytunnus || o.virastotunnus || o.oppilaitosKoodi || '') | hilight:hakuehto")
+    span(ng-bind-html="(o.nimi.fi || o.nimi.sv || o.nimi.en || '') | hilight:hakuehto")
+
+  ul(class="organisaatiohierarkia" ng-show="o.aliOrganisaatioMaara > 0")
+    li(ng-repeat="o in o.children" ng-include="'organisaatiotulos.html'")
+
+script(type="text/ng-template" id="organisaatiohaku.html")
+  div(class="modal-header")
+    button(type="button" class="close" ng-click="modalInstance.close()" aria-hidden="true") &times;
+    h4(class="modal-title" oph-msg="suoritusrekisteri.hakeneet.organisaatio.haeorganisaatio") Hae organisaatio
+
+  div(class="modal-body" ng-controller="OrganisaatioCtrl")
+    div(ng-show="organisaatiot.length === 0" class="alert alert-danger")
+      span(oph-msg="suoritusrekisteri.hakeneet.eituloksia") Organisaatioita ei löytynyt annetuilla hakuehdoilla. Muuta hakuehtoja ja yritä uudelleen.
+
+    form(ng-submit="hae()")
+      div(class="form-group")
+        label(for="organisaatiohakuehto" oph-msg="suoritusrekisteri.hakeneet.organisaatio.hakuehto") Hakuehto
+        input(id="organisaatiohakuehto" class="form-control" type="text" ng-model="hakuehto")
+      div(class="form-group")
+        label(for="organisaatiotyyppi" oph-msg="suoritusrekisteri.hakeneet.organisaatio.organisaatiotyyppi") Organisaatiotyyppi
+        select(id="organisaatiotyyppi" class="form-control" ng-model="organisaatiotyyppi" ng-options="ot.value as ot.text for ot in organisaatiotyypit")
+      div(class="form-group")
+        label(for="oppilaitostyyppi" oph-msg="suoritusrekisteri.hakeneet.organisaatio.oppilaitostyyppi") Oppilaitostyyppi
+        select(id="oppilaitostyyppi" class="form-control" ng-model="oppilaitostyyppi" ng-options="ot.value as ot.text for ot in oppilaitostyypit")
+      div(class="checkbox")
+        label
+          input(type="checkbox" ng-model="lakkautetut")
+          span(oph-msg="suoritusrekisteri.hakeneet.organisaatio.naytavainvalitut") Näytä vain lakkautetut
+      button(type="button" class="btn btn-sm btn-default" ng-click="tyhjenna()")
+        span(oph-msg="suoritusrekisteri.hakeneet.organisaatio.tyhjenna") Tyhjennä
+      button(type="submit" class="btn btn-sm btn-primary" ng-click="hae()")
+        span(oph-msg="suoritusrekisteri.hakeneet.organisaatio.hae") Hae
+        span(class="glyphicon glyphicon-search")
+
+    div(class="organisaatiotulokset")
+      div(ng-show="loading" class="keskenerainen-large")
+      ul(class="organisaatiohierarkia")
+        li(ng-repeat="o in organisaatiot" ng-include="'organisaatiotulos.html'")
+
+div(ng-if="fileLoading" class="modal fade in" style="display: block")
+  div(class="modal-backdrop fade in")
+  div(class="modal-dialog")
+    div(class="modal-content")
+      div(class="modal-header")
+        h4(class="modal-title" oph-msg="suoritusrekisteri.hakeneet.tiedostoamuodostetaan") Tiedostoa muodostetaan...
+      div(class="modal-body")
+        div(class="loading-td loading-large")

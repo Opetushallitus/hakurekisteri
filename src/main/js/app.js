@@ -1,11 +1,12 @@
 'use strict';
 
-var app = angular.module('myApp', ['ngRoute', 'ngResource', 'ui.bootstrap', 'ngUpload'])
+var app = angular.module('myApp', ['ngRoute', 'ngResource', 'ui.bootstrap', 'ngUpload', 'ngSanitize'])
     .config(function ($locationProvider, $routeProvider) {
         $routeProvider.when('/opiskelijat', {templateUrl: 'templates/opiskelijat', controller: OpiskelijatCtrl});
         $routeProvider.when('/muokkaa/:henkiloOid', {templateUrl: 'templates/muokkaa', controller: MuokkaaCtrl});
         $routeProvider.when('/eihakeneet', {templateUrl: 'templates/eihakeneet', controller: EihakeneetCtrl});
         $routeProvider.when('/tiedonsiirto', {templateUrl: 'templates/tiedonsiirto', controller: TiedonsiirtoCtrl});
+        $routeProvider.when('/hakeneet', {templateUrl: 'templates/hakeneet', controller: HakeneetCtrl});
         $routeProvider.otherwise({redirectTo: '/opiskelijat'});
         $locationProvider.html5Mode(false);
     });
@@ -42,4 +43,8 @@ app.factory('Arvosanat', function($resource) {
     });
 });
 
-
+app.filter('hilight', function() {
+    return function (input, query) {
+        return input.replace(new RegExp('('+ query + ')', 'gi'), '<strong>$1</strong>');
+    }
+});
