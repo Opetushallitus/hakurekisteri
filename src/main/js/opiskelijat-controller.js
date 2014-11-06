@@ -114,30 +114,17 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
         if ($scope.henkiloTerm) {
             var henkiloTerm = $q.defer();
             searchTerms.push(henkiloTerm);
-            var henkiloSearchUrl;
-            if ($scope.henkiloTerm.trim().match(/^\d{6}[+-AB]\d{3}[0-9a-zA-Z]$/)) {
-                henkiloSearchUrl = henkiloServiceUrl + '/resources/s2s/byHetu/' + encodeURIComponent($scope.henkiloTerm.trim().toUpperCase());
-            } else if ($scope.henkiloTerm.trim().match(/^[0-9.]{14,30}$/)) {
-                henkiloSearchUrl = henkiloServiceUrl + '/resources/s2s/' + encodeURIComponent($scope.henkiloTerm.trim());
-            } else {
-                $scope.messages.push({
-                    type: "danger",
-                    messageKey: "suoritusrekisteri.opiskelijat.henkilonhakuehtoeihetu",
-                    message: "Henkilön hakuehto ei ole hetu eikä oid.",
-                    descriptionKey: "suoritusrekisteri.opiskelijat.henkilokorjaa",
-                    description: "Korjaa hakuehto."
-                });
-                stopLoading();
-                return;
-            }
-            if (henkiloSearchUrl) {
-                $http.get(henkiloSearchUrl, {cache: true})
-                    .success(function (henkilo) {
-                        $scope.henkilo = henkilo;
+            var henkiloSearchUrl = henkiloServiceUrl + '/resources/henkilo?index=0&count=1&no=true&p=false&s=true&q=' + encodeURIComponent($scope.henkiloTerm.trim().toUpperCase());
+            $http.get(henkiloSearchUrl, {cache: false})
+                .success(function (henkilo) {
+                    if (henkilo.results && henkilo.results.length === 1) {
+                        $scope.henkilo = henkilo.results[0];
                         henkiloTerm.resolve();
-                    })
-                    .error(function() { henkiloTerm.reject() });
-            }
+                    } else {
+                        henkiloTerm.reject();
+                    }
+                })
+                .error(function() { henkiloTerm.reject() });
         }
         if ($scope.organisaatioTerm && $scope.organisaatioTerm.oppilaitosKoodi && !$scope.organisaatioTerm.oid) {
             var organisaatioTerm = $q.defer();
@@ -171,14 +158,7 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
             $http.get(henkiloServiceUrl + '/resources/henkilo/' + encodeURIComponent(row.henkiloOid), {cache: false})
                 .success(function(henkilo) {
                     if (henkilo) {
-                        if (henkilo.duplicate === false) {
-                            row.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + " (" + (henkilo.hetu ? henkilo.hetu : henkilo.syntymaaika) + ")"
-                        } else {
-                            $http.get(henkiloServiceUrl + '/resources/s2s/' + encodeURIComponent(row.henkiloOid), {cache: false})
-                                .success(function(masterHenkilo) {
-                                    row.henkilo = masterHenkilo.sukunimi + ", " + masterHenkilo.etunimet + " (" + (masterHenkilo.hetu ? masterHenkilo.hetu : masterHenkilo.syntymaaika) + ")"
-                                })
-                        }
+                        row.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + " (" + (henkilo.hetu ? henkilo.hetu : henkilo.syntymaaika) + ")"
                     }
                 });
         }

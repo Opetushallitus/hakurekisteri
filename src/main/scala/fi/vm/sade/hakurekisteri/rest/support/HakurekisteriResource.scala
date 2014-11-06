@@ -15,6 +15,7 @@ import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
 
+import scala.compat.Platform
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 import scala.util.Try
@@ -67,7 +68,10 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
 
   get("/", operation(query))(
     if (!currentUser.exists(_.canRead(resourceName))) throw UserNotAuthorized("not authorized")
-    else queryResource(currentUser)
+    else {
+      val t0 = Platform.currentTime
+      queryResource(currentUser, t0)
+    }
   )
 
   case class NotFoundException() extends Exception
@@ -86,15 +90,13 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
 
 case class UserNotAuthorized(message: String) extends Exception(message)
 
-abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]](actor: ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with JacksonJsonParsing with CorsSupport {
+abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]](actor: ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with JacksonJsonParsing with CorsSupport with QueryLogging {
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
-
-
 
   case class MalformedResourceException(errors: NonEmptyList[ValidationError]) extends Exception {
     override def getMessage: String = {
@@ -105,9 +107,7 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
     }
   }
 
-
   def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName
-
 
   lazy val resourceName = className[A]
 
@@ -123,7 +123,6 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
   }
 
   class ActorResult[B: Manifest](message: AnyRef, success: (B) => AnyRef) extends FutureActorResult[B](Future.successful(message), success)
-
 
   def createResource(user: Option[User]): Object = {
     val msg = (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(
@@ -149,7 +148,6 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
     )
 
     new FutureActorResult[A with Identified[UUID]](msg , Ok(_))
-
   }
 
   def deleteResource(id: UUID, user: Option[User]): Object = {
@@ -163,23 +161,24 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
     })
   }
 
-  def queryResource(user: Option[User]): Product with Serializable = {
-    (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q, user)) recover {
+  def queryResource(user: Option[User], t0: Long): Product with Serializable = {
+    (Try(qb(params)) map ((q: Query[A]) => ResourceQuery(q, user, t0)) recover {
       case e: Exception =>
         logger.error(e, "Bad query: " + params)
         throw new IllegalArgumentException("illegal query params")
     }).get
   }
 
-  case class ResourceQuery[R](query: Query[R], user: Option[User]) extends AsyncResult {
+  case class ResourceQuery[R](query: Query[R], user: Option[User], t0: Long) extends AsyncResult {
     override implicit def timeout: Duration = timeOut.seconds
     val is = {
       val future = (actor ? AuthorizedQuery(query, user.get)).mapTo[Seq[R with Identified[UUID]]]
+      logQuery(query, t0, future)
       future.map(Ok(_))
     }
   }
 
-   protected implicit def swagger: SwaggerEngine[_] = sw
+  protected implicit def swagger: SwaggerEngine[_] = sw
 }
 
 
