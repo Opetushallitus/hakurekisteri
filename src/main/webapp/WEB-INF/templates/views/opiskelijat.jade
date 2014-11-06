@@ -18,7 +18,7 @@ aside(class="row")
         label(for="henkiloTerm" class="col-sm-2 control-label" oph-msg="suoritusrekisteri.opiskelijat.henkilo") Henkilö
         div(class="col-sm-5")
           input(id="henkiloTerm" class="form-control" ng-model="henkiloTerm" type="search" placeholder="Hae hetulla tai henkilönumerolla")
-          span(ng-show="henkilo") {{henkilo.etunimet}} {{henkilo.sukunimi}} ({{henkilo.hetu || henkilo.syntymaaika}})
+          span(ng-show="henkilo") {{henkilo.etunimet}} {{henkilo.sukunimi}}
 
       div(class="form-group")
         label(for="organisaatioTerm" class="col-sm-2 control-label" oph-msg="suoritusrekisteri.opiskelijat.oppilaitos") Oppilaitos

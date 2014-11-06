@@ -11,6 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra._
+import scala.compat.Platform
 import scala.concurrent.{Future, ExecutionContext}
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.pattern.ask
@@ -46,7 +47,7 @@ import scala.concurrent.duration._
 
 class HakijaResource(hakijaActor: ActorRef)
                     (implicit system: ActorSystem, sw: Swagger, val ct: ClassTag[XMLHakijat])
-    extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with ExcelSupport[XMLHakijat] with DownloadSupport {
+    extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with ExcelSupport[XMLHakijat] with DownloadSupport with QueryLogging {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override protected def applicationDescription: String = "Hakijatietojen rajapinta"
@@ -75,8 +76,8 @@ class HakijaResource(hakijaActor: ActorRef)
   }
 
   get("/", operation(query)) {
+    val t0 = Platform.currentTime
     val q = HakijaQuery(params, currentUser)
-    logger.info("Query: " + q)
 
     val tyyppi = Try(ApiFormat.withName(params("tyyppi"))).getOrElse(ApiFormat.Json)
     contentType = getContentType(tyyppi)
@@ -85,13 +86,17 @@ class HakijaResource(hakijaActor: ActorRef)
       override implicit def timeout: Duration = 120.seconds
       val hakuResult = hakijaActor ? q
 
-      val is = hakuResult.flatMap {
+      val hakijatFuture = hakuResult.flatMap {
         case result if Try(params("tiedosto").toBoolean).getOrElse(false) || tyyppi == ApiFormat.Excel =>
           setContentDisposition(tyyppi, response, "hakijat")
           Future.successful(result)
         case result =>
           Future.successful(result)
       }
+
+      logQuery(q, t0, hakijatFuture)
+
+      val is = hakijatFuture
     }
   }
 
