@@ -78,7 +78,6 @@ class HakijaResource(hakijaActor: ActorRef)
   get("/", operation(query)) {
     val t0 = Platform.currentTime
     val q = HakijaQuery(params, currentUser)
-    logger.info("Query: " + q)
 
     val tyyppi = Try(ApiFormat.withName(params("tyyppi"))).getOrElse(ApiFormat.Json)
     contentType = getContentType(tyyppi)

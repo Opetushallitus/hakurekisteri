@@ -137,7 +137,6 @@ class KkHakijaResource(hakemukset: ActorRef,
   get("/", operation(query)) {
     val t0 = Platform.currentTime
     val q = KkHakijaQuery(params, currentUser)
-    logger.info("Query: " + q)
 
     val tyyppi = Try(ApiFormat.withName(params("tyyppi"))).getOrElse(ApiFormat.Json)
     contentType = getContentType(tyyppi)
