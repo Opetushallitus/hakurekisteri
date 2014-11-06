@@ -13,7 +13,7 @@ trait QueryLogging { this: HakuJaValintarekisteriStack =>
     case Failure(e) => s"failure: $e"
   }
 
-  def logQuery(q: Product, t0: Long, f: Future[_])(implicit ec: ExecutionContext): Unit = {
+  def logQuery(q: Any, t0: Long, f: Future[_])(implicit ec: ExecutionContext): Unit = {
     f.onComplete(t => logger.info(s"query $q took ${Platform.currentTime - t0} ms, result ${result(t)}"))
   }
 
