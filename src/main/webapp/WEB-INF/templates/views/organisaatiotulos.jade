@@ -1,0 +1,6 @@
+a(ng-click="valitse(o)")
+  span(class="glyphicon glyphicon-folder-open" ng-show="o.aliOrganisaatioMaara > 0")
+  span(ng-bind-html="(o.ytunnus || o.virastotunnus || o.oppilaitosKoodi || '') | hilight:hakuehto")
+  span(ng-bind-html="(o.nimi.fi || o.nimi.sv || o.nimi.en || '') | hilight:hakuehto")
+ul(class="organisaatiohierarkia" ng-show="o.aliOrganisaatioMaara > 0")
+  li(ng-repeat="o in o.children" ng-include="'templates/organisaatiotulos'")
