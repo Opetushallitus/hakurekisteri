@@ -1,4 +1,4 @@
-function HakeneetCtrl($scope, $rootScope, $http, $modal, aste, $log) {
+function HakeneetCtrl($scope, $rootScope, $http, $modal, aste) {
     $scope.errors = [];
     $scope.haut = [];
     $scope.kaudet = [];
@@ -11,8 +11,6 @@ function HakeneetCtrl($scope, $rootScope, $http, $modal, aste, $log) {
     function isKk() {
         return aste === 'kk'
     }
-
-    $log.debug("init");
 
     function tiedostotyypit() {
         if (isKk()) return [
@@ -79,7 +77,8 @@ function HakeneetCtrl($scope, $rootScope, $http, $modal, aste, $log) {
             organisaatio: $scope.organisaatio ? $scope.organisaatio.oid : null,
             hakukohde: $scope.hakukohde ? $scope.hakukohde : null,
             hakuehto: $scope.hakuehto,
-            tyyppi: $scope.tiedostotyyppi
+            tyyppi: $scope.tiedostotyyppi,
+            tiedosto: true
         } : {
             haku: $scope.haku ? $scope.haku.oid : null,
             organisaatio: $scope.organisaatio ? $scope.organisaatio.oid : null,
