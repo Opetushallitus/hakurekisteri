@@ -161,11 +161,11 @@ optgroup option {
     padding-left: 10px;
 }
 
-#hakukohde {
-    width: 16.6667%;
-}
-
 #hakukohdenimi {
     display: inline-block;
     margin-top: 7px;
+}
+
+.input-loading {
+    background: url('../img/ajax-loader.gif') no-repeat right;
 }

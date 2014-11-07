@@ -46,7 +46,8 @@ class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekist
 
   get("/templates/:template") {
     contentType="text/html"
-    try jade("/" + params("template"), "layout" -> "")
+    val attributes = (Map("layout" -> "") ++ params).toSeq
+    try jade("/" + params("template"), attributes:_*)
     catch {
       case te: org.fusesource.scalate.TemplateException  => pass()
       case nf: org.fusesource.scalate.util.ResourceNotFoundException => pass()
