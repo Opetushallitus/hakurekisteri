@@ -22,7 +22,7 @@ class UploadResource()
   configureMultipartHandling(MultipartConfig(maxFileSize = Some(maxFileSize)))
 
   options("/*") {
-    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader(CorsSupport.AccessControlAllowHeadersHeader, request.getHeader(CorsSupport.AccessControlAllowHeadersHeader))
   }
 
   before() {
