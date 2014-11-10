@@ -1,4 +1,4 @@
-import fi.vm.sade.hakurekisteri.batchimport.UploadResource
+import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
 import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaResource
 import fi.vm.sade.hakurekisteri.oppija.OppijaResource
@@ -37,6 +37,7 @@ import org.apache.activemq.camel.component.ActiveMQComponent
 import org.joda.time.LocalDate
 import org.scalatra._
 import org.scalatra.swagger.Swagger
+import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.BeanDefinition
 import org.springframework.beans.MutablePropertyValues
@@ -84,6 +85,7 @@ class ScalatraBootstrap extends LifeCycle {
       ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
       ("/upload", "upload") -> new UploadResource(),
+      // ("/rest/v1/siirto/test", "rest/v1/siirto/test") -> new ImportBatchResource(authorizedRegisters, (foo) => ImportBatchQuery(None))("identifier", "test", "data"),
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
       ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
       ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),
@@ -172,6 +174,7 @@ trait Journals {
   val opiskelijaJournal: Journal[Opiskelija, UUID]
   val opiskeluoikeusJournal: Journal[Opiskeluoikeus, UUID]
   val arvosanaJournal: Journal[Arvosana, UUID]
+  val eraJournal: Journal[ImportBatch, UUID]
 }
 
 class DbJournals(jndiName: String)(implicit val system: ActorSystem) extends Journals {
@@ -183,6 +186,7 @@ class DbJournals(jndiName: String)(implicit val system: ActorSystem) extends Jou
   override val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
   override val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable])
   override val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
+  override val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
 
 }
 
@@ -191,7 +195,7 @@ class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
   override val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(journals.opiskelijaJournal)), "opiskelijat")
   override val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusActor(journals.opiskeluoikeusJournal)), "opiskeluoikeudet")
   override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(journals.arvosanaJournal)), "arvosanat")
-  override val eraRekisteri: ActorRef = system.deadLetters
+  override val eraRekisteri: ActorRef = system.actorOf(Props(new ImportBatchActor(journals.eraJournal.asInstanceOf[JDBCJournal[ImportBatch, UUID, ImportBatchTable]], 5)), "erat")
 }
 
 class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Registers, system: ActorSystem) extends Registers {
@@ -231,7 +235,7 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Regi
   override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, unauthorized.arvosanaRekisteri,
     resolve
     )), "arvosana-authorizer")
-  override val eraRekisteri: ActorRef = system.deadLetters
+  override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era) => Some("1.2.246.562.10.00000000001"))
 }
 
 object AuthorizedRegisters {

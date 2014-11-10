@@ -42,7 +42,7 @@ class ImportBatchCreationSpec extends FlatSpec
     ("identifier" -> "testId") ~ ("batch" -> xml.toString)
 
   it should "parse import batch successfully" in {
-    val validatedBatch = Await.result(command.bindTo(json) >> (_.toValidatedResource("testuser")), 10.seconds)
+    val validatedBatch = Await.result(command.bindTo(Map("identifier" -> "testId", "batch" -> xml.toString)) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isSuccess should be (true)
   }
 
