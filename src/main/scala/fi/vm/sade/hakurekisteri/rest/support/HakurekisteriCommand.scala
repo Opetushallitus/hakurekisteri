@@ -1,24 +1,22 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import org.scalatra.commands.{ModelValidation, JsonCommand}
-import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Komoto, Suoritus}
+import org.scalatra.commands._
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 import org.scalatra.validation.{UnknownError, ValidationError}
 import scala.util.control.Exception._
-import org.scalatra.validation._
+import scala.xml.{Elem, XML}
 import scalaz._, Scalaz._
-import org.scalatra.{util, DefaultValue}
+import org.scalatra.{DefaultValues, util, DefaultValue}
 import org.scalatra.util.conversion.TypeConverter
 import org.json4s._
-import scala.Some
-import org.json4s.JsonAST.{JString, JInt}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.json4s.JsonAST.JString
 import org.json4s.JsonAST.JInt
-import scala.Some
 import scala.concurrent.Future
 
-trait HakurekisteriCommand[R] extends  JsonCommand  with HakurekisteriJsonSupport{
 
+
+trait HakurekisteriCommand[R] extends JsonCommand with HakurekisteriJsonSupport{
 
   implicit def OptionIntDefaultValue: DefaultValue[Option[Int]] = org.scalatra.DefaultValueMethods.default(None)
 
@@ -29,6 +27,19 @@ trait HakurekisteriCommand[R] extends  JsonCommand  with HakurekisteriJsonSuppor
   implicit val stringtoJValue: TypeConverter[String, JValue] = safe((s: String) => parse(s))
 
   implicit val jsontoJValue: TypeConverter[JValue, JValue] = safe((jvalue: JValue) => jvalue)
+
+
+  implicit val defaultElem: DefaultValue[Elem] = DefaultValues.ElemDefaultValue
+
+
+  implicit val stringtoXml: TypeConverter[String, Elem] = safe((s: String) => XML.loadString(s))
+
+  implicit val jsontoXml: TypeConverter[JValue, Elem] = safe((jvalue: JValue) => {
+    val JString(data) = jvalue
+    XML.loadString(data)
+  })
+
+
 
 
 

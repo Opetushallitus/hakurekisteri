@@ -30,113 +30,86 @@ class ImportBatchCreationSpec extends FlatSpec
     dataField= "batch"
   )
 
-  //val json:JValue =
-  //  ("identifier" -> "testId") ~ ("batch" -> Seq("data2", "data1"))
-
   val xml = <batchdata>
     <identifier>testId</identifier>
     <batch>
-      <data></data>
-      <data></data>
+      <data/>
+      <data/>
     </batch>
   </batchdata>
 
-  it should "foo" in {
-    "bar" should be ("bar")
-  }
-
-  /*
+  val json: JValue =
+    ("identifier" -> "testId") ~ ("batch" -> xml.toString)
 
   it should "parse import batch successfully" in {
-    val validatedBatch = Await.result(command.bindTo(xml) >> (_.toValidatedResource("testuser")), 10.seconds)
+    val validatedBatch = Await.result(command.bindTo(json) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isSuccess should be (true)
   }
 
   it should "parse externalId successfully" in {
-    val validatedBatch = command.bindTo(xml) >> (_.toValidatedResource("testuser"))
+    val validatedBatch = command.bindTo(json) >> (_.toValidatedResource("testuser"))
     validatedBatch.resource.externalId should be (Some("testId"))
   }
 
   it should "parse None as externalId if missing" in {
-    val validatedBatch = command.bindTo(<batchdata><batch><data></data></batch></batchdata>) >> (_.toValidatedResource("testuser"))
+    val validatedBatch = command.bindTo(json - "identifier") >> (_.toValidatedResource("testuser"))
     validatedBatch.resource.externalId should be (None)
   }
 
   it should "parse data successfully" in {
-    val validatedBatch = command.bindTo(xml) >> (_.toValidatedResource("testuser"))
-    validatedBatch.resource.data should be (xml \ "batch")
+    val validatedBatch = command.bindTo(json) >> (_.toValidatedResource("testuser"))
+    validatedBatch.resource.data should be (xml)
   }
 
   it should "parse data succesfully if all validation tests pass" in {
-
-    val validatedBatch  = Await.result(command.withValidation("great success" -> ((xml: Elem) => true)).bindTo(xml) >> (_.toValidatedResource("testuser")), 10.seconds)
+    val validatedBatch = Await.result(command.withValidation("great success" -> ((j: Elem) => true)).bindTo(json) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isSuccess should be (true)
-
   }
 
   it should "fail parsing  if a validation test fails" in {
-
-    val validatedBatch  = Await.result(command.withValidation("utter failure" -> ((json: JValue) => false)).bindTo(json) >> (_.toValidatedResource("testuser")), 10.seconds)
+    val validatedBatch = Await.result(command.withValidation("utter failure" -> ((j: Elem) => false)).bindTo(json) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isFailure should be (true)
   }
 
-  it should "return given validation error if a validation test fails"  in {
-    val validatedBatch  = command.withValidation("utter failure" -> ((json: JValue) => false)).bindTo(json) >> (_.toValidatedResource("testuser"))
-    validatedBatch.failure.list should contain (ValidationError("utter failure", Some(FieldName("batch")), Some(ValidationFail)))
+  it should "return given validation error if a validation test fails" in {
+    val validatedBatch = command.withValidation("utter failure" -> ((json: Elem) => false)).bindTo(json) >> (_.toValidatedResource("testuser"))
+    validatedBatch.failure.list should contain(ValidationError("utter failure", Some(FieldName("batch")), Some(ValidationFail)))
   }
-  */
-
-
-
 }
 
 trait JsonCommandTestSupport extends HakurekisteriJsonSupport with JsonMethods with JacksonJsonValueReaderProperty with ParamsValueReaderProperties  with JsonModifiers {
-
-
   implicit def asyncSyncExecutor[T <: Command, S](handler: T => Future[ModelValidation[S]]): CommandExecutor[T, Future[ModelValidation[S]]] =
     new CommandExecutor[T, Future[ModelValidation[S]]](handler) {
       def wait(handler: T => Future[ModelValidation[S]]): T => ModelValidation[S]  = (cmd) => Await.result(handler(cmd), 30.seconds)
-
       val inner = new BlockingCommandExecutor(wait(handler))
-
       override def execute(command: T): Future[ModelValidation[S]] = Future.successful(inner.execute(command))
     }
-
-
 
   case class ValidationReader[T](result: ModelValidation[T]) {
     def resource: T = result.fold[T](
       errors => throw new RuntimeException(errors.toString()),
-      (resource: T) => resource)
+      (resource: T) => resource
+    )
 
     def failure: NonEmptyList[ValidationError] = result.fold(
       errors => errors,
-      (resource: T) => throw new RuntimeException("validation is succesfull")
-
+      (resource: T) => throw new RuntimeException("validation is successful")
     )
   }
 
   implicit def validationToExtractor[T](result: Future[ModelValidation[T]]):ValidationReader[T]  = ValidationReader(Await.result(result, 10.seconds))
 
   case class ValidationCommand(command: ImportBatchCommand) {
-
-    def withValidation(validations: (String, JValue => Boolean)*) = ImportBatchCommand(command.externalIdField: String, command.batchType: String, command.dataField: String, validations:_*)
-
+    def withValidation(validations: (String, Elem => Boolean)*) = ImportBatchCommand(command.externalIdField: String, command.batchType: String, command.dataField: String, validations:_*)
   }
 
   implicit def CommandToValidationCommand(command: ImportBatchCommand): ValidationCommand = ValidationCommand(command)
 }
 
-
 trait JsonModifiers {
-
   case class FieldRemover(json: JValue ) {
-
     def -(fieldName: String): JValue = JObject(json.filterField{case (name, value) => name != fieldName})
-
   }
 
   implicit def jvalueToFieldRemover(json:JValue): FieldRemover = FieldRemover(json)
-
-
 }
