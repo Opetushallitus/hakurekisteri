@@ -12,13 +12,18 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import org.scalatra._
 import org.scalatra.commands._
 import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
+import org.scalatra.servlet.FileItem
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
+import org.scalatra.util.{MultiMapHeadView, ValueReader}
 
+import scala.collection.immutable
 import scala.compat.Platform
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
+import scala.language.implicitConversions
 import scala.util.Try
+import scala.util.control.Exception._
 import scalaz.NonEmptyList
 import org.scalatra.validation.{FieldName, ValidationError}
 

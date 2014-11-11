@@ -23,7 +23,6 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
 
   test("post should return 201 created") {
     post("/", "<batch><data>foo</data></batch>") {
-      println(s"response body: ${response.body}")
       response.status should be(201)
     }
   }

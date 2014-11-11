@@ -7,14 +7,22 @@ function TiedonsiirtoCtrl($scope, $rootScope) {
     };
 
     $scope.uploadComplete = function(content) {
-        if (isUploadResponse(content)) {
-            $scope.uploadResult = typeof content === 'object' ? content : angular.fromJson(content);
-            document.getElementById("uploadForm").reset();
-        } else {
+        if (isImportBatchResponse(content)) {
+            var response = typeof content === 'object' ? content : angular.fromJson(content);
+            $scope.uploadResult = {
+                type: "success",
+                message: "Tiedosto lähetetty.",
+                messageKey: "suoritusrekisteri.tiedonsiirto.tiedostolahetetty",
+                id: response.id
+            }
+        }
+        else if (isIncidentResponse(content)) {
+            var response = typeof content === 'object' ? content : angular.fromJson(content);
             $scope.uploadResult = {
                 type: "danger",
-                message: "Virhe lähettäessä tiedostoa",
-                messageKey: "suoritusrekisteri.tiedonsiirto.virhe"
+                message: "Virhe lähettäessä tiedostoa.",
+                messageKey: "suoritusrekisteri.tiedonsiirto.virhe",
+                description: response.message
             }
         }
         delete $scope.sending;
@@ -25,7 +33,11 @@ function TiedonsiirtoCtrl($scope, $rootScope) {
         delete $scope.uploadResult;
     };
 
-    function isUploadResponse(content) {
-        return (typeof content === 'string' && content.match(/.*"type":.*/g)) || (typeof content === 'object' && content.type && content.message)
+    function isImportBatchResponse(content) {
+        return (typeof content === 'string' && content.match(/.*"batchType".*/g)) || (typeof content === 'object' && content.batchType)
+    }
+
+    function isIncidentResponse(content) {
+        return (typeof content === 'string' && content.match(/.*"incidentId".*/g)) || (typeof content === 'object' && content.incidentId)
     }
 }

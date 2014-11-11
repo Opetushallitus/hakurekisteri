@@ -5,11 +5,11 @@ div(class="row")
     h2(oph-msg="suoritusrekisteri.sovellus.nimi" oph-msg="suoritusrekisteri.tiedonsiirto.tiedonsiirto") Tiedonsiirto
     div(class="row")
       div(class="col-sm-12")
-        form(id="uploadForm" class="well form-horizontal" action="upload" ng-upload="uploadComplete(content)" enctype="multipart/form-data")
+        form(id="uploadForm" class="well form-horizontal" action="rest/v1/siirto/perustiedot" ng-upload="uploadComplete(content)" enctype="multipart/form-data")
           div(class="form-group")
             label(for="tiedosto" class="col-sm-2 control-label" oph-msg="suoritusrekisteri.tiedonsiirto.tiedosto") Lähetettävä tiedosto
             div(class="col-sm-5")
-              input(id="tiedosto" class="form-control" name="tiedosto" type="file" required="required")
+              input(id="tiedosto" class="form-control" name="data" type="file" required="required")
 
           div(class="form-group")
             div(class="col-sm-10 col-sm-offset-2")
@@ -25,7 +25,9 @@ div(class="row")
         strong
           img(ng-show="uploadResult.type === 'success'" class="icon-big" src="static/img/confirm-icon28x29.png")
           img(ng-show="uploadResult.type === 'danger'" class="icon-big" src="static/img/alert-icon28x29.png")
-          span(oph-msg="{{uploadResult.messageKey}}") {{uploadResult.message}}
+          strong
+            span(oph-msg="{{uploadResult.messageKey}}") {{uploadResult.message}}
+          span {{uploadResult.description}}
 
     div(ng-if="sending" class="modal fade in" style="display: block")
       div(class="modal-backdrop fade in")

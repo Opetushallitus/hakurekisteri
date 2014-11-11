@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import org.scalatra.commands._
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
+import org.scalatra.servlet.FileItem
 import org.scalatra.validation.{UnknownError, ValidationError}
 import scala.util.control.Exception._
 import scala.xml.{Elem, XML}
@@ -28,9 +29,7 @@ trait HakurekisteriCommand[R] extends JsonCommand with HakurekisteriJsonSupport{
 
   implicit val jsontoJValue: TypeConverter[JValue, JValue] = safe((jvalue: JValue) => jvalue)
 
-
   implicit val defaultElem: DefaultValue[Elem] = DefaultValues.ElemDefaultValue
-
 
   implicit val stringtoXml: TypeConverter[String, Elem] = safe((s: String) => XML.loadString(s))
 
@@ -39,10 +38,7 @@ trait HakurekisteriCommand[R] extends JsonCommand with HakurekisteriJsonSupport{
     XML.loadString(data)
   })
 
-
-
-
-
+  implicit val fileToXml: TypeConverter[FileItem, Elem] = safe((f: FileItem) => XML.load(f.getInputStream))
 
   implicit val stringtoOptionInt: TypeConverter[String, Option[Int]] = safe(_.blankOption.map (_.toInt))
 
@@ -50,7 +46,6 @@ trait HakurekisteriCommand[R] extends JsonCommand with HakurekisteriJsonSupport{
     case JInt(value) => Some(value.toInt)
     case _ => None
   })
-
 
   implicit val stringtoOptionString: TypeConverter[String, Option[String]] = safe(_.blankOption)
 
@@ -64,19 +59,15 @@ trait HakurekisteriCommand[R] extends JsonCommand with HakurekisteriJsonSupport{
   implicit val stringToYksilollistaminen: TypeConverter[String, Yksilollistetty] = safeOption(_.blankOption.map (yksilollistaminen.withName))
   implicit val jsonToYksilollistaminen: TypeConverter[JValue, Yksilollistetty] = safeOption(_.extractOpt[Yksilollistetty])
 
-
   def toResource(user: String): R
 
   def errorFail(ex: Throwable) = ValidationError(ex.getMessage, UnknownError).failNel
 
   def toValidatedResource(user: String): Future[ModelValidation[R]] =  {
-
-
     Future.successful(
       allCatch.withApply(errorFail) {
         toResource(user).successNel
       }
     )
-
   }
 }
