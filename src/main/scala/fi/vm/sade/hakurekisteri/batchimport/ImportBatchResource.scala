@@ -2,23 +2,23 @@ package fi.vm.sade.hakurekisteri.batchimport
 
 import javax.servlet.http.HttpServletRequest
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import fi.vm.sade.hakurekisteri.rest.support._
 import org.scalatra.commands._
-import org.scalatra.swagger.{DataType, ModelProperty, SwaggerSupport, Swagger}
+import org.scalatra.swagger.{DataType, SwaggerSupport, Swagger}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 
 import scala.xml.Elem
 
 
-class ImportBatchResource(authorizedRegisters: Registers,
+class ImportBatchResource(eraRekisteri: ActorRef,
                                    queryMapper: (Map[String, String]) => Query[ImportBatch])
                                   (externalIdField: String,
                                    batchType: String,
                                    dataField: String,
                                    validations: (String, Elem => Boolean)*)
                                   (implicit sw: Swagger, system: ActorSystem, mf: Manifest[ImportBatch], cf: Manifest[ImportBatchCommand])
-    extends HakurekisteriResource[ImportBatch, ImportBatchCommand](authorizedRegisters.eraRekisteri, queryMapper) with ImportBatchSwaggerApi with HakurekisteriCrudCommands[ImportBatch, ImportBatchCommand] with SpringSecuritySupport {
+    extends HakurekisteriResource[ImportBatch, ImportBatchCommand](eraRekisteri, queryMapper) with ImportBatchSwaggerApi with HakurekisteriCrudCommands[ImportBatch, ImportBatchCommand] with SpringSecuritySupport {
 
   registerCommand[ImportBatchCommand](ImportBatchCommand(externalIdField,
                                                          batchType,

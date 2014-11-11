@@ -37,7 +37,6 @@ import org.apache.activemq.camel.component.ActiveMQComponent
 import org.joda.time.LocalDate
 import org.scalatra._
 import org.scalatra.swagger.Swagger
-import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.BeanDefinition
 import org.springframework.beans.MutablePropertyValues
@@ -85,7 +84,7 @@ class ScalatraBootstrap extends LifeCycle {
       ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
       ("/upload", "upload") -> new UploadResource(),
-      // ("/rest/v1/siirto/test", "rest/v1/siirto/test") -> new ImportBatchResource(authorizedRegisters, (foo) => ImportBatchQuery(None))("identifier", "test", "data"),
+      ("/rest/v1/siirto/test", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None))("identifier", "test", "data") with SpringSecuritySupport,
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
       ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
       ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),

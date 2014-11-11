@@ -12,7 +12,7 @@ import scala.slick.lifted
 import fi.vm.sade.hakurekisteri.storage.repository.Delta
 
 
-class ImportBatchActor(val journal:JDBCJournal[ImportBatch, UUID, ImportBatchTable], poolSize: Int) extends ResourceActor[ImportBatch, UUID] with JDBCRepository[ImportBatch, UUID, ImportBatchTable] with JDBCService[ImportBatch, UUID, ImportBatchTable] {
+class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTable], poolSize: Int) extends ResourceActor[ImportBatch, UUID] with JDBCRepository[ImportBatch, UUID, ImportBatchTable] with JDBCService[ImportBatch, UUID, ImportBatchTable] {
   override val dbQuery: PartialFunction[support.Query[ImportBatch], lifted.Query[ImportBatchTable, Delta[ImportBatch, UUID], Seq]]  = {
     case ImportBatchQuery(Some(externalId)) => all.filter(_.externalId === Option(externalId))
     case ImportBatchQuery(None) => all
