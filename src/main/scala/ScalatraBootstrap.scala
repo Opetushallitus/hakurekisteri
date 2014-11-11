@@ -56,6 +56,8 @@ import HakurekisteriDriver.simple._
 import scala.util.Try
 import siirto.{PerustiedotKoodisto, Perustiedot, SchemaServlet}
 
+import scala.xml.Elem
+
 
 class ScalatraBootstrap extends LifeCycle {
   import Config._
@@ -84,7 +86,7 @@ class ScalatraBootstrap extends LifeCycle {
       ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
       ("/upload", "upload") -> new UploadResource(),
-      ("/rest/v1/siirto/test", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None))("identifier", "test", "data") with SpringSecuritySupport,
+      ("/rest/v1/siirto/test", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None))("era", "perustiedot", "data") with SpringSecuritySupport,
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
       ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
       ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),

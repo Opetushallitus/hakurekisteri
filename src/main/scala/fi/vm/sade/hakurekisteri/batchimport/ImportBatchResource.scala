@@ -35,10 +35,10 @@ case class ImportBatchCommand(externalIdField: String, batchType: String, dataFi
   val validators =  validations.map{
     case (messageFormat, validate ) => BindingValidators.validate(validate, messageFormat)
   }.toList
-  val externalId: Field[Option[String]] = binding2field(asType[Option[String]](externalIdField).optional)
-  val data: Field[Elem] = binding2field(asType[Elem](dataField).validateWith(validators:_*))
+  private val validatedData = asType[Elem](dataField).validateWith(validators: _*)
+  val data: Field[Elem] = validatedData
 
-  override def toResource(user: String): ImportBatch = ImportBatch(data.value.get, externalId.value.get, batchType, user)
+  override def toResource(user: String): ImportBatch = ImportBatch(data.value.get, data.value.flatMap(elem => (elem \ externalIdField).collectFirst{case e:Elem => e.text}), batchType, user)
 }
 
 

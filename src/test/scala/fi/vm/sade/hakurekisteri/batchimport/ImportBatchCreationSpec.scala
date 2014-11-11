@@ -38,8 +38,8 @@ class ImportBatchCreationSpec extends FlatSpec
     </batch>
   </batchdata>
 
-  val json: JValue =
-    ("identifier" -> "testId") ~ ("batch" -> xml.toString)
+  val params =
+    Map("batch" -> xml.toString)
 
   it should "parse import batch successfully" in {
     val validatedBatch = Await.result(command.bindTo(Map("identifier" -> "testId", "batch" -> xml.toString)) >> (_.toValidatedResource("testuser")), 10.seconds)
@@ -47,32 +47,32 @@ class ImportBatchCreationSpec extends FlatSpec
   }
 
   it should "parse externalId successfully" in {
-    val validatedBatch = command.bindTo(json) >> (_.toValidatedResource("testuser"))
+    val validatedBatch = command.bindTo(params) >> (_.toValidatedResource("testuser"))
     validatedBatch.resource.externalId should be (Some("testId"))
   }
 
   it should "parse None as externalId if missing" in {
-    val validatedBatch = command.bindTo(json - "identifier") >> (_.toValidatedResource("testuser"))
+    val validatedBatch = command.bindTo(Map("batch" -> (xml - "identifier").toString())) >> (_.toValidatedResource("testuser"))
     validatedBatch.resource.externalId should be (None)
   }
 
   it should "parse data successfully" in {
-    val validatedBatch = command.bindTo(json) >> (_.toValidatedResource("testuser"))
+    val validatedBatch = command.bindTo(params) >> (_.toValidatedResource("testuser"))
     validatedBatch.resource.data should be (xml)
   }
 
   it should "parse data succesfully if all validation tests pass" in {
-    val validatedBatch = Await.result(command.withValidation("great success" -> ((j: Elem) => true)).bindTo(json) >> (_.toValidatedResource("testuser")), 10.seconds)
+    val validatedBatch = Await.result(command.withValidation("great success" -> ((j: Elem) => true)).bindTo(params) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isSuccess should be (true)
   }
 
   it should "fail parsing  if a validation test fails" in {
-    val validatedBatch = Await.result(command.withValidation("utter failure" -> ((j: Elem) => false)).bindTo(json) >> (_.toValidatedResource("testuser")), 10.seconds)
+    val validatedBatch = Await.result(command.withValidation("utter failure" -> ((j: Elem) => false)).bindTo(params) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isFailure should be (true)
   }
 
   it should "return given validation error if a validation test fails" in {
-    val validatedBatch = command.withValidation("utter failure" -> ((json: Elem) => false)).bindTo(json) >> (_.toValidatedResource("testuser"))
+    val validatedBatch = command.withValidation("utter failure" -> ((json: Elem) => false)).bindTo(params) >> (_.toValidatedResource("testuser"))
     validatedBatch.failure.list should contain(ValidationError("utter failure", Some(FieldName("batch")), Some(ValidationFail)))
   }
 }
@@ -110,6 +110,13 @@ trait JsonModifiers {
   case class FieldRemover(json: JValue ) {
     def -(fieldName: String): JValue = JObject(json.filterField{case (name, value) => name != fieldName})
   }
+
+  case class XmlRemover(xml:Elem) {
+    def -(tagName: String): Elem = xml.copy(child = xml.child.filterNot(_.label == tagName))
+  }
+
+
+  implicit def elemToFieldRemover(elem:Elem): XmlRemover = XmlRemover(elem)
 
   implicit def jvalueToFieldRemover(json:JValue): FieldRemover = FieldRemover(json)
 }
