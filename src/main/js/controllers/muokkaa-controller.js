@@ -428,8 +428,9 @@ app.controller('MuokkaaCtrl', ['$scope', '$routeParams', '$location', '$http', '
             $event.stopPropagation();
             $scope[openedKey] = true;
         };
-        $scope.dateOptions = { 'year-format': "'yyyy'", 'starting-day': 1 };
+        $scope.dateOptions = { 'year-format': "'yyyy'", 'starting-day': 1, appendToBody: true };
         $scope.format = 'dd.MM.yyyy';
+        $scope.opiskelijaFormat = 'yyyy-MM-ddTHH:mm:ss.sssZ';
     }
     initDatepicker();
 }]);
