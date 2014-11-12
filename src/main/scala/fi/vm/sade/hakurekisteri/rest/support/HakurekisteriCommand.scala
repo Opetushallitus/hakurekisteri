@@ -2,7 +2,9 @@ package fi.vm.sade.hakurekisteri.rest.support
 
 import org.scalatra.commands._
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
+import org.scalatra.json.JsonValueReader
 import org.scalatra.servlet.FileItem
+import org.scalatra.util.ValueReader
 import org.scalatra.validation.{UnknownError, ValidationError}
 import scala.util.control.Exception._
 import scala.xml.{Elem, XML}
@@ -17,7 +19,15 @@ import scala.concurrent.Future
 
 
 
-trait HakurekisteriCommand[R] extends JsonCommand with HakurekisteriJsonSupport{
+trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFactories with HakurekisteriJsonSupport{
+
+  type CommandTypeConverterFactory[T] = JsonTypeConverterFactory[T]
+
+  override def typeConverterBuilder[I](tc: CommandTypeConverterFactory[_]) = ({
+    case r: JsonValueReader => tc.resolveJson.asInstanceOf[TypeConverter[I, _]]
+
+  }: PartialFunction[ValueReader[_, _], TypeConverter[I, _]]) orElse super.typeConverterBuilder(tc)
+
 
   implicit def OptionIntDefaultValue: DefaultValue[Option[Int]] = org.scalatra.DefaultValueMethods.default(None)
 
@@ -70,4 +80,25 @@ trait HakurekisteriCommand[R] extends JsonCommand with HakurekisteriJsonSupport{
       }
     )
   }
+}
+
+
+trait FileTypeConverterFactory[T] extends JsonTypeConverterFactory[T] {
+
+
+
+}
+
+trait HakurekisteriTypeConverterFactories extends JsonBindingImplicits  {
+  implicit def fileTypeConverterFactory[T](implicit
+                                           seqConverter: TypeConverter[Seq[String], T],
+                                           stringConverter: TypeConverter[String, T],
+                                           jsonConverter: TypeConverter[JValue, T],
+                                           formats: Formats): TypeConverterFactory[T] =
+    new FileTypeConverterFactory[T] {
+      implicit protected val jsonFormats: Formats = formats
+      def resolveJson: TypeConverter[JValue,  T] = jsonConverter
+      def resolveMultiParams: TypeConverter[Seq[String], T] = seqConverter
+      def resolveStringParams: TypeConverter[String, T] = stringConverter
+    }
 }
