@@ -7,6 +7,7 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.{FakeAuthorizer, TestSecurity}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriSwagger, JDBCJournal}
 import org.scalatra.swagger.Swagger
+import org.scalatra.test.BytesPart
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 
@@ -19,6 +20,12 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5)))
   val authorized = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
 
+  override def stop(): Unit = {
+    system.shutdown()
+    system.awaitTermination()
+    super.stop()
+  }
+
   addServlet(new ImportBatchResource(authorized, (foo) => ImportBatchQuery(None))("identifier", "test", "data") with TestSecurity, "/")
 
   test("post should return 201 created") {
@@ -26,5 +33,16 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
       response.status should be(201)
     }
   }
+
+  test("post with fileupload should return 201 created") {
+    val fileData = BytesPart("test.xml", "<batch><data>foo</data></batch>".getBytes("UTF-8"), contentType = "application/xml")
+
+    post("/", Map[String, String](), List("data" -> fileData)) {
+      println(response.body)
+      response.status should be(201)
+    }
+  }
+
+
 
 }
