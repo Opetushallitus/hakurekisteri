@@ -26,7 +26,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
                                   (externalIdField: String,
                                    batchType: String,
                                    dataField: String,
-                                   validations: (String, Elem => ValidationNel[ValidationError, Elem])*)
+                                   validations: (Elem => ModelValidation[Elem])*)
                                   (implicit sw: Swagger, system: ActorSystem, mf: Manifest[ImportBatch], cf: Manifest[ImportBatchCommand])
     extends HakurekisteriResource[ImportBatch, ImportBatchCommand](eraRekisteri, queryMapper) with ImportBatchSwaggerApi with HakurekisteriCrudCommands[ImportBatch, ImportBatchCommand] with SpringSecuritySupport with FileUploadSupport with IncidentReporting {
 
@@ -75,7 +75,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   }
 }
 
-case class ImportBatchCommand(externalIdField: String, batchType: String, dataField: String, validations: (String, Elem => ValidationNel[ValidationError, Elem])*) extends HakurekisteriCommand[ImportBatch] {
+case class ImportBatchCommand(externalIdField: String, batchType: String, dataField: String, validations: (Elem => ModelValidation[Elem])*) extends HakurekisteriCommand[ImportBatch] {
 
 
   private val validatedData = asType[Elem](dataField).required
@@ -87,7 +87,7 @@ case class ImportBatchCommand(externalIdField: String, batchType: String, dataFi
 
   override def extraValidation(batch: ImportBatch): ValidationNel[ValidationError, ImportBatch] = {
     val xml = batch.data
-    val validation = validations.map(_._2).foldLeft(xml.successNel[ValidationError])((validated: ValidationNel[ValidationError, Elem], validation:  (Elem) => ValidationNel[ValidationError, Elem]) => validated.flatMap(validation))
+    val validation = validations.foldLeft(xml.successNel[ValidationError])((validated: ValidationNel[ValidationError, Elem], validation:  (Elem) => ValidationNel[ValidationError, Elem]) => validated.flatMap(validation))
     validation.map((validated) => batch.copy(data = validated))
   }
 

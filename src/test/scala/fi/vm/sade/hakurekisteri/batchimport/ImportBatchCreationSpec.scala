@@ -60,17 +60,17 @@ class ImportBatchCreationSpec extends FlatSpec
   }
 
   it should "parse data succesfully if all validation tests pass" in {
-    val validatedBatch = Await.result(command.withValidation("great success" -> ((j: Elem) => j.successNel)).bindTo(params) >> (_.toValidatedResource("testuser")), 10.seconds)
+    val validatedBatch = Await.result(command.withValidation((j: Elem) => j.successNel).bindTo(params) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isSuccess should be (true)
   }
 
   it should "fail parsing  if a validation test fails" in {
-    val validatedBatch = Await.result(command.withValidation("utter failure" -> ((j: Elem) => ValidationError("utter failure", FieldName("batch")).failNel)).bindTo(params) >> (_.toValidatedResource("testuser")), 10.seconds)
+    val validatedBatch = Await.result(command.withValidation((j: Elem) => ValidationError("utter failure", FieldName("batch")).failNel).bindTo(params) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isFailure should be (true)
   }
 
   it should "return given validation error if a validation test fails" in {
-    val validatedBatch = command.withValidation("utter failure" -> ((j: Elem) => ValidationError("utter failure", FieldName("batch")).failNel)).bindTo(params) >> (_.toValidatedResource("testuser"))
+    val validatedBatch = command.withValidation((j: Elem) => ValidationError("utter failure", FieldName("batch")).failNel).bindTo(params) >> (_.toValidatedResource("testuser"))
     validatedBatch.failure.list should contain(ValidationError("utter failure", Some(FieldName("batch")), None))
   }
 }
@@ -98,7 +98,7 @@ trait JsonCommandTestSupport extends HakurekisteriJsonSupport with JsonMethods w
   implicit def validationToExtractor[T](result: Future[ModelValidation[T]]):ValidationReader[T]  = ValidationReader(Await.result(result, 10.seconds))
 
   case class ValidationCommand(command: ImportBatchCommand) {
-    def withValidation(validations: (String, Elem => ModelValidation[Elem])*) = ImportBatchCommand(command.externalIdField: String, command.batchType: String, command.dataField: String, validations:_*)
+    def withValidation(validations:  (Elem => ModelValidation[Elem])*) = ImportBatchCommand(command.externalIdField: String, command.batchType: String, command.dataField: String, validations:_*)
   }
 
   implicit def CommandToValidationCommand(command: ImportBatchCommand): ValidationCommand = ValidationCommand(command)
