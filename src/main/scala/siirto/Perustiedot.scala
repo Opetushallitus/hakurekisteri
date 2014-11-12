@@ -1,5 +1,11 @@
 package siirto
 
+import java.io.StringReader
+import javax.xml.XMLConstants
+import javax.xml.transform.sax.SAXSource
+import javax.xml.validation.SchemaFactory
+
+import scala.xml.Source._
 import scala.xml.{XML, Elem}
 
 
@@ -219,5 +225,6 @@ trait SchemaWithRemotes extends SchemaDefinition  {
 trait SchemaDefinition {
   val schemaLocation:String
   val schema: Elem
+
 
 }

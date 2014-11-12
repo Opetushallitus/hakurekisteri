@@ -40,7 +40,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 
   val schemaCache = (schema +: imports).map((sd) => sd.schemaLocation -> sd.schema).toMap
 
-  val schemaValidation = (elem: Elem) => validator.load(fromReader(new StringReader(elem.toString))).leftMap(_.map{ case (level, ex) => ValidationError(ex.getMessage, FieldName("data"), ex)})
+  val schemaValidation = (elem: Elem) => validator.validate(elem).leftMap(_.map{ case (level, ex) => ValidationError(ex.getMessage, FieldName("data"), ex)})
 
   registerCommand[ImportBatchCommand](ImportBatchCommand(externalIdField,
                                                          batchType,
