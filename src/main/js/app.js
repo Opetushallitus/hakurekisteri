@@ -39,3 +39,14 @@ app.filter('hilight', function() {
         return input.replace(new RegExp('('+ query + ')', 'gi'), '<strong>$1</strong>');
     }
 });
+
+app.factory('MurupolkuService', function() {
+    var murupolku = [];
+    return {
+        murupolku: murupolku,
+        addToMurupolku: function(item, reset) {
+            if (reset) murupolku.length = 0;
+            murupolku.push(item);
+        }
+    };
+});

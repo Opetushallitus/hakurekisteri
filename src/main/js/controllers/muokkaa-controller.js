@@ -1,7 +1,6 @@
 'use strict';
 
-app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$http', '$log', '$q', '$modal', 'Opiskelijat', 'Suoritukset', 'Opiskeluoikeudet', 'LokalisointiService',
-        function($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService) {
+app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$http', '$log', '$q', '$modal', 'Opiskelijat', 'Suoritukset', 'Opiskeluoikeudet', 'LokalisointiService', 'MurupolkuService', function($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService) {
 
     $scope.henkiloOid = $routeParams.henkiloOid;
     $scope.myRoles = [];
@@ -43,8 +42,8 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
 
     getKoodistoAsOptionArray($http, 'kieli', 'fi', $scope.kielet, 'koodiArvo');
 
-    $rootScope.addToMurupolku({href: "#/opiskelijat", key: "suoritusrekisteri.muokkaa.muru1", text: "Opiskelijoiden haku"}, true);
-    $rootScope.addToMurupolku({key: "suoritusrekisteri.muokkaa.muru", text: "Muokkaa opiskelijan tietoja"}, false);
+    MurupolkuService.addToMurupolku({href: "#/opiskelijat", key: "suoritusrekisteri.muokkaa.muru1", text: "Opiskelijoiden haku"}, true);
+    MurupolkuService.addToMurupolku({key: "suoritusrekisteri.muokkaa.muru", text: "Muokkaa opiskelijan tietoja"}, false);
 
     function getMyRoles() {
         $http.get('/cas/myroles', {cache: true})
@@ -82,7 +81,8 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
     function enrichLuokkatieto(luokkatieto) {
         if (luokkatieto.oppilaitosOid) {
             getOrganisaatio($http, luokkatieto.oppilaitosOid, function(organisaatio) {
-                luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi
+                luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi;
+                luokkatieto.organisaatio = organisaatio;
             })
         }
         luokkatieto.editable = true;

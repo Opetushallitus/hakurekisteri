@@ -63,7 +63,14 @@ form(ng-submit="save()")
               div(class="row")
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.myontaja") Myöntäjä
-                  input(ng-show="suoritus.editable && suoritus.komo !== komo.ylioppilastutkinto" type="text" class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv || organisaatio.nimi.en)) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingSuoritusOppilaitos" typeahead-wait-ms="500")
+                  input(ng-show="suoritus.editable && suoritus.komo !== komo.ylioppilastutkinto" type="text"
+                    title="{{suoritus.organisaatio.nimi.fi || suoritus.organisaatio.nimi.sv || suoritus.organisaatio.nimi.en}}"
+                    class="form-control input-sm {{suoritus.loading ? 'input-loading' : ''}}"
+                    ng-disabled="suoritus.delete" ng-model="suoritus.oppilaitos"
+                    typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv || organisaatio.nimi.en)) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10"
+                    typeahead-on-select="suoritus.organisaatio = $item"
+                    typeahead-loading="suoritus.loading"
+                    typeahead-wait-ms="500")
                   div(ng-hide="suoritus.editable") {{(suoritus.organisaatio.oppilaitosKoodi + ' ' + (suoritus.organisaatio.nimi.fi || suoritus.organisaatio.nimi.sv || suoritus.organisaatio.nimi.en)) || suoritus.myontaja}}
                   div(ng-show="suoritus.komo === komo.ylioppilastutkinto") {{(suoritus.organisaatio.nimi.fi || suoritus.organisaatio.nimi.sv || suoritus.organisaatio.nimi.en) || suoritus.myontaja}}
                 div(class="form-group col-sm-5")
@@ -117,7 +124,14 @@ form(ng-submit="save()")
               div(class="row")
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.oppilaitos") Oppilaitos
-                  input(type="text" class="form-control input-sm" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv)) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingLuokkatietoOppilaitos" typeahead-wait-ms="500" required="required")
+                  input(type="text" class="form-control input-sm {{luokkatieto.loading ? 'input-loading' : ''}}"
+                    title="{{luokkatieto.organisaatio.nimi.fi || luokkatieto.organisaatio.nimi.sv || luokkatieto.organisaatio.nimi.en}}"
+                    ng-disabled="luokkatieto.delete" ng-model="luokkatieto.oppilaitos"
+                    typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv)) for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10"
+                    typeahead-on-select="luokkatieto.organisaatio = $item"
+                    typeahead-loading="luokkatieto.loading"
+                    typeahead-wait-ms="500"
+                    required="required")
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.luokka") Luokka
                   input(type="text" class="form-control input-sm" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.luokka" required="required")

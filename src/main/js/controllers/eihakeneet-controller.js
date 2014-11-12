@@ -1,6 +1,6 @@
 'use strict';
 
-app.controller('EihakeneetCtrl', ['$scope', '$rootScope', '$routeParams', '$http', '$q', function($scope, $rootScope, $routeParams, $http, $q) {
+app.controller('EihakeneetCtrl', ['$scope', 'MurupolkuService', '$routeParams', '$http', '$q', function($scope, MurupolkuService, $routeParams, $http, $q) {
     var hakuOid = $routeParams.haku;
     var oppilaitosOid = $routeParams.oppilaitos;
     var luokka = $routeParams.luokka;
@@ -9,7 +9,7 @@ app.controller('EihakeneetCtrl', ['$scope', '$rootScope', '$routeParams', '$http
     $scope.allRows = [];
     $scope.messages = [];
 
-    $rootScope.hideMurupolku();
+    MurupolkuService.hideMurupolku();
 
     function enrichOpiskelijat() {
         var deferredEnrichments = [];

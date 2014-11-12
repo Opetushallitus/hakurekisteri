@@ -1,7 +1,6 @@
 'use strict';
 
-app.controller('OpiskelijatCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$log', '$http', '$q', 'Opiskelijat', 'Suoritukset', 'Arvosanat',
-        function($scope, $rootScope, $routeParams, $location, $log, $http, $q, Opiskelijat, Suoritukset, Arvosanat) {
+app.controller('OpiskelijatCtrl', ['$scope', '$routeParams', '$location', '$log', '$http', '$q', 'Opiskelijat', 'Suoritukset', 'Arvosanat', 'MurupolkuService', function($scope, $routeParams, $location, $log, $http, $q, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService) {
 
     $scope.messages = [];
     $scope.loading = false;
@@ -15,7 +14,7 @@ app.controller('OpiskelijatCtrl', ['$scope', '$rootScope', '$routeParams', '$loc
     $scope.henkiloTerm = $routeParams.henkilo;
     $scope.organisaatioTerm = { oppilaitosKoodi: ($routeParams.oppilaitos ? $routeParams.oppilaitos : '') };
 
-    $rootScope.addToMurupolku({key: "suoritusrekisteri.opiskelijat.muru", text: "Opiskelijoiden haku"}, true);
+    MurupolkuService.addToMurupolku({key: "suoritusrekisteri.opiskelijat.muru", text: "Opiskelijoiden haku"}, true);
 
     function getMyRoles() {
         $http.get('/cas/myroles', {cache: true})

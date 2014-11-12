@@ -1,7 +1,7 @@
 'use strict';
 
-app.controller('TiedonsiirtoCtrl', ['$scope', '$rootScope', function($scope, $rootScope) {
-    $rootScope.addToMurupolku({key: "suoritusrekisteri.tiedonsiirto.muru", text: "Tiedonsiirto"}, true);
+app.controller('TiedonsiirtoCtrl', ['$scope', 'MurupolkuService', function($scope, MurupolkuService) {
+    MurupolkuService.addToMurupolku({key: "suoritusrekisteri.tiedonsiirto.muru", text: "Tiedonsiirto"}, true);
 
     $scope.send = function() {
         $scope.sending = true;

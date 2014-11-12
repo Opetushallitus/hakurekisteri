@@ -1,6 +1,6 @@
 'use strict';
 
-app.controller('HakeneetCtrl', ['$scope', '$rootScope', '$http', '$modal', 'aste', function($scope, $rootScope, $http, $modal, aste) {
+app.controller('HakeneetCtrl', ['$scope', '$http', '$modal', 'MurupolkuService', 'aste', function($scope, $http, $modal, MurupolkuService, aste) {
     $scope.errors = [];
     $scope.haut = [];
     $scope.kaudet = [];
@@ -29,9 +29,9 @@ app.controller('HakeneetCtrl', ['$scope', '$rootScope', '$http', '$modal', 'aste
     $scope.tiedostotyypit = tiedostotyypit();
 
     if (isKk())
-        $rootScope.addToMurupolku({key: "suoritusrekisteri.hakeneet.muru.kk", text: "Hakeneet ja valitut opiskelijat (KK)"}, true);
+        MurupolkuService.addToMurupolku({key: "suoritusrekisteri.hakeneet.muru.kk", text: "Hakeneet ja valitut opiskelijat (KK)"}, true);
     else
-        $rootScope.addToMurupolku({key: "suoritusrekisteri.hakeneet.muru", text: "Hakeneet ja valitut opiskelijat"}, true);
+        MurupolkuService.addToMurupolku({key: "suoritusrekisteri.hakeneet.muru", text: "Hakeneet ja valitut opiskelijat"}, true);
 
     loadHakutiedot($http, $scope);
 
@@ -128,12 +128,15 @@ app.controller('HakeneetCtrl', ['$scope', '$rootScope', '$http', '$modal', 'aste
     };
 
     $scope.avaaOrganisaatiohaku = function() {
-        $rootScope.modalInstance = $modal.open({
+        var isolatedScope = $scope.$new(true);
+        isolatedScope.modalInstance = $modal.open({
             templateUrl: 'templates/organisaatiohaku',
-            controller: 'OrganisaatioCtrl'
+            controller: 'OrganisaatioCtrl',
+            scope: isolatedScope
         });
+        $scope.modalInstance = isolatedScope.modalInstance;
 
-        $rootScope.modalInstance.result.then(function (valittu) {
+        $scope.modalInstance.result.then(function (valittu) {
             $scope.organisaatio = valittu;
             $scope.clearHakukohde();
         }, function () {

@@ -1,6 +1,6 @@
 'use strict';
 
-app.controller('OrganisaatioCtrl', ['$scope', '$http', '$rootScope', '$log', function($scope, $http, $rootScope, $log) {
+app.controller('OrganisaatioCtrl', ['$scope', '$http', '$log', function($scope, $http, $log) {
     $scope.organisaatiotyypit = [];
     $scope.oppilaitostyypit = [];
     $scope.loading = false;
@@ -57,7 +57,7 @@ app.controller('OrganisaatioCtrl', ['$scope', '$http', '$rootScope', '$log', fun
     };
 
     $scope.valitse = function(organisaatio) {
-        $rootScope.modalInstance.close(organisaatio);
+        $scope.modalInstance.close(organisaatio);
     };
 
     $scope.showLakkautetut = function(organisaatio) {
