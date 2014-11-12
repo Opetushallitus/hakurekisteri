@@ -14,8 +14,9 @@ import org.scalatra.commands._
 import org.scalatra.servlet.{FileItem, SizeConstraintExceededException, MultipartConfig, FileUploadSupport}
 import org.scalatra.swagger.{DataType, SwaggerSupport, Swagger}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
+import org.scalatra.validation.{FieldName, ValidationError}
+import siirto.{ValidXml, SchemaDefinition}
 
-import scala.util.control.Exception._
 import scala.xml.Elem
 
 
@@ -24,17 +25,24 @@ class ImportBatchResource(eraRekisteri: ActorRef,
                                   (externalIdField: String,
                                    batchType: String,
                                    dataField: String,
-                                   validations: (String, Elem => Boolean)*)
+                                   schema: SchemaDefinition,
+                                   imports: SchemaDefinition*)
                                   (implicit sw: Swagger, system: ActorSystem, mf: Manifest[ImportBatch], cf: Manifest[ImportBatchCommand])
     extends HakurekisteriResource[ImportBatch, ImportBatchCommand](eraRekisteri, queryMapper) with ImportBatchSwaggerApi with HakurekisteriCrudCommands[ImportBatch, ImportBatchCommand] with SpringSecuritySupport with FileUploadSupport with IncidentReporting {
 
   val maxFileSize = 50 * 1024 * 1024L
   configureMultipartHandling(MultipartConfig(maxFileSize = Some(maxFileSize)))
 
+  val validator = new ValidXml(schema, imports:_*)
+
+  val schemaCache = (schema +: imports).map((sd) => sd.schemaLocation -> sd.schema).toMap
+
+  val schemaValidation = (elem: Elem) => validator.validate(elem).leftMap(_.map{ case (level, ex) => ValidationError(ex.getMessage, FieldName("data"), ex)})
+
   registerCommand[ImportBatchCommand](ImportBatchCommand(externalIdField,
                                                          batchType,
                                                          dataField,
-                                                         validations:_*))
+                                                         schemaValidation))
 
   before() {
     if (multipart) contentType = formats("html")
@@ -42,7 +50,21 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 
   def toJson(p: Object): String = compact(Extraction.decompose(p))
 
+  get("schema") {
+    MovedPermanently(request.getRequestURL.append("/").append(schema.schemaLocation).toString)
+  }
+
+  get("schema/:schema") {
+    schemaCache.get(params("schema")).fold(NotFound()){
+      contentType = "application/xml"
+      Ok(_)
+    }
+  }
+
   incident {
+    case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
+    case t: MalformedResourceException => (id) => BadRequest(IncidentReport(id, t.getMessage))
+    case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, "not authorized"))
     case t: SizeConstraintExceededException => (id) => RequestEntityTooLarge(toJson(IncidentReport(id, s"Tiedosto on liian suuri (suurin sallittu koko $maxFileSize tavua).")))
     case t: IllegalArgumentException => (id) => BadRequest(toJson(IncidentReport(id, t.getMessage)))
     case t: AskTimeoutException => (id) => InternalServerError(toJson(IncidentReport(id, "Taustajärjestelmä ei vastaa. Yritä myöhemmin uudelleen.")))
@@ -71,15 +93,21 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   }
 }
 
-case class ImportBatchCommand(externalIdField: String, batchType: String, dataField: String, validations: (String, Elem => Boolean)*) extends HakurekisteriCommand[ImportBatch] {
+case class ImportBatchCommand(externalIdField: String, batchType: String, dataField: String, validations: (Elem => ModelValidation[Elem])*) extends HakurekisteriCommand[ImportBatch] {
 
-  val validators =  validations.map{
-    case (messageFormat, validate ) => BindingValidators.validate(validate, messageFormat)
-  }.toList
-  private val validatedData = asType[Elem](dataField).required.validateWith(validators: _*)
+  private val validatedData = asType[Elem](dataField).required
   val data: Field[Elem] = validatedData
 
   override def toResource(user: String): ImportBatch = ImportBatch(data.value.get, data.value.flatMap(elem => (elem \ externalIdField).collectFirst{case e:Elem => e.text}), batchType, user)
+
+  import scalaz._, Scalaz._
+
+  override def extraValidation(batch: ImportBatch): ValidationNel[ValidationError, ImportBatch] = {
+    val xml = batch.data
+    val validation = validations.foldLeft(xml.successNel[ValidationError])((validated: ValidationNel[ValidationError, Elem], validation:  (Elem) => ValidationNel[ValidationError, Elem]) => validated.flatMap(validation))
+    validation.map((validated) => batch.copy(data = validated))
+  }
+
 }
 
 trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {

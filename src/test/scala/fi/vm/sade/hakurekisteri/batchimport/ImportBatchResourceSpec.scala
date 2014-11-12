@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.batchimport
 
+import java.io.StringReader
 import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
@@ -7,8 +8,13 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.{FakeAuthorizer, TestSecurity}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriSwagger, JDBCJournal}
 import org.scalatra.swagger.Swagger
-import org.scalatra.test.BytesPart
+import org.scalatra.test.{Uploadable, BytesPart}
 import org.scalatra.test.scalatest.ScalatraFunSuite
+import org.scalatra.validation.{FieldName, ValidationError}
+import siirto.{SchemaDefinition, ValidXml}
+
+import scala.xml.Elem
+import scala.xml.Source._
 
 
 class ImportBatchResourceSpec extends ScalatraFunSuite {
@@ -26,7 +32,37 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
     super.stop()
   }
 
-  addServlet(new ImportBatchResource(authorized, (foo) => ImportBatchQuery(None))("identifier", "test", "data") with TestSecurity, "/")
+  object TestSchema extends SchemaDefinition {
+    override val schemaLocation: String = "test.xsd"
+    override val schema: Elem =
+      <xs:schema attributeFormDefault="unqualified"
+                 elementFormDefault="qualified"
+                 xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+
+
+        <xs:element name="batch">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="data" minOccurs="1" maxOccurs="1"></xs:element>
+            </xs:sequence>
+          </xs:complexType>
+
+        </xs:element>
+      </xs:schema>
+  }
+
+
+  addServlet(
+    new ImportBatchResource(
+      authorized,
+      (foo) => ImportBatchQuery(None))
+    ("identifier",
+        "test",
+        "data",
+        TestSchema) with TestSecurity, "/")
+
+
 
   test("post should return 201 created") {
     post("/", "<batch><data>foo</data></batch>") {
@@ -35,13 +71,33 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   }
 
   test("post with fileupload should return 201 created") {
-    val fileData = BytesPart("test.xml", "<batch><data>foo</data></batch>".getBytes("UTF-8"), contentType = "application/xml")
+    val fileData = XmlPart("test.xml", <batch><data>foo</data></batch>)
 
     post("/", Map[String, String](), List("data" -> fileData)) {
-      println(response.body)
       response.status should be(201)
     }
   }
+
+
+  test("post with bad file should return 400") {
+    val fileData = XmlPart("test.xml", <batch><bata>foo</bata></batch>)
+
+    post("/", Map[String, String](), List("data" -> fileData)) {
+
+      println("FOO: " + response.body)
+      response.status should be(400)
+    }
+  }
+
+
+  case class XmlPart(fileName: String, xml:Elem) extends Uploadable {
+    override lazy val content: Array[Byte] = xml.toString().getBytes("UTF-8")
+
+    override lazy val contentLength: Long = content.length
+
+    override val contentType: String = "application/xml"
+  }
+
 
 
 

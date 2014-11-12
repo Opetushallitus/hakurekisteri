@@ -83,10 +83,12 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
 
   def errorFail(ex: Throwable) = ValidationError(ex.getMessage, UnknownError).failNel
 
+  def extraValidation(res: R): ValidationNel[ValidationError, R] = res.successNel
+
   def toValidatedResource(user: String): Future[ModelValidation[R]] =  {
     Future.successful(
       allCatch.withApply(errorFail) {
-        toResource(user).successNel
+        extraValidation(toResource(user))
       }
     )
   }
