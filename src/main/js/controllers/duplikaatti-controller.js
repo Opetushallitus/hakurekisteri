@@ -1,6 +1,6 @@
 'use strict';
 
-app.controller('DuplikaattiCtrl', ['$scope', '$rootScope', '$log', 'arvosanat', function($scope, $rootScope, $log, arvosanat) {
+app.controller('DuplikaattiCtrl', ['$scope', '$log', 'arvosanat', function($scope, $log, arvosanat) {
     $scope.arvosanat = arvosanat.sort(function(a, b) {
         if (a.aine === b.aine) {
             if (a.lisatieto === b.lisatieto) {
@@ -18,7 +18,7 @@ app.controller('DuplikaattiCtrl', ['$scope', '$rootScope', '$log', 'arvosanat', 
             var index = $scope.arvosanat.indexOf(arvosana);
             if (index !== -1) $scope.arvosanat.splice(index, 1);
         }, function() {
-            $rootScope.modalInstance.close({
+            $scope.modalInstance.close({
                 type: "danger",
                 messageKey: "suoritusrekisteri.muokkaa.duplikaatti.virhepoistettaessaarvosanaa",
                 message: "Virhe poistettaessa arvosanaa. Yritä uudelleen."
@@ -27,6 +27,6 @@ app.controller('DuplikaattiCtrl', ['$scope', '$rootScope', '$log', 'arvosanat', 
     };
 
     $scope.close = function() {
-        $rootScope.modalInstance.close()
+        $scope.modalInstance.close()
     };
 }]);

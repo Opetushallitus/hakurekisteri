@@ -1,6 +1,6 @@
 'use strict';
 
-app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$http', '$log', '$q', '$modal', 'Opiskelijat', 'Suoritukset', 'Opiskeluoikeudet', 'LokalisointiService', 'MurupolkuService', 'MessageService', function($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService) {
+app.controller('MuokkaaCtrl', ['$scope', '$routeParams', '$location', '$http', '$log', '$q', '$modal', 'Opiskelijat', 'Suoritukset', 'Opiskeluoikeudet', 'LokalisointiService', 'MurupolkuService', 'MessageService', function($scope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService) {
 
     $scope.henkiloOid = $routeParams.henkiloOid;
     $scope.myRoles = [];
@@ -357,26 +357,32 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
     };
     $scope.editArvosana = function(suoritusId) {
         function openModal(template, controller) {
-            $rootScope.modalInstance = $modal.open({
+            var isolatedScope = $scope.$new(true);
+            isolatedScope.modalInstance = $modal.open({
                 templateUrl: template,
                 controller: controller,
+                scope: isolatedScope,
                 resolve: {
                     suoritusId: function() { return suoritusId }
                 }
             });
+            $scope.modalInstance = isolatedScope.modalInstance;
         }
         openModal('templates/arvosanat', 'ArvosanaCtrl');
 
-        $rootScope.modalInstance.result.then(function (arvosanaRet) {
+        $scope.modalInstance.result.then(function (arvosanaRet) {
             if (Array.isArray(arvosanaRet)) {
-                $rootScope.modalInstance = $modal.open({
+                var isolatedScope = $scope.$new(true);
+                isolatedScope.modalInstance = $modal.open({
                     templateUrl: 'templates/duplikaatti',
                     controller: 'DuplikaattiCtrl',
+                    scope: isolatedScope,
                     resolve: {
                         arvosanat: function() { return arvosanaRet }
                     }
                 });
-                $rootScope.modalInstance.result.then(function(ret) {
+                $scope.modalInstance = isolatedScope.modalInstance;
+                $scope.modalInstance.result.then(function(ret) {
                     if (ret) MessageService.addMessage(ret)
                 }, function() {
                     $log.info("duplicate modal closed")
@@ -388,17 +394,20 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
     };
     $scope.editYoarvosana = function(suoritusId) {
         function openModal(template, controller) {
-            $rootScope.modalInstance = $modal.open({
+            var isolatedScope = $scope.$new(true);
+            isolatedScope.modalInstance = $modal.open({
                 templateUrl: template,
                 controller: controller,
+                scope: isolatedScope,
                 resolve: {
                     suoritusId: function() { return suoritusId }
                 }
             });
+            $scope.modalInstance = isolatedScope.modalInstance;
         }
         openModal('templates/yoarvosanat', 'YoarvosanaCtrl');
 
-        $rootScope.modalInstance.result.then(function (yoarvosanaRet) {
+        $scope.modalInstance.result.then(function (yoarvosanaRet) {
             if (yoarvosanaRet) MessageService.addMessage(yoarvosanaRet)
         }, function () {
             $log.info("yo modal closed")

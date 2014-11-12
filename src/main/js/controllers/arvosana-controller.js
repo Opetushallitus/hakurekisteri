@@ -1,6 +1,6 @@
 'use strict';
 
-app.controller('ArvosanaCtrl', ['$scope', '$rootScope', '$http', '$q', '$log', 'Arvosanat', 'Suoritukset', 'suoritusId', function($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukset, suoritusId) {
+app.controller('ArvosanaCtrl', ['$scope', '$http', '$q', '$log', 'Arvosanat', 'Suoritukset', 'suoritusId', function($scope, $http, $q, $log, Arvosanat, Suoritukset, suoritusId) {
     $scope.arvosanataulukko = [];
     $scope.oppiaineet = [];
     $scope.valinnaisuudet = [
@@ -114,7 +114,7 @@ app.controller('ArvosanaCtrl', ['$scope', '$rootScope', '$http', '$q', '$log', '
                             }
 
                             if (hasRedundantArvosana(kouluArvosanat)) {
-                                $rootScope.modalInstance.close(kouluArvosanat);
+                                $scope.modalInstance.close(kouluArvosanat);
                                 return;
                             }
                             $scope.arvosanataulukko = Object.keys(arvosanataulukko).map(function(key) {
@@ -124,7 +124,7 @@ app.controller('ArvosanaCtrl', ['$scope', '$rootScope', '$http', '$q', '$log', '
                                 return (arvosanaSort[a.aine] < arvosanaSort[b.aine] ? -1 : 1);
                             });
                         }, function() {
-                            $rootScope.modalInstance.close({
+                            $scope.modalInstance.close({
                                 type: "danger",
                                 messageKey: "suoritusrekisteri.muokkaa.arvosanat.arvosanapalveluongelma",
                                 message: "Arvosanapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
@@ -135,7 +135,7 @@ app.controller('ArvosanaCtrl', ['$scope', '$rootScope', '$http', '$q', '$log', '
                     fetchArvosanat();
                 }, function() {
                     $log.error("some of the calls to koodisto service failed");
-                    $rootScope.modalInstance.close({
+                    $scope.modalInstance.close({
                         type: "danger",
                         messageKey: "suoritusrekisteri.muokkaa.arvosanat.koodistopalveluongelma",
                         message: "Koodistopalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
@@ -143,14 +143,14 @@ app.controller('ArvosanaCtrl', ['$scope', '$rootScope', '$http', '$q', '$log', '
                 })
             })
             .error(function() {
-                $rootScope.modalInstance.close({
+                $scope.modalInstance.close({
                     type: "danger",
                     messageKey: "suoritusrekisteri.muokkaa.arvosanat.koodistopalveluongelma",
                     message: "Koodistopalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
                 })
             });
     }, function() {
-        $rootScope.modalInstance.close({
+        $scope.modalInstance.close({
             type: "danger",
             messageKey: "suoritusrekisteri.muokkaa.arvosanat.taustapalveluongelma",
             message: "Taustapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
@@ -223,14 +223,14 @@ app.controller('ArvosanaCtrl', ['$scope', '$rootScope', '$http', '$q', '$log', '
         var allSaved = $q.all(deferreds.map(function(d) { return d.promise }));
         allSaved.then(function() {
             $log.debug("all saved");
-            $rootScope.modalInstance.close({
+            $scope.modalInstance.close({
                 type: "success",
                 messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennettu",
                 message: "Arvosanat tallennettu."
             });
         }, function() {
             $log.error("saving failed");
-            $rootScope.modalInstance.close({
+            $scope.modalInstance.close({
                 type: "danger",
                 messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennuseionnistunut",
                 message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen."
@@ -239,7 +239,7 @@ app.controller('ArvosanaCtrl', ['$scope', '$rootScope', '$http', '$q', '$log', '
     };
 
     $scope.cancel = function() {
-        $rootScope.modalInstance.close()
+        $scope.modalInstance.close()
     };
 
 }]);
