@@ -57,10 +57,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     })
   }
 
-  class FileItemMapValueReader(val data: Map[String, FileItem]) extends ValueReader[Map[String, FileItem], FileItem] {
-    def read(key: String): Either[String, Option[FileItem]] =
-      allCatch.withApply(t => Left(t.getMessage)) { Right(data get key) }
-  }
+
 
   override protected def bindCommand[T <: CommandType](newCommand: T)(implicit request: HttpServletRequest, mf: Manifest[T]): T = {
     if (multipart)

@@ -21,10 +21,11 @@ import scala.concurrent.Future
 
 trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFactories with HakurekisteriJsonSupport{
 
-  type CommandTypeConverterFactory[T] = JsonTypeConverterFactory[T]
+  type CommandTypeConverterFactory[T] = FileTypeConverterFactory[T]
 
   override def typeConverterBuilder[I](tc: CommandTypeConverterFactory[_]) = ({
     case r: JsonValueReader => tc.resolveJson.asInstanceOf[TypeConverter[I, _]]
+    case f: FileItemMapValueReader => tc.resolveFiles.asInstanceOf[TypeConverter[I, _]]
 
   }: PartialFunction[ValueReader[_, _], TypeConverter[I, _]]) orElse super.typeConverterBuilder(tc)
 
@@ -57,6 +58,10 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
     case _ => None
   })
 
+
+  implicit val fileToOptionInt: TypeConverter[FileItem, Option[Int]] = cantConvert
+
+
   implicit val stringtoOptionString: TypeConverter[String, Option[String]] = safe(_.blankOption)
 
   implicit val jsontoOptionString: TypeConverter[JValue, Option[String]] = safe((jvalue: JValue) => jvalue match {
@@ -64,10 +69,15 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
     case _ => None
   })
 
+  implicit val fileToOptionString: TypeConverter[FileItem, Option[String]] = safe(f => scala.io.Source.fromInputStream(f.getInputStream).getLines().mkString("\n").blankOption)
+
+
   implicit def YksilollistaminenDefaultValue: DefaultValue[Yksilollistetty] = org.scalatra.DefaultValueMethods.default(Ei)
 
   implicit val stringToYksilollistaminen: TypeConverter[String, Yksilollistetty] = safeOption(_.blankOption.map (yksilollistaminen.withName))
   implicit val jsonToYksilollistaminen: TypeConverter[JValue, Yksilollistetty] = safeOption(_.extractOpt[Yksilollistetty])
+
+  implicit val fileToYksilollistaminen: TypeConverter[FileItem, Yksilollistetty] = cantConvert
 
   def toResource(user: String): R
 
@@ -85,20 +95,44 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
 
 trait FileTypeConverterFactory[T] extends JsonTypeConverterFactory[T] {
 
+  def resolveFiles: TypeConverter[FileItem, T]
+
 
 
 }
 
-trait HakurekisteriTypeConverterFactories extends JsonBindingImplicits  {
+trait HakurekisteriTypeConverterFactories extends FileBindingImplicits  {
   implicit def fileTypeConverterFactory[T](implicit
                                            seqConverter: TypeConverter[Seq[String], T],
                                            stringConverter: TypeConverter[String, T],
                                            jsonConverter: TypeConverter[JValue, T],
+                                           fileConverter: TypeConverter[FileItem, T],
                                            formats: Formats): TypeConverterFactory[T] =
     new FileTypeConverterFactory[T] {
       implicit protected val jsonFormats: Formats = formats
       def resolveJson: TypeConverter[JValue,  T] = jsonConverter
       def resolveMultiParams: TypeConverter[Seq[String], T] = seqConverter
       def resolveStringParams: TypeConverter[String, T] = stringConverter
+      def resolveFiles: TypeConverter[FileItem, T] = fileConverter
     }
+}
+
+trait FileBindingImplicits extends JsonBindingImplicits {
+
+  def cantConvert[S,T] = new TypeConverter[S, T] {
+    override def apply(s: S): Option[T] = None
+  }
+
+  implicit val fileToString: TypeConverter[FileItem, String] = safe(f => scala.io.Source.fromInputStream(f.getInputStream).getLines().mkString("\n"))
+
+
+  implicit val fileToBoolean: TypeConverter[FileItem, Boolean] = cantConvert
+
+
+
+}
+
+class FileItemMapValueReader(val data: Map[String, FileItem]) extends ValueReader[Map[String, FileItem], FileItem] {
+  def read(key: String): Either[String, Option[FileItem]] =
+    allCatch.withApply(t => Left(t.getMessage)) { Right(data get key) }
 }
