@@ -40,7 +40,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     if (multipart) contentType = formats("html")
   }
 
-  def toJson(p: Product): String = compact(Extraction.decompose(p))
+  def toJson(p: Object): String = compact(Extraction.decompose(p))
 
   incident {
     case t: SizeConstraintExceededException => (id) => RequestEntityTooLarge(toJson(IncidentReport(id, s"Tiedosto on liian suuri (suurin sallittu koko $maxFileSize tavua).")))
@@ -57,7 +57,11 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     })
   }
 
-
+  override def createResource(user: Option[User]): AnyRef = {
+    val created = super.createResource(user)
+    if (multipart) toJson(created)
+    else created
+  }
 
   override protected def bindCommand[T <: CommandType](newCommand: T)(implicit request: HttpServletRequest, mf: Manifest[T]): T = {
     if (multipart)
