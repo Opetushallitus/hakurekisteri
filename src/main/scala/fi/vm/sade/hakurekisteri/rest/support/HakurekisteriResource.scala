@@ -140,7 +140,11 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
   }
 
   object ResourceCreated {
-    def apply(baseUri: StringBuffer)(createdResource: A with Identified[UUID]) = Created(createdResource, headers = Map("Location" -> baseUri.append("/").append(createdResource.id).toString))
+    private def postfixBaseUri(baseUri: StringBuffer): StringBuffer = baseUri match {
+      case s: StringBuffer if s.length() == 0 || s.charAt(s.length() - 1) != '/' => s.append("/")
+      case _ => baseUri
+    }
+    def apply(baseUri: StringBuffer)(createdResource: A with Identified[UUID]) = Created(createdResource, headers = Map("Location" -> postfixBaseUri(baseUri).append(createdResource.id).toString))
   }
 
   def identifyResource(resource : A, id: UUID): A with Identified[UUID] = resource.identify(id)
