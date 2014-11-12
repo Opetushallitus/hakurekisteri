@@ -1,6 +1,6 @@
 'use strict';
 
-function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
+app.controller('YoarvosanaCtrl', ['$scope', '$rootScope', '$q', '$log', 'Arvosanat', 'suoritusId', function($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
     $scope.koetaulukko = [];
     $scope.loading = true;
 
@@ -305,5 +305,5 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
         {value: "A", text: "(A) Approbatur"},
         {value: "I", text: "(I) Improbatur"}
     ];
-}
+}]);
 

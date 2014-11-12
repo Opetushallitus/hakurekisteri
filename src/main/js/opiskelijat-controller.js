@@ -1,6 +1,8 @@
 'use strict';
 
-function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $http, $q, Opiskelijat, Suoritukset, Arvosanat) {
+app.controller('OpiskelijatCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$log', '$http', '$q', 'Opiskelijat', 'Suoritukset', 'Arvosanat',
+        function($scope, $rootScope, $routeParams, $location, $log, $http, $q, Opiskelijat, Suoritukset, Arvosanat) {
+
     $scope.messages = [];
     $scope.loading = false;
     $scope.currentRows = [];
@@ -244,4 +246,4 @@ function OpiskelijatCtrl($scope, $rootScope, $routeParams, $location, $log, $htt
     }
 
     authenticateToAuthenticationService($http, $scope.fetch, cannotAuthenticate);
-}
+}]);

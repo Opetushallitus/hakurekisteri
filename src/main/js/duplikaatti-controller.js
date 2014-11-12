@@ -1,6 +1,6 @@
 'use strict';
 
-function DuplikaattiCtrl($scope, $rootScope, $log, arvosanat) {
+app.controller('DuplikaattiCtrl', ['$scope', '$rootScope', '$log', 'arvosanat', function($scope, $rootScope, $log, arvosanat) {
     $scope.arvosanat = arvosanat.sort(function(a, b) {
         if (a.aine === b.aine) {
             if (a.lisatieto === b.lisatieto) {
@@ -29,4 +29,4 @@ function DuplikaattiCtrl($scope, $rootScope, $log, arvosanat) {
     $scope.close = function() {
         $rootScope.modalInstance.close()
     };
-}
+}]);

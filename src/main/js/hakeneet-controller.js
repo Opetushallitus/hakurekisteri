@@ -1,4 +1,6 @@
-function HakeneetCtrl($scope, $rootScope, $http, $modal, aste) {
+'use strict';
+
+app.controller('HakeneetCtrl', ['$scope', '$rootScope', '$http', '$modal', 'aste', function($scope, $rootScope, $http, $modal, aste) {
     $scope.errors = [];
     $scope.haut = [];
     $scope.kaudet = [];
@@ -128,7 +130,7 @@ function HakeneetCtrl($scope, $rootScope, $http, $modal, aste) {
     $scope.avaaOrganisaatiohaku = function() {
         $rootScope.modalInstance = $modal.open({
             templateUrl: 'templates/organisaatiohaku',
-            controller: OrganisaatioCtrl
+            controller: 'OrganisaatioCtrl'
         });
 
         $rootScope.modalInstance.result.then(function (valittu) {
@@ -211,7 +213,7 @@ function HakeneetCtrl($scope, $rootScope, $http, $modal, aste) {
             $scope.hakukohdenimi = "";
         }
     };
-}
+}]);
 
 function loadHakutiedot($http, $scope) {
     $http.get('rest/v1/haut', {cache: true})
