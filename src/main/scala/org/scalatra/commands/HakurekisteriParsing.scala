@@ -1,12 +1,14 @@
 package org.scalatra.commands
 
+import java.util.UUID
 import javax.servlet.http.HttpServletRequest
 
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriCommand, Resource}
 import org.scalatra.json.{JacksonJsonSupport, JacksonJsonValueReaderProperty}
 
 
-trait HakurekisteriParsing extends CommandSupport with JacksonJsonValueReaderProperty { self: JacksonJsonSupport with CommandSupport =>
-  type CommandType = JsonCommand
+trait HakurekisteriParsing[A <: Resource[UUID, A]] extends CommandSupport with JacksonJsonValueReaderProperty { self: JacksonJsonSupport with CommandSupport =>
+  type CommandType = HakurekisteriCommand[A]
 
 
   override protected def bindCommand[T <: CommandType](newCommand: T)(implicit request: HttpServletRequest, mf: Manifest[T]): T = {
