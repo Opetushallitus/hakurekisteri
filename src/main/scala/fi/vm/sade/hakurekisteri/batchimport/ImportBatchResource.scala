@@ -65,9 +65,9 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   }
 
   incident {
-    case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
-    case t: MalformedResourceException => (id) => BadRequest(IncidentReport(id, t.getMessage))
-    case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, "not authorized"))
+    case t: NotFoundException => (id) => NotFound(toJson(IncidentReport(id, "resource not found")))
+    case t: MalformedResourceException => (id) => BadRequest(toJson(IncidentReport(id, t.getMessage)))
+    case t: UserNotAuthorized => (id) => Forbidden(toJson(IncidentReport(id, "not authorized")))
     case t: SizeConstraintExceededException => (id) => RequestEntityTooLarge(toJson(IncidentReport(id, s"Tiedosto on liian suuri (suurin sallittu koko $maxFileSize tavua).")))
     case t: IllegalArgumentException => (id) => BadRequest(toJson(IncidentReport(id, t.getMessage)))
     case t: AskTimeoutException => (id) => InternalServerError(toJson(IncidentReport(id, "Taustajärjestelmä ei vastaa. Yritä myöhemmin uudelleen.")))
@@ -82,11 +82,13 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     })
   }
 
+  /*
   override def createResource(user: Option[User]): AnyRef = {
     val created = super.createResource(user)
     if (multipart) toJson(created)
     else created
   }
+  */
 
   override protected def bindCommand[T <: CommandType](newCommand: T)(implicit request: HttpServletRequest, mf: Manifest[T]): T = {
     if (multipart)
