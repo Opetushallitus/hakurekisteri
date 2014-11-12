@@ -1,13 +1,12 @@
 'use strict';
 
-app.controller('EihakeneetCtrl', ['$scope', 'MurupolkuService', '$routeParams', '$http', '$q', function($scope, MurupolkuService, $routeParams, $http, $q) {
+app.controller('EihakeneetCtrl', ['$scope', 'MurupolkuService', 'MessageService', '$routeParams', '$http', '$q', function($scope, MurupolkuService, MessageService, $routeParams, $http, $q) {
     var hakuOid = $routeParams.haku;
     var oppilaitosOid = $routeParams.oppilaitos;
     var luokka = $routeParams.luokka;
 
     $scope.loading = false;
     $scope.allRows = [];
-    $scope.messages = [];
 
     MurupolkuService.hideMurupolku();
 
@@ -109,7 +108,7 @@ app.controller('EihakeneetCtrl', ['$scope', 'MurupolkuService', '$routeParams', 
                 enrichOpiskelijat();
                 $scope.loading = false;
             }, function(errors) {
-                $scope.messages.push({
+                MessageService.addMessage({
                     type: "danger",
                     message: "Virhe ladattaessa tietoja: " + errors,
                     description: ""
@@ -117,7 +116,7 @@ app.controller('EihakeneetCtrl', ['$scope', 'MurupolkuService', '$routeParams', 
                 $scope.loading = false;
             });
         } else {
-            $scope.messages.push({
+            MessageService.addMessage({
                 type: "danger",
                 message: "Virheelliset parametrit:",
                 description: "haku=" + hakuOid + ", oppilaitos=" + oppilaitosOid + ", luokka=" + luokka
@@ -125,12 +124,5 @@ app.controller('EihakeneetCtrl', ['$scope', 'MurupolkuService', '$routeParams', 
         }
     }
     authenticateToAuthenticationService($http, fetchData, function() {});
-
-    $scope.removeMessage = function(message) {
-        var index = $scope.messages.indexOf(message);
-        if (index !== -1) {
-            $scope.messages.splice(index, 1);
-        }
-    };
 }]);
 

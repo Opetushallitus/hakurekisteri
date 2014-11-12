@@ -1,0 +1,7 @@
+div(class="alert alert-{{message.type}}" ng-show="messages" ng-repeat="message in messages")
+  button(type="button" class="close" aria-hidden="true" ng-click="removeMessage(message)") &times;
+  strong
+    img(ng-show="message.type == 'alert'" class="icon-big" src="static/img/alert-icon28x29.png")
+    img(ng-show="message.type == 'success'" class="icon-big" src="static/img/confirm-icon28x29.png")
+    span(oph-msg="{{message.messageKey}}") {{message.message}}
+  span(oph-msg="{{message.descriptionKey}}") {{message.description}}

@@ -1,10 +1,9 @@
 'use strict';
 
-app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$http', '$log', '$q', '$modal', 'Opiskelijat', 'Suoritukset', 'Opiskeluoikeudet', 'LokalisointiService', 'MurupolkuService', function($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService) {
+app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$http', '$log', '$q', '$modal', 'Opiskelijat', 'Suoritukset', 'Opiskeluoikeudet', 'LokalisointiService', 'MurupolkuService', 'MessageService', function($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService) {
 
     $scope.henkiloOid = $routeParams.henkiloOid;
     $scope.myRoles = [];
-    $scope.messages = [];
     $scope.suoritukset = [];
     $scope.luokkatiedot = [];
     $scope.kielet = [];
@@ -183,7 +182,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
     }
 
     $scope.save = function() {
-        $scope.messages.length = 0;
+        MessageService.clearMessages();
         var validations = [];
         function validateOppilaitoskoodit() {
             angular.forEach($scope.luokkatiedot.concat($scope.suoritukset), function(obj) {
@@ -191,7 +190,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
                     var d = $q.defer();
                     this.push(d);
                     if (!obj.oppilaitos || !obj.oppilaitos.match(/^\d{5}$/)) {
-                        $scope.messages.push({
+                        MessageService.addMessage({
                             type: "danger",
                             messageKey: "suoritusrekisteri.muokkaa.oppilaitoskoodipuuttuu",
                             message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
@@ -205,7 +204,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
                             else if (obj.luokkataso) obj.oppilaitosOid = organisaatio.oid;
                             d.resolve("validated against organisaatio");
                         }, function () {
-                            $scope.messages.push({
+                            MessageService.addMessage({
                                 type: "danger",
                                 messageKey: "suoritusrekisteri.muokkaa.oppilaitostaeiloytynyt",
                                 message: "Oppilaitosta ei löytynyt oppilaitoskoodilla.",
@@ -239,7 +238,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
                                 $log.debug("suoritus removed");
                                 d.resolve("done");
                             }, function() {
-                                $scope.messages.push({
+                                MessageService.addMessage({
                                     type: "danger",
                                     messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
                                     message: "Virhe tallennettaessa suoritustietoja.",
@@ -257,7 +256,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
                             enrichSuoritus(suoritus);
                             d.resolve("done");
                         }, function () {
-                            $scope.messages.push({
+                            MessageService.addMessage({
                                 type: "danger",
                                 messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
                                 message: "Virhe tallennettaessa suoritustietoja.",
@@ -281,7 +280,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
                             $log.info("luokkatieto removed");
                             d.resolve("done");
                         }, function() {
-                            $scope.messages.push({
+                            MessageService.addMessage({
                                 type: "danger",
                                 messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja",
                                 message: "Virhe tallennettaessa luokkatietoja.",
@@ -299,7 +298,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
                         enrichLuokkatieto(luokkatieto);
                         d.resolve("done");
                     }, function () {
-                        $scope.messages.push({
+                        MessageService.addMessage({
                             type: "danger",
                             messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja",
                             message: "Virhe tallennettaessa luokkatietoja.",
@@ -320,14 +319,14 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
             var allSaved = $q.all(deferreds.map(function(deferred) { return deferred.promise }));
             allSaved.then(function() {
                 $log.info("all saved successfully");
-                $scope.messages.push({
+                MessageService.addMessage({
                     type: "success",
                     messageKey: "suoritusrekisteri.muokkaa.tallennettu",
                     message: "Tiedot tallennettu."
                 });
             }, function(errors) {
                 $log.error("errors while saving: " + errors);
-                $scope.messages.push({
+                MessageService.addMessage({
                     type: "danger",
                     messageKey: "suoritusrekisteri.muokkaa.tallennusepaonnistui",
                     message: "Tietojen tallentaminen ei onnistunut. Yritä uudelleen."
@@ -378,11 +377,11 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
                     }
                 });
                 $rootScope.modalInstance.result.then(function(ret) {
-                    if (ret) $scope.messages.push(ret)
+                    if (ret) MessageService.addMessage(ret)
                 }, function() {
                     $log.info("duplicate modal closed")
                 });
-            } else if (arvosanaRet) $scope.messages.push(arvosanaRet)
+            } else if (arvosanaRet) MessageService.addMessage(arvosanaRet)
         }, function () {
             $log.info("modal closed")
         });
@@ -400,7 +399,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
         openModal('templates/yoarvosanat', 'YoarvosanaCtrl');
 
         $rootScope.modalInstance.result.then(function (yoarvosanaRet) {
-            if (yoarvosanaRet) $scope.messages.push(yoarvosanaRet)
+            if (yoarvosanaRet) MessageService.addMessage(yoarvosanaRet)
         }, function () {
             $log.info("yo modal closed")
         });
@@ -411,10 +410,6 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
             oppilaitosOid: null,
             editable: true
         }))
-    };
-    $scope.removeMessage = function(message) {
-        var index = $scope.messages.indexOf(message);
-        if (index !== -1) $scope.messages.splice(index, 1);
     };
 
     function initDatepicker() {

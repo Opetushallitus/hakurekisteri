@@ -34,12 +34,6 @@ app.factory('Arvosanat', function($resource) {
     });
 });
 
-app.filter('hilight', function() {
-    return function (input, query) {
-        return input.replace(new RegExp('('+ query + ')', 'gi'), '<strong>$1</strong>');
-    }
-});
-
 app.factory('MurupolkuService', function() {
     var murupolku = [];
     var hide = false;
@@ -57,4 +51,38 @@ app.factory('MurupolkuService', function() {
             return hide;
         }
     };
+});
+
+app.factory('MessageService', function() {
+    var messages = [];
+    return {
+        messages: messages,
+        addMessage: function(message, clear) {
+            if (clear) messages.length = 0;
+            messages.push(message);
+        },
+        removeMessage: function(message) {
+            var index = messages.indexOf(message);
+            if (index !== -1) messages.splice(index, 1);
+        },
+        clearMessages: function() {
+            messages.length = 0;
+        }
+    }
+});
+
+app.filter('hilight', function() {
+    return function (input, query) {
+        return input.replace(new RegExp('('+ query + ')', 'gi'), '<strong>$1</strong>');
+    }
+});
+
+app.directive('messages', function() {
+    return {
+        controller: function($scope, MessageService) {
+            $scope.messages = MessageService.messages;
+            $scope.removeMessage = MessageService.removeMessage;
+        },
+        templateUrl: 'templates/messages'
+    }
 });

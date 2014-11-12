@@ -1,8 +1,7 @@
 'use strict';
 
-app.controller('OpiskelijatCtrl', ['$scope', '$routeParams', '$location', '$log', '$http', '$q', 'Opiskelijat', 'Suoritukset', 'Arvosanat', 'MurupolkuService', function($scope, $routeParams, $location, $log, $http, $q, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService) {
+app.controller('OpiskelijatCtrl', ['$scope', '$routeParams', '$location', '$log', '$http', '$q', 'Opiskelijat', 'Suoritukset', 'Arvosanat', 'MurupolkuService', 'MessageService', function($scope, $routeParams, $location, $log, $http, $q, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService) {
 
-    $scope.messages = [];
     $scope.loading = false;
     $scope.currentRows = [];
     $scope.allRows = [];
@@ -68,7 +67,8 @@ app.controller('OpiskelijatCtrl', ['$scope', '$routeParams', '$location', '$log'
         }
 
         function doSearch(query) {
-            $scope.messages.length = 0;
+            MessageService.clearMessages();
+
             function searchOpiskelijat(o) {
                 Opiskelijat.query(query, function (result) {
                     o.resolve(result);
@@ -97,7 +97,7 @@ app.controller('OpiskelijatCtrl', ['$scope', '$routeParams', '$location', '$log'
                     stopLoading();
                 }, function(errors) {
                     $log.error(errors);
-                    $scope.messages.push({
+                    MessageService.addMessage({
                         type: "danger",
                         messageKey: "suoritusrekisteri.opiskelijat.virhehaussa",
                         message: "Haussa tapahtui virhe. Yritä uudelleen."
@@ -221,10 +221,6 @@ app.controller('OpiskelijatCtrl', ['$scope', '$routeParams', '$location', '$log'
         resetPageNumbers();
         showCurrentRows($scope.allRows);
     };
-    $scope.removeMessage = function(message) {
-        var index = $scope.messages.indexOf(message);
-        if (index !== -1) $scope.messages.splice(index, 1);
-    };
 
     function resetPageNumbers() {
         $scope.pageNumbers = [];
@@ -235,7 +231,7 @@ app.controller('OpiskelijatCtrl', ['$scope', '$routeParams', '$location', '$log'
     }
 
     function cannotAuthenticate() {
-        $scope.messages.push({
+        MessageService.addMessage({
             type: "danger",
             messageKey: "suoritusrekisteri.opiskelijat.henkiloeiyhteytta",
             message: "Henkilöpalveluun ei juuri nyt saada yhteyttä.",
