@@ -42,11 +42,19 @@ app.filter('hilight', function() {
 
 app.factory('MurupolkuService', function() {
     var murupolku = [];
+    var hide = false;
     return {
         murupolku: murupolku,
         addToMurupolku: function(item, reset) {
             if (reset) murupolku.length = 0;
             murupolku.push(item);
+            hide = false;
+        },
+        hideMurupolku: function() {
+            hide = true;
+        },
+        isHidden: function() {
+            return hide;
         }
     };
 });
