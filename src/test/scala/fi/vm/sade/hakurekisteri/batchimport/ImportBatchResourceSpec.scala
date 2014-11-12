@@ -7,8 +7,10 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.{FakeAuthorizer, TestSecurity}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriSwagger, JDBCJournal}
 import org.scalatra.swagger.Swagger
-import org.scalatra.test.BytesPart
+import org.scalatra.test.{Uploadable, BytesPart}
 import org.scalatra.test.scalatest.ScalatraFunSuite
+
+import scala.xml.Elem
 
 
 class ImportBatchResourceSpec extends ScalatraFunSuite {
@@ -35,13 +37,21 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   }
 
   test("post with fileupload should return 201 created") {
-    val fileData = BytesPart("test.xml", "<batch><data>foo</data></batch>".getBytes("UTF-8"), contentType = "application/xml")
+    val fileData = XmlPart("test.xml", <batch><data>foo</data></batch>)
 
     post("/", Map[String, String](), List("data" -> fileData)) {
-      println(response.body)
       response.status should be(201)
     }
   }
+
+  case class XmlPart(fileName: String, xml:Elem) extends Uploadable {
+    override lazy val content: Array[Byte] = xml.toString().getBytes("UTF-8")
+
+    override lazy val contentLength: Long = content.length
+
+    override val contentType: String = "application/xml"
+  }
+
 
 
 
