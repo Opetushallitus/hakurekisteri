@@ -17,7 +17,10 @@ import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.validation.{FieldName, ValidationError}
 import siirto.{ValidXml, SchemaDefinition}
 
+import scala.util.control.Exception._
 import scala.xml.Elem
+import scala.xml.Source._
+import scalaz._
 
 
 class ImportBatchResource(eraRekisteri: ActorRef,
