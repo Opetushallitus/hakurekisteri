@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.batchimport
 
-import java.io.{ByteArrayInputStream, InputStream}
+import java.io.{StringReader, ByteArrayInputStream, InputStream}
 import java.util
 import javax.servlet.http.{Part, HttpServletRequest}
 
@@ -14,10 +14,12 @@ import org.scalatra.commands._
 import org.scalatra.servlet.{FileItem, SizeConstraintExceededException, MultipartConfig, FileUploadSupport}
 import org.scalatra.swagger.{DataType, SwaggerSupport, Swagger}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
-import org.scalatra.validation.ValidationError
+import org.scalatra.validation.{FieldName, ValidationError}
+import siirto.{ValidXml, SchemaDefinition}
 
 import scala.util.control.Exception._
 import scala.xml.Elem
+import scala.xml.Source._
 import scalaz._
 
 
@@ -26,20 +28,40 @@ class ImportBatchResource(eraRekisteri: ActorRef,
                                   (externalIdField: String,
                                    batchType: String,
                                    dataField: String,
-                                   validations: (Elem => ModelValidation[Elem])*)
+                                   schema: SchemaDefinition,
+                                   imports: SchemaDefinition*)
                                   (implicit sw: Swagger, system: ActorSystem, mf: Manifest[ImportBatch], cf: Manifest[ImportBatchCommand])
     extends HakurekisteriResource[ImportBatch, ImportBatchCommand](eraRekisteri, queryMapper) with ImportBatchSwaggerApi with HakurekisteriCrudCommands[ImportBatch, ImportBatchCommand] with SpringSecuritySupport with FileUploadSupport with IncidentReporting {
 
   val maxFileSize = 50 * 1024 * 1024L
   configureMultipartHandling(MultipartConfig(maxFileSize = Some(maxFileSize)))
 
+  val validator = new ValidXml(schema, imports:_*)
+
+  val schemaCache = (schema +: imports).map((sd) => sd.schemaLocation -> sd.schema).toMap
+
+  val schemaValidation = (elem: Elem) => validator.load(fromReader(new StringReader(elem.toString))).leftMap(_.map{ case (level, ex) => ValidationError(ex.getMessage, FieldName("data"), ex)})
+
   registerCommand[ImportBatchCommand](ImportBatchCommand(externalIdField,
                                                          batchType,
                                                          dataField,
-                                                         validations:_*))
+                                                         schemaValidation))
 
   before() {
     if (multipart) contentType = formats("html")
+  }
+
+  get("schema") {
+    MovedPermanently(request.getRequestURL.append("/").append(schema.schemaLocation).toString)
+  }
+
+
+
+  get("schema/:schema") {
+    schemaCache.get(params("schema")).fold(NotFound()){
+      contentType = "application/xml"
+      Ok(_)
+    }
   }
 
   def toJson(p: Product): String = compact(Extraction.decompose(p))

@@ -52,7 +52,6 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
       </xs:schema>
   }
 
-  val validator = new ValidXml(TestSchema)
 
   addServlet(
     new ImportBatchResource(
@@ -61,7 +60,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
     ("identifier",
         "test",
         "data",
-        (elem) => validator.load(fromReader(new StringReader(elem.toString))).leftMap(_.map{ case (level, ex) => ValidationError(ex.getMessage, FieldName("data"), ex)})) with TestSecurity, "/")
+        TestSchema) with TestSecurity, "/")
 
 
 
