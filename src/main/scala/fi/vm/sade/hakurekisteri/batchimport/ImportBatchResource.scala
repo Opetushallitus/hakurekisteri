@@ -14,9 +14,11 @@ import org.scalatra.commands._
 import org.scalatra.servlet.{FileItem, SizeConstraintExceededException, MultipartConfig, FileUploadSupport}
 import org.scalatra.swagger.{DataType, SwaggerSupport, Swagger}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
+import org.scalatra.validation.ValidationError
 
 import scala.util.control.Exception._
 import scala.xml.Elem
+import scalaz._
 
 
 class ImportBatchResource(eraRekisteri: ActorRef,
@@ -24,7 +26,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
                                   (externalIdField: String,
                                    batchType: String,
                                    dataField: String,
-                                   validations: (String, Elem => Boolean)*)
+                                   validations: (String, Elem => ValidationNel[ValidationError, Elem])*)
                                   (implicit sw: Swagger, system: ActorSystem, mf: Manifest[ImportBatch], cf: Manifest[ImportBatchCommand])
     extends HakurekisteriResource[ImportBatch, ImportBatchCommand](eraRekisteri, queryMapper) with ImportBatchSwaggerApi with HakurekisteriCrudCommands[ImportBatch, ImportBatchCommand] with SpringSecuritySupport with FileUploadSupport with IncidentReporting {
 
@@ -43,11 +45,17 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   def toJson(p: Product): String = compact(Extraction.decompose(p))
 
   incident {
+    case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
+    case t: MalformedResourceException => (id) => BadRequest(IncidentReport(id, t.getMessage))
+    case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, "not authorized"))
     case t: SizeConstraintExceededException => (id) => RequestEntityTooLarge(toJson(IncidentReport(id, s"Tiedosto on liian suuri (suurin sallittu koko $maxFileSize tavua).")))
     case t: IllegalArgumentException => (id) => BadRequest(toJson(IncidentReport(id, t.getMessage)))
     case t: AskTimeoutException => (id) => InternalServerError(toJson(IncidentReport(id, "Taustajärjestelmä ei vastaa. Yritä myöhemmin uudelleen.")))
     case t: Throwable => (id) => InternalServerError(toJson(IncidentReport(id, "Tuntematon virhe. Yritä uudelleen hetken kuluttua.")))
   }
+
+
+
 
   def multipart(implicit request: HttpServletRequest) = {
     val isPostOrPut = Set("POST", "PUT", "PATCH").contains(request.getMethod)
@@ -67,15 +75,22 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   }
 }
 
-case class ImportBatchCommand(externalIdField: String, batchType: String, dataField: String, validations: (String, Elem => Boolean)*) extends HakurekisteriCommand[ImportBatch] {
+case class ImportBatchCommand(externalIdField: String, batchType: String, dataField: String, validations: (String, Elem => ValidationNel[ValidationError, Elem])*) extends HakurekisteriCommand[ImportBatch] {
 
-  val validators =  validations.map{
-    case (messageFormat, validate ) => BindingValidators.validate(validate, messageFormat)
-  }.toList
-  private val validatedData = asType[Elem](dataField).required.validateWith(validators: _*)
+
+  private val validatedData = asType[Elem](dataField).required
   val data: Field[Elem] = validatedData
 
   override def toResource(user: String): ImportBatch = ImportBatch(data.value.get, data.value.flatMap(elem => (elem \ externalIdField).collectFirst{case e:Elem => e.text}), batchType, user)
+
+  import scalaz._, Scalaz._
+
+  override def extraValidation(batch: ImportBatch): ValidationNel[ValidationError, ImportBatch] = {
+    val xml = batch.data
+    val validation = validations.map(_._2).foldLeft(xml.successNel[ValidationError])((validated: ValidationNel[ValidationError, Elem], validation:  (Elem) => ValidationNel[ValidationError, Elem]) => validated.flatMap(validation))
+    validation.map((validated) => batch.copy(data = validated))
+  }
+
 }
 
 trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {

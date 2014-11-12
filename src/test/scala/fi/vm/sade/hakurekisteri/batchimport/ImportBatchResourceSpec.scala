@@ -44,6 +44,18 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
     }
   }
 
+
+  test("post with bad file should return 400") {
+    val fileData = XmlPart("test.xml", <batch><data>foo</data></batch>)
+
+    post("/", Map[String, String](), List("bata" -> fileData)) {
+
+      println("FOO: " + response.body)
+      response.status should be(400)
+    }
+  }
+
+
   case class XmlPart(fileName: String, xml:Elem) extends Uploadable {
     override lazy val content: Array[Byte] = xml.toString().getBytes("UTF-8")
 

@@ -1,22 +1,20 @@
 package fi.vm.sade.hakurekisteri.batchimport
 
-import org.scalatest.{Matchers, FlatSpec}
-import org.json4s.JsonDSL._
-import org.json4s.jackson.JsonMethods
-import org.json4s.JsonAST.{JObject, JValue}
-import org.scalatra.json.JacksonJsonValueReaderProperty
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-
-import org.scalatra.util.ParamsValueReaderProperties
+import org.json4s.JsonAST.{JObject, JValue}
+import org.json4s.jackson.JsonMethods
+import org.scalatest.{FlatSpec, Matchers}
 import org.scalatra.commands._
-import scala.xml.Elem
-import scalaz.NonEmptyList
-import org.scalatra.validation.{ValidationFail, ValidationError}
-import scala.language.implicitConversions
-import scala.concurrent.{Future, Await}
+import org.scalatra.json.JacksonJsonValueReaderProperty
+import org.scalatra.util.ParamsValueReaderProperties
+import org.scalatra.validation.{FieldName, ValidationError, ValidationFail}
+
 import scala.concurrent.duration._
-import org.scalatra.validation.FieldName
-import scala.Some
+import scala.concurrent.{Await, Future}
+import scala.language.implicitConversions
+import scala.xml.Elem
+import scalaz._, Scalaz._
+
 
 
 class ImportBatchCreationSpec extends FlatSpec
@@ -62,18 +60,18 @@ class ImportBatchCreationSpec extends FlatSpec
   }
 
   it should "parse data succesfully if all validation tests pass" in {
-    val validatedBatch = Await.result(command.withValidation("great success" -> ((j: Elem) => true)).bindTo(params) >> (_.toValidatedResource("testuser")), 10.seconds)
+    val validatedBatch = Await.result(command.withValidation("great success" -> ((j: Elem) => j.successNel)).bindTo(params) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isSuccess should be (true)
   }
 
   it should "fail parsing  if a validation test fails" in {
-    val validatedBatch = Await.result(command.withValidation("utter failure" -> ((j: Elem) => false)).bindTo(params) >> (_.toValidatedResource("testuser")), 10.seconds)
+    val validatedBatch = Await.result(command.withValidation("utter failure" -> ((j: Elem) => ValidationError("utter failure", FieldName("batch")).failNel)).bindTo(params) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isFailure should be (true)
   }
 
   it should "return given validation error if a validation test fails" in {
-    val validatedBatch = command.withValidation("utter failure" -> ((json: Elem) => false)).bindTo(params) >> (_.toValidatedResource("testuser"))
-    validatedBatch.failure.list should contain(ValidationError("utter failure", Some(FieldName("batch")), Some(ValidationFail)))
+    val validatedBatch = command.withValidation("utter failure" -> ((j: Elem) => ValidationError("utter failure", FieldName("batch")).failNel)).bindTo(params) >> (_.toValidatedResource("testuser"))
+    validatedBatch.failure.list should contain(ValidationError("utter failure", Some(FieldName("batch")), None))
   }
 }
 
@@ -100,7 +98,7 @@ trait JsonCommandTestSupport extends HakurekisteriJsonSupport with JsonMethods w
   implicit def validationToExtractor[T](result: Future[ModelValidation[T]]):ValidationReader[T]  = ValidationReader(Await.result(result, 10.seconds))
 
   case class ValidationCommand(command: ImportBatchCommand) {
-    def withValidation(validations: (String, Elem => Boolean)*) = ImportBatchCommand(command.externalIdField: String, command.batchType: String, command.dataField: String, validations:_*)
+    def withValidation(validations: (String, Elem => ModelValidation[Elem])*) = ImportBatchCommand(command.externalIdField: String, command.batchType: String, command.dataField: String, validations:_*)
   }
 
   implicit def CommandToValidationCommand(command: ImportBatchCommand): ValidationCommand = ValidationCommand(command)
