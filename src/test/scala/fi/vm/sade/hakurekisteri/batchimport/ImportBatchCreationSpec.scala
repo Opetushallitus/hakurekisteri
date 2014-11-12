@@ -7,13 +7,14 @@ import org.scalatest.{FlatSpec, Matchers}
 import org.scalatra.commands._
 import org.scalatra.json.JacksonJsonValueReaderProperty
 import org.scalatra.util.ParamsValueReaderProperties
-import org.scalatra.validation.{FieldName, ValidationError, ValidationFail}
+import org.scalatra.validation.{FieldName, ValidationError}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.language.implicitConversions
 import scala.xml.Elem
-import scalaz._, Scalaz._
+import scalaz.Scalaz._
+import scalaz._
 
 
 
