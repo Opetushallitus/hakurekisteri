@@ -79,11 +79,12 @@ case class ImportBatchCommand(externalIdField: String, batchType: String, dataFi
 }
 
 trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
-  protected def applicationDescription: String = "foo"
+  protected def applicationDescription: String = "Perustietojen tiedonsiirto"
 
   registerModel(Model("ImportBatch", "ImportBatch", Seq[ModelField](
-    ModelField("eranTunniste", "eranTunniste", DataType.String),
-    ModelField("henkilot", "henkilot", DataType.GenList(DataType("Henkilo")))
+    ModelField("externalId", "lähettäjän määrittämä tunniste, luetaan tiedoston elementistä 'eranTunniste'", DataType.String, required = false),
+    ModelField("batchType", "lähetyksen tyyppi", DataType.String, Some("perustiedot")),
+    ModelField("data", "lähetetty data", DataType.String)
   ).map(t => (t.name, t)).toMap))
 
   val update: OperationBuilder = apiOperation[ImportBatch]("N/A 1")
@@ -91,8 +92,9 @@ trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
   val read: OperationBuilder = apiOperation[ImportBatch]("N/A 3")
   val create: OperationBuilder = apiOperation[ImportBatch]("lahetaTiedosto")
     .summary("vastaanottaa tiedoston")
-    .notes("Vastaanottaa XML-tiedoston joko lomakkeen kenttänä (kentän nimi 'data') tai XML-muodossa requestin bodyssä.")
-    .consumes("multipart/form-data", "application/xml")
+    .notes("Vastaanottaa XML-tiedoston joko lomakkeen kenttänä multipart-koodattuna (kentän nimi 'data') tai XML-muodossa requestin bodyssä. <a href='/suoritusrekisteri/schemas/perustiedot.xsd'>Perustietojen XML-skeema</a>")
+    .consumes("application/xml", "multipart/form-data")
+    .parameter(bodyParam[String].description("XML-tiedosto").required)
   val query: OperationBuilder = apiOperation[ImportBatch]("N/A 4")
 }
 

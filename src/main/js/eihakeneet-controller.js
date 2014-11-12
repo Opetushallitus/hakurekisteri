@@ -1,6 +1,6 @@
 'use strict';
 
-function EihakeneetCtrl($scope, $rootScope, $routeParams, $http, $q) {
+app.controller('EihakeneetCtrl', ['$scope', '$rootScope', '$routeParams', '$http', '$q', function($scope, $rootScope, $routeParams, $http, $q) {
     var hakuOid = $routeParams.haku;
     var oppilaitosOid = $routeParams.oppilaitos;
     var luokka = $routeParams.luokka;
@@ -132,5 +132,5 @@ function EihakeneetCtrl($scope, $rootScope, $routeParams, $http, $q) {
             $scope.messages.splice(index, 1);
         }
     };
-}
+}]);
 

@@ -1,4 +1,6 @@
-function MurupolkuCtrl($rootScope) {
+'use strict';
+
+app.controller('MurupolkuCtrl', ['$rootScope', function($rootScope) {
     $rootScope.murupolku = [];
 
     $rootScope.addToMurupolku = function(element, reset) {
@@ -7,4 +9,4 @@ function MurupolkuCtrl($rootScope) {
         }
         $rootScope.murupolku.push(element);
     };
-}
+}]);

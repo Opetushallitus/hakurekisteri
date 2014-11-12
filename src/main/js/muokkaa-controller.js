@@ -1,6 +1,8 @@
 'use strict';
 
-function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService) {
+app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$http', '$log', '$q', '$modal', 'Opiskelijat', 'Suoritukset', 'Opiskeluoikeudet', 'LokalisointiService',
+        function($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService) {
+
     $scope.henkiloOid = $routeParams.henkiloOid;
     $scope.myRoles = [];
     $scope.messages = [];
@@ -364,13 +366,13 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                 }
             });
         }
-        openModal('templates/arvosanat', ArvosanaCtrl);
+        openModal('templates/arvosanat', 'ArvosanaCtrl');
 
         $rootScope.modalInstance.result.then(function (arvosanaRet) {
             if (Array.isArray(arvosanaRet)) {
                 $rootScope.modalInstance = $modal.open({
                     templateUrl: 'templates/duplikaatti',
-                    controller: DuplikaattiCtrl,
+                    controller: 'DuplikaattiCtrl',
                     resolve: {
                         arvosanat: function() { return arvosanaRet }
                     }
@@ -395,7 +397,7 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
                 }
             });
         }
-        openModal('templates/yoarvosanat', YoarvosanaCtrl);
+        openModal('templates/yoarvosanat', 'YoarvosanaCtrl');
 
         $rootScope.modalInstance.result.then(function (yoarvosanaRet) {
             if (yoarvosanaRet) $scope.messages.push(yoarvosanaRet)
@@ -426,5 +428,5 @@ function MuokkaaCtrl($scope, $rootScope, $routeParams, $location, $http, $log, $
         $scope.format = 'dd.MM.yyyy';
     }
     initDatepicker();
-}
+}]);
 

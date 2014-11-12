@@ -1,6 +1,6 @@
 'use strict';
 
-function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukset, suoritusId) {
+app.controller('ArvosanaCtrl', ['$scope', '$rootScope', '$http', '$q', '$log', 'Arvosanat', 'Suoritukset', 'suoritusId', function($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukset, suoritusId) {
     $scope.arvosanataulukko = [];
     $scope.oppiaineet = [];
     $scope.valinnaisuudet = [
@@ -242,4 +242,4 @@ function ArvosanaCtrl($scope, $rootScope, $http, $q, $log, Arvosanat, Suoritukse
         $rootScope.modalInstance.close()
     };
 
-}
+}]);

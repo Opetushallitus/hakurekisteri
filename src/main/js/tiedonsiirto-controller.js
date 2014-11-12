@@ -1,4 +1,6 @@
-function TiedonsiirtoCtrl($scope, $rootScope) {
+'use strict';
+
+app.controller('TiedonsiirtoCtrl', ['$scope', '$rootScope', function($scope, $rootScope) {
     $rootScope.addToMurupolku({key: "suoritusrekisteri.tiedonsiirto.muru", text: "Tiedonsiirto"}, true);
 
     $scope.send = function() {
@@ -40,4 +42,4 @@ function TiedonsiirtoCtrl($scope, $rootScope) {
     function isIncidentResponse(content) {
         return (typeof content === 'string' && content.match(/.*"incidentId".*/g)) || (typeof content === 'object' && content.incidentId)
     }
-}
+}]);

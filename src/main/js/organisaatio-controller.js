@@ -1,4 +1,6 @@
-function OrganisaatioCtrl($scope, $http, $rootScope, $log) {
+'use strict';
+
+app.controller('OrganisaatioCtrl', ['$scope', '$http', '$rootScope', '$log', function($scope, $http, $rootScope, $log) {
     $scope.organisaatiotyypit = [];
     $scope.oppilaitostyypit = [];
     $scope.loading = false;
@@ -79,4 +81,4 @@ function OrganisaatioCtrl($scope, $http, $rootScope, $log) {
         }
         return false;
     };
-}
+}]);
