@@ -1,13 +1,12 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import org.scalatra.commands.JsonCommand
 import org.scalatra.{DefaultValue, util}
 import org.joda.time.{DateTime, LocalDate}
 import org.scalatra.util.conversion.TypeConverter
 import org.joda.time.format.DateTimeFormat
 import org.json4s._
 
-trait LocalDateSupport { this: JsonCommand =>
+trait LocalDateSupport { this: HakurekisteriCommand[_] =>
   import util.RicherString._
 
 
