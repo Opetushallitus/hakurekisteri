@@ -51,7 +51,14 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     if (multipart) contentType = formats("html")
   }
 
-  def toJson(p: Object): String = compact(Extraction.decompose(p))
+  private def toJson(a: Product): String = compact(Extraction.decompose(a))
+
+  private def renderAsJson: RenderPipeline = {
+    case a: IncidentReport if format == "html" => toJson(a)
+    case a: ImportBatch if format == "html" => toJson(a)
+  }
+
+  override protected def renderPipeline: RenderPipeline = renderAsJson orElse super.renderPipeline
 
   get("schema") {
     MovedPermanently(request.getRequestURL.append("/").append(schema.schemaLocation).toString)
@@ -65,13 +72,13 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   }
 
   incident {
-    case t: NotFoundException => (id) => NotFound(toJson(IncidentReport(id, "resource not found")))
-    case t: MalformedResourceException => (id) => BadRequest(toJson(IncidentReport(id, t.getMessage)))
-    case t: UserNotAuthorized => (id) => Forbidden(toJson(IncidentReport(id, "not authorized")))
-    case t: SizeConstraintExceededException => (id) => RequestEntityTooLarge(toJson(IncidentReport(id, s"Tiedosto on liian suuri (suurin sallittu koko $maxFileSize tavua).")))
-    case t: IllegalArgumentException => (id) => BadRequest(toJson(IncidentReport(id, t.getMessage)))
-    case t: AskTimeoutException => (id) => InternalServerError(toJson(IncidentReport(id, "Taustajärjestelmä ei vastaa. Yritä myöhemmin uudelleen.")))
-    case t: Throwable => (id) => InternalServerError(toJson(IncidentReport(id, "Tuntematon virhe. Yritä uudelleen hetken kuluttua.")))
+    case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
+    case t: MalformedResourceException => (id) => BadRequest(IncidentReport(id, t.getMessage))
+    case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, "not authorized"))
+    case t: SizeConstraintExceededException => (id) => RequestEntityTooLarge(IncidentReport(id, s"Tiedosto on liian suuri (suurin sallittu koko $maxFileSize tavua)."))
+    case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
+    case t: AskTimeoutException => (id) => InternalServerError(IncidentReport(id, "Taustajärjestelmä ei vastaa. Yritä myöhemmin uudelleen."))
+    case t: Throwable => (id) => InternalServerError(IncidentReport(id, "Tuntematon virhe. Yritä uudelleen hetken kuluttua."))
   }
 
   def multipart(implicit request: HttpServletRequest) = {
@@ -81,14 +88,6 @@ class ImportBatchResource(eraRekisteri: ActorRef,
       case _ => false
     })
   }
-
-  /*
-  override def createResource(user: Option[User]): AnyRef = {
-    val created = super.createResource(user)
-    if (multipart) toJson(created)
-    else created
-  }
-  */
 
   override protected def bindCommand[T <: CommandType](newCommand: T)(implicit request: HttpServletRequest, mf: Manifest[T]): T = {
     if (multipart)

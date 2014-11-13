@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.batchimport
 
-import java.io.StringReader
 import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
@@ -8,13 +7,11 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.{FakeAuthorizer, TestSecurity}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriSwagger, JDBCJournal}
 import org.scalatra.swagger.Swagger
-import org.scalatra.test.{Uploadable, BytesPart}
+import org.scalatra.test.Uploadable
 import org.scalatra.test.scalatest.ScalatraFunSuite
-import org.scalatra.validation.{FieldName, ValidationError}
-import siirto.{SchemaDefinition, ValidXml}
+import siirto.SchemaDefinition
 
 import scala.xml.Elem
-import scala.xml.Source._
 
 
 class ImportBatchResourceSpec extends ScalatraFunSuite {
