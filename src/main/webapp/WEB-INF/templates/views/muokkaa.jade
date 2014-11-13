@@ -29,7 +29,7 @@ div(class="row")
 form(ng-submit="save()")
   div(class="row")
     div(class="col-sm-6")
-      section(ng-show="opiskeluoikeudet" class="panel panel-default")
+      section(ng-if="opiskeluoikeudet && opiskeluoikeudet.length > 0" class="panel panel-default")
         header(class="panel-heading")
           h2(class="panel-title" oph-msg="suoritusrekisteri.muokkaa.opiskeluoikeudet") Opiskeluoikeudet
         div(class="panel-body")
@@ -83,7 +83,7 @@ form(ng-submit="save()")
                 div(class="form-group col-sm-5")
                   strong(oph-msg="suoritusrekisteri.muokkaa.valmistumispaiva") Valmistumispäivä
                   div(ng-show="suoritus.editable" class="input-group")
-                    input(type="text" class="form-control input-sm datepicker" ng-disabled="suoritus.delete" ng-model="suoritus.valmistuminen"
+                    input(type="text" class="form-control input-sm datepicker" ng-disabled="suoritus.delete" ng-model="suoritus.valmistuminen" title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)"
                       datepicker-popup="{{format}}"
                       datepicker-options="dateOptions"
                       datepicker-append-to-body="true"
@@ -143,7 +143,7 @@ form(ng-submit="save()")
                 div(class="form-group col-sm-4")
                   strong(oph-msg="suoritusrekisteri.muokkaa.alkupaiva") Alkupäivä
                   div(class="input-group")
-                    input(type="text" class="form-control input-sm datepicker" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.alkuPaiva"
+                    input(type="text" class="form-control input-sm datepicker" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.alkuPaiva" title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)"
                       datepicker-popup="{{format}}"
                       datepicker-options="dateOptions"
                       required="required"
@@ -158,7 +158,7 @@ form(ng-submit="save()")
                 div(class="form-group col-sm-4")
                   strong(oph-msg="suoritusrekisteri.muokkaa.loppupaiva") Loppupäivä
                   div(class="input-group")
-                    input(type="text" class="form-control input-sm datepicker" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.loppuPaiva"
+                    input(type="text" class="form-control input-sm datepicker" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.loppuPaiva" title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)"
                       datepicker-popup="{{format}}"
                       datepicker-options="dateOptions"
                       min="luokkatieto.alkuPaiva"
