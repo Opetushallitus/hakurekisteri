@@ -80,8 +80,6 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
     val fileData = XmlPart("test.xml", <batch><bata>foo</bata></batch>)
 
     post("/", Map[String, String](), List("data" -> fileData)) {
-
-      println("FOO: " + response.body)
       response.status should be(400)
     }
   }

@@ -60,12 +60,12 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 
   override protected def renderPipeline: RenderPipeline = renderAsJson orElse super.renderPipeline
 
-  get("schema") {
+  get("/schema") {
     MovedPermanently(request.getRequestURL.append("/").append(schema.schemaLocation).toString)
   }
 
-  get("schema/:schema") {
-    schemaCache.get(params("schema")).fold(NotFound()){
+  get("/schema/:schema") {
+    schemaCache.get(params("schema")).fold(NotFound("not found")){
       contentType = "application/xml"
       Ok(_)
     }
