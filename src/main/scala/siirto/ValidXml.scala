@@ -1,21 +1,25 @@
 package siirto
 
-import scala.xml.factory.XMLLoader
-import scala.xml._
-import javax.xml.parsers.SAXParserFactory
-import javax.xml.XMLConstants
-import javax.xml.validation.SchemaFactory
-import java.io._
-import org.w3c.dom.ls.{LSInput, LSResourceResolver}
-import scala.xml.parsing.{NoBindingFactoryAdapter, FactoryAdapter}
-import org.xml.sax.SAXParseException
-import scala.collection.mutable
-import scalaz._
-import org.scalatra.validation.ValidationError
-import scala.xml.Source._
-import java.io.Reader
+import java.io.{Reader, _}
 import java.net.URL
+import javax.xml.XMLConstants
+import javax.xml.parsers.SAXParserFactory
+import javax.xml.transform.Source
+import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXSource
+import javax.xml.validation.SchemaFactory
+
+import org.w3c.dom.ls.{LSInput, LSResourceResolver}
+import org.xml.sax.{ErrorHandler, SAXParseException}
+
+import scala.collection.mutable
+import scala.xml.Source._
+import scala.xml._
+import scala.xml.parsing.{FactoryAdapter, NoBindingFactoryAdapter}
+import scalaz._, Scalaz._
+
+
+import fi.vm.sade.hakurekisteri.tools.XmlHelpers._
 
 
 trait XMLValidator[T <: Validation[E, R], E, R <: scala.xml.Node] {
@@ -129,6 +133,27 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
     schemaFactory.newSchema(new SAXSource(fromReader(new StringReader(schemaDoc.schema.toString))))
   }
 
+  def validate(xml: Elem):ValidationNel[(String, SAXParseException), Elem] = validate(new SAXSource(fromString(xml.toString))).map((_) => xml)
+
+  def validate(source: Source): ValidationNel[(String, SAXParseException), Elem] = {
+    val exceptions = new mutable.Stack[(String, SAXParseException)]
+
+    val handler = new ErrorHandler{
+      override def fatalError(e: SAXParseException): Unit = {exceptions.push("fatal" -> e)}
+
+      override def error(e: SAXParseException): Unit = {exceptions.push("error" -> e)}
+
+      override def warning(e: SAXParseException): Unit = {exceptions.push("warn" -> e)}
+    }
+    val validator  = schema.newValidator()
+    validator.setErrorHandler(handler)
+    //validator.validate(new SAXSource(fromString(xml.toString)))
+    validator.validate(source)
+
+
+    exceptions.toList.toNel.map(_.fail).getOrElse(<result/>.successNel)
+  }
+
   override def parser = {
     val f: SAXParserFactory = SAXParserFactory.newInstance()
     f.setNamespaceAware(true)
@@ -179,5 +204,8 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
 
 
 }
+
+
+
 
 

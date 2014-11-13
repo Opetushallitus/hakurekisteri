@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
+import fi.vm.sade.hakurekisteri.batchimport.ImportBatchSerializer
 import org.json4s.{FieldSerializer, DefaultFormats, Formats}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -22,7 +23,8 @@ trait HakurekisteriJsonSupport {
     new ArvioSerializer +
     new AjanjaksoSerializer +
     new SuoritusSerializer +
-    new LasnaoloSerializer
+    new LasnaoloSerializer +
+    new ImportBatchSerializer
 
 }
 

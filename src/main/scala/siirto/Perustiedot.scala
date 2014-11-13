@@ -1,5 +1,11 @@
 package siirto
 
+import java.io.StringReader
+import javax.xml.XMLConstants
+import javax.xml.transform.sax.SAXSource
+import javax.xml.validation.SchemaFactory
+
+import scala.xml.Source._
 import scala.xml.{XML, Elem}
 
 
@@ -136,7 +142,7 @@ object Perustiedot extends SchemaDefinition {
         <xs:complexContent>
           <xs:extension base="SuoritusType">
             <xs:sequence>
-              <xs:element name="yksilollistaminen" type="koodisto:yksilollistaminen" minOccurs="0" maxOccurs="1"></xs:element>
+              <xs:element name="yksilollistaminen" type="koodisto:yksilollistaminen" minOccurs="1" maxOccurs="1"></xs:element>
             </xs:sequence>
 
 
@@ -219,5 +225,6 @@ trait SchemaWithRemotes extends SchemaDefinition  {
 trait SchemaDefinition {
   val schemaLocation:String
   val schema: Elem
+
 
 }
