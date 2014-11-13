@@ -160,13 +160,15 @@ app.controller('MuokkaaCtrl', ['$scope', '$routeParams', '$location', '$http', '
     fetchSuoritukset();
     fetchOpiskeluoikeudet();
 
-    $scope.getOppilaitos = function(searchStr) {
+    $scope.getOppilaitos = function(searchStr, obj) {
+        if ((typeof obj.organisaatio === 'object') && obj.organisaatio.oppilaitosKoodi === searchStr) return [];
+
         if (searchStr && searchStr.trim().match(/^\d{5}$/))
             return $http.get(organisaatioServiceUrl + '/rest/organisaatio/' + searchStr)
                 .then(function(result) {
                     return [result.data];
                 }, function() { return [] });
-        else if (searchStr && searchStr.length > 3)
+        else if (searchStr && searchStr.length > 2)
             return $http.get(organisaatioServiceUrl + '/rest/organisaatio/hae',
                 { params: { searchstr: searchStr, organisaatioTyyppi: "Oppilaitos" } })
                 .then(function(result) {
