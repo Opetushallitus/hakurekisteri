@@ -129,7 +129,8 @@ app.controller('HakeneetCtrl', ['$scope', '$http', '$modal', 'MurupolkuService',
         isolatedScope.modalInstance = $modal.open({
             templateUrl: 'templates/organisaatiohaku',
             controller: 'OrganisaatioCtrl',
-            scope: isolatedScope
+            scope: isolatedScope,
+            size: 'lg'
         });
         $scope.modalInstance = isolatedScope.modalInstance;
 
