@@ -147,7 +147,6 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
     }
     val validator  = schema.newValidator()
     validator.setErrorHandler(handler)
-    //validator.validate(new SAXSource(fromString(xml.toString)))
     validator.validate(source)
 
 
