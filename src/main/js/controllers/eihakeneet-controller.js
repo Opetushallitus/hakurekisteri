@@ -123,6 +123,7 @@ app.controller('EihakeneetCtrl', ['$scope', 'MurupolkuService', 'MessageService'
             });
         }
     }
-    authenticateToAuthenticationService($http, fetchData, function() {});
+
+    fetchData();
 }]);
 

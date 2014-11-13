@@ -38,3 +38,19 @@ app.config(function ($locationProvider, $routeProvider) {
     $routeProvider.otherwise({redirectTo: '/opiskelijat'});
     $locationProvider.html5Mode(false);
 });
+
+app.run(function($http, $log, MessageService) {
+    $http.get(henkiloServiceUrl + '/buildversion.txt?auth')
+        .success(function() {
+            $log.debug("called authentication-service successfully")
+        })
+        .error(function() {
+            MessageService.addMessage({
+                type: "danger",
+                messageKey: "suoritusrekisteri.opiskelijat.henkiloeiyhteytta",
+                message: "Henkilöpalveluun ei juuri nyt saada yhteyttä.",
+                descriptionKey: "suoritusrekisteri.opiskelijat.henkiloyrita",
+                description: "Yritä hetken kuluttua uudelleen."
+            })
+        })
+});

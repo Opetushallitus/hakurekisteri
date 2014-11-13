@@ -229,16 +229,4 @@ app.controller('OpiskelijatCtrl', ['$scope', '$routeParams', '$location', '$log'
                 $scope.pageNumbers.push(i + 1)
         }
     }
-
-    function cannotAuthenticate() {
-        MessageService.addMessage({
-            type: "danger",
-            messageKey: "suoritusrekisteri.opiskelijat.henkiloeiyhteytta",
-            message: "Henkilöpalveluun ei juuri nyt saada yhteyttä.",
-            descriptionKey: "suoritusrekisteri.opiskelijat.henkiloyrita",
-            description: "Yritä hetken kuluttua uudelleen."
-        })
-    }
-
-    authenticateToAuthenticationService($http, $scope.fetch, cannotAuthenticate);
 }]);
