@@ -229,4 +229,6 @@ app.controller('OpiskelijatCtrl', ['$scope', '$routeParams', '$location', '$log'
                 $scope.pageNumbers.push(i + 1)
         }
     }
+
+    $scope.fetch();
 }]);
