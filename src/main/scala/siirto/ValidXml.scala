@@ -1,23 +1,25 @@
 package siirto
 
-import javax.xml.transform.dom.DOMSource
-
-import scala.xml.factory.XMLLoader
-import scala.xml._
-import javax.xml.parsers.SAXParserFactory
-import javax.xml.XMLConstants
-import javax.xml.validation.SchemaFactory
-import java.io._
-import org.w3c.dom.ls.{LSInput, LSResourceResolver}
-import scala.xml.parsing.{NoBindingFactoryAdapter, FactoryAdapter}
-import org.xml.sax.{ErrorHandler, SAXParseException}
-import scala.collection.mutable
-import scalaz._
-import org.scalatra.validation.ValidationError
-import scala.xml.Source._
-import java.io.Reader
+import java.io.{Reader, _}
 import java.net.URL
+import javax.xml.XMLConstants
+import javax.xml.parsers.SAXParserFactory
+import javax.xml.transform.Source
+import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXSource
+import javax.xml.validation.SchemaFactory
+
+import org.w3c.dom.ls.{LSInput, LSResourceResolver}
+import org.xml.sax.{ErrorHandler, SAXParseException}
+
+import scala.collection.mutable
+import scala.xml.Source._
+import scala.xml._
+import scala.xml.parsing.{FactoryAdapter, NoBindingFactoryAdapter}
+import scalaz._, Scalaz._
+
+
+import fi.vm.sade.hakurekisteri.tools.XmlHelpers._
 
 
 trait XMLValidator[T <: Validation[E, R], E, R <: scala.xml.Node] {
@@ -131,49 +133,9 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
     schemaFactory.newSchema(new SAXSource(fromReader(new StringReader(schemaDoc.schema.toString))))
   }
 
-  object XmlHelpers {
-    val docBuilder =
-      javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder()
-  }
+  def validate(xml: Elem):ValidationNel[(String, SAXParseException), Elem] = validate(new SAXSource(fromString(xml.toString))).map((_) => xml)
 
-  implicit def nodeExtras(n: scala.xml.Node) = new NodeExtras(n)
-  implicit def elemExtras(e: Elem) = new ElemExtras(e)
-
-  class NodeExtras(n: scala.xml.Node) {
-    def toJdkNode(doc: org.w3c.dom.Document): org.w3c.dom.Node =
-      n match {
-        case Elem(prefix, label, attributes, scope, children @ _*) =>
-          // XXX: ns
-          val r = doc.createElement(label)
-          for (a <- attributes) {
-            r.setAttribute(a.key, a.value.text)
-          }
-          for (c <- children) {
-            r.appendChild(c.toJdkNode(doc))
-          }
-          r
-        case Text(text) => doc.createTextNode(text)
-        case Comment(comment) => doc.createComment(comment)
-        // not sure
-        case a: Atom[_] => doc.createTextNode(a.data.toString)
-        // XXX: other types
-        //case x => throw new Exception(x.getClass.getName)
-      }
-  }
-
-  class ElemExtras(e: Elem) extends NodeExtras(e) {
-    override def toJdkNode(doc: org.w3c.dom.Document) =
-      super.toJdkNode(doc).asInstanceOf[org.w3c.dom.Element]
-
-    def toJdkDoc = {
-      val doc = XmlHelpers.docBuilder.newDocument()
-      doc.appendChild(toJdkNode(doc))
-      doc
-    }
-  }
-
-
-  def validate(xml:Elem): ValidationNel[(String, SAXParseException), Elem] = {
+  def validate(source: Source): ValidationNel[(String, SAXParseException), Elem] = {
     val exceptions = new mutable.Stack[(String, SAXParseException)]
 
     val handler = new ErrorHandler{
@@ -186,11 +148,10 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
     val validator  = schema.newValidator()
     validator.setErrorHandler(handler)
     //validator.validate(new SAXSource(fromString(xml.toString)))
-    validator.validate(new DOMSource(xml.toJdkDoc))
+    validator.validate(source)
 
-    import scalaz._, Scalaz._
 
-    exceptions.toList.toNel.map(_.fail).getOrElse(xml.successNel)
+    exceptions.toList.toNel.map(_.fail).getOrElse(<result/>.successNel)
   }
 
   override def parser = {
@@ -243,5 +204,8 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
 
 
 }
+
+
+
 
 
