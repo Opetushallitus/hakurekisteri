@@ -86,3 +86,14 @@ app.directive('messages', function() {
         templateUrl: 'templates/messages'
     }
 });
+
+app.directive('tiedonsiirtomenu', function() {
+    return {
+        controller: function($scope, $location) {
+            $scope.isActive = function(path) {
+                return path === $location.path()
+            };
+        },
+        templateUrl: 'templates/tiedonsiirtomenu'
+    }
+});
