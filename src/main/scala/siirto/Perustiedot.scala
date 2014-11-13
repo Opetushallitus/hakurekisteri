@@ -142,7 +142,7 @@ object Perustiedot extends SchemaDefinition {
         <xs:complexContent>
           <xs:extension base="SuoritusType">
             <xs:sequence>
-              <xs:element name="yksilollistaminen" type="koodisto:yksilollistaminen" minOccurs="0" maxOccurs="1"></xs:element>
+              <xs:element name="yksilollistaminen" type="koodisto:yksilollistaminen" minOccurs="1" maxOccurs="1"></xs:element>
             </xs:sequence>
 
 
