@@ -1,0 +1,29 @@
+div(class="modal-header")
+  button(type="button" class="close" ng-click="modalInstance.close()" aria-hidden="true") &times;
+  h4(class="modal-title" oph-msg="suoritusrekisteri.hakeneet.organisaatio.haeorganisaatio") Hae organisaatio
+div(class="modal-body")
+  div(ng-show="organisaatiot.length === 0" class="alert alert-danger")
+    span(oph-msg="suoritusrekisteri.hakeneet.eituloksia") Organisaatioita ei löytynyt annetuilla hakuehdoilla. Muuta hakuehtoja ja yritä uudelleen.
+  form(ng-submit="hae()")
+    div(class="form-group")
+      label(for="organisaatiohakuehto" oph-msg="suoritusrekisteri.hakeneet.organisaatio.hakuehto") Hakuehto
+      input(id="organisaatiohakuehto" class="form-control" type="text" ng-model="hakuehto")
+    div(class="form-group")
+      label(for="organisaatiotyyppi" oph-msg="suoritusrekisteri.hakeneet.organisaatio.organisaatiotyyppi") Organisaatiotyyppi
+      select(id="organisaatiotyyppi" class="form-control" ng-model="organisaatiotyyppi" ng-options="ot.value as ot.text for ot in organisaatiotyypit")
+    div(class="form-group")
+      label(for="oppilaitostyyppi" oph-msg="suoritusrekisteri.hakeneet.organisaatio.oppilaitostyyppi") Oppilaitostyyppi
+      select(id="oppilaitostyyppi" class="form-control" ng-model="oppilaitostyyppi" ng-options="ot.value as ot.text for ot in oppilaitostyypit")
+    div(class="checkbox")
+      label
+        input(type="checkbox" ng-model="lakkautetut")
+        span(oph-msg="suoritusrekisteri.hakeneet.organisaatio.naytavainvalitut") Näytä vain lakkautetut
+    button(type="button" class="btn btn-sm btn-default" ng-click="tyhjenna()")
+      span(oph-msg="suoritusrekisteri.hakeneet.organisaatio.tyhjenna") Tyhjennä
+    button(type="submit" class="btn btn-sm btn-primary" ng-click="hae()")
+      span(oph-msg="suoritusrekisteri.hakeneet.organisaatio.hae") Hae
+      span(class="glyphicon glyphicon-search")
+  div(class="organisaatiotulokset")
+    div(ng-show="loading" class="keskenerainen-large")
+    ul(class="organisaatiohierarkia")
+      li(ng-repeat="o in organisaatiot" ng-include="'templates/organisaatiotulos'")

@@ -1,0 +1,7 @@
+ul(class="nav nav-tabs nav-stacked")
+  li(data-requires-role="app_tiedonsiirto_valinta" class="{{isActive('/tiedonsiirto/hakeneet') ? 'active' : ''}}")
+    a(href="#/tiedonsiirto/hakeneet" oph-msg="suoritusrekisteri.tiedonsiirto.menu.hakeneet") Hakeneet ja valitut
+  li(data-requires-role="app_tiedonsiirto_valinta" class="{{isActive('/tiedonsiirto/kkhakeneet') ? 'active' : ''}}")
+    a(href="#/tiedonsiirto/kkhakeneet" oph-msg="suoritusrekisteri.tiedonsiirto.menu.kkhakeneet") Hakeneet ja valitut (KK)
+  li(data-requires-role="app_tiedonsiirto_crud" class="{{isActive('/tiedonsiirto/lahetys') ? 'active' : ''}}")
+    a(href="#/tiedonsiirto/lahetys" oph-msg="suoritusrekisteri.tiedonsiirto.menu.tiedostonlahetys") Tiedoston lähetys

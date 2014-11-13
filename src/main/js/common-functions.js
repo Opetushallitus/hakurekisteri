@@ -24,6 +24,24 @@ var komo = {
 };
 var ylioppilastutkintolautakunta = "1.2.246.562.10.43628088406";
 
+String.prototype.hashCode = function() {
+    var hash = 0;
+    if (this.length == 0) return hash;
+    for (var i = 0; i < this.length; i++) {
+        hash = ((hash << 5) - hash) + this.charCodeAt(i);
+        hash = hash & hash;
+    }
+    return hash;
+};
+
+if (!Object.keys) Object.keys = function(o) {
+    if (o !== Object(o))
+        throw new TypeError('Object.keys called on a non-object');
+    var k=[],p;
+    for (p in o) if (Object.prototype.hasOwnProperty.call(o,p)) k.push(p);
+    return k;
+};
+
 if (!Array.prototype.diff)
     Array.prototype.diff = function(a) {
         return this.filter(function(i) { return a.indexOf(i) < 0; });

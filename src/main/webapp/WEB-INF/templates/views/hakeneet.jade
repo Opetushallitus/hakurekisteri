@@ -1,0 +1,79 @@
+-@ val aste: String = "toinenaste"
+
+div(class="row")
+  div(class="col-md-2")
+    tiedonsiirtomenu
+
+  div(class="col-md-10")
+    h3(oph-msg="suoritusrekisteri.hakeneet.otsikko") Muodosta hakeneiden ja valituttujen opiskelijoiden siirtotiedosto
+
+    messages
+
+    form(class="well form-horizontal" ng-submit="search()")
+      fieldset
+        - if (aste == "kk") {
+          div(class="form-group")
+            label(class="col-sm-2 control-label" for="oppijanumero" oph-msg="suoritusrekisteri.hakeneet.oppijanumero") Oppijanumero
+            div(class="col-sm-10")
+              input(type="text" class="form-control" id="oppijanumero" ng-model="oppijanumero" placeholder="Syötä oppijanumero" ng-change="searchHenkilo()" style="width: 30%")
+              span {{henkilo.etunimet}} {{henkilo.sukunimi}}
+        - }
+        div(class="form-group")
+          label(class="col-sm-2 control-label" for="kausi" oph-msg="suoritusrekisteri.hakeneet.hakukausi") Hakukausi
+          div(class="col-sm-2")
+            select(class="form-control" id="kausi" ng-model="kausi" ng-options="k as k.text for k in kaudet")
+        div(class="form-group")
+          label(class="col-sm-2 control-label" for="haku" oph-msg="suoritusrekisteri.hakeneet.haku") Haku
+          div(class="col-sm-10")
+            select(class="form-control" id="haku" ng-model="haku" ng-change="clearHakukohde()"
+              ng-options="hk as hk.text group by (hk.vuosi + ' ' + hk.hakukausi) for hk in haut | filter:{vuosi:kausi.vuosi,kausi:kausi.kausi}")
+        div(class="form-group")
+          label(class="col-sm-2 control-label" oph-msg="suoritusrekisteri.hakeneet.organisaatio") Organisaatio
+          div(class="col-sm-6")
+            span(ng-show="organisaatio") {{organisaatio.nimi.fi || organisaatio.nimi.sv}}
+            button(type="button" class="btn btn-sm btn-default" ng-click="avaaOrganisaatiohaku()") Valitse organisaatio
+        div(class="form-group")
+          label(class="col-sm-2 control-label" for="hakukohde" oph-msg="suoritusrekisteri.hakeneet.hakukohde") Hakukohde
+          - if (aste == "kk") {
+            div(class="col-sm-8")
+              input(class="form-control col-sm-6 {{hakukohteetloading ? 'input-loading' : ''}}" type="text" id="hakukohde" ng-model="hakukohdenimi" autocomplete="off"
+                placeholder="Etsi hakukohdetta syöttämällä osa sen nimestä"
+                typeahead="hk.nimi for hk in searchHakukohde($viewValue) | filter:$viewValue | limitTo:20"
+                typeahead-on-select="setHakukohde($item)"
+                typeahead-wait-ms="500"
+                typeahead-loading="hakukohteetloading")
+              input(type="hidden" ng-model="hakukohde")
+          - } else {
+            div(class="col-sm-10")
+              input(class="form-control col-sm-2" type="text" id="hakukohde" ng-model="hakukohde" autocomplete="off" style="width: 20%"
+                placeholder="Etsi hakukohdekoodia"
+                typeahead="hkk.koodi as (hkk.koodi + ' ' + hkk.nimi) for hkk in searchHakukohdekoodi($viewValue) | filter:$viewValue | limitTo:20"
+                typeahead-on-select="setHakukohdenimi()")
+              span(id="hakukohdenimi" class="pull-left col-sm-8") {{hakukohdenimi}}
+          - }
+        div(class="form-group")
+          label(class="col-sm-2 control-label" for="hakuehto" oph-msg="suoritusrekisteri.hakeneet.hakuehto") Hakuehto
+          div(class="col-sm-4")
+            select(class="form-control" id="hakuehto" ng-model="hakuehto" ng-options="he.value as he.text for he in hakuehdot")
+        div(class="form-group")
+          label(class="col-sm-2 control-label" for="tiedostotyyppi" oph-msg="suoritusrekisteri.hakeneet.tyyppi") Tiedostotyyppi
+          div(class="col-sm-2")
+            select(class="form-control" id="tiedostotyyppi" ng-model="tiedostotyyppi" ng-options="t.value as t.text for t in tiedostotyypit")
+        div(class="form-group")
+          div(class="col-sm-offset-2 col-sm-10")
+            button(type="button" class="btn btn-default" ng-click="reset()")
+              span(oph-msg="suoritusrekisteri.hakeneet.tyhjenna") Tyhjennä
+              span(class="glyphicon glyphicon-remove")
+            button(type="submit" class="btn btn-primary")
+              span(oph-msg="suoritusrekisteri.hakeneet.hae") Muodosta ja lataa
+              span(class="glyphicon glyphicon-download")
+
+
+div(ng-if="fileLoading" class="modal fade in" style="display: block")
+  div(class="modal-backdrop fade in")
+  div(class="modal-dialog")
+    div(class="modal-content")
+      div(class="modal-header")
+        h4(class="modal-title" oph-msg="suoritusrekisteri.hakeneet.tiedostoamuodostetaan") Tiedostoa muodostetaan...
+      div(class="modal-body")
+        div(class="loading-td loading-large")

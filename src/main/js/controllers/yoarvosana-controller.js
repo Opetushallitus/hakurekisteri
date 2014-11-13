@@ -1,6 +1,6 @@
 'use strict';
 
-function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
+app.controller('YoarvosanaCtrl', ['$scope', '$q', '$log', 'Arvosanat', 'suoritusId', function($scope, $q, $log, Arvosanat, suoritusId) {
     $scope.koetaulukko = [];
     $scope.loading = true;
 
@@ -24,7 +24,7 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
         $scope.loading = false;
     }, function() {
         $scope.loading = false;
-        $rootScope.modalInstance.close({
+        $scope.modalInstance.close({
             type: "danger",
             messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.arvosanapalveluongelma",
             message: "Arvosanapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
@@ -99,14 +99,14 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
         var allSaved = $q.all(deferreds.map(function(d) { return d.promise }));
         allSaved.then(function() {
             $log.debug("all saved");
-            $rootScope.modalInstance.close({
+            $scope.modalInstance.close({
                 type: "success",
                 messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.tallennettu",
                 message: "Arvosanat tallennettu."
             });
         }, function() {
             $log.error("saving failed");
-            $rootScope.modalInstance.close({
+            $scope.modalInstance.close({
                 type: "danger",
                 messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.tallennuseionnistunut",
                 message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen."
@@ -115,7 +115,7 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
     };
 
     $scope.cancel = function() {
-        $rootScope.modalInstance.close()
+        $scope.modalInstance.close()
     };
 
     $scope.tutkintokerrat = tutkintokerrat();
@@ -305,5 +305,5 @@ function YoarvosanaCtrl($scope, $rootScope, $q, $log, Arvosanat, suoritusId) {
         {value: "A", text: "(A) Approbatur"},
         {value: "I", text: "(I) Improbatur"}
     ];
-}
+}]);
 

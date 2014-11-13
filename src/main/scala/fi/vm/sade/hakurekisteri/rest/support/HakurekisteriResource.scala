@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
 import java.util.UUID
+import javax.servlet.http.HttpServletRequest
 
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
@@ -11,14 +12,19 @@ import fi.vm.sade.hakurekisteri.organization.{AuthorizedCreate, AuthorizedDelete
 import fi.vm.sade.hakurekisteri.storage.Identified
 import org.scalatra._
 import org.scalatra.commands._
-import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
+import org.scalatra.json.{JacksonJsonValueReaderProperty, JacksonJsonSupport, JsonSupport}
+import org.scalatra.servlet.FileItem
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
+import org.scalatra.util.{MultiMapHeadView, ValueReader}
 
+import scala.collection.immutable
 import scala.compat.Platform
 import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
+import scala.language.implicitConversions
 import scala.util.Try
+import scala.util.control.Exception._
 import scalaz.NonEmptyList
 import org.scalatra.validation.{FieldName, ValidationError}
 
@@ -90,7 +96,8 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
 
 case class UserNotAuthorized(message: String) extends Exception(message)
 
-abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]](actor: ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with JacksonJsonParsing with CorsSupport with QueryLogging {
+abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]](actor: ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with HakurekisteriParsing[A] with CorsSupport with QueryLogging {
+
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
@@ -135,7 +142,11 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
   }
 
   object ResourceCreated {
-    def apply(baseUri: StringBuffer)(createdResource: A with Identified[UUID]) = Created(createdResource, headers = Map("Location" -> baseUri.append("/").append(createdResource.id).toString))
+    private def postfixBaseUri(baseUri: StringBuffer): StringBuffer = baseUri match {
+      case s: StringBuffer if s.length() == 0 || s.charAt(s.length() - 1) != '/' => s.append("/")
+      case _ => baseUri
+    }
+    def apply(baseUri: StringBuffer)(createdResource: A with Identified[UUID]) = Created(createdResource, headers = Map("Location" -> postfixBaseUri(baseUri).append(createdResource.id).toString))
   }
 
   def identifyResource(resource : A, id: UUID): A with Identified[UUID] = resource.identify(id)
@@ -180,5 +191,7 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
 
   protected implicit def swagger: SwaggerEngine[_] = sw
 }
+
+
 
 

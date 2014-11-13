@@ -1,14 +1,6 @@
 'use strict';
 
-var app = angular.module('myApp', ['ngRoute', 'ngResource', 'ui.bootstrap', 'ngUpload'])
-    .config(function ($locationProvider, $routeProvider) {
-        $routeProvider.when('/opiskelijat', {templateUrl: 'templates/opiskelijat', controller: OpiskelijatCtrl});
-        $routeProvider.when('/muokkaa/:henkiloOid', {templateUrl: 'templates/muokkaa', controller: MuokkaaCtrl});
-        $routeProvider.when('/eihakeneet', {templateUrl: 'templates/eihakeneet', controller: EihakeneetCtrl});
-        $routeProvider.when('/tiedonsiirto', {templateUrl: 'templates/tiedonsiirto', controller: TiedonsiirtoCtrl});
-        $routeProvider.otherwise({redirectTo: '/opiskelijat'});
-        $locationProvider.html5Mode(false);
-    });
+var app = angular.module('myApp', ['ngRoute', 'ngResource', 'ui.bootstrap', 'ngUpload', 'ngSanitize']);
 
 app.factory('Opiskelijat', function($resource) {
     return $resource("rest/v1/opiskelijat/:opiskelijaId", {opiskelijaId: "@id"}, {
@@ -42,4 +34,66 @@ app.factory('Arvosanat', function($resource) {
     });
 });
 
+app.factory('MurupolkuService', function() {
+    var murupolku = [];
+    var hide = false;
+    return {
+        murupolku: murupolku,
+        addToMurupolku: function(item, reset) {
+            if (reset) murupolku.length = 0;
+            murupolku.push(item);
+            hide = false;
+        },
+        hideMurupolku: function() {
+            hide = true;
+        },
+        isHidden: function() {
+            return hide;
+        }
+    };
+});
 
+app.factory('MessageService', function() {
+    var messages = [];
+    return {
+        messages: messages,
+        addMessage: function(message, clear) {
+            if (clear) messages.length = 0;
+            messages.push(message);
+        },
+        removeMessage: function(message) {
+            var index = messages.indexOf(message);
+            if (index !== -1) messages.splice(index, 1);
+        },
+        clearMessages: function() {
+            messages.length = 0;
+        }
+    }
+});
+
+app.filter('hilight', function() {
+    return function (input, query) {
+        return input.replace(new RegExp('('+ query + ')', 'gi'), '<strong>$1</strong>');
+    }
+});
+
+app.directive('messages', function() {
+    return {
+        controller: function($scope, MessageService) {
+            $scope.messages = MessageService.messages;
+            $scope.removeMessage = MessageService.removeMessage;
+        },
+        templateUrl: 'templates/messages'
+    }
+});
+
+app.directive('tiedonsiirtomenu', function() {
+    return {
+        controller: function($scope, $location) {
+            $scope.isActive = function(path) {
+                return path === $location.path()
+            };
+        },
+        templateUrl: 'templates/tiedonsiirtomenu'
+    }
+});

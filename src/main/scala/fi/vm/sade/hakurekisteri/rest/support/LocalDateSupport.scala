@@ -1,13 +1,13 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import org.scalatra.commands.JsonCommand
+import org.scalatra.servlet.FileItem
 import org.scalatra.{DefaultValue, util}
 import org.joda.time.{DateTime, LocalDate}
 import org.scalatra.util.conversion.TypeConverter
 import org.joda.time.format.DateTimeFormat
 import org.json4s._
 
-trait LocalDateSupport { this: JsonCommand =>
+trait LocalDateSupport { this: HakurekisteriCommand[_] =>
   import util.RicherString._
 
 
@@ -16,5 +16,7 @@ trait LocalDateSupport { this: JsonCommand =>
 
   implicit val stringToLocalDate: TypeConverter[String, LocalDate] = safeOption((in:String)=>in.blankOption map DateTimeFormat.forPattern("dd.MM.yyyy").parseLocalDate)
   implicit val jsonToLocalDate: TypeConverter[JValue, LocalDate] = safeOption(_.extractOpt[LocalDate])
+
+  implicit val fileToLocalDate: TypeConverter[FileItem, LocalDate] = cantConvert
 
 }
