@@ -1,9 +1,6 @@
 h2(oph-msg="suoritusrekisteri.eihakeneet") Ei hakeneet oppilaat
 
-div(class="alert alert-{{message.type}}" ng-show="messages" ng-repeat="message in messages")
-  button(type="button" class="close" aria-hidden="true" ng-click="removeMessage(message)") &times;
-  strong {{message.message}}
-  span {{message.description}}
+messages
 
 aside
   a(class="btn btn-primary" href="/haku-app/virkailija/hakemus" role="button")

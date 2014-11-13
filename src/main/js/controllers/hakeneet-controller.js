@@ -1,7 +1,6 @@
 'use strict';
 
-app.controller('HakeneetCtrl', ['$scope', '$rootScope', '$http', '$modal', 'aste', function($scope, $rootScope, $http, $modal, aste) {
-    $scope.errors = [];
+app.controller('HakeneetCtrl', ['$scope', '$http', '$modal', 'MurupolkuService', 'MessageService', 'aste', function($scope, $http, $modal, MurupolkuService, MessageService, aste) {
     $scope.haut = [];
     $scope.kaudet = [];
     $scope.hakuehdot = [
@@ -29,25 +28,27 @@ app.controller('HakeneetCtrl', ['$scope', '$rootScope', '$http', '$modal', 'aste
     $scope.tiedostotyypit = tiedostotyypit();
 
     if (isKk())
-        $rootScope.addToMurupolku({key: "suoritusrekisteri.hakeneet.muru.kk", text: "Hakeneet ja valitut opiskelijat (KK)"}, true);
+        MurupolkuService.addToMurupolku({key: "suoritusrekisteri.hakeneet.muru.kk", text: "Hakeneet ja valitut opiskelijat (KK)"}, true);
     else
-        $rootScope.addToMurupolku({key: "suoritusrekisteri.hakeneet.muru", text: "Hakeneet ja valitut opiskelijat"}, true);
+        MurupolkuService.addToMurupolku({key: "suoritusrekisteri.hakeneet.muru", text: "Hakeneet ja valitut opiskelijat"}, true);
 
-    loadHakutiedot($http, $scope);
+    loadHakutiedot($http, $scope, MessageService);
 
     $scope.search = function() {
-        $scope.errors.length = 0;
+        MessageService.clearMessages();
 
         if (isKk()) {
             if (!$scope.oppijanumero && !$scope.hakukohde) {
                 if (!$scope.oppijanumero) {
-                    $scope.errors.push({
+                    MessageService.addMessage({
+                        type: "danger",
                         message: "Oppijanumeroa ei ole syötetty.",
                         description: "Syötä oppijanumero ja yritä uudelleen."
                     })
                 }
                 if (!$scope.hakukohde) {
-                    $scope.errors.push({
+                    MessageService.addMessage({
+                        type: "danger",
                         message: "Hakukohdetta ei ole valittu.",
                         description: "Valitse hakukohde ja yritä uudelleen. Hakukohde on helpompi löytää, jos valitset ensin haun ja organisaation."
                     })
@@ -57,13 +58,15 @@ app.controller('HakeneetCtrl', ['$scope', '$rootScope', '$http', '$modal', 'aste
         } else {
             if (!$scope.haku || !$scope.organisaatio || !$scope.hakuehto || !$scope.tiedostotyyppi) {
                 if (!$scope.haku) {
-                    $scope.errors.push({
+                    MessageService.addMessage({
+                        type: "danger",
                         message: "Hakua ei ole valittu.",
                         description: "Valitse haku ja yritä uudelleen."
                     })
                 }
                 if (!$scope.organisaatio) {
-                    $scope.errors.push({
+                    MessageService.addMessage({
+                        type: "danger",
                         message: "Organisaatiota ei ole valittu.",
                         description: "Valitse organisaatio ja yritä uudelleen."
                     })
@@ -100,7 +103,8 @@ app.controller('HakeneetCtrl', ['$scope', '$rootScope', '$http', '$modal', 'aste
             });
         }).fail(function() {
             $scope.$apply(function() {
-                $scope.errors.push({
+                MessageService.addMessage({
+                    type: "danger",
                     message: "Tiedoston lataaminen epäonnistui.",
                     description: "Palvelussa saattaa olla kuormaa. Yritä hetken kuluttua uudelleen."
                 });
@@ -110,7 +114,7 @@ app.controller('HakeneetCtrl', ['$scope', '$rootScope', '$http', '$modal', 'aste
     };
 
     $scope.reset = function() {
-        $scope.errors.length = 0;
+        MessageService.clearMessages();
         delete $scope.kausi;
         delete $scope.organisaatio;
         delete $scope.hakukohde;
@@ -120,20 +124,16 @@ app.controller('HakeneetCtrl', ['$scope', '$rootScope', '$http', '$modal', 'aste
     };
     $scope.reset();
 
-    $scope.removeError = function(error) {
-        var index = $scope.errors.indexOf(error);
-        if (index !== -1) {
-            $scope.errors.splice(index, 1);
-        }
-    };
-
     $scope.avaaOrganisaatiohaku = function() {
-        $rootScope.modalInstance = $modal.open({
+        var isolatedScope = $scope.$new(true);
+        isolatedScope.modalInstance = $modal.open({
             templateUrl: 'templates/organisaatiohaku',
-            controller: 'OrganisaatioCtrl'
+            controller: 'OrganisaatioCtrl',
+            scope: isolatedScope
         });
+        $scope.modalInstance = isolatedScope.modalInstance;
 
-        $rootScope.modalInstance.result.then(function (valittu) {
+        $scope.modalInstance.result.then(function (valittu) {
             $scope.organisaatio = valittu;
             $scope.clearHakukohde();
         }, function () {
@@ -215,7 +215,7 @@ app.controller('HakeneetCtrl', ['$scope', '$rootScope', '$http', '$modal', 'aste
     };
 }]);
 
-function loadHakutiedot($http, $scope) {
+function loadHakutiedot($http, $scope, MessageService) {
     $http.get('rest/v1/haut', {cache: true})
         .success(function(hautResponse) {
             var kaudet = [];
@@ -276,7 +276,8 @@ function loadHakutiedot($http, $scope) {
             $scope.haut = haut;
         })
         .error(function() {
-            $scope.errors.push({
+            MessageService.addMessage({
+                type: "danger",
                 message: "Tietojen lataaminen näytölle epäonnistui.",
                 description: "Päivitä näyttö tai navigoi sille uudelleen."
             });

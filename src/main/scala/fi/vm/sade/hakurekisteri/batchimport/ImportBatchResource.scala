@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.batchimport
 
-import java.io.{StringReader, ByteArrayInputStream, InputStream}
+import java.io.{ByteArrayInputStream, InputStream}
 import java.util
 import javax.servlet.http.{Part, HttpServletRequest}
 
@@ -51,33 +51,35 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     if (multipart) contentType = formats("html")
   }
 
-  get("schema") {
+  private def toJson(a: Product): String = compact(Extraction.decompose(a))
+
+  private def renderAsJson: RenderPipeline = {
+    case a: IncidentReport if format == "html" => toJson(a)
+    case a: ImportBatch if format == "html" => toJson(a)
+  }
+
+  override protected def renderPipeline: RenderPipeline = renderAsJson orElse super.renderPipeline
+
+  get("/schema") {
     MovedPermanently(request.getRequestURL.append("/").append(schema.schemaLocation).toString)
   }
 
-
-
-  get("schema/:schema") {
-    schemaCache.get(params("schema")).fold(NotFound()){
+  get("/schema/:schema") {
+    schemaCache.get(params("schema")).fold(NotFound("not found")){
       contentType = "application/xml"
       Ok(_)
     }
   }
 
-  def toJson(p: Product): String = compact(Extraction.decompose(p))
-
   incident {
     case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
     case t: MalformedResourceException => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, "not authorized"))
-    case t: SizeConstraintExceededException => (id) => RequestEntityTooLarge(toJson(IncidentReport(id, s"Tiedosto on liian suuri (suurin sallittu koko $maxFileSize tavua).")))
-    case t: IllegalArgumentException => (id) => BadRequest(toJson(IncidentReport(id, t.getMessage)))
-    case t: AskTimeoutException => (id) => InternalServerError(toJson(IncidentReport(id, "Taustajärjestelmä ei vastaa. Yritä myöhemmin uudelleen.")))
-    case t: Throwable => (id) => InternalServerError(toJson(IncidentReport(id, "Tuntematon virhe. Yritä uudelleen hetken kuluttua.")))
+    case t: SizeConstraintExceededException => (id) => RequestEntityTooLarge(IncidentReport(id, s"Tiedosto on liian suuri (suurin sallittu koko $maxFileSize tavua)."))
+    case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
+    case t: AskTimeoutException => (id) => InternalServerError(IncidentReport(id, "Taustajärjestelmä ei vastaa. Yritä myöhemmin uudelleen."))
+    case t: Throwable => (id) => InternalServerError(IncidentReport(id, "Tuntematon virhe. Yritä uudelleen hetken kuluttua."))
   }
-
-
-
 
   def multipart(implicit request: HttpServletRequest) = {
     val isPostOrPut = Set("POST", "PUT", "PATCH").contains(request.getMethod)
@@ -86,8 +88,6 @@ class ImportBatchResource(eraRekisteri: ActorRef,
       case _ => false
     })
   }
-
-
 
   override protected def bindCommand[T <: CommandType](newCommand: T)(implicit request: HttpServletRequest, mf: Manifest[T]): T = {
     if (multipart)
@@ -98,7 +98,6 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 }
 
 case class ImportBatchCommand(externalIdField: String, batchType: String, dataField: String, validations: (Elem => ModelValidation[Elem])*) extends HakurekisteriCommand[ImportBatch] {
-
 
   private val validatedData = asType[Elem](dataField).required
   val data: Field[Elem] = validatedData

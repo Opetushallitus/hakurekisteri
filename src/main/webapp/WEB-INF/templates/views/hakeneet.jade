@@ -1,16 +1,13 @@
 -@ val aste: String = "toinenaste"
 
 div(class="row")
-  div(ng-include="'templates/tiedonsiirtomenu'")
+  div(class="col-md-2")
+    tiedonsiirtomenu
 
   div(class="col-md-10")
     h3(oph-msg="suoritusrekisteri.hakeneet.otsikko") Muodosta hakeneiden ja valituttujen opiskelijoiden siirtotiedosto
 
-    div(class="alert alert-danger" ng-show="errors" ng-repeat="error in errors")
-      button(type="button" class="close" aria-hidden="true" ng-click="removeError(error)") &times;
-      img(class="icon-big" src="static/img/alert-icon28x29.png")
-      strong {{error.message}}
-      span {{error.description}}
+    messages
 
     form(class="well form-horizontal" ng-submit="search()")
       fieldset

@@ -1,11 +1,9 @@
 'use strict';
 
-app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$http', '$log', '$q', '$modal', 'Opiskelijat', 'Suoritukset', 'Opiskeluoikeudet', 'LokalisointiService',
-        function($scope, $rootScope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService) {
+app.controller('MuokkaaCtrl', ['$scope', '$routeParams', '$location', '$http', '$log', '$q', '$modal', 'Opiskelijat', 'Suoritukset', 'Opiskeluoikeudet', 'LokalisointiService', 'MurupolkuService', 'MessageService', function($scope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService) {
 
     $scope.henkiloOid = $routeParams.henkiloOid;
     $scope.myRoles = [];
-    $scope.messages = [];
     $scope.suoritukset = [];
     $scope.luokkatiedot = [];
     $scope.kielet = [];
@@ -43,8 +41,8 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
 
     getKoodistoAsOptionArray($http, 'kieli', 'fi', $scope.kielet, 'koodiArvo');
 
-    $rootScope.addToMurupolku({href: "#/opiskelijat", key: "suoritusrekisteri.muokkaa.muru1", text: "Opiskelijoiden haku"}, true);
-    $rootScope.addToMurupolku({key: "suoritusrekisteri.muokkaa.muru", text: "Muokkaa opiskelijan tietoja"}, false);
+    MurupolkuService.addToMurupolku({href: "#/opiskelijat", key: "suoritusrekisteri.muokkaa.muru1", text: "Opiskelijoiden haku"}, true);
+    MurupolkuService.addToMurupolku({key: "suoritusrekisteri.muokkaa.muru", text: "Muokkaa opiskelijan tietoja"}, false);
 
     function getMyRoles() {
         $http.get('/cas/myroles', {cache: true})
@@ -82,7 +80,8 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
     function enrichLuokkatieto(luokkatieto) {
         if (luokkatieto.oppilaitosOid) {
             getOrganisaatio($http, luokkatieto.oppilaitosOid, function(organisaatio) {
-                luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi
+                luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi;
+                luokkatieto.organisaatio = organisaatio;
             })
         }
         luokkatieto.editable = true;
@@ -161,13 +160,15 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
     fetchSuoritukset();
     fetchOpiskeluoikeudet();
 
-    $scope.getOppilaitos = function(searchStr) {
+    $scope.getOppilaitos = function(searchStr, obj) {
+        if ((typeof obj.organisaatio === 'object') && obj.organisaatio.oppilaitosKoodi === searchStr) return [];
+
         if (searchStr && searchStr.trim().match(/^\d{5}$/))
             return $http.get(organisaatioServiceUrl + '/rest/organisaatio/' + searchStr)
                 .then(function(result) {
                     return [result.data];
                 }, function() { return [] });
-        else if (searchStr && searchStr.length > 3)
+        else if (searchStr && searchStr.length > 2)
             return $http.get(organisaatioServiceUrl + '/rest/organisaatio/hae',
                 { params: { searchstr: searchStr, organisaatioTyyppi: "Oppilaitos" } })
                 .then(function(result) {
@@ -183,7 +184,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
     }
 
     $scope.save = function() {
-        $scope.messages.length = 0;
+        MessageService.clearMessages();
         var validations = [];
         function validateOppilaitoskoodit() {
             angular.forEach($scope.luokkatiedot.concat($scope.suoritukset), function(obj) {
@@ -191,7 +192,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
                     var d = $q.defer();
                     this.push(d);
                     if (!obj.oppilaitos || !obj.oppilaitos.match(/^\d{5}$/)) {
-                        $scope.messages.push({
+                        MessageService.addMessage({
                             type: "danger",
                             messageKey: "suoritusrekisteri.muokkaa.oppilaitoskoodipuuttuu",
                             message: "Oppilaitoskoodi puuttuu tai se on virheellinen.",
@@ -205,7 +206,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
                             else if (obj.luokkataso) obj.oppilaitosOid = organisaatio.oid;
                             d.resolve("validated against organisaatio");
                         }, function () {
-                            $scope.messages.push({
+                            MessageService.addMessage({
                                 type: "danger",
                                 messageKey: "suoritusrekisteri.muokkaa.oppilaitostaeiloytynyt",
                                 message: "Oppilaitosta ei löytynyt oppilaitoskoodilla.",
@@ -239,7 +240,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
                                 $log.debug("suoritus removed");
                                 d.resolve("done");
                             }, function() {
-                                $scope.messages.push({
+                                MessageService.addMessage({
                                     type: "danger",
                                     messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
                                     message: "Virhe tallennettaessa suoritustietoja.",
@@ -257,7 +258,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
                             enrichSuoritus(suoritus);
                             d.resolve("done");
                         }, function () {
-                            $scope.messages.push({
+                            MessageService.addMessage({
                                 type: "danger",
                                 messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja",
                                 message: "Virhe tallennettaessa suoritustietoja.",
@@ -281,7 +282,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
                             $log.info("luokkatieto removed");
                             d.resolve("done");
                         }, function() {
-                            $scope.messages.push({
+                            MessageService.addMessage({
                                 type: "danger",
                                 messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja",
                                 message: "Virhe tallennettaessa luokkatietoja.",
@@ -299,7 +300,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
                         enrichLuokkatieto(luokkatieto);
                         d.resolve("done");
                     }, function () {
-                        $scope.messages.push({
+                        MessageService.addMessage({
                             type: "danger",
                             messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja",
                             message: "Virhe tallennettaessa luokkatietoja.",
@@ -320,14 +321,14 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
             var allSaved = $q.all(deferreds.map(function(deferred) { return deferred.promise }));
             allSaved.then(function() {
                 $log.info("all saved successfully");
-                $scope.messages.push({
+                MessageService.addMessage({
                     type: "success",
                     messageKey: "suoritusrekisteri.muokkaa.tallennettu",
                     message: "Tiedot tallennettu."
                 });
             }, function(errors) {
                 $log.error("errors while saving: " + errors);
-                $scope.messages.push({
+                MessageService.addMessage({
                     type: "danger",
                     messageKey: "suoritusrekisteri.muokkaa.tallennusepaonnistui",
                     message: "Tietojen tallentaminen ei onnistunut. Yritä uudelleen."
@@ -358,49 +359,58 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
     };
     $scope.editArvosana = function(suoritusId) {
         function openModal(template, controller) {
-            $rootScope.modalInstance = $modal.open({
+            var isolatedScope = $scope.$new(true);
+            isolatedScope.modalInstance = $modal.open({
                 templateUrl: template,
                 controller: controller,
+                scope: isolatedScope,
                 resolve: {
                     suoritusId: function() { return suoritusId }
                 }
             });
+            $scope.modalInstance = isolatedScope.modalInstance;
         }
         openModal('templates/arvosanat', 'ArvosanaCtrl');
 
-        $rootScope.modalInstance.result.then(function (arvosanaRet) {
+        $scope.modalInstance.result.then(function (arvosanaRet) {
             if (Array.isArray(arvosanaRet)) {
-                $rootScope.modalInstance = $modal.open({
+                var isolatedScope = $scope.$new(true);
+                isolatedScope.modalInstance = $modal.open({
                     templateUrl: 'templates/duplikaatti',
                     controller: 'DuplikaattiCtrl',
+                    scope: isolatedScope,
                     resolve: {
                         arvosanat: function() { return arvosanaRet }
                     }
                 });
-                $rootScope.modalInstance.result.then(function(ret) {
-                    if (ret) $scope.messages.push(ret)
+                $scope.modalInstance = isolatedScope.modalInstance;
+                $scope.modalInstance.result.then(function(ret) {
+                    if (ret) MessageService.addMessage(ret)
                 }, function() {
                     $log.info("duplicate modal closed")
                 });
-            } else if (arvosanaRet) $scope.messages.push(arvosanaRet)
+            } else if (arvosanaRet) MessageService.addMessage(arvosanaRet)
         }, function () {
             $log.info("modal closed")
         });
     };
     $scope.editYoarvosana = function(suoritusId) {
         function openModal(template, controller) {
-            $rootScope.modalInstance = $modal.open({
+            var isolatedScope = $scope.$new(true);
+            isolatedScope.modalInstance = $modal.open({
                 templateUrl: template,
                 controller: controller,
+                scope: isolatedScope,
                 resolve: {
                     suoritusId: function() { return suoritusId }
                 }
             });
+            $scope.modalInstance = isolatedScope.modalInstance;
         }
         openModal('templates/yoarvosanat', 'YoarvosanaCtrl');
 
-        $rootScope.modalInstance.result.then(function (yoarvosanaRet) {
-            if (yoarvosanaRet) $scope.messages.push(yoarvosanaRet)
+        $scope.modalInstance.result.then(function (yoarvosanaRet) {
+            if (yoarvosanaRet) MessageService.addMessage(yoarvosanaRet)
         }, function () {
             $log.info("yo modal closed")
         });
@@ -412,20 +422,16 @@ app.controller('MuokkaaCtrl', ['$scope', '$rootScope', '$routeParams', '$locatio
             editable: true
         }))
     };
-    $scope.removeMessage = function(message) {
-        var index = $scope.messages.indexOf(message);
-        if (index !== -1) $scope.messages.splice(index, 1);
-    };
 
+    $scope.openDatepicker = function($event, obj, fieldName) {
+        $event.preventDefault();
+        $event.stopPropagation();
+        obj[fieldName] = true;
+    };
     function initDatepicker() {
-        $scope.showWeeks = false;
-        $scope.pickDate = function ($event, openedKey) {
-            $event.preventDefault();
-            $event.stopPropagation();
-            $scope[openedKey] = true;
-        };
-        $scope.dateOptions = { 'year-format': "'yyyy'", 'starting-day': 1 };
-        $scope.format = 'dd.MM.yyyy';
+        $scope.showWeeks = true;
+        $scope.dateOptions = { formatYear: 'yyyy', startingDay: 1 };
+        $scope.format = 'mediumDate';
     }
     initDatepicker();
 }]);

@@ -1,9 +1,7 @@
 'use strict';
 
-app.controller('OpiskelijatCtrl', ['$scope', '$rootScope', '$routeParams', '$location', '$log', '$http', '$q', 'Opiskelijat', 'Suoritukset', 'Arvosanat',
-        function($scope, $rootScope, $routeParams, $location, $log, $http, $q, Opiskelijat, Suoritukset, Arvosanat) {
+app.controller('OpiskelijatCtrl', ['$scope', '$routeParams', '$location', '$log', '$http', '$q', 'Opiskelijat', 'Suoritukset', 'Arvosanat', 'MurupolkuService', 'MessageService', function($scope, $routeParams, $location, $log, $http, $q, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService) {
 
-    $scope.messages = [];
     $scope.loading = false;
     $scope.currentRows = [];
     $scope.allRows = [];
@@ -15,7 +13,7 @@ app.controller('OpiskelijatCtrl', ['$scope', '$rootScope', '$routeParams', '$loc
     $scope.henkiloTerm = $routeParams.henkilo;
     $scope.organisaatioTerm = { oppilaitosKoodi: ($routeParams.oppilaitos ? $routeParams.oppilaitos : '') };
 
-    $rootScope.addToMurupolku({key: "suoritusrekisteri.opiskelijat.muru", text: "Opiskelijoiden haku"}, true);
+    MurupolkuService.addToMurupolku({key: "suoritusrekisteri.opiskelijat.muru", text: "Opiskelijoiden haku"}, true);
 
     function getMyRoles() {
         $http.get('/cas/myroles', {cache: true})
@@ -69,7 +67,8 @@ app.controller('OpiskelijatCtrl', ['$scope', '$rootScope', '$routeParams', '$loc
         }
 
         function doSearch(query) {
-            $scope.messages.length = 0;
+            MessageService.clearMessages();
+
             function searchOpiskelijat(o) {
                 Opiskelijat.query(query, function (result) {
                     o.resolve(result);
@@ -98,7 +97,7 @@ app.controller('OpiskelijatCtrl', ['$scope', '$rootScope', '$routeParams', '$loc
                     stopLoading();
                 }, function(errors) {
                     $log.error(errors);
-                    $scope.messages.push({
+                    MessageService.addMessage({
                         type: "danger",
                         messageKey: "suoritusrekisteri.opiskelijat.virhehaussa",
                         message: "Haussa tapahtui virhe. Yritä uudelleen."
@@ -222,10 +221,6 @@ app.controller('OpiskelijatCtrl', ['$scope', '$rootScope', '$routeParams', '$loc
         resetPageNumbers();
         showCurrentRows($scope.allRows);
     };
-    $scope.removeMessage = function(message) {
-        var index = $scope.messages.indexOf(message);
-        if (index !== -1) $scope.messages.splice(index, 1);
-    };
 
     function resetPageNumbers() {
         $scope.pageNumbers = [];
@@ -235,15 +230,5 @@ app.controller('OpiskelijatCtrl', ['$scope', '$rootScope', '$routeParams', '$loc
         }
     }
 
-    function cannotAuthenticate() {
-        $scope.messages.push({
-            type: "danger",
-            messageKey: "suoritusrekisteri.opiskelijat.henkiloeiyhteytta",
-            message: "Henkilöpalveluun ei juuri nyt saada yhteyttä.",
-            descriptionKey: "suoritusrekisteri.opiskelijat.henkiloyrita",
-            description: "Yritä hetken kuluttua uudelleen."
-        })
-    }
-
-    authenticateToAuthenticationService($http, $scope.fetch, cannotAuthenticate);
+    $scope.fetch();
 }]);

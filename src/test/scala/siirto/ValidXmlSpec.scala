@@ -60,7 +60,7 @@ class ValidXmlSpec extends FlatSpec with Matchers {
             <myontaja>05127</myontaja>
             <suorituskieli>FI</suorituskieli>
             <tila>KESKEN</tila>
-            <yksilollistaminen>ALUEITTAIN</yksilollistaminen>
+            <yksilollistaminen>EI</yksilollistaminen>
           </perusopetus>
         </henkilo>
         <henkilo>
@@ -116,6 +116,7 @@ class ValidXmlSpec extends FlatSpec with Matchers {
             <myontaja>05127</myontaja>
             <suorituskieli>FI</suorituskieli>
             <tila>VALMIS</tila>
+            <yksilollistaminen>EI</yksilollistaminen>
           </perusopetus>
           <perusopetuksenlisaopetus>
             <valmistuminen>2015-06-04</valmistuminen>
