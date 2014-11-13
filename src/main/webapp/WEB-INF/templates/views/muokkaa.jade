@@ -86,8 +86,11 @@ form(ng-submit="save()")
                     input(type="text" class="form-control input-sm datepicker" ng-disabled="suoritus.delete" ng-model="suoritus.valmistuminen"
                       datepicker-popup="{{format}}"
                       datepicker-options="dateOptions"
-                      show-button-bar="false"
-                      onfocus="this.blur()")
+                      datepicker-append-to-body="true"
+                      is-open="suoritus.opened"
+                      date-disabled="disabled(date, mode)"
+                      ng-click="openDatepicker($event, suoritus, 'opened')"
+                      show-button-bar="false")
                     span(class="input-group-btn")
                       button(class="btn btn-default btn-sm" ng-click="suoritus.valmistuminen = null")
                         span(class="glyphicon glyphicon-remove")
@@ -141,11 +144,14 @@ form(ng-submit="save()")
                   strong(oph-msg="suoritusrekisteri.muokkaa.alkupaiva") Alkupäivä
                   div(class="input-group")
                     input(type="text" class="form-control input-sm datepicker" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.alkuPaiva"
-                      datepicker-popup="{{opiskelijaFormat}}"
+                      datepicker-popup="{{format}}"
                       datepicker-options="dateOptions"
                       required="required"
-                      show-button-bar="false"
-                      onfocus="this.blur()")
+                      datepicker-append-to-body="true"
+                      is-open="luokkatieto.openedAlku"
+                      date-disabled="disabled(date, mode)"
+                      ng-click="openDatepicker($event, luokkatieto, 'openedAlku')"
+                      show-button-bar="false")
                     span(class="input-group-btn")
                       button(class="btn btn-default btn-sm" ng-click="luokkatieto.alkuPaiva = null; luokkatieto.loppuPaiva = null;")
                         span(class="glyphicon glyphicon-remove")
@@ -153,11 +159,14 @@ form(ng-submit="save()")
                   strong(oph-msg="suoritusrekisteri.muokkaa.loppupaiva") Loppupäivä
                   div(class="input-group")
                     input(type="text" class="form-control input-sm datepicker" ng-disabled="luokkatieto.delete" ng-model="luokkatieto.loppuPaiva"
-                      datepicker-popup="{{opiskelijaFormat}}"
+                      datepicker-popup="{{format}}"
                       datepicker-options="dateOptions"
-                      show-button-bar="false"
                       min="luokkatieto.alkuPaiva"
-                      onfocus="this.blur()")
+                      datepicker-append-to-body="true"
+                      is-open="luokkatieto.openedLoppu"
+                      date-disabled="disabled(date, mode)"
+                      ng-click="openDatepicker($event, luokkatieto, 'openedLoppu')"
+                      show-button-bar="false")
                     span(class="input-group-btn")
                       button(class="btn btn-default btn-sm" ng-click="luokkatieto.loppuPaiva = null")
                         span(class="glyphicon glyphicon-remove")

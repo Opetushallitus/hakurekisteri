@@ -1,5 +1,6 @@
+'use strict';
 
-app.factory('LokalisointiService', function($log, $http) {
+app.factory('LokalisointiService', ['$log', '$http', function($log, $http) {
     var backendUrl = location.host.indexOf('localhost') == 0 ? "https://itest-virkailija.oph.ware.fi" : "";
     var localisationBackend = backendUrl + "/lokalisointi/cxf/rest/v1/localisation";
     var msgResource = localisationBackend + "?category=" + msgCategory;
@@ -126,9 +127,9 @@ app.factory('LokalisointiService', function($log, $http) {
     };
 
     return service;
-});
+}]);
 
-app.directive('ophMsg', function($log, LokalisointiService) {
+app.directive('ophMsg', ['$log', 'LokalisointiService', function($log, LokalisointiService) {
     return {
         scope: {
             msgKey: '@ophMsg'
@@ -147,7 +148,7 @@ app.directive('ophMsg', function($log, LokalisointiService) {
             });
         }
     };
-});
+}]);
 
 app.run(function($log) {
     if (window.globalInitOphMsg) window.globalInitOphMsg(function() { $log.info("messages loaded") });
