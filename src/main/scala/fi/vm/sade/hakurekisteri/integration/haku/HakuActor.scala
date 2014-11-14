@@ -99,7 +99,7 @@ case class GetHaku(oid: String)
 
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
 
-case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int, kkHaku: Boolean)
+case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int, koulutuksenAlkamiskausi: String, koulutuksenAlkamisvuosi: Int, kkHaku: Boolean)
 
 object Haku {
   def apply(haku: RestHaku)(loppu: ReadableInstant): Haku = {
@@ -109,6 +109,8 @@ object Haku {
       ajanjakso,
       haku.hakukausiUri,
       haku.hakukausiVuosi,
+      haku.koulutuksenAlkamiskausiUri,
+      haku.koulutuksenAlkamisVuosi,
       kkHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_12"))
     )
   }
