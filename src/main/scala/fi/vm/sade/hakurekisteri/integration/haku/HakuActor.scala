@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
+import akka.actor.Status.Failure
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosQuery
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -60,6 +61,9 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
       for(
         haku <- activeHakus
       ) hakemukset ! ReloadHaku(haku.oid)
+
+    case Failure(t) =>
+      log.error(t, s"got failure from ${sender()}")
 
   }
 
