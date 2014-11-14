@@ -40,7 +40,7 @@ html(ng-app="myApp")
         div(class="col-xs-12")
           ul(class="breadcrumb")
             li
-              a(href="#/")
+              a(ng-click="goHome()" class="link")
                 span(class="icon-breadcrumb-home")
             li(ng-repeat="muru in murupolku")
               a(ng-show="muru.href" href="{{muru.href}}")
