@@ -216,7 +216,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       case _ => Future(hakijat)
     }
 
-    val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.2", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, "kausi_k#1", 2015, false)
+    val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.2", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false)
 
     def hakijat: Seq[Hakija] = {
       tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku))

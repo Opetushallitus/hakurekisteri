@@ -22,8 +22,8 @@ case class RestHaku(oid:Option[String],
                     nimi: Map[String, String],
                     hakukausiUri: String,
                     hakukausiVuosi: Int,
-                    koulutuksenAlkamiskausiUri: String,
-                    koulutuksenAlkamisVuosi: Int,
+                    koulutuksenAlkamiskausiUri: Option[String],
+                    koulutuksenAlkamisVuosi: Option[Int],
                     kohdejoukkoUri: Option[String],
                     tila: String)
 

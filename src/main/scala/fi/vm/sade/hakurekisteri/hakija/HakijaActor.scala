@@ -62,10 +62,10 @@ object Hakutoive{
   import fi.vm.sade.hakurekisteri.rest.support.Kausi
 
   private def resolveLasnaolot(lasna: Boolean)(ht: Hakutoive): Seq[Lasnaolo] = ht.hakukohde.koulutukset.map((komoto) => (lasna, komoto.alkamisvuosi, komoto.alkamiskausi)).map {
-    case (true, vuosi, Kausi.Syksy) => Try(Lasna(Syksy(vuosi.toInt))).toOption
-    case (false, vuosi, Kausi.Syksy) => Try(Poissa(Syksy(vuosi.toInt))).toOption
-    case (true, vuosi, Kausi.Kevät) => Try(Lasna(Kevat(vuosi.toInt))).toOption
-    case (false, vuosi, Kausi.Kevät) => Try(Poissa(Kevat(vuosi.toInt))).toOption
+    case (true, Some(vuosi), Some(Kausi.Syksy)) => Try(Lasna(Syksy(vuosi.toInt))).toOption
+    case (false, Some(vuosi), Some(Kausi.Syksy)) => Try(Poissa(Syksy(vuosi.toInt))).toOption
+    case (true, Some(vuosi), Some(Kausi.Kevät)) => Try(Lasna(Kevat(vuosi.toInt))).toOption
+    case (false, Some(vuosi), Some(Kausi.Kevät)) => Try(Poissa(Kevat(vuosi.toInt))).toOption
     case _ => None
   }.flatten.toSeq
 

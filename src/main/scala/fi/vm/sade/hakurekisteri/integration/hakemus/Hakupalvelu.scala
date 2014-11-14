@@ -146,7 +146,7 @@ object AkkaHakupalvelu {
     }.toSeq
 
     opetusPisteet.sortBy(_._1).map { case (jno, tarjoajaoid) =>
-      val koulutukset = Set(Komoto("", "", tarjoajaoid, haku.koulutuksenAlkamisvuosi.toString, Kausi.fromKoodiUri(haku.koulutuksenAlkamiskausi)))
+      val koulutukset = Set(Komoto("", "", tarjoajaoid, haku.koulutuksenAlkamisvuosi.map(_.toString), haku.koulutuksenAlkamiskausi.map(Kausi.fromKoodiUri)))
       val hakukohdekoodi = toiveet(s"preference$jno-Koulutus-id-aoIdentifier")
       val kaksoistutkinto = toiveet.get(s"preference${jno}_kaksoistutkinnon_lisakysymys").map(s => Try(s.toBoolean).getOrElse(false))
       val urheilijanammatillinenkoulutus = toiveet.get(s"preference${jno}_urheilijan_ammatillisen_koulutuksen_lisakysymys").
