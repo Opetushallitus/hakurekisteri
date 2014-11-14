@@ -9,9 +9,9 @@ import org.joda.time.LocalDate
 case class Arvosana(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: Option[String], valinnainen: Boolean, myonnetty: Option[LocalDate] = None, source: String) extends UUIDResource[Arvosana] {
   override def identify(identity: UUID): Arvosana with Identified[UUID]= new IdentifiedArvosana(this, identity)
 
-  private case class ArvosanaCore(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: Option[String], valinnainen: Boolean, myonnetty: Option[LocalDate])
+  private[Arvosana] case class ArvosanaCore(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: Option[String], valinnainen: Boolean, myonnetty: Option[LocalDate])
 
-  override val core: AnyRef = ArvosanaCore(suoritus, arvio, aine, lisatieto, valinnainen, myonnetty)
+  override val core = ArvosanaCore(suoritus, arvio, aine, lisatieto, valinnainen, myonnetty)
 }
 
 class IdentifiedArvosana(a: Arvosana, val id: UUID) extends Arvosana(a.suoritus, a.arvio , a.aine, a.lisatieto, a.valinnainen, a.myonnetty, a.source) with Identified[UUID]
