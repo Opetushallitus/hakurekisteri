@@ -21,7 +21,6 @@ import scala.xml._
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
-import org.joda.time.{DateTimeFieldType, LocalDate}
 import scala.reflect.ClassTag
 
 
@@ -214,8 +213,8 @@ object XMLHakemus {
   }
 
   def apply(hakija: Hakija, opiskelutieto: Option[Opiskelija], lahtokoulu: Option[Organisaatio], toiveet: Seq[XMLHakutoive]): XMLHakemus =
-    XMLHakemus(vuosi = Try(hakija.hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamisvuosi).getOrElse("" + new LocalDate().get(DateTimeFieldType.year())), // FIXME poista oletusarvo
-      kausi = if (Try(hakija.hakemus.hakutoiveet.head.hakukohde.koulutukset.head.alkamiskausi).getOrElse(Kausi.Syksy) == Kausi.Kevät) "K" else "S", // FIXME poista oletusarvo
+    XMLHakemus(vuosi = hakija.hakemus.hakutoiveet.headOption.flatMap(_.hakukohde.koulutukset.headOption.flatMap(_.alkamisvuosi)).getOrElse(""),
+      kausi = hakija.hakemus.hakutoiveet.headOption.flatMap(_.hakukohde.koulutukset.headOption.flatMap(_.alkamiskausi.map(_.toString))).getOrElse(""),
       hakemusnumero = hakija.hakemus.hakemusnumero,
       lahtokoulu = lahtokoulu.flatMap(o => o.oppilaitosKoodi),
       lahtokoulunnimi = lahtokoulu.flatMap(o => o.nimi.get("fi")),

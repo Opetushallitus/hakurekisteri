@@ -337,7 +337,7 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
 object PerusopetuksenToteutus2005S {
   def apply (oppilaitos: String) : Komoto = {
-    Komoto("komotoid", "peruskoulu", oppilaitos, "2005", Kausi.Syksy)
+    Komoto("komotoid", "peruskoulu", oppilaitos, Some("2005"), Some(Kausi.Syksy))
   }
 }
 object Peruskoulu {

@@ -22,6 +22,8 @@ case class RestHaku(oid:Option[String],
                     nimi: Map[String, String],
                     hakukausiUri: String,
                     hakukausiVuosi: Int,
+                    koulutuksenAlkamiskausiUri: Option[String],
+                    koulutuksenAlkamisVuosi: Option[Int],
                     kohdejoukkoUri: Option[String],
                     tila: String)
 
@@ -81,7 +83,7 @@ class TarjontaActor(restClient: VirkailijaRestClient) extends Actor {
     }
   }
 
-  def getHaut: Future[RestHakuResult] = restClient.readObject[RestHakuResult]("/rest/v1/haku/findAll", 200).map(res => RestHakuResult(res.result.filter(_.tila == "JULKAISTU")))
+  def getHaut: Future[RestHakuResult] = restClient.readObject[RestHakuResult]("/rest/v1/haku/findAll", 200).map(res => res.copy(res.result.filter(_.tila == "JULKAISTU")))
 
   def getKoulutus(oid: String): Future[Hakukohteenkoulutus] = {
     val koulutus: Future[Option[Koulutus]] = restClient.readObject[TarjontaResultResponse[Option[Koulutus]]](s"/rest/v1/koulutus/${URLEncoder.encode(oid, "UTF-8")}?meta=false", maxRetries, 200).map(r => r.result)

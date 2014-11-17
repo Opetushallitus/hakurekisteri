@@ -60,21 +60,16 @@ app.controller('MuokkaaCtrl', ['$scope', '$routeParams', '$location', '$http', '
         $http.get(henkiloServiceUrl + '/resources/henkilo/' + encodeURIComponent($scope.henkiloOid), {cache: false})
             .success(function(henkilo) {
                 if (henkilo) {
-                    if (henkilo.duplicate === false) {
-                        $scope.henkilo = henkilo
-                    } else {
-                        $http.get(henkiloServiceUrl + '/resources/s2s/' + encodeURIComponent($scope.henkiloOid), {cache: false})
-                            .success(function(masterHenkilo) {
-                                $scope.henkilo = masterHenkilo;
-                            })
-                            .error(function() {
-                                confirm(getOphMsg("suoritusrekisteri.muokkaa.henkilotietojenhakeminen", "Henkilötietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchHenkilotiedot() : back();
-                            });
-                    }
+                    $scope.henkilo = henkilo
                 }
             })
             .error(function() {
-                confirm(getOphMsg("suoritusrekisteri.muokkaa.henkilotietojenhakeminen", "Henkilötietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchHenkilotiedot() : back();
+                MessageService.addMessage({
+                    type: "danger",
+                    message: "Henkilötietojen hakeminen ei onnistunut. Yritä uudelleen?",
+                    messageKey: "suoritusrekisteri.muokkaa.henkilotietojenhakeminen"
+                });
+                back();
             });
     }
     function enrichLuokkatieto(luokkatieto) {
@@ -97,7 +92,12 @@ app.controller('MuokkaaCtrl', ['$scope', '$routeParams', '$location', '$http', '
             $scope.luokkatiedot = luokkatiedot;
             enrich();
         }, function() {
-            confirm(getOphMsg("suoritusrekisteri.muokkaa.luokkatietojenhakeminen", "Luokkatietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchLuokkatiedot() : back()
+            MessageService.addMessage({
+                type: "danger",
+                message: "Luokkatietojen hakeminen ei onnistunut. Yritä uudelleen?",
+                messageKey: "suoritusrekisteri.muokkaa.luokkatietojenhakeminen"
+            });
+            back();
         });
     }
     function enrichSuoritus(suoritus) {
@@ -127,7 +127,12 @@ app.controller('MuokkaaCtrl', ['$scope', '$routeParams', '$location', '$http', '
             $scope.suoritukset = suoritukset;
             enrich();
         }, function() {
-            confirm(getOphMsg("suoritusrekisteri.muokkaa.suoritustietojenhakeminen", "Suoritustietojen hakeminen ei onnistunut. Yritä uudelleen?")) ? fetchSuoritukset() : back();
+            MessageService.addMessage({
+                type: "danger",
+                message: "Suoritustietojen hakeminen ei onnistunut. Yritä uudelleen?",
+                messageKey: "suoritusrekisteri.muokkaa.suoritustietojenhakeminen"
+            });
+            back();
         });
     }
     function fetchOpiskeluoikeudet() {
@@ -364,6 +369,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$routeParams', '$location', '$http', '
                 templateUrl: template,
                 controller: controller,
                 scope: isolatedScope,
+                size: 'lg',
                 resolve: {
                     suoritusId: function() { return suoritusId }
                 }
@@ -379,6 +385,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$routeParams', '$location', '$http', '
                     templateUrl: 'templates/duplikaatti',
                     controller: 'DuplikaattiCtrl',
                     scope: isolatedScope,
+                    size: 'lg',
                     resolve: {
                         arvosanat: function() { return arvosanaRet }
                     }

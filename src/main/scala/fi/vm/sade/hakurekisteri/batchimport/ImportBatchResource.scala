@@ -128,7 +128,12 @@ trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
   val read: OperationBuilder = apiOperation[ImportBatch]("N/A 3")
   val create: OperationBuilder = apiOperation[ImportBatch]("lahetaTiedosto")
     .summary("vastaanottaa tiedoston")
-    .notes("Vastaanottaa XML-tiedoston joko lomakkeen kenttänä multipart-koodattuna (kentän nimi 'data') tai XML-muodossa requestin bodyssä. <a href='/suoritusrekisteri/schemas/perustiedot.xsd'>Perustietojen XML-skeema</a>")
+    .notes("Vastaanottaa XML-tiedoston joko lomakkeen kenttänä multipart-koodattuna (kentän nimi 'data') tai XML-muodossa requestin bodyssä. " +
+      "Tiedoston voi lähettää esimerkiksi curl-ohjelmaa käyttäen näin: " +
+      "<pre>" +
+      "<code class='bash'>$ curl -F \"data=@perustiedot.xml\" -H \"CasSecurityTicket: ST-tiketti\" https://testi.virkailija.opintopolku.fi/suoritusrekisteri/rest/v1/siirto/perustiedot</code>" +
+      "</pre> " +
+      "<br /><a href='/suoritusrekisteri/rest/v1/siirto/perustiedot/schema'>Perustietojen XML-skeema</a>")
     .consumes("application/xml", "multipart/form-data")
     .parameter(bodyParam[String].description("XML-tiedosto").required)
   val query: OperationBuilder = apiOperation[ImportBatch]("N/A 4")

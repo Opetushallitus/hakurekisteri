@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
+import akka.actor.Status.Failure
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosQuery
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -61,6 +62,9 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
         haku <- activeHakus
       ) hakemukset ! ReloadHaku(haku.oid)
 
+    case Failure(t) =>
+      log.error(t, s"got failure from ${sender()}")
+
   }
 
   def enrich(hakus: List[RestHaku]): List[Future[Haku]] = {
@@ -99,7 +103,7 @@ case class GetHaku(oid: String)
 
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
 
-case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int, kkHaku: Boolean)
+case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int, koulutuksenAlkamiskausi: Option[String], koulutuksenAlkamisvuosi: Option[Int], kkHaku: Boolean)
 
 object Haku {
   def apply(haku: RestHaku)(loppu: ReadableInstant): Haku = {
@@ -109,6 +113,8 @@ object Haku {
       ajanjakso,
       haku.hakukausiUri,
       haku.hakukausiVuosi,
+      haku.koulutuksenAlkamiskausiUri,
+      haku.koulutuksenAlkamisVuosi,
       kkHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_12"))
     )
   }

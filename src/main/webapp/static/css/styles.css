@@ -1,5 +1,7 @@
 body .container {
-    max-width: 1230px;
+    max-width: 1200px;
+    width: auto !important;
+    padding: 0 1px !important;
 }
 
 h1, h2, h3 {
@@ -100,11 +102,6 @@ body #raamit-header .header-content {
     margin-top: 16px;
 }
 
-.modal-dialog {
-    width: auto;
-    max-width: 900px;
-}
-
 .delete-suoritus, .delete-luokkatieto {
     background: #ccc repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255, 255, 255, .5) 5px, rgba(255, 255, 255, .5) 10px);
     border-radius: 5px;
@@ -168,4 +165,16 @@ optgroup option {
 
 .input-loading {
     background: url('../img/ajax-loader.gif') no-repeat right;
+}
+
+.nav-stacked li {
+    white-space: nowrap;
+}
+
+.nav-stacked {
+    border-bottom: none;
+}
+
+.link {
+    cursor: pointer;
 }

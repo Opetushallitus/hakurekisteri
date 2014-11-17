@@ -345,9 +345,9 @@ trait Koosteet {
 class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: Registers) extends Koosteet {
   implicit val ec: ExecutionContext = system.dispatcher
 
-  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemukset), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
+  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.valintaTulos, integrations.ytl)))
+
+  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemukset, haut), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
 
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.virta, integrations.henkilo, integrations.tarjonta, integrations.hakemukset)), "ensikertalainen")
-
-  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.valintaTulos, integrations.ytl)))
 }
