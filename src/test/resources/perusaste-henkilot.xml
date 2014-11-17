@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<perustiedot xmlns:p="http://service.koodisto.sade.vm.fi/types/koodisto" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="perusaste-henkilot.xsd">
-  <eranTunniste>eranTunniste</eranTunniste>
-  <henkilot>
-  	<henkilo>
-  		<hetu>131094-919B</hetu>
-    	<lahtokoulu>05127</lahtokoulu>
+<perustiedot xmlns:p="http://service.koodisto.sade.vm.fi/types/koodisto"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:noNamespaceSchemaLocation="perusaste-henkilot.xsd">
+    <eranTunniste>eranTunniste</eranTunniste>
+    <henkilot>
+        <henkilo>
+            <hetu>131094-919B</hetu>
+            <lahtokoulu>05127</lahtokoulu>
             <luokka>9A</luokka>
             <sukunimi>Testinen</sukunimi>
             <etunimet>Juha Jaakko</etunimet>
@@ -17,18 +19,18 @@
             <matkapuhelin>040 1234 567</matkapuhelin>
             <muuPuhelin>09 1234 567</muuPuhelin>
             <perusopetus>
-            	<valmistuminen>2015-06-04</valmistuminen>
-            	<myontaja>05127</myontaja>
-            	<suorituskieli>FI</suorituskieli>
-            	<tila>KESKEN</tila>
-            	<yksilollistaminen>ALUEITTAIN</yksilollistaminen>
+                <valmistuminen>2015-06-04</valmistuminen>
+                <myontaja>05127</myontaja>
+                <suorituskieli>FI</suorituskieli>
+                <tila>KESKEN</tila>
+                <yksilollistaminen>ALUEITTAIN</yksilollistaminen>
             </perusopetus>
-  	</henkilo>
-  	<henkilo>
-  		<henkiloTunniste>TUNNISTE</henkiloTunniste>
-  		<syntymaAika>1999-03-29</syntymaAika>
-  		<sukupuoli>1</sukupuoli>
-    	<lahtokoulu>05127</lahtokoulu>
+        </henkilo>
+        <henkilo>
+            <henkiloTunniste>TUNNISTE</henkiloTunniste>
+            <syntymaAika>1999-03-29</syntymaAika>
+            <sukupuoli>1</sukupuoli>
+            <lahtokoulu>05127</lahtokoulu>
             <luokka>9A</luokka>
             <sukunimi>Testinen</sukunimi>
             <etunimet>Juha Jaakko</etunimet>
@@ -41,26 +43,21 @@
             <matkapuhelin>040 1234 567</matkapuhelin>
             <muuPuhelin>09 1234 567</muuPuhelin>
             <ulkomainen>
-            
-            	<valmistuminen>2014-06-04</valmistuminen>
-            	<myontaja>05127</myontaja>
-            	<suorituskieli>FI</suorituskieli>
-            	<tila>KESKEN</tila>
-            
+                <valmistuminen>2014-06-04</valmistuminen>
+                <myontaja>05127</myontaja>
+                <suorituskieli>FI</suorituskieli>
+                <tila>KESKEN</tila>
             </ulkomainen>
             <maahanmuuttajienammvalmistava>
-            	<valmistuminen>2015-06-04</valmistuminen>
-            	<myontaja>05127</myontaja>
-            	<suorituskieli>FI</suorituskieli>
-            	<tila>VALMIS</tila>
-            
+                <valmistuminen>2015-06-04</valmistuminen>
+                <myontaja>05127</myontaja>
+                <suorituskieli>FI</suorituskieli>
+                <tila>VALMIS</tila>
             </maahanmuuttajienammvalmistava>
-            
-  	</henkilo>
-  	
-  	<henkilo>
-  		<oppijanumero>1.2.246.562.24.12345678901</oppijanumero>
-  		<lahtokoulu>05127</lahtokoulu>
+        </henkilo>
+        <henkilo>
+            <oppijanumero>1.2.246.562.24.12345678901</oppijanumero>
+            <lahtokoulu>05127</lahtokoulu>
             <luokka>9A</luokka>
             <sukunimi>Testinen</sukunimi>
             <etunimet>Juha Jaakko</etunimet>
@@ -73,22 +70,19 @@
             <matkapuhelin>040 1234 567</matkapuhelin>
             <muuPuhelin>09 1234 567</muuPuhelin>
             <perusopetus>
-            	<valmistuminen>2014-06-04</valmistuminen>
-            	<myontaja>05127</myontaja>
-            	<suorituskieli>FI</suorituskieli>
-            	<tila>VALMIS</tila>
+                <valmistuminen>2014-06-04</valmistuminen>
+                <myontaja>05127</myontaja>
+                <suorituskieli>FI</suorituskieli>
+                <tila>VALMIS</tila>
                 <yksilollistaminen>EI</yksilollistaminen>
             </perusopetus>
             <perusopetuksenlisaopetus>
-            	<valmistuminen>2015-06-04</valmistuminen>
-            	<myontaja>05127</myontaja>
-            	<suorituskieli>FI</suorituskieli>
-            	<tila>KESKEN</tila>
-            	
+                <valmistuminen>2015-06-04</valmistuminen>
+                <myontaja>05127</myontaja>
+                <suorituskieli>FI</suorituskieli>
+                <tila>KESKEN</tila>
+                <yksilollistaminen>EI</yksilollistaminen>
             </perusopetuksenlisaopetus>
-  	</henkilo>
-  	
-  	
-  
-  </henkilot>
+        </henkilo>
+    </henkilot>
 </perustiedot>
