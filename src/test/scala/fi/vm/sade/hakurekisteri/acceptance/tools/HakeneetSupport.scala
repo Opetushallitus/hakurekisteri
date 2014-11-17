@@ -1,11 +1,14 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
 import fi.vm.sade.hakurekisteri.SpecsLikeMockito
+import fi.vm.sade.hakurekisteri.dates.{InFuture, Ajanjakso}
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus._
+import fi.vm.sade.hakurekisteri.integration.haku.{Kieliversiot, Haku}
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
+import org.joda.time.{DateTime, LocalDate}
 import org.scalatra.swagger.Swagger
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, HakurekisteriSwagger}
 import akka.actor.{Props, Actor, ActorSystem}
@@ -213,8 +216,10 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       case _ => Future(hakijat)
     }
 
+    val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.2", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false)
+
     def hakijat: Seq[Hakija] = {
-      tehdytHakemukset.map(AkkaHakupalvelu.getHakija)
+      tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku))
     }
 
     def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {
