@@ -178,3 +178,7 @@ optgroup option {
 .link {
     cursor: pointer;
 }
+
+.checkbox input[type=checkbox] {
+    top: 10px;
+}
