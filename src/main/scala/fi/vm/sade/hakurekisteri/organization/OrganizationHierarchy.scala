@@ -51,7 +51,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](s
   import akka.pattern.pipe
   override def receive: Receive = {
     case a:Update => fetch()
-    case a:OrganizationAuthorizer => logger.info("org paths loaded");authorizer.authorizer = a
+    case a:OrganizationAuthorizer => logger.info("org paths loaded"); authorizer.authorizer = a
     case AuthorizedQuery(q,user) => (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(futfilt(_, authorizer.isAuthorized(user, "READ"))) pipeTo sender
     case AuthorizedRead(id, user) => (filteredActor ? id).mapTo[Option[A with Identified[UUID]]].flatMap(checkRights(user, "READ")) pipeTo sender
     case AuthorizedDelete(id, user)  => val checkedRights = for (resourceToDelete <- filteredActor ? id;
@@ -82,10 +82,10 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](s
 
   def fetch() {
     val orgAuth: Future[OrganizationAuthorizer] = authorizer.createAuthorizer
-    logger.info("fetching organizations from: " + serviceUrl)
+    logger.info(s"fetching organizations from: $serviceUrl")
     orgAuth pipeTo self
     orgAuth.onFailure {
-      case e: Exception => logger.error("failed loading organizations", e)
+      case e: Exception => logger.error(e, "failed loading organizations")
     }
 
   }
