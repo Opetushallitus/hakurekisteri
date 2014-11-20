@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 import akka.event.Logging
-import fi.vm.sade.generic.common.HetuUtils
 import org.joda.time.format.DateTimeFormat
 
 import scala.compat.Platform
@@ -14,14 +13,12 @@ import scala.util.Try
 import scala.xml.{Elem, Node, NodeSeq, XML}
 import com.ning.http.client._
 import scala.util.Failure
-import scala.Some
 import scala.util.Success
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import dispatch.Http
 
+
 case class VirtaValidationError(m: String) extends Exception(m)
-
-
 
 class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot",
                                                     jarjestelma = "",
@@ -87,12 +84,8 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
           val tutkinnot = getTutkinnot(responseEnvelope)
 
           (opiskeluoikeudet, tutkinnot) match {
-            case (Seq(), Seq()) =>
-              None
-
-            case _ =>
-              Some(VirtaResult(opiskeluoikeudet = opiskeluoikeudet, tutkinnot = tutkinnot))
-
+            case (Seq(), Seq()) => None
+            case _ => Some(VirtaResult(oppijanumero = oppijanumero, opiskeluoikeudet = opiskeluoikeudet, tutkinnot = tutkinnot))
           }
         } else {
           val bodyString = response.getResponseBody

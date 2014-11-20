@@ -1,26 +1,85 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
+import java.util.concurrent.TimeUnit
+
+import akka.actor.Status.Failure
 import akka.actor.{ActorLogging, Actor, ActorRef}
-import akka.pattern.pipe
+import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
-import org.joda.time.LocalDate
+import org.joda.time.{LocalDateTime, LocalDate}
 
+import scala.collection.mutable
+import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
+import Virta.at
+
 case class VirtaQuery(oppijanumero: String, hetu: Option[String])
-
+case class VirtaQueuedQuery(q: VirtaQuery)
 case class KomoNotFoundException(message: String) extends Exception(message)
-
 case class VirtaData(opiskeluOikeudet: Seq[Opiskeluoikeus], suoritukset: Seq[Suoritus])
 
-class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef) extends Actor with ActorLogging {
+object ConsumeOne
+object ConsumeAll
+object PrintStats
+
+
+class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
+  val virtaQueue: mutable.Queue[VirtaQuery] = new mutable.Queue()
+
+  context.system.scheduler.schedule(at("04:00"), 24.hours, self, ConsumeAll)
+  context.system.scheduler.schedule(5.minutes, 10.minutes, self, PrintStats)
+
+  def consume() = {
+    try {
+      val q = virtaQueue.dequeue()
+      virtaActor ! q
+    } catch {
+      case t: NoSuchElementException => log.error(s"trying to dequeue an empty queue: $t")
+    }
+  }
+
   def receive: Receive = {
-    case VirtaQuery(o, h) => convertVirtaResult(getOpiskelijanTiedot(o, h))(o) pipeTo sender
+    case VirtaQueuedQuery(q) if !virtaQueue.contains(q) => virtaQueue.enqueue(q)
+
+    case ConsumeOne if virtaQueue.nonEmpty => consume()
+
+    case ConsumeAll =>
+      log.info("started to dequeue virta queries")
+      while(virtaQueue.nonEmpty) {
+        consume()
+      }
+      log.info(s"full dequeue done, virta queue length ${virtaQueue.length}")
+
+    case PrintStats => log.info(s"virta queue length ${virtaQueue.length}")
+  }
+
+  override def preStart(): Unit = {
+    hakemusActor ! Trigger((oid, hetu) => if (!isYsiHetu(hetu)) self ! VirtaQueuedQuery(VirtaQuery(oid, Some(hetu))))
+    super.preStart()
+  }
+
+  val ysiHetu = "\\d{6}[+-AB]9\\d{2}[0123456789ABCDEFHJKLMNPRSTUVWXY]"
+  def isYsiHetu(hetu: String): Boolean = hetu.matches(ysiHetu)
+}
+
+
+
+class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef) extends Actor with ActorLogging {
+  implicit val executionContext: ExecutionContext = context.dispatcher
+
+  import akka.pattern.pipe
+
+  def receive: Receive = {
+    case VirtaQuery(o, h) => getOpiskelijanTiedot(o, h) pipeTo self
+    case Some(r: VirtaResult) => save(r)
+    case Failure(t: VirtaValidationError) => log.warning(s"virta validation error: $t")
+    case Failure(t: Throwable) => log.error(t, "error occurred in virta query")
   }
 
   def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String]): Future[Option[VirtaResult]] =
@@ -64,15 +123,16 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef) extends 
     case _ => "KESKEN"
   }
 
-  def convertVirtaResult(f: Future[Option[VirtaResult]])(oppijanumero: String): Future[VirtaData] = f.flatMap {
-    case None => Future.successful(VirtaData(Seq(), Seq()))
-    case Some(r) =>
-      val opiskeluoikeudet: Future[Seq[Opiskeluoikeus]] = Future.sequence(r.opiskeluoikeudet.map(opiskeluoikeus(oppijanumero)))
-      val suoritukset: Future[Seq[Suoritus]] = Future.sequence(r.tutkinnot.map(tutkinto(oppijanumero)))
-      for {
-        o <- opiskeluoikeudet
-        s <- suoritukset
-      } yield VirtaData(o, s)
+  def save(r: VirtaResult): Unit = {
+    val opiskeluoikeudet: Future[Seq[Opiskeluoikeus]] = Future.sequence(r.opiskeluoikeudet.map(opiskeluoikeus(r.oppijanumero)))
+    val suoritukset: Future[Seq[Suoritus]] = Future.sequence(r.tutkinnot.map(tutkinto(r.oppijanumero)))
+    for {
+      o <- opiskeluoikeudet
+      s <- suoritukset
+    } yield {
+      o.foreach(opiskeluoikeusActor ! _)
+      s.foreach(suoritusActor ! _)
+    }
   }
 
   import akka.pattern.ask
@@ -90,4 +150,15 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef) extends 
 
 object Virta {
   val CSC = "1.2.246.562.10.2013112012294919827487"
+
+  def at(time: String): FiniteDuration = {
+    if (!time.matches("^[0-9]{2}:[0-9]{2}$")) throw new IllegalArgumentException("time format is not HH:mm")
+
+    val t = time.split(":")
+    val todayAtTime = new LocalDateTime().withTime(t(0).toInt, t(1).toInt, 0, 0)
+    todayAtTime match {
+      case d if d.isBefore(new LocalDateTime()) => new FiniteDuration(d.plusDays(1).toDate.getTime - Platform.currentTime, TimeUnit.MILLISECONDS)
+      case d => new FiniteDuration(d.toDate.getTime - Platform.currentTime, TimeUnit.MILLISECONDS)
+    }
+  }
 }
