@@ -2,11 +2,10 @@ package fi.vm.sade.hakurekisteri.tools
 
 
 import com.sun.org.apache.xml.internal.serialize.{XMLSerializer, OutputFormat}
-import org.w3c.dom
-import org.w3c.dom.{Element, Attr}
 
-import scala.collection.mutable
+import scala.language.implicitConversions
 import scala.xml._
+
 
 object XmlHelpers {
   def docBuilder =
@@ -51,12 +50,10 @@ object XmlHelpers {
   implicit def dom2Extras(n: org.w3c.dom.Node): DomExtras = new DomExtras(n)
 
   class DomExtras(n: org.w3c.dom.Node) {
-
     def toScala: Node = n match {
       case d: org.w3c.dom.Document => d.getDocumentElement.toScala
       case e: org.w3c.dom.Element => convertElement(e)
       case t: org.w3c.dom.Text => Text(t.getWholeText)
-
     }
 
     def printDom(doc: org.w3c.dom.Document) = {
@@ -64,7 +61,6 @@ object XmlHelpers {
       format.setIndenting(true)
       val serializer = new XMLSerializer(System.out, format)
       serializer.serialize(doc)
-
     }
 
     def convertElement(e: org.w3c.dom.Element): Elem = {

@@ -1,8 +1,11 @@
 package fi.vm.sade.hakurekisteri.hakija
 
+import fi.vm.sade.hakurekisteri.dates.{InFuture, Ajanjakso}
+import fi.vm.sade.hakurekisteri.integration.haku.{Kieliversiot, Haku}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
+import org.joda.time.DateTime
 import org.scalatest.{Matchers, FlatSpec}
 
 
@@ -89,8 +92,8 @@ class HakijaSpec extends FlatSpec with Matchers {
     preferenceEligibilities = Seq()
   )
 
-
-  val toive = AkkaHakupalvelu.getHakija(FullHakemus1).hakemus.hakutoiveet.head
+  val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.1", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false)
+  val toive = AkkaHakupalvelu.getHakija(FullHakemus1, haku).hakemus.hakutoiveet.head
 
 
   behavior of "Hakemuksen lasnaolotieto"

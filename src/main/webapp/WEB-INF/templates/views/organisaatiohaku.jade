@@ -24,6 +24,6 @@ div(class="modal-body")
       span(oph-msg="suoritusrekisteri.hakeneet.organisaatio.hae") Hae
       span(class="glyphicon glyphicon-search")
   div(class="organisaatiotulokset")
-    div(ng-show="loading" class="keskenerainen-large")
+    div(ng-show="loading" class="loading-large")
     ul(class="organisaatiohierarkia")
       li(ng-repeat="o in organisaatiot" ng-include="'templates/organisaatiotulos'")

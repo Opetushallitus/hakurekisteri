@@ -14,12 +14,12 @@ case class Opiskeluoikeus(aika: Ajanjakso,
                           source : String) extends UUIDResource[Opiskeluoikeus] {
   override def identify(identity: UUID): Opiskeluoikeus with Identified[UUID] = new IdentifiedOpiskeluOikeus(this, identity)
 
-  private[this] case class OpiskeluoikeusCore(aika: Ajanjakso,
+  private[Opiskeluoikeus] case class OpiskeluoikeusCore(aika: Ajanjakso,
                                                henkiloOid: String,
                                                komo: String,
                                                myontaja: String)
 
-  override val core: AnyRef = OpiskeluoikeusCore(aika: Ajanjakso,
+  override val core = OpiskeluoikeusCore(aika: Ajanjakso,
     henkiloOid: String,
     komo: String,
     myontaja: String)

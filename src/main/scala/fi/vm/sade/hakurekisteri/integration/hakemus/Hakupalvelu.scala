@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 import akka.actor.ActorRef
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.integration.haku.{Haku, GetHaku}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -17,43 +18,24 @@ trait Hakupalvelu {
   def getHakijat(q: HakijaQuery): Future[Seq[Hakija]]
 }
 
-class AkkaHakupalvelu(hakemusActor: ActorRef)(implicit val ec: ExecutionContext) extends Hakupalvelu {
+class AkkaHakupalvelu(hakemusActor: ActorRef, hakuActor: ActorRef)(implicit val ec: ExecutionContext) extends Hakupalvelu {
   val Pattern = "preference(\\d+).*".r
-
-  def filterHakemus(optionField: Option[String], filterFunc: (String) => (Map[String, String]) => Map[String, String] )(fh: FullHakemus): FullHakemus = optionField match {
-    case Some(field) => fh.copy(/*answers = newAnswers(fh.answers, filterFunc(field))*/)
-    case None => fh
-  }
-
-  def newAnswers(answers:  Option[Map[String, Map[String, String]]], toiveFilter: (Map[String, String]) => Map[String, String]) :  Option[Map[String, Map[String, String]]] =
-    answers.map((ans) => ans.get("hakutoiveet").fold(ans)((hts: Map[String, String]) => ans + ("hakutoiveet" -> toiveFilter(hts))))
-
-  def newToiveet(oid: String)(toiveet: Map[String, String]): Map[String, String] = toiveet.filterKeys {
-    case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Opetuspiste-id-parents", "").split(",").toSet.contains(oid) || toiveet.getOrElse(s"preference$jno-Opetuspiste-id", "") == oid
-    case _ => true
-  }
-
-  def newToiveetForKoodi(koodi: String)(toiveet: Map[String, String]): Map[String, String] = toiveet.filterKeys {
-    case Pattern(jno) => toiveet.getOrElse(s"preference$jno-Koulutus-id-aoIdentifier", "") == koodi
-    case _ => true
-  }
-
-  def filterState(fh: FullHakemus): Boolean = fh.stateValid
 
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     import akka.pattern._
     implicit val timeout: Timeout = 60.seconds
-    (hakemusActor ? HakemusQuery(q)).mapTo[Seq[FullHakemus]]
-      .map(_.
-      withFilter(filterState).
-      map(filterHakemus(q.organisaatio, newToiveet)).
-      map(filterHakemus(q.hakukohdekoodi, newToiveetForKoodi)).
-      map(AkkaHakupalvelu.getHakija))
+
+    (for (
+      hakemukset <- (hakemusActor ? HakemusQuery(q)).mapTo[Seq[FullHakemus]]
+    ) yield for (
+        hakemus <- hakemukset.filter(_.stateValid)
+      ) yield for (
+          haku <- (hakuActor ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
+        ) yield AkkaHakupalvelu.getHakija(hakemus, haku)).flatMap(Future.sequence(_))
   }
 }
 
 object AkkaHakupalvelu {
-
   val DEFAULT_POHJA_KOULUTUS: String = "1"
 
   def getVuosi(vastaukset:Koulutustausta)(pohjakoulutus:String): Option[String] = pohjakoulutus match {
@@ -62,10 +44,8 @@ object AkkaHakupalvelu {
     case _ => vastaukset.PK_PAATTOTODISTUSVUOSI
   }
 
-
   def kaydytLisapisteKoulutukset(tausta: Koulutustausta) =
     {
-
       def checkKoulutus(lisakoulutus: Option[String]): Boolean = {
         Try(lisakoulutus.getOrElse("false").toBoolean).getOrElse(false)
       }
@@ -79,7 +59,7 @@ object AkkaHakupalvelu {
       ).mapValues(checkKoulutus).filter{case (_, done) => done}.keys
     }
 
-  def getHakija(hakemus: FullHakemus): Hakija = {
+  def getHakija(hakemus: FullHakemus, haku: Haku): Hakija = {
     val kesa = new MonthDay(6, 4)
     implicit val v = hakemus.answers
     val koulutustausta = for (a: HakemusAnswers <- v; k: Koulutustausta <- a.koulutustausta) yield k
@@ -139,9 +119,8 @@ object AkkaHakupalvelu {
         ))
         case _ => Seq()
       },
-      (for (a: HakemusAnswers <- v; t <- a.hakutoiveet) yield Hakemus(convertToiveet(t), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus))
+      (for (a: HakemusAnswers <- v; t <- a.hakutoiveet) yield Hakemus(convertToiveet(t, haku), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus)).getOrElse(Hakemus(Seq(), hakemus.oid, julkaisulupa, hakemus.applicationSystemId, lisapistekoulutus))
     )
-
   }
 
   def getValue[A](key: (HakemusAnswers) => Option[A], subKey: (A) => Option[String], default: String = "")(implicit answers: Option[HakemusAnswers]): String = {
@@ -159,7 +138,7 @@ object AkkaHakupalvelu {
     }
   }
 
-  def convertToiveet(toiveet: Map[String, String]): Seq[Hakutoive] = {
+  def convertToiveet(toiveet: Map[String, String], haku: Haku): Seq[Hakutoive] = {
     val Pattern = "preference(\\d+)-Opetuspiste-id".r
     val notEmpty = "(.+)".r
     val opetusPisteet: Seq[(Short, String)] = toiveet.collect {
@@ -167,7 +146,7 @@ object AkkaHakupalvelu {
     }.toSeq
 
     opetusPisteet.sortBy(_._1).map { case (jno, tarjoajaoid) =>
-      val koulutukset = Set(Komoto("", "", tarjoajaoid, "2014", Kausi.Syksy))
+      val koulutukset = Set(Komoto("", "", tarjoajaoid, haku.koulutuksenAlkamisvuosi.map(_.toString), haku.koulutuksenAlkamiskausi.map(Kausi.fromKoodiUri)))
       val hakukohdekoodi = toiveet(s"preference$jno-Koulutus-id-aoIdentifier")
       val kaksoistutkinto = toiveet.get(s"preference${jno}_kaksoistutkinnon_lisakysymys").map(s => Try(s.toBoolean).getOrElse(false))
       val urheilijanammatillinenkoulutus = toiveet.get(s"preference${jno}_urheilijan_ammatillisen_koulutuksen_lisakysymys").
@@ -182,12 +161,11 @@ object AkkaHakupalvelu {
       }
       val aiempiperuminen = toiveet.get(s"preference${jno}_sora_oikeudenMenetys").map(s => Try(s.toBoolean).getOrElse(false))
       val terveys = toiveet.get(s"preference${jno}_sora_terveys").map(s => Try(s.toBoolean).getOrElse(false))
-      val hakukohdeOid = toiveet.get(s"preference$jno-Koulutus-id").getOrElse("")
-      Toive(jno, Hakukohde(koulutukset, hakukohdekoodi, hakukohdeOid), kaksoistutkinto, urheilijanammatillinenkoulutus, harkinnanvaraisuusperuste, aiempiperuminen, terveys)
+      val organisaatioParentOidPath = toiveet.getOrElse(s"preference$jno-Opetuspiste-id-parents", "")
+      val hakukohdeOid = toiveet.getOrElse(s"preference$jno-Koulutus-id", "")
+      Toive(jno, Hakukohde(koulutukset, hakukohdekoodi, hakukohdeOid), kaksoistutkinto, urheilijanammatillinenkoulutus, harkinnanvaraisuusperuste, aiempiperuminen, terveys, None, organisaatioParentOidPath)
     }
   }
-
-
 }
 
 case class ListHakemus(oid: String)
