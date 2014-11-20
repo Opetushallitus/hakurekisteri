@@ -5,7 +5,6 @@ import java.net.URL
 import javax.xml.XMLConstants
 import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.Source
-import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.sax.SAXSource
 import javax.xml.validation.SchemaFactory
 
@@ -19,7 +18,6 @@ import scala.xml.parsing.{FactoryAdapter, NoBindingFactoryAdapter}
 import scalaz._, Scalaz._
 
 
-import fi.vm.sade.hakurekisteri.tools.XmlHelpers._
 
 
 trait XMLValidator[T <: Validation[E, R], E, R <: scala.xml.Node] {
@@ -147,7 +145,6 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
     }
     val validator  = schema.newValidator()
     validator.setErrorHandler(handler)
-    //validator.validate(new SAXSource(fromString(xml.toString)))
     validator.validate(source)
 
 
