@@ -199,49 +199,23 @@ class KkHakijaResource(hakemukset: ActorRef,
     val kausi: Future[String] = getKausi(haku.kausi, hakemusOid)
 
     kausi.map(k => {
-      val vuosi = k match {
+      val lukuvuosi = k match {
         case "S" => (haku.vuosi, haku.vuosi + 1)
         case "K" => (haku.vuosi, haku.vuosi)
         case _ => throw new IllegalArgumentException(s"invalid kausi $k")
       }
 
-      def kausi(v: Int, k: String): String = s"$v$k"
-
-      t.ilmoittautumistila(hakemusOid, hakukohde) match {
-        case Some(tila) =>
-          tila match {
-            case Ilmoittautumistila.EI_TEHTY =>
-              Seq(Puuttuu(Syksy(vuosi._1)), Puuttuu(Kevat(vuosi._2)))
-
-            case Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI =>
-              Seq(Lasna(Syksy(vuosi._1)), Lasna(Kevat(vuosi._2)))
-
-            case Ilmoittautumistila.POISSA_KOKO_LUKUVUOSI =>
-              Seq(Poissa(Syksy(vuosi._1)), Poissa(Kevat(vuosi._2)))
-
-            case Ilmoittautumistila.EI_ILMOITTAUTUNUT =>
-              Seq(Puuttuu(Syksy(vuosi._1)), Puuttuu(Kevat(vuosi._2)))
-
-            case Ilmoittautumistila.LASNA_SYKSY =>
-              Seq(Lasna(Syksy(vuosi._1)), Poissa(Kevat(vuosi._2)))
-
-            case Ilmoittautumistila.POISSA_SYKSY =>
-              Seq(Poissa(Syksy(vuosi._1)), Lasna(Kevat(vuosi._2)))
-
-            case Ilmoittautumistila.LASNA =>
-              Seq(Lasna(Kevat(vuosi._2)))
-
-            case Ilmoittautumistila.POISSA =>
-              Seq(Poissa(Kevat(vuosi._2)))
-
-            case _ =>
-              Seq()
-
-          }
-
-        case None => Seq(Puuttuu(Syksy(vuosi._1)), Puuttuu(Kevat(vuosi._2)))
-
-      }
+      t.ilmoittautumistila(hakemusOid, hakukohde).map {
+        case Ilmoittautumistila.EI_TEHTY =>Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2)))
+        case Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI => Seq(Lasna(Syksy(lukuvuosi._1)), Lasna(Kevat(lukuvuosi._2)))
+        case Ilmoittautumistila.POISSA_KOKO_LUKUVUOSI => Seq(Poissa(Syksy(lukuvuosi._1)), Poissa(Kevat(lukuvuosi._2)))
+        case Ilmoittautumistila.EI_ILMOITTAUTUNUT => Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2)))
+        case Ilmoittautumistila.LASNA_SYKSY => Seq(Lasna(Syksy(lukuvuosi._1)), Poissa(Kevat(lukuvuosi._2)))
+        case Ilmoittautumistila.POISSA_SYKSY => Seq(Poissa(Syksy(lukuvuosi._1)), Lasna(Kevat(lukuvuosi._2)))
+        case Ilmoittautumistila.LASNA => Seq(Lasna(Kevat(lukuvuosi._2)))
+        case Ilmoittautumistila.POISSA => Seq(Poissa(Kevat(lukuvuosi._2)))
+        case _ => Seq()
+      }.getOrElse(Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2))))
     })
   }
 
