@@ -23,6 +23,7 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     virtaClient.getOpiskelijanTiedot("1.2.3", Some("111111-1975")) returns Future.successful(
       Some(
         VirtaResult(
+          oppijanumero = "1.2.3",
           opiskeluoikeudet = Seq(
             VirtaOpiskeluoikeus(
               alkuPvm = new LocalDate().minusYears(1),
