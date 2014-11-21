@@ -5,6 +5,8 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 import org.joda.time.LocalDate
+import org.scalatest.concurrent.PatienceConfiguration.Timeout
+import org.scalatest.time.{Span, Seconds}
 import org.scalatest.{Matchers, FlatSpec}
 
 import scala.concurrent.Future
@@ -68,8 +70,10 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
 
     virtaActor ! VirtaQuery("1.2.3", Some("111111-1975"))
 
-    sWaiter.await()
-    oWaiter.await()
+    import org.scalatest.time.SpanSugar._
+
+    sWaiter.await(timeout(5.seconds), dismissals(1))
+    oWaiter.await(timeout(5.seconds), dismissals(1))
   }
 
 
