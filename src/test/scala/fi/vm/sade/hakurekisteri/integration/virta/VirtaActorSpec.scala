@@ -5,8 +5,6 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 import org.joda.time.LocalDate
-import org.scalatest.concurrent.PatienceConfiguration.Timeout
-import org.scalatest.time.{Span, Seconds}
 import org.scalatest.{Matchers, FlatSpec}
 
 import scala.concurrent.Future

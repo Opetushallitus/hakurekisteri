@@ -13,7 +13,7 @@ import scala.language.postfixOps
 object HakuJaValintarekisteriBuild extends Build {
   val Organization = "fi.vm.sade"
   val Name = "hakurekisteri"
-  val Version = "11.0-SNAPSHOT"
+  val Version = "13.1-SNAPSHOT"
   val ScalaVersion = "2.11.2"
   val ArtifactName = (s: ScalaVersion, m: ModuleID, a: Artifact) => s"${a.name}-${m.revision}.${a.extension}"
   val ScalatraVersion = "2.3.0"
