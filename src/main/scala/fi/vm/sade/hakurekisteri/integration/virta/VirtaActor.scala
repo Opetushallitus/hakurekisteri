@@ -8,12 +8,14 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
-import org.joda.time.{LocalDateTime, LocalDate}
+import org.joda.time.{DateTime, LocalDateTime, LocalDate}
 
 import scala.collection.mutable
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import fi.vm.sade.hakurekisteri.healthcheck.Status
+import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
 
 import Virta.at
 
@@ -21,16 +23,19 @@ case class VirtaQuery(oppijanumero: String, hetu: Option[String])
 case class VirtaQueuedQuery(q: VirtaQuery)
 case class KomoNotFoundException(message: String) extends Exception(message)
 case class VirtaData(opiskeluOikeudet: Seq[Opiskeluoikeus], suoritukset: Seq[Suoritus])
+case class VirtaStatus(latestDequeueTime: Option[DateTime], queueLength: Long, status: Status)
 
 object ConsumeOne
 object ConsumeAll
 object PrintStats
-
+object VirtaHealth
 
 class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   val virtaQueue: mutable.Queue[VirtaQuery] = new mutable.Queue()
+
+  var latestDequeueTime: Option[DateTime] = None
 
   context.system.scheduler.schedule(at("04:00"), 24.hours, self, ConsumeAll)
   context.system.scheduler.schedule(5.minutes, 10.minutes, self, PrintStats)
@@ -55,8 +60,11 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
         consume()
       }
       log.info(s"full dequeue done, virta queue length ${virtaQueue.length}")
+      latestDequeueTime = Some(new DateTime())
 
     case PrintStats => log.info(s"virta queue length ${virtaQueue.length}")
+
+    case VirtaHealth => sender ! VirtaStatus(latestDequeueTime, virtaQueue.length, Status.OK)
   }
 
   override def preStart(): Unit = {
