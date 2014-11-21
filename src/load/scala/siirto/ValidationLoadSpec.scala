@@ -28,10 +28,10 @@ class ValidationLoadSpec extends fixture.FlatSpec with Matchers with BeforeAndAf
 
   behavior of "Validation under load"
 
-  type FixtureParam = (ValidXml, Seq[Elem])
+  type FixtureParam = (ValidXml, Seq[String])
 
   override protected def withFixture(test: OneArgTest) = {
-    val data = for (i <- 0 until 100) yield PerustiedotGenerator.perustiedot(1000)
+    val data = for (i <- 0 until 100) yield PerustiedotGenerator.perustiedot(1000).toString
     println("generated")
     val validator = new ValidXml(Perustiedot, PerustiedotKoodisto)
 
@@ -49,7 +49,7 @@ class ValidationLoadSpec extends fixture.FlatSpec with Matchers with BeforeAndAf
     val (validator, xml) = input
     for (
       file <- xml
-    ) validator.validate(new DOMSource(file.toJdkDoc.getDocumentElement))
+    ) validator.validate(new DOMSource(XML.loadString(file).toJdkDoc.getDocumentElement))
 
 
   }
@@ -59,7 +59,7 @@ class ValidationLoadSpec extends fixture.FlatSpec with Matchers with BeforeAndAf
     for (
       file <- xml
     ) {
-      val validation = validator.validate(new SAXSource(fromString(file.toString)))
+      val validation = validator.validate(new SAXSource(fromString(XML.loadString(file).toString)))
       validation.valueOr{
         errors =>
           val (level, ex) = errors.head
@@ -68,6 +68,13 @@ class ValidationLoadSpec extends fixture.FlatSpec with Matchers with BeforeAndAf
     }
 
 
+  }
+
+  it should "validate with ValidXml" in { input =>
+    val (validator, xml) = input
+    for (
+      file <- xml
+    ) validator.loadString(file)
   }
 
   def asXml(dom: _root_.org.w3c.dom.Node): Node = {

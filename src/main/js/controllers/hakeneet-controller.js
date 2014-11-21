@@ -27,12 +27,18 @@ app.controller('HakeneetCtrl', ['$scope', '$http', '$modal', 'MurupolkuService',
 
     $scope.tiedostotyypit = tiedostotyypit();
 
+    if (isKk()) $scope.vainKkHaut = true;
+
     if (isKk())
         MurupolkuService.addToMurupolku({key: "suoritusrekisteri.hakeneet.muru.kk", text: "Hakeneet ja valitut opiskelijat (KK)"}, true);
     else
         MurupolkuService.addToMurupolku({key: "suoritusrekisteri.hakeneet.muru", text: "Hakeneet ja valitut opiskelijat"}, true);
 
     loadHakutiedot($http, $scope, MessageService);
+
+    $scope.reloadHakutiedot = function() {
+        loadHakutiedot($http, $scope, MessageService)
+    };
 
     $scope.search = function() {
         MessageService.clearMessages();
@@ -236,8 +242,12 @@ function loadHakutiedot($http, $scope, MessageService) {
                 return (kausiUri && kausiUri.match(/^kausi_s.*/) ? 'Syksy' : (kausiUri && kausiUri.match(/^kausi_k.*/) ? 'Kevät' : 'KAUSI PUUTTUU'))
             };
 
-            for (var i = 0; i < hautResponse.length; i++) {
-                var haku = hautResponse[i];
+            var filteredHaut = hautResponse.filter(function(h) {
+                if ($scope.vainKkHaut) return h.kkHaku;
+                else return true;
+            });
+            for (var i = 0; i < filteredHaut.length; i++) {
+                var haku = filteredHaut[i];
                 var k = {
                     vuosi: haku.vuosi,
                     kausi: haku.kausi,
