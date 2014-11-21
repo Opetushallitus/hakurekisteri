@@ -8,7 +8,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
-import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenUtil, Ensikertalainen, EnsikertalainenQuery, NoHetuException}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery, HenkiloHakijaQuery}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaValidationError, VirtaConnectionErrorException}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
@@ -140,22 +140,9 @@ trait OppijaFetcher { this: HakuJaValintarekisteriStack =>
     )
   }
 
-  import EnsikertalainenUtil.isYsiHetu
   def fetchEnsikertalaisuus(henkiloOid: String, hetu: Option[String]): Future[Option[Ensikertalainen]] = hetu match {
-    case Some(h) if isYsiHetu(h) =>
-      logger.warning(s"skipping ensikertalaisuus check for test hetu on henkilo $henkiloOid")
-      Future.successful(None)
-    case _ =>
-      (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, hetu)).mapTo[Ensikertalainen].
-        map(Some(_)).
-        recover {
-        case NoHetuException(oid, message) =>
-          logger.info(s"trying to resolve ensikertalaisuus for $henkiloOid, no hetu found")
-          None
-        case t: VirtaValidationError =>
-          logger.warning(s"could not resolve ensikertalaisuus for $henkiloOid: $t")
-          None
-      }
+    case Some(_) => (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid)).mapTo[Ensikertalainen].map(Some(_))
+    case None => Future.successful(None)
   }
 
   def fetchOpiskeluoikeudet(henkiloOid: String)(implicit user: User): Future[Seq[Opiskeluoikeus]] = {
