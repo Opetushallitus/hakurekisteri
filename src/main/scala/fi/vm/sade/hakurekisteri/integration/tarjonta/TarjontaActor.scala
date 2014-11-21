@@ -34,9 +34,12 @@ case class TarjontaResultResponse[T](result: T)
 case class KomoResponse(oid: String,
                         komo: Option[Komo])
 
+case class TarjontaKoodi(arvo: Option[String])
+
 case class Koulutus(oid: String,
                     komoOid: String,
-                    tunniste: Option[String])
+                    tunniste: Option[String],
+                    kandidaatinKoulutuskoodi: Option[TarjontaKoodi])
 
 case class HakukohdeOid(oid: String)
 
@@ -85,7 +88,7 @@ class TarjontaActor(restClient: VirkailijaRestClient) extends Actor {
 
   def getHaut: Future[RestHakuResult] = restClient.readObject[RestHakuResult]("/rest/v1/haku/findAll", 200).map(res => res.copy(res.result.filter(_.tila == "JULKAISTU")))
 
-  def getKoulutus(oid: String): Future[Hakukohteenkoulutus] = {
+  def getKoulutus(oid: String): Future[Seq[Hakukohteenkoulutus]] = {
     val koulutus: Future[Option[Koulutus]] = restClient.readObject[TarjontaResultResponse[Option[Koulutus]]](s"/rest/v1/koulutus/${URLEncoder.encode(oid, "UTF-8")}?meta=false", maxRetries, 200).map(r => r.result)
     koulutus.flatMap {
       case None => Future.failed(KoulutusNotFoundException(s"koulutus not found with oid $oid"))
@@ -94,11 +97,12 @@ class TarjontaActor(restClient: VirkailijaRestClient) extends Actor {
         fk.map {
           case None => throw KomoNotFoundException(s"komo not found with oid ${k.komoOid}")
           case Some(komo) =>
-            Hakukohteenkoulutus(komo.oid, komo.koulutuskoodi.arvo, k.tunniste.flatMap(_.blankOption))
+            val koulutukset = Seq(Hakukohteenkoulutus(komo.oid, komo.koulutuskoodi.arvo, k.tunniste.flatMap(_.blankOption)))
+            k.kandidaatinKoulutuskoodi.flatMap(_.arvo.map(a => koulutukset :+ Hakukohteenkoulutus("", a, None))).getOrElse(koulutukset)
         }
     }
   }
-  def getHakukohteenkoulutukset(oids: Seq[String]): Future[Seq[Hakukohteenkoulutus]] = Future.sequence(oids.map(getKoulutus))
+  def getHakukohteenkoulutukset(oids: Seq[String]): Future[Seq[Hakukohteenkoulutus]] = Future.sequence(oids.map(getKoulutus)).map(_.foldLeft(Seq[Hakukohteenkoulutus]())(_ ++ _))
 
   def getHakukohteenKoulutukset(hk: HakukohdeOid): Future[HakukohteenKoulutukset] = {
     if (koulutusCache.contains(hk.oid)) koulutusCache.get(hk.oid)
