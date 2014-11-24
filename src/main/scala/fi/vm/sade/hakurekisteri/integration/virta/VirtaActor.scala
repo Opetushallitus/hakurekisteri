@@ -3,12 +3,12 @@ package fi.vm.sade.hakurekisteri.integration.virta
 import java.util.concurrent.TimeUnit
 
 import akka.actor.Status.Failure
-import akka.actor.{ActorLogging, Actor, ActorRef}
+import akka.actor.{Cancellable, ActorLogging, Actor, ActorRef}
 import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
-import org.joda.time.{DateTime, LocalDateTime, LocalDate}
+import org.joda.time.{LocalTime, DateTime, LocalDateTime, LocalDate}
 
 import scala.collection.mutable
 import scala.compat.Platform
@@ -23,21 +23,40 @@ case class VirtaQuery(oppijanumero: String, hetu: Option[String])
 case class VirtaQueuedQuery(q: VirtaQuery)
 case class KomoNotFoundException(message: String) extends Exception(message)
 case class VirtaData(opiskeluOikeudet: Seq[Opiskeluoikeus], suoritukset: Seq[Suoritus])
-case class VirtaStatus(latestDequeueTime: Option[DateTime], queueLength: Long, status: Status)
+case class VirtaStatus(lastDequeueTime: Option[DateTime] = None,
+                       nextDequeueTime: Option[DateTime] = None,
+                       queueLength: Long,
+                       status: Status)
+case class RescheduleDequeue(time: String)
 
 object ConsumeOne
 object ConsumeAll
 object PrintStats
 object VirtaHealth
+object CancelDequeue
 
 class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   val virtaQueue: mutable.Queue[VirtaQuery] = new mutable.Queue()
 
-  var latestDequeueTime: Option[DateTime] = None
+  var lastDequeueTime: Option[DateTime] = None
+  var dequeueTime: Option[LocalTime] = None
 
-  context.system.scheduler.schedule(at("04:00"), 24.hours, self, ConsumeAll)
+  def nextDequeue: Option[DateTime] = dequeueTime.map(t => {
+    val atToday: DateTime = t.toDateTimeToday
+    if (atToday.isBefore(new DateTime())) {
+      atToday.plusDays(1)
+    } else atToday
+  })
+
+  def scheduleFullDequeue(time: String): Cancellable = {
+    val duration: FiniteDuration = at(time)
+    dequeueTime = Some(new LocalTime(Platform.currentTime + duration.toMillis))
+    context.system.scheduler.schedule(duration, 24.hours, self, ConsumeAll)
+  }
+
+  var fullDequeue: Cancellable = scheduleFullDequeue("04:00")
   context.system.scheduler.schedule(5.minutes, 10.minutes, self, PrintStats)
 
   def consume() = {
@@ -60,11 +79,17 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
         consume()
       }
       log.info(s"full dequeue done, virta queue length ${virtaQueue.length}")
-      latestDequeueTime = Some(new DateTime())
+      lastDequeueTime = Some(new DateTime())
 
     case PrintStats => log.info(s"virta queue length ${virtaQueue.length}")
 
-    case VirtaHealth => sender ! VirtaStatus(latestDequeueTime, virtaQueue.length, Status.OK)
+    case VirtaHealth => sender ! VirtaStatus(lastDequeueTime, nextDequeue, virtaQueue.length, Status.OK)
+
+    case CancelDequeue if !fullDequeue.isCancelled =>
+      fullDequeue.cancel()
+      dequeueTime = None
+
+    case RescheduleDequeue(time) => fullDequeue = scheduleFullDequeue(time)
   }
 
   override def preStart(): Unit = {
@@ -159,8 +184,10 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
 object Virta {
   val CSC = "1.2.246.562.10.2013112012294919827487"
 
+  val timeFormat = "^[0-9]{2}:[0-9]{2}$"
+
   def at(time: String): FiniteDuration = {
-    if (!time.matches("^[0-9]{2}:[0-9]{2}$")) throw new IllegalArgumentException("time format is not HH:mm")
+    if (!time.matches(timeFormat)) throw new IllegalArgumentException("time format is not HH:mm")
 
     val t = time.split(":")
     val todayAtTime = new LocalDateTime().withTime(t(0).toInt, t(1).toInt, 0, 0)
