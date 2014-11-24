@@ -9,7 +9,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{IncidentReport, UserNotAuthorized,
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 
 class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
 
@@ -24,16 +24,47 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem) extends
     contentType = formats("json")
   }
 
+  def virtaStatus: Future[VirtaStatus] = (virtaQueue ? VirtaHealth)(120.seconds).mapTo[VirtaStatus].recover {
+    case e: AskTimeoutException => VirtaStatus(queueLength = 0, status = Status.TIMEOUT)
+    case e: Throwable => VirtaStatus(queueLength = 0, status = Status.FAILURE)
+  }
+
+  def hasAccess: Boolean = currentUser.exists(_.orgsFor("WRITE", "Virta").contains("1.2.246.562.10.00000000001"))
+
   get("/sync") {
-    if (!currentUser.exists(_.orgsFor("WRITE", "Virta").contains("1.2.246.562.10.00000000001"))) throw UserNotAuthorized("not authorized")
+    if (!hasAccess) throw UserNotAuthorized("not authorized")
     else new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
 
       virtaQueue ! ConsumeAll
 
-      override val is = (virtaQueue ? VirtaHealth)(120.seconds).mapTo[VirtaStatus].recover {
-        case e: AskTimeoutException => VirtaStatus(None, 0, Status.TIMEOUT)
-        case e: Throwable => VirtaStatus(None, 0, Status.FAILURE)
+      override val is = virtaStatus
+    }
+  }
+
+  get("/stop") {
+    if (!hasAccess) throw UserNotAuthorized("not authorized")
+    else new AsyncResult() {
+      override implicit def timeout: Duration = 120.seconds
+
+      virtaQueue ! CancelDequeue
+
+      override val is = virtaStatus
+    }
+  }
+
+  get("/reschedule") {
+    if (!hasAccess) throw UserNotAuthorized("not authorized")
+    else {
+      val time = params.get("time")
+      if (time.isDefined && !time.get.matches(Virta.timeFormat)) throw new IllegalArgumentException(s"time format is not HH:mm")
+
+      new AsyncResult() {
+        override implicit def timeout: Duration = 120.seconds
+
+        virtaQueue ! RescheduleDequeue(time.getOrElse("04:00"))
+
+        override val is = virtaStatus
       }
     }
   }

@@ -143,8 +143,8 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
 
 
   def getVirtaStatus: Future[VirtaStatus] = (virtaQueue ? VirtaHealth).mapTo[VirtaStatus].recover {
-    case e: AskTimeoutException => VirtaStatus(None, 0, Status.TIMEOUT)
-    case e: Throwable => VirtaStatus(None, 0, Status.FAILURE)
+    case e: AskTimeoutException => VirtaStatus(queueLength = 0, status = Status.TIMEOUT)
+    case e: Throwable => VirtaStatus(queueLength = 0, status = Status.FAILURE)
   }
 
   def getEnsikertalainenReport: Future[QueryReport] = (ensikertalainenActor ? QueryCount).map{
