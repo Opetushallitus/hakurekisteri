@@ -26,23 +26,10 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
       val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(classOf[VirtaQueue], virtaActor, hakemusActor))
       val q = VirtaQuery("foo", Some("bar"))
       virtaQueue ! VirtaQueuedQuery(q)
-      virtaQueue ! ConsumeAll
+      virtaQueue ! ProcessAll
 
       "consume all queries in the queue" in {
         virtaQueue.underlyingActor.virtaQueue.length should be(0)
-      }
-    }
-
-    "consuming one" should {
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(classOf[VirtaQueue], virtaActor, hakemusActor))
-      val q1 = VirtaQuery("foo", Some("bar"))
-      val q2 = VirtaQuery("foo2", Some("bar2"))
-      virtaQueue ! VirtaQueuedQuery(q1)
-      virtaQueue ! VirtaQueuedQuery(q2)
-      virtaQueue ! ConsumeOne
-
-      "consume the first query in the queue" in {
-        virtaQueue.underlyingActor.virtaQueue.head should be(q2)
       }
     }
 
