@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri
 
 import fi.vm.sade.hakurekisteri.arvosana.{ArvosanaActor, Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, FullHakemus}
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaStatus, VirtaHealth}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusActor}
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -10,7 +11,7 @@ import akka.actor.{Actor, Props, ActorSystem}
 
 import fi.vm.sade.hakurekisteri.acceptance.tools.{Peruskoulu, FakeAuthorizer}
 import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaActor, Opiskelija}
-import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
+import fi.vm.sade.hakurekisteri.healthcheck.{Status, HealthcheckActor, HealthcheckResource}
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
@@ -63,7 +64,13 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
     }
   }))
 
-  val healthcheck = system.actorOf(Props(new HealthcheckActor(guardedArvosanaRekisteri, guardedOpiskelijaRekisteri, guardedOpiskeluoikeusRekisteri, guardedSuoritusRekisteri, ytl,  hakemukset, ensikertalainen)))
+  val virtaQueue = system.actorOf(Props(new Actor {
+    override def receive: Receive = {
+      case VirtaHealth => sender ! VirtaStatus(Some(new DateTime()), 1000, Status.OK)
+    }
+  }))
+
+  val healthcheck = system.actorOf(Props(new HealthcheckActor(guardedArvosanaRekisteri, guardedOpiskelijaRekisteri, guardedOpiskeluoikeusRekisteri, guardedSuoritusRekisteri, ytl,  hakemukset, ensikertalainen, virtaQueue)))
 
   addServlet(new HealthcheckResource(healthcheck), "/*")
 

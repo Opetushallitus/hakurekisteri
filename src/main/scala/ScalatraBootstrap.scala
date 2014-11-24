@@ -79,7 +79,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val koosteet = new BaseKoosteet(system, integrations, registers)
 
-    val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.ytl ,  integrations.hakemukset, koosteet.ensikertalainen)), "healthcheck")
+    val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.ytl, integrations.hakemukset, koosteet.ensikertalainen, integrations.virtaQueue)), "healthcheck")
 
     mountServlets(context) (
       ("/", "gui") -> new GuiServlet,
@@ -326,7 +326,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(system), organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
 
-  val virtaStack = system.actorOf(Props(new VirtaQueue(virta, hakemukset)))
+  val virtaQueue = system.actorOf(Props(new VirtaQueue(virta, hakemukset)))
 
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, ytlConfig)), "ytl")
 

@@ -13,6 +13,7 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
 import fi.vm.sade.hakurekisteri.hakija.Hakemus
 import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaHealth, VirtaStatus}
 import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
@@ -65,7 +66,8 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
                        suoritusRekisteri: ActorRef,
                        ytl: ActorRef,
                        hakemukset: ActorRef,
-                       ensikertalainenActor: ActorRef)(implicit system: ActorSystem) extends Actor with ActorLogging {
+                       ensikertalainenActor: ActorRef,
+                       virtaQueue: ActorRef)(implicit system: ActorSystem) extends Actor with ActorLogging {
   protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(30, TimeUnit.SECONDS)
 
@@ -123,6 +125,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       hakemusCount <- getHakemusCount
       ytlReport <- getYtlReport
       ensikertalaiset <- getEnsikertalainenReport
+      virtaStatus <- getVirtaStatus
     } yield Healhcheck(startTime,
       "anonymousUser",
       "/suoritusrekisteri",
@@ -134,10 +137,15 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
         hakemukset = hakemusCount,
         foundHakemukset = foundHakemukset,
         ensikertalaiset,
-        ytl = ytlReport
+        ytl = ytlReport,
+        virta = virtaStatus
       )),"")}
 
 
+  def getVirtaStatus: Future[VirtaStatus] = (virtaQueue ? VirtaHealth).mapTo[VirtaStatus].recover {
+    case e: AskTimeoutException => VirtaStatus(None, 0, Status.TIMEOUT)
+    case e: Throwable => VirtaStatus(None, 0, Status.FAILURE)
+  }
 
   def getEnsikertalainenReport: Future[QueryReport] = (ensikertalainenActor ? QueryCount).map{
     case QueriesRunning(count, time) => QueryReport(Status.OK, count,time)}.recover {
@@ -234,7 +242,8 @@ case class Resources(arvosanat: ItemCount,
                      hakemukset: ItemCount,
                      foundHakemukset: Map[String, RefreshingState],
                      ensikertalainenQueries: QueryReport,
-                     ytl: YtlStatus)
+                     ytl: YtlStatus,
+                     virta: VirtaStatus)
 
 case class Healhcheck(start: Long, user: String, contextPath: String, checks: Checks, info: String, end: Long = Platform.currentTime) {
 
