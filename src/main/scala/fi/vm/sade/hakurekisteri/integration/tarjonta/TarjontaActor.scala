@@ -97,8 +97,9 @@ class TarjontaActor(restClient: VirkailijaRestClient) extends Actor {
         fk.map {
           case None => throw KomoNotFoundException(s"komo not found with oid ${k.komoOid}")
           case Some(komo) =>
-            val koulutukset = Seq(Hakukohteenkoulutus(komo.oid, komo.koulutuskoodi.arvo, k.tunniste.flatMap(_.blankOption)))
-            k.kandidaatinKoulutuskoodi.flatMap(_.arvo.map(a => koulutukset :+ Hakukohteenkoulutus("", a, None))).getOrElse(koulutukset)
+            val kkKoulutusId = k.tunniste.flatMap(_.blankOption)
+            val koulutukset = Seq(Hakukohteenkoulutus(komo.oid, komo.koulutuskoodi.arvo, kkKoulutusId))
+            k.kandidaatinKoulutuskoodi.flatMap(_.arvo.map(a => koulutukset :+ Hakukohteenkoulutus(komo.oid, a, kkKoulutusId))).getOrElse(koulutukset)
         }
     }
   }
