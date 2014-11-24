@@ -26,7 +26,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
-import fi.vm.sade.hakurekisteri.integration.virta.{VirtaQueue, VirtaConfig, VirtaClient, VirtaActor}
+import fi.vm.sade.hakurekisteri.integration.virta._
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
 import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, OrganizationHierarchy}
@@ -83,9 +83,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     mountServlets(context) (
       ("/", "gui") -> new GuiServlet,
-      ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
-      // ("/upload", "upload") -> new UploadResource(),
       ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None))("eranTunniste", "perustiedot", "data", Perustiedot, PerustiedotKoodisto) with SpringSecuritySupport,
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
       ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
@@ -96,8 +94,11 @@ class ScalatraBootstrap extends LifeCycle {
       ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
       ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
       ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
-      ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport
-      //("/sanity", "sanity") -> new SanityResource(sanity)
+      ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport,
+      //("/sanity", "sanity") -> new SanityResource(sanity),
+      ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
+      //("/upload", "upload") -> new UploadResource(),
+      ("/virta", "virta") -> new VirtaResource(integrations.virtaQueue)
     )
   }
 
