@@ -88,8 +88,11 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
     case CancelDequeue if !fullDequeue.isCancelled =>
       fullDequeue.cancel()
       dequeueTime = None
+      log.warning(s"cancelled full dequeue")
 
-    case RescheduleDequeue(time) => fullDequeue = scheduleFullDequeue(time)
+    case RescheduleDequeue(time) =>
+      fullDequeue = scheduleFullDequeue(time)
+      log.info(s"rescheduled to $dequeueTime")
   }
 
   override def preStart(): Unit = {
