@@ -44,13 +44,20 @@ object Config {
   lazy val properties: Map[String, String] = loadProperties(resources.map(Files.newInputStream(_)))
 
   // props
-  val ophOrganisaatioOid = properties.getOrElse("root.organisaatio.oid", "1.2.246.562.10.00000000001")
-  val ytlOrganisaatioOid = properties.getOrElse("ytl.organisaatio.oid", "1.2.246.562.10.43628088406")
-  val cscOrganisaatioOid = properties.getOrElse("csc.organisaatio.oid", "1.2.246.562.10.2013112012294919827487")
-  val tuntematonOrganisaatioOid = properties.getOrElse("tuntematon.organisaatio.oid", "1.2.246.562.10.57118763579")
-  val yotutkintoKomoOid = properties.getOrElse("yotutkinto.komo.oid", "1.2.246.562.5.2013061010184237348007")
+  val ophOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.oph", "1.2.246.562.10.00000000001")
+  val ytlOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.ytl", "1.2.246.562.10.43628088406")
+  val cscOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.csc", "1.2.246.562.10.2013112012294919827487")
+  val tuntematonOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.tuntematon", "1.2.246.562.10.57118763579")
+  val yotutkintoKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.yotutkinto", "1.2.246.562.5.2013061010184237348007")
+
+  val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt
+  val ensikertalainenCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.ensikertalainen", "6").toInt
+  val tarjontaCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.tarjonta", "12").toInt
+  val valintatulosCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.valintatulos", "2").toInt
+
   val serviceUser = Some(properties("suoritusrekisteri.app.username"))
   val servicePassword = Some(properties("suoritusrekisteri.app.password"))
+
   val casUrl = Some(properties.getOrElse("web.url.cas", casUrlQa))
   val sijoitteluServiceUrl = properties.getOrElse("cas.service.sijoittelu-service", sijoitteluServiceUrlQa)
   val tarjontaServiceUrl = properties.getOrElse("cas.service.tarjonta-service", tarjontaServiceUrlQa)

@@ -3,9 +3,11 @@ package fi.vm.sade.hakurekisteri.integration.tarjonta
 import java.net.URLEncoder
 
 import akka.actor.Actor
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, VirkailijaRestClient}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
 import akka.pattern.pipe
 import org.scalatra.util.RicherString._
 
@@ -61,8 +63,8 @@ case class KoulutusNotFoundException(message: String) extends TarjontaException(
 case class KomoNotFoundException(message: String) extends TarjontaException(message)
 
 class TarjontaActor(restClient: VirkailijaRestClient) extends Actor {
-  private val koulutusCache = new FutureCache[String, HakukohteenKoulutukset]()
-  private val komoCache = new FutureCache[String, KomoResponse]()
+  private val koulutusCache = new FutureCache[String, HakukohteenKoulutukset](Config.tarjontaCacheHours.hours.toMillis)
+  private val komoCache = new FutureCache[String, KomoResponse](Config.tarjontaCacheHours.hours.toMillis)
   val maxRetries = 5
   implicit val ec: ExecutionContext = context.dispatcher
 

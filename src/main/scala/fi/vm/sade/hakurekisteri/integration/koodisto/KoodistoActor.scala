@@ -4,9 +4,11 @@ import java.net.URLEncoder
 
 import akka.actor.{ActorLogging, Actor}
 import akka.pattern.pipe
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedException, VirkailijaRestClient}
 
 import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.duration._
 
 case class GetRinnasteinenKoodiArvoQuery(koodiUri: String, rinnasteinenKoodistoUri: String)
 case class Koodisto(koodistoUri: String)
@@ -23,9 +25,9 @@ class KoodistoActor(restClient: VirkailijaRestClient) extends Actor with ActorLo
 
   implicit val ec: ExecutionContext =  context.dispatcher
 
-  private val koodiCache = new FutureCache[String, Option[Koodi]]()
-  private val relaatioCache = new FutureCache[GetRinnasteinenKoodiArvoQuery, String]()
-  private val koodiArvotCache = new FutureCache[String, KoodistoKoodiArvot]()
+  private val koodiCache = new FutureCache[String, Option[Koodi]](Config.koodistoCacheHours.hours.toMillis)
+  private val relaatioCache = new FutureCache[GetRinnasteinenKoodiArvoQuery, String](Config.koodistoCacheHours.hours.toMillis)
+  private val koodiArvotCache = new FutureCache[String, KoodistoKoodiArvot](Config.koodistoCacheHours.hours.toMillis)
   val maxRetries = 5
 
   override def receive: Receive = {
