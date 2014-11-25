@@ -4,6 +4,7 @@ import java.net.URLEncoder
 
 import akka.actor.{ActorLogging, Actor, Cancellable}
 import akka.pattern.pipe
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
 
 import scala.compat.Platform
@@ -42,7 +43,7 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
     cancellable.foreach(_.cancel())
   }
 
-  val timeToLive = 24.hours
+  val timeToLive = Config.organisaatioCacheHours.hours
 
   case class Save(oid:String, value: (Long, Future[Option[Organisaatio]]))
 

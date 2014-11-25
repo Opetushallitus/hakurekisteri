@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.ensikertalainen
 
-import _root_.akka.event.{Logging, LoggingAdapter}
+import akka.event.{Logging, LoggingAdapter}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack

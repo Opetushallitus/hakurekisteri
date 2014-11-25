@@ -312,7 +312,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.1", 5, 200) returns f
   sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.2", 5, 200) returns f
 
-  object hakijaResource {
+  object testHakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
     val orgAct = system.actorOf(Props(new MockedOrganisaatioActor()))

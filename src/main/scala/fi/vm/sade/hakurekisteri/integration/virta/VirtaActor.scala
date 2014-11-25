@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.Status.Failure
 import akka.actor.{Cancellable, ActorLogging, Actor, ActorRef}
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
@@ -18,6 +19,7 @@ import fi.vm.sade.hakurekisteri.healthcheck.Status
 import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
 
 import Virta.at
+
 
 case class VirtaQuery(oppijanumero: String, hetu: Option[String])
 case class VirtaQueuedQuery(q: VirtaQuery)
@@ -169,10 +171,9 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
   }
 
   import akka.pattern.ask
-  val tuntematon = "1.2.246.562.10.57118763579"
 
   def resolveOppilaitosOid(oppilaitosnumero: String): Future[String] = oppilaitosnumero match {
-    case o if Seq("XX", "UK", "UM").contains(o) => Future.successful(tuntematon)
+    case o if Seq("XX", "UK", "UM").contains(o) => Future.successful(Config.tuntematonOrganisaatioOid)
     case o =>
       (organisaatioActor ? o)(30.seconds).mapTo[Option[Organisaatio]] map {
           case Some(org) => org.oid
@@ -182,7 +183,7 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
 }
 
 object Virta {
-  val CSC = "1.2.246.562.10.2013112012294919827487"
+  val CSC = Config.cscOrganisaatioOid
 
   val timeFormat = "^[0-9]{2}:[0-9]{2}$"
 

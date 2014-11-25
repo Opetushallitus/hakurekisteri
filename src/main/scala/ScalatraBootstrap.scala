@@ -1,11 +1,12 @@
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
 import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaResource
 import fi.vm.sade.hakurekisteri.oppija.OppijaResource
 import fi.vm.sade.hakurekisteri.storage.repository.Journal
 
-import _root_.akka.camel.CamelExtension
-import _root_.akka.routing.BroadcastGroup
+import akka.camel.CamelExtension
+import akka.routing.BroadcastGroup
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
 import fi.vm.sade.hakurekisteri.integration.haku.{HakuResource, HakuActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.ParameterActor
@@ -15,8 +16,8 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.servlet.{Servlet, DispatcherType, ServletContext, ServletContextEvent}
 
-import _root_.akka.actor.{ActorRef, ActorSystem, Props}
-import _root_.akka.util.Timeout
+import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, EnsikertalainenResource}
 import fi.vm.sade.hakurekisteri.hakija._
@@ -35,7 +36,7 @@ import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
 import org.apache.activemq.camel.component.ActiveMQComponent
 import org.joda.time.LocalDate
-import org.scalatra._
+import org.scalatra.{Handler, LifeCycle}
 import org.scalatra.swagger.Swagger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.BeanDefinition
@@ -55,8 +56,6 @@ import scala.reflect.ClassTag
 import HakurekisteriDriver.simple._
 import scala.util.Try
 import siirto.{PerustiedotKoodisto, Perustiedot, SchemaServlet}
-
-import scala.xml.Elem
 
 
 class ScalatraBootstrap extends LifeCycle {
@@ -201,7 +200,7 @@ class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
 }
 
 class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Registers, system: ActorSystem) extends Registers {
-  import _root_.akka.pattern.ask
+  import akka.pattern.ask
   import scala.reflect.runtime.universe._
   implicit val ec:ExecutionContext = system.dispatcher
 
@@ -237,7 +236,7 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Regi
   override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, unauthorized.arvosanaRekisteri,
     resolve
     )), "arvosana-authorizer")
-  override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era) => Some("1.2.246.562.10.00000000001"))
+  override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era) => Some(Config.ophOrganisaatioOid))
 }
 
 object AuthorizedRegisters {

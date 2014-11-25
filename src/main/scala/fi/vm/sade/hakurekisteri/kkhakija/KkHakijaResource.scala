@@ -4,10 +4,10 @@ import java.io.OutputStream
 import java.text.{ParseException, SimpleDateFormat}
 import java.util.{Calendar, Date}
 
-import _root_.akka.actor.{ActorRef, ActorSystem}
-import _root_.akka.event.{LoggingAdapter, Logging}
-import _root_.akka.pattern.ask
-import _root_.akka.util.Timeout
+import akka.actor.{ActorRef, ActorSystem}
+import akka.event.{LoggingAdapter, Logging}
+import akka.pattern.ask
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.rest.support.ApiFormat.ApiFormat

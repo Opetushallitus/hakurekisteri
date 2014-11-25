@@ -2,6 +2,8 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 
 import akka.actor._
 import java.util.UUID
+import fi.vm.sade.hakurekisteri.Config
+
 import scala.xml.{XML, Node, Elem}
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen, Suoritus}
 import fi.vm.sade.hakurekisteri.arvosana.{ArvosanaQuery, Arvosana}
@@ -388,8 +390,9 @@ object YTLXml {
     }
   }
 
-  val YTL: String = "1.2.246.562.10.43628088406"
-  val yotutkinto = "1.2.246.562.5.2013061010184237348007"
+
+  val YTL: String = Config.ytlOrganisaatioOid
+  val yotutkinto = Config.yotutkintoKomoOid
 
   object YoTutkinto {
     def apply(suorittaja: String, valmistuminen: LocalDate, kieli: String, valmis: Boolean = true, vahvistettu: Boolean = true) = {
@@ -449,6 +452,7 @@ object YTLXml {
 
   def extractLukio(oid: String, kokelas:Node): Option[Suoritus] = None
 
+  import fi.vm.sade.hakurekisteri.Config
   import org.scalatra.util.RicherString._
 
   def extractTodistus(yo: Suoritus, kokelas: Node): Seq[Koe] = {

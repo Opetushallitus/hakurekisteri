@@ -4,6 +4,7 @@ package fi.vm.sade.hakurekisteri.ensikertalainen
 import akka.actor.{ActorLogging, Actor, ActorRef, Props}
 import akka.pattern.pipe
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.FutureCache
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
@@ -28,7 +29,7 @@ case class CacheResult(q: EnsikertalainenQuery, f: Future[Ensikertalainen])
 class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, tarjontaActor: ActorRef)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
   val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
   implicit val defaultTimeout: Timeout = 30.seconds
-  private val cache = new FutureCache[EnsikertalainenQuery, Ensikertalainen](2.hours.toMillis)
+  private val cache = new FutureCache[EnsikertalainenQuery, Ensikertalainen](Config.ensikertalainenCacheHours.hours.toMillis)
 
   override def receive: Receive = {
     case q: EnsikertalainenQuery =>

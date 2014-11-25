@@ -3,25 +3,26 @@ package fi.vm.sade.hakurekisteri.hakija
 import java.io.OutputStream
 import java.text.SimpleDateFormat
 
-import _root_.akka.event.{Logging, LoggingAdapter}
-import fi.vm.sade.hakurekisteri.rest.support._
-import fi.vm.sade.hakurekisteri.rest.support.ApiFormat.ApiFormat
-import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
-import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.swagger.{Swagger, SwaggerEngine}
-import org.scalatra._
-import scala.compat.Platform
-import scala.concurrent.{Future, ExecutionContext}
 import _root_.akka.actor.{ActorRef, ActorSystem}
+import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
+import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
+import fi.vm.sade.hakurekisteri.rest.support.ApiFormat.ApiFormat
+import fi.vm.sade.hakurekisteri.rest.support._
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
+import org.scalatra._
+import org.scalatra.json.JacksonJsonSupport
+import org.scalatra.swagger.{Swagger, SwaggerEngine}
+
+import scala.compat.Platform
+import scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassTag
 import scala.util.Try
 import scala.xml._
-import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus}
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
-import scala.reflect.ClassTag
 
 
 object Hakuehto extends Enumeration {
@@ -109,7 +110,7 @@ object XMLUtil {
   def toBoolean10(b: Boolean): String = if (b) "1" else "0"
 }
 
-import XMLUtil._
+import fi.vm.sade.hakurekisteri.hakija.XMLUtil._
 
 case class XMLHakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[String], opetuspisteennimi: Option[String], koulutus: String,
                      harkinnanvaraisuusperuste: Option[String], urheilijanammatillinenkoulutus: Option[Boolean], yhteispisteet: Option[BigDecimal],

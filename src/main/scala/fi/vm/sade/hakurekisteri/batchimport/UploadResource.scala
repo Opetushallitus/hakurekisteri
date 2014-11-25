@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.batchimport
 
-import _root_.akka.actor.ActorSystem
-import _root_.akka.event.{Logging, LoggingAdapter}
+import akka.actor.ActorSystem
+import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, SpringSecuritySupport}
 import org.json4s.Extraction

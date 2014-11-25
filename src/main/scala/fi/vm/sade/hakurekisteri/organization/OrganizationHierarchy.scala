@@ -1,5 +1,7 @@
 package fi.vm.sade.hakurekisteri.organization
 
+import fi.vm.sade.hakurekisteri.Config
+
 import scala.xml.Elem
 import org.scalatra.util.RicherString._
 import org.joda.time.DateTime
@@ -31,7 +33,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](s
 
   override def preStart() {
     scheduledTask = context.system.scheduler.schedule(
-      0.seconds, 60.minutes,
+      0.seconds, Config.organisaatioCacheHours.hours,
       self, update)
   }
 
@@ -206,7 +208,7 @@ case class OrganizationAuthorizer(orgPaths: Map[String, Seq[String]]) {
   def checkAccess(user: User, action: String, futTarget: concurrent.Future[Subject]) = futTarget.map {
     (target: Subject) =>
     val allowedOrgs = user.orgsFor(action, target.resource)
-    val paths: Set[String] = target.orgs.flatMap((oid) => orgPaths.getOrElse(oid, Seq("1.2.246.562.10.00000000001", oid)))
+    val paths: Set[String] = target.orgs.flatMap((oid) => orgPaths.getOrElse(oid, Seq(Config.ophOrganisaatioOid, oid)))
     paths.exists { x => user.username == x || allowedOrgs.contains(x) }
   }
 }

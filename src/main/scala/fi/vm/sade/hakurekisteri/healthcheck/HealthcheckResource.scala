@@ -3,11 +3,11 @@ package fi.vm.sade.hakurekisteri.healthcheck
 import java.util.concurrent.TimeUnit
 import java.util.{Locale, UUID}
 
-import _root_.akka.util.Timeout
+import akka.util.Timeout
 import akka.actor._
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.{AskTimeoutException, ask, pipe}
-import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.{Config, HakuJaValintarekisteriStack}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
 import fi.vm.sade.hakurekisteri.hakija.Hakemus
@@ -29,6 +29,7 @@ import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+
 
 class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -74,7 +75,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
 
   val resources = Set("Arvosana", "Suoritus", "Opiskeluoikeus", "Opiskelija")
 
-  val healthCheckUser = BasicUser("healthcheck", resources.map(ReadRole( _, "1.2.246.562.10.00000000001")))
+  val healthCheckUser = BasicUser("healthcheck", resources.map(ReadRole( _, Config.ophOrganisaatioOid)))
   var foundHakemukset:Map[String, RefreshingState] = Map()
 
   var selfChecks: Map[UUID, Long] = Map()

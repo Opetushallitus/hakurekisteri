@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.oppija
 
 import java.util.UUID
 
-import _root_.akka.event.{LoggingAdapter, Logging}
+import akka.event.{LoggingAdapter, Logging}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout

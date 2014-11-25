@@ -45,10 +45,10 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
     case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
 
     case sq: Seq[_] =>
-      val s = sq.collect{ case h:Haku => h}
+      val s = sq.collect{ case h: Haku => h}
       activeHakus = s.filter(_.aika.isCurrently)
       ytl ! HakuList(activeHakus.filter(_.kkHaku).map(_.oid).toSet)
-      log.debug(s"current hakus ${activeHakus.mkString(", ")}")
+      log.info(s"current hakus [${activeHakus.map(h => s"${h.oid}: ${h.nimi.fi.getOrElse(h.nimi.sv.getOrElse(h.nimi.en.getOrElse("")))}").mkString(", ")}]")
       if (starting) {
         starting = false
         context.system.scheduler.schedule(1.second, refreshTime, self, RefreshSijoittelu)

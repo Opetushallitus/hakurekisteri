@@ -4,6 +4,7 @@ import java.net.URLEncoder
 
 import akka.actor.{ActorLogging, Actor}
 import akka.pattern.pipe
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
@@ -23,7 +24,7 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
   private val maxRetries = 5
   private val refetch: FiniteDuration = 1.hours
   private val retry: FiniteDuration = 60.seconds
-  private val cache = new FutureCache[String, SijoitteluTulos](2.hours.toMillis)
+  private val cache = new FutureCache[String, SijoitteluTulos](Config.valintatulosCacheHours.hours.toMillis)
 
   override def receive: Receive = {
     case q: ValintaTulosQuery =>

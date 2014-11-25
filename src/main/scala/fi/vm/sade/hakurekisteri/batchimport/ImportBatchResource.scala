@@ -4,8 +4,8 @@ import java.io.{ByteArrayInputStream, InputStream}
 import java.util
 import javax.servlet.http.{Part, HttpServletRequest}
 
-import _root_.akka.actor.{ActorRef, ActorSystem}
-import _root_.akka.pattern.AskTimeoutException
+import akka.actor.{ActorRef, ActorSystem}
+import akka.pattern.AskTimeoutException
 import fi.vm.sade.hakurekisteri.rest.support._
 import org.json4s.Extraction
 import org.scalatra.util.ValueReader
