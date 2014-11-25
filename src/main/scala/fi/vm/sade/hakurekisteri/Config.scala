@@ -10,6 +10,8 @@ import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
 import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
 
+import scala.util.Try
+
 object Config {
   val log = LoggerFactory.getLogger(getClass)
   val homeDir = sys.props.get("user.home").getOrElse("")
@@ -41,7 +43,14 @@ object Config {
   } yield ophConfDir.resolve(file)
 
   log.info(s"lazy loading properties from paths $resources")
-  lazy val properties: Map[String, String] = loadProperties(resources.map(Files.newInputStream(_)))
+  lazy val properties: Map[String, String] = {
+    val props = Try(loadProperties(resources.map(Files.newInputStream(_))))
+    
+    if (props.isFailure) {
+      log.error("could not load properties", props.failed.get)
+      Map()
+    } else props.get
+  }
 
   // props
   val ophOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.oph", "1.2.246.562.10.00000000001")
