@@ -31,23 +31,23 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem) extends
 
   def hasAccess: Boolean = currentUser.exists(_.orgsFor("WRITE", "Virta").contains("1.2.246.562.10.00000000001"))
 
-  get("/sync") {
+  get("/process") {
     if (!hasAccess) throw UserNotAuthorized("not authorized")
     else new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
 
-      virtaQueue ! ConsumeAll
+      virtaQueue ! ProcessAll
 
       override val is = virtaStatus
     }
   }
 
-  get("/stop") {
+  get("/cancel") {
     if (!hasAccess) throw UserNotAuthorized("not authorized")
     else new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
 
-      virtaQueue ! CancelDequeue
+      virtaQueue ! CancelSchedule
 
       override val is = virtaStatus
     }
@@ -62,7 +62,7 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem) extends
       new AsyncResult() {
         override implicit def timeout: Duration = 120.seconds
 
-        virtaQueue ! RescheduleDequeue(time.getOrElse("04:00"))
+        virtaQueue ! RescheduleProcessing(time.getOrElse("04:00"))
 
         override val is = virtaStatus
       }

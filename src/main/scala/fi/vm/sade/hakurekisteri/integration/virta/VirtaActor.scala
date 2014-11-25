@@ -23,43 +23,42 @@ case class VirtaQuery(oppijanumero: String, hetu: Option[String])
 case class VirtaQueuedQuery(q: VirtaQuery)
 case class KomoNotFoundException(message: String) extends Exception(message)
 case class VirtaData(opiskeluOikeudet: Seq[Opiskeluoikeus], suoritukset: Seq[Suoritus])
-case class VirtaStatus(lastDequeueTime: Option[DateTime] = None,
-                       nextDequeueTime: Option[DateTime] = None,
+case class VirtaStatus(lastProcessTime: Option[DateTime] = None,
+                       nextProcessTime: Option[DateTime] = None,
                        queueLength: Long,
                        status: Status)
-case class RescheduleDequeue(time: String)
+case class RescheduleProcessing(time: String)
 
-object ConsumeOne
-object ConsumeAll
+object ProcessAll
 object PrintStats
 object VirtaHealth
-object CancelDequeue
+object CancelSchedule
 
 class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   val virtaQueue: mutable.Queue[VirtaQuery] = new mutable.Queue()
 
-  var lastDequeueTime: Option[DateTime] = None
-  var dequeueTime: Option[LocalTime] = None
+  var lastProcessTime: Option[DateTime] = None
+  var scheduledProcessTime: Option[LocalTime] = None
 
-  def nextDequeue: Option[DateTime] = dequeueTime.map(t => {
+  def nextProcessTime: Option[DateTime] = scheduledProcessTime.map(t => {
     val atToday: DateTime = t.toDateTimeToday
     if (atToday.isBefore(new DateTime())) {
       atToday.plusDays(1)
     } else atToday
   })
 
-  def scheduleFullDequeue(time: String): Cancellable = {
+  def scheduleProcessing(time: String): Cancellable = {
     val duration: FiniteDuration = at(time)
-    dequeueTime = Some(new LocalTime(Platform.currentTime + duration.toMillis))
-    context.system.scheduler.schedule(duration, 24.hours, self, ConsumeAll)
+    scheduledProcessTime = Some(new LocalTime(Platform.currentTime + duration.toMillis))
+    context.system.scheduler.schedule(duration, 24.hours, self, ProcessAll)
   }
 
-  var fullDequeue: Cancellable = scheduleFullDequeue("04:00")
+  var processing: Cancellable = scheduleProcessing("04:00")
   context.system.scheduler.schedule(5.minutes, 10.minutes, self, PrintStats)
 
-  def consume() = {
+  def processOne() = {
     try {
       val q = virtaQueue.dequeue()
       virtaActor ! q
@@ -71,25 +70,26 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
   def receive: Receive = {
     case VirtaQueuedQuery(q) if !virtaQueue.contains(q) => virtaQueue.enqueue(q)
 
-    case ConsumeOne if virtaQueue.nonEmpty => consume()
-
-    case ConsumeAll =>
-      log.info("started to dequeue virta queries")
+    case ProcessAll =>
+      log.info("started to process virta queries")
       while(virtaQueue.nonEmpty) {
-        consume()
+        processOne()
       }
-      log.info(s"full dequeue done, virta queue length ${virtaQueue.length}")
-      lastDequeueTime = Some(new DateTime())
+      log.info(s"all virta queries processed, queue length ${virtaQueue.length}")
+      lastProcessTime = Some(new DateTime())
 
-    case PrintStats => log.info(s"virta queue length ${virtaQueue.length}")
+    case PrintStats => log.info(s"queue length ${virtaQueue.length}")
 
-    case VirtaHealth => sender ! VirtaStatus(lastDequeueTime, nextDequeue, virtaQueue.length, Status.OK)
+    case VirtaHealth => sender ! VirtaStatus(lastProcessTime, nextProcessTime, virtaQueue.length, Status.OK)
 
-    case CancelDequeue if !fullDequeue.isCancelled =>
-      fullDequeue.cancel()
-      dequeueTime = None
+    case CancelSchedule if !processing.isCancelled =>
+      processing.cancel()
+      scheduledProcessTime = None
+      log.info(s"cancelled scheduled processing")
 
-    case RescheduleDequeue(time) => fullDequeue = scheduleFullDequeue(time)
+    case RescheduleProcessing(time) =>
+      processing = scheduleProcessing(time)
+      log.info(s"rescheduled to $scheduledProcessTime")
   }
 
   override def preStart(): Unit = {
