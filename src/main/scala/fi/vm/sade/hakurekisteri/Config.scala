@@ -56,8 +56,8 @@ object Config {
   val tarjontaCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.tarjonta", "12").toInt
   val valintatulosCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.valintatulos", "2").toInt
 
-  val serviceUser = Some(properties("suoritusrekisteri.app.username"))
-  val servicePassword = Some(properties("suoritusrekisteri.app.password"))
+  val serviceUser = properties.get("suoritusrekisteri.app.username")
+  val servicePassword = properties.get("suoritusrekisteri.app.password")
 
   val casUrl = Some(properties.getOrElse("web.url.cas", casUrlQa))
   val sijoitteluServiceUrl = properties.getOrElse("cas.service.sijoittelu-service", sijoitteluServiceUrlQa)
