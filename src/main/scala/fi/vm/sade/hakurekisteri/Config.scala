@@ -1,13 +1,14 @@
+package fi.vm.sade.hakurekisteri
+
+import java.io.InputStream
+import java.nio.file.{Files, Paths}
+
 import fi.vm.sade.hakurekisteri.integration.ServiceConfig
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
-import java.io.InputStream
-import java.nio.file.{Files, Paths}
-
 import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
-
 
 object Config {
   val log = LoggerFactory.getLogger(getClass)
@@ -43,6 +44,11 @@ object Config {
   lazy val properties: Map[String, String] = loadProperties(resources.map(Files.newInputStream(_)))
 
   // props
+  val ophOrganisaatioOid = properties.getOrElse("root.organisaatio.oid", "1.2.246.562.10.00000000001")
+  val ytlOrganisaatioOid = properties.getOrElse("ytl.organisaatio.oid", "1.2.246.562.10.43628088406")
+  val cscOrganisaatioOid = properties.getOrElse("csc.organisaatio.oid", "1.2.246.562.10.2013112012294919827487")
+  val tuntematonOrganisaatioOid = properties.getOrElse("tuntematon.organisaatio.oid", "1.2.246.562.10.57118763579")
+  val yotutkintoKomoOid = properties.getOrElse("yotutkinto.komo.oid", "1.2.246.562.5.2013061010184237348007")
   val serviceUser = Some(properties("suoritusrekisteri.app.username"))
   val servicePassword = Some(properties("suoritusrekisteri.app.password"))
   val casUrl = Some(properties.getOrElse("web.url.cas", casUrlQa))

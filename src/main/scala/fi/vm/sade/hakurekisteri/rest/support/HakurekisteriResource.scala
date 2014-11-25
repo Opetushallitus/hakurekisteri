@@ -3,10 +3,10 @@ package fi.vm.sade.hakurekisteri.rest.support
 import java.util.UUID
 import javax.servlet.http.HttpServletRequest
 
-import _root_.akka.actor.{ActorRef, ActorSystem}
-import _root_.akka.event.{Logging, LoggingAdapter}
-import _root_.akka.pattern.ask
-import _root_.akka.util.Timeout
+import akka.actor.{ActorRef, ActorSystem}
+import akka.event.{Logging, LoggingAdapter}
+import akka.pattern.ask
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.organization.{AuthorizedCreate, AuthorizedDelete, AuthorizedQuery, AuthorizedRead, _}
 import fi.vm.sade.hakurekisteri.storage.Identified

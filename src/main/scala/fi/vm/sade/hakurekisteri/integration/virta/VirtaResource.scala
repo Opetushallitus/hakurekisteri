@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.virta
 import _root_.akka.actor.{ActorSystem, ActorRef}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.AskTimeoutException
-import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.{Config, HakuJaValintarekisteriStack}
 import fi.vm.sade.hakurekisteri.healthcheck.Status
 import fi.vm.sade.hakurekisteri.rest.support.{IncidentReport, UserNotAuthorized, SpringSecuritySupport, HakurekisteriJsonSupport}
 import org.scalatra._
@@ -29,7 +29,7 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem) extends
     case e: Throwable => VirtaStatus(queueLength = 0, status = Status.FAILURE)
   }
 
-  def hasAccess: Boolean = currentUser.exists(_.orgsFor("WRITE", "Virta").contains("1.2.246.562.10.00000000001"))
+  def hasAccess: Boolean = currentUser.exists(_.orgsFor("WRITE", "Virta").contains(Config.ophOrganisaatioOid))
 
   get("/process") {
     if (!hasAccess) throw UserNotAuthorized("not authorized")
