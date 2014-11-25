@@ -50,8 +50,9 @@ object Config {
   val tuntematonOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.tuntematon", "1.2.246.562.10.57118763579")
   val yotutkintoKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.yotutkinto", "1.2.246.562.5.2013061010184237348007")
 
-  val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt
   val ensikertalainenCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.ensikertalainen", "6").toInt
+  val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt
+  val organisaatioCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.organisaatio", "12").toInt
   val tarjontaCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.tarjonta", "12").toInt
   val valintatulosCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.valintatulos", "2").toInt
 

@@ -33,7 +33,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](s
 
   override def preStart() {
     scheduledTask = context.system.scheduler.schedule(
-      0.seconds, 60.minutes,
+      0.seconds, Config.organisaatioCacheHours.hours,
       self, update)
   }
 
