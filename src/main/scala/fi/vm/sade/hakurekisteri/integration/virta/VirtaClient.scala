@@ -28,7 +28,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
                  (implicit val system: ActorSystem) {
 
 
-  implicit val ec = ExecutorUtil.createExecutor(10, "virta-executor")
+  implicit val ec = ExecutorUtil.createExecutor(5, "virta-executor")
 
   val client = aClient.map(Http(_)).getOrElse(Http)
 
