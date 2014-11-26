@@ -4,6 +4,7 @@ import java.net.URLEncoder
 
 import akka.actor.{ActorLogging, Actor}
 import akka.pattern.pipe
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
 import scala.concurrent.ExecutionContext
@@ -11,7 +12,7 @@ import scala.concurrent.ExecutionContext
 case class HenkiloResponse(oidHenkilo: String, hetu: Option[String])
 
 class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with ActorLogging {
-  val maxRetries = 2
+  val maxRetries = Config.httpClientMaxRetries
 
   implicit val ec: ExecutionContext = context.dispatcher
 

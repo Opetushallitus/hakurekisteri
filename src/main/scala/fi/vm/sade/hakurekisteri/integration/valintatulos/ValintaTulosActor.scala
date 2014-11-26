@@ -21,7 +21,7 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
 
   implicit val ec = context.dispatcher
 
-  private val maxRetries = 2
+  private val maxRetries = Config.httpClientMaxRetries
   private val refetch: FiniteDuration = 1.hours
   private val retry: FiniteDuration = 60.seconds
   private val cache = new FutureCache[String, SijoitteluTulos](Config.valintatulosCacheHours.hours.toMillis)

@@ -15,7 +15,7 @@ import scala.util.Try
 class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
   private var cache: Map[String, (Long, Future[Option[Organisaatio]])] = Map()
-  val maxRetries = 2
+  val maxRetries = Config.httpClientMaxRetries
 
   class Refresh
   private object refresh extends Refresh

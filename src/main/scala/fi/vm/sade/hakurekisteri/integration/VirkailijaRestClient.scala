@@ -103,7 +103,7 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
     }
 
     val serviceUrlSuffix = "/j_spring_cas_security_check"
-    val maxRetriesCas = 2
+    val maxRetriesCas = Config.httpClientMaxRetries
 
     private def postfixServiceUrl(url: String): String = url match {
       case s if !s.endsWith(serviceUrlSuffix) => s"$url$serviceUrlSuffix"
@@ -237,7 +237,7 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
   private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = client(uri.accept(acceptedResponseCode).as[A]).recoverWith {
     case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
       if (retryCount.getAndIncrement <= maxRetries) {
-        logger.warning(s"retrying request to $uri due to $t, retry count ${retryCount.get - 1}")
+        logger.warning(s"retrying request to $uri due to $t, retry attempt #${retryCount.get - 1}")
         tryClient(uri, acceptedResponseCode, maxRetries, retryCount)
       } else Future.failed(t)
   }

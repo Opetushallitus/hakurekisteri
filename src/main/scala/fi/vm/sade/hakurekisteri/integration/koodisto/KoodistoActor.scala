@@ -28,7 +28,7 @@ class KoodistoActor(restClient: VirkailijaRestClient) extends Actor with ActorLo
   private val koodiCache = new FutureCache[String, Option[Koodi]](Config.koodistoCacheHours.hours.toMillis)
   private val relaatioCache = new FutureCache[GetRinnasteinenKoodiArvoQuery, String](Config.koodistoCacheHours.hours.toMillis)
   private val koodiArvotCache = new FutureCache[String, KoodistoKoodiArvot](Config.koodistoCacheHours.hours.toMillis)
-  val maxRetries = 2
+  val maxRetries = Config.httpClientMaxRetries
 
   override def receive: Receive = {
     case q: GetRinnasteinenKoodiArvoQuery =>

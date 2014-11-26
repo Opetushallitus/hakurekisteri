@@ -1,6 +1,8 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
 import java.io.InterruptedIOException
+import java.net.ConnectException
+import java.util.concurrent.{TimeoutException, ExecutionException}
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
@@ -42,7 +44,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   val client: Http = aClient.map(Http(_)).getOrElse(defaultClient)
 
   val logger = Logging.getLogger(system, this)
-  val maxRetries = 2
+  val maxRetries = Config.httpClientMaxRetries
 
   def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
 
@@ -107,10 +109,17 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
       }
     }
 
+    def retryable(t: Throwable): Boolean = t match {
+      case t: TimeoutException => true
+      case t: ConnectException => true
+      case VirtaConnectionErrorException(_) => true
+      case _ => false
+    }
+
     client(url(requestUrl) << requestEnvelope > VirtaHandler).recoverWith {
-      case t: InterruptedIOException =>
+      case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
         if (retryCount.getAndIncrement <= maxRetries) {
-          logger.warning(s"got $t, retrying virta query for $oppijanumero: retryCount ${retryCount.get}")
+          logger.warning(s"retrying virta query for $oppijanumero due to $t: retry attempt #${retryCount.get - 1}")
 
           tryPost(requestUrl, requestEnvelope, oppijanumero, hetu, retryCount)
         } else concurrent.Future.failed(t)
