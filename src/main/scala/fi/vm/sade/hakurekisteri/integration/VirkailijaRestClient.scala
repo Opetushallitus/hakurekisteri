@@ -49,12 +49,12 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
 
   val cookieExpirationMillis = 5.minutes.toMillis
 
-  private val internalClient = aClient.map(Http(_)).getOrElse(Http().configure(_
+  private val internalClient: Http = aClient.map(Http(_)).getOrElse(Http.configure(_
     .setConnectionTimeoutInMs(10000)
     .setRequestTimeoutInMs(120000)
     .setAllowPoolingConnection(false)
-    .setMaximumConnectionsPerHost(50)
-    .setMaximumConnectionsTotal(50)
+    .setMaximumConnectionsPerHost(10)
+    .setMaximumConnectionsTotal(10)
     .setMaxRequestRetry(2)
   ))
 
