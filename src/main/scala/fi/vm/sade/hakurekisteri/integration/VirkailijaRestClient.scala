@@ -20,7 +20,6 @@ import dispatch._
 import com.ning.http.client._
 import dispatch.Req
 import scala.util.Failure
-import scala.Some
 import fi.vm.sade.hakurekisteri.integration.cas.LocationHeaderNotFoundException
 import fi.vm.sade.hakurekisteri.integration.cas.TGTWasNotCreatedException
 import com.ning.http.client.AsyncHandler.STATE
@@ -51,7 +50,14 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
 
   val cookieExpirationMillis = 5.minutes.toMillis
 
-  private val internalClient = aClient.map(Http(_)).getOrElse(Http())
+  private val internalClient = aClient.map(Http(_)).getOrElse(Http().configure(_
+    .setRequestTimeoutInMs(10000)
+    .setConnectionTimeoutInMs(120000)
+    .setAllowPoolingConnection(false)
+    .setMaximumConnectionsPerHost(50)
+    .setMaximumConnectionsTotal(50)
+    .setMaxRequestRetry(2)
+  ))
 
   object LocationHeader extends (Response => String) {
     def apply(r: Response) =
