@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 import akka.event.Logging
+import fi.vm.sade.hakurekisteri.Config
 import org.joda.time.format.DateTimeFormat
 
 import scala.compat.Platform
@@ -31,9 +32,10 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   implicit val ec = ExecutorUtil.createExecutor(5, "virta-executor")
 
   private val defaultClient = Http.configure(_
-    .setConnectionTimeoutInMs(10000)
-    .setRequestTimeoutInMs(120000)
-    .setIdleConnectionTimeoutInMs(120000)
+    .setConnectionTimeoutInMs(Config.httpClientConnectionTimeout)
+    .setRequestTimeoutInMs(Config.httpClientRequestTimeout)
+    .setIdleConnectionTimeoutInMs(Config.httpClientRequestTimeout)
+    .setFollowRedirects(true)
     .setMaxRequestRetry(2)
   )
 

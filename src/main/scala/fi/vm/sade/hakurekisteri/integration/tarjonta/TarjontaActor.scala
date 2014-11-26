@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.tarjonta
 
 import java.net.URLEncoder
 
-import akka.actor.Actor
+import akka.actor.{ActorLogging, Actor}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, VirkailijaRestClient}
 
@@ -18,6 +18,8 @@ case class GetKomoQuery(oid: String)
 object GetHautQuery
 
 case class RestHakuResult(result: List[RestHaku])
+
+case class GetHautQueryFailedException(m: String, cause: Throwable) extends Exception(m, cause)
 
 case class RestHaku(oid:Option[String],
                     hakuaikas: List[RestHakuAika],
@@ -62,7 +64,7 @@ case class HakukohdeNotFoundException(message: String) extends TarjontaException
 case class KoulutusNotFoundException(message: String) extends TarjontaException(message)
 case class KomoNotFoundException(message: String) extends TarjontaException(message)
 
-class TarjontaActor(restClient: VirkailijaRestClient) extends Actor {
+class TarjontaActor(restClient: VirkailijaRestClient) extends Actor with ActorLogging {
   private val koulutusCache = new FutureCache[String, HakukohteenKoulutukset](Config.tarjontaCacheHours.hours.toMillis)
   private val komoCache = new FutureCache[String, KomoResponse](Config.tarjontaCacheHours.hours.toMillis)
   val maxRetries = 2
@@ -88,7 +90,11 @@ class TarjontaActor(restClient: VirkailijaRestClient) extends Actor {
     }
   }
 
-  def getHaut: Future[RestHakuResult] = restClient.readObject[RestHakuResult]("/rest/v1/haku/findAll", 200, maxRetries).map(res => res.copy(res.result.filter(_.tila == "JULKAISTU")))
+  def getHaut: Future[RestHakuResult] = restClient.readObject[RestHakuResult]("/rest/v1/haku/findAll", 200, maxRetries).map(res => res.copy(res.result.filter(_.tila == "JULKAISTU"))).recoverWith {
+    case t: Throwable =>
+      log.error(t, "error retrieving all hakus")
+      Future.failed(GetHautQueryFailedException("error retrieving all hakus", t))
+  }
 
   def getKoulutus(oid: String): Future[Seq[Hakukohteenkoulutus]] = {
     val koulutus: Future[Option[Koulutus]] = restClient.readObject[TarjontaResultResponse[Option[Koulutus]]](s"/rest/v1/koulutus/${URLEncoder.encode(oid, "UTF-8")}?meta=false", 200, maxRetries).map(r => r.result)

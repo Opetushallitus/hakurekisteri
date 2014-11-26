@@ -124,10 +124,13 @@ class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](serv
   def createAuthorizer: Future[OrganizationAuthorizer] =  edgeFetch map OrganizationAuthorizer
 
   def readXml: Future[Elem] = {
-    val http = Http.configure(_.setConnectionTimeoutInMs(10000)
-      .setRequestTimeoutInMs(180000)
-      .setIdleConnectionTimeoutInMs(180000)
+    val http = Http.configure(_
+      .setConnectionTimeoutInMs(Config.httpClientConnectionTimeout)
+      .setRequestTimeoutInMs(Config.httpClientRequestTimeout)
+      .setIdleConnectionTimeoutInMs(Config.httpClientRequestTimeout)
+      .setFollowRedirects(true)
       .setMaxRequestRetry(2))
+    
     val result: Future[Response] = http(svc << <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:typ="http://model.api.organisaatio.sade.vm.fi/types">
       <soapenv:Header/> <soapenv:Body>
         <typ:getOrganizationStructure></typ:getOrganizationStructure>

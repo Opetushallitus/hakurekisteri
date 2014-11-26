@@ -9,6 +9,7 @@ import akka.actor.{ActorSystem, ActorRef}
 import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cas._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 
@@ -50,9 +51,10 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
   val cookieExpirationMillis = 5.minutes.toMillis
 
   private val defaultClient = Http.configure(_
-    .setConnectionTimeoutInMs(10000)
-    .setRequestTimeoutInMs(180000)
-    .setIdleConnectionTimeoutInMs(180000)
+    .setConnectionTimeoutInMs(Config.httpClientConnectionTimeout)
+    .setRequestTimeoutInMs(Config.httpClientRequestTimeout)
+    .setIdleConnectionTimeoutInMs(Config.httpClientRequestTimeout)
+    .setFollowRedirects(true)
     .setMaxRequestRetry(2)
   )
 
@@ -232,17 +234,15 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
     tryClient(uri, acceptedResponseCode, maxRetries, retryCount)
   } else Future.failed(t)
 
-  private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = {
-    client(uri.accept(acceptedResponseCode).as[A]).recoverWith {
-      case t: InterruptedIOException =>
-        retry(uri, acceptedResponseCode, maxRetries, retryCount)(t)
-      case t: TimeoutException =>
-        retry(uri, acceptedResponseCode, maxRetries, retryCount)(t)
-      case t: ConnectException =>
-        retry(uri, acceptedResponseCode, maxRetries, retryCount)(t)
-      case t: PreconditionFailedException if t.responseCode >= 500 =>
-        retry(uri, acceptedResponseCode, maxRetries, retryCount)(t)
-    }
+  private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = client(uri.accept(acceptedResponseCode).as[A]).recoverWith {
+    case t: InterruptedIOException =>
+      retry(uri, acceptedResponseCode, maxRetries, retryCount)(t)
+    case t: TimeoutException =>
+      retry(uri, acceptedResponseCode, maxRetries, retryCount)(t)
+    case t: ConnectException =>
+      retry(uri, acceptedResponseCode, maxRetries, retryCount)(t)
+    case t: PreconditionFailedException if t.responseCode >= 500 =>
+      retry(uri, acceptedResponseCode, maxRetries, retryCount)(t)
   }
 
   def readObject[A <: AnyRef: Manifest](uri:String, acceptedResponseCode: Int, maxRetries: Int = 0): Future[A] = {
