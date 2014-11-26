@@ -40,7 +40,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   ))
 
   val logger = Logging.getLogger(system, this)
-  val maxRetries = 3
+  val maxRetries = 2
 
   def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
 

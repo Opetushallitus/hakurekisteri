@@ -258,7 +258,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   val organisaatioActor = system.actorOf(Props(new MockedOrganisaatioActor()))
 
   val koodistoClient = mock[VirkailijaRestClient]
-  koodistoClient.readObject[Seq[Koodi]]("", 200) returns Future.successful(Seq(Koodi("246", "", Koodisto(""), Seq())))
+  koodistoClient.readObject[Seq[Koodi]]("", 200, 2) returns Future.successful(Seq(Koodi("246", "", Koodisto(""), Seq())))
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient)))
 
   val f = Future.successful(
@@ -309,8 +309,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   )
 
   val sijoitteluClient = mock[VirkailijaRestClient]
-  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.1", 5, 200) returns f
-  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.2", 5, 200) returns f
+  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.1", 200, 2) returns f
+  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.2", 200, 2) returns f
 
   object testHakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger

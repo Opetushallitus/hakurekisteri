@@ -7,14 +7,14 @@ import org.joda.time.DateTime
 
 class ParameterActor(restClient: VirkailijaRestClient) extends Actor {
   implicit val ec = context.dispatcher
-  val maxRetries = 5
+  val maxRetries = 2
 
   override def receive: Actor.Receive = {
     case KierrosRequest(oid) => getParams(oid).map(HakuParams) pipeTo sender
   }
 
   def getParams(hakuOid: String) =  {
-    restClient.readObject[KierrosParams](s"/api/v1/rest/parametri/$hakuOid", maxRetries, 200).
+    restClient.readObject[KierrosParams](s"/api/v1/rest/parametri/$hakuOid", 200, maxRetries).
       collect { case KierrosParams(Some(KierrosEndParams(date))) => new DateTime(date) }
   }
 }

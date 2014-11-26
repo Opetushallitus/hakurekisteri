@@ -206,7 +206,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
 
   }
 
-  def restRequest[A <: AnyRef](uri: String)(implicit mf : Manifest[A]): Future[A] = hakemusClient.readObject[A](uri, 200)
+  def restRequest[A <: AnyRef](uri: String)(implicit mf : Manifest[A]): Future[A] = hakemusClient.readObject[A](uri, 200, 1)
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
