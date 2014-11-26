@@ -50,8 +50,8 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
   val cookieExpirationMillis = 5.minutes.toMillis
 
   private val internalClient = aClient.map(Http(_)).getOrElse(Http().configure(_
-    .setRequestTimeoutInMs(10000)
-    .setConnectionTimeoutInMs(120000)
+    .setConnectionTimeoutInMs(10000)
+    .setRequestTimeoutInMs(120000)
     .setAllowPoolingConnection(false)
     .setMaximumConnectionsPerHost(50)
     .setMaximumConnectionsTotal(50)
@@ -231,7 +231,7 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
     logger.warning(s"retrying request to $uri due to $t, retry count ${retryCount.get - 1}")
     tryClient(uri, acceptedResponseCode, maxRetries, retryCount)
   } else Future.failed(t)
-  
+
   private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = {
     client(uri.accept(acceptedResponseCode).as[A]).recoverWith {
       case t: InterruptedIOException =>
