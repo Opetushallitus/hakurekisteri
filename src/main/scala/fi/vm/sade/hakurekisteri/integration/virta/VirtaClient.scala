@@ -30,16 +30,14 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
 
   implicit val ec = ExecutorUtil.createExecutor(5, "virta-executor")
 
-  private val defaultClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
+  private val defaultClient = Http.configure(_
     .setConnectionTimeoutInMs(10000)
     .setRequestTimeoutInMs(120000)
-    .setIdleConnectionTimeoutInMs(5000)
-    .setMaximumConnectionsPerHost(5)
-    .setMaximumConnectionsTotal(5)
+    .setIdleConnectionTimeoutInMs(120000)
     .setMaxRequestRetry(2)
-    .build())
+  )
 
-  val client: Http = aClient.map(Http(_)).getOrElse(Http(defaultClient))
+  val client: Http = aClient.map(Http(_)).getOrElse(defaultClient)
 
   val logger = Logging.getLogger(system, this)
   val maxRetries = 2

@@ -49,16 +49,14 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
 
   val cookieExpirationMillis = 5.minutes.toMillis
 
-  private val defaultClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
+  private val defaultClient = Http.configure(_
     .setConnectionTimeoutInMs(10000)
-    .setRequestTimeoutInMs(120000)
-    .setIdleConnectionTimeoutInMs(5000)
-    .setMaximumConnectionsPerHost(10)
-    .setMaximumConnectionsTotal(10)
+    .setRequestTimeoutInMs(180000)
+    .setIdleConnectionTimeoutInMs(180000)
     .setMaxRequestRetry(2)
-    .build())
+  )
 
-  private val internalClient: Http = aClient.map(Http(_)).getOrElse(Http(defaultClient))
+  private val internalClient: Http = aClient.map(Http(_)).getOrElse(defaultClient)
 
   object LocationHeader extends (Response => String) {
     def apply(r: Response) =
