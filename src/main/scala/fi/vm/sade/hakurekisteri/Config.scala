@@ -10,11 +10,11 @@ import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
 import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object Config {
   val log = LoggerFactory.getLogger(getClass)
-  val homeDir = sys.props.get("user.home").getOrElse("")
+  val homeDir = sys.props.getOrElse("user.home", "")
   val ophConfDir = Paths.get(homeDir, "/oph-configuration/")
 
   val propertyLocations = Seq("suoritusrekisteri.properties", "common.properties")
@@ -44,12 +44,14 @@ object Config {
 
   log.info(s"lazy loading properties from paths $resources")
   lazy val properties: Map[String, String] = {
-    val props = Try(loadProperties(resources.map(Files.newInputStream(_))))
-    
-    if (props.isFailure) {
-      log.error("could not load properties", props.failed.get)
-      Map()
-    } else props.get
+    val propertyFiles = resources.map(f => {
+      val t = Try(Files.newInputStream(f))
+      if (t.isFailure) log.error("could not load property file", t.failed.get)
+      t
+    }).collect {
+      case Success(is) => is
+    }
+    loadProperties(propertyFiles)
   }
 
   // props
@@ -94,14 +96,16 @@ object Config {
   val organisaatioConfig = ServiceConfig(serviceUrl = organisaatioServiceUrl)
   val valintaTulosConfig = ServiceConfig(serviceUrl = valintaTulosServiceUrl)
 
+  import org.scalatra.util.RicherString._
+
   val ytlConfig = for (
-    host <- properties.get("suoritusrekisteri.ytl.host");
-    user <- properties.get("suoritusrekisteri.ytl.user");
-    password <- properties.get("suoritusrekisteri.ytl.password");
-    inbox <- properties.get("suoritusrekisteri.ytl.inbox");
-    outbox <- properties.get("suoritusrekisteri.ytl.outbox");
-    poll <- properties.get("suoritusrekisteri.ytl.poll");
-    localStore <- properties.get("suoritusrekisteri.ytl.localstore")
+    host <- properties.get("suoritusrekisteri.ytl.host").flatMap(_.blankOption);
+    user <- properties.get("suoritusrekisteri.ytl.user").flatMap(_.blankOption);
+    password <- properties.get("suoritusrekisteri.ytl.password").flatMap(_.blankOption);
+    inbox <- properties.get("suoritusrekisteri.ytl.inbox").flatMap(_.blankOption);
+    outbox <- properties.get("suoritusrekisteri.ytl.outbox").flatMap(_.blankOption);
+    poll <- properties.get("suoritusrekisteri.ytl.poll").flatMap(_.blankOption);
+    localStore <- properties.get("suoritusrekisteri.ytl.localstore").flatMap(_.blankOption)
   ) yield YTLConfig(host, user, password, inbox, outbox, poll.split(";").map(LocalTime.parse), localStore)
 
   // val amqUrl = OPHSecurity.config.properties.get("activemq.brokerurl").getOrElse("failover:tcp://luokka.hard.ware.fi:61616")
