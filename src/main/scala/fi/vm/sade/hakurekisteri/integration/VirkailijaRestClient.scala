@@ -1,8 +1,8 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import java.io.InterruptedIOException
-import java.net.{URLEncoder, URL}
-import java.util.concurrent.{ThreadFactory, Executors}
+import java.net.{ConnectException, URLEncoder, URL}
+import java.util.concurrent.{TimeoutException, ThreadFactory, Executors}
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{ActorSystem, ActorRef}
@@ -109,27 +109,26 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
       case s => s
     }
 
+    private def retryProxyTicket(retryCount: AtomicInteger)(t: Throwable): Future[String] = if (retryCount.getAndIncrement <= maxRetriesCas) {
+      logger.warning(s"connection error calling cas - trying to retry: $t")
+      tryProxyTicket(retryCount)
+    } else {
+      logger.error(s"connection error calling cas: $t")
+      Future.failed(t)
+    }
+
     private def tryProxyTicket(retryCount: AtomicInteger): Future[String] = getTgtUrl.flatMap(tgtUrl => {
       val proxyReq = dispatch.url(tgtUrl) << s"service=${URLEncoder.encode(postfixServiceUrl(serviceUrl), "UTF-8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
       internalClient(proxyReq > ServiceTicket)
     }).recoverWith {
       case t: InterruptedIOException =>
-        if (retryCount.getAndIncrement <= maxRetriesCas) {
-          logger.warning(s"connection error calling cas - trying to retry: $t")
-          tryProxyTicket(retryCount)
-        } else {
-          logger.error(s"connection error calling cas: $t")
-          Future.failed(t)
-        }
-
+        retryProxyTicket(retryCount)(t)
+      case t: TimeoutException =>
+        retryProxyTicket(retryCount)(t)
+      case t: ConnectException =>
+        retryProxyTicket(retryCount)(t)
       case t: LocationHeaderNotFoundException =>
-        if (retryCount.getAndIncrement <= maxRetriesCas) {
-          logger.warning(s"call to cas was not successful - trying to retry: $t")
-          tryProxyTicket(retryCount)
-        } else {
-          logger.error(s"call to cas was not successful: $t")
-          Future.failed(t)
-        }
+        retryProxyTicket(retryCount)(t)
     }
 
     def getProxyTicket: Future[String] = {
@@ -228,18 +227,21 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
 
   import VirkailijaRestImplicits._
 
+  private def retry[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger)(t: Throwable) = if (retryCount.getAndIncrement <= maxRetries) {
+    logger.warning(s"retrying request to $uri due to $t, retry count ${retryCount.get - 1}")
+    tryClient(uri, acceptedResponseCode, maxRetries, retryCount)
+  } else Future.failed(t)
+  
   private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = {
     client(uri.accept(acceptedResponseCode).as[A]).recoverWith {
       case t: InterruptedIOException =>
-        if (retryCount.getAndIncrement <= maxRetries) {
-          logger.warning(s"retrying request to $uri due to $t, retry count ${retryCount.get - 1}")
-          tryClient(uri, acceptedResponseCode, maxRetries, retryCount)
-        } else Future.failed(t)
+        retry(uri, acceptedResponseCode, maxRetries, retryCount)(t)
+      case t: TimeoutException =>
+        retry(uri, acceptedResponseCode, maxRetries, retryCount)(t)
+      case t: ConnectException =>
+        retry(uri, acceptedResponseCode, maxRetries, retryCount)(t)
       case t: PreconditionFailedException if t.responseCode >= 500 =>
-        if (retryCount.getAndIncrement <= maxRetries) {
-          logger.warning(s"retrying request to $uri due to $t, retry count ${retryCount.get - 1}")
-          tryClient(uri, acceptedResponseCode, maxRetries, retryCount)
-        } else Future.failed(t)
+        retry(uri, acceptedResponseCode, maxRetries, retryCount)(t)
     }
   }
 
