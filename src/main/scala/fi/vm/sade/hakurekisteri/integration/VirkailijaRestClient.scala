@@ -52,7 +52,7 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
   private val defaultClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
     .setConnectionTimeoutInMs(10000)
     .setRequestTimeoutInMs(120000)
-    .setAllowPoolingConnection(false)
+    .setIdleConnectionTimeoutInMs(5000)
     .setMaximumConnectionsPerHost(10)
     .setMaximumConnectionsTotal(10)
     .setMaxRequestRetry(2)

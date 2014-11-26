@@ -33,7 +33,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   private val defaultClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
     .setConnectionTimeoutInMs(10000)
     .setRequestTimeoutInMs(120000)
-    .setAllowPoolingConnection(false)
+    .setIdleConnectionTimeoutInMs(5000)
     .setMaximumConnectionsPerHost(5)
     .setMaximumConnectionsTotal(5)
     .setMaxRequestRetry(2)
