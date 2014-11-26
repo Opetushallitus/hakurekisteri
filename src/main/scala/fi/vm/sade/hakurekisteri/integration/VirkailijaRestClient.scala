@@ -1,14 +1,15 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import java.io.InterruptedIOException
-import java.net.{URLEncoder, URL}
-import java.util.concurrent.{ThreadFactory, Executors}
+import java.net.{ConnectException, URLEncoder, URL}
+import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{ActorSystem, ActorRef}
 import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.cas._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 
@@ -18,9 +19,7 @@ import scala.concurrent.duration._
 import scala.util.Try
 import dispatch._
 import com.ning.http.client._
-import dispatch.Req
 import scala.util.Failure
-import scala.Some
 import fi.vm.sade.hakurekisteri.integration.cas.LocationHeaderNotFoundException
 import fi.vm.sade.hakurekisteri.integration.cas.TGTWasNotCreatedException
 import com.ning.http.client.AsyncHandler.STATE
@@ -34,7 +33,6 @@ case class ServiceConfig(casUrl: Option[String] = None,
                          password: Option[String] = None)
 
 class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[ActorRef] = None, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {
-
   implicit val defaultTimeout: Timeout = 60.seconds
 
   val casUrl: Option[String] = config.casUrl
@@ -51,22 +49,27 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
 
   val cookieExpirationMillis = 5.minutes.toMillis
 
-  private val internalClient = aClient.map(Http(_)).getOrElse(Http())
+  private val defaultClient = Http.configure(_
+    .setConnectionTimeoutInMs(Config.httpClientConnectionTimeout)
+    .setRequestTimeoutInMs(Config.httpClientRequestTimeout)
+    .setIdleConnectionTimeoutInMs(Config.httpClientRequestTimeout)
+    .setFollowRedirects(true)
+    .setMaxRequestRetry(2)
+  )
+
+  private val internalClient: Http = aClient.map(Http(_)).getOrElse(defaultClient)
 
   object LocationHeader extends (Response => String) {
     def apply(r: Response) =
-
       Try(Option(r.getHeader("Location")).get).recoverWith{
         case  e: NoSuchElementException =>  Failure(LocationHeaderNotFoundException("location header not found"))
       }.get
-
   }
 
   class TgtFunctionHandler
     extends FunctionHandler[String](LocationHeader) with TgtHandler
 
   class StFunctionHandler extends AsyncCompletionHandler[String] {
-
     override def onStatusReceived(status: HttpResponseStatus) = {
       if (status.getStatusCode == 200)
         super.onStatusReceived(status)
@@ -81,10 +84,7 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
     }
   }
 
-
   trait TgtHandler extends AsyncHandler[String] {
-
-
     abstract override def onStatusReceived(status: HttpResponseStatus) = {
       if (status.getStatusCode == 201)
         super.onStatusReceived(status)
@@ -94,45 +94,39 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
   }
 
   object client  {
-
     val TgtUrl = new TgtFunctionHandler
-
     val ServiceTicket = new StFunctionHandler
-
 
     def getTgtUrl() = {
       val tgtUrlReq = dispatch.url(s"${casUrl.get}/v1/tickets") << s"username=${URLEncoder.encode(user.get, "UTF8")}&password=${URLEncoder.encode(password.get, "UTF8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
       internalClient(tgtUrlReq > TgtUrl)
     }
 
-
     val serviceUrlSuffix = "/j_spring_cas_security_check"
-    val maxRetries = 3
+    val maxRetriesCas = Config.httpClientMaxRetries
 
     private def postfixServiceUrl(url: String): String = url match {
       case s if !s.endsWith(serviceUrlSuffix) => s"$url$serviceUrlSuffix"
       case s => s
     }
 
-    private def tryProxyTicket(retryCount: AtomicInteger): Future[String] = getTgtUrl.flatMap(tgtUrl => {
+    private def casRetryable(t: Throwable): Boolean = t match {
+      case t: TimeoutException => true
+      case t: ConnectException => true
+      case LocationHeaderNotFoundException(_) => true
+      case _ => false
+    }
+
+    private def tryProxyTicket(retryCount: AtomicInteger): Future[String] = getTgtUrl().flatMap(tgtUrl => {
       val proxyReq = dispatch.url(tgtUrl) << s"service=${URLEncoder.encode(postfixServiceUrl(serviceUrl), "UTF-8")}" <:< Map("Content-Type" -> "application/x-www-form-urlencoded")
       internalClient(proxyReq > ServiceTicket)
     }).recoverWith {
-      case t: InterruptedIOException =>
-        if (retryCount.getAndIncrement <= maxRetries) {
-          //logger.warn(s"connection error calling cas - trying to retry: $t")
+      case t: ExecutionException if t.getCause != null && casRetryable(t.getCause) =>
+        if (retryCount.getAndIncrement <= maxRetriesCas) {
+          logger.warning(s"connection error calling cas - trying to retry: $t")
           tryProxyTicket(retryCount)
         } else {
-          //logger.error(s"connection error calling cas: $t")
-          Future.failed(t)
-        }
-
-      case t: LocationHeaderNotFoundException =>
-        if (retryCount.getAndIncrement <= maxRetries) {
-          //logger.warn(s"call to cas was not successful - trying to retry: $t")
-          tryProxyTicket(retryCount)
-        } else {
-          //logger.error(s"call to cas was not successful: $t")
+          logger.error(s"connection error calling cas: $t")
           Future.failed(t)
         }
     }
@@ -145,10 +139,8 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
     }
 
     def jSessionId: Future[Option[JSessionId]] = {
-
       jSessionIdStorage match {
         case Some(actor) =>
-
           (actor ? JSessionKey(serviceUrl)).mapTo[Option[JSessionId]]
 
         case None =>
@@ -173,9 +165,6 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
       (user,password) match{
         case (Some(_), None) => throw new IllegalArgumentException("password is missing")
         case (Some(un),Some(pw)) =>
-
-
-
           for (
             jsession <- jSessionId;
             result <- withSession(request)((req) => internalClient(req))(jsession)
@@ -184,23 +173,17 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
         case _ =>
           internalClient(request)
       }
-
     }
 
     object NoSessionFound extends Exception("No JSession Found")
 
-
     class SessionCapturer[T](inner: AsyncHandler[T]) extends AsyncHandler[T] {
-
-
       private val promise = Promise[JSessionId]
-
       val jsession = promise.future
 
       override def onCompleted(): T = inner.onCompleted()
 
       override def onHeadersReceived(headers: HttpResponseHeaders): STATE = {
-
         import scala.collection.JavaConversions._
         for (
           header <- headers.getHeaders.entrySet() if header.getKey == "Set-Cookie";
@@ -238,31 +221,45 @@ class VirkailijaRestClient(config: ServiceConfig, jSessionIdStorage: Option[Acto
           ) yield result
 
         case _ => internalClient((dispatch.url(s"$serviceUrl$uri").toRequest, handler))
-
       }
-
     }
-
   }
 
   import VirkailijaRestImplicits._
 
-  def readObject[A <: AnyRef: Manifest](uri:String, codes: Int*): Future[A] = {
-    client(uri.accept(codes:_*).as[A])
+  def retryable(t: Throwable): Boolean = t match {
+    case t: TimeoutException => true
+    case t: ConnectException => true
+    case PreconditionFailedException(_, code) if code >= 500 => true
+    case _ => false
   }
 
+  private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = client(uri.accept(acceptedResponseCode).as[A]).recoverWith {
+    case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
+      if (retryCount.getAndIncrement <= maxRetries) {
+        logger.warning(s"retrying request to $uri due to $t, retry attempt #${retryCount.get - 1}")
+        tryClient(uri, acceptedResponseCode, maxRetries, retryCount)
+      } else Future.failed(t)
+  }
 
+  def readObject[A <: AnyRef: Manifest](uri:String, acceptedResponseCode: Int, maxRetries: Int = 0): Future[A] = {
+    val retryCount = new AtomicInteger(1)
+    tryClient(uri, acceptedResponseCode, maxRetries, retryCount)
+  }
 }
 
 case class JSessionIdCookieException(m: String) extends Exception(m)
 
 object JSessionIdCookieParser {
   val name = "JSESSIONID"
+
   def isJSessionIdCookie(cookie: String): Boolean = {
     cookie.startsWith(name)
   }
+
   def fromString(cookie: String): JSessionId = {
     if (!isJSessionIdCookie(cookie)) throw JSessionIdCookieException(s"not a JSESSIONID cookie: $cookie")
+
     val value = cookie.split(";").headOption match {
       case Some(c) => c.split("=").lastOption match {
         case Some(v) => v
@@ -270,6 +267,7 @@ object JSessionIdCookieParser {
       }
       case None => throw JSessionIdCookieException(s"invalid JSESSIONID cookie structure: $cookie")
     }
+
     JSessionId(Platform.currentTime, value)
   }
 }
@@ -278,61 +276,45 @@ object JSessionIdCookieParser {
 object ExecutorUtil {
   def createExecutor(threads: Int, poolName: String) = {
     val threadNumber = new AtomicInteger(1)
+
     val pool = Executors.newFixedThreadPool(threads, new ThreadFactory() {
       override def newThread(r: Runnable): Thread = {
         new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
       }
     })
+
     ExecutionContext.fromExecutorService(pool)
   }
-
 }
 
-
 abstract class JsonExtractor(val uri: String) extends HakurekisteriJsonSupport {
-
-
   def handler[T](f: (Response) => T):AsyncHandler[T]
 
   def as[T:Manifest] = {
     val f = (resp: Response) => {
       import org.json4s.jackson.Serialization.read
       read[T](resp.getResponseBody)
-
     }
 
     (uri, handler(f))
   }
-
 }
 
 class VirkailijaResultTuples(uri: String) {
-
-
-
   def accept[T](codes: Int*): JsonExtractor = new JsonExtractor(uri) {
-
     override def handler[T](f: (Response) => T): AsyncHandler[T] = new CodeFunctionHandler(codes.toSet, f)
   }
-
 }
 
 
 object VirkailijaRestImplicits {
   implicit def req2VirkailijaResulTuples(uri:String): VirkailijaResultTuples = new VirkailijaResultTuples(uri)
-
-
 }
 
-class CodeFunctionHandler[T](override val codes: Set[Int], f: Response => T)
-  extends FunctionHandler[T](f) with CodeHandler[T]
-
-
+class CodeFunctionHandler[T](override val codes: Set[Int], f: Response => T) extends FunctionHandler[T](f) with CodeHandler[T]
 
 trait CodeHandler[T] extends AsyncHandler[T] {
-
   val codes: Set[Int]
-
 
   abstract override def onStatusReceived(status: HttpResponseStatus) = {
     if (codes.contains(status.getStatusCode))

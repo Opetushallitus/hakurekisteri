@@ -4,6 +4,7 @@ import java.net.URLEncoder
 
 import akka.actor.{ActorLogging, Actor}
 import akka.pattern.pipe
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
 import scala.concurrent.ExecutionContext
@@ -11,7 +12,7 @@ import scala.concurrent.ExecutionContext
 case class HenkiloResponse(oidHenkilo: String, hetu: Option[String])
 
 class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with ActorLogging {
-  val maxRetries = 5
+  val maxRetries = Config.httpClientMaxRetries
 
   implicit val ec: ExecutionContext = context.dispatcher
 
@@ -20,11 +21,11 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with Actor
   override def receive: Receive = {
     case henkiloOid: String =>
       log.debug(s"received henkiloOid: $henkiloOid")
-      henkiloClient.readObject[HenkiloResponse](s"/resources/henkilo/${URLEncoder.encode(henkiloOid, "UTF-8")}", maxRetries, 200) pipeTo sender
+      henkiloClient.readObject[HenkiloResponse](s"/resources/henkilo/${URLEncoder.encode(henkiloOid, "UTF-8")}", 200, maxRetries) pipeTo sender
 
     case HetuQuery(Hetu(hetu)) =>
       log.debug(s"received HetuQuery: ${hetu.substring(0, 6)}XXXX")
-      henkiloClient.readObject[HenkiloResponse](s"/resources/s2s/byHetu/${URLEncoder.encode(hetu, "UTF-8")}", maxRetries, 200) pipeTo sender
+      henkiloClient.readObject[HenkiloResponse](s"/resources/s2s/byHetu/${URLEncoder.encode(hetu, "UTF-8")}", 200, maxRetries) pipeTo sender
   }
 }
 

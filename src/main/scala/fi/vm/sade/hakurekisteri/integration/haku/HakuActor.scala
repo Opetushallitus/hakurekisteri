@@ -5,7 +5,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosQuery
 
 import scala.concurrent.{ExecutionContext, Future}
 import akka.actor.{ActorLogging, ActorRef, Actor}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{RestHaku, GetHautQuery, RestHakuResult}
+import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
@@ -62,6 +62,10 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
         haku <- activeHakus
       ) hakemukset ! ReloadHaku(haku.oid)
 
+    case Failure(t: GetHautQueryFailedException) =>
+      log.error(s"${t.getMessage}, retrying in a minute")
+      context.system.scheduler.scheduleOnce(1.minute, self, Update)
+
     case Failure(t) =>
       log.error(t, s"got failure from ${sender()}")
 
@@ -70,7 +74,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   def enrich(hakus: List[RestHaku]): List[Future[Haku]] = {
     for (
       haku <- hakus
-      if haku.oid.isDefined && !haku.hakuaikas.isEmpty
+      if haku.oid.isDefined && haku.hakuaikas.nonEmpty
     ) yield getKierrosEnd(haku.oid.get).map(Haku(haku))
   }
 

@@ -15,7 +15,7 @@ import scala.util.Try
 class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
   private var cache: Map[String, (Long, Future[Option[Organisaatio]])] = Map()
-  val maxRetries = 5
+  val maxRetries = Config.httpClientMaxRetries
 
   class Refresh
   private object refresh extends Refresh
@@ -25,7 +25,7 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
   var cancellable: Option[Cancellable] = None
 
   override def preStart(): Unit = {
-    organisaatioClient.readObject[Seq[String]]("/rest/organisaatio", maxRetries, 200).onSuccess {
+    organisaatioClient.readObject[Seq[String]]("/rest/organisaatio", 200, maxRetries).onSuccess {
       case s: Seq[String] =>
         fetchOrgs(s)
     }
@@ -62,7 +62,7 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
   }
 
   def newValue(oid: String): (Long, Future[Option[Organisaatio]]) = {
-    val organisaatio: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(oid, "UTF-8")}", maxRetries, 200).map(Option(_)).recoverWith {
+    val organisaatio: Future[Option[Organisaatio]] = organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(oid, "UTF-8")}", 200, maxRetries).map(Option(_)).recoverWith {
       case p: PreconditionFailedException if p.responseCode == 204 => log.warning(s"organisaatio not found with oid $oid"); Future.successful(None)
     }
     (Platform.currentTime + timeToLive.toMillis, organisaatio)

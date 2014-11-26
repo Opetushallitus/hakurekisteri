@@ -21,7 +21,7 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
 
   implicit val ec = context.dispatcher
 
-  private val maxRetries = 5
+  private val maxRetries = Config.httpClientMaxRetries
   private val refetch: FiniteDuration = 1.hours
   private val retry: FiniteDuration = 60.seconds
   private val cache = new FutureCache[String, SijoitteluTulos](Config.valintatulosCacheHours.hours.toMillis)
@@ -60,7 +60,7 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
   def sijoitteluTulos(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = {
 
     def getSingleHakemus(hakemusOid: String): Future[SijoitteluTulos] = restClient.
-      readObject[ValintaTulos](s"/haku/${URLEncoder.encode(hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(hakemusOid, "UTF-8")}", maxRetries, 200).
+      readObject[ValintaTulos](s"/haku/${URLEncoder.encode(hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(hakemusOid, "UTF-8")}", 200, maxRetries).
       recoverWith {
         case t: PreconditionFailedException if t.responseCode == 404 =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
@@ -69,7 +69,7 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
       map(t => valintaTulokset2SijoitteluTulos(t))
 
     def getHaku(haku: String): Future[SijoitteluTulos] = restClient.
-      readObject[Seq[ValintaTulos]](s"/haku/${URLEncoder.encode(haku, "UTF-8")}", maxRetries, 200).
+      readObject[Seq[ValintaTulos]](s"/haku/${URLEncoder.encode(haku, "UTF-8")}", 200, maxRetries).
       recoverWith {
         case t: PreconditionFailedException if t.responseCode == 404 =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
