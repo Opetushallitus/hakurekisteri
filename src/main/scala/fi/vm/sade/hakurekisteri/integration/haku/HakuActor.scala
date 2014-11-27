@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
 import akka.actor.Status.Failure
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosQuery
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -21,10 +22,12 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   implicit val ec = context.dispatcher
 
   var activeHakus: Seq[Haku] = Seq()
-  val refreshTime = 2.hours
+  val hakuRefreshTime = Config.hakuRefreshTimeHours.hours
+  val hakemusRefreshTime = Config.hakemusRefreshTimeHours.hours
+  val valintatulosRefreshTimeHours = Config.valintatulosRefreshTimeHours.hours
   var starting = true
 
-  context.system.scheduler.schedule(1.second, refreshTime, self, Update)
+  context.system.scheduler.schedule(1.second, hakuRefreshTime, self, Update)
 
   import FutureList._
 
@@ -51,8 +54,8 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
       log.info(s"current hakus [${activeHakus.map(h => s"${h.oid}: ${h.nimi.fi.getOrElse(h.nimi.sv.getOrElse(h.nimi.en.getOrElse("")))}").mkString(", ")}]")
       if (starting) {
         starting = false
-        context.system.scheduler.schedule(1.second, refreshTime, self, RefreshSijoittelu)
-        context.system.scheduler.schedule(1.second, refreshTime, self, ReloadHakemukset)
+        context.system.scheduler.schedule(1.second, valintatulosRefreshTimeHours, self, RefreshSijoittelu)
+        context.system.scheduler.schedule(1.second, hakemusRefreshTime, self, ReloadHakemukset)
       }
 
     case RefreshSijoittelu => refreshKeepAlives()
