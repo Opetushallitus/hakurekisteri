@@ -66,6 +66,9 @@ object Config {
   val organisaatioCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.organisaatio", "12").toInt
   val tarjontaCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.tarjonta", "12").toInt
   val valintatulosCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.valintatulos", "2").toInt
+  val hakuRefreshTimeHours = properties.getOrElse("suoritusrekisteri.refresh.time.hours.haku", "12").toInt
+  val hakemusRefreshTimeHours = properties.getOrElse("suoritusrekisteri.refresh.time.hours.hakemus", "2").toInt
+  val valintatulosRefreshTimeHours = properties.getOrElse("suoritusrekisteri.refresh.time.hours.valintatulos", "2").toInt
 
   val httpClientConnectionTimeout = properties.getOrElse("suoritusrekisteri.http.client.connection.timeout.ms", "10000").toInt
   val httpClientRequestTimeout = properties.getOrElse("suoritusrekisteri.http.client.request.timeout.ms", "180000").toInt

@@ -16,7 +16,6 @@ import scala.util.{Failure, Success, Try}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 
 trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
-
   var hakukohdeIndex: Map[String, Seq[FullHakemus with Identified[String]]] = Option(hakukohdeIndex).getOrElse(Map())
   var hakijaIndex: Map[String, Seq[FullHakemus with Identified[String]]] = Option(hakijaIndex).getOrElse(Map())
 
@@ -43,7 +42,6 @@ trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] w
     for (
       hakija <- hakemus.personOid
     ) hakijaIndex = hakijaIndex + (hakija -> (hakemus +: hakijaIndex.getOrElse(hakija, Seq())))
-
   }
 
   override def index(old: Option[FullHakemus with Identified[String]], current: Option[FullHakemus with Identified[String]]) {
@@ -61,8 +59,6 @@ trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] w
       ) hakijaIndex = hakijaIndex.get(hakija).
         map(_.filter((a) => a != hakemus || a.id != hakemus.id)).
         map((ns: Seq[FullHakemus with Identified[String]]) => hakijaIndex + (hakija -> ns)).getOrElse(hakijaIndex)
-
-
     }
 
     old.foreach(removeOld)
@@ -110,7 +106,6 @@ trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] w
     case HenkiloHakijaQuery(henkilo) =>
       (hakemus) => hakemus.personOid.exists(_ == henkilo)
   }
-
 }
 
 case class HakemusQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakukohde: Option[String] = None) extends Query[FullHakemus]
@@ -155,8 +150,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
                    ) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
   var healthCheck: Option[ActorRef] = None
   override val logger = Logging(context.system, this)
-
-  var hakijaTrigger:Seq[ActorRef] = Seq()
+  var hakijaTrigger: Seq[ActorRef] = Seq()
 
   override def receive: Receive = super.receive.orElse({
     case ReloadHaku(haku) => getHakemukset(HakijaQuery(haku = Some(haku), organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None)) onComplete {
@@ -195,18 +189,15 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   }
 
   def handleNew(hakemukset: List[FullHakemus]) {
-
     for (
       hakemus: FullHakemus <- hakemukset
     ) {
       self.!(hakemus)(ActorRef.noSender)
       hakijaTrigger foreach (_ ! hakemus)
     }
-
-
   }
 
-  def restRequest[A <: AnyRef](uri: String)(implicit mf : Manifest[A]): Future[A] = hakemusClient.readObject[A](uri, 200, 1)
+  def restRequest[A <: AnyRef](uri: String)(implicit mf: Manifest[A]): Future[A] = hakemusClient.readObject[A](uri, 200, 2)
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
@@ -226,7 +217,6 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
 case class ReloadHaku(haku: String)
 
 class HakijaTrigger(newApplicant: (FullHakemus) => Unit) extends Actor {
-
   override def receive: Actor.Receive = {
     case f:FullHakemus => newApplicant(f)
   }
