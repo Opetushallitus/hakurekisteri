@@ -17,23 +17,22 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
 
   def createEndpointMock = {
     val result = mock[Endpoint]
-    when(result request forUrl ("http://localhost/test/rest/blaa")).thenReturn((200, List(), "{\"id\":\"abc\"}"))
-    when(result.request(forUrl("http://localhost/test/rest/throwMe"))).thenReturn((404, List(), "Not Found"))
-    when(result.request(forUrl("http://localhost/test/rest/invalidContent"))).thenReturn((200, List(), "invalid content"))
-    when(result.request(forUrl("http://localhost/test/rest/foo").withHeader("CasSecurityTicket" -> "ST-123"))).thenReturn((200, List("Set-Cookie" -> s"${JSessionIdCookieParser.name}=abcd"), "{\"id\":\"abc\"}"))
-    when(result.request(forUrl("http://localhost/blast/rest/foo").withHeader("CasSecurityTicket" -> "ST-124"))).thenReturn((200, List("Set-Cookie" -> s"${JSessionIdCookieParser.name}=abcd"), "{\"id\":\"abc\"}"))
-    when(result.request(forUrl("http://localhost/blast/rest/foo").withHeader("Cookie" -> "JSESSIONID=abcd"))).thenReturn((200, List(), "{\"id\":\"abc\"}"))
-
-
 
     when(result.request(forUrl("http://localhost/cas/v1/tickets"))).thenReturn((201, List("Location" -> "http://localhost/cas/v1/tickets/TGT-123"), ""))
     when(result.request(forUrl("http://localhost/cas/v1/tickets/TGT-123"))).thenReturn((200,List(), "ST-123"))
 
+    when(result.request(forUrl("http://localhost/test/rest/blaa"))).thenReturn((200, List(), "{\"id\":\"abc\"}"))
+    when(result.request(forUrl("http://localhost/test/rest/throwMe"))).thenReturn((404, List(), "Not Found"))
+    when(result.request(forUrl("http://localhost/test/rest/invalidContent"))).thenReturn((200, List(), "invalid content"))
+
 
     when(result.request(forUrl("http://localhost/cas2/v1/tickets"))).thenReturn((201, List("Location" -> "http://localhost/cas2/v1/tickets/TGT-124"), ""))
     when(result.request(forUrl("http://localhost/cas2/v1/tickets/TGT-124"))).thenReturn((200,List(), "ST-124"))
-    result
 
+    when(result.request(forUrl("http://localhost/blast/rest/foo").withHeader("Cookie" -> "JSESSIONID=abcd"))).thenReturn((200, List(), "{\"id\":\"abc\"}"))
+    when(result.request(forUrl("http://localhost/blast/j_spring_cas_security_check?ticket=ST-124"))).thenReturn((200, List("Set-Cookie" -> s"${JSessionIdCookieParser.name}=abcd"), ""))
+
+    result
   }
 
   val endPoint = createEndpointMock
@@ -76,57 +75,26 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
     }
   }
 
-  it should "throw IllegalArgumentException if no password was supplied in the configuration" in {
-    intercept[IllegalArgumentException] {
-      val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/test", user = Some("user")))
-      val response = client.readObject[TestResponse]("/rest/foo", 200)
-      Await.result(response, 10.seconds)
-    }
-  }
-
-  it should "attach CasSecurityTicket request header into the remote request" in {
-    val client = new VirkailijaRestClient(ServiceConfig(casUrl = Some("http://localhost/cas"),
-                                                        serviceUrl = "http://localhost/test",
-                                                        user = Some("user"),
-                                                        password = Some("pw")), aClient = Some(new AsyncHttpClient(asyncProvider)))
-
-
-    val response = client.readObject[TestResponse]("/rest/foo", 200)
-    Await.ready(response, 10.seconds)
-
-    verify(endPoint, timeout(200).atLeastOnce()).
-      request(
-        forUrl("http://localhost/test/rest/foo").
-        withHeader("CasSecurityTicket" -> "ST-123"))
-
-  }
-
-  it should "use JSESSIONID on subsequent requests" in {
+  it should "send JSESSIONID cookie in requests" in {
     val sessionEndPoint = createEndpointMock
 
     val sessionClient = new VirkailijaRestClient(ServiceConfig(casUrl = Some("http://localhost/cas2"),
       serviceUrl = "http://localhost/blast",
       user = Some("user"),
       password = Some("pw")),
-      Some(jSessionIdActor),
       Some(new AsyncHttpClient(new CapturingProvider(sessionEndPoint)))
     )
 
     val requestChain: Future[TestResponse] = sessionClient.readObject[TestResponse]("/rest/foo", 200).flatMap {
-      case _ =>
-        sessionClient.readObject[TestResponse]("/rest/foo", 200).flatMap{
-        case _ =>
-          sessionClient.readObject[TestResponse]("/rest/foo", 200)
+      case _ => sessionClient.readObject[TestResponse]("/rest/foo", 200).flatMap {
+        case _ => sessionClient.readObject[TestResponse]("/rest/foo", 200)
       }
     }
 
-    Await.ready(
-      requestChain,
-      30.seconds
-    )
+    Await.ready(requestChain, 30.seconds)
     val ehti = requestChain.isCompleted
     if (ehti)
-      verify(sessionEndPoint, times(2)).request(forUrl("http://localhost/blast/rest/foo").withHeader("Cookie" -> "JSESSIONID=abcd"))
+      verify(sessionEndPoint, times(3)).request(forUrl("http://localhost/blast/rest/foo").withHeader("Cookie" -> "JSESSIONID=abcd"))
     else
       fail("timed out")
   }
