@@ -4,7 +4,7 @@ import java.util.concurrent.{TimeUnit, Executors}
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{ActorSystem, Props}
-import fi.vm.sade.hakurekisteri.integration.{JSessionIdActor, ServiceConfig, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import org.scalatest.{Matchers, FlatSpec}
 
 import org.json4s.DefaultFormats
@@ -29,8 +29,7 @@ class OppijaResourceLoadSpec extends FlatSpec with Matchers {
     user = Some("robotti"),
     password = Some("Testaaja!")
   )
-  val sessionActor = system.actorOf(Props(new JSessionIdActor()))
-  val oppijaClient = new VirkailijaRestClient(oppijatConfig, Some(sessionActor))( ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor()), system)
+  val oppijaClient = new VirkailijaRestClient(oppijatConfig, None)( ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor()), system)
 
   ignore should "handle loading of all hakukohteet from haku" in {
     val hakuOid = "1.2.246.562.29.173465377510"
