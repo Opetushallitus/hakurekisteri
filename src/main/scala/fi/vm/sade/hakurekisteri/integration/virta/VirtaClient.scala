@@ -81,7 +81,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   }
 
   def tryPost(requestUrl: String, requestEnvelope: String, oppijanumero: String, hetu: Option[String], retryCount: AtomicInteger): Future[Option[VirtaResult]] = {
-    val start = Platform.currentTime
+    val t0 = Platform.currentTime
 
     import dispatch._
 
@@ -116,7 +116,12 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
       case _ => false
     }
 
-    client(url(requestUrl) << requestEnvelope > VirtaHandler).recoverWith {
+    def result(t: Try[_]): String = t match {
+      case Success(_) => "success"
+      case Failure(e) => s"failure: $e"
+    }
+
+    val res = client(url(requestUrl) << requestEnvelope > VirtaHandler).recoverWith {
       case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
         if (retryCount.getAndIncrement <= maxRetries) {
           logger.warning(s"retrying virta query for $oppijanumero due to $t: retry attempt #${retryCount.get - 1}")
@@ -124,6 +129,10 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
           tryPost(requestUrl, requestEnvelope, oppijanumero, hetu, retryCount)
         } else concurrent.Future.failed(t)
     }
+
+    res.onComplete(t => logger.info(s"virta query for $oppijanumero took ${Platform.currentTime - t0} ms, result ${result(t)}"))
+
+    res
   }
 
   def getOpiskeluoikeudet(response: NodeSeq): Seq[VirtaOpiskeluoikeus] = {
