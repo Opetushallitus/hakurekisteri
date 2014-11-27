@@ -31,7 +31,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
                  (implicit val system: ActorSystem) {
 
 
-  implicit val ec = ExecutorUtil.createExecutor(5, "virta-executor")
+  implicit val ec = ExecutorUtil.createExecutor(2, "virta-executor")
 
   private val defaultClient = Http.configure(_
     .setConnectionTimeoutInMs(Config.httpClientConnectionTimeout)
