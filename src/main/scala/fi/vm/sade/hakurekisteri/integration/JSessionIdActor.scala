@@ -6,7 +6,7 @@ import akka.pattern.pipe
 import scala.concurrent.{ExecutionContext, Future}
 
 case class JSessionKey(serviceUrl: String)
-case class JSessionId(created: Long, sessionId: String)
+case class JSessionId(sessionId: String)
 
 case class SaveJSessionId(key: JSessionKey, sessionId: JSessionId)
 
