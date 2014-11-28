@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
-import java.io.InterruptedIOException
 import java.net.ConnectException
 import java.util.concurrent.{TimeoutException, ExecutionException}
 import java.util.concurrent.atomic.AtomicInteger
@@ -30,8 +29,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
                    aClient: Option[AsyncHttpClient] = None)
                  (implicit val system: ActorSystem) {
 
-
-  implicit val ec = ExecutorUtil.createExecutor(5, "virta-executor")
+  implicit val ec = ExecutorUtil.createExecutor(1, "virta-executor")
 
   private val defaultClient = Http.configure(_
     .setConnectionTimeoutInMs(Config.httpClientConnectionTimeout)

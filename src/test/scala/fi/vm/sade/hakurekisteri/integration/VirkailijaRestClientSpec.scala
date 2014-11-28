@@ -40,7 +40,6 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
 
   val asyncProvider = new CapturingProvider(endPoint)
 
-  val jSessionIdActor = system.actorOf(Props(new JSessionIdActor))
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/test"), aClient = Some(new AsyncHttpClient(asyncProvider)))
 
   behavior of "VirkailijaRestClient"

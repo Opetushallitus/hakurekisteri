@@ -16,6 +16,9 @@ import scala.concurrent.{ExecutionContext, Promise, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Try}
 
+case class JSessionKey(serviceUrl: String)
+case class JSessionId(sessionId: String)
+
 class CasActor(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
   val jSessionIdCache: FutureCache[JSessionKey, JSessionId] = new FutureCache[JSessionKey, JSessionId](5.minutes.toMillis)
 

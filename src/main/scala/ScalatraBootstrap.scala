@@ -301,8 +301,6 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val ec: ExecutionContext = ExecutorUtil.createExecutor(10, "rest-client-pool")
 
-  val jSessionIdActor = system.actorOf(Props(new JSessionIdActor))
-
   val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig, None)( ec, system))), "tarjonta")
 
   val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig, None)( ec, system))), "organisaatio")
