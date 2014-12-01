@@ -107,19 +107,23 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
       }
     }
 
+    /*
     def retryable(t: Throwable): Boolean = t match {
       case t: TimeoutException => true
       case t: ConnectException => true
       case VirtaConnectionErrorException(_) => true
       case _ => false
     }
+    */
 
     def result(t: Try[_]): String = t match {
       case Success(_) => "success"
       case Failure(e) => s"failure: $e"
     }
 
-    val res = client(url(requestUrl) << requestEnvelope > VirtaHandler).recoverWith {
+    val res = client(url(requestUrl) << requestEnvelope > VirtaHandler)
+      /*
+      .recoverWith {
       case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
         if (retryCount.getAndIncrement <= maxRetries) {
           logger.warning(s"retrying virta query for $oppijanumero due to $t: retry attempt #${retryCount.get - 1}")
@@ -127,6 +131,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
           tryPost(requestUrl, requestEnvelope, oppijanumero, hetu, retryCount)
         } else concurrent.Future.failed(t)
     }
+    */
 
     res.onComplete(t => logger.info(s"virta query for $oppijanumero took ${Platform.currentTime - t0} ms, result ${result(t)}"))
 
