@@ -18,6 +18,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
+
 case class PreconditionFailedException(message: String, responseCode: Int) extends Exception(message)
 
 case class ServiceConfig(casUrl: Option[String] = None,
@@ -48,7 +49,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
     import org.json4s.jackson.Serialization._
 
-    def withSession[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(jSsessionId: String)(body: Option[A] = None): Future[B] = {
+    def withSessionAndBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(jSsessionId: String)(body: Option[A] = None): Future[B] = {
       val req = body match {
         case Some(a) =>
           request << write[A](a)(jsonFormats)
@@ -58,6 +59,15 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
       f(req <:< Map("Cookie" -> s"${JSessionIdCookieParser.name}=$jSsessionId"))
     }
 
+    def withBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(body: Option[A] = None): Future[B] = {
+      val req = body match {
+        case Some(a) =>
+          request << write[A](a)(jsonFormats)
+        case None => request
+      }
+      f(req)
+    }
+
     def apply[A <: AnyRef: Manifest, B <: AnyRef: Manifest](tuple: (String, AsyncHandler[B]), body: Option[A] = None): dispatch.Future[B] = {
       val (uri, handler) = tuple
       val request = dispatch.url(s"$serviceUrl$uri")
@@ -65,10 +75,13 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
         case (Some(un), Some(pw)) =>
           for (
             jsession <- jSessionId;
-            result <- withSession[A, B](request)((req) => internalClient(req.toRequest, handler))(jsession.sessionId)(body)
+            result <- withSessionAndBody[A, B](request)((req) => internalClient(req.toRequest, handler))(jsession.sessionId)(body)
           ) yield result
 
-        case _ => internalClient((request.toRequest, handler))
+        case _ =>
+          for (
+            result <- withBody[A, B](request)((req) => internalClient(req.toRequest, handler))(body)
+          ) yield result
       }
     }
   }
@@ -141,7 +154,7 @@ object ExecutorUtil {
 abstract class JsonExtractor(val uri: String) extends HakurekisteriJsonSupport {
   def handler[T](f: (Response) => T): AsyncHandler[T]
 
-  def as[T:Manifest] = {
+  def as[T: Manifest] = {
     val f = (resp: Response) => {
       import org.json4s.jackson.Serialization.read
       read[T](resp.getResponseBody)

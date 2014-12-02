@@ -12,6 +12,11 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
+case class Oppilaitos(koodi: String)
+case class OppilaitosResponse(koodi: String, oppilaitos: Organisaatio)
+
+case class OppilaitosNotFoundException(koodi: String) extends Exception(s"Oppilaitosta ei löytynyt oppilaitoskoodilla $koodi.")
+
 class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
   private var cache: Map[String, (Long, Future[Option[Organisaatio]])] = Map()
@@ -45,16 +50,22 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
 
   val timeToLive = Config.organisaatioCacheHours.hours
 
-  case class Save(oid:String, value: (Long, Future[Option[Organisaatio]]))
+  case class Save(oid: String, value: (Long, Future[Option[Organisaatio]]))
 
   override def receive: Receive = {
     case oid: String => find(oid)._2 pipeTo sender
+    case Oppilaitos(koodi) =>
+      val f = find(koodi)._2
+      f.flatMap {
+        case Some(org) => Future.successful(OppilaitosResponse(koodi, org))
+        case None => Future.failed(OppilaitosNotFoundException(koodi))
+      } pipeTo sender
     case Refetch(oid) => val result = newValue(oid)
                          result._2.onSuccess {case _ => self ! Save(oid, result)}
                          result._2.onFailure {case _ => log.warning("fetching organisation data for %s failed. Trying again".format(oid))
                                                         self ! Refetch(oid)}
     case Save(oid, result) => cache = cache + (oid -> result)
-    case refresh:Refresh => Future(fetchOrgs(cache.toSeq.filter(t => t._2._1 < Platform.currentTime).map(_._1), Refetch))
+    case refresh: Refresh => Future(fetchOrgs(cache.toSeq.filter(t => t._2._1 < Platform.currentTime).map(_._1), Refetch))
   }
 
   def find(oid: String): (Long, Future[Option[Organisaatio]]) = {

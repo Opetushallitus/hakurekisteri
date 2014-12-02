@@ -7,15 +7,18 @@ app.controller('MuokkaaCtrl', ['$scope', '$routeParams', '$location', '$http', '
     $scope.suoritukset = [];
     $scope.luokkatiedot = [];
     $scope.kielet = [];
-    $scope.luokkatasot = [
-        {value: "9", text: "9"},
-        {value: "10", text: "10"},
-        {value: "A", text: "A"},
-        {value: "M", text: "M"},
-        {value: "V", text: "V"}
-    ];
     $scope.komo = komo;
     function loadMenuTexts() {
+        $scope.luokkatasot = [
+            {value: "9", text: getOphMsg("suoritusrekisteri.luokktaso.9", "9")},
+            {value: "10", text: getOphMsg("suoritusrekisteri.luokktaso.10", "10")},
+            {value: "A", text: getOphMsg("suoritusrekisteri.luokktaso.a", "ammattistartti")},
+            {value: "AK", text: getOphMsg("suoritusrekisteri.luokktaso.ak", "ammatillinen peruskoulutus")},
+            {value: "L", text: getOphMsg("suoritusrekisteri.luokktaso.l", "lukio")},
+            {value: "M", text: getOphMsg("suoritusrekisteri.luokktaso.m", "maahanmuuttajien ammatilliseen peruskoulutukseen valmistava koulutus")},
+            {value: "ML", text: getOphMsg("suoritusrekisteri.luokktaso.ml", "maahanmuuttajien lukiokoulutukseen valmistava koulutus")},
+            {value: "V", text: getOphMsg("suoritusrekisteri.luokktaso.v", "vammaisten valmentava ja kuntouttava opetus ja ohjaus")}
+        ];
         $scope.yksilollistamiset = [
             {value: "Ei", text: getOphMsg("suoritusrekisteri.yks.ei", "Ei")},
             {value: "Osittain", text: getOphMsg("suoritusrekisteri.yks.osittain", "Osittain")},

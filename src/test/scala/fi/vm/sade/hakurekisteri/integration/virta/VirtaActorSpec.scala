@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.virta
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
+import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 import org.joda.time.LocalDate
 import org.scalatest.{Matchers, FlatSpec}
@@ -85,12 +86,6 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
 
   object AllResources
 
-  class MockedResourceActor[T](f: (T) => Unit) extends Actor {
-    def receive: Receive = {
-      case r: T => f(r)
-    }
-  }
-
   val organisaatioActor = system.actorOf(Props(new MockedOrganisaatioActor()))
 
   val json782603 = """{
@@ -143,4 +138,13 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
 
 }
 
-
+class MockedResourceActor[T](save: (T) => Unit = {(r: T) => }, query: (Query[T]) => Seq[T] = {(q: Query[T]) => Seq()}) extends Actor {
+  override def receive: Receive = {
+    case q: Query[T] =>
+      sender ! query(q)
+    case r: T =>
+      save(r)
+      sender ! r
+    case a: Any => println(s"got unrecognised message $a")
+  }
+}
