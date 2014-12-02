@@ -94,6 +94,16 @@ class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBeha
     journal.journal(None).last should be (delta)
   }
 
+  it should "deduplicate when the same information is received multiple times" in new JournalWithEntries {
+    val tr = TestResource("foo")
+    val tr2 = TestResource("foo")
+
+    val saved = repo.save(tr)
+    val saved2 = repo.save(tr2)
+
+    saved.id should be (saved2.id)
+  }
+
 
 
 

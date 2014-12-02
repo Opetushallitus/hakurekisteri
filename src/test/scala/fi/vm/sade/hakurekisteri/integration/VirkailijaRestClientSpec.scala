@@ -44,15 +44,6 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
 
   behavior of "VirkailijaRestClient"
 
-  it should "make request to specified url" in {
-    client.client("/rest/blaa")
-
-
-
-    Mockito.verify(endPoint, Mockito.timeout(200).atLeastOnce()).request(forUrl("http://localhost/test/rest/blaa"))
-
-  }
-
   import VirkailijaRestImplicits._
   it should "serialize response into a case class" in {
     val response =  client.client("/rest/blaa".accept(200).as[TestResponse])
