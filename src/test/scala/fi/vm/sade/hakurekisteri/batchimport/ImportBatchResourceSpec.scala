@@ -35,16 +35,12 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
       <xs:schema attributeFormDefault="unqualified"
                  elementFormDefault="qualified"
                  xmlns:xs="http://www.w3.org/2001/XMLSchema">
-
-
-
         <xs:element name="batch">
           <xs:complexType>
             <xs:sequence>
               <xs:element name="data" minOccurs="1" maxOccurs="1"></xs:element>
             </xs:sequence>
           </xs:complexType>
-
         </xs:element>
       </xs:schema>
   }
@@ -53,12 +49,11 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   addServlet(
     new ImportBatchResource(
       authorized,
-      (foo) => ImportBatchQuery(None))
+      (foo) => ImportBatchQuery(None, None, None))
     ("identifier",
         "test",
         "data",
         TestSchema) with TestSecurity, "/")
-
 
 
   test("post should return 201 created") {
@@ -74,7 +69,6 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
       response.status should be(201)
     }
   }
-
 
   test("post with bad file should return 400") {
     val fileData = XmlPart("test.xml", <batch><bata>foo</bata></batch>)
@@ -92,8 +86,4 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
 
     override val contentType: String = "application/xml"
   }
-
-
-
-
 }

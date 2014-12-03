@@ -5,6 +5,7 @@ import org.json4s.{FieldSerializer, DefaultFormats, Formats}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, Valintatila, Vastaanottotila}
+import fi.vm.sade.hakurekisteri.batchimport.BatchState
 import org.json4s.ext.DateTimeSerializer
 import java.util.UUID
 
@@ -15,6 +16,7 @@ trait HakurekisteriJsonSupport {
     new org.json4s.ext.EnumNameSerializer(Ilmoittautumistila) +
     new org.json4s.ext.EnumNameSerializer(Valintatila) +
     new org.json4s.ext.EnumNameSerializer(Vastaanottotila) +
+    new org.json4s.ext.EnumNameSerializer(BatchState) +
     FieldSerializer[Identified[UUID]]() +
     new UUIDSerializer +
     new IdentitySerializer +

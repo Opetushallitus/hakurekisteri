@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration
 
-import java.io.InterruptedIOException
-import java.net.{ConnectException, URL}
+import java.net.ConnectException
 import java.util.UUID
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicInteger
@@ -18,6 +17,7 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
+
 
 case class PreconditionFailedException(message: String, responseCode: Int) extends Exception(message)
 
@@ -44,39 +44,44 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   val serviceName = serviceUrl.split("/").reverse.headOption
   val casActor = system.actorOf(Props(new CasActor(config, aClient)), s"cas-client-${serviceName.getOrElse(UUID.randomUUID())}")
 
-  object client  {
+  object client {
     def jSessionId: Future[JSessionId] = (casActor ? JSessionKey(serviceUrl)).mapTo[JSessionId]
 
-    def withSession[T](request: Req)(f: (Req) => Future[T])(jSsessionId: String): Future[T] = {
-      val req = request <:< Map("Cookie" -> s"${JSessionIdCookieParser.name}=$jSsessionId")
+    import org.json4s.jackson.Serialization._
+
+    def withSessionAndBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(jSsessionId: String)(body: Option[A] = None): Future[B] = {
+      val req = body match {
+        case Some(a) =>
+          request << write[A](a)(jsonFormats)
+        case None => request
+      }
+
+      f(req <:< Map("Cookie" -> s"${JSessionIdCookieParser.name}=$jSsessionId"))
+    }
+
+    def withBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(body: Option[A] = None): Future[B] = {
+      val req = body match {
+        case Some(a) =>
+          request << write[A](a)(jsonFormats)
+        case None => request
+      }
       f(req)
     }
 
-    def apply(uri: String) = {
-      val request = dispatch.url(s"$serviceUrl$uri")
-      (user, password) match {
-        case (Some(un), Some(pw)) =>
-          for (
-            jsession <- jSessionId;
-            result <- withSession(request)((req) => internalClient(req))(jsession.sessionId)
-          ) yield result
-
-        case _ =>
-          internalClient(request)
-      }
-    }
-
-    def apply[T](tuple: (String, AsyncHandler[T])): dispatch.Future[T] = {
+    def apply[A <: AnyRef: Manifest, B <: AnyRef: Manifest](tuple: (String, AsyncHandler[B]), body: Option[A] = None): dispatch.Future[B] = {
       val (uri, handler) = tuple
       val request = dispatch.url(s"$serviceUrl$uri")
       (user, password) match{
         case (Some(un), Some(pw)) =>
           for (
             jsession <- jSessionId;
-            result <- withSession(request)((req) => internalClient(req.toRequest, handler))(jsession.sessionId)
+            result <- withSessionAndBody[A, B](request)((req) => internalClient(req.toRequest, handler))(jsession.sessionId)(body)
           ) yield result
 
-        case _ => internalClient((request.toRequest, handler))
+        case _ =>
+          for (
+            result <- withBody[A, B](request)((req) => internalClient(req.toRequest, handler))(body)
+          ) yield result
       }
     }
   }
@@ -90,7 +95,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     case _ => false
   }
 
-  private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = client(uri.accept(acceptedResponseCode).as[A]).recoverWith {
+  private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = client[A, A](uri.accept(acceptedResponseCode).as[A]).recoverWith {
     case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
       if (retryCount.getAndIncrement <= maxRetries) {
         logger.warning(s"retrying request to $uri due to $t, retry attempt #${retryCount.get - 1}")
@@ -98,9 +103,13 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
       } else Future.failed(t)
   }
 
-  def readObject[A <: AnyRef: Manifest](uri:String, acceptedResponseCode: Int, maxRetries: Int = 0): Future[A] = {
+  def readObject[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int = 0): Future[A] = {
     val retryCount = new AtomicInteger(1)
-    tryClient(uri, acceptedResponseCode, maxRetries, retryCount)
+    tryClient[A](uri, acceptedResponseCode, maxRetries, retryCount)
+  }
+
+  def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, resource: A): Future[B] = {
+    client[A, B](uri.accept(acceptedResponseCode).as[B], Some(resource))
   }
 }
 
@@ -143,9 +152,9 @@ object ExecutorUtil {
 }
 
 abstract class JsonExtractor(val uri: String) extends HakurekisteriJsonSupport {
-  def handler[T](f: (Response) => T):AsyncHandler[T]
+  def handler[T](f: (Response) => T): AsyncHandler[T]
 
-  def as[T:Manifest] = {
+  def as[T: Manifest] = {
     val f = (resp: Response) => {
       import org.json4s.jackson.Serialization.read
       read[T](resp.getResponseBody)

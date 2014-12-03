@@ -15,14 +15,12 @@ import scala.util.Try
 import scala.language.implicitConversions
 
 
-
 trait DispatchSupport {
+  def forUrl(url: String) = ERMatcher(Some(url), Set())
 
-  def forUrl(url:String) = ERMatcher(Some(url), Set())
+  def forUrl(url: String, body: String) = ERMatcher(Some(url), Set(body))
 
   implicit def matcherToValue[T](m:Matcher[T]):T = Matchers.argThat(m)
-
-
 }
 
 case class BaseStatus(code: Int, text: String, req: Request, prov: AsyncHttpProvider) extends HttpResponseStatus(req.getURI, prov){
@@ -54,9 +52,6 @@ object OkStatus {
 }
 
 class BodyString(request: Request, provider: AsyncHttpProvider, body: String = "") extends HttpResponseBodyPart(request.getURI,provider) {
-
-
-
   var closed = false
 
   override def markUnderlyingConnectionAsClosed(): Unit = {closed = true}
@@ -137,38 +132,31 @@ class BaseResponse(s: HttpResponseStatus, h: HttpResponseHeaders, bs: Seq[HttpRe
   override def getStatusCode: Int = status.get.getStatusCode
 }
 
-case class EndpointRequest(url:String, body:Option[String],  headers: List[(String, String)])
+case class EndpointRequest(url: String, body: Option[String], headers: List[(String, String)])
 
-case class ERMatcher(url:Option[String], bodyParts: Set[String],  headers: (String, String)*) extends BaseMatcher[EndpointRequest]{
+case class ERMatcher(url: Option[String], bodyParts: Set[String], headers: (String, String)*) extends BaseMatcher[EndpointRequest] {
   override def describeTo(description: Description): Unit = {
-
     val matchedHeaders  = headers.headOption.map((_) => "following headers: " + headers.mkString(", ")).getOrElse("any headers")
     description.appendText(s"request with ${url.map("url: " + _).getOrElse("any url")} and $matchedHeaders")
-
   }
 
   override def matches(item: scala.Any): Boolean = item match {
-    case EndpointRequest(rUrl,body,  rHeaders) =>
+    case EndpointRequest(rUrl, body, rHeaders) =>
       url.map(_ == rUrl).getOrElse(true) &&
       headers.map(rHeaders.contains).reduceOption(_ && _).getOrElse(true) &&
       !bodyParts.exists(!body.getOrElse("").contains(_))
+
     case _ => false
   }
-
 
   def withHeader(header: (String,String))  = ERMatcher(url,bodyParts, (header +: headers):_*)
 
   def withBodyPart(part: String) = ERMatcher(url, bodyParts + part, headers:_*)
 }
 
-
-
 trait Endpoint {
-
   def request(er: EndpointRequest): (Int, List[(String, String)], String)
 }
-
-
 
 class CapturingProvider(endpoint: Endpoint) extends AsyncHttpProvider{
   override def prepareResponse(status: HttpResponseStatus, headers: HttpResponseHeaders, bodyParts: util.List[HttpResponseBodyPart]): Response = {
@@ -184,7 +172,6 @@ class CapturingProvider(endpoint: Endpoint) extends AsyncHttpProvider{
     val foo = for (
       entry <- request.getHeaders.entrySet;
       value <- entry.getValue
-
     ) yield entry.getKey -> value
 
     val reqBody = Option(request.getStringData).orElse(Option(request.getByteData).map(new String(_)))
@@ -194,20 +181,15 @@ class CapturingProvider(endpoint: Endpoint) extends AsyncHttpProvider{
     val response = Option(endpoint.request(er))
 
     def handle = {
-
       val (status, headers, body) = response.getOrElse(404, List(), "Not found")
       handler.onStatusReceived(BaseStatus(status, "", request, this))
       handler.onHeadersReceived(new BaseHeaders(request, this, headers))
       handler.onBodyPartReceived(new BodyString(request, this, body))
       handler.onCompleted()
-
     }
 
-    val promise = Promise[T]
-
+    val promise = Promise[T]()
     promise.tryComplete(Try(handle))
-
-
 
     FutureListenableFuture(promise.future)
   }
@@ -215,7 +197,6 @@ class CapturingProvider(endpoint: Endpoint) extends AsyncHttpProvider{
 
 case class FutureListenableFuture[T](future: Future[T]) extends ListenableFuture[T]{
   override def get(timeout: Long, unit: TimeUnit): T = Await.result(future, Duration(timeout, unit))
-
 
   override def get(): T = Await.result(future, Duration.Inf)
 

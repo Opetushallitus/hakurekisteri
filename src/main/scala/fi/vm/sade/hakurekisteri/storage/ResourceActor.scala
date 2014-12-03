@@ -49,7 +49,8 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
       sender ! get(id)
     case DeleteResource(id: I, user: String) =>
       log.debug(s"received delete request for resource: $id from $sender")
-      sender ! delete(id, user)
+      delete(id, user)
+      sender ! id
       log.debug(s"deleted $id answered to $sender")
     case Report =>
       log.debug(s"saved: $saved")

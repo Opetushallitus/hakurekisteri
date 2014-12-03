@@ -24,25 +24,24 @@ trait JournaledRepository[T <: Resource[I, T], I] extends InMemRepository[T, I] 
     case Updated(resource) =>
       val old = snapShot.get(resource.id)
       for (deleted <- old) {
-
-        val newSeq = reverseSnapShot.get(deleted).map(_.filter(_ != resource.id)).getOrElse(Set())
-        if (newSeq.isEmpty) reverseSnapShot = reverseSnapShot - deleted
-        else reverseSnapShot = reverseSnapShot + (deleted -> newSeq)
-
+        val deleteCore = getCore(deleted)
+        val newSeq = reverseSnapShot.get(deleteCore).map(_.filter(_ != resource.id)).getOrElse(Seq())
+        if (newSeq.isEmpty) reverseSnapShot = reverseSnapShot - deleteCore
+        else reverseSnapShot = reverseSnapShot + (deleteCore -> newSeq)
       }
-
-      snapShot =  snapShot + (resource.id -> resource)
-      val newSeq =  reverseSnapShot.get(resource).getOrElse(Set()) + resource.id
-      reverseSnapShot = reverseSnapShot + (resource -> newSeq)
+      val core = getCore(resource)
+      snapShot = snapShot + (resource.id -> resource)
+      val newSeq = reverseSnapShot.getOrElse(core, Seq()).+:(resource.id)
+      reverseSnapShot = reverseSnapShot + (core -> newSeq)
       index(old, Some(resource))
+
     case Deleted(id, source) =>
       val old = snapShot.get(id)
       for (deleted <- old) {
-
-        val newSeq = reverseSnapShot.get(deleted).map(_.filter(_ != id)).getOrElse(Set())
-        if (newSeq.isEmpty) reverseSnapShot = reverseSnapShot - deleted
-        else reverseSnapShot = reverseSnapShot + (deleted -> newSeq)
-
+        val deleteCore = getCore(deleted)
+        val newSeq = reverseSnapShot.get(deleteCore).map(_.filter(_ != id)).getOrElse(Seq())
+        if (newSeq.isEmpty) reverseSnapShot = reverseSnapShot - deleteCore
+        else reverseSnapShot = reverseSnapShot + (deleteCore -> newSeq)
       }
       snapShot = snapShot - id
       index(old, None)
@@ -57,7 +56,7 @@ trait JournaledRepository[T <: Resource[I, T], I] extends InMemRepository[T, I] 
     if (time.isEmpty && deduplicate)
       for (oids <- reverseSnapShot.values
            if oids.size > 1;
-           duplicate <- oids.tail) delete(duplicate, source = Config.ophOrganisaatioOid)
+           duplicate <- oids.tail.toSet[I]) delete(duplicate, source = Config.ophOrganisaatioOid)
     indexSwapSnapshot()
   }
 

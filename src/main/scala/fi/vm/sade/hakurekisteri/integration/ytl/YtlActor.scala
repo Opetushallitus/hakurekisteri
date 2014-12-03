@@ -16,7 +16,7 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import fr.janalyse.ssh.{SSHPassword, SSH}
 import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.arvosana.ArvioYo
-import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloResponse
+import fi.vm.sade.hakurekisteri.integration.henkilo.Henkilo
 import fi.vm.sade.hakurekisteri.integration.henkilo.HetuQuery
 import scala.util.Failure
 import scala.util.Success
@@ -237,7 +237,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   def resolveOidFromHenkiloPalvelu(hetu: String): Future[String] =
   {
     implicit val timeout: Timeout = Timeout(60, TimeUnit.SECONDS)
-    (henkiloActor ? HetuQuery(hetu)).mapTo[HenkiloResponse].map(_.hetu).flatMap(
+    (henkiloActor ? HetuQuery(hetu)).mapTo[Henkilo].map(_.hetu).flatMap(
       _.map(Future.successful).getOrElse(Future.failed(new NoSuchElementException("can't find oid for hetu in henkilopalvelu"))))
   }
 }

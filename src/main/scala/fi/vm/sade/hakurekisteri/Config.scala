@@ -59,7 +59,17 @@ object Config {
   val ytlOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.ytl", "1.2.246.562.10.43628088406")
   val cscOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.csc", "1.2.246.562.10.2013112012294919827487")
   val tuntematonOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.tuntematon", "1.2.246.562.10.57118763579")
+
   val yotutkintoKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.yotutkinto", "1.2.246.562.5.2013061010184237348007")
+  val perusopetusKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.perusopetus", "1.2.246.562.13.62959769647")
+  val lisaopetusKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lisaopetus", "1.2.246.562.5.2013112814572435044876")
+  val ammattistarttiKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ammattistartti", "1.2.246.562.5.2013112814572438136372")
+  val valmentavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.valmentava", "1.2.246.562.5.2013112814572435755085")
+  val ammatilliseenvalmistavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ammatilliseenvalmistava", "1.2.246.562.5.2013112814572441001730")
+  val ulkomainenkorvaavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ulkomainenkorvaava", "1.2.246.562.13.86722481404")
+  val lukioKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lukio", "TODO lukio komo oid")
+  val ammatillinenKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ammatillinen", "TODO ammatillinen komo oid")
+  val lukioonvalmistavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lukioonvalmistava", "TODO lukioon valmistava komo oid")
 
   val ensikertalainenCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.ensikertalainen", "6").toInt
   val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt

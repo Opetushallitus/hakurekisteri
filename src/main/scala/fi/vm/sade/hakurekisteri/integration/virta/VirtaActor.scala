@@ -11,7 +11,6 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import org.joda.time.{LocalTime, DateTime, LocalDateTime, LocalDate}
 
-import scala.collection.mutable
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,7 +38,7 @@ object CancelSchedule
 class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
-  val virtaQueue: mutable.Queue[VirtaQuery] = new mutable.Queue()
+  var virtaQueue: List[VirtaQuery] = List()
 
   var lastProcessTime: Option[DateTime] = None
   var scheduledProcessTime: Option[LocalTime] = None
@@ -60,9 +59,10 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
   var processing: Cancellable = scheduleProcessing("04:00")
   context.system.scheduler.schedule(5.minutes, 10.minutes, self, PrintStats)
 
-  def processOne() = {
+  def dequeue() = {
     try {
-      val q = virtaQueue.dequeue()
+      val q = virtaQueue.head
+      virtaQueue = virtaQueue.tail
       virtaActor ! q
     } catch {
       case t: NoSuchElementException => log.error(s"trying to dequeue an empty queue: $t")
@@ -70,13 +70,13 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
   }
 
   def receive: Receive = {
-    case VirtaQueuedQuery(q) if !virtaQueue.contains(q) => virtaQueue.enqueue(q)
+    case VirtaQueuedQuery(q) if !virtaQueue.contains(q) =>
+      virtaQueue = virtaQueue :+ q
 
     case ProcessAll =>
       log.info("started to process virta queries")
-      while(virtaQueue.nonEmpty) {
-        processOne()
-      }
+      virtaQueue.foreach(virtaActor ! _)
+      virtaQueue = List()
       log.info(s"all virta queries processed, queue length ${virtaQueue.length}")
       lastProcessTime = Some(new DateTime())
 

@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
+import java.sql.{PreparedStatement, ResultSet}
 import java.util.UUID
 
 import akka.actor.ActorSystem
@@ -10,22 +11,14 @@ import org.json4s.JsonAST.JValue
 
 import scala.compat.Platform
 import scala.language.existentials
+import scala.reflect.ClassTag
 import scala.slick.ast.{BaseTypedType, TypedType}
 import scala.slick.driver.JdbcDriver
+import scala.slick.jdbc.JdbcType
 import scala.slick.jdbc.meta.MTable
-import scala.slick.jdbc.{JdbcType, PositionedParameters, PositionedResult}
 import scala.slick.lifted
-import scala.slick.lifted._
-import java.sql.{ResultSet, PreparedStatement}
-import scala.reflect.ClassTag
-import scala.Some
-import fi.vm.sade.hakurekisteri.storage.repository.Deleted
-import fi.vm.sade.hakurekisteri.storage.repository.Updated
-import scala.Some
-import fi.vm.sade.hakurekisteri.storage.repository.Deleted
-import fi.vm.sade.hakurekisteri.storage.repository.Updated
-import scala.slick.lifted.TableQuery
-import scala.xml.{XML, Elem}
+import scala.slick.lifted.{TableQuery, _}
+import scala.xml.{Elem, XML}
 
 
 object HakurekisteriDriver extends JdbcDriver {
@@ -82,7 +75,6 @@ object HakurekisteriDriver extends JdbcDriver {
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 
 abstract class JournalTable[R <: Resource[I, R], I, ResourceRow](tag: Tag, name: String)(implicit val idType: TypedType[I]) extends Table[Delta[R, I]](tag, name) with HakurekisteriColumns {
-  def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def resourceId = column[I]("resource_id")
   def source = column[String]("source")
   def inserted = column[Long]("inserted")
