@@ -59,6 +59,7 @@ object Config {
   val ytlOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.ytl", "1.2.246.562.10.43628088406")
   val cscOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.csc", "1.2.246.562.10.2013112012294919827487")
   val tuntematonOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.tuntematon", "1.2.246.562.10.57118763579")
+
   val yotutkintoKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.yotutkinto", "1.2.246.562.5.2013061010184237348007")
   val perusopetusKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.perusopetus", "1.2.246.562.13.62959769647")
   val lisaopetusKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lisaopetus", "1.2.246.562.5.2013112814572435044876")
