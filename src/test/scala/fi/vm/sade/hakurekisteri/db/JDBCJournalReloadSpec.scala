@@ -72,7 +72,7 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
     val henkilot = Stream.continually(java.util.UUID.randomUUID).take(amount)
 
     // FIXME jos seuraavalta riviltä poistaa kommentit, testi ei mene läpi:
-    //val suoritukset = createSystemAndInsertAndShutdown(henkilot)
+    val suoritukset = createSystemAndInsertAndShutdown(henkilot)
     
     val suoritukset2 = createSystemAndInsertAndShutdown(henkilot)
 

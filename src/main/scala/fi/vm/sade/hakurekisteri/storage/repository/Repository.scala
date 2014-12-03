@@ -23,7 +23,7 @@ trait Repository[T, I] {
 trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
 
   var store:Map[I,T with Identified[I]] = Map()
-  var reverseStore:Map[AnyRef, Set[I]] = Map()
+  var reverseStore:Map[AnyRef, Seq[I]] = Map()
   var cursor:Map[Int, (Long, String)] = Map()
 
   def updateCursor(t:T, id:I) = (id, Platform.currentTime, cursor(t)) match {
@@ -53,7 +53,7 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
     store = store + (oid.id -> oid)
     val core = getCore(oid)
     deleteFromDeduplication(old)
-    val newSeq = reverseStore.get(core).map((s) => s + oid.id).getOrElse(Set(oid.id))
+    val newSeq = reverseStore.get(core).map((s) => s.+:(oid.id)).getOrElse(Seq(oid.id))
     reverseStore = reverseStore + (core -> newSeq)
     index(old, Some(oid))
     oid
