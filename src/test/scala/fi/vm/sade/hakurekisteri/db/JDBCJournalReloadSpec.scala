@@ -57,8 +57,14 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
 
     Await.result(Future.sequence(yoSuoritukset), Duration(30, TimeUnit.SECONDS))
 
+    val suoritusFuture = (authorized ? SuoritusQuery()).mapTo[Seq[Suoritus]]
+
+    val suoritukset = Await.result(suoritusFuture, Duration(30, TimeUnit.SECONDS))
+
     system.shutdown()
     system.awaitTermination()
+
+    suoritukset
   }
 
   test("suoritukset should be deduplicated after reloading the journal") {
@@ -66,45 +72,11 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
     val henkilot = Stream.continually(java.util.UUID.randomUUID).take(amount)
 
     // FIXME jos seuraavalta riviltä poistaa kommentit, testi ei mene läpi:
-    // createSystemAndInsertAndShutdown(henkilot)
+    //val suoritukset = createSystemAndInsertAndShutdown(henkilot)
+    
+    val suoritukset2 = createSystemAndInsertAndShutdown(henkilot)
 
-    val suoritukset = {
-      implicit val system = ActorSystem("test-jdbc2")
-      implicit val ec: ExecutionContext = system.dispatcher
-      implicit val timeout: Timeout = 30.seconds
-
-      val now = new LocalDate()
-
-      val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
-      val suoritusrekisteri = system.actorOf(Props(new SuoritusActor(suoritusJournal)))
-      val authorized = system.actorOf(Props(new FakeAuthorizer(suoritusrekisteri)))
-
-      val yoSuoritukset: Stream[Future[VirallinenSuoritus]] = henkilot.map((henkilo: UUID) => {
-        (authorized ? VirallinenSuoritus(
-          komo = "1.2.246.562.5.2013061010184237348007",
-          myontaja = "1.2.246.562.10.43628088406",
-          henkilo = henkilo.toString,
-          yksilollistaminen = yksilollistaminen.Ei,
-          suoritusKieli = "FI",
-          lahde = "1.2.246.562.10.43628088406",
-          tila = "VALMIS",
-          valmistuminen = now
-        )).mapTo[VirallinenSuoritus]
-      })
-
-      Await.result(Future.sequence(yoSuoritukset), Duration(30, TimeUnit.SECONDS))
-
-      val suoritusFuture = (authorized ? SuoritusQuery()).mapTo[Seq[Suoritus]]
-
-      val suoritukset = Await.result(suoritusFuture, Duration(30, TimeUnit.SECONDS))
-
-      system.shutdown()
-      system.awaitTermination()
-
-      suoritukset
-    }
-
-    suoritukset.size should be (henkilot.length)
+    suoritukset2.size should be (henkilot.length)
   }
 
 }
