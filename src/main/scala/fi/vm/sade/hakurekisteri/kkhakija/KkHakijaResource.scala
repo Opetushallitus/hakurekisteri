@@ -283,57 +283,66 @@ class KkHakijaResource(hakemukset: ActorRef,
 
   val Pattern = "preference(\\d+)-Koulutus-id".r
 
-  def getHakemukset(hakemus: FullHakemus)(q: KkHakijaQuery): Future[Seq[Hakemus]] =
-    Future.sequence(extract(hakemus)(q)).map(_.flatten)
+  def getHakemukset(hakemus: FullHakemus)(q: KkHakijaQuery): Future[Seq[Hakemus]] = {
+    (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku].flatMap(haku => {
+      if (haku.kkHaku) Future.sequence(extractHakemukset(hakemus)(q)(haku)).map(_.flatten)
+      else Future.successful(Seq())
+    })
+  }
 
-  def extract(hakemus: FullHakemus)(q: KkHakijaQuery): Seq[Future[Option[Hakemus]]] =
+  def extractHakemukset(hakemus: FullHakemus)(q: KkHakijaQuery)(haku: Haku): Seq[Future[Option[Hakemus]]] =
     (for {
       answers: HakemusAnswers <- hakemus.answers
       hakutoiveet: Map[String, String] <- answers.hakutoiveet
       lisatiedot: Lisatiedot <- answers.lisatiedot
       koulutustausta: Koulutustausta <- answers.koulutustausta
     } yield hakutoiveet.keys.collect {
-        case Pattern(jno) if hakutoiveet(s"preference$jno-Koulutus-id") != ""
-          && matchHakukohde(hakutoiveet(s"preference$jno-Koulutus-id"), q.hakukohde)
-          && isAuthorized(hakutoiveet.get(s"preference$jno-Opetuspiste-id-parents"), q.organisaatio)
-          && isAuthorized(hakutoiveet.get(s"preference$jno-Opetuspiste-id-parents"), getKnownOrganizations(q.user)) =>
-
-          val hakemusOid = hakemus.oid
-          val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
-          val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities)
-          val valintaTulosQuery = q.oppijanumero match {
-            case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemusOid), cachedOk = false)
-            case None => ValintaTulosQuery(hakemus.applicationSystemId, None)
-          }
-          for {
-            sijoitteluTulos: SijoitteluTulos <- (valintaTulos ? valintaTulosQuery).mapTo[SijoitteluTulos]
-            hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
-            haku: Haku <- (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
-            kausi: String <- getKausi(haku.kausi, hakemusOid)
-            lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, haku, hakemusOid)
-          } yield {
-            if (matchHakuehto(q.hakuehto, sijoitteluTulos, hakemusOid, hakukohdeOid))
-              Some(Hakemus(
-                haku = hakemus.applicationSystemId,
-                hakuVuosi = haku.vuosi,
-                hakuKausi = kausi,
-                hakemusnumero = hakemusOid,
-                organisaatio = hakutoiveet(s"preference$jno-Opetuspiste-id"),
-                hakukohde = hakutoiveet(s"preference$jno-Koulutus-id"),
-                hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
-                avoinVayla = None, // TODO valinnoista?
-                valinnanTila = sijoitteluTulos.valintatila(hakemusOid, hakukohdeOid),
-                vastaanottotieto = sijoitteluTulos.vastaanottotila(hakemusOid, hakukohdeOid),
-                ilmoittautumiset = lasnaolot,
-                pohjakoulutus = getPohjakoulutukset(koulutustausta),
-                julkaisulupa = lisatiedot.lupaJulkaisu.map(_ == "true"),
-                hKelpoisuus = hakukelpoisuus.status,
-                hKelpoisuusLahde = hakukelpoisuus.source,
-                hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
-              ))
-            else None
-          }
+        case Pattern(jno: String) if hakutoiveet(s"preference$jno-Koulutus-id") != "" && queryMatches(q, hakutoiveet, jno) =>
+          extractSingleHakemus(hakemus)(q)(hakutoiveet)(lisatiedot)(koulutustausta)(jno)(haku)
       }.toSeq).getOrElse(Seq())
+
+  def queryMatches(q: KkHakijaQuery, hakutoiveet: Map[String, String], jno: String): Boolean = {
+    matchHakukohde(hakutoiveet(s"preference$jno-Koulutus-id"), q.hakukohde) &&
+      isAuthorized(hakutoiveet.get(s"preference$jno-Opetuspiste-id-parents"), q.organisaatio) &&
+      isAuthorized(hakutoiveet.get(s"preference$jno-Opetuspiste-id-parents"), getKnownOrganizations(q.user))
+  }
+
+  def extractSingleHakemus(hakemus: FullHakemus)(q: KkHakijaQuery)(hakutoiveet: Map[String, String])(lisatiedot: Lisatiedot)(koulutustausta: Koulutustausta)(jno: String)(haku: Haku): Future[Option[Hakemus]] = {
+    val hakemusOid = hakemus.oid
+    val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
+    val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities)
+    val valintaTulosQuery = q.oppijanumero match {
+      case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemusOid), cachedOk = false)
+      case None => ValintaTulosQuery(hakemus.applicationSystemId, None)
+    }
+    for {
+      sijoitteluTulos: SijoitteluTulos <- (valintaTulos ? valintaTulosQuery).mapTo[SijoitteluTulos]
+      hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
+      kausi: String <- getKausi(haku.kausi, hakemusOid)
+      lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, haku, hakemusOid)
+    } yield {
+      if (matchHakuehto(q.hakuehto, sijoitteluTulos, hakemusOid, hakukohdeOid))
+        Some(Hakemus(
+          haku = hakemus.applicationSystemId,
+          hakuVuosi = haku.vuosi,
+          hakuKausi = kausi,
+          hakemusnumero = hakemusOid,
+          organisaatio = hakutoiveet(s"preference$jno-Opetuspiste-id"),
+          hakukohde = hakutoiveet(s"preference$jno-Koulutus-id"),
+          hakukohdeKkId = hakukohteenkoulutukset.ulkoinenTunniste,
+          avoinVayla = None, // TODO valinnoista?
+          valinnanTila = sijoitteluTulos.valintatila(hakemusOid, hakukohdeOid),
+          vastaanottotieto = sijoitteluTulos.vastaanottotila(hakemusOid, hakukohdeOid),
+          ilmoittautumiset = lasnaolot,
+          pohjakoulutus = getPohjakoulutukset(koulutustausta),
+          julkaisulupa = lisatiedot.lupaJulkaisu.map(_ == "true"),
+          hKelpoisuus = hakukelpoisuus.status,
+          hKelpoisuusLahde = hakukelpoisuus.source,
+          hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
+        ))
+      else None
+    }
+  }
 
   def getHakukohdeOids(hakutoiveet: Map[String, String]): Seq[String] = {
     hakutoiveet.filter((t) => t._1.endsWith("Koulutus-id") && t._2 != "").map((t) => t._2).toSeq
