@@ -229,14 +229,10 @@ function loadHakutiedot($http, $scope, MessageService) {
             var haut = [];
             kaudet.push({text: ''});
 
-            var containsKausi = function(kaudet, kausi) {
-                for (var i = 0; i < kaudet.length; i++) {
-                    var k = kaudet[i];
-                    if (k.vuosi === kausi.vuosi && k.kausi === kausi.kausi) {
-                        return true;
-                    }
-                }
-                return false;
+            var kausiExists = function(kausi) {
+                return kaudet.some(function(k) {
+                    return (k.vuosi === kausi.vuosi && k.kausi === kausi.kausi)
+                });
             };
             var resolveKausiText = function(kausiUri) {
                 return (kausiUri && kausiUri.match(/^kausi_s.*/) ? 'Syksy' : (kausiUri && kausiUri.match(/^kausi_k.*/) ? 'Kevät' : 'KAUSI PUUTTUU'))
@@ -253,7 +249,7 @@ function loadHakutiedot($http, $scope, MessageService) {
                     kausi: haku.kausi,
                     text: '' + haku.vuosi + ' ' + resolveKausiText(haku.kausi)
                 };
-                if (!containsKausi(kaudet, k)) kaudet.push(k);
+                if (!kausiExists(k)) kaudet.push(k);
 
                 haut.push({
                     vuosi: haku.vuosi,
