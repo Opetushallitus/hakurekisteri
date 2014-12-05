@@ -27,13 +27,13 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   var startTime = Platform.currentTime
   var batches: Seq[ImportBatch with Identified[UUID]] = Seq()
 
-  // system.scheduler.schedule(5.minutes, 5.minutes, self, ProcessReadyBatches)
+  // system.scheduler.schedule(5.minutes, 1.minutes, self, ProcessReadyBatches)
 
   override def receive: Receive = {
     case ProcessReadyBatches if !processing =>
       startTime = Platform.currentTime
       processing = true
-      importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), Some("perustiedot"))
+      importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), Some("perustiedot"), Some(3))
 
     case b: Seq[ImportBatch with Identified[UUID]] =>
       batches = b
