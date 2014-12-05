@@ -25,7 +25,6 @@ case class SaveHenkilo(henkilo: Henkilo, tunniste: String)
 case class SavedHenkilo(henkiloOid: String, tunniste: String)
 
 case class HenkiloSearchResponse(totalCount: Int, results: Seq[Henkilo])
-case class HenkiloSavedResponse(oidHenkilo: String)
 
 case class FoundHenkilos(henkilot: Seq[Henkilo], tunniste: String)
 
@@ -55,8 +54,8 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with Actor
       }
 
     case SaveHenkilo(henkilo, tunniste) =>
-      henkiloClient.postObject[Henkilo, HenkiloSavedResponse](s"/resources/s2s/tiedonsiirrot", 200, henkilo).
-        map(saved => SavedHenkilo(saved.oidHenkilo, tunniste)) pipeTo sender
+      henkiloClient.postObject[Henkilo, String](s"/resources/s2s/tiedonsiirrot", 200, henkilo).
+        map(saved => SavedHenkilo(saved, tunniste)) pipeTo sender
   }
 }
 

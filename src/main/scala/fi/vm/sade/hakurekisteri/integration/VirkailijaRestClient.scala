@@ -157,7 +157,8 @@ abstract class JsonExtractor(val uri: String) extends HakurekisteriJsonSupport {
   def as[T: Manifest] = {
     val f = (resp: Response) => {
       import org.json4s.jackson.Serialization.read
-      read[T](resp.getResponseBody)
+      if (manifest[T] == manifest[String]) resp.getResponseBody.asInstanceOf[T]
+      else read[T](resp.getResponseBody)
     }
 
     (uri, handler(f))

@@ -63,7 +63,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
       write[Henkilo](henkilo)
     }
 
-    when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot", henkiloBody))).thenReturn((200, List(), "{\"oidHenkilo\":\"1.2.246.562.24.123\"}"))
+    when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot", henkiloBody))).thenReturn((200, List(), "1.2.246.562.24.123"))
 
     when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio"))).thenReturn((200, List(), "[]"))
     when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/05127"))).thenReturn((200, List(), "{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{}}"))
