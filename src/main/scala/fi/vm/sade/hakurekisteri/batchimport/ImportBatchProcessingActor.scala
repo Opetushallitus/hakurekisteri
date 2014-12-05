@@ -82,8 +82,6 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       })
     }
 
-    override def preStart() = fetchAllOppilaitokset()
-
     def saveHenkilo(h: ImportHenkilo) = henkiloActor ! SaveHenkilo(h.toHenkilo, h.tunniste.tunniste)
 
     def saveOpiskelija(henkiloOid: String, importHenkilo: ImportHenkilo) = {
@@ -122,10 +120,24 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       case _                                                      => ""
     }
 
+    private object Start
     private object Stop
+    system.scheduler.scheduleOnce(1.millisecond, self, Start)
     system.scheduler.scheduleOnce(10.minutes, self, Stop)
 
+    def batchProcessed() = {
+      parent ! ProcessedBatch(b)
+      context.stop(self)
+    }
+
+    def batchFailed(t: Throwable) = {
+      parent ! FailedBatch(b, t)
+      context.stop(self)
+    }
+
     override def receive: Actor.Receive = {
+      case Start => fetchAllOppilaitokset()
+
       case OppilaitosResponse(koodi, organisaatio) =>
         organisaatiot = organisaatiot + (koodi -> Some(organisaatio))
         if (!organisaatiot.values.exists(_.isEmpty))
@@ -142,20 +154,17 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       case s: VirallinenSuoritus =>
         savedSuoritukset = savedSuoritukset :+ s
         if (sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
-          parent ! ProcessedBatch(b)
-          context.stop(self)
+          batchProcessed()
         }
 
       case o: Opiskelija =>
         savedOpiskelijat = savedOpiskelijat :+ o
         if (sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
-          parent ! ProcessedBatch(b)
-          context.stop(self)
+          batchProcessed()
         }
 
       case Failure(t: Throwable) =>
-        parent ! FailedBatch(b, t)
-        context.stop(self)
+        batchFailed(t)
 
       case Stop =>
         if (organisaatiot.values.exists(_.isEmpty))
@@ -165,8 +174,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
         if (sentSuoritukset.size != savedSuoritukset.size)
           log.error(s"all suoritukset were not saved in batch ${b.id}")
         log.warning(s"stopped processing of batch ${b.id}")
-        parent ! FailedBatch(b, ProcessingJammedException)
-        context.stop(self)
+        batchFailed(ProcessingJammedException)
     }
   }
 }
