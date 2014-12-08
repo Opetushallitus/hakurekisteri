@@ -47,7 +47,7 @@ app.controller('YoarvosanaCtrl', ['$scope', '$q', '$log', 'Arvosanat', 'suoritus
                     suoritus: suoritusId,
                     valinnainen: !k.pakollinen,
                     myonnetty: k.myonnetty,
-                    "delete": k.delete,
+                    "delete": k["delete"],
                     arvio: {
                         arvosana: k.arvosana,
                         asteikko: "YO",
@@ -88,7 +88,7 @@ app.controller('YoarvosanaCtrl', ['$scope', '$q', '$log', 'Arvosanat', 'suoritus
             angular.forEach(arvosanat, function(arvosana) {
                 var d = $q.defer();
                 this.push(d);
-                if (arvosana.delete) {
+                if (arvosana["delete"]) {
                     if (arvosana.id) removeArvosana(arvosana, d)
                 } else saveArvosana(arvosana, d);
 

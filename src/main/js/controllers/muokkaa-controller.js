@@ -196,7 +196,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$routeParams', '$location', '$http', '
         var validations = [];
         function validateOppilaitoskoodit() {
             angular.forEach($scope.luokkatiedot.concat($scope.suoritukset), function(obj) {
-                if (!obj.delete && obj.editable && !(obj.komo && obj.komo === komo.ylioppilastutkinto)) {
+                if (!obj['delete'] && obj.editable && !(obj.komo && obj.komo === komo.ylioppilastutkinto)) {
                     var d = $q.defer();
                     this.push(d);
                     if (!obj.oppilaitos || !obj.oppilaitos.match(/^\d{5}$/)) {
@@ -241,7 +241,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$routeParams', '$location', '$http', '
                 this.push(d);
                 if (suoritus.editable)
                     $log.debug("save suoritus: " + suoritus.id);
-                    if (suoritus.delete) {
+                    if (suoritus['delete']) {
                         if (suoritus.id) {
                             suoritus.$remove(function() {
                                 deleteFromArray(suoritus, $scope.suoritukset);
@@ -283,7 +283,7 @@ app.controller('MuokkaaCtrl', ['$scope', '$routeParams', '$location', '$http', '
                 $log.debug("save luokkatieto: " + luokkatieto.id);
                 var d = $q.defer();
                 this.push(d);
-                if (luokkatieto.delete) {
+                if (luokkatieto['delete']) {
                     if (luokkatieto.id) {
                         luokkatieto.$remove(function() {
                             deleteFromArray(luokkatieto, $scope.luokkatiedot);

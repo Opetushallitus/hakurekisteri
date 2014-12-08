@@ -1,3 +1,5 @@
+import com.bowlingx.sbt.plugins.Wro4jPlugin._
+import Wro4jKeys._
 import info.schleichardt.sbt.sonar.SbtSonarPlugin._
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -36,7 +38,6 @@ object HakuJaValintarekisteriBuild extends Build {
     "org.springframework.security" % "spring-security-config",
     "org.springframework.security" % "spring-security-ldap" ,
     "org.springframework.security" % "spring-security-cas"
-
     )
 
   val SecurityStack = SpringStack.map(_ % SpringVersion) ++
@@ -158,13 +159,13 @@ object HakuJaValintarekisteriBuild extends Build {
       "hakurekisteri",
       file("."),
       configurations = Seq(LoadSpecs),
-      settings =   ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
+      settings = ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
         ++ inConfig(LoadSpecs)(Defaults.testSettings)
         ++ Seq(ideaExtraTestConfigurations := Seq(LoadSpecs))
         ++ org.scalastyle.sbt.ScalastylePlugin.Settings
         ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"))
-        ++ Seq(unmanagedSourceDirectories in Compile <+= (sourceDirectory in Runtime) { sd => sd / "js"})
-        ++ Seq(com.earldouglas.xsbtwebplugin.PluginKeys.webappResources in Compile <+= (sourceDirectory in Runtime)(sd => sd / "js"))
+        ++ Seq(wro4jSettings:_*)
+        ++ Seq(com.earldouglas.xsbtwebplugin.PluginKeys.webappResources in Compile <+= (targetFolder in generateResources in Compile))
         ++ Seq(mochaTask, installMochaTask, installCoffeeTask, cleanNodeModules, mochaTestSources)
         ++ Seq(
           organization := Organization,

@@ -102,7 +102,7 @@ function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options, valueFro
     $http.get(getBaseUrl() + '/koodisto-service/rest/json/' + encodeURIComponent(koodisto) + '/koodi', {cache: true})
         .success(function(koodisto) {
             angular.forEach(koodisto, function(koodi) {
-                metas: for (var j = 0; j < koodi.metadata.length; j++) {
+                for (var j = 0; j < koodi.metadata.length; j++) {
                     var meta = koodi.metadata[j];
                     if (meta.kieli.toLowerCase() === kielikoodi.toLowerCase()) {
                         var value = koodi.koodiUri + '#' + koodi.versio;
@@ -114,7 +114,7 @@ function getKoodistoAsOptionArray($http, koodisto, kielikoodi, options, valueFro
                             value: value,
                             text: meta.nimi
                         });
-                        break metas;
+                        break;
                     }
                 }
             });
