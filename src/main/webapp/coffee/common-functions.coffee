@@ -1,43 +1,38 @@
 getBaseUrl = ->
   return "https://itest-virkailija.oph.ware.fi"  if location.hostname is "localhost"
   ""
+
 getOrganisaatio = ($http, organisaatioOid, successCallback, errorCallback) ->
   $http.get(organisaatioServiceUrl + "/rest/organisaatio/" + encodeURIComponent(organisaatioOid),
     cache: true
   ).success(successCallback).error errorCallback
   return
+
 getKoulutusNimi = ($http, koulutusUri, successCallback) ->
   $http.get(koodistoServiceUrl + "/rest/json/koulutus/koodi/" + encodeURIComponent(koulutusUri),
     cache: true
   ).success (koodi) ->
     if koodi.metadata
       i = 0
-
       while i < koodi.metadata.length
         meta = koodi.metadata[i]
         return successCallback(meta.nimi)  if meta.kieli is "FI"
         i++
     successCallback ""
+  return
 
-  return
-authenticateToAuthenticationService = ($http, successCallback, errorCallback) ->
-  $http.get(henkiloServiceUrl + "/buildversion.txt?auth").success(successCallback).error errorCallback
-  return
 getOphMsg = (key, def) ->
   if window.globalGetOphMsg
     window.globalGetOphMsg key, def
   else
     key
-  return
+
 getKoodistoAsOptionArray = ($http, koodisto, kielikoodi, options, valueFromField) ->
   $http.get(getBaseUrl() + "/koodisto-service/rest/json/" + encodeURIComponent(koodisto) + "/koodi",
     cache: true
   ).success (koodisto) ->
     angular.forEach koodisto, (koodi) ->
-      j = 0
-
-      while j < koodi.metadata.length
-        meta = koodi.metadata[j]
+      angular.forEach koodi.metadata, (meta) ->
         if meta.kieli.toLowerCase() is kielikoodi.toLowerCase()
           value = koodi.koodiUri + "#" + koodi.versio
           value = meta.nimi  if valueFromField is "nimi"
@@ -45,26 +40,25 @@ getKoodistoAsOptionArray = ($http, koodisto, kielikoodi, options, valueFromField
           options.push
             value: value
             text: meta.nimi
-
-          break
-        j++
+        return
       return
 
     options.sort (a, b) ->
       return 0  if a.text is b.text
       (if a.text < b.text then -1 else 1)
-
     return
-
   return
+
 parseFinDate = (d) ->
   (if (d and d.match(/[0-3][0-9]\.[0-1][0-9]\.[0-9]{4}/)) then new Date(parseInt(d.substr(6, 4), 10), parseInt(d.substr(3, 2), 10) - 1, parseInt(d.substr(0, 2), 10)) else null)
+
 sortByFinDateDesc = (a, b) ->
   aDate = parseFinDate(a)
   aDate = new Date(1000, 0, 1)  unless aDate
   bDate = parseFinDate(b)
   bDate = new Date(1000, 0, 1)  unless bDate
   (if aDate > bDate then -1 else (if aDate < bDate then 1 else 0))
+
 ensureConsoleMethods = ->
   method = undefined
   noop = ->
@@ -116,6 +110,7 @@ komo =
   ylioppilastutkinto: "1.2.246.562.5.2013061010184237348007"
 
 ylioppilastutkintolautakunta = "1.2.246.562.10.43628088406"
+
 String::hashCode = ->
   hash = 0
   return hash  if @length is 0
@@ -135,6 +130,7 @@ unless Object.keys
     for p of o
       continue
     k
+
 unless Array::diff
   Array::diff = (a) ->
     @filter (i) ->
@@ -155,9 +151,11 @@ unless Array::getUnique
       u[this[i]] = 1
       ++i
     a
+
 unless Array.isArray
   Array.isArray = (arg) ->
     Object::toString.call(arg) is "[object Array]"
+
 (->
   ensureConsoleMethods()
   if window.globalInitOphMsg
