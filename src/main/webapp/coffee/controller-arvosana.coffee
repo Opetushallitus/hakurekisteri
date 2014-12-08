@@ -212,7 +212,7 @@ app.controller "ArvosanaCtrl", [
 
       arvosanat = []
       ((a) ->
-        if a.aine and ((a.arvosana and a.arvosana is not "Ei arvosanaa") or a.arvosanaId)
+        if a.aine and ((a.arvosana and a.arvosana isnt "Ei arvosanaa") or a.arvosanaId)
           arvosanat.push new Arvosanat(
             id: a.arvosanaId
             aine: a.aine
@@ -222,7 +222,7 @@ app.controller "ArvosanaCtrl", [
               arvosana: a.arvosana
               asteikko: "4-10"
           )
-        if a.aine and ((a.arvosanaValinnainen and a.arvosanaValinnainen is not "Ei arvosanaa") or a.valinnainenId)
+        if a.aine and ((a.arvosanaValinnainen and a.arvosanaValinnainen isnt "Ei arvosanaa") or a.valinnainenId)
           arvosanat.push new Arvosanat(
             id: a.valinnainenId
             aine: a.aine
@@ -234,7 +234,7 @@ app.controller "ArvosanaCtrl", [
 
             valinnainen: true
           )
-        if a.aine and ((a.arvosanaToinenValinnainen and a.arvosanaToinenValinnainen is not "Ei arvosanaa") or a.toinenValinnainenId)
+        if a.aine and ((a.arvosanaToinenValinnainen and a.arvosanaToinenValinnainen isnt "Ei arvosanaa") or a.toinenValinnainenId)
           arvosanat.push new Arvosanat(
             id: a.toinenValinnainenId
             aine: a.aine

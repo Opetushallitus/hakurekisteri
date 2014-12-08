@@ -1,14 +1,11 @@
 loadHakutiedot = ($http, $scope, MessageService) ->
-  $http.get("rest/v1/haut",
-    cache: true
-  ).success((hautResponse) ->
-    kaudet = []
+  $http.get("rest/v1/haut", { cache: true }).success((hautResponse) ->
+    kaudet = [text: ""]
     haut = []
-    kaudet.push text: ""
+
     kausiExists = (kausi) ->
       kaudet.some (k) ->
         k.vuosi is kausi.vuosi and k.kausi is kausi.kausi
-
 
     resolveKausiText = (kausiUri) ->
       (if kausiUri and kausiUri.match(/^kausi_s.*/) then "Syksy" else ((if kausiUri and kausiUri.match(/^kausi_k.*/) then "Kevät" else "KAUSI PUUTTUU")))
@@ -19,15 +16,12 @@ loadHakutiedot = ($http, $scope, MessageService) ->
       else
         true
     )
-    i = 0
 
-    while i < filteredHaut.length
-      haku = filteredHaut[i]
+    ((haku) ->
       k =
         vuosi: haku.vuosi
         kausi: haku.kausi
         text: "" + haku.vuosi + " " + resolveKausiText(haku.kausi)
-
       kaudet.push k  unless kausiExists(k)
       haut.push
         vuosi: haku.vuosi
@@ -35,8 +29,8 @@ loadHakutiedot = ($http, $scope, MessageService) ->
         hakukausi: resolveKausiText(haku.kausi)
         oid: haku.oid
         text: ((if haku.nimi and haku.nimi.fi then haku.nimi.fi else ((if haku.nimi and haku.nimi.sv then haku.nimi.sv else ((if haku.nimi and haku.nimi.en then haku.nimi.en else "NIMI PUUTTUU"))))))
+    )(haku) for haku in filteredHaut
 
-      i++
     sortByNimi = (a, b) ->
       if a and b and a.text and b.text
         if a.text.toLowerCase() is b.text.toLowerCase()
@@ -46,6 +40,7 @@ loadHakutiedot = ($http, $scope, MessageService) ->
       0
 
     kaudet.sort sortByNimi
+
     sortByKausiAndNimi = (a, b) ->
       aKausi = a.vuosi + a.kausi
       bKausi = b.vuosi + b.kausi
@@ -55,23 +50,18 @@ loadHakutiedot = ($http, $scope, MessageService) ->
         (if aKausi < bKausi then 1 else -1)
 
     haut.sort sortByKausiAndNimi
+
     $scope.kaudet = kaudet
     $scope.kausi = kaudet[0]  if kaudet.length > 0
     $scope.haut = haut
-    return
   ).error ->
     MessageService.addMessage
       type: "danger"
       message: "Tietojen lataaminen näytölle epäonnistui."
       description: "Päivitä näyttö tai navigoi sille uudelleen."
 
-    return
-
-  return
 loadHakukohdekoodit = ($http, $scope) ->
-  $http.get(koodistoServiceUrl + "/rest/json/hakukohteet/koodi",
-    cache: true
-  ).success (data) ->
+  $http.get(koodistoServiceUrl + "/rest/json/hakukohteet/koodi", { cache: true }).success (data) ->
     $scope.hakukohdekoodit = data.map((koodi) ->
       koodi: koodi.koodiArvo
       nimi: koodi.metadata.sort((a, b) ->
@@ -88,10 +78,8 @@ loadHakukohdekoodit = ($http, $scope) ->
       else
         0
     )
-    return
 
-  return
-"use strict"
+
 app.controller "HakeneetCtrl", [
   "$scope"
   "$http"
@@ -102,19 +90,20 @@ app.controller "HakeneetCtrl", [
   ($scope, $http, $modal, MurupolkuService, MessageService, aste) ->
     isKk = ->
       aste is "kk"
+
     tiedostotyypit = ->
-      if isKk()
-        return [
-          {
-            value: "Json"
-            text: "JSON"
-          }
-          {
-            value: "Excel"
-            text: "Excel"
-          }
-        ]
-      [
+      return [
+        {
+          value: "Json"
+          text: "JSON"
+        }
+        {
+          value: "Excel"
+          text: "Excel"
+        }
+      ]  if isKk()
+
+      return [
         {
           value: "Json"
           text: "JSON"
@@ -128,6 +117,7 @@ app.controller "HakeneetCtrl", [
           text: "Excel"
         }
       ]
+
     $scope.haut = []
     $scope.kaudet = []
     $scope.hakuehdot = [
@@ -146,6 +136,7 @@ app.controller "HakeneetCtrl", [
     ]
     $scope.tiedostotyypit = tiedostotyypit()
     $scope.vainKkHaut = true  if isKk()
+
     if isKk()
       MurupolkuService.addToMurupolku
         key: "suoritusrekisteri.hakeneet.muru.kk"
@@ -156,10 +147,8 @@ app.controller "HakeneetCtrl", [
         key: "suoritusrekisteri.hakeneet.muru"
         text: "Hakeneet ja valitut opiskelijat"
       , true
+
     loadHakutiedot $http, $scope, MessageService
-    $scope.reloadHakutiedot = ->
-      loadHakutiedot $http, $scope, MessageService
-      return
 
     $scope.search = ->
       MessageService.clearMessages()
