@@ -12,6 +12,7 @@ app.controller "DuplikaattiCtrl", [
       else
         (if a.aine < b.aine then -1 else 1)
     )
+
     $scope.remove = (arvosana) ->
       arvosana.$remove (->
         index = $scope.arvosanat.indexOf(arvosana)
@@ -22,9 +23,6 @@ app.controller "DuplikaattiCtrl", [
           type: "danger"
           messageKey: "suoritusrekisteri.muokkaa.duplikaatti.virhepoistettaessaarvosanaa"
           message: "Virhe poistettaessa arvosanaa. Yritä uudelleen."
-
-        return
-
       return
 
     $scope.close = ->
