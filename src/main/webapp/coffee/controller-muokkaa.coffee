@@ -14,58 +14,6 @@ app.controller "MuokkaaCtrl", [
   "MessageService"
   ($scope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService) ->
     loadMenuTexts = ->
-      $scope.luokkatasot = [
-        {
-          value: "9"
-          text: getOphMsg("suoritusrekisteri.luokktaso.9", "9")
-        }
-        {
-          value: "10"
-          text: getOphMsg("suoritusrekisteri.luokktaso.10", "10")
-        }
-        {
-          value: "A"
-          text: getOphMsg("suoritusrekisteri.luokktaso.a", "ammattistartti")
-        }
-        {
-          value: "AK"
-          text: getOphMsg("suoritusrekisteri.luokktaso.ak", "ammatillinen peruskoulutus")
-        }
-        {
-          value: "L"
-          text: getOphMsg("suoritusrekisteri.luokktaso.l", "lukio")
-        }
-        {
-          value: "M"
-          text: getOphMsg("suoritusrekisteri.luokktaso.m", "maahanmuuttajien ammatilliseen peruskoulutukseen valmistava koulutus")
-        }
-        {
-          value: "ML"
-          text: getOphMsg("suoritusrekisteri.luokktaso.ml", "maahanmuuttajien lukiokoulutukseen valmistava koulutus")
-        }
-        {
-          value: "V"
-          text: getOphMsg("suoritusrekisteri.luokktaso.v", "vammaisten valmentava ja kuntouttava opetus ja ohjaus")
-        }
-      ]
-      $scope.yksilollistamiset = [
-        {
-          value: "Ei"
-          text: getOphMsg("suoritusrekisteri.yks.ei", "Ei")
-        }
-        {
-          value: "Osittain"
-          text: getOphMsg("suoritusrekisteri.yks.osittain", "Osittain")
-        }
-        {
-          value: "Alueittain"
-          text: getOphMsg("suoritusrekisteri.yks.alueittain", "Alueittain")
-        }
-        {
-          value: "Kokonaan"
-          text: getOphMsg("suoritusrekisteri.yks.kokonaan", "Kokonaan")
-        }
-      ]
       $scope.koulutukset = [
         {
           value: komo.ulkomainen
@@ -94,20 +42,6 @@ app.controller "MuokkaaCtrl", [
         {
           value: komo.ylioppilastutkinto
           text: getOphMsg("suoritusrekisteri.komo." + komo.ylioppilastutkinto, "Ylioppilastutkinto")
-        }
-      ]
-      $scope.tilat = [
-        {
-          value: "KESKEN"
-          text: getOphMsg("suoritusrekisteri.tila.KESKEN", "Kesken")
-        }
-        {
-          value: "KESKEYTYNYT"
-          text: getOphMsg("suoritusrekisteri.tila.KESKEYTYNYT", "Keskeytynyt")
-        }
-        {
-          value: "VALMIS"
-          text: getOphMsg("suoritusrekisteri.tila.VALMIS", "Valmis")
         }
       ]
       return
@@ -249,10 +183,16 @@ app.controller "MuokkaaCtrl", [
     $scope.myRoles = []
     $scope.suoritukset = []
     $scope.luokkatiedot = []
+    $scope.luokkatasot = []
+    $scope.yksilollistamiset = []
+    $scope.tilat = []
     $scope.kielet = []
     $scope.komo = komo
     LokalisointiService.loadMessages loadMenuTexts
     getKoodistoAsOptionArray $http, "kieli", "fi", $scope.kielet, "koodiArvo"
+    getKoodistoAsOptionArray $http, "luokkataso", "fi", $scope.luokkatasot, "koodiArvo"
+    getKoodistoAsOptionArray $http, "yksilollistaminen", "fi", $scope.yksilollistamiset, "koodiArvo", true
+    getKoodistoAsOptionArray $http, "suorituksentila", "fi", $scope.tilat, "koodiArvo"
     MurupolkuService.addToMurupolku
       href: "#/opiskelijat"
       key: "suoritusrekisteri.muokkaa.muru1"

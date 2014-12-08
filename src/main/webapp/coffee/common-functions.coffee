@@ -27,7 +27,7 @@ getOphMsg = (key, def) ->
   else
     key
 
-getKoodistoAsOptionArray = ($http, koodisto, kielikoodi, options, valueFromField) ->
+getKoodistoAsOptionArray = ($http, koodisto, kielikoodi, options, valueFromField, capitalizeValues) ->
   $http.get(getBaseUrl() + "/koodisto-service/rest/json/" + encodeURIComponent(koodisto) + "/koodi",
     cache: true
   ).success (koodisto) ->
@@ -38,7 +38,7 @@ getKoodistoAsOptionArray = ($http, koodisto, kielikoodi, options, valueFromField
           value = meta.nimi  if valueFromField is "nimi"
           value = koodi.koodiArvo  if valueFromField is "koodiArvo"
           options.push
-            value: value
+            value: if capitalizeValues then value.toLowerCase().capitalize() else value
             text: meta.nimi
         return
       return
@@ -121,6 +121,9 @@ String::hashCode = ->
     hash = hash & hash
     i++
   hash
+
+String::capitalize = ->
+  @charAt(0).toUpperCase() + @slice(1)
 
 unless Object.keys
   Object.keys = (o) ->
