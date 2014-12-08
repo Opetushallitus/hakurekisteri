@@ -44,22 +44,15 @@ app.controller "MuokkaaCtrl", [
           text: getOphMsg("suoritusrekisteri.komo." + komo.ylioppilastutkinto, "Ylioppilastutkinto")
         }
       ]
-      return
+
     getMyRoles = ->
-      $http.get("/cas/myroles",
-        cache: true
-      ).success((data) ->
+      $http.get("/cas/myroles", { cache: true }).success((data) ->
         $scope.myRoles = angular.fromJson(data)
-        return
       ).error ->
         $log.error "cannot connect to CAS"
-        return
 
-      return
     fetchHenkilotiedot = ->
-      $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent($scope.henkiloOid),
-        cache: false
-      ).success((henkilo) ->
+      $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent($scope.henkiloOid), { cache: false }).success((henkilo) ->
         $scope.henkilo = henkilo  if henkilo
         return
       ).error ->
@@ -67,78 +60,60 @@ app.controller "MuokkaaCtrl", [
           type: "danger"
           message: "Henkilötietojen hakeminen ei onnistunut. Yritä uudelleen?"
           messageKey: "suoritusrekisteri.muokkaa.henkilotietojenhakeminen"
-
         back()
-        return
 
-      return
     enrichLuokkatieto = (luokkatieto) ->
       if luokkatieto.oppilaitosOid
         getOrganisaatio $http, luokkatieto.oppilaitosOid, (organisaatio) ->
           luokkatieto.oppilaitos = organisaatio.oppilaitosKoodi
           luokkatieto.organisaatio = organisaatio
-          return
-
       luokkatieto.editable = true
-      return
+
     fetchLuokkatiedot = ->
       enrich = ->
         angular.forEach $scope.luokkatiedot, enrichLuokkatieto  if $scope.luokkatiedot
         return
-      Opiskelijat.query
-        henkilo: $scope.henkiloOid
-      , ((luokkatiedot) ->
-          $scope.luokkatiedot = luokkatiedot
-          enrich()
-          return
-        ), ->
+      Opiskelijat.query { henkilo: $scope.henkiloOid }, ((luokkatiedot) ->
+        $scope.luokkatiedot = luokkatiedot
+        enrich()
+      ), ->
         MessageService.addMessage
           type: "danger"
           message: "Luokkatietojen hakeminen ei onnistunut. Yritä uudelleen?"
           messageKey: "suoritusrekisteri.muokkaa.luokkatietojenhakeminen"
-
         back()
-        return
-
       return
+
     enrichSuoritus = (suoritus) ->
       if suoritus.myontaja
         getOrganisaatio $http, suoritus.myontaja, (organisaatio) ->
           suoritus.oppilaitos = organisaatio.oppilaitosKoodi
           suoritus.organisaatio = organisaatio
-          return
-
       if suoritus.komo and suoritus.komo.match(/^koulutus_\d*$/)
         getKoulutusNimi $http, suoritus.komo, (koulutusNimi) ->
           suoritus.koulutus = koulutusNimi
-          return
-
       else
         suoritus.editable = true
       return
+
     fetchSuoritukset = ->
       enrich = ->
         angular.forEach $scope.suoritukset, enrichSuoritus  if $scope.suoritukset
         return
-      Suoritukset.query
-        henkilo: $scope.henkiloOid
-      , ((suoritukset) ->
-          suoritukset.sort (a, b) ->
-            sortByFinDateDesc a.valmistuminen, b.valmistuminen
-
-          $scope.suoritukset = suoritukset
-          enrich()
-          return
-        ), ->
-        MessageService.addMessage
+      Suoritukset.query { henkilo: $scope.henkiloOid }, ((suoritukset) ->
+        suoritukset.sort (a, b) ->
+          sortByFinDateDesc a.valmistuminen, b.valmistuminen
+        $scope.suoritukset = suoritukset
+        enrich()
+      ), ->
+        MessageService.addMessage {
           type: "danger"
           message: "Suoritustietojen hakeminen ei onnistunut. Yritä uudelleen?"
           messageKey: "suoritusrekisteri.muokkaa.suoritustietojenhakeminen"
-
+        }
         back()
-        return
-
       return
+
     fetchOpiskeluoikeudet = ->
       enrich = ->
         if $scope.opiskeluoikeudet
@@ -147,38 +122,32 @@ app.controller "MuokkaaCtrl", [
               getOrganisaatio $http, opiskeluoikeus.myontaja, (organisaatio) ->
                 opiskeluoikeus.oppilaitos = organisaatio.oppilaitosKoodi
                 opiskeluoikeus.organisaatio = organisaatio
-                return
 
             if opiskeluoikeus.komo and opiskeluoikeus.komo.match(/^koulutus_\d*$/)
               getKoulutusNimi $http, opiskeluoikeus.komo, (koulutusNimi) ->
                 opiskeluoikeus.koulutus = koulutusNimi
-                return
 
             return
-
         return
-      Opiskeluoikeudet.query
-        henkilo: $scope.henkiloOid
-      , (opiskeluoikeudet) ->
+      Opiskeluoikeudet.query { henkilo: $scope.henkiloOid }, (opiskeluoikeudet) ->
         $scope.opiskeluoikeudet = opiskeluoikeudet
         enrich()
-        return
 
-      return
     back = ->
       if history and history.back
         history.back()
       else
         $location.path "/opiskelijat"
       return
+
     initDatepicker = ->
       $scope.showWeeks = true
+      $scope.format = "mediumDate"
       $scope.dateOptions =
         formatYear: "yyyy"
         startingDay: 1
-
-      $scope.format = "mediumDate"
       return
+
     $scope.henkiloOid = $routeParams.henkiloOid
     $scope.myRoles = []
     $scope.suoritukset = []
@@ -188,21 +157,26 @@ app.controller "MuokkaaCtrl", [
     $scope.tilat = []
     $scope.kielet = []
     $scope.komo = komo
+
     LokalisointiService.loadMessages loadMenuTexts
+
     getKoodistoAsOptionArray $http, "kieli", "fi", $scope.kielet, "koodiArvo"
     getKoodistoAsOptionArray $http, "luokkataso", "fi", $scope.luokkatasot, "koodiArvo"
     getKoodistoAsOptionArray $http, "yksilollistaminen", "fi", $scope.yksilollistamiset, "koodiArvo", true
     getKoodistoAsOptionArray $http, "suorituksentila", "fi", $scope.tilat, "koodiArvo"
-    MurupolkuService.addToMurupolku
+
+    MurupolkuService.addToMurupolku {
       href: "#/opiskelijat"
       key: "suoritusrekisteri.muokkaa.muru1"
       text: "Opiskelijoiden haku"
-    , true
-    MurupolkuService.addToMurupolku
+    }, true
+    MurupolkuService.addToMurupolku {
       key: "suoritusrekisteri.muokkaa.muru"
       text: "Muokkaa opiskelijan tietoja"
-    , false
+    }, false
+
     getMyRoles()
+
     $scope.isOPH = ->
       Array.isArray($scope.myRoles) and ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1 or $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1)
 
@@ -210,6 +184,7 @@ app.controller "MuokkaaCtrl", [
     fetchLuokkatiedot()
     fetchSuoritukset()
     fetchOpiskeluoikeudet()
+
     $scope.getOppilaitos = (searchStr, obj) ->
       return []  if (typeof obj.organisaatio is "object") and obj.organisaatio.oppilaitosKoodi is searchStr
       if searchStr and searchStr.trim().match(/^\d{5}$/)
@@ -217,7 +192,6 @@ app.controller "MuokkaaCtrl", [
           [result.data]
         ), ->
           []
-
       else if searchStr and searchStr.length > 2
         $http.get(organisaatioServiceUrl + "/rest/organisaatio/hae",
           params:
@@ -230,7 +204,6 @@ app.controller "MuokkaaCtrl", [
             []
         ), ->
           []
-
       else
         []
 
@@ -270,10 +243,12 @@ app.controller "MuokkaaCtrl", [
           return
         ), validations
         return
+
       deleteFromArray = (obj, arr) ->
         index = arr.indexOf(obj)
         arr.splice index, 1  if index isnt -1
         return
+
       saveSuoritukset = ->
         angular.forEach $scope.suoritukset, ((suoritus) ->
           d = $q.defer()
@@ -319,6 +294,7 @@ app.controller "MuokkaaCtrl", [
           return
         ), deferreds
         return
+
       saveLuokkatiedot = ->
         angular.forEach $scope.luokkatiedot, ((luokkatieto) ->
           $log.debug "save luokkatieto: " + luokkatieto.id
@@ -364,42 +340,39 @@ app.controller "MuokkaaCtrl", [
           return
         ), deferreds
         return
+
       MessageService.clearMessages()
+
       validations = []
       validateOppilaitoskoodit()
+
       deferreds = []
       allValidated = $q.all(validations.map((deferred) ->
         deferred.promise
       ))
+
       allValidated.then (->
         saveSuoritukset()
         saveLuokkatiedot()
+
         allSaved = $q.all(deferreds.map((deferred) ->
           deferred.promise
         ))
+
         allSaved.then (->
           $log.info "all saved successfully"
           MessageService.addMessage
             type: "success"
             messageKey: "suoritusrekisteri.muokkaa.tallennettu"
             message: "Tiedot tallennettu."
-
-          return
         ), (errors) ->
           $log.error "errors while saving: " + errors
           MessageService.addMessage
             type: "danger"
             messageKey: "suoritusrekisteri.muokkaa.tallennusepaonnistui"
             message: "Tietojen tallentaminen ei onnistunut. Yritä uudelleen."
-
-          return
-
-        return
       ), (errors) ->
         $log.error "validation errors: " + errors
-        return
-
-      return
 
     $scope.cancel = ->
       back()
@@ -410,8 +383,6 @@ app.controller "MuokkaaCtrl", [
         suoritus.myontaja = ylioppilastutkintolautakunta
         getOrganisaatio $http, ylioppilastutkintolautakunta, (org) ->
           suoritus.organisaatio = org
-          return
-
       return
 
     $scope.addSuoritus = ->
@@ -422,7 +393,6 @@ app.controller "MuokkaaCtrl", [
         myontaja: null
         editable: true
       )
-      return
 
     $scope.editArvosana = (suoritusId) ->
       openModal = (template, controller) ->
@@ -437,8 +407,9 @@ app.controller "MuokkaaCtrl", [
               suoritusId
         )
         $scope.modalInstance = isolatedScope.modalInstance
-        return
+
       openModal "templates/arvosanat", "ArvosanaCtrl"
+
       $scope.modalInstance.result.then ((arvosanaRet) ->
         if Array.isArray(arvosanaRet)
           isolatedScope = $scope.$new(true)
@@ -457,13 +428,11 @@ app.controller "MuokkaaCtrl", [
             return
           ), ->
             $log.info "duplicate modal closed"
-            return
 
         else MessageService.addMessage arvosanaRet  if arvosanaRet
         return
       ), ->
         $log.info "modal closed"
-        return
 
       return
 
@@ -479,14 +448,14 @@ app.controller "MuokkaaCtrl", [
               suoritusId
         )
         $scope.modalInstance = isolatedScope.modalInstance
-        return
+
       openModal "templates/yoarvosanat", "YoarvosanaCtrl"
+
       $scope.modalInstance.result.then ((yoarvosanaRet) ->
         MessageService.addMessage yoarvosanaRet  if yoarvosanaRet
         return
       ), ->
         $log.info "yo modal closed"
-        return
 
       return
 
@@ -496,13 +465,11 @@ app.controller "MuokkaaCtrl", [
         oppilaitosOid: null
         editable: true
       )
-      return
 
     $scope.openDatepicker = ($event, obj, fieldName) ->
       $event.preventDefault()
       $event.stopPropagation()
       obj[fieldName] = true
-      return
 
     initDatepicker()
 ]
