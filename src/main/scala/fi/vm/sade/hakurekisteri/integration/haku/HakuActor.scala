@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.haku
 
 import akka.actor.Status.Failure
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosQuery
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{UpdateValintatulos, ValintaTulosQuery}
 
 import scala.concurrent.{ExecutionContext, Future}
 import akka.actor.{ActorLogging, ActorRef, Actor}
@@ -92,7 +92,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   }
 
   def refreshKeepAlives() {
-    activeHakus.zipWithIndex foreach {case (haku: Haku, i: Int) => context.system.scheduler.scheduleOnce((i * 10).seconds, valintaTulos, ValintaTulosQuery(haku.oid, None, cachedOk = false))(context.dispatcher, ActorRef.noSender)}
+    activeHakus.foreach((haku: Haku) => valintaTulos.!(UpdateValintatulos(haku.oid))(ActorRef.noSender))
   }
 }
 

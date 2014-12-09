@@ -33,13 +33,12 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
     case q: ValintaTulosQuery =>
       getSijoittelu(q) pipeTo sender
 
-    case Update(haku) if !cache.inUse(haku) =>
+    case UpdateValintatulos(haku) if cache.contains(haku) && !cache.inUse(haku) =>
       cache - haku
 
-    case Update(haku) =>
+    case UpdateValintatulos(haku) =>
       if (refreshing) {
-        log.debug(s"postponing refresh of haku $haku")
-        context.system.scheduler.scheduleOnce(5.seconds, self, Update(haku))
+        context.system.scheduler.scheduleOnce(500.milliseconds, self, UpdateValintatulos(haku))
       } else {
         log.info(s"refreshing haku $haku")
         refreshing = true
@@ -118,8 +117,9 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
 
   def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
     log.info(s"rescheduling haku $haku in $time")
-    context.system.scheduler.scheduleOnce(time, self, Update(haku))
+    context.system.scheduler.scheduleOnce(time, self, UpdateValintatulos(haku))
   }
 
-  case class Update(haku: String)
 }
+
+case class UpdateValintatulos(haku: String)
