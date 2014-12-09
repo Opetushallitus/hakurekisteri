@@ -51,7 +51,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
       val s = sq.collect{ case h: Haku => h}
       activeHakus = s.filter(_.aika.isCurrently)
       ytl ! HakuList(activeHakus.filter(_.kkHaku).map(_.oid).toSet)
-      log.info(s"current hakus [${activeHakus.map(h => s"${h.oid}: ${h.nimi.fi.getOrElse(h.nimi.sv.getOrElse(h.nimi.en.getOrElse("")))}").mkString(", ")}]")
+      log.info(s"current hakus [${activeHakus.map(h => h.oid).mkString(", ")}]")
       if (starting) {
         starting = false
         context.system.scheduler.schedule(1.second, valintatulosRefreshTimeHours, self, RefreshSijoittelu)
