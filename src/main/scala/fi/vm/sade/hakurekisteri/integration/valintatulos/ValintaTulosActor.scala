@@ -24,15 +24,10 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
   implicit val ec = context.dispatcher
 
   private val maxRetries = Config.httpClientMaxRetries
-  private val refetch: FiniteDuration = 1.hours
+  private val refetch: FiniteDuration = (Config.valintatulosCacheHours / 2).hours
   private val retry: FiniteDuration = 60.seconds
   private val cache = new FutureCache[String, SijoitteluTulos](Config.valintatulosCacheHours.hours.toMillis)
-  private var refreshRequests: Map[Long, Seq[Update]] = Map()
   private var refreshing = false
-
-  object RefreshOne
-
-  context.system.scheduler.schedule(5.seconds, 5.seconds, self, RefreshOne)
 
   override def receive: Receive = {
     case q: ValintaTulosQuery =>
@@ -42,29 +37,17 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
       cache - haku
 
     case Update(haku) =>
-      updateCache(haku, sijoitteluTulos(haku, None))
-
-    case RefreshOne if !refreshing =>
-      refresh()
+      if (refreshing) {
+        log.debug(s"postponing refresh of haku $haku")
+        context.system.scheduler.scheduleOnce(5.seconds, self, Update(haku))
+      } else {
+        log.info(s"refreshing haku $haku")
+        refreshing = true
+        updateCacheAndReschedule(haku, sijoitteluTulos(haku, None))
+      }
   }
 
-  def refresh(): Unit = {
-    refreshRequests.keys.toSeq.sortBy(ts => ts).headOption match {
-      case Some(ts: Long) if ts < Platform.currentTime =>
-        refreshRequests(ts).headOption match {
-          case Some(u) =>
-            refreshing = true
-            refreshRequests = refreshRequests + (ts -> refreshRequests(ts).filterNot(_ == u))
-            self ! u
-          case None =>
-            refreshRequests = refreshRequests - ts
-        }
-      case _ =>
-        // no active refresh requests found
-    }
-  }
-
-  def updateCache(hakuOid: String, tulos: Future[SijoitteluTulos]): Unit = {
+  def updateCacheAndReschedule(hakuOid: String, tulos: Future[SijoitteluTulos]): Unit = {
     tulos.onComplete {
       case Success(t) =>
         refreshing = false
@@ -74,14 +57,16 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
         log.error(t, s"failed to fetch sijoittelu for haku $hakuOid")
         rescheduleHaku(hakuOid, retry)
     }
-    cache + (hakuOid, tulos)
+    if (!cache.contains(hakuOid) || cache.inUse(hakuOid)) {
+      cache + (hakuOid, tulos)
+    }
   }
 
   def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
     if (q.cachedOk && cache.contains(q.hakuOid)) cache.get(q.hakuOid)
     else {
       val tulos = sijoitteluTulos(q.hakuOid, q.hakemusOid)
-      if (q.hakemusOid.isEmpty) updateCache(q.hakuOid, tulos)
+      if (q.hakemusOid.isEmpty) updateCacheAndReschedule(q.hakuOid, tulos)
       tulos
     }
   }
@@ -132,15 +117,8 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
   }
 
   def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
-    log.debug(s"rescheduling haku $haku in $time")
-    val t = Platform.currentTime + time.toMillis
-    refreshRequests.get(t) match {
-      case Some(updates: Seq[Update]) =>
-        refreshRequests = refreshRequests + (t -> (updates :+ Update(haku)))
-
-      case None =>
-        refreshRequests = refreshRequests + (t -> Seq(Update(haku)))
-    }
+    log.info(s"rescheduling haku $haku in $time")
+    context.system.scheduler.scheduleOnce(time, self, Update(haku))
   }
 
   case class Update(haku: String)
