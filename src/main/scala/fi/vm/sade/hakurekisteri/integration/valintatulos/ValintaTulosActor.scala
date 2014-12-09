@@ -9,6 +9,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
 import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, FutureCache, VirkailijaRestClient}
+import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -17,7 +18,7 @@ case class ValintaTulosQuery(hakuOid: String,
                              hakemusOid: Option[String],
                              cachedOk: Boolean = true)
 
-class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with ActorLogging {
+class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
 
@@ -25,6 +26,12 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
   private val refetch: FiniteDuration = 1.hours
   private val retry: FiniteDuration = 60.seconds
   private val cache = new FutureCache[String, SijoitteluTulos](Config.valintatulosCacheHours.hours.toMillis)
+  private var refreshRequests: Map[Long, Seq[Update]] = Map()
+  private var refreshing = false
+
+  object RefreshOne
+
+  context.system.scheduler.schedule(5.seconds, 5.seconds, self, RefreshOne)
 
   override def receive: Receive = {
     case q: ValintaTulosQuery =>
@@ -35,13 +42,34 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
 
     case Update(haku) =>
       updateCache(haku, sijoitteluTulos(haku, None))
+
+    case RefreshOne if !refreshing =>
+      refresh()
+  }
+
+  def refresh(): Unit = {
+    refreshRequests.keys.toSeq.sortBy(ts => ts).headOption match {
+      case Some(ts: Long) if ts < Platform.currentTime =>
+        refreshRequests(ts).headOption match {
+          case Some(u) =>
+            refreshing = true
+            refreshRequests = refreshRequests + (ts -> refreshRequests(ts).filterNot(_ == u))
+            self ! u
+          case None =>
+            refreshRequests = refreshRequests - ts
+        }
+      case _ =>
+        // no active refresh requests found
+    }
   }
 
   def updateCache(hakuOid: String, tulos: Future[SijoitteluTulos]): Unit = {
     tulos.onComplete {
       case Success(t) =>
+        refreshing = false
         rescheduleHaku(hakuOid)
       case Failure(t) =>
+        refreshing = false
         log.error(t, s"failed to fetch sijoittelu for haku $hakuOid")
         rescheduleHaku(hakuOid, retry)
     }
@@ -59,7 +87,7 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
 
   def sijoitteluTulos(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = {
 
-    def getSingleHakemus(hakemusOid: String): Future[SijoitteluTulos] = restClient.
+    def getSingleHakemus(hakemusOid: String): Future[SijoitteluTulos] = client.
       readObject[ValintaTulos](s"/haku/${URLEncoder.encode(hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(hakemusOid, "UTF-8")}", 200, maxRetries).
       recoverWith {
         case t: PreconditionFailedException if t.responseCode == 404 =>
@@ -68,8 +96,8 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
       }.
       map(t => valintaTulokset2SijoitteluTulos(t))
 
-    def getHaku(haku: String): Future[SijoitteluTulos] = restClient.
-      readObject[Seq[ValintaTulos]](s"/haku/${URLEncoder.encode(haku, "UTF-8")}", 200, maxRetries).
+    def getHaku(haku: String): Future[SijoitteluTulos] = client.
+      readObject[Seq[ValintaTulos]](s"/haku/${URLEncoder.encode(haku, "UTF-8")}", 200).
       recoverWith {
         case t: PreconditionFailedException if t.responseCode == 404 =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
@@ -100,7 +128,14 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
 
   def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
     log.debug(s"rescheduling haku $haku in $time")
-    context.system.scheduler.scheduleOnce(time, self, Update(haku))
+    val t = Platform.currentTime + time.toMillis
+    refreshRequests.get(t) match {
+      case Some(updates: Seq[Update]) =>
+        refreshRequests = refreshRequests + (t -> (updates :+ Update(haku)))
+
+      case None =>
+        refreshRequests = refreshRequests + (t -> Seq(Update(haku)))
+    }
   }
 
   case class Update(haku: String)

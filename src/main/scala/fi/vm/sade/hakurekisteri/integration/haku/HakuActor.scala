@@ -92,7 +92,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   }
 
   def refreshKeepAlives() {
-    activeHakus.zipWithIndex foreach {case (haku: Haku, i: Int) => context.system.scheduler.scheduleOnce((i * 5).seconds, valintaTulos, ValintaTulosQuery(haku.oid, None, cachedOk = false))(context.dispatcher, ActorRef.noSender)}
+    activeHakus.zipWithIndex foreach {case (haku: Haku, i: Int) => context.system.scheduler.scheduleOnce((i * 10).seconds, valintaTulos, ValintaTulosQuery(haku.oid, None, cachedOk = false))(context.dispatcher, ActorRef.noSender)}
   }
 }
 

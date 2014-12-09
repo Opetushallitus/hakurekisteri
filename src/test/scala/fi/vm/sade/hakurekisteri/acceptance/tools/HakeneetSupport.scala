@@ -309,14 +309,15 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   )
 
   val sijoitteluClient = mock[VirkailijaRestClient]
-  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.1", 200, Config.httpClientMaxRetries) returns f
-  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.2", 200, Config.httpClientMaxRetries) returns f
+  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.1", 200) returns f
+  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.2", 200) returns f
+
+  val sijoittelu = system.actorOf(Props(new ValintaTulosActor(sijoitteluClient)))
 
   object testHakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
     val orgAct = system.actorOf(Props(new MockedOrganisaatioActor()))
-    val sijoittelu = system.actorOf(Props(new ValintaTulosActor(sijoitteluClient)))
     val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodisto, sijoittelu)))
 
     def get(q: HakijaQuery) = {
