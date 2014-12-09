@@ -36,14 +36,13 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
     case UpdateValintatulos(haku) if cache.contains(haku) && !cache.inUse(haku) =>
       cache - haku
 
-    case UpdateValintatulos(haku) =>
-      if (refreshing) {
-        context.system.scheduler.scheduleOnce(500.milliseconds, self, UpdateValintatulos(haku))
-      } else {
-        log.info(s"refreshing haku $haku")
-        refreshing = true
-        updateCacheAndReschedule(haku, sijoitteluTulos(haku, None))
-      }
+    case UpdateValintatulos(haku) if refreshing =>
+      context.system.scheduler.scheduleOnce(500.milliseconds, self, UpdateValintatulos(haku))
+
+    case UpdateValintatulos(haku) if !refreshing =>
+      log.debug(s"refreshing haku $haku")
+      refreshing = true
+      updateCacheAndReschedule(haku, sijoitteluTulos(haku, None))
   }
 
   def updateCacheAndReschedule(hakuOid: String, tulos: Future[SijoitteluTulos]): Unit = {

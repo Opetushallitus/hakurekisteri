@@ -144,6 +144,8 @@ class HakemusJournal extends InMemJournal[FullHakemus, String] {
   }
 }
 
+import scala.concurrent.duration._
+
 class HakemusActor(hakemusClient: VirkailijaRestClient,
                    maxApplications: Int = 2000,
                    override val journal: Journal[FullHakemus, String] = new HakemusJournal()
@@ -151,13 +153,26 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   var healthCheck: Option[ActorRef] = None
   override val logger = Logging(context.system, this)
   var hakijaTrigger: Seq[ActorRef] = Seq()
+  var reloading = false
 
   override def receive: Receive = super.receive.orElse({
-    case ReloadHaku(haku) => getHakemukset(HakijaQuery(haku = Some(haku), organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None)) onComplete {
-      case Success(hs) =>  logger.debug(s"found $hs applications")
-      case Failure(ex) => logger.error(ex, s"failed fetching Hakemukset for $haku")
-    }
+    case ReloadHaku(haku) if reloading =>
+      context.system.scheduler.scheduleOnce(500.milliseconds, self, ReloadHaku(haku))
+
+    case ReloadHaku(haku) if !reloading =>
+      reloading = true
+      logger.debug(s"fetching hakemukset for haku $haku")
+      getHakemukset(HakijaQuery(haku = Some(haku), organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None)) onComplete {
+        case Success(hs) =>
+          reloading = false
+          logger.info(s"found $hs applications in $haku")
+        case Failure(ex) =>
+          reloading = false
+          logger.error(ex, s"failed fetching Hakemukset for $haku")
+      }
+
     case Health(actor) => healthCheck = Some(actor)
+
     case Trigger(trig) => hakijaTrigger = context.actorOf(Props(new HakijaTrigger(trig))) +: hakijaTrigger
   })
 
