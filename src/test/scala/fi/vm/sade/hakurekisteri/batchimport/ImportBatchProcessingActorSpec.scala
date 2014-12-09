@@ -65,7 +65,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
 
     when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot", henkiloBody))).thenReturn((200, List(), "1.2.246.562.24.123"))
 
-    when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/hae?OrganisaatioSearchCriteria=%7B%7D"))).thenReturn((200, List(), "{\"numHits\":1,\"organisaatiot\":[{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}]}"))
+    when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))).thenReturn((200, List(), "{\"numHits\":1,\"organisaatiot\":[{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}]}"))
 
     when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/05127"))).thenReturn((200, List(), "{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}"))
 

@@ -29,7 +29,7 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
   val refresh = context.system.scheduler.schedule(timeToLive.minus(15.minutes), timeToLive.minus(15.minutes), self, Refresh)
 
   def fetchAll(): Unit = {
-    organisaatioClient.readObject[OrganisaatioResponse](s"/rest/organisaatio/hae?OrganisaatioSearchCriteria=${URLEncoder.encode("{}", "UTF-8")}", 200, maxRetries).onSuccess {
+    organisaatioClient.readObject[OrganisaatioResponse](s"/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true", 200, maxRetries).onSuccess {
       case s: OrganisaatioResponse =>
         saveOrganisaatiot(s.organisaatiot)
         log.info(s"all saved to cache: ${cache.size}")
