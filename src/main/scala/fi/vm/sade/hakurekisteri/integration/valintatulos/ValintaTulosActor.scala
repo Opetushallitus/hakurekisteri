@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.valintatulos
 
 import java.net.URLEncoder
+import java.util.concurrent.ExecutionException
 
 import akka.actor.{ActorLogging, Actor}
 import akka.pattern.pipe
@@ -86,11 +87,15 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
   }
 
   def sijoitteluTulos(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = {
+    def is404(t: Throwable): Boolean = t match {
+      case PreconditionFailedException(_, code) if code == 404 => true
+      case _ => false
+    }
 
     def getSingleHakemus(hakemusOid: String): Future[SijoitteluTulos] = client.
       readObject[ValintaTulos](s"/haku/${URLEncoder.encode(hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(hakemusOid, "UTF-8")}", 200, maxRetries).
       recoverWith {
-        case t: PreconditionFailedException if t.responseCode == 404 =>
+        case t: ExecutionException if t.getCause != null && is404(t.getCause) =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
           Future.successful(ValintaTulos(hakemusOid, Seq()))
       }.
@@ -99,7 +104,7 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
     def getHaku(haku: String): Future[SijoitteluTulos] = client.
       readObject[Seq[ValintaTulos]](s"/haku/${URLEncoder.encode(haku, "UTF-8")}", 200).
       recoverWith {
-        case t: PreconditionFailedException if t.responseCode == 404 =>
+        case t: ExecutionException if t.getCause != null && is404(t.getCause) =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
           Future.successful(Seq[ValintaTulos]())
       }.
