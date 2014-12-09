@@ -88,7 +88,7 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
 
   def sijoitteluTulos(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = {
     def is404(t: Throwable): Boolean = t match {
-      case PreconditionFailedException(_, code) if code == 404 => true
+      case PreconditionFailedException(_, 404) => true
       case _ => false
     }
 
