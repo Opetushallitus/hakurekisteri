@@ -9,31 +9,31 @@ app.controller "EihakeneetCtrl", [
     enrichOpiskelijat = ->
       deferredEnrichments = []
 
-      ((opiskelija) ->
-        if opiskelija.henkiloOid
-          deferredEnrichment = $q.defer()
-          deferredEnrichments.push deferredEnrichment
+      for opiskelija in $scope.allRows
+        do (opiskelija) ->
+          if opiskelija.henkiloOid
+            deferredEnrichment = $q.defer()
+            deferredEnrichments.push deferredEnrichment
 
-          $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(opiskelija.henkiloOid), { cache: false }).success((henkilo) ->
-            if henkilo and henkilo.oidHenkilo is opiskelija.henkiloOid
-              opiskelija.sukunimi = henkilo.sukunimi
-              opiskelija.etunimet = henkilo.etunimet
-            deferredEnrichment.resolve "done"
-          ).error ->
-            deferredEnrichment.reject "error"
+            $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(opiskelija.henkiloOid), { cache: false }).success((henkilo) ->
+              if henkilo and henkilo.oidHenkilo is opiskelija.henkiloOid
+                opiskelija.sukunimi = henkilo.sukunimi
+                opiskelija.etunimet = henkilo.etunimet
+              deferredEnrichment.resolve "done"
+            ).error ->
+              deferredEnrichment.reject "error"
 
-        if opiskelija.oppilaitosOid
-          deferredEnrichment = $q.defer()
-          deferredEnrichments.push deferredEnrichment
+          if opiskelija.oppilaitosOid
+            deferredEnrichment = $q.defer()
+            deferredEnrichments.push deferredEnrichment
 
-          getOrganisaatio $http, opiskelija.oppilaitosOid, ((organisaatio) ->
-            opiskelija.oppilaitos = organisaatio.oppilaitosKoodi + " " + ((if organisaatio.nimi.fi then organisaatio.nimi.fi else organisaatio.nimi.sv))
-            deferredEnrichment.resolve "done"
-          ), ->
-            deferredEnrichment.reject "error"
+            getOrganisaatio $http, opiskelija.oppilaitosOid, ((organisaatio) ->
+              opiskelija.oppilaitos = organisaatio.oppilaitosKoodi + " " + ((if organisaatio.nimi.fi then organisaatio.nimi.fi else organisaatio.nimi.sv))
+              deferredEnrichment.resolve "done"
+            ), ->
+              deferredEnrichment.reject "error"
 
-        return
-      )(o) for o in $scope.allRows
+          return
 
       enrichmentsDonePromise = $q.all(deferredEnrichments.map((enrichment) ->
         enrichment.promise

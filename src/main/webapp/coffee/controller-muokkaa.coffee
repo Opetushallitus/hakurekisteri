@@ -125,7 +125,7 @@ app.controller "MuokkaaCtrl", [
             getKoulutusNimi $http, opiskeluoikeus.komo, (koulutusNimi) ->
               opiskeluoikeus.koulutus = koulutusNimi
           return
-        )(o) for o in $scope.opiskeluoikeudet  if $scope.opiskeluoikeudet
+        )(opiskeluoikeus) for opiskeluoikeus in $scope.opiskeluoikeudet  if $scope.opiskeluoikeudet
         return
       Opiskeluoikeudet.query { henkilo: $scope.henkiloOid }, (opiskeluoikeudet) ->
         $scope.opiskeluoikeudet = opiskeluoikeudet
@@ -239,7 +239,7 @@ app.controller "MuokkaaCtrl", [
                 return
 
           return
-        )(o) for o in $scope.luokkatiedot.concat($scope.suoritukset)
+        )(obj) for obj in $scope.luokkatiedot.concat($scope.suoritukset)
         return
 
       deleteFromArray = (obj, arr) ->
@@ -290,7 +290,7 @@ app.controller "MuokkaaCtrl", [
               return
 
           return
-        )(s) for s in $scope.suoritukset
+        )(suoritus) for suoritus in $scope.suoritukset
         return
 
       saveLuokkatiedot = ->
@@ -336,7 +336,7 @@ app.controller "MuokkaaCtrl", [
               return
 
           return
-        )(l) for l in $scope.luokkatiedot
+        )(luokkatieto) for luokkatieto in $scope.luokkatiedot
         return
 
       MessageService.clearMessages()

@@ -31,19 +31,19 @@ getKoodistoAsOptionArray = ($http, koodisto, kielikoodi, options, valueFromField
   $http.get(getBaseUrl() + "/koodisto-service/rest/json/" + encodeURIComponent(koodisto) + "/koodi",
     cache: true
   ).success (koodisto) ->
-    ((koodi) ->
-      ((meta) ->
-        if meta.kieli.toLowerCase() is kielikoodi.toLowerCase()
-          value = koodi.koodiUri + "#" + koodi.versio
-          value = meta.nimi  if valueFromField is "nimi"
-          value = koodi.koodiArvo  if valueFromField is "koodiArvo"
-          options.push
-            value: if capitalizeValues then value.toLowerCase().capitalize() else value
-            text: meta.nimi
+    for koodi in koodisto
+      do (koodi) ->
+        for meta in koodi.metadata
+          do (meta) ->
+            if meta.kieli.toLowerCase() is kielikoodi.toLowerCase()
+              value = koodi.koodiUri + "#" + koodi.versio
+              value = meta.nimi  if valueFromField is "nimi"
+              value = koodi.koodiArvo  if valueFromField is "koodiArvo"
+              options.push
+                value: if capitalizeValues then value.toLowerCase().capitalize() else value
+                text: meta.nimi
+            return
         return
-      )(m) for m in koodi.metadata
-      return
-    )(k) for k in koodisto
 
     options.sort (a, b) ->
       return 0  if a.text is b.text

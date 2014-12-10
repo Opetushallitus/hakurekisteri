@@ -97,7 +97,8 @@ app.controller "YoarvosanaCtrl", [
 
         return
       saveArvosanat = ->
-        ((arvosana) ->
+        for arvosana in arvosanat
+          do (arvosana) ->
           d = $q.defer()
           deferreds.push d
           if arvosana["delete"]
@@ -105,7 +106,7 @@ app.controller "YoarvosanaCtrl", [
           else
             saveArvosana arvosana, d
           return
-        )(a) for a in arvosanat
+
         return
       arvosanat = []
       i = 0

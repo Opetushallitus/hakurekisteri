@@ -17,19 +17,19 @@ loadHakutiedot = ($http, $scope, MessageService) ->
         true
     )
 
-    ((haku) ->
-      k =
-        vuosi: haku.vuosi
-        kausi: haku.kausi
-        text: "" + haku.vuosi + " " + resolveKausiText(haku.kausi)
-      kaudet.push k  unless kausiExists(k)
-      haut.push
-        vuosi: haku.vuosi
-        kausi: haku.kausi
-        hakukausi: resolveKausiText(haku.kausi)
-        oid: haku.oid
-        text: ((if haku.nimi and haku.nimi.fi then haku.nimi.fi else ((if haku.nimi and haku.nimi.sv then haku.nimi.sv else ((if haku.nimi and haku.nimi.en then haku.nimi.en else "NIMI PUUTTUU"))))))
-    )(haku) for haku in filteredHaut
+    for haku in filteredHaut
+      do (haku) ->
+        k =
+          vuosi: haku.vuosi
+          kausi: haku.kausi
+          text: "" + haku.vuosi + " " + resolveKausiText(haku.kausi)
+        kaudet.push k  unless kausiExists(k)
+        haut.push
+          vuosi: haku.vuosi
+          kausi: haku.kausi
+          hakukausi: resolveKausiText(haku.kausi)
+          oid: haku.oid
+          text: ((if haku.nimi and haku.nimi.fi then haku.nimi.fi else ((if haku.nimi and haku.nimi.sv then haku.nimi.sv else ((if haku.nimi and haku.nimi.en then haku.nimi.en else "NIMI PUUTTUU"))))))
 
     sortByNimi = (a, b) ->
       if a and b and a.text and b.text

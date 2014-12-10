@@ -53,16 +53,16 @@ app.controller "ArvosanaCtrl", [
         koodistoPromises = []
 
         $http.get(koodistoServiceUrl + "/rest/json/oppiaineetyleissivistava/koodi/", { cache: true }).success((koodit) ->
-          ((koodi) ->
-            p = $http.get(koodistoServiceUrl + "/rest/json/relaatio/sisaltyy-alakoodit/" + koodi.koodiUri,
-              cache: true
-            ).success((alaKoodit) ->
-              $scope.oppiaineet.push
-                koodi: koodi
-                alaKoodit: alaKoodit
-            )
-            koodistoPromises.push p
-          )(k) for k in koodit
+          for koodi in koodit
+            do (koodi) ->
+              p = $http.get(koodistoServiceUrl + "/rest/json/relaatio/sisaltyy-alakoodit/" + koodi.koodiUri,
+                cache: true
+              ).success((alaKoodit) ->
+                $scope.oppiaineet.push
+                  koodi: koodi
+                  alaKoodit: alaKoodit
+              )
+              koodistoPromises.push p
 
           while koodistoPromises.length < koodit.length
             setTimeout (->
@@ -121,15 +121,15 @@ app.controller "ArvosanaCtrl", [
                 )
                 arvosanataulukko = {}
 
-                ((oppiainekoodi) ->
-                  aine = oppiainekoodi.koodi.koodiArvo
-                  if iterateArvosanat(kouluArvosanat, arvosanataulukko, aine, oppiainekoodi)
-                    return
-                  arvosanataulukko[aine + ";"] =
-                    aine: aine
-                    aineNimi: getOppiaineNimi(oppiainekoodi)
-                    arvosana: "Ei arvosanaa"
-                )(oppiainekoodi) for oppiainekoodi in oppiainekoodit
+                for oppiainekoodi in oppiainekoodit
+                  do (oppiainekoodi) ->
+                    aine = oppiainekoodi.koodi.koodiArvo
+                    if iterateArvosanat(kouluArvosanat, arvosanataulukko, aine, oppiainekoodi)
+                      return
+                    arvosanataulukko[aine + ";"] =
+                      aine: aine
+                      aineNimi: getOppiaineNimi(oppiainekoodi)
+                      arvosana: "Ei arvosanaa"
 
                 if hasRedundantArvosana(kouluArvosanat)
                   $scope.modalInstance.close kouluArvosanat
@@ -200,7 +200,7 @@ app.controller "ArvosanaCtrl", [
             d.reject "retry save failed"
 
       saveArvosanat = ->
-        for a in arvosanat
+        for arvosana in arvosanat
           do (arvosana) ->
             d = $q.defer()
             deferreds.push d

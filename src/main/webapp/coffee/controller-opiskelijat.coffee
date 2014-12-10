@@ -87,7 +87,7 @@ app.controller "OpiskelijatCtrl", [
           getAndEnrichOpiskelijat row
           getAndEnrichSuoritukset row
         return
-      )(r) for r in $scope.currentRows
+      )(row) for row in $scope.currentRows
 
       return
     resetPageNumbers = ->
