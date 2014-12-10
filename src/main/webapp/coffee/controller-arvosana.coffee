@@ -203,7 +203,7 @@ app.controller "ArvosanaCtrl", [
         for arvosana in arvosanat
           do (arvosana) ->
             d = $q.defer()
-            deferreds.push d
+            arvosanaSavePromises.push d
             if arvosana.id and arvosana.arvio.arvosana is "Ei arvosanaa"
               removeArvosana arvosana, d
             else
@@ -249,14 +249,9 @@ app.controller "ArvosanaCtrl", [
               valinnainen: true
             )
           return
-
-      deferreds = []
+      arvosanaSavePromises = []
       saveArvosanat()
-
-      allSaved = $q.all(deferreds.map((d) ->
-        d.promise
-      ))
-      allSaved.then (->
+      $q.all(arvosanaSavePromises.map((d) -> d.promise)).then (->
         $log.debug "all saved"
         $scope.modalInstance.close
           type: "success"

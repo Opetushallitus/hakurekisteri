@@ -210,7 +210,7 @@ app.controller "MuokkaaCtrl", [
         ((obj) ->
           if not obj["delete"] and obj.editable and not (obj.komo and obj.komo is komo.ylioppilastutkinto)
             d = $q.defer()
-            validations.push d
+            validationPromises.push d
             if not obj.oppilaitos or not obj.oppilaitos.match(/^\d{5}$/)
               MessageService.addMessage
                 type: "danger"
@@ -250,7 +250,7 @@ app.controller "MuokkaaCtrl", [
       saveSuoritukset = ->
         ((suoritus) ->
           d = $q.defer()
-          deferreds.push d
+          muokkaaSavePromises.push d
           $log.debug "save suoritus: " + suoritus.id  if suoritus.editable
           if suoritus["delete"]
             if suoritus.id
@@ -297,7 +297,7 @@ app.controller "MuokkaaCtrl", [
         ((luokkatieto) ->
           $log.debug "save luokkatieto: " + luokkatieto.id
           d = $q.defer()
-          deferreds.push d
+          muokkaaSavePromises.push d
           if luokkatieto["delete"]
             if luokkatieto.id
               luokkatieto.$remove (->
@@ -338,26 +338,14 @@ app.controller "MuokkaaCtrl", [
           return
         )(luokkatieto) for luokkatieto in $scope.luokkatiedot
         return
-
       MessageService.clearMessages()
-
-      validations = []
+      validationPromises = []
       validateOppilaitoskoodit()
-
-      deferreds = []
-      allValidated = $q.all(validations.map((deferred) ->
-        deferred.promise
-      ))
-
-      allValidated.then (->
+      muokkaaSavePromises = []
+      $q.all(validationPromises.map((d) -> d.promise)).then (->
         saveSuoritukset()
         saveLuokkatiedot()
-
-        allSaved = $q.all(deferreds.map((deferred) ->
-          deferred.promise
-        ))
-
-        allSaved.then (->
+        $q.all(muokkaaSavePromises.map((d) -> d.promise)).then (->
           $log.info "all saved successfully"
           MessageService.addMessage
             type: "success"
@@ -441,6 +429,7 @@ app.controller "MuokkaaCtrl", [
           templateUrl: template
           controller: controller
           scope: isolatedScope
+          size: "lg"
           resolve:
             suoritusId: ->
               suoritusId

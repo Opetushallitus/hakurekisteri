@@ -9,18 +9,15 @@ app.controller "YoarvosanaCtrl", [
       not myonnetty or myonnetty.match(/^[0-9.]*\.19[0-8][0-9]$/)
     tutkintokerrat = ->
       kerrat = []
-      i = 1989
-
-      while i > 1899
-        kerrat.push
-          value: "21.12." + i
-          text: "21.12." + i + " (" + i + "S)"
-
-        kerrat.push
-          value: "01.06." + i
-          text: "01.06." + i + " (" + i + "K)"
-
-        i--
+      for i in [1989..1900]
+        do (i) ->
+          kerrat.push
+            value: "21.12." + i
+            text: "21.12." + i + " (" + i + "S)"
+          kerrat.push
+            value: "01.06." + i
+            text: "01.06." + i + " (" + i + "K)"
+          return
       kerrat
     getAineet = ->
       Object.keys(aineet).map((k) ->
@@ -58,7 +55,6 @@ app.controller "YoarvosanaCtrl", [
       $scope.koetaulukko.push
         pakollinen: true
         editable: true
-
       return
 
     $scope.save = ->
@@ -75,9 +71,7 @@ app.controller "YoarvosanaCtrl", [
             $log.error "retry remove failed: " + retryErr
             d.reject "retry save failed"
             return
-
           return
-
         return
       saveArvosana = (arvosana, d) ->
         arvosana.$save ((saved) ->
@@ -92,54 +86,42 @@ app.controller "YoarvosanaCtrl", [
             $log.error "retry save failed: " + retryErr
             d.reject "retry save failed"
             return
-
           return
-
         return
       saveArvosanat = ->
         for arvosana in arvosanat
           do (arvosana) ->
-          d = $q.defer()
-          deferreds.push d
-          if arvosana["delete"]
-            removeArvosana arvosana, d  if arvosana.id
-          else
-            saveArvosana arvosana, d
-          return
-
+            d = $q.defer()
+            yoarvosanaSavePromises.push d
+            if arvosana["delete"]
+              removeArvosana arvosana, d  if arvosana.id
+            else
+              saveArvosana arvosana, d
+            return
         return
-      arvosanat = []
-      i = 0
-
-      while i < $scope.koetaulukko.length
-        k = $scope.koetaulukko[i]
-        if k.lisatieto and k.aine and k.arvosana and k.myonnetty
-          arvosanat.push new Arvosanat(
-            id: k.id
-            aine: k.aine
-            lisatieto: k.lisatieto
-            suoritus: suoritusId
-            valinnainen: not k.pakollinen
-            myonnetty: k.myonnetty
-            delete: k["delete"]
-            arvio:
-              arvosana: k.arvosana
-              asteikko: "YO"
-              pisteet: ((if k.pisteet is "" then null else k.pisteet))
-          )
-        i++
-      deferreds = []
+      arvosanat = $scope.koetaulukko.filter((k) -> k.lisatieto and k.aine and k.arvosana and k.myonnetty).map((k) ->
+        new Arvosanat(
+          id: k.id
+          aine: k.aine
+          lisatieto: k.lisatieto
+          suoritus: suoritusId
+          valinnainen: not k.pakollinen
+          myonnetty: k.myonnetty
+          delete: k["delete"]
+          arvio:
+            arvosana: k.arvosana
+            asteikko: "YO"
+            pisteet: ((if k.pisteet is "" then null else k.pisteet))
+        )
+      )
+      yoarvosanaSavePromises = []
       saveArvosanat()
-      allSaved = $q.all(deferreds.map((d) ->
-        d.promise
-      ))
-      allSaved.then (->
+      $q.all(yoarvosanaSavePromises.map (d) -> d.promise).then (->
         $log.debug "all saved"
         $scope.modalInstance.close
           type: "success"
           messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.tallennettu"
           message: "Arvosanat tallennettu."
-
         return
       ), ->
         $log.error "saving failed"
@@ -147,7 +129,6 @@ app.controller "YoarvosanaCtrl", [
           type: "danger"
           messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.tallennuseionnistunut"
           message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen."
-
         return
 
       return
@@ -158,10 +139,8 @@ app.controller "YoarvosanaCtrl", [
 
     $scope.tutkintokerrat = tutkintokerrat()
     $scope.getText = (value, values) ->
-      values.some (v) ->
-        v.value is value
-
-      return
+      return v.text for v in values if v.value is value
+      return null
 
     aineet =
       SA: [
