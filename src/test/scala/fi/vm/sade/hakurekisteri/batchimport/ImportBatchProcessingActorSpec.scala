@@ -6,7 +6,7 @@ import akka.actor.{Props, ActorSystem}
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HenkiloActor}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{CreateHenkilo, Henkilo, HenkiloActor}
 import fi.vm.sade.hakurekisteri.integration.virta.MockedResourceActor
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
@@ -25,6 +25,8 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
   implicit val ec: ExecutionContext = system.dispatcher
 
   behavior of "ImportBatchProcessingActor"
+
+  val lahde = "testitiedonsiirto"
 
   val batch: ImportBatch with Identified[UUID] = ImportBatch(<perustiedot>
     <eranTunniste>eranTunniste</eranTunniste>
@@ -52,15 +54,16 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
         </perusopetus>
       </henkilo>
     </henkilot>
-  </perustiedot>, Some("foo"), "perustiedot", "testitiedonsiirto").identify(UUID.randomUUID())
+  </perustiedot>, Some("foo"), "perustiedot", lahde).identify(UUID.randomUUID())
 
   def createEndpoint = {
     val result = mock[Endpoint]
 
     val henkiloBody = {
-      val henkilo: Henkilo = (batch.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)("")).head.toHenkilo
+      val oidResolver = (koodi: String) => s"1.2.246.562.5.$koodi"
+      val henkilo: CreateHenkilo = (batch.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(lahde)).head.toHenkilo(oidResolver)
       import org.json4s.jackson.Serialization.write
-      write[Henkilo](henkilo)
+      write[CreateHenkilo](henkilo)
     }
 
     when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot", henkiloBody))).thenReturn((200, List(), "1.2.246.562.24.123"))
