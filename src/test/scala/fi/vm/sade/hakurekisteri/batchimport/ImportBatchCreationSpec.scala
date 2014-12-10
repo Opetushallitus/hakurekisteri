@@ -8,6 +8,7 @@ import org.scalatra.commands._
 import org.scalatra.json.JacksonJsonValueReaderProperty
 import org.scalatra.util.ParamsValueReaderProperties
 import org.scalatra.validation.{FieldName, ValidationError}
+import siirto.NoSchemaValidator
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -26,7 +27,8 @@ class ImportBatchCreationSpec extends FlatSpec
   def command = ImportBatchCommand(
     externalIdField = "identifier",
     batchType = "testBatch",
-    dataField= "batch"
+    dataField= "batch",
+    NoSchemaValidator
   )
 
   val xml = <batchdata>

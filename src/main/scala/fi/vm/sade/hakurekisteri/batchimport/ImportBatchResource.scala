@@ -14,8 +14,9 @@ import org.scalatra.commands._
 import org.scalatra.servlet.{FileItem, SizeConstraintExceededException, MultipartConfig, FileUploadSupport}
 import org.scalatra.swagger.{DataType, SwaggerSupport, Swagger}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
-import org.scalatra.validation.{FieldName, ValidationError}
-import siirto.{ValidXml, SchemaDefinition}
+import org.scalatra.validation.{Validation, FieldName, ValidationError}
+import org.xml.sax.SAXParseException
+import siirto.{XMLValidator, Perustiedot, ValidXml, SchemaDefinition}
 
 import scala.util.control.Exception._
 import scala.xml.Elem
@@ -40,12 +41,11 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 
   val schemaCache = (schema +: imports).map((sd) => sd.schemaLocation -> sd.schema).toMap
 
-  val schemaValidation = (elem: Elem) => validator.validate(elem).leftMap(_.map{ case (level, ex) => ValidationError(ex.getMessage, FieldName("data"), ex)})
 
   registerCommand[ImportBatchCommand](ImportBatchCommand(externalIdField,
                                                          batchType,
                                                          dataField,
-                                                         schemaValidation))
+                                                         new ValidXml(schema, imports:_*)))
 
   before() {
     if (multipart) contentType = formats("html")
@@ -97,20 +97,15 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   }
 }
 
-case class ImportBatchCommand(externalIdField: String, batchType: String, dataField: String, validations: (Elem => ModelValidation[Elem])*) extends HakurekisteriCommand[ImportBatch] {
+case class ImportBatchCommand(externalIdField: String, batchType: String, dataField: String, validator: XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem]) extends HakurekisteriCommand[ImportBatch] {
 
-  private val validatedData = asType[Elem](dataField).required
-  val data: Field[Elem] = validatedData
+  implicit val valid = validator
+
+  val data: Field[Elem] = asType[Elem](dataField).required.validateSchema
 
   override def toResource(user: String): ImportBatch = ImportBatch(data.value.get, data.value.flatMap(elem => (elem \ externalIdField).collectFirst{case e:Elem => e.text}), batchType, user)
 
-  import scalaz._, Scalaz._
 
-  override def extraValidation(batch: ImportBatch): ValidationNel[ValidationError, ImportBatch] = {
-    val xml = batch.data
-    val validation = validations.foldLeft(xml.successNel[ValidationError])((validated: ValidationNel[ValidationError, Elem], validation:  (Elem) => ValidationNel[ValidationError, Elem]) => validated.flatMap(validation))
-    validation.map((validated) => batch.copy(data = validated))
-  }
 
 }
 
