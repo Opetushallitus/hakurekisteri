@@ -9,7 +9,7 @@ app.controller "EihakeneetCtrl", [
     enrichOpiskelijat = ->
       deferredEnrichments = []
 
-      angular.forEach $scope.allRows, (opiskelija) ->
+      ((opiskelija) ->
         if opiskelija.henkiloOid
           deferredEnrichment = $q.defer()
           deferredEnrichments.push deferredEnrichment
@@ -33,6 +33,7 @@ app.controller "EihakeneetCtrl", [
             deferredEnrichment.reject "error"
 
         return
+      )(o) for o in $scope.allRows
 
       enrichmentsDonePromise = $q.all(deferredEnrichments.map((enrichment) ->
         enrichment.promise

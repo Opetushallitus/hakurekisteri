@@ -53,7 +53,7 @@ app.controller "ArvosanaCtrl", [
         koodistoPromises = []
 
         $http.get(koodistoServiceUrl + "/rest/json/oppiaineetyleissivistava/koodi/", { cache: true }).success((koodit) ->
-          angular.forEach koodit, (koodi) ->
+          ((koodi) ->
             p = $http.get(koodistoServiceUrl + "/rest/json/relaatio/sisaltyy-alakoodit/" + koodi.koodiUri,
               cache: true
             ).success((alaKoodit) ->
@@ -62,6 +62,7 @@ app.controller "ArvosanaCtrl", [
                 alaKoodit: alaKoodit
             )
             koodistoPromises.push p
+          )(k) for k in koodit
 
           while koodistoPromises.length < koodit.length
             setTimeout (->
@@ -199,15 +200,15 @@ app.controller "ArvosanaCtrl", [
             d.reject "retry save failed"
 
       saveArvosanat = ->
-        angular.forEach arvosanat, ((arvosana) ->
+        ((arvosana) ->
           d = $q.defer()
-          @push d
+          deferreds.push d
           if arvosana.id and not arvosana.arvio.arvosana
             removeArvosana arvosana, d
           else
             saveArvosana arvosana, d
           return
-        ), deferreds
+        )(a) for a in arvosanat
         return
 
       arvosanat = []

@@ -31,8 +31,8 @@ getKoodistoAsOptionArray = ($http, koodisto, kielikoodi, options, valueFromField
   $http.get(getBaseUrl() + "/koodisto-service/rest/json/" + encodeURIComponent(koodisto) + "/koodi",
     cache: true
   ).success (koodisto) ->
-    angular.forEach koodisto, (koodi) ->
-      angular.forEach koodi.metadata, (meta) ->
+    ((koodi) ->
+      ((meta) ->
         if meta.kieli.toLowerCase() is kielikoodi.toLowerCase()
           value = koodi.koodiUri + "#" + koodi.versio
           value = meta.nimi  if valueFromField is "nimi"
@@ -41,7 +41,9 @@ getKoodistoAsOptionArray = ($http, koodisto, kielikoodi, options, valueFromField
             value: if capitalizeValues then value.toLowerCase().capitalize() else value
             text: meta.nimi
         return
+      )(m) for m in koodi.metadata
       return
+    )(k) for k in koodisto
 
     options.sort (a, b) ->
       return 0  if a.text is b.text

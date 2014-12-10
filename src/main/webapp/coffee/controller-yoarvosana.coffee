@@ -31,30 +31,27 @@ app.controller "YoarvosanaCtrl", [
 
     $scope.koetaulukko = []
     $scope.loading = true
-    Arvosanat.query
-      suoritus: suoritusId
-    , ((arvosanat) ->
-        $scope.koetaulukko = arvosanat.filter((a) ->
-          a.arvio.asteikko is "YO"
-        ).map((a) ->
-          id: a.id
-          aine: a.aine
-          lisatieto: a.lisatieto
-          pakollinen: not a.valinnainen
-          myonnetty: a.myonnetty
-          arvosana: a.arvio.arvosana
-          pisteet: a.arvio.pisteet
-          editable: isEditable(a.myonnetty)
-        )
-        $scope.loading = false
-        return
-      ), ->
+    Arvosanat.query { suoritus: suoritusId }, ((arvosanat) ->
+      $scope.koetaulukko = arvosanat.filter((a) ->
+        a.arvio.asteikko is "YO"
+      ).map((a) ->
+        id: a.id
+        aine: a.aine
+        lisatieto: a.lisatieto
+        pakollinen: not a.valinnainen
+        myonnetty: a.myonnetty
+        arvosana: a.arvio.arvosana
+        pisteet: a.arvio.pisteet
+        editable: isEditable(a.myonnetty)
+      )
+      $scope.loading = false
+      return
+    ), ->
       $scope.loading = false
       $scope.modalInstance.close
         type: "danger"
         messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.arvosanapalveluongelma"
         message: "Arvosanapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
-
       return
 
     $scope.addKoe = ->
@@ -100,15 +97,15 @@ app.controller "YoarvosanaCtrl", [
 
         return
       saveArvosanat = ->
-        angular.forEach arvosanat, ((arvosana) ->
+        ((arvosana) ->
           d = $q.defer()
-          @push d
+          deferreds.push d
           if arvosana["delete"]
             removeArvosana arvosana, d  if arvosana.id
           else
             saveArvosana arvosana, d
           return
-        ), deferreds
+        )(a) for a in arvosanat
         return
       arvosanat = []
       i = 0

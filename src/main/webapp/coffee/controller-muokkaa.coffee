@@ -71,7 +71,7 @@ app.controller "MuokkaaCtrl", [
 
     fetchLuokkatiedot = ->
       enrich = ->
-        angular.forEach $scope.luokkatiedot, enrichLuokkatieto  if $scope.luokkatiedot
+        enrichLuokkatieto(l) for l in $scope.luokkatiedot  if $scope.luokkatiedot
         return
       Opiskelijat.query { henkilo: $scope.henkiloOid }, ((luokkatiedot) ->
         $scope.luokkatiedot = luokkatiedot
@@ -98,7 +98,7 @@ app.controller "MuokkaaCtrl", [
 
     fetchSuoritukset = ->
       enrich = ->
-        angular.forEach $scope.suoritukset, enrichSuoritus  if $scope.suoritukset
+        enrichSuoritus(s) for s in $scope.suoritukset  if $scope.suoritukset
         return
       Suoritukset.query { henkilo: $scope.henkiloOid }, ((suoritukset) ->
         suoritukset.sort (a, b) ->
@@ -116,18 +116,16 @@ app.controller "MuokkaaCtrl", [
 
     fetchOpiskeluoikeudet = ->
       enrich = ->
-        if $scope.opiskeluoikeudet
-          angular.forEach $scope.opiskeluoikeudet, (opiskeluoikeus) ->
-            if opiskeluoikeus.myontaja
-              getOrganisaatio $http, opiskeluoikeus.myontaja, (organisaatio) ->
-                opiskeluoikeus.oppilaitos = organisaatio.oppilaitosKoodi
-                opiskeluoikeus.organisaatio = organisaatio
-
-            if opiskeluoikeus.komo and opiskeluoikeus.komo.match(/^koulutus_\d*$/)
-              getKoulutusNimi $http, opiskeluoikeus.komo, (koulutusNimi) ->
-                opiskeluoikeus.koulutus = koulutusNimi
-
-            return
+        ((opiskeluoikeus) ->
+          if opiskeluoikeus.myontaja
+            getOrganisaatio $http, opiskeluoikeus.myontaja, (organisaatio) ->
+              opiskeluoikeus.oppilaitos = organisaatio.oppilaitosKoodi
+              opiskeluoikeus.organisaatio = organisaatio
+          if opiskeluoikeus.komo and opiskeluoikeus.komo.match(/^koulutus_\d*$/)
+            getKoulutusNimi $http, opiskeluoikeus.komo, (koulutusNimi) ->
+              opiskeluoikeus.koulutus = koulutusNimi
+          return
+        )(o) for o in $scope.opiskeluoikeudet  if $scope.opiskeluoikeudet
         return
       Opiskeluoikeudet.query { henkilo: $scope.henkiloOid }, (opiskeluoikeudet) ->
         $scope.opiskeluoikeudet = opiskeluoikeudet
@@ -209,10 +207,10 @@ app.controller "MuokkaaCtrl", [
 
     $scope.save = ->
       validateOppilaitoskoodit = ->
-        angular.forEach $scope.luokkatiedot.concat($scope.suoritukset), ((obj) ->
+        ((obj) ->
           if not obj["delete"] and obj.editable and not (obj.komo and obj.komo is komo.ylioppilastutkinto)
             d = $q.defer()
-            @push d
+            validations.push d
             if not obj.oppilaitos or not obj.oppilaitos.match(/^\d{5}$/)
               MessageService.addMessage
                 type: "danger"
@@ -241,7 +239,7 @@ app.controller "MuokkaaCtrl", [
                 return
 
           return
-        ), validations
+        )(o) for o in $scope.luokkatiedot.concat($scope.suoritukset)
         return
 
       deleteFromArray = (obj, arr) ->
@@ -250,9 +248,9 @@ app.controller "MuokkaaCtrl", [
         return
 
       saveSuoritukset = ->
-        angular.forEach $scope.suoritukset, ((suoritus) ->
+        ((suoritus) ->
           d = $q.defer()
-          @push d
+          deferreds.push d
           $log.debug "save suoritus: " + suoritus.id  if suoritus.editable
           if suoritus["delete"]
             if suoritus.id
@@ -292,14 +290,14 @@ app.controller "MuokkaaCtrl", [
               return
 
           return
-        ), deferreds
+        )(s) for s in $scope.suoritukset
         return
 
       saveLuokkatiedot = ->
-        angular.forEach $scope.luokkatiedot, ((luokkatieto) ->
+        ((luokkatieto) ->
           $log.debug "save luokkatieto: " + luokkatieto.id
           d = $q.defer()
-          @push d
+          deferreds.push d
           if luokkatieto["delete"]
             if luokkatieto.id
               luokkatieto.$remove (->
@@ -338,7 +336,7 @@ app.controller "MuokkaaCtrl", [
               return
 
           return
-        ), deferreds
+        )(l) for l in $scope.luokkatiedot
         return
 
       MessageService.clearMessages()

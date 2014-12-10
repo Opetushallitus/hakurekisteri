@@ -37,25 +37,22 @@ app.controller "OpiskelijatCtrl", [
 
         return
       getAndEnrichOpiskelijat = (row) ->
-        Opiskelijat.query
-          henkilo: row.henkiloOid
-        , (opiskelijat) ->
-          angular.forEach opiskelijat, (o) ->
+        Opiskelijat.query { henkilo: row.henkiloOid }, (opiskelijat) ->
+          ((o) ->
             getOrganisaatio $http, o.oppilaitosOid, (oppilaitos) ->
               o.oppilaitos = ((if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "")) + ((if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv))
               return
 
             return
+          )(o) for o in opiskelijat
 
           row.opiskelijatiedot = opiskelijat
           return
 
         return
       getAndEnrichSuoritukset = (row) ->
-        Suoritukset.query
-          henkilo: row.henkiloOid
-        , (suoritukset) ->
-          angular.forEach suoritukset, (o) ->
+        Suoritukset.query { henkilo: row.henkiloOid }, (suoritukset) ->
+          ((o) ->
             getOrganisaatio $http, o.myontaja, (oppilaitos) ->
               o.oppilaitos = ((if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "")) + " " + ((if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv))
               return
@@ -66,12 +63,11 @@ app.controller "OpiskelijatCtrl", [
                 return
 
             return
+          )(s) for s in suoritukset
 
           row.suoritustiedot = suoritukset
-          angular.forEach suoritukset, (s) ->
-            Arvosanat.query
-              suoritus: s.id
-            , (arvosanat) ->
+          ((s) ->
+            Arvosanat.query { suoritus: s.id }, (arvosanat) ->
               if arvosanat.length > 0
                 s.hasArvosanat = true
               else
@@ -79,16 +75,19 @@ app.controller "OpiskelijatCtrl", [
               return
 
             return
+          )(s) for s in suoritukset
 
           return
 
         return
-      angular.forEach $scope.currentRows, (row) ->
+
+      ((row) ->
         if row.henkiloOid
           enrichHenkilo row
           getAndEnrichOpiskelijat row
           getAndEnrichSuoritukset row
         return
+      )(r) for r in $scope.currentRows
 
       return
     resetPageNumbers = ->
