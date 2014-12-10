@@ -33,6 +33,8 @@ trait XMLValidator[T <: Validation[E, R], E, R <: scala.xml.Node] {
    */
   def loadXML(source: InputSource, parser: SAXParser): T
 
+  def validate(xml: Elem):T
+
   /** Loads XML from the given file, file descriptor, or filename. */
   def loadFile(file: File): T = loadXML(fromFile(file), parser)
   def loadFile(fd: FileDescriptor): T = loadXML(fromFile(fd), parser)
@@ -48,6 +50,26 @@ trait XMLValidator[T <: Validation[E, R], E, R <: scala.xml.Node] {
   /** Loads XML from the given String. */
   def loadString(string: String): T = loadXML(fromString(string), parser)
 }
+
+object NoSchemaValidator extends XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem] {
+  override def adapter: FactoryAdapter = ???
+
+  /* Override this to use a different SAXParser. */
+  override def parser: SAXParser =  {
+    val f = SAXParserFactory.newInstance()
+    f.setNamespaceAware(false)
+    f.newSAXParser()
+  }
+
+  /**
+   * Loads XML from the given InputSource, using the supplied parser.
+   * The methods available in scala.xml.XML use the XML parser in the JDK.
+   */
+  override def loadXML(source: InputSource, parser: SAXParser): ValidationNel[(String, SAXParseException), Elem] = XML.loadXML(source, parser).successNel
+
+  override def validate(xml: Elem): ValidationNel[(String, SAXParseException), Elem] = xml.successNel
+}
+
 
 class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem] {
 
@@ -131,7 +153,7 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
     schemaFactory.newSchema(new SAXSource(fromReader(new StringReader(schemaDoc.schema.toString))))
   }
 
-  def validate(xml: Elem):ValidationNel[(String, SAXParseException), Elem] = validate(new SAXSource(fromString(xml.toString))).map((_) => xml)
+  override def validate(xml: Elem):ValidationNel[(String, SAXParseException), Elem] = validate(new SAXSource(fromString(xml.toString))).map((_) => xml)
 
   def validate(source: Source): ValidationNel[(String, SAXParseException), Elem] = {
     val exceptions = new mutable.Stack[(String, SAXParseException)]
