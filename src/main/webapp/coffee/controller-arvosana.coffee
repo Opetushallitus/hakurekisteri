@@ -204,7 +204,7 @@ app.controller "ArvosanaCtrl", [
           do (arvosana) ->
             d = $q.defer()
             deferreds.push d
-            if arvosana.id and not arvosana.arvio.arvosana
+            if arvosana.id and arvosana.arvio.arvosana is "Ei arvosanaa"
               removeArvosana arvosana, d
             else
               saveArvosana arvosana, d
