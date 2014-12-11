@@ -1,13 +1,12 @@
 "use strict"
 
-app = angular.module("myApp", [
+app = angular.module "myApp", [
   "ngRoute"
   "ngResource"
   "ui.bootstrap"
   "ngUpload"
   "ngSanitize"
-])
-
+]
 
 app.factory "Opiskelijat", ($resource) ->
   $resource "rest/v1/opiskelijat/:opiskelijaId", { opiskelijaId: "@id" }, {

@@ -78,36 +78,36 @@ object HakuJaValintarekisteriBuild extends Build {
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion,
                              "org.scalamock" %% "scalamock-scalatest-support" % "3.1.4")
 
-  lazy val mocha = taskKey[Unit]("run mocha tests")
-  lazy val installMocha = taskKey[Unit]("install mocha")
-  lazy val installCoffee = taskKey[Unit]("install mocha")
-  val installMochaTask = installMocha := {
+  lazy val karma = taskKey[Unit]("run karma tests")
+  lazy val installKarma = taskKey[Unit]("install karma")
+  lazy val installCoffee = taskKey[Unit]("install coffee")
+  val installKarmaTask = installKarma := {
     import sys.process._
-    val pb = Seq("npm", "install",  "mocha")
+    val pb = Seq("npm", "install", "phantomjs", "karma", "karma-coffee-preprocessor", "karma-phantomjs-launcher", "karma-requirejs", "karma-jasmine")
     if ((pb!) !=  0)
-      sys.error("failed installing mocha")
+      sys.error("failed installing karma")
   }
   val installCoffeeTask = installCoffee := {
     import sys.process._
-    val pb = Seq("npm", "install",  "coffee-script")
+    val pb = Seq("npm", "install", "coffee-script")
     if ((pb!) !=  0)
       sys.error("failed installing coffee script")
   }
-  val mochaTask = mocha <<= (installMocha, installCoffee) map {
+  val karmaTask = karma <<= (installCoffee, installKarma) map {
     (Unit1, Unit2) =>
       import sys.process._
-      val test_dir = "src/test/coffee/"
-      if (file(test_dir).exists()) {
-        val pb = Seq("./node_modules/mocha/bin/mocha", "--compilers", "coffee:coffee-script", test_dir)
+      val karma_conf = "src/test/js/karma.conf.js"
+      if (file(karma_conf).exists()) {
+        val pb = Seq("./node_modules/karma/bin/karma", "start", karma_conf)
         if ((pb!) !=  0)
-          sys.error("mocha failed")
+          sys.error("karma failed")
       } else {
-        println("no mocha tests found")
+        println("no karma tests found")
       }
   }
 
   val cleanNodeModules = cleanFiles <+= baseDirectory { base => base / "node_modules" }
-  val mochaTestSources =  unmanagedSourceDirectories in Test <+= (sourceDirectory in Test) {sd => sd / "coffee"}
+  val karmaTestSources = unmanagedSourceDirectories in Test <+= (sourceDirectory in Test) {sd => sd / "coffee"}
 
   val artifactoryPublish = publishTo <<= version apply {
     (ver: String) =>
@@ -153,7 +153,6 @@ object HakuJaValintarekisteriBuild extends Build {
       "sonar.java.coveragePlugin"  -> "cobertura",
       "sonar.cobertura.reportPath" -> (target.value.getAbsolutePath +"/scala-" +scalaBinaryVersion.value + "/coverage-report/cobertura.xml")))
 
-
   lazy val project = {
     Project(
       "hakurekisteri",
@@ -166,7 +165,8 @@ object HakuJaValintarekisteriBuild extends Build {
         ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"))
         ++ Seq(wro4jSettings:_*)
         ++ Seq(com.earldouglas.xsbtwebplugin.PluginKeys.webappResources in Compile <+= (targetFolder in generateResources in Compile))
-        ++ Seq(mochaTask, installMochaTask, installCoffeeTask, cleanNodeModules, mochaTestSources)
+        ++ Seq(karmaTask, installKarmaTask, installCoffeeTask, cleanNodeModules, karmaTestSources)
+        //++ Seq((test in Test) <<= (test in Test) dependsOn karma) // uncomment to enable running karma tests together with "test" phase
         ++ Seq(
           organization := Organization,
           name := Name,
