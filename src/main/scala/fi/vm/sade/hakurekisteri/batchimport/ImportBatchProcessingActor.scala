@@ -56,8 +56,13 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     case b: Seq[ImportBatch with Identified[UUID]] =>
       batches = b
       b.foreach(batch => {
-        log.info(s"started processing batch ${batch.id}")
-        context.actorOf(Props(new PerustiedotProcessingActor(batch, self, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)))
+        try {
+          context.actorOf(Props(new PerustiedotProcessingActor(batch, self, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)))
+          log.info(s"started processing batch ${batch.id}")
+        } catch {
+          case t: Throwable =>
+            self ! FailedBatch(batch, t)
+        }
       })
 
     case ProcessedBatch(b) =>
