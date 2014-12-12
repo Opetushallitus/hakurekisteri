@@ -35,10 +35,14 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
 
   )
 
-  override def save(t: R): R with Identified[I] =  {
-    val identified = t.identify
-    journal.addModification(Updated[R,I](identified))
-    identified
+  override def save(t: R): R with Identified[I] = t match {
+    case current: R with Identified[I] =>
+      journal.addModification(Updated[R, I](current))
+      current
+    case _ =>
+      val identified = t.identify
+      journal.addModification(Updated[R, I](identified))
+      identified
   }
 }
 
