@@ -25,18 +25,36 @@ case class FailedBatch(batch: ImportBatch with Identified[UUID], t: Throwable)
 class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef)(implicit val system: ActorSystem, val ec: ExecutionContext) extends Actor with ActorLogging {
   var processing = false
   var startTime = Platform.currentTime
-  var batches: Seq[UUID] = Seq()
+  var batches: Seq[ImportBatch with Identified[UUID]] = Seq()
 
-  system.scheduler.schedule(1.minutes, 30.seconds, self, ProcessReadyBatches)
+  val processStarter: Cancellable = system.scheduler.schedule(1.minutes, 30.seconds, self, ProcessReadyBatches)
+  var jamStopper: Option[Cancellable] = None
+
+  override def postStop(): Unit = {
+    if (!processStarter.isCancelled) processStarter.cancel()
+    if (jamStopper.isDefined && !jamStopper.get.isCancelled) jamStopper.get.cancel()
+  }
+
+  object Stop
+
+  log.info("starting processing actor")
 
   override def receive: Receive = {
     case ProcessReadyBatches if !processing =>
       startTime = Platform.currentTime
+      jamStopper = Some(context.system.scheduler.scheduleOnce(30.minutes, self, Stop))
       processing = true
       importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), Some("perustiedot"), Some(2))
+      log.debug("queried for two ready perustiedot batches")
+
+    case Stop =>
+      log.warning("processing has been running for 30 minutes, stopping")
+      context.children.foreach(a => context.stop(a))
+      batches.foreach(b => importBatchActor ! b.copy(state = BatchState.FAILED))
+      processing = false
 
     case b: Seq[ImportBatch with Identified[UUID]] =>
-      batches = b.map(_.id)
+      batches = b
       b.foreach(batch => {
         log.info(s"started processing batch ${batch.id}")
         context.actorOf(Props(new PerustiedotProcessingActor(batch, self, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)))
@@ -54,7 +72,9 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   }
 
   def batchProcessed(id: UUID) = {
-    batches = batches.filterNot(_ == id)
+    jamStopper.foreach(s => if (!s.isCancelled) s.cancel())
+    jamStopper = None
+    batches = batches.filterNot(_.id == id)
     if (batches.length == 0) processing = false
   }
 
