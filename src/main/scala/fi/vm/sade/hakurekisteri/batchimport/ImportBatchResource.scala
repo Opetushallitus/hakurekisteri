@@ -98,15 +98,11 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 }
 
 case class ImportBatchCommand(externalIdField: String, batchType: String, dataField: String, validator: XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem]) extends HakurekisteriCommand[ImportBatch] {
-
   implicit val valid = validator
 
   val data: Field[Elem] = asType[Elem](dataField).required.validateSchema
 
-  override def toResource(user: String): ImportBatch = ImportBatch(data.value.get, data.value.flatMap(elem => (elem \ externalIdField).collectFirst{case e:Elem => e.text}), batchType, user)
-
-
-
+  override def toResource(user: String): ImportBatch = ImportBatch(data.value.get, data.value.flatMap(elem => (elem \ externalIdField).collectFirst{case e:Elem => e.text}), batchType, user, BatchState.READY, ImportStatus())
 }
 
 trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {

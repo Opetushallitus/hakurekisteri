@@ -9,6 +9,7 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
 
 import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.duration._
 
 case class Kieli(kieliKoodi: String, kieliTyyppi: Option[String] = None)
 
@@ -45,9 +46,9 @@ case class FoundHenkilos(henkilot: Seq[Henkilo], tunniste: String)
 case class HenkiloNotFoundException(oid: String) extends Exception(s"henkilo not found with oid $oid")
 
 class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with ActorLogging {
-  val maxRetries = Config.httpClientMaxRetries
-
   implicit val ec: ExecutionContext = context.dispatcher
+  val maxRetries = Config.httpClientMaxRetries
+  var savingHenkilo = false
 
   import HetuUtil.Hetu
 
@@ -69,9 +70,15 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with Actor
           map(r => FoundHenkilos(r.results, q.tunniste)) pipeTo sender
       }
 
-    case SaveHenkilo(henkilo: CreateHenkilo, tunniste) =>
-      henkiloClient.postObject[CreateHenkilo, String](s"/resources/s2s/tiedonsiirrot", 200, henkilo).
-        map(saved => SavedHenkilo(saved, tunniste)) pipeTo sender
+    case SaveHenkilo(henkilo: CreateHenkilo, tunniste) if !savingHenkilo =>
+      savingHenkilo = true
+      val savedHenkilo = henkiloClient.postObject[CreateHenkilo, String](s"/resources/s2s/tiedonsiirrot", 200, henkilo).
+        map(saved => SavedHenkilo(saved, tunniste))
+      savedHenkilo.onComplete(t => savingHenkilo = false)
+      savedHenkilo pipeTo sender
+
+    case s: SaveHenkilo if savingHenkilo =>
+      context.system.scheduler.scheduleOnce(50.milliseconds, self, s)(ec, sender())
 
     case CheckHenkilo(henkiloOid) =>
       def notFound(t: Throwable) = t match {

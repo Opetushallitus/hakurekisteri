@@ -25,36 +25,36 @@ case class FailedBatch(batch: ImportBatch with Identified[UUID], t: Throwable)
 class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef)(implicit val system: ActorSystem, val ec: ExecutionContext) extends Actor with ActorLogging {
   var processing = false
   var startTime = Platform.currentTime
-  var batches: Seq[ImportBatch with Identified[UUID]] = Seq()
+  var batches: Seq[UUID] = Seq()
 
-  // system.scheduler.schedule(5.minutes, 5.minutes, self, ProcessReadyBatches)
+  system.scheduler.schedule(1.minutes, 30.seconds, self, ProcessReadyBatches)
 
   override def receive: Receive = {
     case ProcessReadyBatches if !processing =>
       startTime = Platform.currentTime
       processing = true
-      importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), Some("perustiedot"), Some(3))
+      importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), Some("perustiedot"), Some(2))
 
     case b: Seq[ImportBatch with Identified[UUID]] =>
-      batches = b
-      batches.foreach(batch => {
+      batches = b.map(_.id)
+      b.foreach(batch => {
         log.info(s"started processing batch ${batch.id}")
         context.actorOf(Props(new PerustiedotProcessingActor(batch, self, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)))
       })
 
     case ProcessedBatch(b) =>
       importBatchActor ! b.copy(state = BatchState.DONE)
-      batchProcessed(b)
+      batchProcessed(b.id)
       log.info(s"batch ${b.id} was processed successfully, processing took ${Platform.currentTime - startTime} ms")
 
     case FailedBatch(b, t) =>
       importBatchActor ! b.copy(state = BatchState.FAILED)
-      batchProcessed(b)
+      batchProcessed(b.id)
       log.error(t, s"error processing batch ${b.id}, processing took ${Platform.currentTime - startTime} ms")
   }
 
-  def batchProcessed(b: ImportBatch with Identified[UUID]) = {
-    batches = batches.filterNot(_ == b)
+  def batchProcessed(id: UUID) = {
+    batches = batches.filterNot(_ == id)
     if (batches.length == 0) processing = false
   }
 

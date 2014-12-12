@@ -33,6 +33,6 @@ trait HakurekisteriJsonSupport {
 
 object HakurekisteriJsonSupport extends HakurekisteriJsonSupport  {
 
-  val format =jsonFormats
+  val format = jsonFormats
 
 }

@@ -54,7 +54,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
         </perusopetus>
       </henkilo>
     </henkilot>
-  </perustiedot>, Some("foo"), "perustiedot", lahde).identify(UUID.randomUUID())
+  </perustiedot>, Some("foo"), "perustiedot", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
 
   def createEndpoint = {
     val result = mock[Endpoint]

@@ -8,8 +8,8 @@ import akka.pattern.{ask, pipe}
 import fi.vm.sade.hakurekisteri.rest.support
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCService}
-import fi.vm.sade.hakurekisteri.storage.ResourceActor
-import fi.vm.sade.hakurekisteri.storage.repository.Delta
+import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceActor}
+import fi.vm.sade.hakurekisteri.storage.repository.{Updated, Delta}
 
 import scala.concurrent.ExecutionContext
 import scala.slick.lifted
@@ -49,6 +49,18 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
   def matchState(state: Option[BatchState])(i: ImportBatchTable): Column[Boolean] = state match {
     case Some(s) => i.state === s
     case None => true
+  }
+
+  def allWithoutData = {
+    (for (
+      i <- all
+    ) yield (i.resourceId, i.externalId, i.batchType, i.source, i.state, i.status, i.inserted)).sortBy(_._6)
+  }
+
+  def bySource(source: String) = {
+    (for (
+      i <- all.filter(_.source === source)
+    ) yield (i.resourceId, i.externalId, i.batchType, i.source, i.state, i.status, i.inserted)).sortBy(_._6)
   }
 
   override implicit val executionContext: ExecutionContext = context.dispatcher
