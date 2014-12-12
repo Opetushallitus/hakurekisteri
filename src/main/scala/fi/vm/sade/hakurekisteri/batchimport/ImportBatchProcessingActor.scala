@@ -56,13 +56,8 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     case b: Seq[ImportBatch with Identified[UUID]] =>
       batches = b
       b.foreach(batch => {
-        try {
-          context.actorOf(Props(new PerustiedotProcessingActor(batch, self, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)))
-          log.info(s"started processing batch ${batch.id}")
-        } catch {
-          case t: Throwable =>
-            self ! FailedBatch(batch, t)
-        }
+        context.actorOf(Props(new PerustiedotProcessingActor(batch, self, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)))
+        log.info(s"started processing batch ${batch.id}")
       })
 
     case ProcessedBatch(b) =>
@@ -89,7 +84,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   class PerustiedotProcessingActor(b: ImportBatch with Identified[UUID], parent: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef)
     extends Actor {
 
-    var importHenkilot: Map[String, ImportHenkilo] = (b.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(b.source)).groupBy(_.tunniste.tunniste).mapValues(_.head)
+    var importHenkilot: Map[String, ImportHenkilo] = Map()
     var organisaatiot: Map[String, Option[Organisaatio]] = Map()
 
     var sentOpiskelijat: Seq[Opiskelija] = Seq()
@@ -167,8 +162,18 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       context.stop(self)
     }
 
+    def parseData(): Map[String, ImportHenkilo] = try {
+      (b.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(b.source)).groupBy(_.tunniste.tunniste).mapValues(_.head)
+    } catch {
+      case t: Throwable =>
+        batchFailed(t)
+        Map()
+    }
+
     override def receive: Actor.Receive = {
-      case Start => fetchAllOppilaitokset()
+      case Start =>
+        importHenkilot = parseData()
+        fetchAllOppilaitokset()
 
       case OppilaitosResponse(koodi, organisaatio) =>
         organisaatiot = organisaatiot + (koodi -> Some(organisaatio))
