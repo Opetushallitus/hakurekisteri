@@ -28,11 +28,9 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   var batches: Seq[ImportBatch with Identified[UUID]] = Seq()
 
   val processStarter: Cancellable = system.scheduler.schedule(1.minutes, 30.seconds, self, ProcessReadyBatches)
-  var jamStopper: Option[Cancellable] = None
 
   override def postStop(): Unit = {
-    if (!processStarter.isCancelled) processStarter.cancel()
-    if (jamStopper.isDefined && !jamStopper.get.isCancelled) jamStopper.get.cancel()
+    processStarter.cancel()
   }
 
   object Stop
@@ -42,7 +40,6 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   override def receive: Receive = {
     case ProcessReadyBatches if !processing =>
       startTime = Platform.currentTime
-      jamStopper = Some(context.system.scheduler.scheduleOnce(30.minutes, self, Stop))
       processing = true
       importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), Some("perustiedot"), Some(2))
       log.debug("queried for two ready perustiedot batches")
@@ -72,8 +69,6 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   }
 
   def batchProcessed(id: UUID) = {
-    jamStopper.foreach(s => if (!s.isCancelled) s.cancel())
-    jamStopper = None
     batches = batches.filterNot(_.id == id)
     if (batches.length == 0) processing = false
   }
@@ -298,15 +293,16 @@ object ImportHenkilo {
   def apply(h: Node)(lahde: String): ImportHenkilo = {
     val hetu = getOptionField("hetu")(h)
     val oppijanumero = getOptionField("oppijanumero")(h)
-    val henkilonTunniste = getOptionField("henkilonTunniste")(h)
+    val henkiloTunniste = getOptionField("henkiloTunniste")(h)
     val syntymaAika = getOptionField("syntymaAika")(h)
     val sukupuoli = getOptionField("sukupuoli")(h)
 
-    val tunniste = (hetu, oppijanumero, henkilonTunniste, syntymaAika, sukupuoli) match {
+    val tunniste = (hetu, oppijanumero, henkiloTunniste, syntymaAika, sukupuoli) match {
       case (Some(henkilotunnus), _, _, _, _) => ImportHetu(henkilotunnus)
       case (_, Some(o), _, _, _) => ImportOppijanumero(o)
       case (_, _, Some(t), Some(sa), Some(sp)) => ImportHenkilonTunniste(t, sa, sp)
-      case _ => throw new IllegalArgumentException(s"henkilo could not be identified: hetu, oppijanumero or henkilonTunniste+syntymaAika+sukupuoli missing")
+      case t =>
+        throw new IllegalArgumentException(s"henkilo could not be identified: hetu, oppijanumero or henkiloTunniste+syntymaAika+sukupuoli missing $t")
     }
 
     val suoritukset = Seq(

@@ -53,6 +53,35 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
           <yksilollistaminen>EI</yksilollistaminen>
         </perusopetus>
       </henkilo>
+      <henkilo>
+        <henkiloTunniste>TUNNISTE</henkiloTunniste>
+        <syntymaAika>1999-03-29</syntymaAika>
+        <sukupuoli>1</sukupuoli>
+        <lahtokoulu>05127</lahtokoulu>
+        <luokka>9A</luokka>
+        <sukunimi>Testinen</sukunimi>
+        <etunimet>Juha Jaakko</etunimet>
+        <kutsumanimi>Jaakko</kutsumanimi>
+        <kotikunta>020</kotikunta>
+        <aidinkieli>FI</aidinkieli>
+        <kansalaisuus>246</kansalaisuus>
+        <lahiosoite>Katu 1 A 1</lahiosoite>
+        <postinumero>00100</postinumero>
+        <matkapuhelin>040 1234 567</matkapuhelin>
+        <muuPuhelin>09 1234 567</muuPuhelin>
+        <ulkomainen>
+          <valmistuminen>2014-06-04</valmistuminen>
+          <myontaja>05127</myontaja>
+          <suorituskieli>FI</suorituskieli>
+          <tila>KESKEN</tila>
+        </ulkomainen>
+        <maahanmuuttajienammvalmistava>
+          <valmistuminen>2015-06-04</valmistuminen>
+          <myontaja>05127</myontaja>
+          <suorituskieli>FI</suorituskieli>
+          <tila>VALMIS</tila>
+        </maahanmuuttajienammvalmistava>
+      </henkilo>
     </henkilot>
   </perustiedot>, Some("foo"), "perustiedot", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
 

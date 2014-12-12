@@ -60,8 +60,8 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
   val statPrinter: Cancellable = context.system.scheduler.schedule(5.minutes, 10.minutes, self, PrintStats)
 
   override def postStop(): Unit = {
-    if (!processing.isCancelled) processing.cancel()
-    if (!statPrinter.isCancelled) statPrinter.cancel()
+    processing.cancel()
+    statPrinter.cancel()
   }
 
   def dequeue() = {

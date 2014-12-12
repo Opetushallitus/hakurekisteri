@@ -15,8 +15,8 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
   val reloadInterval = 10.seconds
 
   override def postStop(): Unit = {
-    report.foreach((c) => if (!c.isCancelled) c.cancel())
-    reload.foreach((c) => if (!c.isCancelled) c.cancel())
+    report.foreach((c) => c.cancel())
+    reload.foreach((c) => c.cancel())
   }
 
   object Report

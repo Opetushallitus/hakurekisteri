@@ -49,7 +49,7 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
   }
 
   override def postStop(): Unit = {
-    if (!refresh.isCancelled) refresh.cancel()
+    refresh.cancel()
   }
 
   override def receive: Receive = {
