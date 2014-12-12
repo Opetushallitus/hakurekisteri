@@ -52,7 +52,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     def withSessionAndBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(jSsessionId: String)(body: Option[A] = None): Future[B] = {
       val req = body match {
         case Some(a) =>
-          request << write[A](a)(jsonFormats)
+          request << write[A](a)(jsonFormats) <:< Map("Content-Type" -> "application/json")
         case None => request
       }
 
@@ -62,7 +62,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     def withBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(body: Option[A] = None): Future[B] = {
       val req = body match {
         case Some(a) =>
-          request << write[A](a)(jsonFormats)
+          request << write[A](a)(jsonFormats) <:< Map("Content-Type" -> "application/json")
         case None => request
       }
       f(req)

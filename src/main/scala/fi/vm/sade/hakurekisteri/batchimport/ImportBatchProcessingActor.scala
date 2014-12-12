@@ -58,12 +58,12 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       })
 
     case ProcessedBatch(b) =>
-      importBatchActor ! b.copy(state = BatchState.DONE)
+      importBatchActor ! b.copy(state = BatchState.DONE).identify(b.id)
       batchProcessed(b.id)
       log.info(s"batch ${b.id} was processed successfully, processing took ${Platform.currentTime - startTime} ms")
 
     case FailedBatch(b, t) =>
-      importBatchActor ! b.copy(state = BatchState.FAILED)
+      importBatchActor ! b.copy(state = BatchState.FAILED).identify(b.id)
       batchProcessed(b.id)
       log.error(t, s"error processing batch ${b.id}, processing took ${Platform.currentTime - startTime} ms")
   }
