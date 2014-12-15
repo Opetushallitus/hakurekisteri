@@ -33,7 +33,7 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
       maxCount.map(count => all.take(count)).getOrElse(q)
     case ImportBatchQuery(externalId, state, batchType, maxCount) =>
       val q = all.filter(i => matchExternalId(externalId)(i) && matchState(state)(i) && matchBatchType(batchType)(i))
-      maxCount.map(count => all.take(count)).getOrElse(q)
+      maxCount.map(count => q.take(count)).getOrElse(q)
   }
 
   def matchExternalId(externalId: Option[String])(i: ImportBatchTable): Column[Option[Boolean]] = externalId match {
