@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor.{ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.acceptance.tools.{FakeAuthorizer, TestSecurity}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriSwagger, JDBCJournal}
+import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, HakurekisteriSwagger}
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.Uploadable
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -64,7 +64,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   }
 
   test("post with fileupload should return 201 created") {
-    val fileData = XmlPart("test.xml", <batch><identifier>foo</identifier><data>foo2</data></batch>)
+    val fileData = XmlPart("test.xml", <batch><identifier>foo2</identifier><data>foo2</data></batch>)
 
     post("/", Map[String, String](), List("data" -> fileData)) {
       response.status should be(201)
@@ -76,6 +76,31 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
 
     post("/", Map[String, String](), List("data" -> fileData)) {
       response.status should be(400)
+    }
+  }
+
+  test("resource should deduplicate with the same data from the same sender") {
+    val data = "<batch><identifier>foo3</identifier><data>foo</data></batch>"
+
+    post("/", data) {
+      val location: String = response.header("Location")
+
+      post("/", data) {
+        val secondLocation: String = response.header("Location")
+        secondLocation should be(location)
+      }
+    }
+  }
+
+  test("batch should be updated when using the same identifier") {
+    post("/", "<batch><identifier>foo4</identifier><data>foo</data></batch>") {
+      val location = response.header("Location")
+
+      post("/", "<batch><identifier>foo4</identifier><data>foo2</data></batch>") {
+        val secondLocation = response.header("Location")
+        secondLocation should be(location)
+        response.body should include("foo2")
+      }
     }
   }
 
