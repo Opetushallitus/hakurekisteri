@@ -14,9 +14,11 @@ import dispatch._
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 
+import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
+import scala.util.{Failure, Success, Try}
 
 
 case class PreconditionFailedException(message: String, responseCode: Int) extends Exception(message)
@@ -103,13 +105,32 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
       } else Future.failed(t)
   }
 
+  def result(t: Try[_]): String = t match {
+    case Success(_) => "success"
+    case Failure(e) => s"failure: $e"
+  }
+
+  def logLongQuery(f: Future[_], uri: String) = {
+    val t0 = Platform.currentTime
+    f.onComplete(t => {
+      val took = Platform.currentTime - t0
+      if (took > Config.httpClientSlowRequest) {
+        logger.warning(s"slow request: url $serviceUrl$uri took $took ms to complete, result was ${result(t)}")
+      }
+    })
+  }
+
   def readObject[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int = 0): Future[A] = {
     val retryCount = new AtomicInteger(1)
-    tryClient[A](uri, acceptedResponseCode, maxRetries, retryCount)
+    val result = tryClient[A](uri, acceptedResponseCode, maxRetries, retryCount)
+    logLongQuery(result, uri)
+    result
   }
 
   def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, resource: A): Future[B] = {
-    client[A, B](uri.accept(acceptedResponseCode).as[B], Some(resource))
+    val result = client[A, B](uri.accept(acceptedResponseCode).as[B], Some(resource))
+    logLongQuery(result, uri)
+    result
   }
 }
 

@@ -19,6 +19,8 @@ import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
 
 import Virta.at
 
+import scala.util.Success
+
 
 case class VirtaQuery(oppijanumero: String, hetu: Option[String])
 case class VirtaQueuedQuery(q: VirtaQuery)
@@ -118,9 +120,9 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
 
   def receive: Receive = {
     case q: VirtaQuery => 
-      val res = getOpiskelijanTiedot(q.oppijanumero, q.hetu)
-      res.onComplete(t => sender ! QueryProsessed(q))
-      res pipeTo self
+      val tiedot = getOpiskelijanTiedot(q.oppijanumero, q.hetu)
+      tiedot.onComplete(t => sender ! QueryProsessed(q))
+      tiedot.pipeTo(self)(ActorRef.noSender)
       
     case Some(r: VirtaResult) => 
       save(r)
