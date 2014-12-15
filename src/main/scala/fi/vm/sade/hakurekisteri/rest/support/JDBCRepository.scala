@@ -7,6 +7,8 @@ import fi.vm.sade.hakurekisteri.storage.repository.Deleted
 import scala.concurrent.{ExecutionContext, Future}
 import scala.slick.ast.BaseTypedType
 import scala.slick.lifted
+import fi.vm.sade.hakurekisteri.batchimport.{ImportBatchTable, ImportBatch}
+import java.util.UUID
 
 
 trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Repository[R,I]  {
@@ -35,7 +37,7 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
 
   )
 
-  override def save(t: R): R with Identified[I] = t match {
+  def doSave(t: R): R with Identified[I] = t match {
     case current: R with Identified[I] =>
       journal.addModification(Updated[R, I](current))
       current
@@ -44,6 +46,25 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
       journal.addModification(Updated[R, I](identified))
       identified
   }
+
+  def deduplicationQuery(t: T): lifted.Column[Boolean]
+
+  def deduplicate(i: R): Option[R with Identified[I]] = journal.db withSession(
+    implicit session =>
+    {
+      all.filter(deduplicationQuery).list.collect {
+        case Updated(res) => res
+      }.headOption
+    }
+    )
+
+  override def save(t: R): R with Identified[I] = {
+    deduplicate(t) match {
+      case Some(i) => doSave(t.identify(i.id))
+      case None => doSave(t)
+    }
+  }
+
 }
 
 trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends ResourceService[R,I] { this: JDBCRepository[R,I,T] =>
