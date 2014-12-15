@@ -66,6 +66,18 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
   override implicit val executionContext: ExecutionContext = context.dispatcher
 
   override val dbExecutor = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
+
+  def deduplicate(i: ImportBatch): Option[ImportBatch with Identified[UUID]] = journal.db withSession(
+    implicit session =>
+      all.filter(t => t.source === i.source && t.batchType === i.batchType && t.externalId.getOrElse("") === i.externalId.getOrElse("")).list.collect { case Updated(res) => res}.headOption
+  )
+
+  override def save(t: ImportBatch): ImportBatch with Identified[UUID] = {
+    deduplicate(t) match {
+      case Some(i) => super.save(t.identify(i.id))
+      case None => super.save(t)
+    }
+  }
 }
 
 case class ImportBatchQuery(externalId: Option[String], state: Option[BatchState], batchType: Option[String], maxCount: Option[Int] = None) extends support.Query[ImportBatch]

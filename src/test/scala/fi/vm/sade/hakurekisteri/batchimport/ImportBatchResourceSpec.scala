@@ -38,7 +38,8 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
         <xs:element name="batch">
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="data" minOccurs="1" maxOccurs="1"></xs:element>
+              <xs:element name="identifier" minOccurs="1" maxOccurs="1"/>
+              <xs:element name="data" minOccurs="1" maxOccurs="1"/>
             </xs:sequence>
           </xs:complexType>
         </xs:element>
@@ -57,13 +58,13 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
 
 
   test("post should return 201 created") {
-    post("/", "<batch><data>foo</data></batch>") {
+    post("/", "<batch><identifier>foo</identifier><data>foo</data></batch>") {
       response.status should be(201)
     }
   }
 
   test("post with fileupload should return 201 created") {
-    val fileData = XmlPart("test.xml", <batch><data>foo</data></batch>)
+    val fileData = XmlPart("test.xml", <batch><identifier>foo</identifier><data>foo2</data></batch>)
 
     post("/", Map[String, String](), List("data" -> fileData)) {
       response.status should be(201)

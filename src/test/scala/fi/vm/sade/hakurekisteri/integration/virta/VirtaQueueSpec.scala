@@ -9,11 +9,11 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
   implicit val system = ActorSystem("test-virta-queue")
 
   "VirtaQueue" when {
-    val virtaActor = TestActorRef[MockActor]
-    val hakemusActor = TestActorRef[MockActor]
+    val virtaActor = TestActorRef[MockActor](Props(new MockActor()))
+    val hakemusActor = TestActorRef[MockActor](Props(new MockActor()))
 
     "receiving query" should {
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(classOf[VirtaQueue], virtaActor, hakemusActor))
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor)))
       val q = VirtaQuery("foo", Some("bar"))
       virtaQueue ! VirtaQueuedQuery(q)
 
@@ -23,7 +23,7 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
     }
 
     "consuming all" should {
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(classOf[VirtaQueue], virtaActor, hakemusActor))
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor)))
       val q = VirtaQuery("foo", Some("bar"))
       virtaQueue ! VirtaQueuedQuery(q)
       virtaQueue ! ProcessAll
@@ -34,7 +34,7 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
     }
 
     "receiving the same query multiple times" should {
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(classOf[VirtaQueue], virtaActor, hakemusActor))
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor)))
       val q1 = VirtaQuery("foo", Some("bar"))
       val q2 = VirtaQuery("foo", Some("bar"))
       virtaQueue ! VirtaQueuedQuery(q1)
@@ -45,11 +45,10 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
       }
     }
   }
+}
 
-  class MockActor extends Actor {
-    override def receive: Receive = {
-      case a: Any => sender ! a
-    }
+class MockActor extends Actor {
+  override def receive: Receive = {
+    case a: Any => sender ! a
   }
-
 }
