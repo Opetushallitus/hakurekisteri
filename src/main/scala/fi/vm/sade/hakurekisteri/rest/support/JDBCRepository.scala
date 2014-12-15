@@ -47,12 +47,12 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
       identified
   }
 
-  def deduplicationQuery(t: T): lifted.Column[Boolean]
+  def deduplicationQuery(i: R)(t: T): lifted.Column[Boolean]
 
   def deduplicate(i: R): Option[R with Identified[I]] = journal.db withSession(
     implicit session =>
     {
-      all.filter(deduplicationQuery).list.collect {
+      all.filter(deduplicationQuery(i)).list.collect {
         case Updated(res) => res
       }.headOption
     }
