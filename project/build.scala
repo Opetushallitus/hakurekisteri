@@ -42,7 +42,7 @@ object HakuJaValintarekisteriBuild extends Build {
 
   val SecurityStack = SpringStack.map(_ % SpringVersion) ++
     Seq("net.sf.ehcache" % "ehcache-core" % "2.5.0",
-    "fi.vm.sade.generic" % "generic-common" % "9.0-SNAPSHOT",
+    "fi.vm.sade.generic" % "generic-common" % "9.1-SNAPSHOT",
     "org.apache.httpcomponents" % "httpclient" % "4.2.3",
     "org.apache.httpcomponents" % "httpclient-cache" % "4.2.3",
     "commons-httpclient" % "commons-httpclient" % "3.1",
@@ -111,7 +111,7 @@ object HakuJaValintarekisteriBuild extends Build {
 
   val artifactoryPublish = publishTo <<= version apply {
     (ver: String) =>
-      val artifactory = "http://penaali.hard.ware.fi/artifactory"
+      val artifactory = "https://artifactory.oph.ware.fi/artifactory"
       if (ver.trim.endsWith("SNAPSHOT"))
         Some("snapshots" at artifactory + "/oph-sade-snapshot-local")
       else
@@ -174,8 +174,8 @@ object HakuJaValintarekisteriBuild extends Build {
           scalaVersion := ScalaVersion,
           artifactName := ArtifactName,
           resolvers += Classpaths.typesafeReleases,
-          resolvers += "oph-snapshots" at "http://penaali.hard.ware.fi/artifactory/oph-sade-snapshot-local",
-          resolvers += "oph-releases" at "http://penaali.hard.ware.fi/artifactory/oph-sade-release-local",
+          resolvers += "oph-snapshots" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local",
+          resolvers += "oph-releases" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local",
           resolvers += "Sonatype" at "http://oss.sonatype.org/content/repositories/releases/",
           resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
           resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
