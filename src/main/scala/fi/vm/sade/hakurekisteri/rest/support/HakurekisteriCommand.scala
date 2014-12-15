@@ -18,7 +18,7 @@ import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.json4s.JsonAST.JString
 import org.json4s.JsonAST.JInt
 import scala.concurrent.Future
-
+import scala.language.implicitConversions
 
 
 trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFactories with HakurekisteriJsonSupport{
