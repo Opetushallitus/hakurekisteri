@@ -11,9 +11,10 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
   "VirtaQueue" when {
     val virtaWaiter = new Waiter()
     val virtaHandler: PartialFunction[Any, Any] = {
-      case VirtaQuery(o, h) =>
-        virtaWaiter { o should be("foo") }
+      case q: VirtaQuery =>
+        virtaWaiter { q.oppijanumero should be("foo") }
         virtaWaiter.dismiss()
+        QueryProsessed(q)
     }
 
     val virtaActor = TestActorRef[MockActor](Props(new MockActor(virtaHandler)))
@@ -31,13 +32,14 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
 
     "consuming all" should {
       val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor)))
-      val q = VirtaQuery("foo", Some("bar"))
-      virtaQueue ! VirtaQueuedQuery(q)
+      virtaQueue ! VirtaQueuedQuery(VirtaQuery("foo", Some("bar")))
+      virtaQueue ! VirtaQueuedQuery(VirtaQuery("foo", Some("bar2")))
       virtaQueue ! StartVirta
 
       "start consuming queries in the queue" in {
         import org.scalatest.time.SpanSugar._
-        virtaWaiter.await(timeout(10.seconds), dismissals(1))
+        virtaWaiter.await(timeout(10.seconds), dismissals(2))
+        virtaQueue.underlyingActor.virtaQueue.length should be(0)
       }
     }
 
@@ -55,10 +57,10 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
   }
 }
 
-class MockActor(handler: PartialFunction[Any, Any] = { case a: Any => }) extends Actor {
+class MockActor(handler: PartialFunction[Any, Any] = { case a: Any => a }) extends Actor {
   override def receive: Receive = {
     case a: Any =>
-      handler(a)
-      sender ! a
+      val q = handler(a)
+      sender ! q
   }
 }
