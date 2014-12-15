@@ -36,7 +36,7 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem) extends
     else new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
 
-      virtaQueue ! ProcessAll
+      virtaQueue ! StartVirta
 
       override val is = virtaStatus
     }
@@ -66,6 +66,15 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem) extends
 
         override val is = virtaStatus
       }
+    }
+  }
+
+  get("/status") {
+    if (!hasAccess) throw UserNotAuthorized("not authorized")
+    else new AsyncResult() {
+      override implicit def timeout: Duration = 120.seconds
+
+      override val is = virtaStatus
     }
   }
 
