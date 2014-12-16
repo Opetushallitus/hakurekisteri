@@ -1,0 +1,30 @@
+div(class="row")
+  div(class="col-md-2")
+    tiedonsiirtomenu
+    canvas(id="tilaChart" width="175" height="175")
+
+  div(class="col-md-10")
+    h2(oph-msg="suoritusrekisteri.tiedonsiirtotila.otsikko") Tiedonsiirtojen tila
+    div(class="row")
+      div(class="col-sm-12")
+        table(class="table table-condensed")
+          thead
+            tr
+              th(oph-msg="suoritusrekisteri.tiedonsiirtotila.id") Id
+              th(oph-msg="suoritusrekisteri.tiedonsiirtotila.tyyppi") Tyyppi
+              th(oph-msg="suoritusrekisteri.tiedonsiirtotila.lahettaja") Lähettäjä
+              th(oph-msg="suoritusrekisteri.tiedonsiirtotila.tila") Tila
+              th(oph-msg="suoritusrekisteri.tiedonsiirtotila.lahetetty") Lähetetty
+              th(oph-msg="suoritusrekisteri.tiedonsiirtotila.kasitelty") Käsitelty
+          tbody
+            tr(ng-repeat="b in batches" class="{{statusClass(b)}}")
+              td {{b.id}}
+              td {{b.batchType}}
+              td {{b.lahettaja || b.source}}
+              td
+                div(oph-msg="suoritusrekisteri.tiedonsiirtotila.tila.{{b.state}}") {{b.state}}
+                div(ng-if="b.status.successRows") OK {{b.status.successRows}}
+                div(ng-if="b.status.failureRows") NOK {{b.status.failureRows}}
+                div(ng-if="b.status.totalRows") TOTAL {{b.status.totalRows}}
+              td {{b.status.sentTime | date:'medium'}}
+              td {{b.status.processedTime | date:'medium'}}

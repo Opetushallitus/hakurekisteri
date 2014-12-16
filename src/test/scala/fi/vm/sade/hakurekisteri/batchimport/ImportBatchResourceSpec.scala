@@ -98,14 +98,14 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
     }
   }
 
-  test("get allstatuses should contain the posted batch") {
+  test("get withoutdata should contain the posted batch") {
     post("/batch", "<batch><identifier>foo5</identifier><data>foo</data></batch>") {
       import org.json4s.jackson.Serialization.read
       implicit val formats = HakurekisteriJsonSupport.format
 
       val batch = read[ImportBatch with Identified[UUID]](response.body)
 
-      get("/batch/allstatuses") {
+      get("/batch/withoutdata") {
         val batches = read[Seq[ImportBatch with Identified[UUID]]](response.body)
         batches.map(_.id) should contain(batch.id)
       }

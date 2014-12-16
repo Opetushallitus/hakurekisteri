@@ -15,6 +15,10 @@ app.config ($locationProvider, $routeProvider) ->
     templateUrl: "templates/tiedonsiirto"
     controller: "TiedonsiirtoCtrl"
 
+  $routeProvider.when "/tiedonsiirto/tila",
+    templateUrl: "templates/tiedonsiirtotila"
+    controller: "TiedonsiirtotilaCtrl"
+
   $routeProvider.when "/tiedonsiirto/hakeneet",
     templateUrl: "templates/hakeneet"
     controller: "HakeneetCtrl"

@@ -78,7 +78,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     }
   }
 
-  get("/allstatuses") {
+  get("/withoutdata") {
     val user = getUser
     if (!user.orgsFor("READ", "ImportBatch").contains(Config.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
     else new AsyncResult() {

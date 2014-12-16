@@ -28,6 +28,7 @@ module.exports = function(config) {
             'main/webapp/static/js/jquery-1.11.1.min.js',
             'main/webapp/static/js/jquery.fileDownload.js',
             'main/webapp/static/js/bootstrap-3.3.1.min.js',
+            'main/webapp/static/js/Chart.min.js',
             'main/webapp/static/js/angular-1.3.2/angular.min.js',
             'main/webapp/static/js/angular-1.3.2/angular-resource.min.js',
             'main/webapp/static/js/angular-1.3.2/angular-route.min.js',
