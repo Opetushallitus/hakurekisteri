@@ -131,15 +131,14 @@ object Config {
 
   def loadProperties(resources: Seq[InputStream]): Map[String, String] = {
     import scala.collection.JavaConversions._
-    val rawMap = resources.map((reader) => {val prop = new java.util.Properties; prop.load(reader); Map(prop.toList: _*)}).
-      reduce(_ ++ _)
+    val rawMap = resources.map((reader) => {val prop = new java.util.Properties; prop.load(reader); Map(prop.toList: _*)}).foldLeft(Map[String, String]())(_ ++ _)
 
     resolve(rawMap)
   }
 
   def resolve(source: Map[String, String]): Map[String, String] = {
     val converted = source.mapValues(_.replace("${","€{"))
-    val unResolved = Set(converted.map((s) => (for (found <- "€\\{(.*?)\\}".r findAllMatchIn s._2) yield found.group(1)).toList).reduce(_ ++ _):_*)
+    val unResolved = Set(converted.map((s) => (for (found <- "€\\{(.*?)\\}".r findAllMatchIn s._2) yield found.group(1)).toList).foldLeft(List[String]())(_ ++ _):_*)
     val unResolvable = unResolved.filter((s) => converted.get(s).isEmpty)
     if ((unResolved -- unResolvable).isEmpty)
       converted.mapValues(_.replace("€{","${"))
