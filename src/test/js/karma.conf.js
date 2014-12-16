@@ -21,6 +21,7 @@ module.exports = function(config) {
             // these plugins will be require() by Karma
             'karma-coffee-preprocessor',
             'karma-jasmine',
+            'karma-junit-reporter',
             'karma-requirejs',
             'karma-phantomjs-launcher'
         ],
@@ -50,7 +51,10 @@ module.exports = function(config) {
         ],
         // test results reporter to use
         // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
-        reporters: ['progress'],
+        reporters: ['progress','junit'],
+        junitReporter: {
+            outputFile: '../target/surefire-reports/coffee-test-results.xml'
+        },
         port: 9876,
         colors: true,
         logLevel: config.LOG_INFO,

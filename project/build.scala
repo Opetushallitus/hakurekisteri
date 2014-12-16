@@ -83,7 +83,7 @@ object HakuJaValintarekisteriBuild extends Build {
   lazy val installCoffee = taskKey[Unit]("install coffee")
   val installKarmaTask = installKarma := {
     import sys.process._
-    val pb = Seq("npm", "install", "phantomjs", "karma", "karma-coffee-preprocessor", "karma-phantomjs-launcher", "karma-requirejs", "karma-jasmine")
+    val pb = Seq("npm", "install", "phantomjs", "karma", "karma-coffee-preprocessor", "karma-phantomjs-launcher", "karma-requirejs", "karma-jasmine", "karma-junit-reporter")
     if ((pb!) !=  0)
       sys.error("failed installing karma")
   }
