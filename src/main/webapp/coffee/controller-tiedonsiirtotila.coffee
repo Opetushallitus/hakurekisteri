@@ -29,7 +29,7 @@ app.controller "TiedonsiirtotilaCtrl", [
         classes =
           READY: '#D9EDF7'
           DONE: '#DFF0D8'
-          FAILURE: '#F2DEDE'
+          FAILED: '#F2DEDE'
 
         tempData = batches.map((b) -> b.state).reduce((prev, item) ->
           if item of prev
@@ -50,7 +50,7 @@ app.controller "TiedonsiirtotilaCtrl", [
 
     $scope.statusClass = (b) ->
       return "info"  if b.state is "READY"
-      return "danger"  if b.state is "FAILURE"
+      return "danger"  if b.state is "FAILED"
       return "success"  if b.state is "DONE"
       return ""
 
