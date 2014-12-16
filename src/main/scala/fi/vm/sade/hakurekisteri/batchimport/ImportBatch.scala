@@ -12,7 +12,7 @@ import BatchState.BatchState
 
 case class ImportStatus(sentTime: DateTime = new DateTime(),
                         processedTime: Option[DateTime] = None,
-                        messages: Seq[String] = Seq(),
+                        messages: Map[String, Seq[String]] = Map(),
                         successRows: Option[Int] = None,
                         failureRows: Option[Int] = None,
                         totalRows: Option[Int] = None)

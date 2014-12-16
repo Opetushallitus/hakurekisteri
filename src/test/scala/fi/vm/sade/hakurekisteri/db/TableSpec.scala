@@ -41,7 +41,7 @@ class TableSpec extends FlatSpec with Matchers {
 
   it should "be able to retrieve updates" in {
     val xml = <batchdata>data</batchdata>
-    val batch = ImportBatch(xml, Some("externalId"), "test", "test", BatchState.READY, ImportStatus(new DateTime(), Some(new DateTime()), Seq("foo"), Some(1), Some(0), Some(1))).identify(UUID.randomUUID())
+    val batch = ImportBatch(xml, Some("externalId"), "test", "test", BatchState.READY, ImportStatus(new DateTime(), Some(new DateTime()), Map("foo" -> Seq("foo exception")), Some(1), Some(0), Some(1))).identify(UUID.randomUUID())
     val table = TableQuery[ImportBatchTable]
 
     val result = withDb {

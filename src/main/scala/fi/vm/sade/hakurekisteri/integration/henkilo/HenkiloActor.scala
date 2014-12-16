@@ -37,6 +37,7 @@ case class Henkilo(oidHenkilo: String,
 
 case class SaveHenkilo(henkilo: CreateHenkilo, tunniste: String)
 case class SavedHenkilo(henkiloOid: String, tunniste: String)
+case class HenkiloSaveFailed(tunniste: String, t: Throwable)
 case class CheckHenkilo(henkiloOid: String)
 
 case class HenkiloSearchResponse(totalCount: Int, results: Seq[Henkilo])
@@ -75,7 +76,9 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with Actor
       val savedHenkilo = henkiloClient.postObject[CreateHenkilo, String](s"/resources/s2s/tiedonsiirrot", 200, henkilo).
         map(saved => SavedHenkilo(saved, tunniste))
       savedHenkilo.onComplete(t => savingHenkilo = false)
-      savedHenkilo pipeTo sender
+      savedHenkilo.recoverWith {
+        case t: Throwable => Future.successful(HenkiloSaveFailed(tunniste, t))
+      } pipeTo sender
 
     case s: SaveHenkilo if savingHenkilo =>
       context.system.scheduler.scheduleOnce(50.milliseconds, self, s)(ec, sender())

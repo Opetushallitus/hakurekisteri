@@ -19,20 +19,16 @@ import scala.xml.Node
 
 object ProcessReadyBatches
 
-case class ProcessedBatch(batch: ImportBatch with Identified[UUID])
-case class FailedBatch(batch: ImportBatch with Identified[UUID], t: Throwable)
-
 class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef)(implicit val system: ActorSystem, val ec: ExecutionContext) extends Actor with ActorLogging {
 
-  val processStarter: Cancellable = system.scheduler.schedule(1.minutes, 5.seconds, self, ProcessReadyBatches)
+  log.info("starting processing actor")
 
+  private val processStarter: Cancellable = system.scheduler.schedule(1.minute, 5.seconds, self, ProcessReadyBatches)
   override def postStop(): Unit = {
     processStarter.cancel()
   }
 
-  log.info("starting processing actor")
-
-  def readyForProcessing: Boolean = context.children.size < 2
+  private def readyForProcessing: Boolean = context.children.size < 2
 
   override def receive: Receive = {
     case ProcessReadyBatches if readyForProcessing =>
@@ -41,36 +37,32 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
 
     case b: Seq[ImportBatch with Identified[UUID]] =>
       b.foreach(batch => {
-        context.actorOf(Props(new PerustiedotProcessingActor(batch, self, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)))
+        context.actorOf(Props(new PerustiedotProcessingActor(batch)))
       })
-
-    case ProcessedBatch(b) =>
-      importBatchActor ! b.copy(state = BatchState.DONE).identify(b.id)
-
-    case FailedBatch(b, t) =>
-      log.error(t, s"batch ${b.id} failed")
-      importBatchActor ! b.copy(state = BatchState.FAILED).identify(b.id)
   }
 
+  case object ProcessingJammedException extends Exception("processing jammed")
 
-  object ProcessingJammedException extends Exception
-
-  class PerustiedotProcessingActor(b: ImportBatch with Identified[UUID], parent: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef)
+  class PerustiedotProcessingActor(b: ImportBatch with Identified[UUID])
     extends Actor {
 
-    val startTime = Platform.currentTime
+    private val startTime = Platform.currentTime
     log.info(s"started processing batch ${b.id}")
 
-    var importHenkilot: Map[String, ImportHenkilo] = Map()
-    var organisaatiot: Map[String, Option[Organisaatio]] = Map()
+    private var totalRows: Option[Int] = None
 
-    var sentOpiskelijat: Seq[Opiskelija] = Seq()
-    var sentSuoritukset: Seq[VirallinenSuoritus] = Seq()
+    private var importHenkilot: Map[String, ImportHenkilo] = Map()
+    private var organisaatiot: Map[String, Option[Organisaatio]] = Map()
 
-    var savedOpiskelijat: Seq[Opiskelija] = Seq()
-    var savedSuoritukset: Seq[VirallinenSuoritus] = Seq()
+    private var sentOpiskelijat: Seq[Opiskelija] = Seq()
+    private var sentSuoritukset: Seq[VirallinenSuoritus] = Seq()
 
-    def fetchAllOppilaitokset() = {
+    private var savedOpiskelijat: Seq[Opiskelija] = Seq()
+    private var savedSuoritukset: Seq[VirallinenSuoritus] = Seq()
+
+    private var failures: Map[String, Seq[String]] = Map()
+
+    private def fetchAllOppilaitokset() = {
       importHenkilot.values.foreach((h: ImportHenkilo) => {
         organisaatiot = organisaatiot + (h.lahtokoulu -> None)
         h.suoritukset.foreach(s => organisaatiot = organisaatiot + (s.myontaja -> None))
@@ -79,7 +71,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       })
     }
 
-    def saveHenkilo(h: ImportHenkilo, resolveOid: (String) => String) = h.tunniste match {
+    private def saveHenkilo(h: ImportHenkilo, resolveOid: (String) => String) = h.tunniste match {
       case ImportOppijanumero(oppijanumero) =>
         henkiloActor ! CheckHenkilo(h.tunniste.tunniste)
         // FIXME henkilö oidilla tuleville henkilöille ei päivitetä organisaatiohenkilöä henkilöpalveluun
@@ -88,7 +80,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
         henkiloActor ! SaveHenkilo(h.toHenkilo(resolveOid), h.tunniste.tunniste)
     }
 
-    def saveOpiskelija(henkiloOid: String, importHenkilo: ImportHenkilo) = {
+    private def saveOpiskelija(henkiloOid: String, importHenkilo: ImportHenkilo) = {
       val opiskelija = Opiskelija(
         oppilaitosOid = organisaatiot(importHenkilo.lahtokoulu).get.oid,
         luokkataso = detectLuokkataso(importHenkilo.suoritukset),
@@ -101,7 +93,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       opiskelijarekisteri ! opiskelija
     }
 
-    def saveSuoritukset(henkiloOid: String, importHenkilo: ImportHenkilo) = importHenkilo.suoritukset.foreach(s => {
+    private def saveSuoritukset(henkiloOid: String, importHenkilo: ImportHenkilo) = importHenkilo.suoritukset.foreach(s => {
       val suoritus = s.copy(
         myontaja = organisaatiot(s.myontaja).get.oid,
         henkilo = henkiloOid
@@ -110,9 +102,9 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       suoritusrekisteri ! suoritus
     })
 
-    def hasKomo(s: Seq[VirallinenSuoritus], oid: String): Boolean = s.exists(_.komo == oid)
+    private def hasKomo(s: Seq[VirallinenSuoritus], oid: String): Boolean = s.exists(_.komo == oid)
 
-    def detectLuokkataso(suoritukset: Seq[VirallinenSuoritus]): String = suoritukset match {
+    private def detectLuokkataso(suoritukset: Seq[VirallinenSuoritus]): String = suoritukset match {
       case s if hasKomo(s, Config.lukioKomoOid)                   => "L"
       case s if hasKomo(s, Config.lukioonvalmistavaKomoOid)       => "ML"
       case s if hasKomo(s, Config.ammatillinenKomoOid)            => "AK"
@@ -124,30 +116,63 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       case _                                                      => ""
     }
 
-    private object Start
-    private object Stop
-    val start = system.scheduler.scheduleOnce(1.millisecond, self, Start)
-    val stop = system.scheduler.scheduleOnce(10.minutes, self, Stop)
+    private case object Start
+    private case object Stop
+    private val start = system.scheduler.scheduleOnce(1.millisecond, self, Start)
+    private val stop = system.scheduler.scheduleOnce(10.minutes, self, Stop)
 
     override def postStop(): Unit = {
       start.cancel()
       stop.cancel()
     }
 
-    def batchProcessed() = {
-      parent ! ProcessedBatch(b)
+    private def batchProcessed() = {
+      val batch = b.copy(
+        status = b.status.copy(
+          processedTime = Some(new DateTime()),
+          successRows = Some(totalRows.getOrElse(0) - failures.size),
+          failureRows = Some(failures.size),
+          totalRows = totalRows,
+          messages = failures
+        ),
+        state = BatchState.DONE
+      ).identify(b.id)
+
+      importBatchActor ! batch
+
       log.info(s"batch ${b.id} was processed successfully, processing took ${Platform.currentTime - startTime} ms")
+
       context.stop(self)
     }
 
-    def batchFailed(t: Throwable) = {
-      parent ! FailedBatch(b, t)
+    private def batchFailed(t: Throwable) = {
+      val total = totalRows.getOrElse(0)
+      val fails = if (total >= failures.size) failures.size else 0
+      val succs = if (total >= failures.size) total - failures.size else 0
+
+      val batch = b.copy(
+        status = b.status.copy(
+          processedTime = Some(new DateTime()),
+          successRows = Some(succs),
+          failureRows = Some(fails),
+          totalRows = Some(total),
+          messages = failures + ("Virhe tiedoston käsittelyssä" -> Seq(t.toString))
+        ),
+        state = BatchState.FAILED
+      ).identify(b.id)
+
+      importBatchActor ! batch
+
       log.info(s"batch ${b.id} failed, processing took ${Platform.currentTime - startTime} ms")
+
+      log.error(t, s"batch ${b.id} failed")
       context.stop(self)
     }
 
-    def parseData(): Map[String, ImportHenkilo] = try {
-      (b.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(b.source)).groupBy(_.tunniste.tunniste).mapValues(_.head)
+    private def parseData(): Map[String, ImportHenkilo] = try {
+      val henkilot = (b.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(b.source)).groupBy(_.tunniste.tunniste).mapValues(_.head)
+      totalRows = Some(henkilot.size)
+      henkilot
     } catch {
       case t: Throwable =>
         batchFailed(t)
@@ -170,6 +195,11 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
         val importHenkilo = importHenkilot(tunniste)
         saveOpiskelija(henkiloOid, importHenkilo)
         saveSuoritukset(henkiloOid, importHenkilo)
+        importHenkilot = importHenkilot.filterNot(_._1 == tunniste)
+
+      case HenkiloSaveFailed(tunniste, t) =>
+        val errors = failures.getOrElse(tunniste, Seq[String]()) :+ t.toString
+        failures = failures + (tunniste -> errors)
         importHenkilot = importHenkilot.filterNot(_._1 == tunniste)
 
       case s: VirallinenSuoritus =>
