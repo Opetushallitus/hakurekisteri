@@ -23,54 +23,33 @@ case class ProcessedBatch(batch: ImportBatch with Identified[UUID])
 case class FailedBatch(batch: ImportBatch with Identified[UUID], t: Throwable)
 
 class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef)(implicit val system: ActorSystem, val ec: ExecutionContext) extends Actor with ActorLogging {
-  var processing = false
-  var startTime = Platform.currentTime
-  var batches: Seq[ImportBatch with Identified[UUID]] = Seq()
 
-  val processStarter: Cancellable = system.scheduler.schedule(1.minutes, 30.seconds, self, ProcessReadyBatches)
+  val processStarter: Cancellable = system.scheduler.schedule(1.minutes, 5.seconds, self, ProcessReadyBatches)
 
   override def postStop(): Unit = {
     processStarter.cancel()
   }
 
-  object Stop
-
   log.info("starting processing actor")
 
+  def readyForProcessing: Boolean = context.children.size < 2
+
   override def receive: Receive = {
-    case ProcessReadyBatches if !processing =>
-      startTime = Platform.currentTime
-      processing = true
-      importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), Some("perustiedot"), Some(2))
+    case ProcessReadyBatches if readyForProcessing =>
+      importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), Some("perustiedot"), Some(1))
       log.debug("queried for two ready perustiedot batches")
 
-    case Stop =>
-      log.warning("processing has been running for 30 minutes, stopping")
-      context.children.foreach(a => context.stop(a))
-      batches.foreach(b => importBatchActor ! b.copy(state = BatchState.FAILED))
-      processing = false
-
     case b: Seq[ImportBatch with Identified[UUID]] =>
-      batches = b
       b.foreach(batch => {
         context.actorOf(Props(new PerustiedotProcessingActor(batch, self, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)))
-        log.info(s"started processing batch ${batch.id}")
       })
 
     case ProcessedBatch(b) =>
       importBatchActor ! b.copy(state = BatchState.DONE).identify(b.id)
-      batchProcessed(b.id)
-      log.info(s"batch ${b.id} was processed successfully, processing took ${Platform.currentTime - startTime} ms")
 
     case FailedBatch(b, t) =>
+      log.error(t, s"batch ${b.id} failed")
       importBatchActor ! b.copy(state = BatchState.FAILED).identify(b.id)
-      batchProcessed(b.id)
-      log.error(t, s"error processing batch ${b.id}, processing took ${Platform.currentTime - startTime} ms")
-  }
-
-  def batchProcessed(id: UUID) = {
-    batches = batches.filterNot(_.id == id)
-    if (batches.length == 0) processing = false
   }
 
 
@@ -78,6 +57,9 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
 
   class PerustiedotProcessingActor(b: ImportBatch with Identified[UUID], parent: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef)
     extends Actor {
+
+    val startTime = Platform.currentTime
+    log.info(s"started processing batch ${b.id}")
 
     var importHenkilot: Map[String, ImportHenkilo] = Map()
     var organisaatiot: Map[String, Option[Organisaatio]] = Map()
@@ -144,16 +126,23 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
 
     private object Start
     private object Stop
-    system.scheduler.scheduleOnce(1.millisecond, self, Start)
-    system.scheduler.scheduleOnce(10.minutes, self, Stop)
+    val start = system.scheduler.scheduleOnce(1.millisecond, self, Start)
+    val stop = system.scheduler.scheduleOnce(10.minutes, self, Stop)
+
+    override def postStop(): Unit = {
+      start.cancel()
+      stop.cancel()
+    }
 
     def batchProcessed() = {
       parent ! ProcessedBatch(b)
+      log.info(s"batch ${b.id} was processed successfully, processing took ${Platform.currentTime - startTime} ms")
       context.stop(self)
     }
 
     def batchFailed(t: Throwable) = {
       parent ! FailedBatch(b, t)
+      log.info(s"batch ${b.id} failed, processing took ${Platform.currentTime - startTime} ms")
       context.stop(self)
     }
 
