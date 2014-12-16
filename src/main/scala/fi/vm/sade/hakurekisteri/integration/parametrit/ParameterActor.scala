@@ -23,10 +23,7 @@ class ParameterActor(restClient: VirkailijaRestClient) extends Actor {
     case KierrosRequest(oid) if !calling =>
       calling = true
       val f = getParams(oid).map(HakuParams)
-      f.onComplete {
-        case Success(_) => calling = false
-        case Failure(_) => calling = false
-      }
+      f.onComplete(t => calling = false)
       f pipeTo sender
   }
 

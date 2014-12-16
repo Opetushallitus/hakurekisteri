@@ -90,6 +90,7 @@ abstract class JournalTable[R <: Resource[I, R], I, ResourceRow](tag: Tag, name:
   def source = column[String]("source")
   def inserted = column[Long]("inserted")
   def deleted = column[Boolean]("deleted")
+  def pk = primaryKey(s"pk_$name", (resourceId, inserted))
 
   val journalEntryShape = (resourceId, inserted, deleted).shaped
 

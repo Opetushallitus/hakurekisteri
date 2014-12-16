@@ -24,6 +24,9 @@ object BatchState extends Enumeration {
 
 import fi.vm.sade.hakurekisteri.batchimport.BatchState.BatchState
 
+case class BatchesBySource(source: String)
+case object AllBatchStatuses
+
 class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTable], poolSize: Int) extends ResourceActor[ImportBatch, UUID] with JDBCRepository[ImportBatch, UUID, ImportBatchTable] with JDBCService[ImportBatch, UUID, ImportBatchTable] {
   implicit val batchStateColumnType = MappedColumnType.base[BatchState, String]({ c => c.toString }, { s => BatchState.withName(s)})
 
@@ -51,24 +54,42 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
     case None => true
   }
 
-  def allWithoutData = {
-    (for (
-      i <- all
-    ) yield (i.resourceId, i.externalId, i.batchType, i.source, i.state, i.status, i.inserted)).sortBy(_._6)
+  def importBatchWithoutData(t: (UUID, Option[String], String, String, BatchState, ImportStatus, Long)): ImportBatch = ImportBatch(
+    data = <empty></empty>,
+    externalId = t._2,
+    batchType = t._3,
+    source = t._4,
+    state = t._5,
+    status = t._6
+  ).identify(t._1)
+
+  def allWithoutData = journal.db.withSession {
+    implicit session =>
+      (for (
+        i <- all
+      ) yield (i.resourceId, i.externalId, i.batchType, i.source, i.state, i.status, i.inserted)).sortBy(_._6).list.map(importBatchWithoutData)
   }
 
   def bySource(source: String) = {
-    (for (
-      i <- all.filter(_.source === source)
-    ) yield (i.resourceId, i.externalId, i.batchType, i.source, i.state, i.status, i.inserted)).sortBy(_._6)
+    journal.db.withSession {
+      implicit session =>
+        (for (
+          i <- all.filter(_.source === source)
+        ) yield (i.resourceId, i.externalId, i.batchType, i.source, i.state, i.status, i.inserted)).sortBy(_._6).list.map(importBatchWithoutData)
+    }
   }
 
   override implicit val executionContext: ExecutionContext = context.dispatcher
 
   override val dbExecutor = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
 
-  override def deduplicationQuery(i: ImportBatch)(t: ImportBatchTable): lifted.Column[Boolean] =  t.source === i.source && t.batchType === i.batchType && t.externalId.getOrElse("") === i.externalId.getOrElse("")
+  override def deduplicationQuery(i: ImportBatch)(t: ImportBatchTable): lifted.Column[Boolean] = t.source === i.source && t.batchType === i.batchType && t.externalId.getOrElse("") === i.externalId.getOrElse("")
 
+  override def receive: Receive = super.receive.orElse {
+    case BatchesBySource(source) => sender ! bySource(source)
+
+    case AllBatchStatuses => sender ! allWithoutData
+  }
 }
 
 

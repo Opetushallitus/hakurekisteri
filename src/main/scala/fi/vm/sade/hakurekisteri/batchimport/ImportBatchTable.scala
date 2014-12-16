@@ -24,6 +24,10 @@ class ImportBatchTable(tag: Tag) extends JournalTable[ImportBatch, UUID, ImportB
   def state = column[BatchState]("state")
   def status = column[ImportStatus]("status")
 
+  def eIndex = index("i_import_batch_external_id", externalId)
+  def bIndex = index("i_import_batch_batch_type", batchType)
+  def sIndex = index("i_import_batch_state", state)
+
   override def resourceShape = (data, externalId, batchType, source, state, status).shaped
   override def row(resource: ImportBatch): Option[ImportBatchTable.ImportBatchRow] = ImportBatch.unapply(resource)
   override val deletedValues: (String) => ImportBatchTable.ImportBatchRow = (lahde) => (<emptybatch/>, None, "deleted", lahde, BatchState.READY, ImportStatus())

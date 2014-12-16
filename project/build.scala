@@ -43,8 +43,8 @@ object HakuJaValintarekisteriBuild extends Build {
   val SecurityStack = SpringStack.map(_ % SpringVersion) ++
     Seq("net.sf.ehcache" % "ehcache-core" % "2.5.0",
     "fi.vm.sade.generic" % "generic-common" % "9.1-SNAPSHOT",
-    "org.apache.httpcomponents" % "httpclient" % "4.2.3",
-    "org.apache.httpcomponents" % "httpclient-cache" % "4.2.3",
+    "org.apache.httpcomponents" % "httpclient" % "4.3.4",
+    "org.apache.httpcomponents" % "httpclient-cache" % "4.3.4",
     "commons-httpclient" % "commons-httpclient" % "3.1",
     "commons-io" % "commons-io" % "2.4",
     "com.google.code.gson" % "gson" % "2.2.4",
@@ -153,6 +153,8 @@ object HakuJaValintarekisteriBuild extends Build {
       "sonar.java.coveragePlugin"  -> "cobertura",
       "sonar.cobertura.reportPath" -> (target.value.getAbsolutePath +"/scala-" +scalaBinaryVersion.value + "/coverage-report/cobertura.xml")))
 
+  import com.earldouglas.xsbtwebplugin.PluginKeys._
+
   lazy val project = {
     Project(
       "hakurekisteri",
@@ -164,7 +166,8 @@ object HakuJaValintarekisteriBuild extends Build {
         ++ org.scalastyle.sbt.ScalastylePlugin.Settings
         ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"))
         ++ Seq(wro4jSettings:_*)
-        ++ Seq(com.earldouglas.xsbtwebplugin.PluginKeys.webappResources in Compile <+= (targetFolder in generateResources in Compile))
+        ++ Seq(compile in Compile <<= (compile in Compile) dependsOn (generateResources in Compile))
+        ++ Seq(webappResources in Compile <+= (targetFolder in generateResources in Compile))
         ++ Seq(karmaTask, installKarmaTask, installCoffeeTask, cleanNodeModules, karmaTestSources)
         //++ Seq((test in Test) <<= (test in Test) dependsOn karma) // uncomment to enable running karma tests together with "test" phase
         ++ Seq(

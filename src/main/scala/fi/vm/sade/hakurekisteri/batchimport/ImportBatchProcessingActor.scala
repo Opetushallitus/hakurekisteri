@@ -23,7 +23,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
 
   log.info("starting processing actor")
 
-  private val processStarter: Cancellable = system.scheduler.schedule(1.minute, 5.seconds, self, ProcessReadyBatches)
+  private val processStarter: Cancellable = system.scheduler.schedule(1.minute, 15.seconds, self, ProcessReadyBatches)
   override def postStop(): Unit = {
     processStarter.cancel()
   }
@@ -33,7 +33,6 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   override def receive: Receive = {
     case ProcessReadyBatches if readyForProcessing =>
       importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), Some("perustiedot"), Some(1))
-      log.debug("queried for two ready perustiedot batches")
 
     case b: Seq[ImportBatch with Identified[UUID]] =>
       b.foreach(batch => {

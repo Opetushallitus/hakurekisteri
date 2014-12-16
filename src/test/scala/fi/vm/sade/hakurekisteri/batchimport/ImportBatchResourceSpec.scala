@@ -5,7 +5,8 @@ import java.util.UUID
 import akka.actor.{ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.acceptance.tools.{FakeAuthorizer, TestSecurity}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
-import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, HakurekisteriSwagger}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal, HakurekisteriSwagger}
+import fi.vm.sade.hakurekisteri.storage.Identified
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.Uploadable
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -47,18 +48,11 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   }
 
 
-  addServlet(
-    new ImportBatchResource(
-      authorized,
-      (foo) => ImportBatchQuery(None, None, None))
-    ("identifier",
-        "test",
-        "data",
-        TestSchema) with TestSecurity, "/")
+  addServlet(new ImportBatchResource(authorized, (foo) => ImportBatchQuery(None, None, None))("identifier", "test", "data", TestSchema) with TestSecurity, "/batch")
 
 
   test("post should return 201 created") {
-    post("/", "<batch><identifier>foo</identifier><data>foo</data></batch>") {
+    post("/batch", "<batch><identifier>foo</identifier><data>foo</data></batch>") {
       response.status should be(201)
     }
   }
@@ -66,7 +60,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   test("post with fileupload should return 201 created") {
     val fileData = XmlPart("test.xml", <batch><identifier>foo2</identifier><data>foo2</data></batch>)
 
-    post("/", Map[String, String](), List("data" -> fileData)) {
+    post("/batch", Map[String, String](), List("data" -> fileData)) {
       response.status should be(201)
     }
   }
@@ -74,7 +68,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   test("post with bad file should return 400") {
     val fileData = XmlPart("test.xml", <batch><bata>foo</bata></batch>)
 
-    post("/", Map[String, String](), List("data" -> fileData)) {
+    post("/batch", Map[String, String](), List("data" -> fileData)) {
       response.status should be(400)
     }
   }
@@ -82,10 +76,10 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   test("resource should deduplicate with the same data from the same sender") {
     val data = "<batch><identifier>foo3</identifier><data>foo</data></batch>"
 
-    post("/", data) {
+    post("/batch", data) {
       val location: String = response.header("Location")
 
-      post("/", data) {
+      post("/batch", data) {
         val secondLocation: String = response.header("Location")
         secondLocation should be(location)
       }
@@ -93,13 +87,27 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   }
 
   test("batch should be updated when using the same identifier") {
-    post("/", "<batch><identifier>foo4</identifier><data>foo</data></batch>") {
+    post("/batch", "<batch><identifier>foo4</identifier><data>foo</data></batch>") {
       val location = response.header("Location")
 
-      post("/", "<batch><identifier>foo4</identifier><data>foo2</data></batch>") {
+      post("/batch", "<batch><identifier>foo4</identifier><data>foo2</data></batch>") {
         val secondLocation = response.header("Location")
         secondLocation should be(location)
         response.body should include("foo2")
+      }
+    }
+  }
+
+  test("get allstatuses should contain the posted batch") {
+    post("/batch", "<batch><identifier>foo5</identifier><data>foo</data></batch>") {
+      import org.json4s.jackson.Serialization.read
+      implicit val formats = HakurekisteriJsonSupport.format
+
+      val batch = read[ImportBatch with Identified[UUID]](response.body)
+
+      get("/batch/allstatuses") {
+        val batches = read[Seq[ImportBatch with Identified[UUID]]](response.body)
+        batches.map(_.id) should contain(batch.id)
       }
     }
   }

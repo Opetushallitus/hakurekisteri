@@ -5,7 +5,8 @@ import java.util
 import javax.servlet.http.{Part, HttpServletRequest}
 
 import akka.actor.{ActorRef, ActorSystem}
-import akka.pattern.AskTimeoutException
+import akka.pattern.{AskTimeoutException, ask}
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.rest.support._
 import org.json4s.Extraction
 import org.scalatra.util.ValueReader
@@ -14,13 +15,11 @@ import org.scalatra.commands._
 import org.scalatra.servlet.{FileItem, SizeConstraintExceededException, MultipartConfig, FileUploadSupport}
 import org.scalatra.swagger.{DataType, SwaggerSupport, Swagger}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
-import org.scalatra.validation.{Validation, FieldName, ValidationError}
 import org.xml.sax.SAXParseException
-import siirto.{XMLValidator, Perustiedot, ValidXml, SchemaDefinition}
+import siirto.{XMLValidator, ValidXml, SchemaDefinition}
 
-import scala.util.control.Exception._
+import scala.concurrent.duration._
 import scala.xml.Elem
-import scala.xml.Source._
 import scalaz._
 
 
@@ -60,8 +59,32 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 
   override protected def renderPipeline: RenderPipeline = renderAsJson orElse super.renderPipeline
 
+  def getUser: User = {
+    currentUser match {
+      case Some(u) => u
+      case None => throw UserNotAuthorized("anonymous access not allowed")
+    }
+  }
+
   get("/schema") {
     MovedPermanently(request.getRequestURL.append("/").append(schema.schemaLocation).toString)
+  }
+
+  get("/mybatches") {
+    val user = getUser
+    new AsyncResult() {
+      override implicit def timeout: Duration = 60.seconds
+      override val is = eraRekisteri.?(BatchesBySource(user.username))(60.seconds)
+    }
+  }
+
+  get("/allstatuses") {
+    val user = getUser
+    if (!user.orgsFor("READ", "ImportBatch").contains(Config.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
+    else new AsyncResult() {
+      override implicit def timeout: Duration = 60.seconds
+      override val is = eraRekisteri.?(AllBatchStatuses)(60.seconds)
+    }
   }
 
   get("/schema/:schema") {
