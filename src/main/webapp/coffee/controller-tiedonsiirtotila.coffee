@@ -54,4 +54,6 @@ app.controller "TiedonsiirtotilaCtrl", [
       return "success"  if b.state is "DONE"
       return ""
 
+    $scope.hasMessages = (b) ->
+      b and b.status and b.status.messages and Object.keys(b.status.messages).length > 0
 ]

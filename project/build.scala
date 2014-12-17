@@ -168,6 +168,7 @@ object HakuJaValintarekisteriBuild extends Build {
         ++ Seq(wro4jSettings:_*)
         ++ Seq(compile in Compile <<= (compile in Compile) dependsOn (generateResources in Compile))
         ++ Seq(webappResources in Compile <+= (targetFolder in generateResources in Compile))
+        ++ Seq(webappResources in Compile <+= (sourceDirectory in Runtime) { sd => sd / "resources" / "tiedonsiirto"})
         ++ Seq(karmaTask, installKarmaTask, installCoffeeTask, cleanNodeModules, karmaTestSources)
         //++ Seq((test in Test) <<= (test in Test) dependsOn karma) // uncomment to enable running karma tests together with "test" phase
         ++ Seq(

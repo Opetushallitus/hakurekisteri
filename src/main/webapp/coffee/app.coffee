@@ -132,6 +132,37 @@ app.directive "messages", ->
 app.directive "tiedonsiirtomenu", ->
   return (
     controller: ($scope, $location) ->
+      $scope.menu = [
+        {
+          path: "/tiedonsiirto/hakeneet"
+          href: "#/tiedonsiirto/hakeneet"
+          role: "app_tiedonsiirto_valinta"
+          messageKey: "suoritusrekisteri.tiedonsiirto.menu.hakeneet"
+          text: "Hakeneet ja valitut"
+        }
+        {
+          path: "/tiedonsiirto/kkhakeneet"
+          href: "#/tiedonsiirto/kkhakeneet"
+          role: "app_tiedonsiirto_valinta"
+          messageKey: "suoritusrekisteri.tiedonsiirto.menu.kkhakeneet"
+          text: "Hakeneet ja valitut (KK)"
+        }
+        {
+          path: "/tiedonsiirto/lahetys"
+          href: "#/tiedonsiirto/lahetys"
+          role: "app_tiedonsiirto_crud"
+          messageKey: "suoritusrekisteri.tiedonsiirto.menu.tiedostonlahetys"
+          text: "Tiedoston lähetys"
+        }
+        {
+          path: "/tiedonsiirto/tila"
+          href: "#/tiedonsiirto/tila"
+          role: "app_tiedonsiirto_crud_1.2.246.562.10.00000000001"
+          messageKey: "suoritusrekisteri.tiedonsiirto.menu.tila"
+          text: "Tiedonsiirtojen tila"
+        }
+      ]
+
       $scope.isActive = (path) ->
         path is $location.path()
 

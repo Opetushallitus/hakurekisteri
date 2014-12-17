@@ -10,28 +10,34 @@ div(class="row")
         table(class="table table-condensed")
           thead
             tr
-              th(oph-msg="suoritusrekisteri.tiedonsiirtotila.id") Id
+              th
+                div(oph-msg="suoritusrekisteri.tiedonsiirtotila.id") Id
+                div(oph-msg="suoritusrekisteri.tiedonsiirtotila.erantunniste") Erän tunniste
               th(oph-msg="suoritusrekisteri.tiedonsiirtotila.tyyppi") Tyyppi
               th(oph-msg="suoritusrekisteri.tiedonsiirtotila.lahettaja") Lähettäjä
-              th(oph-msg="suoritusrekisteri.tiedonsiirtotila.tila") Tila
               th(oph-msg="suoritusrekisteri.tiedonsiirtotila.lahetetty") Lähetetty
               th(oph-msg="suoritusrekisteri.tiedonsiirtotila.kasitelty") Käsitelty
+              th(oph-msg="suoritusrekisteri.tiedonsiirtotila.tila") Tila
           tbody
-            tr(ng-repeat-start="b in batches" class="{{statusClass(b)}}")
-              td {{b.id}}
+            tr(ng-repeat-start="b in batches")
+              td
+                div {{b.id}}
+                div {{b.externalId}}
               td {{b.batchType}}
               td {{b.lahettaja || b.source}}
-              td
+              td {{b.status.sentTime | date:'medium'}}
+              td {{b.status.processedTime | date:'medium'}}
+              td(rowspan="2" class="{{statusClass(b)}}")
                 div(oph-msg="suoritusrekisteri.tiedonsiirtotila.tila.{{b.state}}") {{b.state}}
                 div(ng-if="b.status.successRows") OK {{b.status.successRows}}
                 div(ng-if="b.status.failureRows") NOK {{b.status.failureRows}}
                 div(ng-if="b.status.totalRows") TOTAL {{b.status.totalRows}}
-              td {{b.status.sentTime | date:'medium'}}
-              td {{b.status.processedTime | date:'medium'}}
-            tr(ng-repeat-end ng-if="b.status && b.status.messages && Object.keys(b.status.messages).length > 0" class="warning")
-              td(colspan="6")
-                h5(oph-msg="suoritusrekisteri.tiedonsiirtotila.varoitukset") Varoitukset
-                dl
-                  dt(ng-repeat-start="(key, errs) in b.status.messages") {{key}}:
-                  dd(ng-repeat-end)
-                    div(ng-repeat="err in errs") {{err}}
+            tr(ng-repeat-end)
+              td(class="nobordertop" colspan="5")
+                div(class="alert alert-alert-danger" ng-if="hasMessages(b)")
+                  dl(class="varoitukset")
+                    dt(ng-repeat-start="(key, errs) in b.status.messages")
+                      span(oph-msg="suoritusrekisteri.tiedonsiirtotila.tunniste") Tunniste
+                      span {{key}}:
+                    dd(ng-repeat-end)
+                      div(ng-repeat="err in errs") {{err}}
