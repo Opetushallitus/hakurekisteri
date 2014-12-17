@@ -30,6 +30,8 @@ div(class="row")
               td {{b.status.processedTime | date:'medium'}}
             tr(ng-repeat-end ng-if="b.status && b.status.messages && Object.keys(b.status.messages).length > 0" class="warning")
               td(colspan="6")
-                dl(class="dl-horizontal")
-                  dt(ng-repeat-start="(key, error) in b.status.messages") {{key}}:
-                  dd(ng-repeat-end) {{error}}
+                h5(oph-msg="suoritusrekisteri.tiedonsiirtotila.varoitukset") Varoitukset
+                dl
+                  dt(ng-repeat-start="(key, errs) in b.status.messages") {{key}}:
+                  dd(ng-repeat-end)
+                    div(ng-repeat="err in errs") {{err}}

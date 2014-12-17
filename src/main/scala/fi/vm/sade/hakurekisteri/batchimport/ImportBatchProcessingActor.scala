@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.batchimport
 
-import java.io.Serializable
 import java.util.UUID
 
 import akka.actor.Status.Failure
@@ -59,7 +58,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     private var savedOpiskelijat: Seq[Opiskelija] = Seq()
     private var savedSuoritukset: Seq[VirallinenSuoritus] = Seq()
 
-    private var failures: Map[String, Seq[String]] = Map()
+    private var failures: Map[String, Set[String]] = Map()
 
     private def fetchAllOppilaitokset() = {
       importHenkilot.values.foreach((h: ImportHenkilo) => {
@@ -125,7 +124,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       stop.cancel()
     }
 
-    def batch(b: ImportBatch with Identified[UUID], state: BatchState, batchFailure: Option[(String, Seq[String])] = None): ImportBatch with Identified[UUID] = {
+    def batch(b: ImportBatch with Identified[UUID], state: BatchState, batchFailure: Option[(String, Set[String])] = None): ImportBatch with Identified[UUID] = {
       b.copy(
         status = b.status.copy(
           processedTime = Some(new DateTime()),
@@ -147,7 +146,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     }
 
     private def batchFailed(t: Throwable) = {
-      importBatchActor ! batch(b, BatchState.FAILED, Some("Virhe tiedoston käsittelyssä", Seq(t.toString)))
+      importBatchActor ! batch(b, BatchState.FAILED, Some("Virhe tiedoston käsittelyssä", Set(t.toString)))
 
       log.info(s"batch ${b.id} failed, processing took ${Platform.currentTime - startTime} ms")
       log.error(t, s"batch ${b.id} failed")
@@ -181,11 +180,11 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
         saveSuoritukset(henkiloOid, importHenkilo)
 
       case HenkiloSaveFailed(tunniste, t) =>
-        val errors = failures.getOrElse(tunniste, Seq[String]()) :+ t.toString
+        val errors = failures.getOrElse(tunniste, Set[String]()) + t.toString
         failures = failures + (tunniste -> errors)
 
       case Failure(t: HenkiloNotFoundException) =>
-        val errors = failures.getOrElse(t.oid, Seq[String]()) :+ t.toString
+        val errors = failures.getOrElse(t.oid, Set[String]()) + t.toString
         failures = failures + (t.oid -> errors)
 
       case s: VirallinenSuoritus =>

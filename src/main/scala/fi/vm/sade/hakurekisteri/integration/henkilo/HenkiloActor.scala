@@ -88,7 +88,7 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with Actor
         case PreconditionFailedException(_, 500) => true
         case _ => false
       }
-      henkiloClient.readObject[Henkilo](s"/resources/s2s/${URLEncoder.encode(henkiloOid, "UTF-8")}", 200, maxRetries).map(h => SavedHenkilo(h.oidHenkilo, henkiloOid)).recoverWith {
+      henkiloClient.readObject[Henkilo](s"/resources/s2s/${URLEncoder.encode(henkiloOid, "UTF-8")}", 200).map(h => SavedHenkilo(h.oidHenkilo, henkiloOid)).recoverWith {
         case t: ExecutionException if t.getCause != null && notFound(t.getCause) => Future.failed(HenkiloNotFoundException(henkiloOid))
       } pipeTo sender
   }
