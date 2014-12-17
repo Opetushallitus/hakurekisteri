@@ -37,4 +37,5 @@ html(ng-app="myApp")
               span(ng-hide="muru.href" oph-msg="{{muru.key}}") {{muru.text}}
 
       div(class="row")
-        div(class="col-xs-12" ng-view)
+        div(class="col-xs-12")
+          ng-view(onload="updateMenuVisibility()")

@@ -44,7 +44,7 @@ app.config ($locationProvider, $routeProvider) ->
   $locationProvider.html5Mode false
   return
 
-app.run ($http, $log, MessageService) ->
+app.run ($http, $log, $rootScope, MessageService) ->
   $http.get(henkiloServiceUrl + "/buildversion.txt?auth").success(->
     $log.debug "called authentication-service successfully"
     return
@@ -56,6 +56,11 @@ app.run ($http, $log, MessageService) ->
       descriptionKey: "suoritusrekisteri.opiskelijat.henkiloyrita"
       description: "Yritä hetken kuluttua uudelleen."
 
+    return
+
+  $rootScope.updateMenuVisibility = () ->
+    if showBasedOnRoles and window.myroles
+      showBasedOnRoles(window.myroles)
     return
 
   return
