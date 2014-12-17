@@ -29,9 +29,15 @@ div(class="row")
               td {{b.status.processedTime | date:'medium'}}
               td(rowspan="2" class="{{statusClass(b)}}")
                 div(oph-msg="suoritusrekisteri.tiedonsiirtotila.tila.{{b.state}}") {{b.state}}
-                div(ng-if="b.status.successRows") OK {{b.status.successRows}}
-                div(ng-if="b.status.failureRows") NOK {{b.status.failureRows}}
-                div(ng-if="b.status.totalRows") TOTAL {{b.status.totalRows}}
+                div(ng-if="b.status.successRows" class="text-success text-nowrap")
+                  strong(oph-msg="suoritusrekisteri.tiedonsiirtotila.ok") OK
+                  span {{b.status.successRows}}
+                div(ng-if="b.status.failureRows" class="text-danger text-nowrap")
+                  strong(oph-msg="suoritusrekisteri.tiedonsiirtotila.nok") NOK
+                  span {{b.status.failureRows}}
+                div(ng-if="b.status.totalRows" class="text-nowrap")
+                  strong(oph-msg="suoritusrekisteri.tiedonsiirtotila.total") TOTAL
+                  span {{b.status.totalRows}}
             tr(ng-repeat-end)
               td(class="nobordertop" colspan="5")
                 div(class="alert alert-alert-danger" ng-if="hasMessages(b)")
