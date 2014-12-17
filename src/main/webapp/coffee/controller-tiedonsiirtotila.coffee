@@ -22,8 +22,8 @@ app.controller "TiedonsiirtotilaCtrl", [
           if a.status and b.status
             aSent = a.status.sentTime
             bSent = b.status.sentTime
-            return -1  if aSent < bSent
-            return 1  if aSent > bSent
+            return 1  if aSent < bSent
+            return -1  if aSent > bSent
           return 0
 
         classes =
@@ -38,7 +38,7 @@ app.controller "TiedonsiirtotilaCtrl", [
             prev[item] = 1
           prev
         , {})
-        data = Object.keys(tempData).map (key) ->
+        chartData = Object.keys(tempData).map (key) ->
           return {
             value: tempData[key]
             label: key
@@ -46,7 +46,7 @@ app.controller "TiedonsiirtotilaCtrl", [
             hilight: classes[key]
           }
         ctx = document.getElementById("tilaChart").getContext("2d")
-        new Chart(ctx).Pie(data, { animationEasing: 'linear', animationSteps: 50 })
+        new Chart(ctx).Pie(chartData, { animationEasing: 'linear', animationSteps: 50 })
 
     $scope.statusClass = (b) ->
       return "info"  if b.state is "READY"
