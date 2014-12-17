@@ -27,7 +27,8 @@ app.config ($locationProvider, $routeProvider) ->
         "toinenaste"
 
   $routeProvider.when "/tiedonsiirto",
-    redirectTo: "/tiedonsiirto/lahetys"
+    redirectTo: (routeParams, currentLocation, search) ->
+      "/tiedonsiirto/lahetys"
 
   $routeProvider.when "/tiedonsiirto/kkhakeneet",
     templateUrl: "templates/hakeneet?aste=kk"
@@ -37,7 +38,9 @@ app.config ($locationProvider, $routeProvider) ->
       aste: ->
         "kk"
 
-  $routeProvider.otherwise redirectTo: "/opiskelijat"
+  $routeProvider.otherwise
+    redirectTo: (routeParams, currentLocation, search) ->
+      "/opiskelijat"
   $locationProvider.html5Mode false
   return
 
