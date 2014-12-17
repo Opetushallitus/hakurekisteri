@@ -23,7 +23,7 @@ app.controller "TiedonsiirtotilaCtrl", [
             aSent = a.status.sentTime
             bSent = b.status.sentTime
             return -1  if aSent < bSent
-            return 1  if aSent > bSend
+            return 1  if aSent > bSent
           return 0
 
         classes =
