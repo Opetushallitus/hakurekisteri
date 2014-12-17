@@ -58,6 +58,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     private var savedOpiskelijat: Seq[Opiskelija] = Seq()
     private var savedSuoritukset: Seq[VirallinenSuoritus] = Seq()
 
+    private var totalRows: Option[Int] = None
     private var failures: Map[String, Set[String]] = Map()
 
     private def fetchAllOppilaitokset() = {
@@ -130,7 +131,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
           processedTime = Some(new DateTime()),
           successRows = Some(savedOpiskelijat.size),
           failureRows = Some(failures.size),
-          totalRows = Some(importHenkilot.size),
+          totalRows = Some(totalRows.getOrElse(0)),
           messages = batchFailure.map(failures + _).getOrElse(failures)
         ),
         state = state
@@ -155,11 +156,17 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     }
 
     private def parseData(): Map[String, ImportHenkilo] = try {
-      (b.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(b.source)).groupBy(_.tunniste.tunniste).mapValues(_.head)
+      val henkilot = (b.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(b.source)).groupBy(_.tunniste.tunniste).mapValues(_.head)
+      totalRows = Some(henkilot.size)
+      henkilot
     } catch {
       case t: Throwable =>
         batchFailed(t)
         Map()
+    }
+    
+    def henkiloDone(tunniste: String) = {
+      importHenkilot = importHenkilot.filterNot(_._1 == tunniste)
     }
 
     override def receive: Actor.Receive = {
@@ -178,24 +185,27 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
         val importHenkilo = importHenkilot(tunniste)
         saveOpiskelija(henkiloOid, importHenkilo)
         saveSuoritukset(henkiloOid, importHenkilo)
+        henkiloDone(tunniste)
 
       case HenkiloSaveFailed(tunniste, t) =>
         val errors = failures.getOrElse(tunniste, Set[String]()) + t.toString
         failures = failures + (tunniste -> errors)
+        henkiloDone(tunniste)
 
       case Failure(t: HenkiloNotFoundException) =>
         val errors = failures.getOrElse(t.oid, Set[String]()) + t.toString
         failures = failures + (t.oid -> errors)
+        henkiloDone(t.oid)
 
       case s: VirallinenSuoritus =>
         savedSuoritukset = savedSuoritukset :+ s
-        if (sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
+        if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
           batchProcessed()
         }
 
       case o: Opiskelija =>
         savedOpiskelijat = savedOpiskelijat :+ o
-        if (sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
+        if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
           batchProcessed()
         }
 
