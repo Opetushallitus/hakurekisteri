@@ -1,10 +1,12 @@
 package fi.vm.sade.hakurekisteri.batchimport
 
+import java.io.Serializable
 import java.util.UUID
 
 import akka.actor.Status.Failure
 import akka.actor._
 import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.batchimport.BatchState.BatchState
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{OppilaitosResponse, Oppilaitos, Organisaatio}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
@@ -47,8 +49,6 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
 
     private val startTime = Platform.currentTime
     log.info(s"started processing batch ${b.id}")
-
-    private var totalRows: Option[Int] = None
 
     private var importHenkilot: Map[String, ImportHenkilo] = Map()
     private var organisaatiot: Map[String, Option[Organisaatio]] = Map()
@@ -125,19 +125,21 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       stop.cancel()
     }
 
-    private def batchProcessed() = {
-      val batch = b.copy(
+    def batch(b: ImportBatch with Identified[UUID], state: BatchState, batchFailure: Option[(String, Seq[String])] = None): ImportBatch with Identified[UUID] = {
+      b.copy(
         status = b.status.copy(
           processedTime = Some(new DateTime()),
-          successRows = Some(totalRows.getOrElse(0) - failures.size),
+          successRows = Some(savedOpiskelijat.size),
           failureRows = Some(failures.size),
-          totalRows = totalRows,
-          messages = failures
+          totalRows = Some(importHenkilot.size),
+          messages = batchFailure.map(failures + _).getOrElse(failures)
         ),
-        state = BatchState.DONE
+        state = state
       ).identify(b.id)
+    }
 
-      importBatchActor ! batch
+    private def batchProcessed() = {
+      importBatchActor ! batch(b, BatchState.DONE)
 
       log.info(s"batch ${b.id} was processed successfully, processing took ${Platform.currentTime - startTime} ms")
 
@@ -145,33 +147,16 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     }
 
     private def batchFailed(t: Throwable) = {
-      val total = totalRows.getOrElse(0)
-      val fails = if (total >= failures.size) failures.size else 0
-      val succs = if (total >= failures.size) total - failures.size else 0
-
-      val batch = b.copy(
-        status = b.status.copy(
-          processedTime = Some(new DateTime()),
-          successRows = Some(succs),
-          failureRows = Some(fails),
-          totalRows = Some(total),
-          messages = failures + ("Virhe tiedoston käsittelyssä" -> Seq(t.toString))
-        ),
-        state = BatchState.FAILED
-      ).identify(b.id)
-
-      importBatchActor ! batch
+      importBatchActor ! batch(b, BatchState.FAILED, Some("Virhe tiedoston käsittelyssä", Seq(t.toString)))
 
       log.info(s"batch ${b.id} failed, processing took ${Platform.currentTime - startTime} ms")
-
       log.error(t, s"batch ${b.id} failed")
+
       context.stop(self)
     }
 
     private def parseData(): Map[String, ImportHenkilo] = try {
-      val henkilot = (b.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(b.source)).groupBy(_.tunniste.tunniste).mapValues(_.head)
-      totalRows = Some(henkilot.size)
-      henkilot
+      (b.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(b.source)).groupBy(_.tunniste.tunniste).mapValues(_.head)
     } catch {
       case t: Throwable =>
         batchFailed(t)
@@ -194,12 +179,14 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
         val importHenkilo = importHenkilot(tunniste)
         saveOpiskelija(henkiloOid, importHenkilo)
         saveSuoritukset(henkiloOid, importHenkilo)
-        importHenkilot = importHenkilot.filterNot(_._1 == tunniste)
 
       case HenkiloSaveFailed(tunniste, t) =>
         val errors = failures.getOrElse(tunniste, Seq[String]()) :+ t.toString
         failures = failures + (tunniste -> errors)
-        importHenkilot = importHenkilot.filterNot(_._1 == tunniste)
+
+      case Failure(t: HenkiloNotFoundException) =>
+        val errors = failures.getOrElse(t.oid, Seq[String]()) :+ t.toString
+        failures = failures + (t.oid -> errors)
 
       case s: VirallinenSuoritus =>
         savedSuoritukset = savedSuoritukset :+ s

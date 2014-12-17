@@ -46,7 +46,7 @@ app.controller "TiedonsiirtotilaCtrl", [
             hilight: classes[key]
           }
         ctx = document.getElementById("tilaChart").getContext("2d")
-        new Chart(ctx).Pie(data)
+        new Chart(ctx).Pie(data, { animationEasing: 'linear', animationSteps: 50 })
 
     $scope.statusClass = (b) ->
       return "info"  if b.state is "READY"

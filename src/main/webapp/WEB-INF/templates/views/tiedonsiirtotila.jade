@@ -17,7 +17,7 @@ div(class="row")
               th(oph-msg="suoritusrekisteri.tiedonsiirtotila.lahetetty") Lähetetty
               th(oph-msg="suoritusrekisteri.tiedonsiirtotila.kasitelty") Käsitelty
           tbody
-            tr(ng-repeat="b in batches" class="{{statusClass(b)}}")
+            tr(ng-repeat-start="b in batches" class="{{statusClass(b)}}")
               td {{b.id}}
               td {{b.batchType}}
               td {{b.lahettaja || b.source}}
@@ -28,3 +28,8 @@ div(class="row")
                 div(ng-if="b.status.totalRows") TOTAL {{b.status.totalRows}}
               td {{b.status.sentTime | date:'medium'}}
               td {{b.status.processedTime | date:'medium'}}
+            tr(ng-repeat-end ng-if="b.status && b.status.messages && Object.keys(b.status.messages).length > 0" class="warning")
+              td(colspan="6")
+                dl(class="dl-horizontal")
+                  dt(ng-repeat-start="(key, error) in b.status.messages") {{key}}:
+                  dd(ng-repeat-end) {{error}}
