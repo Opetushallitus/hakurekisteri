@@ -26,21 +26,18 @@ app.controller "OpiskelijatCtrl", [
           return
         return
 
-      getAndEnrichOpiskelijat = (row) ->
-        Opiskelijat.query { henkilo: row.henkiloOid }, (opiskelijat) ->
-          ((o) ->
+      enrichOpiskelijat = (row) ->
+        for o in row.opiskelijat
+          do (o) ->
             getOrganisaatio $http, o.oppilaitosOid, (oppilaitos) ->
               o.oppilaitos = ((if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "")) + ((if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv))
               return
             return
-          )(o) for o in opiskelijat
-          row.opiskelijatiedot = opiskelijat
-          return
         return
 
-      getAndEnrichSuoritukset = (row) ->
-        Suoritukset.query { henkilo: row.henkiloOid }, (suoritukset) ->
-          ((o) ->
+      enrichSuoritukset = (row) ->
+        for o in row.suoritukset
+          do (o) ->
             getOrganisaatio $http, o.myontaja, (oppilaitos) ->
               o.oppilaitos = ((if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "")) + " " + ((if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv))
               return
@@ -48,27 +45,20 @@ app.controller "OpiskelijatCtrl", [
               getKoulutusNimi $http, o.komo, (koulutusNimi) ->
                 o.koulutus = koulutusNimi
                 return
-            return
-          )(s) for s in suoritukset
-          row.suoritustiedot = suoritukset
-          ((s) ->
-            Arvosanat.query { suoritus: s.id }, (arvosanat) ->
+            Arvosanat.query { suoritus: o.id }, (arvosanat) ->
               if arvosanat.length > 0
-                s.hasArvosanat = true
+                o.hasArvosanat = true
               else
-                s.noArvosanat = true
+                o.noArvosanat = true
               return
-
             return
-          )(s) for s in suoritukset
-          return
         return
 
       ((row) ->
         if row.henkiloOid
           enrichHenkilo row
-          getAndEnrichOpiskelijat row
-          getAndEnrichSuoritukset row
+          enrichOpiskelijat row
+          enrichSuoritukset row
         return
       )(row) for row in $scope.currentRows
 
@@ -148,7 +138,8 @@ app.controller "OpiskelijatCtrl", [
       doSearch = (query) ->
         searchOpiskelijat = (o) ->
           Opiskelijat.query query, ((result) ->
-            o.resolve result
+            o.resolve { opiskelijat: result }
+
             return
           ), ->
             o.reject "opiskelija query failed"
@@ -161,7 +152,7 @@ app.controller "OpiskelijatCtrl", [
             henkilo: (if query.henkilo then query.henkilo else null)
             vuosi: (if query.vuosi then query.vuosi else null)
           Suoritukset.query suoritusQuery, ((result) ->
-            s.resolve result
+            s.resolve { suoritukset: result }
             return
           ), ->
             s.reject "suoritus query failed"
@@ -169,6 +160,31 @@ app.controller "OpiskelijatCtrl", [
           return
 
         MessageService.clearMessages()
+
+        groupByHenkiloOid = (obj) ->
+          res = {}
+          for o in obj.opiskelijat
+            do (o) ->
+              if res[o.henkiloOid]
+                res[o.henkiloOid].opiskelijat.push o
+              else
+                res[o.henkiloOid] =
+                  opiskelijat: [o]
+          for s in obj.suoritukset
+            do (s) ->
+              if res[s.henkiloOid]
+                if res[s.henkiloOid].suoritukset
+                  res[s.henkiloOid].suoritukset.push s
+                else
+                  res[s.henkiloOid].suoritukset = [s]
+              else
+                res[s.henkiloOid] =
+                  suoritukset: [s]
+          henkilot = []
+          for henkiloOid of res
+            do (henkiloOid) ->
+              henkilot.push res[henkiloOid]
+          henkilot
 
         if query.oppilaitosOid
           o = $q.defer()
@@ -178,10 +194,10 @@ app.controller "OpiskelijatCtrl", [
           $q.all([
             o.promise
             s.promise
-          ]).then ((resultArrays) ->
-            showCurrentRows getUniqueHenkiloOids(resultArrays.reduce((a, b) ->
-              a.concat b
-            ))
+          ]).then ((results) ->
+            combined = collect(results)
+            grouped = groupByHenkiloOid(combined)
+            showCurrentRows grouped
             resetPageNumbers()
             stopLoading()
             return
