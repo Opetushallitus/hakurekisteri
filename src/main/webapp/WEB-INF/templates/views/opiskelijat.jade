@@ -46,9 +46,9 @@ table(class="table")
     tr(ng-repeat="row in currentRows")
       td {{row.henkilo || row.henkiloOid}}
       td
-        div(ng-repeat="o in row.opiskelijatiedot") {{o.oppilaitos}}, {{o.luokka}}
+        div(ng-repeat="o in row.opiskelijat") {{o.oppilaitos}}, {{o.luokka}}
       td
-        div(ng-repeat="s in row.suoritustiedot")
+        div(ng-repeat="s in row.suoritukset")
           span {{s.oppilaitos}},
           span(ng-hide="s.koulutus" oph-msg="suoritusrekisteri.komo.{{s.komo}}") {{s.komo}}
           span(ng-show="s.koulutus") {{s.koulutus}}

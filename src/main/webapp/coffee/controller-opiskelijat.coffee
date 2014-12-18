@@ -183,7 +183,9 @@ app.controller "OpiskelijatCtrl", [
           henkilot = []
           for henkiloOid of res
             do (henkiloOid) ->
-              henkilot.push res[henkiloOid]
+              obj = res[henkiloOid]
+              obj.henkiloOid = henkiloOid
+              henkilot.push obj
           henkilot
 
         if query.oppilaitosOid
