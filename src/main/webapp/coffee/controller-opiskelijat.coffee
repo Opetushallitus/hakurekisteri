@@ -11,17 +11,6 @@ app.controller "OpiskelijatCtrl", [
   "MurupolkuService"
   "MessageService"
   ($scope, $routeParams, $location, $log, $http, $q, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService) ->
-    getMyRoles = ->
-      $http.get("/cas/myroles",
-        cache: true
-      ).success((data) ->
-        $scope.myRoles = angular.fromJson(data)
-        return
-      ).error ->
-        $log.error "cannot connect to CAS"
-        return
-      return
-
     showCurrentRows = (allRows) ->
       $scope.allRows = allRows
       $scope.currentRows = allRows.slice($scope.page * $scope.pageSize, ($scope.page + 1) * $scope.pageSize)
@@ -105,23 +94,16 @@ app.controller "OpiskelijatCtrl", [
     $scope.pageNumbers = []
     $scope.page = 0
     $scope.pageSize = 10
-    $scope.targetOrg = ""
-    $scope.myRoles = []
     $scope.vuodet = vuodet()
 
     $scope.henkiloTerm = $routeParams.henkilo
-    $scope.organisaatioTerm = oppilaitosKoodi: ((if $routeParams.oppilaitos then $routeParams.oppilaitos else ""))
+    $scope.organisaatioTerm = oppilaitosKoodi: (if $routeParams.oppilaitos then $routeParams.oppilaitos else "")
     $scope.vuosiTerm = $routeParams.vuosi
 
     MurupolkuService.addToMurupolku
       key: "suoritusrekisteri.opiskelijat.muru"
       text: "Opiskelijoiden haku"
     , true
-
-    getMyRoles()
-
-    $scope.isOPH = ->
-      Array.isArray($scope.myRoles) and ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1 or $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1)
 
     $scope.getOppilaitos = (searchStr) ->
       if searchStr and searchStr.length >= 3
