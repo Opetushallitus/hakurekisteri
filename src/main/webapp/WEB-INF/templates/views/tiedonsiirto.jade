@@ -36,12 +36,12 @@ div(class="row")
 
     div(ng-show="uploadResult")
       div(class="alert alert-{{uploadResult.type}}")
+        img(ng-show="uploadResult.type === 'success'" class="icon-big" src="static/img/confirm-icon28x29.png")
+        img(ng-show="uploadResult.type === 'danger'" class="icon-big" src="static/img/alert-icon28x29.png")
         strong
-          img(ng-show="uploadResult.type === 'success'" class="icon-big" src="static/img/confirm-icon28x29.png")
-          img(ng-show="uploadResult.type === 'danger'" class="icon-big" src="static/img/alert-icon28x29.png")
-          strong
-            span(oph-msg="{{uploadResult.messageKey}}") {{uploadResult.message}}
-          span {{uploadResult.description}}
+          span(oph-msg="{{uploadResult.messageKey}}") {{uploadResult.message}}
+        span {{uploadResult.description}}
+        div(ng-repeat="e in uploadResult.validationErrors track by $index") {{e}}
 
     div(ng-if="sending" class="modal fade in" style="display: block")
       div(class="modal-backdrop fade in")
