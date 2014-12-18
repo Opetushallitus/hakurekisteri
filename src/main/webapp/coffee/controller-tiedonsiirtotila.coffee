@@ -46,7 +46,7 @@ app.controller "TiedonsiirtotilaCtrl", [
             hilight: classes[key]
           }
         ctx = document.getElementById("tilaChart").getContext("2d")
-        new Chart(ctx).Pie(chartData, { animationEasing: 'linear', animationSteps: 50 })
+        $scope.chart = new Chart(ctx).Pie(chartData, { animationEasing: 'linear', animationSteps: 50, animateScale: true })
 
     $scope.statusClass = (b) ->
       return "info"  if b.state is "READY"
@@ -56,4 +56,8 @@ app.controller "TiedonsiirtotilaCtrl", [
 
     $scope.hasMessages = (b) ->
       b and b.status and b.status.messages and Object.keys(b.status.messages).length > 0
+
+    scope.$on '$destroy', () ->
+      $scope.chart.destroy()  if $scope.chart and typeof $scope.chart.destroy is 'function'
+      return
 ]
