@@ -171,7 +171,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
       logger.debug(s"fetching hakemukset for haku $haku")
       getHakemukset(HakijaQuery(haku = Some(haku), organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None), cursor) onComplete {
         case Success(hs) =>
-          hakuCursors = hakuCursors + (haku -> new SimpleDateFormat(cursorFormat).format(new Date(startTime)))
+          hakuCursors = hakuCursors + (haku -> new SimpleDateFormat(cursorFormat).format(new Date(startTime - (5 * 60 * 1000))))
           reloading = false
           logger.info(s"found $hs applications in $haku")
         case Failure(ex) =>
