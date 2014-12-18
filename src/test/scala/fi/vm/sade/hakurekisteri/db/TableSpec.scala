@@ -1,10 +1,11 @@
 package fi.vm.sade.hakurekisteri.db
 
+import org.joda.time.DateTime
 import org.scalatest.{Matchers, FlatSpec}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver
 import HakurekisteriDriver.simple._
 import scala.slick.jdbc.meta.MTable
-import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchTable}
+import fi.vm.sade.hakurekisteri.batchimport.{ImportStatus, BatchState, ImportBatch, ImportBatchTable}
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import java.util.UUID
 
@@ -28,7 +29,7 @@ class TableSpec extends FlatSpec with Matchers {
 
   it should "be able to store updates" in {
     val xml = <batchdata>data</batchdata>
-    val batch = ImportBatch(xml, Some("externalId"), "test", "test").identify(UUID.randomUUID())
+    val batch = ImportBatch(xml, Some("externalId"), "test", "test", BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
 
     val result = withDb {
       implicit session =>
@@ -40,7 +41,7 @@ class TableSpec extends FlatSpec with Matchers {
 
   it should "be able to retrieve updates" in {
     val xml = <batchdata>data</batchdata>
-    val batch = ImportBatch(xml, Some("externalId"), "test", "test").identify(UUID.randomUUID())
+    val batch = ImportBatch(xml, Some("externalId"), "test", "test", BatchState.READY, ImportStatus(new DateTime(), Some(new DateTime()), Map("foo" -> Set("foo exception")), Some(1), Some(0), Some(1))).identify(UUID.randomUUID())
     val table = TableQuery[ImportBatchTable]
 
     val result = withDb {

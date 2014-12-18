@@ -182,3 +182,24 @@ optgroup option {
 .checkbox input[type=checkbox] {
     top: 10px;
 }
+
+#tilaChart {
+    margin-top: 30px;
+}
+
+.varoitukset {
+    margin-bottom: 0;
+}
+
+.nobordertop {
+    border-top: none !important;
+}
+
+.nobordertop .alert {
+    margin-bottom: 0;
+}
+
+.pie-legend li div {
+    display: inline-block;
+    width: 15px;
+}

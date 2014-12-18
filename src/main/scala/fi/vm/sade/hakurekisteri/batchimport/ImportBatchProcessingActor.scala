@@ -5,6 +5,7 @@ import java.util.UUID
 import akka.actor.Status.Failure
 import akka.actor._
 import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.batchimport.BatchState.BatchState
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{OppilaitosResponse, Oppilaitos, Organisaatio}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
@@ -19,61 +20,48 @@ import scala.xml.Node
 
 object ProcessReadyBatches
 
-case class ProcessedBatch(batch: ImportBatch with Identified[UUID])
-case class FailedBatch(batch: ImportBatch with Identified[UUID], t: Throwable)
-
 class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef)(implicit val system: ActorSystem, val ec: ExecutionContext) extends Actor with ActorLogging {
-  var processing = false
-  var startTime = Platform.currentTime
-  var batches: Seq[ImportBatch with Identified[UUID]] = Seq()
 
-  // system.scheduler.schedule(5.minutes, 5.minutes, self, ProcessReadyBatches)
+  log.info("starting processing actor")
+
+  private val processStarter: Cancellable = system.scheduler.schedule(1.minute, 15.seconds, self, ProcessReadyBatches)
+  override def postStop(): Unit = {
+    processStarter.cancel()
+  }
+
+  private def readyForProcessing: Boolean = context.children.size < 2
 
   override def receive: Receive = {
-    case ProcessReadyBatches if !processing =>
-      startTime = Platform.currentTime
-      processing = true
-      importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), Some("perustiedot"))
+    case ProcessReadyBatches if readyForProcessing =>
+      importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), Some("perustiedot"), Some(1))
 
     case b: Seq[ImportBatch with Identified[UUID]] =>
-      batches = b
-      batches.foreach(batch => {
-        log.info(s"started processing batch ${batch.id}")
-        context.actorOf(Props(new PerustiedotProcessingActor(batch, self, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)))
+      b.foreach(batch => {
+        context.actorOf(Props(new PerustiedotProcessingActor(batch)))
       })
-
-    case ProcessedBatch(b) =>
-      importBatchActor ! b.copy(state = BatchState.DONE)
-      batchProcessed(b)
-      log.info(s"batch ${b.id} was processed successfully, processing took ${Platform.currentTime - startTime} ms")
-
-    case FailedBatch(b, t) =>
-      importBatchActor ! b.copy(state = BatchState.FAILED)
-      batchProcessed(b)
-      log.error(t, s"error processing batch ${b.id}, processing took ${Platform.currentTime - startTime} ms")
   }
 
-  def batchProcessed(b: ImportBatch with Identified[UUID]) = {
-    batches = batches.filterNot(_ == b)
-    if (batches.length == 0) processing = false
-  }
+  case object ProcessingJammedException extends Exception("processing jammed")
 
-
-  object ProcessingJammedException extends Exception
-
-  class PerustiedotProcessingActor(b: ImportBatch with Identified[UUID], parent: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef)
+  class PerustiedotProcessingActor(b: ImportBatch with Identified[UUID])
     extends Actor {
 
-    var importHenkilot: Map[String, ImportHenkilo] = (b.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(b.source)).groupBy(_.tunniste.tunniste).mapValues(_.head)
-    var organisaatiot: Map[String, Option[Organisaatio]] = Map()
+    private val startTime = Platform.currentTime
+    log.info(s"started processing batch ${b.id}")
 
-    var sentOpiskelijat: Seq[Opiskelija] = Seq()
-    var sentSuoritukset: Seq[VirallinenSuoritus] = Seq()
+    private var importHenkilot: Map[String, ImportHenkilo] = Map()
+    private var organisaatiot: Map[String, Option[Organisaatio]] = Map()
 
-    var savedOpiskelijat: Seq[Opiskelija] = Seq()
-    var savedSuoritukset: Seq[VirallinenSuoritus] = Seq()
+    private var sentOpiskelijat: Seq[Opiskelija] = Seq()
+    private var sentSuoritukset: Seq[VirallinenSuoritus] = Seq()
 
-    def fetchAllOppilaitokset() = {
+    private var savedOpiskelijat: Seq[Opiskelija] = Seq()
+    private var savedSuoritukset: Seq[VirallinenSuoritus] = Seq()
+
+    private var totalRows: Option[Int] = None
+    private var failures: Map[String, Set[String]] = Map()
+
+    private def fetchAllOppilaitokset() = {
       importHenkilot.values.foreach((h: ImportHenkilo) => {
         organisaatiot = organisaatiot + (h.lahtokoulu -> None)
         h.suoritukset.foreach(s => organisaatiot = organisaatiot + (s.myontaja -> None))
@@ -82,11 +70,16 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       })
     }
 
-    override def preStart() = fetchAllOppilaitokset()
+    private def saveHenkilo(h: ImportHenkilo, resolveOid: (String) => String) = h.tunniste match {
+      case ImportOppijanumero(oppijanumero) =>
+        henkiloActor ! CheckHenkilo(h.tunniste.tunniste)
+        // FIXME henkilö oidilla tuleville henkilöille ei päivitetä organisaatiohenkilöä henkilöpalveluun
 
-    def saveHenkilo(h: ImportHenkilo) = henkiloActor ! SaveHenkilo(h.toHenkilo, h.tunniste.tunniste)
+      case _ =>
+        henkiloActor ! SaveHenkilo(h.toHenkilo(resolveOid), h.tunniste.tunniste)
+    }
 
-    def saveOpiskelija(henkiloOid: String, importHenkilo: ImportHenkilo) = {
+    private def saveOpiskelija(henkiloOid: String, importHenkilo: ImportHenkilo) = {
       val opiskelija = Opiskelija(
         oppilaitosOid = organisaatiot(importHenkilo.lahtokoulu).get.oid,
         luokkataso = detectLuokkataso(importHenkilo.suoritukset),
@@ -99,7 +92,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       opiskelijarekisteri ! opiskelija
     }
 
-    def saveSuoritukset(henkiloOid: String, importHenkilo: ImportHenkilo) = importHenkilo.suoritukset.foreach(s => {
+    private def saveSuoritukset(henkiloOid: String, importHenkilo: ImportHenkilo) = importHenkilo.suoritukset.foreach(s => {
       val suoritus = s.copy(
         myontaja = organisaatiot(s.myontaja).get.oid,
         henkilo = henkiloOid
@@ -108,9 +101,9 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       suoritusrekisteri ! suoritus
     })
 
-    def hasKomo(s: Seq[VirallinenSuoritus], oid: String): Boolean = s.exists(_.komo == oid)
+    private def hasKomo(s: Seq[VirallinenSuoritus], oid: String): Boolean = s.exists(_.komo == oid)
 
-    def detectLuokkataso(suoritukset: Seq[VirallinenSuoritus]): String = suoritukset match {
+    private def detectLuokkataso(suoritukset: Seq[VirallinenSuoritus]): String = suoritukset match {
       case s if hasKomo(s, Config.lukioKomoOid)                   => "L"
       case s if hasKomo(s, Config.lukioonvalmistavaKomoOid)       => "ML"
       case s if hasKomo(s, Config.ammatillinenKomoOid)            => "AK"
@@ -122,40 +115,102 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       case _                                                      => ""
     }
 
-    private object Stop
-    system.scheduler.scheduleOnce(10.minutes, self, Stop)
+    private case object Start
+    private case object Stop
+    private val start = system.scheduler.scheduleOnce(1.millisecond, self, Start)
+    private val stop = system.scheduler.scheduleOnce(10.minutes, self, Stop)
+
+    override def postStop(): Unit = {
+      start.cancel()
+      stop.cancel()
+    }
+
+    def batch(b: ImportBatch with Identified[UUID], state: BatchState, batchFailure: Option[(String, Set[String])] = None): ImportBatch with Identified[UUID] = {
+      b.copy(
+        status = b.status.copy(
+          processedTime = Some(new DateTime()),
+          successRows = Some(savedOpiskelijat.size),
+          failureRows = Some(failures.size),
+          totalRows = Some(totalRows.getOrElse(0)),
+          messages = batchFailure.map(failures + _).getOrElse(failures)
+        ),
+        state = state
+      ).identify(b.id)
+    }
+
+    private def batchProcessed() = {
+      importBatchActor ! batch(b, BatchState.DONE)
+
+      log.info(s"batch ${b.id} was processed successfully, processing took ${Platform.currentTime - startTime} ms")
+
+      context.stop(self)
+    }
+
+    private def batchFailed(t: Throwable) = {
+      importBatchActor ! batch(b, BatchState.FAILED, Some("Virhe tiedoston käsittelyssä", Set(t.toString)))
+
+      log.info(s"batch ${b.id} failed, processing took ${Platform.currentTime - startTime} ms")
+      log.error(t, s"batch ${b.id} failed")
+
+      context.stop(self)
+    }
+
+    private def parseData(): Map[String, ImportHenkilo] = try {
+      val henkilot = (b.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(b.source)).groupBy(_.tunniste.tunniste).mapValues(_.head)
+      totalRows = Some(henkilot.size)
+      henkilot
+    } catch {
+      case t: Throwable =>
+        batchFailed(t)
+        Map()
+    }
+    
+    def henkiloDone(tunniste: String) = {
+      importHenkilot = importHenkilot.filterNot(_._1 == tunniste)
+    }
 
     override def receive: Actor.Receive = {
+      case Start =>
+        importHenkilot = parseData()
+        fetchAllOppilaitokset()
+
       case OppilaitosResponse(koodi, organisaatio) =>
         organisaatiot = organisaatiot + (koodi -> Some(organisaatio))
         if (!organisaatiot.values.exists(_.isEmpty))
           importHenkilot.values.foreach(h => {
-            saveHenkilo(h)
+            saveHenkilo(h, (lahtokoulu) => organisaatiot(lahtokoulu).map(_.oid).get)
           })
 
       case SavedHenkilo(henkiloOid, tunniste) =>
         val importHenkilo = importHenkilot(tunniste)
         saveOpiskelija(henkiloOid, importHenkilo)
         saveSuoritukset(henkiloOid, importHenkilo)
-        importHenkilot = importHenkilot.filterNot(_._1 == tunniste)
+        henkiloDone(tunniste)
+
+      case HenkiloSaveFailed(tunniste, t) =>
+        val errors = failures.getOrElse(tunniste, Set[String]()) + t.toString
+        failures = failures + (tunniste -> errors)
+        henkiloDone(tunniste)
+
+      case Failure(t: HenkiloNotFoundException) =>
+        val errors = failures.getOrElse(t.oid, Set[String]()) + t.toString
+        failures = failures + (t.oid -> errors)
+        henkiloDone(t.oid)
 
       case s: VirallinenSuoritus =>
         savedSuoritukset = savedSuoritukset :+ s
-        if (sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
-          parent ! ProcessedBatch(b)
-          context.stop(self)
+        if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
+          batchProcessed()
         }
 
       case o: Opiskelija =>
         savedOpiskelijat = savedOpiskelijat :+ o
-        if (sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
-          parent ! ProcessedBatch(b)
-          context.stop(self)
+        if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
+          batchProcessed()
         }
 
       case Failure(t: Throwable) =>
-        parent ! FailedBatch(b, t)
-        context.stop(self)
+        batchFailed(t)
 
       case Stop =>
         if (organisaatiot.values.exists(_.isEmpty))
@@ -165,8 +220,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
         if (sentSuoritukset.size != savedSuoritukset.size)
           log.error(s"all suoritukset were not saved in batch ${b.id}")
         log.warning(s"stopped processing of batch ${b.id}")
-        parent ! FailedBatch(b, ProcessingJammedException)
-        context.stop(self)
+        batchFailed(ProcessingJammedException)
     }
   }
 }
@@ -194,30 +248,36 @@ case class ImportHenkilo(tunniste: ImportTunniste, lahtokoulu: String, luokka: S
                          kutsumanimi: String, kotikunta: String, aidinkieli: String, kansalaisuus: Option[String],
                          lahiosoite: Option[String], postinumero: Option[String], maa: Option[String], matkapuhelin: Option[String],
                          muuPuhelin: Option[String], suoritukset: Seq[VirallinenSuoritus], lahde: String) {
-  def toHenkilo: Henkilo = Henkilo(
-    oidHenkilo = None,
-    hetu = tunniste match {
-      case ImportHetu(h) => Some(h)
-      case _ => None
-    },
-    henkiloTyyppi = "OPPIJA",
-    etunimet = Some(etunimet),
-    kutsumanimi = Some(kutsumanimi),
-    sukunimi = Some(sukunimi),
-    kotikunta = Some(kotikunta),
-    aidinkieli = Some(Kieli(aidinkieli))
-  )
-  def toUpdatedHenkilo(h: Henkilo): Henkilo = h.copy(
-    id = h.id,
-    oidHenkilo = h.oidHenkilo,
-    hetu = h.hetu,
-    henkiloTyyppi = h.henkiloTyyppi,
-    etunimet = Some(etunimet),
-    kutsumanimi = Some(kutsumanimi),
-    sukunimi = Some(sukunimi),
-    kotikunta = Some(kotikunta),
-    aidinkieli = Some(Kieli(aidinkieli))
-  )
+  import HetuUtil._
+  val mies = "1"
+  val nainen = "2"
+
+  def toHenkilo(resolveOid: (String) => String): CreateHenkilo = {
+    val (syntymaaika: Option[String], sukupuoli: Option[String]) = tunniste match {
+      case ImportHenkilonTunniste(_, syntymaAika, sukup) => (Some(syntymaAika), Some(sukup))
+      case ImportHetu(Hetu(hetu)) =>
+        if (hetu.charAt(9).toInt % 2 == 0)
+          (toSyntymaAika(hetu), Some(nainen))
+        else
+          (toSyntymaAika(hetu), Some(mies))
+      case _ => (None, None)
+    }
+    CreateHenkilo(
+      etunimet = etunimet,
+      kutsumanimi = kutsumanimi,
+      sukunimi = sukunimi,
+      hetu = tunniste match {
+        case ImportHetu(h) => Some(h)
+        case _ => None
+      },
+      syntymaaika = syntymaaika,
+      sukupuoli = sukupuoli,
+      asiointiKieli = Kieli(aidinkieli.toLowerCase),
+      henkiloTyyppi = "OPPIJA",
+      kasittelijaOid = lahde,
+      organisaatioHenkilo = Seq(OrganisaatioHenkilo(resolveOid(lahtokoulu)))
+    )
+  }
 }
 
 object ImportHenkilo {
@@ -247,15 +307,16 @@ object ImportHenkilo {
   def apply(h: Node)(lahde: String): ImportHenkilo = {
     val hetu = getOptionField("hetu")(h)
     val oppijanumero = getOptionField("oppijanumero")(h)
-    val henkilonTunniste = getOptionField("henkilonTunniste")(h)
+    val henkiloTunniste = getOptionField("henkiloTunniste")(h)
     val syntymaAika = getOptionField("syntymaAika")(h)
     val sukupuoli = getOptionField("sukupuoli")(h)
 
-    val tunniste = (hetu, oppijanumero, henkilonTunniste, syntymaAika, sukupuoli) match {
+    val tunniste = (hetu, oppijanumero, henkiloTunniste, syntymaAika, sukupuoli) match {
       case (Some(henkilotunnus), _, _, _, _) => ImportHetu(henkilotunnus)
       case (_, Some(o), _, _, _) => ImportOppijanumero(o)
       case (_, _, Some(t), Some(sa), Some(sp)) => ImportHenkilonTunniste(t, sa, sp)
-      case _ => throw new IllegalArgumentException(s"henkilo could not be identified: hetu, oppijanumero or henkilonTunniste+syntymaAika+sukupuoli missing")
+      case t =>
+        throw new IllegalArgumentException(s"henkilo could not be identified: hetu, oppijanumero or henkiloTunniste+syntymaAika+sukupuoli missing $t")
     }
 
     val suoritukset = Seq(
@@ -286,6 +347,7 @@ object ImportHenkilo {
       matkapuhelin = getOptionField("matkapuhelin")(h),
       muuPuhelin = getOptionField("muuPuhelin")(h),
       suoritukset = suoritukset,
-      lahde = lahde)
+      lahde = lahde
+    )
   }
 }

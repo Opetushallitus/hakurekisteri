@@ -1,6 +1,8 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import java.net.URLEncoder
+import java.text.SimpleDateFormat
+import java.util.Date
 
 import akka.actor.{Actor, Props, ActorRef}
 import akka.event.Logging
@@ -11,6 +13,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.hakurekisteri.storage.repository._
 import fi.vm.sade.hakurekisteri.storage.{InMemQueryingResourceService, Identified, ResourceActor}
 
+import scala.compat.Platform
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
@@ -144,6 +147,8 @@ class HakemusJournal extends InMemJournal[FullHakemus, String] {
   }
 }
 
+import scala.concurrent.duration._
+
 class HakemusActor(hakemusClient: VirkailijaRestClient,
                    maxApplications: Int = 2000,
                    override val journal: Journal[FullHakemus, String] = new HakemusJournal()
@@ -151,19 +156,37 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   var healthCheck: Option[ActorRef] = None
   override val logger = Logging(context.system, this)
   var hakijaTrigger: Seq[ActorRef] = Seq()
+  var reloading = false
+  var hakuCursors: Map[String, String] = Map()
+  val cursorFormat = "yyyyMMddHHmm"
 
   override def receive: Receive = super.receive.orElse({
-    case ReloadHaku(haku) => getHakemukset(HakijaQuery(haku = Some(haku), organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None)) onComplete {
-      case Success(hs) =>  logger.debug(s"found $hs applications")
-      case Failure(ex) => logger.error(ex, s"failed fetching Hakemukset for $haku")
-    }
+    case ReloadHaku(haku) if reloading =>
+      context.system.scheduler.scheduleOnce(500.milliseconds, self, ReloadHaku(haku))
+
+    case ReloadHaku(haku) if !reloading =>
+      val startTime = Platform.currentTime
+      val cursor: Option[String] = hakuCursors.get(haku)
+      reloading = true
+      logger.debug(s"fetching hakemukset for haku $haku")
+      getHakemukset(HakijaQuery(haku = Some(haku), organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None), cursor) onComplete {
+        case Success(hs) =>
+          hakuCursors = hakuCursors + (haku -> new SimpleDateFormat(cursorFormat).format(new Date(startTime)))
+          reloading = false
+          logger.info(s"found $hs applications in $haku")
+        case Failure(ex) =>
+          reloading = false
+          logger.error(ex, s"failed fetching Hakemukset for $haku")
+      }
+
     case Health(actor) => healthCheck = Some(actor)
+
     case Trigger(trig) => hakijaTrigger = context.actorOf(Props(new HakijaTrigger(trig))) +: hakijaTrigger
   })
 
-  def getHakemukset(q: HakijaQuery): Future[Int] = {
+  def getHakemukset(q: HakijaQuery, cursor: Option[String]): Future[Int] = {
     def getUri(page: Int = 0): String = {
-      "/applications/listfull?" + getQueryParams(q, page)
+      "/applications/listfull?" + getQueryParams(q, page, cursor)
     }
 
     val responseFuture: Future[List[FullHakemus]] = restRequest[List[FullHakemus]](getUri())
@@ -201,10 +224,13 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
-  def getQueryParams(q: HakijaQuery, page: Int = 0): String = {
+  def getQueryParams(q: HakijaQuery, page: Int, cursor: Option[String]): String = {
     val params: Seq[String] = Seq(
-      Some("orgSearchExpanded=true"), Some("checkAllApplications=false"),
-      Some(s"start=${page * maxApplications}"), Some(s"rows=$maxApplications"),
+      cursor.map(c => s"updatedAfter=$c"),
+      Some("orgSearchExpanded=true"),
+      Some("checkAllApplications=false"),
+      Some(s"start=${page * maxApplications}"),
+      Some(s"rows=$maxApplications"),
       q.haku.map(s => s"asId=${urlencode(s)}"),
       q.organisaatio.map(s => s"lopoid=${urlencode(s)}"),
       q.hakukohdekoodi.map(s => s"aoid=${urlencode(s)}")

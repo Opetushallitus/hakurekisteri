@@ -8,6 +8,7 @@ import org.scalatra.commands._
 import org.scalatra.json.JacksonJsonValueReaderProperty
 import org.scalatra.util.ParamsValueReaderProperties
 import org.scalatra.validation.{FieldName, ValidationError}
+import siirto.{ValidXml, SchemaDefinition, NoSchemaValidator}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -15,7 +16,7 @@ import scala.language.implicitConversions
 import scala.xml.Elem
 import scalaz.Scalaz._
 import scalaz._
-
+import com.sun.xml.internal.ws.developer.SchemaValidation
 
 
 class ImportBatchCreationSpec extends FlatSpec
@@ -26,7 +27,8 @@ class ImportBatchCreationSpec extends FlatSpec
   def command = ImportBatchCommand(
     externalIdField = "identifier",
     batchType = "testBatch",
-    dataField= "batch"
+    dataField= "batch",
+    NoSchemaValidator
   )
 
   val xml = <batchdata>
@@ -36,6 +38,31 @@ class ImportBatchCreationSpec extends FlatSpec
       <data/>
     </batch>
   </batchdata>
+
+  val testSchema = <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="batchdata" type="batchdataType"/>
+    <xs:complexType name="batchType">
+      <xs:sequence>
+        <xs:element type="xs:string" name="data" maxOccurs="unbounded" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="batchdataType">
+      <xs:sequence>
+        <xs:element type="xs:string" name="identifier"/>
+        <xs:element type="batchType" name="batch"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:schema>
+
+
+  val invalidXml = <satchdata>
+    <identifier>testId</identifier>
+    <batch>
+      <data/>
+      <data/>
+    </batch>
+  </satchdata>
+
 
   val params =
     Map("batch" -> xml.toString)
@@ -60,19 +87,19 @@ class ImportBatchCreationSpec extends FlatSpec
     validatedBatch.resource.data should be (xml)
   }
 
-  it should "parse data succesfully if all validation tests pass" in {
-    val validatedBatch = Await.result(command.withValidation((j: Elem) => j.successNel).bindTo(params) >> (_.toValidatedResource("testuser")), 10.seconds)
+  it should "parse data succesfully if schema validation passes" in {
+    val validatedBatch = Await.result(command.withSchema(testSchema).bindTo(params) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isSuccess should be (true)
   }
 
-  it should "fail parsing  if a validation test fails" in {
-    val validatedBatch = Await.result(command.withValidation((j: Elem) => ValidationError("utter failure", FieldName("batch")).failNel).bindTo(params) >> (_.toValidatedResource("testuser")), 10.seconds)
+  it should "fail parsing  if schema validation fails" in {
+    val validatedBatch = Await.result(command.withSchema(testSchema).bindTo( Map("batch" -> invalidXml.toString)) >> (_.toValidatedResource("testuser")), 10.seconds)
     validatedBatch.isFailure should be (true)
   }
 
   it should "return given validation error if a validation test fails" in {
-    val validatedBatch = command.withValidation((j: Elem) => ValidationError("utter failure", FieldName("batch")).failNel).bindTo(params) >> (_.toValidatedResource("testuser"))
-    validatedBatch.failure.list should contain(ValidationError("utter failure", Some(FieldName("batch")), None))
+    val validatedBatch = command.withSchema(testSchema).bindTo( Map("batch" -> invalidXml.toString)) >> (_.toValidatedResource("testuser"))
+    validatedBatch.failure.list.exists((e) => e.field == Some(FieldName("batch")) && e.args.collect{case e:org.xml.sax.SAXParseException => e}.exists(_.getMessage().contains("Cannot find the declaration of element 'satchdata'"))) should be (true)
   }
 }
 
@@ -99,10 +126,19 @@ trait JsonCommandTestSupport extends HakurekisteriJsonSupport with JsonMethods w
   implicit def validationToExtractor[T](result: Future[ModelValidation[T]]):ValidationReader[T]  = ValidationReader(Await.result(result, 10.seconds))
 
   case class ValidationCommand(command: ImportBatchCommand) {
-    def withValidation(validations:  (Elem => ModelValidation[Elem])*) = ImportBatchCommand(command.externalIdField: String, command.batchType: String, command.dataField: String, validations:_*)
+    def withSchema(schema: SchemaDefinition) = {
+      val validator = new ValidXml(schema)
+      ImportBatchCommand(command.externalIdField: String, command.batchType: String, command.dataField: String, validator)
+    }
   }
 
   implicit def CommandToValidationCommand(command: ImportBatchCommand): ValidationCommand = ValidationCommand(command)
+
+  implicit def elemToSchema(source: Elem): SchemaDefinition = new SchemaDefinition () {
+    override val schema: Elem = source
+    override val schemaLocation: String = ""
+  }
+
 }
 
 trait JsonModifiers {

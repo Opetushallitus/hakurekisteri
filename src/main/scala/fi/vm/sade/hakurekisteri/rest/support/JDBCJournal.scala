@@ -5,6 +5,7 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.event.Logging
+import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, Delta, Journal, Updated}
 import org.json4s.JsonAST.JValue
@@ -50,7 +51,17 @@ object HakurekisteriDriver extends JdbcDriver {
 
   override val simple = new SimpleQL with Implicits
 
-  trait Implicits extends super.Implicits {
+  trait Implicits extends super.Implicits with HakurekisteriJsonSupport {
+    class ImportStatusType(implicit tmd: JdbcType[String], override val classTag: ClassTag[ImportStatus]) extends HakurekisteriDriver.MappedJdbcType[ImportStatus, String] with BaseTypedType[ImportStatus] {
+      import org.json4s.jackson.Serialization.{read, write}
+      override def newSqlType: Option[Int] = Option(java.sql.Types.CLOB)
+      override def sqlTypeName: String = "TEXT"
+      override def comap(json: String): ImportStatus = read[ImportStatus](json)
+      override def map(data: ImportStatus): String = write(data)
+    }
+
+    implicit val importstatusType = new ImportStatusType
+
     class JValueType(implicit tmd: JdbcType[String], override val classTag: ClassTag[JValue]) extends HakurekisteriDriver.MappedJdbcType[JValue, String] with BaseTypedType[JValue] {
       import org.json4s.jackson.JsonMethods._
       override def newSqlType: Option[Int] = Option(java.sql.Types.CLOB)
@@ -79,6 +90,7 @@ abstract class JournalTable[R <: Resource[I, R], I, ResourceRow](tag: Tag, name:
   def source = column[String]("source")
   def inserted = column[Long]("inserted")
   def deleted = column[Boolean]("deleted")
+  def pk = primaryKey(s"pk_$name", (resourceId, inserted))
 
   val journalEntryShape = (resourceId, inserted, deleted).shaped
 

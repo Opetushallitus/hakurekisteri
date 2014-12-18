@@ -3,7 +3,20 @@ div(class="row")
     tiedonsiirtomenu
 
   div(class="col-md-10")
-    h2(oph-msg="suoritusrekisteri.sovellus.nimi" oph-msg="suoritusrekisteri.tiedonsiirto.tiedonsiirto") Tiedonsiirto
+    h2(oph-msg="suoritusrekisteri.tiedonsiirto.tiedonsiirto") Tiedonsiirto
+    div(class="row")
+      div(class="col-sm-12")
+        p(oph-msg="suoritusrekisteri.tiedonsiirto.ohje") Valitse tiedosto koneeltasi ja paina Lähetä-nappia. Saat ilmoituksen tiedoston vastaanottamisesta sivun alalaitaan.
+        ul(class="list-unstyled")
+          li
+            a(href="perusaste-henkilot.xls" oph-msg="suoritusrekisteri.tiedonsiirto.excelpohja") Excel-pohja tiedonsiirtoa varten
+          li
+            a(href="perusaste-henkilot.xml" oph-msg="suoritusrekisteri.tiedonsiirto.xmlpohja") XML-tiedoston esimerkki tiedonsiirtoa varten
+          li
+            a(href="rest/v1/siirto/perustiedot/schema/perustiedot.xsd" oph-msg="suoritusrekisteri.tiedonsiirto.xmlskeema") XML-skeema XML-tiedoston validointia varten
+          li
+            a(href="rest/v1/siirto/perustiedot/schema/perustiedot-koodisto.xsd" oph-msg="suoritusrekisteri.tiedonsiirto.xmlkoodistoskeema") XML-koodistoskeema XML-tiedoston validointia varten
+
     div(class="row")
       div(class="col-sm-12")
         form(id="uploadForm" class="well form-horizontal" action="rest/v1/siirto/perustiedot" ng-upload="uploadComplete(content)" enctype="multipart/form-data")

@@ -1,3 +1,5 @@
+import com.bowlingx.sbt.plugins.Wro4jPlugin._
+import Wro4jKeys._
 import info.schleichardt.sbt.sonar.SbtSonarPlugin._
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -36,14 +38,13 @@ object HakuJaValintarekisteriBuild extends Build {
     "org.springframework.security" % "spring-security-config",
     "org.springframework.security" % "spring-security-ldap" ,
     "org.springframework.security" % "spring-security-cas"
-
     )
 
   val SecurityStack = SpringStack.map(_ % SpringVersion) ++
     Seq("net.sf.ehcache" % "ehcache-core" % "2.5.0",
-    "fi.vm.sade.generic" % "generic-common" % "9.0-SNAPSHOT",
-    "org.apache.httpcomponents" % "httpclient" % "4.2.3",
-    "org.apache.httpcomponents" % "httpclient-cache" % "4.2.3",
+    "fi.vm.sade.generic" % "generic-common" % "9.1-SNAPSHOT",
+    "org.apache.httpcomponents" % "httpclient" % "4.3.4",
+    "org.apache.httpcomponents" % "httpclient-cache" % "4.3.4",
     "commons-httpclient" % "commons-httpclient" % "3.1",
     "commons-io" % "commons-io" % "2.4",
     "com.google.code.gson" % "gson" % "2.2.4",
@@ -63,7 +64,7 @@ object HakuJaValintarekisteriBuild extends Build {
     "org.json4s" %% "json4s-jackson" % "3.2.10",
     "com.github.nscala-time" %% "nscala-time" % "1.4.0",
     "com.typesafe.slick" %% "slick" % "2.1.0",
-    "com.h2database" % "h2" % "1.3.174",
+    "com.h2database" % "h2" % "1.3.176",
     "org.postgresql" % "postgresql" % "9.3-1100-jdbc4",
     "net.databinder.dispatch" %% "dispatch-core" % "0.11.0",
     "org.apache.poi" % "poi" % "3.10.1",
@@ -77,40 +78,40 @@ object HakuJaValintarekisteriBuild extends Build {
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion,
                              "org.scalamock" %% "scalamock-scalatest-support" % "3.1.4")
 
-  lazy val mocha = taskKey[Unit]("run mocha tests")
-  lazy val installMocha = taskKey[Unit]("install mocha")
-  lazy val installCoffee = taskKey[Unit]("install mocha")
-  val installMochaTask = installMocha := {
+  lazy val karma = taskKey[Unit]("run karma tests")
+  lazy val installKarma = taskKey[Unit]("install karma")
+  lazy val installCoffee = taskKey[Unit]("install coffee")
+  val installKarmaTask = installKarma := {
     import sys.process._
-    val pb = Seq("npm", "install",  "mocha")
+    val pb = Seq("npm", "install", "phantomjs", "karma", "karma-coffee-preprocessor", "karma-phantomjs-launcher", "karma-requirejs", "karma-jasmine", "karma-junit-reporter")
     if ((pb!) !=  0)
-      sys.error("failed installing mocha")
+      sys.error("failed installing karma")
   }
   val installCoffeeTask = installCoffee := {
     import sys.process._
-    val pb = Seq("npm", "install",  "coffee-script")
+    val pb = Seq("npm", "install", "coffee-script")
     if ((pb!) !=  0)
       sys.error("failed installing coffee script")
   }
-  val mochaTask = mocha <<= (installMocha, installCoffee) map {
+  val karmaTask = karma <<= (installCoffee, installKarma) map {
     (Unit1, Unit2) =>
       import sys.process._
-      val test_dir = "src/test/coffee/"
-      if (file(test_dir).exists()) {
-        val pb = Seq("./node_modules/mocha/bin/mocha", "--compilers", "coffee:coffee-script", test_dir)
+      val karma_conf = "src/test/js/karma.conf.js"
+      if (file(karma_conf).exists()) {
+        val pb = Seq("./node_modules/karma/bin/karma", "start", karma_conf)
         if ((pb!) !=  0)
-          sys.error("mocha failed")
+          sys.error("karma failed")
       } else {
-        println("no mocha tests found")
+        println("no karma tests found")
       }
   }
 
   val cleanNodeModules = cleanFiles <+= baseDirectory { base => base / "node_modules" }
-  val mochaTestSources =  unmanagedSourceDirectories in Test <+= (sourceDirectory in Test) {sd => sd / "coffee"}
+  val karmaTestSources = unmanagedSourceDirectories in Test <+= (sourceDirectory in Test) {sd => sd / "coffee"}
 
   val artifactoryPublish = publishTo <<= version apply {
     (ver: String) =>
-      val artifactory = "http://penaali.hard.ware.fi/artifactory"
+      val artifactory = "https://artifactory.oph.ware.fi/artifactory"
       if (ver.trim.endsWith("SNAPSHOT"))
         Some("snapshots" at artifactory + "/oph-sade-snapshot-local")
       else
@@ -152,20 +153,24 @@ object HakuJaValintarekisteriBuild extends Build {
       "sonar.java.coveragePlugin"  -> "cobertura",
       "sonar.cobertura.reportPath" -> (target.value.getAbsolutePath +"/scala-" +scalaBinaryVersion.value + "/coverage-report/cobertura.xml")))
 
+  import com.earldouglas.xsbtwebplugin.PluginKeys._
 
   lazy val project = {
     Project(
       "hakurekisteri",
       file("."),
       configurations = Seq(LoadSpecs),
-      settings =   ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
+      settings = ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
         ++ inConfig(LoadSpecs)(Defaults.testSettings)
         ++ Seq(ideaExtraTestConfigurations := Seq(LoadSpecs))
         ++ org.scalastyle.sbt.ScalastylePlugin.Settings
         ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"))
-        ++ Seq(unmanagedSourceDirectories in Compile <+= (sourceDirectory in Runtime) { sd => sd / "js"})
-        ++ Seq(com.earldouglas.xsbtwebplugin.PluginKeys.webappResources in Compile <+= (sourceDirectory in Runtime)(sd => sd / "js"))
-        ++ Seq(mochaTask, installMochaTask, installCoffeeTask, cleanNodeModules, mochaTestSources)
+        ++ Seq(wro4jSettings:_*)
+        ++ Seq(compile in Compile <<= (compile in Compile) dependsOn (generateResources in Compile))
+        ++ Seq(webappResources in Compile <+= (targetFolder in generateResources in Compile))
+        ++ Seq(webappResources in Compile <+= (sourceDirectory in Runtime) { sd => sd / "resources" / "tiedonsiirto"})
+        ++ Seq(karmaTask, installKarmaTask, installCoffeeTask, cleanNodeModules, karmaTestSources)
+        //++ Seq((test in Test) <<= (test in Test) dependsOn karma) // uncomment to enable running karma tests together with "test" phase
         ++ Seq(
           organization := Organization,
           name := Name,
@@ -173,8 +178,8 @@ object HakuJaValintarekisteriBuild extends Build {
           scalaVersion := ScalaVersion,
           artifactName := ArtifactName,
           resolvers += Classpaths.typesafeReleases,
-          resolvers += "oph-snapshots" at "http://penaali.hard.ware.fi/artifactory/oph-sade-snapshot-local",
-          resolvers += "oph-releases" at "http://penaali.hard.ware.fi/artifactory/oph-sade-release-local",
+          resolvers += "oph-snapshots" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local",
+          resolvers += "oph-releases" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local",
           resolvers += "Sonatype" at "http://oss.sonatype.org/content/repositories/releases/",
           resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
           resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",

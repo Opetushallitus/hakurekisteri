@@ -6,7 +6,7 @@ import akka.actor.{Props, ActorSystem}
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HenkiloActor}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{CreateHenkilo, Henkilo, HenkiloActor}
 import fi.vm.sade.hakurekisteri.integration.virta.MockedResourceActor
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
@@ -25,6 +25,8 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
   implicit val ec: ExecutionContext = system.dispatcher
 
   behavior of "ImportBatchProcessingActor"
+
+  val lahde = "testitiedonsiirto"
 
   val batch: ImportBatch with Identified[UUID] = ImportBatch(<perustiedot>
     <eranTunniste>eranTunniste</eranTunniste>
@@ -51,22 +53,53 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
           <yksilollistaminen>EI</yksilollistaminen>
         </perusopetus>
       </henkilo>
+      <henkilo>
+        <henkiloTunniste>TUNNISTE</henkiloTunniste>
+        <syntymaAika>1999-03-29</syntymaAika>
+        <sukupuoli>1</sukupuoli>
+        <lahtokoulu>05127</lahtokoulu>
+        <luokka>9A</luokka>
+        <sukunimi>Testinen</sukunimi>
+        <etunimet>Juha Jaakko</etunimet>
+        <kutsumanimi>Jaakko</kutsumanimi>
+        <kotikunta>020</kotikunta>
+        <aidinkieli>FI</aidinkieli>
+        <kansalaisuus>246</kansalaisuus>
+        <lahiosoite>Katu 1 A 1</lahiosoite>
+        <postinumero>00100</postinumero>
+        <matkapuhelin>040 1234 567</matkapuhelin>
+        <muuPuhelin>09 1234 567</muuPuhelin>
+        <ulkomainen>
+          <valmistuminen>2014-06-04</valmistuminen>
+          <myontaja>05127</myontaja>
+          <suorituskieli>FI</suorituskieli>
+          <tila>KESKEN</tila>
+        </ulkomainen>
+        <maahanmuuttajienammvalmistava>
+          <valmistuminen>2015-06-04</valmistuminen>
+          <myontaja>05127</myontaja>
+          <suorituskieli>FI</suorituskieli>
+          <tila>VALMIS</tila>
+        </maahanmuuttajienammvalmistava>
+      </henkilo>
     </henkilot>
-  </perustiedot>, Some("foo"), "perustiedot", "testitiedonsiirto").identify(UUID.randomUUID())
+  </perustiedot>, Some("foo"), "perustiedot", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
 
   def createEndpoint = {
     val result = mock[Endpoint]
 
     val henkiloBody = {
-      val henkilo: Henkilo = (batch.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)("")).head.toHenkilo
+      val oidResolver = (koodi: String) => s"1.2.246.562.5.$koodi"
+      val henkilo: CreateHenkilo = (batch.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(lahde)).head.toHenkilo(oidResolver)
       import org.json4s.jackson.Serialization.write
-      write[Henkilo](henkilo)
+      write[CreateHenkilo](henkilo)
     }
 
-    when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot", henkiloBody))).thenReturn((200, List(), "{\"oidHenkilo\":\"1.2.246.562.24.123\"}"))
+    when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot"))).thenReturn((200, List(), "1.2.246.562.24.123"))
 
-    when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio"))).thenReturn((200, List(), "[]"))
-    when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/05127"))).thenReturn((200, List(), "{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{}}"))
+    when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))).thenReturn((200, List(), "{\"numHits\":1,\"organisaatiot\":[{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}]}"))
+
+    when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/05127"))).thenReturn((200, List(), "{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}"))
 
     result
   }
@@ -101,6 +134,9 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
 
     sWaiter.await(timeout(10.seconds), dismissals(1))
     oWaiter.await(timeout(10.seconds), dismissals(1))
+
+    system.shutdown()
+    system.awaitTermination()
   }
 
 }

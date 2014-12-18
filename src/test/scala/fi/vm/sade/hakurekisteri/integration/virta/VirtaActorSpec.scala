@@ -79,7 +79,7 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
   class MockedOrganisaatioActor extends Actor {
     import akka.pattern.pipe
     override def receive: Receive = {
-      case "01901" => Future.successful(Some(Organisaatio(oid = "1.3.0", nimi = Map("fi" -> "Helsingin yliopisto"), toimipistekoodi = None, oppilaitosKoodi = Some("01901"), parentOid = None))) pipeTo sender
+      case "01901" => Future.successful(Some(Organisaatio(oid = "1.3.0", nimi = Map("fi" -> "Helsingin yliopisto"), toimipistekoodi = None, oppilaitosKoodi = Some("01901"), parentOid = None, children = Seq()))) pipeTo sender
       case default => Future.successful(None) pipeTo sender
     }
   }

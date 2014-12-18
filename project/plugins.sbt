@@ -2,6 +2,8 @@ resolvers += "sonatype-releases" at "https://oss.sonatype.org/content/repositori
 
 resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
+resolvers += "sbt-plugin-snapshots" at "http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-snapshots/"
+
 addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.7.0-SNAPSHOT")
 
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.4")
@@ -14,3 +16,4 @@ addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "0.3.2")
 
 addSbtPlugin("info.schleichardt" % "sbt-sonar" % "0.2.0-SNAPSHOT")
 
+addSbtPlugin("com.bowlingx" %% "xsbt-wro4j-plugin" % "0.3.5")

@@ -5,7 +5,9 @@ import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 import org.scalatra.json.JsonValueReader
 import org.scalatra.servlet.FileItem
 import org.scalatra.util.ValueReader
-import org.scalatra.validation.{UnknownError, ValidationError}
+import org.scalatra.validation.{FieldName, UnknownError, ValidationError}
+import org.xml.sax.SAXParseException
+import siirto.{XMLValidator, ValidXml}
 import scala.util.control.Exception._
 import scala.xml.{Elem, XML}
 import scalaz._, Scalaz._
@@ -16,7 +18,7 @@ import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.json4s.JsonAST.JString
 import org.json4s.JsonAST.JInt
 import scala.concurrent.Future
-
+import scala.language.implicitConversions
 
 
 trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFactories with HakurekisteriJsonSupport{
@@ -79,6 +81,8 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
 
   implicit val fileToYksilollistaminen: TypeConverter[FileItem, Yksilollistetty] = cantConvert
 
+  implicit def xmlFieldToValidatable(field: FieldDescriptor[Elem]):ValidatableXml = new ValidatableXml(field)
+
   def toResource(user: String): R
 
   def errorFail(ex: Throwable) = ValidationError(ex.getMessage, UnknownError).failNel
@@ -91,6 +95,22 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
         extraValidation(toResource(user))
       }
     )
+  }
+}
+
+class ValidatableXml(b: FieldDescriptor[Elem]) {
+  def validateSchema(implicit validator: XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem]): FieldDescriptor[Elem] =
+    b.validateWith(abidesSchema(validator))
+
+  def abidesSchema(validator: XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem]): BindingValidator[Elem] = (s: String) => {
+    _ flatMap (validateSchema(s, validator))
+  }
+
+  def validateSchema(field: String, validator: XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem]): (Elem) => FieldValidation[Elem] = (xml)  => {
+    validator.validate(xml).leftMap(saxErrors => {
+      val errors = saxErrors.map(_._2)
+      new ValidationError("Xml validation failed", Some(FieldName(field)), None,  errors.toList)
+    })
   }
 }
 

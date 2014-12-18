@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.valintatulos
 
 import java.net.URLEncoder
+import java.util.concurrent.ExecutionException
 
 import akka.actor.{ActorLogging, Actor}
 import akka.pattern.pipe
@@ -9,6 +10,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
 import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, FutureCache, VirkailijaRestClient}
+import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -17,61 +19,75 @@ case class ValintaTulosQuery(hakuOid: String,
                              hakemusOid: Option[String],
                              cachedOk: Boolean = true)
 
-class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with ActorLogging {
+class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
 
   private val maxRetries = Config.httpClientMaxRetries
-  private val refetch: FiniteDuration = 1.hours
+  private val refetch: FiniteDuration = (Config.valintatulosCacheHours / 2).hours
   private val retry: FiniteDuration = 60.seconds
   private val cache = new FutureCache[String, SijoitteluTulos](Config.valintatulosCacheHours.hours.toMillis)
+  private var refreshing = false
 
   override def receive: Receive = {
     case q: ValintaTulosQuery =>
       getSijoittelu(q) pipeTo sender
 
-    case Update(haku) if !cache.inUse(haku) =>
+    case UpdateValintatulos(haku) if cache.contains(haku) && !cache.inUse(haku) =>
       cache - haku
 
-    case Update(haku) =>
-      updateCache(haku, sijoitteluTulos(haku, None))
+    case UpdateValintatulos(haku) if refreshing =>
+      context.system.scheduler.scheduleOnce(500.milliseconds, self, UpdateValintatulos(haku))
+
+    case UpdateValintatulos(haku) if !refreshing =>
+      log.debug(s"refreshing haku $haku")
+      refreshing = true
+      updateCacheAndReschedule(haku, sijoitteluTulos(haku, None))
   }
 
-  def updateCache(hakuOid: String, tulos: Future[SijoitteluTulos]): Unit = {
+  def updateCacheAndReschedule(hakuOid: String, tulos: Future[SijoitteluTulos]): Unit = {
     tulos.onComplete {
       case Success(t) =>
+        refreshing = false
         rescheduleHaku(hakuOid)
       case Failure(t) =>
+        refreshing = false
         log.error(t, s"failed to fetch sijoittelu for haku $hakuOid")
         rescheduleHaku(hakuOid, retry)
     }
-    cache + (hakuOid, tulos)
+    if (!cache.contains(hakuOid) || cache.inUse(hakuOid)) {
+      cache + (hakuOid, tulos)
+    }
   }
 
   def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
     if (q.cachedOk && cache.contains(q.hakuOid)) cache.get(q.hakuOid)
     else {
       val tulos = sijoitteluTulos(q.hakuOid, q.hakemusOid)
-      if (q.hakemusOid.isEmpty) updateCache(q.hakuOid, tulos)
+      if (q.hakemusOid.isEmpty) updateCacheAndReschedule(q.hakuOid, tulos)
       tulos
     }
   }
 
   def sijoitteluTulos(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = {
+    def is404(t: Throwable): Boolean = t match {
+      case PreconditionFailedException(_, 404) => true
+      case _ => false
+    }
 
-    def getSingleHakemus(hakemusOid: String): Future[SijoitteluTulos] = restClient.
+    def getSingleHakemus(hakemusOid: String): Future[SijoitteluTulos] = client.
       readObject[ValintaTulos](s"/haku/${URLEncoder.encode(hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(hakemusOid, "UTF-8")}", 200, maxRetries).
       recoverWith {
-        case t: PreconditionFailedException if t.responseCode == 404 =>
+        case t: ExecutionException if t.getCause != null && is404(t.getCause) =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
           Future.successful(ValintaTulos(hakemusOid, Seq()))
       }.
       map(t => valintaTulokset2SijoitteluTulos(t))
 
-    def getHaku(haku: String): Future[SijoitteluTulos] = restClient.
-      readObject[Seq[ValintaTulos]](s"/haku/${URLEncoder.encode(haku, "UTF-8")}", 200, maxRetries).
+    def getHaku(haku: String): Future[SijoitteluTulos] = client.
+      readObject[Seq[ValintaTulos]](s"/haku/${URLEncoder.encode(haku, "UTF-8")}", 200).
       recoverWith {
-        case t: PreconditionFailedException if t.responseCode == 404 =>
+        case t: ExecutionException if t.getCause != null && is404(t.getCause) =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
           Future.successful(Seq[ValintaTulos]())
       }.
@@ -99,9 +115,10 @@ class ValintaTulosActor(restClient: VirkailijaRestClient) extends Actor with Act
   }
 
   def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
-    log.debug(s"rescheduling haku $haku in $time")
-    context.system.scheduler.scheduleOnce(time, self, Update(haku))
+    log.info(s"rescheduling haku $haku in $time")
+    context.system.scheduler.scheduleOnce(time, self, UpdateValintatulos(haku))
   }
 
-  case class Update(haku: String)
 }
+
+case class UpdateValintatulos(haku: String)

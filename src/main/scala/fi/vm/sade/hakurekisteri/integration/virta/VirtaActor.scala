@@ -19,18 +19,21 @@ import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
 
 import Virta.at
 
+import scala.util.Success
+
 
 case class VirtaQuery(oppijanumero: String, hetu: Option[String])
 case class VirtaQueuedQuery(q: VirtaQuery)
 case class KomoNotFoundException(message: String) extends Exception(message)
 case class VirtaData(opiskeluOikeudet: Seq[Opiskeluoikeus], suoritukset: Seq[Suoritus])
-case class VirtaStatus(lastProcessTime: Option[DateTime] = None,
-                       nextProcessTime: Option[DateTime] = None,
+case class VirtaStatus(lastProcessDone: Option[DateTime] = None,
+                       nextProcessStart: Option[DateTime] = None,
                        queueLength: Long,
                        status: Status)
 case class RescheduleProcessing(time: String)
+case class QueryProsessed(q: VirtaQuery)
 
-object ProcessAll
+object StartVirta
 object PrintStats
 object VirtaHealth
 object CancelSchedule
@@ -40,7 +43,7 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
 
   var virtaQueue: List[VirtaQuery] = List()
 
-  var lastProcessTime: Option[DateTime] = None
+  var lastProcessDone: Option[DateTime] = None
   var scheduledProcessTime: Option[LocalTime] = None
 
   def nextProcessTime: Option[DateTime] = scheduledProcessTime.map(t => {
@@ -53,39 +56,44 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
   def scheduleProcessing(time: String): Cancellable = {
     val duration: FiniteDuration = at(time)
     scheduledProcessTime = Some(new LocalTime(Platform.currentTime + duration.toMillis))
-    context.system.scheduler.schedule(duration, 24.hours, self, ProcessAll)
+    context.system.scheduler.schedule(duration, 24.hours, self, StartVirta)
   }
 
   var processing: Cancellable = scheduleProcessing("04:00")
-  context.system.scheduler.schedule(5.minutes, 10.minutes, self, PrintStats)
+  val statPrinter: Cancellable = context.system.scheduler.schedule(5.minutes, 10.minutes, self, PrintStats)
 
-  def dequeue() = {
-    try {
-      val q = virtaQueue.head
-      virtaQueue = virtaQueue.tail
-      virtaActor ! q
-    } catch {
-      case t: NoSuchElementException => log.error(s"trying to dequeue an empty queue: $t")
-    }
+  override def postStop(): Unit = {
+    processing.cancel()
+    statPrinter.cancel()
   }
-
+  
   def receive: Receive = {
     case VirtaQueuedQuery(q) if !virtaQueue.contains(q) =>
       virtaQueue = virtaQueue :+ q
 
-    case ProcessAll =>
+    case StartVirta =>
       log.info("started to process virta queries")
-      virtaQueue.foreach(virtaActor ! _)
-      virtaQueue = List()
-      log.info(s"all virta queries processed, queue length ${virtaQueue.length}")
-      lastProcessTime = Some(new DateTime())
+      if (virtaQueue.nonEmpty) 
+        virtaActor ! virtaQueue.head 
+      else 
+        log.info("no queries to process")
+
+    case QueryProsessed(q) =>
+      virtaQueue = virtaQueue.filterNot(_ == q)
+      if (virtaQueue.nonEmpty) {
+        virtaActor ! virtaQueue.head
+      } else {
+        log.info(s"all virta queries processed, queue length ${virtaQueue.length}")
+        lastProcessDone = Some(new DateTime())
+      }
 
     case PrintStats => log.info(s"queue length ${virtaQueue.length}")
 
-    case VirtaHealth => sender ! VirtaStatus(lastProcessTime, nextProcessTime, virtaQueue.length, Status.OK)
+    case VirtaHealth => sender ! VirtaStatus(lastProcessDone, nextProcessTime, virtaQueue.length, Status.OK)
 
-    case CancelSchedule if !processing.isCancelled =>
+    case CancelSchedule =>
       processing.cancel()
+      virtaQueue = List()
       scheduledProcessTime = None
       log.info(s"cancelled scheduled processing")
 
@@ -111,10 +119,19 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
   import akka.pattern.pipe
 
   def receive: Receive = {
-    case VirtaQuery(o, h) => getOpiskelijanTiedot(o, h) pipeTo self
-    case Some(r: VirtaResult) => save(r)
-    case Failure(t: VirtaValidationError) => log.warning(s"virta validation error: $t")
-    case Failure(t: Throwable) => log.error(t, "error occurred in virta query")
+    case q: VirtaQuery => 
+      val tiedot = getOpiskelijanTiedot(q.oppijanumero, q.hetu)
+      tiedot.onComplete(t => sender ! QueryProsessed(q))
+      tiedot.pipeTo(self)(ActorRef.noSender)
+      
+    case Some(r: VirtaResult) => 
+      save(r)
+      
+    case Failure(t: VirtaValidationError) => 
+      log.warning(s"virta validation error: $t")
+      
+    case Failure(t: Throwable) => 
+      log.error(t, "error occurred in virta query")
   }
 
   def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String]): Future[Option[VirtaResult]] =
