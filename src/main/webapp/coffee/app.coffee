@@ -167,7 +167,7 @@ app.directive "tiedonsiirtomenu", ->
         path is $location.path()
 
       $scope.updateMenuVisibility = () ->
-        if showBasedOnRoles and window.myroles
+        if typeof showBasedOnRoles is "function" and window.myroles
           $log.debug("refresh visibility")
           showBasedOnRoles window.myroles
         return
