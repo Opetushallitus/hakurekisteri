@@ -131,7 +131,7 @@ app.directive "messages", ->
 
 app.directive "tiedonsiirtomenu", ->
   return (
-    controller: ($scope, $location) ->
+    controller: ($scope, $location, $log) ->
       $scope.menu = [
         {
           path: "/tiedonsiirto/hakeneet"
@@ -165,6 +165,12 @@ app.directive "tiedonsiirtomenu", ->
 
       $scope.isActive = (path) ->
         path is $location.path()
+
+      $scope.updateMenuVisibility = () ->
+        if showBasedOnRoles and window.myroles
+          $log.debug("refresh visibility")
+          showBasedOnRoles window.myroles
+        return
 
       return
 
