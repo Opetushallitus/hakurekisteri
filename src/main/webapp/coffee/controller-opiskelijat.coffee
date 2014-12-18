@@ -25,33 +25,35 @@ app.controller "OpiskelijatCtrl", [
           row.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + " (" + ((if henkilo.hetu then henkilo.hetu else henkilo.syntymaaika)) + ")"  if henkilo
 
       enrichOpiskelijat = (row) ->
-        for o in row.opiskelijat
-          do (o) ->
-            getOrganisaatio $http, o.oppilaitosOid, (oppilaitos) ->
-              o.oppilaitos = (if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "") + (if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv)
+        if Array.isArray row.opiskelijat
+          for o in row.opiskelijat
+            do (o) ->
+              getOrganisaatio $http, o.oppilaitosOid, (oppilaitos) ->
+                o.oppilaitos = (if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "") + (if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv)
 
       enrichSuoritukset = (row) ->
-        for o in row.suoritukset
-          do (o) ->
-            getOrganisaatio $http, o.myontaja, (oppilaitos) ->
-              o.oppilaitos = (if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "") + " " + (if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv)
-            if o.komo.match(/^koulutus_\d*$/)
-              getKoulutusNimi $http, o.komo, (koulutusNimi) ->
-                o.koulutus = koulutusNimi
-            Arvosanat.query { suoritus: o.id }, (arvosanat) ->
-              if arvosanat.length > 0
-                o.hasArvosanat = true
-              else
-                o.noArvosanat = true
-              return
+        if Array.isArray row.suoritukset
+          for o in row.suoritukset
+            do (o) ->
+              getOrganisaatio $http, o.myontaja, (oppilaitos) ->
+                o.oppilaitos = (if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "") + " " + (if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv)
+              if o.komo.match(/^koulutus_\d*$/)
+                getKoulutusNimi $http, o.komo, (koulutusNimi) ->
+                  o.koulutus = koulutusNimi
+              Arvosanat.query { suoritus: o.id }, (arvosanat) ->
+                if arvosanat.length > 0
+                  o.hasArvosanat = true
+                else
+                  o.noArvosanat = true
+                return
 
-      ((row) ->
-        if row.henkiloOid
-          enrichHenkilo row
-          enrichOpiskelijat row
-          enrichSuoritukset row
-        return
-      )(row) for row in $scope.currentRows
+      for row in $scope.currentRows
+        do (row) ->
+          if row.henkiloOid
+            enrichHenkilo row
+            enrichOpiskelijat row
+            enrichSuoritukset row
+          return
 
       return
 
