@@ -123,28 +123,17 @@ app.controller "OpiskelijatCtrl", [
       return
 
     $scope.fetch = ->
-      startLoading = ->
-        $scope.loading = true
-
-      stopLoading = ->
-        $scope.loading = false
-
-      getUniqueHenkiloOids = (oids) ->
-        oids.map((o) ->
-          o.henkiloOid
-        ).getUnique().map (o) ->
-          henkiloOid: o
+      startLoading = -> $scope.loading = true
+      stopLoading = -> $scope.loading = false
 
       doSearch = (query) ->
+        MessageService.clearMessages()
+
         searchOpiskelijat = (o) ->
           Opiskelijat.query query, ((result) ->
             o.resolve { opiskelijat: result }
-
-            return
           ), ->
             o.reject "opiskelija query failed"
-            return
-          return
 
         searchSuoritukset = (s) ->
           suoritusQuery =
@@ -153,13 +142,8 @@ app.controller "OpiskelijatCtrl", [
             vuosi: (if query.vuosi then query.vuosi else null)
           Suoritukset.query suoritusQuery, ((result) ->
             s.resolve { suoritukset: result }
-            return
           ), ->
             s.reject "suoritus query failed"
-            return
-          return
-
-        MessageService.clearMessages()
 
         groupByHenkiloOid = (obj) ->
           res = {}
@@ -188,34 +172,24 @@ app.controller "OpiskelijatCtrl", [
               henkilot.push obj
           henkilot
 
-        if query.oppilaitosOid
-          o = $q.defer()
-          searchOpiskelijat o
-          s = $q.defer()
-          searchSuoritukset s
-          $q.all([
-            o.promise
-            s.promise
-          ]).then ((results) ->
-            combined = collect(results)
-            grouped = groupByHenkiloOid(combined)
-            showCurrentRows grouped
-            resetPageNumbers()
-            stopLoading()
-            return
-          ), (errors) ->
-            $log.error errors
-            MessageService.addMessage
-              type: "danger"
-              messageKey: "suoritusrekisteri.opiskelijat.virhehaussa"
-              message: "Haussa tapahtui virhe. Yritä uudelleen."
-            stopLoading()
-            return
-        else if query.henkilo
-          showCurrentRows [henkiloOid: query.henkilo]
+        o = $q.defer()
+        searchOpiskelijat o
+        s = $q.defer()
+        searchSuoritukset s
+        $q.all([
+          o.promise
+          s.promise
+        ]).then ((results) ->
+          showCurrentRows groupByHenkiloOid(collect(results))
           resetPageNumbers()
           stopLoading()
-        return
+        ), (errors) ->
+          $log.error errors
+          MessageService.addMessage
+            type: "danger"
+            messageKey: "suoritusrekisteri.opiskelijat.virhehaussa"
+            message: "Haussa tapahtui virhe. Yritä uudelleen."
+          stopLoading()
 
       $scope.currentRows = []
       $scope.allRows = []
