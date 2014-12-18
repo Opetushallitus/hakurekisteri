@@ -28,7 +28,7 @@ div(class="row")
               td {{b.status.sentTime | date:'medium'}}
               td {{b.status.processedTime | date:'medium'}}
               td(rowspan="2" class="{{statusClass(b)}}")
-                div(oph-msg="suoritusrekisteri.tiedonsiirtotila.tila.{{b.state}}") {{b.state}}
+                div(oph-msg="suoritusrekisteri.tiedonsiirtotila.tila.{{b.state}}") {{b.stateLabel || b.state}}
                 div(ng-if="b.status.successRows" class="text-success text-nowrap")
                   strong(oph-msg="suoritusrekisteri.tiedonsiirtotila.ok") OK
                   span {{b.status.successRows}}

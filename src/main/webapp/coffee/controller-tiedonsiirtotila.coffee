@@ -1,8 +1,9 @@
 app.controller "TiedonsiirtotilaCtrl", [
   "$scope"
   "$http"
+  "$log"
   "MurupolkuService"
-  ($scope, $http, MurupolkuService) ->
+  ($scope, $http, $log, MurupolkuService) ->
     MurupolkuService.addToMurupolku
       key: "suoritusrekisteri.tiedonsiirtotila.muru"
       text: "Tiedonsiirtojen tila"
@@ -11,6 +12,7 @@ app.controller "TiedonsiirtotilaCtrl", [
     $scope.batches = []
 
     enrichBatch = (b) ->
+      b.stateLabel = getOphMsg("suoritusrekisteri.tiedonsiirtotila.tila." + b.state)
       $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(b.source), { cache: true }).success (henkilo) ->
         b.lahettaja = henkilo.etunimet + ' ' + henkilo.sukunimi
 
@@ -41,12 +43,20 @@ app.controller "TiedonsiirtotilaCtrl", [
         chartData = Object.keys(tempData).map (key) ->
           return {
             value: tempData[key]
-            label: key
+            label: getOphMsg("suoritusrekisteri.tiedonsiirtotila.tila." + key)
             color: classes[key]
             hilight: classes[key]
           }
         ctx = document.getElementById("tilaChart").getContext("2d")
-        $scope.chart = new Chart(ctx).Pie(chartData, { animationEasing: 'linear', animationSteps: 50, animateScale: true })
+        $scope.chart = new Chart(ctx).Pie(chartData,
+          animationEasing: 'linear'
+          animationSteps: 50
+          animateScale: true
+          legendTemplate: "<ul class=\"<%=name.toLowerCase()%>-legend list-unstyled\"><% for (var i=0; i<segments.length; i++){%><li class=\"text-nowrap\"><div style=\"background-color:<%=segments[i].fillColor%>\"></div> <%=segments[i].label%></li><%}%></ul>"
+        )
+        legend = $scope.chart.generateLegend()
+        $log.debug("legend: " + legend)
+        $scope.legend = legend
 
     $scope.statusClass = (b) ->
       return "info"  if b.state is "READY"

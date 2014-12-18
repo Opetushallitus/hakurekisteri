@@ -198,3 +198,8 @@ optgroup option {
 .nobordertop .alert {
     margin-bottom: 0;
 }
+
+.pie-legend li div {
+    display: inline-block;
+    width: 15px;
+}
