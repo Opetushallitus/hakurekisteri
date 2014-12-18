@@ -57,7 +57,7 @@ app.controller "TiedonsiirtotilaCtrl", [
     $scope.hasMessages = (b) ->
       b and b.status and b.status.messages and Object.keys(b.status.messages).length > 0
 
-    scope.$on '$destroy', () ->
+    $scope.$on '$destroy', () ->
       $scope.chart.destroy()  if $scope.chart and typeof $scope.chart.destroy is 'function'
       return
 ]
