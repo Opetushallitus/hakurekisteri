@@ -23,36 +23,27 @@ app.controller "OpiskelijatCtrl", [
           cache: false
         ).success (henkilo) ->
           row.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + " (" + ((if henkilo.hetu then henkilo.hetu else henkilo.syntymaaika)) + ")"  if henkilo
-          return
-        return
 
       enrichOpiskelijat = (row) ->
         for o in row.opiskelijat
           do (o) ->
             getOrganisaatio $http, o.oppilaitosOid, (oppilaitos) ->
-              o.oppilaitos = ((if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "")) + ((if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv))
-              return
-            return
-        return
+              o.oppilaitos = (if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "") + (if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv)
 
       enrichSuoritukset = (row) ->
         for o in row.suoritukset
           do (o) ->
             getOrganisaatio $http, o.myontaja, (oppilaitos) ->
-              o.oppilaitos = ((if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "")) + " " + ((if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv))
-              return
+              o.oppilaitos = (if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "") + " " + (if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv)
             if o.komo.match(/^koulutus_\d*$/)
               getKoulutusNimi $http, o.komo, (koulutusNimi) ->
                 o.koulutus = koulutusNimi
-                return
             Arvosanat.query { suoritus: o.id }, (arvosanat) ->
               if arvosanat.length > 0
                 o.hasArvosanat = true
               else
                 o.noArvosanat = true
               return
-            return
-        return
 
       ((row) ->
         if row.henkiloOid
@@ -66,10 +57,11 @@ app.controller "OpiskelijatCtrl", [
 
     resetPageNumbers = ->
       $scope.pageNumbers = []
-      i = 0
-      while i < Math.ceil($scope.allRows.length / $scope.pageSize)
-        $scope.pageNumbers.push i + 1  if i is 0 or (i >= ($scope.page - 3) and i <= ($scope.page + 3)) or i is (Math.ceil($scope.allRows.length / $scope.pageSize) - 1)
-        i++
+      max = Math.ceil($scope.allRows.length / $scope.pageSize)
+      for i in [0...max]
+        do (i) ->
+          $scope.pageNumbers.push i + 1  if i is 0 or (i >= ($scope.page - 3) and i <= ($scope.page + 3)) or i is (Math.ceil($scope.allRows.length / $scope.pageSize) - 1)
+          return
       return
 
     vuodet = () ->
@@ -147,30 +139,34 @@ app.controller "OpiskelijatCtrl", [
 
         groupByHenkiloOid = (obj) ->
           res = {}
-          for o in obj.opiskelijat
-            do (o) ->
-              if res[o.henkiloOid]
-                res[o.henkiloOid].opiskelijat.push o
-              else
-                res[o.henkiloOid] =
-                  opiskelijat: [o]
-          for s in obj.suoritukset
-            do (s) ->
-              if res[s.henkiloOid]
-                if res[s.henkiloOid].suoritukset
-                  res[s.henkiloOid].suoritukset.push s
+          if Array.isArray obj.opiskelijat
+            for o in obj.opiskelijat
+              do (o) ->
+                oid = o.henkiloOid
+                if res[oid]
+                  if res[oid].opiskelijat
+                    res[oid].opiskelijat.push o
+                  else
+                    res[oid].opiskelijat = [o]
                 else
-                  res[s.henkiloOid].suoritukset = [s]
-              else
-                res[s.henkiloOid] =
-                  suoritukset: [s]
-          henkilot = []
-          for henkiloOid of res
-            do (henkiloOid) ->
-              obj = res[henkiloOid]
-              obj.henkiloOid = henkiloOid
-              henkilot.push obj
-          henkilot
+                  res[oid] =
+                    opiskelijat: [o]
+          if Array.isArray obj.suoritukset
+            for s in obj.suoritukset
+              do (s) ->
+                oid = s.henkiloOid
+                if res[oid]
+                  if res[oid].suoritukset
+                    res[oid].suoritukset.push s
+                  else
+                    res[oid].suoritukset = [s]
+                else
+                  res[oid] =
+                    suoritukset: [s]
+          Object.keys(res).map (oid) ->
+            obj = res[oid]
+            obj.henkiloOid = oid
+            obj
 
         o = $q.defer()
         searchOpiskelijat o
