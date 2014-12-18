@@ -12,7 +12,6 @@ app.controller "TiedonsiirtotilaCtrl", [
     $scope.batches = []
 
     enrichBatch = (b) ->
-      b.stateLabel = getOphMsg("suoritusrekisteri.tiedonsiirtotila.tila." + b.state)
       $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(b.source), { cache: true }).success (henkilo) ->
         b.lahettaja = henkilo.etunimet + ' ' + henkilo.sukunimi
 
