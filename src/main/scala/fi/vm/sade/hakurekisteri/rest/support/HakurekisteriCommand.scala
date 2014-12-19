@@ -109,7 +109,7 @@ class ValidatableXml(b: FieldDescriptor[Elem]) {
   def validateSchema(field: String, validator: XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem]): (Elem) => FieldValidation[Elem] = (xml)  => {
     validator.validate(xml).leftMap(saxErrors => {
       val errors = saxErrors.map(_._2)
-      new ValidationError("Xml validation failed", Some(FieldName(field)), None,  errors.toList)
+      new ValidationError("Xml validation failed", Some(FieldName(field)), None, errors.toList)
     })
   }
 }

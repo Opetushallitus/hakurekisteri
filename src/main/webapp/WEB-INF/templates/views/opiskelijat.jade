@@ -22,6 +22,11 @@ aside(class="row")
           span(ng-show="organisaatioTerm") {{organisaatioTerm.oppilaitosKoodi}} {{organisaatioTerm.nimi.fi || organisaatioTerm.nimi.sv || organisaatioTerm.nimi.en}}
 
       div(class="form-group")
+        label(for="vuosiTerm" class="col-sm-2 control-label" oph-msg="suoritusrekisteri.opiskelijat.vuosi") Vuosi
+        div(class="col-sm-2")
+          select(id="vuosiTerm" class="form-control" ng-model="vuosiTerm" ng-options="v for v in vuodet")
+
+      div(class="form-group")
         div(class="col-sm-10 col-sm-offset-2")
           button(class="btn btn-default" type="button" ng-click="reset()")
             span(oph-msg="suoritusrekisteri.opiskelijat.tyhjenna") Tyhjennä
@@ -41,9 +46,9 @@ table(class="table")
     tr(ng-repeat="row in currentRows")
       td {{row.henkilo || row.henkiloOid}}
       td
-        div(ng-repeat="o in row.opiskelijatiedot") {{o.oppilaitos}}, {{o.luokka}}
+        div(ng-repeat="o in row.opiskelijat") {{o.oppilaitos}}, {{o.luokka}}
       td
-        div(ng-repeat="s in row.suoritustiedot")
+        div(ng-repeat="s in row.suoritukset")
           span {{s.oppilaitos}},
           span(ng-hide="s.koulutus" oph-msg="suoritusrekisteri.komo.{{s.komo}}") {{s.komo}}
           span(ng-show="s.koulutus") {{s.koulutus}}

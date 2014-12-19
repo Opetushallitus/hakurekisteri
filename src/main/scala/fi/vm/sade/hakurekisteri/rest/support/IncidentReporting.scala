@@ -9,7 +9,7 @@ import org.joda.time.DateTime._
 import org.scalatra.{BadRequest, InternalServerError, ActionResult}
 
 
-case class IncidentReport(incidentId: UUID, message: String, timestamp: DateTime = now())
+case class IncidentReport(incidentId: UUID, message: String, timestamp: DateTime = now(), validationErrors: Seq[String] = Seq())
 
 trait IncidentReporting { this: HakuJaValintarekisteriStack =>
 

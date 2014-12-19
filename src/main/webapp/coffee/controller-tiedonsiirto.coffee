@@ -31,6 +31,7 @@ app.controller "TiedonsiirtoCtrl", [
           message: "Virhe lähettäessä tiedostoa."
           messageKey: "suoritusrekisteri.tiedonsiirto.virhe"
           description: response.message
+          validationErrors: response.validationErrors
       delete $scope.sending
 
       return

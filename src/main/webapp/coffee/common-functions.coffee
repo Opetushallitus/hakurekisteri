@@ -49,6 +49,16 @@ getKoodistoAsOptionArray = ($http, koodisto, kielikoodi, options, valueFromField
     return
   return
 
+collect = (arr) ->
+  ret = {}
+  len = arr.length
+  i = 0
+  while i < len
+    for p of arr[i]
+      ret[p] = arr[i][p]  if arr[i].hasOwnProperty(p)
+    i++
+  ret
+
 parseFinDate = (d) ->
   (if (d and d.match(/[0-3][0-9]\.[0-1][0-9]\.[0-9]{4}/)) then new Date(parseInt(d.substr(6, 4), 10), parseInt(d.substr(3, 2), 10) - 1, parseInt(d.substr(0, 2), 10)) else null)
 

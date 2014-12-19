@@ -96,7 +96,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 
   incident {
     case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
-    case t: MalformedResourceException => (id) => BadRequest(IncidentReport(id, t.getMessage))
+    case t: MalformedResourceException => (id) => BadRequest(IncidentReport(incidentId = id, message = t.getMessage, validationErrors = t.errors.map(_.args.map(_.toString)).list.reduce(_ ++ _).toSeq))
     case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, "not authorized"))
     case t: SizeConstraintExceededException => (id) => RequestEntityTooLarge(IncidentReport(id, s"Tiedosto on liian suuri (suurin sallittu koko $maxFileSize tavua)."))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
