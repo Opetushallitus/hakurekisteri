@@ -29,16 +29,22 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     processStarter.cancel()
   }
 
-  private def readyForProcessing: Boolean = context.children.size < 2
+  var fetching = false
+
+  private def readyForProcessing: Boolean = context.children.size < 2 && !fetching
 
   override def receive: Receive = {
     case ProcessReadyBatches if readyForProcessing =>
+      fetching = true
       importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), Some("perustiedot"), Some(1))
 
     case b: Seq[ImportBatch with Identified[UUID]] =>
-      b.foreach(batch => {
-        context.actorOf(Props(new PerustiedotProcessingActor(batch)))
-      })
+      b.foreach(batch => importBatchActor ! batch.copy(state = BatchState.PROCESSING).identify(batch.id))
+      if (b.isEmpty) fetching = false
+
+    case b: ImportBatch with Identified[UUID] =>
+      fetching = false
+      context.actorOf(Props(new PerustiedotProcessingActor(b)))
   }
 
   case object ProcessingJammedException extends Exception("processing jammed")
@@ -181,11 +187,14 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
             saveHenkilo(h, (lahtokoulu) => organisaatiot(lahtokoulu).map(_.oid).get)
           })
 
-      case SavedHenkilo(henkiloOid, tunniste) =>
+      case SavedHenkilo(henkiloOid, tunniste) if importHenkilot.contains(tunniste) =>
         val importHenkilo = importHenkilot(tunniste)
         saveOpiskelija(henkiloOid, importHenkilo)
         saveSuoritukset(henkiloOid, importHenkilo)
         henkiloDone(tunniste)
+
+      case SavedHenkilo(henkiloOid, tunniste) if !importHenkilot.contains(tunniste) =>
+        log.warning(s"received save confirmation from ${sender()}, but no match left in batch: sent tunniste $tunniste -> received henkiloOid $henkiloOid")
 
       case HenkiloSaveFailed(tunniste, t) =>
         val errors = failures.getOrElse(tunniste, Set[String]()) + t.toString

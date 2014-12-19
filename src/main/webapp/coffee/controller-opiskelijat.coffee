@@ -5,12 +5,13 @@ app.controller "OpiskelijatCtrl", [
   "$log"
   "$http"
   "$q"
+  "$cookies"
   "Opiskelijat"
   "Suoritukset"
   "Arvosanat"
   "MurupolkuService"
   "MessageService"
-  ($scope, $routeParams, $location, $log, $http, $q, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService) ->
+  ($scope, $routeParams, $location, $log, $http, $q, $cookies, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService) ->
     showCurrentRows = (allRows) ->
       $scope.allRows = allRows
       $scope.currentRows = allRows.slice($scope.page * $scope.pageSize, ($scope.page + 1) * $scope.pageSize)
@@ -72,12 +73,23 @@ app.controller "OpiskelijatCtrl", [
       [""].concat([start..end]).map (v) ->
         "" + v
 
+    pageSizeFromCookie = () ->
+      cookieValue = $cookies.opiskelijatPageSize
+      if typeof cookieValue is 'string'
+        try
+          parseInt(cookieValue)
+        catch err
+          $log.error("cookie value cannot be parsed to integer: " + cookieValue)
+          10
+      else
+        10
+
     $scope.loading = false
     $scope.currentRows = []
     $scope.allRows = []
     $scope.pageNumbers = []
     $scope.page = 0
-    $scope.pageSize = 10
+    $scope.pageSize = pageSizeFromCookie()
     $scope.vuodet = vuodet()
 
     $scope.henkiloTerm = $routeParams.henkilo
@@ -265,6 +277,13 @@ app.controller "OpiskelijatCtrl", [
       resetPageNumbers()
       showCurrentRows $scope.allRows
       return
+
+    $scope.setPageSize = (newSize) ->
+      $scope.pageSize = newSize
+      $cookies.opiskelijatPageSize = "" + newSize
+      $scope.page = 0
+      resetPageNumbers()
+      showCurrentRows $scope.allRows
 
     $scope.fetch()
 ]

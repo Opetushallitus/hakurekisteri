@@ -20,6 +20,7 @@ object BatchState extends Enumeration {
   val READY = Value("READY")
   val DONE = Value("DONE")
   val FAILED = Value("FAILED")
+  val PROCESSING = Value("PROCESSING")
 }
 
 import fi.vm.sade.hakurekisteri.batchimport.BatchState.BatchState

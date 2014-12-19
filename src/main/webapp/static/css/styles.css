@@ -168,7 +168,7 @@ optgroup option {
 }
 
 .nav-stacked li {
-    white-space: nowrap;
+    /* white-space: nowrap; */
 }
 
 .nav-stacked {
@@ -202,4 +202,10 @@ optgroup option {
 .pie-legend li div {
     display: inline-block;
     width: 15px;
+}
+
+.pagination-label {
+    display: inline-block;
+    margin-top: 7px;
+    vertical-align: top;
 }
