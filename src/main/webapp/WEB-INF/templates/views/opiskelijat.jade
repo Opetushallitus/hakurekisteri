@@ -62,8 +62,8 @@ table(class="table")
       td(class="loading-td" colspan="4")
         div(class="loading-large")
 
-aside(class="text-center" ng-hide="loading")
-  div(class="pagination" ng-show="pageNumbers && pageNumbers.length > 0")
+aside(ng-hide="loading")
+  div(class="pagination pull-left" ng-show="pageNumbers && pageNumbers.length > 0")
     ul
       li
         a(ng-click="prevPage()")
@@ -73,3 +73,13 @@ aside(class="text-center" ng-hide="loading")
       li
         a(ng-click="nextPage()")
           span(class="glyphicon glyphicon-arrow-right")
+  div(class="pagination pull-right" ng-show="pageNumbers && pageNumbers.length > 0")
+    span(class="pagination-label" oph-msg="suoritusrekisteri.opiskelijat.henkiloitasivulla") Henkilöitä sivulla:
+    ul
+      li(class="{{pageSize === 10 ? 'active' : ''}}")
+        a(ng-click="setPageSize(10)") 10
+      li(class="{{pageSize === 20 ? 'active' : ''}}")
+        a(ng-click="setPageSize(20)") 20
+      li(class="{{pageSize === 50 ? 'active' : ''}}")
+        a(ng-click="setPageSize(50)") 50
+

@@ -6,6 +6,7 @@ app = angular.module "myApp", [
   "ui.bootstrap"
   "ngUpload"
   "ngSanitize"
+  "ngCookies"
 ]
 
 app.factory "Opiskelijat", ($resource) ->

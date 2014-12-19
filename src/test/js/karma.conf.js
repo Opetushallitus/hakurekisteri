@@ -34,6 +34,7 @@ module.exports = function(config) {
             'main/webapp/static/js/angular-1.3.7/angular-resource.min.js',
             'main/webapp/static/js/angular-1.3.7/angular-route.min.js',
             'main/webapp/static/js/angular-1.3.7/angular-sanitize.min.js',
+            'main/webapp/static/js/angular-1.3.7/angular-cookies.min.js',
             'main/webapp/static/js/angular-locale/angular-locale_fi.js',
             'main/webapp/static/js/angular-ui/ui-bootstrap-tpls-0.11.2.min.js',
             'main/webapp/static/js/ng-upload.min.js',

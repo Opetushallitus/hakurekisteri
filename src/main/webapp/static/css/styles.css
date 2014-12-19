@@ -203,3 +203,9 @@ optgroup option {
     display: inline-block;
     width: 15px;
 }
+
+.pagination-label {
+    display: inline-block;
+    margin-top: 7px;
+    vertical-align: top;
+}
