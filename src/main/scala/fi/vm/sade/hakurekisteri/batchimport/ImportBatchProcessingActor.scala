@@ -37,13 +37,16 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     case ProcessReadyBatches if readyForProcessing =>
       fetching = true
       importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), Some("perustiedot"), Some(1))
+      log.debug("asked for one batch")
 
     case b: Seq[ImportBatch with Identified[UUID]] =>
       b.foreach(batch => importBatchActor ! batch.copy(state = BatchState.PROCESSING).identify(batch.id))
+      log.debug(s"got ${b.size} batches, setting state to processing")
 
     case b: ImportBatch with Identified[UUID] =>
       fetching = false
       context.actorOf(Props(new PerustiedotProcessingActor(b)))
+      log.debug("state saved, started processing")
   }
 
   case object ProcessingJammedException extends Exception("processing jammed")

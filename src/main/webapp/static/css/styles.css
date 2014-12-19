@@ -168,7 +168,7 @@ optgroup option {
 }
 
 .nav-stacked li {
-    white-space: nowrap;
+    /* white-space: nowrap; */
 }
 
 .nav-stacked {
