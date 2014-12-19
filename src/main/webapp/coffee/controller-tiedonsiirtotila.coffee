@@ -33,6 +33,7 @@ app.controller "TiedonsiirtotilaCtrl", [
             READY: '#D9EDF7'
             DONE: '#DFF0D8'
             FAILED: '#F2DEDE'
+            PROCESSING: '#FCF8E3'
           tempData = batches.map((b) -> b.state).reduce((prev, item) ->
             if item of prev
               prev[item]++
@@ -64,6 +65,7 @@ app.controller "TiedonsiirtotilaCtrl", [
       return "info"  if b.state is "READY"
       return "danger"  if b.state is "FAILED"
       return "success"  if b.state is "DONE"
+      return "warning"  if b.state is "PROCESSING"
       return ""
 
     $scope.hasMessages = (b) ->
