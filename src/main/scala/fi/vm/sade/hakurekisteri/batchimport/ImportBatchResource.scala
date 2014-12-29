@@ -1,9 +1,12 @@
 package fi.vm.sade.hakurekisteri.batchimport
 
-import java.io.{ByteArrayInputStream, InputStream}
+import java.io.{PrintWriter, File, ByteArrayInputStream, InputStream}
+import java.text.SimpleDateFormat
 import java.util
+import java.util.{Date, UUID}
 import javax.servlet.http.{Part, HttpServletRequest}
 
+import _root_.akka.event.{Logging, LoggingAdapter}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.{AskTimeoutException, ask}
 import fi.vm.sade.hakurekisteri.Config
@@ -18,7 +21,11 @@ import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.xml.sax.SAXParseException
 import siirto.{XMLValidator, ValidXml, SchemaDefinition}
 
+import scala.compat.Platform
 import scala.concurrent.duration._
+import scala.io
+import scala.io.BufferedSource
+import scala.util.Try
 import scala.xml.Elem
 import scalaz._
 
@@ -33,8 +40,16 @@ class ImportBatchResource(eraRekisteri: ActorRef,
                                   (implicit sw: Swagger, system: ActorSystem, mf: Manifest[ImportBatch], cf: Manifest[ImportBatchCommand])
     extends HakurekisteriResource[ImportBatch, ImportBatchCommand](eraRekisteri, queryMapper) with ImportBatchSwaggerApi with HakurekisteriCrudCommands[ImportBatch, ImportBatchCommand] with SpringSecuritySupport with FileUploadSupport with IncidentReporting {
 
+  override val logger: LoggingAdapter = Logging.getLogger(system, this)
+
   val maxFileSize = 50 * 1024 * 1024L
-  configureMultipartHandling(MultipartConfig(maxFileSize = Some(maxFileSize)))
+  val storageDir = Config.tiedonsiirtoStorageDir
+  
+  configureMultipartHandling(MultipartConfig(
+    maxFileSize = Some(maxFileSize)
+  ))
+
+  logger.info(s"storageDir: $storageDir")
 
   val validator = new ValidXml(schema, imports:_*)
 
@@ -49,6 +64,20 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   before() {
     if (multipart) contentType = formats("html")
   }
+
+  private def ensureStorageDir() = {
+    try {
+      if (new File(storageDir).mkdirs()) {
+        logger.info(s"creating a temp dir in $storageDir")
+      }
+    } catch {
+      case e: Exception =>
+        logger.error(e, "error while ensuring storageDir exists")
+        throw e
+    }
+  }
+
+  ensureStorageDir()
 
   private def toJson(a: Product): String = compact(Extraction.decompose(a))
 
@@ -112,11 +141,42 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     })
   }
 
+  val SafeExtension = ".*\\.[a-zA-Z0-9]{1,10}$".r
+  private def getFileExtension(f: FileItem): String = f.name match {
+    case SafeExtension() => f.name.substring(f.name.lastIndexOf('.') + 1)
+    case _ => "unknown"
+  }
+
+  val tsFormat = "yyyyMMddHHmmssSSS"
+  private def saveFiles(valid: Boolean)(implicit request: HttpServletRequest): Map[String, File] = {
+    val ts = new SimpleDateFormat(tsFormat).format(new Date())
+    val filename =
+      if (valid) s"$storageDir/${ts}_${UUID.randomUUID()}"
+      else s"$storageDir/${ts}_${UUID.randomUUID()}_invalid"
+    if (multipart(request)) {
+      fileMultiParams.get(dataField).getOrElse(Seq.empty[FileItem]).map((f: FileItem) => {
+        val newFile = new File(s"$filename.${getFileExtension(f)}")
+        f.write(newFile)
+        f.name -> newFile
+      }).toMap
+    } else {
+      val newFile = new File(s"$filename.xml")
+      new PrintWriter(newFile).write(request.body)
+      Map("as request body" -> newFile)
+    }
+  }
+
   override protected def bindCommand[T <: CommandType](newCommand: T)(implicit request: HttpServletRequest, mf: Manifest[T]): T = {
-    if (multipart)
-      newCommand.bindTo[Map[String, FileItem], FileItem](fileParams, multiParams(request), request.headers)(files => new FileItemMapValueReader(files), default(EmptyFile), default(Map()), manifest[FileItem], implicitly[MultiParams => ValueReader[MultiParams, Seq[String]]])
-    else
-      newCommand.bindTo(params(request) + (dataField -> request.body), multiParams(request), request.headers)
+    val command = request match {
+      case r if multipart(r) => newCommand.bindTo[Map[String, FileItem], FileItem](fileParams, multiParams(request), request.headers)(files => new FileItemMapValueReader(files), default(EmptyFile), default(Map()), manifest[FileItem], implicitly[MultiParams => ValueReader[MultiParams, Seq[String]]])
+      case _ => newCommand.bindTo(params(request) + (dataField -> request.body), multiParams(request), request.headers)
+    }
+
+    saveFiles(command.isValid).foreach(entry => {
+      logger.info(s"received ${if (command.isValid) "a valid" else "an invalid"} batch (${entry._1}) from ${getUser.username}, saving to storage as ${entry._2.getName}")
+    })
+
+    command
   }
 }
 
