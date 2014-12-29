@@ -13,8 +13,10 @@ object ExcelReadConversions {
   val defaultExcelFormat = DefaultExcelFormat()
 }
 
+case class Sheet(name: String, data: Array[Array[(String, String)]])
 
-case class DefaultExcelFormat(root: Elem = <defaultRoot/>) extends ExcelFormat {
+
+case class DefaultExcelFormat(root: Elem = <defaultRoot/>,  handleSheet: PartialFunction[(Elem, Sheet), Elem] = Map()) extends ExcelFormat {
   import scala.collection.JavaConversions._
 
   def readSheet(sheet: org.apache.poi.ss.usermodel.Sheet): Sheet =  {
@@ -32,9 +34,7 @@ case class DefaultExcelFormat(root: Elem = <defaultRoot/>) extends ExcelFormat {
     Sheet(sheet.getSheetName, data)
   }
 
-  val handleSheet: PartialFunction[(Elem, Sheet), Elem] = Map()
 
-  case class Sheet(name: String, data: Array[Array[(String, String)]])
 
   def defaultHandleSheet(currentXml: Elem, sheet: Sheet): Elem = {
     val content = for (
@@ -46,7 +46,7 @@ case class DefaultExcelFormat(root: Elem = <defaultRoot/>) extends ExcelFormat {
       ) yield <xml>{item}</xml>.copy(label = itemName)
       <xml>{rowContent}</xml>.copy(label = sheet.name)
     }
-    currentXml.copy(child = content)
+    currentXml.copy(child = currentXml.child ++ content)
 
   }
 
@@ -56,6 +56,8 @@ case class DefaultExcelFormat(root: Elem = <defaultRoot/>) extends ExcelFormat {
   }
 
   override def withRoot(root: Elem) = this.copy(root = root)
+
+  override def withHandlers(handler: PartialFunction[(Elem, Sheet), Elem]) = this.copy(handleSheet = handler)
 }
 
 case class ReadConvertibleExcel(workbook: Workbook) extends ExcelReadConversions {
@@ -74,6 +76,8 @@ trait ExcelFormat {
   def toXml(workbook:Workbook): Elem
 
   def withRoot(root:Elem): ExcelFormat
+
+  def withHandlers(handler: PartialFunction[(Elem, Sheet), Elem]): ExcelFormat
 
 
 }
