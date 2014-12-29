@@ -1,6 +1,10 @@
 # Logger
-log4j.rootLogger={{env_loglevel}}, FILE
-log4j.logger.fi.vm.sade.hakurekisteri=INFO
+log4j.rootLogger=INFO, FILE
+log4j.logger.org={{env_loglevel}}
+log4j.logger.com={{env_loglevel}}
+log4j.logger.java={{env_loglevel}}
+log4j.logger.javax={{env_loglevel}}
+log4j.logger.scala={{env_loglevel}}
 
 {# raw-endraw -välillä template engine ei tee mitään! #} 
 {% raw %}

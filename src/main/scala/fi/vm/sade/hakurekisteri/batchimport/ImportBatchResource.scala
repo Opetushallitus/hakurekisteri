@@ -41,7 +41,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     extends HakurekisteriResource[ImportBatch, ImportBatchCommand](eraRekisteri, queryMapper) with ImportBatchSwaggerApi with HakurekisteriCrudCommands[ImportBatch, ImportBatchCommand] with SpringSecuritySupport with FileUploadSupport with IncidentReporting {
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
-  
+
   val maxFileSize = 50 * 1024 * 1024L
   val storageDir = Config.tiedonsiirtoStorageDir
   
