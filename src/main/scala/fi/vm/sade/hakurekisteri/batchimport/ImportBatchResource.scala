@@ -6,6 +6,7 @@ import java.util
 import java.util.{Date, UUID}
 import javax.servlet.http.{Part, HttpServletRequest}
 
+import _root_.akka.event.{Logging, LoggingAdapter}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.{AskTimeoutException, ask}
 import fi.vm.sade.hakurekisteri.Config
@@ -39,6 +40,8 @@ class ImportBatchResource(eraRekisteri: ActorRef,
                                   (implicit sw: Swagger, system: ActorSystem, mf: Manifest[ImportBatch], cf: Manifest[ImportBatchCommand])
     extends HakurekisteriResource[ImportBatch, ImportBatchCommand](eraRekisteri, queryMapper) with ImportBatchSwaggerApi with HakurekisteriCrudCommands[ImportBatch, ImportBatchCommand] with SpringSecuritySupport with FileUploadSupport with IncidentReporting {
 
+  override val logger: LoggingAdapter = Logging.getLogger(system, this)
+  
   val maxFileSize = 50 * 1024 * 1024L
   val storageDir = Config.tiedonsiirtoStorageDir
   
