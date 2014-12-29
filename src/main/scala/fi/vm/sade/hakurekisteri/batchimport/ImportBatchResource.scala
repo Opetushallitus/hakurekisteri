@@ -1,8 +1,9 @@
 package fi.vm.sade.hakurekisteri.batchimport
 
 import java.io.{PrintWriter, File, ByteArrayInputStream, InputStream}
+import java.text.SimpleDateFormat
 import java.util
-import java.util.UUID
+import java.util.{Date, UUID}
 import javax.servlet.http.{Part, HttpServletRequest}
 
 import akka.actor.{ActorRef, ActorSystem}
@@ -143,20 +144,22 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     case _ => "unknown"
   }
 
-  private def saveFiles(valid: Boolean)(implicit request: HttpServletRequest): Seq[File] = {
+  val tsFormat = "yyyyMMddHHmmssSSS"
+  private def saveFiles(valid: Boolean)(implicit request: HttpServletRequest): Map[String, File] = {
+    val ts = new SimpleDateFormat(tsFormat).format(new Date())
     val filename =
-      if (valid) s"$storageDir/${Platform.currentTime}_${UUID.randomUUID()}"
-      else s"$storageDir/${Platform.currentTime}_${UUID.randomUUID()}_invalid"
+      if (valid) s"$storageDir/${ts}_${UUID.randomUUID()}"
+      else s"$storageDir/${ts}_${UUID.randomUUID()}_invalid"
     if (multipart(request)) {
       fileMultiParams.get(dataField).getOrElse(Seq.empty[FileItem]).map((f: FileItem) => {
         val newFile = new File(s"$filename.${getFileExtension(f)}")
         f.write(newFile)
-        newFile
-      })
+        f.name -> newFile
+      }).toMap
     } else {
       val newFile = new File(s"$filename.xml")
       new PrintWriter(newFile).write(request.body)
-      Seq(newFile)
+      Map("as request body" -> newFile)
     }
   }
 
@@ -166,8 +169,8 @@ class ImportBatchResource(eraRekisteri: ActorRef,
       case _ => newCommand.bindTo(params(request) + (dataField -> request.body), multiParams(request), request.headers)
     }
 
-    saveFiles(command.isValid).foreach(f => {
-      logger.info(s"received ${if (command.isValid) "a valid" else "an invalid"} batch from ${getUser.username}, saving to storage as ${f.getName}")
+    saveFiles(command.isValid).foreach(entry => {
+      logger.info(s"received ${if (command.isValid) "a valid" else "an invalid"} batch (${entry._1}) from ${getUser.username}, saving to storage as ${entry._2.getName}")
     })
 
     command
