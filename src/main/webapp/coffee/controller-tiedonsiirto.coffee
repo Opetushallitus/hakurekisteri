@@ -16,6 +16,18 @@ app.controller "TiedonsiirtoCtrl", [
 
       return
 
+    clearFile = () ->
+      try
+        elem = document.getElementById("tiedosto")
+        if elem
+          elem.value = ''
+          if elem.value
+            elem.type = 'text'
+            elem.type = 'file'
+      catch e
+        $log.error(e)
+
+
     $scope.uploadComplete = (content) ->
       if isImportBatchResponse(content)
         response = (if typeof content is "object" then content else angular.fromJson(content))
@@ -33,6 +45,8 @@ app.controller "TiedonsiirtoCtrl", [
           description: response.message
           validationErrors: response.validationErrors
       delete $scope.sending
+
+      clearFile()
 
       return
 
