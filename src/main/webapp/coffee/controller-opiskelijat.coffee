@@ -12,14 +12,15 @@ app.controller "OpiskelijatCtrl", [
   "MurupolkuService"
   "MessageService"
   ($scope, $routeParams, $location, $log, $http, $q, $cookies, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService) ->
+    startLoading = -> $scope.loading = true
+    stopLoading = -> $scope.loading = false
+
     showCurrentRows = (allRows) ->
+      startLoading()
       $scope.allRows = allRows
       $scope.currentRows = allRows.slice($scope.page * $scope.pageSize, ($scope.page + 1) * $scope.pageSize)
       enrichData()
       return
-
-    startLoading = -> $scope.loading = true
-    stopLoading = -> $scope.loading = false
 
     enrichData = () ->
       enrichments = []
