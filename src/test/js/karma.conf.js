@@ -26,7 +26,7 @@ module.exports = function(config) {
             'karma-phantomjs-launcher'
         ],
         files: [
-            'main/webapp/static/js/jquery-1.11.1.min.js',
+            'main/webapp/static/js/jquery-2.1.3.min.js',
             'main/webapp/static/js/jquery.fileDownload.js',
             'main/webapp/static/js/bootstrap-3.3.1.min.js',
             'main/webapp/static/js/Chart.min.js',
