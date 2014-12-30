@@ -44,7 +44,7 @@ div(class="row")
         div(ng-repeat="e in uploadResult.validationErrors track by $index") {{e}}
 
     div(ng-if="sending" class="modal fade in" style="display: block")
-      div(class="modal-backdrop fade in")
+      div(class="modal-backdrop fade in" style="height: 100%")
       div(class="modal-dialog")
         div(class="modal-content")
           div(class="modal-header")

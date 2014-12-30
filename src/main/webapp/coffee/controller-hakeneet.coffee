@@ -1,83 +1,68 @@
-loadHakutiedot = ($http, $scope, MessageService) ->
-  $http.get("rest/v1/haut", { cache: true }).success((hautResponse) ->
-    kaudet = [text: ""]
-    haut = []
-
-    kausiExists = (kausi) ->
-      kaudet.some (k) ->
-        k.vuosi is kausi.vuosi and k.kausi is kausi.kausi
-
-    resolveKausiText = (kausiUri) ->
-      (if kausiUri and kausiUri.match(/^kausi_s.*/) then "Syksy" else ((if kausiUri and kausiUri.match(/^kausi_k.*/) then "Kevät" else "KAUSI PUUTTUU")))
-
-    filteredHaut = hautResponse.filter((h) ->
-      if $scope.vainKkHaut
-        h.kkHaku
+loadHakutiedot = (hautResponse, $scope) ->
+  kaudet = [text: ""]
+  haut = []
+  kausiExists = (kausi) ->
+    kaudet.some (k) ->
+      k.vuosi is kausi.vuosi and k.kausi is kausi.kausi
+  resolveKausiText = (kausiUri) ->
+    (if kausiUri and kausiUri.match(/^kausi_s.*/) then "Syksy" else ((if kausiUri and kausiUri.match(/^kausi_k.*/) then "Kevät" else "KAUSI PUUTTUU")))
+  filteredHaut = hautResponse.filter((h) ->
+    if $scope.vainKkHaut
+      h.kkHaku
+    else
+      true
+  )
+  for haku in filteredHaut
+    do (haku) ->
+      k =
+        vuosi: haku.vuosi
+        kausi: haku.kausi
+        text: "" + haku.vuosi + " " + resolveKausiText(haku.kausi)
+      kaudet.push k  unless kausiExists(k)
+      haut.push
+        vuosi: haku.vuosi
+        kausi: haku.kausi
+        hakukausi: resolveKausiText(haku.kausi)
+        oid: haku.oid
+        text: ((if haku.nimi and haku.nimi.fi then haku.nimi.fi else ((if haku.nimi and haku.nimi.sv then haku.nimi.sv else ((if haku.nimi and haku.nimi.en then haku.nimi.en else "NIMI PUUTTUU"))))))
+  sortByNimi = (a, b) ->
+    if a and b and a.text and b.text
+      if a.text.toLowerCase() is b.text.toLowerCase()
+        return 0
       else
-        true
-    )
+        return (if a.text.toLowerCase() < b.text.toLowerCase() then -1 else 1)
+    0
+  kaudet.sort sortByNimi
+  sortByKausiAndNimi = (a, b) ->
+    aKausi = a.vuosi + a.kausi
+    bKausi = b.vuosi + b.kausi
+    if aKausi is bKausi
+      sortByNimi a, b
+    else
+      (if aKausi < bKausi then 1 else -1)
+  haut.sort sortByKausiAndNimi
+  $scope.kaudet = kaudet
+  $scope.kausi = kaudet[0]  if kaudet.length > 0
+  $scope.haut = haut
 
-    for haku in filteredHaut
-      do (haku) ->
-        k =
-          vuosi: haku.vuosi
-          kausi: haku.kausi
-          text: "" + haku.vuosi + " " + resolveKausiText(haku.kausi)
-        kaudet.push k  unless kausiExists(k)
-        haut.push
-          vuosi: haku.vuosi
-          kausi: haku.kausi
-          hakukausi: resolveKausiText(haku.kausi)
-          oid: haku.oid
-          text: ((if haku.nimi and haku.nimi.fi then haku.nimi.fi else ((if haku.nimi and haku.nimi.sv then haku.nimi.sv else ((if haku.nimi and haku.nimi.en then haku.nimi.en else "NIMI PUUTTUU"))))))
 
-    sortByNimi = (a, b) ->
-      if a and b and a.text and b.text
-        if a.text.toLowerCase() is b.text.toLowerCase()
-          return 0
-        else
-          return (if a.text.toLowerCase() < b.text.toLowerCase() then -1 else 1)
-      0
-
-    kaudet.sort sortByNimi
-
-    sortByKausiAndNimi = (a, b) ->
-      aKausi = a.vuosi + a.kausi
-      bKausi = b.vuosi + b.kausi
-      if aKausi is bKausi
-        sortByNimi a, b
-      else
-        (if aKausi < bKausi then 1 else -1)
-
-    haut.sort sortByKausiAndNimi
-
-    $scope.kaudet = kaudet
-    $scope.kausi = kaudet[0]  if kaudet.length > 0
-    $scope.haut = haut
-  ).error ->
-    MessageService.addMessage
-      type: "danger"
-      message: "Tietojen lataaminen näytölle epäonnistui."
-      description: "Päivitä näyttö tai navigoi sille uudelleen."
-
-loadHakukohdekoodit = ($http, $scope) ->
-  $http.get(koodistoServiceUrl + "/rest/json/hakukohteet/koodi", { cache: true }).success (data) ->
-    $scope.hakukohdekoodit = data.map((koodi) ->
-      koodi: koodi.koodiArvo
-      nimi: koodi.metadata.sort((a, b) ->
-        if a.kieli and b.kieli and a.kieli isnt b.kieli
-          (if a.kieli < b.kieli then -1 else 1)
-        else
-          0
-      ).map((kielistys) ->
-        kielistys.nimi
-      ).join("; ")
-    ).sort((a, b) ->
-      if a.koodi and b.koodi and a.koodi isnt b.koodi
-        (if a.koodi < b.koodi then -1 else 1)
+loadHakukohdekoodit = (data, $scope) ->
+  $scope.hakukohdekoodit = data.map((koodi) ->
+    koodi: koodi.koodiArvo
+    nimi: koodi.metadata.sort((a, b) ->
+      if a.kieli and b.kieli and a.kieli isnt b.kieli
+        (if a.kieli < b.kieli then -1 else 1)
       else
         0
-    )
+    ).map((kielistys) ->
+      kielistys.nimi
+    ).join("; ")
+  ).sort((a, b) ->
+    if a.koodi and b.koodi and a.koodi isnt b.koodi
+      (if a.koodi < b.koodi then -1 else 1)
+    else
+      0
+  )
 
 
 app.controller "HakeneetCtrl", [
@@ -87,7 +72,9 @@ app.controller "HakeneetCtrl", [
   "MurupolkuService"
   "MessageService"
   "aste"
-  ($scope, $http, $modal, MurupolkuService, MessageService, aste) ->
+  "haut"
+  "hakukohdekoodit"
+  ($scope, $http, $modal, MurupolkuService, MessageService, aste, haut, hakukohdekoodit) ->
     isKk = ->
       aste is "kk"
 
@@ -148,7 +135,7 @@ app.controller "HakeneetCtrl", [
         text: "Hakeneet ja valitut opiskelijat"
       , true
 
-    loadHakutiedot $http, $scope, MessageService
+    loadHakutiedot haut, $scope
 
     $scope.search = ->
       MessageService.clearMessages()
@@ -264,7 +251,7 @@ app.controller "HakeneetCtrl", [
       return
 
     $scope.hakukohdekoodit = []
-    loadHakukohdekoodit $http, $scope
+    loadHakukohdekoodit hakukohdekoodit, $scope
     $scope.searchHakukohde = ->
       $http.get(tarjontaServiceUrl + "/rest/v1/hakukohde/search",
         params:
@@ -325,4 +312,8 @@ app.controller "HakeneetCtrl", [
       else
         $scope.hakukohdenimi = ""
       return
+
+    $scope.hakuFilter = (haku, i) ->
+      return true  if !$scope.kausi or ($scope.kausi and !$scope.kausi.kausi and !$scope.kausi.vuosi)
+      $scope.kausi and haku.kausi is $scope.kausi.kausi and haku.vuosi is $scope.kausi.vuosi
 ]

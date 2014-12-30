@@ -12,35 +12,59 @@ app.controller "OpiskelijatCtrl", [
   "MurupolkuService"
   "MessageService"
   ($scope, $routeParams, $location, $log, $http, $q, $cookies, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService) ->
+    startLoading = -> $scope.loading = true
+    stopLoading = -> $scope.loading = false
+
     showCurrentRows = (allRows) ->
+      startLoading()
       $scope.allRows = allRows
       $scope.currentRows = allRows.slice($scope.page * $scope.pageSize, ($scope.page + 1) * $scope.pageSize)
       enrichData()
       return
 
     enrichData = () ->
+      enrichments = []
+
       enrichHenkilo = (row) ->
+        d = $q.defer()
+        enrichments.push d
         $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(row.henkiloOid),
           cache: false
-        ).success (henkilo) ->
+        ).success((henkilo) ->
           row.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + " (" + ((if henkilo.hetu then henkilo.hetu else henkilo.syntymaaika)) + ")"  if henkilo
+          d.resolve()
+        ).error(->
+          d.reject('error resolving name for ' + row.henkiloOid)
+        )
 
       enrichOpiskelijat = (row) ->
         if Array.isArray row.opiskelijat
           for o in row.opiskelijat
             do (o) ->
-              getOrganisaatio $http, o.oppilaitosOid, (oppilaitos) ->
+              d = $q.defer()
+              enrichments.push d
+              getOrganisaatio $http, o.oppilaitosOid, ((oppilaitos) ->
                 o.oppilaitos = (if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "") + (if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv)
+                d.resolve()
+              ), -> d.reject('error resolving oppilaitos for ' + o.oppilaitosOid)
 
       enrichSuoritukset = (row) ->
         if Array.isArray row.suoritukset
           for o in row.suoritukset
             do (o) ->
-              getOrganisaatio $http, o.myontaja, (oppilaitos) ->
+              od = $q.defer()
+              enrichments.push od
+              getOrganisaatio $http, o.myontaja, ((oppilaitos) ->
                 o.oppilaitos = (if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "") + " " + (if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv)
+                od.resolve()
+              ), -> od.reject('error resolving oppilaitos for ' + o.myontaja)
               if o.komo.match(/^koulutus_\d*$/)
-                getKoulutusNimi $http, o.komo, (koulutusNimi) ->
+                kd = $q.defer()
+                getKoulutusNimi $http, o.komo, ((koulutusNimi) ->
                   o.koulutus = koulutusNimi
+                  kd.resolve()
+                ), ->
+                  kd.reject('error resolving koulutus nimi for ' + o.komo)
               Arvosanat.query { suoritus: o.id }, (arvosanat) ->
                 if arvosanat.length > 0
                   o.hasArvosanat = true
@@ -55,6 +79,13 @@ app.controller "OpiskelijatCtrl", [
             enrichOpiskelijat row
             enrichSuoritukset row
           return
+
+      $q.all(enrichments.map((d) -> d.promise)).then((->
+        stopLoading()
+      ), (errors) ->
+        $log.error(errors)
+        stopLoading()
+      )
 
       return
 
@@ -129,9 +160,6 @@ app.controller "OpiskelijatCtrl", [
       return
 
     $scope.fetch = ->
-      startLoading = -> $scope.loading = true
-      stopLoading = -> $scope.loading = false
-
       doSearch = (query) ->
         MessageService.clearMessages()
 
@@ -192,7 +220,6 @@ app.controller "OpiskelijatCtrl", [
         ]).then ((results) ->
           showCurrentRows groupByHenkiloOid(collect(results))
           resetPageNumbers()
-          stopLoading()
         ), (errors) ->
           $log.error errors
           MessageService.addMessage

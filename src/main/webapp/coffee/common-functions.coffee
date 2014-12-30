@@ -8,17 +8,17 @@ getOrganisaatio = ($http, organisaatioOid, successCallback, errorCallback) ->
   ).success(successCallback).error errorCallback
   return
 
-getKoulutusNimi = ($http, koulutusUri, successCallback) ->
+getKoulutusNimi = ($http, koulutusUri, successCallback, errorCallback) ->
   $http.get(koodistoServiceUrl + "/rest/json/koulutus/koodi/" + encodeURIComponent(koulutusUri),
     cache: true
-  ).success (koodi) ->
+  ).success((koodi) ->
     if koodi.metadata
       i = 0
       while i < koodi.metadata.length
         meta = koodi.metadata[i]
         return successCallback(meta.nimi)  if meta.kieli is "FI"
         i++
-    successCallback ""
+    successCallback "").error(errorCallback)
   return
 
 getOphMsg = (key, def) ->

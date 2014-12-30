@@ -26,7 +26,7 @@ div(class="row")
           label(class="col-sm-2 control-label" for="haku" oph-msg="suoritusrekisteri.hakeneet.haku") Haku
           div(class="col-sm-10")
             select(class="form-control" id="haku" ng-model="haku" ng-change="clearHakukohde()"
-              ng-options="hk as hk.text group by (hk.vuosi + ' ' + hk.hakukausi) for hk in haut | filter:{vuosi:kausi.vuosi,kausi:kausi.kausi}")
+              ng-options="hk as hk.text group by (hk.vuosi + ' ' + hk.hakukausi) for hk in haut | filter:hakuFilter")
         div(class="form-group")
           label(class="col-sm-2 control-label" oph-msg="suoritusrekisteri.hakeneet.organisaatio") Organisaatio
           div(class="col-sm-6")
@@ -70,7 +70,7 @@ div(class="row")
 
 
 div(ng-if="fileLoading" class="modal fade in" style="display: block")
-  div(class="modal-backdrop fade in")
+  div(class="modal-backdrop fade in" style="height: 100%")
   div(class="modal-dialog")
     div(class="modal-content")
       div(class="modal-header")

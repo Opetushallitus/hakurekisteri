@@ -25,6 +25,22 @@ app.config ($locationProvider, $routeProvider) ->
     resolve:
       aste: ->
         "toinenaste"
+      haut: ($http, MessageService) ->
+        $http.get("rest/v1/haut", { cache: true }).then(((response) -> response.data), ->
+          MessageService.addMessage
+            type: "danger"
+            message: "Tietojen lataaminen näytölle epäonnistui."
+            description: "Päivitä näyttö tai navigoi sille uudelleen."
+          []
+        )
+      hakukohdekoodit: ($http, MessageService) ->
+        $http.get(koodistoServiceUrl + "/rest/json/hakukohteet/koodi", { cache: true }).then(((response) -> response.data), ->
+          MessageService.addMessage
+            type: "danger"
+            message: "Tietojen lataaminen näytölle epäonnistui."
+            description: "Päivitä näyttö tai navigoi sille uudelleen."
+          []
+        )
 
   $routeProvider.when "/tiedonsiirto",
     redirectTo: (routeParams, currentLocation, search) ->
@@ -37,6 +53,16 @@ app.config ($locationProvider, $routeProvider) ->
     resolve:
       aste: ->
         "kk"
+      haut: ($http, MessageService) ->
+        $http.get("rest/v1/haut", { cache: true }).then(((response) -> response.data), ->
+          MessageService.addMessage
+            type: "danger"
+            message: "Tietojen lataaminen näytölle epäonnistui."
+            description: "Päivitä näyttö tai navigoi sille uudelleen."
+          []
+        )
+      hakukohdekoodit: ->
+        []
 
   $routeProvider.otherwise
     redirectTo: (routeParams, currentLocation, search) ->
