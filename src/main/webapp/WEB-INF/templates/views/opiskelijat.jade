@@ -58,9 +58,6 @@ table(class="table")
         a(class="btn bt-default btn-xs pull-right" href="#/muokkaa/{{row.henkiloOid}}")
           span(oph-msg="suoritusrekisteri.opiskelijat.muokkaa") Muokkaa tietoja
           span(class="glyphicon glyphicon-edit")
-    tr(ng-show="loading")
-      td(class="loading-td" colspan="4")
-        div(class="loading-large")
 
 aside(ng-hide="loading")
   div(class="pagination pull-left" ng-show="pageNumbers && pageNumbers.length > 0")
@@ -83,3 +80,11 @@ aside(ng-hide="loading")
       li(class="{{pageSize === 50 ? 'active' : ''}}")
         a(ng-click="setPageSize(50)") 50
 
+div(ng-if="loading" class="modal fade in" style="display: block")
+  div(class="modal-backdrop in" style="height: 100%")
+  div(class="modal-dialog" style="margin-top: 300px;")
+    div(class="modal-content")
+      div(class="modal-header")
+        h4(class="modal-title")
+      div(class="modal-body")
+        div(class="loading-td loading-large")
