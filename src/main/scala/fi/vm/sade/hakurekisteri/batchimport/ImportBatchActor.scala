@@ -108,20 +108,25 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
 
     override def receive: Actor.Receive = {
       case Some(b: ImportBatch with Identified[UUID]) =>
-        log.debug("got some batch")
         if (b.state == BatchState.DONE || b.state == BatchState.FAILED)
-          context.parent.!(b.copy(state = BatchState.READY).identify(b.id))(ActorRef.noSender)
+          context.parent ! b.copy(
+            state = BatchState.READY,
+            status = b.status.copy(
+              processedTime = None,
+              messages = Map(),
+              successRows = None,
+              failureRows = None
+            )
+          ).identify(b.id)
         else
           Future.failed(WrongBatchStateException(b.state)) pipeTo ref
           context.stop(self)
 
       case None =>
-        log.debug("got none batch")
         Future.failed(BatchNotFoundException) pipeTo ref
         context.stop(self)
 
       case b: ImportBatch with Identified[UUID] =>
-        log.debug("got saved batch")
         ref.!(b.id)(ActorRef.noSender)
         context.stop(self)
     }
