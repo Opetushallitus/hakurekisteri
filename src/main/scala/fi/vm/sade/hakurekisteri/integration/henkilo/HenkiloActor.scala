@@ -73,19 +73,24 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with Actor
           map(r => FoundHenkilos(r.results, q.tunniste)) pipeTo sender
       }
 
-    case SaveComplete => savingHenkilo = false
+    case s: SavedHenkilo =>
+      savingHenkilo = false
+      sender ! s
+
+    case s: HenkiloSaveFailed =>
+      savingHenkilo = false
+      sender ! s
 
     case SaveHenkilo(henkilo: CreateHenkilo, tunniste) if !savingHenkilo =>
       savingHenkilo = true
       val savedHenkilo = henkiloClient.postObject[CreateHenkilo, String](s"/resources/s2s/tiedonsiirrot", 200, henkilo).
         map(saved => SavedHenkilo(saved, tunniste))
-      savedHenkilo.onComplete(t => self ! SaveComplete)
       savedHenkilo.recoverWith {
         case t: Throwable => Future.successful(HenkiloSaveFailed(tunniste, t))
-      } pipeTo sender
+      }.pipeTo(self)(sender())
 
     case s: SaveHenkilo if savingHenkilo =>
-      context.system.scheduler.scheduleOnce(50.milliseconds, self, s)(ec, sender())
+      context.system.scheduler.scheduleOnce(100.milliseconds, self, s)(ec, sender())
 
     case CheckHenkilo(henkiloOid) =>
       def notFound(t: Throwable) = t match {
