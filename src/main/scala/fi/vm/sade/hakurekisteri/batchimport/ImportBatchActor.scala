@@ -102,14 +102,14 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
 
   class ReprocessBatchActor(id: UUID, ref: ActorRef) extends Actor {
     override def preStart(): Unit = {
-      context.parent ! id
+      context.parent.!(id)(self)
       super.preStart()
     }
 
     override def receive: Actor.Receive = {
       case Some(b: ImportBatch with Identified[UUID]) =>
         if (b.state == BatchState.DONE || b.state == BatchState.FAILED)
-          context.parent ! b.copy(
+          context.parent.!(b.copy(
             state = BatchState.READY,
             status = b.status.copy(
               processedTime = None,
@@ -117,13 +117,13 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
               successRows = None,
               failureRows = None
             )
-          ).identify(b.id)
+          ).identify(b.id))(self)
         else
-          Future.failed(WrongBatchStateException(b.state)) pipeTo ref
+          Future.failed(WrongBatchStateException(b.state)).pipeTo(ref)(ActorRef.noSender)
           context.stop(self)
 
       case None =>
-        Future.failed(BatchNotFoundException) pipeTo ref
+        Future.failed(BatchNotFoundException).pipeTo(ref)(ActorRef.noSender)
         context.stop(self)
 
       case b: ImportBatch with Identified[UUID] =>
