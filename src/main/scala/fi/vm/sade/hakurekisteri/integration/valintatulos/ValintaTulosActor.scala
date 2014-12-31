@@ -39,7 +39,7 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
       cache - haku
 
     case UpdateValintatulos(haku) if refreshing =>
-      context.system.scheduler.scheduleOnce(500.milliseconds, self, UpdateValintatulos(haku))
+      context.system.scheduler.scheduleOnce(200.milliseconds, self, UpdateValintatulos(haku))
 
     case RefreshDone => refreshing = false
 

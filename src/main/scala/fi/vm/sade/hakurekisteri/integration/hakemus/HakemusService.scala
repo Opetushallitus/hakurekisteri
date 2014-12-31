@@ -164,7 +164,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
 
   override def receive: Receive = super.receive.orElse({
     case ReloadHaku(haku) if reloading =>
-      context.system.scheduler.scheduleOnce(500.milliseconds, self, ReloadHaku(haku))
+      context.system.scheduler.scheduleOnce(200.milliseconds, self, ReloadHaku(haku))
 
     case ReloadingDone => reloading = false
 

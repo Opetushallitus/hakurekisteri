@@ -183,8 +183,10 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
         fetchAllOppilaitokset()
 
       case OppilaitosResponse(koodi, organisaatio) =>
+        log.info(s"got oid ${organisaatio.oid} for oppilaitoskoodi $koodi")
         organisaatiot = organisaatiot + (koodi -> Some(organisaatio))
         if (!organisaatiot.values.exists(_.isEmpty))
+          log.info(s"all organisaaatios resolved, starting henkilo save")
           importHenkilot.values.foreach(h => {
             saveHenkilo(h, (lahtokoulu) => organisaatiot(lahtokoulu).map(_.oid).get)
           })
