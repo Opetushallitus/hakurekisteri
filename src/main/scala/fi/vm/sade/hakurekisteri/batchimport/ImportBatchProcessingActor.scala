@@ -71,9 +71,8 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       importHenkilot.values.foreach((h: ImportHenkilo) => {
         organisaatiot = organisaatiot + (h.lahtokoulu -> None)
         h.suoritukset.foreach(s => organisaatiot = organisaatiot + (s.myontaja -> None))
-
-        organisaatiot.foreach(t => organisaatioActor ! Oppilaitos(t._1))
       })
+      organisaatiot.foreach(t => organisaatioActor ! Oppilaitos(t._1))
     }
 
     private def saveHenkilo(h: ImportHenkilo, resolveOid: (String) => String) = h.tunniste match {
@@ -182,14 +181,13 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
           batchProcessed()
         fetchAllOppilaitokset()
 
-      case OppilaitosResponse(koodi, organisaatio) =>
-        log.info(s"got oid ${organisaatio.oid} for oppilaitoskoodi $koodi")
+      case OppilaitosResponse(koodi, organisaatio) if organisaatiot.values.exists(_.isEmpty) =>
         organisaatiot = organisaatiot + (koodi -> Some(organisaatio))
-        if (!organisaatiot.values.exists(_.isEmpty))
-          log.info(s"all organisaaatios resolved, starting henkilo save")
+        if (!organisaatiot.values.exists(_.isEmpty)) {
           importHenkilot.values.foreach(h => {
             saveHenkilo(h, (lahtokoulu) => organisaatiot(lahtokoulu).map(_.oid).get)
           })
+        }
 
       case SavedHenkilo(henkiloOid, tunniste) if importHenkilot.contains(tunniste) =>
         val importHenkilo = importHenkilot(tunniste)
