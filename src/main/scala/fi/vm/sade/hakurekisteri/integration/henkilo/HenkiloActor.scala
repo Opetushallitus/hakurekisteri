@@ -52,9 +52,7 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with Actor
   var savingHenkilo = false
 
   import HetuUtil.Hetu
-
-  object SaveComplete
-
+  
   override def receive: Receive = {
     case henkiloOid: String =>
       log.debug(s"received henkiloOid: $henkiloOid")
@@ -83,9 +81,7 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with Actor
 
     case SaveHenkilo(henkilo: CreateHenkilo, tunniste) if !savingHenkilo =>
       savingHenkilo = true
-      val savedHenkilo = henkiloClient.postObject[CreateHenkilo, String](s"/resources/s2s/tiedonsiirrot", 200, henkilo).
-        map(saved => SavedHenkilo(saved, tunniste))
-      savedHenkilo.recoverWith {
+      henkiloClient.postObject[CreateHenkilo, String](s"/resources/s2s/tiedonsiirrot", 200, henkilo).map(saved => SavedHenkilo(saved, tunniste)).recoverWith {
         case t: Throwable => Future.successful(HenkiloSaveFailed(tunniste, t))
       }.pipeTo(self)(sender())
 

@@ -16,19 +16,17 @@ class ParameterActor(restClient: VirkailijaRestClient) extends Actor {
 
   import scala.concurrent.duration._
 
-  object CallDone
-
   override def receive: Actor.Receive = {
     case KierrosRequest(oid) if calling =>
       context.system.scheduler.scheduleOnce(100.milliseconds, self, KierrosRequest(oid))(ec, sender())
 
-    case CallDone => calling = false
-
     case KierrosRequest(oid) if !calling =>
       calling = true
-      val f = getParams(oid).map(HakuParams)
-      f.onComplete(t => self ! CallDone)
-      f pipeTo sender
+      getParams(oid).map(HakuParams).pipeTo(self)(sender())
+
+    case h: HakuParams =>
+      calling = false
+      sender ! h
   }
 
   def getParams(hakuOid: String): Future[DateTime] =  {
