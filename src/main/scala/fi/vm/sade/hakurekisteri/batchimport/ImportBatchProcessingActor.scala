@@ -178,6 +178,8 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     override def receive: Actor.Receive = {
       case Start =>
         importHenkilot = parseData()
+        if (importHenkilot.size == 0)
+          batchProcessed()
         fetchAllOppilaitokset()
 
       case OppilaitosResponse(koodi, organisaatio) =>
