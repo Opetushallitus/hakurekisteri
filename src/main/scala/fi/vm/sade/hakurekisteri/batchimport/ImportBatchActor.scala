@@ -119,9 +119,10 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
               failureRows = None
             )
           ).identify(b.id)
-        else
+        else {
           Future.failed(WrongBatchStateException(b.state)).pipeTo(caller)(ActorRef.noSender)
           context.stop(self)
+        }
 
       case None =>
         Future.failed(BatchNotFoundException).pipeTo(caller)(ActorRef.noSender)
@@ -129,10 +130,6 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
 
       case b: ImportBatch with Identified[UUID] =>
         caller.!(b.id)(ActorRef.noSender)
-        context.stop(self)
-
-      case m: Any =>
-        log.warning(s"got unknown message $m")
         context.stop(self)
     }
   }
