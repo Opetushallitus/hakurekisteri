@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCS
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceActor}
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, Delta}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 import scala.slick.lifted
 
 
@@ -29,6 +29,8 @@ import fi.vm.sade.hakurekisteri.batchimport.BatchState.BatchState
 case class BatchesBySource(source: String)
 case object AllBatchStatuses
 case class Reprocess(id: UUID)
+case class WrongBatchStateException(s: BatchState) extends Exception(s"illegal batch state $s")
+object BatchNotFoundException extends Exception("batch not found")
 
 class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTable], poolSize: Int) extends ResourceActor[ImportBatch, UUID] with JDBCRepository[ImportBatch, UUID, ImportBatchTable] with JDBCService[ImportBatch, UUID, ImportBatchTable] {
   implicit val batchStateColumnType = MappedColumnType.base[BatchState, String]({ c => c.toString }, { s => BatchState.withName(s)})
@@ -93,18 +95,34 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
 
     case AllBatchStatuses => sender ! allWithoutData
 
-    case Reprocess(id) => context.actorOf(Props(new ReprocessBatchActor(id, self)))
+    case Reprocess(id) =>
+      val ref = sender()
+      context.actorOf(Props(new ReprocessBatchActor(id, ref)))
   }
 
-  class ReprocessBatchActor(id: UUID, importBatchActor: ActorRef) extends Actor {
-    importBatchActor ! id
+  class ReprocessBatchActor(id: UUID, ref: ActorRef) extends Actor {
+    override def preStart(): Unit = {
+      context.parent ! id
+      super.preStart()
+    }
+
     override def receive: Actor.Receive = {
       case Some(b: ImportBatch with Identified[UUID]) =>
+        log.debug("got some batch")
         if (b.state == BatchState.DONE || b.state == BatchState.FAILED)
-          importBatchActor.!(b.copy(state = BatchState.READY).identify(b.id))(ActorRef.noSender)
-        context.stop(self)
+          context.parent.!(b.copy(state = BatchState.READY).identify(b.id))(ActorRef.noSender)
+        else
+          Future.failed(WrongBatchStateException(b.state)) pipeTo ref
+          context.stop(self)
 
       case None =>
+        log.debug("got none batch")
+        Future.failed(BatchNotFoundException) pipeTo ref
+        context.stop(self)
+
+      case b: ImportBatch with Identified[UUID] =>
+        log.debug("got saved batch")
+        ref.!(b.id)(ActorRef.noSender)
         context.stop(self)
     }
   }

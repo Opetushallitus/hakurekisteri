@@ -18,6 +18,7 @@ app.controller "TiedonsiirtotilaCtrl", [
         b.lahettaja = henkilo.etunimet + ' ' + henkilo.sukunimi
 
     getBatches = ->
+      $scope.loading = true
       $scope.chart.destroy()  if $scope.chart and typeof $scope.chart.destroy is 'function'
       $http.get("rest/v1/siirto/perustiedot/withoutdata", { cache: false }).success (batches) ->
         if batches
@@ -63,6 +64,8 @@ app.controller "TiedonsiirtotilaCtrl", [
             $scope.legend = legend
 
           LokalisointiService.loadMessages(initChart)
+        delete $scope.loading
+        return
 
     getBatches()
 
@@ -81,6 +84,7 @@ app.controller "TiedonsiirtotilaCtrl", [
       return
 
     $scope.reprocess = (id) ->
+      $scope.loading = true
       $http.post('rest/v1/siirto/perustiedot/reprocess/' + encodeURIComponent(id)).success(-> getBatches()).error(->
         MessageService.addMessage
           type: "danger"
