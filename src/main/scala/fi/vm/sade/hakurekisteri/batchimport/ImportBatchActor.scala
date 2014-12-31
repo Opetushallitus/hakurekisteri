@@ -96,20 +96,21 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
     case AllBatchStatuses => sender ! allWithoutData
 
     case Reprocess(id) =>
-      val ref = sender()
-      context.actorOf(Props(new ReprocessBatchActor(id, ref)))
+      val parent = self
+      val caller = sender()
+      context.actorOf(Props(new ReprocessBatchActor(id, parent, caller)))
   }
 
-  class ReprocessBatchActor(id: UUID, ref: ActorRef) extends Actor {
+  class ReprocessBatchActor(id: UUID, importBatchActor: ActorRef, caller: ActorRef) extends Actor {
     override def preStart(): Unit = {
-      context.parent.!(id)(self)
+      importBatchActor ! id
       super.preStart()
     }
 
     override def receive: Actor.Receive = {
       case Some(b: ImportBatch with Identified[UUID]) =>
         if (b.state == BatchState.DONE || b.state == BatchState.FAILED)
-          context.parent.!(b.copy(
+          importBatchActor ! b.copy(
             state = BatchState.READY,
             status = b.status.copy(
               processedTime = None,
@@ -117,17 +118,21 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
               successRows = None,
               failureRows = None
             )
-          ).identify(b.id))(self)
+          ).identify(b.id)
         else
-          Future.failed(WrongBatchStateException(b.state)).pipeTo(ref)(ActorRef.noSender)
+          Future.failed(WrongBatchStateException(b.state)).pipeTo(caller)(ActorRef.noSender)
           context.stop(self)
 
       case None =>
-        Future.failed(BatchNotFoundException).pipeTo(ref)(ActorRef.noSender)
+        Future.failed(BatchNotFoundException).pipeTo(caller)(ActorRef.noSender)
         context.stop(self)
 
       case b: ImportBatch with Identified[UUID] =>
-        ref.!(b.id)(ActorRef.noSender)
+        caller.!(b.id)(ActorRef.noSender)
+        context.stop(self)
+
+      case m: Any =>
+        log.warning(s"got unknown message $m")
         context.stop(self)
     }
   }
