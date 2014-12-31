@@ -22,9 +22,11 @@ class ParameterActor(restClient: VirkailijaRestClient) extends Actor {
 
     case KierrosRequest(oid) if !calling =>
       calling = true
-      val f = getParams(oid).map(HakuParams)
-      f.onComplete(t => calling = false)
-      f pipeTo sender
+      getParams(oid).map(HakuParams).pipeTo(self)(sender())
+
+    case h: HakuParams =>
+      calling = false
+      sender ! h
   }
 
   def getParams(hakuOid: String): Future[DateTime] =  {

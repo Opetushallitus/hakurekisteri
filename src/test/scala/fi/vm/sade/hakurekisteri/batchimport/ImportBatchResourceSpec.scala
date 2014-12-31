@@ -7,6 +7,8 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.{FakeAuthorizer, TestSecurity}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal, HakurekisteriSwagger}
 import fi.vm.sade.hakurekisteri.storage.Identified
+import org.json4s.Extraction
+import org.json4s.jackson.JsonMethods._
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.Uploadable
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -108,6 +110,43 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
       get("/batch/withoutdata") {
         val batches = read[Seq[ImportBatch with Identified[UUID]]](response.body)
         batches.map(_.id) should contain(batch.id)
+      }
+    }
+  }
+
+  test("post reprocess should fail on batch already in READY state") {
+    post("/batch", "<batch><identifier>foo5</identifier><data>foo</data></batch>") {
+      import org.json4s.jackson.Serialization.read
+      implicit val formats = HakurekisteriJsonSupport.format
+
+      val batch = read[ImportBatch with Identified[UUID]](response.body)
+
+      post(s"/batch/reprocess/${batch.id}") {
+        response.status should be(400)
+      }
+    }
+  }
+
+  test("post reprocess should fail on non-existing batch id") {
+    post(s"/batch/reprocess/${UUID.randomUUID()}") {
+      response.status should be(404)
+    }
+  }
+
+  test("post reprocess should set batch to a READY state") {
+    post("/batch", "<batch><identifier>foo5</identifier><data>foo</data></batch>") {
+      import org.json4s.jackson.Serialization.read
+      implicit val formats = HakurekisteriJsonSupport.format
+
+      val batch = read[ImportBatch with Identified[UUID]](response.body)
+
+      post(s"/batch/${batch.id}", compact(Extraction.decompose(batch.copy(state = BatchState.DONE).identify(batch.id)))) {
+        post(s"/batch/reprocess/${batch.id}") {
+          get(s"/batch/${batch.id}") {
+            val ready = read[ImportBatch with Identified[UUID]](response.body)
+            ready.state should be(BatchState.READY)
+          }
+        }
       }
     }
   }

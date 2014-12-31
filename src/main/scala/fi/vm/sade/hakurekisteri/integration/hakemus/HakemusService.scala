@@ -160,9 +160,13 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   var hakuCursors: Map[String, String] = Map()
   val cursorFormat = "yyyyMMddHHmm"
 
+  object ReloadingDone
+
   override def receive: Receive = super.receive.orElse({
     case ReloadHaku(haku) if reloading =>
-      context.system.scheduler.scheduleOnce(500.milliseconds, self, ReloadHaku(haku))
+      context.system.scheduler.scheduleOnce(200.milliseconds, self, ReloadHaku(haku))
+
+    case ReloadingDone => reloading = false
 
     case ReloadHaku(haku) if !reloading =>
       val startTime = Platform.currentTime
@@ -172,10 +176,10 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
       getHakemukset(HakijaQuery(haku = Some(haku), organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None), cursor) onComplete {
         case Success(hs) =>
           hakuCursors = hakuCursors + (haku -> new SimpleDateFormat(cursorFormat).format(new Date(startTime - (5 * 60 * 1000))))
-          reloading = false
+          self ! ReloadingDone
           logger.info(s"found $hs applications in $haku")
         case Failure(ex) =>
-          reloading = false
+          self ! ReloadingDone
           logger.error(ex, s"failed fetching Hakemukset for $haku")
       }
 

@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.batchimport
 import java.util.UUID
 import java.util.concurrent.Executors
 
+import akka.actor.{Props, ActorRef, Actor}
 import akka.dispatch.ExecutionContexts
 import akka.pattern.{ask, pipe}
 import fi.vm.sade.hakurekisteri.rest.support
@@ -11,7 +12,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCS
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceActor}
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, Delta}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 import scala.slick.lifted
 
 
@@ -27,6 +28,9 @@ import fi.vm.sade.hakurekisteri.batchimport.BatchState.BatchState
 
 case class BatchesBySource(source: String)
 case object AllBatchStatuses
+case class Reprocess(id: UUID)
+case class WrongBatchStateException(s: BatchState) extends Exception(s"illegal batch state $s")
+object BatchNotFoundException extends Exception("batch not found")
 
 class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTable], poolSize: Int) extends ResourceActor[ImportBatch, UUID] with JDBCRepository[ImportBatch, UUID, ImportBatchTable] with JDBCService[ImportBatch, UUID, ImportBatchTable] {
   implicit val batchStateColumnType = MappedColumnType.base[BatchState, String]({ c => c.toString }, { s => BatchState.withName(s)})
@@ -90,8 +94,47 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
     case BatchesBySource(source) => sender ! bySource(source)
 
     case AllBatchStatuses => sender ! allWithoutData
+
+    case Reprocess(id) =>
+      val parent = self
+      val caller = sender()
+      context.actorOf(Props(new ReprocessBatchActor(id, parent, caller)))
+  }
+
+  class ReprocessBatchActor(id: UUID, importBatchActor: ActorRef, caller: ActorRef) extends Actor {
+    override def preStart(): Unit = {
+      importBatchActor ! id
+      super.preStart()
+    }
+
+    override def receive: Actor.Receive = {
+      case Some(b: ImportBatch with Identified[UUID]) =>
+        if (b.state == BatchState.DONE || b.state == BatchState.FAILED)
+          importBatchActor ! b.copy(
+            state = BatchState.READY,
+            status = b.status.copy(
+              processedTime = None,
+              messages = Map(),
+              successRows = None,
+              failureRows = None
+            )
+          ).identify(b.id)
+        else {
+          Future.failed(WrongBatchStateException(b.state)).pipeTo(caller)(ActorRef.noSender)
+          context.stop(self)
+        }
+
+      case None =>
+        Future.failed(BatchNotFoundException).pipeTo(caller)(ActorRef.noSender)
+        context.stop(self)
+
+      case b: ImportBatch with Identified[UUID] =>
+        caller.!(b.id)(ActorRef.noSender)
+        context.stop(self)
+    }
   }
 }
+
 
 
 case class ImportBatchQuery(externalId: Option[String], state: Option[BatchState], batchType: Option[String], maxCount: Option[Int] = None) extends support.Query[ImportBatch]
