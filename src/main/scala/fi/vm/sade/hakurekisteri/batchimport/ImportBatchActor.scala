@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.batchimport
 import java.util.UUID
 import java.util.concurrent.Executors
 
+import akka.actor.{Props, ActorRef, Actor}
 import akka.dispatch.ExecutionContexts
 import akka.pattern.{ask, pipe}
 import fi.vm.sade.hakurekisteri.rest.support
@@ -27,6 +28,7 @@ import fi.vm.sade.hakurekisteri.batchimport.BatchState.BatchState
 
 case class BatchesBySource(source: String)
 case object AllBatchStatuses
+case class Reprocess(id: UUID)
 
 class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTable], poolSize: Int) extends ResourceActor[ImportBatch, UUID] with JDBCRepository[ImportBatch, UUID, ImportBatchTable] with JDBCService[ImportBatch, UUID, ImportBatchTable] {
   implicit val batchStateColumnType = MappedColumnType.base[BatchState, String]({ c => c.toString }, { s => BatchState.withName(s)})
@@ -90,8 +92,24 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
     case BatchesBySource(source) => sender ! bySource(source)
 
     case AllBatchStatuses => sender ! allWithoutData
+
+    case Reprocess(id) => context.actorOf(Props(new ReprocessBatchActor(id, self)))
+  }
+
+  class ReprocessBatchActor(id: UUID, importBatchActor: ActorRef) extends Actor {
+    importBatchActor ! id
+    override def receive: Actor.Receive = {
+      case Some(b: ImportBatch with Identified[UUID]) =>
+        if (b.state == BatchState.DONE || b.state == BatchState.FAILED)
+          importBatchActor.!(b.copy(state = BatchState.READY).identify(b.id))(ActorRef.noSender)
+        context.stop(self)
+
+      case None =>
+        context.stop(self)
+    }
   }
 }
+
 
 
 case class ImportBatchQuery(externalId: Option[String], state: Option[BatchState], batchType: Option[String], maxCount: Option[Int] = None) extends support.Query[ImportBatch]

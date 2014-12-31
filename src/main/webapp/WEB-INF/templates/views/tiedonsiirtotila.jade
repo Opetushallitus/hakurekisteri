@@ -18,6 +18,7 @@ div(class="row")
               th(oph-msg="suoritusrekisteri.tiedonsiirtotila.lahetetty") Lähetetty
               th(oph-msg="suoritusrekisteri.tiedonsiirtotila.kasitelty") Käsitelty
               th(oph-msg="suoritusrekisteri.tiedonsiirtotila.tila") Tila
+              th
           tbody
             tr(ng-repeat-start="b in batches")
               td
@@ -38,6 +39,9 @@ div(class="row")
                 div(ng-if="b.status.totalRows" class="text-nowrap")
                   strong(oph-msg="suoritusrekisteri.tiedonsiirtotila.total") TOTAL
                   span {{b.status.totalRows}}
+              td
+                button(ng-if="b.state === 'DONE' || b.state === 'FAILED'" class="btn btn-xs" ng-click="reprocess(b.id)")
+                  span(class="glyphicon glyphicon-repeat" title="Käsittele uudelleen")
             tr(ng-repeat-end)
               td(class="nobordertop" colspan="5")
                 div(class="alert alert-alert-danger" ng-if="hasMessages(b)")

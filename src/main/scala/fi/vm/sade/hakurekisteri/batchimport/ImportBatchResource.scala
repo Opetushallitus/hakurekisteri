@@ -123,6 +123,16 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     }
   }
 
+  post("/reprocess/:id") {
+    val user = getUser
+    if (!user.orgsFor("READ", "ImportBatch").contains(Config.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
+    else {
+      val id = Try(UUID.fromString(params("id"))).get
+      eraRekisteri ! Reprocess(id)
+      Accepted()
+    }
+  }
+
   incident {
     case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
     case t: MalformedResourceException => (id) => BadRequest(IncidentReport(incidentId = id, message = t.getMessage, validationErrors = t.errors.map(_.args.map(_.toString)).list.reduce(_ ++ _).toSeq))
