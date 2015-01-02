@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.acceptance
 
+import org.joda.time.LocalDate
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import org.scalatest.GivenWhenThen
 
@@ -75,8 +76,8 @@ class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with H
             koululle koulu.id)
 
       Then("Molemmille löytyvät peruskoulun keskeneräiset suoritukset arvioidulla valmistumisella")
-        haetut should contain (Peruskoulu(koulu.id, "KESKEN", "04.06.2014", Mikko.oid).asInstanceOf[Suoritus])
-        haetut should contain (Peruskoulu(koulu.id, "KESKEN", "04.06.2014", Matti.oid).asInstanceOf[Suoritus])
+        haetut should contain (Peruskoulu(koulu.id, "KESKEN", s"04.06.${new LocalDate().year().get}", Mikko.oid).asInstanceOf[Suoritus])
+        haetut should contain (Peruskoulu(koulu.id, "KESKEN", s"04.06.${new LocalDate().year().get}", Matti.oid).asInstanceOf[Suoritus])
 
     }
 
