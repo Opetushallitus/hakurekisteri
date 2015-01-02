@@ -5,6 +5,9 @@ div(class="row")
 
   div(class="col-md-10")
     h2(oph-msg="suoritusrekisteri.tiedonsiirtotila.otsikko") Tiedonsiirtojen tila
+
+    messages
+
     div(class="row")
       div(class="col-sm-12")
         table(class="table table-condensed")
@@ -38,6 +41,10 @@ div(class="row")
                 div(ng-if="b.status.totalRows" class="text-nowrap")
                   strong(oph-msg="suoritusrekisteri.tiedonsiirtotila.total") TOTAL
                   span {{b.status.totalRows}}
+                div
+                  button(ng-if="b.state === 'DONE' || b.state === 'FAILED'" class="btn btn-xs" ng-click="reprocess(b.id)" title="Käsittele uudelleen")
+                    span(class="glyphicon glyphicon-repeat")
+
             tr(ng-repeat-end)
               td(class="nobordertop" colspan="5")
                 div(class="alert alert-alert-danger" ng-if="hasMessages(b)")
@@ -47,3 +54,12 @@ div(class="row")
                       span {{key}}:
                     dd(ng-repeat-end)
                       div(ng-repeat="err in errs") {{err}}
+
+div(ng-if="loading" class="modal fade in" style="display: block")
+  div(class="modal-backdrop in" style="height: 100%")
+  div(class="modal-dialog" style="margin-top: 300px;")
+    div(class="modal-content")
+      div(class="modal-header")
+        h4(class="modal-title")
+      div(class="modal-body")
+        div(class="loading-td loading-large")

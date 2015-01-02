@@ -123,7 +123,20 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     }
   }
 
+  post("/reprocess/:id") {
+    val user = getUser
+    if (!user.orgsFor("WRITE", "ImportBatch").contains(Config.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
+    else new AsyncResult() {
+      override implicit def timeout: Duration = 60.seconds
+      val id = Try(UUID.fromString(params("id"))).get
+      logger.debug(s"starting to reprocess $id")
+      override val is = eraRekisteri.?(Reprocess(id))(60.seconds)
+    }
+  }
+
   incident {
+    case t: WrongBatchStateException => (id) => BadRequest(IncidentReport(id, "illegal state for reprocessing"))
+    case BatchNotFoundException => (id) => NotFound(IncidentReport(id, "batch not found for reprocessing"))
     case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
     case t: MalformedResourceException => (id) => BadRequest(IncidentReport(incidentId = id, message = t.getMessage, validationErrors = t.errors.map(_.args.map(_.toString)).list.reduce(_ ++ _).toSeq))
     case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, "not authorized"))

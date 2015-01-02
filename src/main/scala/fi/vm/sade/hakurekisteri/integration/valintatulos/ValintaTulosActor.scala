@@ -29,6 +29,8 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
   private val cache = new FutureCache[String, SijoitteluTulos](Config.valintatulosCacheHours.hours.toMillis)
   private var refreshing = false
 
+  object RefreshDone
+
   override def receive: Receive = {
     case q: ValintaTulosQuery =>
       getSijoittelu(q) pipeTo sender
@@ -37,7 +39,9 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
       cache - haku
 
     case UpdateValintatulos(haku) if refreshing =>
-      context.system.scheduler.scheduleOnce(500.milliseconds, self, UpdateValintatulos(haku))
+      context.system.scheduler.scheduleOnce(200.milliseconds, self, UpdateValintatulos(haku))
+
+    case RefreshDone => refreshing = false
 
     case UpdateValintatulos(haku) if !refreshing =>
       log.debug(s"refreshing haku $haku")
@@ -48,10 +52,10 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
   def updateCacheAndReschedule(hakuOid: String, tulos: Future[SijoitteluTulos]): Unit = {
     tulos.onComplete {
       case Success(t) =>
-        refreshing = false
+        self ! RefreshDone
         rescheduleHaku(hakuOid)
       case Failure(t) =>
-        refreshing = false
+        self ! RefreshDone
         log.error(t, s"failed to fetch sijoittelu for haku $hakuOid")
         rescheduleHaku(hakuOid, retry)
     }
