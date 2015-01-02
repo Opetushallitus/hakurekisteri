@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.hakija
 
-import fi.vm.sade.hakurekisteri.rest.support.HakijatExcelWriter
+import fi.vm.sade.hakurekisteri.rest.support.{Cell, StringCell, Row, HakijatExcelWriter}
 
 
 object ExcelUtil extends HakijatExcelWriter[XMLHakijat] {
