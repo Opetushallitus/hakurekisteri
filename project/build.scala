@@ -71,6 +71,7 @@ object HakuJaValintarekisteriBuild extends Build {
     "org.apache.poi" % "poi-ooxml" % "3.10.1",
     "org.apache.activemq" % "activemq-all" % "5.9.1",
     "org.apache.camel" % "camel-jms" % "2.13.0",
+    "org.scalaz" %% "scalaz-xml" % "7.0.6",
     "fi.vm.sade.log" % "log-client" % "7.0",
     "fr.janalyse" %% "janalyse-ssh" % "0.9.14"
   )

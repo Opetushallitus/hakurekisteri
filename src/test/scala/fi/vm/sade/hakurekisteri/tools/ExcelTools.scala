@@ -15,7 +15,7 @@ trait ExcelTools {
 
 
 
-  case class Workbook(sheets: (String, String)*)  {
+  case class WorkbookData(sheets: (String, String)*)  {
 
     case class RichWorkbook(workbook:poi.Workbook) {
 
