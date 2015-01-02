@@ -127,7 +127,6 @@ object ExcelConversions {
           case (before, empty) if empty.length == 0 =>
             before ++ item
           case (before, after)  =>
-            //println (after.head + " = " + item)
             before ++ (item +: after.tail)
         }
         data.copy(child = newItems)
@@ -159,7 +158,6 @@ object ExcelConversions {
 
       def createIdentifier(identifier: (ItemElem) => IdElem)(item: Elem)(tested: scala.xml.Node): Boolean = tested match {
         case e: Elem if e.label == item.label && identifier(e) == identifier(item) =>
-          //println(identifier(e) + " == " + identifier(item))
           true
         case default => false
       }

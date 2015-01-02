@@ -167,7 +167,6 @@ class ExcelConversionSpec  extends FlatSpec with Matchers with XmlEquality with 
           }}
         </sheet2>
         val result = item.copy(child = addIdentity(row, item.child) ++ sheetData)
-        //println(item + "+" + row + " => " + result)
         result
       },
       (item) => Seq()
