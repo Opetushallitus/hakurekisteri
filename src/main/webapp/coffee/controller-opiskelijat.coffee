@@ -110,13 +110,13 @@ app.controller "OpiskelijatCtrl", [
     $scope.currentRows = []
     $scope.allRows = []
     $scope.currentPage = 1
+    $scope.pageSizes = ["10", "20", "50"]
     $scope.pageSize = pageSizeFromCookie()
     $scope.pageChanged = (p) ->
       $scope.currentPage = p
       showCurrentRows $scope.allRows
-    $scope.setPageSize = (newSize) ->
-      $scope.pageSize = newSize
-      $cookies.opiskelijatPageSize = "" + newSize
+    $scope.setPageSize = () ->
+      $cookies.opiskelijatPageSize = "" + $scope.pageSize
       $scope.currentPage = 1
       showCurrentRows $scope.allRows
     $scope.vuodet = vuodet()

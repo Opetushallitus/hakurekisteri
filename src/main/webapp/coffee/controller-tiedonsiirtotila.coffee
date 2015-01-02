@@ -64,13 +64,13 @@ app.controller "TiedonsiirtotilaCtrl", [
 
     # paging
     $scope.currentPage = 1
+    $scope.pageSizes = ["10", "20", "50"]
     $scope.pageSize = pageSizeFromCookie()
     $scope.pageChanged = (p) ->
       $scope.currentPage = p
       showCurrentRows $scope.allRows
-    $scope.setPageSize = (newSize) ->
-      $scope.pageSize = newSize
-      $cookies.tiedonsiirtotilaPageSize = "" + newSize
+    $scope.setPageSize = () ->
+      $cookies.tiedonsiirtotilaPageSize = "" + $scope.pageSize
       $scope.currentPage = 1
       showCurrentRows $scope.allRows
 
