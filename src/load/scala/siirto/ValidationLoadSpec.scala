@@ -159,7 +159,7 @@ trait HenkiloGenerator extends Generator{
       case _ => 28
     }
 
-    val paiva = int(maxPaiva)
+    val paiva = int(maxPaiva) + 1
 
     def vuosisataMerkki(vuosi:Int) = if ((vuosi / 100) == 19) "-" else "A"
 

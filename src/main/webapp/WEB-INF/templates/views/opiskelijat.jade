@@ -60,17 +60,9 @@ table(class="table")
           span(class="glyphicon glyphicon-edit")
 
 aside(ng-hide="loading")
-  div(class="pagination pull-left" ng-show="pageNumbers && pageNumbers.length > 0")
-    ul
-      li
-        a(ng-click="prevPage()")
-          span(class="glyphicon glyphicon-arrow-left")
-      li(class="{{page === (pageNum - 1) ? 'active' : ''}}" ng-repeat="pageNum in pageNumbers")
-        a(ng-click="showPageWithNumber(pageNum)") {{pageNum}}
-      li
-        a(ng-click="nextPage()")
-          span(class="glyphicon glyphicon-arrow-right")
-  div(class="pagination pull-right" ng-show="pageNumbers && pageNumbers.length > 0")
+  div(class="pagination pull-left" ng-if="allRows.length > 0")
+    pagination(ng-if="allRows" ng-model="currentPage" ng-change="pageChanged(currentPage)" total-items="allRows.length" max-size="5" items-per-page="pageSize" boundary-links="true" rotate="false" previous-text="<" next-text=">" first-text="<<" last-text=">>")
+  div(class="pagination pull-right" ng-if="allRows.length > 0")
     span(class="pagination-label" oph-msg="suoritusrekisteri.opiskelijat.henkiloitasivulla") Henkilöitä sivulla:
     ul
       li(class="{{pageSize === 10 ? 'active' : ''}}")

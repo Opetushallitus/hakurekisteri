@@ -22,7 +22,7 @@ div(class="row")
               th(oph-msg="suoritusrekisteri.tiedonsiirtotila.kasitelty") Käsitelty
               th(oph-msg="suoritusrekisteri.tiedonsiirtotila.tila") Tila
           tbody
-            tr(ng-repeat-start="b in batches")
+            tr(ng-repeat-start="b in currentRows")
               td
                 div {{b.id}}
                 div {{b.externalId}}
@@ -54,6 +54,19 @@ div(class="row")
                       span {{key}}:
                     dd(ng-repeat-end)
                       div(ng-repeat="err in errs") {{err}}
+
+    aside(ng-hide="loading")
+      div(class="pagination pull-left")
+        pagination(ng-if="allRows.length > 0" ng-model="currentPage" ng-change="pageChanged(currentPage)" total-items="allRows.length" max-size="5" items-per-page="pageSize" boundary-links="true" rotate="false" previous-text="<" next-text=">" first-text="<<" last-text=">>")
+      div(class="pagination pull-right" ng-if="allRows.length > 0")
+        span(class="pagination-label" oph-msg="suoritusrekisteri.tiedonsiirtotila.siirtojasivulla") Tiedonsiirtoja sivulla:
+        ul(class="pagination")
+          li(class="{{pageSize === 10 ? 'active' : ''}}")
+            a(ng-click="setPageSize(10)") 10
+          li(class="{{pageSize === 20 ? 'active' : ''}}")
+            a(ng-click="setPageSize(20)") 20
+          li(class="{{pageSize === 50 ? 'active' : ''}}")
+            a(ng-click="setPageSize(50)") 50
 
 div(ng-if="loading" class="modal fade in" style="display: block")
   div(class="modal-backdrop in" style="height: 100%")
