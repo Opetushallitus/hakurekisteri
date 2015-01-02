@@ -231,8 +231,6 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   def getQueryParams(q: HakijaQuery, page: Int, cursor: Option[String]): String = {
     val params: Seq[String] = Seq(
       cursor.map(c => s"updatedAfter=$c"),
-      Some("orgSearchExpanded=true"),
-      Some("checkAllApplications=false"),
       Some(s"start=${page * maxApplications}"),
       Some(s"rows=$maxApplications"),
       q.haku.map(s => s"asId=${urlencode(s)}"),
