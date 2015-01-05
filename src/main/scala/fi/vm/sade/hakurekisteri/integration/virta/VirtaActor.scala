@@ -119,9 +119,10 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
   import akka.pattern.pipe
 
   def receive: Receive = {
-    case q: VirtaQuery => 
+    case q: VirtaQuery =>
+      val from = sender()
       val tiedot = getOpiskelijanTiedot(q.oppijanumero, q.hetu)
-      tiedot.onComplete(t => sender ! QueryProsessed(q))
+      tiedot.onComplete(t => from ! QueryProsessed(q))
       tiedot.pipeTo(self)(ActorRef.noSender)
       
     case Some(r: VirtaResult) => 
