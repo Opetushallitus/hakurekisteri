@@ -159,10 +159,23 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   var reloading = false
   var hakuCursors: Map[String, String] = Map()
   val cursorFormat = "yyyyMMddHHmm"
+  val resetCursors = context.system.scheduler.schedule(7.days, 7.days, self, ResetCursors)
+
+  override def postStop(): Unit = {
+    resetCursors.cancel()
+    super.postStop()
+  }
 
   object ReloadingDone
+  object ResetCursors
 
   override def receive: Receive = super.receive.orElse({
+    case ResetCursors if !reloading =>
+      hakuCursors = Map()
+
+    case ResetCursors if reloading =>
+      context.system.scheduler.scheduleOnce(1.minute, self, ResetCursors)
+      
     case ReloadHaku(haku) if reloading =>
       context.system.scheduler.scheduleOnce(200.milliseconds, self, ReloadHaku(haku))
 
