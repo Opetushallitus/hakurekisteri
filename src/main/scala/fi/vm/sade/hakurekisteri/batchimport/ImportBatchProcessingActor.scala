@@ -85,12 +85,16 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     }
 
     private def saveOpiskelija(henkiloOid: String, importHenkilo: ImportHenkilo) = {
+      val currentMonth = new LocalDate().monthOfYear().get
+      val alku = new DateTime().withDayOfMonth(1).withMonthOfYear(8).withMillisOfDay(0)
+      val loppu = new DateTime().withDayOfMonth(1).withMonthOfYear(6).withMillisOfDay(0)
       val opiskelija = Opiskelija(
         oppilaitosOid = organisaatiot(importHenkilo.lahtokoulu).get.oid,
         luokkataso = detectLuokkataso(importHenkilo.suoritukset),
         luokka = importHenkilo.luokka,
         henkiloOid = henkiloOid,
-        alkuPaiva = new DateTime().minusYears(1).withDayOfMonth(1).withMonthOfYear(8).withMillisOfDay(0),
+        alkuPaiva = if (currentMonth > 6) alku else alku.minusYears(1),
+        loppuPaiva = if (currentMonth > 6) Some(loppu.plusYears(1)) else Some(loppu),
         source = b.source
       )
       sentOpiskelijat = sentOpiskelijat :+ opiskelija

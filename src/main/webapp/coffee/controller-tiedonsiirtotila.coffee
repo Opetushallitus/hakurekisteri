@@ -2,35 +2,96 @@ app.controller "TiedonsiirtotilaCtrl", [
   "$scope"
   "$http"
   "$log"
+  "$q"
+  "$cookies"
   "MurupolkuService"
   "LokalisointiService"
   "MessageService"
-  ($scope, $http, $log, MurupolkuService, LokalisointiService, MessageService) ->
+  ($scope, $http, $log, $q, $cookies, MurupolkuService, LokalisointiService, MessageService) ->
+
+    $scope.loading = false
+    $scope.currentRows = []
+    $scope.allRows = []
+
     MurupolkuService.addToMurupolku
       key: "suoritusrekisteri.tiedonsiirtotila.muru"
       text: "Tiedonsiirtojen tila"
     , true
 
-    $scope.batches = []
+    pageSizeFromCookie = () ->
+      cookieValue = $cookies.tiedonsiirtotilaPageSize
+      if typeof cookieValue is 'string'
+        try
+          parseInt(cookieValue)
+        catch err
+          $log.error("cookie value cannot be parsed to integer: " + cookieValue)
+          10
+      else
+        10
 
-    enrichBatch = (b) ->
-      $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(b.source), { cache: true }).success (henkilo) ->
+    startLoading = -> $scope.loading = true
+    stopLoading = -> $scope.loading = false
+
+    enrichBatch = (b, d) ->
+      $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(b.source), { cache: true }).success((henkilo) ->
         b.lahettaja = henkilo.etunimet + ' ' + henkilo.sukunimi
+        d.resolve()
+      ).error(->
+        d.reject('cannot resolve name for ' + b.source)
+      )
+
+    enrichData = ->
+      enrichments = []
+      for b in $scope.currentRows
+        do (b) ->
+          d = $q.defer()
+          enrichments.push d
+          enrichBatch(b, d)
+      $q.all(enrichments.map((d) -> d.promise)).then((->
+          stopLoading()
+        ), (errors) ->
+        $log.error("errors during enrichment: " + errors)
+        stopLoading()
+      )
+      return
+
+    showCurrentRows = (allRows) ->
+      startLoading()
+      $scope.allRows = allRows
+      $scope.currentRows = allRows.slice(($scope.currentPage - 1) * $scope.pageSize, ($scope.currentPage) * $scope.pageSize)
+      enrichData()
+      return
+
+    # paging
+    $scope.currentPage = 1
+    $scope.pageSizes = ["10", "20", "50"]
+    $scope.pageSize = pageSizeFromCookie()
+    $scope.pageChanged = (p) ->
+      $log.debug("page changed to " + p)
+      $scope.currentPage = p
+      showCurrentRows $scope.allRows
+    $scope.setPageSize = (s) ->
+      startLoading()
+      $scope.pageSize = s
+      $cookies.tiedonsiirtotilaPageSize = "" + $scope.pageSize
+      $scope.currentPage = 1
+      showCurrentRows $scope.allRows
+      return
 
     getBatches = ->
-      $scope.loading = true
+      startLoading()
       $scope.chart.destroy()  if $scope.chart and typeof $scope.chart.destroy is 'function'
       $http.get("rest/v1/siirto/perustiedot/withoutdata", { cache: false }).success (batches) ->
         if batches
-          $scope.batches = batches
-          enrichBatch(b) for b in $scope.batches
-          $scope.batches.sort (a, b) ->
+          batches.sort (a, b) ->
             if a.status and b.status
               aSent = a.status.sentTime
               bSent = b.status.sentTime
               return 1  if aSent < bSent
               return -1  if aSent > bSent
             return 0
+
+          showCurrentRows batches
 
           initChart = () ->
             classes =
@@ -64,7 +125,9 @@ app.controller "TiedonsiirtotilaCtrl", [
             $scope.legend = legend
 
           LokalisointiService.loadMessages(initChart)
-        delete $scope.loading
+          return
+
+        stopLoading()
         return
 
     getBatches()
@@ -84,7 +147,7 @@ app.controller "TiedonsiirtotilaCtrl", [
       return
 
     $scope.reprocess = (id) ->
-      $scope.loading = true
+      startLoading()
       $http.post('rest/v1/siirto/perustiedot/reprocess/' + encodeURIComponent(id)).success(-> getBatches()).error(->
         MessageService.addMessage
           type: "danger"
@@ -92,4 +155,5 @@ app.controller "TiedonsiirtotilaCtrl", [
           messageKey: "suoritusrekisteri.tiedonsiirtotila.tilanmuuttamineneionnistunut"
         getBatches()
       )
+
 ]

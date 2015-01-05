@@ -22,7 +22,7 @@ div(class="row")
               th(oph-msg="suoritusrekisteri.tiedonsiirtotila.kasitelty") Käsitelty
               th(oph-msg="suoritusrekisteri.tiedonsiirtotila.tila") Tila
           tbody
-            tr(ng-repeat-start="b in batches")
+            tr(ng-repeat-start="b in currentRows")
               td
                 div {{b.id}}
                 div {{b.externalId}}
@@ -47,13 +47,21 @@ div(class="row")
 
             tr(ng-repeat-end)
               td(class="nobordertop" colspan="5")
-                div(class="alert alert-alert-danger" ng-if="hasMessages(b)")
+                div(class="alert alert-danger" ng-if="hasMessages(b)")
                   dl(class="varoitukset")
                     dt(ng-repeat-start="(key, errs) in b.status.messages")
                       span(oph-msg="suoritusrekisteri.tiedonsiirtotila.tunniste") Tunniste
                       span {{key}}:
                     dd(ng-repeat-end)
                       div(ng-repeat="err in errs") {{err}}
+
+    aside(ng-if="!loading")
+      div(class="pull-right" ng-if="allRows.length > 0")
+        span(class="pagination-label" oph-msg="suoritusrekisteri.nayta") Näytä
+        select(class="pagination-size" ng-model="pageSize" ng-change="setPageSize(pageSize)" ng-options="p for p in pageSizes" required="true")
+      div(class="pull-right" ng-if="allRows.length > 0" id="tiedonsiirtotilaPagination")
+        span(class="pagination-label") {{(currentPage - 1) * pageSize + 1}} - {{(currentPage * pageSize) >= allRows.length ? allRows.length : (currentPage * pageSize)}} / {{allRows.length}}
+        pagination(ng-model="currentPage" ng-change="pageChanged(currentPage)" total-items="allRows.length" max-size="5" items-per-page="pageSize" boundary-links="true" rotate="false" previous-text="<" next-text=">" first-text="<<" last-text=">>")
 
 div(ng-if="loading" class="modal fade in" style="display: block")
   div(class="modal-backdrop in" style="height: 100%")

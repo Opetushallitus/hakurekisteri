@@ -18,7 +18,7 @@ app.controller "OpiskelijatCtrl", [
     showCurrentRows = (allRows) ->
       startLoading()
       $scope.allRows = allRows
-      $scope.currentRows = allRows.slice($scope.page * $scope.pageSize, ($scope.page + 1) * $scope.pageSize)
+      $scope.currentRows = allRows.slice(($scope.currentPage - 1) * $scope.pageSize, ($scope.currentPage) * $scope.pageSize)
       enrichData()
       return
 
@@ -89,15 +89,6 @@ app.controller "OpiskelijatCtrl", [
 
       return
 
-    resetPageNumbers = ->
-      $scope.pageNumbers = []
-      max = Math.ceil($scope.allRows.length / $scope.pageSize)
-      for i in [0...max]
-        do (i) ->
-          $scope.pageNumbers.push i + 1  if i is 0 or (i >= ($scope.page - 3) and i <= ($scope.page + 3)) or i is (Math.ceil($scope.allRows.length / $scope.pageSize) - 1)
-          return
-      return
-
     vuodet = () ->
       start = new Date().getFullYear() + 1
       end = new Date().getFullYear() - 50
@@ -118,9 +109,19 @@ app.controller "OpiskelijatCtrl", [
     $scope.loading = false
     $scope.currentRows = []
     $scope.allRows = []
-    $scope.pageNumbers = []
-    $scope.page = 0
+    $scope.currentPage = 1
+    $scope.pageSizes = ["10", "20", "50"]
     $scope.pageSize = pageSizeFromCookie()
+    $scope.pageChanged = (p) ->
+      $scope.currentPage = p
+      showCurrentRows $scope.allRows
+    $scope.setPageSize = (s) ->
+      startLoading()
+      $scope.pageSize = s
+      $cookies.opiskelijatPageSize = "" + $scope.pageSize
+      $scope.currentPage = 1
+      showCurrentRows $scope.allRows
+      return
     $scope.vuodet = vuodet()
 
     $scope.henkiloTerm = $routeParams.henkilo
@@ -219,7 +220,6 @@ app.controller "OpiskelijatCtrl", [
           s.promise
         ]).then ((results) ->
           showCurrentRows groupByHenkiloOid(collect(results))
-          resetPageNumbers()
         ), (errors) ->
           $log.error errors
           MessageService.addMessage
@@ -280,37 +280,6 @@ app.controller "OpiskelijatCtrl", [
       else
         stopLoading()
       return
-
-    $scope.nextPage = ->
-      if ($scope.page + 1) * $scope.pageSize < $scope.allRows.length
-        $scope.page++
-      else
-        $scope.page = 0
-      resetPageNumbers()
-      showCurrentRows $scope.allRows
-      return
-
-    $scope.prevPage = ->
-      if $scope.page > 0 and ($scope.page - 1) * $scope.pageSize < $scope.allRows.length
-        $scope.page--
-      else
-        $scope.page = Math.floor($scope.allRows.length / $scope.pageSize)
-      resetPageNumbers()
-      showCurrentRows $scope.allRows
-      return
-
-    $scope.showPageWithNumber = (pageNum) ->
-      $scope.page = (if pageNum > 0 then (pageNum - 1) else 0)
-      resetPageNumbers()
-      showCurrentRows $scope.allRows
-      return
-
-    $scope.setPageSize = (newSize) ->
-      $scope.pageSize = newSize
-      $cookies.opiskelijatPageSize = "" + newSize
-      $scope.page = 0
-      resetPageNumbers()
-      showCurrentRows $scope.allRows
 
     $scope.fetch()
 ]

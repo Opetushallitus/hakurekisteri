@@ -59,26 +59,13 @@ table(class="table")
           span(oph-msg="suoritusrekisteri.opiskelijat.muokkaa") Muokkaa tietoja
           span(class="glyphicon glyphicon-edit")
 
-aside(ng-hide="loading")
-  div(class="pagination pull-left" ng-show="pageNumbers && pageNumbers.length > 0")
-    ul
-      li
-        a(ng-click="prevPage()")
-          span(class="glyphicon glyphicon-arrow-left")
-      li(class="{{page === (pageNum - 1) ? 'active' : ''}}" ng-repeat="pageNum in pageNumbers")
-        a(ng-click="showPageWithNumber(pageNum)") {{pageNum}}
-      li
-        a(ng-click="nextPage()")
-          span(class="glyphicon glyphicon-arrow-right")
-  div(class="pagination pull-right" ng-show="pageNumbers && pageNumbers.length > 0")
-    span(class="pagination-label" oph-msg="suoritusrekisteri.opiskelijat.henkiloitasivulla") Henkilöitä sivulla:
-    ul
-      li(class="{{pageSize === 10 ? 'active' : ''}}")
-        a(ng-click="setPageSize(10)") 10
-      li(class="{{pageSize === 20 ? 'active' : ''}}")
-        a(ng-click="setPageSize(20)") 20
-      li(class="{{pageSize === 50 ? 'active' : ''}}")
-        a(ng-click="setPageSize(50)") 50
+aside(ng-if="!loading")
+  div(class="pull-right" ng-if="allRows.length > 0")
+    span(class="pagination-label" oph-msg="suoritusrekisteri.nayta") Näytä
+    select(class="pagination-size" ng-model="pageSize" ng-change="setPageSize(pageSize)" ng-options="p for p in pageSizes" required="true")
+  div(class="pull-right" ng-if="allRows.length > 0" id="opiskelijatPagination")
+    span(class="pagination-label") {{(currentPage - 1) * pageSize + 1}} - {{(currentPage * pageSize) >= allRows.length ? allRows.length : (currentPage * pageSize)}} / {{allRows.length}}
+    pagination(ng-model="currentPage" ng-change="pageChanged(currentPage)" total-items="allRows.length" max-size="5" items-per-page="pageSize" boundary-links="true" rotate="false" previous-text="<" next-text=">" first-text="<<" last-text=">>")
 
 div(ng-if="loading" class="modal fade in" style="display: block")
   div(class="modal-backdrop in" style="height: 100%")
