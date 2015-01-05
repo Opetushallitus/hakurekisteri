@@ -69,7 +69,7 @@ object Config {
   val ulkomainenkorvaavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ulkomainenkorvaava", "1.2.246.562.13.86722481404")
   val lukioKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lukio", "TODO lukio komo oid")
   val ammatillinenKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ammatillinen", "TODO ammatillinen komo oid")
-  val lukioonvalmistavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lukioonvalmistava", "TODO lukioon valmistava komo oid")
+  val lukioonvalmistavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lukioonvalmistava", "1.2.246.562.5.2013112814572429142840")
 
   val ensikertalainenCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.ensikertalainen", "6").toInt
   val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt

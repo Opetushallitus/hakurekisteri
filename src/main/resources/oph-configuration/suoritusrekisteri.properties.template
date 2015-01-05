@@ -74,6 +74,7 @@ suoritusrekisteri.http.client.slow.request.ms=1000
 suoritusrekisteri.komo.oid.ammatilliseenvalmistava=1.2.246.562.5.2013112814572441001730
 suoritusrekisteri.komo.oid.ammattistartti=1.2.246.562.5.2013112814572438136372
 suoritusrekisteri.komo.oid.lisaopetus=1.2.246.562.5.2013112814572435044876
+suoritusrekisteri.komo.oid.lukioonvalmistava=1.2.246.562.5.2013112814572429142840
 suoritusrekisteri.komo.oid.perusopetus=1.2.246.562.13.62959769647
 suoritusrekisteri.komo.oid.ulkomainenkorvaava=1.2.246.562.13.86722481404
 suoritusrekisteri.komo.oid.valmentava=1.2.246.562.5.2013112814572435755085
