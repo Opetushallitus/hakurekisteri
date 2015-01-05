@@ -115,10 +115,13 @@ app.controller "OpiskelijatCtrl", [
     $scope.pageChanged = (p) ->
       $scope.currentPage = p
       showCurrentRows $scope.allRows
-    $scope.setPageSize = () ->
+    $scope.setPageSize = (s) ->
+      startLoading()
+      $scope.pageSize = s
       $cookies.opiskelijatPageSize = "" + $scope.pageSize
       $scope.currentPage = 1
       showCurrentRows $scope.allRows
+      return
     $scope.vuodet = vuodet()
 
     $scope.henkiloTerm = $routeParams.henkilo

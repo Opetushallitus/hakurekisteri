@@ -50,7 +50,7 @@ app.controller "TiedonsiirtotilaCtrl", [
       $q.all(enrichments.map((d) -> d.promise)).then((->
           stopLoading()
         ), (errors) ->
-        $log.error("errors while enrichment: " + errors)
+        $log.error("errors during enrichment: " + errors)
         stopLoading()
       )
       return
@@ -67,12 +67,16 @@ app.controller "TiedonsiirtotilaCtrl", [
     $scope.pageSizes = ["10", "20", "50"]
     $scope.pageSize = pageSizeFromCookie()
     $scope.pageChanged = (p) ->
+      $log.debug("page changed to " + p)
       $scope.currentPage = p
       showCurrentRows $scope.allRows
-    $scope.setPageSize = () ->
+    $scope.setPageSize = (s) ->
+      startLoading()
+      $scope.pageSize = s
       $cookies.tiedonsiirtotilaPageSize = "" + $scope.pageSize
       $scope.currentPage = 1
       showCurrentRows $scope.allRows
+      return
 
     getBatches = ->
       startLoading()
