@@ -6,6 +6,7 @@ import java.util.Date
 
 import akka.actor.{Actor, Props, ActorRef}
 import akka.event.Logging
+import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, HakijaQuery}
 import fi.vm.sade.hakurekisteri.healthcheck.{RefreshingResource, Hakemukset, Health}
 import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaQuery
@@ -159,29 +160,44 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   var reloading = false
   var hakuCursors: Map[String, String] = Map()
   val cursorFormat = "yyyyMMddHHmm"
+  val resetCursors = context.system.scheduler.schedule(7.days, 7.days, self, ResetCursors)
 
-  object ReloadingDone
+  override def postStop(): Unit = {
+    resetCursors.cancel()
+    super.postStop()
+  }
+
+  case class ReloadingDone(haku: String, startTime: Option[Long])
+  object ResetCursors
 
   override def receive: Receive = super.receive.orElse({
+    case ResetCursors if !reloading =>
+      hakuCursors = Map()
+
+    case ResetCursors if reloading =>
+      context.system.scheduler.scheduleOnce(1.minute, self, ResetCursors)
+      
     case ReloadHaku(haku) if reloading =>
       context.system.scheduler.scheduleOnce(200.milliseconds, self, ReloadHaku(haku))
-
-    case ReloadingDone => reloading = false
 
     case ReloadHaku(haku) if !reloading =>
       val startTime = Platform.currentTime
       val cursor: Option[String] = hakuCursors.get(haku)
       reloading = true
       logger.debug(s"fetching hakemukset for haku $haku")
-      getHakemukset(HakijaQuery(haku = Some(haku), organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None), cursor) onComplete {
-        case Success(hs) =>
-          hakuCursors = hakuCursors + (haku -> new SimpleDateFormat(cursorFormat).format(new Date(startTime - (5 * 60 * 1000))))
-          self ! ReloadingDone
-          logger.info(s"found $hs applications in $haku")
-        case Failure(ex) =>
-          self ! ReloadingDone
-          logger.error(ex, s"failed fetching Hakemukset for $haku")
-      }
+      getHakemukset(HakijaQuery(haku = Some(haku), organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None), cursor).map(i => {
+        logger.info(s"found $i applications in $haku")
+        ReloadingDone(haku, Some(startTime))
+      }).recover {
+        case t: Throwable =>
+          logger.error(t, s"failed fetching Hakemukset for $haku")
+          ReloadingDone(haku, None)
+      } pipeTo self
+
+    case ReloadingDone(haku, startTime) =>
+      if (startTime.isDefined)
+        hakuCursors = hakuCursors + (haku -> new SimpleDateFormat(cursorFormat).format(new Date(startTime.get - (5 * 60 * 1000))))
+      reloading = false
 
     case Health(actor) => healthCheck = Some(actor)
 

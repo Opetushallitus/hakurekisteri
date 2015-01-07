@@ -8,15 +8,13 @@ import org.scalatra.commands._
 import org.scalatra.json.JacksonJsonValueReaderProperty
 import org.scalatra.util.ParamsValueReaderProperties
 import org.scalatra.validation.{FieldName, ValidationError}
-import siirto.{ValidXml, SchemaDefinition, NoSchemaValidator}
+import siirto.{PerustiedotXmlConverter, ValidXml, SchemaDefinition, NoSchemaValidator}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.language.implicitConversions
 import scala.xml.Elem
-import scalaz.Scalaz._
 import scalaz._
-import com.sun.xml.internal.ws.developer.SchemaValidation
 
 
 class ImportBatchCreationSpec extends FlatSpec
@@ -28,6 +26,7 @@ class ImportBatchCreationSpec extends FlatSpec
     externalIdField = "identifier",
     batchType = "testBatch",
     dataField= "batch",
+    PerustiedotXmlConverter,
     NoSchemaValidator
   )
 
@@ -128,7 +127,7 @@ trait JsonCommandTestSupport extends HakurekisteriJsonSupport with JsonMethods w
   case class ValidationCommand(command: ImportBatchCommand) {
     def withSchema(schema: SchemaDefinition) = {
       val validator = new ValidXml(schema)
-      ImportBatchCommand(command.externalIdField: String, command.batchType: String, command.dataField: String, validator)
+      ImportBatchCommand(command.externalIdField: String, command.batchType: String, command.dataField: String, PerustiedotXmlConverter, validator)
     }
   }
 

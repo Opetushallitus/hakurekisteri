@@ -206,11 +206,17 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
         val errors = failures.getOrElse(tunniste, Set[String]()) + t.toString
         failures = failures + (tunniste -> errors)
         henkiloDone(tunniste)
+        if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
+          batchProcessed()
+        }
 
       case Failure(t: HenkiloNotFoundException) =>
         val errors = failures.getOrElse(t.oid, Set[String]()) + t.toString
         failures = failures + (t.oid -> errors)
         henkiloDone(t.oid)
+        if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
+          batchProcessed()
+        }
 
       case s: VirallinenSuoritus =>
         savedSuoritukset = savedSuoritukset :+ s

@@ -55,7 +55,7 @@ import scala.concurrent.duration._
 import scala.reflect.ClassTag
 import HakurekisteriDriver.simple._
 import scala.util.Try
-import siirto.{PerustiedotKoodisto, Perustiedot, SchemaServlet}
+import siirto.{PerustiedotXmlConverter, PerustiedotKoodisto, Perustiedot, SchemaServlet}
 
 
 class ScalatraBootstrap extends LifeCycle {
@@ -85,7 +85,7 @@ class ScalatraBootstrap extends LifeCycle {
     mountServlets(context) (
       ("/", "gui") -> new GuiServlet,
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
-      ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", "perustiedot", "data", Perustiedot, PerustiedotKoodisto) with SpringSecuritySupport,
+      ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", "perustiedot", "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SpringSecuritySupport,
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
       ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
       ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),

@@ -21,10 +21,7 @@ import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.xml.sax.SAXParseException
 import siirto.{XMLValidator, ValidXml, SchemaDefinition}
 
-import scala.compat.Platform
 import scala.concurrent.duration._
-import scala.io
-import scala.io.BufferedSource
 import scala.util.Try
 import scala.xml.Elem
 import scalaz._
@@ -35,6 +32,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
                                   (externalIdField: String,
                                    batchType: String,
                                    dataField: String,
+                                   excelConverter: XmlConverter,
                                    schema: SchemaDefinition,
                                    imports: SchemaDefinition*)
                                   (implicit sw: Swagger, system: ActorSystem, mf: Manifest[ImportBatch], cf: Manifest[ImportBatchCommand])
@@ -59,6 +57,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   registerCommand[ImportBatchCommand](ImportBatchCommand(externalIdField,
                                                          batchType,
                                                          dataField,
+                                                         excelConverter,
                                                          new ValidXml(schema, imports:_*)))
 
   before() {
@@ -181,7 +180,8 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 
   override protected def bindCommand[T <: CommandType](newCommand: T)(implicit request: HttpServletRequest, mf: Manifest[T]): T = {
     val command = request match {
-      case r if multipart(r) => newCommand.bindTo[Map[String, FileItem], FileItem](fileParams, multiParams(request), request.headers)(files => new FileItemMapValueReader(files), default(EmptyFile), default(Map()), manifest[FileItem], implicitly[MultiParams => ValueReader[MultiParams, Seq[String]]])
+      case r if multipart(r) =>
+        newCommand.bindTo[Map[String, FileItem], FileItem](fileParams, multiParams(request), request.headers)(files => new FileItemMapValueReader(files), default(EmptyFile), default(Map()), manifest[FileItem], implicitly[MultiParams => ValueReader[MultiParams, Seq[String]]])
       case _ => newCommand.bindTo(params(request) + (dataField -> request.body), multiParams(request), request.headers)
     }
 
@@ -193,8 +193,10 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   }
 }
 
-case class ImportBatchCommand(externalIdField: String, batchType: String, dataField: String, validator: XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem]) extends HakurekisteriCommand[ImportBatch] {
+case class ImportBatchCommand(externalIdField: String, batchType: String, dataField: String, converter: XmlConverter, validator: XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem]) extends HakurekisteriCommand[ImportBatch] {
   implicit val valid = validator
+
+  override implicit val excelConverter = converter
 
   val data: Field[Elem] = asType[Elem](dataField).required.validateSchema
 
@@ -242,3 +244,4 @@ object EmptyPart extends Part {
   override def getContentType: String = "text/plain"
   override def getHeader(name: String): String = null
 }
+

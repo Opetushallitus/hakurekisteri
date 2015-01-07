@@ -62,7 +62,7 @@ object ExcelConversions {
       rows match {
         case headers :: data if data.length > 0  =>
           val cellNames = headers.cells.map((cell) => cell.index -> cell.value).toMap
-          data.map(_.cells.toSeq.map((cell) => DataCell(cellNames(cell.index), cell.value)))
+          data.map(_.cells.toSeq.sortBy(_.index).map((cell) => DataCell(cellNames(cell.index), cell.value)))
         case _ => Seq()
       }
     }
@@ -103,9 +103,9 @@ object ExcelConversions {
             case s:Sheet if sheetConverters.isDefinedAt(s.name) => s -> sheetConverters(s.name)
           }.foldLeft(elem){case (current, (sheet, converter)) => converter.set(current, sheet)}
         },
-        (elem) => new Workbook((for (
+        (elem) => new Workbook(for (
           (sheetName, (writer, reader)) <- converters
-        ) yield ExcelSheetExtractor(sheetName, writer, reader).get(elem)).toSet)
+        ) yield ExcelSheetExtractor(sheetName, writer, reader).get(elem))
       )
 
 

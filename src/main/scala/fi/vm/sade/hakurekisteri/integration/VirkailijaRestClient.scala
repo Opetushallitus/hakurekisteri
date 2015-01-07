@@ -54,20 +54,21 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     def withSessionAndBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(jSsessionId: String)(body: Option[A] = None): Future[B] = {
       val req = body match {
         case Some(a) =>
-          request << write[A](a)(jsonFormats) <:< Map("Content-Type" -> "application/json")
+          request << write[A](a)(jsonFormats) <:< Map("Content-Type" -> "application/json; charset=UTF-8", "Charset" -> "UTF-8")
         case None => request
       }
 
-      f(req <:< Map("Cookie" -> s"${JSessionIdCookieParser.name}=$jSsessionId"))
+      f(req.subject.underlying(_.setBodyEncoding("UTF-8")) <:< Map("Cookie" -> s"${JSessionIdCookieParser.name}=$jSsessionId"))
     }
 
     def withBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(body: Option[A] = None): Future[B] = {
       val req = body match {
         case Some(a) =>
-          request << write[A](a)(jsonFormats) <:< Map("Content-Type" -> "application/json")
+          request << write[A](a)(jsonFormats) <:< Map("Content-Type" -> "application/json; charset=UTF-8", "Charset" -> "UTF-8")
+
         case None => request
       }
-      f(req)
+      f(req.subject.underlying(_.setBodyEncoding("UTF-8")))
     }
 
     def apply[A <: AnyRef: Manifest, B <: AnyRef: Manifest](tuple: (String, AsyncHandler[B]), body: Option[A] = None): dispatch.Future[B] = {

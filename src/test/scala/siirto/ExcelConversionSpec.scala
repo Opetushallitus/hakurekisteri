@@ -5,11 +5,8 @@ import fi.vm.sade.hakurekisteri.tools.{ExcelTools, XmlEquality}
 import scala.xml.{Elem, Node}
 import siirto.DataCollectionConversions._
 import fi.vm.sade.hakurekisteri.rest.support.Workbook
-import scala.xml.transform.RewriteRule
-import siirto.DataCollectionConversions.DataCell
 import scalaz._
 import siirto.DataCollectionConversions.DataCell
-import siirto.ExcelConversions.ExcelExtractor.RowHandler
 
 class ExcelConversionSpec  extends FlatSpec with Matchers with XmlEquality with ExcelTools {
 
@@ -18,17 +15,14 @@ class ExcelConversionSpec  extends FlatSpec with Matchers with XmlEquality with 
   import ExcelConversions._
 
   it should "convert excel into xml" in {
-
     val rowWriter: RowWriter = (elem,row) =>
       elem.copy(child = elem.child ++ Seq(<default>{row.map((cell) => <tag>{cell.value}</tag>.copy(label = cell.name))}</default>))
-
 
     val reader: CollectionReader = (elem) => (elem \ "default").map(_.child.map(node => DataCell(node.label, node.text)))
 
     val converter = ExcelExtractor(
       "default" -> (rowWriter, reader)
     )
-
 
     val wb = WorkbookData(
       "default" ->
@@ -56,7 +50,6 @@ class ExcelConversionSpec  extends FlatSpec with Matchers with XmlEquality with 
   }
 
  it should "handle multiple sheets" in {
-
    val wb = WorkbookData(
       "default" ->
         """
@@ -75,13 +68,11 @@ class ExcelConversionSpec  extends FlatSpec with Matchers with XmlEquality with 
    def rowWriter(itemName: String): RowWriter = (elem,row) =>
      elem.copy(child = elem.child ++ Seq(<default>{row.map((cell) => <tag>{cell.value}</tag>.copy(label = cell.name))}</default>.copy(label = itemName)))
 
-
    def reader(itemName: String): CollectionReader = (elem) => (elem \ itemName).map(_.child.map(node => DataCell(node.label, node.text)))
 
    val converter = ExcelExtractor(
      "default" -> (rowWriter("default"), reader("default")),
      "default2" -> (rowWriter("default2"), reader("default2"))
-
    )
 
    converter.set(<data/>, Workbook(wb)) should equal (
@@ -108,12 +99,9 @@ class ExcelConversionSpec  extends FlatSpec with Matchers with XmlEquality with 
         </default2>
       </data>
     )(after being normalized)
-
   }
 
   it  should "use custom given custom conversion for worksheet" in {
-
-
     val wb = WorkbookData(
       "sheet1" ->
         """
@@ -203,13 +191,139 @@ class ExcelConversionSpec  extends FlatSpec with Matchers with XmlEquality with 
         </item>
       </data>
     )(after being normalized)
+  }
 
+  it should "convert a perustiedot row with hetu into valid xml" in {
+    val wb = WorkbookData(
+      "henkilotiedot" ->
+        """
+          |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|SYNTYMAAIKA|SUKUPUOLI|LAHTOKOULU|LUOKKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|KOTIKUNTA|AIDINKIELI|KANSALAISUUS|LAHIOSOITE|POSTINUMERO|MAA|MATKAPUHELIN|MUUPUHELIN
+          |111111-1975|            |               |           |         |05127     |9A    |Testi   |Test A  |Test       |211      |FI        |246         |Katu 1    |00100      |246|0401234567  |
+        """,
+      "perusopetus" ->
+        """
+          |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|VALMISTUMINEN|MYONTAJA|SUORITUSKIELI|TILA  |YKSILOLLISTAMINEN
+          |111111-1975|            |               |1.6.2015     |05127   |FI           |KESKEN|EI
+        """
+    ).toExcel
 
+    def itemIdentity(item: Elem): Elem = {
+      item.copy(child = (item \ "hetu") ++ (item \ "oppijanumero") ++ (item \ "henkilotunniste"))
+    }
 
+    def addIdentity(row: DataRow, nodes: Seq[Node]): Seq[Node] = {
+      val id = row.collectFirst{case DataCell("HETU", id) => id}.get
+      nodes match {
+        case nodes if !nodes.exists((idNode) => idNode.label == "hetu") => nodes ++ <hetu>{id}</hetu>
+        case default => default
+      }
+    }
+
+    val henkiloLens: Elem @> DataRow = Lens.lensu(
+      (item, row) =>
+      {
+        val sheetData =
+          {row.collect {
+            case DataCell(name, value) if value != "" && Set("SYNTYMAAIKA", "SUKUPUOLI", "LAHTOKOULU", "LUOKKA", "SUKUNIMI", "ETUNIMET", "KUTSUMANIMI", "KOTIKUNTA", "AIDINKIELI", "KANSALAISUUS", "LAHIOSOITE", "POSTINUMERO", "MAA", "MATKAPUHELIN", "MUUPUHELIN").contains(name) =>
+              <tag>{value}</tag>.copy(label = name.toLowerCase)
+          }}
+        item.copy(child = addIdentity(row, item.child) ++ sheetData)
+      }
+      ,
+      (item) => Seq()
+    )
+
+    val perusopetusLens: Elem @> DataRow = Lens.lensu(
+      (item, row) => {
+        val sheetData = <perusopetus>
+          {row.collect {
+            case DataCell(name, value) if value != "" && Set("VALMISTUMINEN", "MYONTAJA", "SUORITUSKIELI", "TILA", "YKSILOLLISTAMINEN").contains(name) =>
+              <tag>{value}</tag>.copy(label = name.toLowerCase)
+          }}
+        </perusopetus>
+        val result = item.copy(child = addIdentity(row, item.child) ++ sheetData)
+        result
+      },
+      (item) => Seq()
+    )
+
+    val converter: WorkBookExtractor = ExcelExtractor(itemIdentity _, <henkilo/>)(
+      "henkilotiedot" -> henkiloLens,
+      "perusopetus" -> perusopetusLens
+    )
+
+    val valid = <perustiedot>
+      <henkilo>
+        <hetu>111111-1975</hetu>
+        <lahtokoulu>05127</lahtokoulu>
+        <luokka>9A</luokka>
+        <sukunimi>Testi</sukunimi>
+        <etunimet>Test A</etunimet>
+        <kutsumanimi>Test</kutsumanimi>
+        <kotikunta>211</kotikunta>
+        <aidinkieli>FI</aidinkieli>
+        <kansalaisuus>246</kansalaisuus>
+        <lahiosoite>Katu 1</lahiosoite>
+        <postinumero>00100</postinumero>
+        <maa>246</maa>
+        <matkapuhelin>0401234567</matkapuhelin>
+        <perusopetus>
+          <valmistuminen>1.6.2015</valmistuminen>
+          <myontaja>05127</myontaja>
+          <suorituskieli>FI</suorituskieli>
+          <tila>KESKEN</tila>
+          <yksilollistaminen>EI</yksilollistaminen>
+        </perusopetus>
+      </henkilo>
+    </perustiedot>
+
+    converter.set(<perustiedot/>, Workbook(wb)) should equal (valid)(after being normalized)
 
   }
 
-  
+
+  it should "convert a perustiedot row with oppijanumero into valid xml" in {
+    val wb = WorkbookData(
+      "henkilotiedot" ->
+        """
+          |HETU|OPPIJANUMERO              |HENKILOTUNNISTE|SYNTYMAAIKA|SUKUPUOLI|LAHTOKOULU|LUOKKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|KOTIKUNTA|AIDINKIELI|KANSALAISUUS|LAHIOSOITE|POSTINUMERO|MAA|MATKAPUHELIN|MUUPUHELIN
+          |    |1.2.246.562.24.00000000001|               |           |         |05127     |9A    |Testi   |Test A  |Test       |211      |FI        |246         |Katu 1    |00100      |246|0401234567  |
+        """,
+      "perusopetus" ->
+        """
+          |HETU|OPPIJANUMERO              |HENKILOTUNNISTE|VALMISTUMINEN|MYONTAJA|SUORITUSKIELI|TILA  |YKSILOLLISTAMINEN
+          |    |1.2.246.562.24.00000000001|               |1.6.2015     |05127   |FI           |KESKEN|EI
+        """
+    ).toExcel
+
+    val valid = <perustiedot>
+      <henkilo>
+        <oppijanumero>1.2.246.562.24.00000000001</oppijanumero>
+        <lahtokoulu>05127</lahtokoulu>
+        <luokka>9A</luokka>
+        <sukunimi>Testi</sukunimi>
+        <etunimet>Test A</etunimet>
+        <kutsumanimi>Test</kutsumanimi>
+        <kotikunta>211</kotikunta>
+        <aidinkieli>FI</aidinkieli>
+        <kansalaisuus>246</kansalaisuus>
+        <lahiosoite>Katu 1</lahiosoite>
+        <postinumero>00100</postinumero>
+        <maa>246</maa>
+        <matkapuhelin>0401234567</matkapuhelin>
+        <perusopetus>
+          <valmistuminen>2015-06-01</valmistuminen>
+          <myontaja>05127</myontaja>
+          <suorituskieli>FI</suorituskieli>
+          <tila>KESKEN</tila>
+          <yksilollistaminen>EI</yksilollistaminen>
+        </perusopetus>
+      </henkilo>
+    </perustiedot>
+
+    PerustiedotXmlConverter.converter.set(<perustiedot/>, Workbook(wb)) should equal (valid)(after being normalized)
+
+  }
 
 }
 

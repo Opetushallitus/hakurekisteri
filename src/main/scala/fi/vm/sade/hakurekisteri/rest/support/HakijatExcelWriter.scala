@@ -6,6 +6,12 @@ import org.apache.poi.hssf.{usermodel => hssf}
 
 
 import org.apache.poi.ss.{usermodel => poi}
+import org.joda.time.LocalDate
+import org.joda.time.format.DateTimeFormat
+import org.scalatra.servlet.FileItem
+
+import scala.language.implicitConversions
+import scala.util.matching.Regex
 
 case class Cell(index: Int, value: String)
 case class Row(index: Int, cells: Set[Cell])
@@ -19,7 +25,7 @@ object StringCell{
   def apply(i: Int, v: String) = Cell(i,v)
 }
 
-class Workbook(val sheets: Set[Sheet]) {
+class Workbook(val sheets: Seq[Sheet]) {
   def writeTo(out: OutputStream) {
     val workbook = toExcel
     workbook.write(out)
@@ -44,14 +50,45 @@ class Workbook(val sheets: Set[Sheet]) {
 object Workbook {
 
   def apply(original: poi.Workbook): Workbook = {
+
+    implicit def cellToString(cell: poi.Cell): String = cell.getCellType match {
+      case poi.Cell.CELL_TYPE_STRING =>
+        cell.getStringCellValue
+      case poi.Cell.CELL_TYPE_BLANK => ""
+      case poi.Cell.CELL_TYPE_BOOLEAN => cell.getBooleanCellValue.toString
+      case poi.Cell.CELL_TYPE_ERROR => throw new Exception("error in excel")
+      case poi.Cell.CELL_TYPE_FORMULA => throw new Exception("Formulas not supported")
+      case poi.Cell.CELL_TYPE_NUMERIC if poi.DateUtil.isCellDateFormatted(cell) =>
+        val d = new LocalDate(cell.getDateCellValue)
+        DateTimeFormat.forPattern(LocalDateSerializer.dayFormat).print(d)
+      case poi.Cell.CELL_TYPE_NUMERIC =>
+        val df = new poi.DataFormatter()
+        df.createFormat(cell).format(cell.getNumericCellValue)
+      case cellType => throw new Exception(s"unknown cell type $cellType")
+    }
+
     val sheets  = for (
       index <- 0 until original.getNumberOfSheets
     ) yield {
       val os = original.getSheetAt(index)
       import scala.collection.JavaConversions._
-      Sheet(os.getSheetName, os.map((row) => Row(row.getRowNum, row.map((cell) => Cell(cell.getColumnIndex, cell.getStringCellValue)).toSet)).toSet)
+      val readRow: (poi.Row) => Row = (row) => {
+        Row(row.getRowNum, row.map((cell) => Cell(cell.getColumnIndex, cell)).toSet)
+      }
+      try {
+        Sheet(os.getSheetName, os.map(readRow).toSet)
+      } catch {
+        case e: Throwable => e.printStackTrace()
+          throw e
+      }
+
     }
-    new Workbook(sheets.toSet)
+    new Workbook(sheets)
+
+  }
+
+  def apply(f: FileItem): Workbook = {
+    apply(poi.WorkbookFactory.create(f.getInputStream))
   }
 }
 
@@ -70,7 +107,7 @@ trait HakijatExcelWriter[T] {
 
   def write(out: OutputStream, hakijat: T): Unit = {
     val sheet = Sheet("Hakijat", getHeaders ++ getRows(hakijat))
-    val wb = new Workbook(Set(sheet))
+    val wb = new Workbook(Seq(sheet))
     wb.writeTo(out)
   }
 

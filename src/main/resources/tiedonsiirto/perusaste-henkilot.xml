@@ -2,13 +2,13 @@
 <perustiedot xmlns:p="http://service.koodisto.sade.vm.fi/types/koodisto"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:noNamespaceSchemaLocation="perusaste-henkilot.xsd">
-    <eranTunniste>eranTunniste</eranTunniste>
+    <eranTunniste>eranTunniste 66</eranTunniste>
     <henkilot>
         <henkilo>
             <hetu>131094-919B</hetu>
             <lahtokoulu>05127</lahtokoulu>
             <luokka>9A</luokka>
-            <sukunimi>Testinen</sukunimi>
+            <sukunimi>Åädas</sukunimi>
             <etunimet>Juha Jaakko</etunimet>
             <kutsumanimi>Jaakko</kutsumanimi>
             <kotikunta>020</kotikunta>
