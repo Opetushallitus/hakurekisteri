@@ -12,7 +12,7 @@ import org.json4s.jackson.JsonMethods._
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.Uploadable
 import org.scalatra.test.scalatest.ScalatraFunSuite
-import siirto.SchemaDefinition
+import siirto.{PerustiedotXmlConverter, SchemaDefinition}
 
 import scala.xml.Elem
 
@@ -50,7 +50,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   }
 
 
-  addServlet(new ImportBatchResource(authorized, (foo) => ImportBatchQuery(None, None, None))("identifier", "test", "data", TestSchema) with TestSecurity, "/batch")
+  addServlet(new ImportBatchResource(authorized, (foo) => ImportBatchQuery(None, None, None))("identifier", "test", "data", PerustiedotXmlConverter, TestSchema) with TestSecurity, "/batch")
 
 
   test("post should return 201 created") {

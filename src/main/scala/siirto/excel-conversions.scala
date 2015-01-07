@@ -62,7 +62,7 @@ object ExcelConversions {
       rows match {
         case headers :: data if data.length > 0  =>
           val cellNames = headers.cells.map((cell) => cell.index -> cell.value).toMap
-          data.map(_.cells.toSeq.map((cell) => DataCell(cellNames(cell.index), cell.value)))
+          data.map(_.cells.toSeq.sortBy(_.index).map((cell) => DataCell(cellNames(cell.index), cell.value)))
         case _ => Seq()
       }
     }
