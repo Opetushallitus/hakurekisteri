@@ -20,6 +20,7 @@ import org.json4s.JsonAST.JInt
 import scala.concurrent.Future
 import scala.language.implicitConversions
 
+object NoXmlConverterSpecifiedException extends Exception(s"no xml converter specified")
 
 trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFactories with HakurekisteriJsonSupport{
 
@@ -54,12 +55,11 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
   private def xml(f: FileItem): Boolean = f.getContentType.exists(_.contains("xml"))
 
   implicit val excelConverter = new XmlConverter {
-    override def convert(f: FileItem): Elem = <excel/>
+    override def convert(f: FileItem): Elem = throw NoXmlConverterSpecifiedException
   }
 
   implicit val fileToXml: TypeConverter[FileItem, Elem] = safe((f: FileItem) =>
-    if (xml(f))
-      XML.load(f.getInputStream)
+    if (xml(f)) XML.load(f.getInputStream)
     else {
       val converter = implicitly[XmlConverter]
       converter.convert(f)
