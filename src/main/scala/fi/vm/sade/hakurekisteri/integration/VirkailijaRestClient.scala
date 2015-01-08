@@ -51,24 +51,26 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
     import org.json4s.jackson.Serialization._
 
-    def withSessionAndBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(jSsessionId: String)(body: Option[A] = None): Future[B] = {
-      val req = body match {
-        case Some(a) =>
-          request << write[A](a)(jsonFormats) <:< Map("Content-Type" -> "application/json; charset=UTF-8", "Charset" -> "UTF-8")
-        case None => request
+    class JsonReq(request: Req) {
+
+      def attachJsonBody[A <: AnyRef : Manifest](body: Option[A]): Req = {
+        (body match {
+          case Some(a) =>
+            request << write[A](a)(jsonFormats) <:< Map("Content-Type" -> "application/json; charset=UTF-8", "Charset" -> "UTF-8")
+          case None => request
+        }).subject.underlying(_.setBodyEncoding("UTF-8"))
       }
 
-      f(req.subject.underlying(_.setBodyEncoding("UTF-8")) <:< Map("Cookie" -> s"${JSessionIdCookieParser.name}=$jSsessionId"))
+    }
+
+    implicit def req2JsonReq(req:Req):JsonReq = new JsonReq(req)
+
+    def withSessionAndBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(jSsessionId: String)(body: Option[A] = None): Future[B] = {
+      f(request.attachJsonBody(body) <:< Map("Cookie" -> s"${JSessionIdCookieParser.name}=$jSsessionId"))
     }
 
     def withBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(body: Option[A] = None): Future[B] = {
-      val req = body match {
-        case Some(a) =>
-          request << write[A](a)(jsonFormats) <:< Map("Content-Type" -> "application/json; charset=UTF-8", "Charset" -> "UTF-8")
-
-        case None => request
-      }
-      f(req.subject.underlying(_.setBodyEncoding("UTF-8")))
+      f(request.attachJsonBody(body))
     }
 
     def apply[A <: AnyRef: Manifest, B <: AnyRef: Manifest](tuple: (String, AsyncHandler[B]), body: Option[A] = None): dispatch.Future[B] = {
