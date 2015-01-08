@@ -10,9 +10,9 @@ import scala.xml.{Node, Elem}
 import scalaz._
 
 object PerustiedotXmlConverter extends XmlConverter {
-  val excelContentTypes = Set("application/vnd.ms-excel","application/msexcel","application/x-msexcel","application/x-ms-excel","application/x-excel","application/x-dos_ms_excel","application/xls","application/x-xls","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+  val excelContentTypes = Set("application/vnd.ms-excel", "application/msexcel", "application/x-msexcel", "application/x-ms-excel", "application/x-excel", "application/x-dos_ms_excel", "application/xls", "application/x-xls", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-  def isExcel(f: FileItem): Boolean = f.name.endsWith(".xls") || f.name.endsWith(".xlsx") || f.getContentType.exists(excelContentTypes.contains)
+  def isExcel(f: FileItem): Boolean = f.name.toLowerCase.endsWith(".xls") || f.name.toLowerCase.endsWith(".xlsx") || f.getContentType.exists(excelContentTypes.contains)
 
   override def convert(f: FileItem): Elem = f match {
     case excelFile if isExcel(excelFile) =>
