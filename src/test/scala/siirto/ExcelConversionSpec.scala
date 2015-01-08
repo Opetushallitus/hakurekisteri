@@ -203,54 +203,14 @@ class ExcelConversionSpec  extends FlatSpec with Matchers with XmlEquality with 
       "perusopetus" ->
         """
           |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|VALMISTUMINEN|MYONTAJA|SUORITUSKIELI|TILA  |YKSILOLLISTAMINEN
+          |111111-1975|            |               |1.6.2014     |05127   |FI           |VALMIS|EI
+        """,
+      "perusopetuksenlisaopetus" ->
+        """
+          |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|VALMISTUMINEN|MYONTAJA|SUORITUSKIELI|TILA  |YKSILOLLISTAMINEN
           |111111-1975|            |               |1.6.2015     |05127   |FI           |KESKEN|EI
         """
     ).toExcel
-
-    def itemIdentity(item: Elem): Elem = {
-      item.copy(child = (item \ "hetu") ++ (item \ "oppijanumero") ++ (item \ "henkilotunniste"))
-    }
-
-    def addIdentity(row: DataRow, nodes: Seq[Node]): Seq[Node] = {
-      val id = row.collectFirst{case DataCell("HETU", id) => id}.get
-      nodes match {
-        case nodes if !nodes.exists((idNode) => idNode.label == "hetu") => nodes ++ <hetu>{id}</hetu>
-        case default => default
-      }
-    }
-
-    val henkiloLens: Elem @> DataRow = Lens.lensu(
-      (item, row) =>
-      {
-        val sheetData =
-          {row.collect {
-            case DataCell(name, value) if value != "" && Set("SYNTYMAAIKA", "SUKUPUOLI", "LAHTOKOULU", "LUOKKA", "SUKUNIMI", "ETUNIMET", "KUTSUMANIMI", "KOTIKUNTA", "AIDINKIELI", "KANSALAISUUS", "LAHIOSOITE", "POSTINUMERO", "MAA", "MATKAPUHELIN", "MUUPUHELIN").contains(name) =>
-              <tag>{value}</tag>.copy(label = name.toLowerCase)
-          }}
-        item.copy(child = addIdentity(row, item.child) ++ sheetData)
-      }
-      ,
-      (item) => Seq()
-    )
-
-    val perusopetusLens: Elem @> DataRow = Lens.lensu(
-      (item, row) => {
-        val sheetData = <perusopetus>
-          {row.collect {
-            case DataCell(name, value) if value != "" && Set("VALMISTUMINEN", "MYONTAJA", "SUORITUSKIELI", "TILA", "YKSILOLLISTAMINEN").contains(name) =>
-              <tag>{value}</tag>.copy(label = name.toLowerCase)
-          }}
-        </perusopetus>
-        val result = item.copy(child = addIdentity(row, item.child) ++ sheetData)
-        result
-      },
-      (item) => Seq()
-    )
-
-    val converter: WorkBookExtractor = ExcelExtractor(itemIdentity _, <henkilo/>)(
-      "henkilotiedot" -> henkiloLens,
-      "perusopetus" -> perusopetusLens
-    )
 
     val valid = <perustiedot>
       <henkilo>
@@ -268,17 +228,23 @@ class ExcelConversionSpec  extends FlatSpec with Matchers with XmlEquality with 
         <maa>246</maa>
         <matkapuhelin>0401234567</matkapuhelin>
         <perusopetus>
-          <valmistuminen>1.6.2015</valmistuminen>
+          <valmistuminen>2014-06-01</valmistuminen>
+          <myontaja>05127</myontaja>
+          <suorituskieli>FI</suorituskieli>
+          <tila>VALMIS</tila>
+          <yksilollistaminen>EI</yksilollistaminen>
+        </perusopetus>
+        <perusopetuksenlisaopetus>
+          <valmistuminen>2015-06-01</valmistuminen>
           <myontaja>05127</myontaja>
           <suorituskieli>FI</suorituskieli>
           <tila>KESKEN</tila>
           <yksilollistaminen>EI</yksilollistaminen>
-        </perusopetus>
+        </perusopetuksenlisaopetus>
       </henkilo>
     </perustiedot>
 
-    converter.set(<perustiedot/>, Workbook(wb)) should equal (valid)(after being normalized)
-
+    PerustiedotXmlConverter.converter.set(<perustiedot/>, Workbook(wb)) should equal (valid)(after being normalized)
   }
 
 

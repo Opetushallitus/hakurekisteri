@@ -41,7 +41,7 @@ object PerustiedotXmlConverter extends XmlConverter {
     }
   }
 
-  val henkiloLens: Elem @> DataRow = Lens.lensu(
+  def henkiloLens: Elem @> DataRow = Lens.lensu(
     (item, row) =>
     {
       val sheetData =
@@ -58,15 +58,30 @@ object PerustiedotXmlConverter extends XmlConverter {
     (item) => Seq()
   )
 
-  val perusopetusLens: Elem @> DataRow = Lens.lensu(
+  def yksilollistettavaLens(elementName: String): Elem @> DataRow = Lens.lensu(
     (item, row) => {
-      val sheetData = <perusopetus>
+      val sheetData = <s>
         {row.collect {
           case DataCell("VALMISTUMINEN", v) => <valmistuminen>{ISODateTimeFormat.yearMonthDay().print(DateTimeFormat.forPattern(LocalDateSerializer.dayFormat).parseDateTime(v))}</valmistuminen>
           case DataCell(name, v) if v != "" && Set("MYONTAJA", "SUORITUSKIELI", "TILA", "YKSILOLLISTAMINEN").contains(name) =>
             <tag>{v}</tag>.copy(label = name.toLowerCase)
         }}
-      </perusopetus>
+      </s>.copy(label = elementName)
+      val result = item.copy(child = addIdentity(row, item.child) ++ sheetData)
+      result
+    },
+    (item) => Seq()
+  )
+
+  def suoritusLens(elementName: String): Elem @> DataRow = Lens.lensu(
+    (item, row) => {
+      val sheetData = <s>
+        {row.collect {
+          case DataCell("VALMISTUMINEN", v) => <valmistuminen>{ISODateTimeFormat.yearMonthDay().print(DateTimeFormat.forPattern(LocalDateSerializer.dayFormat).parseDateTime(v))}</valmistuminen>
+          case DataCell(name, v) if v != "" && Set("MYONTAJA", "SUORITUSKIELI", "TILA").contains(name) =>
+            <tag>{v}</tag>.copy(label = name.toLowerCase)
+        }}
+      </s>.copy(label = elementName)
       val result = item.copy(child = addIdentity(row, item.child) ++ sheetData)
       result
     },
@@ -75,6 +90,14 @@ object PerustiedotXmlConverter extends XmlConverter {
 
   val converter: WorkBookExtractor = ExcelExtractor(itemIdentity _, <henkilo/>)(
     "henkilotiedot" -> henkiloLens,
-    "perusopetus" -> perusopetusLens
+    "perusopetus" -> yksilollistettavaLens("perusopetus"),
+    "perusopetuksenlisaopetus" -> yksilollistettavaLens("perusopetuksenlisaopetus"),
+    "ammattistartti" -> suoritusLens("ammattistartti"),
+    "valmentava" -> suoritusLens("valmentava"),
+    "maahanmuuttajienlukioonvalmistava" -> suoritusLens("maahanmuuttajienlukioonvalmistava"),
+    "maahanmuuttajienammvalmistava" -> suoritusLens("maahanmuuttajienammvalmistava"),
+    "ulkomainen" -> suoritusLens("ulkomainen"),
+    "lukio" -> suoritusLens("lukio"),
+    "ammatillinen" -> suoritusLens("ammatillinen")
   )
 }
