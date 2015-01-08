@@ -4,11 +4,12 @@ import com.ning.http.client._
 import java.io.{ByteArrayInputStream, InputStream, OutputStream}
 import java.nio.ByteBuffer
 import java.util
+import com.ning.http.client.cookie.{Cookie, CookieDecoder}
+
 import scala.concurrent.{Promise, Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 import java.util.concurrent.{Callable, Executor}
 import java.net.URI
-import com.ning.org.jboss.netty.handler.codec.http.CookieDecoder
 import org.hamcrest.{BaseMatcher, Description, Matcher}
 import org.mockito.Matchers
 import scala.util.Try
@@ -63,11 +64,14 @@ class BodyString(request: Request, provider: AsyncHttpProvider, body: String = "
   override def isLast: Boolean = true
 
   override def writeTo(outputStream: OutputStream): Int = {
-    outputStream.write(body.getBytes)
-    body.getBytes.size
+    val b = getBodyPartBytes
+    outputStream.write(b)
+    b.length
   }
 
-  override def getBodyByteBuffer: ByteBuffer = ByteBuffer.wrap(body.getBytes)
+  override def getBodyByteBuffer: ByteBuffer = ByteBuffer.wrap(getBodyPartBytes)
+
+  override def length(): Int = getBodyPartBytes.length
 }
 
 class BaseResponse(s: HttpResponseStatus, h: HttpResponseHeaders, bs: Seq[HttpResponseBodyPart]) extends Response{
@@ -86,10 +90,9 @@ class BaseResponse(s: HttpResponseStatus, h: HttpResponseHeaders, bs: Seq[HttpRe
 
   override def getCookies: util.List[Cookie] = {
     for (
-      header<- headers.get.getHeaders.entrySet.toList if (header.getKey.equalsIgnoreCase("Set-Cookie"));
-      value <- header.getValue;
-      cookie <- CookieDecoder.decode(value)
-    ) yield cookie
+      header <- headers.get.getHeaders.entrySet.toList if (header.getKey.equalsIgnoreCase("Set-Cookie"));
+      value <- header.getValue
+    ) yield CookieDecoder.decode(value)
   }
 
   override def isRedirected: Boolean = (status.get.getStatusCode >= 300) && (status.get.getStatusCode <= 399)
@@ -223,6 +226,6 @@ case class FutureListenableFuture[T](future: Future[T]) extends ListenableFuture
 
   override def abort(t: Throwable): Unit = ???
 
-  override def done(callable: Callable[_]): Unit = ???
+  override def done(): Unit = ???
 }
 

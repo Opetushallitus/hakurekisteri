@@ -56,9 +56,9 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
       def attachJsonBody[A <: AnyRef : Manifest](body: Option[A]): Req = {
         (body match {
           case Some(a) =>
-            request << write[A](a)(jsonFormats) <:< Map("Content-Type" -> "application/json; charset=UTF-8", "Charset" -> "UTF-8")
+            request << write[A](a)(jsonFormats)
           case None => request
-        }).subject.underlying(_.setBodyEncoding("UTF-8"))
+        }).setContentType("application/json", "UTF-8")
       }
 
     }

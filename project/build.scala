@@ -66,7 +66,7 @@ object HakuJaValintarekisteriBuild extends Build {
     "com.typesafe.slick" %% "slick" % "2.1.0",
     "com.h2database" % "h2" % "1.3.176",
     "org.postgresql" % "postgresql" % "9.3-1100-jdbc4",
-    "net.databinder.dispatch" %% "dispatch-core" % "0.11.0",
+    "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
     "org.apache.poi" % "poi" % "3.10.1",
     "org.apache.poi" % "poi-ooxml" % "3.10.1",
     "org.apache.activemq" % "activemq-all" % "5.9.1",
