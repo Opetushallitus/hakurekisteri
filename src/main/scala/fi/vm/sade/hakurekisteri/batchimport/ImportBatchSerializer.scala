@@ -4,12 +4,9 @@ import java.util.UUID
 
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.Identified
-import org.joda.time.DateTime
 import org.json4s.{Extraction, CustomSerializer}
-import org.json4s.JsonAST.{JField, JValue, JString, JObject}
+import org.json4s.JsonAST.{JValue, JString, JObject}
 import org.json4s.JsonDSL._
-import org.json4s.jackson.JsonMethods._
-import org.json4s.jackson.Serialization.read
 
 import org.json4s.Xml.{toJson, toXml}
 
@@ -28,7 +25,7 @@ class ImportBatchSerializer extends CustomSerializer[ImportBatch] (format => (
       val status: JValue = json \ "status"
 
       implicit val formats = HakurekisteriJsonSupport.format
-      val importstatus = read[ImportStatus](compact(render(status)))
+      val importstatus = Extraction.extract[ImportStatus](status)
 
       val batch = ImportBatch(toXml(rawData).collectFirst{case e:Elem => e}.get, external, batchType, source, BatchState.withName(state), importstatus)
 
