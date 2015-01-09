@@ -186,7 +186,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
         case Some(refs) => refs + (refName -> refId)
         case None =>
           log.error(s"henkiloOid $henkiloOid not found in savedReferences")
-          Map[String, String](refName -> refId)
+          Map[String, String]("tunniste" -> henkiloOid, refName -> refId)
       }
       savedReferences = savedReferences + (henkiloOid -> henkiloRefs)
     }
@@ -223,7 +223,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
         val importHenkilo = importHenkilot(tunniste)
         saveOpiskelija(henkiloOid, importHenkilo)
         saveSuoritukset(henkiloOid, importHenkilo)
-        savedReferences = savedReferences + (henkiloOid -> Map())
+        savedReferences = savedReferences + (henkiloOid -> Map("tunniste" -> tunniste))
         henkiloDone(tunniste)
 
       case SavedHenkilo(henkiloOid, tunniste) if !importHenkilot.contains(tunniste) =>
