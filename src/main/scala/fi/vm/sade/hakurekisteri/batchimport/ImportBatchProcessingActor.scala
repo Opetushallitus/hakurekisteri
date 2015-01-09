@@ -144,7 +144,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
           failureRows = Some(failures.size),
           totalRows = Some(totalRows.getOrElse(0)),
           messages = batchFailure.map(failures + _).getOrElse(failures),
-          savedReferences = Option(savedReferences)
+          savedReferences = Some(savedReferences)
         ),
         state = state
       ).identify(b.id)
