@@ -85,7 +85,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   case class SelfCheck(id: UUID = UUID.randomUUID())
   case class Measure(id:UUID)
 
-  context.system.scheduler.schedule(0.seconds, 5.minutes, self, SelfCheck())
+  context.system.scheduler.schedule(5.minutes, 5.minutes, self, SelfCheck())
 
   override def preStart(): Unit = {
     hakemukset ! Health(self)
