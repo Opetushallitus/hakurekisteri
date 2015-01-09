@@ -52,15 +52,11 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     import org.json4s.jackson.Serialization._
 
     class JsonReq(request: Req) {
-
-      def attachJsonBody[A <: AnyRef : Manifest](body: Option[A]): Req = {
-        (body match {
-          case Some(a) =>
-            request << write[A](a)(jsonFormats) <:< Map("Content-Type" -> "application/json; charset=UTF-8", "Charset" -> "UTF-8")
-          case None => request
-        }).subject.underlying(_.setBodyEncoding("UTF-8"))
+      def attachJsonBody[A <: AnyRef : Manifest](body: Option[A]): Req = body match {
+        case Some(a) =>
+          (request << write[A](a)(jsonFormats)).setContentType("application/json", "UTF-8")
+        case None => request
       }
-
     }
 
     implicit def req2JsonReq(req:Req):JsonReq = new JsonReq(req)

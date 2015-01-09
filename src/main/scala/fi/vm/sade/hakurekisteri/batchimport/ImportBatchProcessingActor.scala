@@ -67,6 +67,8 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     private var totalRows: Option[Int] = None
     private var failures: Map[String, Set[String]] = Map()
 
+    private var savedReferences: Map[String, Map[String, String]] = Map()
+
     private def fetchAllOppilaitokset() = {
       importHenkilot.values.foreach((h: ImportHenkilo) => {
         organisaatiot = organisaatiot + (h.lahtokoulu -> None)
@@ -141,7 +143,8 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
           successRows = Some(savedOpiskelijat.size),
           failureRows = Some(failures.size),
           totalRows = Some(totalRows.getOrElse(0)),
-          messages = batchFailure.map(failures + _).getOrElse(failures)
+          messages = batchFailure.map(failures + _).getOrElse(failures),
+          savedReferences = Some(savedReferences)
         ),
         state = state
       ).identify(b.id)
@@ -178,6 +181,29 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       importHenkilot = importHenkilot.filterNot(_._1 == tunniste)
     }
 
+    def addReference(henkiloOid: String, refName: String, refId: String): Unit = {
+      val henkiloRefs: Map[String, String] = savedReferences.get(henkiloOid) match {
+        case Some(refs) => refs + (refName -> refId)
+        case None =>
+          log.error(s"henkiloOid $henkiloOid not found in savedReferences")
+          Map[String, String](refName -> refId)
+      }
+      savedReferences = savedReferences + (henkiloOid -> henkiloRefs)
+    }
+
+    def suoritusType(s: VirallinenSuoritus): String = s.komo match {
+      case Config.perusopetusKomoOid => "perusopetus"
+      case Config.lisaopetusKomoOid => "perusopetuksenlisaopetus"
+      case Config.ammattistarttiKomoOid => "ammattistartti"
+      case Config.valmentavaKomoOid => "valmentava"
+      case Config.lukioonvalmistavaKomoOid => "maahanmuuttajienlukioonvalmistava"
+      case Config.ammatilliseenvalmistavaKomoOid => "maahanmuuttajienammvalmistava"
+      case Config.ulkomainenkorvaavaKomoOid => "ulkomainen"
+      case Config.lukioKomoOid => "lukio"
+      case Config.ammatillinenKomoOid => "ammatillinen"
+      case oid => oid
+    }
+
     override def receive: Actor.Receive = {
       case Start =>
         importHenkilot = parseData()
@@ -197,6 +223,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
         val importHenkilo = importHenkilot(tunniste)
         saveOpiskelija(henkiloOid, importHenkilo)
         saveSuoritukset(henkiloOid, importHenkilo)
+        savedReferences = savedReferences + (henkiloOid -> Map())
         henkiloDone(tunniste)
 
       case SavedHenkilo(henkiloOid, tunniste) if !importHenkilot.contains(tunniste) =>
@@ -218,14 +245,16 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
           batchProcessed()
         }
 
-      case s: VirallinenSuoritus =>
+      case s: VirallinenSuoritus with Identified[UUID] =>
         savedSuoritukset = savedSuoritukset :+ s
+        addReference(s.henkiloOid, suoritusType(s), s.id.toString)
         if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
           batchProcessed()
         }
 
-      case o: Opiskelija =>
+      case o: Opiskelija with Identified[UUID] =>
         savedOpiskelijat = savedOpiskelijat :+ o
+        addReference(o.henkiloOid, "opiskelija", o.id.toString)
         if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
           batchProcessed()
         }

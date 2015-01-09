@@ -15,7 +15,8 @@ case class ImportStatus(sentTime: DateTime = new DateTime(),
                         messages: Map[String, Set[String]] = Map(),
                         successRows: Option[Int] = None,
                         failureRows: Option[Int] = None,
-                        totalRows: Option[Int] = None)
+                        totalRows: Option[Int] = None,
+                        savedReferences: Option[Map[String, Map[String, String]]] = None)
 
 case class ImportBatch(data: Elem, externalId: Option[String] = None, batchType: String, source: String, state: BatchState = BatchState.READY, status: ImportStatus) extends UUIDResource[ImportBatch]  {
   override def identify(identifier: UUID): ImportBatch with Identified[UUID] = new IdentifiedImportBatch(this, identifier)
