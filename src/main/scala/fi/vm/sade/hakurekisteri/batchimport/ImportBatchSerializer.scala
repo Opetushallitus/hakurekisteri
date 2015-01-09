@@ -6,7 +6,7 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.DateTime
 import org.json4s.CustomSerializer
-import org.json4s.JsonAST.{JValue, JString, JObject}
+import org.json4s.JsonAST.{JField, JValue, JString, JObject}
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization.read
@@ -43,13 +43,24 @@ class ImportBatchSerializer extends CustomSerializer[ImportBatch] (format => (
       val statusWithSuccessRows: JObject = ib.status.successRows.map((r: Int) => statusWithProcessedTime ~ ("successRows" -> r)).getOrElse(statusWithProcessedTime)
       val statusWithFailureRows: JObject = ib.status.failureRows.map((r: Int) => statusWithSuccessRows ~ ("failureRows" -> r)).getOrElse(statusWithSuccessRows)
       val statusWithTotalRows: JObject = ib.status.totalRows.map((r: Int) => statusWithFailureRows ~ ("totalRows" -> r)).getOrElse(statusWithFailureRows)
+      val statusWithSavedReferences: JObject = ib.status.savedReferences.map((refs) => {
+        val references = for (
+          henkilo <- refs.toList
+        ) yield {
+          val saved = for (
+            ref <- henkilo._2.toList
+          ) yield (ref._1, JString(ref._2))
+          JField(henkilo._1, JObject(saved))
+        }
+        statusWithTotalRows ~ ("savedReferences" -> JObject(references))
+      }).getOrElse(statusWithTotalRows)
 
       val result =  ("id" -> ib.id.toString) ~
                     ("data" -> toJson(ib.data)) ~
                     ("batchType" -> ib.batchType) ~
                     ("source" -> ib.source) ~
                     ("state" -> ib.state.toString) ~
-                    ("status" -> statusWithTotalRows)
+                    ("status" -> statusWithSavedReferences)
 
       ib.externalId.map(id => result ~ ("externalId" -> id)).getOrElse(result)
   }
