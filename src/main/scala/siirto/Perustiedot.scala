@@ -103,7 +103,7 @@ object Perustiedot extends SchemaDefinition {
       <xs:complexType name="henkilotType">
         <xs:sequence>
           <xs:element type="henkiloType" name="henkilo"
-                      maxOccurs="unbounded" minOccurs="0"/>
+                      maxOccurs="unbounded" minOccurs="1"/>
         </xs:sequence>
       </xs:complexType>
 
