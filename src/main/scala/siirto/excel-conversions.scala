@@ -4,18 +4,12 @@ import scala.xml.Elem
 
 import scala.language.implicitConversions
 import scalaz._
-import scala.collection.immutable.IndexedSeq
-import org.apache.poi.ss.usermodel
 import fi.vm.sade.hakurekisteri.rest.support.{Workbook, Cell, Row, Sheet}
 import siirto.DataCollectionConversions._
-import scala.util.matching.Regex
 
 
 object DataCollectionConversions {
-
-
   case class DataCell(name: String, value: String)
-
   type CellExtractor = Lens[DataCell, Elem]
 
   val defaultCellExtractor: CellExtractor = Lens.lensu(
@@ -24,73 +18,52 @@ object DataCollectionConversions {
   )
 
   type DataRow = Seq[DataCell]
-
   type RowExtractor = LensFamily[Elem, Elem, DataCollection, DataRow]
-
-
   type DataCollection = Seq[DataRow]
-
-
-
   type XmlConverter = Elem @> DataCollection
-
   type RowWriter = (Elem, DataRow) => Elem
-
   type CollectionReader = Elem => DataCollection
-
 
   object XmlConverter {
     def apply(rc: RowExtractor): XmlConverter = Lens.lensu((current: Elem, coll: DataCollection) =>  coll.foldLeft(current)(rc.set), rc.get)
-
     def apply(w: RowWriter, r: CollectionReader): XmlConverter = apply(LensFamily.lensFamilyu(w,r))
-
   }
-
-
-
 }
 
 object ExcelConversions {
-
   type ExcelSheetExtractor = Elem @> Sheet
 
   object ExcelSheetExtractor {
-
-
-    def readSheet (sheet: Sheet):DataCollection = {
+    def readSheet(sheet: Sheet):DataCollection = {
       val rows = sheet.rows.toList.sortBy(_.index)
       rows match {
         case headers :: data if data.length > 0  =>
           val cellNames = headers.cells.map((cell) => cell.index -> cell.value).toMap
-          data.map(_.cells.toSeq.sortBy(_.index).map((cell) => DataCell(cellNames(cell.index), cell.value)))
+          data.collect {
+            case Row(_, cells) if cells.exists(_.value.trim() != "") =>
+              cells.toSeq.sortBy(_.index).collect {
+                case Cell(index, value) if value.trim != "" =>
+                  DataCell(cellNames(index), value)
+              }
+          }
         case _ => Seq()
       }
     }
 
     def writeSheet(name: String)(dc: DataCollection): Sheet = {
-
       val columns: Map[String, Int] = dc.foldLeft[Set[String]](Set[String]())((cur, row) => cur ++ row.map(_.name)).toSeq.zipWithIndex.toMap
-
-
       Sheet(name,
         dc.zipWithIndex.map{ case (datarow, index) => Row(index + 1)(datarow.map((dc) => Cell(columns(dc.name), dc.value)):_*) }.toSet +
           Row(0)(columns.map{ case (value, index) => Cell(index, value)}.toSeq:_*))
-
     }
 
     def apply(name: String, xc: XmlConverter): ExcelSheetExtractor = xc.xmapB[Sheet, Sheet](writeSheet(name))(readSheet)
-
-
     def  apply(name: String, w: RowWriter, r: CollectionReader): ExcelSheetExtractor = apply(name, XmlConverter(w, r))
-
   }
 
   type WorkBookExtractor = Elem @> Workbook
 
-
-
   object ExcelExtractor {
-
     type DataElem = Elem
     type ItemElem = Elem
     type IdElem = Elem
@@ -99,16 +72,14 @@ object ExcelConversions {
       val sheetConverters = converters.map{ case (sheetName, (writer, reader)) => sheetName -> ExcelSheetExtractor(sheetName, writer, reader)}.toMap
       Lens.lensu(
         (elem, wb) => {
-          wb.sheets.collect{
-            case s:Sheet if sheetConverters.isDefinedAt(s.name) => s -> sheetConverters(s.name)
-          }.foldLeft(elem){case (current, (sheet, converter)) => converter.set(current, sheet)}
+          wb.sheets.collect {
+            case s: Sheet if sheetConverters.isDefinedAt(s.name) => s -> sheetConverters(s.name)
+          }.foldLeft(elem) { case (current, (sheet, converter)) => converter.set(current, sheet) }
         },
         (elem) => new Workbook(for (
           (sheetName, (writer, reader)) <- converters
         ) yield ExcelSheetExtractor(sheetName, writer, reader).get(elem))
       )
-
-
     }
 
     def apply(itemIdentity: ItemElem => IdElem, itemTag: Elem)(lenses: (String, ItemElem @> DataRow)*):WorkBookExtractor = {
@@ -116,9 +87,6 @@ object ExcelConversions {
     }
 
     object RowHandler {
-
-
-
       import scalaz._, Scalaz._
 
       def itemSetter(identifier: ItemElem => scala.xml.Node => Boolean)(data: DataElem)(item:ItemElem): DataElem = {
@@ -132,7 +100,6 @@ object ExcelConversions {
         data.copy(child = newItems)
       }
 
-
       def lensForRow(identifier: (ItemElem) => IdElem,itemTag: Elem,  itemLens: ItemElem @> DataRow, row: DataRow): LensFamily[ExcelExtractor.DataElem, ExcelExtractor.DataElem, Option[ItemElem], ExcelExtractor.ItemElem] = {
         val identifyItem = createIdentifier(identifier) _
         LensFamily.lensFamilyg(
@@ -143,7 +110,6 @@ object ExcelConversions {
             }
             result
           }
-
         )
       }
 
@@ -164,13 +130,5 @@ object ExcelConversions {
 
       def apply(itemIdentity: ItemElem => IdElem, itemTag: Elem, itemLens: ItemElem @> DataRow): (RowWriter, CollectionReader) = (writer(itemIdentity, itemTag, itemLens), reader(itemLens))
     }
-
-
-
-
-
-
   }
-
-
 }
