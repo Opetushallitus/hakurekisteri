@@ -21,7 +21,7 @@ case class CreateHenkilo(etunimet: String,
                          hetu: Option[String],
                          syntymaaika: Option[String],
                          sukupuoli: Option[String],
-                         asiointiKieli: Kieli,
+                         aidinkieli: Kieli,
                          henkiloTyyppi: String,
                          kasittelijaOid: String,
                          organisaatioHenkilo: Seq[OrganisaatioHenkilo])

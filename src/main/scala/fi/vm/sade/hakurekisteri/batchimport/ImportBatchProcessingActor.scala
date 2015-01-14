@@ -322,7 +322,7 @@ case class ImportHenkilo(tunniste: ImportTunniste, lahtokoulu: String, luokka: S
       },
       syntymaaika = syntymaaika,
       sukupuoli = sukupuoli,
-      asiointiKieli = Kieli(aidinkieli.toLowerCase),
+      aidinkieli = Kieli(aidinkieli.toLowerCase),
       henkiloTyyppi = "OPPIJA",
       kasittelijaOid = lahde,
       organisaatioHenkilo = Seq(OrganisaatioHenkilo(resolveOid(lahtokoulu)))
