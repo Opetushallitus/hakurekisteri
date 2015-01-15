@@ -52,7 +52,7 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
     XML.loadString(data)
   })
 
-  private def xml(f: FileItem): Boolean = f.getContentType.exists(_.contains("xml"))
+  private def xml(f: FileItem): Boolean = f.getContentType.exists(t => t == "text/xml" || t == "application/xml")
 
   implicit val excelConverter = new XmlConverter {
     override def convert(f: FileItem): Elem = throw NoXmlConverterSpecifiedException
