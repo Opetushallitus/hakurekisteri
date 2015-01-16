@@ -153,11 +153,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     })
   }
 
-  val SafeExtension = ".*\\.[a-zA-Z0-9]{1,10}$".r
-  private def getFileExtension(f: FileItem): String = f.name match {
-    case SafeExtension() => f.name.substring(f.name.lastIndexOf('.') + 1)
-    case _ => "unknown"
-  }
+  import FileItemOperations._
 
   val tsFormat = "yyyyMMddHHmmssSSS"
   private def saveFiles(valid: Boolean)(implicit request: HttpServletRequest): Map[String, File] = {
@@ -167,7 +163,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
       else s"$storageDir/${ts}_${UUID.randomUUID()}_invalid"
     if (multipart(request)) {
       fileMultiParams.get(dataField).getOrElse(Seq.empty[FileItem]).map((f: FileItem) => {
-        val newFile = new File(s"$filename.${getFileExtension(f)}")
+        val newFile = new File(s"$filename.${f.extension.getOrElse("unknown")}")
         f.write(newFile)
         f.name -> newFile
       }).toMap
