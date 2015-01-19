@@ -22,7 +22,8 @@ import scala.language.implicitConversions
 
 object NoXmlConverterSpecifiedException extends Exception(s"no xml converter specified")
 
-trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFactories with HakurekisteriJsonSupport{
+trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFactories with HakurekisteriJsonSupport with FileItemOperations {
+
 
   type CommandTypeConverterFactory[T] = FileTypeConverterFactory[T]
 
@@ -52,7 +53,12 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
     XML.loadString(data)
   })
 
-  private def xml(f: FileItem): Boolean = f.getContentType.exists(_.contains("xml"))
+
+
+
+
+  private def xml(f: FileItem): Boolean = f.getContentType.exists(t => t == "text/xml" || t == "application/xml") ||
+      f.extension.exists(_ == "xml")
 
   implicit val excelConverter = new XmlConverter {
     override def convert(f: FileItem): Elem = throw NoXmlConverterSpecifiedException
@@ -174,3 +180,26 @@ class FileItemMapValueReader(val data: Map[String, FileItem]) extends ValueReade
   def read(key: String): Either[String, Option[FileItem]] =
     allCatch.withApply(t => Left(t.getMessage)) { Right(data get key) }
 }
+
+
+trait FileItemOperations {
+
+  trait RichFileItem {
+    val f: FileItem
+
+    val SafeExtension = ".*\\.([a-zA-Z0-9]{1,10}$)".r
+
+    def extension = f.getName match {
+      case SafeExtension(extension) => Some(extension)
+      case _ => None
+
+    }
+  }
+
+  implicit def fileItem2ToRichFileItem(item: FileItem): RichFileItem = new RichFileItem {
+    override val f: FileItem = item
+  }
+
+}
+
+object FileItemOperations extends FileItemOperations
