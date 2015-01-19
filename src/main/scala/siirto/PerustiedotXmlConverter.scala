@@ -41,15 +41,21 @@ object PerustiedotXmlConverter extends XmlConverter {
     }
   }
 
+  private val XmlDate = "[0-9]{4}-[0-9]{2}-[0-9]{2}".r
+  private def toXmlDate(value: String): String = value match {
+    case XmlDate() => value
+    case finDate => ISODateTimeFormat.yearMonthDay().print(DateTimeFormat.forPattern(LocalDateSerializer.dayFormat).parseDateTime(finDate))
+  }
+
   def henkiloLens: Elem @> DataRow = Lens.lensu(
     (item, row) =>
     {
       val sheetData =
       {row.collect {
-        case DataCell("SYNTYMAAIKA", v) if v != "" => <syntymaAika>{ISODateTimeFormat.yearMonthDay().print(DateTimeFormat.forPattern(LocalDateSerializer.dayFormat).parseDateTime(v))}</syntymaAika>
-        case DataCell("MUUPUHELIN", v) if v != "" => <muuPuhelin>{v}</muuPuhelin>
+        case DataCell("SYNTYMAAIKA", v) if v != "" => <syntymaAika>{toXmlDate(v)}</syntymaAika>
         case DataCell(name, v) if v != "" && Set("SUKUPUOLI", "LAHTOKOULU", "LUOKKA", "SUKUNIMI", "ETUNIMET", "KUTSUMANIMI", "KOTIKUNTA", "AIDINKIELI", "KANSALAISUUS", "LAHIOSOITE", "POSTINUMERO", "MAA", "MATKAPUHELIN").contains(name) =>
           <tag>{v}</tag>.copy(label = name.toLowerCase)
+        case DataCell("MUUPUHELIN", v) if v != "" => <muuPuhelin>{v}</muuPuhelin>
       }}
 
       item.copy(child = addIdentity(row, item.child) ++ sheetData)
@@ -62,7 +68,7 @@ object PerustiedotXmlConverter extends XmlConverter {
     (item, row) => {
       val sheetData = <s>
         {row.collect {
-          case DataCell("VALMISTUMINEN", v) => <valmistuminen>{ISODateTimeFormat.yearMonthDay().print(DateTimeFormat.forPattern(LocalDateSerializer.dayFormat).parseDateTime(v))}</valmistuminen>
+          case DataCell("VALMISTUMINEN", v) => <valmistuminen>{toXmlDate(v)}</valmistuminen>
           case DataCell(name, v) if v != "" && Set("MYONTAJA", "SUORITUSKIELI", "TILA", "YKSILOLLISTAMINEN").contains(name) =>
             <tag>{v}</tag>.copy(label = name.toLowerCase)
         }}
