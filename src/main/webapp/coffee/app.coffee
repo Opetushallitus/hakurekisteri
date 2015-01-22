@@ -116,6 +116,14 @@ app.factory "MessageService", ->
       return
   )
 
+app.factory "callerIdInterceptor", ->
+  callerId = "suoritusrekisteri-ui"
+  return {
+    request: (config) ->
+      config.headers["Caller-Id"] = callerId
+      return config
+  }
+
 app.filter "hilight", ->
   (input, query) ->
     input.replace new RegExp("(" + query + ")", "gi"), "<strong>$1</strong>"

@@ -1,4 +1,4 @@
-app.config ($locationProvider, $routeProvider) ->
+app.config ($locationProvider, $routeProvider, $httpProvider) ->
   $routeProvider.when "/opiskelijat",
     templateUrl: "templates/opiskelijat"
     controller: "OpiskelijatCtrl"
@@ -68,6 +68,9 @@ app.config ($locationProvider, $routeProvider) ->
     redirectTo: (routeParams, currentLocation, search) ->
       "/opiskelijat"
   $locationProvider.html5Mode false
+
+  $httpProvider.interceptors.push 'callerIdInterceptor'
+
   return
 
 app.run ($http, $log, MessageService) ->
