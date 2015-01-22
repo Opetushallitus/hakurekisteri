@@ -71,7 +71,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
     def apply[A <: AnyRef: Manifest, B <: AnyRef: Manifest](tuple: (String, AsyncHandler[B]), body: Option[A] = None): dispatch.Future[B] = {
       val (uri, handler) = tuple
-      val request = dispatch.url(s"$serviceUrl$uri") <:< Map("Caller-Id" -> "suoritusrekisteri-backend")
+      val request = dispatch.url(s"$serviceUrl$uri") <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend")
       (user, password) match{
         case (Some(un), Some(pw)) =>
           for (

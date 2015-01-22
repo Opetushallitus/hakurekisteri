@@ -100,7 +100,7 @@ class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](serv
   def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName
   lazy val resourceName = className[A]
   val subjectFinder = (resource: A) => organizationFinder(resource).map(Subject(resourceName, _))
-  val svc = url(serviceUrl).POST <:< Map("Caller-Id" -> "suoritusrekisteri-backend")
+  val svc = url(serviceUrl).POST <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend")
   var authorizer = OrganizationAuthorizer(Map())
 
   def addSelfToPaths(m: Map[String,Seq[String]], org:Org) = {
