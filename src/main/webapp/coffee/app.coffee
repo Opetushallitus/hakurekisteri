@@ -117,10 +117,9 @@ app.factory "MessageService", ->
   )
 
 app.factory "callerIdInterceptor", ->
-  callerId = "suoritusrekisteri-ui"
   return {
     request: (config) ->
-      config.headers["Caller-Id"] = callerId
+      config.headers["Caller-Id"] = "suoritusrekisteri.suoritusrekisteri.frontend"
       return config
   }
 
