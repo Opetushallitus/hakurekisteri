@@ -24,10 +24,6 @@ import fi.vm.sade.hakurekisteri.suoritus.Komoto
 import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 import java.text.SimpleDateFormat
-import rl.UrlCodingUtils
-import java.nio.charset.Charset
-import java.util.regex.Pattern
-import org.scalatra.util.RicherString
 
 
 case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String, oid: String)

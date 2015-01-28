@@ -48,7 +48,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
   get("/", operation(query)) {
     val t0 = Platform.currentTime
     implicit val user = getUser
-    val q = HakemusQuery(params)
+    val q = queryForParams(params)
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
@@ -60,6 +60,18 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
       val is = oppijatFuture
     }
   }
+
+
+
+  import org.scalatra.util.RicherString._
+
+  def queryForParams(params: Map[String,String]): HakemusQuery = HakemusQuery(
+    haku = params.get("haku").flatMap(_.blankOption),
+    organisaatio = params.get("organisaatio").flatMap(_.blankOption),
+    None,
+    hakukohde = params.get("hakukohde").flatMap(_.blankOption)
+  )
+
 
   get("/:oid", operation(read)) {
     val t0 = Platform.currentTime
@@ -87,4 +99,6 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     case t: VirtaConnectionErrorException => (id) => InternalServerError(IncidentReport(id, "virta error"))
   }
 }
+
+
 
