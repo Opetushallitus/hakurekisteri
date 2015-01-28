@@ -13,7 +13,7 @@ import org.scalatest.matchers._
 import org.scalatest.{Outcome, Suite}
 import scala.xml.{Elem, Node, NodeSeq}
 import fi.vm.sade.hakurekisteri.rest.support._
-import fi.vm.sade.hakurekisteri.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi, OpiskelijaActor}
+import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
@@ -29,6 +29,9 @@ import fi.vm.sade.hakurekisteri.suoritus.Komoto
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
+import fi.vm.sade.hakurekisteri.web.opiskelija.{OpiskelijaSwaggerApi, CreateOpiskelijaCommand}
+import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwaggerApi}
+import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriCrudCommands, HakurekisteriResource, HakurekisteriSwagger}
 
 
 object kausi extends Enumeration {

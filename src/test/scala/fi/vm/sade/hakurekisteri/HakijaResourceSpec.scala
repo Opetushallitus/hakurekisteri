@@ -5,7 +5,8 @@ import fi.vm.sade.hakurekisteri.hakija._
 import akka.actor.Props
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import org.scalatra.swagger.Swagger
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriSwagger
+import fi.vm.sade.hakurekisteri.web.hakija.HakijaResource
+import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 
 class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger

@@ -5,24 +5,42 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{Actor, Props}
 import fi.vm.sade.hakurekisteri.acceptance.tools.{TestSecurity, HakeneetSupport}
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
-import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
-import fi.vm.sade.hakurekisteri.integration.haku.{Kieliversiot, Haku, GetHaku}
-import fi.vm.sade.hakurekisteri.integration.koodisto._
-import fi.vm.sade.hakurekisteri.integration.tarjonta._
+import fi.vm.sade.hakurekisteri.integration.haku.Haku
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
-import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriSwagger}
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.rest.support.User
 import org.joda.time.LocalDate
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
+import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
+import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaQuery, KkHakijaResource}
+import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.integration.tarjonta.RestHakuAika
+import fi.vm.sade.hakurekisteri.hakija.Puuttuu
+import fi.vm.sade.hakurekisteri.integration.haku.Kieliversiot
+import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
+import fi.vm.sade.hakurekisteri.integration.koodisto.GetKoodi
+import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosQuery
+import fi.vm.sade.hakurekisteri.integration.tarjonta.HakukohdeOid
+import scala.Some
+import fi.vm.sade.hakurekisteri.integration.tarjonta.HakukohteenKoulutukset
+import fi.vm.sade.hakurekisteri.suoritus.SuoritysTyyppiQuery
+import fi.vm.sade.hakurekisteri.integration.koodisto.Koodisto
+import fi.vm.sade.hakurekisteri.web.kkhakija.Hakija
+import fi.vm.sade.hakurekisteri.hakija.Syksy
+import fi.vm.sade.hakurekisteri.integration.tarjonta.RestHaku
+import fi.vm.sade.hakurekisteri.integration.koodisto.KoodiMetadata
+import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
+import fi.vm.sade.hakurekisteri.integration.tarjonta.Hakukohteenkoulutus
+import fi.vm.sade.hakurekisteri.integration.haku.GetHaku
+import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 
 class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger

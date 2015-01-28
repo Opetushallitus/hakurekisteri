@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
-import fi.vm.sade.hakurekisteri.{Config, SpecsLikeMockito}
+import fi.vm.sade.hakurekisteri.SpecsLikeMockito
 import fi.vm.sade.hakurekisteri.dates.{InFuture, Ajanjakso}
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
@@ -8,13 +8,12 @@ import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{Kieliversiot, Haku}
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.DateTime
 import org.scalatra.swagger.Swagger
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, HakurekisteriSwagger}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import akka.actor.{Props, Actor, ActorSystem}
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
-import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
 import org.scalatest.Suite
 import org.scalatra.test.HttpComponentsClient
 import scala.concurrent.{Future, ExecutionContext}
@@ -25,6 +24,7 @@ import fi.vm.sade.hakurekisteri.hakija.Hakija
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
 import scala.language.implicitConversions
+import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 
 trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport with SpecsLikeMockito {
 

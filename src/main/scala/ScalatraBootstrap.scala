@@ -1,16 +1,27 @@
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
-import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaResource
-import fi.vm.sade.hakurekisteri.oppija.OppijaResource
 import fi.vm.sade.hakurekisteri.storage.repository.Journal
 
 import akka.camel.CamelExtension
 import akka.routing.BroadcastGroup
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
-import fi.vm.sade.hakurekisteri.integration.haku.{HakuResource, HakuActor}
+import fi.vm.sade.hakurekisteri.integration.haku.HakuActor
 import fi.vm.sade.hakurekisteri.integration.parametrit.ParameterActor
 import fi.vm.sade.hakurekisteri.integration.ytl.{YTLConfig, YtlActor}
+import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaSwaggerApi, CreateArvosanaCommand}
+import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchResource
+import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
+import fi.vm.sade.hakurekisteri.web.hakija.HakijaResource
+import fi.vm.sade.hakurekisteri.web.haku.HakuResource
+import fi.vm.sade.hakurekisteri.web.healthcheck.HealthcheckResource
+import fi.vm.sade.hakurekisteri.web.integration.virta.VirtaResource
+import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaResource
+import fi.vm.sade.hakurekisteri.web.opiskelija.{OpiskelijaSwaggerApi, CreateOpiskelijaCommand}
+import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.{OpiskeluoikeusSwaggerApi, CreateOpiskeluoikeusCommand}
+import fi.vm.sade.hakurekisteri.web.oppija.OppijaResource
+import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriCrudCommands, HakurekisteriResource, ResourcesApp, HakurekisteriSwagger}
+import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwaggerApi}
 import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -19,9 +30,9 @@ import javax.servlet.{Servlet, DispatcherType, ServletContext, ServletContextEve
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana._
-import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, EnsikertalainenResource}
+import fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenActor
 import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, HealthcheckResource}
+import fi.vm.sade.hakurekisteri.healthcheck.HealthcheckActor
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.integration._

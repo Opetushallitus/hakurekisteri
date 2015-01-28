@@ -26,6 +26,9 @@ case class QueriesRunning(count: Map[String, Int], timestamp: Long = Platform.cu
 
 case class CacheResult(q: EnsikertalainenQuery, f: Future[Ensikertalainen])
 
+case class Ensikertalainen(ensikertalainen: Boolean)
+case class HetuNotFoundException(message: String) extends Exception(message)
+
 class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, tarjontaActor: ActorRef)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
   val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
   implicit val defaultTimeout: Timeout = 30.seconds

@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.acceptance
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import org.scalatest.GivenWhenThen
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
-import fi.vm.sade.hakurekisteri.hakija.{XMLHakijat, Hakuehto, HakijaQuery}
+import fi.vm.sade.hakurekisteri.hakija.{HakijaQuery, Hakuehto, XMLHakijat}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import akka.util.Timeout

@@ -3,8 +3,9 @@ package org.scalatra.commands
 import java.util.UUID
 import javax.servlet.http.HttpServletRequest
 
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriCommand, Resource}
+import fi.vm.sade.hakurekisteri.rest.support.Resource
 import org.scalatra.json.{JacksonJsonSupport, JacksonJsonValueReaderProperty}
+import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriCommand
 
 
 trait HakurekisteriParsing[A <: Resource[UUID, A]] extends CommandSupport with JacksonJsonValueReaderProperty { self: JacksonJsonSupport with CommandSupport =>

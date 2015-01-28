@@ -9,14 +9,13 @@ import akka.event.Logging
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, HakijaQuery}
 import fi.vm.sade.hakurekisteri.healthcheck.{RefreshingResource, Hakemukset, Health}
-import fi.vm.sade.hakurekisteri.kkhakija.KkHakijaQuery
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.hakurekisteri.storage.repository._
 import fi.vm.sade.hakurekisteri.storage.{InMemQueryingResourceService, Identified, ResourceActor}
 
 import scala.compat.Platform
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 
 trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
@@ -126,7 +125,6 @@ object HakemusQuery {
     hakukohde = params.get("hakukohde").flatMap(_.blankOption)
     )
   def apply(hq: HakijaQuery): HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
-  def apply(hq: KkHakijaQuery): HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, None, hq.hakukohde)
 }
 
 case class Trigger(newApplicant: (FullHakemus) => Unit)

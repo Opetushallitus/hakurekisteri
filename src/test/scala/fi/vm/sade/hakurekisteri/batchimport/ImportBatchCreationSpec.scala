@@ -15,6 +15,7 @@ import scala.concurrent.{Await, Future}
 import scala.language.implicitConversions
 import scala.xml.Elem
 import scalaz._
+import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchCommand
 
 
 class ImportBatchCreationSpec extends FlatSpec

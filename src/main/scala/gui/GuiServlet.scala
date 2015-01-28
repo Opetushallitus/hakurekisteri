@@ -2,13 +2,13 @@ package gui
 
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
-import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import org.scalatra.scalate.ScalateSupport
 import org.fusesource.scalate.layout.DefaultLayoutStrategy
 import org.fusesource.scalate.TemplateEngine
 import javax.servlet.http.HttpServletRequest
 import scala.collection.mutable
 import org.fusesource.scalate.util.{StringResource, Resource, ResourceLoader}
+import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 
 
 class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekisteriStack with ScalateSupport {

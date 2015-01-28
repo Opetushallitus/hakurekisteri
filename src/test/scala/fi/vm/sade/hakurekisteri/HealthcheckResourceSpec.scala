@@ -11,13 +11,14 @@ import akka.actor.{Actor, Props, ActorSystem}
 
 import fi.vm.sade.hakurekisteri.acceptance.tools.{Peruskoulu, FakeAuthorizer}
 import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaActor, Opiskelija}
-import fi.vm.sade.hakurekisteri.healthcheck.{Status, HealthcheckActor, HealthcheckResource}
+import fi.vm.sade.hakurekisteri.healthcheck.{Status, HealthcheckActor}
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
 import org.json4s.JsonAST.JInt
 import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
 import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.web.healthcheck.HealthcheckResource
 
 class HealthcheckResourceSpec extends ScalatraFunSuite {
   val arvosana = Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", None, false, source = "Test")

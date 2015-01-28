@@ -1,9 +1,9 @@
 package siirto
 
-import fi.vm.sade.hakurekisteri.HakuJaValintarekisteriStack
 import akka.event.{Logging, LoggingAdapter}
 import akka.actor.ActorSystem
 import org.scalatra.{MovedPermanently, Ok, NotFound}
+import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 
 
 class SchemaServlet(schemas: SchemaDefinition*)(implicit val system: ActorSystem) extends HakuJaValintarekisteriStack {
