@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
 import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{Success, Try}
 import fi.vm.sade.hakurekisteri.tools.RicherString
 
 object Config {
