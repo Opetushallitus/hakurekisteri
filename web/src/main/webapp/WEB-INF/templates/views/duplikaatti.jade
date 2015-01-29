@@ -1,0 +1,27 @@
+div(class="modal-header")
+  button(type="button" class="close" ng-click="modalInstance.close()" aria-hidden="true") &times;
+  h4(class="modal-title" oph-msg="suoritusrekisteri.muokkaa.duplikaatti.otsikko") Poista duplikaattiarvosanoja
+  span(oph-msg="suoritusrekisteri.muokkaa.duplikaatti.ohjeteksti") Tarkista alla olevat arvosanat ja poista duplikaatit klikkaamalla kyseisen arvosanan kohdalla Poista-nappia.
+table(class="table table-condensed")
+  thead
+    th(oph-msg="suoritusrekisteri.muokkaa.duplikaatti.oppiaine") Oppiaine
+    th(oph-msg="suoritusrekisteri.muokkaa.duplikaatti.lisatieto") Lisätieto (kieli)
+    th(oph-msg="suoritusrekisteri.muokkaa.duplikaatti.arvosana") Arvosana
+    th(oph-msg="suoritusrekisteri.muokkaa.duplikaatti.valinnainen") Valinnainen
+    th
+  tbody
+    tr(ng-repeat="a in arvosanat" class="{{!a.taken ? 'danger' : ''}}")
+      td {{a.aine}}
+      td {{a.lisatieto}}
+      td {{a.arvio.arvosana}}
+      td
+        span(ng-show="a.valinnainen" oph-msg="suoritusrekisteri.muokkaa.duplikaatti.valinnainen.kylla") Kyllä
+        span(ng-hide="a.valinnainen" oph-msg="suoritusrekisteri.muokkaa.duplikaatti.valinnainen.ei") Ei
+      td
+        button(type="button" class="btn btn-default btn-xs" ng-click="remove(a)")
+          span(oph-msg="suoritusrekisteri.muokkaa.duplikaatti.poista") Poista
+          span(class="glyphicon glyphicon-remove")
+div(class="modal-footer")
+  button(type="type" class="btn btn-primary" ng-click="close()")
+    span(oph-msg="suoritusrekisteri.muokkaa.duplikaatti.tallenna") Sulje
+    span(class="glyphicon glyphicon-remove")
