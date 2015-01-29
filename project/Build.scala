@@ -59,11 +59,17 @@ object HakurekisteriBuild extends Build {
   val AkkaStack = Seq("akka-testkit", "akka-slf4j","akka-camel").map("com.typesafe.akka" %% _ % akkaVersion)
 
 
-  val dependencies = Seq(
-    "org.slf4j" % "slf4j-api" % "1.6.1",
+  val webDeps =  Seq(
     "org.eclipse.jetty" % "jetty-webapp" % "9.1.5.v20140505" % "container",
     "org.eclipse.jetty" % "jetty-plus" % "9.1.5.v20140505" % "container",
-    "javax.servlet" % "javax.servlet-api" % "3.1.0",
+    "javax.servlet" % "javax.servlet-api" % "3.1.0"
+  )
+
+  val dependencies = Seq(
+    "org.slf4j" % "slf4j-api" % "1.6.1",
+    "org.json4s" %% "json4s-ast" % "3.2.10",
+    "org.json4s" %% "json4s-core" % "3.2.10",
+    "org.json4s" %% "json4s-ext" % "3.2.10",
     "org.json4s" %% "json4s-jackson" % "3.2.10",
     "com.github.nscala-time" %% "nscala-time" % "1.4.0",
     "com.typesafe.slick" %% "slick" % "2.1.0",
@@ -160,66 +166,83 @@ object HakurekisteriBuild extends Build {
   import com.earldouglas.xsbtwebplugin.PluginKeys._
 
 
-  object HakurekisteriModule {
-    def apply(moduleName: String): Project = {
-      Project(
-        s"hakurekisteri-$moduleName",
-        file(moduleName),
-        configurations = Seq(LoadSpecs),
-        settings = ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
-          ++ inConfig(LoadSpecs)(Defaults.testSettings)
-          ++ Seq(ideaExtraTestConfigurations := Seq(LoadSpecs))
-          ++ org.scalastyle.sbt.ScalastylePlugin.Settings
-          ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"))
-          ++ Seq(wro4jSettings:_*)
-          ++ Seq(compile in Compile <<= (compile in Compile) dependsOn (generateResources in Compile))
-          ++ Seq(webappResources in Compile <+= (targetFolder in generateResources in Compile))
-          ++ Seq(webappResources in Compile <+= (sourceDirectory in Runtime) { sd => sd / "resources" / "tiedonsiirto"})
-          ++ Seq(karmaTask, installKarmaTask, installCoffeeTask, cleanNodeModules, karmaTestSources)
-          //++ Seq((test in Test) <<= (test in Test) dependsOn karma) // uncomment to enable running karma tests together with "test" phase
-          ++ Seq(
-          organization := Organization,
-          name := s"hakurekisteri-$moduleName",
-          version := Version,
-          scalaVersion := ScalaVersion,
-          artifactName := ArtifactName,
-          resolvers += Classpaths.typesafeReleases,
-          resolvers += "oph-snapshots" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local",
-          resolvers += "oph-releases" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local",
-          resolvers += "Sonatype" at "http://oss.sonatype.org/content/repositories/releases/",
-          resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
-          resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
-          credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
-          artifactoryPublish,
-          buildversionTask,
-          libraryDependencies ++=  ScalatraStack.map(_ % ScalatraVersion)
-            ++ SecurityStack
-            ++ AkkaStack
-            ++ dependencies
-            ++ testDependencies.map((m) => m % "test"),
-          scalateTemplateConfig in Compile <<= (sourceDirectory in Compile) {
-            base =>
-              Seq(
-                TemplateConfig(
-                  base / "webapp" / "WEB-INF" / "templates",
-                  Seq.empty, /* default imports should be added here */
-                  Seq(
-                    Binding("context", "_root_.org.scalatra.scalate.ScalatraRenderContext", importMembers = true, isImplicit = true)
-                  ), /* add extra bindings here */
-                  Some("templates")
-                )
-              )
-          }
-        )
-          ++ sonar
-          ++ Seq(surefire)).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
 
-    }
-  }
+  lazy val core = Project(
+    id = "hakurekisteri-core",
+    base = file("core"),
+    settings = Seq(
+      name                  := "hakurekisteri-core",
+      organization          := Organization,
+      version               := Version,
+      scalaVersion          := ScalaVersion,
+      artifactName          := ArtifactName,
+      scalacOptions         := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8"),
+      resolvers += Classpaths.typesafeReleases,
+      resolvers += "oph-snapshots" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local",
+      resolvers += "oph-releases" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local",
+      resolvers += "Sonatype" at "http://oss.sonatype.org/content/repositories/releases/",
+      resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
+      resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
+      resolvers             += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
+      libraryDependencies   ++= AkkaStack ++ dependencies
+        ++ testDependencies.map((m) => m % "test")
+    )
+  )
+
+
 
   lazy val root = project.in(file(".")).aggregate(core, web)
 
-  lazy val core = HakurekisteriModule("core")
 
-  lazy val web = HakurekisteriModule("web").dependsOn(core % "test->test;compile->compile")
+  lazy val web = {
+    Project(
+      s"hakurekisteri-web",
+      file("web"),
+      configurations = Seq(LoadSpecs),
+      settings = ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
+        ++ inConfig(LoadSpecs)(Defaults.testSettings)
+        ++ Seq(ideaExtraTestConfigurations := Seq(LoadSpecs))
+        ++ org.scalastyle.sbt.ScalastylePlugin.Settings
+        ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8"))
+        ++ Seq(wro4jSettings:_*)
+        ++ Seq(compile in Compile <<= (compile in Compile) dependsOn (generateResources in Compile))
+        ++ Seq(webappResources in Compile <+= (targetFolder in generateResources in Compile))
+        ++ Seq(webappResources in Compile <+= (sourceDirectory in Runtime) { sd => sd / "resources" / "tiedonsiirto"})
+        ++ Seq(karmaTask, installKarmaTask, installCoffeeTask, cleanNodeModules, karmaTestSources)
+        //++ Seq((test in Test) <<= (test in Test) dependsOn karma) // uncomment to enable running karma tests together with "test" phase
+        ++ Seq(
+        organization := Organization,
+        name := s"hakurekisteri-web",
+        version := Version,
+        scalaVersion := ScalaVersion,
+        artifactName := ArtifactName,
+        resolvers += Classpaths.typesafeReleases,
+        resolvers += "oph-snapshots" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local",
+        resolvers += "oph-releases" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local",
+        resolvers += "Sonatype" at "http://oss.sonatype.org/content/repositories/releases/",
+        resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
+        resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
+        credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+        artifactoryPublish,
+        buildversionTask,
+        libraryDependencies ++=  ScalatraStack.map(_ % ScalatraVersion)
+          ++ SecurityStack ++ webDeps,
+        scalateTemplateConfig in Compile <<= (sourceDirectory in Compile) {
+          base =>
+            Seq(
+              TemplateConfig(
+                base / "webapp" / "WEB-INF" / "templates",
+                Seq.empty, /* default imports should be added here */
+                Seq(
+                  Binding("context", "_root_.org.scalatra.scalate.ScalatraRenderContext", importMembers = true, isImplicit = true)
+                ), /* add extra bindings here */
+                Some("templates")
+              )
+            )
+        }
+      )
+        ++ sonar
+        ++ Seq(surefire)).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
+
+  }.dependsOn(core % "test->test;compile->compile")
 }
