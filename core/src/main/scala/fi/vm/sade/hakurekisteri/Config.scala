@@ -16,7 +16,7 @@ import fi.vm.sade.hakurekisteri.tools.RicherString
 object Config {
   val log = LoggerFactory.getLogger(getClass)
   val homeDir = sys.props.getOrElse("user.home", "")
-  val ophConfDir = Paths.get(homeDir, "/web/src/main/resources/oph-configuration/")
+  val ophConfDir = Paths.get(homeDir, "/oph-configuration/")
 
   val propertyLocations = Seq("suoritusrekisteri.properties", "common.properties")
 
