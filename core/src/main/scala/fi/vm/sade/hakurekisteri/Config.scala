@@ -11,6 +11,7 @@ import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
 
 import scala.util.{Failure, Success, Try}
+import fi.vm.sade.hakurekisteri.tools.RicherString
 
 object Config {
   val log = LoggerFactory.getLogger(getClass)
@@ -116,7 +117,7 @@ object Config {
   val organisaatioConfig = ServiceConfig(serviceUrl = organisaatioServiceUrl)
   val valintaTulosConfig = ServiceConfig(serviceUrl = valintaTulosServiceUrl)
 
-  import org.scalatra.util.RicherString._
+  import RicherString._
 
   val ytlConfig = for (
     host <- properties.get("suoritusrekisteri.ytl.host").flatMap(_.blankOption);
