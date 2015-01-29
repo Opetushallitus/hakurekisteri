@@ -1,0 +1,42 @@
+!!! 5
+html(ng-app="myApp")
+  head
+    title(oph-msg="suoritusrekisteri.title") Haku- ja valintarekisteri
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    link(type="text/css" href="static/css/bootstrap-3.3.1.min.css" rel="stylesheet")
+    link(type="text/css" href="static/css/styles.css" rel="stylesheet")
+    link(type="text/css" href="static/css/css-tyylikirjasto-virkailija.css" rel="stylesheet")
+    link(type="text/css" href="static/css/sivumallit.css" rel="stylesheet")
+    script(type="text/javascript" src="static/js/jquery-2.1.3.min.js")
+    script(type="text/javascript" src="static/js/jquery.fileDownload.js")
+    script(type="text/javascript" src="static/js/Chart.min.js")
+    script(type="text/javascript" src="static/js/bootstrap-3.3.1.min.js")
+    script(type="text/javascript" src="static/js/angular/angular.min.js")
+    script(type="text/javascript" src="static/js/angular/angular-resource.min.js")
+    script(type="text/javascript" src="static/js/angular/angular-route.min.js")
+    script(type="text/javascript" src="static/js/angular/angular-sanitize.min.js")
+    script(type="text/javascript" src="static/js/angular/angular-cookies.min.js")
+    script(type="text/javascript" src="static/js/angular-locale/angular-locale_fi.js")
+    script(type="text/javascript" src="static/js/angular-ui/ui-bootstrap-tpls-0.12.0.min.js")
+    script(type="text/javascript" src="static/js/ng-upload.min.js")
+    script(type="text/javascript" src="compiled/scripts.js")
+    script(type="text/javascript" src="/virkailija-raamit/apply-raamit.js")
+
+  body
+    div(class="container")
+      div(class="row" ng-controller="MurupolkuCtrl" ng-hide="isHidden()")
+        div(class="col-xs-12")
+          ul(class="breadcrumb")
+            li
+              a(ng-click="goHome()" class="link")
+                span(class="icon-breadcrumb-home")
+            li(ng-repeat="muru in murupolku")
+              a(ng-show="muru.href" href="{{muru.href}}")
+                span(ng-show="muru.icon" class="{{muru.icon}}")
+                span(oph-msg="{{muru.key}}") {{muru.text}}
+              span(ng-hide="muru.href" oph-msg="{{muru.key}}") {{muru.text}}
+
+      div(class="row")
+        div(class="col-xs-12")
+          ng-view
