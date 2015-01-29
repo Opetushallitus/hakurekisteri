@@ -453,7 +453,7 @@ object YTLXml {
   def extractLukio(oid: String, kokelas:Node): Option[Suoritus] = None
 
   import fi.vm.sade.hakurekisteri.Config
-  import org.scalatra.util.RicherString._
+  import fi.vm.sade.hakurekisteri.tools.RicherString._
 
   def extractTodistus(yo: Suoritus, kokelas: Node): Seq[Koe] = {
     (kokelas \\ "KOE").map{

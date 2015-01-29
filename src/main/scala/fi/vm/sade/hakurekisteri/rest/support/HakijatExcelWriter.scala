@@ -8,7 +8,6 @@ import org.apache.poi.hssf.{usermodel => hssf}
 import org.apache.poi.ss.{usermodel => poi}
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
-import org.scalatra.servlet.FileItem
 
 import scala.language.implicitConversions
 import scala.util.matching.Regex
@@ -87,9 +86,6 @@ object Workbook {
 
   }
 
-  def apply(f: FileItem): Workbook = {
-    apply(poi.WorkbookFactory.create(f.getInputStream))
-  }
 }
 
 

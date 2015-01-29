@@ -9,7 +9,7 @@ import fi.vm.sade.hakurekisteri.integration.{FutureCache, VirkailijaRestClient}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import akka.pattern.pipe
-import org.scalatra.util.RicherString._
+import fi.vm.sade.hakurekisteri.tools.RicherString._
 
 case class SearchKomoQuery(koulutus: String)
 

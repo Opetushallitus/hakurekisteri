@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.organization
 import fi.vm.sade.hakurekisteri.Config
 
 import scala.xml.Elem
-import org.scalatra.util.RicherString._
+import fi.vm.sade.hakurekisteri.tools.RicherString._
 import org.joda.time.DateTime
 import dispatch._
 import Defaults._

@@ -17,6 +17,7 @@ import scala.compat.Platform
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.xml.Node
+import fi.vm.sade.hakurekisteri.tools.RicherString
 
 object ProcessReadyBatches
 
@@ -275,9 +276,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   }
 }
 
-
-import org.scalatra.util.RicherString._
-
+import RicherString._
 trait ImportTunniste {
   val tunniste: String
 }

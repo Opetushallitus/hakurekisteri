@@ -24,6 +24,8 @@ import fi.vm.sade.hakurekisteri.suoritus.Komoto
 import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 import java.text.SimpleDateFormat
+import fi.vm.sade.hakurekisteri.tools.RicherString
+import fi.vm.sade.hakurekisteri.hakija.XMLHakija.XMLHakija
 
 
 case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String, oid: String)
@@ -477,31 +479,7 @@ object XMLHakemus {
       hakutoiveet = toiveet)
 }
 
-case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
-                     postinumero: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String], muupuhelin: Option[String], sahkoposti: Option[String],
-                     kotikunta: Option[String], sukupuoli: String, aidinkieli: String, koulutusmarkkinointilupa: Boolean, hakemus: XMLHakemus) {
-  def toXml: Node = {
-    <Hakija>
-      <Hetu>{hetu}</Hetu>
-      <Oppijanumero>{oppijanumero}</Oppijanumero>
-      <Sukunimi>{sukunimi}</Sukunimi>
-      <Etunimet>{etunimet}</Etunimet>
-      {if (kutsumanimi.isDefined) <Kutsumanimi>{kutsumanimi.get}</Kutsumanimi>}
-      <Lahiosoite>{lahiosoite}</Lahiosoite>
-      <Postinumero>{postinumero}</Postinumero>
-      <Maa>{maa}</Maa>
-      <Kansalaisuus>{kansalaisuus}</Kansalaisuus>
-      {if (matkapuhelin.isDefined) <Matkapuhelin>{matkapuhelin.get}</Matkapuhelin>}
-      {if (muupuhelin.isDefined) <Muupuhelin>{muupuhelin.get}</Muupuhelin>}
-      {if (sahkoposti.isDefined) <Sahkoposti>{sahkoposti.get}</Sahkoposti>}
-      {if (kotikunta.isDefined) <Kotikunta>{kotikunta.get}</Kotikunta>}
-      <Sukupuoli>{sukupuoli}</Sukupuoli>
-      <Aidinkieli>{aidinkieli}</Aidinkieli>
-      <Koulutusmarkkinointilupa>{toBooleanX(koulutusmarkkinointilupa)}</Koulutusmarkkinointilupa>
-      {hakemus.toXml}
-    </Hakija>
-  }
-}
+
 
 object XMLHakija {
   val mies = "\\d{6}[-A]\\d{2}[13579].".r
@@ -516,17 +494,31 @@ object XMLHakija {
   }
 
 
-  class RicherString(orig: String) {
-    def isBlank = orig == null || orig.trim.isEmpty
-
-    def blankOption = if (isBlank) None else Some(orig)
-
+  case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
+                       postinumero: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String], muupuhelin: Option[String], sahkoposti: Option[String],
+                       kotikunta: Option[String], sukupuoli: String, aidinkieli: String, koulutusmarkkinointilupa: Boolean, hakemus: XMLHakemus) {
+    def toXml: Node = {
+      <Hakija>
+        <Hetu>{hetu}</Hetu>
+        <Oppijanumero>{oppijanumero}</Oppijanumero>
+        <Sukunimi>{sukunimi}</Sukunimi>
+        <Etunimet>{etunimet}</Etunimet>
+        {if (kutsumanimi.isDefined) <Kutsumanimi>{kutsumanimi.get}</Kutsumanimi>}
+        <Lahiosoite>{lahiosoite}</Lahiosoite>
+        <Postinumero>{postinumero}</Postinumero>
+        <Maa>{maa}</Maa>
+        <Kansalaisuus>{kansalaisuus}</Kansalaisuus>
+        {if (matkapuhelin.isDefined) <Matkapuhelin>{matkapuhelin.get}</Matkapuhelin>}
+        {if (muupuhelin.isDefined) <Muupuhelin>{muupuhelin.get}</Muupuhelin>}
+        {if (sahkoposti.isDefined) <Sahkoposti>{sahkoposti.get}</Sahkoposti>}
+        {if (kotikunta.isDefined) <Kotikunta>{kotikunta.get}</Kotikunta>}
+        <Sukupuoli>{sukupuoli}</Sukupuoli>
+        <Aidinkieli>{aidinkieli}</Aidinkieli>
+        <Koulutusmarkkinointilupa>{toBooleanX(koulutusmarkkinointilupa)}</Koulutusmarkkinointilupa>
+        {hakemus.toXml}
+      </Hakija>
+    }
   }
-
-  object RicherString {
-    implicit def stringToRicherString(s: String) = new RicherString(s)
-  }
-
   import RicherString._
 
   def apply(hakija: Hakija, hakemus: XMLHakemus): XMLHakija =

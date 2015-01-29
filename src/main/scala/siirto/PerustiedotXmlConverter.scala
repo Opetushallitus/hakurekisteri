@@ -2,6 +2,7 @@ package siirto
 
 import fi.vm.sade.hakurekisteri.rest.support.{LocalDateSerializer, Workbook}
 import org.joda.time.format.{ISODateTimeFormat, DateTimeFormat}
+
 import org.scalatra.servlet.FileItem
 import siirto.DataCollectionConversions._
 import siirto.ExcelConversions._
@@ -9,6 +10,7 @@ import siirto.ExcelConversions._
 import scala.xml.{Node, Elem}
 import scalaz._
 import fi.vm.sade.hakurekisteri.web.rest.support
+import org.apache.poi.ss.usermodel.WorkbookFactory
 
 object PerustiedotXmlConverter extends support.XmlConverter {
   val excelContentTypes = Set("application/vnd.ms-excel", "application/msexcel", "application/x-msexcel", "application/x-ms-excel", "application/x-excel", "application/x-dos_ms_excel", "application/xls", "application/x-xls", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
@@ -17,7 +19,7 @@ object PerustiedotXmlConverter extends support.XmlConverter {
 
   override def convert(f: FileItem): Elem = f match {
     case excelFile if isExcel(excelFile) =>
-      val xml = converter.set(<henkilot/>, Workbook(excelFile))
+      val xml = converter.set(<henkilot/>, Workbook(WorkbookFactory.create(f.getInputStream)))
       <perustiedot>
         <eranTunniste>{excelFile.getName}</eranTunniste>
         {xml}
