@@ -184,6 +184,7 @@ object HakurekisteriBuild extends Build {
       resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
       resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
       resolvers             += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
+      artifactoryPublish,
       libraryDependencies   ++= AkkaStack ++ dependencies
         ++ testDependencies.map((m) => m % "test")
     )
