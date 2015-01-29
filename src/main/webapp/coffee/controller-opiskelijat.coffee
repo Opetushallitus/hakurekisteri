@@ -135,10 +135,13 @@ app.controller "OpiskelijatCtrl", [
 
     $scope.getOppilaitos = (searchStr) ->
       if searchStr and searchStr.length >= 3
-        $http.get(organisaatioServiceUrl + "/rest/organisaatio/hae",
+        $http.get(organisaatioServiceUrl + "/rest/organisaatio/v2/hae",
           params:
-            searchstr: searchStr.trim()
-            organisaatioTyyppi: "Oppilaitos"
+            searchStr: searchStr.trim()
+            organisaatiotyyppi: "Oppilaitos"
+            aktiiviset: true
+            suunnitellut: true
+            lakkautetut: false
         ).then ((result) ->
           if result.data and result.data.numHits > 0
             result.data.organisaatiot
