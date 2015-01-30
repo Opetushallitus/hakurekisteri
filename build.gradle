@@ -15,11 +15,11 @@ String zipFileName = ""
 task(zipIt, type: Zip) {
     doFirst {
         // Renames abc-x.y-SOMETHING.war to abc.war
-        fileTree(from: '.', include: '**/target/**/hakurekisteri-web-*.war').files.each { warFile ->
-            warFile.renameTo('target/scala-2.10/suoritusrekisteri.war')
+        fileTree(from: '.', include: '**/target/**/*.war').files.each { warFile ->
+            String replaced = warFile.path.replaceFirst('-web-\\d+(\\.\\d+)*([^./]+|).war','.war')
+            replaced = replaced.replace("hakurekisteri.war", "suoritusrekisteri.war")
+            warFile.renameTo(file(replaced))
         }
-        // copy resources from web to src/main/resources
-        new File('src/main/') << new File('web/src/main/resources')
     }
 
     zipFileName = serviceName + "_" + branchName + "_" + new Date().format("yyyyMMddHHmmss") + ".zip"
