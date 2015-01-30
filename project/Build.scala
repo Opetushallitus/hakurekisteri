@@ -144,7 +144,7 @@ object HakurekisteriBuild extends Build {
         "\nbuildTtime=" + now
       println("writing buildversion.txt:\n" + buildversionTxt)
 
-      val f: File = file("src/main/webapp/buildversion.txt")
+      val f: File = file("web/src/main/webapp/buildversion.txt")
       IO.write(f, buildversionTxt)
   }
 
