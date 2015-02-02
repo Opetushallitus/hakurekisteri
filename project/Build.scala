@@ -1,7 +1,4 @@
-import com.bowlingx.sbt.plugins.Wro4jPlugin._
-import com.bowlingx.sbt.plugins.Wro4jPlugin.Wro4jKeys
 import com.mojolly.scalate.ScalatePlugin.ScalateKeys
-import Wro4jKeys._
 import info.schleichardt.sbt.sonar.SbtSonarPlugin._
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -192,6 +189,7 @@ object HakurekisteriBuild extends Build {
         ++ Seq(webappResources in Compile <+= (sourceDirectory in Runtime) { sd => sd / "resources" / "tiedonsiirto"})
         ++ Seq(karmaTask, npmBuildTask, cleanNodeModules)
         ++ Seq((test in Test) <<= (test in Test) dependsOn karma)
+        ++ Seq(watchSources <++= baseDirectory map { path => ((path / "src/main/webapp/coffee") ** "*.coffee").get })
         ++ Seq(
         organization := Organization,
         name := s"hakurekisteri-web",
