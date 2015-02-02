@@ -44,7 +44,6 @@ class CasActor(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(i
 
   private def getJSessionIdFor(key: JSessionKey): Future[JSessionId] = {
     if (jSessionIdCache.contains(key)) {
-      log.debug(s"jsession for $key found in cache")
       jSessionIdCache.get(key)
     } else {
       log.debug(s"no jsession found or it was expired, fetching a new one for $serviceUrl")
