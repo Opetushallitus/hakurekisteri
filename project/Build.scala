@@ -14,6 +14,7 @@ import org.sbtidea.SbtIdeaPlugin._
 import scala.language.postfixOps
 
 object HakurekisteriBuild extends Build {
+  import sys.process._
 
 
   val Organization = "fi.vm.sade"
@@ -58,7 +59,6 @@ object HakurekisteriBuild extends Build {
   val akkaVersion = "2.3.6"
   val AkkaStack = Seq("akka-testkit", "akka-slf4j","akka-camel").map("com.typesafe.akka" %% _ % akkaVersion)
 
-
   val webDeps =  Seq(
     "org.eclipse.jetty" % "jetty-webapp" % "9.1.5.v20140505" % "container",
     "org.eclipse.jetty" % "jetty-plus" % "9.1.5.v20140505" % "container",
@@ -88,36 +88,26 @@ object HakurekisteriBuild extends Build {
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion,
     "org.scalamock" %% "scalamock-scalatest-support" % "3.1.4")
 
+  if(Seq("npm", "build").! != 0){
+    sys.error("webbuild failed")
+  }
+
+
+  lazy val npmBuild = taskKey[Unit]("run npm build")
+  val npmBuildTask = npmBuild := {
+    println("FOO:" + (target in Compile).value)
+    if ((Seq("npm", "run", "build")!) !=  0)
+      sys.error("npm run build failed")
+  }
+
   lazy val karma = taskKey[Unit]("run karma tests")
-  lazy val installKarma = taskKey[Unit]("install karma")
-  lazy val installCoffee = taskKey[Unit]("install coffee")
-  val installKarmaTask = installKarma := {
-    import sys.process._
-    val pb = Seq("npm", "install", "phantomjs", "karma", "karma-coffee-preprocessor", "karma-phantomjs-launcher", "karma-requirejs", "karma-jasmine", "karma-junit-reporter")
-    if ((pb!) !=  0)
-      sys.error("failed installing karma")
-  }
-  val installCoffeeTask = installCoffee := {
-    import sys.process._
-    val pb = Seq("npm", "install", "coffee-script")
-    if ((pb!) !=  0)
-      sys.error("failed installing coffee script")
-  }
-  val karmaTask = karma <<= (sourceDirectory in Test, installCoffee, installKarma) map {
-    (sd, Unit1, Unit2) =>
-      import sys.process._
-      val karma_conf = s"${sd.getAbsolutePath}/js/karma.conf.js"
-      if (file(karma_conf).exists()) {
-        val pb = Seq("./node_modules/karma/bin/karma", "start", karma_conf)
-        if ((pb!) !=  0)
-          sys.error("karma failed")
-      } else {
-        println("no karma tests found")
-      }
+  val karmaTask = karma <<= (sourceDirectory in Test) map {
+    (sd) =>
+      if ((Seq("npm", "test")!) !=  0)
+        sys.error("npm test failed")
   }
 
   val cleanNodeModules = cleanFiles <+= baseDirectory { base => base / "node_modules" }
-  val karmaTestSources = unmanagedSourceDirectories in Test <+= (sourceDirectory in Test) {sd => sd / "coffee"}
 
   val artifactoryPublish = publishTo <<= version apply {
     (ver: String) =>
@@ -131,8 +121,6 @@ object HakurekisteriBuild extends Build {
   lazy val buildversion = taskKey[Unit]("start buildversion.txt generator")
 
   val surefire = testListeners += new SurefireListener(target.value)
-
-
 
   val buildversionTask = buildversion <<= version map {
     (ver: String) =>
@@ -205,12 +193,11 @@ object HakurekisteriBuild extends Build {
         ++ Seq(ideaExtraTestConfigurations := Seq(LoadSpecs))
         ++ org.scalastyle.sbt.ScalastylePlugin.Settings
         ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8"))
-        ++ Seq(wro4jSettings:_*)
-        ++ Seq(compile in Compile <<= (compile in Compile) dependsOn (generateResources in Compile))
-        ++ Seq(webappResources in Compile <+= (targetFolder in generateResources in Compile))
+        ++ Seq(compile in Compile <<= (compile in Compile) dependsOn npmBuild)
+        ++ Seq(webappResources in Compile <+= (target in Runtime)(t => t / "javascript") )
         ++ Seq(webappResources in Compile <+= (sourceDirectory in Runtime) { sd => sd / "resources" / "tiedonsiirto"})
-        ++ Seq(karmaTask, installKarmaTask, installCoffeeTask, cleanNodeModules, karmaTestSources)
-        //++ Seq((test in Test) <<= (test in Test) dependsOn karma) // uncomment to enable running karma tests together with "test" phase
+        ++ Seq(karmaTask, npmBuildTask, cleanNodeModules)
+        ++ Seq((test in Test) <<= (test in Test) dependsOn karma)
         ++ Seq(
         organization := Organization,
         name := s"hakurekisteri-web",

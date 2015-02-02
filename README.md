@@ -15,3 +15,10 @@ If `browse` doesn't launch your browser, manually open [http://localhost:8080/](
 API Documentation is available in URI /swagger/index.html after starting the container.
 
 .
+
+## Development
+
+Compile coffeescript files automatically after changes:
+```
+npm run watch
+```
