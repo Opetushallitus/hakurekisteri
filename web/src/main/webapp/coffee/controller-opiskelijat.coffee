@@ -164,7 +164,6 @@ app.controller "OpiskelijatCtrl", [
       return
 
     $scope.muokkaaSuoritukset = ->
-      console.log('muokkaaSuoritukset')
       $location.path("/muokkaa-suoritukset")
       return
 
