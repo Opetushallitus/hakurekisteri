@@ -34,6 +34,9 @@ aside(class="row")
           button(class="btn btn-primary" type="submit")
             span(oph-msg="suoritusrekisteri.opiskelijat.hae") Hae
             span(class="glyphicon glyphicon-search")
+          p(class="newlink")
+            a(ng-click="muokkaaSuoritukset()")
+              span() Uuteen käliin
 
 table(class="table")
   thead
