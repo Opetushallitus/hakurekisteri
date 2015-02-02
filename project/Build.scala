@@ -95,7 +95,6 @@ object HakurekisteriBuild extends Build {
 
   lazy val npmBuild = taskKey[Unit]("run npm build")
   val npmBuildTask = npmBuild := {
-    println("FOO:" + (target in Compile).value)
     if ((Seq("npm", "run", "build")!) !=  0)
       sys.error("npm run build failed")
   }
