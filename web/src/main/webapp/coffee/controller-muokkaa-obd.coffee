@@ -113,13 +113,16 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
     doSearch = (query) ->
       MessageService.clearMessages()
 
-      searchOpiskelijat = (o) ->
+      searchOpiskelijat = () ->
+        o = $q.defer()
         Opiskelijat.query query, ((result) ->
           o.resolve { opiskelijat: result }
         ), ->
           o.reject "opiskelija query failed"
+        o
 
-      searchSuoritukset = (s) ->
+      searchSuoritukset = () ->
+        s = $q.defer()
         suoritusQuery =
           myontaja: query.oppilaitosOid
           henkilo: (if query.henkilo then query.henkilo else null)
@@ -128,6 +131,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           s.resolve { suoritukset: result }
         ), ->
           s.reject "suoritus query failed"
+        s
 
       groupByHenkiloOid = (obj) ->
         res = {}
@@ -160,13 +164,9 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           obj.henkiloOid = oid
           obj
 
-      o = $q.defer()
-      searchOpiskelijat o
-      s = $q.defer()
-      searchSuoritukset s
       $q.all([
-        o.promise
-        s.promise
+        searchOpiskelijat().promise
+        searchSuoritukset().promise
       ]).then ((results) ->
         showCurrentRows groupByHenkiloOid(collect(results))
       ), (errors) ->
