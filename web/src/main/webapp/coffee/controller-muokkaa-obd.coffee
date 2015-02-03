@@ -17,7 +17,9 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
 
     showCurrentRows = (allRows) ->
       startLoading()
-      enrichData(allRows)
+      enrichData(allRows.slice(0,10))
+      if(allRows.length > 0)
+        $scope.valitseHenkilo(allRows[0].henkiloOid)
       return
 
     enrichData = (allRows) ->
@@ -109,6 +111,9 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         oppilaitos: (if $scope.organisaatioTerm then $scope.organisaatioTerm.oppilaitosKoodi else "")
         vuosi: (if $scope.vuosiTerm then $scope.vuosiTerm else "")
       return
+
+    $scope.valitseHenkilo = (henkiloOid) ->
+      $scope.valittuHenkiloOid = henkiloOid
 
     doSearch = (query) ->
       MessageService.clearMessages()
