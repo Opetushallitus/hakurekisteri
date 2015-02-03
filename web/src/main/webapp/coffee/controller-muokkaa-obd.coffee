@@ -11,7 +11,8 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
   "Arvosanat"
   "MurupolkuService"
   "MessageService"
-  ($scope, $routeParams, $location, $log, $http, $q, $cookies, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService) ->
+  "MuokkaaService"
+  ($scope, $routeParams, $location, $log, $http, $q, $cookies, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService, MuokkaaService) ->
     startLoading = -> $scope.loading = true
     stopLoading = -> $scope.loading = false
 
@@ -114,6 +115,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
 
     $scope.valitseHenkilo = (henkiloOid) ->
       $scope.valittuHenkiloOid = henkiloOid
+      MuokkaaService.muokkaaHenkilo(henkiloOid, $scope)
 
     doSearch = (query) ->
       MessageService.clearMessages()

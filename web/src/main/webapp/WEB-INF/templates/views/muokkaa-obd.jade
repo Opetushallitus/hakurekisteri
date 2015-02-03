@@ -42,8 +42,7 @@ table(class="table col-sm-4")
         div(ng-repeat="o in row.opiskelijat") {{o.luokka}}
 
 div(ng-if="valittuHenkiloOid")
-  span() {{valittuHenkiloOid}}
-  div(ng-include="'templates/muokkaa'")
+  div(ng-include="'templates/muokkaa-partial'")
 
 div(ng-if="loading" class="modal fade in" style="display: block")
   div(class="modal-backdrop in" style="height: 100%")
