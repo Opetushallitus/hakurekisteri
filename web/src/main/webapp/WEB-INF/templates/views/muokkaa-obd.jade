@@ -30,29 +30,16 @@ aside(class="row")
             span(oph-msg="suoritusrekisteri.opiskelijat.hae") Hae
             span(class="glyphicon glyphicon-search")
 
-table(class="table")
+table(class="table col-sm-4")
   thead
     tr
       th(oph-msg="suoritusrekisteri.opiskelijat.henkiloOid") Henkilö
-      th(oph-msg="suoritusrekisteri.opiskelijat.opiskelijatiedot") Opiskelijatiedot
-      th(oph-msg="suoritusrekisteri.opiskelijat.suoritustiedot") Suoritustiedot
-      th
+      th(oph-msg="suoritusrekisteri.opiskelijat.opiskelijatiedot") Luokka
   tbody
     tr(ng-repeat="row in allRows")
       td {{row.henkilo || row.henkiloOid}}
       td
-        div(ng-repeat="o in row.opiskelijat") {{o.oppilaitos}}, {{o.luokka}}
-      td
-        div(ng-repeat="s in row.suoritukset")
-          span {{s.oppilaitos}},
-          span(ng-hide="s.koulutus" oph-msg="suoritusrekisteri.komo.{{s.komo}}") {{s.komo}}
-          span(ng-show="s.koulutus") {{s.koulutus}}
-          span(ng-show="s.hasArvosanat" oph-msg="suoritusrekisteri.opiskelijat.arvosanatsiirretty") (arvosanat siirretty)
-          span(ng-show="s.noArvosanat" oph-msg="suoritusrekisteri.opiskelijat.eiarvosanoja") (ei arvosanoja)
-      td
-        a(class="btn bt-default btn-xs pull-right" href="#/muokkaa/{{row.henkiloOid}}")
-          span(oph-msg="suoritusrekisteri.opiskelijat.muokkaa") Muokkaa tietoja
-          span(class="glyphicon glyphicon-edit")
+        div(ng-repeat="o in row.opiskelijat") {{o.luokka}}
 
 div(ng-if="loading" class="modal fade in" style="display: block")
   div(class="modal-backdrop in" style="height: 100%")

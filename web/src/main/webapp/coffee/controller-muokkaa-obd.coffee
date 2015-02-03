@@ -17,7 +17,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
 
     showCurrentRows = (allRows) ->
       startLoading()
-      $scope.allRows = allRows.slice(0, 300)
+      $scope.allRows = allRows
       enrichData()
       return
 
@@ -47,36 +47,11 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
                 d.resolve()
               ), -> d.reject('error resolving oppilaitos for ' + o.oppilaitosOid)
 
-      enrichSuoritukset = (row) ->
-        if Array.isArray row.suoritukset
-          for o in row.suoritukset
-            do (o) ->
-              od = $q.defer()
-              enrichments.push od
-              getOrganisaatio $http, o.myontaja, ((oppilaitos) ->
-                o.oppilaitos = (if oppilaitos.oppilaitosKoodi then oppilaitos.oppilaitosKoodi + " " else "") + " " + (if oppilaitos.nimi.fi then oppilaitos.nimi.fi else oppilaitos.nimi.sv)
-                od.resolve()
-              ), -> od.reject('error resolving oppilaitos for ' + o.myontaja)
-              if o.komo.match(/^koulutus_\d*$/)
-                kd = $q.defer()
-                getKoulutusNimi $http, o.komo, ((koulutusNimi) ->
-                  o.koulutus = koulutusNimi
-                  kd.resolve()
-                ), ->
-                  kd.reject('error resolving koulutus nimi for ' + o.komo)
-              Arvosanat.query { suoritus: o.id }, (arvosanat) ->
-                if arvosanat.length > 0
-                  o.hasArvosanat = true
-                else
-                  o.noArvosanat = true
-                return
-
       for row in $scope.allRows
         do (row) ->
           if row.henkiloOid
             enrichHenkilo row
             enrichOpiskelijat row
-            enrichSuoritukset row
           return
 
       $q.all(enrichments.map((d) -> d.promise)).then((->
@@ -137,79 +112,78 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         vuosi: (if $scope.vuosiTerm then $scope.vuosiTerm else "")
       return
 
+    doSearch = (query) ->
+      MessageService.clearMessages()
+
+      searchOpiskelijat = (o) ->
+        Opiskelijat.query query, ((result) ->
+          o.resolve { opiskelijat: result }
+        ), ->
+          o.reject "opiskelija query failed"
+
+      searchSuoritukset = (s) ->
+        suoritusQuery =
+          myontaja: query.oppilaitosOid
+          henkilo: (if query.henkilo then query.henkilo else null)
+          vuosi: (if query.vuosi then query.vuosi else null)
+        Suoritukset.query suoritusQuery, ((result) ->
+          s.resolve { suoritukset: result }
+        ), ->
+          s.reject "suoritus query failed"
+
+      groupByHenkiloOid = (obj) ->
+        res = {}
+        if Array.isArray obj.opiskelijat
+          for o in obj.opiskelijat
+            do (o) ->
+              oid = o.henkiloOid
+              if res[oid]
+                if res[oid].opiskelijat
+                  res[oid].opiskelijat.push o
+                else
+                  res[oid].opiskelijat = [o]
+              else
+                res[oid] =
+                  opiskelijat: [o]
+        if Array.isArray obj.suoritukset
+          for s in obj.suoritukset
+            do (s) ->
+              oid = s.henkiloOid
+              if res[oid]
+                if res[oid].suoritukset
+                  res[oid].suoritukset.push s
+                else
+                  res[oid].suoritukset = [s]
+              else
+                res[oid] =
+                  suoritukset: [s]
+        Object.keys(res).map (oid) ->
+          obj = res[oid]
+          obj.henkiloOid = oid
+          obj
+
+      o = $q.defer()
+      searchOpiskelijat o
+      s = $q.defer()
+      searchSuoritukset s
+      $q.all([
+        o.promise
+        s.promise
+      ]).then ((results) ->
+        showCurrentRows groupByHenkiloOid(collect(results))
+      ), (errors) ->
+        $log.error errors
+        MessageService.addMessage
+          type: "danger"
+          messageKey: "suoritusrekisteri.opiskelijat.virhehaussa"
+          message: "Haussa tapahtui virhe. Yritä uudelleen."
+        stopLoading()
+
+
     $scope.fetch = ->
-      doSearch = (query) ->
-        MessageService.clearMessages()
-
-        searchOpiskelijat = (o) ->
-          Opiskelijat.query query, ((result) ->
-            o.resolve { opiskelijat: result }
-          ), ->
-            o.reject "opiskelija query failed"
-
-        searchSuoritukset = (s) ->
-          suoritusQuery =
-            myontaja: query.oppilaitosOid
-            henkilo: (if query.henkilo then query.henkilo else null)
-            vuosi: (if query.vuosi then query.vuosi else null)
-          Suoritukset.query suoritusQuery, ((result) ->
-            s.resolve { suoritukset: result }
-          ), ->
-            s.reject "suoritus query failed"
-
-        groupByHenkiloOid = (obj) ->
-          res = {}
-          if Array.isArray obj.opiskelijat
-            for o in obj.opiskelijat
-              do (o) ->
-                oid = o.henkiloOid
-                if res[oid]
-                  if res[oid].opiskelijat
-                    res[oid].opiskelijat.push o
-                  else
-                    res[oid].opiskelijat = [o]
-                else
-                  res[oid] =
-                    opiskelijat: [o]
-          if Array.isArray obj.suoritukset
-            for s in obj.suoritukset
-              do (s) ->
-                oid = s.henkiloOid
-                if res[oid]
-                  if res[oid].suoritukset
-                    res[oid].suoritukset.push s
-                  else
-                    res[oid].suoritukset = [s]
-                else
-                  res[oid] =
-                    suoritukset: [s]
-          Object.keys(res).map (oid) ->
-            obj = res[oid]
-            obj.henkiloOid = oid
-            obj
-
-        o = $q.defer()
-        searchOpiskelijat o
-        s = $q.defer()
-        searchSuoritukset s
-        $q.all([
-          o.promise
-          s.promise
-        ]).then ((results) ->
-          showCurrentRows groupByHenkiloOid(collect(results))
-        ), (errors) ->
-          $log.error errors
-          MessageService.addMessage
-            type: "danger"
-            messageKey: "suoritusrekisteri.opiskelijat.virhehaussa"
-            message: "Haussa tapahtui virhe. Yritä uudelleen."
-          stopLoading()
-
       $scope.allRows = []
       $scope.henkilo = null
       $scope.organisaatio = null
-
-      startLoading()
 
       searchTerms = []
       if $scope.henkiloTerm
@@ -245,6 +219,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         $q.all(searchTerms.map((d) ->
           d.promise
         )).then (->
+          startLoading()
           doSearch
             henkilo: (if $scope.henkilo then $scope.henkilo.oidHenkilo else null)
             oppilaitosOid: (if $scope.organisaatioTerm then $scope.organisaatioTerm.oid else null)
@@ -253,8 +228,6 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         ), ->
           stopLoading()
           return
-      else
-        stopLoading()
       return
 
     $scope.fetch()
