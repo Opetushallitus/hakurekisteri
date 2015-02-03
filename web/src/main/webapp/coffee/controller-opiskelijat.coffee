@@ -163,6 +163,10 @@ app.controller "OpiskelijatCtrl", [
         vuosi: (if $scope.vuosiTerm then $scope.vuosiTerm else "")
       return
 
+    $scope.muokkaaSuoritukset = ->
+      $location.path("/muokkaa-suoritukset")
+      return
+
     $scope.fetch = ->
       doSearch = (query) ->
         MessageService.clearMessages()

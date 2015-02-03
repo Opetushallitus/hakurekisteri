@@ -44,7 +44,6 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
     case RefreshDone => refreshing = false
 
     case UpdateValintatulos(haku) if !refreshing =>
-      log.debug(s"refreshing haku $haku")
       refreshing = true
       updateCacheAndReschedule(haku, sijoitteluTulos(haku, None))
   }

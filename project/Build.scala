@@ -1,7 +1,4 @@
-import com.bowlingx.sbt.plugins.Wro4jPlugin._
-import com.bowlingx.sbt.plugins.Wro4jPlugin.Wro4jKeys
 import com.mojolly.scalate.ScalatePlugin.ScalateKeys
-import Wro4jKeys._
 import info.schleichardt.sbt.sonar.SbtSonarPlugin._
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -88,22 +85,16 @@ object HakurekisteriBuild extends Build {
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion,
     "org.scalamock" %% "scalamock-scalatest-support" % "3.1.4")
 
-  if(Seq("npm", "build").! != 0){
-    sys.error("webbuild failed")
-  }
-
-
   lazy val npmBuild = taskKey[Unit]("run npm build")
   val npmBuildTask = npmBuild := {
-    println("FOO:" + (target in Compile).value)
-    if ((Seq("npm", "run", "build")!) !=  0)
+    if ((Seq("npm", "run", "build", "-s")!) !=  0)
       sys.error("npm run build failed")
   }
 
   lazy val karma = taskKey[Unit]("run karma tests")
   val karmaTask = karma <<= (sourceDirectory in Test) map {
     (sd) =>
-      if ((Seq("npm", "test")!) !=  0)
+      if ((Seq("npm", "test", "-s")!) !=  0)
         sys.error("npm test failed")
   }
 
@@ -198,6 +189,7 @@ object HakurekisteriBuild extends Build {
         ++ Seq(webappResources in Compile <+= (sourceDirectory in Runtime) { sd => sd / "resources" / "tiedonsiirto"})
         ++ Seq(karmaTask, npmBuildTask, cleanNodeModules)
         ++ Seq((test in Test) <<= (test in Test) dependsOn karma)
+        ++ Seq(watchSources <++= baseDirectory map { path => ((path / "src/main/webapp/coffee") ** "*.coffee").get })
         ++ Seq(
         organization := Organization,
         name := s"hakurekisteri-web",
