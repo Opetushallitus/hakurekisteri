@@ -1,13 +1,16 @@
 package fi.vm.sade.hakurekisteri.integration.parametrit
 
+import akka.actor.Status.Failure
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
-import akka.actor.Actor
+import akka.actor.{ActorRef, Actor}
 import akka.pattern.pipe
 import org.joda.time.DateTime
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+
+case class ParamsFailedException(haku: String, from: ActorRef, t: Throwable) extends Exception(s"call to parameter service failed for haku $haku", t)
+case class NoParamFoundException(haku: String) extends Exception(s"no parameter found for haku $haku")
 
 class ParameterActor(restClient: VirkailijaRestClient) extends Actor {
   implicit val ec = context.dispatcher
@@ -17,21 +20,30 @@ class ParameterActor(restClient: VirkailijaRestClient) extends Actor {
   import scala.concurrent.duration._
 
   override def receive: Actor.Receive = {
-    case KierrosRequest(oid) if calling =>
-      context.system.scheduler.scheduleOnce(100.milliseconds, self, KierrosRequest(oid))(ec, sender())
+    case r: KierrosRequest if calling =>
+      val from = sender()
+      context.system.scheduler.scheduleOnce(100.milliseconds, self, r)(ec, from)
 
-    case KierrosRequest(oid) if !calling =>
+    case r: KierrosRequest if !calling =>
       calling = true
-      getParams(oid).map(HakuParams).pipeTo(self)(sender())
+      val from = sender()
+      getParams(r.haku).map(HakuParams).pipeTo(self)(from)
 
     case h: HakuParams =>
       calling = false
       sender ! h
+
+    case Failure(t: Throwable) =>
+      calling = false
+      Future.failed(t) pipeTo sender
+
   }
 
-  def getParams(hakuOid: String): Future[DateTime] =  {
-    restClient.readObject[KierrosParams](s"/api/v1/rest/parametri/$hakuOid", 200, maxRetries).
-      collect { case KierrosParams(Some(KierrosEndParams(date))) => new DateTime(date) }
+  def getParams(hakuOid: String): Future[DateTime] = {
+    restClient.readObject[KierrosParams](s"/api/v1/rest/parametri/$hakuOid", 200).map {
+      case KierrosParams(Some(KierrosEndParams(date))) => new DateTime(date)
+      case _ => throw NoParamFoundException(hakuOid)
+    }
   }
 }
 
