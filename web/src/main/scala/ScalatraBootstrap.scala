@@ -20,7 +20,7 @@ import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaResource
 import fi.vm.sade.hakurekisteri.web.opiskelija.{OpiskelijaSwaggerApi, CreateOpiskelijaCommand}
 import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.{OpiskeluoikeusSwaggerApi, CreateOpiskeluoikeusCommand}
 import fi.vm.sade.hakurekisteri.web.oppija.OppijaResource
-import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriCrudCommands, HakurekisteriResource, ResourcesApp, HakurekisteriSwagger}
+import fi.vm.sade.hakurekisteri.web.rest.support._
 import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwaggerApi}
 import java.nio.file.Path
 import java.util.UUID
@@ -47,6 +47,7 @@ import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
 import org.apache.activemq.camel.component.ActiveMQComponent
 import org.joda.time.LocalDate
+import org.scalatra.servlet.FileItem
 import org.scalatra.{Handler, LifeCycle}
 import org.scalatra.swagger.Swagger
 import org.slf4j.LoggerFactory
@@ -66,7 +67,9 @@ import scala.concurrent.duration._
 import scala.reflect.ClassTag
 import HakurekisteriDriver.simple._
 import scala.util.Try
-import siirto.{PerustiedotXmlConverter, PerustiedotKoodisto, Perustiedot, SchemaServlet}
+import siirto._
+
+import scala.xml.Elem
 
 
 class ScalatraBootstrap extends LifeCycle {
@@ -96,6 +99,9 @@ class ScalatraBootstrap extends LifeCycle {
     mountServlets(context) (
       ("/", "web/src/scala/gui") -> new GuiServlet,
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
+      ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", "arvosanat", "data", new XmlConverter {
+        override def convert(f: FileItem): Elem = ???
+      }, Arvosanat, ArvosanatKoodisto) with SpringSecuritySupport,
       ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", "perustiedot", "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SpringSecuritySupport,
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
       ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
