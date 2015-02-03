@@ -17,11 +17,10 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
 
     showCurrentRows = (allRows) ->
       startLoading()
-      $scope.allRows = allRows
-      enrichData()
+      enrichData(allRows)
       return
 
-    enrichData = () ->
+    enrichData = (allRows) ->
       enrichments = []
 
       enrichHenkilo = (row) ->
@@ -47,7 +46,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
                 d.resolve()
               ), -> d.reject('error resolving oppilaitos for ' + o.oppilaitosOid)
 
-      for row in $scope.allRows
+      for row in allRows
         do (row) ->
           if row.henkiloOid
             enrichHenkilo row
@@ -55,13 +54,12 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           return
 
       $q.all(enrichments.map((d) -> d.promise)).then((->
+          $scope.allRows = allRows
           stopLoading()
         ), (errors) ->
         $log.error(errors)
         stopLoading()
       )
-
-      return
 
     vuodet = () ->
       start = new Date().getFullYear() + 1
