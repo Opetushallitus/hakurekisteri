@@ -1,27 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <arvosanat xmlns="http://www.example.org/arvosanat" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.example.org/arvosanat arvosanat.xsd ">
-   <oppilas>
+  <oppilas>
 	<hetu>111111-111L</hetu>
-	<tunniste>id</tunniste>
-	
     <todistukset>
       <perusopetus>
         <valmistuminen>2001-01-01</valmistuminen>
         <myontaja>02839</myontaja>
-        <suorituskieli>fi</suorituskieli>
+        <suorituskieli>FI</suorituskieli>
         <AI>
         	<yleinen>5</yleinen>
-        	<tyyppi></tyyppi>
+        	<tyyppi>FI</tyyppi>
 		</AI>
 		<A1>
         	<yleinen>5</yleinen>
         	<valinnainen>6</valinnainen>
         	<valinnainen>8</valinnainen>
-        	<kieli></kieli>
+        	<kieli>EN</kieli>
 		</A1>
 		<B1>
         	<yleinen>5</yleinen>
-        	<kieli></kieli>
+        	<kieli>SV</kieli>
 		</B1>
 		<MA>
         	<yleinen>5</yleinen>
@@ -73,26 +71,24 @@
   </oppilas>
   <oppilas>
 	<oppijanumero>1.2.246.562.24.12345678901</oppijanumero>
-	
-    <todistukset>
+	<todistukset>
       <perusopetus>
         <valmistuminen>2001-01-01</valmistuminen>
         <myontaja>02839</myontaja>
-        <suorituskieli>fi</suorituskieli>
+        <suorituskieli>FI</suorituskieli>
         <eivalmistu>JÄÄ LUOKALLE</eivalmistu>
       </perusopetus>
     </todistukset>
   </oppilas>
-  
-  <oppilas>
+  <!--oppilas>
 	<syntymaaika>11111921</syntymaaika>
 	<tunniste>5a3fe790-55d5-11e4-8ed6-0800200c9a66</tunniste>
     <todistukset>
       <lukio>
       	<valmistuminen>2001-01-01</valmistuminen>
       	<myontaja>02839</myontaja>
-        <suorituskieli>fi</suorituskieli>
+        <suorituskieli>FI</suorituskieli>
       </lukio>
     </todistukset>
-  </oppilas>
+  </oppilas-->
 </arvosanat>
