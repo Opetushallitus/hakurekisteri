@@ -37,7 +37,7 @@ table(class="table col-sm-4")
       th(oph-msg="suoritusrekisteri.opiskelijat.opiskelijatiedot") Luokka
   tbody
     tr(ng-repeat="row in allRows" ng-click="valitseHenkilo(row.henkiloOid)")
-      td {{row.henkilo}}
+      td {{row.henkilo || row.henkiloOid}}
       td
         div(ng-repeat="o in row.opiskelijat") {{o.luokka}}
 
