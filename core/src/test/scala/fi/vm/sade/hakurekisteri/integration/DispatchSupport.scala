@@ -161,6 +161,13 @@ trait Endpoint {
   def request(er: EndpointRequest): (Int, List[(String, String)], String)
 }
 
+trait FutureEndpoint {
+
+  def request(er: EndpointRequest): Future[(Int, List[(String, String)], String)]
+
+}
+
+
 class CapturingProvider(endpoint: Endpoint) extends AsyncHttpProvider{
   override def prepareResponse(status: HttpResponseStatus, headers: HttpResponseHeaders, bodyParts: util.List[HttpResponseBodyPart]): Response = {
     import scala.collection.JavaConversions._
@@ -170,6 +177,22 @@ class CapturingProvider(endpoint: Endpoint) extends AsyncHttpProvider{
   override def close(): Unit = {}
 
   override def execute[T](request: Request, handler: AsyncHandler[T]): ListenableFuture[T] = {
+    FutureListenableFuture(executeScala(request, handler))
+  }
+
+  def handle[T](handler: AsyncHandler[T], request: Request)(response: Option[(Int, List[(String, String)], String)]) =  {
+    val (status, headers, body) = response.getOrElse(404, List(), "Not found")
+    handler.onStatusReceived(BaseStatus(status, "", request, this))
+    handler.onHeadersReceived(new BaseHeaders(request, this, headers))
+    handler.onBodyPartReceived(new BodyString(request, this, body))
+    handler.onCompleted()
+  }
+
+  def executeScala[T](request: Request, handler: AsyncHandler[T]): Future[T] = {
+    Future.fromTry(Try(handle(handler, request)(executeRequest(request))))
+  }
+
+  def executeRequest[T](request: Request): Option[(Int, List[(String, String)], String)] = {
     import scala.collection.JavaConversions._
 
     val foo = for (
@@ -181,20 +204,7 @@ class CapturingProvider(endpoint: Endpoint) extends AsyncHttpProvider{
 
     val er = EndpointRequest(request.getUrl, reqBody, foo.toList)
 
-    val response = Option(endpoint.request(er))
-
-    def handle = {
-      val (status, headers, body) = response.getOrElse(404, List(), "Not found")
-      handler.onStatusReceived(BaseStatus(status, "", request, this))
-      handler.onHeadersReceived(new BaseHeaders(request, this, headers))
-      handler.onBodyPartReceived(new BodyString(request, this, body))
-      handler.onCompleted()
-    }
-
-    val promise = Promise[T]()
-    promise.tryComplete(Try(handle))
-
-    FutureListenableFuture(promise.future)
+    Option(endpoint.request(er))
   }
 }
 

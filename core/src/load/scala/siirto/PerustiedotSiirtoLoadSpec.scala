@@ -7,21 +7,50 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.SuoritusActor
 import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
 import akka.util.Timeout
-import scala.concurrent.Await
+import scala.concurrent.{Future, ExecutionContext, Await}
 import org.scalameter.api._
 import scala.xml.XML
 import fi.vm.sade.hakurekisteri.batchimport.BatchState._
-import fi.vm.sade.hakurekisteri.integration.organisaatio.Oppilaitos
+import fi.vm.sade.hakurekisteri.integration.organisaatio._
+import akka.actor.Status.Failure
+import scala.Some
+import fi.vm.sade.hakurekisteri.integration.henkilo.{HenkiloActor, SavedHenkilo, SaveHenkilo, CheckHenkilo}
+import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
+import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
+import java.io.{ObjectInputStream, ObjectOutputStream, IOException}
+import scala.concurrent.duration._
+import fi.vm.sade.hakurekisteri.integration._
+import com.ning.http.client.{AsyncHandler, Request, AsyncHttpClient}
+import fi.vm.sade.hakurekisteri.integration.ServiceConfig
 import akka.actor.Status.Failure
 import scala.Some
 import fi.vm.sade.hakurekisteri.integration.henkilo.SavedHenkilo
-import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.henkilo.SaveHenkilo
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.integration.henkilo.CheckHenkilo
 import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
+import fi.vm.sade.hakurekisteri.integration.EndpointRequest
+import fi.vm.sade.hakurekisteri.integration.ServiceConfig
+import akka.actor.Status.Failure
+import scala.Some
+import fi.vm.sade.hakurekisteri.integration.henkilo.CheckHenkilo
+import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
+import fi.vm.sade.hakurekisteri.integration.henkilo.SavedHenkilo
+import fi.vm.sade.hakurekisteri.integration.henkilo.SaveHenkilo
+import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
+import fi.vm.sade.hakurekisteri.integration.EndpointRequest
+import fi.vm.sade.hakurekisteri.integration.ServiceConfig
+import akka.actor.Status.Failure
+import scala.Some
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import fi.vm.sade.hakurekisteri.integration.henkilo.CheckHenkilo
+import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Oppilaitos
+import fi.vm.sade.hakurekisteri.integration.henkilo.SavedHenkilo
+import fi.vm.sade.hakurekisteri.integration.henkilo.SaveHenkilo
+import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OppilaitosResponse
-import java.io.{ObjectInputStream, ObjectOutputStream, IOException}
+import scala.util.Try
 
 
 object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
@@ -87,8 +116,7 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
   val batchGen = Gen.single[SerializableBatch]("batch")(new SerializableBatch(batch))
 
 
-
-  class Registers  {
+  trait Registers extends Serializable {
 
 
     var systemHolder: Option[ActorSystem] = None
@@ -100,18 +128,15 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
 
 
 
-    def start = {
+    def start {
       if (systemHolder.isDefined) {
         system.shutdown()
       }
       systemHolder = Some(ActorSystem(s"perf-test-${UUID.randomUUID()}"))
-      importBatchActorHolder = Some(system.actorOf(Props[BatchActor]))
-      suoritusrekisteriHolder = Some(system.actorOf(Props(new SuoritusActor())))
-      opiskelijarekisteriHolder = Some(system.actorOf(Props(new OpiskelijaActor())))
-      henkiloActorHolder = Some(system.actorOf(Props[TestHenkiloActor]))
-      organisaatioActorHolder = Some(system.actorOf(Props[TestOrganisaatioActor]))
-
+      startActors
     }
+
+    def startActors:Unit
 
     def system = systemHolder.get
     def importBatchActor = importBatchActorHolder.get
@@ -126,16 +151,24 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
   val PerustiedotImportProps = (regs: Registers, b:ImportBatch with Identified[UUID]) =>  Props(new PerustiedotProcessingActor(regs.importBatchActor, regs.henkiloActor, regs.suoritusrekisteri, regs.opiskelijarekisteri, regs.organisaatioActor)(b))
 
   import akka.pattern.ask
-  import scala.concurrent.duration._
 
   implicit val timeout: Timeout = 1.minute
 
 
-  val registers = new Registers
-
   performance of "PerustiedotProcessing" in {
 
     measure method "processSingle" in {
+
+      val registers = new Registers{
+        override def startActors {
+          importBatchActorHolder = Some(system.actorOf(Props[BatchActor]))
+          suoritusrekisteriHolder = Some(system.actorOf(Props(new SuoritusActor())))
+          opiskelijarekisteriHolder = Some(system.actorOf(Props(new OpiskelijaActor())))
+          henkiloActorHolder = Some(system.actorOf(Props[TestHenkiloActor]))
+          organisaatioActorHolder = Some(system.actorOf(Props[TestOrganisaatioActor]))
+        }
+      }
+
       using(batchGen) setUp {
         _ =>
           registers.start
@@ -145,9 +178,51 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
           registers.system.awaitTermination()
       } in {
         b =>
-          val doneFut = registers.importBatchActor ? AlertEnd(b.batch.externalId.get)
-          registers.system.actorOf(PerustiedotImportProps(registers, b.batch))
-          Await.result(doneFut, Duration.Inf)
+          processSingleBatch(registers, b)
+      }
+
+
+    }
+
+    measure method "processSingleWithHenkilotAndOrganisaatiot" in {
+
+      val registers = new Registers{
+        override def startActors {
+          importBatchActorHolder = Some(system.actorOf(Props[BatchActor]))
+          suoritusrekisteriHolder = Some(system.actorOf(Props(new SuoritusActor())))
+          opiskelijarekisteriHolder = Some(system.actorOf(Props(new OpiskelijaActor())))
+          val endPoint: Endpoint = new Endpoint {
+            override def request(er: EndpointRequest): (Int, List[(String, String)], String) = (200, List(), "1.2.246.562.24.123")
+          }
+          val asyncProvider =  new DelayingProvider(endPoint, 20.milliseconds)(system.dispatcher, system.scheduler)
+          val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))(system.dispatcher, system)
+
+
+          henkiloActorHolder = Some(system.actorOf(Props(new HenkiloActor(client))))
+
+          val orgEndPoint = new Endpoint {
+            override def request(er: EndpointRequest): (Int, List[(String, String)], String) = er match {
+              case EndpointRequest("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true", _, _ )  => (200, List(), "{\"numHits\":1,\"organisaatiot\":[{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}]}")
+              case EndpointRequest("http://localhost/organisaatio-service/rest/organisaatio/05127",_,_) => (200, List(), "{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}")
+              case default => (404, List(), "Not Found")
+            }
+          }
+          val orgProvider = new DelayingProvider(orgEndPoint, 20.milliseconds)(system.dispatcher, system.scheduler)
+          val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(orgProvider)))(system.dispatcher, system)
+          organisaatioActorHolder = Some(system.actorOf(Props(new OrganisaatioActor(organisaatioClient))))
+        }
+      }
+
+      using(batchGen) setUp {
+        _ =>
+          registers.start
+      } tearDown {
+        _ =>
+          registers.system.shutdown()
+          registers.system.awaitTermination()
+      } in {
+        b =>
+          processSingleBatch(registers, b)
       }
 
 
@@ -155,6 +230,11 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
   }
 
 
+  def processSingleBatch(registers: PerustiedotSiirtoLoadBenchmark.Registers with Object {def startActorsUnit}, b: PerustiedotSiirtoLoadBenchmark.SerializableBatch): Any = {
+    val doneFut = registers.importBatchActor ? AlertEnd(b.batch.externalId.get)
+    registers.system.actorOf(PerustiedotImportProps(registers, b.batch))
+    Await.result(doneFut, Duration.Inf)
+  }
 
   case class AlertEnd(id: String)
 
@@ -173,6 +253,10 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
   }
 
   class TestHenkiloActor extends Actor with ActorLogging {
+
+
+    implicit val ec:ExecutionContext = context.dispatcher
+
     override def receive: Actor.Receive = {
 
       case SaveHenkilo(_, tunniste) =>
@@ -182,7 +266,6 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
       case CheckHenkilo(oid) =>
         log.debug(s"checking $oid")
         sender ! SavedHenkilo(oid, oid)
-
     }
   }
 
@@ -219,7 +302,14 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
     override def toString: String = batch.toString
   }
 
+  class DelayingProvider( endpoint: Endpoint, delay: FiniteDuration)(implicit val ec: ExecutionContext, scheduler: Scheduler) extends CapturingProvider(endpoint) {
+    override def executeScala[T](request: Request, handler: AsyncHandler[T]): Future[T] = {
+      import akka.pattern.after
+      after(delay, scheduler)(super.executeScala(request, handler))
 
+
+    }
+  }
 
 }
 
