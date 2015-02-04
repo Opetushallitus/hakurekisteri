@@ -45,6 +45,11 @@ body #raamit-header .header-content {
     text-align: center;
 }
 
+.table-selected {
+    background-color: #06526b;
+    color: #fff;
+}
+
 .loading-large {
     background-image: url('../img/ajax-loader-large.gif');
     height: 32px;
