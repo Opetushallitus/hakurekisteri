@@ -83,7 +83,8 @@ object HakurekisteriBuild extends Build {
   )
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion,
-    "org.scalamock" %% "scalamock-scalatest-support" % "3.1.4")
+    "org.scalamock" %% "scalamock-scalatest-support" % "3.1.4",
+    "com.storm-enroute" %% "scalameter" % "0.6")
 
   lazy val npmBuild = taskKey[Unit]("run npm build")
   val npmBuildTask = npmBuild := {
@@ -149,6 +150,7 @@ object HakurekisteriBuild extends Build {
   lazy val core = Project(
     id = "hakurekisteri-core",
     base = file("core"),
+    configurations = Seq(LoadSpecs),
     settings = Seq(
       name                  := "hakurekisteri-core",
       organization          := Organization,
@@ -166,7 +168,11 @@ object HakurekisteriBuild extends Build {
       artifactoryPublish,
       libraryDependencies   ++= AkkaStack ++ dependencies
         ++ testDependencies.map((m) => m % "test")
-    )
+    ) ++ inConfig(LoadSpecs)(Defaults.testSettings)
+      ++ inConfig(LoadSpecs)(Seq(
+      testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
+      logBuffered := false,
+      parallelExecution := false))
   )
 
 
@@ -181,6 +187,10 @@ object HakurekisteriBuild extends Build {
       configurations = Seq(LoadSpecs),
       settings = ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
         ++ inConfig(LoadSpecs)(Defaults.testSettings)
+        ++ inConfig(LoadSpecs)(Seq(
+          testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
+          logBuffered := false,
+          parallelExecution := false))
         ++ Seq(ideaExtraTestConfigurations := Seq(LoadSpecs))
         ++ org.scalastyle.sbt.ScalastylePlugin.Settings
         ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8"))

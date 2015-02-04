@@ -7,6 +7,10 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
     templateUrl: "templates/muokkaa-suoritukset"
     controller: "MuokkaaSuorituksetCtrl"
 
+  $routeProvider.when "/muokkaa-obd",
+    templateUrl: "templates/muokkaa-obd"
+    controller: "MuokkaaSuorituksetObdCtrl"
+
   $routeProvider.when "/muokkaa/:henkiloOid",
     templateUrl: "templates/muokkaa"
     controller: "MuokkaaCtrl"
