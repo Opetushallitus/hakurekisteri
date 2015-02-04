@@ -13,12 +13,10 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
   "MessageService"
   "MuokkaaService"
   ($scope, $routeParams, $location, $log, $http, $q, $cookies, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService, MuokkaaService) ->
-    startLoading = -> $scope.loading = true
-    stopLoading = -> $scope.loading = false
 
     showCurrentRows = (allRows) ->
-      startLoading()
-      enrichData(allRows.slice(0,10))
+      $scope.allRows = allRows
+      enrichData(allRows)
       if(allRows.length > 0)
         $scope.valitseHenkilo(allRows[0].henkiloOid)
       return
@@ -57,11 +55,8 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           return
 
       $q.all(enrichments.map((d) -> d.promise)).then((->
-          $scope.allRows = allRows
-          stopLoading()
         ), (errors) ->
         $log.error(errors)
-        stopLoading()
       )
 
     vuodet = () ->
@@ -184,7 +179,6 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           message: "Haussa tapahtui virhe. Yritä uudelleen."
         stopLoading()
 
-
     $scope.fetch = ->
       $scope.allRows = []
       $scope.henkilo = null
@@ -224,14 +218,12 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         $q.all(searchTerms.map((d) ->
           d.promise
         )).then (->
-          startLoading()
           doSearch
             henkilo: (if $scope.henkilo then $scope.henkilo.oidHenkilo else null)
             oppilaitosOid: (if $scope.organisaatioTerm then $scope.organisaatioTerm.oid else null)
             vuosi: (if $scope.vuosiTerm then $scope.vuosiTerm else null)
           return
         ), ->
-          stopLoading()
           return
       return
 
