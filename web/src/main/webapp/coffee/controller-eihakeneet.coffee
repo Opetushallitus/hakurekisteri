@@ -96,10 +96,7 @@ app.controller "EihakeneetCtrl", [
           deferredHakemukset.promise
         ])
         bothPromise.then (->
-          $scope.allRows = luokanOpiskelijat.filter(hasNoHakemus = (h) ->
-            return false for hakemus in luokanHakemukset if hakemus.henkiloOid is h.personOid
-            true
-          )
+          $scope.allRows = luokanOpiskelijat.filter((h) -> !luokanHakemukset.some((hakemus) -> hakemus.henkiloOid is h.personOid))
           enrichOpiskelijat()
           $scope.loading = false
         ), (errors) ->
