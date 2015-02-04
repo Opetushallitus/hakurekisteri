@@ -63,6 +63,7 @@ object HakurekisteriBuild extends Build {
   )
 
   val dependencies = Seq(
+    "org.scalaz"              %% "scalaz-core"        % "7.0.6",
     "org.slf4j" % "slf4j-api" % "1.6.1",
     "org.json4s" %% "json4s-ast" % "3.2.10",
     "org.json4s" %% "json4s-core" % "3.2.10",
@@ -77,7 +78,6 @@ object HakurekisteriBuild extends Build {
     "org.apache.poi" % "poi-ooxml" % "3.10.1",
     "org.apache.activemq" % "activemq-all" % "5.9.1",
     "org.apache.camel" % "camel-jms" % "2.13.0",
-    "org.scalaz" %% "scalaz-xml" % "7.0.6",
     "fi.vm.sade.log" % "log-client" % "7.0",
     "fr.janalyse" %% "janalyse-ssh" % "0.9.14"
   )
