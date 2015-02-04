@@ -1,20 +1,34 @@
 app.controller "TiedonsiirtoCtrl", [
   "$scope"
   "MurupolkuService"
-  ($scope, MurupolkuService) ->
+  "LokalisointiService"
+  "MessageService"
+  "$log"
+  ($scope, MurupolkuService, LokalisointiService, MessageService, $log) ->
+    $scope.tyypit = [{ value: "perustiedot", text: "Perustiedot" }, { value: "perustiedot", text: "Arvosanat" }]
+    LokalisointiService.loadMessages(->
+      $scope.tyypit = [
+        {
+          value: "perustiedot"
+          text: getOphMsg("suoritusrekisteri.tiedonsiirto.tyyppi.perustiedot", "Perustiedot")
+        }
+        {
+          value: "arvosanat"
+          text: getOphMsg("suoritusrekisteri.tiedonsiirto.tyyppi.arvosanat", "Arvosanat")
+        }
+      ]
+    )
+
     isImportBatchResponse = (content) ->
       (typeof content is "string" and content.match(/.*"batchType".*/g)) or (typeof content is "object" and content.batchType)
+
     isIncidentResponse = (content) ->
       (typeof content is "string" and content.match(/.*"incidentId".*/g)) or (typeof content is "object" and content.incidentId)
+
     MurupolkuService.addToMurupolku
       key: "suoritusrekisteri.tiedonsiirto.muru"
       text: "Tiedonsiirto"
     , true
-    $scope.send = ->
-      $scope.sending = true
-      delete $scope.uploadResult
-
-      return
 
     clearFile = () ->
       try
@@ -27,6 +41,33 @@ app.controller "TiedonsiirtoCtrl", [
       catch e
         $log.error(e)
 
+    $scope.beforeSubmitCheck = ->
+      $scope.$apply(->
+        MessageService.clearMessages()
+      )
+      if !$scope.tyyppi or document.getElementById("tiedosto").files.length is 0
+        if !$scope.tyyppi
+          $scope.$apply(->
+            MessageService.addMessage
+              type: "danger"
+              message: "Tiedoston tyyppiä ei ole valittu"
+              messageKey: "suoritusrekisteri.tiedonsiirto.tyyppiaeiolevalittu"
+          )
+        if document.getElementById("tiedosto").files.length is 0
+          $scope.$apply(->
+            MessageService.addMessage
+              type: "danger"
+              message: "Tiedostoa ei ole valittu"
+              messageKey: "suoritusrekisteri.tiedonsiirto.tiedostoaeiolevalittu"
+          )
+        return false
+      else
+        form = jQuery("#uploadForm")
+        if form.get(0)
+          form.get(0).setAttribute('action', 'rest/v1/siirto/' + $scope.tyyppi)
+        $scope.sending = true
+        delete $scope.uploadResult
+        return true
 
     $scope.uploadComplete = (content) ->
       if isImportBatchResponse(content)
@@ -45,14 +86,13 @@ app.controller "TiedonsiirtoCtrl", [
           description: response.message
           validationErrors: response.validationErrors
       delete $scope.sending
-
       clearFile()
-
       return
 
     $scope.reset = ->
       document.getElementById("uploadForm").reset()
       delete $scope.uploadResult
-
+      delete $scope.tyyppi
+      MessageService.clearMessages()
       return
 ]

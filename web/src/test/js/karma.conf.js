@@ -37,7 +37,7 @@ module.exports = function(config) {
             'main/webapp/static/js/angular/angular-cookies.min.js',
             'main/webapp/static/js/angular-locale/angular-locale_fi.js',
             'main/webapp/static/js/angular-ui/ui-bootstrap-tpls-0.12.0.min.js',
-            'main/webapp/static/js/ng-upload.min.js',
+            'main/webapp/static/js/ng-upload.js',
 
             'main/webapp/coffee/app.coffee',
             'main/webapp/coffee/oph-msg-directive.coffee',
