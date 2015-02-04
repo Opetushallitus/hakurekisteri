@@ -3,10 +3,6 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
     templateUrl: "templates/opiskelijat"
     controller: "OpiskelijatCtrl"
 
-  $routeProvider.when "/muokkaa-suoritukset",
-    templateUrl: "templates/muokkaa-suoritukset"
-    controller: "MuokkaaSuorituksetCtrl"
-
   $routeProvider.when "/muokkaa-obd",
     templateUrl: "templates/muokkaa-obd"
     controller: "MuokkaaSuorituksetObdCtrl"
