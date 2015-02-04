@@ -164,7 +164,7 @@ app.controller "OpiskelijatCtrl", [
       return
 
     $scope.muokkaaSuoritukset = ->
-      $location.path("/muokkaa-suoritukset")
+      $location.path("/muokkaa-obd")
       return
 
     $scope.fetch = ->
