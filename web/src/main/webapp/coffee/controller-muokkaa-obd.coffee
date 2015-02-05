@@ -83,9 +83,9 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           message: "Haussa tapahtui virhe. Yritä uudelleen."
 
     showCurrentRows = (allRows) ->
-      $scope.allRows = allRows
       if(allRows.length > 0)
         $scope.valitseHenkilo(allRows[0].henkiloOid)
+      $scope.allRows = allRows
       enrichData(allRows)
       return
 
