@@ -224,3 +224,7 @@ optgroup option {
 .pagination-size {
     margin-top: 24px;
 }
+
+.radio-inline input[type=radio] {
+    margin-top: 7px
+}

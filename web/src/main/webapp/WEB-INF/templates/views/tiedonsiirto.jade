@@ -35,9 +35,14 @@ div(class="row")
       div(class="col-sm-12")
         form(id="uploadForm" class="well form-horizontal" action="rest/v1/siirto/" ng-upload="uploadComplete(content)" upload-options-convert-hidden="true" upload-options-before-submit="beforeSubmitCheck()" enctype="multipart/form-data" method="post")
           div(class="form-group")
-            label(for="tyyppi" class="col-sm-2 control-label" oph-msg="suoritusrekisteri.tiedonsiirto.tyyppi") Tiedoston tyyppi
-            div(class="col-sm-3")
-              select(id="tyyppi" class="form-control" ng-model="tyyppi" ng-options="t.value as t.text for t in tyypit" required="required")
+            label(class="col-sm-2 control-label" oph-msg="suoritusrekisteri.tiedonsiirto.tyyppi") Tiedoston tyyppi
+            div(class="col-sm-10")
+              label(class="radio-inline")
+                input(type="radio" ng-model="tyyppi" value="perustiedot")
+                span(oph-msg="suoritusrekisteri.tiedonsiirto.tyyppi.perustiedot") Perustiedot
+              label(class="radio-inline")
+                input(type="radio" ng-model="tyyppi" value="arvosanat")
+                span(oph-msg="suoritusrekisteri.tiedonsiirto.tyyppi.arvosanat") Arvosanat
           div(class="form-group")
             label(for="tiedosto" class="col-sm-2 control-label" oph-msg="suoritusrekisteri.tiedonsiirto.tiedosto") Lähetettävä tiedosto
             div(class="col-sm-10")

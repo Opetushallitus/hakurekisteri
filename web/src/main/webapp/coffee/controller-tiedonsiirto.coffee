@@ -1,24 +1,9 @@
 app.controller "TiedonsiirtoCtrl", [
   "$scope"
   "MurupolkuService"
-  "LokalisointiService"
   "MessageService"
   "$log"
-  ($scope, MurupolkuService, LokalisointiService, MessageService, $log) ->
-    $scope.tyypit = [{ value: "perustiedot", text: "Perustiedot" }, { value: "perustiedot", text: "Arvosanat" }]
-    LokalisointiService.loadMessages(->
-      $scope.tyypit = [
-        {
-          value: "perustiedot"
-          text: getOphMsg("suoritusrekisteri.tiedonsiirto.tyyppi.perustiedot", "Perustiedot")
-        }
-        {
-          value: "arvosanat"
-          text: getOphMsg("suoritusrekisteri.tiedonsiirto.tyyppi.arvosanat", "Arvosanat")
-        }
-      ]
-    )
-
+  ($scope, MurupolkuService, MessageService, $log) ->
     isImportBatchResponse = (content) ->
       (typeof content is "string" and content.match(/.*"batchType".*/g)) or (typeof content is "object" and content.batchType)
 
