@@ -4,7 +4,8 @@ app.factory "ArvosanaService", [
   "$log"
   "Arvosanat"
   "Suoritukset"
-  ($http, $q, $log, Arvosanat, Suoritukset) ->
+  "MessageService"
+  ($http, $q, $log, Arvosanat, Suoritukset, MessageService) ->
     muokkaaArvosanat: (suoritusId, $scope) ->
       $scope.arvosanataulukko = []
       $scope.oppiaineet = []
@@ -131,7 +132,7 @@ app.factory "ArvosanaService", [
                       arvosana: "Ei arvosanaa"
 
                 if hasRedundantArvosana(kouluArvosanat)
-                  $scope.modalInstance.close kouluArvosanat
+                  MessageService.addMessage kouluArvosanat
 
                 $scope.arvosanataulukko = Object.keys(arvosanataulukko).map((key) ->
                   arvosanataulukko[key]
@@ -140,7 +141,7 @@ app.factory "ArvosanaService", [
                   (if arvosanaSort[a.aine] < arvosanaSort[b.aine] then -1 else 1)
                 )
               ), ->
-                $scope.modalInstance.close
+                MessageService.addMessage
                   type: "danger"
                   messageKey: "suoritusrekisteri.muokkaa.arvosanat.arvosanapalveluongelma"
                   message: "Arvosanapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
@@ -148,17 +149,17 @@ app.factory "ArvosanaService", [
             fetchArvosanat()
           ), ->
             $log.error "some of the calls to koodisto service failed"
-            $scope.modalInstance.close
+            MessageService.addMessage
               type: "danger"
               messageKey: "suoritusrekisteri.muokkaa.arvosanat.koodistopalveluongelma"
               message: "Koodistopalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
         ).error ->
-          $scope.modalInstance.close
+          MessageService.addMessage
             type: "danger"
             messageKey: "suoritusrekisteri.muokkaa.arvosanat.koodistopalveluongelma"
             message: "Koodistopalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
       ), ->
-        $scope.modalInstance.close
+        MessageService.addMessage
           type: "danger"
           messageKey: "suoritusrekisteri.muokkaa.arvosanat.taustapalveluongelma"
           message: "Taustapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
@@ -175,7 +176,7 @@ app.factory "ArvosanaService", [
             alakoodi.koodiUri is "oppiaineenkielisyys_1"
           )
 
-      $scope.save = ->
+      $scope.saveArvosanat = ->
         removeArvosana = (arvosana, d) ->
           arvosana.$remove (->
             d.resolve "remove ok"
@@ -252,18 +253,14 @@ app.factory "ArvosanaService", [
         saveArvosanat()
         $q.all(arvosanaSavePromises.map((d) -> d.promise)).then (->
           $log.debug "all saved"
-          $scope.modalInstance.close
+          MessageService.addMessage
             type: "success"
             messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennettu"
             message: "Arvosanat tallennettu."
         ), ->
           $log.error "saving failed"
-          $scope.modalInstance.close
+          MessageService.addMessage
             type: "danger"
             messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennuseionnistunut"
             message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen."
-
-      $scope.cancel = ->
-        $scope.modalInstance.close()
-        return
 ]

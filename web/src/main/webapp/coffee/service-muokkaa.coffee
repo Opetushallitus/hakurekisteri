@@ -3,7 +3,6 @@ app.factory "MuokkaaService", [
   "$http"
   "$log"
   "$q"
-  "$modal"
   "Opiskelijat"
   "Suoritukset"
   "Opiskeluoikeudet"
@@ -11,7 +10,7 @@ app.factory "MuokkaaService", [
   "MurupolkuService"
   "MessageService"
   "ArvosanaService"
-  ($location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService, ArvosanaService) ->
+  ($location, $http, $log, $q, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService, ArvosanaService) ->
     muokkaaHenkilo: (henkiloOid, $scope) ->
       loadMenuTexts = ->
         $scope.koulutukset = [
@@ -60,7 +59,6 @@ app.factory "MuokkaaService", [
             type: "danger"
             message: "Henkilötietojen hakeminen ei onnistunut. Yritä uudelleen?"
             messageKey: "suoritusrekisteri.muokkaa.henkilotietojenhakeminen"
-          back()
 
       enrichLuokkatieto = (luokkatieto) ->
         if luokkatieto.oppilaitosOid
@@ -81,7 +79,6 @@ app.factory "MuokkaaService", [
             type: "danger"
             message: "Luokkatietojen hakeminen ei onnistunut. Yritä uudelleen?"
             messageKey: "suoritusrekisteri.muokkaa.luokkatietojenhakeminen"
-          back()
         return
 
       enrichSuoritus = (suoritus) ->
@@ -112,7 +109,6 @@ app.factory "MuokkaaService", [
             message: "Suoritustietojen hakeminen ei onnistunut. Yritä uudelleen?"
             messageKey: "suoritusrekisteri.muokkaa.suoritustietojenhakeminen"
           }
-          back()
         return
 
       fetchOpiskeluoikeudet = ->
@@ -131,13 +127,6 @@ app.factory "MuokkaaService", [
         Opiskeluoikeudet.query { henkilo: henkiloOid }, (opiskeluoikeudet) ->
           $scope.opiskeluoikeudet = opiskeluoikeudet
           enrich()
-
-      back = ->
-        if history and history.back
-          history.back()
-        else
-          $location.path "/opiskelijat"
-        return
 
       initDatepicker = ->
         $scope.showWeeks = true
@@ -205,7 +194,7 @@ app.factory "MuokkaaService", [
         else
           []
 
-      $scope.save = ->
+      $scope.saveTiedot = ->
         validateOppilaitoskoodit = ->
           ((obj) ->
             if not obj["delete"] and obj.editable and not (obj.komo and obj.komo is komo.ylioppilastutkinto)
@@ -358,10 +347,6 @@ app.factory "MuokkaaService", [
               message: "Tietojen tallentaminen ei onnistunut. Yritä uudelleen."
         ), (errors) ->
           $log.error "validation errors: " + errors
-
-      $scope.cancel = ->
-        back()
-        return
 
       $scope.checkYlioppilastutkinto = (suoritus) ->
         if suoritus.komo is komo.ylioppilastutkinto

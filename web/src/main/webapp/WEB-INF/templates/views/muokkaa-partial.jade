@@ -24,7 +24,7 @@ div(class="row")
             span(oph-msg="suoritusrekisteri.muokkaa.henkilotietoja") Muokkaa henkilötietoja
             span(class="glyphicon glyphicon-edit")
 
-form(ng-submit="save()")
+form(ng-submit="saveTiedot()")
   div(class="row")
     div(class="col-sm-6")
       section(ng-if="opiskeluoikeudet && opiskeluoikeudet.length > 0" class="panel panel-default")
@@ -176,16 +176,10 @@ form(ng-submit="save()")
                 span(class="glyphicon glyphicon-plus")
 
   div(class="row")
-    div(ng-include="'templates/arvosanat-partial'")
-
-  div(class="row")
     aside(class="col-sm-12 btn-toolbar")
-      button(type="button" class="btn btn-primary" ng-click="cancel()")
-        span(oph-msg="suoritusrekisteri.muokkaa.takaisin") Takaisin
-        span(class="glyphicon glyphicon-arrow-left")
-      button(type="button" class="btn btn-default" ng-click="cancel()")
-        span(oph-msg="suoritusrekisteri.muokkaa.peruuta") Peruuta
-        span(class="glyphicon glyphicon-remove")
       button(type="submit" class="btn btn-primary")
-        span(oph-msg="suoritusrekisteri.muokkaa.tallenna") Tallenna
+        span(oph-msg="suoritusrekisteri.muokkaa.tallenna") Tallenna tiedot
         span(class="glyphicon glyphicon-saved")
+
+div(class="row")
+  div(ng-include="'templates/arvosanat-partial'")
