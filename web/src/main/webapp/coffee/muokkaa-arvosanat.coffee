@@ -1,11 +1,12 @@
 app.factory "MuokkaaArvosanat", [
   "$http"
   "$q"
+  "$modal"
   "$log"
   "Arvosanat"
   "Suoritukset"
   "MessageService"
-  ($http, $q, $log, Arvosanat, Suoritukset, MessageService) ->
+  ($http, $q, $modal, $log, Arvosanat, Suoritukset, MessageService) ->
     muokkaaArvosanat: (suoritusId, $scope) ->
       $scope.arvosanataulukko = []
       $scope.oppiaineet = []
@@ -46,6 +47,23 @@ app.factory "MuokkaaArvosanat", [
         KO: 190
         PS: 200
         FI: 210
+
+      openDuplicateModal = (arvosanaRet) ->
+        isolatedScope = $scope.$new(true)
+        isolatedScope.modalInstance = $modal.open(
+          templateUrl: "templates/duplikaatti"
+          controller: "DuplikaattiCtrl"
+          scope: isolatedScope
+          size: "lg"
+          resolve:
+            arvosanat: ->
+              arvosanaRet
+        )
+        isolatedScope.modalInstance.result.then ((ret) ->
+          MessageService.addMessage ret if ret
+          return
+        ), ->
+          $log.info "duplicate modal closed"
 
       Suoritukset.get { suoritusId: suoritusId }, ((suoritus) ->
         pohjakoulutusFilter = "onperusasteenoppiaine_1"
@@ -132,7 +150,8 @@ app.factory "MuokkaaArvosanat", [
                       arvosana: "Ei arvosanaa"
 
                 if hasRedundantArvosana(kouluArvosanat)
-                  MessageService.addMessage kouluArvosanat
+                  openDuplicateModal(kouluArvosanat)
+                  return
 
                 $scope.arvosanataulukko = Object.keys(arvosanataulukko).map((key) ->
                   arvosanataulukko[key]
