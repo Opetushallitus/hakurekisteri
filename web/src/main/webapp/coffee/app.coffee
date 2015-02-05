@@ -102,6 +102,9 @@ app.factory "MessageService", ->
   return (
     messages: messages
     addMessage: (message, clear) ->
+      if !message.descriptionKey? && !message.messageKey?
+        console.log("Problem with message", message)
+        throw new Error("Problem with message")
       messages.length = 0  if clear
       messages.push message
       return
