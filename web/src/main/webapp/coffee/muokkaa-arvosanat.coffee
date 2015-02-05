@@ -1,4 +1,4 @@
-app.factory "ArvosanaService", [
+app.factory "MuokkaaArvosanat", [
   "$http"
   "$q"
   "$log"

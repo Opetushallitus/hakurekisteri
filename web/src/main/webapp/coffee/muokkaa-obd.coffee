@@ -11,9 +11,8 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
   "Arvosanat"
   "MurupolkuService"
   "MessageService"
-  "MuokkaaService"
-  "ArvosanaService"
-  ($scope, $routeParams, $location, $log, $http, $q, $cookies, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService, MuokkaaService, ArvosanaService) ->
+  "MuokkaaTiedot"
+  ($scope, $routeParams, $location, $log, $http, $q, $cookies, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService, MuokkaaTiedot) ->
 
     initializeSearch = ->
       MessageService.clearMessages()
@@ -158,7 +157,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
 
     $scope.valitseHenkilo = (henkiloOid) ->
       $scope.valittuHenkiloOid = henkiloOid
-      MuokkaaService.muokkaaHenkilo(henkiloOid, $scope)
+      MuokkaaTiedot.muokkaaHenkilo(henkiloOid, $scope)
 
     searchOpiskelijat = (query) ->
       o = $q.defer()

@@ -1,4 +1,4 @@
-app.factory "MuokkaaService", [
+app.factory "MuokkaaTiedot", [
   "$location"
   "$http"
   "$log"
@@ -9,8 +9,8 @@ app.factory "MuokkaaService", [
   "LokalisointiService"
   "MurupolkuService"
   "MessageService"
-  "ArvosanaService"
-  ($location, $http, $log, $q, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService, ArvosanaService) ->
+  "MuokkaaArvosanat"
+  ($location, $http, $log, $q, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService, MuokkaaArvosanat) ->
     muokkaaHenkilo: (henkiloOid, $scope) ->
       loadMenuTexts = ->
         $scope.koulutukset = [
@@ -101,7 +101,7 @@ app.factory "MuokkaaService", [
           suoritukset.sort (a, b) ->
             sortByFinDateDesc a.valmistuminen, b.valmistuminen
           $scope.suoritukset = suoritukset
-          ArvosanaService.muokkaaArvosanat($scope.suoritukset[0].id, $scope)
+          MuokkaaArvosanat.muokkaaArvosanat($scope.suoritukset[0].id, $scope)
           enrich()
         ), ->
           MessageService.addMessage {
@@ -365,8 +365,7 @@ app.factory "MuokkaaService", [
         )
 
       $scope.editArvosana = (suoritusId) ->
-        ArvosanaService.muokkaaArvosanat(suoritusId, $scope)
-
+        MuokkaaArvosanat.muokkaaArvosanat(suoritusId, $scope)
 
       $scope.editYoarvosana = (suoritusId) ->
         openModal = (template, controller) ->
