@@ -38,15 +38,15 @@ div(class="row")
             label(class="col-sm-2 control-label" oph-msg="suoritusrekisteri.tiedonsiirto.tyyppi") Tiedoston tyyppi
             div(class="col-sm-10")
               label(class="radio-inline")
-                input(type="radio" ng-model="tyyppi" value="perustiedot")
+                input(id="tyyppiperustiedot" type="radio" ng-model="tyyppi" value="perustiedot")
                 span(oph-msg="suoritusrekisteri.tiedonsiirto.tyyppi.perustiedot") Perustiedot
               label(class="radio-inline")
-                input(type="radio" ng-model="tyyppi" value="arvosanat")
+                input(id="tyyppiarvosanat" type="radio" ng-model="tyyppi" value="arvosanat")
                 span(oph-msg="suoritusrekisteri.tiedonsiirto.tyyppi.arvosanat") Arvosanat
           div(class="form-group")
             label(for="tiedosto" class="col-sm-2 control-label" oph-msg="suoritusrekisteri.tiedonsiirto.tiedosto") Lähetettävä tiedosto
             div(class="col-sm-10")
-              input(id="tiedosto" class="form-control" name="data" type="file" required="required")
+              input(id="tiedosto" class="form-control" name="data" type="file")
 
           div(class="form-group")
             div(class="col-sm-10 col-sm-offset-2")
@@ -57,8 +57,8 @@ div(class="row")
                 span(oph-msg="suoritusrekisteri.tiedonsiirto.laheta") Lähetä
                 span(class="glyphicon glyphicon-upload")
 
-    div(ng-show="uploadResult")
-      div(class="alert alert-{{uploadResult.type}}")
+    div(ng-if="uploadResult")
+      div(id="uploadResult" class="alert alert-{{uploadResult.type}}")
         img(ng-show="uploadResult.type === 'success'" class="icon-big" src="static/img/confirm-icon28x29.png")
         img(ng-show="uploadResult.type === 'danger'" class="icon-big" src="static/img/alert-icon28x29.png")
         strong
