@@ -7,22 +7,27 @@ script(type="text/ng-template" id="organisaatioTemplate.html")
     span(bind-html-unsafe="(match.model.oppilaitosKoodi + ' ' + (match.model.nimi.fi ? match.model.nimi.fi : (match.model.nimi.sv ? match.model.nimi.sv : match.model.nimi.en))) | typeaheadHighlight:query")
 
 aside(class="row")
-  div(class="col-sm-8")
+  div(class="col-sm-3")
     form(id="filterForm" class="well form-horizontal" ng-submit="search()")
 
       div(class="form-group")
-        label(for="organisaatioTerm" class="col-sm-2 control-label" oph-msg="suoritusrekisteri.opiskelijat.oppilaitos") Oppilaitos
-        div(class="col-sm-5")
+        label(for="henkiloTerm" class="col-sm-3 control-label" oph-msg="suoritusrekisteri.opiskelijat.henkilo") Henkilö
+        div(class="col-sm-8")
+          input(id="henkiloTerm" class="form-control" ng-model="henkiloTerm" type="search" placeholder="Hae hetulla tai henkilönumerolla")
+
+      div(class="form-group")
+        label(for="organisaatioTerm" class="col-sm-3 control-label" oph-msg="suoritusrekisteri.opiskelijat.oppilaitos") Oppilaitos
+        div(class="col-sm-8")
           input(id="organisaatioTerm" class="form-control" autocomplete="off" ng-model="organisaatioTerm" type="search" placeholder="Hae oppilaitoksen numerolla tai nimellä" typeahead="organisaatio as organisaatio.oppilaitosKoodi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingOppilaitos" typeahead-wait-ms="500" typeahead-template-url="organisaatioTemplate.html")
           span(ng-show="organisaatioTerm") {{organisaatioTerm.oppilaitosKoodi}} {{organisaatioTerm.nimi.fi || organisaatioTerm.nimi.sv || organisaatioTerm.nimi.en}}
 
       div(class="form-group")
-        label(for="vuosiTerm" class="col-sm-2 control-label" oph-msg="suoritusrekisteri.opiskelijat.vuosi") Vuosi
-        div(class="col-sm-2")
+        label(for="vuosiTerm" class="col-sm-3 control-label" oph-msg="suoritusrekisteri.opiskelijat.vuosi") Vuosi
+        div(class="col-sm-6")
           select(id="vuosiTerm" class="form-control" ng-model="vuosiTerm" ng-options="v for v in vuodet")
 
       div(class="form-group")
-        div(class="col-sm-10 col-sm-offset-2")
+        div(class="col-sm-10 col-sm-offset-1")
           button(class="btn btn-default" type="button" ng-click="reset()")
             span(oph-msg="suoritusrekisteri.opiskelijat.tyhjenna") Tyhjennä
             span(class="glyphicon glyphicon-remove")
@@ -30,19 +35,17 @@ aside(class="row")
             span(oph-msg="suoritusrekisteri.opiskelijat.hae") Hae
             span(class="glyphicon glyphicon-search")
 
-table(class="table col-sm-4")
-  thead
-    tr
-      th(oph-msg="suoritusrekisteri.opiskelijat.henkiloOid") Henkilö
-      th(oph-msg="suoritusrekisteri.opiskelijat.opiskelijatiedot") Luokka
-  tbody
-    tr(ng-repeat="row in allRows" ng-click="valitseHenkilo(row.henkiloOid)")
-      td {{row.henkilo || row.henkiloOid}}
-      td
-        div(ng-repeat="o in row.opiskelijat") {{o.luokka}}
+div(class="col-sm-2")
+  table(class="table table-responsive")
+    tbody
+      tr(ng-repeat="row in allRows" ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}" ng-click="valitseHenkilo(row.henkiloOid)")
+        td() {{row.henkilo || row.henkiloOid}}
+        td
+          div(ng-repeat="o in row.opiskelijat") {{o.luokka}}
 
-div(ng-if="valittuHenkiloOid")
-  div(ng-include="'templates/muokkaa-partial'")
+div(class="col-sm-8")
+  div(ng-if="valittuHenkiloOid")
+    div(ng-include="'templates/muokkaa-partial'")
 
 div(ng-if="loading" class="modal fade in" style="display: block")
   div(class="modal-backdrop in" style="height: 100%")

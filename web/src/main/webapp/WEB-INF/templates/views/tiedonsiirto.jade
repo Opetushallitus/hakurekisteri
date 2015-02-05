@@ -10,22 +10,33 @@ div(class="row")
     div(class="row")
       div(class="col-sm-12")
         p(oph-msg="suoritusrekisteri.tiedonsiirto.ohje") Valitse tiedosto koneeltasi ja paina Lähetä-nappia. Saat ilmoituksen tiedoston vastaanottamisesta sivun alalaitaan.
+        h4(oph-msg="suoritusrekisteri.tiedonsiirto.perustiedot") Perustiedot
         ul(class="list-unstyled")
           li
             a(href="perusaste-henkilot.xls" oph-msg="suoritusrekisteri.tiedonsiirto.excelpohja") Excel-pohja tiedonsiirtoa varten
           li
             a(href="perusaste-henkilot.xml" oph-msg="suoritusrekisteri.tiedonsiirto.xmlpohja") XML-tiedoston esimerkki tiedonsiirtoa varten
           li
-            a(href="rest/v1/siirto/perustiedot/schema/perustiedot.xsd" oph-msg="suoritusrekisteri.tiedonsiirto.xmlskeema") XML-skeema XML-tiedoston validointia varten
+            a(href="rest/v1/siirto/perustiedot/schema/perustiedot.xsd" oph-msg="suoritusrekisteri.tiedonsiirto.xmlskeema") XML-skeema validointia varten
           li
-            a(href="rest/v1/siirto/perustiedot/schema/perustiedot-koodisto.xsd" oph-msg="suoritusrekisteri.tiedonsiirto.xmlkoodistoskeema") XML-koodistoskeema XML-tiedoston validointia varten
+            a(href="rest/v1/siirto/perustiedot/schema/perustiedot-koodisto.xsd" oph-msg="suoritusrekisteri.tiedonsiirto.xmlkoodistoskeema") XML-koodistoskeema validointia varten
+        h4(oph-msg="suoritusrekisteri.tiedonsiirto.arvosanat") Arvosanat
+        ul(class="list-unstyled")
+          li
+            a(href="rest/v1/siirto/arvosanat/schema/arvosanat.xsd" oph-msg="suoritusrekisteri.tiedonsiirto.xmlskeemaarvosanat") XML-skeema validointia varten
+          li
+            a(href="rest/v1/siirto/arvosanat/schema/arvosanat-koodisto.xsd" oph-msg="suoritusrekisteri.tiedonsiirto.xmlkoodistoskeemaarvosanat") XML-koodistoskeema validointia varten
 
     div(class="row")
       div(class="col-sm-12")
-        form(id="uploadForm" class="well form-horizontal" action="rest/v1/siirto/perustiedot" ng-upload="uploadComplete(content)" enctype="multipart/form-data")
+        form(id="uploadForm" class="well form-horizontal" action="rest/v1/siirto/" ng-upload="uploadComplete(content)" upload-options-convert-hidden="true" upload-options-before-submit="beforeSubmitCheck()" enctype="multipart/form-data" method="post")
+          div(class="form-group")
+            label(for="tyyppi" class="col-sm-2 control-label" oph-msg="suoritusrekisteri.tiedonsiirto.tyyppi") Tiedoston tyyppi
+            div(class="col-sm-3")
+              select(id="tyyppi" class="form-control" ng-model="tyyppi" ng-options="t.value as t.text for t in tyypit" required="required")
           div(class="form-group")
             label(for="tiedosto" class="col-sm-2 control-label" oph-msg="suoritusrekisteri.tiedonsiirto.tiedosto") Lähetettävä tiedosto
-            div(class="col-sm-5")
+            div(class="col-sm-10")
               input(id="tiedosto" class="form-control" name="data" type="file" required="required")
 
           div(class="form-group")
@@ -33,7 +44,7 @@ div(class="row")
               button(class="btn btn-default" type="button" ng-click="reset()")
                 span(oph-msg="suoritusrekisteri.tiedonsiirto.tyhjenna") Tyhjennä
                 span(class="glyphicon glyphicon-remove")
-              button(class="btn btn-primary" type="button" upload-submit ng-click="send()")
+              button(class="btn btn-primary" type="submit")
                 span(oph-msg="suoritusrekisteri.tiedonsiirto.laheta") Lähetä
                 span(class="glyphicon glyphicon-upload")
 
