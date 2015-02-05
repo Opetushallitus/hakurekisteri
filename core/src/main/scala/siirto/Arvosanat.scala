@@ -9,28 +9,36 @@ object Arvosanat extends SchemaDefinition {
     <xs:import schemaLocation="arvosanat-koodisto.xsd" namespace="http://service.koodisto.sade.vm.fi/types/koodisto"/>
 
     <xs:element name="arvosanat" type="ArvosanatType">
-      <xs:unique name="uniqueHetu">
-        <xs:selector xpath="oppilas"/>
-        <xs:field xpath="hetu"/>
-      </xs:unique>
-      <xs:unique name="uniqueOid">
-        <xs:selector xpath="oppilas"/>
-        <xs:field xpath="oppilasnumero"/>
-      </xs:unique>
-      <xs:unique name="uniqueTunniste">
-        <xs:selector xpath="oppilas"/>
-        <xs:field xpath="tunniste"/>
-      </xs:unique>
+
     </xs:element>
 
     <xs:complexType name="ArvosanatType">
       <xs:sequence>
         <xs:element name="eranTunniste" minOccurs="1" maxOccurs="1"/>
-        <xs:element name="oppilas" type="OppilasType" maxOccurs="unbounded" minOccurs="1"/>
+        <xs:element type="HenkilotType" name="henkilot" maxOccurs="1" minOccurs="1">
+          <xs:unique name="uniqueHetu">
+            <xs:selector xpath="henkilo"/>
+            <xs:field xpath="hetu"/>
+          </xs:unique>
+          <xs:unique name="uniqueOid">
+            <xs:selector xpath="henkilo"/>
+            <xs:field xpath="oppilasnumero"/>
+          </xs:unique>
+          <xs:unique name="uniqueTunniste">
+            <xs:selector xpath="henkilo"/>
+            <xs:field xpath="tunniste"/>
+          </xs:unique>
+        </xs:element>
       </xs:sequence>
     </xs:complexType>
 
-    <xs:complexType name="OppilasType">
+    <xs:complexType name="HenkilotType">
+      <xs:sequence>
+        <xs:element type="HenkiloType" name="henkilo" maxOccurs="unbounded" minOccurs="1"/>
+      </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="HenkiloType">
       <xs:sequence>
         <xs:choice maxOccurs="1" minOccurs="1">
           <xs:element name="hetu" type="hetuType" maxOccurs="1" minOccurs="1"/>
