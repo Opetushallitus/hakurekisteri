@@ -96,7 +96,7 @@ app.factory "LokalisointiService", [
       if x is "" or not x
         addTranslations msgKey, elemText, oldTranslation
         return "[" + msgKey + "-" + lang + "]"
-      $log.debug "getTranslation, lang: " + lang + ", key: " + msgKey + " => " + x
+      # $log.debug "getTranslation, lang: " + lang + ", key: " + msgKey + " => " + x
       x
 
     if window.msgCategory is `undefined`
