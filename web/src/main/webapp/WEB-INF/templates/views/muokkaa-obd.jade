@@ -35,17 +35,17 @@ aside(class="row")
             span(oph-msg="suoritusrekisteri.opiskelijat.hae") Hae
             span(class="glyphicon glyphicon-search")
 
-div(class="col-sm-2")
-  table(class="table table-responsive")
-    tbody
-      tr(ng-repeat="row in allRows" ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}" ng-click="valitseHenkilo(row.henkiloOid)")
-        td() {{row.henkilo || row.henkiloOid}}
-        td
-          div(ng-repeat="o in row.opiskelijat") {{o.luokka}}
+      div(class="form-group")
+        table(class="table table-responsive")
+          tbody
+            tr(ng-repeat="row in allRows" ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}" ng-click="valitseHenkilo(row.henkiloOid)")
+              td() {{row.henkilo || row.henkiloOid}}
+              td
+                div(ng-repeat="o in row.opiskelijat") {{o.luokka}}
 
-div(class="col-sm-8")
-  div(ng-if="valittuHenkiloOid")
-    div(ng-include="'templates/muokkaa-partial'")
+  div(class="col-sm-9")
+    div(ng-if="valittuHenkiloOid")
+      div(ng-include="'templates/muokkaa-partial'")
 
 div(ng-if="loading" class="modal fade in" style="display: block")
   div(class="modal-backdrop in" style="height: 100%")
