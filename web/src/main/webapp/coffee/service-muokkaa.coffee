@@ -10,7 +10,8 @@ app.factory "MuokkaaService", [
   "LokalisointiService"
   "MurupolkuService"
   "MessageService"
-  ($location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService) ->
+  "ArvosanaService"
+  ($location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService, ArvosanaService) ->
     muokkaaHenkilo: (henkiloOid, $scope) ->
       loadMenuTexts = ->
         $scope.koulutukset = [
@@ -103,6 +104,7 @@ app.factory "MuokkaaService", [
           suoritukset.sort (a, b) ->
             sortByFinDateDesc a.valmistuminen, b.valmistuminen
           $scope.suoritukset = suoritukset
+          ArvosanaService.muokkaaArvosanat($scope.suoritukset[0].id, $scope)
           enrich()
         ), ->
           MessageService.addMessage {
@@ -336,7 +338,6 @@ app.factory "MuokkaaService", [
             return
           )(luokkatieto) for luokkatieto in $scope.luokkatiedot
           return
-        MessageService.clearMessages()
         validationPromises = []
         validateOppilaitoskoodit()
         muokkaaSavePromises = []
@@ -379,46 +380,8 @@ app.factory "MuokkaaService", [
         )
 
       $scope.editArvosana = (suoritusId) ->
-        openModal = (template, controller) ->
-          isolatedScope = $scope.$new(true)
-          isolatedScope.modalInstance = $modal.open(
-            templateUrl: template
-            controller: controller
-            scope: isolatedScope
-            size: "lg"
-            resolve:
-              suoritusId: ->
-                suoritusId
-          )
-          $scope.modalInstance = isolatedScope.modalInstance
+        ArvosanaService.muokkaaArvosanat(suoritusId, $scope)
 
-        openModal "templates/arvosanat", "ArvosanaCtrl"
-
-        $scope.modalInstance.result.then ((arvosanaRet) ->
-          if Array.isArray(arvosanaRet)
-            isolatedScope = $scope.$new(true)
-            isolatedScope.modalInstance = $modal.open(
-              templateUrl: "templates/duplikaatti"
-              controller: "DuplikaattiCtrl"
-              scope: isolatedScope
-              size: "lg"
-              resolve:
-                arvosanat: ->
-                  arvosanaRet
-            )
-            $scope.modalInstance = isolatedScope.modalInstance
-            $scope.modalInstance.result.then ((ret) ->
-              MessageService.addMessage ret  if ret
-              return
-            ), ->
-              $log.info "duplicate modal closed"
-
-          else MessageService.addMessage arvosanaRet  if arvosanaRet
-          return
-        ), ->
-          $log.info "modal closed"
-
-        return
 
       $scope.editYoarvosana = (suoritusId) ->
         openModal = (template, controller) ->

@@ -12,7 +12,8 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
   "MurupolkuService"
   "MessageService"
   "MuokkaaService"
-  ($scope, $routeParams, $location, $log, $http, $q, $cookies, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService, MuokkaaService) ->
+  "ArvosanaService"
+  ($scope, $routeParams, $location, $log, $http, $q, $cookies, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService, MuokkaaService, ArvosanaService) ->
 
     initializeSearch = ->
       MessageService.clearMessages()
