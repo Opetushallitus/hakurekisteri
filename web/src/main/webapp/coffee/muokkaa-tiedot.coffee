@@ -172,28 +172,6 @@ app.factory "MuokkaaTiedot", [
       fetchSuoritukset()
       fetchOpiskeluoikeudet()
 
-      $scope.getOppilaitos = (searchStr, obj) ->
-        return []  if (typeof obj.organisaatio is "object") and obj.organisaatio.oppilaitosKoodi is searchStr
-        if searchStr and searchStr.trim().match(/^\d{5}$/)
-          $http.get(organisaatioServiceUrl + "/rest/organisaatio/" + searchStr).then ((result) ->
-            [result.data]
-          ), ->
-            []
-        else if searchStr and searchStr.length > 2
-          $http.get(organisaatioServiceUrl + "/rest/organisaatio/hae",
-            params:
-              searchstr: searchStr
-              organisaatioTyyppi: "Oppilaitos"
-          ).then ((result) ->
-            if result.data and result.data.numHits > 0
-              result.data.organisaatiot
-            else
-              []
-          ), ->
-            []
-        else
-          []
-
       $scope.saveTiedot = ->
         validateOppilaitoskoodit = ->
           ((obj) ->

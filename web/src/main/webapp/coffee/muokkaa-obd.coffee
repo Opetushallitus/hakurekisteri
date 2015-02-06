@@ -125,7 +125,8 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
       text: "Opiskelijoiden haku"
     , true
 
-    $scope.getOppilaitos = (searchStr) ->
+    $scope.getOppilaitos = (searchStr, obj) ->
+      return []  if (obj and typeof obj.organisaatio is "object") and obj.organisaatio.oppilaitosKoodi is searchStr
       if searchStr and searchStr.length >= 3
         $http.get(organisaatioServiceUrl + "/rest/organisaatio/v2/hae",
           params:
