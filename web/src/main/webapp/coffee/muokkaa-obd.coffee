@@ -17,10 +17,17 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
     initializeSearch = ->
       MessageService.clearMessages()
 
+      currentYear = () ->
+        currDate = new Date()
+        if((currDate.getMonth()) > 6)
+          ""+(currDate.getFullYear()+1)
+        else
+          ""+currDate.getFullYear()
+
       $scope.vuodet = vuodet()
       $scope.henkiloTerm = $routeParams.henkilo
       $scope.organisaatioTerm = oppilaitosKoodi: (if $routeParams.oppilaitos then $routeParams.oppilaitos else "")
-      $scope.vuosiTerm = $routeParams.vuosi
+      $scope.vuosiTerm = if($routeParams.vuosi) then $routeParams.vuosi else currentYear()
       $scope.allRows = []
       $scope.henkilo = null
       $scope.organisaatio = null
@@ -115,8 +122,8 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
       )
 
     vuodet = () ->
-      start = new Date().getFullYear() + 1
-      end = new Date().getFullYear() - 50
+      start = new Date().getFullYear() - 50
+      end = new Date().getFullYear() + 1
       [""].concat([start..end]).map (v) ->
         "" + v
 
