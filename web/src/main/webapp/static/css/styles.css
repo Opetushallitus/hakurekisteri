@@ -50,6 +50,10 @@ body #raamit-header .header-content {
     color: #fff;
 }
 
+.table-hover {
+    cursor: pointer;
+}
+
 .loading-large {
     background-image: url('../img/ajax-loader-large.gif');
     height: 32px;

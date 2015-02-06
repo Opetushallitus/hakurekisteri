@@ -11,15 +11,12 @@ aside(class="row")
     form(id="filterForm" class="well form-horizontal" ng-submit="search()")
 
       div(class="form-group")
-        label(for="henkiloTerm" class="col-sm-3 control-label" oph-msg="suoritusrekisteri.opiskelijat.henkilo") Henkilö
-        div(class="col-sm-8")
+        div(class="col-sm-12")
           input(id="henkiloTerm" class="form-control" ng-model="henkiloTerm" type="search" placeholder="Hae hetulla tai henkilönumerolla")
 
       div(class="form-group")
-        label(for="organisaatioTerm" class="col-sm-3 control-label" oph-msg="suoritusrekisteri.opiskelijat.oppilaitos") Oppilaitos
-        div(class="col-sm-8")
-          input(id="organisaatioTerm" class="form-control" autocomplete="off" ng-model="organisaatioTerm" type="search" placeholder="Hae oppilaitoksen numerolla tai nimellä" typeahead="organisaatio as organisaatio.oppilaitosKoodi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingOppilaitos" typeahead-wait-ms="500" typeahead-template-url="organisaatioTemplate.html")
-          span(ng-show="organisaatioTerm") {{organisaatioTerm.oppilaitosKoodi}} {{organisaatioTerm.nimi.fi || organisaatioTerm.nimi.sv || organisaatioTerm.nimi.en}}
+        div(class="col-sm-12")
+          input(id="organisaatioTerm" class="form-control" autocomplete="off" ng-model="organisaatioTerm" type="search" placeholder="Hae oppilaitoksen numerolla tai nimellä" typeahead="organisaatio as organisaatio.oppilaitosKoodi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingOppilaitos" typeahead-wait-ms="300" typeahead-template-url="organisaatioTemplate.html")
 
       div(class="form-group")
         label(for="vuosiTerm" class="col-sm-3 control-label" oph-msg="suoritusrekisteri.opiskelijat.vuosi") Vuosi
@@ -38,10 +35,9 @@ aside(class="row")
       div(class="form-group")
         table(class="table table-responsive")
           tbody
-            tr(ng-repeat="row in allRows" ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}" ng-click="valitseHenkilo(row.henkiloOid)")
+            tr(ng-repeat="row in allRows" class="table-hover" ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}" ng-click="valitseHenkilo(row.henkiloOid)")
               td() {{row.henkilo || row.henkiloOid}}
-              td
-                div(ng-repeat="o in row.opiskelijat") {{o.luokka}}
+              td(ng-repeat="o in row.opiskelijat") {{o.luokka}}
 
   div(class="col-sm-9")
     div(ng-if="valittuHenkiloOid")
@@ -55,4 +51,3 @@ div(ng-if="loading" class="modal fade in" style="display: block")
         h4(class="modal-title")
       div(class="modal-body")
         div(class="loading-td loading-large")
-
