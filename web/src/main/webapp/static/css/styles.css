@@ -50,8 +50,9 @@ body #raamit-header .header-content {
     color: #fff;
 }
 
-.table-hover {
+.table-settings {
     cursor: pointer;
+    color: #06526b;
 }
 
 .loading-large {

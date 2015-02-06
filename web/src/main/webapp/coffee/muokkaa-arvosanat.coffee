@@ -6,6 +6,7 @@ app.factory "MuokkaaArvosanat", [
   "Arvosanat"
   "Suoritukset"
   "MessageService"
+
   ($http, $q, $modal, $log, Arvosanat, Suoritukset, MessageService) ->
     muokkaaArvosanat: (suoritusId, $scope) ->
       $scope.arvosanataulukko = []

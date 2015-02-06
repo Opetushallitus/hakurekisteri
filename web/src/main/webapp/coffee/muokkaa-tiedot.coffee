@@ -173,6 +173,7 @@ app.factory "MuokkaaTiedot", [
       fetchOpiskeluoikeudet()
 
       $scope.saveTiedot = ->
+        $scope.saveArvosanat()
         validateOppilaitoskoodit = ->
           ((obj) ->
             if not obj["delete"] and obj.editable and not (obj.komo and obj.komo is komo.ylioppilastutkinto)

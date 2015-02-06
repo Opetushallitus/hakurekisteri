@@ -122,8 +122,8 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
       )
 
     vuodet = () ->
-      start = new Date().getFullYear() - 50
-      end = new Date().getFullYear() + 1
+      start = new Date().getFullYear() + 1
+      end = new Date().getFullYear() - 50
       [""].concat([start..end]).map (v) ->
         "" + v
 
