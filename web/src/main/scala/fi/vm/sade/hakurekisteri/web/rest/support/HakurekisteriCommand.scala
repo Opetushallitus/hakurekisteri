@@ -1,25 +1,26 @@
 package fi.vm.sade.hakurekisteri.web.rest.support
 
-import org.scalatra.commands._
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
+import org.json4s.JsonAST.{JInt, JString}
+import org.json4s._
+import org.scalatra.commands._
 import org.scalatra.json.JsonValueReader
 import org.scalatra.servlet.FileItem
 import org.scalatra.util.ValueReader
+import org.scalatra.util.conversion.TypeConverter
 import org.scalatra.validation.{FieldName, UnknownError, ValidationError}
+import org.scalatra.{DefaultValue, DefaultValues}
 import org.xml.sax.SAXParseException
 import siirto.XMLValidator
-import scala.util.control.Exception._
-import scala.xml.{Elem, XML}
-import scalaz._, Scalaz._
-import org.scalatra.{DefaultValues, util, DefaultValue}
-import org.scalatra.util.conversion.TypeConverter
-import org.json4s._
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
-import org.json4s.JsonAST.JString
-import org.json4s.JsonAST.JInt
+
 import scala.concurrent.Future
 import scala.language.implicitConversions
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import scala.util.control.Exception._
+import scala.xml.{Elem, XML}
+import scalaz.Scalaz._
+import scalaz._
 
 object NoXmlConverterSpecifiedException extends Exception(s"no xml converter specified")
 
@@ -37,9 +38,8 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
 
   implicit def OptionIntDefaultValue: DefaultValue[Option[Int]] = org.scalatra.DefaultValueMethods.default(None)
 
-  import util.RicherString._
-
   import org.json4s.jackson.JsonMethods.parse
+  import org.scalatra.util.RicherString._
 
   implicit val stringtoJValue: TypeConverter[String, JValue] = safe((s: String) => parse(s))
 
@@ -59,7 +59,7 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
 
 
   private def xml(f: FileItem): Boolean = f.getContentType.exists(t => t == "text/xml" || t == "application/xml") ||
-      f.extension.exists(_ == "xml")
+      f.extension.contains("xml")
 
   implicit val excelConverter = new XmlConverter {
     override def convert(f: FileItem): Elem = throw NoXmlConverterSpecifiedException
@@ -122,7 +122,7 @@ class ValidatableXml(b: FieldDescriptor[Elem]) {
     b.validateWith(abidesSchema(validator))
 
   def abidesSchema(validator: XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem]): BindingValidator[Elem] = (s: String) => {
-    _ flatMap (validateSchema(s, validator))
+    _.flatMap(validateSchema(s, validator))
   }
 
   def validateSchema(field: String, validator: XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem]): (Elem) => FieldValidation[Elem] = (xml)  => {

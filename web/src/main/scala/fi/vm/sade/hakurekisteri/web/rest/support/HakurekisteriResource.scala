@@ -6,35 +6,23 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.organization.{AuthorizedQuery, AuthorizedRead, _}
+import fi.vm.sade.hakurekisteri.organization.{AuthorizedCreate, AuthorizedDelete, AuthorizedQuery, AuthorizedRead, AuthorizedUpdate}
+import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import org.scalatra._
 import org.scalatra.commands._
-import org.scalatra.json.{JacksonJsonValueReaderProperty, JacksonJsonSupport, JsonSupport}
+import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
-import org.scalatra.util.ValueReader
+import org.scalatra.validation.{FieldName, ValidationError}
 
-import scala.collection.immutable
 import scala.compat.Platform
-import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 import scala.util.Try
-import scala.util.control.Exception._
 import scalaz.NonEmptyList
-import org.scalatra.validation.{FieldName, ValidationError}
-import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriCommand
-import fi.vm.sade.hakurekisteri.rest.support._
-import scala.Some
-import fi.vm.sade.hakurekisteri.organization.AuthorizedRead
-import org.scalatra.validation.FieldName
-import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
-import fi.vm.sade.hakurekisteri.organization.AuthorizedUpdate
-import fi.vm.sade.hakurekisteri.organization.AuthorizedCreate
-import fi.vm.sade.hakurekisteri.organization.AuthorizedDelete
-import fi.vm.sade.hakurekisteri.web.rest.support.UserNotAuthorized
-import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 
 trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
 
@@ -50,10 +38,10 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
 
   delete("/:id", operation(delete)) {
     if (!currentUser.exists(_.canDelete(resourceName))) throw UserNotAuthorized("not authorized")
-    else deleteResource
+    else deleteResource()
   }
 
-  def deleteResource: Object = {
+  def deleteResource(): Object = {
     Try(UUID.fromString(params("id"))).map(deleteResource(_, currentUser)).get
   }
 
@@ -64,10 +52,10 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
 
   post("/:id", operation(update)) {
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
-    else updateResource
+    else updateResource()
   }
 
-  def updateResource: Object = {
+  def updateResource(): Object = {
     Try(UUID.fromString(params("id"))).map(updateResource(_, currentUser)).get
   }
 
@@ -122,7 +110,7 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
     }
   }
 
-  def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName
+  def className[CL](implicit m: Manifest[CL]) = m.runtimeClass.getSimpleName
 
   lazy val resourceName = className[A]
 
