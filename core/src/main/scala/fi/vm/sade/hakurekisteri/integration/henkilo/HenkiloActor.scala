@@ -86,7 +86,7 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with Actor
       }.pipeTo(self)(sender())
 
     case s: SaveHenkilo if savingHenkilo =>
-      context.system.scheduler.scheduleOnce(500.milliseconds, self, s)(ec, sender())
+      context.system.scheduler.scheduleOnce(50.milliseconds, self, s)(ec, sender())
 
     case CheckHenkilo(henkiloOid) =>
       def notFound(t: Throwable) = t match {

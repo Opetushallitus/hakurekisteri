@@ -130,7 +130,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     private case object Start
     private case object Stop
     private val start = system.scheduler.scheduleOnce(1.millisecond, self, Start)
-    private val stop = system.scheduler.scheduleOnce(10.minutes, self, Stop)
+    private val stop = system.scheduler.scheduleOnce(30.minutes, self, Stop)
 
     override def postStop(): Unit = {
       start.cancel()
