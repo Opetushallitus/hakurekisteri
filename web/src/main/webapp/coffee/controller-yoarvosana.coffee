@@ -139,7 +139,9 @@ app.controller "YoarvosanaCtrl", [
 
     $scope.tutkintokerrat = tutkintokerrat()
     $scope.getText = (value, values) ->
-      return v.text for v in values if v.value is value
+      for v in values
+        if v.value is value
+          return v.text
       return null
 
     aineet =

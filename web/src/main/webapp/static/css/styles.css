@@ -45,6 +45,12 @@ body #raamit-header .header-content {
     text-align: center;
 }
 
+#table-scroller {
+    overflow-y: auto;
+    height: calc(100vh - 350px);
+    min-height: 300px;
+}
+
 #table-settings .table-selected td {
     background-color: #149ecb;
     color: #fff;
