@@ -8,20 +8,21 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.integration.henkilo._
+import fi.vm.sade.hakurekisteri.integration.koodisto.{KoodistoKoodiArvot, GetKoodistoKoodiArvot}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus, SuoritusQuery, VirallinenSuoritus}
 import org.joda.time.{DateTime, LocalDate}
 import scala.collection.immutable.Iterable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.xml.Node
 
-class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, importBatchActor: ActorRef)(implicit val system: ActorSystem) {
+class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, importBatchActor: ActorRef, koodistoActor: ActorRef)(implicit val system: ActorSystem) {
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val timeout: Timeout = 10.minutes
 
-  def process(batch: ImportBatch): Future[ImportBatch] = {
+  def process(batch: ImportBatch): Future[ImportBatch with Identified[UUID]] = {
     (for (
       statukset <- processBatch(batch)
     ) yield {
@@ -33,12 +34,12 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
         successRows = Some(refs.size),
         failureRows = Some(statukset.size - refs.size),
         messages = messages(statukset)
-      ))
-    }).flatMap(b => (importBatchActor ? b).mapTo[ImportBatch]).recoverWith {
+      ), state = BatchState.DONE)
+    }).flatMap(b => (importBatchActor ? b).mapTo[ImportBatch with Identified[UUID]]).recoverWith {
       case t: Throwable => (importBatchActor ? batch.copy(status = batch.status.copy(
         processedTime = Some(new DateTime()),
         messages = Map("virhe käsittelyssä" -> Set(t.toString))
-      ))).mapTo[ImportBatch]
+      ), state = BatchState.FAILED)).mapTo[ImportBatch with Identified[UUID]]
     }
   }
 
@@ -50,12 +51,14 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     case OkStatus(tunniste, refs) => tunniste -> refs.map(t => t._1.toString -> t._2.map(_.toString).mkString(", ")).toMap
   }.toMap)
 
-  private def processBatch(batch: ImportBatch): Future[Seq[ImportArvosanaStatus]] = {
-    val henkilot = parseData(batch)
-    val enriched = enrich(henkilot)
+  private def fetchOppiaineetKoodisto(): Future[Seq[String]] = {
+    (koodistoActor ? GetKoodistoKoodiArvot("oppiaineetyleissivistava")).mapTo[KoodistoKoodiArvot].map(arvot => arvot.arvot)
+  }
 
+  private def processBatch(batch: ImportBatch): Future[Seq[ImportArvosanaStatus]] = {
     (for (
-      hlos <- enriched
+      oppiaineet <- fetchOppiaineetKoodisto();
+      hlos <- enrich(parseData(batch)(oppiaineet))
     ) yield for (
         h <- hlos; t <- h._3
       ) yield (for (
@@ -70,7 +73,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   }
 
   private def toArvosana(arvosana: ImportArvosana)(suoritus: UUID)(source: String): Arvosana =
-    Arvosana(suoritus, Arvio410("TODO"), "TODO", Some("TODO"), valinnainen = true, None, source)
+    Arvosana(suoritus, Arvio410(arvosana.arvosana), arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source)
 
   private def fetchSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String): Future[Suoritus with Identified[UUID]] = {
     (suoritusrekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid))).mapTo[Seq[Suoritus with Identified[UUID]]].map(_.find(matchSuoritus(todistus))).map {
@@ -115,27 +118,76 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     })
   }
 
-  private def parseData(batch: ImportBatch): Map[String, ImportArvosanaHenkilo] = try {
-    val henkilot = (batch.data \ "henkilot" \ "henkilo").map(ImportArvosanaHenkilo(_)(batch.source)).groupBy(_.tunniste.tunniste).mapValues(_.head)
-    henkilot
-  } catch {
-    case t: Throwable =>
-      //batchFailed(t)
-      Map()
-  }
+  private def parseData(batch: ImportBatch)(oppiaineet: Seq[String]): Map[String, ImportArvosanaHenkilo] =
+    (batch.data \ "henkilot" \ "henkilo").map(ImportArvosanaHenkilo(_)(batch.source)(oppiaineet)).groupBy(_.tunniste.tunniste).mapValues(_.head)
 
   case class SuoritusNotFoundException(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String) extends Exception(s"suoritus not found for henkilo $henkiloOid with myontaja $oppilaitosOid for todistus $todistus")
 
   object HenkiloTunnisteNotSupportedException extends Exception("henkilo tunniste not yet supported in arvosana batch")
 
-  case class ImportArvosana()
+  case class ImportArvosana(aine: String, arvosana: String, lisatieto: Option[String], valinnainen: Boolean)
 
   case class ImportTodistus(komo: String, myontaja: String, arvosanat: Seq[ImportArvosana], valmistuminen: LocalDate)
 
   case class ImportArvosanaHenkilo(tunniste: ImportTunniste, todistukset: Seq[ImportTodistus])
 
+  import fi.vm.sade.hakurekisteri.tools.RicherString._
+
   object ImportArvosanaHenkilo {
-    def apply(h: Node)(lahde: String): ImportArvosanaHenkilo = ???
+    def getField(name: String)(h: Node): String = (h \ name).head.text
+    def getOptionField(name: String)(h: Node): Option[String] = (h \ name).headOption.flatMap(_.text.blankOption)
+    def arvosanat(h: Node)(oppiaineet: Seq[String]): Seq[ImportArvosana] = {
+      oppiaineet.map(name => {
+        (h \ name).headOption.collect {
+          case s =>
+            val lisatieto = name match {
+              case "AI" => getOptionField("tyyppi")(s)
+              case _ => getOptionField("kieli")(s)
+            }
+            (s \ "valinnainen").map(a => ImportArvosana(name, a.text, lisatieto, valinnainen = true)) :+ ImportArvosana(name, getField("yhteinen")(s), lisatieto, valinnainen = false)
+        }
+      }).flatten.foldLeft[Seq[ImportArvosana]](Seq())(_ ++ _)
+    }
+    def todistus(name: String, komoOid: String, oppijanumero: Option[String])(h: Node)(lahde: String)(oppiaineet: Seq[String]): Option[ImportTodistus] = (h \ name).headOption.map(s => {
+      val valmistuminen = getField("valmistuminen")(s)
+      val myontaja = getField("myontaja")(s)
+      // val suoritusKieli = getField("suoritusKieli")(s)
+      ImportTodistus(komoOid, myontaja, arvosanat(s)(oppiaineet), new LocalDate(valmistuminen))
+    })
+
+    def apply(h: Node)(lahde: String)(oppiaineet: Seq[String]): ImportArvosanaHenkilo = {
+      val hetu = getOptionField("hetu")(h)
+      val oppijanumero = getOptionField("oppijanumero")(h)
+      val henkiloTunniste = getOptionField("henkiloTunniste")(h)
+      val syntymaAika = getOptionField("syntymaAika")(h)
+
+      val tunniste = (hetu, oppijanumero, henkiloTunniste, syntymaAika) match {
+        case (Some(henkilotunnus), _, _, _) => ImportHetu(henkilotunnus)
+        case (_, Some(o), _, _) => ImportOppijanumero(o)
+        case (_, _, Some(t), Some(sa)) => ImportHenkilonTunniste(t, sa, "0")
+        case t =>
+          throw new IllegalArgumentException(s"henkilo could not be identified: hetu, oppijanumero or henkiloTunniste+syntymaAika missing $t")
+      }
+
+      val todistuksetNode = (h \ "todistukset").head
+
+      val todistukset = Seq(
+        todistus("perusopetus", Config.perusopetusKomoOid, oppijanumero)(todistuksetNode)(lahde)(oppiaineet),
+        todistus("perusopetuksenlisaopetus", Config.lisaopetusKomoOid, oppijanumero)(todistuksetNode)(lahde)(oppiaineet),
+        todistus("ammattistartti", Config.ammattistarttiKomoOid, oppijanumero)(todistuksetNode)(lahde)(oppiaineet),
+        todistus("valmentava", Config.valmentavaKomoOid, oppijanumero)(todistuksetNode)(lahde)(oppiaineet),
+        todistus("maahanmuuttajienlukioonvalmistava", Config.lukioonvalmistavaKomoOid, oppijanumero)(todistuksetNode)(lahde)(oppiaineet),
+        todistus("maahanmuuttajienammvalmistava", Config.ammatilliseenvalmistavaKomoOid, oppijanumero)(todistuksetNode)(lahde)(oppiaineet),
+        todistus("ulkomainen", Config.ulkomainenkorvaavaKomoOid, oppijanumero)(todistuksetNode)(lahde)(oppiaineet),
+        todistus("lukio", Config.lukioKomoOid, oppijanumero)(todistuksetNode)(lahde)(oppiaineet),
+        todistus("ammatillinen", Config.ammatillinenKomoOid, oppijanumero)(todistuksetNode)(lahde)(oppiaineet)
+      ).flatten
+
+      ImportArvosanaHenkilo(
+        tunniste = tunniste,
+        todistukset = todistukset
+      )
+    }
   }
 
   trait ImportArvosanaStatus {

@@ -25,19 +25,15 @@ import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.tarjonta.RestHakuAika
 import fi.vm.sade.hakurekisteri.hakija.Puuttuu
 import fi.vm.sade.hakurekisteri.integration.haku.Kieliversiot
-import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
-import fi.vm.sade.hakurekisteri.integration.koodisto.GetKoodi
+import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosQuery
 import fi.vm.sade.hakurekisteri.integration.tarjonta.HakukohdeOid
 import scala.Some
 import fi.vm.sade.hakurekisteri.integration.tarjonta.HakukohteenKoulutukset
 import fi.vm.sade.hakurekisteri.suoritus.SuoritysTyyppiQuery
-import fi.vm.sade.hakurekisteri.integration.koodisto.Koodisto
 import fi.vm.sade.hakurekisteri.web.kkhakija.Hakija
 import fi.vm.sade.hakurekisteri.hakija.Syksy
 import fi.vm.sade.hakurekisteri.integration.tarjonta.RestHaku
-import fi.vm.sade.hakurekisteri.integration.koodisto.KoodiMetadata
-import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
 import fi.vm.sade.hakurekisteri.integration.tarjonta.Hakukohteenkoulutus
 import fi.vm.sade.hakurekisteri.integration.haku.GetHaku
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
@@ -202,6 +198,12 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
     override def receive: Actor.Receive = {
       case q: GetRinnasteinenKoodiArvoQuery => sender ! "246"
       case q: GetKoodi =>  sender ! Some(Koodi(q.koodiUri.split("_").last.split("#").head.toUpperCase, q.koodiUri, Koodisto(q.koodistoUri), Seq(KoodiMetadata(q.koodiUri, "FI"))))
+      case q: GetKoodistoKoodiArvot => q.koodistoUri match {
+        case "oppiaineetyleissivistava" => sender ! KoodistoKoodiArvot(
+          koodistoUri = "oppiaineetyleissivistava",
+          arvot = Seq("AI", "A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33", "BI", "FI","FY", "GE", "HI", "KE", "KO", "KS", "KT", "KU", "LI", "MA", "MU", "PS", "TE", "YH")
+        )
+      }
     }
   }
 }
