@@ -32,10 +32,10 @@ aside(class="row")
             span(oph-msg="suoritusrekisteri.opiskelijat.hae") Hae
             span(class="glyphicon glyphicon-search")
 
-      div(class="form-group")
-        table(class="table table-responsive")
+      div(class="form-group" style="overflow-y:auto; height:calc(100vh - 350px)")
+        table(class="table table-responsive" id="table-settings")
           tbody
-            tr(ng-repeat="row in allRows" class="table-settings" ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}" ng-click="valitseHenkilo(row.henkiloOid)")
+            tr(ng-repeat="row in allRows" ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}" ng-click="valitseHenkilo(row.henkiloOid)")
               td() {{row.henkilo || row.henkiloOid}}
               td()
                 span(ng-repeat="o in row.opiskelijat") {{o.luokka}}

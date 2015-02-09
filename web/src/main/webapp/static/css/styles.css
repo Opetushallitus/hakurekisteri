@@ -45,14 +45,15 @@ body #raamit-header .header-content {
     text-align: center;
 }
 
-.table-selected {
+#table-settings .table-selected td {
     background-color: #149ecb;
     color: #fff;
 }
 
-.table-settings {
+#table-settings td {
     cursor: pointer;
     color: #06526b;
+    font-size: 12px;
 }
 
 .loading-large {
