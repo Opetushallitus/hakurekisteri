@@ -7,32 +7,29 @@ script(type="text/ng-template" id="organisaatioTemplate.html")
     span(bind-html-unsafe="(match.model.oppilaitosKoodi + ' ' + (match.model.nimi.fi ? match.model.nimi.fi : (match.model.nimi.sv ? match.model.nimi.sv : match.model.nimi.en))) | typeaheadHighlight:query")
 
 aside(class="row")
-  div(class="col-sm-3")
-    form(id="filterForm" class="well form-horizontal" ng-submit="search()")
-
-      div(class="form-group")
-        div(class="col-sm-12")
-          input(id="henkiloTerm" class="form-control" ng-model="henkiloTerm" type="search" placeholder="Hetu tai henkilönumero")
-
-      div(class="form-group")
-        div(class="col-sm-12")
-          span(ng-show="organisaatioTerm.length > 0") Oppilaitoksen numero tai nimi
-          input(id="organisaatioTerm" class="form-control" autocomplete="off" ng-model="organisaatioTerm" type="search" placeholder="Hae oppilaitoksen numerolla tai nimellä" typeahead="organisaatio as organisaatio.oppilaitosKoodi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingOppilaitos" typeahead-wait-ms="300" typeahead-template-url="organisaatioTemplate.html")
-
-      div(class="form-group")
-        div(class="col-sm-6")
-          select(id="vuosiTerm" class="form-control" ng-model="vuosiTerm" ng-options="v for v in vuodet")
-
-      div(class="form-group")
-        div(class="col-sm-10")
-          button(class="btn btn-default" type="button" ng-click="reset()")
-            span(oph-msg="suoritusrekisteri.opiskelijat.tyhjenna") Tyhjennä
-            span(class="glyphicon glyphicon-remove")
-          button(class="btn btn-primary" type="submit")
-            span(oph-msg="suoritusrekisteri.opiskelijat.hae") Hae
-            span(class="glyphicon glyphicon-search")
-
-      div(class="form-group" id="table-scroller")
+  form(id="filterForm" class="well form-horizontal sticky-scroller" style="margin-left: 15px;" ng-submit="search()")
+    div(class="form-group")
+      div(class="col-sm-12")
+        input(id="henkiloTerm" class="form-control" ng-model="henkiloTerm" type="search" placeholder="Hetu tai henkilönumero")
+    div(class="form-group")
+      div(class="col-sm-12")
+        input(id="organisaatioTerm" class="form-control" autocomplete="off" ng-model="organisaatioTerm" type="search"
+        placeholder="Hae oppilaitoksen numerolla tai nimellä"
+        typeahead="organisaatio as organisaatio.nimi.fi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10"
+        typeahead-loading="loadingOppilaitos" typeahead-wait-ms="300" typeahead-template-url="organisaatioTemplate.html")
+    div(class="form-group")
+      div(class="col-sm-6")
+        select(id="vuosiTerm" class="form-control" ng-model="vuosiTerm" ng-options="v for v in vuodet")
+    div(class="form-group")
+      div(class="col-sm-12")
+        button(class="btn btn-default" type="button" ng-click="reset()")
+          span(oph-msg="suoritusrekisteri.opiskelijat.tyhjenna") Tyhjennä
+          span(class="glyphicon glyphicon-remove")
+        button(class="btn btn-primary" type="submit")
+          span(oph-msg="suoritusrekisteri.opiskelijat.hae") Hae
+          span(class="glyphicon glyphicon-search")
+    div(class="form-group" id="table-scroller")
+      div(class="col-sm-12")
         table(class="table table-responsive" id="table-settings")
           tbody
             tr(ng-repeat="row in allRows" ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}" ng-click="valitseHenkilo(row.henkiloOid)")
@@ -40,7 +37,7 @@ aside(class="row")
               td()
                 span(ng-repeat="o in row.opiskelijat") {{o.luokka}}
 
-  div(class="col-sm-9")
+  div(class="col-sm-8 col-sm-offset-4")
     div(ng-if="valittuHenkiloOid")
       div(ng-include="'templates/muokkaa-tiedot'")
 

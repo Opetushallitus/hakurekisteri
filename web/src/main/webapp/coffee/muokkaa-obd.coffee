@@ -26,7 +26,10 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
 
       $scope.vuodet = vuodet()
       $scope.henkiloTerm = $routeParams.henkilo
-      $scope.organisaatioTerm = oppilaitosKoodi: (if $routeParams.oppilaitos then $routeParams.oppilaitos else "")
+      $scope.organisaatioTerm = {
+        oppilaitosKoodi: (if $routeParams.oppilaitos then $routeParams.oppilaitos else "")
+        nimi: {fi: "", sv: "", en: "",}
+      }
       $scope.vuosiTerm = if($routeParams.vuosi) then $routeParams.vuosi else currentYear()
       $scope.allRows = []
       $scope.henkilo = null
@@ -118,7 +121,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
     , true
 
     $scope.getOppilaitos = (searchStr, obj) ->
-      return []  if (obj and typeof obj.organisaatio is "object") and obj.organisaatio.oppilaitosKoodi is searchStr
+      return [{organisaatio: {nimi: {fi: "suomi jee"}}}]  if (obj and typeof obj.organisaatio is "object") and obj.organisaatio.oppilaitosKoodi is searchStr
       if searchStr and searchStr.length >= 3
         $http.get(organisaatioServiceUrl + "/rest/organisaatio/v2/hae",
           params:

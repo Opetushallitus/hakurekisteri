@@ -1,5 +1,6 @@
 body .container {
     max-width: 1200px;
+    min-width: 1000px;
     width: auto !important;
     padding: 0 1px !important;
 }
@@ -45,21 +46,29 @@ body #raamit-header .header-content {
     text-align: center;
 }
 
+.sticky-scroller {
+    position: fixed;
+}
+
 #table-scroller {
     overflow-y: auto;
     height: calc(100vh - 350px);
     min-height: 300px;
 }
 
-#table-settings .table-selected td {
-    background-color: #149ecb;
-    color: #fff;
-}
-
-#table-settings td {
+#table-settings {
     cursor: pointer;
     color: #06526b;
     font-size: 12px;
+}
+
+#table-settings tbody:hover tr:hover {
+    background-color: #eaf2f5;
+}
+
+.table-selected {
+    background-color: #149ecb !important;
+    color: #fff;
 }
 
 .loading-large {
