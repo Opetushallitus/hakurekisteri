@@ -158,7 +158,7 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
   }
 
   def deleteResource(id: UUID, user: Option[User]): Object = {
-    new ActorResult[Unit](AuthorizedDelete(id,  user.get), (unit) => Ok())
+    new ActorResult[Boolean](AuthorizedDelete(id,  user.get), (unit) => Ok())
   }
 
   def readResource(id: UUID, user: Option[User]): Object = {

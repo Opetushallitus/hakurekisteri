@@ -142,7 +142,7 @@ app.controller "YoarvosanaCtrl", [
       for v in values
         if v.value is value
           return v.text
-      return null
+      return value
 
     aineet =
       SA: [

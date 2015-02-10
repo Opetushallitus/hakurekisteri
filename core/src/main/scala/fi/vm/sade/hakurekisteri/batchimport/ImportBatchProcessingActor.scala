@@ -175,7 +175,7 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   implicit val ec = context.dispatcher
 
   private val start = context.system.scheduler.scheduleOnce(1.millisecond, self, Start)
-  private val stop = context.system.scheduler.scheduleOnce(10.minutes, self, Stop)
+  private val stop = context.system.scheduler.scheduleOnce(30.minutes, self, Stop)
 
   override def postStop(): Unit = {
     start.cancel()
