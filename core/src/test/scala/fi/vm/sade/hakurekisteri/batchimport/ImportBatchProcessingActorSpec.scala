@@ -136,8 +136,8 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
 
     import org.scalatest.time.SpanSugar._
 
-    sWaiter.await(timeout(10.seconds), dismissals(1))
-    oWaiter.await(timeout(10.seconds), dismissals(1))
+    sWaiter.await(timeout(30.seconds), dismissals(1))
+    oWaiter.await(timeout(30.seconds), dismissals(1))
 
     system.shutdown()
     system.awaitTermination()

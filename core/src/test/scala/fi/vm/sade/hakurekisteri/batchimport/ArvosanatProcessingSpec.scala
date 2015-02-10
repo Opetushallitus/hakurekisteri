@@ -149,8 +149,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     arvosanatProcessing.process(batch)
 
     import org.scalatest.time.SpanSugar._
-    aWaiter.await(timeout(10.seconds), dismissals(22))
-    iWaiter.await(timeout(10.seconds), dismissals(1))
+    aWaiter.await(timeout(30.seconds), dismissals(22))
+    iWaiter.await(timeout(30.seconds), dismissals(1))
 
     system.shutdown()
     system.awaitTermination()
