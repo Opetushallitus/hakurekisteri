@@ -21,6 +21,7 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.ExecutionContext
+import scala.util.{Failure, Success}
 
 class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions with HakurekisteriJsonSupport {
   implicit val system = ActorSystem("test-import-arvosana-batch-processing")
@@ -126,7 +127,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     val henkiloActor = system.actorOf(Props(new HenkiloActor(henkiloClient)))
     val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
 
-    val suoritus = VirallinenSuoritus(Config.perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", new LocalDate(2015, 5, 31), "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
+    val suoritus = VirallinenSuoritus(Config.perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", new LocalDate(2001, 1, 1), "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
     val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = {r => r}, query = {q => Seq(suoritus)})))
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
     val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient)))
