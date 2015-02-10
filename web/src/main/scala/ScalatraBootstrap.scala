@@ -94,7 +94,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, integrations.ytl, integrations.hakemukset, koosteet.ensikertalainen, integrations.virtaQueue)), "healthcheck")
 
-    val importBatchProcessing = system.actorOf(Props(new ImportBatchProcessingActor(authorizedRegisters.eraRekisteri, integrations.henkilo, authorizedRegisters.suoritusRekisteri, authorizedRegisters.opiskelijaRekisteri, integrations.organisaatiot)), "importBatchProcessing")
+    val importBatchProcessing = system.actorOf(Props(new ImportBatchProcessingActor(authorizedRegisters.eraRekisteri, integrations.henkilo, authorizedRegisters.suoritusRekisteri, authorizedRegisters.opiskelijaRekisteri, integrations.organisaatiot, authorizedRegisters.arvosanaRekisteri, integrations.koodisto)), "importBatchProcessing")
 
     mountServlets(context) (
       ("/", "web/src/scala/gui") -> new GuiServlet,

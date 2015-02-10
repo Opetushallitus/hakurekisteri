@@ -21,7 +21,7 @@ import scala.concurrent.ExecutionContext
 
 object ProcessReadyBatches
 
-class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef) extends Actor with ActorLogging {
+class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef, arvosanarekisteri: ActorRef, koodistoActor: ActorRef) extends Actor with ActorLogging {
 
   log.info("starting processing actor")
 
@@ -38,7 +38,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   override def receive: Receive = {
     case ProcessReadyBatches if readyForProcessing =>
       fetching = true
-      importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), Some("perustiedot"), Some(1))
+      importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), None, Some(1))
 
     case b: Seq[ImportBatch with Identified[UUID]] =>
       b.foreach(batch => importBatchActor ! batch.copy(state = BatchState.PROCESSING).identify(batch.id))
@@ -46,21 +46,55 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
 
     case b: ImportBatch with Identified[UUID] =>
       fetching = false
-      context.actorOf(Props(new PerustiedotProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)(b)))
+      b.batchType match {
+        case "perustiedot" =>
+          context.actorOf(Props(new PerustiedotProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)(b)))
+        case "arvosanat" =>
+          context.actorOf(Props(new ArvosanatProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, organisaatioActor, koodistoActor)(b)))
+        case t => throw new Exception(s"unknown batchType $t")
+      }
+
   }
-
-
-
 }
-
 
 object ProcessingJammedException extends Exception("processing jammed")
 
+class ArvosanatProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, organisaatioActor: ActorRef, koodistoActor: ActorRef)(b: ImportBatch with Identified[UUID])
+  extends Actor with ActorLogging {
+
+  implicit val ec = context.dispatcher
+  private val processor = new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)(context.system)
+  private val startTime = Platform.currentTime
+  log.info(s"started processing batch ${b.id}")
+
+  private case object Start
+  private case object Stop
+
+  private val start = context.system.scheduler.scheduleOnce(1.millisecond, self, Start)
+
+  override def postStop(): Unit = {
+    start.cancel()
+  }
+
+  override def receive: Actor.Receive = {
+    case Start =>
+      processor.process(b).onComplete(t => {
+        if (t.isSuccess)
+          log.info(s"batch ${b.id} was processed successfully, processing took ${Platform.currentTime - startTime} ms")
+        else {
+          log.info(s"batch ${b.id} failed, processing took ${Platform.currentTime - startTime} ms")
+          log.error(t.failed.get, s"batch ${b.id} failed")
+        }
+        self ! Stop
+      })
+
+    case Stop =>
+      context.stop(self)
+  }
+}
 
 class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef)(b: ImportBatch with Identified[UUID])
   extends Actor with ActorLogging {
-
-
 
   private val startTime = Platform.currentTime
   log.info(s"started processing batch ${b.id}")

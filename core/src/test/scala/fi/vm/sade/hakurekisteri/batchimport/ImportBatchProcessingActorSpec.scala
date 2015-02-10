@@ -4,6 +4,7 @@ import java.util.UUID
 
 import akka.actor.{Props, ActorSystem}
 import com.ning.http.client.AsyncHttpClient
+import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{CreateHenkilo, Henkilo, HenkiloActor}
@@ -126,7 +127,10 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija](save = opiskelijaHandler, query = {q => Seq()})))
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
     val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient)))
-    val processingActor = system.actorOf(Props(new ImportBatchProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)))
+    val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
+    val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana](save = {r => r}, query = { (q) => Seq() })))
+
+    val processingActor = system.actorOf(Props(new ImportBatchProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, arvosanarekisteri, koodistoActor)))
 
     processingActor ! ProcessReadyBatches
 
