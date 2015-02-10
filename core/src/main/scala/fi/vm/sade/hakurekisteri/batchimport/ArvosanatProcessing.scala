@@ -29,7 +29,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
       val refs = savedRefs(statukset)
       batch.copy(status = batch.status.copy(
         processedTime = Some(new DateTime()),
-        savedReferences = refs,
+        savedReferences = Some(refs),
         totalRows = Some(statukset.size),
         successRows = Some(refs.size),
         failureRows = Some(statukset.size - refs.size),
@@ -47,9 +47,9 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     case FailureStatus(tunniste, t) => tunniste -> Set(t.toString)
   }.toMap
 
-  private def savedRefs(statukset: Seq[ImportArvosanaStatus]) = Some(statukset.collect {
+  private def savedRefs(statukset: Seq[ImportArvosanaStatus]): Map[String, Map[String, String]] = statukset.collect {
     case OkStatus(tunniste, refs) => tunniste -> refs.map(t => t._1.toString -> t._2.map(_.toString).mkString(", ")).toMap
-  }.toMap)
+  }.toMap
 
   private def fetchOppiaineetKoodisto(): Future[Seq[String]] = {
     (koodistoActor ? GetKoodistoKoodiArvot("oppiaineetyleissivistava")).mapTo[KoodistoKoodiArvot].map(arvot => arvot.arvot)
