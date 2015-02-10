@@ -96,29 +96,14 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
       return
 
     enrichData = (allRows) ->
-      enrichments = []
-
-      enrichHenkilo = (row) ->
-        d = $q.defer()
-        enrichments.push d
-        $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(row.henkiloOid),
-          cache: false
-        ).success((henkilo) ->
+      $http.post(henkiloServiceUrl + "/resources/henkilo/henkilotByHenkiloOidList", (item.henkiloOid for item in allRows)
+      ).success((henkiloList) ->
+        allRows.forEach (row, i) ->
+          henkilo = henkiloList[i]
           row.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + " (" + ((if henkilo.hetu then henkilo.hetu else henkilo.syntymaaika)) + ")"  if henkilo
-          d.resolve()
-        ).error(->
-          d.reject('error resolving name for ' + row.henkiloOid)
-        )
-
-      for row in allRows
-        do (row) ->
-          if row.henkiloOid
-            enrichHenkilo row
-          return
-
-      $q.all(enrichments.map((d) -> d.promise)).then((->
-        ), (errors) ->
-        $log.error(errors)
+        $scope.allRows = allRows
+      ).error(->
+        $log.error('error resolving henkilotByHenkiloOidList')
       )
 
     vuodet = () ->
