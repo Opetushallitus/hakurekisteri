@@ -38,7 +38,11 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     }).flatMap(b => (importBatchActor ? b).mapTo[ImportBatch with Identified[UUID]]).recoverWith {
       case t: Throwable => (importBatchActor ? batch.copy(status = batch.status.copy(
         processedTime = Some(new DateTime()),
-        messages = Map("virhe käsittelyssä" -> Set(t.toString))
+        savedReferences = None,
+        totalRows = None,
+        successRows = None,
+        failureRows = None,
+        messages = Map("virhe esitietojen hakemisessa" -> Set(t.toString))
       ), state = BatchState.FAILED)).mapTo[ImportBatch with Identified[UUID]]
     }
   }
