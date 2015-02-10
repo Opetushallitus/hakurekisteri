@@ -83,8 +83,8 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   }
 
   private def matchSuoritus(todistus: ImportTodistus)(suoritus: Suoritus): Boolean = (todistus, suoritus) match {
-    case (ImportTodistus(Config.perusopetusKomoOid, _, _, _), s: VirallinenSuoritus) if s.komo == Config.perusopetusKomoOid => true
-    case (ImportTodistus(Config.lisaopetusKomoOid, _, _, _), s: VirallinenSuoritus) if s.komo == Config.lisaopetusKomoOid => true
+    case (ImportTodistus(Config.perusopetusKomoOid, _, _, v), s: VirallinenSuoritus) if s.komo == Config.perusopetusKomoOid && s.valmistuminen == v => true
+    case (ImportTodistus(Config.lisaopetusKomoOid, _, _, v), s: VirallinenSuoritus) if s.komo == Config.lisaopetusKomoOid && s.valmistuminen == v => true
     case _ => false
   }
 
