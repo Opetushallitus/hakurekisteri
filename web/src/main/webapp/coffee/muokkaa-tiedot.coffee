@@ -17,7 +17,7 @@ app.factory "MuokkaaTiedot", [
           suoritukset: []
           luokkatiedot: []
           opiskeluoikeudet: []
-          suoritusArvosanaScopes: []
+          extraSaves: []
         $scope.myRoles = []
         $scope.luokkatasot = []
         $scope.yksilollistamiset = []
@@ -173,8 +173,8 @@ app.factory "MuokkaaTiedot", [
         Array.isArray($scope.myRoles) and ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1 or $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1)
 
       $scope.saveTiedot = ->
-        for arvosanaScope in $scope.henkilo.suoritusArvosanaScopes
-          arvosanaScope.saveArvosanat()
+        for saveFn in $scope.henkilo.extraSaves
+          saveFn()
         validateOppilaitoskoodit = ->
           ((obj) ->
             if not obj["delete"] and obj.editable and not (obj.komo and obj.komo is komo.ylioppilastutkinto)
@@ -383,8 +383,8 @@ app.factory "MuokkaaTiedot", [
         $event.stopPropagation()
         obj[fieldName] = true
 
-      $scope.addSuoritusArvosanaScopes = (scope) ->
-        $scope.henkilo.suoritusArvosanaScopes.push scope
+      $scope.addSave = (fn) ->
+        $scope.henkilo.extraSaves.push fn
 
       initializeHenkilotiedot()
 ]

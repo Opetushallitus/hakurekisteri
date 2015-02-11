@@ -98,7 +98,8 @@ form(ng-submit="saveTiedot()")
                   div(ng-hide="suoritus.editable") {{suoritus.tila}}
               div(ng-show="suoritus.editable" class="row")
                 div(class="form-group col-sm-12")
-                  div(ng-include="'templates/muokkaa-arvosanat'" ng-controller="MuokkaaArvosanat")
+                  div(ng-show="suoritus.komo !== komo.ylioppilastutkinto" ng-include="'templates/muokkaa-arvosanat'" ng-controller="MuokkaaArvosanat")
+                  div(ng-show="suoritus.komo === komo.ylioppilastutkinto" ng-include="'templates/muokkaa-arvosanat-yo'" ng-controller="MuokkaaArvosanatYo")
                   div(class="pull-right")
                     button(ng-show="isOPH()" type="button" class="btn btn-default arvosana-button" ng-disabled="suoritus.delete" ng-click="suoritus.delete = true")
                       span(oph-msg="suoritusrekisteri.muokkaa.poistasuoritus") Poista

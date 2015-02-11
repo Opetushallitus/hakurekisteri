@@ -8,7 +8,6 @@ app.controller "MuokkaaArvosanat", [
   "Suoritukset"
   "MessageService"
   ($scope, $http, $q, $modal, $log, Arvosanat, Suoritukset, MessageService) ->
-    $scope.addSuoritusArvosanaScopes($scope)
     suoritusId = $scope.suoritus.id
     $scope.arvosanataulukko = []
     $scope.oppiaineet = []
@@ -197,7 +196,7 @@ app.controller "MuokkaaArvosanat", [
           alakoodi.koodiUri is "oppiaineenkielisyys_1"
         )
 
-    $scope.saveArvosanat = ->
+    saveArvosanatNormaali = ->
       removeArvosana = (arvosana, d) ->
         arvosana.$remove (->
           d.resolve "remove ok"
@@ -284,4 +283,5 @@ app.controller "MuokkaaArvosanat", [
           type: "danger"
           messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennuseionnistunut"
           message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen."
+    $scope.addSave(saveArvosanatNormaali)
 ]
