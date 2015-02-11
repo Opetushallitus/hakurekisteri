@@ -8,11 +8,11 @@ import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{CreateHenkilo, Henkilo, HenkiloActor}
-import fi.vm.sade.hakurekisteri.integration.virta.MockedResourceActor
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus}
+import fi.vm.sade.hakurekisteri.test.tools.MockedResourceActor
 import org.mockito.Mockito._
 import org.scalatest.{Matchers, FlatSpec}
 import org.scalatest.concurrent.AsyncAssertions
