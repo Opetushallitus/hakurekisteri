@@ -60,6 +60,8 @@ body #raamit-header .header-content {
     cursor: pointer;
     color: #06526b;
     font-size: 12px;
+    width: 20em;
+    word-wrap: break-word;
 }
 
 #table-settings tbody:hover tr:hover {
