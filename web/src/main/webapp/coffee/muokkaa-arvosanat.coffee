@@ -64,7 +64,6 @@ app.controller "MuokkaaArvosanat", [
         MessageService.addMessage ret if ret
         return
       ), ->
-        $log.info "duplicate modal closed"
 
     Suoritukset.get { suoritusId: suoritusId }, ((suoritus) ->
       pohjakoulutusFilter = "onperusasteenoppiaine_1"
@@ -168,7 +167,6 @@ app.controller "MuokkaaArvosanat", [
 
           fetchArvosanat()
         ), ->
-          $log.error "some of the calls to koodisto service failed"
           MessageService.addMessage
             type: "danger"
             messageKey: "suoritusrekisteri.muokkaa.arvosanat.koodistopalveluongelma"

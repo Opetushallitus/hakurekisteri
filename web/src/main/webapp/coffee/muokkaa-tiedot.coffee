@@ -344,33 +344,6 @@ app.factory "MuokkaaTiedot", [
           editable: true
         )
 
-      $scope.editArvosana = (suoritusId) ->
-        MuokkaaArvosanat.muokkaaArvosanat(suoritusId, $scope)
-
-      $scope.editYoarvosana = (suoritusId) ->
-        openModal = (template, controller) ->
-          isolatedScope = $scope.$new(true)
-          isolatedScope.modalInstance = $modal.open(
-            templateUrl: template
-            controller: controller
-            scope: isolatedScope
-            size: "lg"
-            resolve:
-              suoritusId: ->
-                suoritusId
-          )
-          $scope.modalInstance = isolatedScope.modalInstance
-
-        openModal "templates/yoarvosanat", "YoarvosanaCtrl"
-
-        $scope.modalInstance.result.then ((yoarvosanaRet) ->
-          MessageService.addMessage yoarvosanaRet  if yoarvosanaRet
-          return
-        ), ->
-          $log.info "yo modal closed"
-
-        return
-
       $scope.addLuokkatieto = ->
         $scope.henkilo.luokkatiedot.push new Opiskelijat(
           henkiloOid: henkiloOid

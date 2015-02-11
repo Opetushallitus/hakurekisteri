@@ -3,7 +3,8 @@ app.controller "MuokkaaArvosanatYo", [
   "$q"
   "$log"
   "Arvosanat"
-  ($scope, $q, $log, Arvosanat) ->
+  "MessageService"
+  ($scope, $q, $log, Arvosanat, MessageService) ->
     suoritusId = $scope.suoritus.id
     isEditable = (myonnetty) ->
       not myonnetty or myonnetty.match(/^[0-9.]*\.19[0-8][0-9]$/)
@@ -45,7 +46,7 @@ app.controller "MuokkaaArvosanatYo", [
       return
     ), ->
       $scope.loading = false
-      $scope.modalInstance.close
+      MessageService.addMessage
         type: "danger"
         messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.arvosanapalveluongelma"
         message: "Arvosanapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
@@ -117,15 +118,13 @@ app.controller "MuokkaaArvosanatYo", [
       yoarvosanaSavePromises = []
       saveArvosanat()
       $q.all(yoarvosanaSavePromises.map (d) -> d.promise).then (->
-        $log.debug "all saved"
-        $scope.modalInstance.close
+        MessageService.addMessage
           type: "success"
           messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.tallennettu"
           message: "Arvosanat tallennettu."
         return
       ), ->
-        $log.error "saving failed"
-        $scope.modalInstance.close
+        MessageService.addMessage
           type: "danger"
           messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.tallennuseionnistunut"
           message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen."
