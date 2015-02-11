@@ -83,7 +83,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         searchOpiskelijat(query).promise
         searchSuoritukset(query).promise
       ]).then ((results) ->
-        showCurrentRows groupByHenkiloOid(collect(results))
+        showCurrentRows collectHenkilot(collect(results))
       ), (errors) ->
         $log.error errors
         MessageService.addMessage
@@ -91,23 +91,24 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           messageKey: "suoritusrekisteri.opiskelijat.virhehaussa"
           message: "Haussa tapahtui virhe. Yritä uudelleen."
 
-    showCurrentRows = (allRows) ->
-      if(allRows.length > 0)
-        $scope.valitseHenkilo(allRows[0].henkiloOid)
-      $scope.allRows = allRows
-      enrichData(allRows)
-      return
-
-    enrichData = (allRows) ->
-      $http.post(henkiloServiceUrl + "/resources/henkilo/henkilotByHenkiloOidList", (item.henkiloOid for item in allRows)
+    showCurrentRows = (henkiloMap) ->
+      $http.post(henkiloServiceUrl + "/resources/henkilo/henkilotByHenkiloOidList", Object.keys(henkiloMap)
       ).success((henkiloList) ->
-        allRows.forEach (row, i) ->
-          henkilo = henkiloList[i]
-          row.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + " (" + ((if henkilo.hetu then henkilo.hetu else henkilo.syntymaaika)) + ")"  if henkilo
+        unsorted = []
+        for henkiloTieto in henkiloList
+          henkilo = henkiloMap[henkiloTieto.oidHenkilo]
+          henkilo.henkilo = henkiloTieto.sukunimi + ", " + henkiloTieto.etunimet + " (" + ((if henkiloTieto.hetu then henkiloTieto.hetu else henkiloTieto.syntymaaika)) + ")"
+          henkilo.luokka = henkilo.opiskelijat.map((o) -> o.luokka).join(" ")
+          henkilo.sortBy = "#{henkilo.luokka};#{henkilo.henkilo}"
+          unsorted.push henkilo
+        allRows = unsorted.sort((a, b) -> a.sortBy.localeCompare(b.sortBy))
         $scope.allRows = allRows
+        if(allRows.length > 0)
+          $scope.valitseHenkilo(allRows[0].henkiloOid)
       ).error(->
         $log.error('error resolving henkilotByHenkiloOidList')
       )
+      return
 
     vuodet = () ->
       start = new Date().getFullYear() + 1
@@ -175,36 +176,21 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         s.reject "suoritus query failed"
       s
 
-    groupByHenkiloOid = (obj) ->
+    collectHenkilot = (obj) ->
       res = {}
       if Array.isArray obj.opiskelijat
         for o in obj.opiskelijat
-          do (o) ->
-            oid = o.henkiloOid
-            if res[oid]
-              if res[oid].opiskelijat
-                res[oid].opiskelijat.push o
-              else
-                res[oid].opiskelijat = [o]
-            else
-              res[oid] =
-                opiskelijat: [o]
+          oid = o.henkiloOid
+          henkilo = res[oid] || (res[oid]={henkiloOid: oid, opiskelijat: []})
+          henkilo.opiskelijat.push o
       if Array.isArray obj.suoritukset
         for s in obj.suoritukset
-          do (s) ->
-            oid = s.henkiloOid
-            if res[oid]
-              if res[oid].suoritukset
-                res[oid].suoritukset.push s
-              else
-                res[oid].suoritukset = [s]
-            else
-              res[oid] =
-                suoritukset: [s]
-      Object.keys(res).map (oid) ->
-        obj = res[oid]
-        obj.henkiloOid = oid
-        obj
+          oid = s.henkiloOid
+          if !(henkilo = res[oid])
+            henkilo = res[oid] = {henkiloOid: oid, opiskelijat: []}
+          suoritukset = henkilo.suoritukset || (henkilo.suoritukset = [])
+          suoritukset.push s
+      res
 
     initializeSearch()
 ]
