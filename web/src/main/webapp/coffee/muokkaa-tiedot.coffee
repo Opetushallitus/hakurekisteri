@@ -12,6 +12,33 @@ app.factory "MuokkaaTiedot", [
   "MuokkaaArvosanat"
   ($location, $http, $log, $q, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService, MuokkaaArvosanat) ->
     muokkaaHenkilo: (henkiloOid, $scope) ->
+
+      initializeHenkilotiedot = ->
+        $scope.myRoles = []
+        $scope.suoritukset = []
+        $scope.luokkatiedot = []
+        $scope.luokkatasot = []
+        $scope.yksilollistamiset = []
+        $scope.tilat = []
+        $scope.kielet = []
+        $scope.komo = komo
+
+        LokalisointiService.loadMessages loadMenuTexts
+
+        getKoodistoAsOptionArray $http, "kieli", "fi", $scope.kielet, "koodiArvo"
+        getKoodistoAsOptionArray $http, "luokkataso", "fi", $scope.luokkatasot, "koodiArvo"
+        getKoodistoAsOptionArray $http, "yksilollistaminen", "fi", $scope.yksilollistamiset, "koodiArvo", true
+        getKoodistoAsOptionArray $http, "suorituksentila", "fi", $scope.tilat, "koodiArvo"
+
+        updateMurupolku()
+        getMyRoles()
+
+        fetchHenkilotiedot()
+        fetchLuokkatiedot()
+        fetchSuoritukset()
+        fetchOpiskeluoikeudet()
+        initDatepicker()
+
       loadMenuTexts = ->
         $scope.koulutukset = [
           {
@@ -136,41 +163,19 @@ app.factory "MuokkaaTiedot", [
           startingDay: 1
         return
 
-      $scope.myRoles = []
-      $scope.suoritukset = []
-      $scope.luokkatiedot = []
-      $scope.luokkatasot = []
-      $scope.yksilollistamiset = []
-      $scope.tilat = []
-      $scope.kielet = []
-      $scope.komo = komo
-
-      LokalisointiService.loadMessages loadMenuTexts
-
-      getKoodistoAsOptionArray $http, "kieli", "fi", $scope.kielet, "koodiArvo"
-      getKoodistoAsOptionArray $http, "luokkataso", "fi", $scope.luokkatasot, "koodiArvo"
-      getKoodistoAsOptionArray $http, "yksilollistaminen", "fi", $scope.yksilollistamiset, "koodiArvo", true
-      getKoodistoAsOptionArray $http, "suorituksentila", "fi", $scope.tilat, "koodiArvo"
-
-      MurupolkuService.addToMurupolku {
-        href: "#/opiskelijat"
-        key: "suoritusrekisteri.muokkaa.muru1"
-        text: "Opiskelijoiden haku"
-      }, true
-      MurupolkuService.addToMurupolku {
-        key: "suoritusrekisteri.muokkaa.muru"
-        text: "Muokkaa opiskelijan tietoja"
-      }, false
-
-      getMyRoles()
+      updateMurupolku = ->
+        MurupolkuService.addToMurupolku {
+          href: "#/opiskelijat"
+          key: "suoritusrekisteri.muokkaa.muru1"
+          text: "Opiskelijoiden haku"
+        }, true
+        MurupolkuService.addToMurupolku {
+          key: "suoritusrekisteri.muokkaa.muru"
+          text: "Muokkaa opiskelijan tietoja"
+        }, false
 
       $scope.isOPH = ->
         Array.isArray($scope.myRoles) and ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1 or $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1)
-
-      fetchHenkilotiedot()
-      fetchLuokkatiedot()
-      fetchSuoritukset()
-      fetchOpiskeluoikeudet()
 
       $scope.saveTiedot = ->
         $scope.saveArvosanat()
@@ -382,5 +387,5 @@ app.factory "MuokkaaTiedot", [
         $event.stopPropagation()
         obj[fieldName] = true
 
-      initDatepicker()
+      initializeHenkilotiedot()
 ]
