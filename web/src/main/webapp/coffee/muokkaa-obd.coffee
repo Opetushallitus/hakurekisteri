@@ -19,10 +19,13 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
 
       currentYear = () ->
         currDate = new Date()
-        if((currDate.getMonth()) > 6)
+        if (currDate.getMonth() > 6)
           ""+(currDate.getFullYear()+1)
         else
           ""+currDate.getFullYear()
+
+      $('#henkiloTerm').placeholder();
+      $('#organisaatioTerm').placeholder();
 
       $scope.vuodet = vuodet()
       $scope.henkiloTerm = $routeParams.henkilo
