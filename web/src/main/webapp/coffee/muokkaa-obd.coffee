@@ -17,16 +17,9 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
     initializeSearch = ->
       MessageService.clearMessages()
 
-      currentYear = () ->
-        currDate = new Date()
-        if (currDate.getMonth() > 6)
-          ""+(currDate.getFullYear()+1)
-        else
-          ""+currDate.getFullYear()
-
       $('#henkiloTerm').placeholder();
       $('#organisaatioTerm').placeholder();
-
+      $scope.loading = false
       $scope.vuodet = vuodet()
       $scope.henkiloTerm = $routeParams.henkilo
       $scope.organisaatioTerm = {
@@ -81,13 +74,23 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           return
       return
 
+    currentYear = () ->
+      currDate = new Date()
+      if (currDate.getMonth() > 6)
+        ""+(currDate.getFullYear()+1)
+      else
+        ""+currDate.getFullYear()
+
     doSearch = (query) ->
+      $scope.allRows = []
+      $scope.loading = true
       $q.all([
         searchOpiskelijat(query).promise
         searchSuoritukset(query).promise
       ]).then ((results) ->
         showCurrentRows collectHenkilot(collect(results))
       ), (errors) ->
+        $scope.loading = false
         $log.error errors
         MessageService.addMessage
           type: "danger"
@@ -105,10 +108,12 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           henkilo.sortBy = "#{henkilo.luokka};#{henkilo.henkilo}"
           unsorted.push henkilo
         allRows = unsorted.sort((a, b) -> a.sortBy.localeCompare(b.sortBy))
+        $scope.loading = false
         $scope.allRows = allRows
         if(allRows.length > 0)
           $scope.valitseHenkilo(allRows[0].henkiloOid)
       ).error(->
+        $scope.loading = false
         $log.error('error resolving henkilotByHenkiloOidList')
       )
       return

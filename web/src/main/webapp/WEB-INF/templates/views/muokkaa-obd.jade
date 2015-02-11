@@ -30,22 +30,16 @@ aside(class="row")
           span(class="glyphicon glyphicon-search")
     div(class="form-group" id="table-scroller")
       div(class="col-sm-12")
-        table(class="table table-responsive" id="table-settings")
-          tbody
-            tr(ng-repeat="row in allRows" ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}" ng-click="valitseHenkilo(row.henkiloOid)")
-              td() {{row.henkilo || row.henkiloOid}}
-              td()
-                span(ng-repeat="o in row.opiskelijat") {{o.luokka}}
+        div(ng-if="loading")
+          div(class="loading-td loading-large")
+        div(ng-if="!loading")
+          table(class="table table-responsive" typeahead-loading="loadingOppilaitos" id="table-settings")
+            tbody
+              tr(ng-repeat="row in allRows" ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}" ng-click="valitseHenkilo(row.henkiloOid)")
+                td() {{row.henkilo || row.henkiloOid}}
+                td()
+                  span(ng-repeat="o in row.opiskelijat") {{o.luokka}}
 
   div(class="col-sm-9 col-sm-offset-3")
     div(ng-if="valittuHenkiloOid")
       div(ng-include="'templates/muokkaa-tiedot'")
-
-div(ng-if="loading" class="modal fade in" style="display: block")
-  div(class="modal-backdrop in" style="height: 100%")
-  div(class="modal-dialog" style="margin-top: 300px;")
-    div(class="modal-content")
-      div(class="modal-header")
-        h4(class="modal-title")
-      div(class="modal-body")
-        div(class="loading-td loading-large")
