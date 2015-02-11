@@ -51,7 +51,7 @@ div(class="row")
                   dl(class="varoitukset")
                     dt(ng-repeat-start="(key, errs) in b.status.messages")
                       span(oph-msg="suoritusrekisteri.tiedonsiirtotila.tunniste") Tunniste
-                      span {{key}}:
+                      span "{{key}}":
                     dd(ng-repeat-end)
                       div(ng-repeat="err in errs") {{err}}
 
