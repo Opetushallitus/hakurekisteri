@@ -2,20 +2,21 @@ package fi.vm.sade.hakurekisteri.batchimport
 
 import java.util.UUID
 
-import akka.actor.{ActorSystem, ActorRef}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.integration.henkilo._
-import fi.vm.sade.hakurekisteri.integration.koodisto.{KoodistoKoodiArvot, GetKoodistoKoodiArvot}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoKoodiArvot}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus, SuoritusQuery, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus}
 import org.joda.time.{DateTime, LocalDate}
+
 import scala.collection.immutable.Iterable
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Node
 
 class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, importBatchActor: ActorRef, koodistoActor: ActorRef)(implicit val system: ActorSystem) {
@@ -23,18 +24,18 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   implicit val timeout: Timeout = 10.minutes
 
   def process(batch: ImportBatch): Future[ImportBatch with Identified[UUID]] = {
-    (for (
-      statukset <- processBatch(batch)
-    ) yield {
-      val refs = savedRefs(statukset)
-      batch.copy(status = batch.status.copy(
-        processedTime = Some(new DateTime()),
-        savedReferences = Some(refs),
-        totalRows = Some(statukset.size),
-        successRows = Some(refs.size),
-        failureRows = Some(statukset.size - refs.size),
-        messages = messages(statukset)
-      ), state = BatchState.DONE)
+    fetchOppiaineetKoodisto().flatMap(oppiaineet => {
+      Future.sequence(processBatch(batch)(oppiaineet)).map(statukset => {
+        val refs = savedRefs(statukset)
+        batch.copy(status = batch.status.copy(
+          processedTime = Some(new DateTime()),
+          savedReferences = Some(refs),
+          totalRows = Some(statukset.size),
+          successRows = Some(refs.size),
+          failureRows = Some(statukset.size - refs.size),
+          messages = messages(statukset)
+        ), state = BatchState.DONE)
+      })
     }).flatMap(b => (importBatchActor ? b).mapTo[ImportBatch with Identified[UUID]]).recoverWith {
       case t: Throwable => (importBatchActor ? batch.copy(status = batch.status.copy(
         processedTime = Some(new DateTime()),
@@ -48,7 +49,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   }
 
   private def messages(statukset: Seq[ImportArvosanaStatus]): Map[String, Set[String]] = statukset.collect {
-    case FailureStatus(tunniste, t) => tunniste -> Set(t.toString)
+    case FailureStatus(tunniste: String, errors: Seq[Throwable]) => tunniste -> errors.map(_.toString).toSet
   }.toMap
 
   private def savedRefs(statukset: Seq[ImportArvosanaStatus]): Map[String, Map[String, String]] = statukset.collect {
@@ -59,22 +60,44 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     (koodistoActor ? GetKoodistoKoodiArvot("oppiaineetyleissivistava")).mapTo[KoodistoKoodiArvot].map(arvot => arvot.arvot)
   }
 
-  private def processBatch(batch: ImportBatch): Future[Seq[ImportArvosanaStatus]] = {
-    (for (
-      oppiaineet <- fetchOppiaineetKoodisto();
-      hlos <- enrich(parseData(batch)(oppiaineet))
-    ) yield for (
-        h <- hlos; t <- h._3
-      ) yield (for (
-          s <- fetchSuoritus(h._2, t._1, t._2)
-        ) yield for (
-            a <- t._1.arvosanat
-          ) yield (arvosanarekisteri ? toArvosana(a)(s.id)(batch.source)).mapTo[Arvosana with Identified[UUID]]).flatMap(Future.sequence(_)).map(arvosanat => {
-            OkStatus(h._1, arvosanat.groupBy(_.suoritus).map(t => (t._1, t._2.map(_.id))))
-          }).recoverWith {
-            case t: Throwable => Future.successful(FailureStatus(h._1, t))
-          }).flatMap(Future.sequence(_))
+  private def processBatch(batch: ImportBatch)(oppiaineet: Seq[String]): Seq[Future[ImportArvosanaStatus]] = {
+    for (
+      henkilot <- enrich(parseData(batch)(oppiaineet))
+    ) yield henkilot.flatMap(henkilo => {
+        val todistukset: Seq[Future[Seq[ArvosanaStatus]]] = for (
+          todistus <- henkilo._3
+        ) yield {
+
+          val savedTodistus: Future[Seq[Future[Arvosana with Identified[UUID]]]] = for (
+            s <- fetchSuoritus(henkilo._2, todistus._1, todistus._2)
+          ) yield for (
+              arvosana <- todistus._1.arvosanat
+            ) yield (arvosanarekisteri ? toArvosana(arvosana)(s.id)(batch.source)).mapTo[Arvosana with Identified[UUID]]
+
+          savedTodistus.flatMap((arvosanat: Seq[Future[Arvosana with Identified[UUID]]]) => {
+            Future.sequence(arvosanat.map(arvosana => {
+              arvosana.map(a => OkArvosanaStatus(a.id, a.suoritus, henkilo._1)).recoverWith {
+                case th: Throwable => Future.successful(FailureArvosanaStatus(henkilo._1, th))
+              }
+            }))
+          })
+        }
+
+        Future.sequence(todistukset).map((tods: Seq[Seq[ArvosanaStatus]]) => {
+          val arvosanaStatukset = tods.foldLeft[Seq[ArvosanaStatus]](Seq())(_ ++ _)
+          arvosanaStatukset.find(_.isInstanceOf[FailureArvosanaStatus]) match {
+            case Some(FailureArvosanaStatus(tunniste, _)) =>
+              FailureStatus(tunniste, arvosanaStatukset.filter(_.isInstanceOf[FailureArvosanaStatus]).asInstanceOf[Seq[FailureArvosanaStatus]].map(_.t))
+            case None =>
+              OkStatus(henkilo._1, tods.foldLeft[Seq[ArvosanaStatus]](Seq())(_ ++ _).asInstanceOf[Seq[OkArvosanaStatus]].groupBy(_.suoritus).map(t => t._1 -> t._2.map(_.id)))
+          }
+        })
+      })
   }
+
+  private trait ArvosanaStatus
+  private case class OkArvosanaStatus(id: UUID, suoritus: UUID, tunniste: String) extends ArvosanaStatus
+  private case class FailureArvosanaStatus(tunniste: String, t: Throwable) extends ArvosanaStatus
 
   private def toArvosana(arvosana: ImportArvosana)(suoritus: UUID)(source: String): Arvosana =
     Arvosana(suoritus, Arvio410(arvosana.arvosana), arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source)
@@ -92,7 +115,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     case _ => false
   }
 
-  private def enrich(henkilot: Map[String, ImportArvosanaHenkilo]): Future[Seq[(String, String, Seq[(ImportTodistus, String)])]] = {
+  private def enrich(henkilot: Map[String, ImportArvosanaHenkilo]): Seq[Future[(String, String, Seq[(ImportTodistus, String)])]] = {
     val enriched: Iterable[Future[(String, String, Seq[Future[(ImportTodistus, String)]])]] = for (
       (tunniste: String, henkilo: ImportArvosanaHenkilo) <- henkilot
     ) yield {
@@ -115,11 +138,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
       }
     }
 
-    Future.sequence(enriched).flatMap(hlos => {
-      Future.sequence(hlos.map(h => {
-        Future.sequence(h._3).map(tods => (h._1, h._2, tods))
-      }).toSeq)
-    })
+    enriched.map(_.flatMap(h => Future.sequence(h._3).map(tods => (h._1, h._2, tods)))).toSeq
   }
 
   private def parseData(batch: ImportBatch)(oppiaineet: Seq[String]): Map[String, ImportArvosanaHenkilo] =
@@ -199,7 +218,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   }
 
   case class OkStatus(tunniste: String, todistukset: Map[UUID, Seq[UUID]]) extends ImportArvosanaStatus
-  case class FailureStatus(tunniste: String, t: Throwable) extends ImportArvosanaStatus
+  case class FailureStatus(tunniste: String, errors: Seq[Throwable]) extends ImportArvosanaStatus
 
 }
 
