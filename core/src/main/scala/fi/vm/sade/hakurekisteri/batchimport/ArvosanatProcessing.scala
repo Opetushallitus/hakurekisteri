@@ -80,7 +80,9 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
                 case th: Throwable => Future.successful(FailureArvosanaStatus(henkilo._1, th))
               }
             }))
-          })
+          }).recoverWith {
+            case th: Throwable => Future.successful(Seq(FailureArvosanaStatus(henkilo._1, th)))
+          }
         }
 
         Future.sequence(todistukset).map((tods: Seq[Seq[ArvosanaStatus]]) => {
@@ -89,7 +91,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
             case Some(FailureArvosanaStatus(tunniste, _)) =>
               FailureStatus(tunniste, arvosanaStatukset.filter(_.isInstanceOf[FailureArvosanaStatus]).asInstanceOf[Seq[FailureArvosanaStatus]].map(_.t))
             case None =>
-              OkStatus(henkilo._1, tods.foldLeft[Seq[ArvosanaStatus]](Seq())(_ ++ _).asInstanceOf[Seq[OkArvosanaStatus]].groupBy(_.suoritus).map(t => t._1 -> t._2.map(_.id)))
+              OkStatus(henkilo._1, arvosanaStatukset.asInstanceOf[Seq[OkArvosanaStatus]].groupBy(_.suoritus).map(t => t._1 -> t._2.map(_.id)))
           }
         })
       })
