@@ -32,7 +32,7 @@ form(ng-submit="saveTiedot()")
           h2(class="panel-title" oph-msg="suoritusrekisteri.muokkaa.opiskeluoikeudet") Opiskeluoikeudet
         div(class="panel-body")
           ul(class="list-unstyled entrylist")
-            li(ng-repeat="opiskeluoikeus in opiskeluoikeudet")
+            li(ng-repeat="opiskeluoikeus in henkilo.opiskeluoikeudet")
               div(class="row")
                 div(class="col-sm-2")
                   strong(oph-msg="suoritusrekisteri.muokkaa.alkupaiva") Alkupäivä
@@ -51,7 +51,7 @@ form(ng-submit="saveTiedot()")
           h2(class="panel-title" oph-msg="suoritusrekisteri.muokkaa.suoritukset") Suoritukset
         div(class="panel-body")
           ul(class="list-unstyled entrylist")
-            li(ng-repeat="suoritus in suoritukset" class="{{suoritus.delete ? 'delete-suoritus' : ''}}")
+            li(ng-repeat="suoritus in henkilo.suoritukset" class="{{suoritus.delete ? 'delete-suoritus' : ''}}")
               div(class="row")
                 div(class="form-group col-sm-3")
                   strong(oph-msg="suoritusrekisteri.muokkaa.myontaja") Myöntäjä
@@ -98,7 +98,7 @@ form(ng-submit="saveTiedot()")
                   div(ng-hide="suoritus.editable") {{suoritus.tila}}
               div(ng-show="suoritus.editable" class="row")
                 div(class="form-group col-sm-12")
-                  div(ng-include="'templates/muokkaa-arvosanat'")
+                  div(ng-include="'templates/muokkaa-arvosanat'" ng-controller="MuokkaaArvosanat")
                   div(class="pull-right")
                     button(ng-show="isOPH()" type="button" class="btn btn-default arvosana-button" ng-disabled="suoritus.delete" ng-click="suoritus.delete = true")
                       span(oph-msg="suoritusrekisteri.muokkaa.poistasuoritus") Poista
@@ -114,7 +114,7 @@ form(ng-submit="saveTiedot()")
         h2(class="panel-title" oph-msg="suoritusrekisteri.muokkaa.luokkatiedot") Luokkatiedot
       div(class="panel-body")
         ul(class="list-unstyled entrylist")
-          li(ng-repeat="luokkatieto in luokkatiedot" class="{{luokkatieto.delete ? 'delete-luokkatieto' : ''}}")
+          li(ng-repeat="luokkatieto in henkilo.luokkatiedot" class="{{luokkatieto.delete ? 'delete-luokkatieto' : ''}}")
             div(class="row")
               div(class="form-group col-sm-3")
                 strong(oph-msg="suoritusrekisteri.muokkaa.oppilaitos") Oppilaitos

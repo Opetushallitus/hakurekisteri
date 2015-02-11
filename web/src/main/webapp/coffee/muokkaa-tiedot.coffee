@@ -9,14 +9,16 @@ app.factory "MuokkaaTiedot", [
   "LokalisointiService"
   "MurupolkuService"
   "MessageService"
-  "MuokkaaArvosanat"
-  ($location, $http, $log, $q, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService, MuokkaaArvosanat) ->
+  ($location, $http, $log, $q, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService) ->
     muokkaaHenkilo: (henkiloOid, $scope) ->
 
       initializeHenkilotiedot = ->
+        $scope.henkilo = # // main data object
+          suoritukset: []
+          luokkatiedot: []
+          opiskeluoikeudet: []
+          suoritusArvosanaScopes: []
         $scope.myRoles = []
-        $scope.suoritukset = []
-        $scope.luokkatiedot = []
         $scope.luokkatasot = []
         $scope.yksilollistamiset = []
         $scope.tilat = []
@@ -79,7 +81,7 @@ app.factory "MuokkaaTiedot", [
 
       fetchHenkilotiedot = ->
         $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(henkiloOid), { cache: false }).success((henkilo) ->
-          $scope.henkilo = henkilo  if henkilo
+          jQuery.extend($scope.henkilo, henkilo)  if henkilo
           return
         ).error ->
           MessageService.addMessage
@@ -95,12 +97,9 @@ app.factory "MuokkaaTiedot", [
         luokkatieto.editable = true
 
       fetchLuokkatiedot = ->
-        enrich = ->
-          enrichLuokkatieto(l) for l in $scope.luokkatiedot  if $scope.luokkatiedot
-          return
         Opiskelijat.query { henkilo: henkiloOid }, ((luokkatiedot) ->
-          $scope.luokkatiedot = luokkatiedot
-          enrich()
+          $scope.henkilo.luokkatiedot = luokkatiedot
+          enrichLuokkatieto(l) for l in luokkatiedot
         ), ->
           MessageService.addMessage
             type: "danger"
@@ -121,15 +120,11 @@ app.factory "MuokkaaTiedot", [
         return
 
       fetchSuoritukset = ->
-        enrich = ->
-          enrichSuoritus(s) for s in $scope.suoritukset  if $scope.suoritukset
-          return
         Suoritukset.query { henkilo: henkiloOid }, ((suoritukset) ->
-          suoritukset.sort (a, b) ->
-            sortByFinDateDesc a.valmistuminen, b.valmistuminen
-          $scope.suoritukset = suoritukset
-          MuokkaaArvosanat.muokkaaArvosanat($scope.suoritukset[0].id, $scope)
-          enrich()
+          suoritukset.sort (a, b) -> sortByFinDateDesc a.valmistuminen, b.valmistuminen
+          $scope.henkilo.suoritukset = suoritukset
+          for s in suoritukset
+            enrichSuoritus(s)
         ), ->
           MessageService.addMessage {
             type: "danger"
@@ -149,10 +144,10 @@ app.factory "MuokkaaTiedot", [
               getKoulutusNimi $http, opiskeluoikeus.komo, (koulutusNimi) ->
                 opiskeluoikeus.koulutus = koulutusNimi
             return
-          )(opiskeluoikeus) for opiskeluoikeus in $scope.opiskeluoikeudet  if $scope.opiskeluoikeudet
+          )(opiskeluoikeus) for opiskeluoikeus in $scope.henkilo.opiskeluoikeudet  if $scope.henkilo.opiskeluoikeudet
           return
         Opiskeluoikeudet.query { henkilo: henkiloOid }, (opiskeluoikeudet) ->
-          $scope.opiskeluoikeudet = opiskeluoikeudet
+          $scope.henkilo.opiskeluoikeudet = opiskeluoikeudet
           enrich()
 
       initDatepicker = ->
@@ -178,7 +173,8 @@ app.factory "MuokkaaTiedot", [
         Array.isArray($scope.myRoles) and ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1 or $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1)
 
       $scope.saveTiedot = ->
-        $scope.saveArvosanat()
+        for arvosanaScope in $scope.henkilo.suoritusArvosanaScopes
+          arvosanaScope.saveArvosanat()
         validateOppilaitoskoodit = ->
           ((obj) ->
             if not obj["delete"] and obj.editable and not (obj.komo and obj.komo is komo.ylioppilastutkinto)
@@ -212,7 +208,7 @@ app.factory "MuokkaaTiedot", [
                   return
 
             return
-          )(obj) for obj in $scope.luokkatiedot.concat($scope.suoritukset)
+          )(obj) for obj in $scope.henkilo.luokkatiedot.concat($scope.henkilo.suoritukset)
           return
 
         deleteFromArray = (obj, arr) ->
@@ -228,7 +224,7 @@ app.factory "MuokkaaTiedot", [
             if suoritus["delete"]
               if suoritus.id
                 suoritus.$remove (->
-                  deleteFromArray suoritus, $scope.suoritukset
+                  deleteFromArray suoritus, $scope.henkilo.suoritukset
                   $log.debug "suoritus removed"
                   d.resolve "done"
                   return
@@ -244,7 +240,7 @@ app.factory "MuokkaaTiedot", [
                   return
 
               else
-                deleteFromArray suoritus, $scope.suoritukset
+                deleteFromArray suoritus, $scope.henkilo.suoritukset
                 d.resolve "done"
             else
               suoritus.$save (->
@@ -263,7 +259,7 @@ app.factory "MuokkaaTiedot", [
                 return
 
             return
-          )(suoritus) for suoritus in $scope.suoritukset
+          )(suoritus) for suoritus in $scope.henkilo.suoritukset
           return
 
         saveLuokkatiedot = ->
@@ -274,7 +270,7 @@ app.factory "MuokkaaTiedot", [
             if luokkatieto["delete"]
               if luokkatieto.id
                 luokkatieto.$remove (->
-                  deleteFromArray luokkatieto, $scope.luokkatiedot
+                  deleteFromArray luokkatieto, $scope.henkilo.luokkatiedot
                   $log.info "luokkatieto removed"
                   d.resolve "done"
                   return
@@ -290,7 +286,7 @@ app.factory "MuokkaaTiedot", [
                   return
 
               else
-                deleteFromArray luokkatieto, $scope.luokkatiedot
+                deleteFromArray luokkatieto, $scope.henkilo.luokkatiedot
                 d.resolve "done"
             else
               luokkatieto.$save (->
@@ -309,7 +305,7 @@ app.factory "MuokkaaTiedot", [
                 return
 
             return
-          )(luokkatieto) for luokkatieto in $scope.luokkatiedot
+          )(luokkatieto) for luokkatieto in $scope.henkilo.luokkatiedot
           return
         validationPromises = []
         validateOppilaitoskoodit()
@@ -340,7 +336,7 @@ app.factory "MuokkaaTiedot", [
         return
 
       $scope.addSuoritus = ->
-        $scope.suoritukset.push new Suoritukset(
+        $scope.henkilo.suoritukset.push new Suoritukset(
           henkiloOid: henkiloOid
           tila: "KESKEN"
           yksilollistaminen: "Ei"
@@ -376,7 +372,7 @@ app.factory "MuokkaaTiedot", [
         return
 
       $scope.addLuokkatieto = ->
-        $scope.luokkatiedot.push new Opiskelijat(
+        $scope.henkilo.luokkatiedot.push new Opiskelijat(
           henkiloOid: henkiloOid
           oppilaitosOid: null
           editable: true
@@ -386,6 +382,9 @@ app.factory "MuokkaaTiedot", [
         $event.preventDefault()
         $event.stopPropagation()
         obj[fieldName] = true
+
+      $scope.addSuoritusArvosanaScopes = (scope) ->
+        $scope.henkilo.suoritusArvosanaScopes.push scope
 
       initializeHenkilotiedot()
 ]
