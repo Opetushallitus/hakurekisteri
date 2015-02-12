@@ -50,7 +50,7 @@ trait OpiskeluoikeusService extends InMemQueryingResourceService[Opiskeluoikeus,
 
   override val optimize: PartialFunction[Query[Opiskeluoikeus], Future[Seq[Opiskeluoikeus with Identified[UUID]]]] = {
     case OpiskeluoikeusQuery(Some(henkilo), None) =>
-      Future.successful(henkiloIndex.getOrElse(henkilo, Seq()))
+      Future { henkiloIndex.getOrElse(henkilo, Seq()) }
 
     case OpiskeluoikeusQuery(Some(henkilo), myontaja) =>
       val filtered = henkiloIndex.getOrElse(henkilo, Seq())

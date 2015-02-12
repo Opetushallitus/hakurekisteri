@@ -61,10 +61,10 @@ trait OpiskelijaService extends InMemQueryingResourceService[Opiskelija, UUID] w
 
   override val optimize: PartialFunction[Query[Opiskelija], Future[Seq[Opiskelija with Identified[UUID]]]] = {
     case OpiskelijaQuery(Some(henkilo), None, None, None, None, None) =>
-      Future.successful(henkiloIndex.getOrElse(henkilo, Seq()))
+      Future { henkiloIndex.getOrElse(henkilo, Seq()) }
 
     case OpiskelijaQuery(None, None, vuosi, None, Some(oppilaitosOid), None) =>
-      Future.successful(oppilaitosIndex.getOrElse(oppilaitosOid, Seq()).filter(checkVuosiAndKausi(vuosi, None)))
+      Future { oppilaitosIndex.getOrElse(oppilaitosOid, Seq()).filter(checkVuosiAndKausi(vuosi, None)) }
 
     case OpiskelijaQuery(Some(henkilo), kausi, vuosi, paiva, oppilaitosOid, luokka) =>
       val filtered = henkiloIndex.getOrElse(henkilo, Seq())

@@ -70,7 +70,7 @@ trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] w
 
   override val optimize:PartialFunction[Query[FullHakemus], Future[Seq[FullHakemus with Identified[String]]]] = {
     case HakemusQuery(_, None, _, Some(kohde)) =>
-      Future.successful(hakukohdeIndex.getOrElse(kohde, Seq()))
+      Future { hakukohdeIndex.getOrElse(kohde, Seq()) }
     case HakemusQuery(haku, organisaatio, kohdekoodi, Some(kohde)) =>
       val filtered = hakukohdeIndex.getOrElse(kohde, Seq())
       executeQuery(filtered)(HakemusQuery(haku, organisaatio, kohdekoodi, Some(kohde)))

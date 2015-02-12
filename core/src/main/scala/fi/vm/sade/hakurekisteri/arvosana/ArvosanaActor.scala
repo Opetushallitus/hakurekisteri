@@ -45,8 +45,8 @@ trait ArvosanaService extends InMemQueryingResourceService[Arvosana, UUID]  with
 
   override val optimize:PartialFunction[Query[Arvosana], Future[Seq[Arvosana with Identified[UUID]]]] = {
     case ArvosanaQuery(Some(suoritus)) =>
-      Future.successful(suoritusIndex.get(suoritus).getOrElse(Seq()))
-    case ArvosanaQuery(None) => Future.successful(listAll())
+      Future { suoritusIndex.get(suoritus).getOrElse(Seq()) }
+    case ArvosanaQuery(None) => Future { listAll() }
 
   }
 
