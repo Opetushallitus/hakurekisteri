@@ -52,8 +52,8 @@ body #raamit-header .header-content {
 
 #table-scroller {
     overflow-y: auto;
-    height: calc(100vh - 350px);
-    min-height: 300px;
+    height: calc(85vh - 360px);
+    min-height: 360px;
 }
 
 #table-settings {
