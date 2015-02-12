@@ -13,10 +13,13 @@ import scala.concurrent.Future
 trait OpiskelijaRepository extends JournaledRepository[Opiskelija, UUID] {
 
   var henkiloIndex: Map[String, Seq[Opiskelija with Identified[UUID]]] = Option(henkiloIndex).getOrElse(Map())
+  var oppilaitosIndex: Map[String, Seq[Opiskelija with Identified[UUID]]] = Option(oppilaitosIndex).getOrElse(Map())
 
   def addNew(opiskelija: Opiskelija with Identified[UUID]) = {
     henkiloIndex = Option(henkiloIndex).getOrElse(Map())
     henkiloIndex = henkiloIndex  + (opiskelija.henkiloOid -> (opiskelija +: henkiloIndex.getOrElse(opiskelija.henkiloOid, Seq())))
+    oppilaitosIndex = Option(oppilaitosIndex).getOrElse(Map())
+    oppilaitosIndex = oppilaitosIndex + (opiskelija.oppilaitosOid -> (opiskelija +: oppilaitosIndex.getOrElse(opiskelija.oppilaitosOid, Seq())))
   }
 
   override def index(old: Option[Opiskelija with Identified[UUID]], current: Option[Opiskelija with Identified[UUID]]) {
@@ -25,11 +28,19 @@ trait OpiskelijaRepository extends JournaledRepository[Opiskelija, UUID] {
       henkiloIndex = henkiloIndex.get(opiskelija.henkiloOid).
         map(_.filter((a) => a != opiskelija || a.id != opiskelija.id)).
         map((ns) => henkiloIndex + (opiskelija.henkiloOid -> ns)).getOrElse(henkiloIndex)
+
+      oppilaitosIndex = Option(oppilaitosIndex).getOrElse(Map())
+      val opiskelijat = oppilaitosIndex.getOrElse(opiskelija.oppilaitosOid, Seq()).filterNot(_.oppilaitosOid == opiskelija.oppilaitosOid)
+      if (opiskelijat.isEmpty)
+        oppilaitosIndex = oppilaitosIndex - opiskelija.oppilaitosOid
+      else
+        oppilaitosIndex = oppilaitosIndex + (opiskelija.oppilaitosOid -> opiskelijat)
     }
 
     old.foreach(removeOld)
     current.foreach(addNew)
   }
+
 
 }
 
@@ -51,6 +62,9 @@ trait OpiskelijaService extends InMemQueryingResourceService[Opiskelija, UUID] w
   override val optimize: PartialFunction[Query[Opiskelija], Future[Seq[Opiskelija with Identified[UUID]]]] = {
     case OpiskelijaQuery(Some(henkilo), None, None, None, None, None) =>
       Future.successful(henkiloIndex.getOrElse(henkilo, Seq()))
+
+    case OpiskelijaQuery(None, None, vuosi, None, Some(oppilaitosOid), None) =>
+      Future.successful(oppilaitosIndex.getOrElse(oppilaitosOid, Seq()).filter(checkVuosiAndKausi(vuosi, None)))
 
     case OpiskelijaQuery(Some(henkilo), kausi, vuosi, paiva, oppilaitosOid, luokka) =>
       val filtered = henkiloIndex.getOrElse(henkilo, Seq())
