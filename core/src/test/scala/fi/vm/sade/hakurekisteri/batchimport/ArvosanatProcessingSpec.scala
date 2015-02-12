@@ -126,7 +126,6 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
     val arvosanatProcessing = new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)
     val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
-    println(s"messages: ${saved.status.messages}")
     saved.status.messages("111111-111L").find(_.contains("test save exception")) should not be None
 
     import org.scalatest.time.SpanSugar._
