@@ -118,11 +118,6 @@ app.controller "MuokkaaArvosanatYo", [
       yoarvosanaSavePromises = []
       saveArvosanat()
       $q.all(yoarvosanaSavePromises.map (d) -> d.promise).then (->
-        MessageService.addMessage
-          type: "success"
-          messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.tallennettu"
-          message: "Arvosanat tallennettu."
-        return
       ), ->
         MessageService.addMessage
           type: "danger"

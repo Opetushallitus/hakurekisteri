@@ -232,12 +232,10 @@ app.factory "MuokkaaTiedot", [
           ((suoritus) ->
             d = $q.defer()
             muokkaaSavePromises.push d
-            $log.debug "save suoritus: " + suoritus.id  if suoritus.editable
             if suoritus["delete"]
               if suoritus.id
                 suoritus.$remove (->
                   deleteFromArray suoritus, $scope.henkilo.suoritukset
-                  $log.debug "suoritus removed"
                   d.resolve "done"
                   return
                 ), ->
@@ -276,14 +274,12 @@ app.factory "MuokkaaTiedot", [
 
         saveLuokkatiedot = ->
           ((luokkatieto) ->
-            $log.debug "save luokkatieto: " + luokkatieto.id
             d = $q.defer()
             muokkaaSavePromises.push d
             if luokkatieto["delete"]
               if luokkatieto.id
                 luokkatieto.$remove (->
                   deleteFromArray luokkatieto, $scope.henkilo.luokkatiedot
-                  $log.info "luokkatieto removed"
                   d.resolve "done"
                   return
                 ), ->

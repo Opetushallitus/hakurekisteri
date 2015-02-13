@@ -270,13 +270,7 @@ app.controller "MuokkaaArvosanat", [
       arvosanaSavePromises = []
       saveArvosanat()
       $q.all(arvosanaSavePromises.map((d) -> d.promise)).then (->
-        $log.debug "all saved"
-        MessageService.addMessage
-          type: "success"
-          messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennettu"
-          message: "Arvosanat tallennettu."
       ), ->
-        $log.error "saving failed"
         MessageService.addMessage
           type: "danger"
           messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennuseionnistunut"
