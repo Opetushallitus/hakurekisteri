@@ -96,7 +96,7 @@ form(ng-submit="saveTiedot()")
                   strong(oph-msg="suoritusrekisteri.muokkaa.tila") Tila
                   select(ng-show="suoritus.editable" class="form-control input-sm" ng-disabled="suoritus.delete" ng-model="suoritus.tila" required="required" ng-options="t.value as t.text for t in tilat")
                   div(ng-hide="suoritus.editable") {{suoritus.tila}}
-              div(ng-show="suoritus.editable" class="row")
+              div(ng-show="suoritus.editable" ng-if="suoritus.id" class="row")
                 div(class="form-group col-sm-12")
                   div(ng-show="suoritus.komo !== komo.ylioppilastutkinto" ng-include="'templates/muokkaa-arvosanat'" ng-controller="MuokkaaArvosanat")
                   div(ng-show="suoritus.komo === komo.ylioppilastutkinto" ng-include="'templates/muokkaa-arvosanat-yo'" ng-controller="MuokkaaArvosanatYo")
