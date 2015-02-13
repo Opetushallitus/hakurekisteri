@@ -109,7 +109,7 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
         myontajaIndex.filterKeys {
           case (oid, _) if oid == myontaja => true
           case _ => false
-        }.map(entry => myontajaIndex(entry._1)).foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _)
+        }.map(entry => myontajaIndex(entry._1)).foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _).toSet.toSeq
       }
 
     case SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja) =>
