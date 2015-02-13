@@ -167,7 +167,8 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         $scope.allRowsFiltered = $scope.allRows
       else
         customFilter = (input, func) -> x for x in input when func(x)
-        $scope.allRowsFiltered = customFilter($scope.allRows, (x) -> x.sortBy.indexOf(filterInput) > -1)
+        lowerCased = filterInput.toLocaleLowerCase()
+        $scope.allRowsFiltered = customFilter($scope.allRows, (x) -> x.sortBy.toLocaleLowerCase().indexOf(lowerCased) > -1)
 
     $scope.valitseHenkilo = (henkiloOid) ->
       $scope.valittuHenkiloOid = henkiloOid
