@@ -61,7 +61,11 @@ app.factory "MuokkaaTiedot", [
           }
           {
             value: komo.maahanmuuttaja
-            text: getOphMsg("suoritusrekisteri.komo." + komo.maahanmuuttaja, "Maahanmuuttaja")
+            text: getOphMsg("suoritusrekisteri.komo." + komo.maahanmuuttaja, "Maahanmuuttajien ammatilliseen valmistava")
+          }
+          {
+            value: komo.maahanmuuttajalukio
+            text: getOphMsg("suoritusrekisteri.komo." + komo.maahanmuuttajalukio, "Maahanmuuttajien lukioon valmistava")
           }
           {
             value: komo.valmentava
@@ -70,6 +74,14 @@ app.factory "MuokkaaTiedot", [
           {
             value: komo.ylioppilastutkinto
             text: getOphMsg("suoritusrekisteri.komo." + komo.ylioppilastutkinto, "Ylioppilastutkinto")
+          }
+          {
+            value: komo.lukio
+            text: getOphMsg("suoritusrekisteri.komo." + komo.lukio, "Lukio")
+          }
+          {
+            value: komo.ammatillinen
+            text: getOphMsg("suoritusrekisteri.komo." + komo.ammatillinen, "Ammatillinen")
           }
         ]
 
