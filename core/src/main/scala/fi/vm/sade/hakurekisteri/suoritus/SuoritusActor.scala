@@ -91,16 +91,31 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
   }
 
   override val optimize: PartialFunction[Query[Suoritus], Future[Seq[Suoritus with Identified[UUID]]]] = {
-    case SuoritusQuery(Some(henkilo), None, Some(vuosi), None) => Future { tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq()) }
+    case SuoritusQuery(Some(henkilo), None, Some(vuosi), None) =>
+      Future { tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq()) }
+
     case SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja) =>
       val filtered = tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq())
       executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja))
+
     case SuoritusQuery(Some(henkilo), None, None, None) =>
       Future { tiedonSiirtoIndex.get(henkilo).map(_.values.reduce(_ ++ _)).getOrElse(Seq()) }
-    case SuoritusQuery(None, None, Some(vuosi), Some(myontaja)) => Future { myontajaIndex.getOrElse((myontaja, vuosi), Seq()) }
+
+    case SuoritusQuery(None, None, Some(vuosi), Some(myontaja)) =>
+      Future { myontajaIndex.getOrElse((myontaja, vuosi), Seq()) }
+
+    case SuoritusQuery(None, None, None, Some(myontaja)) =>
+      Future {
+        myontajaIndex.filterKeys {
+          case (oid, _) if oid == myontaja => true
+          case _ => false
+        }.map(entry => myontajaIndex(entry._1)).foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _)
+      }
+
     case SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja) =>
       val filtered = tiedonSiirtoIndex.get(henkilo).map(_.values.reduce(_ ++ _)).getOrElse(Seq())
       executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja))
+
     case SuoritysTyyppiQuery(henkilo, komo) => Future {
       (for (
         henk <- suoritusTyyppiIndex.get(henkilo);

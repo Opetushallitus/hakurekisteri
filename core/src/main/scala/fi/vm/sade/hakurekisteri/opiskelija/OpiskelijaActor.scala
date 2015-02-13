@@ -13,13 +13,15 @@ import scala.concurrent.Future
 trait OpiskelijaRepository extends JournaledRepository[Opiskelija, UUID] {
 
   var henkiloIndex: Map[String, Seq[Opiskelija with Identified[UUID]]] = Option(henkiloIndex).getOrElse(Map())
-  var oppilaitosIndex: Map[String, Seq[Opiskelija with Identified[UUID]]] = Option(oppilaitosIndex).getOrElse(Map())
+  var oppilaitosIndex: Map[(String, String), Seq[Opiskelija with Identified[UUID]]] = Option(oppilaitosIndex).getOrElse(Map())
 
   def addNew(opiskelija: Opiskelija with Identified[UUID]) = {
     henkiloIndex = Option(henkiloIndex).getOrElse(Map())
     henkiloIndex = henkiloIndex  + (opiskelija.henkiloOid -> (opiskelija +: henkiloIndex.getOrElse(opiskelija.henkiloOid, Seq())))
     oppilaitosIndex = Option(oppilaitosIndex).getOrElse(Map())
-    oppilaitosIndex = oppilaitosIndex + (opiskelija.oppilaitosOid -> (opiskelija +: oppilaitosIndex.getOrElse(opiskelija.oppilaitosOid, Seq())))
+    val startYear = opiskelija.alkuPaiva.getYear
+    val endYear = opiskelija.loppuPaiva.getOrElse(new DateTime()).getYear
+    for (year <- startYear to endYear) oppilaitosIndex = oppilaitosIndex + ((opiskelija.oppilaitosOid, year.toString) -> (opiskelija +: oppilaitosIndex.getOrElse((opiskelija.oppilaitosOid, year.toString), Seq())))
   }
 
   override def index(old: Option[Opiskelija with Identified[UUID]], current: Option[Opiskelija with Identified[UUID]]) {
@@ -30,11 +32,16 @@ trait OpiskelijaRepository extends JournaledRepository[Opiskelija, UUID] {
         map((ns) => henkiloIndex + (opiskelija.henkiloOid -> ns)).getOrElse(henkiloIndex)
 
       oppilaitosIndex = Option(oppilaitosIndex).getOrElse(Map())
-      val opiskelijat = oppilaitosIndex.getOrElse(opiskelija.oppilaitosOid, Seq()).filterNot(_.oppilaitosOid == opiskelija.oppilaitosOid)
-      if (opiskelijat.isEmpty)
-        oppilaitosIndex = oppilaitosIndex - opiskelija.oppilaitosOid
-      else
-        oppilaitosIndex = oppilaitosIndex + (opiskelija.oppilaitosOid -> opiskelijat)
+      val startYear = opiskelija.alkuPaiva.getYear
+      val endYear = opiskelija.loppuPaiva.getOrElse(new DateTime()).getYear
+      for (year <- startYear to endYear) {
+        val opiskelijat = oppilaitosIndex.getOrElse((opiskelija.oppilaitosOid, year.toString), Seq()).filterNot(_.oppilaitosOid == opiskelija.oppilaitosOid)
+        if (opiskelijat.isEmpty)
+          oppilaitosIndex = oppilaitosIndex - ((opiskelija.oppilaitosOid, year.toString))
+        else
+          oppilaitosIndex = oppilaitosIndex + ((opiskelija.oppilaitosOid, year.toString) -> opiskelijat)
+      }
+
     }
 
     old.foreach(removeOld)
@@ -63,8 +70,14 @@ trait OpiskelijaService extends InMemQueryingResourceService[Opiskelija, UUID] w
     case OpiskelijaQuery(Some(henkilo), None, None, None, None, None) =>
       Future { henkiloIndex.getOrElse(henkilo, Seq()) }
 
-    case OpiskelijaQuery(None, None, vuosi, None, Some(oppilaitosOid), None) =>
-      Future { oppilaitosIndex.getOrElse(oppilaitosOid, Seq()).filter(checkVuosiAndKausi(vuosi, None)) }
+    case OpiskelijaQuery(None, None, Some(vuosi), None, Some(oppilaitosOid), None) =>
+      Future { oppilaitosIndex.getOrElse((oppilaitosOid, vuosi), Seq()) }
+
+    case OpiskelijaQuery(None, None, None, None, Some(oppilaitosOid), None) =>
+      Future { oppilaitosIndex.filterKeys {
+        case (oid, _) if oid == oppilaitosOid => true
+        case _ => false
+      }.map(entry => oppilaitosIndex(entry._1)).foldLeft[Seq[Opiskelija with Identified[UUID]]](Seq())(_ ++ _) }
 
     case OpiskelijaQuery(Some(henkilo), kausi, vuosi, paiva, oppilaitosOid, luokka) =>
       val filtered = henkiloIndex.getOrElse(henkilo, Seq())
