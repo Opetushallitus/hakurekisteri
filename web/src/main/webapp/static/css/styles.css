@@ -50,6 +50,10 @@ body #raamit-header .header-content {
     position: fixed;
 }
 
+#result-filter {
+    width: 18em;
+}
+
 #table-scroller {
     overflow-y: auto;
     height: calc(85vh - 360px);

@@ -19,6 +19,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
 
       $('#henkiloTerm').placeholder();
       $('#organisaatioTerm').placeholder();
+      $('#resultFilter').placeholder();
       $scope.loading = false
       $scope.vuodet = vuodet()
       $scope.henkiloTerm = $routeParams.henkilo
@@ -110,6 +111,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         allRows = unsorted.sort((a, b) -> a.sortBy.localeCompare(b.sortBy))
         $scope.loading = false
         $scope.allRows = allRows
+        $scope.allRowsFiltered = $scope.allRows
         if(allRows.length > 0)
           $scope.valitseHenkilo(allRows[0].henkiloOid)
       ).error(->
@@ -159,6 +161,13 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         oppilaitos: (if $scope.organisaatioTerm then $scope.organisaatioTerm.oppilaitosKoodi else "")
         vuosi: (if $scope.vuosiTerm then $scope.vuosiTerm else "")
       return
+
+    $scope.updateResultFilter = (filterInput) ->
+      if(filterInput.length == 0)
+        $scope.allRowsFiltered = $scope.allRows
+      else
+        customFilter = (input, func) -> x for x in input when func(x)
+        $scope.allRowsFiltered = customFilter($scope.allRows, (x) -> x.sortBy.indexOf(filterInput) > -1)
 
     $scope.valitseHenkilo = (henkiloOid) ->
       $scope.valittuHenkiloOid = henkiloOid
