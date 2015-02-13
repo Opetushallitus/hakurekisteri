@@ -9,10 +9,25 @@ import javax.servlet.http.HttpServletRequest
 import scala.collection.mutable
 import org.fusesource.scalate.util.{StringResource, Resource, ResourceLoader}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.Config
 
 
 class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekisteriStack with ScalateSupport {
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
+
+  lazy val oidit = GuiOidit(
+    yotutkintoKomoOid = Config.yotutkintoKomoOid,
+    perusopetusKomoOid = Config.perusopetusKomoOid,
+    lisaopetusKomoOid = Config.lisaopetusKomoOid,
+    ammattistarttiKomoOid = Config.ammattistarttiKomoOid,
+    valmentavaKomoOid = Config.valmentavaKomoOid,
+    ammatilliseenvalmistavaKomoOid = Config.ammatilliseenvalmistavaKomoOid,
+    ulkomainenkorvaavaKomoOid = Config.ulkomainenkorvaavaKomoOid,
+    lukioKomoOid = Config.lukioKomoOid,
+    ammatillinenKomoOid = Config.ammatillinenKomoOid,
+    lukioonvalmistavaKomoOid = Config.lukioonvalmistavaKomoOid,
+    ylioppilastutkintolautakunta = Config.ytlOrganisaatioOid
+  )
 
   /* wire up the precompiled templates */
   override protected def defaultTemplatePath: List[String] = List("/WEB-INF/templates/views")
@@ -40,8 +55,7 @@ class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekist
 
   get("/") {
     contentType="text/html"
-    jade("/index.jade")
-
+    jade("/index.jade", "oidit" -> oidit)
   }
 
   get("/templates/:template") {
@@ -67,3 +81,15 @@ class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekist
     } orElse serveStaticResource() getOrElse resourceNotFound()
   }
 }
+
+case class GuiOidit(yotutkintoKomoOid: String,
+                    perusopetusKomoOid: String,
+                    lisaopetusKomoOid: String,
+                    ammattistarttiKomoOid: String,
+                    valmentavaKomoOid: String,
+                    ammatilliseenvalmistavaKomoOid: String,
+                    ulkomainenkorvaavaKomoOid: String,
+                    lukioKomoOid: String,
+                    ammatillinenKomoOid: String,
+                    lukioonvalmistavaKomoOid: String,
+                    ylioppilastutkintolautakunta: String)

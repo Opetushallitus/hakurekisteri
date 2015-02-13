@@ -110,16 +110,8 @@ organisaatioServiceUrl = getBaseUrl() + "/organisaatio-service"
 hakuAppServiceUrl = getBaseUrl() + "/haku-app"
 koodistoServiceUrl = getBaseUrl() + "/koodisto-service"
 tarjontaServiceUrl = getBaseUrl() + "/tarjonta-service"
-komo =
-  ulkomainen: "1.2.246.562.13.86722481404"
-  peruskoulu: "1.2.246.562.13.62959769647"
-  lisaopetus: "1.2.246.562.5.2013112814572435044876"
-  ammattistartti: "1.2.246.562.5.2013112814572438136372"
-  maahanmuuttaja: "1.2.246.562.5.2013112814572441001730"
-  valmentava: "1.2.246.562.5.2013112814572435755085"
-  ylioppilastutkinto: "1.2.246.562.5.2013061010184237348007"
-
-ylioppilastutkintolautakunta = "1.2.246.562.10.43628088406"
+komo = komo or {}
+ylioppilastutkintolautakunta = ylioppilastutkintolautakunta or ""
 
 String::hashCode = ->
   hash = 0

@@ -1,3 +1,4 @@
+-@ val oidit: gui.GuiOidit
 doctype
 html(ng-app="myApp")
   head
@@ -8,6 +9,20 @@ html(ng-app="myApp")
     link(type="text/css" href="static/css/styles.css" rel="stylesheet")
     link(type="text/css" href="static/css/css-tyylikirjasto-virkailija.css" rel="stylesheet")
     link(type="text/css" href="static/css/sivumallit.css" rel="stylesheet")
+    script(type="text/javascript")
+      |var komo = {
+      |  ulkomainen: "#{oidit.ulkomainenkorvaavaKomoOid}",
+      |  peruskoulu: "#{oidit.perusopetusKomoOid}",
+      |  lisaopetus: "#{oidit.lisaopetusKomoOid}",
+      |  ammattistartti: "#{oidit.ammattistarttiKomoOid}",
+      |  maahanmuuttaja: "#{oidit.ammatilliseenvalmistavaKomoOid}",
+      |  maahanmuuttajalukio: "#{oidit.lukioonvalmistavaKomoOid}",
+      |  valmentava: "#{oidit.valmentavaKomoOid}",
+      |  ylioppilastutkinto: "#{oidit.yotutkintoKomoOid}",
+      |  ammatillinen: "#{oidit.ammatillinenKomoOid}",
+      |  lukio: "#{oidit.lukioKomoOid}"
+      |};
+      |var ylioppilastutkintolautakunta = "#{oidit.ylioppilastutkintolautakunta}";
     script(type="text/javascript" src="static/js/jquery-2.1.3.min.js")
     script(type="text/javascript" src="static/js/jquery.fileDownload.js")
     script(type="text/javascript" src="static/js/Chart.min.js")

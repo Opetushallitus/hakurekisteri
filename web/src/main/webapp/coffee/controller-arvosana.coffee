@@ -49,7 +49,7 @@ app.controller "ArvosanaCtrl", [
 
     Suoritukset.get { suoritusId: suoritusId }, ((suoritus) ->
         pohjakoulutusFilter = "onperusasteenoppiaine_1"
-        pohjakoulutusFilter = "onlukionoppiaine_1"  if suoritus.komo is komo.ylioppilastutkinto
+        pohjakoulutusFilter = "onlukionoppiaine_1"  if suoritus.komo is komo.lukio
         koodistoPromises = []
 
         $http.get(koodistoServiceUrl + "/rest/json/oppiaineetyleissivistava/koodi/", { cache: true }).success((koodit) ->

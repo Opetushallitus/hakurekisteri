@@ -13,6 +13,12 @@ app.controller "MuokkaaCtrl", [
   "MurupolkuService"
   "MessageService"
   ($scope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService) ->
+    $scope.koulutukset = [{ value: komo.ulkomainen, text: "Ulkomainen" }, { value: komo.peruskoulu, text: "Peruskoulu" },
+      { value: komo.lisaopetus, text: "Perusopetuksen lisäopetus" }, { value: komo.ammattistartti, text: "Ammattistartti" },
+      { value: komo.maahanmuuttaja, text: "Maahanmuuttajien ammatilliseen valmistava" }, { value: komo.maahanmuuttajalukio, text: "Maahanmuuttajien lukioon valmistava" },
+      { value: komo.valmentava, text: "Valmentava" }, { value: komo.ylioppilastutkinto, text: "Ylioppilastutkinto" },
+      { value: komo.lukio, text: "Lukio" }, { value: komo.ammatillinen, text: "Ammatillinen" }]
+
     loadMenuTexts = ->
       $scope.koulutukset = [
         {
@@ -33,7 +39,11 @@ app.controller "MuokkaaCtrl", [
         }
         {
           value: komo.maahanmuuttaja
-          text: getOphMsg("suoritusrekisteri.komo." + komo.maahanmuuttaja, "Maahanmuuttaja")
+          text: getOphMsg("suoritusrekisteri.komo." + komo.maahanmuuttaja, "Maahanmuuttajien ammatilliseen valmistava")
+        }
+        {
+          value: komo.maahanmuuttajalukio
+          text: getOphMsg("suoritusrekisteri.komo." + komo.maahanmuuttajalukio, "Maahanmuuttajien lukioon valmistava")
         }
         {
           value: komo.valmentava
@@ -42,6 +52,14 @@ app.controller "MuokkaaCtrl", [
         {
           value: komo.ylioppilastutkinto
           text: getOphMsg("suoritusrekisteri.komo." + komo.ylioppilastutkinto, "Ylioppilastutkinto")
+        }
+        {
+          value: komo.lukio
+          text: getOphMsg("suoritusrekisteri.komo." + komo.lukio, "Lukio")
+        }
+        {
+          value: komo.ammatillinen
+          text: getOphMsg("suoritusrekisteri.komo." + komo.ammatillinen, "Ammatillinen")
         }
       ]
 
