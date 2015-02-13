@@ -110,8 +110,6 @@ organisaatioServiceUrl = getBaseUrl() + "/organisaatio-service"
 hakuAppServiceUrl = getBaseUrl() + "/haku-app"
 koodistoServiceUrl = getBaseUrl() + "/koodisto-service"
 tarjontaServiceUrl = getBaseUrl() + "/tarjonta-service"
-komo = komo or {}
-ylioppilastutkintolautakunta = ylioppilastutkintolautakunta or ""
 
 String::hashCode = ->
   hash = 0
