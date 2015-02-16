@@ -19,7 +19,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.HenkiloHakijaQuery
 import fi.vm.sade.hakurekisteri.integration.hakemus.FullHakemus
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.web.rest.support.UserNotAuthorized
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, SuoritusQuery, Suoritus}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
@@ -29,6 +29,7 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.{OpiskeluoikeusQuery, Opiskeluoik
 import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaQuery, Opiskelija}
 import org.scalatra.{InternalServerError, CorsSupport, FutureSupport, AsyncResult}
 import org.joda.time.DateTime
+import fi.vm.sade.hakurekisteri.Config
 
 class RekisteritiedotResource(val rekisterit: Registers)
                     (implicit val system: ActorSystem, sw: Swagger)
@@ -114,8 +115,17 @@ class RekisteritiedotResource(val rekisterit: Registers)
 
       val is = tiedotFuture.map(for (
        oppija: Oppija <- _
-      ) yield LightWeightTiedot(oppija.oppijanumero, oppija.opiskelu.sorted(Ordering.by((opiskelija:Opiskelija) => opiskelija.loppuPaiva.getOrElse(farFuture).toDate).reverse).headOption.map(_.luokka), false))
+      ) yield LightWeightTiedot(oppija.oppijanumero, oppija.opiskelu.sorted(Ordering.by((opiskelija:Opiskelija) => opiskelija.loppuPaiva.getOrElse(farFuture).toDate).reverse).headOption.map(_.luokka), hasArvosanat(oppija.suoritukset)))
+
+      val tarkastetut = Set(Config.perusopetusKomoOid, Config.lisaopetusKomoOid, Config.lukioKomoOid)
+
+      def hasArvosanat(todistukset:Seq[Todistus]): Boolean = !todistukset.exists{
+        case Todistus(s: VirallinenSuoritus, arvosanat) if tarkastetut.contains(s.komo) && arvosanat.isEmpty => true
+        case default => false
+      }
     }
+
+
 
 
   }
