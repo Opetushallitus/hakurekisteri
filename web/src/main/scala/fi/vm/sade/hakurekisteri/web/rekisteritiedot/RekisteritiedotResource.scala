@@ -129,7 +129,7 @@ trait TiedotFetcher {
   }
 
 
-  def crossCheck(opiskelijat: Seq[Opiskelija], todistukset: Seq[Todistus]): Future[Set[Oppija]] = {
+  def crossCheck(opiskelijat: Seq[Opiskelija], todistukset: Seq[Todistus])(implicit user: User): Future[Set[Oppija]] = {
     val opiskelijaTiedot = opiskelijat.groupBy(_.henkiloOid)
     val todistusTiedot = todistukset.groupBy(_.suoritus.henkiloOid)
     val found = opiskelijaTiedot.keySet.union(todistusTiedot.keySet)
@@ -140,14 +140,16 @@ trait TiedotFetcher {
           Future.successful(Oppija(henkilo, oppilaitoshistoria, todistukset, Seq(), None))
         case (None, Some(todistukset)) => fetchOpiskelu(henkilo).map(Oppija(henkilo, _, todistukset, Seq(), None))
         case (Some(oppilaitoshistoria), None) => fetchTodistukset(henkilo).map(Oppija(henkilo, oppilaitoshistoria, _, Seq(), None))
+        case (None, None) => throw new RuntimeException("Somehow maps were mutated")
       }
     Future.sequence(all)
   }
 
 
-  def fetchTodistukset(henkilo: String): Future[Seq[Todistus]] = {
-    fetchSuoritukset(henkilo).flatMap(fetchTodistukset)
-  }
+  def fetchTodistukset(henkilo: String)(implicit user: User): Future[Seq[Todistus]] = for (
+    suoritukset <- fetchSuoritukset(henkilo);
+    todistukset <- fetchTodistukset(suoritukset)
+  ) yield todistukset
 
   import akka.pattern.ask
 
