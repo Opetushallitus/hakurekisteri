@@ -114,7 +114,7 @@ class RekisteritiedotResource(val rekisterit: Registers)
 
       val is = tiedotFuture.map(for (
        oppija: Oppija <- _
-      ) yield LightWeightTiedot(oppija.oppijanumero, oppija.opiskelu.sortBy(_.loppuPaiva.getOrElse(farFuture).toDate).reverse.headOption.map(_.luokka), false))
+      ) yield LightWeightTiedot(oppija.oppijanumero, oppija.opiskelu.sorted(Ordering.by((opiskelija:Opiskelija) => opiskelija.loppuPaiva.getOrElse(farFuture).toDate).reverse).headOption.map(_.luokka), false))
     }
 
 
