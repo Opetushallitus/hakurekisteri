@@ -4,7 +4,6 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorSystem, Props}
-import akka.pattern.pipe
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
@@ -12,10 +11,11 @@ import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoKoodiArvot}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
-import fi.vm.sade.hakurekisteri.rest.support.{Query, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.{FailingResourceActor, MockedResourceActor}
+import generators.DataGen
 import org.joda.time.LocalDate
 import org.mockito.Mockito._
 import org.scalatest.concurrent.AsyncAssertions
@@ -23,7 +23,7 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Future, Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext}
 
 class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions with HakurekisteriJsonSupport {
 
@@ -56,6 +56,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
       iWaiter { b.state should be (BatchState.DONE) }
       iWaiter.dismiss()
     }
+    val batch = batchGenerator.generate
     val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchSaveHandler, query = { (q) => Seq(batch) })))
 
     val arvosanatProcessing = new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)
@@ -89,6 +90,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
       iWaiter { b.state should be (BatchState.DONE) }
       iWaiter.dismiss()
     }
+    val batch = batchGenerator.generate
     val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchSaveHandler, query = { (q) => Seq(batch) })))
 
     val arvosanatProcessing = new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)
@@ -122,6 +124,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
       iWaiter { b.state should be (BatchState.DONE) }
       iWaiter.dismiss()
     }
+    val batch = batchGenerator.generate
     val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchSaveHandler, query = { (q) => Seq(batch) })))
 
     val arvosanatProcessing = new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)
@@ -135,83 +138,193 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     system.awaitTermination()
   }
 
+  it should "create a lukio suoritus if it does not exist" in {
+    implicit val system = ActorSystem("test-import-arvosana-batch-processing")
+    implicit val ec: ExecutionContext = system.dispatcher
+
+    val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))
+    val henkiloActor = system.actorOf(Props(new HenkiloActor(henkiloClient)))
+    val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
+
+    val sWaiter = new Waiter()
+    val suoritusHandler = (s: Suoritus) => {
+      sWaiter { s.asInstanceOf[VirallinenSuoritus].komo should be (Config.lukioKomoOid) }
+      sWaiter.dismiss()
+    }
+    val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = suoritusHandler, query = {q => {println("qqq"); Seq()}})))
+    val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
+    val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient)))
+
+    val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana](save = {r => r}, query = { (q) => Seq() })))
+    val batch = batchGeneratorLukio.generate
+    val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = {r => r}, query = { (q) => Seq(batch) })))
+
+    val arvosanatProcessing = new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)
+    arvosanatProcessing.process(batch)
+
+    import org.scalatest.time.SpanSugar._
+    sWaiter.await(timeout(10.seconds), dismissals(1))
+
+    system.shutdown()
+    system.awaitTermination()
+  }
+
   object Fixtures {
     val lahde = "testiarvosanatiedonsiirto"
-    val xml = <arvosanat>
-      <eranTunniste>PKERA3_2015S_05127</eranTunniste>
-      <henkilot>
-        <henkilo>
-          <hetu>111111-111L</hetu>
-          <todistukset>
-            <perusopetus>
-              <valmistuminen>2001-01-01</valmistuminen>
-              <myontaja>05127</myontaja>
-              <suorituskieli>FI</suorituskieli>
-              <AI>
-                <yhteinen>5</yhteinen>
-                <tyyppi>FI</tyyppi>
-              </AI>
-              <A1>
-                <yhteinen>5</yhteinen>
-                <valinnainen>6</valinnainen>
-                <valinnainen>8</valinnainen>
-                <kieli>EN</kieli>
-              </A1>
-              <B1>
-                <yhteinen>5</yhteinen>
-                <kieli>SV</kieli>
-              </B1>
-              <MA>
-                <yhteinen>5</yhteinen>
-                <valinnainen>6</valinnainen>
-                <valinnainen>8</valinnainen>
-              </MA>
-              <KS>
-                <yhteinen>5</yhteinen>
-                <valinnainen>6</valinnainen>
-              </KS>
-              <KE>
-                <yhteinen>5</yhteinen>
-              </KE>
-              <KU>
-                <yhteinen>5</yhteinen>
-              </KU>
-              <KO>
-                <yhteinen>5</yhteinen>
-              </KO>
-              <BI>
-                <yhteinen>5</yhteinen>
-              </BI>
-              <MU>
-                <yhteinen>5</yhteinen>
-              </MU>
-              <LI>
-                <yhteinen>5</yhteinen>
-              </LI>
-              <HI>
-                <yhteinen>5</yhteinen>
-              </HI>
-              <FY>
-                <yhteinen>5</yhteinen>
-              </FY>
-              <YH>
-                <yhteinen>5</yhteinen>
-              </YH>
-              <TE>
-                <yhteinen>5</yhteinen>
-              </TE>
-              <KT>
-                <yhteinen>5</yhteinen>
-              </KT>
-              <GE>
-                <yhteinen>5</yhteinen>
-              </GE>
-            </perusopetus>
-          </todistukset>
-        </henkilo>
-      </henkilot>
-    </arvosanat>
-    val batch: ImportBatch with Identified[UUID] = ImportBatch(xml, Some("foo"), "arvosanat", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
+    val batchGenerator = new DataGen[ImportBatch with Identified[UUID]] {
+      val xml = <arvosanat>
+        <eranTunniste>PKERA3_2015S_05127</eranTunniste>
+        <henkilot>
+          <henkilo>
+            <hetu>111111-111L</hetu>
+            <todistukset>
+              <perusopetus>
+                <valmistuminen>2001-01-01</valmistuminen>
+                <myontaja>05127</myontaja>
+                <suorituskieli>FI</suorituskieli>
+                <AI>
+                  <yhteinen>5</yhteinen>
+                  <tyyppi>FI</tyyppi>
+                </AI>
+                <A1>
+                  <yhteinen>5</yhteinen>
+                  <valinnainen>6</valinnainen>
+                  <valinnainen>8</valinnainen>
+                  <kieli>EN</kieli>
+                </A1>
+                <B1>
+                  <yhteinen>5</yhteinen>
+                  <kieli>SV</kieli>
+                </B1>
+                <MA>
+                  <yhteinen>5</yhteinen>
+                  <valinnainen>6</valinnainen>
+                  <valinnainen>8</valinnainen>
+                </MA>
+                <KS>
+                  <yhteinen>5</yhteinen>
+                  <valinnainen>6</valinnainen>
+                </KS>
+                <KE>
+                  <yhteinen>5</yhteinen>
+                </KE>
+                <KU>
+                  <yhteinen>5</yhteinen>
+                </KU>
+                <KO>
+                  <yhteinen>5</yhteinen>
+                </KO>
+                <BI>
+                  <yhteinen>5</yhteinen>
+                </BI>
+                <MU>
+                  <yhteinen>5</yhteinen>
+                </MU>
+                <LI>
+                  <yhteinen>5</yhteinen>
+                </LI>
+                <HI>
+                  <yhteinen>5</yhteinen>
+                </HI>
+                <FY>
+                  <yhteinen>5</yhteinen>
+                </FY>
+                <YH>
+                  <yhteinen>5</yhteinen>
+                </YH>
+                <TE>
+                  <yhteinen>5</yhteinen>
+                </TE>
+                <KT>
+                  <yhteinen>5</yhteinen>
+                </KT>
+                <GE>
+                  <yhteinen>5</yhteinen>
+                </GE>
+              </perusopetus>
+            </todistukset>
+          </henkilo>
+        </henkilot>
+      </arvosanat>
+      override def generate: ImportBatch with Identified[UUID] =
+        ImportBatch(xml, Some("foo"), "arvosanat", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
+    }
+
+    val batchGeneratorLukio = new DataGen[ImportBatch with Identified[UUID]] {
+      val xmlLukio = <arvosanat>
+        <eranTunniste>LKERA3_2015S_05127</eranTunniste>
+        <henkilot>
+          <henkilo>
+            <hetu>111111-111L</hetu>
+            <todistukset>
+              <lukio>
+                <valmistuminen>2004-01-01</valmistuminen>
+                <myontaja>05127</myontaja>
+                <suorituskieli>FI</suorituskieli>
+                <AI>
+                  <yhteinen>5</yhteinen>
+                  <tyyppi>FI</tyyppi>
+                </AI>
+                <A1>
+                  <yhteinen>5</yhteinen>
+                  <kieli>EN</kieli>
+                </A1>
+                <B1>
+                  <yhteinen>5</yhteinen>
+                  <kieli>SV</kieli>
+                </B1>
+                <MA>
+                  <yhteinen>5</yhteinen>
+                  <laajuus>lyhyt</laajuus>
+                </MA>
+                <BI>
+                  <yhteinen>5</yhteinen>
+                </BI>
+                <GE>
+                  <yhteinen>5</yhteinen>
+                </GE>
+                <FY>
+                  <yhteinen>5</yhteinen>
+                  <laajuus>pitkä</laajuus>
+                </FY>
+                <KE>
+                  <yhteinen>5</yhteinen>
+                </KE>
+                <TE>
+                  <yhteinen>5</yhteinen>
+                </TE>
+                <KT>
+                  <yhteinen>5</yhteinen>
+                </KT>
+                <HI>
+                  <yhteinen>5</yhteinen>
+                </HI>
+                <YH>
+                  <yhteinen>5</yhteinen>
+                </YH>
+                <MU>
+                  <yhteinen>5</yhteinen>
+                </MU>
+                <KU>
+                  <yhteinen>5</yhteinen>
+                </KU>
+                <LI>
+                  <yhteinen>5</yhteinen>
+                </LI>
+                <PS>
+                  <yhteinen>5</yhteinen>
+                </PS>
+                <FI>
+                  <yhteinen>5</yhteinen>
+                </FI>
+              </lukio>
+            </todistukset>
+          </henkilo>
+        </henkilot>
+      </arvosanat>
+      override def generate: ImportBatch with Identified[UUID] =
+        ImportBatch(xmlLukio, Some("foo2"), "arvosanat", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
+    }
 
     def createEndpoint = {
       val result = mock[Endpoint]

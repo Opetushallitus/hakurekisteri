@@ -113,7 +113,7 @@ object Arvosanat extends SchemaDefinition {
 
     <xs:complexType name="LukioAineType">
       <xs:sequence>
-        <xs:element name="arvio" type="arvosana410" maxOccurs="1" minOccurs="1"/>
+        <xs:element name="yhteinen" type="arvosana410" maxOccurs="1" minOccurs="1"/>
       </xs:sequence>
     </xs:complexType>
 
@@ -232,9 +232,9 @@ object Arvosanat extends SchemaDefinition {
 
     <xs:complexType name="SuoritusType">
       <xs:sequence>
-        <xs:element name="valmistuminen" type="xs:date"/>
-        <xs:element name="myontaja" type="koodisto:oppilaitosnumero"/>
-        <xs:element name="suorituskieli" type="koodisto:kieli"/>
+        <xs:element name="valmistuminen" type="xs:date" maxOccurs="1" minOccurs="1"/>
+        <xs:element name="myontaja" type="koodisto:oppilaitosnumero" maxOccurs="1" minOccurs="1"/>
+        <xs:element name="suorituskieli" type="koodisto:kieli" maxOccurs="1" minOccurs="1"/>
       </xs:sequence>
     </xs:complexType>
 
@@ -245,7 +245,7 @@ object Arvosanat extends SchemaDefinition {
             <xs:element name="AI" type="LukioAidinkieliType" maxOccurs="1" minOccurs="1"/>
             <xs:element name="A1" type="LukioKieliType" maxOccurs="1" minOccurs="1"/>
             <xs:element name="A12" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
-            <xs:element name="A2" type="LukioKieliType" maxOccurs="1" minOccurs="1"/>
+            <xs:element name="A2" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="A22" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="B1" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="B2" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>

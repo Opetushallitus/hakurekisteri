@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoKoodiArvot}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus, SuoritusQuery, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import org.joda.time.{DateTime, LocalDate}
 
@@ -76,7 +76,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     }
     def saveTodistus(henkilo: (String, String, Seq[(ImportTodistus, String)]), todistus: (ImportTodistus, String)): Future[Seq[ArvosanaStatus]] = {
       val savedTodistus = for (
-        s <- fetchSuoritus(henkilo._2, todistus._1, todistus._2)
+        s <- fetchSuoritus(henkilo._2, todistus._1, todistus._2, batch.source)
       ) yield for (
           arvosana <- todistus._1.arvosanat
         ) yield saveArvosana(s, arvosana)
@@ -117,16 +117,20 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   private def toArvosana(arvosana: ImportArvosana)(suoritus: UUID)(source: String): Arvosana =
     Arvosana(suoritus, Arvio410(arvosana.arvosana), arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source)
 
-  private def fetchSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String): Future[Suoritus with Identified[UUID]] = {
-    (suoritusrekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid))).mapTo[Seq[Suoritus with Identified[UUID]]].map(_.find(matchSuoritus(todistus))).map {
-      case Some(s) => s
-      case None => throw SuoritusNotFoundException(henkiloOid, todistus, oppilaitosOid)
+  private def fetchSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String, lahde: String): Future[Suoritus with Identified[UUID]] = {
+    (suoritusrekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid))).mapTo[Seq[Suoritus with Identified[UUID]]].map(_.find(matchSuoritus(todistus))).flatMap {
+      case Some(s) => Future.successful(s)
+      case None if todistus.komo == Config.lukioKomoOid => createLukioSuoritus(henkiloOid, todistus, oppilaitosOid, lahde)
+      case None => Future.failed(SuoritusNotFoundException(henkiloOid, todistus, oppilaitosOid))
     }
   }
 
+  private def createLukioSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String, lahde: String): Future[Suoritus with Identified[UUID]] =
+    (suoritusrekisteri ? VirallinenSuoritus(todistus.komo, oppilaitosOid, "KESKEN", todistus.valmistuminen, henkiloOid, yksilollistaminen.Ei, todistus.suoritusKieli, None, vahv = true, lahde)).mapTo[Suoritus with Identified[UUID]]
+
   private def matchSuoritus(todistus: ImportTodistus)(suoritus: Suoritus): Boolean = (todistus, suoritus) match {
-    case (ImportTodistus(Config.perusopetusKomoOid, _, _, v), s: VirallinenSuoritus) if s.komo == Config.perusopetusKomoOid && s.valmistuminen == v => true
-    case (ImportTodistus(Config.lisaopetusKomoOid, _, _, v), s: VirallinenSuoritus) if s.komo == Config.lisaopetusKomoOid && s.valmistuminen == v => true
+    case (ImportTodistus(Config.perusopetusKomoOid, _, _, v, _), s: VirallinenSuoritus) if s.komo == Config.perusopetusKomoOid && s.valmistuminen == v => true
+    case (ImportTodistus(Config.lisaopetusKomoOid, _, _, v, _), s: VirallinenSuoritus) if s.komo == Config.lisaopetusKomoOid && s.valmistuminen == v => true
     case _ => false
   }
 
@@ -162,7 +166,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   case class SuoritusNotFoundException(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String) extends Exception(s"suoritus not found for henkilo $henkiloOid with myontaja $oppilaitosOid for todistus $todistus")
   object HenkiloTunnisteNotSupportedException extends Exception("henkilo tunniste not yet supported in arvosana batch")
   case class ImportArvosana(aine: String, arvosana: String, lisatieto: Option[String], valinnainen: Boolean)
-  case class ImportTodistus(komo: String, myontaja: String, arvosanat: Seq[ImportArvosana], valmistuminen: LocalDate)
+  case class ImportTodistus(komo: String, myontaja: String, arvosanat: Seq[ImportArvosana], valmistuminen: LocalDate, suoritusKieli: String)
   case class ImportArvosanaHenkilo(tunniste: ImportTunniste, todistukset: Seq[ImportTodistus])
   object ImportArvosanaHenkilo {
     def getField(name: String)(h: Node): String = (h \ name).head.text
@@ -184,9 +188,8 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     def todistus(name: String, komoOid: String, oppijanumero: Option[String])(h: Node)(lahde: String)(oppiaineet: Seq[String]): Option[ImportTodistus] = (h \ name).headOption.map(s => {
       val valmistuminen = getField("valmistuminen")(s)
       val myontaja = getField("myontaja")(s)
-      // TODO käytetäänkö suorituskieltä?
-      // val suoritusKieli = getField("suoritusKieli")(s)
-      ImportTodistus(komoOid, myontaja, arvosanat(s)(oppiaineet), new LocalDate(valmistuminen))
+      val suoritusKieli = getField("suorituskieli")(s)
+      ImportTodistus(komoOid, myontaja, arvosanat(s)(oppiaineet), new LocalDate(valmistuminen), suoritusKieli)
     })
 
     val tyypit = Map(
