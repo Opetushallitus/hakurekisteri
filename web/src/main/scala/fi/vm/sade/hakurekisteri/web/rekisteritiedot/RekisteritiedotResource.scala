@@ -28,6 +28,7 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenQuery, Ensikerta
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{OpiskeluoikeusQuery, Opiskeluoikeus}
 import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaQuery, Opiskelija}
 import org.scalatra.{InternalServerError, CorsSupport, FutureSupport, AsyncResult}
+import org.joda.time.DateTime
 
 class RekisteritiedotResource(val rekisterit: Registers)
                     (implicit val system: ActorSystem, sw: Swagger)
@@ -96,6 +97,31 @@ class RekisteritiedotResource(val rekisterit: Registers)
 
   }
 
+
+  val farFuture = new DateTime(new DateTime(32503593600000L)) //quick hack (31.12.2999/00:00:00)
+
+  get("/light") {
+    val t0 = Platform.currentTime
+    implicit val user = getUser
+    val q = queryForParams(params)
+
+    new AsyncResult() {
+      override implicit def timeout: Duration = 500.seconds
+
+      private val tiedotFuture = fetchTiedot(q)
+
+      logQuery(q, t0, tiedotFuture)
+
+      val is = tiedotFuture.map(for (
+       oppija: Oppija <- _
+      ) yield LightWeightTiedot(oppija.oppijanumero, oppija.opiskelu.sortBy(_.loppuPaiva.getOrElse(farFuture).toDate).reverse.headOption.map(_.luokka), false))
+    }
+
+
+  }
+
+
+
   incident {
     case t: VirtaConnectionErrorException => (id) => InternalServerError(IncidentReport(id, "virta error"))
   }
@@ -108,7 +134,10 @@ trait TiedotFetcher {
   protected implicit def executor: ExecutionContext
   implicit val defaultTimeout: Timeout
 
-  def fetchTodistuksetFor(query: RekisteriQuery)(implicit user: User):Future[Seq[Todistus]] = fetchSuoritukset(query).flatMap(fetchTodistukset)
+  def fetchTodistuksetFor(query: RekisteriQuery)(implicit user: User):Future[Seq[Todistus]] = for (
+    suoritukset <- fetchSuoritukset(query);
+    todistukset <- fetchTodistukset(suoritukset)
+  ) yield todistukset
 
 
 
@@ -186,3 +215,6 @@ trait TiedotFetcher {
 }
 
 case class RekisteriQuery(oppilaitosOid: Option[String], vuosi: Option[String])
+
+
+case class LightWeightTiedot(henkilo: String, luokka: Option[String], arvosanat: Boolean)
