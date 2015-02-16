@@ -31,7 +31,7 @@ import org.scalatra.{InternalServerError, CorsSupport, FutureSupport, AsyncResul
 
 class RekisteritiedotResource(val rekisterit: Registers)
                     (implicit val system: ActorSystem, sw: Swagger)
-  extends HakuJaValintarekisteriStack with TiedotFetcher with OppijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with QueryLogging {
+  extends HakuJaValintarekisteriStack with TiedotFetcher with RekisteritiedotSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with QueryLogging {
 
   override protected def applicationDescription: String = "Oppijan tietojen koosterajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw

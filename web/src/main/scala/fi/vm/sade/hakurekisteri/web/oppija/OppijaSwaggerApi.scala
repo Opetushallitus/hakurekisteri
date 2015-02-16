@@ -5,23 +5,11 @@ import fi.vm.sade.hakurekisteri.web.arvosana.ArvosanaSwaggerModel
 import fi.vm.sade.hakurekisteri.web.opiskelija.OpiskelijaSwaggerModel
 import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.OpiskeluoikeusSwaggerModel
 import fi.vm.sade.hakurekisteri.web.suoritus.SuoritusSwaggerModel
-import fi.vm.sade.hakurekisteri.web.rest.support.{ModelResponseMessage, IncidentReportSwaggerModel}
+import fi.vm.sade.hakurekisteri.web.rest.support.{OldSwaggerSyntax, ModelResponseMessage, IncidentReportSwaggerModel}
 import fi.vm.sade.hakurekisteri.oppija.Oppija
 
-trait OppijaSwaggerApi extends SwaggerSupport with ArvosanaSwaggerModel with SuoritusSwaggerModel with OpiskelijaSwaggerModel with OpiskeluoikeusSwaggerModel with IncidentReportSwaggerModel {
+trait OppijaSwaggerApi extends SwaggerSupport with OppijaSwaggerModel with ArvosanaSwaggerModel with SuoritusSwaggerModel with OpiskelijaSwaggerModel with OpiskeluoikeusSwaggerModel with IncidentReportSwaggerModel {
 
-  val oppijaFields = Seq(
-    ModelField("oppijanumero", null, DataType.String),
-    ModelField("opiskelu", null, DataType.GenList(DataType("Opiskelija"))),
-    ModelField("suoritukset", null, DataType.GenList(DataType("Todistus"))),
-    ModelField("opiskeluoikeudet", null, DataType.GenList(DataType("Opiskeluoikeus"))),
-    ModelField("ensikertalainen", null, DataType.Boolean, required = false)
-  )
-
-  val todistusFields = Seq(
-    ModelField("suoritus", null, DataType("Suoritus")),
-    ModelField("arvosanat", null, DataType.GenList(DataType("Arvosana")))
-  )
 
   registerModel(arvioModel)
   registerModel(arvosanaModel)
@@ -30,8 +18,9 @@ trait OppijaSwaggerApi extends SwaggerSupport with ArvosanaSwaggerModel with Suo
   registerModel(vapaamuotoinenSuoritusModel)
   registerModel(opiskelijaModel)
   registerModel(opiskeluoikeusModel)
-  registerModel(Model("Todistus", "Todistus", todistusFields.map(t => (t.name, t)).toMap))
-  registerModel(Model("Oppija", "Oppija", oppijaFields.map(t => (t.name, t)).toMap))
+
+  registerModel(todistusModel)
+  registerModel(oppijaModel)
 
   val query = apiOperation[Seq[Oppija]]("haeOppijat")
     .summary("näyttää oppijoiden tiedot")
@@ -52,5 +41,28 @@ trait OppijaSwaggerApi extends SwaggerSupport with ArvosanaSwaggerModel with Suo
     .responseMessage(ModelResponseMessage(500, "virta error"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
+
+}
+
+
+trait OppijaSwaggerModel extends OldSwaggerSyntax  {
+
+  val oppijaFields = Seq(
+    ModelField("oppijanumero", null, DataType.String),
+    ModelField("opiskelu", null, DataType.GenList(DataType("Opiskelija"))),
+    ModelField("suoritukset", null, DataType.GenList(DataType("Todistus"))),
+    ModelField("opiskeluoikeudet", null, DataType.GenList(DataType("Opiskeluoikeus"))),
+    ModelField("ensikertalainen", null, DataType.Boolean, required = false)
+  )
+
+  val todistusFields = Seq(
+    ModelField("suoritus", null, DataType("Suoritus")),
+    ModelField("arvosanat", null, DataType.GenList(DataType("Arvosana")))
+  )
+
+  def todistusModel = Model("Todistus", "Todistus", todistusFields.map(t => (t.name, t)).toMap)
+  def oppijaModel = Model("Oppija", "Oppija", oppijaFields.map(t => (t.name, t)).toMap)
+
+
 
 }
