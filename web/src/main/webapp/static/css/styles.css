@@ -77,6 +77,13 @@ body #raamit-header .header-content {
     color: #fff;
 }
 
+#save-button {
+    text-align: right;
+    position: fixed;
+    bottom:10vh;
+    right: 10vw;
+}
+
 .loading-large {
     background-image: url('../img/ajax-loader-large.gif');
     height: 32px;

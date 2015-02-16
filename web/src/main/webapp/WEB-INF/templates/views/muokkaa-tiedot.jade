@@ -172,8 +172,7 @@ form(ng-submit="saveTiedot()")
               span(oph-msg="suoritusrekisteri.muokkaa.uusiluokkatieto") Lisää uusi luokkatieto
               span(class="glyphicon glyphicon-plus")
 
-  div(class="row" style="text-align: center; padding-bottom: 20px")
-    aside(class="col-sm-12")
-      button(type="submit" class="btn btn-primary")
-        span(oph-msg="suoritusrekisteri.muokkaa.tallenna") Tallenna tiedot
-        span(class="glyphicon glyphicon-saved")
+  div(class="row" id="save-button")
+    button(type="submit" class="btn btn-primary")
+      span(oph-msg="suoritusrekisteri.muokkaa.tallenna") Tallenna
+      span(class="glyphicon glyphicon-saved")
