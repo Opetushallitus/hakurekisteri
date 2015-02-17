@@ -14,7 +14,7 @@ import fi.vm.sade.hakurekisteri.batchimport.BatchState._
 import fi.vm.sade.hakurekisteri.integration.organisaatio._
 import akka.actor.Status.Failure
 import scala.Some
-import fi.vm.sade.hakurekisteri.integration.henkilo.{HenkiloActor, SavedHenkilo, SaveHenkilo, CheckHenkilo}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{HenkiloActor, SavedHenkilo, SaveHenkilo, UpdateHenkilo}
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
 import java.io.{ObjectInputStream, ObjectOutputStream, IOException}
@@ -27,13 +27,13 @@ import scala.Some
 import fi.vm.sade.hakurekisteri.integration.henkilo.SavedHenkilo
 import fi.vm.sade.hakurekisteri.integration.henkilo.SaveHenkilo
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
-import fi.vm.sade.hakurekisteri.integration.henkilo.CheckHenkilo
+import fi.vm.sade.hakurekisteri.integration.henkilo.UpdateHenkilo
 import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
 import fi.vm.sade.hakurekisteri.integration.EndpointRequest
 import fi.vm.sade.hakurekisteri.integration.ServiceConfig
 import akka.actor.Status.Failure
 import scala.Some
-import fi.vm.sade.hakurekisteri.integration.henkilo.CheckHenkilo
+import fi.vm.sade.hakurekisteri.integration.henkilo.UpdateHenkilo
 import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
 import fi.vm.sade.hakurekisteri.integration.henkilo.SavedHenkilo
 import fi.vm.sade.hakurekisteri.integration.henkilo.SaveHenkilo
@@ -43,7 +43,7 @@ import fi.vm.sade.hakurekisteri.integration.ServiceConfig
 import akka.actor.Status.Failure
 import scala.Some
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
-import fi.vm.sade.hakurekisteri.integration.henkilo.CheckHenkilo
+import fi.vm.sade.hakurekisteri.integration.henkilo.UpdateHenkilo
 import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Oppilaitos
 import fi.vm.sade.hakurekisteri.integration.henkilo.SavedHenkilo
@@ -263,7 +263,7 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
         log.debug(s"saving $tunniste")
         sender ! SavedHenkilo("1.2.3.4.5", tunniste)
 
-      case CheckHenkilo(oid) =>
+      case UpdateHenkilo(oid, _) =>
         log.debug(s"checking $oid")
         sender ! SavedHenkilo(oid, oid)
     }

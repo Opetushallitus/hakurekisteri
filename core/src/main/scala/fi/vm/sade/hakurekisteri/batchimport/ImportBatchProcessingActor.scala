@@ -123,26 +123,36 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
 
   private def saveHenkilo(h: ImportHenkilo, resolveOid: (String) => String) = h.tunniste match {
     case ImportOppijanumero(oppijanumero) =>
-      henkiloActor ! CheckHenkilo(h.tunniste.tunniste)
-    // FIXME henkilö oidilla tuleville henkilöille ei päivitetä organisaatiohenkilöä henkilöpalveluun
+      val opiskelija: Opiskelija = createOpiskelija(oppijanumero, h)
+      henkiloActor ! UpdateHenkilo(oppijanumero, Some(OrganisaatioHenkilo(
+        organisaatioOid = resolveOid(h.lahtokoulu),
+        organisaatioHenkiloTyyppi = "OPISKELIJA",
+        voimassaAlkuPvm = opiskelija.alkuPaiva.toString("yyyy-MM-dd"),
+        voimassaLoppuPvm = opiskelija.loppuPaiva.getOrElse(new LocalDate().toDateTimeAtStartOfDay).toString("yyyy-MM-dd"),
+        tehtavanimike = h.luokka
+      )))
 
-    case _ =>
-      henkiloActor ! SaveHenkilo(h.toHenkilo(resolveOid), h.tunniste.tunniste)
+    case t =>
+      henkiloActor ! SaveHenkilo(h.toHenkilo(resolveOid), t.tunniste)
   }
 
-  private def saveOpiskelija(henkiloOid: String, importHenkilo: ImportHenkilo) = {
-    val currentMonth = new LocalDate().monthOfYear().get
-    val alku = new DateTime().withDayOfMonth(1).withMonthOfYear(8).withMillisOfDay(0)
-    val loppu = new DateTime().withDayOfMonth(1).withMonthOfYear(6).withMillisOfDay(0)
-    val opiskelija = Opiskelija(
+  import ImportHenkilo.opiskelijaAlkuPaiva
+  import ImportHenkilo.opiskelijaLoppuPaiva
+
+  private def createOpiskelija(henkiloOid: String, importHenkilo: ImportHenkilo): Opiskelija = {
+    Opiskelija(
       oppilaitosOid = organisaatiot(importHenkilo.lahtokoulu).get.oid,
       luokkataso = detectLuokkataso(importHenkilo.suoritukset),
       luokka = importHenkilo.luokka,
       henkiloOid = henkiloOid,
-      alkuPaiva = if (currentMonth > 6) alku else alku.minusYears(1),
-      loppuPaiva = if (currentMonth > 6) Some(loppu.plusYears(1)) else Some(loppu),
+      alkuPaiva = opiskelijaAlkuPaiva,
+      loppuPaiva = Some(opiskelijaLoppuPaiva),
       source = b.source
     )
+  }
+
+  private def saveOpiskelija(henkiloOid: String, importHenkilo: ImportHenkilo) = {
+    val opiskelija = createOpiskelija(henkiloOid, importHenkilo)
     sentOpiskelijat = sentOpiskelijat :+ opiskelija
     opiskelijarekisteri ! opiskelija
   }
@@ -355,6 +365,10 @@ case class ImportHenkilo(tunniste: ImportTunniste, lahtokoulu: String, luokka: S
           (toSyntymaAika(hetu), Some(mies))
       case _ => (None, None)
     }
+
+    import ImportHenkilo.opiskelijaAlkuPaiva
+    import ImportHenkilo.opiskelijaLoppuPaiva
+
     CreateHenkilo(
       etunimet = etunimet,
       kutsumanimi = kutsumanimi,
@@ -368,7 +382,13 @@ case class ImportHenkilo(tunniste: ImportTunniste, lahtokoulu: String, luokka: S
       aidinkieli = Kieli(aidinkieli.toLowerCase),
       henkiloTyyppi = "OPPIJA",
       kasittelijaOid = lahde,
-      organisaatioHenkilo = Seq(OrganisaatioHenkilo(resolveOid(lahtokoulu)))
+      organisaatioHenkilo = Seq(OrganisaatioHenkilo(
+        organisaatioOid = resolveOid(lahtokoulu),
+        organisaatioHenkiloTyyppi = "OPISKELIJA",
+        voimassaAlkuPvm = opiskelijaAlkuPaiva.toString("yyyy-MM-dd"),
+        voimassaLoppuPvm = opiskelijaLoppuPaiva.toString("yyyy-MM-dd"),
+        tehtavanimike = luokka
+      ))
     )
   }
 }
@@ -376,6 +396,16 @@ case class ImportHenkilo(tunniste: ImportTunniste, lahtokoulu: String, luokka: S
 object ImportHenkilo {
   def getField(name: String)(h: Node): String = (h \ name).head.text
   def getOptionField(name: String)(h: Node): Option[String] = (h \ name).headOption.flatMap(_.text.blankOption)
+  def opiskelijaAlkuPaiva: DateTime = {
+    val currentMonth = new LocalDate().monthOfYear().get
+    val alku = new DateTime().withDayOfMonth(1).withMonthOfYear(8).withMillisOfDay(0)
+    if (currentMonth > 6) alku else alku.minusYears(1)
+  }
+  def opiskelijaLoppuPaiva: DateTime = {
+    val currentMonth = new LocalDate().monthOfYear().get
+    val loppu = new DateTime().withDayOfMonth(1).withMonthOfYear(6).withMillisOfDay(0)
+    if (currentMonth > 6) loppu.plusYears(1) else loppu
+  }
   def suoritus(name: String, komoOid: String, oppijanumero: Option[String], yksilollistetty: Boolean)(h: Node)(lahde: String): Option[VirallinenSuoritus] = (h \ name).headOption.map(s => {
     val valmistuminen = getField("valmistuminen")(s)
     val myontaja = getField("myontaja")(s)

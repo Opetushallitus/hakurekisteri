@@ -13,7 +13,11 @@ import scala.concurrent.duration._
 
 case class Kieli(kieliKoodi: String, kieliTyyppi: Option[String] = None)
 
-case class OrganisaatioHenkilo(organisaatioOid: String)
+case class OrganisaatioHenkilo(organisaatioOid: String,
+                               organisaatioHenkiloTyyppi: String,
+                               voimassaAlkuPvm: String,
+                               voimassaLoppuPvm: String,
+                               tehtavanimike: String)
 
 case class CreateHenkilo(etunimet: String,
                          kutsumanimi: String,
@@ -38,7 +42,7 @@ case class Henkilo(oidHenkilo: String,
 case class SaveHenkilo(henkilo: CreateHenkilo, tunniste: String)
 case class SavedHenkilo(henkiloOid: String, tunniste: String)
 case class HenkiloSaveFailed(tunniste: String, t: Throwable)
-case class CheckHenkilo(henkiloOid: String)
+case class UpdateHenkilo(henkiloOid: String, organisaatioHenkilo: Option[OrganisaatioHenkilo])
 
 case class HenkiloSearchResponse(totalCount: Int, results: Seq[Henkilo])
 
@@ -50,6 +54,10 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with Actor
   implicit val ec: ExecutionContext = context.dispatcher
   val maxRetries = Config.httpClientMaxRetries
   var savingHenkilo = false
+
+  def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
+    henkiloClient.postObject[OrganisaatioHenkilo, OrganisaatioHenkilo](s"/resources/henkilo/$oidHenkilo/organisaatiohenkilo", 200, organisaatioHenkilo)
+  }
 
   import HetuUtil.Hetu
 
@@ -88,12 +96,17 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with Actor
     case s: SaveHenkilo if savingHenkilo =>
       context.system.scheduler.scheduleOnce(50.milliseconds, self, s)(ec, sender())
 
-    case CheckHenkilo(henkiloOid) =>
+    case UpdateHenkilo(henkiloOid, organisaatioHenkilo) =>
       def notFound(t: Throwable) = t match {
         case PreconditionFailedException(_, 500) => true
         case _ => false
       }
-      henkiloClient.readObject[Henkilo](s"/resources/s2s/${URLEncoder.encode(henkiloOid, "UTF-8")}", 200).map(h => SavedHenkilo(h.oidHenkilo, henkiloOid)).recoverWith {
+      henkiloClient.readObject[Henkilo](s"/resources/s2s/${URLEncoder.encode(henkiloOid, "UTF-8")}", 200).flatMap(h => {
+        organisaatioHenkilo match {
+          case Some(o) => createOrganisaatioHenkilo(h.oidHenkilo, o).map(oh => SavedHenkilo(h.oidHenkilo, henkiloOid))
+          case None => Future.successful(SavedHenkilo(h.oidHenkilo, henkiloOid))
+        }
+      }).recoverWith {
         case t: ExecutionException if t.getCause != null && notFound(t.getCause) => Future.failed(HenkiloNotFoundException(henkiloOid))
       } pipeTo sender
   }
