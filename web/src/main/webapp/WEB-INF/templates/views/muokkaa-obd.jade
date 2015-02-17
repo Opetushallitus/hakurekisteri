@@ -43,6 +43,8 @@ aside(class="row")
                 td() {{row.henkilo}}
                 td()
                   span(ng-repeat="o in row.opiskelijat") {{o.luokka}}
+                td(ng-if="!row.hasArvosana")
+                  span(ng-repeat="o in row.opiskelijat") puuttuu
 
   div(class="col-sm-9 col-sm-offset-3")
     div(ng-if="valittuHenkiloOid")

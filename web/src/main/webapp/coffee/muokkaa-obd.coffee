@@ -7,12 +7,13 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
   "$q"
   "$cookies"
   "Opiskelijat"
+  "RekisteriTiedot"
   "Suoritukset"
   "Arvosanat"
   "MurupolkuService"
   "MessageService"
   "MuokkaaTiedot"
-  ($scope, $routeParams, $location, $log, $http, $q, $cookies, Opiskelijat, Suoritukset, Arvosanat, MurupolkuService, MessageService, MuokkaaTiedot) ->
+  ($scope, $routeParams, $location, $log, $http, $q, $cookies, Opiskelijat, RekisteriTiedot, Suoritukset, Arvosanat, MurupolkuService, MessageService, MuokkaaTiedot) ->
 
     initializeSearch = ->
       MessageService.clearMessages()
@@ -86,8 +87,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
       $scope.allRows = []
       $scope.loading = true
       $q.all([
-        searchOpiskelijat(query).promise
-        searchSuoritukset(query).promise
+        searchRekisteriTiedot(query).promise
       ]).then ((results) ->
         showCurrentRows collectHenkilot(collect(results))
       ), (errors) ->
@@ -107,6 +107,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           henkilo.henkilo = henkiloTieto.sukunimi + ", " + henkiloTieto.etunimet + " (" + ((if henkiloTieto.hetu then henkiloTieto.hetu else henkiloTieto.syntymaaika)) + ")"
           henkilo.luokka = henkilo.opiskelijat.map((o) -> o.luokka).join(" ")
           henkilo.sortBy = "#{henkilo.luokka};#{henkilo.henkilo}"
+          henkilo.hasArvosana = henkilo.opiskelijat[0].arvosanat
           unsorted.push henkilo
         allRows = unsorted.sort((a, b) -> a.sortBy.localeCompare(b.sortBy))
         $scope.loading = false
@@ -132,7 +133,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
     , true
 
     $scope.getOppilaitos = (searchStr, obj) ->
-      return [{organisaatio: {nimi: {fi: "suomi jee"}}}]  if (obj and typeof obj.organisaatio is "object") and obj.organisaatio.oppilaitosKoodi is searchStr
+      return [{organisaatio: {nimi: {fi: "suomi"}}}]  if (obj and typeof obj.organisaatio is "object") and obj.organisaatio.oppilaitosKoodi is searchStr
       if searchStr and searchStr.length >= 3
         $http.get(organisaatioServiceUrl + "/rest/organisaatio/v2/hae",
           params:
@@ -174,40 +175,21 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
       $scope.valittuHenkiloOid = henkiloOid
       MuokkaaTiedot.muokkaaHenkilo(henkiloOid, $scope)
 
-    searchOpiskelijat = (query) ->
-      o = $q.defer()
-      Opiskelijat.query query, ((result) ->
-        o.resolve { opiskelijat: result }
+    searchRekisteriTiedot = (query) ->
+      r = $q.defer()
+      RekisteriTiedot.query query, ((result) ->
+        r.resolve { rekisteriTiedot: result }
       ), ->
-        o.reject "opiskelija query failed"
-      o
-
-    searchSuoritukset = (query) ->
-      s = $q.defer()
-      suoritusQuery =
-        myontaja: query.oppilaitosOid
-        henkilo: (if query.henkilo then query.henkilo else null)
-        vuosi: (if query.vuosi then query.vuosi else null)
-      Suoritukset.query suoritusQuery, ((result) ->
-        s.resolve { suoritukset: result }
-      ), ->
-        s.reject "suoritus query failed"
-      s
+        r.reject "opiskelija query failed"
+      r
 
     collectHenkilot = (obj) ->
       res = {}
-      if Array.isArray obj.opiskelijat
-        for o in obj.opiskelijat
-          oid = o.henkiloOid
-          henkilo = res[oid] || (res[oid]={henkiloOid: oid, opiskelijat: []})
+      if Array.isArray obj.rekisteriTiedot
+        for o in obj.rekisteriTiedot
+          oid = o.henkilo
+          henkilo = res[oid] || (res[oid]= {henkiloOid: oid, opiskelijat: []})
           henkilo.opiskelijat.push o
-      if Array.isArray obj.suoritukset
-        for s in obj.suoritukset
-          oid = s.henkiloOid
-          if !(henkilo = res[oid])
-            henkilo = res[oid] = {henkiloOid: oid, opiskelijat: []}
-          suoritukset = henkilo.suoritukset || (henkilo.suoritukset = [])
-          suoritukset.push s
       res
 
     initializeSearch()

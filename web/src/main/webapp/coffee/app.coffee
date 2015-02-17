@@ -77,6 +77,23 @@ app.factory "Arvosanat", ($resource) ->
       timeout: 15000
   }
 
+app.factory "RekisteriTiedot", ($resource) ->
+  $resource "rest/v1/rekisteritiedot/light:opiskelijaId", { opiskelijaId: "@id" }, {
+    query:
+      method: "GET"
+      isArray: true
+      cache: false
+      timeout: 55000
+
+    save:
+      method: "POST"
+      timeout: 30000
+
+    remove:
+      method: "DELETE"
+      timeout: 15000
+  }
+
 
 app.factory "MurupolkuService", ->
   murupolku = []
