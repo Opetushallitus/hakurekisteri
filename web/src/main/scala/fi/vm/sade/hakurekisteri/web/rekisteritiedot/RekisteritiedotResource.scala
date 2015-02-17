@@ -99,8 +99,6 @@ class RekisteritiedotResource(val rekisterit: Registers)
   }
 
 
-  val farFuture = new DateTime(new DateTime(32503593600000L)) //quick hack (31.12.2999/00:00:00)
-
   get("/light") {
     val t0 = Platform.currentTime
     implicit val user = getUser
