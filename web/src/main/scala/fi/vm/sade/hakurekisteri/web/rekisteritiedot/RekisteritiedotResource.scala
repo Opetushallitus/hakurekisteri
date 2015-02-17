@@ -115,7 +115,7 @@ class RekisteritiedotResource(val rekisterit: Registers)
 
       val is = tiedotFuture.map(for (
        oppija: Oppija <- _
-      ) yield LightWeightTiedot(oppija.oppijanumero, oppija.opiskelu.sorted(Ordering.by((opiskelija:Opiskelija) => opiskelija.loppuPaiva.getOrElse(farFuture).toDate).reverse).headOption.map(_.luokka), hasArvosanat(oppija.suoritukset)))
+      ) yield LightWeightTiedot(oppija.oppijanumero, oppija.opiskelu.map(_.luokka).mkString(", ").blankOption, hasArvosanat(oppija.suoritukset)))
 
       val tarkastetut = Set(Config.perusopetusKomoOid, Config.lisaopetusKomoOid, Config.lukioKomoOid)
 
@@ -153,9 +153,9 @@ trait TiedotFetcher {
 
   def fetchTiedot(q: RekisteriQuery)(implicit user: User): Future[Seq[Oppija]] = {
     for (
-      todistukset <- fetchTodistuksetFor(q);
+      suoritukset <- fetchSuoritukset(q);
       opiskelijat <- fetchOpiskelu(q);
-      crossed <- crossCheck(opiskelijat, todistukset)
+      crossed <- crossCheck(opiskelijat, suoritukset)
     ) yield crossed.toSeq
   }
 
@@ -168,19 +168,13 @@ trait TiedotFetcher {
   }
 
 
-  def crossCheck(opiskelijat: Seq[Opiskelija], todistukset: Seq[Todistus])(implicit user: User): Future[Set[Oppija]] = {
-    val opiskelijaTiedot = opiskelijat.groupBy(_.henkiloOid)
-    val todistusTiedot = todistukset.groupBy(_.suoritus.henkiloOid)
-    val found = opiskelijaTiedot.keySet.union(todistusTiedot.keySet)
+  def crossCheck(opiskelijat: Seq[Opiskelija], todistukset: Seq[Suoritus])(implicit user: User): Future[Set[Oppija]] = {
+    val opiskelijatiedot = opiskelijat.groupBy(_.henkiloOid)
+    val suorittajat = todistukset.map(_.henkiloOid).toSet
+    val found = opiskelijatiedot.keySet union suorittajat
     val all = for (
       henkilo <- found
-    ) yield (opiskelijaTiedot.get(henkilo), todistusTiedot.get(henkilo)) match {
-        case (Some(oppilaitoshistoria), Some(todistukset)) =>
-          Future.successful(Oppija(henkilo, oppilaitoshistoria, todistukset, Seq(), None))
-        case (None, Some(todistukset)) => fetchOpiskelu(henkilo).map(Oppija(henkilo, _, todistukset, Seq(), None))
-        case (Some(oppilaitoshistoria), None) => fetchTodistukset(henkilo).map(Oppija(henkilo, oppilaitoshistoria, _, Seq(), None))
-        case (None, None) => throw new RuntimeException("Somehow maps were mutated")
-      }
+    ) yield fetchTodistukset(henkilo).map(Oppija(henkilo, opiskelijatiedot.getOrElse(henkilo, Seq()), _, Seq(), None))
     Future.sequence(all)
   }
 
