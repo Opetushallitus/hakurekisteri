@@ -20,6 +20,8 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Node
 
+case class HenkiloNotFoundException(oid: String) extends Exception(s"henkilo not found with oid $oid")
+
 class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, importBatchActor: ActorRef, koodistoActor: ActorRef)(implicit val system: ActorSystem) {
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val timeout: Timeout = 15.minutes

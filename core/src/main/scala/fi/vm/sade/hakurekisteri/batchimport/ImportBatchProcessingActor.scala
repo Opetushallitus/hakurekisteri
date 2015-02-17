@@ -124,13 +124,13 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   private def saveHenkilo(h: ImportHenkilo, resolveOid: (String) => String) = h.tunniste match {
     case ImportOppijanumero(oppijanumero) =>
       val opiskelija: Opiskelija = createOpiskelija(oppijanumero, h)
-      henkiloActor ! UpdateHenkilo(oppijanumero, Some(OrganisaatioHenkilo(
+      henkiloActor ! UpdateHenkilo(oppijanumero, OrganisaatioHenkilo(
         organisaatioOid = resolveOid(h.lahtokoulu),
-        organisaatioHenkiloTyyppi = "OPISKELIJA",
-        voimassaAlkuPvm = opiskelija.alkuPaiva.toString("yyyy-MM-dd"),
-        voimassaLoppuPvm = opiskelija.loppuPaiva.getOrElse(new LocalDate().toDateTimeAtStartOfDay).toString("yyyy-MM-dd"),
-        tehtavanimike = h.luokka
-      )))
+        organisaatioHenkiloTyyppi = Some("OPISKELIJA"),
+        voimassaAlkuPvm = Some(opiskelija.alkuPaiva.toString("yyyy-MM-dd")),
+        voimassaLoppuPvm = opiskelija.loppuPaiva.map(_.toString("yyyy-MM-dd")),
+        tehtavanimike = Some(h.luokka)
+      ))
 
     case t =>
       henkiloActor ! SaveHenkilo(h.toHenkilo(resolveOid), t.tunniste)
@@ -293,7 +293,7 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
         batchProcessed()
       }
 
-    case Failure(t: HenkiloNotFoundException) =>
+    case Failure(t: UpdateHenkiloException) =>
       val errors = failures.getOrElse(t.oid, Set[String]()) + t.toString
       failures = failures + (t.oid -> errors)
       henkiloDone(t.oid)
@@ -384,10 +384,10 @@ case class ImportHenkilo(tunniste: ImportTunniste, lahtokoulu: String, luokka: S
       kasittelijaOid = lahde,
       organisaatioHenkilo = Seq(OrganisaatioHenkilo(
         organisaatioOid = resolveOid(lahtokoulu),
-        organisaatioHenkiloTyyppi = "OPISKELIJA",
-        voimassaAlkuPvm = opiskelijaAlkuPaiva.toString("yyyy-MM-dd"),
-        voimassaLoppuPvm = opiskelijaLoppuPaiva.toString("yyyy-MM-dd"),
-        tehtavanimike = luokka
+        organisaatioHenkiloTyyppi = Some("OPISKELIJA"),
+        voimassaAlkuPvm = Some(opiskelijaAlkuPaiva.toString("yyyy-MM-dd")),
+        voimassaLoppuPvm = Some(opiskelijaLoppuPaiva.toString("yyyy-MM-dd")),
+        tehtavanimike = Some(luokka)
       ))
     )
   }

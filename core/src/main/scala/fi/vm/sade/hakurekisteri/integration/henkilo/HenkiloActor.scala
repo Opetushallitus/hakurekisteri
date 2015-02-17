@@ -14,10 +14,10 @@ import scala.concurrent.duration._
 case class Kieli(kieliKoodi: String, kieliTyyppi: Option[String] = None)
 
 case class OrganisaatioHenkilo(organisaatioOid: String,
-                               organisaatioHenkiloTyyppi: String,
-                               voimassaAlkuPvm: String,
-                               voimassaLoppuPvm: String,
-                               tehtavanimike: String)
+                               organisaatioHenkiloTyyppi: Option[String],
+                               voimassaAlkuPvm: Option[String],
+                               voimassaLoppuPvm: Option[String],
+                               tehtavanimike: Option[String])
 
 case class CreateHenkilo(etunimet: String,
                          kutsumanimi: String,
@@ -42,13 +42,15 @@ case class Henkilo(oidHenkilo: String,
 case class SaveHenkilo(henkilo: CreateHenkilo, tunniste: String)
 case class SavedHenkilo(henkiloOid: String, tunniste: String)
 case class HenkiloSaveFailed(tunniste: String, t: Throwable)
-case class UpdateHenkilo(henkiloOid: String, organisaatioHenkilo: Option[OrganisaatioHenkilo])
+case class UpdateHenkilo(henkiloOid: String, organisaatioHenkilo: OrganisaatioHenkilo)
 
 case class HenkiloSearchResponse(totalCount: Int, results: Seq[Henkilo])
 
 case class FoundHenkilos(henkilot: Seq[Henkilo], tunniste: String)
 
-case class HenkiloNotFoundException(oid: String) extends Exception(s"henkilo not found with oid $oid")
+class UpdateHenkiloException(val oid: String) extends Exception(s"error with henkilo oid $oid")
+case class OrganisaatiohenkiloSearchException(override val oid: String) extends UpdateHenkiloException(oid)
+case class OrganisaatiohenkiloCreateFailedException(override val oid: String) extends UpdateHenkiloException(oid)
 
 class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with ActorLogging {
   implicit val ec: ExecutionContext = context.dispatcher
@@ -57,6 +59,10 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with Actor
 
   def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
     henkiloClient.postObject[OrganisaatioHenkilo, OrganisaatioHenkilo](s"/resources/henkilo/$oidHenkilo/organisaatiohenkilo", 200, organisaatioHenkilo)
+  }
+
+  def findExistingOrganisaatiohenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
+    henkiloClient.readObject[Seq[OrganisaatioHenkilo]](s"/resources/henkilo/$oidHenkilo/organisaatiohenkilo", 200)
   }
 
   import HetuUtil.Hetu
@@ -97,17 +103,23 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with Actor
       context.system.scheduler.scheduleOnce(50.milliseconds, self, s)(ec, sender())
 
     case UpdateHenkilo(henkiloOid, organisaatioHenkilo) =>
-      def notFound(t: Throwable) = t match {
+      def serverError(t: Throwable) = t match {
         case PreconditionFailedException(_, 500) => true
         case _ => false
       }
-      henkiloClient.readObject[Henkilo](s"/resources/s2s/${URLEncoder.encode(henkiloOid, "UTF-8")}", 200).flatMap(h => {
-        organisaatioHenkilo match {
-          case Some(o) => createOrganisaatioHenkilo(h.oidHenkilo, o).map(oh => SavedHenkilo(h.oidHenkilo, henkiloOid))
-          case None => Future.successful(SavedHenkilo(h.oidHenkilo, henkiloOid))
+      henkiloClient.readObject[Henkilo](s"/resources/s2s/${URLEncoder.encode(henkiloOid, "UTF-8")}", 200).flatMap(foundHenkilo =>
+        findExistingOrganisaatiohenkilo(foundHenkilo.oidHenkilo, organisaatioHenkilo).flatMap(organisaatioHenkilot => {
+          if (!organisaatioHenkilot.exists(_.organisaatioOid == organisaatioHenkilo.organisaatioOid)) 
+            createOrganisaatioHenkilo(foundHenkilo.oidHenkilo, organisaatioHenkilo).map(created => SavedHenkilo(foundHenkilo.oidHenkilo, henkiloOid)).recoverWith {
+              case t: ExecutionException if t.getCause != null && serverError(t.getCause) => Future.failed(OrganisaatiohenkiloCreateFailedException(henkiloOid))
+            }
+          else 
+            Future.successful(SavedHenkilo(foundHenkilo.oidHenkilo, henkiloOid))
+        }).recoverWith {
+          case t: ExecutionException if t.getCause != null && serverError(t.getCause) => Future.failed(OrganisaatiohenkiloSearchException(henkiloOid))
         }
-      }).recoverWith {
-        case t: ExecutionException if t.getCause != null && notFound(t.getCause) => Future.failed(HenkiloNotFoundException(henkiloOid))
+      ).recoverWith {
+        case t: ExecutionException if t.getCause != null && serverError(t.getCause) => Future.failed(new UpdateHenkiloException(henkiloOid))
       } pipeTo sender
   }
 }
