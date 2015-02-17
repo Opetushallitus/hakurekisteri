@@ -170,12 +170,12 @@ trait TiedotFetcher {
     val opiskelijatiedot = opiskelijat.groupBy(_.henkiloOid)
     val suorittajat = todistukset.groupBy(_.henkiloOid)
     val found = (for (
-      (opiskelija, historia) <- opiskelijatiedot
-    ) yield fetchTodistukset(opiskelija).map(Oppija(opiskelija, historia, _, Seq(), None))) ++
+      (suorittaja, suoritukset) <- suorittajat
+    ) yield fetchTodistukset(suoritukset).map(Oppija(suorittaja, opiskelijatiedot.getOrElse(suorittaja, Seq()), _, Seq(), None))) ++
     (for (
-      (suorittaja, suoritukset) <- suorittajat if !(opiskelijatiedot contains suorittaja)
+      (opiskelija, historia) <- opiskelijatiedot   if !suorittajat.contains(opiskelija)
+    ) yield fetchTodistukset(opiskelija).map(Oppija(opiskelija, historia, _, Seq(), None)))
 
-    ) yield fetchTodistukset(suoritukset).map(Oppija(suorittaja, opiskelijatiedot.getOrElse(suorittaja, Seq()), _, Seq(), None)))
 
     Future.sequence(found.toSeq)
   }
