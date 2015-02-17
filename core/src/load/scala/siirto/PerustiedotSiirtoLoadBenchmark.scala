@@ -9,35 +9,15 @@ import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
 import akka.util.Timeout
 import scala.concurrent.{Future, ExecutionContext, Await}
 import org.scalameter.api._
-import scala.xml.XML
+import scala.xml.{Node, XML}
 import fi.vm.sade.hakurekisteri.batchimport.BatchState._
 import fi.vm.sade.hakurekisteri.integration.organisaatio._
-import akka.actor.Status.Failure
-import scala.Some
-import fi.vm.sade.hakurekisteri.integration.henkilo.{HenkiloActor, SavedHenkilo, SaveHenkilo, UpdateHenkilo}
-import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
-import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
+import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor
 import java.io.{ObjectInputStream, ObjectOutputStream, IOException}
 import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.integration._
-import com.ning.http.client.{AsyncHandler, Request, AsyncHttpClient}
-import fi.vm.sade.hakurekisteri.integration.ServiceConfig
-import akka.actor.Status.Failure
-import scala.Some
-import fi.vm.sade.hakurekisteri.integration.henkilo.SavedHenkilo
-import fi.vm.sade.hakurekisteri.integration.henkilo.SaveHenkilo
-import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
-import fi.vm.sade.hakurekisteri.integration.henkilo.UpdateHenkilo
-import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
-import fi.vm.sade.hakurekisteri.integration.EndpointRequest
-import fi.vm.sade.hakurekisteri.integration.ServiceConfig
-import akka.actor.Status.Failure
-import scala.Some
-import fi.vm.sade.hakurekisteri.integration.henkilo.UpdateHenkilo
-import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
-import fi.vm.sade.hakurekisteri.integration.henkilo.SavedHenkilo
-import fi.vm.sade.hakurekisteri.integration.henkilo.SaveHenkilo
-import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
+import com.ning.http.client.{AsyncHandler, Request}
+import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.integration.EndpointRequest
 import fi.vm.sade.hakurekisteri.integration.ServiceConfig
 import akka.actor.Status.Failure
@@ -50,70 +30,87 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.SavedHenkilo
 import fi.vm.sade.hakurekisteri.integration.henkilo.SaveHenkilo
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OppilaitosResponse
-import scala.util.Try
+import org.json4s.JsonAST.JString
+import generators.DataGen
 
 
-object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
+object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.OfflineReport {
 
   val lahde = "testitiedonsiirto"
-  val batch: ImportBatch with Identified[UUID] = ImportBatch(<perustiedot>
-    <eranTunniste>eranTunniste</eranTunniste>
-    <henkilot>
-      <henkilo>
-        <hetu>111111-1975</hetu>
-        <lahtokoulu>05127</lahtokoulu>
-        <luokka>9A</luokka>
-        <sukunimi>Testinen</sukunimi>
-        <etunimet>Juha Jaakko</etunimet>
-        <kutsumanimi>Jaakko</kutsumanimi>
-        <kotikunta>020</kotikunta>
-        <aidinkieli>FI</aidinkieli>
-        <kansalaisuus>246</kansalaisuus>
-        <lahiosoite>Katu 1 A 1</lahiosoite>
-        <postinumero>00100</postinumero>
-        <matkapuhelin>040 1234 567</matkapuhelin>
-        <muuPuhelin>09 1234 567</muuPuhelin>
-        <perusopetus>
-          <valmistuminen>2015-06-04</valmistuminen>
-          <myontaja>05127</myontaja>
-          <suorituskieli>FI</suorituskieli>
-          <tila>KESKEN</tila>
-          <yksilollistaminen>EI</yksilollistaminen>
-        </perusopetus>
-      </henkilo>
-      <henkilo>
-        <henkiloTunniste>TUNNISTE</henkiloTunniste>
-        <syntymaAika>1999-03-29</syntymaAika>
-        <sukupuoli>1</sukupuoli>
-        <lahtokoulu>05127</lahtokoulu>
-        <luokka>9A</luokka>
-        <sukunimi>Testinen</sukunimi>
-        <etunimet>Juha Jaakko</etunimet>
-        <kutsumanimi>Jaakko</kutsumanimi>
-        <kotikunta>020</kotikunta>
-        <aidinkieli>FI</aidinkieli>
-        <kansalaisuus>246</kansalaisuus>
-        <lahiosoite>Katu 1 A 1</lahiosoite>
-        <postinumero>00100</postinumero>
-        <matkapuhelin>040 1234 567</matkapuhelin>
-        <muuPuhelin>09 1234 567</muuPuhelin>
-        <ulkomainen>
-          <valmistuminen>2014-06-04</valmistuminen>
-          <myontaja>05127</myontaja>
-          <suorituskieli>FI</suorituskieli>
-          <tila>KESKEN</tila>
-        </ulkomainen>
-        <maahanmuuttajienammvalmistava>
-          <valmistuminen>2015-06-04</valmistuminen>
-          <myontaja>05127</myontaja>
-          <suorituskieli>FI</suorituskieli>
-          <tila>VALMIS</tila>
-        </maahanmuuttajienammvalmistava>
-      </henkilo>
-    </henkilot>
-  </perustiedot>, Some("eranTunniste"), "perustiedot", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
 
-  val batchGen = Gen.single[SerializableBatch]("batch")(new SerializableBatch(batch))
+  val kkGen = DataGen.int(1,12)
+  def maxPaiva(kk:Int): Int = kk match {
+    case 1 | 3 | 5 | 7 | 8 | 10 | 12 => 31
+    case 2 => 28
+    case _ => 30
+  }
+  val paivaGen = for (
+    kk <- kkGen;
+    pv <- DataGen.int(1,maxPaiva(kk))
+  ) yield (pv, kk, 1999)
+
+
+  val sukupuoliGen = DataGen.values("mies", "nainen")
+  val merkit = "0123456789ABCDEFHJKLMNPRSTUVWXY"
+  val valimerkit = "+-A"
+  val hetuGen =  for (
+    (pv, kk, vuosi) <- paivaGen;
+    sukupuoli <- sukupuoliGen;
+    luku <- DataGen.int(0,49)
+  ) yield {
+    val alku = "%02d".format(pv) + "%02d".format(kk) + "%04d".format(vuosi).substring(2)
+    val finalLuku = sukupuoli match {
+      case "mies" => luku * 2 + 1
+      case _ => luku * 2
+    }
+    val loppu = "9" + "%02d".format(finalLuku)
+    val merkki = merkit((alku + loppu).toInt % 31)
+    val valimerkki = valimerkit((vuosi / 100) - 18)
+    alku + valimerkki + loppu + merkki
+  }
+
+  val henkiloGen = for (
+    hetu <- hetuGen
+  ) yield <henkilo>
+      <hetu>{hetu}</hetu>
+      <lahtokoulu>05127</lahtokoulu>
+      <luokka>9A</luokka>
+      <sukunimi>Testinen</sukunimi>
+      <etunimet>Juha Jaakko</etunimet>
+      <kutsumanimi>Jaakko</kutsumanimi>
+      <kotikunta>020</kotikunta>
+      <aidinkieli>FI</aidinkieli>
+      <kansalaisuus>246</kansalaisuus>
+      <lahiosoite>Katu 1 A 1</lahiosoite>
+      <postinumero>00100</postinumero>
+      <matkapuhelin>040 1234 567</matkapuhelin>
+      <muuPuhelin>09 1234 567</muuPuhelin>
+      <perusopetus>
+        <valmistuminen>2015-06-04</valmistuminen>
+        <myontaja>05127</myontaja>
+        <suorituskieli>FI</suorituskieli>
+        <tila>KESKEN</tila>
+        <yksilollistaminen>EI</yksilollistaminen>
+      </perusopetus>
+    </henkilo>
+
+  def henkilotGen(size:Int) = DataGen.seq(henkiloGen, size)
+
+  def batchDataGen(size:Int) = for (
+    henkilot <- henkilotGen(size)
+  ) yield <perustiedot>
+      <eranTunniste>eranTunniste</eranTunniste>
+      <henkilot>
+        {henkilot}
+      </henkilot>
+      </perustiedot>
+
+  def importBatchGen(size:Int) = for (
+    data <- batchDataGen(size);
+    id <- DataGen.uuid
+  ) yield ImportBatch(data, Some("eranTunniste"), "perustiedot" , lahde, BatchState.READY, ImportStatus()).identify(id)
+
+  val batchGen = Gen.range("batchSize")(0,200, 100).map((size) => new SerializableBatch(importBatchGen(size).generate))
 
 
   trait Registers extends Serializable {
@@ -128,15 +125,15 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
 
 
 
-    def start {
+    def start(b: SerializableBatch) {
       if (systemHolder.isDefined) {
         system.shutdown()
       }
       systemHolder = Some(ActorSystem(s"perf-test-${UUID.randomUUID()}"))
-      startActors
+      startActors(b: SerializableBatch)
     }
 
-    def startActors:Unit
+    def startActors(b: SerializableBatch):Unit
 
     def system = systemHolder.get
     def importBatchActor = importBatchActorHolder.get
@@ -157,10 +154,10 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
 
   performance of "PerustiedotProcessing" in {
 
-    measure method "processSingle" in {
+    measure method "process single batch" in {
 
       val registers = new Registers{
-        override def startActors {
+        override def startActors(b: SerializableBatch) {
           importBatchActorHolder = Some(system.actorOf(Props[BatchActor]))
           suoritusrekisteriHolder = Some(system.actorOf(Props(new SuoritusActor())))
           opiskelijarekisteriHolder = Some(system.actorOf(Props(new OpiskelijaActor())))
@@ -170,8 +167,8 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
       }
 
       using(batchGen) setUp {
-        _ =>
-          registers.start
+        b =>
+          registers.start(b)
       } tearDown {
         _ =>
           registers.system.shutdown()
@@ -184,38 +181,60 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
 
     }
 
-    measure method "processSingleWithHenkilotAndOrganisaatiot" in {
+    measure method "process single batch with henkilo actor and organisaatio actor" in {
 
       val registers = new Registers{
-        override def startActors {
+        override def startActors(b: SerializableBatch) {
           importBatchActorHolder = Some(system.actorOf(Props[BatchActor]))
           suoritusrekisteriHolder = Some(system.actorOf(Props(new SuoritusActor())))
           opiskelijarekisteriHolder = Some(system.actorOf(Props(new OpiskelijaActor())))
+
+          val henkilot: Map[String, String] = (b.batch.data \\ "hetu").map((e: Node) => e.text).toSet[String].toList.zipWithIndex.toMap.mapValues(i => s"1.2.246.562.24.$i")
+
+          def url(pattern:String) ="\\$".r.replaceAllIn(s"${pattern.replaceAll("\\?", "\\\\?")}", "(.*)").r
+
+
           val endPoint: Endpoint = new Endpoint {
-            override def request(er: EndpointRequest): (Int, List[(String, String)], String) = (200, List(), "1.2.246.562.24.123")
+            import org.json4s.jackson.JsonMethods._
+
+            override def request(er: EndpointRequest): (Int, List[(String, String)], String) = er.body.map(parse(_) \ "hetu") match {
+              case Some(JString(hetu)) if henkilot.contains(hetu) => (200, List(), henkilot(hetu))
+              case _ => (404, List(), "Not Found")
+            }
+
+
+
           }
           val asyncProvider =  new DelayingProvider(endPoint, 20.milliseconds)(system.dispatcher, system.scheduler)
           val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))(system.dispatcher, system)
 
 
           henkiloActorHolder = Some(system.actorOf(Props(new HenkiloActor(client))))
+          val orgs = (b.batch.data \\ "myontaja" ++ b.batch.data \\ "lahtokoulu").map(_.text).toSet.map((koodi: String) => koodi -> s"1.2.246.562.5.$koodi").toMap
+
 
           val orgEndPoint = new Endpoint {
+
+
+
+            val all = url("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true")
+            val single = url("http://localhost/organisaatio-service/rest/organisaatio/$")
             override def request(er: EndpointRequest): (Int, List[(String, String)], String) = er match {
-              case EndpointRequest("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true", _, _ )  => (200, List(), "{\"numHits\":1,\"organisaatiot\":[{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}]}")
-              case EndpointRequest("http://localhost/organisaatio-service/rest/organisaatio/05127",_,_) => (200, List(), "{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}")
+              case EndpointRequest(all(), _, _ )  => (200, List(), "{\"numHits\":1,\"organisaatiot\":[{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}]}")
+              case EndpointRequest(single(koodi),_,_) if orgs.contains(koodi) => (200, List(), "{\"oid\":\"" + orgs(koodi) + "\",\"nimi\":{},\"oppilaitosKoodi\":\"" + koodi + "\"}")
               case default => (404, List(), "Not Found")
             }
           }
           val orgProvider = new DelayingProvider(orgEndPoint, 20.milliseconds)(system.dispatcher, system.scheduler)
           val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(orgProvider)))(system.dispatcher, system)
           organisaatioActorHolder = Some(system.actorOf(Props(new OrganisaatioActor(organisaatioClient))))
+
         }
       }
 
       using(batchGen) setUp {
-        _ =>
-          registers.start
+        b =>
+          registers.start(b)
       } tearDown {
         _ =>
           registers.system.shutdown()
@@ -227,10 +246,13 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.Microbenchmark {
 
 
     }
+
+
   }
 
 
-  def processSingleBatch(registers: PerustiedotSiirtoLoadBenchmark.Registers with Object {def startActorsUnit}, b: PerustiedotSiirtoLoadBenchmark.SerializableBatch): Any = {
+
+  def processSingleBatch(registers: PerustiedotSiirtoLoadBenchmark.Registers, b: PerustiedotSiirtoLoadBenchmark.SerializableBatch): Any = {
     val doneFut = registers.importBatchActor ? AlertEnd(b.batch.externalId.get)
     registers.system.actorOf(PerustiedotImportProps(registers, b.batch))
     Await.result(doneFut, Duration.Inf)

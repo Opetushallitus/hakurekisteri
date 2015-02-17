@@ -14,6 +14,7 @@ import org.hamcrest.{BaseMatcher, Description, Matcher}
 import org.mockito.Matchers
 import scala.util.Try
 import scala.language.implicitConversions
+import akka.actor.Scheduler
 
 
 trait DispatchSupport {
@@ -237,5 +238,18 @@ case class FutureListenableFuture[T](future: Future[T]) extends ListenableFuture
   override def abort(t: Throwable): Unit = ???
 
   override def done(): Unit = ???
+}
+
+
+class DelayingProvider( endpoint: Endpoint, delay: FiniteDuration)(implicit val ec: ExecutionContext, scheduler: Scheduler) extends CapturingProvider(endpoint) {
+
+  println(s"provider with $delay initialized")
+
+  override def executeScala[T](request: Request, handler: AsyncHandler[T]): Future[T] = {
+    import akka.pattern.after
+    after(delay, scheduler)(super.executeScala(request, handler))
+
+
+  }
 }
 
