@@ -19,7 +19,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.HenkiloHakijaQuery
 import fi.vm.sade.hakurekisteri.integration.hakemus.FullHakemus
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.web.rest.support.UserNotAuthorized
-import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, SuoritusQuery, Suoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{AllForMatchinHenkiloSuoritusQuery, VirallinenSuoritus, SuoritusQuery, Suoritus}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
@@ -166,14 +166,18 @@ trait TiedotFetcher {
   }
 
 
-  def crossCheck(opiskelijat: Seq[Opiskelija], todistukset: Seq[Suoritus])(implicit user: User): Future[Set[Oppija]] = {
+  def crossCheck(opiskelijat: Seq[Opiskelija], todistukset: Seq[Suoritus with Identified[UUID]])(implicit user: User): Future[Seq[Oppija]] = {
     val opiskelijatiedot = opiskelijat.groupBy(_.henkiloOid)
-    val suorittajat = todistukset.map(_.henkiloOid).toSet
-    val found = opiskelijatiedot.keySet union suorittajat
-    val all = for (
-      henkilo <- found
-    ) yield fetchTodistukset(henkilo).map(Oppija(henkilo, opiskelijatiedot.getOrElse(henkilo, Seq()), _, Seq(), None))
-    Future.sequence(all)
+    val suorittajat = todistukset.groupBy(_.henkiloOid)
+    val found = (for (
+      (opiskelija, historia) <- opiskelijatiedot
+    ) yield fetchTodistukset(opiskelija).map(Oppija(opiskelija, historia, _, Seq(), None))) ++
+    (for (
+      (suorittaja, suoritukset) <- suorittajat if !(opiskelijatiedot contains suorittaja)
+
+    ) yield fetchTodistukset(suoritukset).map(Oppija(suorittaja, opiskelijatiedot.getOrElse(suorittaja, Seq()), _, Seq(), None)))
+
+    Future.sequence(found.toSeq)
   }
 
 
@@ -211,7 +215,7 @@ trait TiedotFetcher {
   }
 
   def fetchSuoritukset(q: RekisteriQuery)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] = {
-    (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(myontaja = q.oppilaitosOid, vuosi = q.vuosi), user)).mapTo[Seq[Suoritus with Identified[UUID]]]
+    (rekisterit.suoritusRekisteri ? AuthorizedQuery(AllForMatchinHenkiloSuoritusQuery(myontaja = q.oppilaitosOid, vuosi = q.vuosi), user)).mapTo[Seq[Suoritus with Identified[UUID]]]
   }
 
 }

@@ -99,7 +99,7 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
       executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja))
 
     case SuoritusQuery(Some(henkilo), None, None, None) =>
-      Future { tiedonSiirtoIndex.get(henkilo).map(_.values.reduce(_ ++ _)).getOrElse(Seq()) }
+      Future { getByHenkilo(henkilo) }
 
     case SuoritusQuery(None, None, Some(vuosi), Some(myontaja)) =>
       Future { myontajaIndex.getOrElse((myontaja, vuosi), Seq()) }
@@ -121,6 +121,22 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
         suoritukset <- henk.get(komo)
       ) yield suoritukset).getOrElse(Seq())
     }
+
+    case AllForMatchinHenkiloSuoritusQuery(Some(vuosi), Some(myontaja)) =>
+      Future { myontajaIndex.getOrElse((myontaja, vuosi), Seq()) }.map(_.flatMap(s => getByHenkilo(s.henkiloOid)).toSet.toSeq)
+
+    case AllForMatchinHenkiloSuoritusQuery(None, Some(myontaja)) =>
+      Future {
+        myontajaIndex.collect {
+          case ((oid, _), value) if oid == myontaja => value
+        }.foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _).toSet.toSeq
+      }.map(_.flatMap(s => getByHenkilo(s.henkiloOid)).toSet.toSeq)
+
+  }
+
+
+  def getByHenkilo(henkilo: String): Seq[Suoritus with Identified[UUID]] = {
+    tiedonSiirtoIndex.get(henkilo).map(_.values.reduce(_ ++ _)).getOrElse(Seq())
   }
 
   val matcher: PartialFunction[Query[Suoritus], (Suoritus with Identified[UUID]) => Boolean] = {
