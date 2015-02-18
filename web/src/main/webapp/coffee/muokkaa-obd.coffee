@@ -88,7 +88,10 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
       $scope.allRows = []
       $scope.loading = true
       $q.all([
-        searchRekisteriTiedot(query).promise
+        if(query.oppilaitosOid)
+          searchRekisteriTiedot(query).promise
+        else
+          searchOpiskelijat(query).promise
       ]).then ((results) ->
         showCurrentRows collectHenkilot(collect(results))
       ), (errors) ->
@@ -186,11 +189,22 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
 
     searchRekisteriTiedot = (query) ->
       r = $q.defer()
-      RekisteriTiedot.query query, ((result) ->
+      rekisteriTiedotQuery =
+        oppilaitosOid: (if query.oppilaitosOid then query.oppilaitosOid else "")
+        vuosi: (if query.vuosi then query.vuosi else null)
+      RekisteriTiedot.query rekisteriTiedotQuery, ((result) ->
         r.resolve { rekisteriTiedot: result }
       ), ->
-        r.reject "opiskelija query failed"
+        r.reject "rekisteri tiedot query failed"
       r
+
+    searchOpiskelijat = (query) ->
+      o = $q.defer()
+      Opiskelijat.query query, ((result) ->
+        o.resolve { opiskelijat: result }
+      ), ->
+        o.reject "opiskelija query failed"
+      o
 
     collectHenkilot = (obj) ->
       res = {}
@@ -198,6 +212,11 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         for o in obj.rekisteriTiedot
           oid = o.henkilo
           henkilo = res[oid] || (res[oid]= {henkiloOid: oid, opiskelijat: []})
+          henkilo.opiskelijat.push o
+      if Array.isArray obj.opiskelijat
+        for o in obj.opiskelijat
+          oid = o.henkiloOid
+          henkilo = res[oid] || (res[oid]={henkiloOid: oid, opiskelijat: []})
           henkilo.opiskelijat.push o
       res
 
