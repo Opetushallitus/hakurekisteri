@@ -23,6 +23,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
       $('#resultFilter').placeholder();
       $scope.loading = false
       $scope.showOnlyPuuttuvat = false
+      $scope.filterParam = ""
       $scope.vuodet = vuodet()
       $scope.henkiloTerm = $routeParams.henkilo
       $scope.organisaatioTerm = {
@@ -167,25 +168,28 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         vuosi: (if $scope.vuosiTerm then $scope.vuosiTerm else "")
       return
 
+    $scope.resultFilter = (filterParam) ->
+      $scope.filterParam = filterParam
+      updateList()
+
+    $scope.arvosanatPuuttuuFilter = () ->
+      $scope.showOnlyPuuttuvat = !$scope.showOnlyPuuttuvat
+      updateList()
+
     customFilter = (input, func) -> x for x in input when func(x)
 
-    $scope.updateResultFilter = (filterInput) ->
-      if(filterInput.length == 0)
-        $scope.allRowsFiltered = $scope.allRows
-      else
-        lowerCased = filterInput.toLocaleLowerCase()
+    updateList = () ->
+      lowerCased = $scope.filterParam.toLocaleLowerCase()
+      if($scope.showOnlyPuuttuvat)
+        $scope.allRowsFiltered = customFilter($scope.allRows, (x) -> !x.hasArvosana and x.sortBy.toLocaleLowerCase().indexOf(lowerCased) > -1)
+      else if ($scope.filterParam.length > 0)
         $scope.allRowsFiltered = customFilter($scope.allRows, (x) -> x.sortBy.toLocaleLowerCase().indexOf(lowerCased) > -1)
+      else
+        $scope.allRowsFiltered = $scope.allRows
 
     $scope.valitseHenkilo = (henkiloOid) ->
       $scope.valittuHenkiloOid = henkiloOid
       MuokkaaTiedot.muokkaaHenkilo(henkiloOid, $scope)
-
-    $scope.showArvosanatPuuttuu = () ->
-      $scope.showOnlyPuuttuvat = !$scope.showOnlyPuuttuvat
-      if($scope.showOnlyPuuttuvat)
-        $scope.allRowsFiltered = customFilter($scope.allRows, (x) -> !x.hasArvosana)
-      else
-        $scope.allRowsFiltered = $scope.allRows
 
     searchRekisteriTiedot = (query) ->
       r = $q.defer()
