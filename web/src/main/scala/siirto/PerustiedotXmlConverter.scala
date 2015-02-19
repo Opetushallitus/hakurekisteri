@@ -86,7 +86,7 @@ object PerustiedotXmlConverter extends support.XmlConverter {
     (item, row) => {
       val sheetData = <s>
         {row.collect {
-          case DataCell("VALMISTUMINEN", v) => <valmistuminen>{ISODateTimeFormat.yearMonthDay().print(DateTimeFormat.forPattern(LocalDateSerializer.dayFormat).parseDateTime(v))}</valmistuminen>
+          case DataCell("VALMISTUMINEN", v) => <valmistuminen>{toXmlDate(v)}</valmistuminen>
           case DataCell(name, v) if v != "" && Set("MYONTAJA", "SUORITUSKIELI", "TILA").contains(name) =>
             <tag>{v}</tag>.copy(label = name.toLowerCase)
         }}
