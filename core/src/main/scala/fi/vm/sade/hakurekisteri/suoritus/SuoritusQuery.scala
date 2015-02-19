@@ -5,11 +5,11 @@ import Kausi.Kausi
 
 
 
-case class SuoritusQuery(henkilo: Option[String] = None, kausi: Option[Kausi] = None, vuosi: Option[String] = None, myontaja: Option[String] = None) extends Query[Suoritus]
+case class SuoritusQuery(henkilo: Option[String] = None, kausi: Option[Kausi] = None, vuosi: Option[String] = None, myontaja: Option[String] = None, komo: Option[String] = None) extends Query[Suoritus]
 
 object SuoritusQuery{
   def apply(params: Map[String,String]): SuoritusQuery = {
-    SuoritusQuery(params.get("henkilo"), params.get("kausi").map(Kausi.withName), params.get("vuosi"), params.get("myontaja"))
+    SuoritusQuery(params.get("henkilo"), params.get("kausi").map(Kausi.withName), params.get("vuosi"), params.get("myontaja"), params.get("komo"))
   }
 }
 

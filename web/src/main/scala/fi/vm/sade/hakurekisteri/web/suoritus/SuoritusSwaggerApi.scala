@@ -19,6 +19,7 @@ trait SuoritusSwaggerApi extends SuoritusSwaggerModel { this: HakurekisteriResou
     .parameter(queryParam[Option[String]]("kausi").description("päättymisen kausi").allowableValues("S", "K"))
     .parameter(queryParam[Option[String]]("vuosi").description("päättymisen vuosi"))
     .parameter(queryParam[Option[String]]("myontaja").description("myöntäneen oppilaitoksen oid"))
+    .parameter(queryParam[Option[String]]("komo").description("koulutusmoduulin oid"))
 
   val create = apiOperation[Suoritus]("lisääSuoritus")
     .summary("luo suorituksen ja palauttaa sen tiedot")
