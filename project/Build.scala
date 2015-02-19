@@ -13,7 +13,6 @@ import scala.language.postfixOps
 object HakurekisteriBuild extends Build {
   import sys.process._
 
-
   val Organization = "fi.vm.sade"
   val Name = "hakurekisteri"
   val Version = "13.1-SNAPSHOT"
@@ -23,6 +22,10 @@ object HakurekisteriBuild extends Build {
   val SpringVersion = "3.2.1.RELEASE"
 
   lazy val LoadSpecs = config("load") extend Test
+
+  lazy val createTestDb = taskKey[Unit]("create h2 test db")
+
+
 
   val ScalatraStack = Seq(
     "org.scalatra" %% "scalatra",
@@ -167,7 +170,8 @@ object HakurekisteriBuild extends Build {
       resolvers             += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
       artifactoryPublish,
       libraryDependencies   ++= AkkaStack ++ dependencies
-        ++ testDependencies.map((m) => m % "test")
+        ++ testDependencies.map((m) => m % "test"),
+      fullRunTask(createTestDb, Test, "util.CreateDb")
     ) ++ inConfig(LoadSpecs)(Defaults.testSettings)
       ++ inConfig(LoadSpecs)(Seq(
       testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
@@ -235,4 +239,7 @@ object HakurekisteriBuild extends Build {
         ++ Seq(surefire)).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
 
   }.dependsOn(core % "test->test;compile->compile")
+
+
+
 }
