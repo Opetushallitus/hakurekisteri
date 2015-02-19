@@ -15,7 +15,6 @@ import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus, SuoritusQ
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import org.joda.time.{DateTime, LocalDate}
 
-import scala.collection.immutable.Iterable
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Node
@@ -62,7 +61,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     Future.sequence(processBatch(batch)(oppiaineet))
 
   private def extractMessages(statukset: Seq[ImportArvosanaStatus]): Map[String, Set[String]] = statukset.collect {
-    case FailureStatus(tunniste: String, errors: Seq[Throwable]) => tunniste -> errors.map(_.toString).toSet
+    case FailureStatus(tunniste, errors) => tunniste -> errors.map(_.toString).toSet
   }.toMap
 
   private def extractReferences(statukset: Seq[ImportArvosanaStatus]): Map[String, Map[String, String]] = statukset.collect {
@@ -70,47 +69,43 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   }.toMap
 
   private def fetchOppiaineetKoodisto(): Future[Seq[String]] =
-    (koodistoActor ? GetKoodistoKoodiArvot("oppiaineetyleissivistava")).mapTo[KoodistoKoodiArvot].map(arvot => arvot.arvot)
+    (koodistoActor ? GetKoodistoKoodiArvot("oppiaineetyleissivistava")).
+      mapTo[KoodistoKoodiArvot].
+      map(arvot => arvot.arvot)
 
-  private def processBatch(batch: ImportBatch)(oppiaineet: Seq[String]): Seq[Future[ImportArvosanaStatus]] = {
-    def saveArvosana(s: Suoritus with Identified[UUID], arvosana: ImportArvosana): Future[Arvosana with Identified[UUID]] = {
-      (arvosanarekisteri ? toArvosana(arvosana)(s.id)(batch.source)).mapTo[Arvosana with Identified[UUID]]
+  private def saveArvosana(batch: ImportBatch, s: Suoritus with Identified[UUID], arvosana: ImportArvosana): Future[Arvosana with Identified[UUID]] =
+    (arvosanarekisteri ? toArvosana(arvosana)(s.id)(batch.source)).mapTo[Arvosana with Identified[UUID]]
+
+  private def saveTodistus(batch: ImportBatch, henkilo: (String, String, Seq[(ImportTodistus, String)]), todistus: (ImportTodistus, String)): Future[Seq[ArvosanaStatus]] = {
+    val savedTodistus =
+      for (suoritus <- fetchSuoritus(henkilo._2, todistus._1, todistus._2, batch.source)) yield
+        for (arvosana <- todistus._1.arvosanat) yield saveArvosana(batch, suoritus, arvosana)
+
+    savedTodistus.flatMap(arvosanat => {
+      Future.sequence(arvosanat.map(f => {
+        f.map(arvosana => OkArvosanaStatus(arvosana.id, arvosana.suoritus, henkilo._1)).recoverWith {
+          case th: Throwable => Future.successful(FailureArvosanaStatus(henkilo._1, th))
+        }
+      }))
+    }).recoverWith {
+      case th: Throwable => Future.successful(Seq(FailureArvosanaStatus(henkilo._1, th)))
     }
-    def saveTodistus(henkilo: (String, String, Seq[(ImportTodistus, String)]), todistus: (ImportTodistus, String)): Future[Seq[ArvosanaStatus]] = {
-      val savedTodistus = for (
-        s <- fetchSuoritus(henkilo._2, todistus._1, todistus._2, batch.source)
-      ) yield for (
-          arvosana <- todistus._1.arvosanat
-        ) yield saveArvosana(s, arvosana)
+  }
 
-      savedTodistus.flatMap((arvosanat: Seq[Future[Arvosana with Identified[UUID]]]) => {
-        Future.sequence(arvosanat.map(arvosana => {
-          arvosana.map(a => OkArvosanaStatus(a.id, a.suoritus, henkilo._1)).recoverWith {
-            case th: Throwable => Future.successful(FailureArvosanaStatus(henkilo._1, th))
-          }
-        }))
-      }).recoverWith {
-        case th: Throwable => Future.successful(Seq(FailureArvosanaStatus(henkilo._1, th)))
-      }
-    }
-    for (
-      henkilot <- enrich(parseData(batch)(oppiaineet))
-    ) yield henkilot.flatMap(henkilo => {
-      val todistukset = for (
-        todistus <- henkilo._3
-      ) yield saveTodistus(henkilo, todistus)
+  private def processBatch(batch: ImportBatch)(oppiaineet: Seq[String]): Seq[Future[ImportArvosanaStatus]] =
+    for (henkilot <- enrich(parseData(batch)(oppiaineet))) yield henkilot.flatMap(henkilo => {
+      val todistukset = for (todistus <- henkilo._3) yield saveTodistus(batch, henkilo, todistus)
 
-      Future.sequence(todistukset).map((tods: Seq[Seq[ArvosanaStatus]]) => {
+      Future.sequence(todistukset).map(tods => {
         val arvosanaStatukset = tods.foldLeft[Seq[ArvosanaStatus]](Seq())(_ ++ _)
         arvosanaStatukset.find(_.isInstanceOf[FailureArvosanaStatus]) match {
           case Some(FailureArvosanaStatus(tunniste, _)) =>
             FailureStatus(tunniste, arvosanaStatukset.filter(_.isInstanceOf[FailureArvosanaStatus]).asInstanceOf[Seq[FailureArvosanaStatus]].map(_.t))
-          case None =>
+          case _ =>
             OkStatus(henkilo._1, arvosanaStatukset.asInstanceOf[Seq[OkArvosanaStatus]].groupBy(_.suoritus).map(t => t._1 -> t._2.map(_.id)))
         }
       })
     })
-  }
 
   private trait ArvosanaStatus
   private case class OkArvosanaStatus(id: UUID, suoritus: UUID, tunniste: String) extends ArvosanaStatus
@@ -119,13 +114,15 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   private def toArvosana(arvosana: ImportArvosana)(suoritus: UUID)(source: String): Arvosana =
     Arvosana(suoritus, Arvio410(arvosana.arvosana), arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source)
 
-  private def fetchSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String, lahde: String): Future[Suoritus with Identified[UUID]] = {
-    (suoritusrekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid))).mapTo[Seq[Suoritus with Identified[UUID]]].map(_.find(matchSuoritus(todistus))).flatMap {
-      case Some(s) => Future.successful(s)
-      case None if todistus.komo == Config.lukioKomoOid => createLukioSuoritus(henkiloOid, todistus, oppilaitosOid, lahde)
-      case None => Future.failed(SuoritusNotFoundException(henkiloOid, todistus, oppilaitosOid))
-    }
-  }
+  private def fetchSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String, lahde: String): Future[Suoritus with Identified[UUID]] =
+    (suoritusrekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid))).
+      mapTo[Seq[Suoritus with Identified[UUID]]].
+      map(_.find(matchSuoritus(todistus))).
+      flatMap {
+        case Some(s) => Future.successful(s)
+        case None if todistus.komo == Config.lukioKomoOid => createLukioSuoritus(henkiloOid, todistus, oppilaitosOid, lahde)
+        case None => Future.failed(SuoritusNotFoundException(henkiloOid, todistus, oppilaitosOid))
+      }
 
   private def createLukioSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String, lahde: String): Future[Suoritus with Identified[UUID]] =
     (suoritusrekisteri ? VirallinenSuoritus(todistus.komo, oppilaitosOid, "KESKEN", todistus.valmistuminen, henkiloOid, yksilollistaminen.Ei, todistus.suoritusKieli, None, vahv = true, lahde)).mapTo[Suoritus with Identified[UUID]]
@@ -137,28 +134,26 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     case _ => false
   }
 
-  private def enrich(henkilot: Map[String, ImportArvosanaHenkilo]): Seq[Future[(String, String, Seq[(ImportTodistus, String)])]] = {
-    val enriched: Iterable[Future[(String, String, Seq[Future[(ImportTodistus, String)]])]] = for (
-      (tunniste: String, henkilo: ImportArvosanaHenkilo) <- henkilot
-    ) yield {
-      val q: HenkiloQuery = henkilo.tunniste match {
-        case ImportHetu(hetu) => HenkiloQuery(None, Some(hetu), tunniste)
-        case ImportOppijanumero(oid) => HenkiloQuery(Some(oid), None, tunniste)
-        case ImportHenkilonTunniste(_, _, _) => throw HenkiloTunnisteNotSupportedException
-      }
-      for (
-        henk <- (henkiloActor ? q).mapTo[FoundHenkilos]
-      ) yield {
-        if (henk.henkilot.isEmpty) throw HenkiloNotFoundException(q.oppijanumero.getOrElse(q.hetu.getOrElse("")))
-        val todistukset: Seq[Future[(ImportTodistus, String)]] = for (
-          todistus: ImportTodistus <- henkilo.todistukset
-        ) yield for (
-            oppilaitos <- (organisaatioActor ? Oppilaitos(todistus.myontaja)).mapTo[OppilaitosResponse]
-          ) yield (todistus, oppilaitos.oppilaitos.oid)
+  private def query(henkilo: ImportArvosanaHenkilo) = henkilo.tunniste match {
+    case ImportHetu(hetu) => HenkiloQuery(None, Some(hetu), hetu)
+    case ImportOppijanumero(oid) => HenkiloQuery(Some(oid), None, oid)
+    case ImportHenkilonTunniste(_, _, _) => throw HenkiloTunnisteNotSupportedException
+    //TODO tallenna ulkoinen tunniste henkilöpalveluun
+  }
 
-        (tunniste, henk.henkilot.head.oidHenkilo, todistukset)
-      }
-    }
+  private def enrich(henkilot: Map[String, ImportArvosanaHenkilo]): Seq[Future[(String, String, Seq[(ImportTodistus, String)])]] = {
+    val enriched =
+      for ((tunniste, henkilo) <- henkilot) yield
+        for (henk <- (henkiloActor ? query(henkilo)).mapTo[FoundHenkilos]) yield {
+          //TODO muuta tästä kohtaa luomaan uusi henkilö, jos kyseessä lukio-tyyppinen todistus ja henkilöä ei ole jo olemassa
+          //TODO tätä varten henkilöpalveluun pitää tehdä feature, jolla uusi henkilö voidaan luoda pelkän hetun perusteella ja hakea nimitiedot VTJ:stä
+          if (henk.henkilot.isEmpty) throw HenkiloNotFoundException(tunniste)
+          val todistukset =
+            for (todistus: ImportTodistus <- henkilo.todistukset) yield
+              for (oppilaitos <- (organisaatioActor ? Oppilaitos(todistus.myontaja)).mapTo[OppilaitosResponse]) yield (todistus, oppilaitos.oppilaitos.oid)
+
+          (tunniste, henk.henkilot.head.oidHenkilo, todistukset)
+        }
 
     enriched.map(_.flatMap(h => Future.sequence(h._3).map(tods => (h._1, h._2, tods)))).toSeq
   }
@@ -175,18 +170,15 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     def getField(name: String)(h: Node): String = (h \ name).head.text
     def getOptionField(name: String)(h: Node): Option[String] = (h \ name).headOption.flatMap(_.text.blankOption)
 
-    def arvosanat(h: Node)(oppiaineet: Seq[String]): Seq[ImportArvosana] = {
-      oppiaineet.map(name => {
-        (h \ name).headOption.collect {
-          case s =>
-            val lisatieto = name match {
-              case "AI" => Some(getField("tyyppi")(s))
-              case _ => getOptionField("kieli")(s)
-            }
-            (s \ "valinnainen").map(a => ImportArvosana(name, a.text, lisatieto, valinnainen = true)) :+ ImportArvosana(name, getField("yhteinen")(s), lisatieto, valinnainen = false)
+    def arvosanat(h: Node)(oppiaineet: Seq[String]): Seq[ImportArvosana] = oppiaineet.map(name => (h \ name).headOption.collect {
+      case s =>
+        val lisatieto = name match {
+          case "AI" => Some(getField("tyyppi")(s))
+          case _ => getOptionField("kieli")(s)
         }
-      }).flatten.foldLeft[Seq[ImportArvosana]](Seq())(_ ++ _)
-    }
+        (s \ "valinnainen").
+          map(a => ImportArvosana(name, a.text, lisatieto, valinnainen = true)) :+ ImportArvosana(name, getField("yhteinen")(s), lisatieto, valinnainen = false)
+    }).flatten.foldLeft[Seq[ImportArvosana]](Seq())(_ ++ _)
 
     def todistus(name: String, komoOid: String, oppijanumero: Option[String])(h: Node)(lahde: String)(oppiaineet: Seq[String]): Option[ImportTodistus] = (h \ name).headOption.map(s => {
       val valmistuminen = getField("valmistuminen")(s)

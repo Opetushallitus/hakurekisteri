@@ -151,7 +151,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
       sWaiter { s.asInstanceOf[VirallinenSuoritus].komo should be (Config.lukioKomoOid) }
       sWaiter.dismiss()
     }
-    val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = suoritusHandler, query = {q => {println("qqq"); Seq()}})))
+    val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = suoritusHandler, query = {q => {Seq()}})))
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
     val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient)))
 
