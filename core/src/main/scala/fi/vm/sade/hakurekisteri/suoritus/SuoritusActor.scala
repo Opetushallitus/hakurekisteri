@@ -87,33 +87,33 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
 trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with SuoritusRepository {
 
   override val emptyQuery: PartialFunction[Query[Suoritus], Boolean] = {
-    case SuoritusQuery(None, None, None, None) => true
+    case SuoritusQuery(None, None, None, None, None) => true
   }
 
   override val optimize: PartialFunction[Query[Suoritus], Future[Seq[Suoritus with Identified[UUID]]]] = {
-    case SuoritusQuery(Some(henkilo), None, Some(vuosi), None) =>
+    case SuoritusQuery(Some(henkilo), None, Some(vuosi), None, None) =>
       Future { tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq()) }
 
-    case SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja) =>
+    case SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja, komo) =>
       val filtered = tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq())
-      executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja))
+      executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja, komo))
 
-    case SuoritusQuery(Some(henkilo), None, None, None) =>
+    case SuoritusQuery(Some(henkilo), None, None, None, None) =>
       Future { getByHenkilo(henkilo) }
 
-    case SuoritusQuery(None, None, Some(vuosi), Some(myontaja)) =>
+    case SuoritusQuery(None, None, Some(vuosi), Some(myontaja), None) =>
       Future { myontajaIndex.getOrElse((myontaja, vuosi), Seq()) }
 
-    case SuoritusQuery(None, None, None, Some(myontaja)) =>
+    case SuoritusQuery(None, None, None, Some(myontaja), None) =>
       Future {
         myontajaIndex.collect {
           case ((oid, _), value) if oid == myontaja => value
         }.foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _).toSet.toSeq
       }
 
-    case SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja) =>
+    case SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja, komo) =>
       val filtered = tiedonSiirtoIndex.get(henkilo).map(_.values.reduce(_ ++ _)).getOrElse(Seq())
-      executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja))
+      executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja, komo))
 
     case SuoritysTyyppiQuery(henkilo, komo) => Future {
       (for (
@@ -140,10 +140,17 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
   }
 
   val matcher: PartialFunction[Query[Suoritus], (Suoritus with Identified[UUID]) => Boolean] = {
-    case SuoritusQuery(henkilo, kausi, vuosi, myontaja) =>  (s: Suoritus with Identified[UUID]) =>
-      checkHenkilo(henkilo)(s) && checkVuosi(vuosi)(s) && checkKausi(kausi)(s) && checkMyontaja(myontaja)(s)
+    case SuoritusQuery(henkilo, kausi, vuosi, myontaja, komo) => (s: Suoritus with Identified[UUID]) =>
+      checkHenkilo(henkilo)(s) && checkVuosi(vuosi)(s) && checkKausi(kausi)(s) && checkMyontaja(myontaja)(s) && checkKomoOption(komo)(s)
+
     case SuoritysTyyppiQuery(henkilo, komo) => (s: Suoritus with Identified[UUID]) =>
       checkHenkilo(Some(henkilo))(s)  && checkKomo(komo)(s)
+  }
+
+  def checkKomoOption(komo: Option[String])(s: Suoritus with Identified[UUID]) = (komo, s) match {
+    case (Some(k), v: VirallinenSuoritus) if v.komo == k => true
+    case (Some(_), _) => false
+    case (None, _) => true
   }
 
   def checkKomo(komo:String)(s: Suoritus with Identified[UUID]) = s match {
