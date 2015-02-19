@@ -22,7 +22,14 @@ import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaTable, Opiskelija}
 object CreateDb extends App {
   println("Creating a test db")
 
-  val kevatJuhla = new MonthDay(6,4).toLocalDate(DateTime.now.getYear)
+  val kevaanVuosi = if (DateTime.now isBefore(new MonthDay(8, 18).toLocalDate(DateTime.now.getYear).toDateTimeAtStartOfDay()))
+    DateTime.now.getYear
+  else
+    DateTime.now.getYear + 1
+
+  val kevatJuhla = new MonthDay(6,4).toLocalDate(kevaanVuosi)
+  val syksynAlku = new MonthDay(8, 18).toLocalDate(kevaanVuosi - 1)
+
 
 
   implicit val db = Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
@@ -58,7 +65,7 @@ object CreateDb extends App {
 
   def createOppilas(oid:String) {
     suoritusJournal.addModification(Updated(VirallinenSuoritus(Config.perusopetusKomoOid, "1.2.246.562.10.39644336305", "KESKEN", kevatJuhla, oid, yksilollistaminen.Ei, "fi",  lahde = "Test").identify(UUID.randomUUID())))
-    opiskelijaJournal.addModification(Updated(Opiskelija("1.2.246.562.10.39644336305", "9", "9A", oid, new MonthDay(8,18).toLocalDate(DateTime.now.getYear - 1).toDateTimeAtStartOfDay(), Some(kevatJuhla.toDateTimeAtStartOfDay()), "Test").identify(UUID.randomUUID())))
+    opiskelijaJournal.addModification(Updated(Opiskelija("1.2.246.562.10.39644336305", "9", "9A", oid, syksynAlku.toDateTimeAtStartOfDay(), Some(kevatJuhla.toDateTimeAtStartOfDay()), "Test").identify(UUID.randomUUID())))
     print(".")
   }
 
