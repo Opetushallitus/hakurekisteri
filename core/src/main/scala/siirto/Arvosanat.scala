@@ -45,6 +45,9 @@ object Arvosanat extends SchemaDefinition {
           <xs:element name="oppijanumero" type="oppijaNumeroType" maxOccurs="1" minOccurs="1"/>
           <xs:group ref="SyntymaAjallinen"/>
         </xs:choice>
+        <xs:element type="xs:string" name="sukunimi" maxOccurs="1" minOccurs="1"/>
+        <xs:element type="xs:string" name="etunimet" maxOccurs="1" minOccurs="1"/>
+        <xs:element type="xs:string" name="kutsumanimi" maxOccurs="1" minOccurs="1"/>
         <xs:element name="todistukset" type="TodistuksetType" maxOccurs="1" minOccurs="1"/>
       </xs:sequence>
     </xs:complexType>

@@ -138,15 +138,14 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     case ImportHetu(hetu) => HenkiloQuery(None, Some(hetu), hetu)
     case ImportOppijanumero(oid) => HenkiloQuery(Some(oid), None, oid)
     case ImportHenkilonTunniste(_, _, _) => throw HenkiloTunnisteNotSupportedException
-    //TODO tallenna ulkoinen tunniste henkilöpalveluun
+      //TODO hae henkilöpalvelusta ulkoisen tunnisteen perusteella
   }
 
   private def enrich(henkilot: Map[String, ImportArvosanaHenkilo]): Seq[Future[(String, String, Seq[(ImportTodistus, String)])]] = {
     val enriched =
       for ((tunniste, henkilo) <- henkilot) yield
         for (henk <- (henkiloActor ? query(henkilo)).mapTo[FoundHenkilos]) yield {
-          //TODO muuta tästä kohtaa luomaan uusi henkilö, jos kyseessä lukio-tyyppinen todistus ja henkilöä ei ole jo olemassa
-          //TODO tätä varten henkilöpalveluun pitää tehdä feature, jolla uusi henkilö voidaan luoda pelkän hetun perusteella ja hakea nimitiedot VTJ:stä
+          //TODO muuta tästä kohtaa luomaan uusi henkilö, jos henkilöä ei ole jo olemassa
           if (henk.henkilot.isEmpty) throw HenkiloNotFoundException(tunniste)
           val todistukset =
             for (todistus: ImportTodistus <- henkilo.todistukset) yield
@@ -165,7 +164,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   object HenkiloTunnisteNotSupportedException extends Exception("henkilo tunniste not yet supported in arvosana batch")
   case class ImportArvosana(aine: String, arvosana: String, lisatieto: Option[String], valinnainen: Boolean)
   case class ImportTodistus(komo: String, myontaja: String, arvosanat: Seq[ImportArvosana], valmistuminen: LocalDate, suoritusKieli: String)
-  case class ImportArvosanaHenkilo(tunniste: ImportTunniste, todistukset: Seq[ImportTodistus])
+  case class ImportArvosanaHenkilo(tunniste: ImportTunniste, sukunimi: String, etunimet: String, kutsumanimi: String, todistukset: Seq[ImportTodistus])
   object ImportArvosanaHenkilo {
     def getField(name: String)(h: Node): String = (h \ name).head.text
     def getOptionField(name: String)(h: Node): Option[String] = (h \ name).headOption.flatMap(_.text.blankOption)
@@ -213,11 +212,18 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
           throw new IllegalArgumentException(s"henkilo could not be identified: hetu, oppijanumero or henkiloTunniste+syntymaAika missing $t")
       }
 
+      val sukunimi = getField("sukunimi")(h)
+      val etunimet = getField("etunimet")(h)
+      val kutsumanimi = getField("kutsumanimi")(h)
+
       val todistuksetNode = (h \ "todistukset").head
       val todistukset = tyypit.map(t => todistus(t._1, t._2, oppijanumero)(todistuksetNode)(lahde)(oppiaineet)).toSeq.flatten
 
       ImportArvosanaHenkilo(
         tunniste = tunniste,
+        sukunimi = sukunimi,
+        etunimet = etunimet,
+        kutsumanimi = kutsumanimi,
         todistukset = todistukset
       )
     }

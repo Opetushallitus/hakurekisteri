@@ -177,6 +177,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         <henkilot>
           <henkilo>
             <hetu>111111-111L</hetu>
+            <sukunimi>foo</sukunimi>
+            <etunimet>bar k</etunimet>
+            <kutsumanimi>bar</kutsumanimi>
             <todistukset>
               <perusopetus>
                 <valmistuminen>2001-01-01</valmistuminen>
@@ -256,6 +259,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         <henkilot>
           <henkilo>
             <hetu>111111-111L</hetu>
+            <sukunimi>foo</sukunimi>
+            <etunimet>bar k</etunimet>
+            <kutsumanimi>bar</kutsumanimi>
             <todistukset>
               <lukio>
                 <valmistuminen>2004-01-01</valmistuminen>
