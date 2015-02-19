@@ -48,6 +48,8 @@ aside(class="row")
                   span(ng-repeat="o in row.opiskelijat") {{o.luokka}}
                 td(ng-if="!row.hasArvosana")
                   span(ng-repeat="o in row.opiskelijat") puuttuu
+                td(ng-if="row.hasArvosana")
+                  span(ng-repeat="o in row.opiskelijat")
 
   div(class="col-sm-9 col-sm-offset-3")
     div(ng-if="valittuHenkiloOid")
