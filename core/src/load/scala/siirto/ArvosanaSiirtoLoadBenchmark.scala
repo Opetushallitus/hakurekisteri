@@ -14,7 +14,7 @@ import org.scalameter.api._
 import scala.xml.{Node, XML}
 import fi.vm.sade.hakurekisteri.batchimport.BatchState._
 import fi.vm.sade.hakurekisteri.integration.organisaatio._
-import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor
+import fi.vm.sade.hakurekisteri.integration.henkilo._
 import java.io.{ObjectInputStream, ObjectOutputStream, IOException}
 import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.integration._
@@ -24,15 +24,24 @@ import fi.vm.sade.hakurekisteri.integration.ServiceConfig
 import akka.actor.Status.Failure
 import scala.Some
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
-import fi.vm.sade.hakurekisteri.integration.henkilo.CheckHenkilo
+import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Oppilaitos
+import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
+import fi.vm.sade.hakurekisteri.integration.organisaatio.OppilaitosResponse
+import org.json4s.JsonAST.JString
+import generators.DataGen
+import fi.vm.sade.hakurekisteri.integration.EndpointRequest
+import fi.vm.sade.hakurekisteri.integration.ServiceConfig
+import akka.actor.Status.Failure
+import scala.Some
+import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import org.json4s.JsonAST.JString
 import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Oppilaitos
 import fi.vm.sade.hakurekisteri.integration.henkilo.SavedHenkilo
 import fi.vm.sade.hakurekisteri.integration.henkilo.SaveHenkilo
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OppilaitosResponse
-import org.json4s.JsonAST.JString
-import generators.DataGen
 
 
 object ArvosanaSiirtoLoadBenchmark extends PerformanceTest.Quickbenchmark {
@@ -286,9 +295,13 @@ object ArvosanaSiirtoLoadBenchmark extends PerformanceTest.Quickbenchmark {
         log.debug(s"saving $tunniste")
         sender ! SavedHenkilo("1.2.3.4.5", tunniste)
 
-      case CheckHenkilo(oid) =>
+      case HenkiloQuery(Some(oid), _ , tunniste) =>
         log.debug(s"checking $oid")
-        sender ! SavedHenkilo(oid, oid)
+        sender ! FoundHenkilos(Seq(Henkilo(oid, None, "", None, None, None, None, None)), tunniste)
+
+      case HenkiloQuery(None, _ , tunniste) =>
+        log.debug(s"checking $tunniste")
+        sender ! FoundHenkilos(Seq(Henkilo("1.2.3.4.5", None, "", None, None, None, None, None)), tunniste)
     }
   }
 
