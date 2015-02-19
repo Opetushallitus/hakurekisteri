@@ -164,9 +164,8 @@ app.factory "MuokkaaTiedot", [
 
       initDatepicker = ->
         $scope.showWeeks = true
-        $scope.format = "mediumDate"
+        $scope.format = "shortDate"
         $scope.dateOptions =
-          formatYear: "yyyy"
           startingDay: 1
         return
 
