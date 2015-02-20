@@ -334,7 +334,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
     def createEndpoint = {
       val result = mock[Endpoint]
-      when(result.request(forUrl("http://localhost/authentication-service/resources/henkilo?q=111111-111L&index=0&count=2&no=true&s=true"))).thenReturn((200, List(), "{\"totalCount\":1,\"results\":[{\"oidHenkilo\":\"1.2.246.562.24.123\",\"henkiloTyyppi\":\"OPPIJA\"}]}"))
+      when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot"))).thenReturn((200, List(), "1.2.246.562.24.123"))
       when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))).thenReturn((200, List(), "{\"numHits\":1,\"organisaatiot\":[{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}]}"))
       when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/05127"))).thenReturn((200, List(), "{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}"))
       result

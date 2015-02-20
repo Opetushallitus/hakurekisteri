@@ -121,20 +121,8 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     organisaatiot.foreach(t => organisaatioActor ! Oppilaitos(t._1))
   }
 
-  private def saveHenkilo(h: ImportHenkilo, resolveOid: (String) => String) = h.tunniste match {
-    case ImportOppijanumero(oppijanumero) =>
-      val opiskelija: Opiskelija = createOpiskelija(oppijanumero, h)
-      henkiloActor ! UpdateHenkilo(oppijanumero, OrganisaatioHenkilo(
-        organisaatioOid = resolveOid(h.lahtokoulu),
-        organisaatioHenkiloTyyppi = Some("OPISKELIJA"),
-        voimassaAlkuPvm = Some(opiskelija.alkuPaiva.toString("yyyy-MM-dd")),
-        voimassaLoppuPvm = opiskelija.loppuPaiva.map(_.toString("yyyy-MM-dd")),
-        tehtavanimike = Some(h.luokka)
-      ))
-
-    case t =>
-      henkiloActor ! SaveHenkilo(h.toHenkilo(resolveOid), t.tunniste)
-  }
+  private def saveHenkilo(h: ImportHenkilo, resolveOid: (String) => String) =
+    henkiloActor ! SaveHenkilo(h.toHenkilo(resolveOid), h.tunniste.tunniste)
 
   import ImportHenkilo.opiskelijaAlkuPaiva
   import ImportHenkilo.opiskelijaLoppuPaiva
@@ -285,18 +273,11 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     case SavedHenkilo(henkiloOid, tunniste) if !importHenkilot.contains(tunniste) =>
       log.warning(s"received save confirmation from ${sender()}, but no match left in batch: sent tunniste $tunniste -> received henkiloOid $henkiloOid")
 
-    case HenkiloSaveFailed(tunniste, t) =>
+    case Failure(HenkiloSaveFailed(tunniste, t)) =>
+      println("failure from henkilo actor")
       val errors = failures.getOrElse(tunniste, Set[String]()) + t.toString
       failures = failures + (tunniste -> errors)
       henkiloDone(tunniste)
-      if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
-        batchProcessed()
-      }
-
-    case Failure(t: UpdateHenkiloException) =>
-      val errors = failures.getOrElse(t.oid, Set[String]()) + t.toString
-      failures = failures + (t.oid -> errors)
-      henkiloDone(t.oid)
       if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
         batchProcessed()
       }
@@ -377,9 +358,13 @@ case class ImportHenkilo(tunniste: ImportTunniste, lahtokoulu: String, luokka: S
         case ImportHetu(h) => Some(h)
         case _ => None
       },
+      oidHenkilo = tunniste match {
+        case ImportOppijanumero(oid) => Some(oid)
+        case _ => None
+      },
       syntymaaika = syntymaaika,
       sukupuoli = sukupuoli,
-      aidinkieli = Kieli(aidinkieli.toLowerCase),
+      aidinkieli = Some(Kieli(aidinkieli.toLowerCase)),
       henkiloTyyppi = "OPPIJA",
       kasittelijaOid = lahde,
       organisaatioHenkilo = Seq(OrganisaatioHenkilo(

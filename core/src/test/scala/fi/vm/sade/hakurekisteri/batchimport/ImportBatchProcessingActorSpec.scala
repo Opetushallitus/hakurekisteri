@@ -7,9 +7,9 @@ import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.henkilo.{CreateHenkilo, Henkilo, HenkiloActor}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{CreateHenkilo, HenkiloActor}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus}
 import fi.vm.sade.hakurekisteri.test.tools.MockedResourceActor
@@ -22,9 +22,6 @@ import scala.concurrent.ExecutionContext
 
 
 class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions with HakurekisteriJsonSupport {
-  implicit val system = ActorSystem("test-import-batch-processing")
-  implicit val ec: ExecutionContext = system.dispatcher
-
   behavior of "ImportBatchProcessingActor"
 
   val lahde = "testitiedonsiirto"
@@ -86,7 +83,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     </henkilot>
   </perustiedot>, Some("foo"), "perustiedot", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
 
-  def createEndpoint = {
+  def createEndpoint(fail: Boolean) = {
     val result = mock[Endpoint]
 
     val henkiloBody = {
@@ -96,19 +93,26 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
       write[CreateHenkilo](henkilo)
     }
 
-    when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot"))).thenReturn((200, List(), "1.2.246.562.24.123"))
-
-    when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))).thenReturn((200, List(), "{\"numHits\":1,\"organisaatiot\":[{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}]}"))
-
-    when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/05127"))).thenReturn((200, List(), "{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}"))
+    if (fail) {
+      when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot"))).thenReturn((500, List(), "error"))
+      when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))).thenReturn((500, List(), "error"))
+      when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/05127"))).thenReturn((500, List(), "error"))
+    } else {
+      when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot"))).thenReturn((200, List(), "1.2.246.562.24.123"))
+      when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))).thenReturn((200, List(), "{\"numHits\":1,\"organisaatiot\":[{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}]}"))
+      when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/05127"))).thenReturn((200, List(), "{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}"))
+    }
 
     result
   }
-  val endpoint = createEndpoint
-  val asyncProvider = new CapturingProvider(endpoint)
+  val asyncProvider = new CapturingProvider(createEndpoint(fail = false))
+  val failingAsyncProvider = new CapturingProvider(createEndpoint(fail = true))
 
 
   it should "import data into henkilopalvelu and suoritusrekisteri" in {
+    implicit val system = ActorSystem("test-import-batch-processing")
+    implicit val ec: ExecutionContext = system.dispatcher
+
     val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = {r =>}, query = { (q) => Seq(batch) })))
     val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))
     val henkiloActor = system.actorOf(Props(new HenkiloActor(henkiloClient)))
@@ -138,6 +142,39 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
 
     sWaiter.await(timeout(30.seconds), dismissals(1))
     oWaiter.await(timeout(30.seconds), dismissals(1))
+
+    system.shutdown()
+    system.awaitTermination()
+  }
+
+  it should "report error for failed henkilo save" in {
+    implicit val system = ActorSystem("test-import-batch-processing")
+    implicit val ec: ExecutionContext = system.dispatcher
+
+    val iWaiter = new Waiter()
+    val batchHandler = (b: ImportBatch) => {
+      if (b.state != BatchState.PROCESSING) iWaiter {
+        b.status.messages.keys should (contain ("111111-1975") and contain ("TUNNISTE") and have size 2)
+      }
+      iWaiter.dismiss()
+    }
+    val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchHandler, query = { (q) => Seq(batch) })))
+    val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(failingAsyncProvider)))
+    val henkiloActor = system.actorOf(Props(new HenkiloActor(henkiloClient)))
+    val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = {r => r}, query = {q => Seq()})))
+    val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija](save = {r => r}, query = {q => Seq()})))
+    val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
+    val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient)))
+    val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
+    val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana](save = {r => r}, query = { (q) => Seq() })))
+
+    val processingActor = system.actorOf(Props(new ImportBatchProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, arvosanarekisteri, koodistoActor)))
+
+    processingActor ! ProcessReadyBatches
+
+    import org.scalatest.time.SpanSugar._
+
+    iWaiter.await(timeout(30.seconds), dismissals(2))
 
     system.shutdown()
     system.awaitTermination()

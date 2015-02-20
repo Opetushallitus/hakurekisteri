@@ -21,9 +21,7 @@ import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.integration.EndpointRequest
 import fi.vm.sade.hakurekisteri.integration.ServiceConfig
 import akka.actor.Status.Failure
-import scala.Some
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
-import fi.vm.sade.hakurekisteri.integration.henkilo.UpdateHenkilo
 import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Oppilaitos
 import fi.vm.sade.hakurekisteri.integration.henkilo.SavedHenkilo
@@ -280,14 +278,9 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.OfflineReport {
     implicit val ec:ExecutionContext = context.dispatcher
 
     override def receive: Actor.Receive = {
-
       case SaveHenkilo(_, tunniste) =>
         log.debug(s"saving $tunniste")
         sender ! SavedHenkilo("1.2.3.4.5", tunniste)
-
-      case UpdateHenkilo(oid, _) =>
-        log.debug(s"checking $oid")
-        sender ! SavedHenkilo(oid, oid)
     }
   }
 

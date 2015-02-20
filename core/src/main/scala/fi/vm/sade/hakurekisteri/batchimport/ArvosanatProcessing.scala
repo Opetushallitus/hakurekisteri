@@ -93,7 +93,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   }
 
   private def processBatch(batch: ImportBatch)(oppiaineet: Seq[String]): Seq[Future[ImportArvosanaStatus]] =
-    for (henkilot <- enrich(parseData(batch)(oppiaineet))) yield henkilot.flatMap(henkilo => {
+    for (henkilot <- enrich(parseData(batch)(oppiaineet))(batch.source)) yield henkilot.flatMap(henkilo => {
       val todistukset = for (todistus <- henkilo._3) yield saveTodistus(batch, henkilo, todistus)
 
       Future.sequence(todistukset).map(tods => {
@@ -134,25 +134,35 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     case _ => false
   }
 
-  private def query(henkilo: ImportArvosanaHenkilo) = henkilo.tunniste match {
-    case ImportHetu(hetu) => HenkiloQuery(None, Some(hetu), hetu)
-    case ImportOppijanumero(oid) => HenkiloQuery(Some(oid), None, oid)
-    case ImportHenkilonTunniste(_, _, _) => throw HenkiloTunnisteNotSupportedException
-      //TODO hae henkilöpalvelusta ulkoisen tunnisteen perusteella
-  }
+  private def saveHenkilo(henkilo: ImportArvosanaHenkilo)(lahde: String)(tunniste: String) =
+    SaveHenkilo(
+      CreateHenkilo(
+        sukunimi = henkilo.sukunimi,
+        etunimet = henkilo.etunimet,
+        kutsumanimi = henkilo.kutsumanimi,
+        hetu = henkilo.tunniste match {
+          case ImportHetu(hetu) => Some(hetu)
+          case _ => None
+        },
+        oidHenkilo = henkilo.tunniste match {
+          case ImportOppijanumero(oid) => Some(oid)
+          case _ => None
+        },
+        henkiloTyyppi = "OPPIJA",
+        kasittelijaOid = lahde,
+        organisaatioHenkilo = Seq() // TODO liitetäänkö organisaatioihin todistusten myöntäjien perusteella?
+      ),
+      tunniste
+    )
 
-  private def enrich(henkilot: Map[String, ImportArvosanaHenkilo]): Seq[Future[(String, String, Seq[(ImportTodistus, String)])]] = {
-    val enriched =
-      for ((tunniste, henkilo) <- henkilot) yield
-        for (henk <- (henkiloActor ? query(henkilo)).mapTo[FoundHenkilos]) yield {
-          //TODO muuta tästä kohtaa luomaan uusi henkilö, jos henkilöä ei ole jo olemassa
-          if (henk.henkilot.isEmpty) throw HenkiloNotFoundException(tunniste)
-          val todistukset =
-            for (todistus: ImportTodistus <- henkilo.todistukset) yield
-              for (oppilaitos <- (organisaatioActor ? Oppilaitos(todistus.myontaja)).mapTo[OppilaitosResponse]) yield (todistus, oppilaitos.oppilaitos.oid)
+  private def enrich(henkilot: Map[String, ImportArvosanaHenkilo])(lahde: String): Seq[Future[(String, String, Seq[(ImportTodistus, String)])]] = {
+    val enriched = for ((tunniste, arvosanahenkilo) <- henkilot) yield
+      for (henkilo <- (henkiloActor ? saveHenkilo(arvosanahenkilo)(lahde)(tunniste)).mapTo[SavedHenkilo]) yield {
+        val todistukset = for (todistus: ImportTodistus <- arvosanahenkilo.todistukset) yield
+          for (oppilaitos <- (organisaatioActor ? Oppilaitos(todistus.myontaja)).mapTo[OppilaitosResponse]) yield (todistus, oppilaitos.oppilaitos.oid)
 
-          (tunniste, henk.henkilot.head.oidHenkilo, todistukset)
-        }
+        (tunniste, henkilo.henkiloOid, todistukset)
+      }
 
     enriched.map(_.flatMap(h => Future.sequence(h._3).map(tods => (h._1, h._2, tods)))).toSeq
   }

@@ -17,7 +17,20 @@ import com.ning.http.client.AsyncHttpClient
 object HenkiloActorBenchmark extends PerformanceTest.OfflineReport {
 
 
-  val henkiloDataGen: DataGen[CreateHenkilo] = DataGen.values(CreateHenkilo("Testi Henkilo", "Testi", "Sukuniminen", Some("290499-957B"), Some("1999-04-29") , Some("1"),Kieli("fi"),henkiloTyyppi = "OPPIJA","testi",Seq(OrganisaatioHenkilo("1.2.246.562.5.05127")) ))
+  val henkiloDataGen: DataGen[CreateHenkilo] = DataGen.values(
+    CreateHenkilo(
+      etunimet = "Testi Henkilo",
+      kutsumanimi = "Testi",
+      sukunimi = "Sukuniminen",
+      hetu = Some("290499-957B"),
+      syntymaaika = Some("1999-04-29"),
+      sukupuoli = Some("1"),
+      aidinkieli = Some(Kieli("fi")),
+      henkiloTyyppi = "OPPIJA",
+      kasittelijaOid = "testi",
+      organisaatioHenkilo = Seq(OrganisaatioHenkilo("1.2.246.562.5.05127"))
+    )
+  )
 
   val henkilos = Gen.exponential("saves")(1,256, 2).map(s => for (
     i <- 0 until s
@@ -37,7 +50,7 @@ object HenkiloActorBenchmark extends PerformanceTest.OfflineReport {
         case (henkiloSeq, lag) =>
           val sys = ActorSystem("perf-test")
 
-          val henkilot: Map[String, String] = henkiloSeq.collect{ case h: CreateHenkilo if h.hetu.isDefined => h.hetu.get}.toSet[String].toList.zipWithIndex.toMap.mapValues(i => s"1.2.246.562.24.$i")
+          val henkilot: Map[String, String] = henkiloSeq.collect{ case h: CreateHenkilo if h.hetu.isDefined => h.hetu.get}.toSet[String].toList.zipWithIndex.toMap.mapValues((i: String) => s"1.2.246.562.24.$i")
 
           def url(pattern:String) ="\\$".r.replaceAllIn(s"${pattern.replaceAll("\\?", "\\\\?")}", "(.*)").r
 
