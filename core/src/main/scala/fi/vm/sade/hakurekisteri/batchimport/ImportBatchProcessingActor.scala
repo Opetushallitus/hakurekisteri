@@ -274,7 +274,6 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       log.warning(s"received save confirmation from ${sender()}, but no match left in batch: sent tunniste $tunniste -> received henkiloOid $henkiloOid")
 
     case Failure(HenkiloSaveFailed(tunniste, t)) =>
-      println("failure from henkilo actor")
       val errors = failures.getOrElse(tunniste, Set[String]()) + t.toString
       failures = failures + (tunniste -> errors)
       henkiloDone(tunniste)
@@ -336,6 +335,8 @@ case class ImportHenkilo(tunniste: ImportTunniste, lahtokoulu: String, luokka: S
   val mies = "1"
   val nainen = "2"
 
+  def koulut = (lahtokoulu +: suoritukset.map(_.myontaja)).toSet.toList.sorted.mkString(",")
+
   def toHenkilo(resolveOid: (String) => String): CreateHenkilo = {
     val (syntymaaika: Option[String], sukupuoli: Option[String]) = tunniste match {
       case ImportHenkilonTunniste(_, syntymaAika, sukup) => (Some(syntymaAika), Some(sukup))
@@ -345,6 +346,11 @@ case class ImportHenkilo(tunniste: ImportTunniste, lahtokoulu: String, luokka: S
         else
           (toSyntymaAika(hetu), Some(mies))
       case _ => (None, None)
+    }
+
+    val vuosi = new LocalDate() match {
+      case v if v.getMonthOfYear > 6 => v.getYear + 1
+      case v => v.getYear
     }
 
     import ImportHenkilo.opiskelijaAlkuPaiva
@@ -360,6 +366,10 @@ case class ImportHenkilo(tunniste: ImportTunniste, lahtokoulu: String, luokka: S
       },
       oidHenkilo = tunniste match {
         case ImportOppijanumero(oid) => Some(oid)
+        case _ => None
+      },
+      externalId = tunniste match {
+        case ImportHenkilonTunniste(t, sa, _) => Some(s"${koulut}_${vuosi}_${t}_$sa")
         case _ => None
       },
       syntymaaika = syntymaaika,

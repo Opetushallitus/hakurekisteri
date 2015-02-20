@@ -134,7 +134,11 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     case _ => false
   }
 
-  private def saveHenkilo(henkilo: ImportArvosanaHenkilo)(lahde: String)(tunniste: String) =
+  private def saveHenkilo(henkilo: ImportArvosanaHenkilo)(lahde: String)(tunniste: String) = {
+    val vuosi = new LocalDate() match {
+      case v if v.getMonthOfYear > 6 => v.getYear + 1
+      case v => v.getYear
+    }
     SaveHenkilo(
       CreateHenkilo(
         sukunimi = henkilo.sukunimi,
@@ -148,12 +152,17 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
           case ImportOppijanumero(oid) => Some(oid)
           case _ => None
         },
+        externalId = henkilo.tunniste match {
+          case ImportHenkilonTunniste(t, sa, _) => Some(s"${henkilo.todistukset.map(_.myontaja).toSet.toList.sorted.mkString(",")}_${vuosi}_${t}_$sa")
+          case _ => None
+        },
         henkiloTyyppi = "OPPIJA",
         kasittelijaOid = lahde,
         organisaatioHenkilo = Seq() // TODO liitetäänkö organisaatioihin todistusten myöntäjien perusteella?
       ),
       tunniste
     )
+  }
 
   private def enrich(henkilot: Map[String, ImportArvosanaHenkilo])(lahde: String): Seq[Future[(String, String, Seq[(ImportTodistus, String)])]] = {
     val enriched = for ((tunniste, arvosanahenkilo) <- henkilot) yield
