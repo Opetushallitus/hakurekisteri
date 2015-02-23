@@ -6,6 +6,9 @@
     <henkilot>
         <henkilo>
             <hetu>111111-111L</hetu>
+            <sukunimi>Hetullinen</sukunimi>
+            <etunimet>Juha Jaakko</etunimet>
+            <kutsumanimi>Juha</kutsumanimi>
             <todistukset>
                 <perusopetus>
                     <valmistuminen>2001-01-01</valmistuminen>
@@ -75,6 +78,9 @@
         </henkilo>
         <henkilo>
             <oppijanumero>1.2.246.562.24.12345678901</oppijanumero>
+            <sukunimi>Oppijanumerollinen</sukunimi>
+            <etunimet>Juha Jaakko</etunimet>
+            <kutsumanimi>Jaakko</kutsumanimi>
             <todistukset>
                 <perusopetus>
                     <valmistuminen>2001-01-01</valmistuminen>
