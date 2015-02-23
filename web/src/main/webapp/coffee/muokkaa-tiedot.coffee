@@ -148,7 +148,6 @@ app.factory "MuokkaaTiedot", [
         return
 
       formatDate = (input) ->
-        console.log('input='+input)
         if(input.indexOf(':') > -1)
           parts = []
           d = new Date(input)
@@ -159,7 +158,6 @@ app.factory "MuokkaaTiedot", [
           parts = input.split('-')
           d = new Date(''+(parts[1])+'-'+parts[0]+'-'+parts[2])
         if parts
-          console.log('date='+""+d.getDate()+"."+(1+d.getMonth())+"."+d.getFullYear())
           ""+d.getDate()+"."+(1+d.getMonth())+"."+d.getFullYear()
         else
           "Virheellinen päivämäärä: " + d
