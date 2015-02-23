@@ -62,44 +62,23 @@ app.controller "MuokkaaArvosanatYo", [
       removeArvosana = (arvosana, d) ->
         arvosana.$remove (->
           d.resolve "remove ok"
-          return
         ), (err) ->
-          $log.error "error removing, retrying to remove: " + err
-          arvosana.$remove (->
-            d.resolve "retry remove ok"
-            return
-          ), (retryErr) ->
-            $log.error "retry remove failed: " + retryErr
-            d.reject "retry save failed"
-            return
-          return
-        return
+          $log.error "error removing " + err
+          d.reject "remove failed"
       saveArvosana = (arvosana, d) ->
         arvosana.$save ((saved) ->
           d.resolve "save ok: " + saved.id
-          return
         ), (err) ->
-          $log.error "error saving, retrying to save: " + err
-          arvosana.$save ((retriedSave) ->
-            d.resolve "retry save ok: " + retriedSave.id
-            return
-          ), (retryErr) ->
-            $log.error "retry save failed: " + retryErr
-            d.reject "retry save failed"
-            return
-          return
-        return
-      saveArvosanat = ->
-        for arvosana in arvosanat
-          do (arvosana) ->
-            d = $q.defer()
-            yoarvosanaSavePromises.push d
-            if arvosana["delete"]
-              removeArvosana arvosana, d  if arvosana.id
-            else
-              saveArvosana arvosana, d
-            return
-        return
+          $log.error "error saving " + err
+          d.reject "save failed"
+      saveArvosanat = (arvosanat) ->
+        arvosanat.map (arvosana) ->
+          d = $q.defer()
+          if arvosana["delete"] && arvosana.id
+            removeArvosana arvosana, d
+          else
+            saveArvosana arvosana, d
+          d.promise
       arvosanat = $scope.koetaulukko.filter((k) -> k.lisatieto and k.aine and k.arvosana and k.myonnetty).map((k) ->
         new Arvosanat(
           id: k.id
@@ -115,9 +94,7 @@ app.controller "MuokkaaArvosanatYo", [
             pisteet: ((if k.pisteet is "" then null else k.pisteet))
         )
       )
-      yoarvosanaSavePromises = []
-      saveArvosanat()
-      $q.all(yoarvosanaSavePromises.map (d) -> d.promise).then (->
+      $q.all(saveArvosanat(arvosanat)).then (->
       ), ->
         MessageService.addMessage
           type: "danger"
