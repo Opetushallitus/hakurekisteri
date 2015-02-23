@@ -80,8 +80,8 @@ body #raamit-header .header-content {
 #save-button {
     text-align: right;
     position: fixed;
-    bottom:10vh;
-    right: 10vw;
+    bottom: 10px;
+    right: 20px;
 }
 
 .loading-large {

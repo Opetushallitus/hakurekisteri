@@ -1,6 +1,5 @@
 h2(oph-msg="suoritusrekisteri.sovellus.nimi" oph-msg="suoritusrekisteri.opiskelijat.opiskelijatiedot") Opiskelijatiedot
 
-messages
 
 script(type="text/ng-template" id="organisaatioTemplate.html")
   a
@@ -14,7 +13,7 @@ aside(class="row")
     div(class="form-group")
       div(class="col-sm-12")
         input(id="organisaatioTerm" class="form-control" autocomplete="off" ng-model="organisaatioTerm" type="search"
-        placeholder="Hae oppilaitoksen numerolla tai nimellä"
+        placeholder="Oppilaitoksen numero tai nimi"
         typeahead="organisaatio as organisaatio.nimi.fi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10"
         typeahead-loading="loadingOppilaitos" typeahead-wait-ms="300" typeahead-template-url="organisaatioTemplate.html")
     div(class="form-group")
@@ -52,5 +51,6 @@ aside(class="row")
                   span(ng-repeat="o in row.opiskelijat")
 
   div(class="col-sm-9 col-sm-offset-3")
+    messages
     div(ng-if="valittuHenkiloOid")
       div(ng-include="'templates/muokkaa-tiedot'")
