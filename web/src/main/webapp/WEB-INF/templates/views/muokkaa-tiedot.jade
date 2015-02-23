@@ -89,7 +89,7 @@ form(ng-submit="saveTiedot()")
                       ng-click="openDatepicker($event, suoritus, 'opened')"
                       show-button-bar="false")
                     span(class="input-group-btn")
-                      button(class="btn btn-default btn-sm" ng-click="suoritus.valmistuminen = null")
+                      button(class="btn btn-default btn-sm" type="button" ng-click="suoritus.valmistuminen = ''")
                         span(class="glyphicon glyphicon-remove")
                   div(ng-hide="suoritus.editable") {{suoritus.valmistuminen}}
                 div(class="form-group col-sm-4")
@@ -146,7 +146,7 @@ form(ng-submit="saveTiedot()")
                     ng-click="openDatepicker($event, luokkatieto, 'openedAlku')"
                     show-button-bar="false")
                   span(class="input-group-btn")
-                    button(class="btn btn-default btn-sm" ng-click="luokkatieto.alkuPaiva = null; luokkatieto.loppuPaiva = null;")
+                    button(class="btn btn-default btn-sm" type="button" ng-click="luokkatieto.alkuPaiva = null; luokkatieto.loppuPaiva = null;")
                       span(class="glyphicon glyphicon-remove")
               div(class="form-group col-sm-4")
                 strong(oph-msg="suoritusrekisteri.muokkaa.loppupaiva") Loppupäivä
@@ -160,7 +160,7 @@ form(ng-submit="saveTiedot()")
                     ng-click="openDatepicker($event, luokkatieto, 'openedLoppu')"
                     show-button-bar="false")
                   span(class="input-group-btn")
-                    button(class="btn btn-default btn-sm" ng-click="luokkatieto.loppuPaiva = null")
+                    button(class="btn btn-default btn-sm" type="button" ng-click="luokkatieto.loppuPaiva = null")
                       span(class="glyphicon glyphicon-remove")
               div(class="form-group col-sm-4")
                 div(class="pull-right")
