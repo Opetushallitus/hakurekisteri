@@ -110,6 +110,7 @@ app.factory "MuokkaaTiedot", [
 
       fetchLuokkatiedot = ->
         Opiskelijat.query { henkilo: henkiloOid }, ((luokkatiedot) ->
+          luokkatiedot.forEach((l) -> l.loppuPaiva = formatDate(l.loppuPaiva))
           $scope.henkilo.luokkatiedot = luokkatiedot
           enrichLuokkatieto(l) for l in luokkatiedot
         ), ->
@@ -134,6 +135,7 @@ app.factory "MuokkaaTiedot", [
       fetchSuoritukset = ->
         Suoritukset.query { henkilo: henkiloOid }, ((suoritukset) ->
           suoritukset.sort (a, b) -> sortByFinDateDesc a.valmistuminen, b.valmistuminen
+          suoritukset.forEach((s) -> s.valmistuminen = formatDate(s.valmistuminen))
           $scope.henkilo.suoritukset = suoritukset
           for s in suoritukset
             enrichSuoritus(s)
@@ -144,6 +146,23 @@ app.factory "MuokkaaTiedot", [
             messageKey: "suoritusrekisteri.muokkaa.suoritustietojenhakeminen"
           }
         return
+
+      formatDate = (input) ->
+        console.log('input='+input)
+        if(input.indexOf(':') > -1)
+          parts = []
+          d = new Date(input)
+        else if(input.indexOf('.') > -1)
+          parts = input.split('.')
+          d = new Date(''+(parts[1])+'-'+parts[0]+'-'+parts[2])
+        else if(input.indexOf('-') > -1)
+          parts = input.split('-')
+          d = new Date(''+(parts[1])+'-'+parts[0]+'-'+parts[2])
+        if parts
+          console.log('date='+""+d.getDate()+"."+(1+d.getMonth())+"."+d.getFullYear())
+          ""+d.getDate()+"."+(1+d.getMonth())+"."+d.getFullYear()
+        else
+          "Virheellinen päivämäärä: " + d
 
       fetchOpiskeluoikeudet = ->
         enrich = ->
@@ -164,9 +183,11 @@ app.factory "MuokkaaTiedot", [
 
       initDatepicker = ->
         $scope.showWeeks = true
-        $scope.format = "shortDate"
+        $scope.format = "mediumDate"
         $scope.dateOptions =
           startingDay: 1
+          formatMonth: 'MM'
+          formatYear: 'yy'
         return
 
       updateMurupolku = ->
