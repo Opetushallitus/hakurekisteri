@@ -1,16 +1,14 @@
 package fi.vm.sade.hakurekisteri.integration.henkilo
 
 import java.net.URLEncoder
-import java.util.concurrent.ExecutionException
 
-import akka.actor.Status.Failure
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
-import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 case class Kieli(kieliKoodi: String, kieliTyyppi: Option[String] = None)
 
@@ -63,7 +61,7 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with Actor
     henkiloClient.readObject[Seq[OrganisaatioHenkilo]](s"/resources/henkilo/$oidHenkilo/organisaatiohenkilo", 200)
   }
 
-  import HetuUtil.Hetu
+  import fi.vm.sade.hakurekisteri.integration.henkilo.HetuUtil.Hetu
 
   override def receive: Receive = {
     case henkiloOid: String =>
