@@ -23,7 +23,7 @@ import scala.util.Try
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, ArvosanaTable, Arvosana}
 import generators.DataGen
 
-object CreateDb extends App {
+object CreateTestDb extends App {
   println("Creating a test db")
 
   val kevaanVuosi = if (DateTime.now isBefore(new MonthDay(8, 18).toLocalDate(DateTime.now.getYear).toDateTimeAtStartOfDay()))

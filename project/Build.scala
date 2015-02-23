@@ -171,7 +171,7 @@ object HakurekisteriBuild extends Build {
       artifactoryPublish,
       libraryDependencies   ++= AkkaStack ++ dependencies
         ++ testDependencies.map((m) => m % "test"),
-      fullRunTask(createTestDb, Test, "util.CreateDb")
+      fullRunTask(createTestDb, Test, "util.CreateTestDb")
     ) ++ inConfig(LoadSpecs)(Defaults.testSettings)
       ++ inConfig(LoadSpecs)(Seq(
       testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
