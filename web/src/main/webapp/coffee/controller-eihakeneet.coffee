@@ -61,10 +61,13 @@ app.controller "EihakeneetCtrl", [
           params:
             oppilaitosOid: oppilaitosOid
 
+        opiskelijatConfig.params.vuosi = vuosi if vuosi
+        opiskelijatConfig.params.kausi = kausi if kausi
         opiskelijatConfig.params.luokka = luokka  if luokka
 
         $http.get("rest/v1/opiskelijat", opiskelijatConfig).success((opiskelijat) ->
-          luokanOpiskelijat = opiskelijat  if opiskelijat
+          if opiskelijat
+            luokanOpiskelijat = opiskelijat.filter((o) -> o.luokkataso in ["9", "10"])
           deferredOpiskelijat.resolve "done"
         ).error (data, status) ->
           deferredOpiskelijat.reject status
@@ -114,6 +117,8 @@ app.controller "EihakeneetCtrl", [
 
     hakuOid = $routeParams.haku
     oppilaitosOid = $routeParams.oppilaitos
+    vuosi = $routeParams.vuosi
+    kausi = $routeParams.kausi
     luokka = $routeParams.luokka
 
     $scope.loading = false
