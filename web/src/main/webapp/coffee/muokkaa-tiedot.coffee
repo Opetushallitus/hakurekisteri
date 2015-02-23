@@ -110,9 +110,10 @@ app.factory "MuokkaaTiedot", [
 
       fetchLuokkatiedot = ->
         Opiskelijat.query { henkilo: henkiloOid }, ((luokkatiedot) ->
-          luokkatiedot.forEach((l) -> l.loppuPaiva = formatDate(l.loppuPaiva))
+          for luokkatieto in luokkatiedot
+            luokkatieto.loppuPaiva = formatDate(luokkatieto.loppuPaiva)
+            enrichLuokkatieto(luokkatieto)
           $scope.henkilo.luokkatiedot = luokkatiedot
-          enrichLuokkatieto(l) for l in luokkatiedot
         ), ->
           MessageService.addMessage
             type: "danger"
@@ -135,10 +136,10 @@ app.factory "MuokkaaTiedot", [
       fetchSuoritukset = ->
         Suoritukset.query { henkilo: henkiloOid }, ((suoritukset) ->
           suoritukset.sort (a, b) -> sortByFinDateDesc a.valmistuminen, b.valmistuminen
-          suoritukset.forEach((s) -> s.valmistuminen = formatDate(s.valmistuminen))
+          for suoritus in suoritukset
+            suoritus.valmistuminen = formatDate(suoritus.valmistuminen)
+            enrichSuoritus(suoritus)
           $scope.henkilo.suoritukset = suoritukset
-          for s in suoritukset
-            enrichSuoritus(s)
         ), ->
           MessageService.addMessage {
             type: "danger"
@@ -163,21 +164,17 @@ app.factory "MuokkaaTiedot", [
           "Virheellinen päivämäärä: " + d
 
       fetchOpiskeluoikeudet = ->
-        enrich = ->
-          ((opiskeluoikeus) ->
-            if opiskeluoikeus.myontaja
-              getOrganisaatio $http, opiskeluoikeus.myontaja, (organisaatio) ->
-                opiskeluoikeus.oppilaitos = organisaatio.oppilaitosKoodi
-                opiskeluoikeus.organisaatio = organisaatio
-            if opiskeluoikeus.komo and opiskeluoikeus.komo.match(/^koulutus_\d*$/)
-              getKoulutusNimi $http, opiskeluoikeus.komo, (koulutusNimi) ->
-                opiskeluoikeus.koulutus = koulutusNimi
-            return
-          )(opiskeluoikeus) for opiskeluoikeus in $scope.henkilo.opiskeluoikeudet  if $scope.henkilo.opiskeluoikeudet
-          return
         Opiskeluoikeudet.query { henkilo: henkiloOid }, (opiskeluoikeudet) ->
           $scope.henkilo.opiskeluoikeudet = opiskeluoikeudet
-          enrich()
+          if $scope.henkilo.opiskeluoikeudet
+            for opiskeluoikeus in $scope.henkilo.opiskeluoikeudet
+              if opiskeluoikeus.myontaja
+                getOrganisaatio $http, opiskeluoikeus.myontaja, (organisaatio) ->
+                  opiskeluoikeus.oppilaitos = organisaatio.oppilaitosKoodi
+                  opiskeluoikeus.organisaatio = organisaatio
+              if opiskeluoikeus.komo and opiskeluoikeus.komo.match(/^koulutus_\d*$/)
+                getKoulutusNimi $http, opiskeluoikeus.komo, (koulutusNimi) ->
+                  opiskeluoikeus.koulutus = koulutusNimi
 
       initDatepicker = ->
         $scope.showWeeks = true
@@ -202,79 +199,47 @@ app.factory "MuokkaaTiedot", [
       $scope.isOPH = ->
         Array.isArray($scope.myRoles) and ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1 or $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1)
 
-      $scope.saveTiedot = ->
-        for saveFn in $scope.henkilo.extraSaves
-          saveFn()
-        validateOppilaitoskoodit = ->
-          ((obj) ->
-            if not obj["delete"] and obj.editable and not (obj.komo and obj.komo is komo.ylioppilastutkinto)
-              d = $q.defer()
-              validationPromises.push d
-              if not obj.oppilaitos or not obj.oppilaitos.match(/^\d{5}$/)
-                MessageService.addMessage
-                  type: "danger"
-                  messageKey: "suoritusrekisteri.muokkaa.oppilaitoskoodipuuttuu"
-                  message: "Oppilaitoskoodi puuttuu tai se on virheellinen."
-                  descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi"
-                  description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
+      needsValidation = (obj) -> not obj["delete"] and obj.editable and not (obj.komo and obj.komo is komo.ylioppilastutkinto)
+      validateOppilaitoskoodit = ->
+        $scope.henkilo.luokkatiedot.concat($scope.henkilo.suoritukset).filter(needsValidation).map (obj) ->
+          d = $q.defer()
+          if not obj.oppilaitos or not obj.oppilaitos.match(/^\d{5}$/)
+            MessageService.addMessage
+              type: "danger"
+              messageKey: "suoritusrekisteri.muokkaa.oppilaitoskoodipuuttuu"
+              message: "Oppilaitoskoodi puuttuu tai se on virheellinen."
+              descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi"
+              description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
+            d.reject "validationerror"
+          else
+            getOrganisaatio $http, obj.oppilaitos, ((organisaatio) ->
+              if obj.komo
+                obj.myontaja = organisaatio.oid
+              else obj.oppilaitosOid = organisaatio.oid  if obj.luokkataso
+              d.resolve "validated against organisaatio"
+            ), ->
+              MessageService.addMessage
+                type: "danger"
+                messageKey: "suoritusrekisteri.muokkaa.oppilaitostaeiloytynyt"
+                message: "Oppilaitosta ei löytynyt oppilaitoskoodilla."
+                descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi"
+                description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
+              d.reject "validationerror in call to organisaatio"
+          d.promise
 
-                d.reject "validationerror"
-              else
-                getOrganisaatio $http, obj.oppilaitos, ((organisaatio) ->
-                  if obj.komo
-                    obj.myontaja = organisaatio.oid
-                  else obj.oppilaitosOid = organisaatio.oid  if obj.luokkataso
-                  d.resolve "validated against organisaatio"
-                  return
-                ), ->
-                  MessageService.addMessage
-                    type: "danger"
-                    messageKey: "suoritusrekisteri.muokkaa.oppilaitostaeiloytynyt"
-                    message: "Oppilaitosta ei löytynyt oppilaitoskoodilla."
-                    descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi"
-                    description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
+      deleteFromArray = (obj, arr) ->
+        index = arr.indexOf(obj)
+        arr.splice index, 1  if index isnt -1
+        return
 
-                  d.reject "validationerror in call to organisaatio"
-                  return
-
-            return
-          )(obj) for obj in $scope.henkilo.luokkatiedot.concat($scope.henkilo.suoritukset)
-          return
-
-        deleteFromArray = (obj, arr) ->
-          index = arr.indexOf(obj)
-          arr.splice index, 1  if index isnt -1
-          return
-
-        saveSuoritukset = ->
-          ((suoritus) ->
-            d = $q.defer()
-            muokkaaSavePromises.push d
-            if suoritus["delete"]
-              if suoritus.id
-                suoritus.$remove (->
-                  deleteFromArray suoritus, $scope.henkilo.suoritukset
-                  d.resolve "done"
-                  return
-                ), ->
-                  MessageService.addMessage
-                    type: "danger"
-                    messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja"
-                    message: "Virhe tallennettaessa suoritustietoja."
-                    descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita"
-                    description: "Yritä uudelleen."
-
-                  d.reject "error deleting suoritus: " + suoritus
-                  return
-
-              else
+      saveSuoritukset = ->
+        $scope.henkilo.suoritukset.map (suoritus) ->
+          d = $q.defer()
+          if suoritus["delete"]
+            if suoritus.id
+              suoritus.$remove (->
                 deleteFromArray suoritus, $scope.henkilo.suoritukset
                 d.resolve "done"
-            else
-              suoritus.$save (->
-                enrichSuoritus suoritus
-                d.resolve "done"
-                return
               ), ->
                 MessageService.addMessage
                   type: "danger"
@@ -282,64 +247,66 @@ app.factory "MuokkaaTiedot", [
                   message: "Virhe tallennettaessa suoritustietoja."
                   descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita"
                   description: "Yritä uudelleen."
+                d.reject "error deleting suoritus: " + suoritus
+            else
+              deleteFromArray suoritus, $scope.henkilo.suoritukset
+              d.resolve "done"
+          else
+            suoritus.$save (->
+              enrichSuoritus suoritus
+              d.resolve "done"
+            ), ->
+              MessageService.addMessage
+                type: "danger"
+                messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja"
+                message: "Virhe tallennettaessa suoritustietoja."
+                descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita"
+                description: "Yritä uudelleen."
+              d.reject "error saving suoritus: " + suoritus
+          d.promise
 
-                d.reject "error saving suoritus: " + suoritus
-                return
-
-            return
-          )(suoritus) for suoritus in $scope.henkilo.suoritukset
-          return
-
-        saveLuokkatiedot = ->
-          ((luokkatieto) ->
-            d = $q.defer()
-            muokkaaSavePromises.push d
-            if luokkatieto["delete"]
-              if luokkatieto.id
-                luokkatieto.$remove (->
-                  deleteFromArray luokkatieto, $scope.henkilo.luokkatiedot
-                  d.resolve "done"
-                  return
-                ), ->
-                  MessageService.addMessage
-                    type: "danger"
-                    messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja"
-                    message: "Virhe tallennettaessa luokkatietoja."
-                    descriptionKey: "suoritusrekisteri.muokkaa.virheluokkatietoyrita"
-                    description: "Yritä uudelleen."
-
-                  d.reject "error deleting luokkatieto: " + luokkatieto
-                  return
-
-              else
+      saveLuokkatiedot = ->
+        $scope.henkilo.luokkatiedot.map (luokkatieto) ->
+          d = $q.defer()
+          if luokkatieto["delete"]
+            if luokkatieto.id
+              luokkatieto.$remove (->
                 deleteFromArray luokkatieto, $scope.henkilo.luokkatiedot
                 d.resolve "done"
-            else
-              luokkatieto.$save (->
-                enrichLuokkatieto luokkatieto
-                d.resolve "done"
-                return
               ), ->
                 MessageService.addMessage
                   type: "danger"
                   messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja"
                   message: "Virhe tallennettaessa luokkatietoja."
-                  descriptionKey: "suoritusrekisteri.muokkaa.virheluokkayrita"
+                  descriptionKey: "suoritusrekisteri.muokkaa.virheluokkatietoyrita"
                   description: "Yritä uudelleen."
 
-                d.reject "error saving luokkatieto: " + luokkatieto
-                return
+                d.reject "error deleting luokkatieto: " + luokkatieto
+            else
+              deleteFromArray luokkatieto, $scope.henkilo.luokkatiedot
+              d.resolve "done"
+          else
+            luokkatieto.$save (->
+              enrichLuokkatieto luokkatieto
+              d.resolve "done"
+            ), ->
+              MessageService.addMessage
+                type: "danger"
+                messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja"
+                message: "Virhe tallennettaessa luokkatietoja."
+                descriptionKey: "suoritusrekisteri.muokkaa.virheluokkayrita"
+                description: "Yritä uudelleen."
+              d.reject "error saving luokkatieto: " + luokkatieto
+          d.promise
 
-            return
-          )(luokkatieto) for luokkatieto in $scope.henkilo.luokkatiedot
-          return
-        validationPromises = []
-        validateOppilaitoskoodit()
-        muokkaaSavePromises = []
-        $q.all(validationPromises.map((d) -> d.promise)).then (->
-          saveSuoritukset()
-          saveLuokkatiedot()
-          $q.all(muokkaaSavePromises.map((d) -> d.promise)).then (->
+      $scope.addSave = (fn) ->
+        $scope.henkilo.extraSaves.push fn
+
+      $scope.saveTiedot = ->
+        for saveFn in $scope.henkilo.extraSaves
+          saveFn()
+        $q.all(validateOppilaitoskoodit()).then (->
+          $q.all(saveSuoritukset().concat(saveLuokkatiedot())).then (->
             $log.info "all saved successfully"
             MessageService.addMessage
               type: "success"
@@ -354,8 +321,6 @@ app.factory "MuokkaaTiedot", [
         ), (errors) ->
           $log.error "validation errors: " + errors
         window.scrollTo(0, 0);
-        return
-
 
       $scope.checkYlioppilastutkinto = (suoritus) ->
         if suoritus.komo is komo.ylioppilastutkinto
@@ -384,9 +349,6 @@ app.factory "MuokkaaTiedot", [
         $event.preventDefault()
         $event.stopPropagation()
         obj[fieldName] = true
-
-      $scope.addSave = (fn) ->
-        $scope.henkilo.extraSaves.push fn
 
       initializeHenkilotiedot()
 ]
