@@ -2,12 +2,8 @@ app.controller "MuokkaaSuoritus", [
   "$scope"
   "$http"
   "$q"
-  "$modal"
-  "$log"
-  "Arvosanat"
-  "Suoritukset"
   "MessageService"
-  ($scope, $http, $q, $modal, $log, Arvosanat, Suoritukset, MessageService) ->
+  ($scope, $http, $q, MessageService) ->
     enrichSuoritus = (suoritus) ->
       if suoritus.myontaja
         getOrganisaatio $http, suoritus.myontaja, (organisaatio) ->
