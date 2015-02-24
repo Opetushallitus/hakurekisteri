@@ -111,7 +111,6 @@ app.factory "MuokkaaTiedot", [
       fetchLuokkatiedot = ->
         Opiskelijat.query { henkilo: henkiloOid }, ((luokkatiedot) ->
           for luokkatieto in luokkatiedot
-            luokkatieto.loppuPaiva = formatDate(luokkatieto.loppuPaiva)
             enrichLuokkatieto(luokkatieto)
           $scope.henkilo.luokkatiedot = luokkatiedot
         ), ->
