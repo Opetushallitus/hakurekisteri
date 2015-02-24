@@ -11,6 +11,7 @@ app.factory "MuokkaaTiedot", [
   "MessageService"
   ($location, $http, $log, $q, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService) ->
     muokkaaHenkilo: (henkiloOid, $scope) ->
+      modifiedCache = createChangeDetectionCache()
 
       initializeHenkilotiedot = ->
         $scope.henkilo = # // main data object
@@ -111,6 +112,7 @@ app.factory "MuokkaaTiedot", [
       fetchLuokkatiedot = ->
         Opiskelijat.query { henkilo: henkiloOid }, ((luokkatiedot) ->
           for luokkatieto in luokkatiedot
+            modifiedCache.add(luokkatieto.id, luokkatieto)
             enrichLuokkatieto(luokkatieto)
           $scope.henkilo.luokkatiedot = luokkatiedot
         ), ->
@@ -118,26 +120,12 @@ app.factory "MuokkaaTiedot", [
             type: "danger"
             message: "Luokkatietojen hakeminen ei onnistunut. Yritä uudelleen?"
             messageKey: "suoritusrekisteri.muokkaa.luokkatietojenhakeminen"
-        return
-
-      enrichSuoritus = (suoritus) ->
-        if suoritus.myontaja
-          getOrganisaatio $http, suoritus.myontaja, (organisaatio) ->
-            suoritus.oppilaitos = organisaatio.oppilaitosKoodi
-            suoritus.organisaatio = organisaatio
-        if suoritus.komo and suoritus.komo.match(/^koulutus_\d*$/)
-          getKoulutusNimi $http, suoritus.komo, (koulutusNimi) ->
-            suoritus.koulutus = koulutusNimi
-        else
-          suoritus.editable = true
-        return
 
       fetchSuoritukset = ->
         Suoritukset.query { henkilo: henkiloOid }, ((suoritukset) ->
           suoritukset.sort (a, b) -> sortByFinDateDesc a.valmistuminen, b.valmistuminen
           for suoritus in suoritukset
             suoritus.valmistuminen = formatDate(suoritus.valmistuminen)
-            enrichSuoritus(suoritus)
           $scope.henkilo.suoritukset = suoritukset
         ), ->
           MessageService.addMessage {
@@ -145,7 +133,6 @@ app.factory "MuokkaaTiedot", [
             message: "Suoritustietojen hakeminen ei onnistunut. Yritä uudelleen?"
             messageKey: "suoritusrekisteri.muokkaa.suoritustietojenhakeminen"
           }
-        return
 
       formatDate = (input) ->
         if(input.indexOf(':') > -1)
@@ -226,46 +213,8 @@ app.factory "MuokkaaTiedot", [
               d.reject "validationerror in call to organisaatio"
           d.promise
 
-      deleteFromArray = (obj, arr) ->
-        index = arr.indexOf(obj)
-        arr.splice index, 1  if index isnt -1
-        return
-
-      saveSuoritukset = ->
-        $scope.henkilo.suoritukset.map (suoritus) ->
-          d = $q.defer()
-          if suoritus["delete"]
-            if suoritus.id
-              suoritus.$remove (->
-                deleteFromArray suoritus, $scope.henkilo.suoritukset
-                d.resolve "done"
-              ), ->
-                MessageService.addMessage
-                  type: "danger"
-                  messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja"
-                  message: "Virhe tallennettaessa suoritustietoja."
-                  descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita"
-                  description: "Yritä uudelleen."
-                d.reject "error deleting suoritus: " + suoritus
-            else
-              deleteFromArray suoritus, $scope.henkilo.suoritukset
-              d.resolve "done"
-          else
-            suoritus.$save (->
-              enrichSuoritus suoritus
-              d.resolve "done"
-            ), ->
-              MessageService.addMessage
-                type: "danger"
-                messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja"
-                message: "Virhe tallennettaessa suoritustietoja."
-                descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita"
-                description: "Yritä uudelleen."
-              d.reject "error saving suoritus: " + suoritus
-          d.promise
-
       saveLuokkatiedot = ->
-        $scope.henkilo.luokkatiedot.map (luokkatieto) ->
+        $scope.henkilo.luokkatiedot.filter((luokkatieto) -> modifiedCache.hasChanged(luokkatieto.id, luokkatieto)).map (luokkatieto) ->
           d = $q.defer()
           if luokkatieto["delete"]
             if luokkatieto.id
@@ -301,11 +250,15 @@ app.factory "MuokkaaTiedot", [
       $scope.addSave = (fn) ->
         $scope.henkilo.extraSaves.push fn
 
-      $scope.saveTiedot = ->
+      saveExtraData = ->
+        promises = []
         for saveFn in $scope.henkilo.extraSaves
-          saveFn()
+          promises = promises.concat(saveFn())
+        promises
+
+      $scope.saveTiedot = ->
         $q.all(validateOppilaitoskoodit()).then (->
-          $q.all(saveSuoritukset().concat(saveLuokkatiedot())).then (->
+          $q.all(saveExtraData().concat(saveLuokkatiedot())).then (->
             $log.info "all saved successfully"
             MessageService.addMessage
               type: "success"

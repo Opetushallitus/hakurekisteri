@@ -100,8 +100,7 @@ app.controller "MuokkaaArvosanatYo", [
           type: "danger"
           messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.tallennuseionnistunut"
           message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen."
-        return
-      return
+      []
 
     $scope.addSave(saveArvosanatYo)
 

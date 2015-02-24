@@ -159,6 +159,26 @@ unless Array.isArray
   Array.isArray = (arg) ->
     Object::toString.call(arg) is "[object Array]"
 
+createChangeDetectionCache = ->
+  cache = {}
+  {
+  add: (id, val)->
+    cache[id] = JSON.stringify(val)
+  hasChanged: (id, val)->
+    if not id of cache
+      true
+    newJson = JSON.stringify(val)
+    changed = cache[id] != newJson
+    console.log("hasChanged", changed, JSON.parse(cache[id]), val)
+    if changed
+      cache[id] = newJson
+    changed
+  }
+
+deleteFromArray = (obj, arr) ->
+  if index = arr.indexOf(obj) != -1
+    arr.splice index, 1
+
 (->
   ensureConsoleMethods()
   if window.globalInitOphMsg
