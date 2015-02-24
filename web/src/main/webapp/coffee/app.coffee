@@ -124,6 +124,9 @@ app.factory "MessageService", ->
         throw new Error("Problem with message")
       messages.length = 0  if clear
       messages.push message
+      setTimeout ( ->
+        $('#status-messages').find('.message').fadeOut('slow')
+      ), 4000
       return
 
     removeMessage: (message) ->

@@ -51,6 +51,6 @@ aside(class="row")
                   span(ng-repeat="o in row.opiskelijat")
 
   div(class="col-sm-9 col-sm-offset-3")
-    messages
+    messages(id="status-messages")
     div(ng-if="valittuHenkiloOid")
       div(ng-include="'templates/muokkaa-tiedot'")
