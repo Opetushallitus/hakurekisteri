@@ -154,10 +154,10 @@ app.factory "MuokkaaTiedot", [
           d = new Date(input)
         else if(input.indexOf('.') > -1)
           parts = input.split('.')
-          d = new Date(''+(parts[1])+'-'+parts[0]+'-'+parts[2])
+          d = new Date(parts[2], parts[1], parts[0])
         else if(input.indexOf('-') > -1)
           parts = input.split('-')
-          d = new Date(''+(parts[1])+'-'+parts[0]+'-'+parts[2])
+          d = new Date(parts[2], parts[1], parts[0])
         if parts
           ""+d.getDate()+"."+(1+d.getMonth())+"."+d.getFullYear()
         else
