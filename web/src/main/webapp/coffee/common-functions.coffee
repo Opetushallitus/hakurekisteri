@@ -165,7 +165,7 @@ changeDetection = (object) ->
   hasChanged: ()->
     newJson = JSON.stringify(object)
     changed = json != newJson
-    console.log("hasChanged", changed, JSON.parse(json), "->", JSON.parse(newJson))
+    #console.log("hasChanged", changed, JSON.parse(json), "->", JSON.parse(newJson))
     if changed
       json = newJson
     changed

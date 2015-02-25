@@ -4,7 +4,6 @@ app.controller "MuokkaaSuoritus", [
   "$q"
   "MessageService"
   ($scope, $http, $q, MessageService) ->
-    console.log "MuokkaaSuoritus", $scope
     enrichSuoritus = (suoritus) ->
       if suoritus.myontaja
         getOrganisaatio $http, suoritus.myontaja, (organisaatio) ->
