@@ -300,7 +300,7 @@ app.factory "MuokkaaTiedot", [
       $scope.openDatepicker = ($event, obj, fieldName) ->
         $event.preventDefault()
         $event.stopPropagation()
-          obj[fieldName] = true
+        obj[fieldName] = true
 
       initializeHenkilotiedot()
 ]
