@@ -58,7 +58,7 @@ app.controller "MuokkaaArvosanatYo", [
         editable: true
       return
 
-    saveArvosanatYo = ->
+    $scope.saveData = ->
       removeArvosana = (arvosana, d) ->
         arvosana.$remove (->
           d.resolve "remove ok"
@@ -102,7 +102,7 @@ app.controller "MuokkaaArvosanatYo", [
           message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen."
       []
 
-    $scope.addSave(saveArvosanatYo)
+    $scope.addDataScope($scope)
 
     $scope.tutkintokerrat = tutkintokerrat()
     $scope.getText = (value, values) ->

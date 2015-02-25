@@ -185,7 +185,7 @@ app.controller "MuokkaaArvosanat", [
           alakoodi.koodiUri is "oppiaineenkielisyys_1"
         )
 
-    saveArvosanatNormaali = ->
+    $scope.saveData = ->
       removeArvosana = (arvosana, d) ->
         arvosana.$remove (->
           d.resolve "remove ok"
@@ -251,5 +251,5 @@ app.controller "MuokkaaArvosanat", [
           message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen."
       []
 
-    $scope.addSave(saveArvosanatNormaali)
+    $scope.addDataScope($scope)
 ]

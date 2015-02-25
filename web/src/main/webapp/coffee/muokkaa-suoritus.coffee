@@ -4,22 +4,26 @@ app.controller "MuokkaaSuoritus", [
   "$q"
   "MessageService"
   ($scope, $http, $q, MessageService) ->
+    console.log "MuokkaaSuoritus", $scope
     enrichSuoritus = (suoritus) ->
       if suoritus.myontaja
         getOrganisaatio $http, suoritus.myontaja, (organisaatio) ->
-          $scope.oppilaitos = organisaatio.oppilaitosKoodi
-          $scope.organisaatio = organisaatio
+          $scope.info.oppilaitos = organisaatio.oppilaitosKoodi
+          $scope.info.organisaatio = organisaatio
       if suoritus.komo and suoritus.komo.match(/^koulutus_\d*$/)
         getKoulutusNimi $http, suoritus.komo, (koulutusNimi) ->
-          $scope.koulutus = koulutusNimi
+          $scope.info.koulutus = koulutusNimi
       else
-        $scope.editable = true
+        $scope.info.editable = true
 
-    saveSuoritus = ->
-      suoritus = $scope.suoritus
-      if modifiedCache.hasChanged(suoritus.id, suoritus)
+    $scope.validateData = ->
+      $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel($scope.info, $scope.suoritus)
+
+    $scope.saveData = ->
+      if modifiedCache.hasChanged()
         d = $q.defer()
-        if $scope.deleteSuoritus
+        suoritus = $scope.suoritus
+        if $scope.info.delete
           if suoritus.id
             suoritus.$remove (->
               deleteFromArray suoritus, $scope.henkilo.suoritukset
@@ -51,9 +55,8 @@ app.controller "MuokkaaSuoritus", [
       else
         []
 
-    modifiedCache = createChangeDetectionCache()
-    modifiedCache.add($scope.suoritus.id, $scope.suoritus)
+    modifiedCache = changeDetection($scope.suoritus)
+    $scope.info = {}
     enrichSuoritus($scope.suoritus)
-    $scope.addSave(saveSuoritus)
-
+    $scope.addDataScope($scope)
 ]

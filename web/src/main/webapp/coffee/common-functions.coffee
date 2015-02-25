@@ -159,19 +159,15 @@ unless Array.isArray
   Array.isArray = (arg) ->
     Object::toString.call(arg) is "[object Array]"
 
-createChangeDetectionCache = ->
-  cache = {}
+changeDetection = (object) ->
+  json = JSON.stringify(object)
   {
-  add: (id, val)->
-    cache[id] = JSON.stringify(val)
-  hasChanged: (id, val)->
-    if not id of cache
-      true
-    newJson = JSON.stringify(val)
-    changed = cache[id] != newJson
-    console.log("hasChanged", changed, JSON.parse(cache[id]), val)
+  hasChanged: ()->
+    newJson = JSON.stringify(object)
+    changed = json != newJson
+    console.log("hasChanged", changed, JSON.parse(json), "->", JSON.parse(newJson))
     if changed
-      cache[id] = newJson
+      json = newJson
     changed
   }
 

@@ -138,7 +138,8 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
     , true
 
     $scope.getOppilaitos = (searchStr, obj) ->
-      return [{organisaatio: {nimi: {fi: "suomi"}}}]  if (obj and typeof obj.organisaatio is "object") and obj.organisaatio.oppilaitosKoodi is searchStr
+      if (obj and typeof obj.organisaatio is "object") and obj.organisaatio.oppilaitosKoodi is searchStr
+        return [{organisaatio: {nimi: {fi: "suomi"}}}]
       if searchStr and searchStr.length >= 3
         $http.get(organisaatioServiceUrl + "/rest/organisaatio/v2/hae",
           params:
