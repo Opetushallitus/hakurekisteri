@@ -35,6 +35,15 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
       $scope.henkilo = null
       $scope.organisaatio = null
 
+      stickyElem = $('.sticky-scroller')
+      stickyOrigTop = undefined
+      $(window).bind "scroll", ->
+        if !stickyOrigTop
+          stickyOrigTop = stickyElem.position().top
+        offset = stickyOrigTop - this.pageYOffset
+        if offset < 0 then offset = 0
+        stickyElem.css("top", offset + "px")
+
       searchTerms = []
       if $scope.henkiloTerm
         henkiloTerm = $q.defer()
