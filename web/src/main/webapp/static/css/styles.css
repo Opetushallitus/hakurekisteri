@@ -65,7 +65,7 @@ body #raamit-header .header-content {
     color: #06526b;
     font-size: 12px;
     width: 20em;
-    word-wrap: break-word;
+    word-break: break-all;
 }
 
 #table-settings tbody:hover tr:hover {
