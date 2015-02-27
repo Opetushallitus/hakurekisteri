@@ -124,14 +124,18 @@ app.factory "MessageService", ->
         throw new Error("Problem with message")
       messages.length = 0  if clear
       messages.push message
+      that = this
       setTimeout ( ->
-        $('#status-messages').find('.message').fadeOut('slow')
-      ), 4000
+        that.removeMessage(message)
+      ), 2000
       return
 
     removeMessage: (message) ->
       index = messages.indexOf(message)
       messages.splice index, 1  if index isnt -1
+      element = angular.element($('#status-messages').find('.alert-success'))
+      if(element)
+        element.scope().$apply()
       return
 
     clearMessages: ->
