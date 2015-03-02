@@ -35,7 +35,7 @@ div(class="row")
       ng-click="valmistuminenOpen = true"
       show-button-bar="false")
       span(class="input-group-btn")
-        button(class="btn btn-default btn-sm" type="button" ng-click="suoritus.valmistuminen = ''")
+        button(class="btn btn-default btn-sm" type="button" ng-click="suoritus.valmistuminen = null")
           span(class="glyphicon glyphicon-remove")
     div(ng-hide="info.editable") {{suoritus.valmistuminen}}
   div(class="form-group col-sm-4")

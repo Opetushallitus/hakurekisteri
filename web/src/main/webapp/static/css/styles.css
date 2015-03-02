@@ -46,6 +46,10 @@ body #raamit-header .header-content {
     text-align: center;
 }
 
+#bread-crumb {
+    display: none;
+}
+
 .sticky-scroller {
     position: fixed;
 }

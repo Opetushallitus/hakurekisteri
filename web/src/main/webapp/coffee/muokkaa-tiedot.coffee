@@ -123,17 +123,14 @@ app.factory "MuokkaaTiedot", [
           }
 
       formatDate = (input) ->
-        if(input.indexOf(':') > -1)
-          parts = []
-          d = new Date(input)
-        else if(input.indexOf('.') > -1)
+        if(input.indexOf('.') > -1)
           parts = input.split('.')
           d = new Date(parts[2], parts[1], parts[0])
         else if(input.indexOf('-') > -1)
           parts = input.split('-')
           d = new Date(parts[2], parts[1], parts[0])
         if parts
-          ""+d.getDate()+"."+(d.getMonth())+"."+d.getFullYear()
+          ""+d.getDate()+"."+(0+d.getMonth())+"."+d.getFullYear()
         else
           "Virheellinen päivämäärä: " + d
 
@@ -155,8 +152,10 @@ app.factory "MuokkaaTiedot", [
         $scope.format = "mediumDate"
         $scope.dateOptions =
           startingDay: 1
-          formatMonth: 'MM'
-          formatYear: 'yy'
+          dayFormat: 'd'
+          formatMonth: 'm'
+          formatYear: 'yyyy'
+        return
 
       updateMurupolku = ->
         MurupolkuService.addToMurupolku {
@@ -220,11 +219,12 @@ app.factory "MuokkaaTiedot", [
 
       $scope.saveTiedot = ->
         $q.all(validateData()).then (->
-          $q.all(saveData()).then (->
-            MessageService.addMessage
-              type: "success"
-              messageKey: "suoritusrekisteri.muokkaa.tallennettu"
-              message: "Tiedot tallennettu."
+          $q.all(saveData()).then ((res) ->
+            if(res[0])
+              MessageService.addMessage
+                type: "success"
+                messageKey: "suoritusrekisteri.muokkaa.tallennettu"
+                message: "Tiedot tallennettu."
           ), (errors) ->
             $log.error "errors while saving: " + errors
             MessageService.addMessage
@@ -233,7 +233,7 @@ app.factory "MuokkaaTiedot", [
               message: "Tietojen tallentaminen ei onnistunut. Yritä uudelleen."
         ), (errors) ->
           $log.error "validation errors: " + errors
-        window.scrollTo(0, 0)
+        window.scrollTo(0, 100)
 
       $scope.checkYlioppilastutkinto = (suoritus) ->
         if suoritus.komo is komo.ylioppilastutkinto

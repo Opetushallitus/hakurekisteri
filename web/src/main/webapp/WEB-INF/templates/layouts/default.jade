@@ -43,7 +43,7 @@ html(ng-app="myApp")
     div(class="container")
       div(class="row" ng-controller="MurupolkuCtrl" ng-hide="isHidden()")
         div(class="col-sm-12")
-          ul(class="breadcrumb")
+          ul(class="breadcrumb" id="bread-crumb")
             li
               a(ng-click="goHome()" class="link")
                 span(class="icon-breadcrumb-home")
