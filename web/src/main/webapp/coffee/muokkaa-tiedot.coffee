@@ -233,7 +233,9 @@ app.factory "MuokkaaTiedot", [
               message: "Tietojen tallentaminen ei onnistunut. Yritä uudelleen."
         ), (errors) ->
           $log.error "validation errors: " + errors
-        window.scrollTo(0, 100)
+        window.scrollTo(0,
+        document.getElementById('application-name').getBoundingClientRect().height)
+
 
       $scope.checkYlioppilastutkinto = (suoritus) ->
         if suoritus.komo is komo.ylioppilastutkinto
