@@ -133,7 +133,7 @@ app.factory "MuokkaaTiedot", [
           parts = input.split('-')
           d = new Date(parts[2], parts[1], parts[0])
         if parts
-          ""+d.getDate()+"."+(1+d.getMonth())+"."+d.getFullYear()
+          ""+d.getDate()+"."+(d.getMonth())+"."+d.getFullYear()
         else
           "Virheellinen päivämäärä: " + d
 
