@@ -9,6 +9,10 @@ app = angular.module "myApp", [
   "ngCookies"
 ]
 
+if (window.self != window.top)
+  console.log("Mocks ON!")
+  angular.module('myApp').requires.push('e2e-mocks')
+
 app.factory "Opiskelijat", ($resource) ->
   $resource "rest/v1/opiskelijat/:opiskelijaId", { opiskelijaId: "@id" }, {
       query:
