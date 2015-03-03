@@ -215,7 +215,10 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
     searchOpiskelijat = (query) ->
       o = $q.defer()
       Opiskelijat.query query, ((result) ->
-        o.resolve { opiskelijat: result }
+        if(result.length > 0)
+          o.resolve { opiskelijat: result }
+        else
+          o.resolve { opiskelijat:  [ { henkiloOid: query.henkilo} ] }
       ), ->
         o.reject "opiskelija query failed"
       o
