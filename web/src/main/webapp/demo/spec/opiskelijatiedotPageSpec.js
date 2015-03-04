@@ -16,7 +16,7 @@
 
     describe("Haku", function() {
       it('Voi hakea oppilaitoksen perusteella', function(done) {
-        wait.until(function() { return page.filterForm().length === 1 })()
+        exists(page.organizationSearch)()
           .then(wait.forAngular)
           .then(function() {
             page.organizationSearch().val("Pikkaralan ala-aste").change()
@@ -31,7 +31,7 @@
           })
           .then(wait.forAngular)
           .then(function() {
-            expect(page.resultsTable().length).to.equal(2)
+            expect(page.resultsTable().length).to.equal(5)
             done()
           })
       })

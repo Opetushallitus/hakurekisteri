@@ -11,7 +11,7 @@ function opiskelijatiedotPage() {
       return S("#filterForm").first()
     },
     organizationSearch: function() {
-      return S("#organisaatioTerm").first()
+      return S("#organisaatioTerm")
     },
     searchButton: function() {
       return Button(function() {

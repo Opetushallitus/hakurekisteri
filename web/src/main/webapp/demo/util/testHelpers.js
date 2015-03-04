@@ -200,6 +200,15 @@ function openPage(path, predicate) {
     }
 }
 
+function exists(fn) {
+    if (typeof(fn) !== 'function') {
+        throw new Error('exists() got a non-function');
+    }
+    return wait.until(function() {
+        return fn().length > 0;
+    })
+}
+
 function takeScreenshot() {
     if (window.callPhantom) {
         var date = new Date();
