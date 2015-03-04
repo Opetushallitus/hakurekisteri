@@ -46,8 +46,6 @@ object VapaamuotoinenKkTutkinto {
 
 }
 
-
-
 case class VirallinenSuoritus(komo: String,
                     myontaja: String,
                     tila: String,

@@ -6,7 +6,7 @@ import fi.vm.sade.hakurekisteri.Config
 
 import scala.xml.{XML, Node, Elem}
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen, Suoritus}
-import fi.vm.sade.hakurekisteri.arvosana.{ArvosanaQuery, Arvosana}
+import fi.vm.sade.hakurekisteri.arvosana._
 import scala.concurrent.{ExecutionContext, Future}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -15,7 +15,6 @@ import org.joda.time._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fr.janalyse.ssh.{SSHPassword, SSH}
 import scala.concurrent.duration._
-import fi.vm.sade.hakurekisteri.arvosana.ArvioYo
 import fi.vm.sade.hakurekisteri.integration.henkilo.Henkilo
 import fi.vm.sade.hakurekisteri.integration.henkilo.HetuQuery
 import scala.util.Failure
@@ -253,7 +252,8 @@ case class YtlResult(batch: UUID, data: Elem)
 case class Kokelas(oid: String,
                    yo: Suoritus,
                    lukio: Option[Suoritus],
-                   yoTodistus: Seq[Koe])
+                   yoTodistus: Seq[Koe],
+                   osakokeet: Seq[Koe])
 
 object Send
 
@@ -386,7 +386,7 @@ object YTLXml {
       oid <- oidFuture
     } yield {
       val yo = extractYo(oid, kokelas)
-      Kokelas(oid, yo , extractLukio(oid, kokelas), extractTodistus(yo, kokelas) )
+      Kokelas(oid, yo , extractLukio(oid, kokelas), extractTodistus(yo, kokelas), extractOsakoe(yo, kokelas))
     }
   }
 
@@ -455,22 +455,49 @@ object YTLXml {
   import fi.vm.sade.hakurekisteri.Config
   import fi.vm.sade.hakurekisteri.tools.RicherString._
 
-  def extractTodistus(yo: Suoritus, kokelas: Node): Seq[Koe] = {
+  def extractTodistus(yo: Suoritus, kokelas: Node): Seq[YoKoe] = {
     (kokelas \\ "KOE").map{
       (koe: Node) =>
        val arvio = ArvioYo((koe \ "ARVOSANA").text, (koe \ "YHTEISPISTEMAARA").text.blankOption.map(_.toInt))
-        Koe(arvio, (koe \ "KOETUNNUS").text, (koe \ "AINEYHDISTELMAROOLI").text, parseKausi((koe \ "TUTKINTOKERTA").text).get)
+        YoKoe(arvio, (koe \ "KOETUNNUS").text, (koe \ "AINEYHDISTELMAROOLI").text, parseKausi((koe \ "TUTKINTOKERTA").text).get)
     }
   }
+
+  def extractOsakoe(yo: Suoritus, kokelas: Node): Seq[Osakoe] = {
+    (kokelas \\ "KOE").flatMap {
+      (koe: Node) =>
+        val osakokeet = koe \\ "OSAKOE"
+        osakokeet.map(osakoe => {
+          val arvio = ArvioOsakoe((osakoe \ "OSAKOEPISTEET").text)
+          Osakoe(arvio, (koe \ "KOETUNNUS").text, (osakoe \ "OSAKOETUNNUS").text, (koe \ "AINEYHDISTELMAROOLI").text, parseKausi((koe \ "TUTKINTOKERTA").text).get)
+        })
+    }
+  }
+
 }
 
-case class Koe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String, myonnetty: LocalDate) {
+trait Koe {
+  def toArvosana(suoritus: Suoritus with Identified[UUID]): Arvosana
+}
+
+case class Osakoe(arvio: ArvioOsakoe, koetunnus: String, osakoetunnus: String, aineyhdistelmarooli: String, myonnetty: LocalDate) extends Koe {
   val aine = Aine(koetunnus, Some(aineyhdistelmarooli))
   val valinnainen = aineyhdistelmarooli.toInt >= 60
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]) = {
+    Arvosana(suoritus.id, arvio, aine.aine + "_" + osakoetunnus: String, Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL)
+  }
+}
+
+case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String, myonnetty: LocalDate) extends Koe {
+  val aine = Aine(koetunnus, Some(aineyhdistelmarooli))
+  val valinnainen = aineyhdistelmarooli.toInt >= 60
+
+  def toArvosana(suoritus: Suoritus with Identified[UUID]):Arvosana = {
     Arvosana(suoritus.id, arvio, aine.aine: String, Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL)
   }
+
+
 }
 
 
@@ -490,7 +517,7 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
       } foreach (arvosanaRekisteri ! _)
       uudet.filterNot((uusi) => s.exists { case old: Arvosana => isKorvaava(old)(uusi) }) foreach (arvosanaRekisteri ! _)
       context.stop(self)
-    case Kokelas(_, _, _ , todistus) => kokeet = todistus
+    case Kokelas(_, _, _ , todistus, _) => kokeet = todistus
   }
 
   var fetch: Option[Cancellable] = None

@@ -20,12 +20,14 @@ sealed abstract class Arvio
 
 object Arvio {
   val ASTEIKKO_4_10 = "4-10"
+  val ASTEIKKO_OSAKOE = "OSAKOE"
   val ASTEIKKOYO = "YO"
-  val asteikot = Seq(ASTEIKKO_4_10, ASTEIKKOYO)
+  val asteikot = Seq(ASTEIKKO_4_10, ASTEIKKOYO, ASTEIKKO_OSAKOE)
 
   def apply(arvosana: String, asteikko: String, pisteet: Option[Int] = None): Arvio = asteikko match {
     case ASTEIKKO_4_10 => Arvio410(arvosana)
     case ASTEIKKOYO => ArvioYo(arvosana, pisteet)
+    case ASTEIKKO_OSAKOE => ArvioOsakoe(arvosana)
     case _ => throw UnknownScaleException(asteikko)
   }
 }
@@ -41,4 +43,7 @@ case class Arvio410(arvosana: String) extends Arvio {
 case class ArvioYo(arvosana: String, pisteet: Option[Int]) extends Arvio {
   val allowable = Set[String]("L", "E", "M", "C", "B", "A", "I+", "I", "I-", "I=", "K", "P" )
   require(allowable.contains(arvosana), s"$arvosana is not in (${allowable.mkString(", ")})")
+}
+
+case class ArvioOsakoe(arvosana: String) extends Arvio {
 }

@@ -59,5 +59,12 @@ class KokelasParserSpec extends FlatSpec with Matchers with FutureWaiting {
 
     }
   }
+  it should "have yo osakokeet parsed by yo osakokeet parser" in {
 
+    waitFuture(parseKokelas(Future.successful("oid"), ylioppilas)) {
+      (kokelas: Kokelas) =>
+        kokelas.osakokeet should be (YTLXml.extractOsakoe(kokelas.yo, ylioppilas))
+
+    }
+  }
 }
