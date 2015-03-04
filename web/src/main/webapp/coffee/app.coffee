@@ -9,8 +9,7 @@ app = angular.module "myApp", [
   "ngCookies"
 ]
 
-if (window.self != window.top)
-  console.log("Mocks ON!")
+if (window.mocksOn)
   angular.module('myApp').requires.push('e2e-mocks')
 
 app.factory "Opiskelijat", ($resource) ->

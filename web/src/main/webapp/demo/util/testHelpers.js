@@ -190,6 +190,7 @@ function openPage(path, predicate) {
         var newTestFrame = $('<iframe/>').attr({src: path, width: 1024, height: 800, id: "testframe"});
         $("#testframe").replaceWith(newTestFrame);
         return wait.until(function () {
+            testFrame().mocksOn = true
             return predicate()
         })().then(function () {
             window.uiError = null;
