@@ -6,7 +6,7 @@
 $ git clone https://github.com/Opetushallitus/hakurekisteri.git
 $ cd hakurekisteri
 $ ./sbt
-> container:start
+> ~container:start or container:start
 > browse
 ```
 
