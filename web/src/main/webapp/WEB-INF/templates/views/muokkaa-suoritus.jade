@@ -27,7 +27,7 @@ div(class="row")
   div(class="form-group col-sm-5")
     strong(oph-msg="suoritusrekisteri.muokkaa.valmistumispaiva") Valmistumispäivä
     div(ng-show="info.editable" class="input-group")
-      input(type="text" class="form-control input-sm datepicker" ng-disabled="info.delete" ng-model="suoritus.valmistuminen" title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)"
+      input(type="text" class="form-control input-sm datepicker" ng-disabled="info.delete" ng-model="info.valmistuminen" title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)"
       datepicker-popup="{{format}}"
       datepicker-options="dateOptions"
       datepicker-append-to-body="true"
@@ -35,9 +35,9 @@ div(class="row")
       ng-click="valmistuminenOpen = true"
       show-button-bar="false")
       span(class="input-group-btn")
-        button(class="btn btn-default btn-sm" type="button" ng-click="suoritus.valmistuminen = null")
+        button(class="btn btn-default btn-sm" type="button" ng-click="info.valmistuminen = null")
           span(class="glyphicon glyphicon-remove")
-    div(ng-hide="info.editable") {{suoritus.valmistuminen}}
+    div(ng-hide="info.editable") {{info.valmistuminen}}
   div(class="form-group col-sm-4")
     strong(oph-msg="suoritusrekisteri.muokkaa.tila") Tila
     select(ng-show="info.editable" class="form-control input-sm" ng-disabled="info.delete" ng-model="suoritus.tila" required="required" ng-options="t.value as t.text for t in tilat")

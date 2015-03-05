@@ -19,6 +19,7 @@ app.controller "MuokkaaSuoritus", [
       $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel($scope.info, $scope.suoritus)
 
     $scope.saveData = ->
+      $scope.suoritus.valmistuminen = formatDateWithZeroPaddedNumbers($scope.info.valmistuminen)
       if modifiedCache.hasChanged()
         d = $q.defer()
         suoritus = $scope.suoritus
@@ -54,8 +55,32 @@ app.controller "MuokkaaSuoritus", [
       else
         []
 
+    parseFinDate = (input) ->
+      parts = input.split('.')
+      new Date(parts[2], parts[1], parts[0])
+
+    pad = (n) ->
+      if n<10
+        '0'+n
+      else
+        n
+    formatDateNoZeroPaddedNumbers = (input) ->
+      if input && input.indexOf('.') > -1
+        date = parseFinDate(input)
+        ""+date.getDate()+"."+date.getMonth()+"."+date.getFullYear()
+      else
+        input
+
+    formatDateWithZeroPaddedNumbers = (input) ->
+      if input && input.indexOf('.') > -1
+        date = parseFinDate(input)
+        ""+pad(date.getDate())+"."+pad(date.getMonth())+"."+date.getFullYear()
+      else
+        input
+
     modifiedCache = changeDetection($scope.suoritus)
     $scope.info = {}
+    $scope.info.valmistuminen = formatDateNoZeroPaddedNumbers($scope.suoritus.valmistuminen)
     enrichSuoritus($scope.suoritus)
     $scope.addDataScope($scope)
 ]
