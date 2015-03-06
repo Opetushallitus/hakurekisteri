@@ -202,6 +202,7 @@ trait Journals {
 class DbJournals(jndiName: String)(implicit val system: ActorSystem) extends Journals {
   implicit val database = Try(Database.forName(jndiName)).recover {
     case _: javax.naming.NameNotFoundException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
+    case _: javax.naming.NoInitialContextException => Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
   }.get
 
   override val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])

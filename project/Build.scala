@@ -12,6 +12,7 @@ import scala.language.postfixOps
 
 object HakurekisteriBuild extends Build {
   import sys.process._
+  import com.earldouglas.xsbtwebplugin.PluginKeys._
 
   val Organization = "fi.vm.sade"
   val Name = "hakurekisteri"
@@ -24,8 +25,6 @@ object HakurekisteriBuild extends Build {
   lazy val LoadSpecs = config("load") extend Test
 
   lazy val createTestDb = taskKey[Unit]("create h2 test db")
-
-
 
   val ScalatraStack = Seq(
     "org.scalatra" %% "scalatra",
@@ -146,10 +145,6 @@ object HakurekisteriBuild extends Build {
       "sonar.java.coveragePlugin"  -> "cobertura",
       "sonar.cobertura.reportPath" -> (target.value.getAbsolutePath +"/scala-" +scalaBinaryVersion.value + "/coverage-report/cobertura.xml")))
 
-  import com.earldouglas.xsbtwebplugin.PluginKeys._
-
-
-
   lazy val core = Project(
     id = "hakurekisteri-core",
     base = file("core"),
@@ -179,10 +174,7 @@ object HakurekisteriBuild extends Build {
       parallelExecution := false))
   )
 
-
-
   lazy val root = project.in(file(".")).aggregate(core, web)
-
 
   lazy val web = {
     Project(
@@ -235,8 +227,8 @@ object HakurekisteriBuild extends Build {
             )
         }
       )
-        ++ sonar
-        ++ Seq(surefire)).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
+      ++ sonar
+      ++ Seq(surefire)).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
 
   }.dependsOn(core % "test->test;compile->compile")
 
