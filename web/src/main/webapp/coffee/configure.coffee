@@ -1,29 +1,29 @@
 app.config ($locationProvider, $routeProvider, $httpProvider) ->
   $routeProvider.when "/opiskelijat",
-    templateUrl: "templates/opiskelijat"
+    templateUrl: "templates/opiskelijat.html"
     controller: "OpiskelijatCtrl"
 
   $routeProvider.when "/muokkaa-obd",
-    templateUrl: "templates/muokkaa-obd"
+    templateUrl: "templates/muokkaa-obd.html"
     controller: "MuokkaaSuorituksetObdCtrl"
 
   $routeProvider.when "/muokkaa/:henkiloOid",
-    templateUrl: "templates/muokkaa"
+    templateUrl: "templates/muokkaa.html"
     controller: "MuokkaaCtrl"
 
   $routeProvider.when "/eihakeneet",
-    templateUrl: "templates/eihakeneet"
+    templateUrl: "templates/eihakeneet.html"
     controller: "EihakeneetCtrl"
 
   $routeProvider.when "/tiedonsiirto/lahetys",
-    templateUrl: "templates/tiedonsiirto"
+    templateUrl: "templates/tiedonsiirto.html"
     controller: "TiedonsiirtoCtrl"
 
   $routeProvider.when "/tiedonsiirto/tila",
-    templateUrl: "templates/tiedonsiirtotila"
+    templateUrl: "templates/tiedonsiirtotila.html"
     controller: "TiedonsiirtotilaCtrl"
 
-  $routeProvider.when "/tiedonsiirto/hakeneet",
+  $routeProvider.when "/tiedonsiirto/hakeneet.html",
     templateUrl: "templates/hakeneet"
     controller: "HakeneetCtrl"
     resolve:
@@ -51,7 +51,7 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
       "/tiedonsiirto/lahetys"
 
   $routeProvider.when "/tiedonsiirto/kkhakeneet",
-    templateUrl: "templates/hakeneet?aste=kk"
+    templateUrl: "templates/hakeneet.html?aste=kk"
     controller: "HakeneetCtrl"
     controllerAs: "KkHakeneetCtrl"
     resolve:

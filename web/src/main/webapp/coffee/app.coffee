@@ -163,7 +163,7 @@ app.directive "messages", ->
       $scope.removeMessage = MessageService.removeMessage
       return
 
-    templateUrl: "templates/messages"
+    templateUrl: "templates/messages.html"
   )
 
 app.directive "tiedonsiirtomenu", ->
