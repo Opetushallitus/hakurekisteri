@@ -23,6 +23,7 @@ app.factory "MuokkaaTiedot", [
         $scope.tilat = []
         $scope.kielet = []
         $scope.komo = komo
+        $scope.disableSave = true
 
         LokalisointiService.loadMessages loadMenuTexts
 
@@ -207,6 +208,7 @@ app.factory "MuokkaaTiedot", [
         $q.all(validateData()).then (->
           $q.all(saveData()).then ((res) ->
             if(res[0])
+              $scope.enableSave()
               MessageService.addMessage
                 type: "success"
                 messageKey: "suoritusrekisteri.muokkaa.tallennettu"
@@ -222,6 +224,11 @@ app.factory "MuokkaaTiedot", [
         window.scrollTo(0,
         document.getElementById('application-name').getBoundingClientRect().height)
 
+      $scope.enableSave = () ->
+        $scope.disableSave = true
+        for scope in $scope.henkilo.dataScopes
+          if scope.hasOwnProperty("hasChanged") && scope.hasChanged()
+            $scope.disableSave = false
 
       $scope.checkYlioppilastutkinto = (suoritus) ->
         if suoritus.komo is komo.ylioppilastutkinto

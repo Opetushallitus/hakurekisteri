@@ -14,9 +14,12 @@ app.controller "MuokkaaLuokkatieto", [
     $scope.validateData = ->
       $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel($scope.info, $scope.luokkatieto)
 
+    $scope.hasChanged = ->
+      modifiedCache.hasChanged()
+
     $scope.saveData = ->
       luokkatieto = $scope.luokkatieto
-      if modifiedCache.hasChanged()
+      if $scope.hasChanged()
         d = $q.defer()
         if $scope.info.delete
           if luokkatieto.id
@@ -55,4 +58,5 @@ app.controller "MuokkaaLuokkatieto", [
     $scope.info = {}
     enrichLuokkatieto($scope.luokkatieto)
     $scope.addDataScope($scope)
+    $scope.$watch "luokkatieto", $scope.enableSave, true
 ]

@@ -157,7 +157,7 @@ app.controller "MuokkaaArvosanat", [
 
       $scope.suorituksenArvosanataulukko = createArvosanaTaulukko(suorituksenArvosanat)
       updateArvosanaTaulukko $scope.suorituksenArvosanataulukko
-      console.log $scope.suorituksenArvosanataulukko
+      $scope.$watch "suorituksenArvosanataulukko", $scope.enableSave, true
     )
 
     hasValinnaisuus = (aine) ->
@@ -169,6 +169,10 @@ app.controller "MuokkaaArvosanat", [
       koodistoOppiaineLista.some (o) ->
         o.koodi.koodiArvo is aine and o.alaKoodit.some (alakoodi) ->
           alakoodi.koodiUri is "oppiaineenkielisyys_1"
+
+    $scope.hasChanged = ->
+      updateArvosanaTaulukko $scope.suorituksenArvosanataulukko
+      arvosanatModified.some (a) -> a.hasChanged()
 
     $scope.saveData = ->
       removeArvosana = (arvosana, d) ->
@@ -203,7 +207,7 @@ app.controller "MuokkaaArvosanat", [
             arvosanaModified.update()
           d.promise
 
-      updateArvosanaTaulukko($scope.suorituksenArvosanataulukko)
+      updateArvosanaTaulukko $scope.suorituksenArvosanataulukko
       $q.all(saveArvosanat()).then (->
       ), ->
         MessageService.addMessage
