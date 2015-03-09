@@ -1,0 +1,26 @@
+<h2 oph-msg="suoritusrekisteri.eihakeneet">Ei hakeneet oppilaat</h2>
+<messages></messages>
+<aside><a href="/haku-app/virkailija/hakemus" role="button" class="btn btn-primary"><span class="glyphicon glyphicon-arrow-left"></span><span oph-msg="suoritusrekisteri.takaisin">Takaisin</span></a></aside>
+<table class="table">
+    <thead>
+    <tr>
+        <th oph-msg="suoritusrekisteri.sukunimi">Sukunimi</th>
+        <th oph-msg="suoritusrekisteri.etunimet">Etunimet</th>
+        <th oph-msg="suoritusrekisteri.oppilaitos">Oppilaitos</th>
+        <th oph-msg="suoritusrekisteri.luokka">Luokka</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="row in allRows">
+        <td>{{row.sukunimi}}</td>
+        <td>{{row.etunimet}}</td>
+        <td>{{row.oppilaitos}}</td>
+        <td>{{row.luokka}}</td>
+    </tr>
+    <tr ng-show="loading">
+        <td colspan="4" class="loading-td">
+            <div class="loading-large"></div>
+        </td>
+    </tr>
+    </tbody>
+</table>

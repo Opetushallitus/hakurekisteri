@@ -1,0 +1,64 @@
+<h2 id="application-name">Suoritusrekisteri</h2>
+<script type="text/ng-template" id="organisaatioTemplate.html"><a><span bind-html-unsafe="(match.model.oppilaitosKoodi + ' ' + (match.model.nimi.fi ? match.model.nimi.fi : (match.model.nimi.sv ? match.model.nimi.sv : match.model.nimi.en))) | typeaheadHighlight:query"></span></a></script>
+<aside class="row">
+    <form id="filterForm" style="margin-left: 15px;" ng-submit="search()" class="well form-horizontal sticky-scroller">
+        <div class="form-group">
+            <div class="col-sm-12">
+                <input id="henkiloTerm" ng-model="henkiloTerm" type="search" placeholder="Hetu tai henkilönumero" class="form-control"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-12">
+                <input id="organisaatioTerm" autocomplete="off" ng-model="organisaatioTerm" type="search" placeholder="Oppilaitoksen numero tai nimi" typeahead="organisaatio as organisaatio.nimi.fi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingOppilaitos" typeahead-wait-ms="300" typeahead-template-url="organisaatioTemplate.html" class="form-control"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-6">
+                <select id="vuosiTerm" ng-model="vuosiTerm" ng-options="v for v in vuodet" class="form-control"></select>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-12">
+                <button type="button" ng-click="reset()" class="btn btn-default"><span oph-msg="suoritusrekisteri.opiskelijat.tyhjenna">Tyhjennä</span><span class="glyphicon glyphicon-remove"></span></button>
+                <button type="submit" class="btn btn-primary"><span oph-msg="suoritusrekisteri.opiskelijat.hae" id="hae-button">Hae</span><span class="glyphicon glyphicon-search"></span></button>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-12">
+                <div ng-if="!loading &amp;&amp; allRows.length &gt; 0 &amp;&amp; henkiloTerm.length == 0">
+                    <input id="result-filter" ng-model="filterParam" placeholder="Suodata tuloksia" ng-change="resultFilter(filterParam)" class="form-control"/>
+                    <div class="checkbox">
+                        <label for="missingToggleCheckbox">
+                            <input type="checkbox" id="missingToggleCheckbox" ng-model="showOnlyPuuttuvat" ng-change="arvosanatPuuttuuFilter()"/> Näytä vain puuttuvat
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="table-scroller" class="form-group">
+            <div class="col-sm-12">
+                <div ng-if="loading" id="table-settings">
+                    <div class="loading-td loading-large"></div>
+                </div>
+                <div ng-if="!loading">
+                    <table typeahead-loading="loadingOppilaitos" id="table-settings" class="table table-responsive">
+                        <tbody>
+                        <tr ng-repeat="row in allRowsFiltered" ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}" ng-click="valitseHenkilo(row.henkiloOid)">
+                            <td>{{row.henkilo}}</td>
+                            <td><span ng-repeat="o in row.opiskelijat">{{o.luokka}}</span></td>
+                            <td ng-if="!row.hasArvosana"><span ng-repeat="o in row.opiskelijat">puuttuu</span></td>
+                            <td ng-if="row.hasArvosana"><span ng-repeat="o in row.opiskelijat"></span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="col-sm-9 col-sm-offset-3">
+        <messages id="status-messages"></messages>
+        <div ng-if="valittuHenkiloOid">
+            <div ng-include="'templates/muokkaa-tiedot'"></div>
+        </div>
+    </div>
+</aside>

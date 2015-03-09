@@ -1,0 +1,30 @@
+<div class="row">
+    <div class="form-group col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.oppilaitos">Oppilaitos</strong>
+        <input type="text" title="{{organisaatio.nimi.fi || organisaatio.nimi.sv || organisaatio.nimi.en}}" ng-disabled="info.delete" ng-model="info.oppilaitos" typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv)) for organisaatio in getOppilaitos($viewValue, info) | filter:$viewValue | limitTo:10" typeahead-on-select="info.organisaatio = $item" typeahead-loading="oppilaitosLoading" typeahead-wait-ms="500" required="required" class="form-control input-sm {{oppilaitosLoading ? 'input-loading' : ''}}"/>
+    </div>
+    <div class="form-group col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.luokka">Luokka</strong>
+        <input type="text" ng-disabled="info.delete" ng-model="luokkatieto.luokka" required="required" class="form-control input-sm"/>
+    </div>
+    <div class="form-group col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.luokkataso">Luokkataso</strong>
+        <select ng-disabled="info.delete" ng-model="luokkatieto.luokkataso" required="required" ng-options="l.value as l.text for l in luokkatasot" class="form-control input-sm"></select>
+    </div>
+</div>
+<div class="row">
+    <div class="form-group col-sm-4"><strong oph-msg="suoritusrekisteri.muokkaa.alkupaiva">Alkupäivä</strong>
+        <div class="input-group">
+            <input type="text" ng-disabled="info.delete" ng-model="luokkatieto.alkuPaiva" title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)" datepicker-popup="{{format}}" datepicker-options="dateOptions" required="required" datepicker-append-to-body="true" is-open="alkuOpen" ng-click="alkuOpen = true" show-button-bar="false" class="form-control input-sm datepicker"/><span class="input-group-btn">
+        <button type="button" ng-click="luokkatieto.alkuPaiva = null; luokkatieto.loppuPaiva = null;" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-remove"></span></button></span>
+        </div>
+    </div>
+    <div class="form-group col-sm-4"><strong oph-msg="suoritusrekisteri.muokkaa.loppupaiva">Loppupäivä</strong>
+        <div class="input-group">
+            <input type="text" ng-disabled="info.delete" ng-model="luokkatieto.loppuPaiva" title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)" datepicker-popup="{{format}}" datepicker-options="dateOptions" min-date="luokkatieto.alkuPaiva" datepicker-append-to-body="true" is-open="loppuOpen" ng-click="loppuOpen = true" show-button-bar="false" class="form-control input-sm datepicker"/><span class="input-group-btn">
+        <button type="button" ng-click="luokkatieto.loppuPaiva = null" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-remove"></span></button></span>
+        </div>
+    </div>
+    <div class="form-group col-sm-4">
+        <div class="pull-right">
+            <button ng-show="isOPH()" type="button" ng-disabled="info.delete" ng-click="info.delete = true" class="btn btn-default arvosana-button"><span oph-msg="suoritusrekisteri.muokkaa.poistaluokkatieto">Poista</span><span class="glyphicon glyphicon-remove"></span></button>
+        </div>
+    </div>
+</div>
