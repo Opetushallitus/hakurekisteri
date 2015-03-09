@@ -20,3 +20,21 @@ table(class="table table-condensed table-striped")
       td(style="white-space: nowrap;")
         span(ng-repeat="valinnainen in aineRivi.valinnaiset")
           select(class="form-control smallInline" ng-model="valinnainen.arvio.arvosana" required="required" ng-options="a.value as a.text for a in arvosanat")
+
+div(ng-show="info.editable" class="input-group")
+  select(class="form-control input-sm smallInline" ng-model="info.korotusAine" ng-options="k.aine as k.text for k in korotusAineet")
+div(ng-show="info.editable" class="input-group")
+  input(type="text" class="form-control input-sm datepicker smallInline" ng-disabled="info.delete" ng-model="info.korotusPvm" title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)"
+    datepicker-popup="{{format}}"
+    datepicker-options="dateOptions"
+    datepicker-append-to-body="true"
+    is-open="korotusOpen"
+    ng-click="korotusOpen = true"
+    show-button-bar="false")
+  span(class="input-group-btn")
+    button(class="btn btn-default btn-sm" type="button" ng-click="info.korotusPvm = null")
+      span(class="glyphicon glyphicon-remove")
+div(ng-show="info.editable" class="input-group")
+  button(type="button" class="btn btn-default btn-xs" ng-click="addKorotus()")
+    span() Lisää uusi korotus
+    span(class="glyphicon glyphicon-plus")

@@ -31,6 +31,9 @@ app.controller "MuokkaaArvosanat", [
       d = $q.defer()
       $http.get(koodistoServiceUrl + "/rest/json/oppiaineetyleissivistava/koodi/", {cache: true}).success((koodit) ->
         koodiPromises = koodit.map (koodi) ->
+          koodi.metadata.sort((a, b) ->
+            (if a.kieli < b.kieli then -1 else 1)
+          )
           $http.get(koodistoServiceUrl + "/rest/json/relaatio/sisaltyy-alakoodit/" + koodi.koodiUri,
             {cache: true}).success((alaKoodit) ->
             koodistoOppiaineLista.push
@@ -94,8 +97,8 @@ app.controller "MuokkaaArvosanat", [
           addArvosanaIfNeeded aineRivi.valinnaiset, true, 3, aineRivi
 
     $q.all([updateOppiaineLista(), getSuorituksenArvosanat()]).then (->
-      oppiainekoodit = (lukio) ->
-        koodistoOppiaineLista.filter (o) ->
+      lukio = suoritus.komo is komo.lukio
+      oppiainekoodit = koodistoOppiaineLista.filter (o) ->
           pohjakoulutusFilter = "onperusasteenoppiaine_1"
           if lukio
             pohjakoulutusFilter = "onlukionoppiaine_1"
@@ -109,7 +112,13 @@ app.controller "MuokkaaArvosanat", [
           (ret[k] || (ret[k] = [])).push i
         ret
 
-      makeAineRivi = (aine, nimi, arvosanat, myonnetty, lisatieto) ->
+      resolveAineNimi = (aine) ->
+        for oppiaine in oppiainekoodit
+          if aine == oppiaine.koodi.koodiArvo
+            return oppiaine.koodi.metadata[0].nimi
+        return aine
+
+      makeAineRivi = (aine, arvosanat, myonnetty, lisatieto) ->
         {
         aine: aine
         pakolliset: (arvosanat.filter (a) ->  !a.valinnainen)
@@ -118,15 +127,18 @@ app.controller "MuokkaaArvosanat", [
         lisatieto: lisatieto
         hasKielisyys: hasKielisyys(aine)
         hasValinnaisuus: hasValinnaisuus(aine)
-        aineNimi: nimi
+        aineNimi: resolveAineNimi(aine)
         }
 
-      sortArvosanaTaulukko = (arvosanataulukko) ->
+      sortByAine = (arvosanataulukko) ->
         arvosanataulukko.sort (a, b) ->
           if a.aine is b.aine
-            aPvm = $scope.parseFinDate(a.myonnetty)
-            bPvm = $scope.parseFinDate(b.myonnetty)
-            if aPvm > bPvm then -1 else if aPvm < bPvm then 1 else 0
+            if a.myonnetty && b.myonnetty
+              aPvm = $scope.parseFinDate(a.myonnetty)
+              bPvm = $scope.parseFinDate(b.myonnetty)
+              if aPvm > bPvm then 1 else if aPvm < bPvm then -1 else 0
+            else
+              0
           else if arvosanaSort[a.aine] < arvosanaSort[b.aine]
             -1
           else
@@ -135,11 +147,8 @@ app.controller "MuokkaaArvosanat", [
 
       createArvosanaTaulukko = (arvosanat) ->
         taulukko = []
-        for oppiaine in oppiainekoodit(suoritus.komo is komo.lukio)
+        for oppiaine in oppiainekoodit
           aine = oppiaine.koodi.koodiArvo
-          aineNimi = oppiaine.koodi.metadata.sort((a, b) ->
-            (if a.kieli < b.kieli then -1 else 1)
-          )[0].nimi
           aineenArvosanat = arvosanat.filter (a) -> a.aine is aine
           arvosanatByMyonnettyLisatieto = collectToMap(aineenArvosanat, ((a) -> "#{a.myonnetty};#{a.lisatieto}"))
           rivit = []
@@ -147,15 +156,28 @@ app.controller "MuokkaaArvosanat", [
           for key of arvosanatByMyonnettyLisatieto
             list = arvosanatByMyonnettyLisatieto[key]
             first = list[0]
-            rivit.push makeAineRivi(aine, aineNimi, list, first.myonnetty, first.lisatieto)
+            rivit.push makeAineRivi(aine, list, first.myonnetty, first.lisatieto)
             if first.myonnetty == $scope.suoritus.valmistuminen
               suoritusPvm = true
           if !suoritusPvm
-            taulukko.splice 0,0, makeAineRivi(aine, aineNimi, [], $scope.suoritus.valmistuminen, null)
+            taulukko.splice 0,0, makeAineRivi(aine, [], $scope.suoritus.valmistuminen, null)
           taulukko = taulukko.concat(rivit)
-        sortArvosanaTaulukko(taulukko)
+        sortByAine(taulukko)
 
       $scope.suorituksenArvosanataulukko = createArvosanaTaulukko(suorituksenArvosanat)
+      $scope.korotusAineet = sortByAine oppiainekoodit.map (oppiaine) ->
+        {
+          aine: oppiaine.koodi.koodiArvo
+          text: oppiaine.koodi.metadata[0].nimi
+        }
+      $scope.info.korotusPvm = $scope.formatDateNoZeroPaddedNumbers($scope.suoritus.valmistuminen)
+      $scope.addKorotus = () ->
+        console.log $scope.info.korotusAine, $scope.info.korotusPvm
+        if  $scope.info.korotusAine && $scope.info.korotusPvm
+          $scope.suorituksenArvosanataulukko.push makeAineRivi($scope.info.korotusAine, [], $scope.formatDateWithZeroPaddedNumbers($scope.info.korotusPvm), null)
+          sortByAine $scope.suorituksenArvosanataulukko
+          updateArvosanaTaulukko $scope.suorituksenArvosanataulukko
+
       updateArvosanaTaulukko $scope.suorituksenArvosanataulukko
       $scope.$watch "suorituksenArvosanataulukko", $scope.enableSave, true
     )
