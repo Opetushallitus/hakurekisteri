@@ -112,8 +112,6 @@ app.factory "MuokkaaTiedot", [
       fetchSuoritukset = ->
         Suoritukset.query { henkilo: henkiloOid }, ((suoritukset) ->
           suoritukset.sort (a, b) -> sortByFinDateDesc a.valmistuminen, b.valmistuminen
-          for suoritus in suoritukset
-            suoritus.valmistuminen = formatDate(suoritus.valmistuminen)
           $scope.henkilo.suoritukset = suoritukset
         ), ->
           MessageService.addMessage {
@@ -121,18 +119,6 @@ app.factory "MuokkaaTiedot", [
             message: "Suoritustietojen hakeminen ei onnistunut. Yritä uudelleen?"
             messageKey: "suoritusrekisteri.muokkaa.suoritustietojenhakeminen"
           }
-
-      formatDate = (input) ->
-        if(input.indexOf('.') > -1)
-          parts = input.split('.')
-          d = new Date(parts[2], parts[1], parts[0])
-        else if(input.indexOf('-') > -1)
-          parts = input.split('-')
-          d = new Date(parts[2], parts[1], parts[0])
-        if parts
-          ""+d.getDate()+"."+(0+d.getMonth())+"."+d.getFullYear()
-        else
-          "Virheellinen päivämäärä: " + d
 
       fetchOpiskeluoikeudet = ->
         Opiskeluoikeudet.query { henkilo: henkiloOid }, (opiskeluoikeudet) ->

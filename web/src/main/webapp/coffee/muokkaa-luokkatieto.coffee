@@ -47,6 +47,8 @@ app.controller "MuokkaaLuokkatieto", [
               descriptionKey: "suoritusrekisteri.muokkaa.virheluokkayrita"
               description: "Yritä uudelleen."
             d.reject "error saving luokkatieto: " + luokkatieto
+        d.promise.then () ->
+          modifiedCache.update()
         [d.promise]
 
     modifiedCache = changeDetection($scope.luokkatieto)

@@ -266,3 +266,8 @@ optgroup option {
 .radio-inline input[type=radio] {
     margin-top: 7px
 }
+
+.smallInline {
+    width: auto;
+    display: inline;
+}

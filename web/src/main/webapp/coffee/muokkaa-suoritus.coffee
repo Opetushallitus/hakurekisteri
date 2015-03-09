@@ -51,32 +51,32 @@ app.controller "MuokkaaSuoritus", [
               descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita"
               description: "Yritä uudelleen."
             d.reject "error saving suoritus: " + suoritus
+        d.promise.then ->
+          modifiedCache.update()
         [d.promise]
       else
         []
 
-    parseFinDate = (input) ->
+    $scope.parseFinDate = (input) ->
       parts = input.split('.')
-      new Date(parts[2], parts[1], parts[0])
+      new Date(parts[2], parts[1]-1, parts[0])
 
     pad = (n) ->
       if n<10
         '0'+n
       else
         n
-    formatDateNoZeroPaddedNumbers = (input) ->
-      if input && input.indexOf('.') > -1
-        date = parseFinDate(input)
-        ""+date.getDate()+"."+date.getMonth()+"."+date.getFullYear()
-      else
-        input
 
-    formatDateWithZeroPaddedNumbers = (input) ->
-      if input && input.indexOf('.') > -1
-        date = parseFinDate(input)
-        ""+pad(date.getDate())+"."+pad(date.getMonth())+"."+date.getFullYear()
-      else
-        input
+    formatDateNoZeroPaddedNumbers = (input) ->
+      date = $scope.parseFinDate(input)
+      ""+date.getDate()+"."+(date.getMonth()+1)+"."+date.getFullYear()
+
+    formatDateWithZeroPaddedNumbers = (date) ->
+      if typeof date is 'string'
+        date = $scope.parseFinDate(date)
+      ret = "" + pad(date.getDate()) + "." + pad(date.getMonth()+1) + "." + date.getFullYear()
+      console.log date, "->", ret
+      ret
 
     modifiedCache = changeDetection($scope.suoritus)
     $scope.info = {}

@@ -8,9 +8,12 @@ app.controller "MuokkaaArvosanat", [
   "Suoritukset"
   "MessageService"
   ($scope, $http, $q, $modal, $log, Arvosanat, Suoritukset, MessageService) ->
-    suoritusId = $scope.suoritus.id
+    suoritus = $scope.suoritus
+    suoritusId = suoritus.id
     $scope.arvosanataulukko = []
-    $scope.oppiaineet = []
+    koodistoOppiaineLista = []
+    suorituksenArvosanat = []
+    arvosanatModified = []
     $scope.arvosanat = []
     $scope.kielet = []
     $scope.aidinkieli = []
@@ -19,171 +22,153 @@ app.controller "MuokkaaArvosanat", [
     getKoodistoAsOptionArray $http, "kielivalikoima", "fi", $scope.kielet, "koodiArvo"
     getKoodistoAsOptionArray $http, "aidinkielijakirjallisuus", "fi", $scope.aidinkieli, "koodiArvo"
 
-    arvosanaSort =
-      AI: 10
-      A1: 20
-      A12: 21
-      A2: 30
-      A22: 31
-      B1: 40
-      B2: 50
-      B22: 51
-      B23: 52
-      B3: 53
-      B32: 54
-      B33: 55
-      MA: 60
-      BI: 70
-      GE: 80
-      FY: 90
-      KE: 100
-      TE: 110
-      KT: 120
-      HI: 130
-      YH: 140
-      MU: 150
-      KU: 160
-      KS: 170
-      LI: 180
-      KO: 190
-      PS: 200
-      FI: 210
+    arvosanaSort = {}
+    arvosanaOrder = ["AI", "A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33", "MA", "BI", "GE",
+                     "FY", "KE", "TE", "KT", "HI", "YH", "MU", "KU", "KS", "LI", "KO", "PS", "FI"]
+    arvosanaOrder.forEach (k, i) -> arvosanaSort[k] = i
 
-    openDuplicateModal = (arvosanaRet) ->
-      isolatedScope = $scope.$new(true)
-      isolatedScope.modalInstance = $modal.open(
-        templateUrl: "templates/duplikaatti"
-        controller: "DuplikaattiCtrl"
-        scope: isolatedScope
-        size: "lg"
-        resolve:
-          arvosanat: ->
-            arvosanaRet
-      )
-      isolatedScope.modalInstance.result.then ((ret) ->
-        MessageService.addMessage ret if ret
-        return
-      ), ->
-
-    Suoritukset.get { suoritusId: suoritusId }, ((suoritus) ->
-      pohjakoulutusFilter = "onperusasteenoppiaine_1"
-      pohjakoulutusFilter = "onlukionoppiaine_1"  if suoritus.komo is komo.lukio
-
-      $http.get(koodistoServiceUrl + "/rest/json/oppiaineetyleissivistava/koodi/", { cache: true }).success((koodit) ->
-        koodistoPromises = koodit.map (koodi) ->
+    updateOppiaineLista = ->
+      d = $q.defer()
+      $http.get(koodistoServiceUrl + "/rest/json/oppiaineetyleissivistava/koodi/", {cache: true}).success((koodit) ->
+        koodiPromises = koodit.map (koodi) ->
           $http.get(koodistoServiceUrl + "/rest/json/relaatio/sisaltyy-alakoodit/" + koodi.koodiUri,
-            cache: true
-          ).success((alaKoodit) ->
-            $scope.oppiaineet.push
+            {cache: true}).success((alaKoodit) ->
+            koodistoOppiaineLista.push
               koodi: koodi
               alaKoodit: alaKoodit
           )
-
-        $q.all(koodistoPromises).then (->
-          findArvosana = (aine, lisatieto, arvosanat, valinnainen) ->
-            return ((arvosana) ->
-              arvosana.taken = true
-              return arvosana
-            )(arvosana) for arvosana in arvosanat when not arvosana.taken and arvosana.aine is aine and arvosana.lisatieto is lisatieto and arvosana.valinnainen is valinnainen
-
-            null
-
-          getOppiaineNimi = (oppiainekoodi) ->
-            oppiainekoodi.koodi.metadata.sort((a, b) ->
-              (if a.kieli < b.kieli then -1 else 1)
-            )[0].nimi
-
-          iterateArvosanat = (kouluArvosanat, arvosanataulukko, aine, oppiainekoodi) ->
-            return ((lisatieto) ->
-              a = arvosanataulukko[aine + ";" + lisatieto]
-              a = {}  unless a
-              a.aine = aine
-              a.aineNimi = getOppiaineNimi(oppiainekoodi)
-              a.lisatieto = lisatieto
-              arvosana = findArvosana(aine, lisatieto, kouluArvosanat, false)
-              a.arvosana = (if arvosana then arvosana.arvio.arvosana else null)
-              a.arvosanaId = (if arvosana then arvosana.id else null)
-              valinnainen = findArvosana(aine, lisatieto, kouluArvosanat, true)
-              a.arvosanaValinnainen = (if valinnainen then valinnainen.arvio.arvosana else null)
-              a.valinnainenId = (if valinnainen then valinnainen.id else null)
-              toinenValinnainen = findArvosana(aine, lisatieto, kouluArvosanat, true)
-              a.arvosanaToinenValinnainen = (if toinenValinnainen then toinenValinnainen.arvio.arvosana else null)
-              a.toinenValinnainenId = (if toinenValinnainen then toinenValinnainen.id else null)
-              arvosanataulukko[aine + ";" + lisatieto] = a
-              return true
-            )(arvosana.lisatieto) for arvosana in kouluArvosanat when arvosana.aine is aine
-            false
-
-          fetchArvosanat = ->
-            Arvosanat.query { suoritus: suoritusId }, ((arvosanat) ->
-              hasRedundantArvosana = (kouluArvosanat) ->
-                kouluArvosanat.some (a) ->
-                  not a.taken
-
-              kouluArvosanat = arvosanat.filter((a) ->
-                a.arvio.asteikko is "4-10"
-              )
-              oppiainekoodit = $scope.oppiaineet.filter((o) ->
-                o.alaKoodit.some (alakoodi) ->
-                  alakoodi.koodiUri is pohjakoulutusFilter
-
-              )
-              arvosanataulukko = {}
-
-              for oppiainekoodi in oppiainekoodit
-                do (oppiainekoodi) ->
-                  aine = oppiainekoodi.koodi.koodiArvo
-                  if iterateArvosanat(kouluArvosanat, arvosanataulukko, aine, oppiainekoodi)
-                    return
-                  arvosanataulukko[aine + ";"] =
-                    aine: aine
-                    aineNimi: getOppiaineNimi(oppiainekoodi)
-                    arvosana: "Ei arvosanaa"
-
-              if hasRedundantArvosana(kouluArvosanat)
-                openDuplicateModal(kouluArvosanat)
-                return
-
-              $scope.arvosanataulukko = Object.keys(arvosanataulukko).map((key) ->
-                arvosanataulukko[key]
-              ).sort((a, b) ->
-                return 0  if a.aine is b.aine
-                (if arvosanaSort[a.aine] < arvosanaSort[b.aine] then -1 else 1)
-              )
-            ), ->
-              MessageService.addMessage
-                type: "danger"
-                messageKey: "suoritusrekisteri.muokkaa.arvosanat.arvosanapalveluongelma"
-                message: "Arvosanapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
-
-          fetchArvosanat()
+        $q.all(koodiPromises).then ( ->
+          d.resolve "done"
         ), ->
+          d.reject "error"
           MessageService.addMessage
             type: "danger"
             messageKey: "suoritusrekisteri.muokkaa.arvosanat.koodistopalveluongelma"
             message: "Koodistopalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
       ).error ->
+        d.reject "error"
         MessageService.addMessage
           type: "danger"
           messageKey: "suoritusrekisteri.muokkaa.arvosanat.koodistopalveluongelma"
           message: "Koodistopalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
-    ), ->
-      MessageService.addMessage
-        type: "danger"
-        messageKey: "suoritusrekisteri.muokkaa.arvosanat.taustapalveluongelma"
-        message: "Taustapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
+      d.promise
 
-    $scope.isValinnainen = (aine) ->
-      $scope.oppiaineet.some (o) ->
-        o.koodi.koodiArvo is aine and o.alaKoodit.some((alakoodi) ->
+    getSuorituksenArvosanat = ->
+      d = $q.defer()
+      Arvosanat.query {suoritus: suoritusId}, ((arvosanatData) ->
+        suorituksenArvosanat = arvosanatData.map((a) -> new Arvosanat(a)).filter (a) ->
+          a.arvio.asteikko is "4-10"
+        arvosanatModified = suorituksenArvosanat.map (a) -> changeDetection(a)
+        d.resolve "done"
+      ), ->
+        d.reject "error"
+        MessageService.addMessage
+          type: "danger"
+          messageKey: "suoritusrekisteri.muokkaa.arvosanat.arvosanapalveluongelma"
+          message: "Arvosanapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
+      d.promise
+
+    addArvosanaIfNeeded = (list, valinnainen, maxCount, aineRivi) ->
+      if list.length >= maxCount || list.some( (a) -> ( a.arvio.arvosana == "Ei arvosanaa" ))
+        return
+      arvosanaTmp = new Arvosanat(
+        aine: aineRivi.aine
+        lisatieto: aineRivi.lisatieto
+        suoritus: suoritusId
+        myonnetty: aineRivi.myonnetty
+        arvio:
+          arvosana: "Ei arvosanaa"
+          asteikko: "4-10"
+        valinnainen: valinnainen
+      )
+      list.push arvosanaTmp
+      arvosanatModified.push changeDetection(arvosanaTmp)
+
+    updateArvosanaTaulukko = (taulukko) ->
+      for aineRivi in taulukko
+        for arvosana in aineRivi.pakolliset.concat(aineRivi.valinnaiset)
+          arvosana.lisatieto = aineRivi.lisatieto
+          arvosana.myonnetty = aineRivi.myonnetty
+        addArvosanaIfNeeded aineRivi.pakolliset, false, 1, aineRivi
+        if aineRivi.hasValinnaisuus
+          addArvosanaIfNeeded aineRivi.valinnaiset, true, 3, aineRivi
+
+    $q.all([updateOppiaineLista(), getSuorituksenArvosanat()]).then (->
+      oppiainekoodit = (lukio) ->
+        koodistoOppiaineLista.filter (o) ->
+          pohjakoulutusFilter = "onperusasteenoppiaine_1"
+          if lukio
+            pohjakoulutusFilter = "onlukionoppiaine_1"
+          o.alaKoodit.some (alakoodi) ->
+            pohjakoulutusFilter == alakoodi.koodiUri
+
+      collectToMap = (list, keyFn) ->
+        ret = {}
+        for i in list
+          k = keyFn(i)
+          (ret[k] || (ret[k] = [])).push i
+        ret
+
+      makeAineRivi = (aine, nimi, arvosanat, myonnetty, lisatieto) ->
+        {
+        aine: aine
+        pakolliset: (arvosanat.filter (a) ->  !a.valinnainen)
+        valinnaiset: (arvosanat.filter (a) -> a.valinnainen)
+        myonnetty: myonnetty
+        lisatieto: lisatieto
+        hasKielisyys: hasKielisyys(aine)
+        hasValinnaisuus: hasValinnaisuus(aine)
+        aineNimi: nimi
+        }
+
+      sortArvosanaTaulukko = (arvosanataulukko) ->
+        arvosanataulukko.sort (a, b) ->
+          if a.aine is b.aine
+            aPvm = $scope.parseFinDate(a.myonnetty)
+            bPvm = $scope.parseFinDate(b.myonnetty)
+            if aPvm > bPvm then -1 else if aPvm < bPvm then 1 else 0
+          else if arvosanaSort[a.aine] < arvosanaSort[b.aine]
+            -1
+          else
+            1
+        arvosanataulukko
+
+      createArvosanaTaulukko = (arvosanat) ->
+        taulukko = []
+        for oppiaine in oppiainekoodit(suoritus.komo is komo.lukio)
+          aine = oppiaine.koodi.koodiArvo
+          aineNimi = oppiaine.koodi.metadata.sort((a, b) ->
+            (if a.kieli < b.kieli then -1 else 1)
+          )[0].nimi
+          aineenArvosanat = arvosanat.filter (a) -> a.aine is aine
+          arvosanatByMyonnettyLisatieto = collectToMap(aineenArvosanat, ((a) -> "#{a.myonnetty};#{a.lisatieto}"))
+          rivit = []
+          suoritusPvm = false
+          for key of arvosanatByMyonnettyLisatieto
+            list = arvosanatByMyonnettyLisatieto[key]
+            first = list[0]
+            rivit.push makeAineRivi(aine, aineNimi, list, first.myonnetty, first.lisatieto)
+            if first.myonnetty == $scope.suoritus.valmistuminen
+              suoritusPvm = true
+          if !suoritusPvm
+            taulukko.splice 0,0, makeAineRivi(aine, aineNimi, [], $scope.suoritus.valmistuminen, null)
+          taulukko = taulukko.concat(rivit)
+        sortArvosanaTaulukko(taulukko)
+
+      $scope.suorituksenArvosanataulukko = createArvosanaTaulukko(suorituksenArvosanat)
+      updateArvosanaTaulukko $scope.suorituksenArvosanataulukko
+      console.log $scope.suorituksenArvosanataulukko
+    )
+
+    hasValinnaisuus = (aine) ->
+      koodistoOppiaineLista.some (o) ->
+        o.koodi.koodiArvo is aine and o.alaKoodit.some (alakoodi) ->
           alakoodi.koodiUri is "oppiaineenvalinnaisuus_1"
-        )
 
-    $scope.isKielisyys = (aine) ->
-      $scope.oppiaineet.some (o) ->
-        o.koodi.koodiArvo is aine and o.alaKoodit.some((alakoodi) ->
+    hasKielisyys = (aine) ->
+      koodistoOppiaineLista.some (o) ->
+        o.koodi.koodiArvo is aine and o.alaKoodit.some (alakoodi) ->
           alakoodi.koodiUri is "oppiaineenkielisyys_1"
-        )
 
     $scope.saveData = ->
       removeArvosana = (arvosana, d) ->
@@ -200,50 +185,26 @@ app.controller "MuokkaaArvosanat", [
           $log.error "error saving, retrying to save: " + err
           d.reject "save failed"
 
-      saveArvosanat = (arvosanat) ->
-        arvosanat.map (arvosana) ->
+      saveArvosanat = () ->
+        arvosanatModified.map (arvosanaModified) ->
           d = $q.defer()
-          if arvosana.id and arvosana.arvio.arvosana is "Ei arvosanaa"
-            removeArvosana arvosana, d
+          if arvosanaModified.hasChanged()
+            arvosana = arvosanaModified.object
+            if arvosana.arvio.arvosana is "Ei arvosanaa"
+              if arvosana.id
+                removeArvosana arvosana, d
+              else
+                d.resolve "not saved, don't remove"
+            else
+              saveArvosana arvosana, d
           else
-            saveArvosana arvosana, d
+            d.resolve "not modified"
+          d.promise.then () ->
+            arvosanaModified.update()
           d.promise
 
-      arvosanat = []
-      for a in $scope.arvosanataulukko
-        if a.aine and ((a.arvosana and a.arvosana isnt "Ei arvosanaa") or a.arvosanaId)
-          arvosanat.push new Arvosanat(
-            id: a.arvosanaId
-            aine: a.aine
-            lisatieto: a.lisatieto
-            suoritus: suoritusId
-            arvio:
-              arvosana: a.arvosana
-              asteikko: "4-10"
-          )
-        if a.aine and ((a.arvosanaValinnainen and a.arvosanaValinnainen isnt "Ei arvosanaa") or a.valinnainenId)
-          arvosanat.push new Arvosanat(
-            id: a.valinnainenId
-            aine: a.aine
-            lisatieto: a.lisatieto
-            suoritus: suoritusId
-            arvio:
-              arvosana: a.arvosanaValinnainen
-              asteikko: "4-10"
-            valinnainen: true
-          )
-        if a.aine and ((a.arvosanaToinenValinnainen and a.arvosanaToinenValinnainen isnt "Ei arvosanaa") or a.toinenValinnainenId)
-          arvosanat.push new Arvosanat(
-            id: a.toinenValinnainenId
-            aine: a.aine
-            lisatieto: a.lisatieto
-            suoritus: suoritusId
-            arvio:
-              arvosana: a.arvosanaToinenValinnainen
-              asteikko: "4-10"
-            valinnainen: true
-          )
-      $q.all(saveArvosanat(arvosanat)).then (->
+      updateArvosanaTaulukko($scope.suorituksenArvosanataulukko)
+      $q.all(saveArvosanat()).then (->
       ), ->
         MessageService.addMessage
           type: "danger"

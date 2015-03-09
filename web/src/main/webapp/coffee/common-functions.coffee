@@ -162,13 +162,11 @@ unless Array.isArray
 changeDetection = (object) ->
   json = JSON.stringify(object)
   {
-  hasChanged: ()->
-    newJson = JSON.stringify(object)
-    changed = json != newJson
-    #console.log("hasChanged", changed, JSON.parse(json), "->", JSON.parse(newJson))
-    if changed
-      json = newJson
-    changed
+  object: object
+  hasChanged: () ->
+    json != JSON.stringify(object)
+  update: () ->
+    json = JSON.stringify(object)
   }
 
 deleteFromArray = (obj, arr) ->
