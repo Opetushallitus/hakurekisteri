@@ -70,7 +70,7 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
 
   $routeProvider.otherwise
     redirectTo: (routeParams, currentLocation, search) ->
-      "/opiskelijat"
+      "/muokkaa-obd"
   $locationProvider.html5Mode false
 
   $httpProvider.interceptors.push 'callerIdInterceptor'

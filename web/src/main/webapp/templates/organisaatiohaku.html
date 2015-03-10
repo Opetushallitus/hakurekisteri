@@ -3,27 +3,36 @@
     <h4 oph-msg="suoritusrekisteri.hakeneet.organisaatio.haeorganisaatio" class="modal-title">Hae organisaatio</h4>
 </div>
 <div class="modal-body">
-    <div ng-show="organisaatiot.length === 0" class="alert alert-danger"><span oph-msg="suoritusrekisteri.hakeneet.eituloksia">Organisaatioita ei löytynyt annetuilla hakuehdoilla. Muuta hakuehtoja ja yritä uudelleen.</span></div>
+    <div ng-show="organisaatiot.length === 0" class="alert alert-danger"><span
+            oph-msg="suoritusrekisteri.hakeneet.eituloksia">Organisaatioita ei löytynyt annetuilla hakuehdoilla. Muuta hakuehtoja ja yritä uudelleen.</span>
+    </div>
     <form ng-submit="hae()">
         <div class="form-group">
-            <label for="organisaatiohakuehto" oph-msg="suoritusrekisteri.hakeneet.organisaatio.hakuehto">Hakuehto</label>
+            <label for="organisaatiohakuehto"
+                   oph-msg="suoritusrekisteri.hakeneet.organisaatio.hakuehto">Hakuehto</label>
             <input id="organisaatiohakuehto" type="text" ng-model="hakuehto" class="form-control"/>
         </div>
         <div class="form-group">
             <label for="organisaatiotyyppi" oph-msg="suoritusrekisteri.hakeneet.organisaatio.organisaatiotyyppi">Organisaatiotyyppi</label>
-            <select id="organisaatiotyyppi" ng-model="organisaatiotyyppi" ng-options="ot.value as ot.text for ot in organisaatiotyypit" class="form-control"></select>
+            <select id="organisaatiotyyppi" ng-model="organisaatiotyyppi"
+                    ng-options="ot.value as ot.text for ot in organisaatiotyypit" class="form-control"></select>
         </div>
         <div class="form-group">
             <label for="oppilaitostyyppi" oph-msg="suoritusrekisteri.hakeneet.organisaatio.oppilaitostyyppi">Oppilaitostyyppi</label>
-            <select id="oppilaitostyyppi" ng-model="oppilaitostyyppi" ng-options="ot.value as ot.text for ot in oppilaitostyypit" class="form-control"></select>
+            <select id="oppilaitostyyppi" ng-model="oppilaitostyyppi"
+                    ng-options="ot.value as ot.text for ot in oppilaitostyypit" class="form-control"></select>
         </div>
         <div class="checkbox">
             <label>
-                <input type="checkbox" ng-model="lakkautetut"/><span oph-msg="suoritusrekisteri.hakeneet.organisaatio.naytavainvalitut">Näytä vain lakkautetut</span>
+                <input type="checkbox" ng-model="lakkautetut"/><span
+                    oph-msg="suoritusrekisteri.hakeneet.organisaatio.naytavainvalitut">Näytä vain lakkautetut</span>
             </label>
         </div>
-        <button type="button" ng-click="tyhjenna()" class="btn btn-sm btn-default"><span oph-msg="suoritusrekisteri.hakeneet.organisaatio.tyhjenna">Tyhjennä</span></button>
-        <button type="submit" ng-click="hae()" class="btn btn-sm btn-primary"><span oph-msg="suoritusrekisteri.hakeneet.organisaatio.hae">Hae</span><span class="glyphicon glyphicon-search"></span></button>
+        <button type="button" ng-click="tyhjenna()" class="btn btn-sm btn-default"><span
+                oph-msg="suoritusrekisteri.hakeneet.organisaatio.tyhjenna">Tyhjennä</span></button>
+        <button type="submit" ng-click="hae()" class="btn btn-sm btn-primary"><span
+                oph-msg="suoritusrekisteri.hakeneet.organisaatio.hae">Hae</span><span
+                class="glyphicon glyphicon-search"></span></button>
     </form>
     <div class="organisaatiotulokset">
         <div ng-show="loading" class="loading-large"></div>

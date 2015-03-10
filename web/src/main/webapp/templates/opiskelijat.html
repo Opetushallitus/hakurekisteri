@@ -1,32 +1,50 @@
 <h2 oph-msg="suoritusrekisteri.opiskelijat.opiskelijatiedot">Opiskelijatiedot</h2>
 <messages></messages>
-<script type="text/ng-template" id="organisaatioTemplate.html"><a><span bind-html-unsafe="(match.model.oppilaitosKoodi + ' ' + (match.model.nimi.fi ? match.model.nimi.fi : (match.model.nimi.sv ? match.model.nimi.sv : match.model.nimi.en))) | typeaheadHighlight:query"></span></a></script>
+<script type="text/ng-template" id="organisaatioTemplate.html">
+    <a><span bind-html-unsafe="(match.model.oppilaitosKoodi + ' ' + (match.model.nimi.fi ? match.model.nimi.fi : (match.model.nimi.sv ? match.model.nimi.sv : match.model.nimi.en))) | typeaheadHighlight:query"></span></a>
+</script>
 <aside class="row">
     <div class="col-sm-8">
         <form id="filterForm" ng-submit="search()" class="well form-horizontal">
             <div class="form-group">
                 <label for="henkiloTerm" oph-msg="suoritusrekisteri.opiskelijat.henkilo" class="col-sm-2 control-label">Henkilö</label>
+
                 <div class="col-sm-5">
-                    <input id="henkiloTerm" ng-model="henkiloTerm" type="search" placeholder="Hae hetulla tai henkilönumerolla" class="form-control"/><span ng-show="henkilo">{{henkilo.etunimet}} {{henkilo.sukunimi}}</span>
+                    <input id="henkiloTerm" ng-model="henkiloTerm" type="search"
+                           placeholder="Hae hetulla tai henkilönumerolla" class="form-control"/><span ng-show="henkilo">{{henkilo.etunimet}} {{henkilo.sukunimi}}</span>
                 </div>
             </div>
             <div class="form-group">
-                <label for="organisaatioTerm" oph-msg="suoritusrekisteri.opiskelijat.oppilaitos" class="col-sm-2 control-label">Oppilaitos</label>
+                <label for="organisaatioTerm" oph-msg="suoritusrekisteri.opiskelijat.oppilaitos"
+                       class="col-sm-2 control-label">Oppilaitos</label>
+
                 <div class="col-sm-5">
-                    <input id="organisaatioTerm" autocomplete="off" ng-model="organisaatioTerm" type="search" placeholder="Hae oppilaitoksen numerolla tai nimellä" typeahead="organisaatio as organisaatio.oppilaitosKoodi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10" typeahead-loading="loadingOppilaitos" typeahead-wait-ms="500" typeahead-template-url="organisaatioTemplate.html" class="form-control"/><span ng-show="organisaatioTerm">{{organisaatioTerm.oppilaitosKoodi}} {{organisaatioTerm.nimi.fi || organisaatioTerm.nimi.sv || organisaatioTerm.nimi.en}}</span>
+                    <input id="organisaatioTerm" autocomplete="off" ng-model="organisaatioTerm" type="search"
+                           placeholder="Hae oppilaitoksen numerolla tai nimellä"
+                           typeahead="organisaatio as organisaatio.oppilaitosKoodi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10"
+                           typeahead-loading="loadingOppilaitos" typeahead-wait-ms="500"
+                           typeahead-template-url="organisaatioTemplate.html" class="form-control"/><span
+                        ng-show="organisaatioTerm">{{organisaatioTerm.oppilaitosKoodi}} {{organisaatioTerm.nimi.fi || organisaatioTerm.nimi.sv || organisaatioTerm.nimi.en}}</span>
                 </div>
             </div>
             <div class="form-group">
                 <label for="vuosiTerm" oph-msg="suoritusrekisteri.opiskelijat.vuosi" class="col-sm-2 control-label">Vuosi</label>
+
                 <div class="col-sm-2">
-                    <select id="vuosiTerm" ng-model="vuosiTerm" ng-options="v for v in vuodet" class="form-control"></select>
+                    <select id="vuosiTerm" ng-model="vuosiTerm" ng-options="v for v in vuodet"
+                            class="form-control"></select>
                 </div>
             </div>
             <div class="form-group">
                 <div class="col-sm-10 col-sm-offset-2">
-                    <button type="button" ng-click="reset()" class="btn btn-default"><span oph-msg="suoritusrekisteri.opiskelijat.tyhjenna">Tyhjennä</span><span class="glyphicon glyphicon-remove"></span></button>
-                    <button type="submit" class="btn btn-primary"><span oph-msg="suoritusrekisteri.opiskelijat.hae">Hae</span><span class="glyphicon glyphicon-search"></span></button>
-                    <p class="newlink"><a ng-click="muokkaaSuoritukset()" href=""><span>Kokeile uutta hakua</span></a></p>
+                    <button type="button" ng-click="reset()" class="btn btn-default"><span
+                            oph-msg="suoritusrekisteri.opiskelijat.tyhjenna">Tyhjennä</span><span
+                            class="glyphicon glyphicon-remove"></span></button>
+                    <button type="submit" class="btn btn-primary"><span
+                            oph-msg="suoritusrekisteri.opiskelijat.hae">Hae</span><span
+                            class="glyphicon glyphicon-search"></span></button>
+                    <p class="newlink"><a ng-click="muokkaaSuoritukset()" href=""><span>Kokeile uutta hakua</span></a>
+                    </p>
                 </div>
             </div>
         </form>
@@ -48,18 +66,29 @@
             <div ng-repeat="o in row.opiskelijat">{{o.oppilaitos}}, {{o.luokka}}</div>
         </td>
         <td>
-            <div ng-repeat="s in row.suoritukset"><span>{{s.oppilaitos}},</span><span ng-hide="s.koulutus" oph-msg="suoritusrekisteri.komo.{{s.komo}}">{{s.komo}}</span><span ng-show="s.koulutus">{{s.koulutus}}</span><span ng-show="s.hasArvosanat" oph-msg="suoritusrekisteri.opiskelijat.arvosanatsiirretty">(arvosanat siirretty)</span><span ng-show="s.noArvosanat" oph-msg="suoritusrekisteri.opiskelijat.eiarvosanoja">(ei arvosanoja)</span></div>
+            <div ng-repeat="s in row.suoritukset"><span>{{s.oppilaitos}},</span><span ng-hide="s.koulutus"
+                                                                                      oph-msg="suoritusrekisteri.komo.{{s.komo}}">{{s.komo}}</span><span
+                    ng-show="s.koulutus">{{s.koulutus}}</span><span ng-show="s.hasArvosanat"
+                                                                    oph-msg="suoritusrekisteri.opiskelijat.arvosanatsiirretty">(arvosanat siirretty)</span><span
+                    ng-show="s.noArvosanat" oph-msg="suoritusrekisteri.opiskelijat.eiarvosanoja">(ei arvosanoja)</span>
+            </div>
         </td>
-        <td><a href="#/muokkaa/{{row.henkiloOid}}" class="btn bt-default btn-xs pull-right"><span oph-msg="suoritusrekisteri.opiskelijat.muokkaa">Muokkaa tietoja</span><span class="glyphicon glyphicon-edit"></span></a></td>
+        <td><a href="#/muokkaa/{{row.henkiloOid}}" class="btn bt-default btn-xs pull-right"><span
+                oph-msg="suoritusrekisteri.opiskelijat.muokkaa">Muokkaa tietoja</span><span
+                class="glyphicon glyphicon-edit"></span></a></td>
     </tr>
     </tbody>
 </table>
 <aside ng-if="!loading">
-    <div ng-if="allRows.length &gt; 0" class="pull-right"><span oph-msg="suoritusrekisteri.nayta" class="pagination-label">Näytä</span>
-        <select ng-model="pageSize" ng-change="setPageSize(pageSize)" ng-options="p for p in pageSizes" required="true" class="pagination-size"></select>
+    <div ng-if="allRows.length &gt; 0" class="pull-right"><span oph-msg="suoritusrekisteri.nayta"
+                                                                class="pagination-label">Näytä</span>
+        <select ng-model="pageSize" ng-change="setPageSize(pageSize)" ng-options="p for p in pageSizes" required="true"
+                class="pagination-size"></select>
     </div>
     <div ng-if="allRows.length &gt; 0" id="opiskelijatPagination" class="pull-right"><span class="pagination-label">{{(currentPage - 1) * pageSize + 1}} - {{(currentPage * pageSize) >= allRows.length ? allRows.length : (currentPage * pageSize)}} / {{allRows.length}}</span>
-        <pagination ng-model="currentPage" ng-change="pageChanged(currentPage)" total-items="allRows.length" max-size="5" items-per-page="pageSize" boundary-links="true" rotate="false" previous-text="&lt;" next-text="&gt;" first-text="&lt;&lt;" last-text="&gt;&gt;"></pagination>
+        <pagination ng-model="currentPage" ng-change="pageChanged(currentPage)" total-items="allRows.length"
+                    max-size="5" items-per-page="pageSize" boundary-links="true" rotate="false" previous-text="&lt;"
+                    next-text="&gt;" first-text="&lt;&lt;" last-text="&gt;&gt;"></pagination>
     </div>
 </aside>
 <div ng-if="loading" style="display: block" class="modal fade in">

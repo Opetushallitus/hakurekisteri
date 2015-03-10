@@ -7,8 +7,10 @@
             <div class="panel-body">
                 <div class="row">
                     <div class="form-group col-sm-4">
-                        <div><strong oph-msg="suoritusrekisteri.muokkaa.henkilotunnus">Henkilötunnus / syntymäaika</strong></div>
-                        <div> <span>{{henkilo.hetu || henkilo.syntymaaika}}</span><strong ng-if="henkilo.duplicate">(DUPLIKAATTI)</strong></div>
+                        <div><strong oph-msg="suoritusrekisteri.muokkaa.henkilotunnus">Henkilötunnus /
+                            syntymäaika</strong></div>
+                        <div><span>{{henkilo.hetu || henkilo.syntymaaika}}</span><strong ng-if="henkilo.duplicate">(DUPLIKAATTI)</strong>
+                        </div>
                     </div>
                     <div class="form-group col-sm-4">
                         <div><strong oph-msg="suoritusrekisteri.muokkaa.sukunimi">Sukunimi</strong></div>
@@ -19,7 +21,10 @@
                         <div>{{henkilo.etunimet}}</div>
                     </div>
                 </div>
-                <aside><a href="/authentication-henkiloui/html/index.html#/muokkaaoppija/{{henkilo.oidHenkilo}}/" target="_blank" class="btn btn-default btn-xs"><span oph-msg="suoritusrekisteri.muokkaa.henkilotietoja">Muokkaa henkilötietoja</span><span class="glyphicon glyphicon-edit"></span></a></aside>
+                <aside><a href="/authentication-henkiloui/html/index.html#/muokkaaoppija/{{henkilo.oidHenkilo}}/"
+                          target="_blank" class="btn btn-default btn-xs"><span
+                        oph-msg="suoritusrekisteri.muokkaa.henkilotietoja">Muokkaa henkilötietoja</span><span
+                        class="glyphicon glyphicon-edit"></span></a></aside>
             </div>
         </section>
     </div>
@@ -35,16 +40,27 @@
                     <ul class="list-unstyled entrylist">
                         <li ng-repeat="opiskeluoikeus in henkilo.opiskeluoikeudet">
                             <div class="row">
-                                <div class="col-sm-2"><strong oph-msg="suoritusrekisteri.muokkaa.alkupaiva">Alkupäivä</strong>
+                                <div class="col-sm-2"><strong
+                                        oph-msg="suoritusrekisteri.muokkaa.alkupaiva">Alkupäivä</strong>
+
                                     <div>{{opiskeluoikeus.aika.alku | date:'dd.MM.yyyy'}}</div>
                                 </div>
-                                <div class="col-sm-2"><strong oph-msg="suoritusrekisteri.muokkaa.loppupaiva">Loppupäivä</strong>
+                                <div class="col-sm-2"><strong
+                                        oph-msg="suoritusrekisteri.muokkaa.loppupaiva">Loppupäivä</strong>
+
                                     <div>{{opiskeluoikeus.aika.loppu | date:'dd.MM.yyyy'}}</div>
                                 </div>
-                                <div class="col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</strong>
-                                    <div>{{(opiskeluoikeus.organisaatio.oppilaitosKoodi + ' ' + (opiskeluoikeus.organisaatio.nimi.fi || opiskeluoikeus.organisaatio.nimi.sv || opiskeluoikeus.organisaatio.nimi.en)) || opiskeluoikeus.myontaja}}</div>
+                                <div class="col-sm-3"><strong
+                                        oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</strong>
+
+                                    <div>{{(opiskeluoikeus.organisaatio.oppilaitosKoodi + ' ' +
+                                        (opiskeluoikeus.organisaatio.nimi.fi || opiskeluoikeus.organisaatio.nimi.sv ||
+                                        opiskeluoikeus.organisaatio.nimi.en)) || opiskeluoikeus.myontaja}}
+                                    </div>
                                 </div>
-                                <div class="col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.koulutus">Koulutus</strong>
+                                <div class="col-sm-3"><strong
+                                        oph-msg="suoritusrekisteri.muokkaa.koulutus">Koulutus</strong>
+
                                     <div>{{opiskeluoikeus.koulutus || opiskeluoikeus.komo}}</div>
                                 </div>
                             </div>
@@ -58,11 +74,14 @@
                 </header>
                 <div class="panel-body">
                     <ul class="list-unstyled entrylist">
-                        <li ng-repeat="suoritus in henkilo.suoritukset" class="{{suoritus.delete ? 'delete-suoritus' : ''}}">
+                        <li ng-repeat="suoritus in henkilo.suoritukset"
+                            class="{{suoritus.delete ? 'delete-suoritus' : ''}}">
                             <div ng-include="'templates/muokkaa-suoritus'" ng-controller="MuokkaaSuoritus"></div>
                         </li>
                         <li>
-                            <button type="button" ng-click="addSuoritus()" class="btn btn-default btn-xs"><span oph-msg="suoritusrekisteri.muokkaa.uusisuoritus">Lisää uusi suoritus</span><span class="glyphicon glyphicon-plus"></span></button>
+                            <button type="button" ng-click="addSuoritus()" class="btn btn-default btn-xs"><span
+                                    oph-msg="suoritusrekisteri.muokkaa.uusisuoritus">Lisää uusi suoritus</span><span
+                                    class="glyphicon glyphicon-plus"></span></button>
                         </li>
                     </ul>
                 </div>
@@ -76,17 +95,22 @@
             </header>
             <div class="panel-body">
                 <ul class="list-unstyled entrylist">
-                    <li ng-repeat="luokkatieto in henkilo.luokkatiedot" class="{{luokkatieto.delete ? 'delete-luokkatieto' : ''}}">
+                    <li ng-repeat="luokkatieto in henkilo.luokkatiedot"
+                        class="{{luokkatieto.delete ? 'delete-luokkatieto' : ''}}">
                         <div ng-include="'templates/muokkaa-luokkatieto'" ng-controller="MuokkaaLuokkatieto"></div>
                     </li>
                     <li>
-                        <button type="button" ng-click="addLuokkatieto()" class="btn btn-default btn-xs"><span oph-msg="suoritusrekisteri.muokkaa.uusiluokkatieto">Lisää uusi luokkatieto</span><span class="glyphicon glyphicon-plus"></span></button>
+                        <button type="button" ng-click="addLuokkatieto()" class="btn btn-default btn-xs"><span
+                                oph-msg="suoritusrekisteri.muokkaa.uusiluokkatieto">Lisää uusi luokkatieto</span><span
+                                class="glyphicon glyphicon-plus"></span></button>
                     </li>
                 </ul>
             </div>
         </section>
     </div>
     <div id="save-button" class="row">
-        <button type="submit" class="btn btn-primary"><span oph-msg="suoritusrekisteri.muokkaa.tallenna">Tallenna</span><span class="glyphicon glyphicon-saved"></span></button>
+        <button type="submit" ng-disabled="disableSave" class="btn btn-primary"><span
+                oph-msg="suoritusrekisteri.muokkaa.tallenna">Tallenna</span><span
+                class="glyphicon glyphicon-saved"></span></button>
     </div>
 </form>
