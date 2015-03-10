@@ -22,7 +22,7 @@ function opiskelijatiedotPage() {
       return S("#filterForm ul.dropdown-menu").first()
     },
     resultsTable: function() {
-      return S("#table-settings").find("tr")
+      return S("#table-scroller").find("tr")
     },
     openPage: function() {
       return opiskelijatiedotPage()

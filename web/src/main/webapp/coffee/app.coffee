@@ -215,5 +215,5 @@ app.directive "tiedonsiirtomenu", ->
 
       return
 
-    templateUrl: "templates/tiedonsiirtomenu"
+    templateUrl: "templates/tiedonsiirtomenu.html"
   )

@@ -14,7 +14,7 @@ import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.Config
 
 
-class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport {
+class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekisteriStack {
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   lazy val oidit = GuiOidit(
@@ -36,7 +36,7 @@ class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekist
     new java.io.File(servletContext.getResource("/index.html").getFile)
   }
 
-  get("/komo") {
+  get("/rest/v1/komo") {
     oidit
   }
 }
