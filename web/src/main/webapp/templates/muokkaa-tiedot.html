@@ -32,7 +32,7 @@
 <form ng-submit="saveTiedot()">
     <div class="row">
         <div class="col-sm-12">
-            <section ng-if="opiskeluoikeudet &amp;&amp; opiskeluoikeudet.length &gt; 0" class="panel panel-default">
+            <section ng-if="opiskeluoikeudet && opiskeluoikeudet.length > 0" class="panel panel-default">
                 <header class="panel-heading">
                     <h2 oph-msg="suoritusrekisteri.muokkaa.opiskeluoikeudet" class="panel-title">Opiskeluoikeudet</h2>
                 </header>
@@ -76,7 +76,7 @@
                     <ul class="list-unstyled entrylist">
                         <li ng-repeat="suoritus in henkilo.suoritukset"
                             class="{{suoritus.delete ? 'delete-suoritus' : ''}}">
-                            <div ng-include="'templates/muokkaa-suoritus'" ng-controller="MuokkaaSuoritus"></div>
+                            <div ng-include="'templates/muokkaa-suoritus.html'" ng-controller="MuokkaaSuoritus"></div>
                         </li>
                         <li>
                             <button type="button" ng-click="addSuoritus()" class="btn btn-default btn-xs"><span
@@ -97,7 +97,7 @@
                 <ul class="list-unstyled entrylist">
                     <li ng-repeat="luokkatieto in henkilo.luokkatiedot"
                         class="{{luokkatieto.delete ? 'delete-luokkatieto' : ''}}">
-                        <div ng-include="'templates/muokkaa-luokkatieto'" ng-controller="MuokkaaLuokkatieto"></div>
+                        <div ng-include="'templates/muokkaa-luokkatieto.html'" ng-controller="MuokkaaLuokkatieto"></div>
                     </li>
                     <li>
                         <button type="button" ng-click="addLuokkatieto()" class="btn btn-default btn-xs"><span

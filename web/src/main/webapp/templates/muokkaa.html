@@ -34,7 +34,7 @@
 <form ng-submit="save()">
     <div class="row">
         <div class="col-sm-6">
-            <section ng-if="opiskeluoikeudet &amp;&amp; opiskeluoikeudet.length &gt; 0" class="panel panel-default">
+            <section ng-if="opiskeluoikeudet && opiskeluoikeudet.length > 0" class="panel panel-default">
                 <header class="panel-heading">
                     <h2 oph-msg="suoritusrekisteri.muokkaa.opiskeluoikeudet" class="panel-title">Opiskeluoikeudet</h2>
                 </header>
@@ -79,7 +79,7 @@
                         <li ng-repeat="suoritus in suoritukset" class="{{suoritus.delete ? 'delete-suoritus' : ''}}">
                             <div class="row">
                                 <div class="form-group col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</strong>
-                                    <input ng-show="suoritus.editable &amp;&amp; suoritus.komo !== komo.ylioppilastutkinto"
+                                    <input ng-show="suoritus.editable && suoritus.komo !== komo.ylioppilastutkinto"
                                            type="text"
                                            title="{{suoritus.organisaatio.nimi.fi || suoritus.organisaatio.nimi.sv || suoritus.organisaatio.nimi.en}}"
                                            ng-disabled="suoritus.delete" ng-model="suoritus.oppilaitos"
@@ -111,7 +111,7 @@
                                     <select ng-show="suoritus.editable" ng-model="suoritus.yksilollistaminen"
                                             ng-options="yks.value as yks.text for yks in yksilollistamiset"
                                             required="required"
-                                            ng-disabled="suoritus.delete || (suoritus.komo !== komo.peruskoulu &amp;&amp; suoritus.komo !== komo.lisaopetus)"
+                                            ng-disabled="suoritus.delete || (suoritus.komo !== komo.peruskoulu && suoritus.komo !== komo.lisaopetus)"
                                             class="form-control input-sm"></select>
 
                                     <div ng-hide="suoritus.editable">{{suoritus.yksilollistaminen}}</div>

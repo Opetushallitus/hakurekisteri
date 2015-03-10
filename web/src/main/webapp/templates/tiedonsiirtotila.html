@@ -69,17 +69,17 @@
             </div>
         </div>
         <aside ng-if="!loading">
-            <div ng-if="allRows.length &gt; 0" class="pull-right"><span oph-msg="suoritusrekisteri.nayta"
+            <div ng-if="allRows.length > 0" class="pull-right"><span oph-msg="suoritusrekisteri.nayta"
                                                                         class="pagination-label">Näytä</span>
                 <select ng-model="pageSize" ng-change="setPageSize(pageSize)" ng-options="p for p in pageSizes"
                         required="true" class="pagination-size"></select>
             </div>
-            <div ng-if="allRows.length &gt; 0" id="tiedonsiirtotilaPagination" class="pull-right"><span
+            <div ng-if="allRows.length > 0" id="tiedonsiirtotilaPagination" class="pull-right"><span
                     class="pagination-label">{{(currentPage - 1) * pageSize + 1}} - {{(currentPage * pageSize) >= allRows.length ? allRows.length : (currentPage * pageSize)}} / {{allRows.length}}</span>
                 <pagination ng-model="currentPage" ng-change="pageChanged(currentPage)" total-items="allRows.length"
                             max-size="5" items-per-page="pageSize" boundary-links="true" rotate="false"
-                            previous-text="&lt;" next-text="&gt;" first-text="&lt;&lt;"
-                            last-text="&gt;&gt;"></pagination>
+                            previous-text="<" next-text=">" first-text="<<"
+                            last-text=">>"></pagination>
             </div>
         </aside>
     </div>

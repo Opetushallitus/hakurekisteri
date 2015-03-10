@@ -2,6 +2,8 @@ package gui
 
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.scalate.ScalateSupport
 import org.fusesource.scalate.layout.DefaultLayoutStrategy
 import org.fusesource.scalate.TemplateEngine
@@ -12,7 +14,7 @@ import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.Config
 
 
-class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekisteriStack {
+class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport {
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   lazy val oidit = GuiOidit(
@@ -32,6 +34,10 @@ class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekist
   get("/") {
     contentType="text/html"
     new java.io.File(servletContext.getResource("/index.html").getFile)
+  }
+
+  get("/komo") {
+    oidit
   }
 }
 

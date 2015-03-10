@@ -104,7 +104,7 @@ app.controller "MuokkaaArvosanat", [
           addArvosanaIfNeeded aineRivi.valinnaiset, true, 3, aineRivi
 
     $q.all([updateOppiaineLista(), getSuorituksenArvosanat()]).then (->
-      lukio = suoritus.komo is komo.lukio
+      lukio = suoritus.komo is $scope.komo.lukio
       oppiainekoodit = koodistoOppiaineLista.filter (o) ->
           pohjakoulutusFilter = "onperusasteenoppiaine_1"
           if lukio
