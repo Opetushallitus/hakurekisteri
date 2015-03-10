@@ -88,7 +88,14 @@ app.controller "MuokkaaArvosanat", [
       arvosanatModified.push changeDetection(arvosanaTmp)
 
     updateArvosanaTaulukko = (taulukko) ->
+      rowClass = arrayCarousel("oddRow", "")
+      rowClass.next()
+      previousAine = null
       for aineRivi in taulukko
+        if aineRivi.aine != previousAine
+          rowClass.next()
+        aineRivi.rowClass = rowClass.value
+        previousAine = aineRivi.aine
         for arvosana in aineRivi.pakolliset.concat(aineRivi.valinnaiset)
           arvosana.lisatieto = aineRivi.lisatieto
           arvosana.myonnetty = aineRivi.myonnetty
@@ -179,6 +186,7 @@ app.controller "MuokkaaArvosanat", [
           updateArvosanaTaulukko $scope.suorituksenArvosanataulukko
 
       updateArvosanaTaulukko $scope.suorituksenArvosanataulukko
+      console.log $scope.suorituksenArvosanataulukko
       $scope.$watch "suorituksenArvosanataulukko", $scope.enableSave, true
     )
 

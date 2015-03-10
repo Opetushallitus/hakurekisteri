@@ -271,3 +271,13 @@ optgroup option {
     width: auto;
     display: inline;
 }
+
+.oddRow {
+    background-color: #f9f9f9;
+}
+
+.oddRow>td {
+    background-color: rgba(20, 158, 203, 0.06);
+    border-top-color: rgba(6, 82, 107, 0.12);
+    border-bottom-color: rgba(6, 82, 107, 0.12);
+}

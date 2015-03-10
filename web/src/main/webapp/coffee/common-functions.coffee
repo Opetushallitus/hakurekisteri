@@ -169,6 +169,16 @@ changeDetection = (object) ->
     json = JSON.stringify(object)
   }
 
+arrayCarousel = (args...) ->
+  if args.length == 0
+    throw new Error("Args was empty array")
+  index = 0
+  o = {
+    value: args[0]
+    next: () ->
+      o["value"] = args[index = (index + 1) % args.length]
+  }
+
 deleteFromArray = (obj, arr) ->
   if index = arr.indexOf(obj) != -1
     arr.splice index, 1
