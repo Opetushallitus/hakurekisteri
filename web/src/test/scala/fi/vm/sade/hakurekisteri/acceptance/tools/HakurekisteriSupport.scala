@@ -44,17 +44,7 @@ object kausi extends Enumeration {
 
 import kausi._
 
-trait TestSecurity extends SecuritySupport {
 
-  object TestUser extends User {
-
-    override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
-
-    override val username: String = "Test"
-  }
-
-  override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(TestUser)
-}
 
 trait HakurekisteriContainer extends EmbeddedJettyContainer {
 

@@ -3,9 +3,9 @@ package fi.vm.sade.hakurekisteri.batchimport
 import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
-import fi.vm.sade.hakurekisteri.acceptance.tools.{FakeAuthorizer, TestSecurity}
+import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
+import fi.vm.sade.hakurekisteri.rest.support.{TestSecurity, HakurekisteriJsonSupport, JDBCJournal}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import org.json4s.Extraction
 import org.json4s.jackson.JsonMethods._

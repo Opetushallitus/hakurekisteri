@@ -97,29 +97,49 @@ class ScalatraBootstrap extends LifeCycle {
 
     val importBatchProcessing = system.actorOf(Props(new ImportBatchProcessingActor(authorizedRegisters.eraRekisteri, integrations.henkilo, authorizedRegisters.suoritusRekisteri, authorizedRegisters.opiskelijaRekisteri, integrations.organisaatiot, authorizedRegisters.arvosanaRekisteri, integrations.koodisto)), "importBatchProcessing")
 
-    mountServlets(context) (
-      ("/", "web/src/scala/gui") -> new GuiServlet,
-      ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
-      ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", "arvosanat", "data", new XmlConverter {
-        override def convert(f: FileItem): Elem = ???
-      }, Arvosanat, ArvosanatKoodisto) with SpringSecuritySupport,
-      ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", "perustiedot", "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SpringSecuritySupport,
-      ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
-      ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
-      ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),
-      ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(koosteet.haut),
-      ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),
-      ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),
-      ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
-      ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
-      ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(authorizedRegisters),
-      ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
-      ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport,
-      //("/sanity", "sanity") -> new SanityResource(sanity),
-      ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
-      //("/upload", "upload") -> new UploadResource(),
-      ("/virta", "virta") -> new VirtaResource(integrations.virtaQueue)
-    )
+    sys.props.get("securityMode") match {
+      case Some("test") =>
+        mountServlets(context) (
+          ("/", "web/src/scala/gui") -> new GuiServlet,
+          ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
+          ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", "perustiedot", "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with TestSecurity,
+          ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
+          ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with TestSecurity,
+          ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),
+          ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(koosteet.haut),
+          ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),
+          ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),
+          ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with TestSecurity,
+          ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
+          ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with TestSecurity,
+          ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with TestSecurity,
+          //("/sanity", "sanity") -> new SanityResource(sanity),
+          ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
+          //("/upload", "upload") -> new UploadResource(),
+          ("/virta", "virta") -> new VirtaResource(integrations.virtaQueue)
+        )
+
+      case _ =>
+        mountServlets(context) (
+          ("/", "web/src/scala/gui") -> new GuiServlet,
+          ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
+          ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", "perustiedot", "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SpringSecuritySupport,
+          ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
+          ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
+          ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),
+          ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(koosteet.haut),
+          ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),
+          ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),
+          ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
+          ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
+          ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
+          ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport,
+          //("/sanity", "sanity") -> new SanityResource(sanity),
+          ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
+          //("/upload", "upload") -> new UploadResource(),
+          ("/virta", "virta") -> new VirtaResource(integrations.virtaQueue)
+        )
+    }
   }
 
   def mountServlets(context: ServletContext)(servlets: ((String, String), Servlet with Handler)*) = {

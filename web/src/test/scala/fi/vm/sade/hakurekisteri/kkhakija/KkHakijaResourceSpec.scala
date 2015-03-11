@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.kkhakija
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, Props}
-import fi.vm.sade.hakurekisteri.acceptance.tools.{TestSecurity, HakeneetSupport}
+import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
 import fi.vm.sade.hakurekisteri.integration.haku.Haku
@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
-import fi.vm.sade.hakurekisteri.rest.support.User
+import fi.vm.sade.hakurekisteri.rest.support.{TestSecurity, User}
 import org.joda.time.LocalDate
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite

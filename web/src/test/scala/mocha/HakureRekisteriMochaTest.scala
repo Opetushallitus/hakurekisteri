@@ -5,9 +5,10 @@ import java.net.Socket
 
 import fi.vm.sade.hakurekisteri.JettyLauncher
 import org.scalatest.{FlatSpec, Matchers}
-import scala.sys.process._
-import scala.language.postfixOps
+import org.scalatra.{ScalatraContext, ScalatraBase}
 
+import scala.language.postfixOps
+import scala.sys.process._
 import scala.util.Random
 
 class HakureRekisteriMochaTest extends FlatSpec with Matchers {
@@ -32,20 +33,13 @@ class HakureRekisteriMochaTest extends FlatSpec with Matchers {
     }
   }
 
-  it should "Mocha test" in {
-    assert(true)    //Take back in action when fixed properly
-    /*
+  "Mocha tests" should "pass" in {
     val jettyPort: Int = findFreeLocalPort
     new JettyLauncher(jettyPort).withJetty {
-      val pb = Seq("node_modules/mocha-phantomjs/bin/mocha-phantomjs", "-R", "spec", "http://localhost:"+jettyPort+"/demo/runner.html")
+      val pb = Seq("node_modules/mocha-phantomjs/bin/mocha-phantomjs", "-R", "spec", "http://localhost:" + jettyPort + "/demo/runner.html")
       val res = pb.!
-      println("res="+res)
-      if(res != 0)
-        fail("Mocha tests failed")
-      else
-        assert(true)
+      res should be(0)
     }
-    */
   }
 
 }

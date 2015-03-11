@@ -11,6 +11,7 @@ object JettyLauncher {
 }
 
 class JettyLauncher(val port: Int) {
+  sys.props.+=(("securityMode", "test"))
   val server = new Server(port)
   val context = new WebAppContext()
   context.setBaseResource(

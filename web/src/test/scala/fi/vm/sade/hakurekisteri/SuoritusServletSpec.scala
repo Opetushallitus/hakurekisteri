@@ -1,12 +1,13 @@
 package fi.vm.sade.hakurekisteri
 
+import fi.vm.sade.hakurekisteri.rest.support.TestSecurity
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import akka.actor.{Props, ActorSystem}
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.LocalDate
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
-import fi.vm.sade.hakurekisteri.acceptance.tools.{TestSecurity, FakeAuthorizer}
+import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import scala.language.implicitConversions
 import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwaggerApi}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriCrudCommands, HakurekisteriResource, HakurekisteriSwagger}
