@@ -33,11 +33,6 @@ class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekist
     ylioppilastutkintolautakunta = Config.ytlOrganisaatioOid
   )
 
-  get("/") {
-    contentType="text/html"
-    new java.io.File(servletContext.getResource("/index.html").getFile)
-  }
-
   get("/rest/v1/komo") {
     contentType="application/json"
     oidit
