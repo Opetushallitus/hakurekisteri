@@ -1,16 +1,17 @@
 <form ng-submit="saveArvosanat()"></form>
-<table class="table table-condensed table-striped">
+<table class="table table-condensed">
     <thead>
     <th oph-msg="suoritusrekisteri.muokkaa.arvosanat.oppiaine">Oppiaine</th>
-    <th>Korotus</th>
     <th oph-msg="suoritusrekisteri.muokkaa.arvosanat.lisatieto">Lisätieto (kieli)</th>
     <th oph-msg="suoritusrekisteri.muokkaa.arvosanat.arvosana">Arvosana</th>
-    <th oph-msg="suoritusrekisteri.muokkaa.arvosanat.valinnainen">Valinnaisten arvosanat</th>
+    <th oph-msg="suoritusrekisteri.muokkaa.arvosanat.valinnainen">1. Valinnainen</th>
+    <th oph-msh="suoritusrekisteri.muokkaa.arvosanat.toinenvalinnainen">2. valinnainen</th>
+    <th oph-msh="suoritusrekisteri.muokkaa.arvosanat.toinenvalinnainen">3. valinnainen</th>
     </thead>
     <tbody>
-    <tr ng-repeat="aineRivi in suorituksenArvosanataulukko">
-        <td>{{aineRivi.aineNimi || aineRivi.aine}}</td>
-        <td><span ng-show="suoritus.valmistuminen != aineRivi.myonnetty">{{aineRivi.myonnetty}}</span></td>
+    <tr ng-repeat="aineRivi in suorituksenArvosanataulukko" class="{{aineRivi.rowClass}}">
+        <td><span>{{aineRivi.aineNimi || aineRivi.aine}}</span><span
+                ng-show="suoritus.valmistuminen != aineRivi.myonnetty">({{aineRivi.myonnetty}})</span></td>
         <td>
             <select ng-show="aineRivi.aine == 'AI'" ng-model="aineRivi.lisatieto"
                     ng-options="k.value as k.text for k in aidinkieli"
@@ -22,9 +23,20 @@
           <select ng-model="pakollinen.arvio.arvosana" required="required"
                   ng-options="a.value as a.text for a in arvosanat" class="form-control smallInline"></select></span>
         </td>
-        <td style="white-space: nowrap;"><span ng-repeat="valinnainen in aineRivi.valinnaiset">
-          <select ng-model="valinnainen.arvio.arvosana" required="required"
-                  ng-options="a.value as a.text for a in arvosanat" class="form-control smallInline"></select></span>
+        <td style="white-space: nowrap;">
+            <select ng-show="aineRivi.valinnaiset[0]" ng-model="aineRivi.valinnaiset[0].arvio.arvosana"
+                    required="required" ng-options="a.value as a.text for a in arvosanat"
+                    class="form-control smallInline"></select>
+        </td>
+        <td style="white-space: nowrap;">
+            <select ng-show="aineRivi.valinnaiset[1]" ng-model="aineRivi.valinnaiset[1].arvio.arvosana"
+                    required="required" ng-options="a.value as a.text for a in arvosanat"
+                    class="form-control smallInline"></select>
+        </td>
+        <td style="white-space: nowrap;">
+            <select ng-show="aineRivi.valinnaiset[2]" ng-model="aineRivi.valinnaiset[2].arvio.arvosana"
+                    required="required" ng-options="a.value as a.text for a in arvosanat"
+                    class="form-control smallInline"></select>
         </td>
     </tr>
     </tbody>

@@ -81,7 +81,7 @@ class ScalatraBootstrap extends LifeCycle {
   implicit val ec: ExecutionContext = system.dispatcher
 
   override def init(context: ServletContext) {
-    if(!sys.props.get("securityMode").equals("test")) OPHSecurity init context
+    if(sys.props.get("securityMode").equals("test")) { OPHSecurity init context }
 
     val journals = new DbJournals(jndiName)
     val registers = new BareRegisters(system, journals)
@@ -153,7 +153,7 @@ class ScalatraBootstrap extends LifeCycle {
   override def destroy(context: ServletContext) {
     system.shutdown()
     system.awaitTermination(15.seconds)
-    if(!sys.props.get("securityMode").equals("test")) OPHSecurity.destroy(context)
+    if(sys.props.get("securityMode").equals("test")) { OPHSecurity.destroy(context) }
   }
 }
 
