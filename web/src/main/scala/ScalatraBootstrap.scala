@@ -81,7 +81,7 @@ class ScalatraBootstrap extends LifeCycle {
   implicit val ec: ExecutionContext = system.dispatcher
 
   override def init(context: ServletContext) {
-    OPHSecurity init context
+    if(!sys.props.get("securityMode").equals("test")) OPHSecurity init context
 
     val journals = new DbJournals(jndiName)
     val registers = new BareRegisters(system, journals)
@@ -114,6 +114,7 @@ class ScalatraBootstrap extends LifeCycle {
           ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with TestSecurity,
           ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with TestSecurity,
           //("/sanity", "sanity") -> new SanityResource(sanity),
+          ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(authorizedRegisters) with TestSecurity,
           ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
           //("/upload", "upload") -> new UploadResource(),
           ("/virta", "virta") -> new VirtaResource(integrations.virtaQueue)
@@ -135,10 +136,12 @@ class ScalatraBootstrap extends LifeCycle {
           ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
           ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport,
           //("/sanity", "sanity") -> new SanityResource(sanity),
+          ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(authorizedRegisters),
           ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
           //("/upload", "upload") -> new UploadResource(),
           ("/virta", "virta") -> new VirtaResource(integrations.virtaQueue)
         )
+
     }
   }
 
@@ -150,7 +153,7 @@ class ScalatraBootstrap extends LifeCycle {
   override def destroy(context: ServletContext) {
     system.shutdown()
     system.awaitTermination(15.seconds)
-    OPHSecurity.destroy(context)
+    if(!sys.props.get("securityMode").equals("test")) OPHSecurity.destroy(context)
   }
 }
 

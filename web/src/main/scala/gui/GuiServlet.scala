@@ -3,6 +3,8 @@ package gui
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import org.json4s.{DefaultFormats, Formats}
+import org.json4s.JsonAST.JValue
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.scalate.ScalateSupport
 import org.fusesource.scalate.layout.DefaultLayoutStrategy
@@ -14,7 +16,7 @@ import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.Config
 
 
-class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekisteriStack {
+class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekisteriStack with JacksonJsonSupport {
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   lazy val oidit = GuiOidit(
@@ -37,8 +39,11 @@ class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekist
   }
 
   get("/rest/v1/komo") {
+    contentType="application/json"
     oidit
   }
+
+  override protected implicit def jsonFormats: Formats = DefaultFormats
 }
 
 case class GuiOidit(yotutkintoKomoOid: String,

@@ -216,6 +216,8 @@ function takeScreenshot() {
         var filename = "target/screenshots/" + date.getTime();
         console.log("Taking screenshot " + filename);
         callPhantom({'screenshot': filename});
+    } else {
+        console.error('No screenshot saved')
     }
 }
 

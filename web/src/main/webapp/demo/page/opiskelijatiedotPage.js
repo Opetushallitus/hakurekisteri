@@ -1,6 +1,6 @@
 function opiskelijatiedotPage() {
   function isLocalhost() {
-    return location.host === 'localhost:8080'
+    return location.host.indexOf('localhost') > -1
   }
   var opiskelijatiedotPage = openPage((isLocalhost() ? '' : '/suoritusrekisteri') + "/#/muokkaa-obd", function() {
     return S("#filterForm").length === 1
@@ -24,10 +24,14 @@ function opiskelijatiedotPage() {
     resultsTable: function() {
       return S("#table-scroller").find("tr")
     },
-    openPage: function() {
+    openPage: function(done) {
       return opiskelijatiedotPage()
         .then(wait.until(function() {
-          return pageFunctions.filterForm().length === 1
+          var pageReady = pageFunctions.filterForm().length === 1
+          if (pageReady) {
+              done()
+          }
+          return pageReady
         }))
     }
   };

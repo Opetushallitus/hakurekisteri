@@ -1,6 +1,6 @@
 function TiedonsiirtoPage() {
     function isLocalhost() {
-        return location.host === 'localhost:8080'
+        return location.host.indexOf('localhost') > -1
     }
     var tiedonsiirtoPage = openPage((isLocalhost() ? '' : '/suoritusrekisteri') + "/#/tiedonsiirto/lahetys", function() {
         return S("#uploadForm").length === 1
@@ -32,11 +32,14 @@ function TiedonsiirtoPage() {
         uploadResult: function() {
             return S("#uploadResult").first()
         },
-        openPage: function() {
+        openPage: function(done) {
             return tiedonsiirtoPage()
                 .then(wait.until(function() {
-                    return pageFunctions.arvosanatRadio().length === 1
-                        && pageFunctions.tiedostoInput().length === 1
+                    var pageReady = pageFunctions.arvosanatRadio().length === 1 && pageFunctions.tiedostoInput().length === 1
+                    if(pageReady) {
+                        done()
+                    }
+                    return pageReady
                 }))
         }
     };
