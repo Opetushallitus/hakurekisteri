@@ -4,13 +4,13 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.ResourceCollection
 import org.eclipse.jetty.webapp.WebAppContext
 
-object JettyLauncher {
+object JettyTestLauncher {
   def main(args: Array[String]) {
-    new JettyLauncher(8080).start.join
+    new JettyTestLauncher(8080).start.join
   }
 }
 
-class JettyLauncher(val port: Int) {
+class JettyTestLauncher(val port: Int) {
   sys.props.+=(("securityMode", "test"))
   val server = new Server(port)
   val context = new WebAppContext()

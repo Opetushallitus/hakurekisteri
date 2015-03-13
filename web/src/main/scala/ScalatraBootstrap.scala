@@ -87,8 +87,6 @@ class ScalatraBootstrap extends LifeCycle {
     val registers = new BareRegisters(system, journals)
     val authorizedRegisters = filter(registers) withAuthorizationDataFrom organisaatioSoapServiceUrl
 
-    //val sanity = system.actorOf(Props(new PerusopetusSanityActor(koodistoServiceUrl, registers.suoritusRekisteri, journals.arvosanaJournal)), "perusopetus-sanity")
-
     val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, parameterConfig, hakemusConfig, ytlConfig, koodistoConfig, valintaTulosConfig, registers, system)
 
     val koosteet = new BaseKoosteet(system, integrations, registers)
@@ -100,7 +98,7 @@ class ScalatraBootstrap extends LifeCycle {
     sys.props.get("securityMode") match {
       case Some("test") =>
         mountServlets(context) (
-          ("/", "web/src/scala/gui") -> new GuiServlet,
+          ("/rest/v1/komo", "komo") -> new GuiServlet,
           ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
           ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", "perustiedot", "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with TestSecurity,
           ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
@@ -113,16 +111,14 @@ class ScalatraBootstrap extends LifeCycle {
           ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
           ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with TestSecurity,
           ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with TestSecurity,
-          //("/sanity", "sanity") -> new SanityResource(sanity),
           ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(authorizedRegisters) with TestSecurity,
           ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
-          //("/upload", "upload") -> new UploadResource(),
           ("/virta", "virta") -> new VirtaResource(integrations.virtaQueue)
         )
 
       case _ =>
         mountServlets(context) (
-          ("/", "web/src/scala/gui") -> new GuiServlet,
+          ("/rest/v1/komo", "komo") -> new GuiServlet,
           ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
           ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", "perustiedot", "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SpringSecuritySupport,
           ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
@@ -135,10 +131,8 @@ class ScalatraBootstrap extends LifeCycle {
           ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
           ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
           ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport,
-          //("/sanity", "sanity") -> new SanityResource(sanity),
           ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(authorizedRegisters),
           ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto),
-          //("/upload", "upload") -> new UploadResource(),
           ("/virta", "virta") -> new VirtaResource(integrations.virtaQueue)
         )
     }

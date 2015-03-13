@@ -3,7 +3,7 @@ package mocha
 import java.io.IOException
 import java.net.Socket
 
-import fi.vm.sade.hakurekisteri.JettyLauncher
+import fi.vm.sade.hakurekisteri.JettyTestLauncher
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatra.{ScalatraContext, ScalatraBase}
 
@@ -35,7 +35,7 @@ class HakureRekisteriMochaTest extends FlatSpec with Matchers {
 
   "Mocha tests" should "pass" in {
     val jettyPort: Int = findFreeLocalPort
-    new JettyLauncher(jettyPort).withJetty {
+    new JettyTestLauncher(jettyPort).withJetty {
       val pb = Seq("node_modules/mocha-phantomjs/bin/mocha-phantomjs", "-R", "spec", "http://localhost:" + jettyPort + "/demo/runner.html")
       val res = pb.!
       res should be(0)
