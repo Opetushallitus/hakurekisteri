@@ -114,8 +114,6 @@ object HakurekisteriBuild extends Build {
 
   lazy val buildversion = taskKey[Unit]("start buildversion.txt generator")
 
-  val surefire = testListeners += new SurefireListener(target.value)
-
   val buildversionTask = buildversion <<= version map {
     (ver: String) =>
       val now: String = new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date())
@@ -131,19 +129,6 @@ object HakurekisteriBuild extends Build {
   }
 
   val scalac = Seq(scalacOptions ++= Seq( "-deprecation", "-unchecked", "-feature" ))
-
-  val sonar =  sonarSettings ++ Seq(sonarProperties := sonarProperties.value ++
-    Map("sonar.host.url" -> "http://pulpetti.hard.ware.fi:9000/sonar",
-      "sonar.jdbc.url" -> "jdbc:mysql://pulpetti.hard.ware.fi:3306/sonar?useUnicode=true&amp;characterEncoding=utf8",
-      "sonar.jdbc.username" -> "sonar",
-      "sonar.jdbc.password" -> sys.env.getOrElse("SONAR_PASSWORD", "sonar"),
-      "sonar.projectKey" -> "fi.vm.sade.hakurekisteri:hakurekisteri",
-      "sonar.language" -> "scala",
-      "sonar.surefire.reportsPath" -> (target.value.getAbsolutePath + "/surefire-reports"),
-      "sonar.dynamicAnalysis" -> "reuseReports",
-      "sonar.core.codeCoveragePlugin" -> "cobertura",
-      "sonar.java.coveragePlugin"  -> "cobertura",
-      "sonar.cobertura.reportPath" -> (target.value.getAbsolutePath +"/scala-" +scalaBinaryVersion.value + "/coverage-report/cobertura.xml")))
 
   lazy val core = Project(
     id = "hakurekisteri-core",
@@ -212,23 +197,8 @@ object HakurekisteriBuild extends Build {
         artifactoryPublish,
         buildversionTask,
         libraryDependencies ++=  ScalatraStack.map(_ % ScalatraVersion)
-          ++ SecurityStack ++ webDeps,
-        scalateTemplateConfig in Compile <<= (sourceDirectory in Compile) {
-          base =>
-            Seq(
-              TemplateConfig(
-                base / "webapp" / "WEB-INF" / "templates",
-                Seq.empty, /* default imports should be added here */
-                Seq(
-                  Binding("context", "_root_.org.scalatra.scalate.ScalatraRenderContext", importMembers = true, isImplicit = true)
-                ), /* add extra bindings here */
-                Some("templates")
-              )
-            )
-        }
-      )
-      ++ sonar
-      ++ Seq(surefire)).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
+          ++ SecurityStack ++ webDeps
+      )).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
 
   }.dependsOn(core % "test->test;compile->compile")
 
