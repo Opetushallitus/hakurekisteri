@@ -6,15 +6,29 @@ import fi.vm.sade.hakurekisteri.rest.support.{UUIDResource, Resource}
 import scala.util.Try
 import org.joda.time.LocalDate
 
-case class Arvosana(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: Option[String], valinnainen: Boolean, myonnetty: Option[LocalDate] = None, source: String) extends UUIDResource[Arvosana] {
+case class Arvosana(suoritus: UUID,
+                    arvio: Arvio,
+                    aine: String,
+                    lisatieto: Option[String],
+                    valinnainen: Boolean,
+                    myonnetty: Option[LocalDate] = None,
+                    source: String,
+                    jarjestys: Option[Int] = None) extends UUIDResource[Arvosana] {
+
   override def identify(identity: UUID): Arvosana with Identified[UUID]= new IdentifiedArvosana(this, identity)
 
-  private[Arvosana] case class ArvosanaCore(suoritus: UUID, arvio: Arvio, aine: String, lisatieto: Option[String], valinnainen: Boolean, myonnetty: Option[LocalDate])
+  private[Arvosana] case class ArvosanaCore(suoritus: UUID,
+                                            arvio: Arvio,
+                                            aine: String,
+                                            lisatieto: Option[String],
+                                            valinnainen: Boolean,
+                                            myonnetty: Option[LocalDate],
+                                            jarjestys: Option[Int])
 
-  override val core = ArvosanaCore(suoritus, arvio, aine, lisatieto, valinnainen, myonnetty)
+  override val core = ArvosanaCore(suoritus, arvio, aine, lisatieto, valinnainen, myonnetty, jarjestys)
 }
 
-class IdentifiedArvosana(a: Arvosana, val id: UUID) extends Arvosana(a.suoritus, a.arvio , a.aine, a.lisatieto, a.valinnainen, a.myonnetty, a.source) with Identified[UUID]
+class IdentifiedArvosana(a: Arvosana, val id: UUID) extends Arvosana(a.suoritus, a.arvio , a.aine, a.lisatieto, a.valinnainen, a.myonnetty, a.source, a.jarjestys) with Identified[UUID]
 
 sealed abstract class Arvio
 

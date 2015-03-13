@@ -186,7 +186,7 @@ class PerusopetusSanityActor(val serviceUrl: String = "https://itest-virkailija.
   def missing(arvosanas: Seq[Arvosana]): Set[String] = {
     val skaala = (4 to 10).map(_.toString).toSet
     val set = arvosanas.withFilter {
-      case Arvosana(_, Arvio410(arvosana), _, _, _, _, _) => skaala.contains(arvosana)
+      case Arvosana(_, Arvio410(arvosana), _, _, _, _, _, _) => skaala.contains(arvosana)
     }.map(_.aine).toSet
     pakolliset.filterNot(set.contains(_))
   }

@@ -112,7 +112,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   private case class FailureArvosanaStatus(tunniste: String, t: Throwable) extends ArvosanaStatus
 
   private def toArvosana(arvosana: ImportArvosana)(suoritus: UUID)(source: String): Arvosana =
-    Arvosana(suoritus, Arvio410(arvosana.arvosana), arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source)
+    Arvosana(suoritus, Arvio410(arvosana.arvosana), arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source, arvosana.jarjestys)
 
   private def fetchSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String, lahde: String): Future[Suoritus with Identified[UUID]] =
     (suoritusrekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid))).
@@ -181,7 +181,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
 
   case class SuoritusNotFoundException(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String) extends Exception(s"suoritus not found for henkilo $henkiloOid with myontaja $oppilaitosOid for todistus $todistus")
   object HenkiloTunnisteNotSupportedException extends Exception("henkilo tunniste not yet supported in arvosana batch")
-  case class ImportArvosana(aine: String, arvosana: String, lisatieto: Option[String], valinnainen: Boolean)
+  case class ImportArvosana(aine: String, arvosana: String, lisatieto: Option[String], valinnainen: Boolean, jarjestys: Option[Int] = None)
   case class ImportTodistus(komo: String, myontaja: String, arvosanat: Seq[ImportArvosana], valmistuminen: LocalDate, suoritusKieli: String)
   case class ImportArvosanaHenkilo(tunniste: ImportTunniste, sukunimi: String, etunimet: String, kutsumanimi: String, todistukset: Seq[ImportTodistus])
   object ImportArvosanaHenkilo {
@@ -194,8 +194,8 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
           case "AI" => Some(getField("tyyppi")(s))
           case _ => getOptionField("kieli")(s)
         }
-        (s \ "valinnainen").
-          map(a => ImportArvosana(name, a.text, lisatieto, valinnainen = true)) :+ ImportArvosana(name, getField("yhteinen")(s), lisatieto, valinnainen = false)
+        (s \ "valinnainen").zipWithIndex.
+          map(t => ImportArvosana(name, t._1.text, lisatieto, valinnainen = true, Some(t._2))) :+ ImportArvosana(name, getField("yhteinen")(s), lisatieto, valinnainen = false)
     }).flatten.foldLeft[Seq[ImportArvosana]](Seq())(_ ++ _)
 
     def todistus(name: String, komoOid: String, oppijanumero: Option[String])(h: Node)(lahde: String)(oppiaineet: Seq[String]): Option[ImportTodistus] = (h \ name).headOption.map(s => {

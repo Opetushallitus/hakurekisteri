@@ -51,7 +51,9 @@ trait ArvosanaSwaggerModel extends OldSwaggerSyntax {
     ModelField("aine", "aine josta arvosana on annettu", DataType.String),
     ModelField("lisatieto", "aineen lisätieto. esim kieli", DataType.String, required = false),
     ModelField("valinnainen", "onko aine ollut valinnainen", DataType.Boolean, Some("false"), required = false),
-    ModelField("myonnetty", "milloin arvosana on myönnetty", DataType.Date, required = false))
+    ModelField("myonnetty", "milloin arvosana on myönnetty", DataType.Date, required = false),
+    ModelField("jarjestys", "monesko valinnainen arvosana on kyseessä", DataType.Int, required = false)
+  )
 
   def arvosanaModel = Model("Arvosana", "Arvosanatiedot", arvosanaFields.map(t => (t.name, t)).toMap)
 }
