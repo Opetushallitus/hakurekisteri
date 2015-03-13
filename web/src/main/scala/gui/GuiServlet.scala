@@ -38,6 +38,10 @@ class GuiServlet()(implicit val system: ActorSystem) extends HakuJaValintarekist
     oidit
   }
 
+  get("/") {
+    new java.io.File(servletContext.getResource("/index.html").getFile)
+  }
+
   override protected implicit def jsonFormats: Formats = DefaultFormats
 }
 
