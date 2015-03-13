@@ -43,7 +43,7 @@ function S(selector) {
 
 wait = {
     maxWaitMs: testTimeout,
-    waitIntervalMs: 10,
+    waitIntervalMs: 30,
     until: function (condition, count) {
         return function () {
             var deferred = Q.defer();
