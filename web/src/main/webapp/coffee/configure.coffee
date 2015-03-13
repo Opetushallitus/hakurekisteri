@@ -23,7 +23,7 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
     templateUrl: "templates/tiedonsiirtotila.html"
     controller: "TiedonsiirtotilaCtrl"
 
-  $routeProvider.when "/tiedonsiirto/hakeneet.html",
+  $routeProvider.when "/tiedonsiirto/hakeneet",
     templateUrl: "templates/hakeneet"
     controller: "HakeneetCtrl"
     resolve:

@@ -48,7 +48,6 @@ import fi.vm.sade.hakurekisteri.suoritus._
 import gui.GuiServlet
 import org.apache.activemq.camel.component.ActiveMQComponent
 import org.joda.time.LocalDate
-import org.scalatra.servlet.FileItem
 import org.scalatra.{Handler, LifeCycle}
 import org.scalatra.swagger.Swagger
 import org.slf4j.LoggerFactory
@@ -69,8 +68,6 @@ import scala.reflect.ClassTag
 import HakurekisteriDriver.simple._
 import scala.util.Try
 import siirto._
-
-import scala.xml.Elem
 
 
 class ScalatraBootstrap extends LifeCycle {
