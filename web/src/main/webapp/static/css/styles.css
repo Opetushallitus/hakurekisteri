@@ -281,3 +281,11 @@ optgroup option {
     border-top-color: rgba(6, 82, 107, 0.12);
     border-bottom-color: rgba(6, 82, 107, 0.12);
 }
+
+.paddedRow>td {
+    border-top: none !important;
+}
+
+.paddedRow>td:first-child {
+    padding-left: 15px;
+}

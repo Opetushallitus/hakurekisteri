@@ -17,6 +17,7 @@ app.controller "MuokkaaArvosanat", [
     $scope.arvosanat = []
     $scope.kielet = []
     $scope.aidinkieli = []
+    $scope.info = { editable: false }
 
     getKoodistoAsOptionArray $http, "arvosanat", "fi", $scope.arvosanat, "koodiArvo"
     getKoodistoAsOptionArray $http, "kielivalikoima", "fi", $scope.kielet, "koodiArvo"
@@ -41,6 +42,13 @@ app.controller "MuokkaaArvosanat", [
               alaKoodit: alaKoodit
           )
         $q.all(koodiPromises).then ( ->
+          lukio = suoritus.komo is $scope.komo.lukio
+          pohjakoulutusFilter = "onperusasteenoppiaine_1"
+          if lukio
+            pohjakoulutusFilter = "onlukionoppiaine_1"
+          koodistoOppiaineLista = koodistoOppiaineLista.filter (o) ->
+            o.alaKoodit.some (alakoodi) ->
+              pohjakoulutusFilter == alakoodi.koodiUri
           d.resolve "done"
         ), ->
           d.reject "error"
@@ -76,9 +84,7 @@ app.controller "MuokkaaArvosanat", [
         return
       arvosanaTmp = new Arvosanat(
         aine: aineRivi.aine
-        lisatieto: aineRivi.lisatieto
         suoritus: suoritusId
-        myonnetty: aineRivi.myonnetty
         arvio:
           arvosana: "Ei arvosanaa"
           asteikko: "4-10"
@@ -87,31 +93,79 @@ app.controller "MuokkaaArvosanat", [
       list.push arvosanaTmp
       arvosanatModified.push changeDetection(arvosanaTmp)
 
-    updateArvosanaTaulukko = (taulukko) ->
+    filterArvosanatAndRemove = (list, fn) ->
+      list.filter (i) ->
+        include = fn(i)
+        if !include
+          arvosanatModified = arvosanatModified.filter (am) -> am.object != i
+        include
+
+    updateAineRivi = (aineRivi, addNew) ->
+      aineRivi.aineNimi = resolveAineNimi(aineRivi.aine)
+      if !(aineRivi.hasKielisyys =  hasKielisyys(aineRivi.aine))
+        delete aineRivi.lisatieto
+      if aineRivi.hasValinnaisuus = hasValinnaisuus(aineRivi.aine)
+        if addNew
+          addArvosanaIfNeeded aineRivi.valinnaiset, true, 3, aineRivi
+      else
+        aineRivi.valinnaiset = filterArvosanatAndRemove aineRivi.valinnaiset, (a) -> a.id
+      if addNew
+        addArvosanaIfNeeded aineRivi.pakolliset, false, 1, aineRivi
+      aineRivi.hasArvosana = aineRivi.pakolliset.concat(aineRivi.valinnaiset).some (a) -> ( a.arvio.arvosana != "Ei arvosanaa" )
+      for arvosana in aineRivi.pakolliset.concat(aineRivi.valinnaiset)
+        arvosana.aine = aineRivi.aine
+        if aineRivi.lisatieto
+          arvosana.lisatieto = aineRivi.lisatieto
+        else
+          delete arvosana.lisatieto
+        if aineRivi.myonnetty
+          arvosana.myonnetty = aineRivi.myonnetty
+        else
+          delete arvosana.myonnetty
+
+    updateArvosanaTaulukko = () ->
       rowClass = arrayCarousel("oddRow", "")
       rowClass.next()
       previousAine = null
-      for aineRivi in taulukko
-        if aineRivi.aine != previousAine
+      maxValinnainenCount = 0
+      for aineRivi in $scope.suorituksenArvosanataulukko
+        aineRivi.rowClass = ""
+        if aineRivi.aine == previousAine
+          aineRivi.rowClass = "paddedRow "
+        else
           rowClass.next()
-        aineRivi.rowClass = rowClass.value
+        aineRivi.rowClass = aineRivi.rowClass + rowClass.value
         previousAine = aineRivi.aine
-        for arvosana in aineRivi.pakolliset.concat(aineRivi.valinnaiset)
-          arvosana.lisatieto = aineRivi.lisatieto
-          arvosana.myonnetty = aineRivi.myonnetty
-        addArvosanaIfNeeded aineRivi.pakolliset, false, 1, aineRivi
-        if aineRivi.hasValinnaisuus
-          addArvosanaIfNeeded aineRivi.valinnaiset, true, 3, aineRivi
+        updateAineRivi(aineRivi, $scope.info.editable)
+        if maxValinnainenCount < aineRivi.valinnaiset.length
+          maxValinnainenCount = aineRivi.valinnaiset.length
+      $scope.maxValinnainenCount = maxValinnainenCount
+
+    makeAineRivi = (aine, arvosanat, myonnetty, lisatieto) ->
+        {
+        aine: aine
+        pakolliset: (arvosanat.filter (a) ->  !a.valinnainen)
+        valinnaiset: (arvosanat.filter (a) -> a.valinnainen)
+        myonnetty: myonnetty
+        lisatieto: lisatieto
+        }
+
+    sortByAine = (arvosanataulukko) ->
+      arvosanataulukko.sort (a, b) ->
+        if a.aine is b.aine
+          if a.myonnetty && b.myonnetty
+            aPvm = $scope.parseFinDate(a.myonnetty)
+            bPvm = $scope.parseFinDate(b.myonnetty)
+            if aPvm > bPvm then 1 else if aPvm < bPvm then -1 else 0
+          else
+            0
+        else if arvosanaSort[a.aine] < arvosanaSort[b.aine]
+          -1
+        else
+          1
+      arvosanataulukko
 
     $q.all([updateOppiaineLista(), getSuorituksenArvosanat()]).then (->
-      lukio = suoritus.komo is $scope.komo.lukio
-      oppiainekoodit = koodistoOppiaineLista.filter (o) ->
-          pohjakoulutusFilter = "onperusasteenoppiaine_1"
-          if lukio
-            pohjakoulutusFilter = "onlukionoppiaine_1"
-          o.alaKoodit.some (alakoodi) ->
-            pohjakoulutusFilter == alakoodi.koodiUri
-
       collectToMap = (list, keyFn) ->
         ret = {}
         for i in list
@@ -119,42 +173,9 @@ app.controller "MuokkaaArvosanat", [
           (ret[k] || (ret[k] = [])).push i
         ret
 
-      resolveAineNimi = (aine) ->
-        for oppiaine in oppiainekoodit
-          if aine == oppiaine.koodi.koodiArvo
-            return oppiaine.koodi.metadata[0].nimi
-        return aine
-
-      makeAineRivi = (aine, arvosanat, myonnetty, lisatieto) ->
-        {
-        aine: aine
-        pakolliset: (arvosanat.filter (a) ->  !a.valinnainen)
-        valinnaiset: (arvosanat.filter (a) -> a.valinnainen)
-        myonnetty: myonnetty
-        lisatieto: lisatieto
-        hasKielisyys: hasKielisyys(aine)
-        hasValinnaisuus: hasValinnaisuus(aine)
-        aineNimi: resolveAineNimi(aine)
-        }
-
-      sortByAine = (arvosanataulukko) ->
-        arvosanataulukko.sort (a, b) ->
-          if a.aine is b.aine
-            if a.myonnetty && b.myonnetty
-              aPvm = $scope.parseFinDate(a.myonnetty)
-              bPvm = $scope.parseFinDate(b.myonnetty)
-              if aPvm > bPvm then 1 else if aPvm < bPvm then -1 else 0
-            else
-              0
-          else if arvosanaSort[a.aine] < arvosanaSort[b.aine]
-            -1
-          else
-            1
-        arvosanataulukko
-
       createArvosanaTaulukko = (arvosanat) ->
         taulukko = []
-        for oppiaine in oppiainekoodit
+        for oppiaine in koodistoOppiaineLista
           aine = oppiaine.koodi.koodiArvo
           aineenArvosanat = arvosanat.filter (a) -> a.aine is aine
           arvosanatByMyonnettyLisatieto = collectToMap(aineenArvosanat, ((a) -> "#{a.myonnetty};#{a.lisatieto}"))
@@ -172,23 +193,42 @@ app.controller "MuokkaaArvosanat", [
         sortByAine(taulukko)
 
       $scope.suorituksenArvosanataulukko = createArvosanaTaulukko(suorituksenArvosanat)
-      $scope.korotusAineet = sortByAine oppiainekoodit.map (oppiaine) ->
+      $scope.korotusAineet = sortByAine koodistoOppiaineLista.map (oppiaine) ->
         {
           aine: oppiaine.koodi.koodiArvo
           text: oppiaine.koodi.metadata[0].nimi
         }
-      $scope.info.korotusPvm = $scope.formatDateNoZeroPaddedNumbers($scope.suoritus.valmistuminen)
-      $scope.addKorotus = () ->
-        console.log $scope.info.korotusAine, $scope.info.korotusPvm
-        if  $scope.info.korotusAine && $scope.info.korotusPvm
-          $scope.suorituksenArvosanataulukko.push makeAineRivi($scope.info.korotusAine, [], $scope.formatDateWithZeroPaddedNumbers($scope.info.korotusPvm), null)
-          sortByAine $scope.suorituksenArvosanataulukko
-          updateArvosanaTaulukko $scope.suorituksenArvosanataulukko
-
-      updateArvosanaTaulukko $scope.suorituksenArvosanataulukko
-      console.log $scope.suorituksenArvosanataulukko
+      updateArvosanaTaulukko()
       $scope.$watch "suorituksenArvosanataulukko", $scope.enableSave, true
     )
+
+    $scope.editArvosanat = () ->
+      $scope.info.editable = true
+      updateArvosanaTaulukko()
+
+    $scope.showKorotus = () ->
+      $scope.info.showKorotus = true
+      $scope.korotusRivi = makeAineRivi("AI", [], $scope.formatDateNoZeroPaddedNumbers($scope.suoritus.valmistuminen), null)
+      updateKorotus()
+      $scope.$watch "korotusRivi", updateKorotus, true
+
+    updateKorotus = () ->
+      updateAineRivi($scope.korotusRivi, true)
+      $scope.info.addKorotusDisabled = !$scope.korotusRivi.hasArvosana
+
+    $scope.addKorotus = () ->
+      $scope.info.showKorotus = false
+      if $scope.korotusRivi.myonnetty instanceof Date
+        $scope.korotusRivi.myonnetty = $scope.formatDateNoZeroPaddedNumbers($scope.korotusRivi.myonnetty)
+      $scope.suorituksenArvosanataulukko.push $scope.korotusRivi
+      updateArvosanaTaulukko()
+      $scope.suorituksenArvosanataulukko = sortByAine $scope.suorituksenArvosanataulukko
+
+    resolveAineNimi = (aine) ->
+      for oppiaine in koodistoOppiaineLista
+        if aine == oppiaine.koodi.koodiArvo
+          return oppiaine.koodi.metadata[0].nimi
+      return aine
 
     hasValinnaisuus = (aine) ->
       koodistoOppiaineLista.some (o) ->
@@ -201,8 +241,9 @@ app.controller "MuokkaaArvosanat", [
           alakoodi.koodiUri is "oppiaineenkielisyys_1"
 
     $scope.hasChanged = ->
-      updateArvosanaTaulukko $scope.suorituksenArvosanataulukko
-      arvosanatModified.some (a) -> a.hasChanged()
+      if $scope.suorituksenArvosanataulukko
+        updateArvosanaTaulukko()
+        arvosanatModified.some (a) -> a.hasChanged()
 
     $scope.saveData = ->
       removeArvosana = (arvosana, d) ->
@@ -237,7 +278,7 @@ app.controller "MuokkaaArvosanat", [
             arvosanaModified.update()
           d.promise
 
-      updateArvosanaTaulukko $scope.suorituksenArvosanataulukko
+      updateArvosanaTaulukko()
       $q.all(saveArvosanat()).then (->
       ), ->
         MessageService.addMessage

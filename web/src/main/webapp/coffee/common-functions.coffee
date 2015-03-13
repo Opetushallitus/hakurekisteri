@@ -164,6 +164,8 @@ changeDetection = (object) ->
   {
   object: object
   hasChanged: () ->
+    if json != JSON.stringify(object)
+      console.log "hasChanged", json, JSON.stringify(object)
     json != JSON.stringify(object)
   update: () ->
     json = JSON.stringify(object)
@@ -182,6 +184,15 @@ arrayCarousel = (args...) ->
 deleteFromArray = (obj, arr) ->
   if index = arr.indexOf(obj) != -1
     arr.splice index, 1
+
+lastIndex = (arr, fn) ->
+  i = 0
+  index = -1
+  for o in arr
+    if fn(o)
+      index = i
+    i = i + 1
+  index
 
 (->
   ensureConsoleMethods()

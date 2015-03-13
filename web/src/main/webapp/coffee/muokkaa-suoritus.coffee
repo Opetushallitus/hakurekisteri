@@ -61,8 +61,11 @@ app.controller "MuokkaaSuoritus", [
         []
 
     $scope.parseFinDate = (input) ->
-      parts = input.split('.')
-      new Date(parts[2], parts[1]-1, parts[0])
+      if input instanceof Date
+        input
+      else
+        parts = input.split('.')
+        new Date(parts[2], parts[1]-1, parts[0])
 
     pad = (n) ->
       if n<10

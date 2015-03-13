@@ -79,9 +79,10 @@
                             <div ng-include="'templates/muokkaa-suoritus.html'" ng-controller="MuokkaaSuoritus"></div>
                         </li>
                         <li>
-                            <button type="button" ng-click="addSuoritus()" class="btn btn-default btn-xs"><span
-                                    oph-msg="suoritusrekisteri.muokkaa.uusisuoritus">Lisää uusi suoritus</span><span
-                                    class="glyphicon glyphicon-plus"></span></button>
+                            <button type="button" ng-click="addSuoritus()" class="btn btn-default btn-xs">
+                                <span oph-msg="suoritusrekisteri.muokkaa.uusisuoritus">Lisää uusi suoritus</span>
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </button>
                         </li>
                     </ul>
                 </div>
@@ -100,17 +101,18 @@
                         <div ng-include="'templates/muokkaa-luokkatieto.html'" ng-controller="MuokkaaLuokkatieto"></div>
                     </li>
                     <li>
-                        <button type="button" ng-click="addLuokkatieto()" class="btn btn-default btn-xs"><span
-                                oph-msg="suoritusrekisteri.muokkaa.uusiluokkatieto">Lisää uusi luokkatieto</span><span
-                                class="glyphicon glyphicon-plus"></span></button>
+                        <button type="button" ng-click="addLuokkatieto()" class="btn btn-default btn-xs">
+                            <span oph-msg="suoritusrekisteri.muokkaa.uusiluokkatieto">Lisää uusi luokkatieto</span>
+                            <span class="glyphicon glyphicon-plus"></span></button>
                     </li>
                 </ul>
             </div>
         </section>
     </div>
     <div id="save-button" class="row">
-        <button type="submit" ng-disabled="disableSave" class="btn btn-primary"><span
-                oph-msg="suoritusrekisteri.muokkaa.tallenna">Tallenna</span><span
-                class="glyphicon glyphicon-saved"></span></button>
+        <button type="submit" ng-disabled="disableSave" class="btn btn-primary">
+            <span oph-msg="suoritusrekisteri.muokkaa.tallenna">Tallenna</span>
+            <span class="glyphicon glyphicon-saved"></span>
+        </button>
     </div>
 </form>
