@@ -24,7 +24,7 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
     controller: "TiedonsiirtotilaCtrl"
 
   $routeProvider.when "/tiedonsiirto/hakeneet",
-    templateUrl: "templates/hakeneet"
+    templateUrl: "templates/hakeneet.html"
     controller: "HakeneetCtrl"
     resolve:
       aste: ->

@@ -229,7 +229,7 @@ app.controller "HakeneetCtrl", [
     $scope.avaaOrganisaatiohaku = ->
       isolatedScope = $scope.$new(true)
       isolatedScope.modalInstance = $modal.open(
-        templateUrl: "templates/organisaatiohaku"
+        templateUrl: "templates/organisaatiohaku.html"
         controller: "OrganisaatioCtrl"
         scope: isolatedScope
         size: "lg"
