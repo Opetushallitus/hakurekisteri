@@ -412,7 +412,7 @@ app.controller "MuokkaaCtrl", [
         )
         $scope.modalInstance = isolatedScope.modalInstance
 
-      openModal "templates/arvosanat", "ArvosanaCtrl"
+      openModal "templates/arvosanat.html", "ArvosanaCtrl"
 
       $scope.modalInstance.result.then ((arvosanaRet) ->
         if Array.isArray(arvosanaRet)
