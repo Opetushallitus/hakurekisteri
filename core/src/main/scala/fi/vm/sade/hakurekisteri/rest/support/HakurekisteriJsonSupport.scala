@@ -25,6 +25,7 @@ trait HakurekisteriJsonSupport {
     HakurekisteriDateTimeSerializer +
     new LocalDateSerializer() +
     new ArvioSerializer +
+    new ArvosanaSerializer +
     new AjanjaksoSerializer +
     new SuoritusSerializer +
     new LasnaoloSerializer +
