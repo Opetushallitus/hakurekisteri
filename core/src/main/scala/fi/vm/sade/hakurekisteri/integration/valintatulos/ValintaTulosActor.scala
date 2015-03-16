@@ -27,9 +27,17 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
   private val refetch: FiniteDuration = (Config.valintatulosCacheHours / 2).hours
   private val retry: FiniteDuration = 60.seconds
   private val cache = new FutureCache[String, SijoitteluTulos](Config.valintatulosCacheHours.hours.toMillis)
-  private var refreshing = false
+  private var refresing: Boolean = false
 
   object RefreshDone
+  object UpdateNext
+
+  private var updates: Set[UpdateValintatulos] = Set()
+  private val updateTrigger = context.system.scheduler.schedule(1.minutes, 1.minutes, self, UpdateNext)
+
+  override def postStop(): Unit = {
+    updateTrigger.cancel()
+  }
 
   override def receive: Receive = {
     case q: ValintaTulosQuery =>
@@ -38,15 +46,22 @@ class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLo
     case UpdateValintatulos(haku) if cache.contains(haku) && !cache.inUse(haku) =>
       cache - haku
 
-    case UpdateValintatulos(haku) if refreshing =>
-      context.system.scheduler.scheduleOnce(200.milliseconds, self, UpdateValintatulos(haku))
+    case u: UpdateValintatulos =>
+      updates = updates + u
+      self ! UpdateNext
 
-    case RefreshDone => refreshing = false
+    case RefreshDone =>
+      refresing = false
+      self ! UpdateNext
 
-    case UpdateValintatulos(haku) if !refreshing =>
-      log.debug(s"refreshing haku $haku")
-      refreshing = true
-      updateCacheAndReschedule(haku, sijoitteluTulos(haku, None))
+    case UpdateNext =>
+      if (!refresing && updates.nonEmpty) {
+        refresing = true
+        val u = updates.head
+        updates = updates.filterNot(_ == u)
+        log.debug(s"refreshing haku ${u.haku}")
+        updateCacheAndReschedule(u.haku, sijoitteluTulos(u.haku, None))
+      }
   }
 
   def updateCacheAndReschedule(hakuOid: String, tulos: Future[SijoitteluTulos]): Unit = {
