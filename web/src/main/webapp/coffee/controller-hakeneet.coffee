@@ -122,7 +122,7 @@ app.controller "HakeneetCtrl", [
       }
     ]
     $scope.tiedostotyypit = tiedostotyypit()
-    $scope.vainKkHaut = true  if isKk()
+    $scope.vainKkHaut = true if isKk()
 
     if isKk()
       MurupolkuService.addToMurupolku

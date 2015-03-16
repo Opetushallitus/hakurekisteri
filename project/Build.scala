@@ -65,7 +65,7 @@ object HakurekisteriBuild extends Build {
   )
 
   val dependencies = Seq(
-    "org.scalaz"              %% "scalaz-core"        % "7.0.6",
+    "org.scalaz" %% "scalaz-core" % "7.0.6",
     "org.slf4j" % "slf4j-api" % "1.6.1",
     "org.json4s" %% "json4s-ast" % "3.2.10",
     "org.json4s" %% "json4s-core" % "3.2.10",
