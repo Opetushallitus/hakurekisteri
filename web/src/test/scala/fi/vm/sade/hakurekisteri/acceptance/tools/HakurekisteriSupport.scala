@@ -293,7 +293,7 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
           henkiloOid = henkiloRekisteri.find(row \ "HETU")) )
     }
 
-    def lähettää(kaavake:Elem){
+    def lahettaa(kaavake:Elem){
       parseSuoritukset(kaavake) foreach create
       parseOpiskelijat(kaavake) foreach create
     }

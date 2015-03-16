@@ -21,7 +21,7 @@ class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with H
   feature("Suorituksen tallentaminen") {
     scenario("Esitäytetyn lomakkeen lähettäminen tuottaa suorituksen") {
       Given("Koulu lähettää Mikon ja Matin esitäytetyt kaavaakkeet")
-      koulu lähettää
+      koulu lahettaa
         <ROWSET>
           <ROW>
             <VUOSI>2014</VUOSI>
@@ -84,7 +84,7 @@ class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with H
 
     scenario("Esitäytetyn lomakkeen lähettäminen tuottaa opiskelijatiedon") {
       Given("Koulu lähettää Mikon ja Matin esitäytetyt kaavaakkeet")
-      koulu lähettää
+      koulu lahettaa
         <ROWSET>
           <ROW>
             <VUOSI>2014</VUOSI>
