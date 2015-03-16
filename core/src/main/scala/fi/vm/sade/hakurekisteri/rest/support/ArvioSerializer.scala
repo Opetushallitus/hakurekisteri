@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
 import org.json4s.CustomSerializer
-import fi.vm.sade.hakurekisteri.arvosana.{ArvioYo, Arvio410, Arvio}
+import fi.vm.sade.hakurekisteri.arvosana.{ArvioOsakoe, ArvioYo, Arvio410, Arvio}
 import org.json4s.JsonAST.{JInt, JString, JField, JObject}
 
 
@@ -15,9 +15,6 @@ class ArvioSerializer extends CustomSerializer[Arvio](format => (
         case _ => None
       }
       Arvio(arvosana, asteikko, pisteet)
-
-
-
   },
   {
     case x: Arvio410 =>
@@ -26,9 +23,8 @@ class ArvioSerializer extends CustomSerializer[Arvio](format => (
       JObject(JField("arvosana", JString(arvosana)) :: JField("asteikko", JString("YO")) :: JField("pisteet", JInt(pisteet)) :: Nil)
     case ArvioYo(arvosana, None) =>
       JObject(JField("arvosana", JString(arvosana)) :: JField("asteikko", JString("YO")) :: Nil)
-
-
+    case ArvioOsakoe(osakoepisteet) =>
+      JObject(JField("arvosana", JString(osakoepisteet)) :: JField("asteikko", JString("OSAKOE")) :: Nil)
   }
   )
-
 )
