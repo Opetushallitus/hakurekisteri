@@ -6,7 +6,7 @@ import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvosana}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.LocalDate
 import org.json4s.{Extraction, CustomSerializer}
-import org.json4s.JsonAST.{JValue, JString, JObject, JBool, JNull, JInt}
+import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
 
 class ArvosanaSerializer extends CustomSerializer[Arvosana](format => (
@@ -27,11 +27,12 @@ class ArvosanaSerializer extends CustomSerializer[Arvosana](format => (
       implicit val formats = HakurekisteriJsonSupport.format
       val arv = Extraction.extract[Arvio](arvio)
       val myonnetty = arvosana \ "myonnetty" match {
-        case JNull => None
+        case JNothing => None
         case v: JValue => Some(Extraction.extract[LocalDate](v))
       }
       val JString(source) = arvosana \ "source"
       val jarjestys: Option[Int] = arvosana \ "jarjestys" match {
+        case JNothing => None
         case JInt(i) => Some(i.toInt)
       }
 
