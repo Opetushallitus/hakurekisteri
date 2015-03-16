@@ -16,7 +16,7 @@ class ArvosanaSerializer extends CustomSerializer[Arvosana](format => (
       val JString(suoritus) = arvosana \ "suoritus"
       val arvio = arvosana \ "arvio"
       val JString(aine) = arvosana \ "aine"
-      val lisatieto: Option[String] = arvosana.findField(_ == "lisatieto").map(_._2).collect {
+      val lisatieto: Option[String] = arvosana.findField(_._1 == "lisatieto").map(_._2).collect {
         case JString(v) => v
       }
       val valinnainen: Boolean = arvosana \ "valinnainen" match {
@@ -32,8 +32,8 @@ class ArvosanaSerializer extends CustomSerializer[Arvosana](format => (
       }
       val JString(source) = arvosana \ "source"
       val jarjestys: Option[Int] = arvosana \ "jarjestys" match {
-        case JNothing => None
         case JInt(i) => Some(i.toInt)
+        case _ => None
       }
 
       Arvosana(UUID.fromString(suoritus), arv, aine, lisatieto, valinnainen, myonnetty, source, jarjestys)
