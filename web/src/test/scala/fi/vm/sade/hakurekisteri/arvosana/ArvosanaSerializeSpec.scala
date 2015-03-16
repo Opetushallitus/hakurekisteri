@@ -18,7 +18,7 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite {
   val arvosana1 = Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", Some("FI"), valinnainen = false, None, "")
   val arvosana12 = Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", Some("FI"), valinnainen = true, None, "", Some(0))
   val arvosana2 = Arvosana(UUID.randomUUID(), ArvioYo("L", Some(100)), "AI", Some("FI"), valinnainen = false, Some(new LocalDate()), "")
-  val arvosana3 = Arvosana(UUID.randomUUID(), ArvioOsakoe("foo"), "AI", Some("FI"), valinnainen = false, Some(new LocalDate()), "")
+  val arvosana3 = Arvosana(UUID.randomUUID(), ArvioOsakoe("10"), "AI", Some("FI"), valinnainen = false, Some(new LocalDate()), "")
 
   implicit val system = ActorSystem()
   implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]): InMemJournal[R, UUID] = {
