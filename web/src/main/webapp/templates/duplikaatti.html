@@ -19,15 +19,17 @@
         <td><span ng-show="a.valinnainen" oph-msg="suoritusrekisteri.muokkaa.duplikaatti.valinnainen.kylla">Kyllä</span><span
                 ng-hide="a.valinnainen" oph-msg="suoritusrekisteri.muokkaa.duplikaatti.valinnainen.ei">Ei</span></td>
         <td>
-            <button type="button" ng-click="remove(a)" class="btn btn-default btn-xs"><span
-                    oph-msg="suoritusrekisteri.muokkaa.duplikaatti.poista">Poista</span><span
-                    class="glyphicon glyphicon-remove"></span></button>
+            <button type="button" ng-click="remove(a)" class="btn btn-default btn-xs">
+                <span oph-msg="suoritusrekisteri.muokkaa.duplikaatti.poista">Poista</span>
+                <span class="glyphicon glyphicon-remove"></span>
+            </button>
         </td>
     </tr>
     </tbody>
 </table>
 <div class="modal-footer">
-    <button type="type" ng-click="close()" class="btn btn-primary"><span
-            oph-msg="suoritusrekisteri.muokkaa.duplikaatti.tallenna">Sulje</span><span
-            class="glyphicon glyphicon-remove"></span></button>
+    <button type="type" ng-click="close()" class="btn btn-primary">
+        <span oph-msg="suoritusrekisteri.muokkaa.duplikaatti.tallenna">Sulje</span>
+        <span class="glyphicon glyphicon-remove"></span>
+    </button>
 </div>

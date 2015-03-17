@@ -24,9 +24,10 @@
                     </div>
                 </div>
                 <aside><a href="/authentication-henkiloui/html/index.html#/muokkaaoppija/{{henkilo.oidHenkilo}}/"
-                          target="_blank" class="btn btn-default btn-xs"><span
-                        oph-msg="suoritusrekisteri.muokkaa.henkilotietoja">Muokkaa henkilötietoja</span><span
-                        class="glyphicon glyphicon-edit"></span></a></aside>
+                          target="_blank" class="btn btn-default btn-xs">
+                    <span oph-msg="suoritusrekisteri.muokkaa.henkilotietoja">Muokkaa henkilötietoja</span>
+                    <span class="glyphicon glyphicon-edit"></span>
+                </a></aside>
             </div>
         </section>
     </div>
@@ -161,18 +162,21 @@
                                                 ng-disabled="!suoritus.id || suoritus.delete"
                                                 ng-click="editArvosana(suoritus.id)"
                                                 class="btn btn-default arvosana-button"><span
-                                                oph-msg="suoritusrekisteri.muokkaa.muokkaaarvosanoja">Muokkaa arvosanoja</span><span
+                                                oph-msg="suoritusrekisteri.muokkaa.muokkaaarvosanoja">Muokkaa arvosanoja</span>
+                                            <span
                                                 class="glyphicon glyphicon-edit"></span></button>
                                         <button ng-show="suoritus.komo === komo.ylioppilastutkinto" type="button"
                                                 ng-disabled="!suoritus.id || suoritus.delete"
                                                 ng-click="editYoarvosana(suoritus.id)"
                                                 class="btn btn-default arvosana-button"><span
-                                                oph-msg="suoritusrekisteri.muokkaa.muokkaayoarvosanoja">Muokkaa YO-arvosanoja</span><span
+                                                oph-msg="suoritusrekisteri.muokkaa.muokkaayoarvosanoja">Muokkaa YO-arvosanoja</span>
+                                            <span
                                                 class="glyphicon glyphicon-edit"></span></button>
                                         <button ng-show="isOPH()" type="button" ng-disabled="suoritus.delete"
                                                 ng-click="suoritus.delete = true"
                                                 class="btn btn-default arvosana-button"><span
-                                                oph-msg="suoritusrekisteri.muokkaa.poistasuoritus">Poista</span><span
+                                                oph-msg="suoritusrekisteri.muokkaa.poistasuoritus">Poista</span>
+                                            <span
                                                 class="glyphicon glyphicon-remove"></span></button>
                                     </div>
                                 </div>
@@ -180,7 +184,8 @@
                         </li>
                         <li>
                             <button type="button" ng-click="addSuoritus()" class="btn btn-default btn-xs"><span
-                                    oph-msg="suoritusrekisteri.muokkaa.uusisuoritus">Lisää uusi suoritus</span><span
+                                    oph-msg="suoritusrekisteri.muokkaa.uusisuoritus">Lisää uusi suoritus</span>
+                                <span
                                     class="glyphicon glyphicon-plus"></span></button>
                         </li>
                     </ul>
@@ -256,7 +261,8 @@
                                         <button ng-show="isOPH()" type="button" ng-disabled="luokkatieto.delete"
                                                 ng-click="luokkatieto.delete = true"
                                                 class="btn btn-default arvosana-button"><span
-                                                oph-msg="suoritusrekisteri.muokkaa.poistaluokkatieto">Poista</span><span
+                                                oph-msg="suoritusrekisteri.muokkaa.poistaluokkatieto">Poista</span>
+                                            <span
                                                 class="glyphicon glyphicon-remove"></span></button>
                                     </div>
                                 </div>
@@ -264,7 +270,8 @@
                         </li>
                         <li>
                             <button type="button" ng-click="addLuokkatieto()" class="btn btn-default btn-xs"><span
-                                    oph-msg="suoritusrekisteri.muokkaa.uusiluokkatieto">Lisää uusi luokkatieto</span><span
+                                    oph-msg="suoritusrekisteri.muokkaa.uusiluokkatieto">Lisää uusi luokkatieto</span>
+                                <span
                                     class="glyphicon glyphicon-plus"></span></button>
                         </li>
                     </ul>
@@ -275,13 +282,16 @@
     <div class="row">
         <aside class="col-sm-12 btn-toolbar">
             <button type="button" ng-click="cancel()" class="btn btn-primary"><span
-                    oph-msg="suoritusrekisteri.muokkaa.takaisin">Takaisin</span><span
+                    oph-msg="suoritusrekisteri.muokkaa.takaisin">Takaisin</span>
+                <span
                     class="glyphicon glyphicon-arrow-left"></span></button>
             <button type="button" ng-click="cancel()" class="btn btn-default"><span
-                    oph-msg="suoritusrekisteri.muokkaa.peruuta">Peruuta</span><span
+                    oph-msg="suoritusrekisteri.muokkaa.peruuta">Peruuta</span>
+                <span
                     class="glyphicon glyphicon-remove"></span></button>
             <button type="submit" class="btn btn-primary"><span
-                    oph-msg="suoritusrekisteri.muokkaa.tallenna">Tallenna</span><span
+                    oph-msg="suoritusrekisteri.muokkaa.tallenna">Tallenna</span>
+                <span
                     class="glyphicon glyphicon-saved"></span></button>
         </aside>
     </div>

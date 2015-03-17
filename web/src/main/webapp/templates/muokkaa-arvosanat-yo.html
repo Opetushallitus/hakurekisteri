@@ -41,15 +41,16 @@
             </td>
             <td>
                 <button ng-show="k.editable" type="button" ng-click="k.delete = true" ng-disabled="k.delete"
-                        class="btn btn-default btn-xs"><span oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.poista">Poista</span><span
-                        class="glyphicon glyphicon-remove"></span></button>
+                        class="btn btn-default btn-xs">
+                    <span oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.poista">Poista</span>
+                    <span class="glyphicon glyphicon-remove"></span></button>
             </td>
         </tr>
         <tr>
             <td colspan="7">
-                <button type="button" ng-click="addKoe()" class="btn btn-default btn-xs"><span
-                        oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.lisaakoe">Lisää koe</span><span
-                        class="glyphicon glyphicon-plus"></span></button>
+                <button type="button" ng-click="addKoe()" class="btn btn-default btn-xs">
+                    <span oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.lisaakoe">Lisää koe</span>
+                    <span class="glyphicon glyphicon-plus"></span></button>
             </td>
         </tr>
         <tr ng-show="loading">

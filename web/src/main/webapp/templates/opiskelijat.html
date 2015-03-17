@@ -37,12 +37,13 @@
             </div>
             <div class="form-group">
                 <div class="col-sm-10 col-sm-offset-2">
-                    <button type="button" ng-click="reset()" class="btn btn-default"><span
-                            oph-msg="suoritusrekisteri.opiskelijat.tyhjenna">Tyhjennä</span><span
-                            class="glyphicon glyphicon-remove"></span></button>
-                    <button type="submit" class="btn btn-primary"><span
-                            oph-msg="suoritusrekisteri.opiskelijat.hae">Hae</span><span
-                            class="glyphicon glyphicon-search"></span></button>
+                    <button type="button" ng-click="reset()" class="btn btn-default">
+                        <span oph-msg="suoritusrekisteri.opiskelijat.tyhjenna">Tyhjennä</span>
+                        <span class="glyphicon glyphicon-remove"></span></button>
+                    <button type="submit" class="btn btn-primary">
+                        <span oph-msg="suoritusrekisteri.opiskelijat.hae">Hae</span>
+                        <span class="glyphicon glyphicon-search"></span>
+                    </button>
                     <p class="newlink"><a ng-click="muokkaaSuoritukset()" href=""><span>Kokeile uutta hakua</span></a>
                     </p>
                 </div>
@@ -73,8 +74,9 @@
                     ng-show="s.noArvosanat" oph-msg="suoritusrekisteri.opiskelijat.eiarvosanoja">(ei arvosanoja)</span>
             </div>
         </td>
-        <td><a href="#/muokkaa/{{row.henkiloOid}}" class="btn bt-default btn-xs pull-right"><span
-                oph-msg="suoritusrekisteri.opiskelijat.muokkaa">Muokkaa tietoja</span><span
+        <td><a href="#/muokkaa/{{row.henkiloOid}}" class="btn bt-default btn-xs pull-right">
+            <span oph-msg="suoritusrekisteri.opiskelijat.muokkaa">Muokkaa tietoja</span>
+            <span
                 class="glyphicon glyphicon-edit"></span></a></td>
     </tr>
     </tbody>

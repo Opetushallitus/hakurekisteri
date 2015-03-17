@@ -66,9 +66,9 @@
         <div ng-if="suoritus.komo === komo.ylioppilastutkinto" ng-include="'templates/muokkaa-arvosanat-yo.html'"
              ng-controller="MuokkaaArvosanatYo"></div>
         <div class="pull-right">
-            <button ng-show="isOPH()" type="button" ng-disabled="info.delete" ng-click="info.delete = true"
-                    class="btn btn-default arvosana-button"><span oph-msg="suoritusrekisteri.muokkaa.poistasuoritus">Poista</span><span
-                    class="glyphicon glyphicon-remove"></span></button>
+            <button ng-show="isOPH()" type="button" ng-disabled="info.delete" ng-click="info.delete = true" class="btn btn-default arvosana-button">
+                <span oph-msg="suoritusrekisteri.muokkaa.poistasuoritus">Poista</span>
+                <span§ class="glyphicon glyphicon-remove"></span></button>
         </div>
     </div>
 </div>
