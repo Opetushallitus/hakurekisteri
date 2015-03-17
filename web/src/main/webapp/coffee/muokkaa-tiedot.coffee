@@ -224,12 +224,11 @@ app.factory "MuokkaaTiedot", [
       $scope.saveTiedot = ->
         $q.all(validateData()).then (->
           $q.all(saveData()).then ((res) ->
-            if(res[0])
-              $scope.enableSave()
-              MessageService.addMessage
-                type: "success"
-                messageKey: "suoritusrekisteri.muokkaa.tallennettu"
-                message: "Tiedot tallennettu."
+            $scope.enableSave()
+            MessageService.addMessage
+              type: "success"
+              messageKey: "suoritusrekisteri.muokkaa.tallennettu"
+              message: "Tiedot tallennettu."
           ), (errors) ->
             $log.error "errors while saving: " + errors
             MessageService.addMessage

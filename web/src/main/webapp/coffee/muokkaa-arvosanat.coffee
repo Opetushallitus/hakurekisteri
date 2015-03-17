@@ -302,13 +302,13 @@ app.controller "MuokkaaArvosanat", [
 
       addKorotus()
       updateArvosanaTaulukko()
-      $q.all(saveArvosanat()).then (->
+      p = $q.all(saveArvosanat()).then (->
       ), ->
         MessageService.addMessage
           type: "danger"
           messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennuseionnistunut"
           message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen."
-      []
+      [p]
 
     $scope.addDataScope($scope)
 ]

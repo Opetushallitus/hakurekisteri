@@ -88,17 +88,16 @@ app.controller "MuokkaaArvosanatYo", [
             arvosanaM.update()
           d.promise
       arvosanat = arvosanatModified.filter((arvosanaModified) -> arvosanaModified.hasChanged())
-      $q.all(saveArvosanat(arvosanat)).then (->
+      p = $q.all(saveArvosanat(arvosanat)).then (->
       ), ->
         MessageService.addMessage
           type: "danger"
           messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.tallennuseionnistunut"
           message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen."
-      []
+      [p]
 
     $scope.$watch "koetaulukko", $scope.enableSave, true
     $scope.hasChanged = ->
-      console.log $scope.koetaulukko
       arvosanatModified.some (a) -> a.hasChanged()
 
     $scope.addDataScope($scope)
