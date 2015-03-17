@@ -78,8 +78,7 @@ app.controller "MuokkaaSuoritus", [
       ""+date.getDate()+"."+(date.getMonth()+1)+"."+date.getFullYear()
 
     $scope.formatDateWithZeroPaddedNumbers = (date) ->
-      if typeof date is 'string'
-        date = $scope.parseFinDate(date)
+      date = $scope.parseFinDate(date)
       "" + pad(date.getDate()) + "." + pad(date.getMonth()+1) + "." + date.getFullYear()
 
     modifiedCache = changeDetection($scope.suoritus)
