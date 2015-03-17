@@ -1,6 +1,6 @@
 <div class="row">
     <div class="form-group col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</strong>
-        <input ng-show="info.editable && suoritus.komo !== $scope.komo.ylioppilastutkinto" type="text"
+        <input ng-show="info.editable && suoritus.komo !== komo.ylioppilastutkinto" type="text"
                title="{{info.organisaatio.nimi.fi || info.organisaatio.nimi.sv || info.organisaatio.nimi.en}}"
                ng-disabled="info.delete" ng-model="info.oppilaitos"
                typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv || organisaatio.nimi.en)) for organisaatio in getOppilaitos($viewValue, info) | filter:$viewValue | limitTo:10"
@@ -10,7 +10,7 @@
         <div ng-hide="info.editable">{{(info.organisaatio.oppilaitosKoodi + ' ' + (info.organisaatio.nimi.fi ||
             info.organisaatio.nimi.sv || info.organisaatio.nimi.en)) || suoritus.myontaja}}
         </div>
-        <div ng-show="suoritus.komo === $scope.komo.ylioppilastutkinto">{{(info.organisaatio.nimi.fi ||
+        <div ng-show="suoritus.komo === komo.ylioppilastutkinto">{{(info.organisaatio.nimi.fi ||
             info.organisaatio.nimi.sv || info.organisaatio.nimi.en) || suoritus.myontaja}}
         </div>
     </div>
@@ -26,9 +26,8 @@
             oph-msg="suoritusrekisteri.muokkaa.yksilollistetty">Yksilöllistetty</strong>
         <select ng-show="info.editable" ng-model="suoritus.yksilollistaminen"
                 ng-options="yks.value as yks.text for yks in yksilollistamiset" required="required"
-                ng-disabled="info.delete || (suoritus.komo !== $scope.komo.peruskoulu && suoritus.komo !== komo.lisaopetus)"
+                ng-disabled="info.delete || (suoritus.komo !== komo.peruskoulu && suoritus.komo !== komo.lisaopetus)"
                 class="form-control input-sm"></select>
-
         <div ng-hide="info.editable">{{suoritus.yksilollistaminen}}</div>
     </div>
 </div>
@@ -62,9 +61,9 @@
 </div>
 <div ng-show="info.editable" ng-if="suoritus.id" class="row">
     <div class="form-group col-sm-12">
-        <div ng-if="suoritus.komo !== $scope.komo.ylioppilastutkinto" ng-include="'templates/muokkaa-arvosanat.html'"
+        <div ng-if="suoritus.komo !== komo.ylioppilastutkinto" ng-include="'templates/muokkaa-arvosanat.html'"
              ng-controller="MuokkaaArvosanat"></div>
-        <div ng-if="suoritus.komo === $scope.komo.ylioppilastutkinto" ng-include="'templates/muokkaa-arvosanat-yo.html'"
+        <div ng-if="suoritus.komo === komo.ylioppilastutkinto" ng-include="'templates/muokkaa-arvosanat-yo.html'"
              ng-controller="MuokkaaArvosanatYo"></div>
         <div class="pull-right">
             <button ng-show="isOPH()" type="button" ng-disabled="info.delete" ng-click="info.delete = true"
