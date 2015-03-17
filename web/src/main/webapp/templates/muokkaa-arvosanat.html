@@ -104,7 +104,7 @@
                     required="required" ng-options="a.value as a.text for a in arvosanat"
                     class="form-control smallInline"></select>
         </td>
-        <td ng-hide="info.editable"><span ng-show="aineRivi.hasArvosana && (aineRivi.hasKielisyys || aineRivi.aine == 'AI')">{{aineRivi.lisatieto || "Kieli puuttuu!!"}}</span>
+        <td ng-hide="info.editable"><span ng-show="aineRivi.hasArvosana && (aineRivi.hasKielisyys || aineRivi.aine == 'AI')">{{aineRivi.lisatietoText || "Kieli puuttuu!!"}}</span>
         </td>
         <td ng-hide="info.editable"><span ng-repeat="pakollinen in aineRivi.pakolliset">{{pakollinen.arvio.arvosana}}</span>
         </td>

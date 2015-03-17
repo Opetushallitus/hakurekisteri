@@ -116,11 +116,23 @@ app.controller "MuokkaaArvosanat", [
         delete arvosana.lisatieto
         delete arvosana.myonnetty
 
+    resolveText = (list, value) ->
+      for i in list
+        if i.value == value
+          return i.text
+      value
+
     updateAineRivi = (aineRivi, addNew) ->
       aineRivi.aineNimi = resolveAineNimi(aineRivi.aine)
-      hasLisatieto = (aineRivi.hasKielisyys = hasKielisyys(aineRivi.aine)) || aineRivi.aine == 'AI'
-      if !hasLisatieto
+      aineRivi.hasKielisyys = hasKielisyys(aineRivi.aine)
+      if aineRivi.hasKielisyys || aineRivi.aine == 'AI'
+        aineRivi.lisatietoText = if aineRivi.aine == 'AI'
+            resolveText($scope.aidinkieli, aineRivi.lisatieto)
+          else
+            resolveText($scope.kielet, aineRivi.lisatieto)
+      else
         delete aineRivi.lisatieto
+        delete aineRivi.lisatietoText
       if aineRivi.hasValinnaisuus = hasValinnaisuus(aineRivi.aine)
         if addNew
           addArvosanaIfNeeded aineRivi.valinnaiset, true, 3, aineRivi
