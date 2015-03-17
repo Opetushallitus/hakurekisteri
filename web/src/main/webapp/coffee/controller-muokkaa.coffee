@@ -13,13 +13,8 @@ app.controller "MuokkaaCtrl", [
   "MurupolkuService"
   "MessageService"
   ($scope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService) ->
-    $scope.koulutukset = [{ value: komo.ulkomainen, text: "Ulkomainen" }, { value: komo.peruskoulu, text: "Peruskoulu" },
-      { value: komo.lisaopetus, text: "Perusopetuksen lisäopetus" }, { value: komo.ammattistartti, text: "Ammattistartti" },
-      { value: komo.maahanmuuttaja, text: "Maahanmuuttajien ammatilliseen valmistava" }, { value: komo.maahanmuuttajalukio, text: "Maahanmuuttajien lukioon valmistava" },
-      { value: komo.valmentava, text: "Valmentava" }, { value: komo.ylioppilastutkinto, text: "Ylioppilastutkinto" },
-      { value: komo.lukio, text: "Lukio" }, { value: komo.ammatillinen, text: "Ammatillinen" }]
 
-    loadMenuTexts = ->
+    loadMenuTexts = (komo) ->
       $scope.koulutukset = [
         {
           value: komo.ulkomainen
@@ -62,6 +57,24 @@ app.controller "MuokkaaCtrl", [
           text: getOphMsg("suoritusrekisteri.komo." + komo.ammatillinen, "Ammatillinen")
         }
       ]
+
+    fetchKomos = ->
+      $http.get("rest/v1/komo", { cache: true }).success((data) ->
+        window.komo = $scope.komo =
+          ulkomainen: data.ulkomainenkorvaavaKomoOid
+          peruskoulu: data.perusopetusKomoOid
+          lisaopetus: data.lisaopetusKomoOid
+          ammattistartti: data.ammattistarttiKomoOid
+          maahanmuuttaja: data.ammatilliseenvalmistavaKomoOid
+          maahanmuuttajalukio: data.lukioonvalmistavaKomoOid
+          valmentava: data.valmentavaKomoOid
+          ylioppilastutkinto: data.yotutkintoKomoOid
+          ammatillinen: data.ammatillinenKomoOid
+          lukio: data.lukioKomoOid
+        $scope.ylioppilastutkintolautakunta = data.ylioppilastutkintolautakunta
+        loadMenuTexts($scope.komo)
+      ).error ->
+        $log.error "cannot get komos"
 
     getMyRoles = ->
       $http.get("/cas/myroles", { cache: true }).success((data) ->
@@ -172,9 +185,6 @@ app.controller "MuokkaaCtrl", [
     $scope.yksilollistamiset = []
     $scope.tilat = []
     $scope.kielet = []
-    $scope.komo = komo
-
-    LokalisointiService.loadMessages loadMenuTexts
 
     getKoodistoAsOptionArray $http, "kieli", "fi", $scope.kielet, "koodiArvo"
     getKoodistoAsOptionArray $http, "luokkataso", "fi", $scope.luokkatasot, "koodiArvo"
@@ -200,6 +210,7 @@ app.controller "MuokkaaCtrl", [
     fetchLuokkatiedot()
     fetchSuoritukset()
     fetchOpiskeluoikeudet()
+    LokalisointiService.loadMessages fetchKomos
 
     $scope.getOppilaitos = (searchStr, obj) ->
       return []  if (typeof obj.organisaatio is "object") and obj.organisaatio.oppilaitosKoodi is searchStr
@@ -418,7 +429,7 @@ app.controller "MuokkaaCtrl", [
         if Array.isArray(arvosanaRet)
           isolatedScope = $scope.$new(true)
           isolatedScope.modalInstance = $modal.open(
-            templateUrl: "templates/duplikaatti"
+            templateUrl: "templates/duplikaatti.html"
             controller: "DuplikaattiCtrl"
             scope: isolatedScope
             size: "lg"

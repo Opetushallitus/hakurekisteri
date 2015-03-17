@@ -25,14 +25,12 @@ app.factory "MuokkaaTiedot", [
         $scope.disableSave = true
         $scope.komo = {}
 
-        LokalisointiService.loadMessages loadMenuTexts
-
         getKoodistoAsOptionArray $http, "kieli", "fi", $scope.kielet, "koodiArvo"
         getKoodistoAsOptionArray $http, "luokkataso", "fi", $scope.luokkatasot, "koodiArvo"
         getKoodistoAsOptionArray $http, "yksilollistaminen", "fi", $scope.yksilollistamiset, "koodiArvo", true
         getKoodistoAsOptionArray $http, "suorituksentila", "fi", $scope.tilat, "koodiArvo"
 
-        fetchKomos()
+        LokalisointiService.loadMessages fetchKomos
         updateMurupolku()
         getMyRoles()
 
@@ -106,6 +104,7 @@ app.factory "MuokkaaTiedot", [
             ammatillinen: data.ammatillinenKomoOid
             lukio: data.lukioKomoOid
           $scope.ylioppilastutkintolautakunta = data.ylioppilastutkintolautakunta
+          loadMenuTexts()
         ).error ->
           $log.error "cannot get komos"
 
