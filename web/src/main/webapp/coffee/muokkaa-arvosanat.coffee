@@ -265,7 +265,7 @@ app.controller "MuokkaaArvosanat", [
     $scope.hasChanged = ->
       if $scope.suorituksenArvosanataulukko
         updateArvosanaTaulukko()
-        arvosanatModified.some (a) -> a.hasChanged() || $scope.korotusRivi && $scope.korotusRivi.hasArvosana
+        arvosanatModified.some((a) -> a.hasChanged()) || $scope.korotusRivi && $scope.korotusRivi.hasArvosana
 
     $scope.saveData = ->
       removeArvosana = (arvosana, d) ->

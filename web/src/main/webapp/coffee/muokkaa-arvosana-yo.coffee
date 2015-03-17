@@ -27,20 +27,18 @@ app.controller "MuokkaaArvosanatYo", [
       ).sort (a, b) ->
         (if a.text is b.text then 0 else (if a.text < b.text then -1 else 1))
 
+    arvosanatModified = []
     $scope.koetaulukko = []
     $scope.loading = true
     Arvosanat.query { suoritus: suoritusId }, ((arvosanat) ->
       $scope.koetaulukko = arvosanat.filter((a) ->
         a.arvio.asteikko is "YO"
       ).map((a) ->
-        id: a.id
-        aine: a.aine
-        lisatieto: a.lisatieto
-        pakollinen: not a.valinnainen
-        myonnetty: a.myonnetty
-        arvosana: a.arvio.arvosana
-        pisteet: a.arvio.pisteet
-        editable: isEditable(a.myonnetty)
+        arvosanatModified.push changeDetection(a)
+        {
+          arvosana: a
+          editable: isEditable(a.myonnetty)
+        }
       )
       $scope.loading = false
       return
@@ -53,10 +51,17 @@ app.controller "MuokkaaArvosanatYo", [
       return
 
     $scope.addKoe = ->
-      $scope.koetaulukko.push
-        pakollinen: true
+      arvosana = new Arvosanat(
+        suoritus: suoritusId
+        valinnainen: false
+        arvio:
+          asteikko: "YO"
+      )
+      arvosanatModified.push changeDetection(arvosana)
+      $scope.koetaulukko.push {
+        arvosana: arvosana
         editable: true
-      return
+      }
 
     $scope.saveData = ->
       removeArvosana = (arvosana, d) ->
@@ -72,28 +77,17 @@ app.controller "MuokkaaArvosanatYo", [
           $log.error "error saving " + err
           d.reject "save failed"
       saveArvosanat = (arvosanat) ->
-        arvosanat.map (arvosana) ->
+        arvosanat.map (arvosanaM) ->
+          arvosana = arvosanaM.object
           d = $q.defer()
           if arvosana["delete"] && arvosana.id
             removeArvosana arvosana, d
           else
             saveArvosana arvosana, d
+          d.promise.then () ->
+            arvosanaM.update()
           d.promise
-      arvosanat = $scope.koetaulukko.filter((k) -> k.lisatieto and k.aine and k.arvosana and k.myonnetty).map((k) ->
-        new Arvosanat(
-          id: k.id
-          aine: k.aine
-          lisatieto: k.lisatieto
-          suoritus: suoritusId
-          valinnainen: not k.pakollinen
-          myonnetty: k.myonnetty
-          delete: k["delete"]
-          arvio:
-            arvosana: k.arvosana
-            asteikko: "YO"
-            pisteet: ((if k.pisteet is "" then null else k.pisteet))
-        )
-      )
+      arvosanat = arvosanatModified.filter((arvosanaModified) -> arvosanaModified.hasChanged())
       $q.all(saveArvosanat(arvosanat)).then (->
       ), ->
         MessageService.addMessage
@@ -101,6 +95,11 @@ app.controller "MuokkaaArvosanatYo", [
           messageKey: "suoritusrekisteri.muokkaa.yoarvosanat.tallennuseionnistunut"
           message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen."
       []
+
+    $scope.$watch "koetaulukko", $scope.enableSave, true
+    $scope.hasChanged = ->
+      console.log $scope.koetaulukko
+      arvosanatModified.some (a) -> a.hasChanged()
 
     $scope.addDataScope($scope)
 
