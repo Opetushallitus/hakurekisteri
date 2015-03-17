@@ -260,6 +260,7 @@ app.factory "MuokkaaTiedot", [
           yksilollistaminen: "Ei"
           myontaja: null
           editable: true
+          valmistuminen: new Date()
         )
 
       $scope.addLuokkatieto = ->

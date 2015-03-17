@@ -27,6 +27,7 @@ describe 'Controllers', ->
       $httpBackend.whenGET('rest/v1/suoritukset?henkilo=1.2.3').respond(200, [])
       $httpBackend.whenGET('rest/v1/opiskelijat?henkilo=1.2.3').respond(200, [])
       $httpBackend.whenGET('rest/v1/opiskeluoikeudet?henkilo=1.2.3').respond(200, [])
+      $httpBackend.whenGET('rest/v1/komo').respond(200, [])
 
       $controller 'MuokkaaCtrl',
         $scope: scope
