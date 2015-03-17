@@ -10,13 +10,15 @@ import org.json4s._
 trait LocalDateSupport { this: HakurekisteriCommand[_] =>
   import util.RicherString._
 
+  implicit def OptionLocalDateDefaultValue: DefaultValue[Option[LocalDate]] = org.scalatra.DefaultValueMethods.default(None)
+  implicit def LocalDateDefaultValue: DefaultValue[LocalDate] = org.scalatra.DefaultValueMethods.default(LocalDate.now())
 
-  implicit def LocalDateDefaultValue: DefaultValue[LocalDate] = org.scalatra.DefaultValueMethods.default(new LocalDate(DateTime.now().getYear,1,1))
-
-
-  implicit val stringToLocalDate: TypeConverter[String, LocalDate] = safeOption((in:String)=>in.blankOption map DateTimeFormat.forPattern("dd.MM.yyyy").parseLocalDate)
+  implicit val stringToLocalDate: TypeConverter[String, LocalDate] = safeOption((in: String) => in.blankOption map DateTimeFormat.forPattern("dd.MM.yyyy").parseLocalDate)
   implicit val jsonToLocalDate: TypeConverter[JValue, LocalDate] = safeOption(_.extractOpt[LocalDate])
-
   implicit val fileToLocalDate: TypeConverter[FileItem, LocalDate] = cantConvert
+
+  implicit val stringToOptionLocalDate: TypeConverter[String, Option[LocalDate]] = safe((in: String) => in.blankOption map DateTimeFormat.forPattern("dd.MM.yyyy").parseLocalDate)
+  implicit val jsonToOptionLocalDate: TypeConverter[JValue, Option[LocalDate]] = safe(_.extractOpt[LocalDate])
+  implicit val fileToOptionLocalDate: TypeConverter[FileItem, Option[LocalDate]] = cantConvert
 
 }

@@ -8,20 +8,18 @@ import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import scala.util.Try
 
 
-class LocalDateSerializer(dayFormat:String = LocalDateSerializer.dayFormat) extends CustomSerializer[LocalDate](format => (
+class LocalDateSerializer(dayFormat: String = LocalDateSerializer.dayFormat) extends CustomSerializer[LocalDate](format => (
   {
     case JString(date) =>
       format.dateFormat.parse(date).map(new LocalDate(_)).getOrElse(
-        Try(DateTimeFormat.forPattern(dayFormat).parseLocalDate(date)).get)}
-
-
-
-  ,
+        Try(DateTimeFormat.forPattern(dayFormat).parseLocalDate(date)).get)
+  },
   {
     case x: LocalDate =>
       JString(x.toString(dayFormat))
   }
-  ))
+  )
+)
 
 
 object LocalDateSerializer {

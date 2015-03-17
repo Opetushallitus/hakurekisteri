@@ -16,25 +16,17 @@ class ArvosanaSerializer extends CustomSerializer[Arvosana](format => (
       val JString(suoritus) = arvosana \ "suoritus"
       val arvio = arvosana \ "arvio"
       val JString(aine) = arvosana \ "aine"
-      val lisatieto: Option[String] = arvosana.findField(_._1 == "lisatieto").map(_._2).collect {
-        case JString(v) => v
-      }
-      val valinnainen: Boolean = arvosana \ "valinnainen" match {
-        case JBool(v) => v
+      val lisatieto: Option[String] = arvosana.findField(_._1 == "lisatieto").map(_._2).collect { case JString(v) => v }
+      val valinnainen: Boolean = arvosana.findField(jf => jf._1 == "valinnainen").map(_._2) match {
+        case Some(JBool(v)) => v
         case _ => false
       }
 
       implicit val formats = HakurekisteriJsonSupport.format
       val arv = Extraction.extract[Arvio](arvio)
-      val myonnetty = arvosana \ "myonnetty" match {
-        case JNothing => None
-        case v: JValue => Some(Extraction.extract[LocalDate](v))
-      }
+      val myonnetty = arvosana.findField(_._1 == "myonnetty").map(_._2).collect { case JString(v) => Extraction.extract[LocalDate](v) }
       val JString(source) = arvosana \ "source"
-      val jarjestys: Option[Int] = arvosana \ "jarjestys" match {
-        case JInt(i) => Some(i.toInt)
-        case _ => None
-      }
+      val jarjestys: Option[Int] = arvosana.findField(_._1 == "jarjestys").map(_._2).collect { case JInt(v) => v.toInt }
 
       Arvosana(UUID.fromString(suoritus), arv, aine, lisatieto, valinnainen, myonnetty, source, jarjestys)
   },
