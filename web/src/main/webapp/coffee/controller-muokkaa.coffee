@@ -13,48 +13,47 @@ app.controller "MuokkaaCtrl", [
   "MurupolkuService"
   "MessageService"
   ($scope, $routeParams, $location, $http, $log, $q, $modal, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService) ->
-
     loadMenuTexts = (komo) ->
       $scope.koulutukset = [
         {
-          value: komo.ulkomainen
-          text: getOphMsg("suoritusrekisteri.komo." + komo.ulkomainen, "Ulkomainen")
+          value: $scope.komo.ulkomainen
+          text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.ulkomainen, "Ulkomainen")
         }
         {
-          value: komo.peruskoulu
-          text: getOphMsg("suoritusrekisteri.komo." + komo.peruskoulu, "Peruskoulu")
+          value: $scope.komo.peruskoulu
+          text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.peruskoulu, "Peruskoulu")
         }
         {
-          value: komo.lisaopetus
-          text: getOphMsg("suoritusrekisteri.komo." + komo.lisaopetus, "Perusopetuksen lisäopetus")
+          value: $scope.komo.lisaopetus
+          text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.lisaopetus, "Perusopetuksen lisäopetus")
         }
         {
-          value: komo.ammattistartti
-          text: getOphMsg("suoritusrekisteri.komo." + komo.ammattistartti, "Ammattistartti")
+          value: $scope.komo.ammattistartti
+          text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.ammattistartti, "Ammattistartti")
         }
         {
-          value: komo.maahanmuuttaja
-          text: getOphMsg("suoritusrekisteri.komo." + komo.maahanmuuttaja, "Maahanmuuttajien ammatilliseen valmistava")
+          value: $scope.komo.maahanmuuttaja
+          text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.maahanmuuttaja, "Maahanmuuttajien ammatilliseen valmistava")
         }
         {
-          value: komo.maahanmuuttajalukio
-          text: getOphMsg("suoritusrekisteri.komo." + komo.maahanmuuttajalukio, "Maahanmuuttajien lukioon valmistava")
+          value: $scope.komo.maahanmuuttajalukio
+          text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.maahanmuuttajalukio, "Maahanmuuttajien lukioon valmistava")
         }
         {
-          value: komo.valmentava
-          text: getOphMsg("suoritusrekisteri.komo." + komo.valmentava, "Valmentava")
+          value: $scope.komo.valmentava
+          text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.valmentava, "Valmentava")
         }
         {
-          value: komo.ylioppilastutkinto
-          text: getOphMsg("suoritusrekisteri.komo." + komo.ylioppilastutkinto, "Ylioppilastutkinto")
+          value: $scope.komo.ylioppilastutkinto
+          text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.ylioppilastutkinto, "Ylioppilastutkinto")
         }
         {
-          value: komo.lukio
-          text: getOphMsg("suoritusrekisteri.komo." + komo.lukio, "Lukio")
+          value: $scope.komo.lukio
+          text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.lukio, "Lukio")
         }
         {
-          value: komo.ammatillinen
-          text: getOphMsg("suoritusrekisteri.komo." + komo.ammatillinen, "Ammatillinen")
+          value: $scope.komo.ammatillinen
+          text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.ammatillinen, "Ammatillinen")
         }
       ]
 
