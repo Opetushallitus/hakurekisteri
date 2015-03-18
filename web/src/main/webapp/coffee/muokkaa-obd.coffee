@@ -198,6 +198,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         $scope.allRowsFiltered = $scope.allRows
 
     $scope.valitseHenkilo = (henkiloOid) ->
+      MessageService.clearMessages()
       $scope.valittuHenkiloOid = henkiloOid
       MuokkaaTiedot.muokkaaHenkilo(henkiloOid, $scope)
 

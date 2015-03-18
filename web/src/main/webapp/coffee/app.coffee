@@ -127,10 +127,10 @@ app.factory "MessageService", ->
       messages.length = 0  if clear
       messages.push message
       that = this
-      setTimeout ( ->
-        that.removeMessage(message)
-      ), 2000
-      return
+      if message.type == "success"
+        setTimeout ( ->
+          that.removeMessage(message)
+        ), 2000
 
     removeMessage: (message) ->
       index = messages.indexOf(message)
