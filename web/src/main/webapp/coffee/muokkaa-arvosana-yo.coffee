@@ -98,7 +98,8 @@ app.controller "MuokkaaArvosanatYo", [
 
     $scope.$watch "koetaulukko", $scope.enableSave, true
     $scope.hasChanged = ->
-      arvosanatModified.some (a) -> a.hasChanged()
+      arvosanatModified.some (a) ->
+        a.hasChanged() && notEmpty(a.object.aine) && notEmpty(a.object.arvio.arvosana)
 
     $scope.addDataScope($scope)
 

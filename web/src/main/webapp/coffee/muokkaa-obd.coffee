@@ -114,7 +114,11 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
 
     showCurrentRows = (henkiloMap) ->
       $http.post(henkiloServiceUrl + "/resources/henkilo/henkilotByHenkiloOidList", Object.keys(henkiloMap)
-      ).success((henkiloList) ->
+      ).success((henkiloList, status) ->
+        if status != 200 || typeof henkiloList == "string"
+          $scope.loading = false
+          $log.error('error resolving henkilotByHenkiloOidList')
+          return
         unsorted = []
         for henkiloTieto in henkiloList
           henkilo = henkiloMap[henkiloTieto.oidHenkilo]

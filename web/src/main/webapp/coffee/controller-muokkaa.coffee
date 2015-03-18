@@ -465,7 +465,7 @@ app.controller "MuokkaaCtrl", [
         )
         $scope.modalInstance = isolatedScope.modalInstance
 
-      openModal "templates/yoarvosanat", "YoarvosanaCtrl"
+      openModal "templates/yoarvosanat.html", "YoarvosanaCtrl"
 
       $scope.modalInstance.result.then ((yoarvosanaRet) ->
         MessageService.addMessage yoarvosanaRet  if yoarvosanaRet

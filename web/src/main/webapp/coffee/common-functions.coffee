@@ -183,6 +183,9 @@ deleteFromArray = (obj, arr) ->
   if index = arr.indexOf(obj) != -1
     arr.splice index, 1
 
+notEmpty = (s) ->
+  s && s.length > 0
+
 lastIndex = (arr, fn) ->
   i = 0
   index = -1
