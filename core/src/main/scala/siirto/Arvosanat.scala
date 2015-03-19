@@ -66,34 +66,29 @@ object Arvosanat extends SchemaDefinition {
         <xs:extension base="SuoritusType">
           <xs:choice>
             <xs:sequence>
-              <xs:element name="AI" type="PerusOpetusAidinkieliType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="A1" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="1"/>
+              <xs:element name="AI" type="PerusOpetusAidinkieliType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="A1" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
               <xs:element name="A12" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
-              <xs:choice>
-                <xs:sequence>
-                  <xs:element name="A2" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="1"/>
-                  <xs:element name="A22" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
-                  <xs:element name="B1" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
-                </xs:sequence>
-                <xs:element name="B1" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="1"/>
-              </xs:choice>
+              <xs:element name="A2" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="A22" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="B1" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
               <xs:element name="B2" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
               <xs:element name="B22" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
               <xs:element name="B23" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
-              <xs:element name="MA" type="PerusOpetusAineType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="KS" type="PerusOpetusAineType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="KE" type="PerusOpetusAineType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="KU" type="PerusOpetusAineType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="KO" type="PerusOpetusAineType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="BI" type="PerusOpetusAineType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="MU" type="PerusOpetusAineType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="LI" type="PerusOpetusAineType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="HI" type="PerusOpetusAineType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="FY" type="PerusOpetusAineType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="YH" type="PerusOpetusAineType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="TE" type="PerusOpetusAineType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="KT" type="PerusOpetusAineType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="GE" type="PerusOpetusAineType" maxOccurs="1" minOccurs="1"/>
+              <xs:element name="MA" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="KS" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="KE" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="KU" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="KO" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="BI" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="MU" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="LI" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="HI" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="FY" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="YH" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="TE" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="KT" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+              <xs:element name="GE" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
             </xs:sequence>
             <xs:element name="eivalmistu" type="EiValmistuType"/>
           </xs:choice>
@@ -245,8 +240,8 @@ object Arvosanat extends SchemaDefinition {
       <xs:complexContent>
         <xs:extension base="SuoritusType">
           <xs:sequence>
-            <xs:element name="AI" type="LukioAidinkieliType" maxOccurs="1" minOccurs="1"/>
-            <xs:element name="A1" type="LukioKieliType" maxOccurs="1" minOccurs="1"/>
+            <xs:element name="AI" type="LukioAidinkieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="A1" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="A12" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="A2" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="A22" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
@@ -257,18 +252,18 @@ object Arvosanat extends SchemaDefinition {
             <xs:element name="B3" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="B32" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="B33" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
-            <xs:element name="MA" type="LukioAineLaajuudellaType" maxOccurs="1" minOccurs="1"/>
-            <xs:element name="BI" type="LukioAineType" maxOccurs="1" minOccurs="1"/>
-            <xs:element name="GE" type="LukioAineType" maxOccurs="1" minOccurs="1"/>
-            <xs:element name="FY" type="LukioAineLaajuudellaType" maxOccurs="1" minOccurs="1"/>
-            <xs:element name="KE" type="LukioAineType" maxOccurs="1" minOccurs="1"/>
-            <xs:element name="TE" type="LukioAineType" maxOccurs="1" minOccurs="1"/>
-            <xs:element name="KT" type="LukioAineType" maxOccurs="1" minOccurs="1"/>
-            <xs:element name="HI" type="LukioAineType" maxOccurs="1" minOccurs="1"/>
-            <xs:element name="YH" type="LukioAineType" maxOccurs="1" minOccurs="1"/>
-            <xs:element name="MU" type="LukioAineType" maxOccurs="1" minOccurs="1"/>
-            <xs:element name="KU" type="LukioAineType" maxOccurs="1" minOccurs="1"/>
-            <xs:element name="LI" type="LukioAineType" maxOccurs="1" minOccurs="1"/>
+            <xs:element name="MA" type="LukioAineLaajuudellaType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="BI" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="GE" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="FY" type="LukioAineLaajuudellaType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="KE" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="TE" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="KT" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="HI" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="YH" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="MU" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="KU" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="LI" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="PS" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="FI" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
           </xs:sequence>
