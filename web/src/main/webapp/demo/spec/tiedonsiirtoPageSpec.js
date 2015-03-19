@@ -50,14 +50,33 @@
                 })
             })
 
-            describe("Kun validoidaan arvosanatiedosto, josta puuttuvat arvosanat", function() {
-                before(function() {
-                    testFrame().validateXml("<arvosanat><perusopetus></perusopetus></arvosanat>")
+            describe("Arvosanojen validointi", function() {
+                describe("Arvosanat puuttuvat", function() {
+                    before(function() {
+                        testFrame().validateXml(todistus([]))
+                    })
+
+                    it("Näyttää validointivirheet", function() {
+                        expect(page.validationErrors().length).to.be.above(10)
+                    })
                 })
 
-                it("Näyttää validointivirheet", function() {
-                    expect(page.validationErrors().length).to.be.above(10)
+                describe("Kaikki pakolliset arvosanat", function() {
+                    before(function() {
+                        testFrame().validateXml(todistus(["TE","KO","BI","MU","LI","A1","KT","GE","KU","A2","KE","MA","FY","KS","YH","HI","AI"]))
+                    })
+
+                    it("Ei näytä validointivirheitä", function() {
+                        // TODO: should be 0 actually, when validation is fixed
+                        expect(page.validationErrors().length).to.equal(1)
+                    })
                 })
+
+                function todistus(aineet) {
+                    return "<arvosanat><perusopetus>"
+                      + aineet.map(function(aine) { return "<"+aine.toUpperCase()+"><yhteinen>5</yhteinen></" + aine +">" }).join("")
+                      + "</perusopetus></arvosanat>"
+                }
             })
         });
     });
