@@ -5,7 +5,6 @@ app.factory "LokalisointiService", [
     getLang = ->
       lang = undefined
       i = 0
-
       while i < localisationMyroles.length
         lang = localisationMyroles[i].substring(5).toLowerCase()  if localisationMyroles[i].indexOf("LANG_") is 0
         i++
@@ -16,6 +15,7 @@ app.factory "LokalisointiService", [
         "en"
       ].indexOf(lang) is -1
       lang
+
     addTranslation = (msgKey, lang, elemText, oldTranslation) ->
       allowEmptyTranslationUpdate = false
       if not oldTranslation or allowEmptyTranslationUpdate and (not oldTranslation.value or $.trim(oldTranslation).length is 0)
@@ -31,15 +31,14 @@ app.factory "LokalisointiService", [
           data: JSON.stringify(data)
           contentType: "application/json; charset=UTF-8"
           dataType: "json"
-
       return
-    addTranslations = (msgKey, elemText, oldTranslation) ->
 
-      #$.get(localisationBackend + "/authorize");
+    addTranslations = (msgKey, elemText, oldTranslation) ->
       addTranslation msgKey, "fi", elemText, oldTranslation
       addTranslation msgKey, "sv", elemText, oldTranslation
       addTranslation msgKey, "en", elemText, oldTranslation
       return
+
     backendUrl = (if location.host.indexOf("localhost") is 0 then "https://itest-virkailija.oph.ware.fi" else "")
     localisationBackend = backendUrl + "/lokalisointi/cxf/rest/v1/localisation"
     msgResource = localisationBackend + "?category=" + msgCategory
@@ -70,9 +69,7 @@ app.factory "LokalisointiService", [
             $log.info "localisations inited, lang: " + service.lang + ", localisationBackend: " + localisationBackend + ", translations: " + translations.length
           callback()  if callback
           return
-
         return
-
       return
 
     service.getTranslation = (msgKey, lang, elemText) ->
@@ -96,7 +93,7 @@ app.factory "LokalisointiService", [
       if x is "" or not x
         addTranslations msgKey, elemText, oldTranslation
         return "[" + msgKey + "-" + lang + "]"
-      # $log.debug "getTranslation, lang: " + lang + ", key: " + msgKey + " => " + x
+      $log.debug "getTranslation, lang: " + lang + ", key: " + msgKey + " => " + x
       x
 
     if window.msgCategory is `undefined`
@@ -107,7 +104,6 @@ app.factory "LokalisointiService", [
       service.loadMessages ->
         callback()
         return
-
       return
 
     window.globalGetOphMsg = (msgKey, defaultText) ->
@@ -137,9 +133,7 @@ app.directive "ophMsg", [
             else
               $log.warn "localisation directive, key doesn't start with the category!, cat: " + msgCategory + ", key: " + $scope.msgKey + ", element:"
             return
-
           return
-
         return
     )
 ]

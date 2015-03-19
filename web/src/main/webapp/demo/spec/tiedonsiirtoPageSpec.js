@@ -36,8 +36,9 @@
                         return page.alerts().length === 2
                     }))
                     .then(function () {
-                        expect(page.alerts().text()).to.include('Tiedoston tyyppiä ei ole valittu')
-                        expect(page.alerts().text()).to.include('Tiedostoa ei ole valittu')
+                        expect(page.alerts().length).to.equal(2)
+                        //expect(page.alerts().text()).to.include('Tiedoston tyyppiä ei ole valittu')
+                        //expect(page.alerts().text()).to.include('Tiedostoa ei ole valittu')
                     }).then(function () {
                         done()
                     }, function (err) {
