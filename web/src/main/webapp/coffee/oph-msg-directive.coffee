@@ -39,7 +39,7 @@ app.factory "LokalisointiService", [
       addTranslation msgKey, "en", elemText, oldTranslation
       return
 
-    backendUrl = (if location.host.indexOf("localhost") is 0 then "https://itest-virkailija.oph.ware.fi" else "")
+    backendUrl = (if location.host.indexOf("localhost") > -1 then "https://itest-virkailija.oph.ware.fi" else "")
     localisationBackend = backendUrl + "/lokalisointi/cxf/rest/v1/localisation"
     msgResource = localisationBackend + "?category=" + msgCategory
     localisationMyroles = []
@@ -79,7 +79,6 @@ app.factory "LokalisointiService", [
           if translation[lang]
             text = translation[lang].value
             regExp = new RegExp(key)
-
             #$log.debug("oph msg regexp, key: "+key+", text: "+text);
             return elemText.replace(regExp, text)  if elemText.match(regExp)
         $log.warn "no matching regexp translation for: " + elemText
@@ -93,7 +92,7 @@ app.factory "LokalisointiService", [
       if x is "" or not x
         addTranslations msgKey, elemText, oldTranslation
         return "[" + msgKey + "-" + lang + "]"
-      $log.debug "getTranslation, lang: " + lang + ", key: " + msgKey + " => " + x
+      #$log.debug "getTranslation, lang: " + lang + ", key: " + msgKey + " => " + x
       x
 
     if window.msgCategory is `undefined`

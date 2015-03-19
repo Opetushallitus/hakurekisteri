@@ -1,5 +1,5 @@
 getBaseUrl = ->
-  return "https://itest-virkailija.oph.ware.fi"  if location.hostname is "localhost"
+  return "https://itest-virkailija.oph.ware.fi"  if location.host.indexOf('localhost')  > -1
   ""
 
 getOrganisaatio = ($http, organisaatioOid, successCallback, errorCallback) ->
