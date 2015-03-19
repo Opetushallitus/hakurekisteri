@@ -110,7 +110,25 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
     r("LK")("AI")("OPPIAINE") should be ("FI")
 
   }
-
+  it should "include valinnaiset arvosanat" in {
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
+      Hakemus()
+        .setPersonOid("person1")
+        .setPerusopetuksenPaattotodistusvuosi(1988)
+        .putArvosana("PK_MA","8")
+        .putArvosana("PK_MA_VAL1","6")
+        .putArvosana("PK_MA_VAL2","5")
+        .putArvosana("PK_MA_VAL3","7")
+        .build
+    ) should contain theSameElementsAs Seq(
+      (ItseilmoitettuPeruskouluTutkinto("person1", 1988, "FI"),
+        Seq(
+          Arvosana(suoritus = null, arvio = Arvio410("6"), "MA", lisatieto = None, valinnainen = true, myonnetty = None, source = "person1"),
+          Arvosana(suoritus = null, arvio = Arvio410("5"), "MA", lisatieto = None, valinnainen = true, myonnetty = None, source = "person1"),
+          Arvosana(suoritus = null, arvio = Arvio410("7"), "MA", lisatieto = None, valinnainen = true, myonnetty = None, source = "person1"),
+          Arvosana(suoritus = null, arvio = Arvio410("8"), "MA", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1"))
+        ))
+  }
   it should "create suorituksia from koulutustausta" in {
     IlmoitetutArvosanatTrigger.createSuorituksetKoulutustausta(
       Hakemus()

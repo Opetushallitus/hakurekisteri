@@ -62,8 +62,19 @@ object IlmoitetutArvosanatTrigger {
     }
   }
 
-  def aineArvotToArvosana(personOid: String, aine: String, arvot: Map[String, String]) = {
-    Arvosana(suoritus = null, arvio = Arvio410(arvot("")), aine, lisatieto = arvot.get("OPPIAINE"), valinnainen = false, myonnetty = None, source = personOid)
+  def createArvosana(personOid: String, arvo: String, aine: String, lisatieto: Option[String], valinnainen: Boolean): Arvosana = {
+    Arvosana(suoritus = null, arvio = Arvio410(arvo), aine, lisatieto, valinnainen, myonnetty = None, source = personOid)
+  }
+
+  def aineArvotToArvosanat(personOid: String, aine: String, arvot: Map[String, String]) = {
+    Seq(
+      arvot.get("VAL1").map(a => Seq(createArvosana(personOid, arvot("VAL1"), aine, arvot.get("OPPIAINE"), true))).getOrElse(Seq.empty),
+      arvot.get("VAL2").map(a => Seq(createArvosana(personOid, arvot("VAL2"), aine, arvot.get("OPPIAINE"), true))).getOrElse(Seq.empty),
+      arvot.get("VAL3").map(a => Seq(createArvosana(personOid, arvot("VAL3"), aine, arvot.get("OPPIAINE"), true))).getOrElse(Seq.empty),
+    Seq(
+      createArvosana(personOid, arvot(""), aine, arvot.get("OPPIAINE"), false)
+      //Arvosana(suoritus = null, arvio = Arvio410(arvot("")), aine, lisatieto = arvot.get("OPPIAINE"), valinnainen = false, myonnetty = None, source = personOid))
+    )).flatten
   }
 
   def createSuorituksetJaArvosanatFromOppimiset(hakemus: FullHakemus): Seq[(Suoritus, Seq[Arvosana])] = {
@@ -83,7 +94,7 @@ object IlmoitetutArvosanatTrigger {
             hakijaOid = personOid,
             valmistumisvuosi.toInt,
             suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI"))
-        Seq((itseIlmoitettuSuoritus, osaaminen.getPeruskoulu.map({case (aine,arvot) => aineArvotToArvosana(personOid, aine, arvot)}).toSeq))
+        Seq((itseIlmoitettuSuoritus, osaaminen.getPeruskoulu.map({case (aine,arvot) => aineArvotToArvosanat(personOid, aine, arvot)}).flatten.toSeq))
       }).getOrElse(Seq.empty)
 
       // Lukio Arvosanat
@@ -93,7 +104,7 @@ object IlmoitetutArvosanatTrigger {
             hakijaOid = personOid,
             valmistumisvuosi.toInt,
             suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI"))
-        Seq((itseIlmoitettuSuoritus, osaaminen.getLukio.map({case (aine,arvot) => aineArvotToArvosana(personOid, aine, arvot)}).toSeq))
+        Seq((itseIlmoitettuSuoritus, osaaminen.getLukio.map({case (aine,arvot) => aineArvotToArvosanat(personOid, aine, arvot)}).flatten.toSeq))
       }).getOrElse(Seq.empty)
 
       (peruskoulunArvosanat ++ lukionArvosanat)
