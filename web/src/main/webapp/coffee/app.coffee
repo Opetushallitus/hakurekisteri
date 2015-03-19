@@ -11,6 +11,7 @@ app = angular.module "myApp", [
 
 if (window.mocksOn)
   angular.module('myApp').requires.push('e2e-mocks')
+  angular.module('myApp').requires.push('koodisto-mocks')
 
 app.factory "Opiskelijat", ($resource) ->
   $resource "rest/v1/opiskelijat/:opiskelijaId", { opiskelijaId: "@id" }, {
