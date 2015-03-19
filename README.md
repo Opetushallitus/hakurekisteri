@@ -18,6 +18,7 @@ $ ./sbt
 ```
 
 ## Populate local H2 DB (requires: oph-configuration set up)
+
 ```
 ./sbt createTestDb
 ```
