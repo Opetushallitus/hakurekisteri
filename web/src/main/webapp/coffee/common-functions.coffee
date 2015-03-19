@@ -180,7 +180,8 @@ arrayCarousel = (args...) ->
   }
 
 deleteFromArray = (obj, arr) ->
-  if index = arr.indexOf(obj) != -1
+  index = arr.indexOf(obj)
+  if index != -1
     arr.splice index, 1
 
 notEmpty = (s) ->

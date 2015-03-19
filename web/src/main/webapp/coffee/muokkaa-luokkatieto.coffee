@@ -21,38 +21,37 @@ app.controller "MuokkaaLuokkatieto", [
       luokkatieto = $scope.luokkatieto
       if $scope.hasChanged()
         d = $q.defer()
-        if $scope.info.delete
-          if luokkatieto.id
-            luokkatieto.$remove (->
-              deleteFromArray luokkatieto, $scope.henkilo.luokkatiedot
-              d.resolve "done"
-            ), ->
-              MessageService.addMessage
-                type: "danger"
-                messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja"
-                message: "Virhe tallennettaessa luokkatietoja."
-                descriptionKey: "suoritusrekisteri.muokkaa.virheluokkatietoyrita"
-                description: "Yritä uudelleen."
+        luokkatieto.$save (->
+          enrichLuokkatieto luokkatieto
+          d.resolve "done"
+        ), ->
+          MessageService.addMessage
+            type: "danger"
+            messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja"
+            message: "Virhe tallennettaessa luokkatietoja."
+            descriptionKey: "suoritusrekisteri.muokkaa.virheluokkayrita"
+            description: "Yritä uudelleen."
+          d.reject "error saving luokkatieto: " + luokkatieto
+        d.promise.then () ->
+          modifiedCache.update()
+        [d.promise]
 
-              d.reject "error deleting luokkatieto: " + luokkatieto
-          else
-            deleteFromArray luokkatieto, $scope.henkilo.luokkatiedot
-            d.resolve "done"
-        else
-          luokkatieto.$save (->
-            enrichLuokkatieto luokkatieto
-            d.resolve "done"
-          ), ->
+    $scope.poistaLuokkatieto = () ->
+      luokkatieto = $scope.luokkatieto
+      removeLuokkatietoScope = () ->
+        $scope.removeDataScope($scope)
+        deleteFromArray luokkatieto, $scope.henkilo.luokkatiedot
+      if confirm("Poista luokkatieto?")
+        if luokkatieto.id
+          luokkatieto.$remove removeLuokkatietoScope, ->
             MessageService.addMessage
               type: "danger"
               messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja"
               message: "Virhe tallennettaessa luokkatietoja."
-              descriptionKey: "suoritusrekisteri.muokkaa.virheluokkayrita"
+              descriptionKey: "suoritusrekisteri.muokkaa.virheluokkatietoyrita"
               description: "Yritä uudelleen."
-            d.reject "error saving luokkatieto: " + luokkatieto
-        d.promise.then () ->
-          modifiedCache.update()
-        [d.promise]
+        else
+          removeLuokkatietoScope()
 
     modifiedCache = changeDetection($scope.luokkatieto)
     $scope.info = {}

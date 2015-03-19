@@ -59,16 +59,16 @@
         <div ng-hide="info.editable">{{suoritus.tila}}</div>
     </div>
 </div>
-<div ng-show="info.editable" ng-if="suoritus.id" class="row">
+<div class="row">
     <div class="form-group col-sm-12">
-        <div ng-if="suoritus.komo !== komo.ylioppilastutkinto" ng-include="'templates/muokkaa-arvosanat.html'"
+        <div ng-if="suoritus.id && suoritus.komo !== komo.ylioppilastutkinto" ng-include="'templates/muokkaa-arvosanat.html'"
              ng-controller="MuokkaaArvosanat"></div>
-        <div ng-if="suoritus.komo === komo.ylioppilastutkinto" ng-include="'templates/muokkaa-arvosanat-yo.html'"
+        <div ng-if="suoritus.id && suoritus.komo === komo.ylioppilastutkinto" ng-include="'templates/muokkaa-arvosanat-yo.html'"
              ng-controller="MuokkaaArvosanatYo"></div>
         <div class="pull-right">
-            <button ng-show="isOPH()" type="button" ng-disabled="info.delete" ng-click="info.delete = true" class="btn btn-default arvosana-button">
+            <button ng-show="isOPH()" type="button" ng-click="poistaSuoritus()" class="btn btn-default arvosana-button">
                 <span oph-msg="suoritusrekisteri.muokkaa.poistasuoritus">Poista</span>
-                <span§ class="glyphicon glyphicon-remove"></span></button>
+                <span class="glyphicon glyphicon-remove"></span></button>
         </div>
     </div>
 </div>

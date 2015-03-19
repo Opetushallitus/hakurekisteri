@@ -26,39 +26,39 @@ app.controller "MuokkaaSuoritus", [
       if $scope.hasChanged()
         d = $q.defer()
         suoritus = $scope.suoritus
-        if $scope.info.delete
-          if suoritus.id
-            suoritus.$remove (->
-              deleteFromArray suoritus, $scope.henkilo.suoritukset
-              d.resolve "done"
-            ), ->
-              MessageService.addMessage
-                type: "danger"
-                messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja"
-                message: "Virhe tallennettaessa suoritustietoja."
-                descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita"
-                description: "Yritä uudelleen."
-              d.reject "error deleting suoritus: " + suoritus
-          else
-            deleteFromArray suoritus, $scope.henkilo.suoritukset
-            d.resolve "done"
-        else
-          suoritus.$save (->
-            enrichSuoritus suoritus
-            d.resolve "done"
-          ), ->
+        suoritus.$save (->
+          enrichSuoritus suoritus
+          d.resolve "done"
+        ), ->
+          MessageService.addMessage
+            type: "danger"
+            messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja"
+            message: "Virhe tallennettaessa suoritustietoja."
+            descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita"
+            description: "Yritä uudelleen."
+          d.reject "error saving suoritus: " + suoritus
+        d.promise.then ->
+          modifiedCache.update()
+        [d.promise]
+      else
+        []
+
+    $scope.poistaSuoritus = ->
+      suoritus = $scope.suoritus
+      removeSuoritusScope = () ->
+        $scope.removeDataScope($scope)
+        deleteFromArray suoritus, $scope.henkilo.suoritukset
+      if confirm("Poista suoritus " + suoritus.valmistuminen + "?")
+        if suoritus.id
+          suoritus.$remove removeSuoritusScope, ->
             MessageService.addMessage
               type: "danger"
               messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja"
               message: "Virhe tallennettaessa suoritustietoja."
               descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita"
               description: "Yritä uudelleen."
-            d.reject "error saving suoritus: " + suoritus
-        d.promise.then ->
-          modifiedCache.update()
-        [d.promise]
-      else
-        []
+        else
+          removeSuoritusScope()
 
     $scope.parseFinDate = (input) ->
       if input instanceof Date

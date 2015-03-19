@@ -205,8 +205,11 @@ app.factory "MuokkaaTiedot", [
         else
           []
 
-      $scope.addDataScope = (fn) ->
-        $scope.henkilo.dataScopes.push fn
+      $scope.addDataScope = (scope) ->
+        $scope.henkilo.dataScopes.push scope
+
+      $scope.removeDataScope = (scope) ->
+        deleteFromArray scope, $scope.henkilo.dataScopes
 
       saveData = ->
         promises = []
