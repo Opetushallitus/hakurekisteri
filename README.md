@@ -32,3 +32,15 @@ If you want sbt to build project automatically on changes, use
 ```
 > ~container:start
 ```
+
+## Arvosanavalidaattori
+
+Arvosanojen tuonnissa käytettävä validaattori on erillisessä [repositoriossa](https://github.com/Opetushallitus/validaattori).
+
+Validaattorin server-side -versio on buildattu sieltä Artifactoryyn ja on käytössä jarrina.
+
+Validaattorin client-side -versio on buildattu ja kopioitu tämän [js-hakemistoon](web/src/main/webapp/static/js). Tämä päivitetään ajamalla skripti
+
+    sbin/update_validator.sh
+
+Edellyttäen että validaattori-repositorystä on klooni hakemistossa `../validator`.
