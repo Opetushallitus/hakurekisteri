@@ -10,6 +10,8 @@ app.controller "TiedonsiirtoCtrl", [
     isIncidentResponse = (content) ->
       (typeof content is "string" and content.match(/.*"incidentId".*/g)) or (typeof content is "object" and content.incidentId)
 
+    $scope.validointiVirheet = []
+
     fileupload = document.getElementById("tiedosto")
 
     MurupolkuService.addToMurupolku
@@ -29,14 +31,18 @@ app.controller "TiedonsiirtoCtrl", [
         $log.error(e)
 
     $scope.validateXmlFile = ->
-      file = fileupload.files[0]
-      reader = new FileReader()
-      reader.readAsText(file)
-      reader.addEventListener "loadend", ->
-        debugger
-        result = hakurekisteri.perusopetus.xml.validate.validoi(reader.result)
-        console.log("validation result", result)
-
+      if $scope.tyyppi is "arvosanat"
+        file = fileupload.files[0]
+        reader = new FileReader()
+        reader.readAsText(file)
+        reader.addEventListener "loadend", ->
+          result = hakurekisteri.perusopetus.xml.validate.validoi(reader.result)
+          $scope.validointiVirheet = R.toPairs(R.groupBy(([todistus, virhe]) -> virhe.id)(result)).map ([ruleId, todistusTuplet]) ->
+            todistukset = todistusTuplet.map (tuple) -> tuple[0]
+            {ruleId, todistukset, count: todistukset.length}
+          console.log("validation result", $scope.validointiVirheet)
+          $scope.$apply()
+          
     $scope.beforeSubmitCheck = ->
       $scope.$apply(->
         MessageService.clearMessages()
