@@ -2,6 +2,7 @@
 
 rootdir=`dirname $0`/..
 validatorroot=$rootdir/../validaattori
+validatorversion=`git log --oneline -n 1|cut -d ' ' -f 1`
 
 echo "## building validator js bundle"
 
@@ -11,4 +12,4 @@ echo "## copying"
 
 cp $validatorroot/target/prod/hakurekisteri-validator.min.js $rootdir/web/src/main/webapp/static/js
 
-echo "## done"
+echo "## done, validator revision $validatorversion"
