@@ -300,10 +300,12 @@ app.controller "MuokkaaArvosanat", [
             arvosanaModified.update()
           d.promise
 
+      $scope.info.editable = false
       addKorotus()
       updateArvosanaTaulukko()
       p = $q.all(saveArvosanat()).then (->
       ), ->
+        $scope.info.editable = true
         MessageService.addMessage
           type: "danger"
           messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennuseionnistunut"
