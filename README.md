@@ -7,6 +7,10 @@
 2. Käynnistä mock-serveri IDEAsta: `JettyTestLauncher`.
 3. Avaa testisivu selaimessa: http://localhost:8080/demo/runner.html
 
+## Fronttidevaus
+
+    npm run watch
+
 ## Build & Run ##
 
 ```sh
