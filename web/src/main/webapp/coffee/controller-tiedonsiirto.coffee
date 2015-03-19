@@ -35,14 +35,16 @@ app.controller "TiedonsiirtoCtrl", [
         file = fileupload.files[0]
         reader = new FileReader()
         reader.readAsText(file)
-        reader.addEventListener "loadend", ->
-          result = hakurekisteri.perusopetus.xml.validate.validoi(reader.result)
-          $scope.validointiVirheet = R.toPairs(R.groupBy(([todistus, virhe]) -> virhe.id)(result)).map ([ruleId, todistusTuplet]) ->
-            todistukset = todistusTuplet.map (tuple) -> tuple[0]
-            {ruleId, todistukset, count: todistukset.length}
-          console.log("validation result", $scope.validointiVirheet)
-          $scope.$apply()
-          
+        reader.addEventListener "loadend", -> validateXml(reader.result)
+
+    validateXml = window.validateXml = (xml) ->
+      result = hakurekisteri.perusopetus.xml.validate.validoi(xml)
+      $scope.validointiVirheet = R.toPairs(R.groupBy(([todistus, virhe]) -> virhe.id)(result)).map ([ruleId, todistusTuplet]) ->
+        todistukset = todistusTuplet.map (tuple) -> tuple[0]
+        {ruleId, todistukset, count: todistukset.length}
+      console.log("validation result", $scope.validointiVirheet)
+      $scope.$apply()
+
     $scope.beforeSubmitCheck = ->
       $scope.$apply(->
         MessageService.clearMessages()

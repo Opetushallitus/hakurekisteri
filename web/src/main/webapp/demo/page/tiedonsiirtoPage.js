@@ -29,6 +29,9 @@ function TiedonsiirtoPage() {
         alerts: function() {
             return S("div.alert.message")
         },
+        validationErrors: function() {
+            return S(".validation-error")
+        },
         uploadResult: function() {
             return S("#uploadResult").first()
         },
