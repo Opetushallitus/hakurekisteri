@@ -1,5 +1,12 @@
 # Haku- ja valintarekisteri #
 
+
+## Run mocha tests
+
+1. Aja `./sbt compile` joka myös buildaa frontin.
+2. Käynnistä mock-serveri IDEAsta: `JettyTestLauncher`.
+3. Avaa testisivu selaimessa: http://localhost:8080/demo/runner.html
+
 ## Build & Run ##
 
 ```sh
@@ -10,7 +17,7 @@ $ ./sbt
 > browse
 ```
 
-##### Populate local H2 DB (requires: oph-configuration set up)
+## Populate local H2 DB (requires: oph-configuration set up)
 ```
 ./sbt createTestDb
 ```
