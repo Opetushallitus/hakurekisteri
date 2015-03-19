@@ -64,6 +64,7 @@ object Config {
   val yotutkintoKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.yotutkinto", "1.2.246.562.5.2013061010184237348007")
   val perusopetusKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.perusopetus", "1.2.246.562.13.62959769647")
   val lisaopetusKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lisaopetus", "1.2.246.562.5.2013112814572435044876")
+  val lisaopetusTalousKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lisaopetus.talous", "1.2.246.562.5.2013061010184614853416")
   val ammattistarttiKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ammattistartti", "1.2.246.562.5.2013112814572438136372")
   val valmentavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.valmentava", "1.2.246.562.5.2013112814572435755085")
   val ammatilliseenvalmistavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ammatilliseenvalmistava", "1.2.246.562.5.2013112814572441001730")

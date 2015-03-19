@@ -1,10 +1,13 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
-import java.util.UUID
+import java.util.{GregorianCalendar, UUID}
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.storage.Identified
-import org.joda.time.LocalDate
+import org.joda.time.{DateTimeConstants, LocalDate}
 import fi.vm.sade.hakurekisteri.rest.support.UUIDResource
 import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
+
+import scala.annotation.tailrec
 
 object yksilollistaminen extends Enumeration {
   type Yksilollistetty = Value
@@ -46,6 +49,73 @@ object VapaamuotoinenKkTutkinto {
 
 }
 
+object DayFinder {
+
+  val basedate = LocalDate.now()
+
+  import com.github.nscala_time.time.Imports._
+
+  def saturdayOfWeek22(year: Int) = {
+    basedate.withWeekyear(year).withWeekOfWeekyear(22).withDayOfWeek(DateTimeConstants.SATURDAY)
+  }
+
+  @tailrec
+  def firstSaturdayAfter(startDate: LocalDate): LocalDate = startDate.getDayOfWeek match {
+    case DateTimeConstants.SATURDAY => startDate
+    case _ => firstSaturdayAfter(startDate.plusDays(1))
+  }
+}
+
+import DayFinder._
+
+object ItseilmoitettuPeruskouluTutkinto {
+
+  def apply(hakijaOid: String, valmistumisvuosi: Int, suoritusKieli: String) =
+    VirallinenSuoritus(Config.perusopetusKomoOid,
+      myontaja = hakijaOid,
+      tila = "VALMIS",
+      valmistuminen = saturdayOfWeek22(valmistumisvuosi),
+      hakijaOid,
+      yksilollistaminen = Ei,
+      suoritusKieli,
+      opiskeluoikeus = None,
+      vahv = false,
+      lahde = hakijaOid)
+
+}
+
+object ItseilmoitettuTutkinto {
+
+  def apply(komoOid: String, hakijaOid: String, valmistumisvuosi: Int, suoritusKieli: String) =
+    VirallinenSuoritus(komo = komoOid, //Config.lisaopetusKomoOid,
+      myontaja = hakijaOid,
+      tila = "VALMIS",
+      valmistuminen = saturdayOfWeek22(valmistumisvuosi),
+      hakijaOid,
+      yksilollistaminen = Ei,
+      suoritusKieli,
+      opiskeluoikeus = None,
+      vahv = false,
+      lahde = hakijaOid)
+
+}
+
+object ItseilmoitettuLukioTutkinto {
+
+  def apply(hakijaOid: String, valmistumisvuosi: Int, suoritusKieli: String) =
+    VirallinenSuoritus(Config.lukioKomoOid,
+      myontaja = hakijaOid,
+      tila = "VALMIS",
+      valmistuminen = saturdayOfWeek22(valmistumisvuosi),
+      hakijaOid,
+      yksilollistaminen = Ei,
+      suoritusKieli,
+      opiskeluoikeus = None,
+      vahv = false,
+      lahde = hakijaOid)
+
+}
+
 case class VirallinenSuoritus(komo: String,
                     myontaja: String,
                     tila: String,
@@ -57,9 +127,9 @@ case class VirallinenSuoritus(komo: String,
                     vahv:Boolean = true,
                     lahde: String) extends Suoritus(henkilo, vahv, lahde)  {
 
-  private[VirallinenSuoritus] case class VirallinenSisalto(henkilo: String, komo: String, myontaja: String)
+  private[VirallinenSuoritus] case class VirallinenSisalto(henkilo: String, komo: String, myontaja: String, vahv: Boolean)
 
-  override  val core = VirallinenSisalto(henkilo, komo, myontaja)
+  override  val core = VirallinenSisalto(henkilo, komo, myontaja, vahv)
 
   override def identify(identity: UUID): VirallinenSuoritus with Identified[UUID] = new VirallinenSuoritus(komo, myontaja, tila, valmistuminen, henkiloOid, yksilollistaminen, suoritusKieli, opiskeluoikeus, vahvistettu, source) with Identified[UUID] {
     val id: UUID = identity

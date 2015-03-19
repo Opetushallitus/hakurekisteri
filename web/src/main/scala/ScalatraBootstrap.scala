@@ -1,6 +1,8 @@
+import akka.pattern.AskTimeoutException
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
+import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository.Journal
 
 import akka.camel.CamelExtension
@@ -63,7 +65,7 @@ import org.springframework.web.context.support.XmlWebApplicationContext
 import org.springframework.web.filter.DelegatingFilterProxy
 
 import scala.collection.JavaConverters._
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
 import HakurekisteriDriver.simple._
@@ -364,6 +366,10 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
         vuosi <- Try(vuosiString.toInt).toOption
       ) rekisterit.suoritusRekisteri ! VapaamuotoinenKkTutkinto(person, kuvaus, myontaja, vuosi, 0, person)
   }
+
+  val ilmoitetutArvosanat = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri);
+
+  hakemukset ! ilmoitetutArvosanat
 
   val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(system), organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
 

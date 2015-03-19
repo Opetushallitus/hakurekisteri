@@ -51,14 +51,21 @@ class HakijaSpec extends FlatSpec with Matchers {
             LISAKOULUTUS_KANSANOPISTO = None,
             LISAKOULUTUS_MAAHANMUUTTO = None,
             lahtoluokka = Some("9A"),
+            perusopetuksen_kieli = None,
             lukioPaattotodistusVuosi = None,
             pohjakoulutus_yo = None,
+            pohjakoulutus_yo_vuosi = None,
             pohjakoulutus_am = None,
+            pohjakoulutus_am_vuosi = None,
             pohjakoulutus_amt = None,
+            pohjakoulutus_amt_vuosi = None,
             pohjakoulutus_kk = None,
+            pohjakoulutus_kk_pvm = None,
             pohjakoulutus_avoin = None,
             pohjakoulutus_ulk = None,
+            pohjakoulutus_ulk_vuosi = None,
             pohjakoulutus_muu = None,
+            pohjakoulutus_muu_vuosi = None,
             aiempitutkinto_korkeakoulu = None,
             aiempitutkinto_tutkinto = None,
             aiempitutkinto_vuosi = None
@@ -87,7 +94,9 @@ class HakijaSpec extends FlatSpec with Matchers {
         lisatiedot = Some(
           Lisatiedot(
             lupaMarkkinointi = Some("true"),
-            lupaJulkaisu = Some("true"))))),
+            lupaJulkaisu = Some("true"))),
+        osaaminen = None)
+    ),
     state = Some("ACTIVE"),
     preferenceEligibilities = Seq()
   )

@@ -16,9 +16,12 @@ import scala.util.Try
 import scala.language.implicitConversions
 import akka.actor.Scheduler
 
+import scala.util.matching.Regex
+
 
 trait DispatchSupport {
   def forUrl(url: String) = ERMatcher(Some(url), Set())
+  def forPattern(url: String) = ERPatternMatcher(url.r, Set())
 
   def forUrl(url: String, body: String) = ERMatcher(Some(url), Set(body))
 
@@ -138,25 +141,53 @@ class BaseResponse(s: HttpResponseStatus, h: HttpResponseHeaders, bs: Seq[HttpRe
 
 case class EndpointRequest(url: String, body: Option[String], headers: List[(String, String)])
 
-case class ERMatcher(url: Option[String], bodyParts: Set[String], headers: (String, String)*) extends BaseMatcher[EndpointRequest] {
+abstract class EndpointMatching  extends BaseMatcher[EndpointRequest] {
+  val headers:Seq[(String, String)]
+  val bodyParts: Set[String]
+
+  val urlString: String
+
   override def describeTo(description: Description): Unit = {
     val matchedHeaders  = headers.headOption.map((_) => "following headers: " + headers.mkString(", ")).getOrElse("any headers")
-    description.appendText(s"request with ${url.map("url: " + _).getOrElse("any url")} and $matchedHeaders")
+    description.appendText(s"request with $urlString and $matchedHeaders")
   }
+
+  def matchesUrl(rUrl:String): Boolean
 
   override def matches(item: scala.Any): Boolean = item match {
     case EndpointRequest(rUrl, body, rHeaders) =>
-      url.map(_ == rUrl).getOrElse(true) &&
-      headers.map(rHeaders.contains).reduceOption(_ && _).getOrElse(true) &&
-      !bodyParts.exists(!body.getOrElse("").contains(_))
+      matchesUrl(rUrl) &&
+        headers.map(rHeaders.contains).reduceOption(_ && _).getOrElse(true) &&
+        !bodyParts.exists(!body.getOrElse("").contains(_))
 
     case _ => false
   }
 
+
+
+}
+
+case class ERMatcher(url: Option[String], bodyParts: Set[String], headers: (String, String)*) extends EndpointMatching {
+  val urlString: String = url.map("url: " + _).getOrElse("any url")
+  def matchesUrl(rUrl:String) = url.map(_ == rUrl).getOrElse(true)
+
   def withHeader(header: (String,String))  = ERMatcher(url,bodyParts, (header +: headers):_*)
 
   def withBodyPart(part: String) = ERMatcher(url, bodyParts + part, headers:_*)
+
 }
+
+
+case class ERPatternMatcher(url: Regex, bodyParts: Set[String], headers: (String, String)*) extends EndpointMatching {
+  val urlString: String = s"url: $url"
+  def matchesUrl(rUrl:String) = rUrl match {
+    case url() => true
+    case _ => false
+  }
+
+
+}
+
 
 trait Endpoint {
   def request(er: EndpointRequest): (Int, List[(String, String)], String)

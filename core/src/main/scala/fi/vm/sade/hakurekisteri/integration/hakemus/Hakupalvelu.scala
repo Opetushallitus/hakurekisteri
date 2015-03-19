@@ -206,20 +206,27 @@ case class Koulutustausta(lahtokoulu:Option[String],
                           LISAKOULUTUS_MAAHANMUUTTO: Option[String],
                           luokkataso: Option[String],
                           lahtoluokka: Option[String],
+                          perusopetuksen_kieli: Option[String],
                           pohjakoulutus_yo: Option[String],
+                          pohjakoulutus_yo_vuosi: Option[String],
                           pohjakoulutus_am: Option[String],
+                          pohjakoulutus_am_vuosi: Option[String],
                           pohjakoulutus_amt: Option[String],
+                          pohjakoulutus_amt_vuosi: Option[String],
                           pohjakoulutus_kk: Option[String],
+                          pohjakoulutus_kk_pvm: Option[String],
                           pohjakoulutus_ulk: Option[String],
+                          pohjakoulutus_ulk_vuosi: Option[String],
                           pohjakoulutus_avoin: Option[String],
                           pohjakoulutus_muu: Option[String],
+                          pohjakoulutus_muu_vuosi: Option[String],
                           aiempitutkinto_tutkinto: Option[String],
                           aiempitutkinto_korkeakoulu: Option[String],
                           aiempitutkinto_vuosi: Option[String])
 
 case class Lisatiedot(lupaJulkaisu: Option[String], lupaMarkkinointi: Option[String])
 
-case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot], koulutustausta: Option[Koulutustausta], lisatiedot: Option[Lisatiedot], hakutoiveet: Option[Map[String, String]])
+case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot], koulutustausta: Option[Koulutustausta], lisatiedot: Option[Lisatiedot], hakutoiveet: Option[Map[String, String]], osaaminen: Option[Map[String, String]])
 
 case class PreferenceEligibility(aoId: String, status: String, source: Option[String])
 
