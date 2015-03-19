@@ -15,6 +15,8 @@ class SchemaServlet(schemas: SchemaDefinition*)(implicit val system: ActorSystem
     params.get("schema") match {
       case Some("perustiedot.xsd") => MovedPermanently("../rest/v1/siirto/perustiedot/schema/perustiedot.xsd")
       case Some("perustiedot-koodisto.xsd") => MovedPermanently("../rest/v1/siirto/perustiedot/schema/perustiedot-koodisto.xsd")
+      case Some("arvosanat.xsd") => MovedPermanently("../rest/v1/siirto/arvosanat/schema/arvosanat.xsd")
+      case Some("arvosanat-koodisto.xsd") => MovedPermanently("../rest/v1/siirto/arvosanat/schema/arvosanat-koodisto.xsd")
       case Some(s) => schemaCache.get(params("schema")).fold(NotFound()) {
         contentType = "application/xml"
         Ok(_)
