@@ -367,7 +367,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
       ) rekisterit.suoritusRekisteri ! VapaamuotoinenKkTutkinto(person, kuvaus, myontaja, vuosi, 0, person)
   }
 
-  val ilmoitetutArvosanat = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri);
+  val ilmoitetutArvosanat = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri,rekisterit.arvosanaRekisteri)(ec);
 
   hakemukset ! ilmoitetutArvosanat
 
