@@ -23,7 +23,7 @@
                 exists(page.organizationSearch)()
                     .then(wait.forAngular)
                     .then(function () {
-                        page.organizationSearch().val("Pikkaralan ala-aste").change()
+                        page.organizationSearch().val("Pikkaralan+ala-aste").change()
                     })
                     .then(wait.forAngular)
                     .then(function () {
@@ -34,7 +34,7 @@
                     })
                     .then(wait.forAngular)
                     .then(function () {
-                        expect(page.resultsTable().length).to.equal(1)
+                        expect(page.resultsTable().length).to.equal(5)
                     }).then(function () {
                         done()
                     }, function (err) {
