@@ -138,7 +138,22 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .build
     ) should contain theSameElementsAs Seq(ItseilmoitettuLukioTutkinto("person1", 2000, "FI"), ItseilmoitettuPeruskouluTutkinto("person1", 1988, "FI"))
   }
-
+  it should "handle 'ei arvosanaa' and 'S' arvosanat" in {
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
+      Hakemus()
+        .setPersonOid("person1")
+        .setLukionPaattotodistusvuosi(2000)
+        .setPerusopetuksenPaattotodistusvuosi(1988)
+        .putArvosana("LK_MA","Ei arvosanaa")
+        .putArvosana("PK_AI","S")
+        .build
+    ) should contain theSameElementsAs Seq(
+      (ItseilmoitettuLukioTutkinto("person1", 2000, "FI"),
+        Seq()),
+      (ItseilmoitettuPeruskouluTutkinto("person1", 1988, "FI"),
+        Seq()
+        ))
+  }
   it should "create suorituksia ja arvosanoja from oppimiset" in {
     IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
       Hakemus()

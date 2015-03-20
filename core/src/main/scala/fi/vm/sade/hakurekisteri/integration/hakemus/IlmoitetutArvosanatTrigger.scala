@@ -186,6 +186,19 @@ case class RicherOsaaminen(osaaminen: Map[String, String]) {
       case (key,value) => (key, ((value.groupBy({case (k,v) => k.split("_").head}))
         .mapValues(vals => vals.map({
         case (kxx,vxx) => (stringAfterFirstUnderscore(kxx),vxx)
+      }).filter(v => {
+        if(v._1.equals("")) {
+          isAllDigits(v._2)
+        } else if(v._1.equals("VAL1")) {
+          isAllDigits(v._2)
+        } else if(v._1.equals("VAL2")) {
+          isAllDigits(v._2)
+        } else if(v._1.equals("VAL3")) {
+          isAllDigits(v._2)
+        } else {
+          true
+        }
+        //== "" &&  && isAllDigits(v._2.get("VAL1")) && isAllDigits(v._2.get("VAL2")) && isAllDigits(v._2.get("VAL3"))
       }))
         .filter(v => v._2.contains(""))
         ))
@@ -194,12 +207,14 @@ case class RicherOsaaminen(osaaminen: Map[String, String]) {
   .filter(w => !w._2.isEmpty);
 
   private def stringAfterFirstUnderscore(source: String): String = if (!source.contains("_")) "" else source.substring(source.indexOf("_") + 1)
+  private def isAllDigits(x: Option[String]) = if (x.isEmpty) true else x.get forall Character.isDigit
+  private def isAllDigits(x: String) = x forall Character.isDigit
 
   def getLukio: Map[String,Map[String, String]] = {
-    groupByKomoAndGroupByAine("LK")
+    groupByKomoAndGroupByAine.get("LK").getOrElse(Map.empty)
   }
   def getPeruskoulu: Map[String,Map[String, String]] = {
-    groupByKomoAndGroupByAine("PK")
+    groupByKomoAndGroupByAine.get("PK").getOrElse(Map.empty)
   }
 
 }
