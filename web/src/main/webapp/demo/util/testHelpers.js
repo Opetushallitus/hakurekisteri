@@ -201,6 +201,15 @@ function openPage(path, predicate) {
     }
 }
 
+function exists(fn) {
+    if (typeof(fn) !== 'function') {
+        throw new Error('exists() got a non-function');
+    }
+    return wait.until(function() {
+        return fn().length > 0;
+    })
+}
+
 function autocomplete(inputFn, text, selectItemFn) {
     return seq(
         visible(inputFn),
