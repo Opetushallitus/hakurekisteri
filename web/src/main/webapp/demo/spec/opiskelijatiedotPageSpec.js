@@ -41,6 +41,17 @@
                         done(err)
                     })
             })
+
+            it('Voi hakea oppilaitoksen perusteella - test-dsl', seqDone(
+                wait.forAngular,
+                autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
+                wait.forAngular,
+                click(opiskelijatiedot.searchButton),
+                wait.forAngular,
+                function () {
+                    expect(opiskelijatiedot.resultsTable().length).to.equal(1)
+                }
+            ))
         })
 
         describe('Henkilohaku', function () {

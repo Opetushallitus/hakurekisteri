@@ -53,7 +53,7 @@ wait = {
                 var cond = condition();
                 if (cond) {
                     deferred.resolve()
-                } else if (remaining === 0) {
+                } else if (remaining < 1) {
                     deferred.reject("timeout of " + wait.maxWaitMs + " in wait.until")
                 } else {
                     setTimeout(function () {
@@ -201,13 +201,12 @@ function openPage(path, predicate) {
     }
 }
 
-function exists(fn) {
-    if (typeof(fn) !== 'function') {
-        throw new Error('exists() got a non-function');
-    }
-    return wait.until(function() {
-        return fn().length > 0;
-    })
+function autocomplete(inputFn, text, selectItemFn) {
+    return seq(
+        visible(inputFn),
+        function() { return inputFn().val(text).change()},
+        click(selectItemFn)
+    )
 }
 
 function takeScreenshot() {

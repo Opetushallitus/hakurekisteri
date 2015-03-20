@@ -51,3 +51,12 @@ function opiskelijatiedotPage() {
 
     return pageFunctions;
 }
+
+opiskelijatiedot = initSelectors({
+    organizationSearch: "#organisaatioTerm",
+    searchButton: "#filterForm button[type=submit]",
+    resultsTable: "#table-scroller tr",
+    organizationDropDownMenuChild: function(n) {
+        return "#filterForm ul.dropdown-menu li:nth-child("+n+")"
+    }
+})
