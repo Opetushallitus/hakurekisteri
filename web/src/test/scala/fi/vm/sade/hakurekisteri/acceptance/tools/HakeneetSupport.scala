@@ -39,6 +39,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object FullHakemus1 extends FullHakemus("1.25.1", Some("1.24.1"), "1.1",
     answers = Some(
       HakemusAnswers(
+        osaaminen = None,
         henkilotiedot = Some(
           HakemusHenkilotiedot(
             kansalaisuus = Some("FIN"),
@@ -63,6 +64,13 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             koulusivistyskieli = Some("FI"))),
         koulutustausta = Some(
           Koulutustausta(
+            pohjakoulutus_muu_vuosi = None,
+            perusopetuksen_kieli = None,
+            pohjakoulutus_yo_vuosi = None,
+            pohjakoulutus_am_vuosi = None,
+            pohjakoulutus_amt_vuosi = None,
+            pohjakoulutus_kk_pvm = None,
+            pohjakoulutus_ulk_vuosi = None,
             PK_PAATTOTODISTUSVUOSI = Some("2014"),
             POHJAKOULUTUS = Some("1"),
             lahtokoulu = Some(OppilaitosX.oid),
@@ -118,6 +126,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object FullHakemus2 extends FullHakemus("1.25.2", Some("1.24.2"), "1.2",
     answers = Some(
       HakemusAnswers(
+        osaaminen = None,
         henkilotiedot = Some(
           HakemusHenkilotiedot(
             kansalaisuus =  Some("FIN"),
@@ -142,6 +151,13 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             koulusivistyskieli = Some("FI"))),
         koulutustausta = Some(
           Koulutustausta(
+            pohjakoulutus_muu_vuosi = None,
+            perusopetuksen_kieli = None,
+            pohjakoulutus_yo_vuosi = None,
+            pohjakoulutus_am_vuosi = None,
+            pohjakoulutus_amt_vuosi = None,
+            pohjakoulutus_kk_pvm = None,
+            pohjakoulutus_ulk_vuosi = None,
             PK_PAATTOTODISTUSVUOSI = Some("2014"),
             POHJAKOULUTUS = Some("1"),
             lahtokoulu = Some(OppilaitosY.oid),
