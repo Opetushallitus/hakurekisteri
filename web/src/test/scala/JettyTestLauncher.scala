@@ -11,13 +11,12 @@ object JettyTestLauncher {
 }
 
 class JettyTestLauncher(val port: Int) {
-  sys.props.+=(("securityMode", "test"))
   val server = new Server(port)
   val context = new WebAppContext()
   context.setBaseResource(
     new ResourceCollection(Array("./web/src/main/webapp", "./web/target/javascript")))
   context.setContextPath("/")
-  context.setDescriptor("web/src/main/webapp/WEB-INF/web.xml")
+  context.setDescriptor("web/src/test/webapp/WEB-INF/web.xml")
   server.setHandler(context)
 
   def start = {
