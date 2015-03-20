@@ -57,6 +57,9 @@
                     .then(wait.forAngular)
                     .then(function () {
                         expect(page.resultsTable().length).to.equal(1)
+                        expect(page.henkiloTiedot().is(':visible')).to.equal(true)
+                        expect(page.suoritusTiedot().is(':visible')).to.equal(true)
+                        expect(page.luokkaTiedot().is(':visible')).to.equal(true)
                     }).then(function () {
                         done()
                     }, function (err) {
@@ -77,6 +80,32 @@
                     .then(wait.forAngular)
                     .then(function () {
                         expect(page.resultsTable().length).to.equal(1)
+                        expect(page.henkiloTiedot().is(':visible')).to.equal(true)
+                        expect(page.suoritusTiedot().is(':visible')).to.equal(true)
+                        expect(page.luokkaTiedot().is(':visible')).to.equal(true)
+                    }).then(function () {
+                        done()
+                    }, function (err) {
+                        done(err)
+                    })
+            })
+
+            it('Puuttuva hetu perusteella', function (done) {
+                exists(page.henkiloSearch)()
+                    .then(wait.forAngular)
+                    .then(function () {
+                        page.henkiloSearch().val('foobar').change()
+                    })
+                    .then(wait.forAngular)
+                    .then(function () {
+                        page.searchButton().click()
+                    })
+                    .then(wait.forAngular)
+                    .then(function () {
+                        expect(page.resultsTable().length).to.equal(0)
+                        expect(page.henkiloTiedot().is(':visible')).to.equal(false)
+                        expect(page.suoritusTiedot().is(':visible')).to.equal(false)
+                        expect(page.luokkaTiedot().is(':visible')).to.equal(false)
                     }).then(function () {
                         done()
                     }, function (err) {

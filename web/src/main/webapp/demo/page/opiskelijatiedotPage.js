@@ -25,6 +25,15 @@ function opiskelijatiedotPage() {
         dropDownMenu: function () {
             return S("#filterForm ul.dropdown-menu").first()
         },
+        henkiloTiedot: function () {
+            return S('#henkiloTiedot')
+        },
+        suoritusTiedot: function () {
+            return S('#suoritusTiedot')
+        },
+        luokkaTiedot: function () {
+            return S('#luokkaTiedot')
+        },
         resultsTable: function () {
             return S("#table-scroller").find("tr")
         },
