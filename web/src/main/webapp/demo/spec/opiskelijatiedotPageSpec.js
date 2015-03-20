@@ -131,7 +131,7 @@
                 exists(page.organizationSearch)()
                     .then(wait.forAngular)
                     .then(function () {
-                        page.organizationSearch().val("Pikkaralan+ala-aste").change()
+                        page.organizationSearch().val("Pik").change()
                     })
                     .then(wait.forAngular)
                     .then(function () {
