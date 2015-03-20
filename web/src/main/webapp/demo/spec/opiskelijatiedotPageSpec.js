@@ -44,11 +44,31 @@
         })
 
         describe('Henkilohaku', function () {
-            it('Voi hakea hetu perusteella', function (done) {
+            it('Voi hakea oidin perusteella', function (done) {
                 exists(page.henkiloSearch)()
                     .then(wait.forAngular)
                     .then(function () {
                         page.henkiloSearch().val('1.2.246.562.24.71944845619').change()
+                    })
+                    .then(wait.forAngular)
+                    .then(function () {
+                        page.searchButton().click()
+                    })
+                    .then(wait.forAngular)
+                    .then(function () {
+                        expect(page.resultsTable().length).to.equal(1)
+                    }).then(function () {
+                        done()
+                    }, function (err) {
+                        done(err)
+                    })
+            })
+
+            it('Voi hakea hetun perusteella', function (done) {
+                exists(page.henkiloSearch)()
+                    .then(wait.forAngular)
+                    .then(function () {
+                        page.henkiloSearch().val('123456-789').change()
                     })
                     .then(wait.forAngular)
                     .then(function () {
