@@ -56,7 +56,12 @@ opiskelijatiedot = initSelectors({
     organizationSearch: "#organisaatioTerm",
     searchButton: "#filterForm button[type=submit]",
     resultsTable: "#table-scroller tr",
+    resultsTableChild: function(n) {return "#table-scroller tr:nth-child("+n+")"},
     organizationDropDownMenuChild: function(n) {
         return "#filterForm ul.dropdown-menu li:nth-child("+n+")"
-    }
+    },
+    henkiloSearch: "#henkiloTerm",
+    henkiloTiedot: "#henkiloTiedot",
+    suoritusTiedot: "#suoritusTiedot",
+    luokkaTiedot: "#luokkaTiedot"
 })
