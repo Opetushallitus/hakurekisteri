@@ -79,7 +79,6 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
 
 app.run ($http, $log, MessageService) ->
   $http.get(henkiloServiceUrl + "/buildversion.txt?auth").success(->
-    $log.debug "called authentication-service successfully"
     return
   ).error ->
     MessageService.addMessage

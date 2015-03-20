@@ -7,7 +7,6 @@ angular.module('e2e-mocks', ['ngMockE2E'])
                  vcsRevision=xxx
                  buildTtime=20150227-0927"
   window.httpBackend = $httpBackend
-  console.debug("Mocks ON!")
 
   #Local templates
   $httpBackend.when('GET', /templates\/.*/).passThrough()
