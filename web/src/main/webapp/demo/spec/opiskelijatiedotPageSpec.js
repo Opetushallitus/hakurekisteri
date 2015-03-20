@@ -23,7 +23,7 @@
                 exists(page.organizationSearch)()
                     .then(wait.forAngular)
                     .then(function () {
-                        page.organizationSearch().val("Pikkaralan+ala-aste").change()
+                        page.organizationSearch().val("Pik").change()
                     })
                     .then(wait.forAngular)
                     .then(function () {
@@ -49,7 +49,7 @@
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
                 function () {
-                    expect(opiskelijatiedot.resultsTable().length).to.equal(1)
+                    expect(opiskelijatiedot.resultsTable().length).to.equal(5)
                 }
             ))
         })
