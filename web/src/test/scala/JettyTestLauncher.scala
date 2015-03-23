@@ -14,7 +14,7 @@ class JettyTestLauncher(val port: Int) {
   val server = new Server(port)
   val context = new WebAppContext()
   context.setBaseResource(
-    new ResourceCollection(Array("./web/src/main/webapp", "./web/target/javascript")))
+    new ResourceCollection(Array("./web/src/main/webapp", "./web/target/javascript", "./web/src/test/front-mock-files")))
   context.setContextPath("/")
   context.setDescriptor("web/src/test/webapp/WEB-INF/web.xml")
   server.setHandler(context)

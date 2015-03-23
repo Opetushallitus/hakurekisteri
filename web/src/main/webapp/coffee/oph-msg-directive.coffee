@@ -44,7 +44,6 @@ app.factory "LokalisointiService", [
     msgResource = localisationBackend + "?category=" + msgCategory
     localisationMyroles = []
     translations = inited: false
-    $log.info "backend: " + backendUrl
 
     service =
       lang: "fi"
@@ -66,7 +65,7 @@ app.factory "LokalisointiService", [
               translations[t.key][t.locale] = t
               i++
             translations.inited = true
-            $log.info "localisations inited, lang: " + service.lang + ", localisationBackend: " + localisationBackend + ", translations: " + translations.length
+#            $log.info "localisations inited, lang: " + service.lang + ", localisationBackend: " + localisationBackend + ", translations: " + translations.length
           callback()  if callback
           return
         return
@@ -96,7 +95,7 @@ app.factory "LokalisointiService", [
       x
 
     if window.msgCategory is `undefined`
-      $log.warn "msgCategory global variable not defined -> setting to: " + msgCategory
+#      $log.warn "msgCategory global variable not defined -> setting to: " + msgCategory
       window.msgCategory = msgCategory
 
     window.globalInitOphMsg = (callback) ->
