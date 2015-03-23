@@ -1,9 +1,19 @@
 /* master at https://github.com/Opetushallitus/haku/tree/master/haku-app/src/main/webapp/test/util/test-dsl.js */
 
+testDslDebug = false
+function dslDebug() {
+    if(testDslDebug) {
+        var args = Array.prototype.slice.call(arguments);
+        args.splice(0, 0, "test-dsl -")
+        console.log.apply(console, args);
+    }
+}
+
 function wrap(elementDefinition) {
     switch (typeof(elementDefinition)) {
         case 'string':
             return function() {
+                dslDebug("S("+elementDefinition+")")
                 return S(elementDefinition);
             };
         case 'function':
@@ -44,6 +54,7 @@ function visible(fn) {
         throw new Error('visible() got a non-function: ' + fn);
     }
     return wait.until(function() {
+        dslDebug("visible", fn().is(':visible'))
         return fn().is(':visible');
     })
 }
@@ -51,7 +62,10 @@ function visible(fn) {
 function input1(fn, value) {
     return seq(
         visible(fn),
-        function() { return fn().val(value).change().blur(); });
+        function() {
+            dslDebug("element visible and ready for input1", value)
+            return fn().val(value).change().blur();
+        });
 }
 
 function input(/* fn, value, fn, value, ... */) {
@@ -67,13 +81,14 @@ function input(/* fn, value, fn, value, ... */) {
 }
 
 function click(/* ...promises */) {
-    var fns = arguments;
+    var fns =  Array.prototype.slice.call(arguments);
     return function() {
-        var clickSequence = Object.keys(fns).map(function(i) {
-            var fn = fns[i];
+        dslDebug("click")
+        var clickSequence = fns.map(function(fn) {
             return seq(
                 visible(fn),
                 function() {
+                    dslDebug("element visible and ready to click. matched elements: ", fn().length)
                     fn().click();
                 });
         });
