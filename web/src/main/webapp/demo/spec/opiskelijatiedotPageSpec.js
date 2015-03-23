@@ -41,7 +41,7 @@
                         done(err)
                     })
             })
-
+/*
             it('Voi hakea oppilaitoksen perusteella - test-dsl', seqDone(
                 wait.forAngular,
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
@@ -52,6 +52,7 @@
                     expect(opiskelijatiedot.resultsTable().length).to.equal(5)
                 }
             ))
+            */
         })
 
         describe('Henkilohaku', function () {
@@ -77,7 +78,7 @@
                         done(err)
                     })
             })
-
+/*
             it('Voi hakea oidin perusteella - test-dsl', seqDone(
                 wait.forAngular,
                 input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
@@ -90,7 +91,7 @@
                     expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
                 }
             ))
-
+*/
             it('Voi hakea hetun perusteella', function (done) {
                 exists(page.henkiloSearch)()
                     .then(wait.forAngular)
@@ -113,7 +114,7 @@
                         done(err)
                     })
             })
-
+/*
             it('Voi hakea hetun perusteella - test.dsl', seqDone(
                 wait.forAngular,
                 input(opiskelijatiedot.henkiloSearch, '123456-789'),
@@ -126,7 +127,7 @@
                     expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
                 }
             ))
-
+*/
             it('Puuttuva hetu perusteella', function (done) {
                 exists(page.henkiloSearch)()
                     .then(wait.forAngular)
@@ -149,7 +150,7 @@
                         done(err)
                     })
             })
-
+/*
             it('Puuttuva hetu perusteella - test.dsl', seqDone(
                 wait.forAngular,
                 input(opiskelijatiedot.henkiloSearch, 'foobar'),
@@ -162,9 +163,9 @@
                     expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(false)
                 }
             ))
+ */
         })
 
-        //TODO: add checks
         describe('Muuta tietoja', function (done) {
             it('Etsi organisaatiosta henkiloita', function (done) {
                 exists(page.organizationSearch)()
@@ -202,6 +203,7 @@
                         done(err)
                     })
             })
+/*
             it('Etsi organisaatiosta henkiloita - test.dsl', seqDone(
                 wait.forAngular,
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
@@ -218,6 +220,7 @@
                 wait.forAngular,
                 click(opiskelijatiedot.resultsTableChild(5))
             ))
+*/
         })
     })
 })();
