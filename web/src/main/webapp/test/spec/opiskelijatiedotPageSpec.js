@@ -74,6 +74,10 @@
 
         describe('Oppilaiden valitseminen/etsiminen organisaatiossa', function () {
 
+            function assertText(selector, val) {
+                expect(selector().text().trim()).to.equal(val)
+            }
+
             function areElementsVisible() {
                 return opiskelijatiedot.henkiloTiedot().is(':visible') &&
                     opiskelijatiedot.suoritusTiedot().is(':visible') &&
@@ -90,31 +94,31 @@
                 wait.forAngular,
                 function () {
                     expect(areElementsVisible()).to.equal(true)
-                    expect(page.hetuTieto()).to.equal("123456-789")
+                    assertText(opiskelijatiedot.hetuTieto, "123456-789")
                 },
                 click(opiskelijatiedot.resultsTableChild(2)),
                 wait.forAngular,
                 function () {
                     expect(areElementsVisible()).to.equal(true)
-                    expect(page.hetuTieto()).to.equal("010719-917S")
+                    assertText(opiskelijatiedot.hetuTieto, "010719-917S")
                 },
                 click(opiskelijatiedot.resultsTableChild(3)),
                 wait.forAngular,
                 function () {
                     expect(areElementsVisible()).to.equal(true)
-                    expect(page.hetuTieto()).to.equal("060398-7570")
+                    assertText(opiskelijatiedot.hetuTieto, "060398-7570")
                 },
                 click(opiskelijatiedot.resultsTableChild(4)),
                 wait.forAngular,
                 function () {
                     expect(areElementsVisible()).to.equal(true)
-                    expect(page.hetuTieto()).to.equal("090700-386W")
+                    assertText(opiskelijatiedot.hetuTieto, "090700-386W")
                 },
                 click(opiskelijatiedot.resultsTableChild(5)),
                 wait.forAngular,
                 function () {
                     expect(areElementsVisible()).to.equal(true)
-                    expect(page.hetuTieto()).to.equal("260420-382F")
+                    assertText(opiskelijatiedot.hetuTieto, "260420-382F")
                 }
             ))
         })
