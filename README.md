@@ -5,7 +5,7 @@
 
 1. Aja `./sbt compile` joka myös buildaa frontin.
 2. Käynnistä mock-serveri IDEAsta: `JettyTestLauncher`.
-3. Avaa testisivu selaimessa: http://localhost:8080/demo/runner.html
+3. Avaa testisivu selaimessa: http://localhost:8080/test/runner.html
 
 ## Fronttidevaus
 

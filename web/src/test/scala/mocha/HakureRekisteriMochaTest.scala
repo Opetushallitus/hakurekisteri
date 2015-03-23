@@ -36,7 +36,7 @@ class HakureRekisteriMochaTest extends FlatSpec with Matchers {
   "Mocha tests" should "pass" in {
     val jettyPort: Int = findFreeLocalPort
     new JettyTestLauncher(jettyPort).withJetty {
-      val pb = Seq("node_modules/mocha-phantomjs/bin/mocha-phantomjs", "-R", "spec", "http://localhost:" + jettyPort + "/demo/runner.html")
+      val pb = Seq("node_modules/mocha-phantomjs/bin/mocha-phantomjs", "-R", "spec", "http://localhost:" + jettyPort + "/test/runner.html")
       val res = pb.!
       res should be(0)
     }

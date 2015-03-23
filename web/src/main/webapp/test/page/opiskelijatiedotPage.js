@@ -11,32 +11,6 @@ function opiskelijatiedotPage() {
         filterForm: function () {
             return S("#filterForm").first()
         },
-        organizationSearch: function () {
-            return S("#organisaatioTerm")
-        },
-        henkiloSearch: function () {
-            return S('#henkiloTerm')
-        },
-        searchButton: function () {
-            return Button(function () {
-                return S("#filterForm button[type=submit]").first()
-            })
-        },
-        dropDownMenu: function () {
-            return S("#filterForm ul.dropdown-menu").first()
-        },
-        henkiloTiedot: function () {
-            return S('#henkiloTiedot')
-        },
-        suoritusTiedot: function () {
-            return S('#suoritusTiedot')
-        },
-        luokkaTiedot: function () {
-            return S('#luokkaTiedot')
-        },
-        resultsTable: function () {
-            return S("#table-scroller").find("tr")
-        },
         openPage: function (done) {
             return opiskelijatiedotPage()
                 .then(wait.until(function () {
