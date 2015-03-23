@@ -112,7 +112,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
       case Failure(e) => s"failure: $e"
     }
 
-    val res = client(url(requestUrl) << requestEnvelope > VirtaHandler)
+    val res = client((url(requestUrl) << requestEnvelope).setContentType("text/xml", "UTF-8") > VirtaHandler)
     res.onComplete(t => logger.info(s"virta query for $oppijanumero took ${Platform.currentTime - t0} ms, result ${result(t)}"))
     res
   }
