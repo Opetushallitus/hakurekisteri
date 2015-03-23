@@ -21,6 +21,9 @@
         describe("Haku", function () {
             it('Voi hakea oppilaitoksen perusteella - test-dsl', seqDone(
                 wait.forAngular,
+                function() {
+                    httpFixtures().organisaatioService.pikkarala()
+                },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
                 wait.forAngular,
                 click(opiskelijatiedot.searchButton),
@@ -86,6 +89,9 @@
 
             it('Etsi organisaatiosta henkiloita - test.dsl', seqDone(
                 wait.forAngular,
+                function() {
+                    httpFixtures().organisaatioService.pikkarala()
+                },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
                 wait.forAngular,
                 click(opiskelijatiedot.searchButton),
