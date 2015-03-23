@@ -11,6 +11,9 @@ function opiskelijatiedotPage() {
         filterForm: function () {
             return S("#filterForm").first()
         },
+        hetuTieto: function () {
+          return S('#hetuTieto').children().next().text().trim()
+        },
         openPage: function (done) {
             return opiskelijatiedotPage()
                 .then(wait.until(function () {

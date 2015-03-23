@@ -87,28 +87,34 @@
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
                 click(opiskelijatiedot.resultsTableChild(1)),
+                wait.forAngular,
                 function () {
                     expect(areElementsVisible()).to.equal(true)
+                    expect(page.hetuTieto()).to.equal("123456-789")
                 },
-                wait.forAngular,
                 click(opiskelijatiedot.resultsTableChild(2)),
+                wait.forAngular,
                 function () {
                     expect(areElementsVisible()).to.equal(true)
+                    expect(page.hetuTieto()).to.equal("010719-917S")
                 },
-                wait.forAngular,
                 click(opiskelijatiedot.resultsTableChild(3)),
+                wait.forAngular,
                 function () {
                     expect(areElementsVisible()).to.equal(true)
+                    expect(page.hetuTieto()).to.equal("060398-7570")
                 },
-                wait.forAngular,
                 click(opiskelijatiedot.resultsTableChild(4)),
-                function () {
-                    expect(areElementsVisible()).to.equal(true)
-                },
                 wait.forAngular,
-                click(opiskelijatiedot.resultsTableChild(5)),
                 function () {
                     expect(areElementsVisible()).to.equal(true)
+                    expect(page.hetuTieto()).to.equal("090700-386W")
+                },
+                click(opiskelijatiedot.resultsTableChild(5)),
+                wait.forAngular,
+                function () {
+                    expect(areElementsVisible()).to.equal(true)
+                    expect(page.hetuTieto()).to.equal("260420-382F")
                 }
             ))
         })
