@@ -73,43 +73,6 @@
         })
 
         describe('Muuta tietoja', function (done) {
-            it('Etsi organisaatiosta henkiloita', function (done) {
-                exists(page.organizationSearch)()
-                    .then(wait.forAngular)
-                    .then(function () {
-                        page.organizationSearch().val("Pik").change()
-                    })
-                    .then(wait.forAngular)
-                    .then(function () {
-                        page.dropDownMenu().children().first().click()
-                    })
-                    .then(function () {
-                        page.searchButton().click()
-                    })
-                    .then(function () {
-                        page.resultsTable().children().eq(0).click()
-                    })
-                    .then(wait.forAngular)
-                    .then(function () {
-                        page.resultsTable().children().eq(3).click()
-                    })
-                    .then(wait.forAngular).then(function () {
-                        page.resultsTable().children().eq(6).click()
-                    })
-                    .then(wait.forAngular).then(function () {
-                        page.resultsTable().children().eq(9).click()
-                    })
-                    .then(wait.forAngular).then(function () {
-                        page.resultsTable().children().eq(12).click()
-                    })
-                    .then(wait.forAngular)
-                    .then(function () {
-                        done()
-                    }, function (err) {
-                        done(err)
-                    })
-            })
-/*
             it('Etsi organisaatiosta henkiloita - test.dsl', seqDone(
                 wait.forAngular,
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
@@ -126,7 +89,6 @@
                 wait.forAngular,
                 click(opiskelijatiedot.resultsTableChild(5))
             ))
-*/
         })
     })
 })();
