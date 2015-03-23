@@ -61,18 +61,8 @@ object HakurekisteriBuild extends Build {
   val webDeps =  Seq(
     "org.eclipse.jetty" % "jetty-webapp" % "9.1.5.v20140505" % "container",
     "org.eclipse.jetty" % "jetty-plus" % "9.1.5.v20140505" % "container",
-    "javax.servlet" % "javax.servlet-api" % "3.1.0"
-    ,"validator" % "hakurekisteri-validation" % "0.1.0-SNAPSHOT"
-  )
-
-  val clojureDeps =  Seq(
-    "validator" % "hakurekisteri-validation" % "0.1.0-SNAPSHOT",
-    "com.cemerick" % "austin" % "0.1.6",
-    "lein-midje" % "lein-midje" % "3.1.1",
-    "lein-kibit" % "lein-kibit" % "0.0.8",
-    "jonase" % "eastwood" % "0.2.1",
-    "cljsbuild" % "cljsbuild" % "1.0.5",
-    "com.birdseye-sw" % "lein-dalap" % "0.1.0"
+    "javax.servlet" % "javax.servlet-api" % "3.1.0",
+    "validator" % "hakurekisteri-validation" % "0.1.0-SNAPSHOT"
   )
 
   val dependencies = Seq(
@@ -209,7 +199,7 @@ object HakurekisteriBuild extends Build {
         artifactoryPublish,
         buildversionTask,
         libraryDependencies ++=  ScalatraStack.map(_ % ScalatraVersion)
-          ++ SecurityStack ++ webDeps ++ clojureDeps
+          ++ SecurityStack ++ webDeps
       )).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
 
   }.dependsOn(core % "test->test;compile->compile")
