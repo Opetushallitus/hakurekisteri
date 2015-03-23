@@ -23,6 +23,7 @@
                 wait.forAngular,
                 function() {
                     httpFixtures().organisaatioService.pikkarala()
+                    httpFixtures().authenticationService.aarne();
                 },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
                 wait.forAngular,
@@ -37,6 +38,9 @@
         describe('Henkilohaku', function () {
             it('Voi hakea oidin perusteella - test-dsl', seqDone(
                 wait.forAngular,
+                function() {
+                    httpFixtures().authenticationService.aarne();
+                },
                 input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
@@ -50,6 +54,9 @@
 
             it('Voi hakea hetun perusteella - test.dsl', seqDone(
                 wait.forAngular,
+                function() {
+                    httpFixtures().authenticationService.aarne();
+                },
                 input(opiskelijatiedot.henkiloSearch, '123456-789'),
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
@@ -63,6 +70,9 @@
 
             it('Puuttuva hetu perusteella - test.dsl', seqDone(
                 wait.forAngular,
+                function() {
+                    httpFixtures().authenticationService.foobar()
+                },
                 input(opiskelijatiedot.henkiloSearch, 'foobar'),
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
@@ -90,7 +100,9 @@
             it('Etsi organisaatiosta henkiloita - test.dsl', seqDone(
                 wait.forAngular,
                 function() {
-                    httpFixtures().organisaatioService.pikkarala()
+                    httpFixtures().organisaatioService.pikkarala();
+                    httpFixtures().authenticationService.aarne();
+                    httpFixtures().authenticationService.tyyne();
                 },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
                 wait.forAngular,
@@ -107,24 +119,6 @@
                 function () {
                     expect(areElementsVisible()).to.equal(true)
                     assertText(opiskelijatiedot.hetuTieto, "010719-917S")
-                },
-                click(opiskelijatiedot.resultsTableChild(3)),
-                wait.forAngular,
-                function () {
-                    expect(areElementsVisible()).to.equal(true)
-                    assertText(opiskelijatiedot.hetuTieto, "060398-7570")
-                },
-                click(opiskelijatiedot.resultsTableChild(4)),
-                wait.forAngular,
-                function () {
-                    expect(areElementsVisible()).to.equal(true)
-                    assertText(opiskelijatiedot.hetuTieto, "090700-386W")
-                },
-                click(opiskelijatiedot.resultsTableChild(5)),
-                wait.forAngular,
-                function () {
-                    expect(areElementsVisible()).to.equal(true)
-                    assertText(opiskelijatiedot.hetuTieto, "260420-382F")
                 }
             ))
         })

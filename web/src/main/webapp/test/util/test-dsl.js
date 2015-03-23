@@ -1,6 +1,6 @@
 /* master at https://github.com/Opetushallitus/haku/tree/master/haku-app/src/main/webapp/test/util/test-dsl.js */
 
-testDslDebug = true
+testDslDebug = false
 function dslDebug() {
     if(testDslDebug) {
         var args = Array.prototype.slice.call(arguments);
