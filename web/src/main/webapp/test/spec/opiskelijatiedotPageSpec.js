@@ -32,6 +32,7 @@
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
@@ -55,6 +56,7 @@
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().suorituksetLocal.aarnenSuoritukset()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
                 input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
@@ -79,6 +81,7 @@
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                     httpFixtures().luokkaTiedotLocal.tyynenLuokkaTiedotHetulla()
+                    httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
                 input(opiskelijatiedot.henkiloSearch, '123456-789'),
@@ -141,6 +144,7 @@
                     httpFixtures().arvosanatLocal.tyynenArvosanat()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                     httpFixtures().luokkaTiedotLocal.tyynenLuokkaTiedot()
+                    httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),

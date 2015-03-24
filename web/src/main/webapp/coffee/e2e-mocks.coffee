@@ -9,7 +9,6 @@ angular.module('e2e-mocks', ['ngMockE2E'])
   $httpBackend.when('GET', /.*rest\/v1\/rekisteritiedot\/light\?oppilaitosOid=1\.2\.246\.562\.10\.39644336305&vuosi=2015$/).respond([{"henkilo":"1.2.246.562.24.71944845619","luokka":"9A","arvosanat":true},{"henkilo":"1.2.246.562.24.49719248091","luokka":"9A","arvosanat":true},{"henkilo":"1.2.246.562.24.76359038731","luokka":"9A","arvosanat":true},{"henkilo":"1.2.246.562.24.87951154293","luokka":"9A","arvosanat":true},{"henkilo":"1.2.246.562.24.98743797763","luokka":"9A","arvosanat":true}])
 
   $httpBackend.when('GET', /.*rest\/v1\/opiskeluoikeudet\?henkilo.*/).respond([])
-  $httpBackend.when('GET', /.*rest\/v1\/komo/).respond({"yotutkintoKomoOid":"1.2.246.562.5.2013061010184237348007","perusopetusKomoOid":"1.2.246.562.13.62959769647","lisaopetusKomoOid":"1.2.246.562.5.2013112814572435044876","ammattistarttiKomoOid":"1.2.246.562.5.2013112814572438136372","valmentavaKomoOid":"1.2.246.562.5.2013112814572435755085","ammatilliseenvalmistavaKomoOid":"1.2.246.562.5.2013112814572441001730","ulkomainenkorvaavaKomoOid":"1.2.246.562.13.86722481404","lukioKomoOid":"TODO lukio komo oid","ammatillinenKomoOid":"TODO ammatillinen komo oid","lukioonvalmistavaKomoOid":"1.2.246.562.5.2013112814572429142840","ylioppilastutkintolautakunta":"1.2.246.562.10.43628088406"})
 
   $httpBackend.when('GET', /.*\/authentication-service\/buildversion\.txt\?auth/).respond("artifactId=authentication-service
                  version=13.0-MOCK
