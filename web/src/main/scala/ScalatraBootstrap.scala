@@ -118,6 +118,8 @@ class ScalatraBootstrap extends LifeCycle {
       ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto, Arvosanat, ArvosanatKoodisto),
       ("/virta", "virta") -> new VirtaResource(integrations.virtaQueue)
     )
+
+    context mount (new ValidatorJavascriptServlet, "/")
   }
 
   def mountServlets(context: ServletContext)(servlets: ((String, String), Servlet with Handler)*) = {

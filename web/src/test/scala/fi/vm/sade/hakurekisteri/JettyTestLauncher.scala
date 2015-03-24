@@ -1,8 +1,13 @@
 package fi.vm.sade.hakurekisteri
 
+import javax.servlet.ServletContext
+
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.ResourceCollection
 import org.eclipse.jetty.webapp.WebAppContext
+import org.scalatra.LifeCycle
+import org.scalatra.servlet.ScalatraListener
+import siirto.ValidatorJavascriptServlet
 
 object JettyTestLauncher {
   def main(args: Array[String]) {
@@ -17,6 +22,9 @@ class JettyTestLauncher(val port: Int) {
     new ResourceCollection(Array("./web/src/main/webapp", "./web/target/javascript", "./web/src/test/front-mock-files")))
   context.setContextPath("/")
   context.setDescriptor("web/src/test/webapp/WEB-INF/web.xml")
+  context.setInitParameter(ScalatraListener.LifeCycleKey, "fi.vm.sade.hakurekisteri.TestScalatraBootstrap")
+  context.addEventListener(new ScalatraListener)
+
   server.setHandler(context)
 
   def start = {
@@ -31,5 +39,11 @@ class JettyTestLauncher(val port: Int) {
     } finally {
       server.stop
     }
+  }
+}
+
+class TestScalatraBootstrap extends LifeCycle {
+  override def init(context: ServletContext) {
+    context mount (new ValidatorJavascriptServlet, "/")
   }
 }
