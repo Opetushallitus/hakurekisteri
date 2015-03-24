@@ -25,7 +25,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
 
   log.info("starting processing actor")
 
-  private val processStarter: Cancellable = system.scheduler.schedule(1.minute, 15.seconds, self, ProcessReadyBatches)
+  private val processStarter: Cancellable = system.scheduler.schedule(20.minute, 15.seconds, self, ProcessReadyBatches)
   override def postStop(): Unit = {
     processStarter.cancel()
   }
