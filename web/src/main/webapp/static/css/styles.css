@@ -289,3 +289,6 @@ optgroup option {
 .paddedRow>td:first-child {
     padding-left: 15px;
 }
+.validation-error {
+    color: #a94442;
+}
