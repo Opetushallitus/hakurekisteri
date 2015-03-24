@@ -58,7 +58,7 @@ app.controller "TiedonsiirtoCtrl", [
             messageKey: "suoritusrekisteri.tiedonsiirto.tyyppiaeiolevalittu"
         )
         false
-      if supportsFileApi && fileupload.files.length is 0
+      if !fileupload.value
         $scope.$apply(->
           MessageService.addMessage
             type: "danger"
