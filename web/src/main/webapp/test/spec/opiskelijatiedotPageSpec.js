@@ -28,6 +28,7 @@
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
+                    httpFixtures().suoritukset.aarnenSuoritukset()
                 },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
                 wait.forAngular,
@@ -47,6 +48,7 @@
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                    httpFixtures().suoritukset.aarnenSuoritukset()
                 },
                 input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                 click(opiskelijatiedot.searchButton),
@@ -66,6 +68,7 @@
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                    httpFixtures().suoritukset.aarnenSuoritukset()
                 },
                 input(opiskelijatiedot.henkiloSearch, '123456-789'),
                 click(opiskelijatiedot.searchButton),
@@ -118,6 +121,8 @@
                     httpFixtures().henkiloPalveluService.tyyne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
+                    httpFixtures().suoritukset.aarnenSuoritukset()
+                    httpFixtures().suoritukset.tyynenSuoritukset()
                 },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
                 wait.forAngular,
