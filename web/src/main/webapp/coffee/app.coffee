@@ -11,7 +11,6 @@ app = angular.module "myApp", [
 
 if (window.mocksOn)
   angular.module('myApp').requires.push('e2e-mocks')
-  angular.module('myApp').requires.push('koodisto-mocks')
   angular.module('myApp').requires.push('lokalisointi-mocks')
 
 app.factory "Opiskelijat", ($resource) ->
