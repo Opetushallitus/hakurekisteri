@@ -4,6 +4,7 @@ app.controller "TiedonsiirtoCtrl", [
   "MessageService"
   "$log"
   ($scope, MurupolkuService, MessageService, $log) ->
+    supportsFileApi = window.FileReader?
     isImportBatchResponse = (content) ->
       (typeof content is "string" and content.match(/.*"batchType".*/g)) or (typeof content is "object" and content.batchType)
 
@@ -31,7 +32,7 @@ app.controller "TiedonsiirtoCtrl", [
         $log.error(e)
 
     $scope.validateXmlFile = ->
-      if $scope.tyyppi is "arvosanat"
+      if supportsFileApi and $scope.tyyppi is "arvosanat"
         file = fileupload.files[0]
         reader = new FileReader()
         reader.readAsText(file)
@@ -57,7 +58,7 @@ app.controller "TiedonsiirtoCtrl", [
             messageKey: "suoritusrekisteri.tiedonsiirto.tyyppiaeiolevalittu"
         )
         false
-      if fileupload.files.length is 0
+      if supportsFileApi && fileupload.files.length is 0
         $scope.$apply(->
           MessageService.addMessage
             type: "danger"
