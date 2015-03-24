@@ -8,6 +8,7 @@ import akka.actor._
 import akka.pattern.{AskTimeoutException, ask, pipe}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
+import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchQuery}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
 import fi.vm.sade.hakurekisteri.hakija.Hakemus
 import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
@@ -35,6 +36,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
                        opiskelijaRekisteri: ActorRef,
                        opiskeluoikeusRekisteri: ActorRef,
                        suoritusRekisteri: ActorRef,
+                       eraRekisteri: ActorRef,
                        ytl: ActorRef,
                        hakemukset: ActorRef,
                        ensikertalainenActor: ActorRef,
@@ -42,8 +44,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(30, TimeUnit.SECONDS)
 
-
-  val resources = Set("Arvosana", "Suoritus", "Opiskeluoikeus", "Opiskelija")
+  val resources = Set("Arvosana", "Suoritus", "Opiskeluoikeus", "Opiskelija", "ImportBatch")
 
   val healthCheckUser = BasicUser("healthcheck", resources.map(ReadRole( _, Config.ophOrganisaatioOid)))
   var foundHakemukset:Map[String, RefreshingState] = Map()
@@ -66,25 +67,23 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
     case SelfCheck(id) =>
       selfChecks = selfChecks + (id -> Platform.currentTime)
       self ! Measure(id)
-      writer ! Query
+
     case Measure(id) =>
       val arrival = Platform.currentTime
       val roundTrip = selfChecks.get(id).map(arrival - _)
-      if (!(roundTrip.getOrElse(0L) < 30000)) log.warning(s"Healthcheck is too slow. Measured roundtrip over 30s ${roundTrip}ms")
+      if (!(roundTrip.getOrElse(0L) < 30000)) log.warning(s"Healthcheck is too slow. Measured roundtrip over 30s: ${roundTrip}ms")
       selfChecks = selfChecks - id
+
     case Hakemukset(oid, count) =>
       val curState = foundHakemukset.get(oid).map{
         case RefreshingState(max, latest) if  max.amount <= count.amount => RefreshingState(count, count)
         case RefreshingState(max, latest) => RefreshingState(max, count)
       }.getOrElse(RefreshingState(count, count))
       foundHakemukset = foundHakemukset + (oid -> curState)
+
     case "healthcheck" =>
-      val combinedFuture =
-        checkState
-
-      combinedFuture pipeTo sender
+      checkState pipeTo sender
   }
-
 
   def checkState: Future[Healhcheck] = {
     val startTime = Platform.currentTime
@@ -93,6 +92,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       opiskelijaCount <- getOpiskelijaCount
       opiskeluoikeusCount <- getOpiskeluoikeusCount
       suoritusCount <- getSuoritusCount
+      eraCount <- getEraCount
       hakemusCount <- getHakemusCount
       ytlReport <- getYtlReport
       ensikertalaiset <- getEnsikertalainenReport
@@ -106,12 +106,13 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
         opiskeluoikeudet = opiskeluoikeusCount,
         suoritukset = suoritusCount,
         hakemukset = hakemusCount,
+        erat = eraCount,
         foundHakemukset = foundHakemukset,
         ensikertalaiset,
         ytl = ytlReport,
         virta = virtaStatus
-      )),"")}
-
+      )), "")
+  }
 
   def getVirtaStatus: Future[VirtaStatus] = (virtaQueue ? VirtaHealth).mapTo[VirtaStatus].recover {
     case e: AskTimeoutException => VirtaStatus(queueLength = 0, status = Status.TIMEOUT)
@@ -127,7 +128,6 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   def getYtlReport: Future[YtlStatus] = {
     val ytlFuture = (ytl ? Report).mapTo[YtlReport]
 
-
     ytlFuture.map((yr) => { YtlOk(
       waitingForAnswer = yr.waitingforAnswers.map(BatchReport(_)),
       yr.nextSend
@@ -135,7 +135,14 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       case e: AskTimeoutException => new YtlFailure(Status.TIMEOUT)
       case e: Throwable => log.error(e, "error getting ytl status"); new YtlFailure(Status.FAILURE)
     }
+  }
 
+  def getEraCount: Future[ItemCount] = {
+    val batchFuture = (eraRekisteri ? AuthorizedQuery(ImportBatchQuery(None, None, None), healthCheckUser)).mapTo[Seq[ImportBatch with Identified[UUID]]]
+    batchFuture.map((b) => { new ItemCount(Status.OK, b.length.toLong) }).recover  {
+      case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
+      case e: Throwable => log.error(e, "error getting era count"); new ItemCount(Status.FAILURE, 0)
+    }
   }
 
   def getArvosanaCount: Future[ItemCount] = {
@@ -211,6 +218,7 @@ case class Resources(arvosanat: ItemCount,
                      opiskeluoikeudet: ItemCount,
                      suoritukset: ItemCount,
                      hakemukset: ItemCount,
+                     erat: ItemCount,
                      foundHakemukset: Map[String, RefreshingState],
                      ensikertalainenQueries: QueryReport,
                      ytl: YtlStatus,
