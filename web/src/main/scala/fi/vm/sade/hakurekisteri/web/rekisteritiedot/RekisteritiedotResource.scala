@@ -33,7 +33,7 @@ import fi.vm.sade.hakurekisteri.Config
 import org.scalatra.commands.ModelValidation
 import scalaz.{Failure, Success, NonEmptyList, Validation}
 import java.util
-import fi.vm.sade.hakurekisteri.web.validation.{Validatable, ScalaValidator}
+import fi.vm.sade.hakurekisteri.web.validation.{SimpleValidatable, Validatable, ScalaValidator}
 import collection.JavaConversions._
 
 
@@ -46,7 +46,7 @@ class RekisteritiedotResource(val rekisterit: Registers)
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 500.seconds
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
-  val valid = new hakurekisteri.api.HakurekisteriValidator() with ScalaValidator;
+  val valid = new hakurekisteri.api.HakurekisteriValidator() with ScalaValidator
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
@@ -126,9 +126,7 @@ class RekisteritiedotResource(val rekisterit: Registers)
 
 
       def hasArvosanat(todistukset:Seq[Todistus]): Boolean = {
-        implicit val v: Validatable[Todistus] = new Validatable[Todistus] {
-          override def validatableResource(v: Todistus): AnyRef = ValidatedTodistus(v.suoritus, v.arvosanat)
-        }
+        implicit val v: Validatable[Todistus] = SimpleValidatable((t) => ValidatedTodistus(t.suoritus, t.arvosanat))
         !todistukset.exists{
           case Todistus(s: VirallinenSuoritus, arvosanat) if tarkastetut.contains(s.komo) && arvosanat.isEmpty => true
           case t:Todistus => valid.validateData(t).isFailure

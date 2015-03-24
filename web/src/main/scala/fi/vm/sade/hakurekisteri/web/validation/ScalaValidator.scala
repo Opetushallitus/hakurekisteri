@@ -1,26 +1,39 @@
 package fi.vm.sade.hakurekisteri.web.validation
 
-import scalaz.{Failure, Success, NonEmptyList, Validation}
+import scalaz._
 import collection.JavaConversions._
+import scala.util.Try
+import scala.util.control.Exception._
+import scalaz.Success
+import scalaz.Failure
 
 
-trait Validatable[T] {
-  def validatableResource(v:T):AnyRef
+trait Validatable[T]  {
+  def validatableResource(v:T):ValidationNel[String, AnyRef]
+
+}
+
+case class SimpleValidatable[O,T <: AnyRef](converter: O => T) extends Validatable[O] with ValidationFunctions{
+
+  override def validatableResource(v: O): ValidationNel[String, T] =
+    fromTryCatch{converter(v)}.leftMap(_.getLocalizedMessage).toValidationNel
 
 }
 
 trait ScalaValidator { this: validator.api.Validator =>
 
-  def convert(resource: AnyRef, failures:List[validator.api.ValidationResult]):Validation[NonEmptyList[String], AnyRef] = failures match {
-    case failures if failures.isEmpty => Success(resource)
-    case first :: rest => Failure(NonEmptyList(first.getFailedRule, rest.map(_.getFailedRule):_*))
+
+
+  def validateData[V <: AnyRef :Validatable](data:V):ValidationNel[String, V] = {
+    for (
+      resource <- implicitly[Validatable[V]].validatableResource(data);
+      res <- convert(validate(resource).toList)
+    ) yield data
   }
 
-  def validateData[V <: AnyRef :Validatable](data:V):Validation[NonEmptyList[String], AnyRef] = {
-
-    val resource = implicitly[Validatable[V]].validatableResource(data)
-    println(resource)
-    convert(data, validate(resource).toList)
+  def convert[V <: AnyRef](failures:List[validator.api.ValidationResult]):ValidationNel[String, Unit] = failures match {
+    case first :: rest => Failure(NonEmptyList(first.getFailedRule, rest.map(_.getFailedRule):_*))
+    case _ => Success(())
   }
 
 

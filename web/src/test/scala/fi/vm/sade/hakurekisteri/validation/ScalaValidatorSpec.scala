@@ -4,7 +4,7 @@ import org.scalatest.{Matchers, FlatSpec}
 import validator.api.{ValidationResult, Validator}
 import _root_.java.{util => java}
 import org.scalatest.mock.MockitoSugar
-import fi.vm.sade.hakurekisteri.web.validation.{Validatable, ScalaValidator}
+import fi.vm.sade.hakurekisteri.web.validation.{SimpleValidatable, Validatable, ScalaValidator}
 import fi.vm.sade.hakurekisteri.TestResource
 import org.mockito.Mockito._
 import org.mockito.Mockito
@@ -17,9 +17,7 @@ class ScalaValidatorSpec extends FlatSpec with Matchers with MockitoSugar {
   it should "use converter prior validation" in {
     val extractor = (tr:TestResource) => tr.name
 
-    implicit val trv:Validatable[TestResource] = new Validatable[TestResource] {
-      override def validatableResource(v: TestResource): AnyRef = extractor(v)
-    }
+    implicit val trv:Validatable[TestResource] = SimpleValidatable(extractor)
 
     val tested = TestResource("testing")
     val mockValidator = mock[Validator]
@@ -35,9 +33,9 @@ class ScalaValidatorSpec extends FlatSpec with Matchers with MockitoSugar {
   }
 
   it should "result in success for empty list form validation" in {
-    implicit val trv:Validatable[TestResource] = new Validatable[TestResource] {
-      override def validatableResource(v: TestResource): AnyRef = v.name
-    }
+    val extractor = (tr:TestResource) => tr.name
+
+    implicit val trv:Validatable[TestResource] = SimpleValidatable(extractor)
 
     val tested = TestResource("testing")
     val mockValidator = mock[Validator]
@@ -51,9 +49,9 @@ class ScalaValidatorSpec extends FlatSpec with Matchers with MockitoSugar {
   }
 
   it should "result in failure for non empty list form validation" in {
-    implicit val trv:Validatable[TestResource] = new Validatable[TestResource] {
-      override def validatableResource(v: TestResource): AnyRef = v.name
-    }
+    val extractor = (tr:TestResource) => tr.name
+
+    implicit val trv:Validatable[TestResource] = SimpleValidatable(extractor)
 
     val tested = TestResource("testing")
     val mockValidator = mock[Validator]
@@ -67,9 +65,9 @@ class ScalaValidatorSpec extends FlatSpec with Matchers with MockitoSugar {
   }
 
   it should "return a non empty list containing failed rules in failure" in {
-    implicit val trv:Validatable[TestResource] = new Validatable[TestResource] {
-      override def validatableResource(v: TestResource): AnyRef = v.name
-    }
+    val extractor = (tr:TestResource) => tr.name
+
+    implicit val trv:Validatable[TestResource] = SimpleValidatable(extractor)
 
     val tested = TestResource("testing")
     val mockValidator = mock[Validator]
