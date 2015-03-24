@@ -6,7 +6,7 @@ angular.module('e2e-mocks', ['ngMockE2E'])
   $httpBackend.when('GET', /templates\/.*/).passThrough()
 
   # Mocked local services
-  $httpBackend.when('GET', /.*rest\/v1\/rekisteritiedot\/light\?oppilaitosOid=1\.2\.246\.562\.10\.39644336305&vuosi=2015$/).respond([{"henkilo":"1.2.246.562.24.71944845619","luokka":"9A","arvosanat":true},{"henkilo":"1.2.246.562.24.49719248091","luokka":"9A","arvosanat":true},{"henkilo":"1.2.246.562.24.76359038731","luokka":"9A","arvosanat":true},{"henkilo":"1.2.246.562.24.87951154293","luokka":"9A","arvosanat":true},{"henkilo":"1.2.246.562.24.98743797763","luokka":"9A","arvosanat":true}])
+  #$httpBackend.when('GET', /.*rest\/v1\/rekisteritiedot\/light\?oppilaitosOid=1\.2\.246\.562\.10\.39644336305&vuosi=2015$/).respond([{"henkilo":"1.2.246.562.24.71944845619","luokka":"9A","arvosanat":true},{"henkilo":"1.2.246.562.24.49719248091","luokka":"9A","arvosanat":true},{"henkilo":"1.2.246.562.24.76359038731","luokka":"9A","arvosanat":true},{"henkilo":"1.2.246.562.24.87951154293","luokka":"9A","arvosanat":true},{"henkilo":"1.2.246.562.24.98743797763","luokka":"9A","arvosanat":true}])
 
   $httpBackend.when('GET', /.*rest\/v1\/opiskeluoikeudet\?henkilo.*/).respond([])
 

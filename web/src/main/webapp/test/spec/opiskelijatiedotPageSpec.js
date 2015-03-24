@@ -33,6 +33,7 @@
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                     httpFixtures().komoLocal.komoTiedot()
+                    httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
                     koodistoFixtures()
                 },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
@@ -145,6 +146,7 @@
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                     httpFixtures().luokkaTiedotLocal.tyynenLuokkaTiedot()
                     httpFixtures().komoLocal.komoTiedot()
+                    httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
                     koodistoFixtures()
                 },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
