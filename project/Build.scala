@@ -95,13 +95,6 @@ object HakurekisteriBuild extends Build {
       sys.error("npm run build failed")
   }
 
-  lazy val karma = taskKey[Unit]("run karma tests")
-  val karmaTask = karma <<= (sourceDirectory in Test) map {
-    (sd) =>
-      if ((Seq("npm", "test", "-s")!) !=  0)
-        sys.error("npm test failed")
-  }
-
   val cleanNodeModules = cleanFiles <+= baseDirectory { base => base / "node_modules" }
 
   val artifactoryPublish = publishTo <<= version apply {
@@ -179,8 +172,7 @@ object HakurekisteriBuild extends Build {
         ++ Seq(compile in Compile <<= (compile in Compile) dependsOn npmBuild)
         ++ Seq(webappResources in Compile <+= (target in Runtime)(t => t / "javascript") )
         ++ Seq(webappResources in Compile <+= (sourceDirectory in Runtime) { sd => sd / "resources" / "tiedonsiirto"})
-        ++ Seq(karmaTask, npmBuildTask, cleanNodeModules)
-        ++ Seq((test in Test) <<= (test in Test) dependsOn karma)
+        ++ Seq(npmBuildTask, cleanNodeModules)
         ++ Seq(watchSources <++= baseDirectory map { path => ((path / "src/main/webapp/coffee") ** "*.coffee").get })
         ++ Seq(
         organization := Organization,
