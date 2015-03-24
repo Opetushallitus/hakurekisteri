@@ -23,7 +23,9 @@
                 wait.forAngular,
                 function() {
                     httpFixtures().organisaatioService.pikkarala()
-                    httpFixtures().authenticationService.aarne();
+                    httpFixtures().organisaatioService.pikkaralaKoodi()
+                    httpFixtures().organisaatioService.pikkaralaOid()
+                    httpFixtures().authenticationService.aarne()
                 },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
                 wait.forAngular,
@@ -39,7 +41,8 @@
             it('Voi hakea oidin perusteella - test-dsl', seqDone(
                 wait.forAngular,
                 function() {
-                    httpFixtures().authenticationService.aarne();
+                    httpFixtures().organisaatioService.pikkaralaOid()
+                    httpFixtures().authenticationService.aarne()
                 },
                 input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                 click(opiskelijatiedot.searchButton),
@@ -55,7 +58,8 @@
             it('Voi hakea hetun perusteella - test.dsl', seqDone(
                 wait.forAngular,
                 function() {
-                    httpFixtures().authenticationService.aarne();
+                    httpFixtures().organisaatioService.pikkaralaOid()
+                    httpFixtures().authenticationService.aarne()
                 },
                 input(opiskelijatiedot.henkiloSearch, '123456-789'),
                 click(opiskelijatiedot.searchButton),
@@ -71,6 +75,7 @@
             it('Puuttuva hetu perusteella - test.dsl', seqDone(
                 wait.forAngular,
                 function() {
+                    httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().authenticationService.foobar()
                 },
                 input(opiskelijatiedot.henkiloSearch, 'foobar'),
@@ -100,9 +105,11 @@
             it('Etsi organisaatiosta henkiloita - test.dsl', seqDone(
                 wait.forAngular,
                 function() {
-                    httpFixtures().organisaatioService.pikkarala();
-                    httpFixtures().authenticationService.aarne();
-                    httpFixtures().authenticationService.tyyne();
+                    httpFixtures().organisaatioService.pikkarala()
+                    httpFixtures().organisaatioService.pikkaralaKoodi()
+                    httpFixtures().organisaatioService.pikkaralaOid()
+                    httpFixtures().authenticationService.aarne()
+                    httpFixtures().authenticationService.tyyne()
                 },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
                 wait.forAngular,
@@ -123,4 +130,4 @@
             ))
         })
     })
-})();
+})()
