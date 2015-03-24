@@ -19,7 +19,7 @@ import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.rest.support._
-import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.storage.{GetCount, Identified}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
 import org.joda.time.DateTime
 
@@ -138,44 +138,40 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   }
 
   def getEraCount: Future[ItemCount] = {
-    val batchFuture = (eraRekisteri ? AuthorizedQuery(ImportBatchQuery(None, None, None), healthCheckUser)).mapTo[Seq[ImportBatch with Identified[UUID]]]
-    batchFuture.map((b) => { new ItemCount(Status.OK, b.length.toLong) }).recover  {
+    val batchFuture = (eraRekisteri ? GetCount).mapTo[Int]
+    batchFuture.map((b) => { new ItemCount(Status.OK, b.toLong) }).recover  {
       case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
       case e: Throwable => log.error(e, "error getting era count"); new ItemCount(Status.FAILURE, 0)
     }
   }
 
   def getArvosanaCount: Future[ItemCount] = {
-    val arvosanaFuture = (arvosanaRekisteri ? AuthorizedQuery(ArvosanaQuery(None), healthCheckUser))
-      .mapTo[Seq[Arvosana with Identified[UUID]]]
-    arvosanaFuture.map((a) => { new ItemCount(Status.OK, a.length.toLong) }).recover {
+    val arvosanaFuture = (arvosanaRekisteri ? GetCount).mapTo[Int]
+    arvosanaFuture.map((a) => { new ItemCount(Status.OK, a.toLong) }).recover {
       case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
       case e: Throwable => log.error(e,"error getting arvosana count"); new ItemCount(Status.FAILURE, 0)
     }
   }
 
   def getSuoritusCount: Future[ItemCount] = {
-    val suoritusFuture = (suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(None, None, None, None), healthCheckUser))
-      .mapTo[Seq[Suoritus with Identified[UUID]]]
-    suoritusFuture.map((s) => { new ItemCount(Status.OK, s.length.toLong) }).recover {
+    val suoritusFuture = (suoritusRekisteri ? GetCount).mapTo[Int]
+    suoritusFuture.map((s) => { new ItemCount(Status.OK, s.toLong) }).recover {
       case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
       case e: Throwable => log.error(e,"error getting suoritus count"); new ItemCount(Status.FAILURE, 0)
     }
   }
 
   def getOpiskelijaCount: Future[ItemCount] = {
-    val opiskelijaFuture = (opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaQuery(None, None, None, None, None, None), healthCheckUser))
-      .mapTo[Seq[Opiskelija with Identified[UUID]]]
-    opiskelijaFuture.map((o) => { ItemCount(Status.OK, o.length.toLong) }).recover {
+    val opiskelijaFuture = (opiskelijaRekisteri ? GetCount).mapTo[Int]
+    opiskelijaFuture.map((o) => { ItemCount(Status.OK, o.toLong) }).recover {
       case e: AskTimeoutException => ItemCount(Status.TIMEOUT, 0)
       case e: Throwable => log.error(e,"error getting opiskelija count"); ItemCount(Status.FAILURE, 0)
     }
   }
 
   def getOpiskeluoikeusCount: Future[ItemCount] = {
-    val opiskeluoikeusFuture = (opiskeluoikeusRekisteri ? AuthorizedQuery(OpiskeluoikeusQuery(None, None), healthCheckUser))
-      .mapTo[Seq[Opiskeluoikeus with Identified[UUID]]]
-    opiskeluoikeusFuture.map((o) => { ItemCount(Status.OK, o.length.toLong) }).recover {
+    val opiskeluoikeusFuture = (opiskeluoikeusRekisteri ? GetCount).mapTo[Int]
+    opiskeluoikeusFuture.map((o) => { ItemCount(Status.OK, o.toLong) }).recover {
       case e: AskTimeoutException => ItemCount(Status.TIMEOUT, 0)
       case e: Throwable => log.error(e,"error getting opiskeluoikeus count"); ItemCount(Status.FAILURE, 0)
     }

@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, HakijaQuery}
 import fi.vm.sade.hakurekisteri.healthcheck.{RefreshingResource, Hakemukset, Health}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.hakurekisteri.storage.repository._
-import fi.vm.sade.hakurekisteri.storage.{InMemQueryingResourceService, Identified, ResourceActor}
+import fi.vm.sade.hakurekisteri.storage.{GetCount, InMemQueryingResourceService, Identified, ResourceActor}
 
 import scala.compat.Platform
 import scala.concurrent.Future

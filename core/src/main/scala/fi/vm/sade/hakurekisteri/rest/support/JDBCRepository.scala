@@ -19,7 +19,6 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
 
   override def delete(id: I, source: String): Unit = journal.addModification(Deleted[R,I](id, source))
 
-
   override def cursor(t: R): Any = ???
 
   val all = journal.latestResources.filter(_.deleted === false)
@@ -27,14 +26,18 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
   def latest(id: I) = all.filter((item) => columnExtensionMethods(item.resourceId) === id)
 
   override def get(id: I): Option[R with Identified[I]] = journal.db withSession(
-      implicit session =>
-        latest(id).firstOption.collect{ case Updated(res) => res}
-    )
+    implicit session =>
+      latest(id).firstOption.collect{ case Updated(res) => res }
+  )
 
   override def listAll(): Seq[R with Identified[I]] = journal.db withSession(
     implicit session =>
-      all.list.collect{ case Updated(res) => res}
+      all.list.collect{ case Updated(res) => res }
+  )
 
+  override def count: Int = journal.db withSession(
+    implicit session =>
+      journal.latestResources.length.run
   )
 
   def doSave(t: R): R with Identified[I] = t match {

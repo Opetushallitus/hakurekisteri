@@ -9,6 +9,7 @@ import akka.actor.Status.Failure
 import scala.util.Try
 import fi.vm.sade.hakurekisteri.storage.repository.Repository
 
+object GetCount
 
 abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] extends Actor with ActorLogging { this: Repository[T, I] with ResourceService[T, I] =>
   implicit val executionContext: ExecutionContext = context.dispatcher
@@ -31,6 +32,9 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
   }
 
   def receive: Receive = {
+    case GetCount =>
+      sender ! count
+
     case q: Query[T] =>
       log.debug(s"received: $q from $sender")
       val result = findBy(q)
