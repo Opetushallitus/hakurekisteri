@@ -67,8 +67,7 @@
                     })
 
                     it("Ei näytä validointivirheitä", function() {
-                        // TODO: should be 0 actually, when validation is fixed
-                        expect(page.validationErrors().length).to.equal(1)
+                        expect(page.validationErrors().length).to.equal(0)
                     })
                 })
 
