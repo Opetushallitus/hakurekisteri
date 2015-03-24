@@ -29,7 +29,6 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuoritukset()
-                    httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                     httpFixtures().komoLocal.komoTiedot()
