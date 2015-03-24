@@ -28,9 +28,10 @@
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
-                    httpFixtures().suoritukset.aarnenSuoritukset()
+                    httpFixtures().suorituksetLocal.aarnenSuoritukset()
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
-                    httpFixtures().arvosanat.aarnenArvosanat()
+                    httpFixtures().arvosanatLocal.aarnenArvosanat()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                     koodistoFixtures()
                 },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
@@ -51,8 +52,9 @@
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                    httpFixtures().suoritukset.aarnenSuoritukset()
-                    httpFixtures().arvosanat.aarnenArvosanat()
+                    httpFixtures().arvosanatLocal.aarnenArvosanat()
+                    httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                     koodistoFixtures()
                 },
                 input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
@@ -73,8 +75,10 @@
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                    httpFixtures().suoritukset.aarnenSuoritukset()
-                    httpFixtures().arvosanat.aarnenArvosanat()
+                    httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                    httpFixtures().arvosanatLocal.aarnenArvosanat()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().luokkaTiedotLocal.tyynenLuokkaTiedotHetulla()
                     koodistoFixtures()
                 },
                 input(opiskelijatiedot.henkiloSearch, '123456-789'),
@@ -93,6 +97,9 @@
                 function() {
                     httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().henkiloPalveluService.foobar()
+                    httpFixtures().arvosanatLocal.aarnenArvosanat()
+                    httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                 },
                 input(opiskelijatiedot.henkiloSearch, 'foobar'),
                 click(opiskelijatiedot.searchButton),
@@ -128,10 +135,12 @@
                     httpFixtures().henkiloPalveluService.tyyne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
-                    httpFixtures().suoritukset.aarnenSuoritukset()
-                    httpFixtures().suoritukset.tyynenSuoritukset()
-                    httpFixtures().arvosanat.aarnenArvosanat()
-                    httpFixtures().arvosanat.tyynenArvosanat()
+                    httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                    httpFixtures().suorituksetLocal.tyynenSuoritukset()
+                    httpFixtures().arvosanatLocal.aarnenArvosanat()
+                    httpFixtures().arvosanatLocal.tyynenArvosanat()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().luokkaTiedotLocal.tyynenLuokkaTiedot()
                     koodistoFixtures()
                 },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
