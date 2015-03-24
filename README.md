@@ -1,50 +1,32 @@
 # Haku- ja valintarekisteri #
 
 
-## Run mocha tests
+## Fronttidevaus ja mocha-testit
+
+Setup:
 
 1. Aja `./sbt compile` joka myös buildaa frontin.
 2. Käynnistä mock-serveri IDEAsta: `JettyTestLauncher`.
-3. Avaa testisivu selaimessa: http://localhost:8080/test/runner.html
+3. Buildaa fronttikamat: `npm run watch`
 
-## Fronttidevaus
-
-    npm run watch
+Mocha-testit selaimessa: http://localhost:8080/test/runner.html
 
 ## Build & Run ##
 
-```sh
-$ git clone https://github.com/Opetushallitus/hakurekisteri.git
-$ cd hakurekisteri
-$ ./sbt
-> ~container:start or container:start
-> browse
-```
+Näin voit ajaa sovellusta paikallisesti tuotannonkaltaisena setuppina, käyttäen paikallista h2-kantaa.
 
-## Populate local H2 DB (requires: oph-configuration set up)
+1. Ihan ensin tarvitset devaukseen soveltuvan `~/oph-configuration`-hakemiston. Kysy devaajilta apua!
 
-```
-./sbt createTestDb
-```
+2. Luo paikallinen h2-tietokanta: `./sbt createTestDb`. Tämä kopioi datat luokka-ympäristöstä paikalliseen data-nimiseen hakemistoon.
 
-If `browse` doesn't launch your browser, manually open [http://localhost:8080/](http://localhost:8080/) in your browser.
+3. Käynnistä paikallinen serveri: `./sbt ~container:start`
 
-API Documentation is available in URI /swagger/index.html after starting the container.
+4. Avaa http://localhost:8080/
 
-If you want sbt to build project automatically on changes, use
-
-```
-> ~container:start
-```
+API-dokumentaatio löytyy http://localhost:8080//swagger/index.html
 
 ## Arvosanavalidaattori
 
 Arvosanojen tuonnissa käytettävä validaattori on erillisessä [repositoriossa](https://github.com/Opetushallitus/validaattori).
 
-Validaattorin server-side -versio on buildattu sieltä Artifactoryyn ja on käytössä jarrina.
-
-Validaattorin client-side -versio on buildattu ja kopioitu tämän [js-hakemistoon](web/src/main/webapp/static/js). Tämä päivitetään ajamalla skripti
-
-    sbin/update_validator.sh
-
-Edellyttäen että validaattori-repositorystä on klooni hakemistossa `../validator`.
+Validaattorin server-side -versio on buildattu sieltä Artifactoryyn ja on käytössä jarrina. Validaattorin client-side -versio on bundlattu samaan jarriin ja serveröidään ValidatorJavasccriptServletin toimesta.
