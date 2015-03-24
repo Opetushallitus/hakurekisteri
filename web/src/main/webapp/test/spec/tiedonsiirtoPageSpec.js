@@ -71,6 +71,11 @@
                     })
                 })
 
+                describe("IE9", function() {
+                    it("validointia ei tehdä (testataan manuaalisesti)", function() {
+                    })
+                })
+
                 function todistus(aineet) {
                     return "<arvosanat><perusopetus>"
                       + aineet.map(function(aine) { return "<"+aine.toUpperCase()+"><yhteinen>5</yhteinen></" + aine +">" }).join("")
