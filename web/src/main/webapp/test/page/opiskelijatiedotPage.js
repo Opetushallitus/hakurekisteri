@@ -30,12 +30,18 @@ opiskelijatiedot = initSelectors({
     searchButton: "#filterForm button[type=submit]",
     resultsTable: "#table-scroller tr",
     resultsTableChild: function(n) {return "#table-scroller tr:nth-child("+n+")"},
-    organizationDropDownMenuChild: function(n) {
-        return "#filterForm ul.dropdown-menu li:nth-child("+n+")"
+    typeaheadMenuChild: function(n) {
+        return "ul.dropdown-menu > li:nth-child("+n+"):has(a)"
     },
     henkiloSearch: "#henkiloTerm",
     henkiloTiedot: "#henkiloTiedot",
     hetuTieto: "#hetuTieto",
     suoritusTiedot: "#suoritusTiedot",
-    luokkaTiedot: "#luokkaTiedot"
+    luokkaTiedot: "#luokkaTiedot",
+    suoritusMyontaja: ".test-suoritusMyontaja",
+    suoritusKoulutus: ".test-suoritusKoulutus",
+    suoritusYksilollistetty: ".test-suoritusYksilollistetty",
+    suoritusKieli: ".test-suoritusKieli",
+    suoritusTila: ".test-suoritusTila",
+    saveButton: ".test-saveButton"
 })

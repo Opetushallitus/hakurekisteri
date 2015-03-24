@@ -13,7 +13,6 @@ function wrap(elementDefinition) {
     switch (typeof(elementDefinition)) {
         case 'string':
             return function() {
-                dslDebug("S("+elementDefinition+")")
                 return S(elementDefinition);
             };
         case 'function':
@@ -49,21 +48,32 @@ function seqDone(/* ...promises */) {
     }
 }
 
-function visible(fn) {
+function waitJqueryIs(fn, param, value) {
+    if(typeof value == 'undefined') {
+        value = true
+    }
     if (typeof(fn) !== 'function') {
         throw new Error('visible() got a non-function: ' + fn);
     }
-    return wait.until(function() {
-        dslDebug("visible", fn().is(':visible'))
-        return fn().is(':visible');
-    })
+    return function() {
+        return wait.until(function() {
+            dslDebug(fn().selector, param, fn().is(param));
+            return fn().is(param) === value;
+        })().fail(function(error) {
+            throw new Error("Wait for selector '" + fn().selector + "' status: "+param+" to be " +value+ " failed: " + error);
+        })
+    }
+}
+
+function visible(fn) {
+    return waitJqueryIs(fn, ':visible')
 }
 
 function input1(fn, value) {
     return seq(
         visible(fn),
         function() {
-            dslDebug("element visible and ready for input1", value)
+            dslDebug(fn().selector, "visible and ready for input1: '" + value + "'")
             return fn().val(value).change().blur();
         });
 }
@@ -83,12 +93,12 @@ function input(/* fn, value, fn, value, ... */) {
 function click(/* ...promises */) {
     var fns =  Array.prototype.slice.call(arguments);
     return function() {
-        dslDebug("click")
+        dslDebug("click selector count:", fns.length)
         var clickSequence = fns.map(function(fn) {
             return seq(
                 visible(fn),
                 function() {
-                    dslDebug("element visible and ready to click. matched elements: ", fn().length)
+                    dslDebug(fn().selector, "visible and ready for click. matched elements: ", fn().length)
                     fn().click();
                 });
         });
@@ -101,6 +111,62 @@ function sleep(ms) {
         return Q.delay(ms);
     }
 }
+
+wait = {
+    maxWaitMs: 20000,
+    waitIntervalMs: 10,
+    until: function (condition, count) {
+        return function (/*...promiseArgs*/) {
+            var promiseArgs = arguments;
+            var deferred = Q.defer();
+            if (count == undefined) count = wait.maxWaitMs / wait.waitIntervalMs;
+
+            (function waitLoop(remaining) {
+                var cond = condition.apply(this, promiseArgs);
+                if (cond) {
+                    deferred.resolve()
+                } else if (remaining < 1) {
+                    deferred.reject("timeout of " + wait.maxWaitMs + " in wait.until")
+                } else {
+                    setTimeout(function () {
+                        waitLoop(remaining - 1)
+                    }, wait.waitIntervalMs)
+                }
+            })(count);
+            return deferred.promise
+        }
+    },
+    untilFalse: function (condition) {
+        return wait.until(function () {
+            return !condition()
+        })
+    },
+    forAngular: function () {
+        var deferred = Q.defer();
+        try {
+            var angular = testFrame().angular;
+            var el = angular.element(S("body"));
+            var timeout = angular.element(el).injector().get('$timeout');
+            angular.element(el).injector().get('$browser').notifyWhenNoOutstandingRequests(function () {
+                timeout(function () {
+                    deferred.resolve()
+                })
+            })
+        } catch (e) {
+            deferred.reject(e)
+        }
+        return deferred.promise
+    },
+    forMilliseconds: function (ms) {
+        return function () {
+            var deferred = Q.defer();
+            setTimeout(function () {
+                deferred.resolve()
+            }, ms);
+            return deferred.promise
+        }
+    }
+};
 
 function select(fn, value) {
     return seq(

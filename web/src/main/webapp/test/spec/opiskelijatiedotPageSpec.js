@@ -21,7 +21,7 @@
         describe("Haku", function () {
             it('Voi hakea oppilaitoksen perusteella - test-dsl', seqDone(
                 wait.forAngular,
-                function() {
+                function () {
                     httpFixtures().organisaatioService.pikkarala()
                     httpFixtures().organisaatioService.pikkaralaKoodi()
                     httpFixtures().organisaatioService.pikkaralaOid()
@@ -35,7 +35,7 @@
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
                     koodistoFixtures()
                 },
-                autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
+                typeaheadInput(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
                 wait.forAngular,
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
@@ -48,7 +48,7 @@
         describe('Henkilohaku', function () {
             it('Voi hakea oidin perusteella - test-dsl', seqDone(
                 wait.forAngular,
-                function() {
+                function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
@@ -72,7 +72,7 @@
 
             it('Voi hakea hetun perusteella - test.dsl', seqDone(
                 wait.forAngular,
-                function() {
+                function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
@@ -97,7 +97,7 @@
 
             it('Puuttuva hetu perusteella - test.dsl', seqDone(
                 wait.forAngular,
-                function() {
+                function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().henkiloPalveluService.foobar()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
@@ -130,7 +130,7 @@
 
             it('Etsi organisaatiosta henkiloita - test.dsl', seqDone(
                 wait.forAngular,
-                function() {
+                function () {
                     httpFixtures().organisaatioService.pikkarala()
                     httpFixtures().organisaatioService.pikkaralaKoodi()
                     httpFixtures().organisaatioService.pikkaralaOid()
@@ -148,7 +148,7 @@
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
                     koodistoFixtures()
                 },
-                autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
+                typeaheadInput(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
                 wait.forAngular,
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
@@ -166,5 +166,83 @@
                 }
             ))
         })
+
+        describe('Suoritustietojen muokkaus', function () {
+                function saveEnabled() {
+                    return waitJqueryIs(opiskelijatiedot.saveButton, ":disabled", false)
+                }
+
+                function saveDisabled() {
+                    return waitJqueryIs(opiskelijatiedot.saveButton, ":disabled", true)
+                }
+
+                var savedData;
+
+                it("Peruskoulun suoritustiedot ja arvosanat talletetaan vain jos muuttuneita arvoja", seqDone(
+                    function () {
+                        httpFixtures().organisaatioService.pikkaralaOid()
+                        httpFixtures().henkiloPalveluService.aarne()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                        httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                        httpFixtures().arvosanatLocal.aarnenArvosanat()
+                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                        httpFixtures().komoLocal.komoTiedot()
+                        koodistoFixtures()
+                    },
+                    input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                    click(opiskelijatiedot.searchButton),
+                    wait.forAngular,
+
+                    saveDisabled(),
+                    select(opiskelijatiedot.suoritusKoulutus, "2"),
+                    saveEnabled(),
+                    select(opiskelijatiedot.suoritusKoulutus, "1"),
+
+                    saveDisabled(),
+                    select(opiskelijatiedot.suoritusYksilollistetty, "2"),
+                    saveEnabled(),
+                    select(opiskelijatiedot.suoritusYksilollistetty, "0"),
+
+                    saveDisabled(),
+                    select(opiskelijatiedot.suoritusTila, "1"),
+                    saveEnabled(),
+                    select(opiskelijatiedot.suoritusTila, "0"),
+                    saveDisabled(),
+
+                    select(opiskelijatiedot.suoritusKieli, "2"),
+                    function () {
+                        httpFixtures().organisaatioService.pikkarala()
+                        httpFixtures().organisaatioService.pikkaralaKoodi()
+                    },
+                    typeaheadInput(opiskelijatiedot.suoritusMyontaja, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
+                    function () {
+                        testFrame().httpBackend.when('POST', /.*rest\/v1\/suoritukset\/4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9$/, function (data) {
+                            savedData = data;
+                            return true
+                        }).respond(savedData)
+                    },
+                    click(opiskelijatiedot.saveButton),
+                    wait.until(function () {
+                        return savedData
+                    }),
+                    function () {
+                        expect(JSON.parse(savedData)).to.deep.equal({
+                            henkiloOid: "1.2.246.562.24.71944845619",
+                            source: "ophadmin",
+                            vahvistettu: true,
+                            komo: "1.2.246.562.13.62959769647",
+                            myontaja: "1.2.246.562.10.39644336305",
+                            tila: "KESKEN",
+                            valmistuminen: "03.06.2015",
+                            yksilollistaminen: "Ei",
+                            suoritusKieli: "PS",
+                            id: "4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9"
+                        })
+                    },
+                    saveDisabled()
+                ))
+            }
+        )
     })
 })()

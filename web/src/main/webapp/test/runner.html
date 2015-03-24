@@ -13,10 +13,9 @@
         <script src="lib/q.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script>
-            var testTimeout = 20000;
             mocha.ui('bdd');
             mocha.reporter('html');
-            mocha.timeout(testTimeout);
+            mocha.timeout(30000);
         </script>
         <script src="util/testHelpers.js"></script>
         <script src="util/test-dsl.js"></script>
