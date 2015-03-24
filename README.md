@@ -21,7 +21,7 @@ Näin voit ajaa sovellusta paikallisesti tuotannonkaltaisena setuppina, käyttä
 
 3. Käynnistä paikallinen serveri: `./sbt ~container:start`
 
-4. Avaa http://localhost:8080/
+Sovellus on saatavilla osoitteessa http://localhost:8080/
 
 API-dokumentaatio löytyy http://localhost:8080//swagger/index.html
 
