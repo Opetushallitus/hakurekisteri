@@ -119,7 +119,7 @@ class ScalatraBootstrap extends LifeCycle {
       ("/virta", "virta") -> new VirtaResource(integrations.virtaQueue)
     )
 
-    context mount (new ValidatorJavascriptServlet, "/")
+    context mount (new ValidatorJavascriptServlet, "/hakurekisteri-validator")
   }
 
   def mountServlets(context: ServletContext)(servlets: ((String, String), Servlet with Handler)*) = {

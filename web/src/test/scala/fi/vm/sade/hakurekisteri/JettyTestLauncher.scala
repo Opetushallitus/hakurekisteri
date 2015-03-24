@@ -44,6 +44,6 @@ class JettyTestLauncher(val port: Int) {
 
 class TestScalatraBootstrap extends LifeCycle {
   override def init(context: ServletContext) {
-    context mount (new ValidatorJavascriptServlet, "/")
+    context mount (new ValidatorJavascriptServlet, "/hakurekisteri-validator")
   }
 }
