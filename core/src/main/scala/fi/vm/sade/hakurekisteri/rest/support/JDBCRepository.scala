@@ -37,7 +37,7 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
 
   override def count: Int = journal.db withSession(
     implicit session =>
-      journal.latestResources.length.run
+      all.length.run
   )
 
   def doSave(t: R): R with Identified[I] = t match {
