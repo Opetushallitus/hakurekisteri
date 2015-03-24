@@ -1,8 +1,7 @@
 {
   "scripts": {
     "build" : "npm install -s && coffee --join web/target/javascript/compiled/scripts.js --compile web/src/main/webapp/coffee/*.coffee",
-    "watch" : "npm install -s && coffee --watch --join  web/target/javascript/compiled/scripts.js --compile web/src/main/webapp/coffee/*.coffee",
-    "test": "npm install -s && ./node_modules/karma/bin/karma start web/src/test/js/karma.conf.js"
+    "watch" : "npm install -s && coffee --watch --join  web/target/javascript/compiled/scripts.js --compile web/src/main/webapp/coffee/*.coffee"
   },
   "name": "hakurekisteri",
   "description": "hakurekisteri",
