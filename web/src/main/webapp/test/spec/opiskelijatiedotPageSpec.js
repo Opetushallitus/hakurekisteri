@@ -25,7 +25,9 @@
                     httpFixtures().organisaatioService.pikkarala()
                     httpFixtures().organisaatioService.pikkaralaKoodi()
                     httpFixtures().organisaatioService.pikkaralaOid()
-                    httpFixtures().authenticationService.aarne()
+                    httpFixtures().henkiloPalveluService.aarne()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
+                    httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
                 },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
                 wait.forAngular,
@@ -42,7 +44,9 @@
                 wait.forAngular,
                 function() {
                     httpFixtures().organisaatioService.pikkaralaOid()
-                    httpFixtures().authenticationService.aarne()
+                    httpFixtures().henkiloPalveluService.aarne()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                 },
                 input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                 click(opiskelijatiedot.searchButton),
@@ -59,7 +63,9 @@
                 wait.forAngular,
                 function() {
                     httpFixtures().organisaatioService.pikkaralaOid()
-                    httpFixtures().authenticationService.aarne()
+                    httpFixtures().henkiloPalveluService.aarne()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                 },
                 input(opiskelijatiedot.henkiloSearch, '123456-789'),
                 click(opiskelijatiedot.searchButton),
@@ -76,7 +82,7 @@
                 wait.forAngular,
                 function() {
                     httpFixtures().organisaatioService.pikkaralaOid()
-                    httpFixtures().authenticationService.foobar()
+                    httpFixtures().henkiloPalveluService.foobar()
                 },
                 input(opiskelijatiedot.henkiloSearch, 'foobar'),
                 click(opiskelijatiedot.searchButton),
@@ -108,8 +114,10 @@
                     httpFixtures().organisaatioService.pikkarala()
                     httpFixtures().organisaatioService.pikkaralaKoodi()
                     httpFixtures().organisaatioService.pikkaralaOid()
-                    httpFixtures().authenticationService.aarne()
-                    httpFixtures().authenticationService.tyyne()
+                    httpFixtures().henkiloPalveluService.aarne()
+                    httpFixtures().henkiloPalveluService.tyyne()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
+                    httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
                 },
                 autocomplete(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.organizationDropDownMenuChild(1)),
                 wait.forAngular,
