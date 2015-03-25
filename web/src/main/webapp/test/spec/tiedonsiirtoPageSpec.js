@@ -77,9 +77,9 @@
                 })
 
                 function todistus(aineet) {
-                    return "<arvosanat><perusopetus>"
+                    return "<arvosanat><henkilo><perusopetus>"
                       + aineet.map(function(aine) { return "<"+aine.toUpperCase()+"><yhteinen>5</yhteinen></" + aine +">" }).join("")
-                      + "</perusopetus></arvosanat>"
+                      + "</perusopetus></henkilo></arvosanat>"
                 }
             })
         });
