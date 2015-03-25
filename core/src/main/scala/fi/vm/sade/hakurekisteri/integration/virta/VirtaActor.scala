@@ -42,9 +42,11 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   var virtaQueue: List[VirtaQuery] = List()
-
-  var lastProcessDone: Option[DateTime] = None
-  var scheduledProcessTime: Option[LocalTime] = None
+  private var lastProcessDone: Option[DateTime] = None
+  private var scheduledProcessTime: Option[LocalTime] = None
+  private var startedProcessing: Boolean = false
+  private var processing: Cancellable = scheduleProcessing("04:00")
+  private val statPrinter: Cancellable = context.system.scheduler.schedule(5.minutes, 10.minutes, self, PrintStats)
 
   def nextProcessTime: Option[DateTime] = scheduledProcessTime.map(t => {
     val atToday: DateTime = t.toDateTimeToday
@@ -59,9 +61,6 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
     context.system.scheduler.schedule(duration, 24.hours, self, StartVirta)
   }
 
-  var processing: Cancellable = scheduleProcessing("04:00")
-  val statPrinter: Cancellable = context.system.scheduler.schedule(5.minutes, 10.minutes, self, PrintStats)
-
   override def postStop(): Unit = {
     processing.cancel()
     statPrinter.cancel()
@@ -71,12 +70,12 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
     case VirtaQueuedQuery(q) if !virtaQueue.contains(q) =>
       virtaQueue = virtaQueue :+ q
 
-    case StartVirta =>
+    case StartVirta if !startedProcessing =>
       log.info("started to process virta queries")
-      if (virtaQueue.nonEmpty) 
-        virtaActor ! virtaQueue.head 
-      else 
-        log.info("no queries to process")
+      if (virtaQueue.nonEmpty) {
+        startedProcessing = true
+        virtaActor ! virtaQueue.head
+      } else log.info("no queries to process")
 
     case QueryProsessed(q) =>
       virtaQueue = virtaQueue.filterNot(_ == q)
@@ -85,6 +84,7 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
       } else {
         log.info(s"all virta queries processed, queue length ${virtaQueue.length}")
         lastProcessDone = Some(new DateTime())
+        startedProcessing = false
       }
 
     case PrintStats => log.info(s"queue length ${virtaQueue.length}")
