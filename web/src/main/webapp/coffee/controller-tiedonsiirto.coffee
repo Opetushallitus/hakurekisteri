@@ -46,9 +46,13 @@ app.controller "TiedonsiirtoCtrl", [
       result = hakurekisteri.perusopetus.xml.validate.validoi(xml)
       $scope.validointiVirheet = R.toPairs(R.groupBy(({rule, resource}) -> rule.id)(result)).map ([ruleId, todistusTuplet]) ->
         todistukset = todistusTuplet.map (tuple) -> tuple.resource
-        aineet = ruleId.replace("hakurekisteri.perusopetus.mandatory-", "").split("-or-")
-          .map (aine) -> $scope.aineidenKielistykset[aine](LokalisointiService.lang)
-        message = aineet.join(" tai ") + " puuttuu"
+        prefixForMandatoryRule = "hakurekisteri.perusopetus.mandatory-"
+        message = if (ruleId.indexOf(prefixForMandatoryRule) == 0)
+          aineet = ruleId.replace(prefixForMandatoryRule, "").split("-or-")
+            .map (aine) -> $scope.aineidenKielistykset[aine](LokalisointiService.lang)
+          aineet.join(" tai ") + " puuttuu"
+        else
+          ruleId
         {ruleId, todistukset, count: todistukset.length, message}
       console.log("validation result", $scope.validointiVirheet)
       $scope.$apply()
