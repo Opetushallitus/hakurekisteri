@@ -22,7 +22,7 @@
             it('Voi hakea oppilaitoksen perusteella - test-dsl', seqDone(
                 wait.forAngular,
                 function () {
-                    httpFixtures().organisaatioService.pikkarala()
+                    httpFixtures().organisaatioService.pikkaralaGeneric()
                     httpFixtures().organisaatioService.pikkaralaKoodi()
                     httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().henkiloPalveluService.aarne()
@@ -122,6 +122,10 @@
                 expect(selector().text().trim()).to.equal(val)
             }
 
+            function assertMyontaja(val) {
+                expect(opiskelijatiedot.suoritusMyontajaCheck().first().text().trim()).to.equal(val)
+            }
+
             function areElementsVisible() {
                 return opiskelijatiedot.henkiloTiedot().is(':visible') &&
                     opiskelijatiedot.suoritusTiedot().is(':visible') &&
@@ -131,7 +135,7 @@
             it('Etsi organisaatiosta henkiloita - test.dsl', seqDone(
                 wait.forAngular,
                 function () {
-                    httpFixtures().organisaatioService.pikkarala()
+                    httpFixtures().organisaatioService.pikkaralaGeneric()
                     httpFixtures().organisaatioService.pikkaralaKoodi()
                     httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().henkiloPalveluService.aarne()
@@ -157,12 +161,14 @@
                 function () {
                     expect(areElementsVisible()).to.equal(true)
                     assertText(opiskelijatiedot.hetuTieto, "123456-789")
+                    assertMyontaja("06345 Pikkaralan ala-aste")
                 },
                 click(opiskelijatiedot.resultsTableChild(2)),
                 wait.forAngular,
                 function () {
                     expect(areElementsVisible()).to.equal(true)
                     assertText(opiskelijatiedot.hetuTieto, "010719-917S")
+                    assertMyontaja("06345 Pikkaralan ala-aste")
                 }
             ))
         })
@@ -212,7 +218,7 @@
 
                     select(opiskelijatiedot.suoritusKieli, "2"),
                     function () {
-                        httpFixtures().organisaatioService.pikkarala()
+                        httpFixtures().organisaatioService.pikkaralaGeneric()
                         httpFixtures().organisaatioService.pikkaralaKoodi()
                     },
                     typeaheadInput(opiskelijatiedot.suoritusMyontaja, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),

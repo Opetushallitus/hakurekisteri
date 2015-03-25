@@ -39,9 +39,11 @@ opiskelijatiedot = initSelectors({
     suoritusTiedot: "#suoritusTiedot",
     luokkaTiedot: "#luokkaTiedot",
     suoritusMyontaja: ".test-suoritusMyontaja",
+    suoritusMyontajaCheck: ".test-suoritus div.ng-binding",
     suoritusKoulutus: ".test-suoritusKoulutus",
     suoritusYksilollistetty: ".test-suoritusYksilollistetty",
     suoritusKieli: ".test-suoritusKieli",
     suoritusTila: ".test-suoritusTila",
     saveButton: ".test-saveButton"
+
 })
