@@ -79,7 +79,7 @@
                     })
 
                     it("Näyttää henkilöiden lukumäärät", function() {
-                        expect(page.validationErrorCounts().text()).to.contain("4 oppilasta")
+                        expect(page.validationErrorCounts().text()).to.contain("4")
                     })
                 })
 
