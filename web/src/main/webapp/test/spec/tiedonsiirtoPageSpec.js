@@ -15,7 +15,9 @@
         });
 
         describe("Tiedoston lähetys", function () {
-            before( page.openPage,
+            before(
+                    addTestHook(koodistoFixtures),
+                    page.openPage,
                     wait.until(function () { return page.uploadForm().length === 1}),
                     wait.forAngular,
                     wait.until(function () { return page.alerts().length === 0 })
@@ -52,10 +54,9 @@
 
             describe("Arvosanojen validointi", function() {
                 describe("Arvosanat puuttuvat, korkeintaan 3 henkilöä", function() {
-                    before(function() {
-                        testFrame().validateXml(todistukset([{aineet: []},{aineet: []}]))
-                    })
-
+                    before(
+                      function() { testFrame().validateXml(todistukset([{aineet: []},{aineet: []}]))}
+                    )
                     it("Näyttää validointivirheet", function() {
                         expect(page.validationErrors().length).to.be.above(10)
                     })

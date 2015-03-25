@@ -2,14 +2,18 @@ app.controller "TiedonsiirtoCtrl", [
   "$scope"
   "MurupolkuService"
   "MessageService"
+  "LokalisointiService"
   "$log"
-  ($scope, MurupolkuService, MessageService, $log) ->
+  "$http"
+  ($scope, MurupolkuService, MessageService, LokalisointiService, $log, $http) ->
     supportsFileApi = window.FileReader?
-    isImportBatchResponse = (content) ->
-      (typeof content is "string" and content.match(/.*"batchType".*/g)) or (typeof content is "object" and content.batchType)
 
-    isIncidentResponse = (content) ->
-      (typeof content is "string" and content.match(/.*"incidentId".*/g)) or (typeof content is "object" and content.incidentId)
+    $http.get(koodistoServiceUrl + "/rest/json/oppiaineetyleissivistava/koodi/", {cache: true}).success (koodit) ->
+      translateWithMetadata = (koodi, metadatas) -> (lang) ->
+        translations = R.fromPairs(R.map((metadata) -> [metadata.kieli.toLowerCase(), metadata.nimi])(metadatas))
+        translations[lang] || translations["fi"] || koodi
+
+      $scope.aineidenKielistykset = R.fromPairs(R.map((koodi) -> [koodi.koodiArvo.toLowerCase(), translateWithMetadata(koodi.koodiArvo, koodi.metadata)])(koodit))
 
     $scope.validointiVirheet = []
 
@@ -42,7 +46,10 @@ app.controller "TiedonsiirtoCtrl", [
       result = hakurekisteri.perusopetus.xml.validate.validoi(xml)
       $scope.validointiVirheet = R.toPairs(R.groupBy(({rule, resource}) -> rule.id)(result)).map ([ruleId, todistusTuplet]) ->
         todistukset = todistusTuplet.map (tuple) -> tuple.resource
-        {ruleId, todistukset, count: todistukset.length}
+        aineet = ruleId.replace("mandatory-", "").split("-or-")
+          .map((aine) -> $scope.aineidenKielistykset[aine](LokalisointiService.lang))
+        message = aineet.join(" tai ") + " puuttuu"
+        {ruleId, todistukset, count: todistukset.length, message}
       console.log("validation result", $scope.validointiVirheet)
       $scope.$apply()
 
@@ -75,6 +82,12 @@ app.controller "TiedonsiirtoCtrl", [
         true
 
     $scope.uploadComplete = (content) ->
+      isImportBatchResponse = (content) ->
+        (typeof content is "string" and content.match(/.*"batchType".*/g)) or (typeof content is "object" and content.batchType)
+
+      isIncidentResponse = (content) ->
+        (typeof content is "string" and content.match(/.*"incidentId".*/g)) or (typeof content is "object" and content.incidentId)
+
       if isImportBatchResponse(content)
         response = (if typeof content is "object" then content else angular.fromJson(content))
         $scope.uploadResult =

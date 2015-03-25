@@ -71,13 +71,13 @@
                             <span oph-msg="suoritusrekisteri.tiedonsiirto.oppilasta">oppilasta</span>
 
                             /
-                            {{ virhe.ruleId }}
+                            {{ virhe.message }}
                         </div>
                         <div class="col-sm-10" ng-if="virhe.count <= 3">
                             <span oph-msg="suoritusrekisteri.tiedonsiirto.varoitus">Varoitus!</span>
                             <span class="name" ng-repeat="todistus in virhe.todistukset">{{todistus.suoritus.oppija.kutsumanimi}} {{todistus.suoritus.oppija.sukunimi}}<span class="separator">, </span></span>
                             /
-                            {{ virhe.ruleId }}
+                            {{ virhe.message }}
                         </div>
                     </div>
                     <div class="form-group">
