@@ -46,8 +46,8 @@ app.controller "TiedonsiirtoCtrl", [
       result = hakurekisteri.perusopetus.xml.validate.validoi(xml)
       $scope.validointiVirheet = R.toPairs(R.groupBy(({rule, resource}) -> rule.id)(result)).map ([ruleId, todistusTuplet]) ->
         todistukset = todistusTuplet.map (tuple) -> tuple.resource
-        aineet = ruleId.replace("mandatory-", "").split("-or-")
-          .map((aine) -> $scope.aineidenKielistykset[aine](LokalisointiService.lang))
+        aineet = ruleId.replace("hakurekisteri.perusopetus.mandatory-", "").split("-or-")
+          .map (aine) -> $scope.aineidenKielistykset[aine](LokalisointiService.lang)
         message = aineet.join(" tai ") + " puuttuu"
         {ruleId, todistukset, count: todistukset.length, message}
       console.log("validation result", $scope.validointiVirheet)
