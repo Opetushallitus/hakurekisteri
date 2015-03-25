@@ -28,10 +28,6 @@ BEGIN
     DELETE FROM arvosana WHERE resource_id = delta.resource_id AND inserted = delta.inserted;
     _count := _count + 1;
     RAISE NOTICE '%: archived delta: %, %', _count, delta.resource_id, delta.inserted;
-
-    IF _count % 1000 = 0 THEN
-      COMMIT;
-    END IF;
   END LOOP;
 
   RETURN _count;
