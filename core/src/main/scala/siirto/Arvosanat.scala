@@ -55,6 +55,7 @@ object Arvosanat extends SchemaDefinition {
     <xs:complexType name="TodistuksetType">
       <xs:choice>
         <xs:group ref="PerusopetuksenKaynyt"/>
+        <xs:group ref="LukionKaynyt"/>
         <xs:group ref="UlkomainenKorvaava"/>
         <xs:group ref="AmmattikoulunKaynyt"/>
       </xs:choice>
@@ -108,6 +109,22 @@ object Arvosanat extends SchemaDefinition {
       </xs:sequence>
     </xs:complexType>
 
+    <xs:complexType name="LukioAineType">
+      <xs:sequence>
+        <xs:element name="yhteinen" type="arvosana410" maxOccurs="1" minOccurs="1"/>
+      </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="LukioAineLaajuudellaType">
+      <xs:complexContent>
+        <xs:extension base="LukioAineType">
+          <xs:sequence>
+            <xs:element name="laajuus" type="aineenLaajuus"/>
+          </xs:sequence>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+
     <xs:simpleType name="aineenLaajuus">
       <xs:restriction base="xs:string">
         <xs:enumeration value="lyhyt"/>
@@ -131,6 +148,16 @@ object Arvosanat extends SchemaDefinition {
     <xs:complexType name="PerusOpetusAidinkieliType">
       <xs:complexContent>
         <xs:extension base="PerusOpetusAineType">
+          <xs:sequence>
+            <xs:element name="tyyppi" type="koodisto:aidinkielijakirjallisuus"/>
+          </xs:sequence>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="LukioAidinkieliType">
+      <xs:complexContent>
+        <xs:extension base="LukioAineType">
           <xs:sequence>
             <xs:element name="tyyppi" type="koodisto:aidinkielijakirjallisuus"/>
           </xs:sequence>
@@ -162,6 +189,16 @@ object Arvosanat extends SchemaDefinition {
       </xs:complexContent>
     </xs:complexType>
 
+    <xs:complexType name="LukioKieliType">
+      <xs:complexContent>
+        <xs:extension base="LukioAineType">
+          <xs:sequence>
+            <xs:element name="kieli" type="koodisto:kieli"/>
+          </xs:sequence>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+
     <xs:simpleType name="hetuType">
       <xs:restriction base="xs:string">
         <xs:pattern value="[0-9]{6}[-A][0-9]{3}[0123456789ABCDEFHJKLMNPRSTUVWXY]"/>
@@ -185,12 +222,53 @@ object Arvosanat extends SchemaDefinition {
       </xs:sequence>
     </xs:group>
 
+    <xs:group name="LukionKaynyt">
+      <xs:sequence>
+        <xs:element name="lukio" type="LukioType" maxOccurs="1" minOccurs="1"/>
+      </xs:sequence>
+    </xs:group>
+
     <xs:complexType name="SuoritusType">
       <xs:sequence>
         <xs:element name="valmistuminen" type="xs:date" maxOccurs="1" minOccurs="1"/>
         <xs:element name="myontaja" type="koodisto:oppilaitosnumero" maxOccurs="1" minOccurs="1"/>
         <xs:element name="suorituskieli" type="koodisto:kieli" maxOccurs="1" minOccurs="1"/>
       </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="LukioType">
+      <xs:complexContent>
+        <xs:extension base="SuoritusType">
+          <xs:sequence>
+            <xs:element name="AI" type="LukioAidinkieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="A1" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="A12" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="A2" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="A22" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="B1" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="B2" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="B22" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="B23" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="B3" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="B32" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="B33" type="LukioKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="MA" type="LukioAineLaajuudellaType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="BI" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="GE" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="FY" type="LukioAineLaajuudellaType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="KE" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="TE" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="KT" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="HI" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="YH" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="MU" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="KU" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="LI" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="PS" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="FI" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
+          </xs:sequence>
+        </xs:extension>
+      </xs:complexContent>
     </xs:complexType>
 
     <xs:group name="UlkomainenKorvaava">
