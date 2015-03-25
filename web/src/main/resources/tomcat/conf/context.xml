@@ -35,17 +35,4 @@
               password="{{ host_postgresql_suoritusrekisteri_password }}" driverClassName="org.postgresql.Driver"
               url="jdbc:postgresql://{{host_postgresql_suoritusrekisteri}}:{{port_postgresql}}/suoritusrekisteri"/>
 
-    <Resource name="jdbc/tiedonsiirto"
-              auth="Container"
-              type="javax.sql.DataSource"
-              initialSize="5"
-              maxActive="50"
-              minIdle="5"
-              maxIdle="10"
-              validationQuery="SELECT 1"
-              testOnBorrow="true"
-              removeAbandoned="true"
-              username="{{ host_postgresql_tiedonsiirto_user }}" 
-              password="{{ host_postgresql_tiedonsiirto_password }}" driverClassName="org.postgresql.Driver"
-              url="jdbc:postgresql://{{host_postgresql_tiedonsiirto}}:{{port_postgresql}}/tiedonsiirto"/>
 </Context>
