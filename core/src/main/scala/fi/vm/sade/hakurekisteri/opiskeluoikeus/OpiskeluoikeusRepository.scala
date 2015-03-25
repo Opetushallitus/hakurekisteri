@@ -43,7 +43,11 @@ trait OpiskeluoikeusService extends InMemQueryingResourceService[Opiskeluoikeus,
     case None => true
   }
 
-  val matcher: PartialFunction[Query[Opiskeluoikeus], (Opiskeluoikeus with Identified[UUID]) => Boolean] = {
+  override val emptyQuery: PartialFunction[Query[Opiskeluoikeus], Boolean] = {
+    case OpiskeluoikeusQuery(None, None) => true
+  }
+
+  override val matcher: PartialFunction[Query[Opiskeluoikeus], (Opiskeluoikeus with Identified[UUID]) => Boolean] = {
     case OpiskeluoikeusQuery(henkilo, myontaja) => (o: Opiskeluoikeus with Identified[UUID]) =>
       checkHenkilo(henkilo)(o) && checkMyontaja(myontaja)(o)
   }
