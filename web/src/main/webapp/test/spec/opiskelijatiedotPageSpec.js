@@ -122,8 +122,8 @@
                 expect(selector().text().trim()).to.equal(val)
             }
 
-            function assertMyontaja(val) {
-                expect(opiskelijatiedot.suoritusMyontajaCheck().first().text().trim()).to.equal(val)
+            function assertValue(selector, val) {
+                expect(selector().val().trim()).to.equal(val)
             }
 
             function areElementsVisible() {
@@ -132,7 +132,7 @@
                     opiskelijatiedot.luokkaTiedot().is(':visible')
             }
 
-            it('Etsi organisaatiosta henkiloita - test.dsl', seqDone(
+            it('Vaihtamalla henkilöä organisaatio haun listasta tiedot vaihtuvat - test.dsl', seqDone(
                 wait.forAngular,
                 function () {
                     httpFixtures().organisaatioService.pikkaralaGeneric()
@@ -161,14 +161,16 @@
                 function () {
                     expect(areElementsVisible()).to.equal(true)
                     assertText(opiskelijatiedot.hetuTieto, "123456-789")
-                    assertMyontaja("06345 Pikkaralan ala-aste")
+                    assertValue(opiskelijatiedot.suoritusMyontaja, "06345")
+                    assertValue(opiskelijatiedot.luokkaTaso, "10A")
                 },
                 click(opiskelijatiedot.resultsTableChild(2)),
                 wait.forAngular,
                 function () {
                     expect(areElementsVisible()).to.equal(true)
                     assertText(opiskelijatiedot.hetuTieto, "010719-917S")
-                    assertMyontaja("06345 Pikkaralan ala-aste")
+                    assertValue(opiskelijatiedot.suoritusMyontaja, "06345")
+                    assertValue(opiskelijatiedot.luokkaTaso, "9A")
                 }
             ))
         })

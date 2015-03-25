@@ -66,7 +66,7 @@ var httpFixtures = function () {
 
     fixtures.luokkaTiedotLocal = {
         aarnenLuokkaTiedot: function () {
-            httpBackend.when('GET', /.*rest\/v1\/opiskelijat\?henkilo=1.2.246.562.24.71944845619.*/).respond([{"id":"e86fb63a-607a-48da-b701-4527193e9efc","oppilaitosOid":"1.2.246.562.10.39644336305","luokkataso":"9","luokka":"9A","henkiloOid":"1.2.246.562.24.71944845619","alkuPaiva":"2014-08-17T21:00:00.000Z","loppuPaiva":"2015-06-03T21:00:00.000Z","source":"Test","core":{"oppilaitosOid":"1.2.246.562.10.39644336305","luokkataso":"9","henkiloOid":"1.2.246.562.24.71944845619"}}])
+            httpBackend.when('GET', /.*rest\/v1\/opiskelijat\?henkilo=1.2.246.562.24.71944845619.*/).respond([{"id":"e86fb63a-607a-48da-b701-4527193e9efc","oppilaitosOid":"1.2.246.562.10.39644336305","luokkataso":"10","luokka":"10A","henkiloOid":"1.2.246.562.24.71944845619","alkuPaiva":"2014-08-17T21:00:00.000Z","loppuPaiva":"2015-06-03T21:00:00.000Z","source":"Test","core":{"oppilaitosOid":"1.2.246.562.10.39644336305","luokkataso":"10","henkiloOid":"1.2.246.562.24.71944845619"}}])
         },
         tyynenLuokkaTiedot: function () {
             httpBackend.when('GET', /.*rest\/v1\/opiskelijat\?henkilo=1.2.246.562.24.98743797763$/).respond([{"id":"67108ac8-11db-4ec1-b1a5-613ffd095251","oppilaitosOid":"1.2.246.562.10.39644336305","luokkataso":"9","luokka":"9A","henkiloOid":"1.2.246.562.24.98743797763","alkuPaiva":"2014-08-17T21:00:00.000Z","loppuPaiva":"2015-06-03T21:00:00.000Z","source":"Test","core":{"oppilaitosOid":"1.2.246.562.10.39644336305","luokkataso":"9","henkiloOid":"1.2.246.562.24.98743797763"}}])
