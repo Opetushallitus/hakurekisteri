@@ -19,7 +19,11 @@ var httpFixtures = function () {
         },
         pikkaralaKoodi: function () {
             httpBackend.when('GET', /.*\/organisaatio-service\/rest\/organisaatio\/06345$/).respond(restData.organisaatioService.pikkarala)
+        },
+        foobarKoulu: function () {
+            httpBackend.when('GET', /organisaatio-service\/rest\/organisaatio\/v2\/hae\?aktiiviset=true&lakkautetut=false&organisaatiotyyppi=Oppilaitos&searchStr=foobar&suunnitellut=true/).respond({"numHits":1,"organisaatiot":[]})
         }
+        
     }
 
     fixtures.henkiloPalveluService = {

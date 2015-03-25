@@ -43,6 +43,19 @@
                     expect(opiskelijatiedot.resultsTable().length).to.equal(5)
                 }
             ))
+            it('Virheellinen oppilaitos haku', seqDone(
+                wait.forAngular,
+                function () {
+                    httpFixtures().organisaatioService.foobarKoulu()
+                },
+                input(opiskelijatiedot.organizationSearch, "foobar"),
+                wait.forAngular,
+                click(opiskelijatiedot.searchButton),
+                wait.forAngular,
+                function () {
+                    expect(opiskelijatiedot.resultsTable().length).to.equal(0)
+                }
+            ))
         })
 
         describe('Henkilohaku', function () {
