@@ -41,7 +41,7 @@ app.controller "TiedonsiirtoCtrl", [
     validateXml = window.validateXml = (xml) ->
       result = hakurekisteri.perusopetus.xml.validate.validoi(xml)
       $scope.validointiVirheet = R.toPairs(R.groupBy(({rule, resource}) -> rule.id)(result)).map ([ruleId, todistusTuplet]) ->
-        todistukset = todistusTuplet.map (tuple) -> tuple[0]
+        todistukset = todistusTuplet.map (tuple) -> tuple.resource
         {ruleId, todistukset, count: todistukset.length}
       console.log("validation result", $scope.validointiVirheet)
       $scope.$apply()

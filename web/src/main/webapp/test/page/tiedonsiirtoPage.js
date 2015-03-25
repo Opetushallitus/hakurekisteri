@@ -32,6 +32,12 @@ function TiedonsiirtoPage() {
         validationErrors: function() {
             return S(".validation-error")
         },
+        validationErrorNames: function() {
+            return S(".validation-error .name")
+        },
+        validationErrorCounts: function() {
+            return S(".validation-error .count")
+        },
         uploadResult: function() {
             return S("#uploadResult").first()
         },

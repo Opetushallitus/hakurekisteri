@@ -51,19 +51,41 @@
             })
 
             describe("Arvosanojen validointi", function() {
-                describe("Arvosanat puuttuvat", function() {
+                describe("Arvosanat puuttuvat, korkeintaan 3 henkilöä", function() {
                     before(function() {
-                        testFrame().validateXml(todistus([]))
+                        testFrame().validateXml(todistukset([{aineet: []},{aineet: []}]))
                     })
 
                     it("Näyttää validointivirheet", function() {
                         expect(page.validationErrors().length).to.be.above(10)
                     })
+
+                    it("Näyttää henkilöiden nimet", function() {
+                        expect(page.validationErrorNames().text()).to.contain("Pertti Karppinen")
+                    })
+                })
+
+                describe("Arvosanat puuttuvat, yli 3 henkilöä", function() {
+                    before(function() {
+                        testFrame().validateXml(todistukset([{aineet: []},{aineet: []},{aineet: []},{aineet: []}]))
+                    })
+
+                    it("Näyttää validointivirheet", function() {
+                        expect(page.validationErrors().length).to.be.above(10)
+                    })
+
+                    it("Ei näytä henkilöiden nimiä", function() {
+                        expect(page.validationErrorNames().text()).to.equal("")
+                    })
+
+                    it("Näyttää henkilöiden lukumäärät", function() {
+                        expect(page.validationErrorCounts().text()).to.contain("4 oppilasta")
+                    })
                 })
 
                 describe("Kaikki pakolliset arvosanat", function() {
                     before(function() {
-                        testFrame().validateXml(todistus(["TE","KO","BI","MU","LI","A1","KT","GE","KU","A2","KE","MA","FY","KS","YH","HI","AI"]))
+                        testFrame().validateXml(todistukset([{aineet: ["TE","KO","BI","MU","LI","A1","KT","GE","KU","A2","KE","MA","FY","KS","YH","HI","AI"]}]))
                     })
 
                     it("Ei näytä validointivirheitä", function() {
@@ -76,10 +98,14 @@
                     })
                 })
 
-                function todistus(aineet) {
-                    return "<arvosanat><henkilo><perusopetus>"
-                      + aineet.map(function(aine) { return "<"+aine.toUpperCase()+"><yhteinen>5</yhteinen></" + aine +">" }).join("")
-                      + "</perusopetus></henkilo></arvosanat>"
+                function todistukset(datat) {
+                    return "<arvosanat>" + datat.map(todistus).join("") + "</arvosanat>"
+                }
+
+                function todistus(data) {
+                    return "<henkilo><sukunimi>Karppinen</sukunimi><kutsumanimi>Pertti</kutsumanimi><perusopetus>"
+                      + data.aineet.map(function(aine) { return "<"+aine.toUpperCase()+"><yhteinen>5</yhteinen></" + aine +">" }).join("")
+                      + "</perusopetus></henkilo>"
                 }
             })
         });

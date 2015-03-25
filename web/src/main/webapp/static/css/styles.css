@@ -292,3 +292,6 @@ optgroup option {
 .validation-error {
     color: #a94442;
 }
+.validation-error .name:last-child .separator {
+    display: none;
+}
