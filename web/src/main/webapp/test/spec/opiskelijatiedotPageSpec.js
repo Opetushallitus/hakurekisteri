@@ -187,6 +187,53 @@
                 }
             ))
         })
+        
+        describe('URL parametrin vaihto', function () {
+            it('Henkilo haku URL parametri', seqDone(
+                function () {
+                    httpFixtures().organisaatioService.pikkaralaOid()
+                    httpFixtures().henkiloPalveluService.aarne()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                    httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                    httpFixtures().arvosanatLocal.aarnenArvosanat()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().komoLocal.komoTiedot()
+                    koodistoFixtures()
+                },
+                input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                click(opiskelijatiedot.searchButton),
+                wait.forAngular,
+                function () {
+                    console.log('href='+testFrame().location.hash)
+                    expect(testFrame().location.hash).to.equal('#/muokkaa-obd?henkilo=1.2.246.562.24.71944845619&oppilaitos=&vuosi=2015')
+                }
+            ))
+            it('Organisaatio haku URL parametri', seqDone(
+                function () {
+                    httpFixtures().organisaatioService.pikkaralaGeneric()
+                    httpFixtures().organisaatioService.pikkaralaKoodi()
+                    httpFixtures().organisaatioService.pikkaralaOid()
+                    httpFixtures().henkiloPalveluService.aarne()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
+                    httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
+                    httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                    httpFixtures().arvosanatLocal.aarnenArvosanat()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().komoLocal.komoTiedot()
+                    httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
+                    koodistoFixtures()
+                },
+                typeaheadInput(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
+                wait.forAngular,
+                click(opiskelijatiedot.searchButton),
+                wait.forAngular,
+                function () {
+                    console.log('href='+testFrame().location.hash)
+                    expect(testFrame().location.hash).to.equal('#/muokkaa-obd?henkilo=&oppilaitos=06345&vuosi=2015')
+                }
+            ))
+        })
 
         describe('Suoritustietojen muokkaus', function () {
                 function saveEnabled() {
