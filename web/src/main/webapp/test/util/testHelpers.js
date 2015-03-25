@@ -136,6 +136,7 @@ function openPage(path, predicate) {
         $("#testframe").replaceWith(newTestFrame);
         return wait.until(function () {
             testFrame().mocksOn = true
+            testFrame().runTestHooks = runTestHooks
             return predicate()
         })().then(function () {
             window.uiError = null;
@@ -144,6 +145,19 @@ function openPage(path, predicate) {
             }; // Hack: force mocha to fail on unhandled exceptions
         })
     }
+}
+
+var testHooks = []
+
+function addTestHook(fn) {
+    return function() {
+        testHooks.push(fn)
+    }
+}
+
+function runTestHooks() {
+    testHooks.forEach(function(hook) { hook() })
+    testHooks = []
 }
 
 function exists(fn) {
