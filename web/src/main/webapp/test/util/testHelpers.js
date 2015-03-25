@@ -180,6 +180,30 @@ function typeaheadInput(inputFn, text, selectItemFn) {
     )
 }
 
+// Promise returning POST data triggered by triggerFn. urlPattern needs to match POST url
+function mockPostReturnData(triggerFn, urlPattern) {
+    var deferred = Q.defer();
+    return seq(
+        function () {
+            var savedData
+            testFrame().httpBackend.when('POST', urlPattern, function (data) {
+                deferred.resolve(data)
+                savedData = data
+                return true
+            }).respond(savedData)
+        },
+        triggerFn,
+        function(){return deferred.promise}
+    )
+}
+
+function log(marker) {
+    return function(arg) {
+        console.log(marker, arg);
+        return arg;
+    }
+}
+
 function takeScreenshot() {
     if (window.callPhantom) {
         var date = new Date();

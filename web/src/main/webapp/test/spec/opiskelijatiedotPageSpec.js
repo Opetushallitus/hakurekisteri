@@ -197,8 +197,6 @@
                     return waitJqueryIs(opiskelijatiedot.saveButton, ":disabled", true)
                 }
 
-                var savedData;
-
                 it("Peruskoulun suoritustiedot ja arvosanat talletetaan vain jos muuttuneita arvoja", seqDone(
                     function () {
                         httpFixtures().organisaatioService.pikkaralaOid()
@@ -237,17 +235,9 @@
                         httpFixtures().organisaatioService.pikkaralaKoodi()
                     },
                     typeaheadInput(opiskelijatiedot.suoritusMyontaja, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
-                    function () {
-                        testFrame().httpBackend.when('POST', /.*rest\/v1\/suoritukset\/4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9$/, function (data) {
-                            savedData = data;
-                            return true
-                        }).respond(savedData)
-                    },
-                    click(opiskelijatiedot.saveButton),
-                    wait.until(function () {
-                        return savedData
-                    }),
-                    function () {
+                    saveEnabled(),
+                    mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/suoritukset\/4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9$/),
+                    function (savedData) {
                         expect(JSON.parse(savedData)).to.deep.equal({
                             henkiloOid: "1.2.246.562.24.71944845619",
                             source: "ophadmin",
