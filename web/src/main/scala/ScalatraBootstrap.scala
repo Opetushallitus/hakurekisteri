@@ -100,9 +100,9 @@ class ScalatraBootstrap extends LifeCycle {
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
       ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
       ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),
-      ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(koosteet.haut),
+      ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(integrations.haut),
       ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),
-      ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),
+      ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta, integrations.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),
       ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SpringSecuritySupport,
       ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
       ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
@@ -297,6 +297,7 @@ trait Integrations {
   val ytl: ActorRef
   val parametrit: ActorRef
   val valintaTulos: ActorRef
+  val haut: ActorRef
 }
 
 class BaseIntegrations(virtaConfig: VirtaConfig,
@@ -321,7 +322,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf, None)(ec, system), hakemusConfig.maxApplications)), "hakemus")
 
-  hakemukset ! Trigger{
+  hakemukset ! Trigger {
     (hakemus: FullHakemus) =>
       for (
         person <- hakemus.personOid;
@@ -334,10 +335,6 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
       ) rekisterit.suoritusRekisteri ! VapaamuotoinenKkTutkinto(person, kuvaus, myontaja, vuosi, 0, person)
   }
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(system), organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
-
-  val virtaQueue = system.actorOf(Props(new VirtaQueue(virta, hakemukset)), "virta-queue")
-
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, ytlConfig)), "ytl")
 
   val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig, None)(ec, system))), "koodisto")
@@ -345,20 +342,23 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
   val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig, None)(ec, system))), "parametrit")
 
   val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig, None)(ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool"), system))), "valintaTulos")
+
+  val haut = system.actorOf(Props(new HakuActor(tarjonta, parametrit, hakemukset, valintaTulos, ytl)))
+
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(system), organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
+
+  val virtaQueue = system.actorOf(Props(new VirtaQueue(virta, hakemukset, haut)), "virta-queue")
 }
 
 trait Koosteet {
   val hakijat: ActorRef
   val ensikertalainen: ActorRef
-  val haut: ActorRef
 }
 
 class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: Registers) extends Koosteet {
   implicit val ec: ExecutionContext = system.dispatcher
 
-  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.valintaTulos, integrations.ytl)))
-
-  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemukset, haut), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
+  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemukset, integrations.haut), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
 
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.tarjonta)), "ensikertalainen")
 }
