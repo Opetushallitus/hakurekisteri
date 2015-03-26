@@ -35,6 +35,7 @@ opiskelijatiedot = initSelectors({
     },
     henkiloSearch: "#henkiloTerm",
     henkiloTiedot: "#henkiloTiedot",
+    vuosiSearch: "#vuosiTerm",
     hetuTieto: "#hetuTieto",
     suoritusTiedot: "#suoritusTiedot",
     luokkaTiedot: "#luokkaTiedot",

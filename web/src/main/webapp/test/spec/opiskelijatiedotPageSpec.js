@@ -189,6 +189,11 @@
         })
         
         describe('URL parametrin vaihto', function () {
+
+            function getCurrentYear() {
+                return new Date().getFullYear()
+            }
+
             it('Henkilo haku URL parametri', seqDone(
                 function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
@@ -202,11 +207,12 @@
                     koodistoFixtures()
                 },
                 input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                wait.forAngular,
+                select(opiskelijatiedot.vuosiSearch, '2'),
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
                 function () {
-                    console.log('href='+testFrame().location.hash)
-                    expect(testFrame().location.hash).to.equal('#/muokkaa-obd?henkilo=1.2.246.562.24.71944845619&oppilaitos=&vuosi=2015')
+                    expect(testFrame().location.hash).to.equal('#/muokkaa-obd?henkilo=1.2.246.562.24.71944845619&oppilaitos=&vuosi='+getCurrentYear())
                 }
             ))
             it('Organisaatio haku URL parametri', seqDone(
@@ -226,11 +232,12 @@
                 },
                 typeaheadInput(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
                 wait.forAngular,
+                select(opiskelijatiedot.vuosiSearch, '2'),
+                wait.forAngular,
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
                 function () {
-                    console.log('href='+testFrame().location.hash)
-                    expect(testFrame().location.hash).to.equal('#/muokkaa-obd?henkilo=&oppilaitos=06345&vuosi=2015')
+                    expect(testFrame().location.hash).to.equal('#/muokkaa-obd?henkilo=&oppilaitos=06345&vuosi='+getCurrentYear())
                 }
             ))
         })
