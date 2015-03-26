@@ -93,6 +93,7 @@ object IlmoitetutArvosanatTrigger {
       ) yield {
         val itseIlmoitettuSuoritus: Suoritus =
           ItseilmoitettuPeruskouluTutkinto(
+            hakemusOid = hakemus.oid,
             hakijaOid = personOid,
             valmistumisvuosi.toInt,
             suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI"))
@@ -103,6 +104,7 @@ object IlmoitetutArvosanatTrigger {
       val lukionArvosanat: Seq[(Suoritus, Seq[Arvosana])] = (for (valmistumisvuosi <- koulutustausta.lukioPaattotodistusVuosi) yield {
         val itseIlmoitettuSuoritus: Suoritus =
           ItseilmoitettuLukioTutkinto(
+            hakemusOid = hakemus.oid,
             hakijaOid = personOid,
             valmistumisvuosi.toInt,
             suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI"))
@@ -121,6 +123,7 @@ object IlmoitetutArvosanatTrigger {
     ) yield koulutustausta.lukioPaattotodistusVuosi.map(_.toInt).map(vuosi => {
         // Lukion suoritus
         Seq(ItseilmoitettuLukioTutkinto(
+          hakemusOid = hakemus.oid,
           hakijaOid = personOid,
           vuosi,
           suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
@@ -134,6 +137,7 @@ object IlmoitetutArvosanatTrigger {
               if("true".equals(lk)) {
                 Seq(ItseilmoitettuTutkinto(
                   komoOid = Config.ammattistarttiKomoOid,
+                  hakemusOid = hakemus.oid,
                   hakijaOid = personOid,
                   vuosi,
                   suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
@@ -146,6 +150,7 @@ object IlmoitetutArvosanatTrigger {
               if("true".equals(lk)) {
                 Seq(ItseilmoitettuTutkinto(
                   komoOid = Config.lisaopetusTalousKomoOid,
+                  hakemusOid = hakemus.oid,
                   hakijaOid = personOid,
                   vuosi,
                   suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
@@ -158,6 +163,7 @@ object IlmoitetutArvosanatTrigger {
               if("true".equals(lk)) {
                 Seq(ItseilmoitettuTutkinto(
                   komoOid = Config.lisaopetusKomoOid,
+                  hakemusOid = hakemus.oid,
                   hakijaOid = personOid,
                   vuosi,
                   suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
@@ -167,6 +173,7 @@ object IlmoitetutArvosanatTrigger {
             }).getOrElse(Seq.empty),
           // PERUSKOULUTUTKINTO AINA KUN PK_PAATTOTODISTUSVUOSI LOYTYY
             Seq(ItseilmoitettuPeruskouluTutkinto(
+            hakemusOid = hakemus.oid,
             hakijaOid = personOid,
             vuosi,
             suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI"))))
