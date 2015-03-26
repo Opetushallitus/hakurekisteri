@@ -5,15 +5,15 @@
                typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv)) for organisaatio in getOppilaitos($viewValue, info) | filter:$viewValue | limitTo:10"
                typeahead-on-select="info.organisaatio = $item" typeahead-loading="oppilaitosLoading"
                typeahead-wait-ms="500" required="required"
-               class="form-control input-sm {{oppilaitosLoading ? 'input-loading' : ''}}"/>
+               class="form-control input-sm test-luokkatietoOppilaitos {{oppilaitosLoading ? 'input-loading' : ''}}"/>
     </div>
     <div class="form-group col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.luokka">Luokka</strong>
-        <input  class="test-luokkaTaso" type="text" ng-disabled="info.delete" ng-model="luokkatieto.luokka" required="required"
-               class="form-control input-sm"/>
+        <input type="text" ng-disabled="info.delete" ng-model="luokkatieto.luokka" required="required"
+               class="form-control input-sm test-luokkatietoLuokka"/>
     </div>
     <div class="form-group col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.luokkataso">Luokkataso</strong>
         <select ng-disabled="info.delete" ng-model="luokkatieto.luokkataso" required="required"
-                ng-options="l.value as l.text for l in luokkatasot" class="form-control input-sm"></select>
+                ng-options="l.value as l.text for l in luokkatasot" class="form-control input-sm test-luokkatietoLuokkaTaso"></select>
     </div>
 </div>
 <div class="row">
@@ -24,7 +24,7 @@
                    title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)" datepicker-popup="{{format}}"
                    datepicker-options="dateOptions" required="required" datepicker-append-to-body="true"
                    is-open="alkuOpen" ng-click="alkuOpen = true" show-button-bar="false"
-                   class="form-control input-sm datepicker"/><span class="input-group-btn">
+                   class="form-control input-sm datepicker test-luokkatietoAlkuPaiva"/><span class="input-group-btn">
         <button type="button" ng-click="luokkatieto.alkuPaiva = null; luokkatieto.loppuPaiva = null;"
                 class="btn btn-default btn-sm"><span class="glyphicon glyphicon-remove"></span></button></span>
         </div>
@@ -36,7 +36,7 @@
                    title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)" datepicker-popup="{{format}}"
                    datepicker-options="dateOptions" min-date="luokkatieto.alkuPaiva" datepicker-append-to-body="true"
                    is-open="loppuOpen" ng-click="loppuOpen = true" show-button-bar="false"
-                   class="form-control input-sm datepicker"/><span class="input-group-btn">
+                   class="form-control input-sm datepicker test-luokkatietoLoppuPaiva"/><span class="input-group-btn">
         <button type="button" ng-click="luokkatieto.loppuPaiva = null" class="btn btn-default btn-sm"><span
                 class="glyphicon glyphicon-remove"></span></button></span>
         </div>
