@@ -251,6 +251,49 @@
                 function saveDisabled() {
                     return waitJqueryIs(opiskelijatiedot.saveButton, ":disabled", true)
                 }
+                function testAlertText (selector, expected) {
+                    return function() {
+                        expect(selector().text().indexOf(expected)).not.to.equal(-1)
+                    }
+                }
+
+
+                it("Vahvistamattomalle suoritukselle näytetään info-viesti", seqDone(
+                    function () {
+                        httpFixtures().organisaatioService.pikkaralaOid()
+                        httpFixtures().henkiloPalveluService.aarne()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                        httpFixtures().arvosanatLocal.aarnenArvosanat()
+                        httpFixtures().suorituksetLocal.aarnenVahvistamatonSuoritus()
+                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                        httpFixtures().komoLocal.komoTiedot()
+                        koodistoFixtures()
+                    },
+                    input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                    click(opiskelijatiedot.searchButton),
+                    wait.forAngular,
+                    visible(opiskelijatiedot.hakijanIlmoittamaAlert),
+                    testAlertText(opiskelijatiedot.hakijanIlmoittamaAlert, "Suoritus ei ole vahvistettu")
+                ))
+                it("Hakijan ilmoittamalle suoritukselle näytetään info-viesti", seqDone(
+                    function () {
+                        httpFixtures().organisaatioService.pikkaralaOid()
+                        httpFixtures().henkiloPalveluService.aarne()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                        httpFixtures().arvosanatLocal.aarnenArvosanat()
+                        httpFixtures().suorituksetLocal.aarnenVahvistamatonSuoritusHakemukselta()
+                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                        httpFixtures().komoLocal.komoTiedot()
+                        koodistoFixtures()
+                    },
+                    input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                    click(opiskelijatiedot.searchButton),
+                    wait.forAngular,
+                    visible(opiskelijatiedot.hakijanIlmoittamaAlert),
+                    testAlertText(opiskelijatiedot.hakijanIlmoittamaAlert, "Suoritus hakijan ilmoittama")
+                ))
 
                 it("Peruskoulun suoritustiedot ja arvosanat talletetaan vain jos muuttuneita arvoja", seqDone(
                     function () {

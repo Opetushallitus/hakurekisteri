@@ -60,6 +60,12 @@ var httpFixtures = function () {
         },
         tyynenSuoritukset: function () {
             httpBackend.when('GET', /.*rest\/v1\/suoritukset\?henkilo=1.2.246.562.24.98743797763$/).respond([{"henkiloOid":"1.2.246.562.24.98743797763","source":"Test","vahvistettu":true,"komo":"1.2.246.562.13.62959769647","myontaja":"1.2.246.562.10.39644336305","tila":"KESKEN","valmistuminen":"04.06.2015","yksilollistaminen":"Ei","suoritusKieli":"fi","id":"b3704e86-942f-43ed-b842-9d6570ecab4c"}])
+        },
+        aarnenVahvistamatonSuoritus: function () {
+            httpBackend.when('GET', /.*rest\/v1\/suoritukset\?henkilo=1.2.246.562.24.71944845619$/).respond([{"henkiloOid":"1.2.246.562.24.71944845619","source":"ophadmin","vahvistettu":false,"komo":"1.2.246.562.13.62959769647","myontaja":"1.2.246.562.10.39644336305","tila":"KESKEN","valmistuminen":"03.06.2015","yksilollistaminen":"Ei","suoritusKieli":"fi","id":"4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9"}])
+        },
+        aarnenVahvistamatonSuoritusHakemukselta: function() {
+            httpBackend.when('GET', /.*rest\/v1\/suoritukset\?henkilo=1.2.246.562.24.71944845619$/).respond([{"henkiloOid":"1.2.246.562.24.71944845619","source":"ophadmin","vahvistettu":false,"komo":"1.2.246.562.13.62959769647","myontaja":"1.2.246.562.11.39644336305","tila":"KESKEN","valmistuminen":"03.06.2015","yksilollistaminen":"Ei","suoritusKieli":"fi","id":"4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9"}])
         }
     }
 
