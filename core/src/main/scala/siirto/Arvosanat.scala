@@ -199,7 +199,13 @@ object Arvosanat extends SchemaDefinition {
       </xs:restriction>
     </xs:simpleType>
 
-    <xs:complexType name="EiValmistuLisaType"/>
+    <xs:simpleType name="EiValmistuLisaType">
+      <xs:restriction base="xs:string">
+        <xs:enumeration value="SUORITUS HYLATTY"/>
+      </xs:restriction>
+    </xs:simpleType>
+
+
 
     <xs:group name="SyntymaAjallinen">
       <xs:sequence>
