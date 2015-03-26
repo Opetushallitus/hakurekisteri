@@ -84,6 +84,7 @@ trait Journal[T <: Resource[I, T], I] {
 
 sealed abstract class Delta[T <: Resource[I, T], I]
 case class Updated[T <: Resource[I, T], I](current:T with Identified[I]) extends Delta[T, I]
+case class Insert[T <: Resource[I, T], I](current:T with Identified[I]) extends Delta[T, I]
 case class Deleted[T <: Resource[I, T], I](id:I, source: String) extends Delta[T, I]
 
 class InMemJournal[T <: Resource[I, T], I] extends Journal[T, I] {

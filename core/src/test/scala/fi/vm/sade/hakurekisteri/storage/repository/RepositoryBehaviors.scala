@@ -64,7 +64,6 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
         }
     }
 
-
     it should "return updated item when updated" in repoContext {
       (repo, items, itemConstructor, itemUpdater) =>
         for (i <- repo.listAll().size to 10) repo.save(itemConstructor)
@@ -82,6 +81,21 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
         forAll(Table("adds",repo.listAll().map(itemUpdater).take(10):_*)) {
           (item) => repo.get(repo.save(item).id) should be (Some(item))
         }
+    }
+
+    it should "contain inserted item when inserted" in repoContext {
+      (repo, items, itemConstructor, itemUpdater) =>
+        forAll(Table("adds",Stream.continually(itemConstructor).take(10):_*)) {
+          (item) => repo.get(repo.insert(item).id) should be (Some(item))
+        }
+    }
+
+    it should "not update when inserting" in repoContext {
+      (repo, items, itemConstructor, itemUpdater) =>
+        for (i <- repo.listAll().size to 1) repo.save(itemConstructor)
+        val original = repo.listAll().head
+        val updated = itemUpdater(original)
+        repo.get(repo.insert(updated).id) should be (Some(original))
     }
 
     it should "retain id of the item when updated" in repoContext {

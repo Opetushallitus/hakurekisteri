@@ -9,7 +9,8 @@ import java.util.UUID
 import scala.concurrent.Future
 
 
-trait ArvosanaRepository extends JournaledRepository[Arvosana, UUID] {
+trait
+ArvosanaRepository extends JournaledRepository[Arvosana, UUID] {
 
   var suoritusIndex: Map[UUID, Seq[Arvosana with Identified[UUID]]] = Option(suoritusIndex).getOrElse(Map())
 

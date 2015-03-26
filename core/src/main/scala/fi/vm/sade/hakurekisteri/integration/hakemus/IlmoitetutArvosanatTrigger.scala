@@ -3,7 +3,8 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 import java.util.UUID
 
 
-import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.rest.support.Resource
+import fi.vm.sade.hakurekisteri.storage.{InsertResource, Identified}
 import fi.vm.sade.hakurekisteri.suoritus._
 import akka.actor.ActorRef
 import akka.pattern.AskTimeoutException
@@ -25,8 +26,8 @@ object IlmoitetutArvosanatTrigger {
   implicit def osaaminen2RicherOsaaminen(osaaminen:Map[String,String]):RicherOsaaminen = RicherOsaaminen(osaaminen)
   implicit def koulutustausta2RicherKoulutustausta(koulutustausta:Map[String,String]):RicherKoulutustausta = RicherKoulutustausta(koulutustausta)
 
-  def arvosanaToSuoritus(arvosana: Arvosana, s: Suoritus with Identified[UUID]): Arvosana = {
-    Arvosana(suoritus = s.id, arvio = arvosana.arvio, aine = arvosana.aine, lisatieto = arvosana.lisatieto, valinnainen = arvosana.valinnainen, myonnetty = arvosana.myonnetty, source = arvosana.source)
+  def arvosanaForSuoritus(arvosana: Arvosana, s: Suoritus with Identified[UUID]): Arvosana = {
+    arvosana.copy(suoritus = s.id)
   }
 
   def muodostaSuorituksetJaArvosanat(hakemus: FullHakemus, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef)(implicit ec: ExecutionContext): Unit = {
@@ -47,7 +48,8 @@ object IlmoitetutArvosanatTrigger {
       ) {
         suoritusJaArvosanat._2.foreach(
           arvosana => {
-            arvosanaRekisteri ! arvosanaToSuoritus(arvosana, suoritus)
+            val arvosanaForSuoritus1: Arvosana = arvosanaForSuoritus(arvosana, suoritus)
+            arvosanaRekisteri ! InsertResource[UUID, Arvosana](arvosanaForSuoritus1)
           }
         )
       }

@@ -9,6 +9,8 @@ trait Repository[T, I] {
 
   def save(t:T):T with Identified[I]
 
+  def insert(t:T):T with Identified[I]
+
   def listAll():Seq[T with Identified[I]]
 
   def get(id: I): Option[T with Identified[I]]
@@ -46,6 +48,24 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
     cursor = cursor + ((o.hashCode % 16384) -> updateCursor(o,oid.id))
     old.foreach((item) => cursor = cursor + ((item.hashCode % 16384) -> updateCursor(item,oid.id)))
     result
+  }
+
+  def insert(o: T ): T with Identified[I] = {
+
+    val oid = reverseStore.get(o.core).flatMap((ids) => ids.headOption.map((id) => o.identify(id)) ).getOrElse(o.identify)
+    val old = store.get(oid.id)
+    old match {
+      case None => {
+        val result = saveIdentified(oid)
+        cursor = cursor + ((o.hashCode % 16384) -> updateCursor(o,oid.id))
+        //old.foreach((item) => cursor = cursor + ((item.hashCode % 16384) -> updateCursor(item,oid.id)))
+        result
+      }
+      case Some(i) => {
+        i
+      }
+    }
+
   }
 
   protected def saveIdentified(oid: T with Identified[I]) = {

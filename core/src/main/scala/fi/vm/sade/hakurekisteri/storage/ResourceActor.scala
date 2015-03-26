@@ -52,6 +52,12 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
       delete(id, user)
       sender ! id
       log.debug(s"deleted $id answered to $sender")
+    case InsertResource(resource: T) =>
+      log.debug(s"received insert request for resource: $resource from $sender")
+      val insertTry = Try(insert(resource))
+      if (insertTry.isFailure)
+        log.error(insertTry.failed.get, "insert failed")
+      sender ! insertTry.recover{ case e: Exception => Failure(e)}.get
     case Report =>
       log.debug(s"saved: $saved")
     case Reload  =>
@@ -61,5 +67,6 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
 }
 
 case class DeleteResource[I](id: I, source: String)
+case class InsertResource[I, T <: Resource[I, T]](resource: T)
 
 object Reload

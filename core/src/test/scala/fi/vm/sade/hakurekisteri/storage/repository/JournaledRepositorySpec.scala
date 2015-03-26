@@ -21,7 +21,7 @@ class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBeha
   }
 
   def itemUpdater(original:TestResource with Identified[UUID]):TestResource with Identified[UUID] = {
-    TestResource(original.id, original.name + " updated")
+    TestResource(original.id, original.name + " updated", value=Some("Updated"))
   }
 
   it should behave like basicRepoBehaviors(repoConstructor, itemConstructor, itemUpdater)
@@ -39,7 +39,7 @@ class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBeha
   trait JournalWithEntries extends Repo {
     val amount = 100
     val ids = Stream.continually(java.util.UUID.randomUUID).take(amount)
-    val resources = Stream.continually(ids).take(2).flatten.zip(Stream.tabulate(amount * 2){(i) => if (i >= amount) s"updated${UUID.randomUUID}" else s"original${UUID.randomUUID}"}).map{case (id, round) => TestResource(id, round.toString)}
+    val resources = Stream.continually(ids).take(2).flatten.zip(Stream.tabulate(amount * 2){(i) => if (i >= amount) s"updated${UUID.randomUUID}" else s"original${UUID.randomUUID}"}).map{case (id, round) => TestResource(id, round.toString, None)}
     val journal = TestJournal[TestResource](resources)
   }
 

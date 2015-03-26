@@ -5,7 +5,7 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository._
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 
-case class TestResource(name:String) extends fi.vm.sade.hakurekisteri.rest.support.UUIDResource[TestResource] {
+case class TestResource(name:String, value: Option[String] = None) extends fi.vm.sade.hakurekisteri.rest.support.UUIDResource[TestResource] {
 
   val source = "Test"
   override def identify(id: UUID): TestResource with Identified[UUID] = TestResource.identify(this, id)
@@ -17,7 +17,7 @@ case class TestResource(name:String) extends fi.vm.sade.hakurekisteri.rest.suppo
 
 object TestResource {
 
-  def apply(id:UUID, name:String): TestResource with Identified[UUID] = TestResource(name).identify(id)
+  def apply(id:UUID, name:String, value: Option[String]): TestResource with Identified[UUID] = TestResource(name, value).identify(id)
 
 
   def identify(o:TestResource): TestResource with Identified[UUID] = o match {
@@ -28,7 +28,7 @@ object TestResource {
   def identify(t:TestResource, identity:UUID) = {
 
 
-    new TestResource(t.name) with Identified[UUID] {
+    new TestResource(t.name, t.value) with Identified[UUID] {
       val id: UUID = identity
     }
   }

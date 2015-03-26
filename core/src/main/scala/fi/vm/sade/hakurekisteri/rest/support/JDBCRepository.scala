@@ -64,7 +64,12 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
       case None => doSave(t)
     }
   }
-
+  override def insert(t: R): R with Identified[I] = {
+    deduplicate(t) match {
+      case Some(i) => i
+      case None => doSave(t)
+    }
+  }
 }
 
 trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends ResourceService[R,I] { this: JDBCRepository[R,I,T] =>

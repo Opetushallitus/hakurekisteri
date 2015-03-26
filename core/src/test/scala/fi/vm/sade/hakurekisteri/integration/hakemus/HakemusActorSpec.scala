@@ -51,6 +51,42 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
   implicit val timeout: Timeout = 5.second
   import CustomMatchers._
 
+  it should "add arvosanat only once" in {
+    // Tätä ei suoriteta synkronisesti koko testijoukon suorituksen yhteydessä
+    /*
+    val suoritusRekisteri = TestActorRef(new SuoritusActor)
+    val arvosanaRekisteri = TestActorRef(new ArvosanaActor)
+
+    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(
+      Hakemus()
+        .setPersonOid("person1")
+        .setLukionPaattotodistusvuosi(2000)
+        .setPerusopetuksenPaattotodistusvuosi(1988)
+        .putArvosana("LK_MA","8")
+        .build,
+      suoritusRekisteri, arvosanaRekisteri)
+    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(
+      Hakemus()
+        .setPersonOid("person1")
+        .setLukionPaattotodistusvuosi(2000)
+        .setPerusopetuksenPaattotodistusvuosi(1988)
+        .putArvosana("LK_MA","9")
+        .build,
+      suoritusRekisteri, arvosanaRekisteri)
+    val future = (arvosanaRekisteri ? ArvosanaQuery(None)).mapTo[Seq[Arvosana with Identified[UUID]]]
+    val result = future.value.get
+
+    result.isSuccess should be (true)
+    result.get should containArvosanat (Seq(
+      Arvosana(null,Arvio410("8"),"MA",None,false,None,"person1")
+    ))
+
+    val suoritusFut = (suoritusRekisteri ? SuoritusQuery(None))
+    val suoritusRes = suoritusFut.value.get
+    suoritusRes.isSuccess should be (true)
+    */
+  }
+
   it should "create suoritukset and arvosanat to rekisteri" in {
     // Tätä ei suoriteta synkronisesti koko testijoukon suorituksen yhteydessä
     /*
@@ -201,9 +237,15 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
       def apply(left: Seq[Arvosana]) = {
         MatchResult(
           if(left.isEmpty) false else left.map(l => expectedArvosanat.exists(p => l.arvio.equals(p.arvio) && l.lisatieto.equals(p.lisatieto) )).reduceLeft(_ && _),
-          s"""Arvosana not in expected arvosanat""",
-          s"""Arvosana in expected arvosanat"""
+          s"""Arvosanat\n ${left.toList}\nwas not expected\n $expectedArvosanat""",
+          s"""Arvosanat\n ${stripId(left).toList}\nwas expected\n $expectedArvosanat"""
         )
+      }
+
+      private def stripId(l: Seq[Arvosana]) = {
+        l.map(l0 => {
+          l0.copy(suoritus=null)
+        })
       }
     }
 
