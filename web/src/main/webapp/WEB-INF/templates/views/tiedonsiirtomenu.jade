@@ -1,3 +1,0 @@
-ul(class="nav nav-tabs nav-stacked")
-  li(ng-repeat="m in menu" ng-if="hasRole(m.role)" class="block-menu {{isActive(m.path) ? 'active' : ''}}")
-    a(href="{{m.href}}" oph-msg="{{m.messageKey}}") {{m.text}}
