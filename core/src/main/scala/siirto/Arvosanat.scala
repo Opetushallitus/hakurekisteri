@@ -255,7 +255,7 @@ object Arvosanat extends SchemaDefinition {
             <xs:element name="MA" type="LukioAineLaajuudellaType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="BI" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="GE" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
-            <xs:element name="FY" type="LukioAineLaajuudellaType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="FY" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="KE" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="TE" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="KT" type="LukioAineType" maxOccurs="1" minOccurs="0"/>
