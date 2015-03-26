@@ -98,7 +98,34 @@ object Arvosanat extends SchemaDefinition {
 
     <xs:complexType name="LisaopetusType">
       <xs:complexContent>
-        <xs:extension base="SuoritusType"/>
+        <xs:extension base="SuoritusType">
+          <xs:sequence>
+            <xs:element name="AI" type="PerusOpetusAidinkieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="A1" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="A12" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="A2" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="A22" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="B1" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="B2" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="B22" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="B23" type="PerusOpetusKieliType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="MA" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="KS" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="KE" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="KU" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="KO" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="BI" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="MU" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="LI" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="HI" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="FY" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="YH" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="TE" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="KT" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="GE" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="eivalmistu" type="EiValmistuLisaType"/>
+          </xs:sequence>
+        </xs:extension>
       </xs:complexContent>
     </xs:complexType>
 
@@ -168,9 +195,11 @@ object Arvosanat extends SchemaDefinition {
     <xs:simpleType name="EiValmistuType">
       <xs:restriction base="xs:string">
         <xs:enumeration value="JAA LUOKALLE"/>
-        <xs:enumeration value="HYLATTY"/>
+        <xs:enumeration value="PERUSOPETUS PAATTYNYT VALMISTUMATTA"/>
       </xs:restriction>
     </xs:simpleType>
+
+    <xs:complexType name="EiValmistuLisaType"/>
 
     <xs:group name="SyntymaAjallinen">
       <xs:sequence>
@@ -215,10 +244,10 @@ object Arvosanat extends SchemaDefinition {
       <xs:sequence>
         <xs:element name="perusopetus" type="PerusopetusType" maxOccurs="1" minOccurs="1"/>
         <xs:element name="perusopetuksenlisaopetus" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
-        <xs:element name="ammattistartti" type="SuoritusType" maxOccurs="1" minOccurs="0"/>
-        <xs:element name="valmentava" type="SuoritusType" maxOccurs="1" minOccurs="0"/>
-        <xs:element name="maahanmuuttajienlukioonvalmistava" type="SuoritusType" maxOccurs="1" minOccurs="0"/>
-        <xs:element name="maahanmuuttajienammvalmistava" type="SuoritusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="ammattistartti" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="valmentava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="maahanmuuttajienlukioonvalmistava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="maahanmuuttajienammvalmistava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
       </xs:sequence>
     </xs:group>
 
@@ -274,10 +303,10 @@ object Arvosanat extends SchemaDefinition {
     <xs:group name="UlkomainenKorvaava">
       <xs:sequence>
         <xs:element name="ulkomainen" type="SuoritusType" maxOccurs="1" minOccurs="1"/>
-        <xs:element name="ammattistartti" type="SuoritusType" maxOccurs="1" minOccurs="0"/>
-        <xs:element name="valmentava" type="SuoritusType" maxOccurs="1" minOccurs="0"/>
-        <xs:element name="maahanmuuttajienlukioonvalmistava" type="SuoritusType" maxOccurs="1" minOccurs="0"/>
-        <xs:element name="maahanmuuttajienammvalmistava" type="SuoritusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="ammattistartti" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="valmentava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="maahanmuuttajienlukioonvalmistava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="maahanmuuttajienammvalmistava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
       </xs:sequence>
     </xs:group>
 
