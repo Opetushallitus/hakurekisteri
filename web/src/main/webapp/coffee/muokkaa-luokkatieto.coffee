@@ -11,10 +11,11 @@ app.controller "MuokkaaLuokkatieto", [
           $scope.info.organisaatio = organisaatio
       $scope.info.editable = true
 
-    $scope.validateData = ->
-      $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel($scope.info, $scope.luokkatieto)
+    $scope.validateData = (updateOnly) ->
+      $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel($scope.info, $scope.luokkatieto, !updateOnly)
 
     $scope.hasChanged = ->
+      $scope.validateData(true)
       modifiedCache.hasChanged()
 
     $scope.saveData = ->
@@ -58,4 +59,5 @@ app.controller "MuokkaaLuokkatieto", [
     enrichLuokkatieto($scope.luokkatieto)
     $scope.addDataScope($scope)
     $scope.$watch "luokkatieto", $scope.enableSave, true
+    $scope.$watch "info", $scope.enableSave, true
 ]

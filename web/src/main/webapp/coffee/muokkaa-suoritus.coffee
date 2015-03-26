@@ -15,10 +15,11 @@ app.controller "MuokkaaSuoritus", [
       else
         $scope.info.editable = true
 
-    $scope.validateData = ->
-      $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel($scope.info, $scope.suoritus)
+    $scope.validateData = (updateOnly) ->
+      $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel($scope.info, $scope.suoritus, !updateOnly)
 
     $scope.hasChanged = ->
+      $scope.validateData(true)
       $scope.suoritus.valmistuminen = $scope.formatDateWithZeroPaddedNumbers($scope.info.valmistuminen)
       modifiedCache.hasChanged()
 
@@ -86,6 +87,6 @@ app.controller "MuokkaaSuoritus", [
     $scope.info.valmistuminen = $scope.formatDateNoZeroPaddedNumbers($scope.suoritus.valmistuminen)
     enrichSuoritus($scope.suoritus)
     $scope.addDataScope($scope)
-    $scope.$watch "info.valmistuminen", $scope.enableSave, true
+    $scope.$watch "info", $scope.enableSave, true
     $scope.$watch "suoritus", $scope.enableSave, true
 ]

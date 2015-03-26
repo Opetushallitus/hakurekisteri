@@ -175,17 +175,18 @@ app.factory "MuokkaaTiedot", [
       $scope.isOPH = ->
         Array.isArray($scope.myRoles) and ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1 or $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1)
 
-      $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel = (info, model) ->
+      $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel = (info, model, validateError) ->
         if not info["delete"] and info.editable and not (model.komo and model.komo is $scope.komo.ylioppilastutkinto)
           d = $q.defer()
           if not info.oppilaitos or not info.oppilaitos.match(/^\d{5}$/)
-            MessageService.addMessage
-              type: "danger"
-              messageKey: "suoritusrekisteri.muokkaa.oppilaitoskoodipuuttuu"
-              message: "Oppilaitoskoodi puuttuu tai se on virheellinen."
-              descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi"
-              description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
-            d.reject "validationerror"
+            if validateError
+              MessageService.addMessage
+                type: "danger"
+                messageKey: "suoritusrekisteri.muokkaa.oppilaitoskoodipuuttuu"
+                message: "Oppilaitoskoodi puuttuu tai se on virheellinen."
+                descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi"
+                description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
+              d.reject "validationerror"
           else
             getOrganisaatio $http, info.oppilaitos, ((organisaatio) ->
               if model.komo
@@ -194,12 +195,13 @@ app.factory "MuokkaaTiedot", [
                 model.oppilaitosOid = organisaatio.oid
               d.resolve "validated against organisaatio"
             ), ->
-              MessageService.addMessage
-                type: "danger"
-                messageKey: "suoritusrekisteri.muokkaa.oppilaitostaeiloytynyt"
-                message: "Oppilaitosta ei löytynyt oppilaitoskoodilla."
-                descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi"
-                description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
+              if validateError
+                MessageService.addMessage
+                  type: "danger"
+                  messageKey: "suoritusrekisteri.muokkaa.oppilaitostaeiloytynyt"
+                  message: "Oppilaitosta ei löytynyt oppilaitoskoodilla."
+                  descriptionKey: "suoritusrekisteri.muokkaa.tarkistaoppilaitoskoodi"
+                  description: "Tarkista oppilaitoskoodi ja yritä uudelleen."
               d.reject "validationerror in call to organisaatio"
           [d.promise]
         else

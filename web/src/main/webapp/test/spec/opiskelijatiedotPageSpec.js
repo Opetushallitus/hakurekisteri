@@ -22,13 +22,13 @@
             it('Voi hakea oppilaitoksen perusteella - test-dsl', seqDone(
                 wait.forAngular,
                 function () {
-                    httpFixtures().organisaatioService.pikkaralaGeneric()
+                    httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
                     httpFixtures().organisaatioService.pikkaralaKoodi()
                     httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
-                    httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                    httpFixtures().suorituksetLocal.aarnenSuoritus()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                     httpFixtures().komoLocal.komoTiedot()
@@ -67,7 +67,7 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
-                    httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                    httpFixtures().suorituksetLocal.aarnenSuoritus()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
@@ -90,7 +90,7 @@
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                    httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                    httpFixtures().suorituksetLocal.aarnenSuoritus()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                     httpFixtures().luokkaTiedotLocal.tyynenLuokkaTiedotHetulla()
@@ -114,7 +114,7 @@
                     httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().henkiloPalveluService.foobar()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
-                    httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                    httpFixtures().suorituksetLocal.aarnenSuoritus()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                 },
                 input(opiskelijatiedot.henkiloSearch, 'foobar'),
@@ -148,14 +148,14 @@
             it('Vaihtamalla henkilöä organisaatio haun listasta tiedot vaihtuvat - test.dsl', seqDone(
                 wait.forAngular,
                 function () {
-                    httpFixtures().organisaatioService.pikkaralaGeneric()
+                    httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
                     httpFixtures().organisaatioService.pikkaralaKoodi()
                     httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.tyyne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
-                    httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                    httpFixtures().suorituksetLocal.aarnenSuoritus()
                     httpFixtures().suorituksetLocal.tyynenSuoritukset()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().arvosanatLocal.tyynenArvosanat()
@@ -200,7 +200,7 @@
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                    httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                    httpFixtures().suorituksetLocal.aarnenSuoritus()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                     httpFixtures().komoLocal.komoTiedot()
@@ -217,13 +217,13 @@
             ))
             it('Organisaatio haku URL parametri', seqDone(
                 function () {
-                    httpFixtures().organisaatioService.pikkaralaGeneric()
+                    httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
                     httpFixtures().organisaatioService.pikkaralaKoodi()
                     httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
-                    httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                    httpFixtures().suorituksetLocal.aarnenSuoritus()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                     httpFixtures().komoLocal.komoTiedot()
@@ -254,12 +254,13 @@
                 it("Peruskoulun suoritustiedot ja arvosanat talletetaan vain jos muuttuneita arvoja", seqDone(
                     function () {
                         httpFixtures().organisaatioService.pikkaralaOid()
+                        httpFixtures().organisaatioService.pikkaralaKoodi()
                         httpFixtures().henkiloPalveluService.aarne()
                         httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                         httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                        httpFixtures().suorituksetLocal.aarnenSuoritukset()
+                        httpFixtures().suorituksetLocal.aarnenSuoritus()
                         httpFixtures().arvosanatLocal.aarnenArvosanat()
-                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
                         httpFixtures().komoLocal.komoTiedot()
                         koodistoFixtures()
                     },
@@ -281,14 +282,19 @@
                     select(opiskelijatiedot.suoritusTila, "1"),
                     saveEnabled(),
                     select(opiskelijatiedot.suoritusTila, "0"),
+
+                    saveDisabled(),
+                    function () {
+                        httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
+                        httpFixtures().organisaatioService.pikkoloKoodi()
+                        httpFixtures().organisaatioService.pikkoloOid()
+                    },
+                    typeaheadInput(opiskelijatiedot.suoritusMyontaja, "Pik", opiskelijatiedot.typeaheadMenuChild(2)),
+                    saveEnabled(),
+                    typeaheadInput(opiskelijatiedot.suoritusMyontaja, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
                     saveDisabled(),
 
                     select(opiskelijatiedot.suoritusKieli, "2"),
-                    function () {
-                        httpFixtures().organisaatioService.pikkaralaGeneric()
-                        httpFixtures().organisaatioService.pikkaralaKoodi()
-                    },
-                    typeaheadInput(opiskelijatiedot.suoritusMyontaja, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
                     saveEnabled(),
                     mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/suoritukset\/4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9$/),
                     function (savedData) {
@@ -297,7 +303,7 @@
                             source: "ophadmin",
                             vahvistettu: true,
                             komo: "1.2.246.562.13.62959769647",
-                            myontaja: "1.2.246.562.10.39644336305",
+                            myontaja: restData.organisaatioService.pikkarala.oid,
                             tila: "KESKEN",
                             valmistuminen: "03.06.2015",
                             yksilollistaminen: "Ei",
