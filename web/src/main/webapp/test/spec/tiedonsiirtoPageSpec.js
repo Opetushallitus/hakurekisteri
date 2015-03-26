@@ -17,6 +17,7 @@
         describe("Tiedoston lähetys", function () {
             before(
                     addTestHook(koodistoFixtures),
+                    addTestHook(lokalisointiFixtures),
                     page.openPage,
                     wait.until(function () { return page.uploadForm().length === 1}),
                     wait.forAngular,

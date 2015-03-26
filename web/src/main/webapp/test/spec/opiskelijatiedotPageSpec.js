@@ -9,6 +9,7 @@
         var page = opiskelijatiedotPage()
 
         beforeEach(function (done) {
+            addTestHook(lokalisointiFixtures)()
             page.openPage(done)
         })
 
