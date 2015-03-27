@@ -55,6 +55,12 @@ object Arvosanat extends SchemaDefinition {
     <xs:complexType name="TodistuksetType">
       <xs:choice>
         <xs:group ref="PerusopetuksenKaynyt"/>
+        <xs:group ref="JaaLuokalle"/>
+        <xs:group ref="LisaopetuksenKaynyt"/>
+        <xs:group ref="AmmattistartinKaynyt"/>
+        <xs:group ref="ValmentavanKaynyt"/>
+        <xs:group ref="MaahanmuuttajienLukioonValmistavanKaynyt"/>
+        <xs:group ref="MaahanmuuttajienValmistavanKaynyt"/>
         <xs:group ref="LukionKaynyt"/>
         <xs:group ref="UlkomainenKorvaava"/>
         <xs:group ref="AmmattikoulunKaynyt"/>
@@ -194,8 +200,13 @@ object Arvosanat extends SchemaDefinition {
 
     <xs:simpleType name="EiValmistuType">
       <xs:restriction base="xs:string">
-        <xs:enumeration value="JAA LUOKALLE"/>
         <xs:enumeration value="PERUSOPETUS PAATTYNYT VALMISTUMATTA"/>
+      </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="EiValmistuJaaLuokalleType">
+      <xs:restriction base="xs:string">
+        <xs:enumeration value="JAA LUOKALLE"/>
       </xs:restriction>
     </xs:simpleType>
 
@@ -240,11 +251,25 @@ object Arvosanat extends SchemaDefinition {
       </xs:restriction>
     </xs:simpleType>
 
+    <xs:simpleType name="valmistuvanPaivaysType">
+      <xs:restriction base="xs:date">
+        <xs:maxInclusive value="2015-06-01"/>
+      </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="luokalleJaavanPaivaysType">
+      <xs:restriction base="xs:date">
+        <xs:minInclusive value="2015-08-01"/>
+      </xs:restriction>
+    </xs:simpleType>
+
     <xs:simpleType name="oppijaNumeroType">
       <xs:restriction base="xs:string">
         <xs:pattern value="1\.2\.246\.562\.24\.[0-9]{11}"/>
       </xs:restriction>
     </xs:simpleType>
+
+
 
     <xs:group name="PerusopetuksenKaynyt">
       <xs:sequence>
@@ -257,6 +282,70 @@ object Arvosanat extends SchemaDefinition {
       </xs:sequence>
     </xs:group>
 
+    <xs:group name="JaaLuokalle">
+      <xs:sequence>
+        <xs:element name="perusopetus" type="JaaLuokalleType" maxOccurs="1" minOccurs="1"/>
+      </xs:sequence>
+    </xs:group>
+
+
+      <xs:group name="LisaopetuksenKaynyt">
+      <xs:sequence>
+        <xs:element name="perusopetus" type="PerusopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="perusopetuksenlisaopetus" type="LisaopetusType" maxOccurs="1" minOccurs="1"/>
+        <xs:element name="ammattistartti" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="valmentava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="maahanmuuttajienlukioonvalmistava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="maahanmuuttajienammvalmistava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+      </xs:sequence>
+    </xs:group>
+
+    <xs:group name="AmmattistartinKaynyt">
+      <xs:sequence>
+        <xs:element name="perusopetus" type="PerusopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="perusopetuksenlisaopetus" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="ammattistartti" type="LisaopetusType" maxOccurs="1" minOccurs="1"/>
+        <xs:element name="valmentava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="maahanmuuttajienlukioonvalmistava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="maahanmuuttajienammvalmistava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+      </xs:sequence>
+    </xs:group>
+
+
+      <xs:group name="ValmentavanKaynyt">
+      <xs:sequence>
+        <xs:element name="perusopetus" type="PerusopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="perusopetuksenlisaopetus" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="ammattistartti" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="valmentava" type="LisaopetusType" maxOccurs="1" minOccurs="1"/>
+        <xs:element name="maahanmuuttajienlukioonvalmistava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="maahanmuuttajienammvalmistava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+      </xs:sequence>
+    </xs:group>
+
+    <xs:group name="MaahanmuuttajienLukioonValmistavanKaynyt">
+      <xs:sequence>
+        <xs:element name="perusopetus" type="PerusopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="perusopetuksenlisaopetus" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="ammattistartti" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="valmentava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="maahanmuuttajienlukioonvalmistava" type="LisaopetusType" maxOccurs="1" minOccurs="1"/>
+        <xs:element name="maahanmuuttajienammvalmistava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+      </xs:sequence>
+    </xs:group>
+
+    <xs:group name="MaahanmuuttajienValmistavanKaynyt">
+      <xs:sequence>
+        <xs:element name="perusopetus" type="PerusopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="perusopetuksenlisaopetus" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="ammattistartti" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="valmentava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="maahanmuuttajienlukioonvalmistava" type="LisaopetusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="maahanmuuttajienammvalmistava" type="LisaopetusType" maxOccurs="1" minOccurs="1"/>
+      </xs:sequence>
+    </xs:group>
+
+
     <xs:group name="LukionKaynyt">
       <xs:sequence>
         <xs:element name="lukio" type="LukioType" maxOccurs="1" minOccurs="1"/>
@@ -265,9 +354,18 @@ object Arvosanat extends SchemaDefinition {
 
     <xs:complexType name="SuoritusType">
       <xs:sequence>
-        <xs:element name="valmistuminen" type="xs:date" maxOccurs="1" minOccurs="1"/>
+        <xs:element name="valmistuminen" type="valmistuvanPaivaysType" maxOccurs="1" minOccurs="1"/>
         <xs:element name="myontaja" type="koodisto:oppilaitosnumero" maxOccurs="1" minOccurs="1"/>
         <xs:element name="suorituskieli" type="koodisto:kieli" maxOccurs="1" minOccurs="1"/>
+      </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="JaaLuokalleType">
+      <xs:sequence>
+        <xs:element name="valmistuminen" type="luokalleJaavanPaivaysType" maxOccurs="1" minOccurs="1"/>
+        <xs:element name="myontaja" type="koodisto:oppilaitosnumero" maxOccurs="1" minOccurs="1"/>
+        <xs:element name="suorituskieli" type="koodisto:kieli" maxOccurs="1" minOccurs="1"/>
+        <xs:element name="eivalmistu" type="EiValmistuJaaLuokalleType" maxOccurs="1" minOccurs="1"/>
       </xs:sequence>
     </xs:complexType>
 
