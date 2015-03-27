@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.rekisteritiedot
 
-import fi.vm.sade.hakurekisteri.rest.support.{User, SpringSecuritySupport, HakurekisteriJsonSupport, Registers}
+import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport, Registers}
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import org.scalatra.swagger.{SwaggerEngine, Swagger}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack

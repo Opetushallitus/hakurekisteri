@@ -5,12 +5,12 @@ import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.AskTimeoutException
 import fi.vm.sade.hakurekisteri.integration.hakemus.ReloadHaku
 import org.scalatra.swagger.Swagger
-import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra._
 import scala.concurrent.ExecutionContext
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.web.rest.support.IncidentReport
+import fi.vm.sade.hakurekisteri.web.rest.support.{SpringSecuritySupport, IncidentReport}
 import fi.vm.sade.hakurekisteri.integration.haku.HakuRequest
 
 

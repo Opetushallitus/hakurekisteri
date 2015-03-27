@@ -5,18 +5,16 @@ import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.AskTimeoutException
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.healthcheck.Status
-import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 
 import scala.concurrent.{Future, ExecutionContext}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.web.rest.support.{UserNotAuthorized, IncidentReport}
+import fi.vm.sade.hakurekisteri.web.rest.support._
 import fi.vm.sade.hakurekisteri.integration.virta._
 import fi.vm.sade.hakurekisteri.integration.virta.RescheduleProcessing
-import fi.vm.sade.hakurekisteri.web.rest.support.IncidentReport
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaStatus
-import fi.vm.sade.hakurekisteri.web.rest.support.UserNotAuthorized
 
 class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
 

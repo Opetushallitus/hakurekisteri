@@ -1,8 +1,10 @@
-package fi.vm.sade.hakurekisteri.rest.support
+package fi.vm.sade.hakurekisteri.web.rest.support
 
-import javax.servlet.http.HttpServletRequest
 import java.security.Principal
-import org.springframework.security.core.{GrantedAuthority, Authentication}
+import javax.servlet.http.HttpServletRequest
+
+import fi.vm.sade.hakurekisteri.rest.support.{OPHUser, User}
+import org.springframework.security.core.{Authentication, GrantedAuthority}
 
 
 trait SecuritySupport {

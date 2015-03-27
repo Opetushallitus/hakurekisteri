@@ -1,6 +1,9 @@
-package fi.vm.sade.hakurekisteri.rest.support
+package fi.vm.sade.hakurekisteri
 
 import javax.servlet.http.HttpServletRequest
+
+import fi.vm.sade.hakurekisteri.rest.support.User
+import fi.vm.sade.hakurekisteri.web.rest.support.SecuritySupport
 
 /**
  * Created by laastine on 11/03/15.

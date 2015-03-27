@@ -16,7 +16,7 @@ import scala.compat.Platform
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.web.rest.support.{UserNotAuthorized, QueryLogging, IncidentReport}
+import fi.vm.sade.hakurekisteri.web.rest.support.{SpringSecuritySupport, UserNotAuthorized, QueryLogging, IncidentReport}
 import fi.vm.sade.hakurekisteri.oppija.OppijaFetcher
 
 
