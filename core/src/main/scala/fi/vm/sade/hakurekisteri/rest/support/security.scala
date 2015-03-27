@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.virta.Virta
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 
@@ -79,6 +80,8 @@ trait User {
   def canDelete(resource: String) = !orgsFor("DELETE", resource).isEmpty
 
   def canRead(resource: String) = !orgsFor("READ", resource).isEmpty
+
+  def isAdmin:Boolean = orgsFor("DELETE", "arvosana").contains(Config.ophOrganisaatioOid)
 
 
 }

@@ -1,12 +1,13 @@
 package fi.vm.sade.hakurekisteri.web.haku
 
-import akka.actor.{ActorSystem, ActorRef}
-import akka.event.{Logging, LoggingAdapter}
-import akka.pattern.AskTimeoutException
+import _root_.akka.actor.{ActorSystem, ActorRef}
+import _root_.akka.event.{Logging, LoggingAdapter}
+import _root_.akka.pattern.AskTimeoutException
+import fi.vm.sade.hakurekisteri.integration.hakemus.ReloadHaku
 import org.scalatra.swagger.Swagger
 import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.{InternalServerError, AsyncResult, CorsSupport, FutureSupport}
+import org.scalatra._
 import scala.concurrent.ExecutionContext
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.IncidentReport
@@ -28,10 +29,20 @@ class HakuResource(hakuActor: ActorRef)(implicit system: ActorSystem, sw: Swagge
   get("/") {
     new AsyncResult() {
       import scala.concurrent.duration._
-      import akka.pattern.ask
+      import _root_.akka.pattern.ask
       override implicit def timeout: Duration = 60.seconds
       val is = (hakuActor ? HakuRequest)(30.seconds)
     }
+  }
+
+
+  get("/refresh/:oid") {
+    currentUser.collect {
+      case p if p.isAdmin =>
+        hakuActor ! ReloadHaku(params("oid"))
+        Some(Accepted())
+    }.getOrElse(Unauthorized())
+
   }
 
   incident {

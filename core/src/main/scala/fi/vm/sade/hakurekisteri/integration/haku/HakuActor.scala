@@ -48,6 +48,8 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
     case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
 
+    case rh:ReloadHaku if activeHakus.exists(_.oid == rh.haku) => hakemukset forward rh
+
     case sq: Seq[_] =>
       val s = sq.collect{ case h: Haku => h}
       activeHakus = s.filter(_.aika.isCurrently)
