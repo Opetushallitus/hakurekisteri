@@ -12,97 +12,98 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers {
 
   behavior of "Arvosana Xml Validation"
 
-  val validator: XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem] = new ValidXml(Arvosanat, ArvosanatKoodisto)
+  implicit val schemas = NonEmptyList(Arvosanat, ArvosanatKoodisto)
 
   it should "mark valid perusopetuksen todistus as valid" in {
     val todistus = siirto(henkilo(perusopetus)).generate
-    validator.validate(todistus)  should succeed
+    todistus should abideSchemas
   }
 
   it should "mark luokalle jaava as valid" in {
     val todistus =  siirto(henkilo(jaaLuokalle)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   it should "mark perusopetuksen keskettanyt as valid" in {
     val todistus =  siirto(henkilo(keskeyttanytPerusopetuksen)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
+
   }
 
   it should "mark lisaopetuksen kaynyt as valid" in {
     val todistus =  siirto(henkilo(lisaopetus)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   it should "mark lisaopetuksen keskeyttanyt as valid" in {
     val todistus =  siirto(henkilo(lisaopetuksenKeskeyttanyt)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   it should "mark ammattistartin kaynyt as valid" in {
     val todistus =  siirto(henkilo(ammattistartti)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   it should "mark ammattistartin keskeyttanyt as valid" in {
     val todistus =  siirto(henkilo(ammattistartinKeskeyttanyt)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   it should "mark valmentavan kaynyt as valid" in {
     val todistus =  siirto(henkilo(valmentava)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   it should "mark valmentavan keskeyttanyt as valid" in {
     val todistus =  siirto(henkilo(valmentavanKeskeyttanyt)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   it should "mark maahanmuuttajien lukioonvalmistavan kaynyt as valid" in {
     val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistava)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   it should "mark maahanmuuttajien lukioonvalmistavan keskeyttanyt as valid" in {
     val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistavanKeskeyttanyt)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
 
   it should "mark maahanmuuttajien ammattiin valmistavan kaynyt as valid" in {
     val todistus =  siirto(henkilo(maahanmuuttajienAmmValmistava)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   it should "mark maahanmuuttajien ammattiin valmistavan keskeyttanyt as valid" in {
     val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistavanKeskeyttanyt)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   it should "mark lukion kaynyt as valid" in {
     val todistus =  siirto(henkilo(lukio)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   it should "mark ammattikoulun kaynyt as valid" in {
     val todistus =  siirto(henkilo(ammattikoulu)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   it should "mark ulkomaalaisen korvaavn kaynyt as valid" in {
     val todistus =  siirto(hetutonHenkilo(ulkomainenKorvaava)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   it should "mark syntyma-ajallinen henkilo as valid" in {
     val todistus =  siirto(hetutonHenkilo(perusopetus)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   it should "mark oidillinen henkilo as valid" in {
     val todistus =  siirto(henkiloOidilla(perusopetus)).generate
-    validator.validate(todistus) should succeed
+    todistus should abideSchemas
   }
 
   /*it should "mark todistus with multiple entries as valid" in {
@@ -128,6 +129,21 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers {
         left + " succeeded"
       )
     }
+
+  def abide(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) = Matcher { (left: Elem) =>
+    val validator = new ValidXml(schemaDoc, imports:_*)
+    val validation: scalaz.ValidationNel[(String, _root_.scala.xml.SAXParseException), Elem] = validator.validate(left)
+    val messages = validation.swap.toOption.map(_.list).getOrElse(List()).mkString(", ")
+    MatchResult(
+      {
+        validation.isSuccess
+      },
+      left + s" does not abide to schemas exceptions: $messages",
+      left + " abides schemas"
+    )
+  }
+
+  def abideSchemas(implicit schemas: NonEmptyList[SchemaDefinition]) = abide(schemas.head, schemas.tail:_*)
 
 
   def suoritus(name:String): DataGen[Elem] = DataGen.always(
