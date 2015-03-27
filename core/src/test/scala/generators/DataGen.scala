@@ -59,23 +59,27 @@ object DataGen {
     ) yield generator.generate
   }
 
+  def set[T](generators: Seq[DataGen[T]]):DataGen[Set[T]] = new DataGen[Set[T]] {
+    override def generate: Set[T] = ???
+  }
 
-  val kk = DataGen.int(1,12)
+
+  def kk = DataGen.int(1,12)
   def maxPaiva(kk:Int): Int = kk match {
     case 1 | 3 | 5 | 7 | 8 | 10 | 12 => 31
     case 2 => 28
     case _ => 30
   }
-  val paiva = for (
+  def paiva = for (
     kk <- kk;
     pv <- DataGen.int(1,maxPaiva(kk))
   ) yield (pv, kk, 1999)
 
 
-  val sukupuoli = DataGen.values("mies", "nainen")
+  def sukupuoli = DataGen.values("mies", "nainen")
   val merkit = "0123456789ABCDEFHJKLMNPRSTUVWXY"
   val valimerkit = "+-A"
-  val hetu =  for (
+  def hetu =  for (
     (pv, kk, vuosi) <- paiva;
     sukupuoli <- sukupuoli;
     luku <- DataGen.int(0,49)
