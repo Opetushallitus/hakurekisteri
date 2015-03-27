@@ -96,10 +96,11 @@ object DataGen {
     alku + valimerkki + loppu + merkki
   }
 
-
-  val henkiloOid = for (
+  def oid(kanta:String) = for (
     loppu <- DataGen.seq(DataGen.int(0,9),11)
-  ) yield "1.2.246.562.24." + loppu.mkString
+  ) yield kanta + loppu.mkString
+
+  def henkiloOid = oid("1.2.246.562.24.")
 
 
 }
