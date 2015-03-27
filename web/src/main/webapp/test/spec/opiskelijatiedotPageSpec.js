@@ -19,7 +19,7 @@
             }
         })
 
-        describe("Haku", function () {
+        describe("Organisaatiohaku", function () {
             it('Voi hakea oppilaitoksen perusteella - test-dsl', seqDone(
                 wait.forAngular,
                 function () {
@@ -29,9 +29,8 @@
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
-                    httpFixtures().suorituksetLocal.aarnenSuoritus()
-                    httpFixtures().arvosanatLocal.aarnenArvosanat()
-                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
                     koodistoFixtures()
@@ -42,6 +41,7 @@
                 wait.forAngular,
                 function () {
                     expect(opiskelijatiedot.resultsTable().length).to.equal(5)
+                    assertText(opiskelijatiedot.hetu, "123456-789")
                 }
             ))
             it('Virheellinen oppilaitos haku', seqDone(
@@ -67,9 +67,8 @@
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                    httpFixtures().arvosanatLocal.aarnenArvosanat()
-                    httpFixtures().suorituksetLocal.aarnenSuoritus()
-                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -78,23 +77,19 @@
                 wait.forAngular,
                 function () {
                     expect(opiskelijatiedot.resultsTable().length).to.equal(1)
-                    expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
-                    expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
-                    expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
+                    assertText(opiskelijatiedot.hetu, "123456-789")
                 }
             ))
 
-            it('Voi hakea hetun perusteella - test.dsl', seqDone(
+            it('Voi hakea hetun perusteella', seqDone(
                 wait.forAngular,
                 function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                    httpFixtures().suorituksetLocal.aarnenSuoritus()
-                    httpFixtures().arvosanatLocal.aarnenArvosanat()
-                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
-                    httpFixtures().luokkaTiedotLocal.tyynenLuokkaTiedotHetulla()
+                    httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -103,13 +98,11 @@
                 wait.forAngular,
                 function () {
                     expect(opiskelijatiedot.resultsTable().length).to.equal(1)
-                    expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
-                    expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
-                    expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
+                    assertText(opiskelijatiedot.hetu, "123456-789")
                 }
             ))
 
-            it('Puuttuva hetu perusteella - test.dsl', seqDone(
+            it('Puuttuva hetu perusteella', seqDone(
                 wait.forAngular,
                 function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
@@ -132,21 +125,13 @@
 
         describe('Oppilaiden valitseminen/etsiminen organisaatiossa', function () {
 
-            function assertText(selector, val) {
-                expect(selector().text().trim()).to.equal(val)
-            }
-
-            function assertValue(selector, val) {
-                expect(selector().val().trim()).to.equal(val)
-            }
-
             function areElementsVisible() {
                 return opiskelijatiedot.henkiloTiedot().is(':visible') &&
                     opiskelijatiedot.suoritusTiedot().is(':visible') &&
                     opiskelijatiedot.luokkaTiedot().is(':visible')
             }
 
-            it('Vaihtamalla henkilöä organisaatio haun listasta tiedot vaihtuvat - test.dsl', seqDone(
+            it('Vaihtamalla henkilöä organisaatio haun listasta tiedot vaihtuvat', seqDone(
                 wait.forAngular,
                 function () {
                     httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
@@ -156,12 +141,10 @@
                     httpFixtures().henkiloPalveluService.tyyne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
-                    httpFixtures().suorituksetLocal.aarnenSuoritus()
-                    httpFixtures().suorituksetLocal.tyynenSuoritukset()
-                    httpFixtures().arvosanatLocal.aarnenArvosanat()
-                    httpFixtures().arvosanatLocal.tyynenArvosanat()
-                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
-                    httpFixtures().luokkaTiedotLocal.tyynenLuokkaTiedot()
+                    httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().suorituksetLocal.tyynenSuorituksetEmpty()
+                    httpFixtures().luokkaTiedotLocal.tyynenLuokkaTiedotEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
                     koodistoFixtures()
@@ -174,22 +157,18 @@
                 wait.forAngular,
                 function () {
                     expect(areElementsVisible()).to.equal(true)
-                    assertText(opiskelijatiedot.hetuTieto, "123456-789")
-                    assertValue(opiskelijatiedot.suoritusMyontaja, "06345")
-                    assertValue(opiskelijatiedot.luokkaTaso, "10A")
+                    assertText(opiskelijatiedot.hetu, "123456-789")
                 },
                 click(opiskelijatiedot.resultsTableChild(2)),
                 wait.forAngular,
                 function () {
                     expect(areElementsVisible()).to.equal(true)
-                    assertText(opiskelijatiedot.hetuTieto, "010719-917S")
-                    assertValue(opiskelijatiedot.suoritusMyontaja, "06345")
-                    assertValue(opiskelijatiedot.luokkaTaso, "9A")
+                    assertText(opiskelijatiedot.hetu, "010719-917S")
                 }
             ))
         })
         
-        describe('URL parametrin vaihto', function () {
+        describe('URL parametrien käsittely', function () {
 
             function getCurrentYear() {
                 return new Date().getFullYear()
@@ -201,9 +180,8 @@
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                    httpFixtures().suorituksetLocal.aarnenSuoritus()
-                    httpFixtures().arvosanatLocal.aarnenArvosanat()
-                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -214,6 +192,7 @@
                 wait.forAngular,
                 function () {
                     expect(testFrame().location.hash).to.equal('#/muokkaa-obd?henkilo=1.2.246.562.24.71944845619&oppilaitos=&vuosi='+getCurrentYear())
+                    assertText(opiskelijatiedot.hetu, "123456-789")
                 }
             ))
             it('Organisaatio haku URL parametri', seqDone(
@@ -224,9 +203,8 @@
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
-                    httpFixtures().suorituksetLocal.aarnenSuoritus()
-                    httpFixtures().arvosanatLocal.aarnenArvosanat()
-                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
                     koodistoFixtures()
@@ -239,8 +217,95 @@
                 wait.forAngular,
                 function () {
                     expect(testFrame().location.hash).to.equal('#/muokkaa-obd?henkilo=&oppilaitos=06345&vuosi='+getCurrentYear())
+                    assertText(opiskelijatiedot.hetu, "123456-789")
                 }
             ))
+        })
+
+        describe("Tietojen näyttö", function() {
+            function testAlertText (selector, expected) {
+                return function() {
+                    expect(selector().text().indexOf(expected)).not.to.equal(-1)
+                }
+            }
+
+            it('Opiskelijan suoritukset, arvosanat, luokkatiedot ja opintooikeudet näkyvät oikein', seqDone(
+                wait.forAngular,
+                function () {
+                    httpFixtures().organisaatioService.pikkaralaOid()
+                    httpFixtures().organisaatioService.pikkaralaKoodi()
+                    httpFixtures().henkiloPalveluService.aarne()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                    httpFixtures().suorituksetLocal.aarnenSuoritus()
+                    httpFixtures().arvosanatLocal.aarnenArvosanat()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().komoLocal.komoTiedot()
+                    koodistoFixtures()
+                },
+                input(opiskelijatiedot.henkiloSearch, '123456-789'),
+                click(opiskelijatiedot.searchButton),
+                wait.forAngular,
+                function () {
+                    expect(opiskelijatiedot.resultsTable().length).to.equal(1)
+                    expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
+                    expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
+                    expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
+                    assertText(opiskelijatiedot.hetu, "123456-789")
+                    assertValue(opiskelijatiedot.suoritusMyontaja, "06345")
+                    assertValue(opiskelijatiedot.suoritusKoulutus, "1")
+                    assertValue(opiskelijatiedot.suoritusYksilollistetty, "0")
+                    assertValue(opiskelijatiedot.suoritusKieli, "156")
+                    assertValue(opiskelijatiedot.suoritusValmistuminen, "3.6.2015")
+                    assertValue(opiskelijatiedot.suoritusTila, "0")
+                    assertValue(opiskelijatiedot.luokkatietoOppilaitos, "06345")
+                    assertValue(opiskelijatiedot.luokkatietoLuokka, "10A")
+                    assertValue(opiskelijatiedot.luokkatietoLuokkaTaso, "2")
+                    assertValue(opiskelijatiedot.luokkatietoAlkuPaiva, "18.8.2014")
+                    assertValue(opiskelijatiedot.luokkatietoLoppuPaiva, "4.6.2015")
+                }
+            ))
+
+
+            it("Vahvistamattomalle suoritukselle näytetään info-viesti", seqDone(
+                function () {
+                    httpFixtures().organisaatioService.pikkaralaOid()
+                    httpFixtures().organisaatioService.pikkaralaKoodi()
+                    httpFixtures().henkiloPalveluService.aarne()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                    httpFixtures().arvosanatLocal.aarnenArvosanat()
+                    httpFixtures().suorituksetLocal.aarnenVahvistamatonSuoritus()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().komoLocal.komoTiedot()
+                    koodistoFixtures()
+                },
+                input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                click(opiskelijatiedot.searchButton),
+                wait.forAngular,
+                visible(opiskelijatiedot.hakijanIlmoittamaAlert),
+                testAlertText(opiskelijatiedot.hakijanIlmoittamaAlert, "Suoritus ei ole vahvistettu")
+            ))
+            it("Hakijan ilmoittamalle suoritukselle näytetään info-viesti", seqDone(
+                function () {
+                    httpFixtures().organisaatioService.pikkaralaOid()
+                    httpFixtures().organisaatioService.pikkaralaKoodi()
+                    httpFixtures().henkiloPalveluService.aarne()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                    httpFixtures().arvosanatLocal.aarnenArvosanat()
+                    httpFixtures().suorituksetLocal.aarnenVahvistamatonSuoritusHakemukselta()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().komoLocal.komoTiedot()
+                    koodistoFixtures()
+                },
+                input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                click(opiskelijatiedot.searchButton),
+                wait.forAngular,
+                visible(opiskelijatiedot.hakijanIlmoittamaAlert),
+                testAlertText(opiskelijatiedot.hakijanIlmoittamaAlert, "Suoritus hakijan ilmoittama")
+            ))
+
         })
 
         describe('Suoritustietojen muokkaus', function () {

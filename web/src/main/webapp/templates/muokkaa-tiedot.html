@@ -9,16 +9,16 @@
                     <div class="form-group col-sm-4">
                         <div><strong oph-msg="suoritusrekisteri.muokkaa.henkilotunnus">Henkilötunnus /
                             syntymäaika</strong></div>
-                        <div><span id="hetuTieto">{{henkilo.hetu || henkilo.syntymaaika}}</span><strong ng-if="henkilo.duplicate">(DUPLIKAATTI)</strong>
+                        <div><span class="test-hetu">{{henkilo.hetu || henkilo.syntymaaika}}</span><strong ng-if="henkilo.duplicate">(DUPLIKAATTI)</strong>
                         </div>
                     </div>
                     <div class="form-group col-sm-4">
                         <div><strong oph-msg="suoritusrekisteri.muokkaa.sukunimi">Sukunimi</strong></div>
-                        <div>{{henkilo.sukunimi}}</div>
+                        <div class="test-sukunimi">{{henkilo.sukunimi}}</div>
                     </div>
                     <div class="form-group col-sm-4">
                         <div><strong oph-msg="suoritusrekisteri.muokkaa.etunimet">Etunimet</strong></div>
-                        <div>{{henkilo.etunimet}}</div>
+                        <div class="test-etunimi">{{henkilo.etunimet}}</div>
                     </div>
                 </div>
                 <aside><a href="/authentication-henkiloui/html/index.html#/muokkaaoppija/{{henkilo.oidHenkilo}}/"
@@ -77,6 +77,10 @@
                     <ul class="list-unstyled entrylist">
                         <li ng-repeat="suoritus in henkilo.suoritukset"
                             class="{{suoritus.delete ? 'delete-suoritus' : ''}}">
+                            <div ng-if="!suoritus.vahvistettu" class="alert alert-info">
+                                <span ng-if="isFromApplication(suoritus.myontaja)">Suoritus hakijan ilmoittama (Hakemus <a href="{{hakemusLink(suoritus.myontaja)}}">{{suoritus.myontaja}}</a>)</span>
+                                <span ng-if="!isFromApplication(suoritus.myontaja)">Suoritus ei ole vahvistettu</span>
+                            </div>
                             <div ng-include="'templates/muokkaa-suoritus.html'" ng-controller="MuokkaaSuoritus"></div>
                         </li>
                         <li>
