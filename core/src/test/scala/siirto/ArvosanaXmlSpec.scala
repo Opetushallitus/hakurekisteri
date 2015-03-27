@@ -368,10 +368,10 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers {
   def hetutonHenkilo(todistuksetGen:DataGen[Elem]*)  = for (
     todistukset <- DataGen.combine[Elem](todistuksetGen);
     tunniste <- DataGen.uuid;
-    (pv, kk, vuosi) <- DataGen.paiva
+    syntymaPaiva <- DataGen.paiva
   ) yield <henkilo>
       <henkiloTunniste>{tunniste}</henkiloTunniste>
-      <syntymaAika>{"%02d".format(vuosi)}-{"%02d".format(kk)}-{"%02d".format(pv)}</syntymaAika>
+      <syntymaAika>{syntymaPaiva.toString("yyyy-MM-dd")}</syntymaAika>
       <sukunimi>Tunnisteellinen</sukunimi>
       <etunimet>Juha Jaakko</etunimet>
       <kutsumanimi>Juha</kutsumanimi>

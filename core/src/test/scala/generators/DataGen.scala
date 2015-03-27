@@ -3,6 +3,7 @@ package generators
 import scala.annotation.tailrec
 import scala.util.Random
 import java.util.UUID
+import org.joda.time.LocalDate
 
 trait DataGen[T] {
   self =>
@@ -73,25 +74,25 @@ object DataGen {
   def paiva = for (
     kk <- kk;
     pv <- DataGen.int(1,maxPaiva(kk))
-  ) yield (pv, kk, 1999)
+  ) yield new LocalDate(1999,kk,pv)
 
 
   def sukupuoli = DataGen.values("mies", "nainen")
   val merkit = "0123456789ABCDEFHJKLMNPRSTUVWXY"
   val valimerkit = "+-A"
   def hetu =  for (
-    (pv, kk, vuosi) <- paiva;
+    syntymaPaiva <- paiva;
     sukupuoli <- sukupuoli;
     luku <- DataGen.int(0,49)
   ) yield {
-    val alku = "%02d".format(pv) + "%02d".format(kk) + "%04d".format(vuosi).substring(2)
+    val alku = syntymaPaiva.toString("ddMMyy")
     val finalLuku = sukupuoli match {
       case "mies" => luku * 2 + 1
       case _ => luku * 2
     }
     val loppu = "9" + "%02d".format(finalLuku)
     val merkki = merkit((alku + loppu).toInt % 31)
-    val valimerkki = valimerkit((vuosi / 100) - 18)
+    val valimerkki = valimerkit((syntymaPaiva.getYear / 100) - 18)
     alku + valimerkki + loppu + merkki
   }
 
