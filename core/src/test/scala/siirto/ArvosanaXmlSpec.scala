@@ -5,104 +5,104 @@ import org.xml.sax.SAXParseException
 import scala.xml.{XML, Elem}
 import org.scalatest.{Matchers, FlatSpec}
 import org.scalatest.matchers.{MatchResult, Matcher}
-import generators.DataGen
+import generators.{DataGeneratorSupport, DataGen}
 import org.joda.time.LocalDate
 
-class ArvosanaXmlSpec extends FlatSpec with Matchers {
+class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
 
   behavior of "Arvosana Xml Validation"
 
   implicit val schemas = NonEmptyList(Arvosanat, ArvosanatKoodisto)
 
   it should "mark valid perusopetuksen todistus as valid" in {
-    val todistus = siirto(henkilo(perusopetus)).generate
+    val todistus = siirto(henkilo(perusopetus))
     todistus should abideSchemas
   }
 
   it should "mark luokalle jaava as valid" in {
-    val todistus =  siirto(henkilo(jaaLuokalle)).generate
+    val todistus =  siirto(henkilo(jaaLuokalle))
     todistus should abideSchemas
   }
 
   it should "mark perusopetuksen keskettanyt as valid" in {
-    val todistus =  siirto(henkilo(keskeyttanytPerusopetuksen)).generate
+    val todistus =  siirto(henkilo(keskeyttanytPerusopetuksen))
     todistus should abideSchemas
 
   }
 
   it should "mark lisaopetuksen kaynyt as valid" in {
-    val todistus =  siirto(henkilo(lisaopetus)).generate
+    val todistus =  siirto(henkilo(lisaopetus))
     todistus should abideSchemas
   }
 
   it should "mark lisaopetuksen keskeyttanyt as valid" in {
-    val todistus =  siirto(henkilo(lisaopetuksenKeskeyttanyt)).generate
+    val todistus =  siirto(henkilo(lisaopetuksenKeskeyttanyt))
     todistus should abideSchemas
   }
 
   it should "mark ammattistartin kaynyt as valid" in {
-    val todistus =  siirto(henkilo(ammattistartti)).generate
+    val todistus =  siirto(henkilo(ammattistartti))
     todistus should abideSchemas
   }
 
   it should "mark ammattistartin keskeyttanyt as valid" in {
-    val todistus =  siirto(henkilo(ammattistartinKeskeyttanyt)).generate
+    val todistus =  siirto(henkilo(ammattistartinKeskeyttanyt))
     todistus should abideSchemas
   }
 
   it should "mark valmentavan kaynyt as valid" in {
-    val todistus =  siirto(henkilo(valmentava)).generate
+    val todistus =  siirto(henkilo(valmentava))
     todistus should abideSchemas
   }
 
   it should "mark valmentavan keskeyttanyt as valid" in {
-    val todistus =  siirto(henkilo(valmentavanKeskeyttanyt)).generate
+    val todistus =  siirto(henkilo(valmentavanKeskeyttanyt))
     todistus should abideSchemas
   }
 
   it should "mark maahanmuuttajien lukioonvalmistavan kaynyt as valid" in {
-    val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistava)).generate
+    val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistava))
     todistus should abideSchemas
   }
 
   it should "mark maahanmuuttajien lukioonvalmistavan keskeyttanyt as valid" in {
-    val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistavanKeskeyttanyt)).generate
+    val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistavanKeskeyttanyt))
     todistus should abideSchemas
   }
 
 
   it should "mark maahanmuuttajien ammattiin valmistavan kaynyt as valid" in {
-    val todistus =  siirto(henkilo(maahanmuuttajienAmmValmistava)).generate
+    val todistus =  siirto(henkilo(maahanmuuttajienAmmValmistava))
     todistus should abideSchemas
   }
 
   it should "mark maahanmuuttajien ammattiin valmistavan keskeyttanyt as valid" in {
-    val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistavanKeskeyttanyt)).generate
+    val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistavanKeskeyttanyt))
     todistus should abideSchemas
   }
 
   it should "mark lukion kaynyt as valid" in {
-    val todistus =  siirto(henkilo(lukio)).generate
+    val todistus =  siirto(henkilo(lukio))
     todistus should abideSchemas
   }
 
   it should "mark ammattikoulun kaynyt as valid" in {
-    val todistus =  siirto(henkilo(ammattikoulu)).generate
+    val todistus =  siirto(henkilo(ammattikoulu))
     todistus should abideSchemas
   }
 
   it should "mark ulkomaalaisen korvaavn kaynyt as valid" in {
-    val todistus =  siirto(hetutonHenkilo(ulkomainenKorvaava)).generate
+    val todistus =  siirto(hetutonHenkilo(ulkomainenKorvaava))
     todistus should abideSchemas
   }
 
   it should "mark syntyma-ajallinen henkilo as valid" in {
-    val todistus =  siirto(hetutonHenkilo(perusopetus)).generate
+    val todistus =  siirto(hetutonHenkilo(perusopetus))
     todistus should abideSchemas
   }
 
   it should "mark oidillinen henkilo as valid" in {
-    val todistus =  siirto(henkiloOidilla(perusopetus)).generate
+    val todistus =  siirto(henkiloOidilla(perusopetus))
     todistus should abideSchemas
   }
 

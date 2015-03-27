@@ -4,6 +4,7 @@ import scala.annotation.tailrec
 import scala.util.Random
 import java.util.UUID
 import org.joda.time.LocalDate
+import org.scalatest.matchers.Matcher
 
 trait DataGen[T] {
   self =>
@@ -102,6 +103,12 @@ object DataGen {
 
   def henkiloOid = oid("1.2.246.562.24.")
 
+
+}
+
+trait DataGeneratorSupport {
+  import scala.language.implicitConversions
+  implicit def matcherForGenerator[T](m: Matcher[T]):Matcher[DataGen[T]] = m compose {(dg:DataGen[T]) => dg.generate}
 
 }
 
