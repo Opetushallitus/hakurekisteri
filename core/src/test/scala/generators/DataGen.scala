@@ -43,8 +43,18 @@ object DataGen {
     override def generate: T = items(Random.nextInt(items.size))
   }
 
+  def always[T](item: T): DataGen[T] = new DataGen[T]{
+    override def generate: T = item
+  }
+
   def uuid: DataGen[UUID] = new DataGen[UUID]{
     override def generate: UUID = UUID.randomUUID()
+  }
+
+  def combine[T](generators: Seq[DataGen[T]]):DataGen[Seq[T]] = new DataGen[Seq[T]] {
+    override def generate: Seq[T] = for (
+      generator <- generators
+    ) yield generator.generate
   }
 
 }
