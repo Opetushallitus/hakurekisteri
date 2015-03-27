@@ -171,7 +171,7 @@ object Arvosanat extends SchemaDefinition {
     <xs:simpleType name="aineenLaajuus">
       <xs:restriction base="xs:string">
         <xs:enumeration value="lyhyt"/>
-        <xs:enumeration value="pitkä"/>
+        <xs:enumeration value="pitka"/>
       </xs:restriction>
     </xs:simpleType>
 
