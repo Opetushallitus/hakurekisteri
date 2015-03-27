@@ -31,6 +31,7 @@
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
                     koodistoFixtures()
@@ -69,6 +70,7 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -90,6 +92,7 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -107,9 +110,6 @@
                 function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().henkiloPalveluService.foobar()
-                    httpFixtures().arvosanatLocal.aarnenArvosanat()
-                    httpFixtures().suorituksetLocal.aarnenSuoritus()
-                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                 },
                 input(opiskelijatiedot.henkiloSearch, 'foobar'),
                 click(opiskelijatiedot.searchButton),
@@ -143,8 +143,10 @@
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().suorituksetLocal.tyynenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.tyynenLuokkaTiedotEmpty()
+                    httpFixtures().opiskeluOikeudetLocal.tyynenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
                     koodistoFixtures()
@@ -182,6 +184,7 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -205,6 +208,7 @@
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
                     koodistoFixtures()
@@ -229,7 +233,7 @@
                 }
             }
 
-            it('Opiskelijan suoritukset, arvosanat, luokkatiedot ja opintooikeudet näkyvät oikein', seqDone(
+            it('!! Opiskelijan peruskoulun suoritukset, (ainelista, arvosanat,) luokkatiedot ja opintooikeudet näkyvät oikein', seqDone(
                 wait.forAngular,
                 function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
@@ -240,6 +244,7 @@
                     httpFixtures().suorituksetLocal.aarnenSuoritus()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeus()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -263,10 +268,18 @@
                     assertValue(opiskelijatiedot.luokkatietoLuokkaTaso, "2")
                     assertValue(opiskelijatiedot.luokkatietoAlkuPaiva, "18.8.2014")
                     assertValue(opiskelijatiedot.luokkatietoLoppuPaiva, "4.6.2015")
+                    assertText(opiskelijatiedot.opiskeluoikeusAlkuPaiva, "01.01.2000")
+                    assertText(opiskelijatiedot.opiskeluoikeusLoppuPaiva, "01.01.2014")
+                    assertText(opiskelijatiedot.opiskeluoikeusMyontaja, "06345 Pikkaralan ala-aste")
+                    assertText(opiskelijatiedot.opiskeluoikeusKoulutus, "Ensihoitaja (AMK)")
                 }
             ))
+            it('!! Opiskelijan lukion suoritukset, ainelista ja arvosanat näkyvät oikein', seqDone(
 
+            ))
+            it('!! Opiskelijan kk (komo = koulutus_*) suoritus näkyy oikein eikä arvosanoja näytetä', seqDone(
 
+            ))
             it("Vahvistamattomalle suoritukselle näytetään info-viesti", seqDone(
                 function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
@@ -276,7 +289,8 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().suorituksetLocal.aarnenVahvistamatonSuoritus()
-                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -295,7 +309,8 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().suorituksetLocal.aarnenVahvistamatonSuoritusHakemukselta()
-                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -327,6 +342,7 @@
                         httpFixtures().suorituksetLocal.aarnenSuoritus()
                         httpFixtures().arvosanatLocal.aarnenArvosanat()
                         httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                        httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                         httpFixtures().komoLocal.komoTiedot()
                         koodistoFixtures()
                     },
@@ -378,6 +394,14 @@
                         })
                     },
                     saveDisabled()
+                ))
+                it("!! YO tutkinnon suoritustiedot ja arvosanat talletetaan vain jos muuttuneita arvoja", seqDone(
+                ))
+                it("!! Suorituksen poistaminen", seqDone(
+
+                ))
+                it("!! Luokkatiedon poistaminen", seqDone(
+
                 ))
             }
         )

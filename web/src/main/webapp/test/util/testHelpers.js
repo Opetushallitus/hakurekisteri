@@ -199,7 +199,7 @@ function mockPostReturnData(triggerFn, urlPattern) {
 
 function assertText(selector, val) {
     chai.assert(typeof selector().val() !== 'undefined', "element "  + selector().selector + " should be defined, is undefined")
-    expect(selector().text().trim()).to.equal(val)
+    expect(selector().text().trim()).to.equal(val, selector().selector)
 }
 
 function assertValue(selector, val) {
