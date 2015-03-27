@@ -139,7 +139,7 @@ object Arvosanat extends SchemaDefinition {
             <xs:element name="TE" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="KT" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
             <xs:element name="GE" type="PerusOpetusAineType" maxOccurs="1" minOccurs="0"/>
-            <xs:element name="eivalmistu" type="EiValmistuLisaType"/>
+            <xs:element name="eivalmistu" type="EiValmistuLisaType" maxOccurs="1" minOccurs="0"/>
           </xs:sequence>
         </xs:extension>
       </xs:complexContent>
