@@ -10,7 +10,7 @@ ALTER TABLE a_arvosana OWNER TO oph;
 
 
 
-CREATE OR REPLACE FUNCTION arkistoi_arvosana_deltat()
+CREATE OR REPLACE FUNCTION arkistoi_arvosana_deltat(amount integer)
   RETURNS integer AS
 $BODY$
 DECLARE
@@ -23,6 +23,7 @@ BEGIN
     SELECT resource_id, inserted FROM arvosana
     EXCEPT
     SELECT resource_id, inserted FROM v_arvosana
+    LIMIT amount
   LOOP
     INSERT INTO a_arvosana SELECT * FROM arvosana WHERE resource_id = delta.resource_id AND inserted = delta.inserted;
     DELETE FROM arvosana WHERE resource_id = delta.resource_id AND inserted = delta.inserted;
@@ -36,4 +37,4 @@ $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
 
-ALTER FUNCTION arkistoi_arvosana_deltat() OWNER TO oph;
+ALTER FUNCTION arkistoi_arvosana_deltat(integer) OWNER TO oph;
