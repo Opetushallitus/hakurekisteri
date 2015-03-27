@@ -25,6 +25,8 @@ trait DataGen[T] {
     override def generate: T = genValid
   }
 
+  def withFilter(f: T => Boolean) = filter(f)
+
 }
 
 object DataGen {
@@ -56,6 +58,44 @@ object DataGen {
       generator <- generators
     ) yield generator.generate
   }
+
+
+  val kk = DataGen.int(1,12)
+  def maxPaiva(kk:Int): Int = kk match {
+    case 1 | 3 | 5 | 7 | 8 | 10 | 12 => 31
+    case 2 => 28
+    case _ => 30
+  }
+  val paiva = for (
+    kk <- kk;
+    pv <- DataGen.int(1,maxPaiva(kk))
+  ) yield (pv, kk, 1999)
+
+
+  val sukupuoli = DataGen.values("mies", "nainen")
+  val merkit = "0123456789ABCDEFHJKLMNPRSTUVWXY"
+  val valimerkit = "+-A"
+  val hetu =  for (
+    (pv, kk, vuosi) <- paiva;
+    sukupuoli <- sukupuoli;
+    luku <- DataGen.int(0,49)
+  ) yield {
+    val alku = "%02d".format(pv) + "%02d".format(kk) + "%04d".format(vuosi).substring(2)
+    val finalLuku = sukupuoli match {
+      case "mies" => luku * 2 + 1
+      case _ => luku * 2
+    }
+    val loppu = "9" + "%02d".format(finalLuku)
+    val merkki = merkit((alku + loppu).toInt % 31)
+    val valimerkki = valimerkit((vuosi / 100) - 18)
+    alku + valimerkki + loppu + merkki
+  }
+
+
+  val henkiloOid = for (
+    loppu <- DataGen.seq(DataGen.int(0,9),11)
+  ) yield "1.2.246.562.24." + loppu.mkString
+
 
 }
 
