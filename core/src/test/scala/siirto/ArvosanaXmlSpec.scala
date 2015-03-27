@@ -1,12 +1,10 @@
 package siirto
 
 import scalaz._
-import org.xml.sax.SAXParseException
-import scala.xml.{XML, Elem}
+import scala.xml.Elem
 import org.scalatest.{Matchers, FlatSpec}
 import org.scalatest.matchers.{MatchResult, Matcher}
 import generators.{DataGeneratorSupport, DataGen}
-import org.joda.time.LocalDate
 
 class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
 
@@ -15,95 +13,149 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
   implicit val schemas = NonEmptyList(Arvosanat, ArvosanatKoodisto)
 
   it should "mark valid perusopetuksen todistus as valid" in {
-    val todistus = siirto(henkilo(perusopetus))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        perusopetus
+      )
+    ) should abideSchemas
   }
 
   it should "mark luokalle jaava as valid" in {
-    val todistus =  siirto(henkilo(jaaLuokalle))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        jaaLuokalle
+      )
+    ) should abideSchemas
   }
 
   it should "mark perusopetuksen keskettanyt as valid" in {
-    val todistus =  siirto(henkilo(keskeyttanytPerusopetuksen))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        keskeyttanytPerusopetuksen
+      )
+    ) should abideSchemas
 
   }
 
   it should "mark lisaopetuksen kaynyt as valid" in {
-    val todistus =  siirto(henkilo(lisaopetus))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        lisaopetus
+      )
+    ) should abideSchemas
   }
 
   it should "mark lisaopetuksen keskeyttanyt as valid" in {
-    val todistus =  siirto(henkilo(lisaopetuksenKeskeyttanyt))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        lisaopetuksenKeskeyttanyt
+      )
+    ) should abideSchemas
   }
 
   it should "mark ammattistartin kaynyt as valid" in {
-    val todistus =  siirto(henkilo(ammattistartti))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        ammattistartti
+      )
+    ) should abideSchemas
   }
 
   it should "mark ammattistartin keskeyttanyt as valid" in {
-    val todistus =  siirto(henkilo(ammattistartinKeskeyttanyt))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        ammattistartinKeskeyttanyt
+      )
+    ) should abideSchemas
   }
 
   it should "mark valmentavan kaynyt as valid" in {
-    val todistus =  siirto(henkilo(valmentava))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        valmentava
+      )
+    ) should abideSchemas
   }
 
   it should "mark valmentavan keskeyttanyt as valid" in {
-    val todistus =  siirto(henkilo(valmentavanKeskeyttanyt))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        valmentavanKeskeyttanyt
+      )
+    ) should abideSchemas
   }
 
   it should "mark maahanmuuttajien lukioonvalmistavan kaynyt as valid" in {
-    val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistava))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        maahanmuuttajienLukioonValmistava
+      )
+    ) should abideSchemas
   }
 
   it should "mark maahanmuuttajien lukioonvalmistavan keskeyttanyt as valid" in {
-    val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistavanKeskeyttanyt))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        maahanmuuttajienLukioonValmistavanKeskeyttanyt
+      )
+    ) should abideSchemas
   }
 
 
   it should "mark maahanmuuttajien ammattiin valmistavan kaynyt as valid" in {
-    val todistus =  siirto(henkilo(maahanmuuttajienAmmValmistava))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        maahanmuuttajienAmmValmistava
+      )
+    ) should abideSchemas
   }
 
   it should "mark maahanmuuttajien ammattiin valmistavan keskeyttanyt as valid" in {
-    val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistavanKeskeyttanyt))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        maahanmuuttajienLukioonValmistavanKeskeyttanyt
+      )
+    ) should abideSchemas
   }
 
   it should "mark lukion kaynyt as valid" in {
-    val todistus =  siirto(henkilo(lukio))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        lukio
+      )
+    ) should abideSchemas
   }
 
   it should "mark ammattikoulun kaynyt as valid" in {
-    val todistus =  siirto(henkilo(ammattikoulu))
-    todistus should abideSchemas
+    siirto(
+      henkilo(
+        ammattikoulu
+      )
+    ) should abideSchemas
   }
 
   it should "mark ulkomaalaisen korvaavn kaynyt as valid" in {
-    val todistus =  siirto(hetutonHenkilo(ulkomainenKorvaava))
-    todistus should abideSchemas
+    siirto(
+      hetutonHenkilo(
+        ulkomainenKorvaava
+      )
+    ) should abideSchemas
   }
 
   it should "mark syntyma-ajallinen henkilo as valid" in {
-    val todistus =  siirto(hetutonHenkilo(perusopetus))
-    todistus should abideSchemas
+    siirto(
+      hetutonHenkilo(
+        perusopetus
+      )
+    ) should abideSchemas
   }
 
   it should "mark oidillinen henkilo as valid" in {
-    val todistus =  siirto(henkiloOidilla(perusopetus))
-    todistus should abideSchemas
+    siirto(
+      henkiloOidilla(
+        perusopetus
+      )
+    ) should abideSchemas
   }
 
   /*it should "mark todistus with multiple entries as valid" in {
