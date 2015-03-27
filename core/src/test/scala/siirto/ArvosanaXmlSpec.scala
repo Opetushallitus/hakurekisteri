@@ -7,9 +7,6 @@ import org.scalatest.{Matchers, FlatSpec}
 import org.scalatest.matchers.{MatchResult, Matcher}
 import generators.DataGen
 
-/**
- * Created by verneri on 27.3.15.
- */
 class ArvosanaXmlSpec extends FlatSpec with Matchers {
 
   behavior of "Arvosana Xml Validation"
@@ -36,8 +33,61 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers {
     validator.validate(todistus) should succeed
   }
 
+  it should "mark lisaopetuksen keskeyttanyt as valid" in {
+    val todistus =  siirto(henkilo(lisaopetuksenKeskeyttanyt)).generate
+    validator.validate(todistus) should succeed
+  }
+
+  it should "mark ammattistartin kaynyt as valid" in {
+    val todistus =  siirto(henkilo(ammattistartti)).generate
+    validator.validate(todistus) should succeed
+  }
+
+  it should "mark ammattistartin keskeyttanyt as valid" in {
+    val todistus =  siirto(henkilo(ammattistartinKeskeyttanyt)).generate
+    validator.validate(todistus) should succeed
+  }
+
+  it should "mark valmentavan kaynyt as valid" in {
+    val todistus =  siirto(henkilo(valmentava)).generate
+    validator.validate(todistus) should succeed
+  }
+
+  it should "mark valmentavan keskeyttanyt as valid" in {
+    val todistus =  siirto(henkilo(valmentavanKeskeyttanyt)).generate
+    validator.validate(todistus) should succeed
+  }
+
+  it should "mark maahanmuuttajien lukioonvalmistavan kaynyt as valid" in {
+    val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistava)).generate
+    validator.validate(todistus) should succeed
+  }
+
+  it should "mark maahanmuuttajien lukioonvalmistavan keskeyttanyt as valid" in {
+    val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistavanKeskeyttanyt)).generate
+    validator.validate(todistus) should succeed
+  }
 
 
+  it should "mark maahanmuuttajien ammattiin valmistavan kaynyt as valid" in {
+    val todistus =  siirto(henkilo(maahanmuuttajienAmmValmistava)).generate
+    validator.validate(todistus) should succeed
+  }
+
+  it should "mark maahanmuuttajien ammattiin valmistavan keskeyttanyt as valid" in {
+    val todistus =  siirto(henkilo(maahanmuuttajienLukioonValmistavanKeskeyttanyt)).generate
+    validator.validate(todistus) should succeed
+  }
+
+  it should "mark lukion kaynyt as valid" in {
+    val todistus =  siirto(henkilo(lukio)).generate
+    validator.validate(todistus) should succeed
+  }
+
+  it should "mark ammattikoulun kaynyt as valid" in {
+    val todistus =  siirto(henkilo(ammattikoulu)).generate
+    validator.validate(todistus) should succeed
+  }
 
   val succeed =
     Matcher { (left: Validation[Any,Any]) =>
@@ -131,9 +181,115 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers {
 
   )
 
-  val lisaopetus = for (
-    perusopetusTodistus <- perusopetus
-  ) yield perusopetusTodistus.copy(label = "perusopetuksenlisaopetus")
+  val lukio = DataGen.always(
+    <lukio>
+      <myontaja>05127</myontaja>
+      <suorituskieli>FI</suorituskieli>
+      <valmistuminen>2001-01-01</valmistuminen>
+      <AI>
+        <yhteinen>7</yhteinen>
+        <tyyppi>FI</tyyppi>
+      </AI>
+      <A1>
+        <yhteinen>9</yhteinen>
+        <kieli>EN</kieli>
+      </A1>
+      <B1>
+        <yhteinen>5</yhteinen>
+        <kieli>SV</kieli>
+      </B1>
+      <MA>
+        <yhteinen>5</yhteinen>
+        <laajuus>pitka</laajuus>
+      </MA>
+      <BI>
+        <yhteinen>7</yhteinen>
+      </BI>
+      <GE>
+        <yhteinen>7</yhteinen>
+      </GE>
+      <FY>
+        <yhteinen>7</yhteinen>
+      </FY>
+      <KE>
+        <yhteinen>7</yhteinen>
+      </KE>
+      <TE>
+        <yhteinen>7</yhteinen>
+      </TE>
+      <KT>
+        <yhteinen>7</yhteinen>
+      </KT>
+      <HI>
+        <yhteinen>7</yhteinen>
+      </HI>
+      <YH>
+        <yhteinen>7</yhteinen>
+      </YH>
+      <MU>
+        <yhteinen>7</yhteinen>
+      </MU>
+      <KU>
+        <yhteinen>7</yhteinen>
+      </KU>
+      <LI>
+        <yhteinen>7</yhteinen>
+      </LI>
+      <PS>
+        <yhteinen>7</yhteinen>
+      </PS>
+      <FI>
+        <yhteinen>7</yhteinen>
+      </FI>
+    </lukio>
+  )
+
+  val ammattikoulu = DataGen.always(
+    <ammatillinen>
+      <myontaja>05127</myontaja>
+      <suorituskieli>FI</suorituskieli>
+      <valmistuminen>2001-01-01</valmistuminen>
+    </ammatillinen>
+  )
+
+  val lisaopetus = convertPerusopetus("perusopetuksenlisaopetus")
+
+
+  def convertPerusopetus(label: String): DataGen[Elem] = {
+    for (
+      perusopetusTodistus <- perusopetus
+    ) yield {
+
+      perusopetusTodistus.copy(label = label)
+    }
+  }
+
+  val lisaopetuksenKeskeyttanyt = eiValmistuLisaopetuksesta(lisaopetus)
+
+
+  def eiValmistuLisaopetuksesta(lisaopetusTodistusGen:DataGen[Elem]): DataGen[Elem] = {
+    for (
+      lisaopetusTodistus <- lisaopetusTodistusGen
+    ) yield lisaopetusTodistus.copy(child = lisaopetusTodistus.child ++ Seq(<eivalmistu>SUORITUS HYLATTY</eivalmistu>))
+  }
+
+  val ammattistartti = convertPerusopetus("ammattistartti")
+
+  val ammattistartinKeskeyttanyt = eiValmistuLisaopetuksesta(ammattistartti)
+
+  val valmentava = convertPerusopetus("valmentava")
+
+  val valmentavanKeskeyttanyt = eiValmistuLisaopetuksesta(valmentava)
+
+  val maahanmuuttajienLukioonValmistava = convertPerusopetus("maahanmuuttajienlukioonvalmistava")
+
+  val maahanmuuttajienLukioonValmistavanKeskeyttanyt = eiValmistuLisaopetuksesta(maahanmuuttajienLukioonValmistava)
+
+  val maahanmuuttajienAmmValmistava = convertPerusopetus("maahanmuuttajienammvalmistava")
+
+  val maahanmuuttajienAmmValmistavanKeskeyttanyt = eiValmistuLisaopetuksesta(maahanmuuttajienAmmValmistava)
+
+
 
   def henkilo(todistuksetGen:DataGen[Elem]*): DataGen[Elem] = for (
     todistukset <- DataGen.combine[Elem](todistuksetGen)
