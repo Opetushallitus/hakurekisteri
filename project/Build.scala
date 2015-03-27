@@ -1,14 +1,11 @@
-import com.mojolly.scalate.ScalatePlugin.ScalateKeys
-import info.schleichardt.sbt.sonar.SbtSonarPlugin._
 import java.text.SimpleDateFormat
 import java.util.Date
 import sbt._
 import sbt.Keys._
-import org.scalatra.sbt._
 import com.mojolly.scalate.ScalatePlugin._
-import ScalateKeys._
 import org.sbtidea.SbtIdeaPlugin._
 import scala.language.postfixOps
+import com.earldouglas.xsbtwebplugin._
 
 object HakurekisteriBuild extends Build {
   import sys.process._
@@ -59,8 +56,8 @@ object HakurekisteriBuild extends Build {
   val AkkaStack = Seq("akka-testkit", "akka-slf4j","akka-camel").map("com.typesafe.akka" %% _ % akkaVersion)
 
   val webDeps =  Seq(
-    "org.eclipse.jetty" % "jetty-webapp" % "9.1.5.v20140505" % "container",
-    "org.eclipse.jetty" % "jetty-plus" % "9.1.5.v20140505" % "container",
+    "org.eclipse.jetty" % "jetty-webapp" % "9.2.1.v20140609" % "container;test",
+    "org.eclipse.jetty" % "jetty-plus" % "9.2.1.v20140609" % "container;test",
     "javax.servlet" % "javax.servlet-api" % "3.1.0",
     "validator" % "hakurekisteri-validation" % "0.1.0-SNAPSHOT" changing()
   )
@@ -160,7 +157,7 @@ object HakurekisteriBuild extends Build {
       s"hakurekisteri-web",
       file("web"),
       configurations = Seq(LoadSpecs),
-      settings = ScalatraPlugin.scalatraWithJRebel ++ scalateSettings
+      settings = WebPlugin.webSettings ++ scalateSettings
         ++ inConfig(LoadSpecs)(Defaults.testSettings)
         ++ inConfig(LoadSpecs)(Seq(
           testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),

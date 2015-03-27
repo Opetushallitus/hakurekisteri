@@ -10,7 +10,7 @@ addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.4")
 
 addSbtPlugin("com.mojolly.scalate" % "xsbt-scalate-generator" % "0.5.0")
 
-addSbtPlugin("org.scalatra.sbt" % "scalatra-sbt" % "0.3.5")
+addSbtPlugin("com.earldouglas" % "xsbt-web-plugin" % "0.9.0")
 
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "0.3.2")
 
