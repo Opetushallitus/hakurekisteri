@@ -11,9 +11,9 @@
             <kutsumanimi>Juha</kutsumanimi>
             <todistukset>
                 <perusopetus>
-                    <valmistuminen>2001-01-01</valmistuminen>
                     <myontaja>05127</myontaja>
                     <suorituskieli>FI</suorituskieli>
+                    <valmistuminen>2001-01-01</valmistuminen>
                     <AI>
                         <yhteinen>5</yhteinen>
                         <tyyppi>FI</tyyppi>
@@ -83,10 +83,10 @@
             <kutsumanimi>Jaakko</kutsumanimi>
             <todistukset>
                 <perusopetus>
-                    <valmistuminen>2001-01-01</valmistuminen>
                     <myontaja>05127</myontaja>
                     <suorituskieli>FI</suorituskieli>
-                    <eivalmistu>JAA LUOKALLE</eivalmistu>
+                    <oletettuvalmistuminen>2016-06-01</oletettuvalmistuminen>
+                    <valmistuminensiirtyy>JAA LUOKALLE</valmistuminensiirtyy>
                 </perusopetus>
             </todistukset>
         </henkilo>
