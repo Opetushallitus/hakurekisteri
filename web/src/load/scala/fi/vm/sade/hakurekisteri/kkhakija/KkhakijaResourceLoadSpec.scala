@@ -14,6 +14,7 @@ import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Success, Try}
+import fi.vm.sade.hakurekisteri.web.kkhakija.Hakija
 
 class KkhakijaResourceLoadSpec extends FlatSpec with Matchers {
 
