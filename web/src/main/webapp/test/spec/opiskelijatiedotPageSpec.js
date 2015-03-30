@@ -61,7 +61,7 @@
         })
 
         describe('Henkilohaku', function () {
-            it('Voi hakea oidin perusteella - test-dsl', seqDone(
+            it('Voi hakea oidin perusteella', seqDone(
                 wait.forAngular,
                 function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
@@ -69,6 +69,7 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
                     httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
@@ -92,6 +93,7 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
                     httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
@@ -184,6 +186,7 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
                     httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
@@ -208,6 +211,7 @@
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
                     httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
@@ -267,7 +271,6 @@
                 var aineRivi = jQuery(aineRivit[0])
                 var p = jQuery.makeArray(jQuery(aineRivi).find(opiskelijatiedot.arvosanaPakollinenArvosana().selector).map(txtArr))
                 var v = jQuery.makeArray(jQuery(aineRivi).find(opiskelijatiedot.arvosanaValinnainenArvosana().selector).filter(nonEmpty).map(txtArr))
-                console.log(p,v)
                 expect([aineTxt, myonnetty , lisatieto, p, v]).to.deep.equal([aineTxt, myonnetty, lisatieto, pakolliset, valinnaiset])
             }
 
@@ -282,6 +285,7 @@
                     httpFixtures().suorituksetLocal.aarnenSuoritus()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot(2015)
                     httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeus()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
@@ -333,6 +337,7 @@
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().suorituksetLocal.aarnenVahvistamatonSuoritus()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
                     httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
@@ -353,6 +358,7 @@
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().suorituksetLocal.aarnenVahvistamatonSuoritusHakemukselta()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
                     httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
@@ -385,6 +391,7 @@
                         httpFixtures().suorituksetLocal.aarnenSuoritus()
                         httpFixtures().arvosanatLocal.aarnenArvosanat()
                         httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
                         httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                         httpFixtures().komoLocal.komoTiedot()
                         koodistoFixtures()
@@ -446,7 +453,7 @@
                 it("!! Luokkatiedon poistaminen", seqDone(
 
                 ))
-                it("Lisää korotus tallentaa arvosanan", seqDone(
+                it("!! Lisää korotus tallentaa arvosanan", seqDone(
 
                 ))
             }
