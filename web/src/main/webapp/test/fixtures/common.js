@@ -6,6 +6,9 @@ var restData = {
     suoritusRekisteri: {
         opiskeluoikeudet: {
             aarne: [{"id":"d6bbbe98-9d92-4fcf-8827-631591ec6b47","aika":{"alku":"2000-01-01T00:00:00.000+02:00","loppu":"2014-01-01T00:00:00.000+02:00"},"henkiloOid":"1.2.246.562.24.71944845619","komo":"koulutus_671116","myontaja":"1.2.246.562.10.39644336305","source":"1.2.246.562.24.00000000001"}]
+        },
+        suoritukset: {
+            aarne: {"henkiloOid":"1.2.246.562.24.71944845619","source":"ophadmin","vahvistettu":true,"komo":"1.2.246.562.13.62959769647","myontaja":"1.2.246.562.10.39644336305","tila":"KESKEN","valmistuminen":"03.06.2015","yksilollistaminen":"Ei","suoritusKieli":"FI","id":"4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9"}
         }
     },
     komo: {"yotutkintoKomoOid":"1.2.246.562.5.2013061010184237348007","perusopetusKomoOid":"1.2.246.562.13.62959769647","lisaopetusKomoOid":"1.2.246.562.5.2013112814572435044876","ammattistarttiKomoOid":"1.2.246.562.5.2013112814572438136372","valmentavaKomoOid":"1.2.246.562.5.2013112814572435755085","ammatilliseenvalmistavaKomoOid":"1.2.246.562.5.2013112814572441001730","ulkomainenkorvaavaKomoOid":"1.2.246.562.13.86722481404","lukioKomoOid":"TODO lukio komo oid","ammatillinenKomoOid":"TODO ammatillinen komo oid","lukioonvalmistavaKomoOid":"1.2.246.562.5.2013112814572429142840","ylioppilastutkintolautakunta":"1.2.246.562.10.43628088406"}
@@ -83,7 +86,7 @@ var httpFixtures = function () {
 
     fixtures.suorituksetLocal = {
         aarnenSuoritus: function () {
-            httpBackend.when('GET', serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619")).respond([{"henkiloOid":"1.2.246.562.24.71944845619","source":"ophadmin","vahvistettu":true,"komo":"1.2.246.562.13.62959769647","myontaja":"1.2.246.562.10.39644336305","tila":"KESKEN","valmistuminen":"03.06.2015","yksilollistaminen":"Ei","suoritusKieli":"FI","id":"4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9"}])
+            httpBackend.when('GET', serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619")).respond([restData.suoritusRekisteri.suoritukset.aarne])
         },
         aarnenSuorituksetEmpty: function () {
             httpBackend.when('GET', serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619")).respond([])
