@@ -8,6 +8,32 @@ app.controller "TiedonsiirtoCtrl", [
   ($scope, MurupolkuService, MessageService, LokalisointiService, $log, $http) ->
     supportsFileApi = window.FileReader?
 
+    isPerusTiedotActive = () ->
+      $http.get("rest/v1/siirto/perustiedot/isopen", {cache: true})
+      .success((data) ->
+        console.log('data='+JSON.stringify(data))
+        $scope.perusTiedotOpen = data
+        console.log('perusTiedotOpen='+$scope.perusTiedotOpen))
+      .error ->
+        $scope.perusTiedotOpen = false
+        $log.error "cannot connect perustiedot"
+
+    isArvosanojenSiirtoActive = () ->
+      $http.get("rest/v1/siirto/arvosanat/isopen", {cache: true})
+      .success((data) ->
+        console.log('data='+JSON.stringify(data))
+        $scope.arvosanatOpen = data
+        console.log('arvosanatOpen='+$scope.arvosanatOpen))
+      .error ->
+        $scope.arvosanatOpen = false
+        $log.error "cannot connect arvosanat"
+
+    $scope.perusTiedotOpen = isPerusTiedotActive()
+    $scope.arvosanatOpen = isArvosanojenSiirtoActive()
+
+    $scope.isSendingDisabled = () ->
+      $scope.tyyppi == 'perustiedot' and $scope.perusTiedotOpen or $scope.tyyppi == 'arvosanat' and $scope.arvosanatOpen
+
     $http.get(koodistoServiceUrl + "/rest/json/oppiaineetyleissivistava/koodi/", {cache: true}).success (koodit) ->
       translateWithMetadata = (koodi, metadatas) -> (lang) ->
         translations = R.fromPairs(R.map((metadata) -> [metadata.kieli.toLowerCase(), metadata.nimi])(metadatas))
