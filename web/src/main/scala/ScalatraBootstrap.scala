@@ -1,6 +1,7 @@
 import java.nio.file.Path
 import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEvent}
 
+import _root_.support._
 import akka.actor.{ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana._
@@ -8,7 +9,6 @@ import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.healthcheck.HealthcheckActor
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
-import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaSwaggerApi, CreateArvosanaCommand}
 import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchResource
@@ -38,7 +38,6 @@ import org.springframework.web.context._
 import org.springframework.web.context.support.XmlWebApplicationContext
 import org.springframework.web.filter.DelegatingFilterProxy
 import siirto._
-import _root_.support._
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
@@ -46,8 +45,8 @@ import scala.concurrent.duration._
 import scala.xml.Elem
 
 class ScalatraBootstrap extends LifeCycle {
-  import fi.vm.sade.hakurekisteri.Config._
   import AuthorizedRegisters._
+  import fi.vm.sade.hakurekisteri.Config._
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("hakurekisteri")
   implicit val ec: ExecutionContext = system.dispatcher
@@ -70,10 +69,10 @@ class ScalatraBootstrap extends LifeCycle {
     mountServlets(context)(
       ("/rest/v1/komo", "komo") -> new GuiServlet,
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
-      ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", "arvosanat", "data", new XmlConverter {
+      ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", batchTypeArvosanat, "data", new XmlConverter {
         override def convert(f: FileItem): Elem = ???
       }, Arvosanat, ArvosanatKoodisto) with SpringSecuritySupport,
-      ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", "perustiedot", "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SpringSecuritySupport,
+      ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SpringSecuritySupport,
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
       ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
       ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),

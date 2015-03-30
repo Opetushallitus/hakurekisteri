@@ -22,6 +22,9 @@ object Config {
 
   val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
 
+  val batchTypeArvosanat = "arvosanat"
+  val batchTypePerustiedot = "perustiedot"
+
   // by default the service urls point to QA
   val hostQa = "testi.virkailija.opintopolku.fi"
   val casUrlQa = s"https://$hostQa/cas"
