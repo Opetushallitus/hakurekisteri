@@ -324,15 +324,15 @@
             it('Opiskelijan lukion suoritukset, ainelista ja arvosanat näkyvät oikein', seqDone(
                 wait.forAngular,
                 function () {
-                    lukioSuoritus = {}
-                    lukioSuoritus = jQuery.extend(lukioSuoritus, restData.suoritusRekisteri.suoritukset.aarne)
-                    lukioSuoritus.komo = restData.komo.lukioKomoOid
+                    suoritus = {}
+                    suoritus = jQuery.extend(suoritus, restData.suoritusRekisteri.suoritukset.aarne)
+                    suoritus.komo = restData.komo.lukioKomoOid
                     httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().organisaatioService.pikkaralaKoodi()
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                    testFrame().httpBackend.when('GET', serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619")).respond([lukioSuoritus])
+                    testFrame().httpBackend.when('GET', serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619")).respond([suoritus])
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
@@ -362,8 +362,42 @@
                     assertArvosanaRivi("Matematiikka", "04.06.2015", "", ["10"],["9"])
                 }
             ))
-            it('!! Opiskelijan kk suoritus (komo = koulutus_*) näkyy oikein eikä arvosanoja näytetä', seqDone(
-
+            it('Opiskelijan amk suoritus (komo = koulutus_*) näkyy oikein eikä arvosanoja näytetä', seqDone(
+                wait.forAngular,
+                function () {
+                    suoritus = {}
+                    suoritus = jQuery.extend(suoritus, restData.suoritusRekisteri.suoritukset.aarne)
+                    suoritus.komo = "koulutus_671116"
+                    httpFixtures().organisaatioService.pikkaralaOid()
+                    httpFixtures().organisaatioService.pikkaralaKoodi()
+                    httpFixtures().henkiloPalveluService.aarne()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                    testFrame().httpBackend.when('GET', serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619")).respond([suoritus])
+                    httpFixtures().arvosanatLocal.aarnenArvosanat()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
+                    httpFixtures().komoLocal.komoTiedot()
+                    koodistoFixtures()
+                },
+                input(opiskelijatiedot.henkiloSearch, '123456-789'),
+                click(opiskelijatiedot.searchButton),
+                wait.forAngular,
+                function () {
+                    expect(opiskelijatiedot.resultsTable().length).to.equal(1)
+                    expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
+                    expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
+                    expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
+                    assertText(opiskelijatiedot.hetu, "123456-789")
+                    assertValue(opiskelijatiedot.suoritusMyontaja, "06345")
+                    assertText(opiskelijatiedot.suoritusKoulutusText, "Ensihoitaja (AMK)")
+                    assertValue(opiskelijatiedot.suoritusYksilollistetty, "0")
+                    assertValue(opiskelijatiedot.suoritusKieli, "156")
+                    assertValue(opiskelijatiedot.suoritusValmistuminen, "3.6.2015")
+                    assertValue(opiskelijatiedot.suoritusTila, "0")
+                    assertArvosanat(0, 0, 0, 0, 0)
+                }
             ))
             it("Vahvistamattomalle suoritukselle näytetään info-viesti", seqDone(
                 function () {
