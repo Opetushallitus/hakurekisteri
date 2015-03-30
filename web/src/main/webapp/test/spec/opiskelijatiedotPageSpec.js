@@ -332,7 +332,6 @@
                     httpFixtures().henkiloPalveluService.aarne()
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                    console.log(lukioSuoritus)
                     testFrame().httpBackend.when('GET', serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619")).respond([lukioSuoritus])
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
