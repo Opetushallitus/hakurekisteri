@@ -57,5 +57,11 @@ opiskelijatiedot = initSelectors({
     opiskeluoikeusLoppuPaiva: ".test-opiskeluoikeusLoppuPaiva",
     opiskeluoikeusMyontaja: ".test-opiskeluoikeusMyontaja",
     opiskeluoikeusKoulutus: ".test-opiskeluoikeusKoulutus",
-    saveButton: ".test-saveButton"
+    saveButton: ".test-saveButton",
+    arvosanaAineRivi: ".test-aineRivi:visible",
+    arvosanaAineNimi: ".test-aineNimi",
+    arvosanaMyonnetty: ".test-arvosanaMyonnetty:visible",
+    arvosanaLisatieto: ".test-arvosanaLisatieto:visible",
+    arvosanaPakollinenArvosana: ".test-arvosanaPakollinenArvosana:visible",
+    arvosanaValinnainenArvosana: ".test-arvosanaValinnainenArvosana:visible"
 })

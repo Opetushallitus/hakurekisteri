@@ -233,7 +233,45 @@
                 }
             }
 
-            it('!! Opiskelijan peruskoulun suoritukset, (ainelista, arvosanat,) luokkatiedot ja opintooikeudet näkyvät oikein', seqDone(
+            function nonEmpty(i,e) {
+                return jQuery(e).text().trim().length > 0
+            }
+
+            function assertArvosanat(aineRiviCount, aineCount, korotusDateCount, pakollisetCount, valinnaisetCount) {
+                expect(opiskelijatiedot.arvosanaAineRivi().length).to.equal(aineRiviCount)
+                expect(jQuery.unique(jQuery.map(opiskelijatiedot.arvosanaAineNimi(),function(e){return jQuery(e).text()})).length).to.equal(aineCount)
+                expect(opiskelijatiedot.arvosanaMyonnetty().length).to.equal(korotusDateCount)
+                expect(opiskelijatiedot.arvosanaPakollinenArvosana().length).to.equal(pakollisetCount)
+                expect(opiskelijatiedot.arvosanaValinnainenArvosana().filter(nonEmpty).length).to.equal(valinnaisetCount)
+            }
+
+            function findAineRivi(aineTxt, myonnetty, lisatieto) {
+                return opiskelijatiedot.arvosanaAineRivi().filter(function(i, rivi){
+                    var aine = jQuery(rivi).find(opiskelijatiedot.arvosanaAineNimi().selector).text();
+                    var m = jQuery(rivi).find(opiskelijatiedot.arvosanaMyonnetty().selector).text();
+                    var l = jQuery(rivi).find(opiskelijatiedot.arvosanaLisatieto().selector).text();
+                    return aine == aineTxt && m == myonnetty && l == lisatieto
+                })
+            }
+
+            function txtArr(i, e) {
+                return jQuery(e).text();
+            }
+
+            function assertArvosanaRivi(aineTxt, myonnetty, lisatieto, pakolliset, valinnaiset) {
+                if(myonnetty.length > 0) {
+                    myonnetty = "(" + myonnetty + ")"
+                }
+                var aineRivit = findAineRivi(aineTxt, myonnetty, lisatieto)
+                expect(aineRivit.length).to.equal(1, "found " + aineRivit.length + " matching aineRivi when there was supposed to be 1: " + aineTxt + ": " + myonnetty)
+                var aineRivi = jQuery(aineRivit[0])
+                var p = jQuery.makeArray(jQuery(aineRivi).find(opiskelijatiedot.arvosanaPakollinenArvosana().selector).map(txtArr))
+                var v = jQuery.makeArray(jQuery(aineRivi).find(opiskelijatiedot.arvosanaValinnainenArvosana().selector).filter(nonEmpty).map(txtArr))
+                console.log(p,v)
+                expect([aineTxt, myonnetty , lisatieto, p, v]).to.deep.equal([aineTxt, myonnetty, lisatieto, pakolliset, valinnaiset])
+            }
+
+            it('Opiskelijan peruskoulun suoritukset, ainelista, arvosanat, luokkatiedot ja opintooikeudet näkyvät oikein', seqDone(
                 wait.forAngular,
                 function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
@@ -272,12 +310,17 @@
                     assertText(opiskelijatiedot.opiskeluoikeusLoppuPaiva, "01.01.2014")
                     assertText(opiskelijatiedot.opiskeluoikeusMyontaja, "06345 Pikkaralan ala-aste")
                     assertText(opiskelijatiedot.opiskeluoikeusKoulutus, "Ensihoitaja (AMK)")
+                    assertArvosanat(38, 19, 15, 17, 1)
+                    assertArvosanaRivi("Äidinkieli ja kirjallisuus", "", "Kieli puuttuu!!", ["10"],[])
+                    // assertArvosanaRivi("A1-kieli", "", "englanti", ["9"],[])
+                    assertArvosanaRivi("Matematiikka", "", "", ["6"],[])
+                    assertArvosanaRivi("Matematiikka", "04.06.2015", "", ["10"],["9"])
                 }
             ))
             it('!! Opiskelijan lukion suoritukset, ainelista ja arvosanat näkyvät oikein', seqDone(
 
             ))
-            it('!! Opiskelijan kk (komo = koulutus_*) suoritus näkyy oikein eikä arvosanoja näytetä', seqDone(
+            it('!! Opiskelijan kk suoritus (komo = koulutus_*) näkyy oikein eikä arvosanoja näytetä', seqDone(
 
             ))
             it("Vahvistamattomalle suoritukselle näytetään info-viesti", seqDone(
@@ -401,6 +444,9 @@
 
                 ))
                 it("!! Luokkatiedon poistaminen", seqDone(
+
+                ))
+                it("Lisää korotus tallentaa arvosanan", seqDone(
 
                 ))
             }
