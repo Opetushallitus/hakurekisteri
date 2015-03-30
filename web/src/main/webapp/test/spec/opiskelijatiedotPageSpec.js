@@ -321,7 +321,7 @@
                     assertArvosanaRivi("Matematiikka", "04.06.2015", "", ["10"],["9"])
                 }
             ))
-            it('Opiskelijan lukio suoritukset, ainelista ja arvosanat näkyvät oikein', seqDone(
+            it('Opiskelijan lukion suoritukset, ainelista ja arvosanat näkyvät oikein', seqDone(
                 wait.forAngular,
                 function () {
                     lukioSuoritus = {}
@@ -361,9 +361,6 @@
                     assertArvosanaRivi("Matematiikka", "", "", ["6"],[])
                     assertArvosanaRivi("Matematiikka", "04.06.2015", "", ["10"],["9"])
                 }
-            ))
-            it('!! Opiskelijan lukion suoritukset, ainelista ja arvosanat näkyvät oikein', seqDone(
-
             ))
             it('!! Opiskelijan kk suoritus (komo = koulutus_*) näkyy oikein eikä arvosanoja näytetä', seqDone(
 
