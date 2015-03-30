@@ -130,14 +130,8 @@ var httpFixtures = function () {
         aarnenLuokkaTiedotEmpty: function (year) {
             httpBackend.when('GET', serviceUrls.opiskelijat.henkilo("1.2.246.562.24.71944845619", year)).respond([])
         },
-        tyynenLuokkaTiedot: function () {
-            httpBackend.when('GET', /.*rest\/v1\/opiskelijat\?henkilo=1.2.246.562.24.98743797763.*/).respond([{"id":"67108ac8-11db-4ec1-b1a5-613ffd095251","oppilaitosOid":"1.2.246.562.10.39644336305","luokkataso":"9","luokka":"9A","henkiloOid":"1.2.246.562.24.98743797763","alkuPaiva":"2014-08-17T21:00:00.000Z","loppuPaiva":"2015-06-03T21:00:00.000Z","source":"Test"}])
-        },
         tyynenLuokkaTiedotEmpty: function () {
-            httpBackend.when('GET', /.*rest\/v1\/opiskelijat\?henkilo=1.2.246.562.24.98743797763.*/).respond([])
-        },
-        tyynenLuokkaTiedotHetulla: function () {
-            httpBackend.when('GET', /.*rest\/v1\/opiskelijat\?henkilo=123456-789&vuosi=2015$/).respond([{"id":"6812d1cb-bc15-435a-ab0c-53414d1a7775","oppilaitosOid":"1.2.246.562.10.39644336305","luokkataso":"9","luokka":"9A","henkiloOid":"1.2.246.562.24.71944845619","alkuPaiva":"2014-08-17T21:00:00.000Z","loppuPaiva":"2015-06-03T21:00:00.000Z","source":"Test"}])
+            httpBackend.when('GET', serviceUrls.opiskelijat.henkilo("1.2.246.562.24.98743797763")).respond([])
         }
     }
 
