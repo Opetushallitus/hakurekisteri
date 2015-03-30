@@ -419,7 +419,7 @@
                     return waitJqueryIs(opiskelijatiedot.saveButton, ":disabled", true)
                 }
 
-                it("Peruskoulun suoritustiedot ja arvosanat talletetaan vain jos muuttuneita arvoja", seqDone(
+                it("!! Peruskoulun suoritustiedot (ja arvosanat) talletetaan vain jos muuttuneita arvoja", seqDone(
                     function () {
                         httpFixtures().organisaatioService.pikkaralaOid()
                         httpFixtures().organisaatioService.pikkaralaKoodi()
