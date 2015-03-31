@@ -362,7 +362,8 @@ object YTLXml {
       "FC" -> Aine("C", "RA"),
       "TE" -> Aine("AINEREAALI", "TE"),
       "GA" -> Aine("A", "PG"),
-      "UE" -> Aine("AINEREAALI", "UE")
+      "UE" -> Aine("AINEREAALI", "UE"),
+      "W" -> Aine("AI", "QS")
     )
 
     def apply(koetunnus:String, aineyhdistelmärooli: Option[String] = None):Aine =
