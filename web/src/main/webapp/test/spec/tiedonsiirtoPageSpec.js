@@ -14,12 +14,12 @@
             }
         });
 
-        initPage = function (tiedonSiirtoEnabled) {
+        initPage = function (enablePerustiedot, enableArvosanat) {
             before(
                 addTestHook(koodistoFixtures),
                 addTestHook(lokalisointiFixtures),
-                addTestHook(tiedostonSiirtoFixtures().perustiedotOpen(tiedonSiirtoEnabled)),
-                addTestHook(tiedostonSiirtoFixtures().arvosanatOpen(tiedonSiirtoEnabled)),
+                addTestHook(tiedostonSiirtoFixtures().perustiedotOpen(enablePerustiedot)),
+                addTestHook(tiedostonSiirtoFixtures().arvosanatOpen(enableArvosanat)),
                 page.openPage,
                 wait.until(function () { return page.uploadForm().length === 1}),
                 wait.forAngular,
@@ -28,7 +28,7 @@
         }
 
         describe("Tiedoston lähetys", function () {
-            initPage(true)
+            initPage(true, true)
 
             describe("Aluksi", function() {
                 it("Ei näytä virheitä", function () {
@@ -65,7 +65,7 @@
             })
 
             describe("Tiedoston siirron disablointi", function () {
-                initPage(false)
+                initPage(false, false)
                 it("Perustiedot disabloitu", function () {
                     expect(page.perustiedotRadio().isEnabled()).to.equal(false)
                 })
@@ -75,6 +75,13 @@
                 })
             })
 
+            describe("Eri arvot", function () {
+                initPage(false, true)
+                it("Perustiedot disabloitu ja arvosanat enabloitu", function () {
+                    expect(page.perustiedotRadio().isEnabled()).to.equal(false)
+                    expect(page.arvosanatRadio().isEnabled()).to.equal(true)
+                })
+            })
 
             describe("Arvosanojen validointi", function() {
                 describe("Arvosanat puuttuvat, korkeintaan 3 henkilöä", function() {
