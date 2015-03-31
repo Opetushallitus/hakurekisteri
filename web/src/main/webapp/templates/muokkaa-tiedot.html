@@ -78,7 +78,7 @@
                         <li ng-repeat="suoritus in henkilo.suoritukset"
                             class="{{suoritus.delete ? 'delete-suoritus' : ''}}">
                             <div ng-if="!suoritus.vahvistettu" class="alert alert-info">
-                                <span ng-if="isFromApplication(suoritus.myontaja)">Suoritus hakijan ilmoittama (Hakemus <a href="{{hakemusLink(suoritus.myontaja)}}">{{suoritus.myontaja}}</a>)</span>
+                                <span ng-if="isFromApplication(suoritus.myontaja)">Suoritus hakijan ilmoittama (Hakemus <a href="{{hakemusLink(suoritus.myontaja)}}" target="_blank">{{suoritus.myontaja}}</a>)</span>
                                 <span ng-if="!isFromApplication(suoritus.myontaja)">Suoritus ei ole vahvistettu</span>
                             </div>
                             <div ng-include="'templates/muokkaa-suoritus.html'" ng-controller="MuokkaaSuoritus"></div>
