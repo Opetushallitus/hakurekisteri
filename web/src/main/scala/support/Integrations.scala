@@ -1,7 +1,8 @@
 package support
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{Props, ActorRef, ActorSystem}
 import fi.vm.sade.hakurekisteri.integration.hakemus._
+import fi.vm.sade.hakurekisteri.integration.haku.HakuActor
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
 import fi.vm.sade.hakurekisteri.integration.parametrit.ParameterActor
@@ -50,7 +51,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf, None)(ec, system), hakemusConfig.maxApplications)), "hakemus")
 
-  hakemukset ! Trigger{
+  hakemukset ! Trigger {
     (hakemus: FullHakemus) =>
       for (
         person <- hakemus.personOid;
@@ -67,10 +68,6 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   hakemukset ! ilmoitetutArvosanat
 
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(system), organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
-
-  val virtaQueue = system.actorOf(Props(new VirtaQueue(virta, hakemukset)), "virta-queue")
-
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, ytlConfig)), "ytl")
 
   val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig, None)(ec, system))), "koodisto")
@@ -78,4 +75,10 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
   val parametrit = system.actorOf(Props(new ParameterActor(new VirkailijaRestClient(parameterConfig, None)(ec, system))), "parametrit")
 
   val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig, None)(ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool"), system))), "valintaTulos")
+
+  val haut = system.actorOf(Props(new HakuActor(tarjonta, parametrit, hakemukset, valintaTulos, ytl)))
+
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(system), organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
+
+  val virtaQueue = system.actorOf(Props(new VirtaQueue(virta, hakemukset, haut)), "virta-queue")
 }
