@@ -1,21 +1,20 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
 import akka.actor.Status.Failure
-import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{UpdateValintatulos, ValintaTulosQuery}
-
-import scala.concurrent.{ExecutionContext, Future}
-import akka.actor.{ActorLogging, ActorRef, Actor}
-import fi.vm.sade.hakurekisteri.integration.tarjonta._
-import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.pipe
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
-import org.joda.time.{DateTime, ReadableInstant}
 import fi.vm.sade.hakurekisteri.integration.hakemus.ReloadHaku
-import scala.concurrent.duration._
-import fi.vm.sade.hakurekisteri.tools.RicherString
-import RicherString._
+import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
+import fi.vm.sade.hakurekisteri.integration.tarjonta._
+import fi.vm.sade.hakurekisteri.integration.valintatulos.UpdateValintatulos
 import fi.vm.sade.hakurekisteri.integration.ytl.HakuList
+import fi.vm.sade.hakurekisteri.tools.RicherString._
+import org.joda.time.{DateTime, ReadableInstant}
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 
@@ -87,6 +86,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   def getKierrosEnd(hakuOid: String): Future[ReadableInstant] = {
     import akka.pattern.ask
     import akka.util.Timeout
+
     import scala.concurrent.duration._
     implicit val to: Timeout = 2.minutes
     (parametrit ? KierrosRequest(hakuOid)).mapTo[HakuParams].map(_.end).recover {

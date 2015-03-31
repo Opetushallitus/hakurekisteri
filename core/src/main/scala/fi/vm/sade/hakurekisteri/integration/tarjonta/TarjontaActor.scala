@@ -90,10 +90,10 @@ class TarjontaActor(restClient: VirkailijaRestClient) extends Actor with ActorLo
     }
   }
 
-  def getHaut: Future[RestHakuResult] = restClient.readObject[RestHakuResult]("/rest/v1/haku/findAll", 200, maxRetries).map(res => res.copy(res.result.filter(_.tila == "JULKAISTU"))).recoverWith {
+  def getHaut: Future[RestHakuResult] = restClient.readObject[RestHakuResult]("/rest/v1/haku/findAll", 200).map(res => res.copy(res.result.filter(_.tila == "JULKAISTU"))).recover {
     case t: Throwable =>
       log.error(t, "error retrieving all hakus")
-      Future.failed(GetHautQueryFailedException("error retrieving all hakus", t))
+      throw GetHautQueryFailedException("error retrieving all hakus", t)
   }
 
   def getKoulutus(oid: String): Future[Seq[Hakukohteenkoulutus]] = {

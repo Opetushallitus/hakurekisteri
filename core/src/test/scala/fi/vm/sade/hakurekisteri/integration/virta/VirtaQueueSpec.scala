@@ -2,7 +2,10 @@ package fi.vm.sade.hakurekisteri.integration.virta
 
 import akka.actor.{Actor, Props, ActorSystem}
 import akka.testkit.TestActorRef
+import fi.vm.sade.hakurekisteri.dates.{InFuture, Ajanjakso}
+import fi.vm.sade.hakurekisteri.integration.haku.{Kieliversiot, Haku, GetHaku}
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
+import org.joda.time.DateTime
 import org.scalatest.{WordSpec, Matchers}
 
 class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
@@ -16,12 +19,16 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
         virtaWaiter.dismiss()
         QueryProsessed(q)
     }
+    val hakuHandler: PartialFunction[Any, Any] = {
+      case q: GetHaku => Haku(Kieliversiot(Some("haku"), None, None), "1.2", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), true)
+    }
 
     val virtaActor = TestActorRef[MockActor](Props(new MockActor(virtaHandler)))
     val hakemusActor = TestActorRef[MockActor](Props(new MockActor()))
+    val hakuActor = TestActorRef[MockActor](Props(new MockActor(hakuHandler)))
 
     "receiving query" should {
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor)))
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor, hakuActor)))
       val q = VirtaQuery("foo", Some("bar"))
       virtaQueue ! VirtaQueuedQuery(q)
 
@@ -31,7 +38,7 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
     }
 
     "consuming all" should {
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor)))
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor, hakuActor)))
       virtaQueue ! VirtaQueuedQuery(VirtaQuery("foo", Some("bar")))
       virtaQueue ! VirtaQueuedQuery(VirtaQuery("foo", Some("bar2")))
       virtaQueue ! StartVirta
@@ -44,7 +51,7 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
     }
 
     "receiving the same query multiple times" should {
-      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor)))
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor, hakuActor)))
       val q1 = VirtaQuery("foo", Some("bar"))
       val q2 = VirtaQuery("foo", Some("bar"))
       virtaQueue ! VirtaQueuedQuery(q1)

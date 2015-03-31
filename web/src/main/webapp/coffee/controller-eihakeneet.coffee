@@ -61,13 +61,19 @@ app.controller "EihakeneetCtrl", [
           params:
             oppilaitosOid: oppilaitosOid
 
+        opiskelijatConfig.params.vuosi = vuosi if vuosi
+        opiskelijatConfig.params.kausi = kausi if kausi
         opiskelijatConfig.params.luokka = luokka  if luokka
 
-        $http.get("rest/v1/opiskelijat", opiskelijatConfig).success((opiskelijat) ->
-          luokanOpiskelijat = opiskelijat  if opiskelijat
-          deferredOpiskelijat.resolve "done"
-        ).error (data, status) ->
-          deferredOpiskelijat.reject status
+        $http.get("rest/v1/opiskelijat", opiskelijatConfig)
+          .success((opiskelijat) ->
+            if opiskelijat
+              luokanOpiskelijat = opiskelijat.filter((o) ->
+                o.luokkataso in ["9", "10"]
+              )
+            deferredOpiskelijat.resolve "done"
+          ).error (data, status) ->
+            deferredOpiskelijat.reject status
 
         deferredHakemukset = $q.defer()
         luokanHakemukset = []
@@ -82,21 +88,26 @@ app.controller "EihakeneetCtrl", [
 
         hakemusConfig.params.sendingClass = luokka  if luokka
 
-        $http.get(hakuAppServiceUrl + "/applications/listshort", hakemusConfig).success((hakemukset) ->
-          if hakemukset and hakemukset.results
-            luokanHakemukset = hakemukset.results.filter((h) ->
-              h.state is "ACTIVE" or h.state is "INCOMPLETE"
-            )
-          deferredHakemukset.resolve "done"
-        ).error (data, status) ->
-          deferredHakemukset.reject status
+        $http.get(hakuAppServiceUrl + "/applications/listshort", hakemusConfig)
+          .success((hakemukset) ->
+            if hakemukset and hakemukset.results
+              luokanHakemukset = hakemukset.results.filter((h) ->
+                h.state is "ACTIVE" or h.state is "INCOMPLETE"
+              )
+            deferredHakemukset.resolve "done"
+          ).error (data, status) ->
+            deferredHakemukset.reject status
 
         bothPromise = $q.all([
           deferredOpiskelijat.promise
           deferredHakemukset.promise
         ])
         bothPromise.then (->
-          $scope.allRows = luokanOpiskelijat.filter((h) -> !luokanHakemukset.some((hakemus) -> hakemus.henkiloOid is h.personOid))
+          $scope.allRows = luokanOpiskelijat.filter((henkilo) ->
+            not luokanHakemukset.some((hakemus) ->
+              hakemus.personOid is henkilo.henkiloOid
+            )
+          )
           enrichOpiskelijat()
           $scope.loading = false
         ), (errors) ->
@@ -114,6 +125,8 @@ app.controller "EihakeneetCtrl", [
 
     hakuOid = $routeParams.haku
     oppilaitosOid = $routeParams.oppilaitos
+    vuosi = $routeParams.vuosi
+    kausi = $routeParams.kausi
     luokka = $routeParams.luokka
 
     $scope.loading = false

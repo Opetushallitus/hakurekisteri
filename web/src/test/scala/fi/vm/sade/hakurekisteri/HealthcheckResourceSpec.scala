@@ -1,13 +1,20 @@
 package fi.vm.sade.hakurekisteri
 
+import java.nio.charset.Charset
+
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana.{ArvosanaActor, Arvio410, Arvosana}
+import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, FullHakemus}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaStatus, VirtaHealth}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusActor}
+import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, HakurekisteriDriver}
+import org.h2.tools.RunScript
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.{LocalDate, DateTime}
-import akka.actor.{Actor, Props, ActorSystem}
+import akka.actor.{Props, Actor, ActorSystem}
+import akka.pattern.ask
 
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaActor, Opiskelija}
@@ -20,15 +27,21 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.web.healthcheck.HealthcheckResource
 import fi.vm.sade.hakurekisteri.tools.Peruskoulu
+import HakurekisteriDriver.simple._
+
+import scala.concurrent.{ExecutionContext, Await}
+
 
 class HealthcheckResourceSpec extends ScalatraFunSuite {
   val arvosana = Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", None, false, source = "Test")
   val opiskelija = Opiskelija("1.2.3", "9", "9A", "1.2.4", DateTime.now, None, source = "Test")
   val opiskeluoikeus = Opiskeluoikeus(LocalDate.now(), None, "1.2.4", "1.2.5", "1.2.3", source = "Test")
   val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now,"1.2.4")
-  val hakemus = FullHakemus("1.2.5", Some("1.2.4"), ("1.2.5"), None, state =  Some("ACTIVE"), Seq())
+  val importBatch = ImportBatch(<empty/>, None, "test", "foo", BatchState.DONE, ImportStatus())
+  val hakemus = FullHakemus("1.2.5", Some("1.2.4"), "1.2.5", None, state =  Some("ACTIVE"), Seq())
 
   implicit val system = ActorSystem()
+  implicit val ec: ExecutionContext = system.dispatcher
 
   val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(seq2journal(Seq(arvosana)))))
   val guardedArvosanaRekisteri = system.actorOf(Props(new FakeAuthorizer(arvosanaRekisteri)))
@@ -42,6 +55,11 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
   val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(seq2journal(Seq(suoritus)))))
   val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
+  implicit val database = Database.forURL("jdbc:h2:file:data/healthchecktest", driver = "org.h2.Driver")
+  val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
+  val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 1)))
+  val guardedEraRekisteri = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
+
   val hakemukset = system.actorOf(Props(new Actor {
     override def receive: Actor.Receive = {
       case h: HakemusQuery => val identify: FullHakemus with Identified[String] = hakemus.identify
@@ -53,16 +71,11 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
     override def receive: Actor.Receive = {
       case QueryCount => sender ! QueriesRunning(Map("status" -> 1))
     }
-
   }))
 
-
   val ytl = system.actorOf(Props(new Actor {
-
     override def receive: Actor.Receive = {
       case Report => sender ! YtlReport(Seq(), None)
-
-
     }
   }))
 
@@ -72,13 +85,19 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
     }
   }))
 
-  val healthcheck = system.actorOf(Props(new HealthcheckActor(guardedArvosanaRekisteri, guardedOpiskelijaRekisteri, guardedOpiskeluoikeusRekisteri, guardedSuoritusRekisteri, ytl,  hakemukset, ensikertalainen, virtaQueue)))
+  val healthcheck = system.actorOf(Props(new HealthcheckActor(guardedArvosanaRekisteri, guardedOpiskelijaRekisteri, guardedOpiskeluoikeusRekisteri, guardedSuoritusRekisteri, guardedEraRekisteri, ytl, hakemukset, ensikertalainen, virtaQueue)))
 
   addServlet(new HealthcheckResource(healthcheck), "/*")
 
   import org.json4s.jackson.JsonMethods._
 
   test("healthcheck should return OK and correct resource counts") {
+
+    import scala.concurrent.duration._
+    implicit val timeout: Timeout = 20.seconds
+    val saved = (eraRekisteri ? importBatch).mapTo[ImportBatch with Identified[UUID]]
+    Await.result(saved, 20.seconds)
+
     get("/") {
       status should equal (200)
       body should include ("\"status\":\"OK\"")
@@ -86,10 +105,15 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
       parse(body) \\ "opiskelijat" \ "count" should equal(JInt(1))
       parse(body) \\ "opiskeluoikeudet" \ "count" should equal(JInt(1))
       parse(body) \\ "suoritukset" \ "count" should equal(JInt(1))
+      parse(body) \\ "erat" \ "count" should equal(JInt(1))
       parse(body) \\ "hakemukset" \ "count" should equal(JInt(1))
-      //body should include ("\"foundHakemukset\":1")
       response.getHeader("Expires") should not be null
     }
+  }
+
+  override def stop(): Unit = {
+    RunScript.execute("jdbc:h2:file:test", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
+    super.stop()
   }
 
   def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]) = {

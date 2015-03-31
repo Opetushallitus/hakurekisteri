@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, HakijaQuery}
 import fi.vm.sade.hakurekisteri.healthcheck.{RefreshingResource, Hakemukset, Health}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.hakurekisteri.storage.repository._
-import fi.vm.sade.hakurekisteri.storage.{InMemQueryingResourceService, Identified, ResourceActor}
+import fi.vm.sade.hakurekisteri.storage.{GetCount, InMemQueryingResourceService, Identified, ResourceActor}
 
 import scala.compat.Platform
 import scala.concurrent.Future
@@ -120,15 +120,15 @@ object HakemusQuery {
   def apply(hq: HakijaQuery): HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
 }
 
-case class Trigger(newApplicant: (FullHakemus) => Unit)
+case class Trigger(f: (FullHakemus) => Unit)
 
 object Trigger {
-  def apply(oidHetu: (String, String) => Unit): Trigger = Trigger(_ match {
-    case FullHakemus(_, Some(personOid), _, Some(answers), _, _) =>
+  def apply(f: (String, String, String) => Unit): Trigger = Trigger(_ match {
+    case FullHakemus(_, Some(personOid), hakuOid, Some(answers), _, _) =>
       for (
         henkilo <- answers.henkilotiedot;
         hetu <- henkilo.Henkilotunnus
-      ) oidHetu(personOid, hetu)
+      ) f(personOid, hetu, hakuOid)
 
     case _ =>
   })

@@ -13,13 +13,14 @@ trait Repository[T, I] {
 
   def listAll():Seq[T with Identified[I]]
 
+  def count: Int
+
   def get(id: I): Option[T with Identified[I]]
 
   def cursor(t:T): Any
 
   def delete(id: I, source: String)
 }
-
 
 
 trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
@@ -32,16 +33,11 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
     case (resourceId, time, Some((curtime, curid))) if resourceId.toString == curid  && time == curtime =>  (time, resourceId.toString + "#a")
     case (resourceId, time, Some((curtime, curid))) if curid.startsWith(resourceId.toString) && time == curtime => (time, curid + "a")
     case (resourceId, time, _) => time -> id.toString
-
   }
 
-  override def cursor(t: T): Option[(Long, String)] = {
-    cursor.get(t.hashCode % 16384)
-
-  }
+  override def cursor(t: T): Option[(Long, String)] = cursor.get(t.hashCode % 16384)
 
   def save(o: T ): T with Identified[I] = {
-
     val oid = reverseStore.get(o.core).flatMap((ids) => ids.headOption.map((id) => o.identify(id)) ).getOrElse(o.identify)
     val old = store.get(oid.id)
     val result = saveIdentified(oid)
@@ -83,15 +79,11 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
 
   def index(old: Option[T with Identified[I]], oid: Option[T with Identified[I]]) {}
 
+  def listAll(): Seq[T with Identified[I]] = store.values.toSeq
 
-  def listAll(): Seq[T with Identified[I]] = {
-    store.values.toSeq
-  }
+  def count: Int = store.values.size
 
-  def get(id:I): Option[T with Identified[I]]   = {
-    store.get(id)
-  }
-
+  def get(id:I): Option[T with Identified[I]] = store.get(id)
 
   override def delete(id:I,source :String): Unit = {
     if (store.contains(id)) {
@@ -111,7 +103,6 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
     ) yield indexedId
     if (newSeq.isEmpty) reverseStore = reverseStore - getCore(item)
     else reverseStore = reverseStore + (getCore(item) -> newSeq)
-
   }
 
   def deleteFromStore(id:I, source: String) = {

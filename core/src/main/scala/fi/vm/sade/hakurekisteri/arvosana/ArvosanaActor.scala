@@ -4,13 +4,11 @@ import akka.event.Logging
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.storage._
 import fi.vm.sade.hakurekisteri.storage.repository._
-import scala.Some
 import java.util.UUID
 import scala.concurrent.Future
 
 
-trait
-ArvosanaRepository extends JournaledRepository[Arvosana, UUID] {
+trait ArvosanaRepository extends JournaledRepository[Arvosana, UUID] {
 
   var suoritusIndex: Map[UUID, Seq[Arvosana with Identified[UUID]]] = Option(suoritusIndex).getOrElse(Map())
 
@@ -34,11 +32,11 @@ ArvosanaRepository extends JournaledRepository[Arvosana, UUID] {
 }
 
 trait ArvosanaService extends InMemQueryingResourceService[Arvosana, UUID]  with ArvosanaRepository {
-
+  override val emptyQuery: PartialFunction[Query[Arvosana], Boolean] = {
+    case ArvosanaQuery(None) => true
+  }
   override val optimize:PartialFunction[Query[Arvosana], Future[Seq[Arvosana with Identified[UUID]]]] = {
-    case ArvosanaQuery(Some(suoritus)) =>
-      Future { suoritusIndex.getOrElse(suoritus, Seq()) }
-
+    case ArvosanaQuery(Some(suoritus)) => Future { suoritusIndex.getOrElse(suoritus, Seq()) }
     case ArvosanaQuery(None) => Future { listAll() }
   }
 

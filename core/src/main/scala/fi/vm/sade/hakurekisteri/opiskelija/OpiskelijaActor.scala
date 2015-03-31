@@ -57,7 +57,7 @@ trait OpiskelijaService extends InMemQueryingResourceService[Opiskelija, UUID] w
     case OpiskelijaQuery(None, None, None, None, None, None) => true
   }
 
-  val matcher: PartialFunction[Query[Opiskelija], (Opiskelija with Identified[UUID]) => Boolean] = {
+  override val matcher: PartialFunction[Query[Opiskelija], (Opiskelija with Identified[UUID]) => Boolean] = {
     case OpiskelijaQuery(henkilo, kausi, vuosi, paiva, oppilaitosOid, luokka) =>
       (o: Opiskelija with Identified[UUID]) => checkHenkilo(henkilo)(o) &&
                                          checkVuosiAndKausi(vuosi, kausi)(o) &&
