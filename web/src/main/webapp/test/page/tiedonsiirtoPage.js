@@ -11,7 +11,14 @@ function TiedonsiirtoPage() {
             return S("#uploadForm").first()
         },
         arvosanatRadio: function () {
-            return S("input#tyyppiarvosanat").first()
+            return Button(function () {
+                return S("input#tyyppiarvosanat").first()
+            })
+        },
+        perustiedotRadio: function () {
+            return Button(function () {
+                return S ("input#tyyppiperustiedot").first()
+            })
         },
         tiedostoInput: function() {
             return S("input#tiedosto").first()
@@ -44,7 +51,7 @@ function TiedonsiirtoPage() {
         openPage: function(done) {
             return tiedonsiirtoPage()
                 .then(wait.until(function() {
-                    var pageReady = pageFunctions.arvosanatRadio().length === 1 && pageFunctions.tiedostoInput().length === 1
+                    var pageReady = pageFunctions.arvosanatRadio().isVisible() && pageFunctions.tiedostoInput().length === 1
                     if(pageReady) {
                         done()
                     }

@@ -18,6 +18,10 @@
             before(
                     addTestHook(koodistoFixtures),
                     addTestHook(lokalisointiFixtures),
+
+                    addTestHook(tiedostonSiirtoFixtures().perustiedotOpen(true)),
+                    addTestHook(tiedostonSiirtoFixtures().arvosanatOpen(true)),
+
                     page.openPage,
                     wait.until(function () { return page.uploadForm().length === 1}),
                     wait.forAngular,
@@ -32,14 +36,9 @@
             })
 
             describe("Kun tiedoston tyyppiä ja tiedostoa ei ole valittu", function() {
-                before(
-                  page.submitButton().click,
-                  wait.until(function () { return page.alerts().length === 2 })
-                )
 
                 it('ilmoittaa, että tyyppiä ja tiedostoa ei ole valittu', function () {
-                    expect(page.alerts().text()).to.include('Tiedoston tyyppiä ei ole valittu')
-                    expect(page.alerts().text()).to.include('Tiedostoa ei ole valittu')
+                    expect(page.submitButton().isEnabled()).to.equal(false)
                 })
             })
 
@@ -52,6 +51,35 @@
                     expect(page.alerts().length).to.equal(0)
                 })
             })
+
+            describe("Tiedoston siirron enabloitu", function () {
+                it("Perustiedot enabloitu", function () {
+                    expect(page.perustiedotRadio().isEnabled()).to.equal(true)
+                })
+
+                it("Arvosanat enabloitu", function () {
+                    expect(page.arvosanatRadio().isEnabled()).to.equal(true)
+                })
+            })
+
+            describe("Tiedoston siirron disablointi", function () {
+                before(
+                    addTestHook(koodistoFixtures),
+                    addTestHook(lokalisointiFixtures),
+                    addTestHook(tiedostonSiirtoFixtures().perustiedotOpen(false)),
+                    addTestHook(tiedostonSiirtoFixtures().arvosanatOpen(false)),
+                    page.openPage
+                )
+
+                it("Perustiedot disabloitu", function () {
+                    expect(page.perustiedotRadio().isEnabled()).to.equal(false)
+                })
+
+                it("Arvosanat disabloitu", function () {
+                    expect(page.arvosanatRadio().isEnabled()).to.equal(false)
+                })
+            })
+
 
             describe("Arvosanojen validointi", function() {
                 describe("Arvosanat puuttuvat, korkeintaan 3 henkilöä", function() {

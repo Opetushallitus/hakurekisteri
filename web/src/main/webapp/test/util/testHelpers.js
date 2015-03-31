@@ -150,6 +150,9 @@ function openPage(path, predicate) {
 var testHooks = []
 
 function addTestHook(fn) {
+    if(typeof fn !== 'function') {
+        throw new Error('Test hook is not a function, got typeof fn'+(typeof fn))
+    }
     return function() {
         testHooks.push(fn)
     }
