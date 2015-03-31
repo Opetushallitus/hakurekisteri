@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.parametrit.{ParameterActor, SendingPeriod, TiedonsiirtoSendingPeriods}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
-import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchResource
+import fi.vm.sade.hakurekisteri.web.batchimport.{TiedonsiirtoOpen, ImportBatchResource}
 import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 import org.json4s.jackson.Serialization._
 import org.mockito.Mockito._
@@ -39,8 +39,8 @@ class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with Dis
       (200,
         List("Content-Type" -> "application/json"),
         write(TiedonsiirtoSendingPeriods(
-          arvosanat = SendingPeriod(0, 0),
-          perustiedot = SendingPeriod(0, 0)
+          arvosanat = SendingPeriod(0, 1),
+          perustiedot = SendingPeriod(0, 1)
         )))
     )
 
@@ -76,17 +76,29 @@ class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with Dis
   addServlet(new ImportBatchResource(authorized, parameterActor, (foo) => ImportBatchQuery(None, None, None))("identifier", "perustiedot", "data", PerustiedotXmlConverter, TestSchema) with TestSecurity, "/batch")
 
 
-  ignore("create should return 404 not found") {
-    post("/batch", "<batch><identifier>foo</identifier><data>foo</data></batch>") {
+  test("create should return 404 not found") {
+    val fileData = XmlPart("file.xml", <batch><identifier>foo</identifier><data>foo</data></batch>)
+
+    post("/batch", Map[String, String](), List("data" -> fileData)) {
       response.status should be(404)
     }
   }
 
-  ignore("update should return 404 not found") {
+  test("update should return 404 not found") {
     val batch = ImportBatch(<batch><identifier>foo</identifier><data>foo</data></batch>, Some("foo"),"test", "Test", BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
     val json = write(batch)
     post(s"/batch/${batch.id}", json) {
       response.status should be(404)
+    }
+  }
+
+  test("isopen should return false") {
+    get("/batch/isopen") {
+      import org.json4s.jackson.Serialization.read
+
+      val isopen = read[TiedonsiirtoOpen](response.body)
+
+      isopen.open should be(false)
     }
   }
 

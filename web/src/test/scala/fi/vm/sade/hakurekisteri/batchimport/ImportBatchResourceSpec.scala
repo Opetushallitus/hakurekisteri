@@ -2,24 +2,28 @@ package fi.vm.sade.hakurekisteri.batchimport
 
 import java.util.UUID
 
-import akka.actor.{Actor, ActorSystem, Props}
-import fi.vm.sade.hakurekisteri.TestSecurity
+import akka.actor.{ActorSystem, Props}
+import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.parametrit.IsSendingEnabled
+import fi.vm.sade.hakurekisteri.integration.parametrit.{ParameterActor, SendingPeriod, TiedonsiirtoSendingPeriods}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.web.batchimport.{TiedonsiirtoOpen, ImportBatchResource}
+import fi.vm.sade.hakurekisteri.web.batchimport.{ImportBatchResource, TiedonsiirtoOpen}
 import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
+import fi.vm.sade.hakurekisteri.{Config, TestSecurity}
 import org.json4s.Extraction
 import org.json4s.jackson.JsonMethods._
+import org.json4s.jackson.Serialization._
+import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.Uploadable
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import siirto.{PerustiedotXmlConverter, SchemaDefinition}
 
+import scala.compat.Platform
 import scala.concurrent.ExecutionContext
 import scala.xml.Elem
 
@@ -34,11 +38,24 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
   val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5)))
   val authorized = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
 
-  val parameterActor = system.actorOf(Props(new Actor {
-    override def receive: Receive = {
-      case IsSendingEnabled(_) => sender ! true
-    }
-  }))
+  def createEndpointMock = {
+    val result = mock[Endpoint]
+    val inFuture = Platform.currentTime + (120 * 60 * 1000)
+
+    when(result.request(forUrl("http://localhost/ohjausparametrit-service/api/v1/rest/parametri/tiedonsiirtosendingperiods"))).thenReturn(
+      (200,
+        List("Content-Type" -> "application/json"),
+        write(TiedonsiirtoSendingPeriods(
+          arvosanat = SendingPeriod(0, inFuture),
+          perustiedot = SendingPeriod(0, inFuture)
+        )))
+    )
+
+    result
+  }
+  val asyncProvider = new CapturingProvider(createEndpointMock)
+  val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/ohjausparametrit-service"), aClient = Some(new AsyncHttpClient(asyncProvider)))
+  val parameterActor = system.actorOf(Props(new ParameterActor(client)))
 
   override def stop(): Unit = {
     system.shutdown()
@@ -63,9 +80,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
       </xs:schema>
   }
 
-
-  addServlet(new ImportBatchResource(authorized, parameterActor, (foo) => ImportBatchQuery(None, None, None))("identifier", "test", "data", PerustiedotXmlConverter, TestSchema) with TestSecurity, "/batch")
-
+  addServlet(new ImportBatchResource(authorized, parameterActor, (foo) => ImportBatchQuery(None, None, None))("identifier", Config.batchTypePerustiedot, "data", PerustiedotXmlConverter, TestSchema) with TestSecurity, "/batch")
 
   test("post should return 201 created") {
     post("/batch", "<batch><identifier>foo</identifier><data>foo</data></batch>") {
@@ -84,7 +99,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
   test("post with bad file should return 400") {
     val fileData = XmlPart("test.xml", <batch><bata>foo</bata></batch>)
 
-    post("/batch", Map[String, String](), List("data" -> fileData)) {
+    post("/batch", Map[String, String]("Content-Type" -> "multipart/form-data"), List("data" -> fileData)) {
       response.status should be(400)
     }
   }
@@ -172,12 +187,12 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
     }
   }
 
+}
 
-  case class XmlPart(fileName: String, xml:Elem) extends Uploadable {
-    override lazy val content: Array[Byte] = xml.toString().getBytes("UTF-8")
+case class XmlPart(fileName: String, xml:Elem) extends Uploadable {
+  override lazy val content: Array[Byte] = xml.toString().getBytes("UTF-8")
 
-    override lazy val contentLength: Long = content.length
+  override lazy val contentLength: Long = content.length
 
-    override val contentType: String = "application/xml"
-  }
+  override val contentType: String = "application/xml"
 }

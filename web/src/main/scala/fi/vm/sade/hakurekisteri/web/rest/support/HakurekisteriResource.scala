@@ -10,6 +10,7 @@ import fi.vm.sade.hakurekisteri.organization.{AuthorizedCreate, AuthorizedDelete
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.web.batchimport.TiedonsiirtoNotOpenException
 import org.scalatra._
 import org.scalatra.commands._
 import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
@@ -92,7 +93,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
 
 case class UserNotAuthorized(message: String) extends Exception(message)
 
-abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]](actor: ActorRef, qb: Map[String,String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A],cf:Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with HakurekisteriParsing[A] with CorsSupport with QueryLogging {
+abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]](actor: ActorRef, qb: Map[String, String] => Query[A])(implicit sw: Swagger, system: ActorSystem, mf: Manifest[A], cf: Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with HakurekisteriParsing[A] with CorsSupport with QueryLogging {
 
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
@@ -122,19 +123,24 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
     override implicit def timeout: Duration = timeOut.seconds
     val is = message.flatMap(actor ? _).mapTo[B].
       map(success)
-
   }
 
   class ActorResult[B: Manifest](message: AnyRef, success: (B) => AnyRef) extends FutureActorResult[B](Future.successful(message), success)
 
-  def createResource(user: Option[User]): Object = {
-    val msg = (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(
-      _.fold(
-        errors => Future.failed(MalformedResourceException(errors)),
-        resource => Future.successful(AuthorizedCreate[A,UUID](resource, user.get)))
-    )
+  def createEnabled = Future.successful(true)
 
-    new FutureActorResult(msg , ResourceCreated(request.getRequestURL))
+  def notEnabled = new Exception("operation not enabled")
+
+  def createResource(user: Option[User]): Object = {
+    val msg: Future[AuthorizedCreate[A, UUID]] = (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(_.fold(
+      errors => Future.failed(MalformedResourceException(errors)),
+      resource =>
+        createEnabled.flatMap(enabled =>
+          if (enabled) Future.successful(AuthorizedCreate[A, UUID](resource, user.get))
+          else Future.failed(TiedonsiirtoNotOpenException)
+        )
+    ))
+    new FutureActorResult(msg, ResourceCreated(request.getRequestURL))
   }
 
   object ResourceCreated {
@@ -147,13 +153,17 @@ abstract class  HakurekisteriResource[A <: Resource[UUID, A], C <: Hakurekisteri
 
   def identifyResource(resource : A, id: UUID): A with Identified[UUID] = resource.identify(id)
 
-  def updateResource(id: UUID, user: Option[User]): Object = {
-    val msg: Future[AuthorizedUpdate[A, UUID]] = (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(
-      _.fold(
-        errors => Future.failed(MalformedResourceException(errors)),
-        resource => Future.successful(AuthorizedUpdate[A,UUID](identifyResource(resource, id), user.get)))
-    )
+  def updateEnabled = Future.successful(true)
 
+  def updateResource(id: UUID, user: Option[User]): Object = {
+    val msg: Future[AuthorizedUpdate[A, UUID]] = updateEnabled.flatMap(enabled =>
+      if (enabled) (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(
+        _.fold(
+          errors => Future.failed(MalformedResourceException(errors)),
+          resource => Future.successful(AuthorizedUpdate[A,UUID](identifyResource(resource, id), user.get)))
+      )
+      else Future.failed(notEnabled)
+    )
     new FutureActorResult[A with Identified[UUID]](msg , Ok(_))
   }
 

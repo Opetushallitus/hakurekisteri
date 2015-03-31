@@ -13,7 +13,7 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.batchimport.{BatchesBySource, ImportBatch, ImportStatus, Reprocess, WrongBatchStateException, _}
 import fi.vm.sade.hakurekisteri.integration.parametrit.IsSendingEnabled
 import fi.vm.sade.hakurekisteri.rest.support._
-import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReport, UserNotAuthorized, _}
+import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.json4s.Extraction
 import org.scalatra._
 import org.scalatra.commands._
@@ -46,7 +46,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 
   val maxFileSize = 50 * 1024 * 1024L
   val storageDir = Config.tiedonsiirtoStorageDir
-  
+
   configureMultipartHandling(MultipartConfig(
     maxFileSize = Some(maxFileSize)
   ))
@@ -98,11 +98,17 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     }
   }
 
-  get("/schema") {
+  override def createEnabled = (parameterActor ? IsSendingEnabled(batchType)).mapTo[Boolean]
+
+  override def updateEnabled = createEnabled
+
+  override def notEnabled = TiedonsiirtoNotOpenException
+
+  get("/schema", operation(schemaOperation)) {
     MovedPermanently(request.getRequestURL.append("/").append(schema.schemaLocation).toString)
   }
 
-  get("/mybatches") {
+  get("/mybatches", operation(mybatches)) {
     val user = getUser
     new AsyncResult() {
       override implicit def timeout: Duration = 60.seconds
@@ -110,7 +116,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     }
   }
 
-  get("/withoutdata") {
+  get("/withoutdata", operation(withoutdata)) {
     val user = getUser
     if (!user.orgsFor("READ", "ImportBatch").contains(Config.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
     else new AsyncResult() {
@@ -119,8 +125,8 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     }
   }
 
-  get("/schema/:schema") {
-    schemaCache.get(params("schema")).fold(NotFound("not found")){
+  get("/schema/:schema", operation(schemaOperation)) {
+    schemaCache.get(params("schema")).fold(NotFound("not found")) {
       contentType = "application/xml"
       Ok(_)
     }
@@ -129,11 +135,11 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   get("/isopen", operation(isopen)) {
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
-      override val is = (parameterActor ? IsSendingEnabled(batchType))(120.seconds).mapTo[Boolean].map(TiedonsiirtoOpen)
+      override val is = createEnabled.map(TiedonsiirtoOpen)
     }
   }
 
-  post("/reprocess/:id") {
+  post("/reprocess/:id", operation(reprocess)) {
     val user = getUser
     if (!user.orgsFor("WRITE", "ImportBatch").contains(Config.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
     else new AsyncResult() {
@@ -144,52 +150,8 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     }
   }
 
-  /*
-  post("/", operation(create)) {
-    val user = currentUser
-    if (!user.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
-    else new AsyncResult {
-      override implicit def timeout: Duration = 120.seconds
-      def createOrNotFound(sendingEnabled: Boolean): Future[ActionResult] = {
-        if (sendingEnabled) {
-          val msg = (command[ImportBatchCommand] >> (_.toValidatedResource(user.get.username))).flatMap(
-            _.fold(
-              errors => Future.failed(MalformedResourceException(errors)),
-              resource => Future.successful(AuthorizedCreate[ImportBatch, UUID](resource, user.get)))
-          )
-          msg.flatMap(eraRekisteri ? _).mapTo[ImportBatch with Identified[UUID]].map(ResourceCreated(request.getRequestURL))
-        }
-        else Future.successful(NotFound(IncidentReport(UUID.randomUUID(), "batch sending not enabled at the moment")))
-      }
-      override val is = (parameterActor ? IsSendingEnabled(batchType))(120.seconds).mapTo[Boolean].flatMap(createOrNotFound)
-    }
-  }
-
-
-  post("/:id", operation(update)) {
-    val user = currentUser
-    if (!user.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
-    else new AsyncResult {
-      override implicit def timeout: Duration = 120.seconds
-      def updateOrNotFound(id: UUID)(sendingEnabled: Boolean): Future[ActionResult] = {
-        if (sendingEnabled) {
-          val msg: Future[AuthorizedUpdate[ImportBatch, UUID]] = (command[ImportBatchCommand] >> (_.toValidatedResource(user.get.username))).flatMap(
-            _.fold(
-              errors => Future.failed(MalformedResourceException(errors)),
-              resource => Future.successful(AuthorizedUpdate[ImportBatch, UUID](identifyResource(resource, id), user.get)))
-          )
-          msg.flatMap(eraRekisteri ? _).mapTo[ImportBatch with Identified[UUID]].map(Ok(_))
-        }
-        else Future.successful(NotFound(IncidentReport(UUID.randomUUID(), "batch update not enabled at the moment")))
-      }
-      override val is = (parameterActor ? IsSendingEnabled(batchType))(120.seconds).mapTo[Boolean].flatMap(bool => {
-        Try(UUID.fromString(params("id"))).map(id => updateOrNotFound(id)(bool)).get
-      })
-    }
-  }
-  */
-
   incident {
+    case TiedonsiirtoNotOpenException => (id) => NotFound(IncidentReport(id, "tiedonsiirto not open at the moment"))
     case t: WrongBatchStateException => (id) => BadRequest(IncidentReport(id, "illegal state for reprocessing"))
     case BatchNotFoundException => (id) => NotFound(IncidentReport(id, "batch not found for reprocessing"))
     case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
@@ -231,11 +193,10 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   }
 
   override protected def bindCommand[T <: CommandType](newCommand: T)(implicit request: HttpServletRequest, mf: Manifest[T]): T = {
-    val command = request match {
-      case r if multipart(r) =>
+    val command =
+      if (multipart(request))
         newCommand.bindTo[Map[String, FileItem], FileItem](fileParams, multiParams(request), request.headers)(files => new FileItemMapValueReader(files), default(EmptyFile), default(Map()), manifest[FileItem], implicitly[MultiParams => ValueReader[MultiParams, Seq[String]]])
-      case _ => newCommand.bindTo(params(request) + (dataField -> request.body), multiParams(request), request.headers)
-    }
+      else newCommand.bindTo(params(request) + (dataField -> request.body), multiParams(request), request.headers)
 
     saveFiles(command.isValid).foreach(entry => {
       logger.info(s"received ${if (command.isValid) "a valid" else "an invalid"} batch (${entry._1}) from ${getUser.username}, saving to storage as ${entry._2.getName}")
@@ -245,14 +206,30 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   }
 }
 
-case class ImportBatchCommand(externalIdField: String, batchType: String, dataField: String, converter: XmlConverter, validator: XMLValidator[ValidationNel[(String, SAXParseException), Elem],NonEmptyList[(String, SAXParseException)], Elem]) extends HakurekisteriCommand[ImportBatch] {
+case class ImportBatchCommand(externalIdField: String,
+                              batchType: String,
+                              dataField: String,
+                              converter: XmlConverter,
+                              validator: XMLValidator[ValidationNel[(String, SAXParseException), Elem], NonEmptyList[(String, SAXParseException)], Elem])
+  extends HakurekisteriCommand[ImportBatch] {
+
   implicit val valid = validator
 
   override implicit val excelConverter = converter
 
   val data: Field[Elem] = asType[Elem](dataField).required.validateSchema
 
-  override def toResource(user: String): ImportBatch = ImportBatch(data.value.get, data.value.flatMap(elem => (elem \ externalIdField).collectFirst{case e:Elem => e.text}), batchType, user, BatchState.READY, ImportStatus())
+  override def toResource(user: String): ImportBatch =
+    ImportBatch(
+      data.value.get,
+      data.value.flatMap(
+        elem => (elem \ externalIdField).collectFirst { case e: Elem => e.text }
+      ),
+      batchType,
+      user,
+      BatchState.READY,
+      ImportStatus()
+    )
 }
 
 trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
@@ -264,10 +241,20 @@ trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
     ModelField("data", "lähetetty data", DataType.String)
   ).map(t => (t.name, t)).toMap))
 
-  val update: OperationBuilder = apiOperation[ImportBatch]("N/A 1")
-  val delete: OperationBuilder = apiOperation[ImportBatch]("N/A 2")
-  val read: OperationBuilder = apiOperation[ImportBatch]("N/A 3")
-  val create: OperationBuilder = apiOperation[ImportBatch]("lahetaTiedosto")
+  val update: OperationBuilder = apiOperation[ImportBatch]("päivitäSiirto")
+    .summary("päivittää olemassa olevaa siirtoa ja palauttaa sen tiedot")
+    .parameter(pathParam[String]("id").description("siirron uuid").required)
+    .parameter(bodyParam[ImportBatch]("siirto").description("päivitettävä siirto").required)
+
+  val delete: OperationBuilder = apiOperation[ImportBatch]("poistaSiirto")
+    .summary("poistaa olemassa olevan siirron")
+    .parameter(pathParam[String]("id").description("siirron uuid").required)
+
+  val read: OperationBuilder = apiOperation[ImportBatch]("haeSiirto")
+    .summary("hakee siirron tiedot")
+    .parameter(pathParam[String]("id").description("siirron uuid").required)
+
+  val create: OperationBuilder = apiOperation[ImportBatch]("lisääSiirto")
     .summary("vastaanottaa tiedoston")
     .notes("Vastaanottaa XML-tiedoston joko lomakkeen kenttänä multipart-koodattuna (kentän nimi 'data') tai XML-muodossa requestin bodyssä. " +
       "Tiedoston voi lähettää esimerkiksi curl-ohjelmaa käyttäen näin: " +
@@ -277,10 +264,27 @@ trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
       "<br /><a href='/suoritusrekisteri/rest/v1/siirto/perustiedot/schema'>Perustietojen XML-skeema</a>")
     .consumes("application/xml", "multipart/form-data")
     .parameter(bodyParam[String].description("XML-tiedosto").required)
-  val query: OperationBuilder = apiOperation[ImportBatch]("N/A 4")
+  val query: OperationBuilder = apiOperation[ImportBatch]("haeSiirrot")
+    .summary("näyttää kaikki siirrot")
+    .notes("Näyttää kaikki siirrot.")
+
   val isopen: OperationBuilder = apiOperation[TiedonsiirtoOpen]("onkoAvoinna")
-    .summary("kertoo onko tiedonsiirto avoinna")
-    .notes("Kertoo onko tiedonsiirto avoinna.")
+    .summary("näyttää onko tiedonsiirto avoinna")
+    .notes("Näyttää onko tiedonsiirto avoinna.")
+
+  val mybatches: OperationBuilder = apiOperation[Seq[ImportBatch]]("omatSiirrot")
+    .summary("näyttää omat siirrot")
+    .notes("Näyttää omat siirrot.")
+
+  val withoutdata: OperationBuilder = apiOperation[Seq[ImportBatch]]("withoutdata")
+    .summary("näyttää siirrot ilman tiedostoja")
+    .notes("Näyttää siirrot ilman tiedostoja. Eroaa haeSiirrot-operaatiosta siten, että data-kenttä on tyhjä.")
+
+  val schemaOperation: OperationBuilder = apiOperation[String]("schema")
+    .summary("näyttää siirron validointiin käytettävän XML-skeeman")
+
+  val reprocess: OperationBuilder = apiOperation[UUID]("reprocess")
+    .summary("asettaa siirron uudelleenkäsiteltäväksi")
 }
 
 object EmptyFile extends FileItem(EmptyPart)
@@ -301,3 +305,5 @@ object EmptyPart extends Part {
 }
 
 case class TiedonsiirtoOpen(open: Boolean)
+
+object TiedonsiirtoNotOpenException extends Exception
