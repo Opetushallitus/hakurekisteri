@@ -8,19 +8,16 @@ app.controller "TiedonsiirtoCtrl", [
   ($scope, MurupolkuService, MessageService, LokalisointiService, $log, $http) ->
     supportsFileApi = window.FileReader?
 
-    $http.get("rest/v1/siirto/perustiedot/isopen", {cache: true})
-      .success (data) ->
-        $scope.perusTiedotEnabled = data.open
-      .error ->
-        $scope.perusTiedotEnabled = false
-        $log.error "cannot connect perustiedot"
+    fetchEnabledState = (type) ->
+      $http.get("rest/v1/siirto/"+type+"/isopen", {cache: true})
+        .success (data) ->
+          $scope[type+"Enabled"] = data.open
+        .error ->
+          $scope[type+"Enabled"] = false
+          $log.error "cannot connect "+type
 
-    $http.get("rest/v1/siirto/arvosanat/isopen", {cache: true})
-      .success (data) ->
-        $scope.arvosanatEnabled = data.open
-      .error ->
-        $scope.arvosanatEnabled = false
-        $log.error "cannot connect arvosanat"
+    fetchEnabledState('perustiedot')
+    fetchEnabledState('arvosanat')
 
     $scope.isSendingDisabled = () ->
       !$scope.tyyppi

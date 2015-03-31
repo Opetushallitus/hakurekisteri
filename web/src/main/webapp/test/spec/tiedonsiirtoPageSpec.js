@@ -14,19 +14,21 @@
             }
         });
 
-        describe("Tiedoston lähetys", function () {
+        initPage = function (tiedonSiirtoEnabled) {
             before(
-                    addTestHook(koodistoFixtures),
-                    addTestHook(lokalisointiFixtures),
-
-                    addTestHook(tiedostonSiirtoFixtures().perustiedotOpen(true)),
-                    addTestHook(tiedostonSiirtoFixtures().arvosanatOpen(true)),
-
-                    page.openPage,
-                    wait.until(function () { return page.uploadForm().length === 1}),
-                    wait.forAngular,
-                    wait.until(function () { return page.alerts().length === 0 })
+                addTestHook(koodistoFixtures),
+                addTestHook(lokalisointiFixtures),
+                addTestHook(tiedostonSiirtoFixtures().perustiedotOpen(tiedonSiirtoEnabled)),
+                addTestHook(tiedostonSiirtoFixtures().arvosanatOpen(tiedonSiirtoEnabled)),
+                page.openPage,
+                wait.until(function () { return page.uploadForm().length === 1}),
+                wait.forAngular,
+                wait.until(function () { return page.alerts().length === 0 })
             )
+        }
+
+        describe("Tiedoston lähetys", function () {
+            initPage(true)
 
             describe("Aluksi", function() {
                 it("Ei näytä virheitä", function () {
@@ -63,14 +65,7 @@
             })
 
             describe("Tiedoston siirron disablointi", function () {
-                before(
-                    addTestHook(koodistoFixtures),
-                    addTestHook(lokalisointiFixtures),
-                    addTestHook(tiedostonSiirtoFixtures().perustiedotOpen(false)),
-                    addTestHook(tiedostonSiirtoFixtures().arvosanatOpen(false)),
-                    page.openPage
-                )
-
+                initPage(false)
                 it("Perustiedot disabloitu", function () {
                     expect(page.perustiedotRadio().isEnabled()).to.equal(false)
                 })
