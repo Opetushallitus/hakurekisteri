@@ -263,6 +263,7 @@ app.factory "MuokkaaTiedot", [
           tila: "KESKEN"
           yksilollistaminen: "Ei"
           myontaja: null
+          vahvistettu: true
           editable: true
           valmistuminen: new Date()
         )
