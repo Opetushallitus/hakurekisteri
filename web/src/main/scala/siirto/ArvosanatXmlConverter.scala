@@ -54,12 +54,12 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
 
   def todistusLens(elementName: String): Elem @> DataRow = Lens.lensu(
     (henkiloElem: Elem, row: DataRow) => {
-      val todistus = <s>
-        {row.collect {
-          case DataCell(name, v) if (Set("VALMISTUMINEN", "OLETETTUVALMISTUMINEN", "OPETUSPAATTYNYT").contains(name)) => wrapIntoElement(name.toLowerCase, toXmlDate(v))
-          case DataCell(name, v) if v != "" && Set("MYONTAJA", "SUORITUSKIELI", "EIVALMISTU", "VALMISTUMINENSIIRTYY").contains(name) => wrapIntoElement(name.toLowerCase, v)
-        }}
-      </s>.copy(label = elementName)
+      val todistus = wrapIntoElement(elementName, row.collect {
+          case DataCell(name, v) if (Set("VALMISTUMINEN", "OLETETTUVALMISTUMINEN", "OPETUSPAATTYNYT").contains(name)) =>
+            wrapIntoElement(name.toLowerCase, toXmlDate(v))
+          case DataCell(name, v) if (Set("MYONTAJA", "SUORITUSKIELI", "EIVALMISTU", "VALMISTUMINENSIIRTYY").contains(name)) =>
+            wrapIntoElement(name.toLowerCase, v)
+      })
 
       val result = henkiloElem.copy(child = addTodistus(addHenkilotiedot(row, henkiloElem.child), todistus))
       result
