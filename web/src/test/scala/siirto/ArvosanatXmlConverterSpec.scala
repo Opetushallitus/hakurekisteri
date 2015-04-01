@@ -135,8 +135,8 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
     val wb = WorkbookData(
       "perusopetus" ->
         """
-          |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|SYNTYMAAIKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|MYONTAJA|SUORITUSKIELI|VALMISTUMINEN|AI_YH|AI_VAL|AI_VAL2|AI_TYYPPI|A1_YH|A1_VAL|A1_VAL2|A1_KIELI|MA_YH
-          |111111-1975|            |               |           |Testi   |Test A  |Test       |05127   |FI           |31.05.2015   |    9|     8|      7|FI       |6    | 5    | 4     |SV      |10
+          |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|SYNTYMAAIKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|MYONTAJA|SUORITUSKIELI|VALMISTUMINEN|AI_YH|AI_VAL|AI_VAL2|AI_TYYPPI|A1_YH|A1_VAL|A1_VAL2|A1_KIELI|B23_YH |B23_KIELI|MA_YH
+          |111111-1975|            |               |           |Testi   |Test A  |Test       |05127   |FI           |31.05.2015   |    9|     8|      7|FI       |6    | 5    | 4     |SV      |     4 |FR       |10
         """,
       "perusopetuksenlisaopetus" ->
         """
@@ -170,6 +170,10 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
                 <valinnainen>4</valinnainen>
                 <kieli>SV</kieli>
               </A1>
+              <B23>
+                <yhteinen>4</yhteinen>
+                <kieli>FR</kieli>
+              </B23>
               <MA>
                 <yhteinen>10</yhteinen>
               </MA>
