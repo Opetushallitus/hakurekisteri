@@ -135,8 +135,8 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
     val wb = WorkbookData(
       "perusopetus" ->
         """
-          |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|SYNTYMAAIKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|MYONTAJA|SUORITUSKIELI|VALMISTUMINEN|AI_YH|AI_VAL|AI_VAL2|AI_TYYPPI|A1_YH|A1_VAL|A1_VAL2|A1_KIELI
-          |111111-1975|            |               |           |Testi   |Test A  |Test       |05127   |FI           |31.05.2015   |    9|     8|      7|FI       |6    | 5    | 4     |SV
+          |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|SYNTYMAAIKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|MYONTAJA|SUORITUSKIELI|VALMISTUMINEN|AI_YH|AI_VAL|AI_VAL2|AI_TYYPPI|A1_YH|A1_VAL|A1_VAL2|A1_KIELI|MA_YH
+          |111111-1975|            |               |           |Testi   |Test A  |Test       |05127   |FI           |31.05.2015   |    9|     8|      7|FI       |6    | 5    | 4     |SV      |10
         """
     ).toExcel
 
@@ -165,6 +165,9 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
                 <valinnainen>4</valinnainen>
                 <kieli>SV</kieli>
               </A1>
+              <MA>
+                <yhteinen>10</yhteinen>
+              </MA>
             </perusopetus>
           </todistukset>
         </henkilo>
@@ -173,8 +176,6 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
 
     verifyConversion(wb, valid)
   }
-
-  // TODO: arvosanat etc
 
   it should "convert arvosanat.xls into valid xml" in {
     verifyValidity(XML.load(getClass.getResource("/tiedonsiirto/arvosanat.xml"))) // sanity check
