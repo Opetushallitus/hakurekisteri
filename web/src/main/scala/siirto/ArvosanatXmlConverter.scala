@@ -54,12 +54,37 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
 
   def todistusLens(elementName: String): Elem @> DataRow = Lens.lensu(
     (henkiloElem: Elem, row: DataRow) => {
-      val todistus = wrapIntoElement(elementName, row.collect {
-          case DataCell(name, v) if (Set("VALMISTUMINEN", "OLETETTUVALMISTUMINEN", "OPETUSPAATTYNYT").contains(name)) =>
-            wrapIntoElement(name.toLowerCase, toXmlDate(v))
-          case DataCell(name, v) if (Set("MYONTAJA", "SUORITUSKIELI", "EIVALMISTU", "VALMISTUMINENSIIRTYY").contains(name)) =>
-            wrapIntoElement(name.toLowerCase, v)
-      })
+      val todistusContents: Seq[Elem] = row.collect {
+        case DataCell(name, v) if (Set("VALMISTUMINEN", "OLETETTUVALMISTUMINEN", "OPETUSPAATTYNYT").contains(name)) =>
+          wrapIntoElement(name.toLowerCase, toXmlDate(v))
+        case DataCell(name, v) if (Set("MYONTAJA", "SUORITUSKIELI", "EIVALMISTU", "VALMISTUMINENSIIRTYY").contains(name)) =>
+          wrapIntoElement(name.toLowerCase, v)
+      }
+
+      val AineRegex = """(.+)_([A-Z]+).*""".r
+
+      val aineNimetJarjestyksessa = row
+        .collect {  case DataCell(AineRegex(aine, _), _) => aine}
+        .distinct
+
+      val aineTiedot = row
+        .collect {  case DataCell(AineRegex(aine, lisatieto), v) =>  (aine, lisatieto, v)}
+        .groupBy(_._1)
+
+      val aineet = aineNimetJarjestyksessa
+        .map(aine => (aine, aineTiedot(aine)))
+        .map{ case (aine, arvot: Seq[(String, String, String)]) =>
+          wrapIntoElement(aine, arvot.map { case (_, lisatieto, v) =>
+            val lisatietoElementName = lisatieto.toLowerCase match {
+              case "yh" => "yhteinen"
+              case "val" => "valinnainen"
+              case x => x
+            }
+            wrapIntoElement(lisatietoElementName, v)
+        })
+      }
+
+      val todistus = wrapIntoElement(elementName, todistusContents ++ aineet)
 
       val result = henkiloElem.copy(child = addTodistus(addHenkilotiedot(row, henkiloElem.child), todistus))
       result

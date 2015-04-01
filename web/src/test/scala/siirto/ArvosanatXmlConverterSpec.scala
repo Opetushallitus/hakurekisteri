@@ -5,7 +5,7 @@ import fi.vm.sade.hakurekisteri.tools.{ExcelTools, XmlEquality}
 import org.apache.poi.ss.usermodel
 import org.scalatest.{FlatSpec, Matchers}
 import org.xml.sax.SAXParseException
-import scala.xml.Elem
+import scala.xml.{XML, Elem}
 import scalaz.ValidationNel
 
 class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality with ExcelTools {
@@ -131,10 +131,55 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
     verifyValidity(convertXls(wb))
   }
 
+  it should "konvertoi aineiden arvosanat" in {
+    val wb = WorkbookData(
+      "perusopetus" ->
+        """
+          |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|SYNTYMAAIKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|MYONTAJA|SUORITUSKIELI|VALMISTUMINEN|AI_YH|AI_VAL|AI_VAL2|AI_TYYPPI|A1_YH|A1_VAL|A1_VAL2|A1_KIELI
+          |111111-1975|            |               |           |Testi   |Test A  |Test       |05127   |FI           |31.05.2015   |    9|     8|      7|FI       |6    | 5    | 4     |SV
+        """
+    ).toExcel
+
+    val valid = <arvosanat>
+      <eranTunniste>balaillaan</eranTunniste>
+      <henkilot>
+        <henkilo>
+          <hetu>111111-1975</hetu>
+          <sukunimi>Testi</sukunimi>
+          <etunimet>Test A</etunimet>
+          <kutsumanimi>Test</kutsumanimi>
+          <todistukset>
+            <perusopetus>
+              <myontaja>05127</myontaja>
+              <suorituskieli>FI</suorituskieli>
+              <valmistuminen>2015-05-31</valmistuminen>
+              <AI>
+                <yhteinen>9</yhteinen>
+                <valinnainen>8</valinnainen>
+                <valinnainen>7</valinnainen>
+                <tyyppi>FI</tyyppi>
+              </AI>
+              <A1>
+                <yhteinen>6</yhteinen>
+                <valinnainen>5</valinnainen>
+                <valinnainen>4</valinnainen>
+                <kieli>SV</kieli>
+              </A1>
+            </perusopetus>
+          </todistukset>
+        </henkilo>
+      </henkilot>
+    </arvosanat>
+
+    verifyConversion(wb, valid)
+  }
+
   // TODO: arvosanat etc
 
   it should "convert arvosanat.xls into valid xml" in {
+    verifyValidity(XML.load(getClass.getResource("/tiedonsiirto/arvosanat.xml"))) // sanity check
     val doc: Elem = ArvosanatXmlConverter.convert(getClass.getResourceAsStream("/tiedonsiirto/arvosanat.xls"), "arvosanat.xml")
+    println(doc)
     verifyValidity(doc)
   }
 
