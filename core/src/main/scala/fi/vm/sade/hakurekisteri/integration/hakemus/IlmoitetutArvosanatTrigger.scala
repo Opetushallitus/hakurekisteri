@@ -73,10 +73,8 @@ object IlmoitetutArvosanatTrigger {
       arvot.get("VAL1").map(a => Seq(createArvosana(personOid, arvot("VAL1"), aine, arvot.get("OPPIAINE"), true, Some(1)))).getOrElse(Seq.empty),
       arvot.get("VAL2").map(a => Seq(createArvosana(personOid, arvot("VAL2"), aine, arvot.get("OPPIAINE"), true, Some(2)))).getOrElse(Seq.empty),
       arvot.get("VAL3").map(a => Seq(createArvosana(personOid, arvot("VAL3"), aine, arvot.get("OPPIAINE"), true, Some(3)))).getOrElse(Seq.empty),
-    Seq(
-      createArvosana(personOid, arvot(""), aine, arvot.get("OPPIAINE"), false)
-      //Arvosana(suoritus = null, arvio = Arvio410(arvot("")), aine, lisatieto = arvot.get("OPPIAINE"), valinnainen = false, myonnetty = None, source = personOid))
-    )).flatten
+      arvot.get("").map(a => Seq(createArvosana(personOid, arvot(""), aine, arvot.get("OPPIAINE"), false))).getOrElse(Seq.empty)
+    ).flatten
   }
 
   def createSuorituksetJaArvosanatFromOppimiset(hakemus: FullHakemus): Seq[(Suoritus, Seq[Arvosana])] = {
@@ -97,7 +95,14 @@ object IlmoitetutArvosanatTrigger {
             hakijaOid = personOid,
             valmistumisvuosi.toInt,
             suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI"))
-        Seq((itseIlmoitettuSuoritus, osaaminen.getPeruskoulu.map({case (aine,arvot) => aineArvotToArvosanat(personOid, aine, arvot)}).flatten.toSeq))
+        try {
+          Seq((itseIlmoitettuSuoritus, osaaminen.getPeruskoulu.map({case (aine,arvot) => aineArvotToArvosanat(personOid, aine, arvot)}).flatten.toSeq))
+        } catch {
+          case anyException: Throwable => {
+            anyException.printStackTrace()
+            throw new Exception("Collecting peruskouluarvosanat from hakemus " + hakemus.oid + " with personID " + personOid + " failed on exception: " + anyException.getMessage)
+          }
+        }
       }).getOrElse(Seq.empty)
 
       // Lukio Arvosanat
@@ -108,7 +113,14 @@ object IlmoitetutArvosanatTrigger {
             hakijaOid = personOid,
             valmistumisvuosi.toInt,
             suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI"))
-        Seq((itseIlmoitettuSuoritus, osaaminen.getLukio.map({case (aine,arvot) => aineArvotToArvosanat(personOid, aine, arvot)}).flatten.toSeq))
+        try {
+          Seq((itseIlmoitettuSuoritus, osaaminen.getLukio.map({case (aine,arvot) => aineArvotToArvosanat(personOid, aine, arvot)}).flatten.toSeq))
+        } catch {
+          case anyException: Throwable => {
+            anyException.printStackTrace()
+            throw new Exception("Collecting lukioarvosanat from hakemus " + hakemus.oid + " with personID " + personOid + " failed on exception: " + anyException.getMessage)
+          }
+        }
       }).getOrElse(Seq.empty)
 
       (peruskoulunArvosanat ++ lukionArvosanat)
@@ -197,19 +209,21 @@ case class RicherOsaaminen(osaaminen: Map[String, String]) {
         case (kxx,vxx) => (stringAfterFirstUnderscore(kxx),vxx)
       }).filter(v => {
         if(v._1.equals("")) {
-          isAllDigits(v._2)
+          !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
         } else if(v._1.equals("VAL1")) {
-          isAllDigits(v._2)
+          !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
         } else if(v._1.equals("VAL2")) {
-          isAllDigits(v._2)
+          !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
         } else if(v._1.equals("VAL3")) {
-          isAllDigits(v._2)
+          !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
         } else {
           true
         }
         //== "" &&  && isAllDigits(v._2.get("VAL1")) && isAllDigits(v._2.get("VAL2")) && isAllDigits(v._2.get("VAL3"))
       }))
-        .filter(v => v._2.contains(""))
+        .filter(v => {
+        v._2.contains("") || v._2.contains("VAL1") || v._2.contains("VAL2") || v._2.contains("VAL3")
+      })
         ))
   })
   // Filtterointi
