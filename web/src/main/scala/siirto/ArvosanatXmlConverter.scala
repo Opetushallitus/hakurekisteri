@@ -70,6 +70,7 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
   )
 
   val converter: WorkBookExtractor = ExcelExtractor(itemIdentity _, <henkilo/>)(
-    "perusopetus" -> todistusLens("perusopetus")
+    "perusopetus" -> todistusLens("perusopetus"),
+    "perusopetuksenlisaopetus" -> todistusLens("perusopetuksenlisaopetus")
   )
 }
