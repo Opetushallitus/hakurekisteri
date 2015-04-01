@@ -55,22 +55,19 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
   })
 
 
-
-
-
-  private def xml(f: FileItem): Boolean = f.getContentType.exists(t => t == "text/xml" || t == "application/xml") ||
-      f.extension.contains("xml")
-
   implicit val excelConverter = new XmlConverter {
     override def convert(f: FileItem): Elem = throw NoXmlConverterSpecifiedException
   }
 
-  implicit val fileToXml: TypeConverter[FileItem, Elem] = safe((f: FileItem) =>
-    if (xml(f)) XML.load(f.getInputStream)
+  implicit val fileToXml: TypeConverter[FileItem, Elem] = safe {(f: FileItem) =>
+    def xml(f: FileItem): Boolean = f.getContentType.exists(t => t == "text/xml" || t == "application/xml") || f.extension.contains("xml")
+
+    if (xml(f)) {
+      XML.load(f.getInputStream)
+    }
     else {
-      val converter = implicitly[XmlConverter]
-      converter.convert(f)
-    })
+      excelConverter.convert(f)
+    }}
 
   implicit val stringtoOptionInt: TypeConverter[String, Option[Int]] = safe(_.blankOption.map (_.toInt))
 
