@@ -83,6 +83,10 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
     verifyConversion(wb, valid)
   }
 
+  it should "convert arvosanat.xls into valid xml" in {
+
+  }
+
   it should "convert an arvosanat row with oppijanumero into valid xml" in {
     // TODO
   }
@@ -97,14 +101,17 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
   // TODO: testaa esimerkkitiedostolla arvosanat.xls
 
   private def verifyConversion(wb: usermodel.Workbook, valid: Elem) {
-    val henkilotElem: Elem = ArvosanatXmlConverter.converter.set(<henkilot/>, Workbook(wb))
-    val doc: Elem = <arvosanat>
-      <eranTunniste>balaillaan</eranTunniste>{henkilotElem}
-    </arvosanat>
+    val doc: Elem = convertXls(wb)
     doc should equal(valid)(after being normalized)
+    verifyValidity(doc)
+  }
 
+  def verifyValidity(doc: Elem) {
     val validationResult: ValidationNel[(String, SAXParseException), Elem] = new ValidXml(Arvosanat, ArvosanatKoodisto).validate(doc)
     validationResult should equal(scalaz.Success(doc))
   }
 
+  def convertXls(wb: usermodel.Workbook): Elem = {
+    ArvosanatXmlConverter.convert(Workbook(wb), "balaillaan")
+  }
 }

@@ -1,5 +1,6 @@
 package siirto
 
+import java.io.InputStream
 import fi.vm.sade.hakurekisteri.rest.support.Workbook
 
 import org.scalatra.servlet.FileItem
@@ -13,17 +14,15 @@ import org.apache.poi.ss.usermodel.WorkbookFactory
 
 
 object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport {
-  override def convert(f: FileItem): Elem = f match {
-    case excelFile if isExcel(excelFile) =>
-      val xml = converter.set(<henkilot/>, Workbook(WorkbookFactory.create(f.getInputStream)))
-      <arvosanat>
-        <eranTunniste>{excelFile.getName}</eranTunniste>
-        {xml}
-      </arvosanat>
-    case file =>
-      throw new IllegalArgumentException(s"file ${file.getName} cannot be converted to xml")
+  def convert(workbook: Workbook, filename: String): Elem = {
+    val xml = converter.set(<henkilot/>, workbook)
+    <arvosanat>
+      <eranTunniste>
+        {filename}
+      </eranTunniste>{xml}
+    </arvosanat>
   }
-  
+
   def itemIdentity(item: Elem): Elem = {
     item.copy(child = (item \ "hetu") ++ (item \ "oppijanumero") ++ (item \ "henkiloTunniste"))
   }

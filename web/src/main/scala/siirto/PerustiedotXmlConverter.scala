@@ -13,16 +13,12 @@ import fi.vm.sade.hakurekisteri.web.rest.support
 import org.apache.poi.ss.usermodel.WorkbookFactory
 
 object PerustiedotXmlConverter extends support.XmlConverter with ExcelToXmlSupport {
-
-  override def convert(f: FileItem): Elem = f match {
-    case excelFile if isExcel(excelFile) =>
-      val xml = converter.set(<henkilot/>, Workbook(WorkbookFactory.create(f.getInputStream)))
-      <perustiedot>
-        <eranTunniste>{excelFile.getName}</eranTunniste>
-        {xml}
-      </perustiedot>
-    case file =>
-      throw new IllegalArgumentException(s"file ${file.getName} cannot be converted to xml")
+  def convert(workbook: Workbook, filename: String): Elem = {
+    val xml = converter.set(<henkilot/>, workbook)
+    <perustiedot>
+      <eranTunniste>{filename}</eranTunniste>
+      {xml}
+    </perustiedot>
   }
 
   def itemIdentity(item: Elem): Elem = {

@@ -1,8 +1,10 @@
 package fi.vm.sade.hakurekisteri.web.rest.support
 
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import java.io.InputStream
+import fi.vm.sade.hakurekisteri.rest.support.{Workbook, HakurekisteriJsonSupport}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.json4s.JsonAST.{JInt, JString}
 import org.json4s._
 import org.scalatra.commands._
@@ -13,6 +15,7 @@ import org.scalatra.util.conversion.TypeConverter
 import org.scalatra.validation.{FieldName, UnknownError, ValidationError}
 import org.scalatra.{DefaultValue, DefaultValues}
 import org.xml.sax.SAXParseException
+import siirto.ArvosanatXmlConverter._
 import siirto.XMLValidator
 
 import scala.concurrent.Future
@@ -56,7 +59,7 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
 
 
   implicit val excelConverter = new XmlConverter {
-    override def convert(f: FileItem): Elem = throw NoXmlConverterSpecifiedException
+    override def convert(workbook: Workbook, filename: String): Elem = throw NoXmlConverterSpecifiedException
   }
 
   implicit val fileToXml: TypeConverter[FileItem, Elem] = safe {(f: FileItem) =>
@@ -131,7 +134,18 @@ class ValidatableXml(b: FieldDescriptor[Elem]) {
 }
 
 trait XmlConverter {
-  def convert(f: FileItem): Elem
+  def convert(f: FileItem): Elem = f match {
+    case excelFile if isExcel(excelFile) =>
+      convert(excelFile.getInputStream, excelFile.getName)
+    case file =>
+      throw new IllegalArgumentException(s"file ${file.getName} cannot be converted to xml")
+  }
+
+  def convert(inputStream: InputStream, filename: String): Elem = {
+    convert(Workbook(WorkbookFactory.create(inputStream)), filename)
+  }
+
+  def convert(workbook: Workbook, filename: String): Elem
 }
 
 

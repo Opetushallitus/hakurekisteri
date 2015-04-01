@@ -9,6 +9,7 @@ import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.healthcheck.HealthcheckActor
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
+import fi.vm.sade.hakurekisteri.rest.support.Workbook
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaSwaggerApi, CreateArvosanaCommand}
 import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchResource
@@ -70,7 +71,7 @@ class ScalatraBootstrap extends LifeCycle {
       ("/rest/v1/komo", "komo") -> new GuiServlet,
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
       ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", batchTypeArvosanat, "data", new XmlConverter {
-        override def convert(f: FileItem): Elem = ???
+        override def convert(workbook: Workbook, filename: String) = ???
       }, Arvosanat, ArvosanatKoodisto) with SpringSecuritySupport,
       ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SpringSecuritySupport,
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
