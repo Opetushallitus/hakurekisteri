@@ -1,16 +1,13 @@
 package siirto
 
-import java.io.InputStream
 import fi.vm.sade.hakurekisteri.rest.support.Workbook
 
-import org.scalatra.servlet.FileItem
 import DataCollectionConversions._
 import ExcelConversions._
 
 import scala.xml.{Node, Elem}
 import scalaz._
 import fi.vm.sade.hakurekisteri.web.rest.support
-import org.apache.poi.ss.usermodel.WorkbookFactory
 import fi.vm.sade.hakurekisteri.tools.XmlHelpers.wrapIntoElement
 
 object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport {
