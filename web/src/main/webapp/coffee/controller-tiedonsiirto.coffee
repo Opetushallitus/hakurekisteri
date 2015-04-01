@@ -8,6 +8,10 @@ app.controller "TiedonsiirtoCtrl", [
   ($scope, MurupolkuService, MessageService, LokalisointiService, $log, $http) ->
     supportsFileApi = window.FileReader?
 
+    $('#tiedosto').placeholder()
+    $('#oppijanumero').placeholder()
+    $('#hakukohde').placeholder()
+
     fetchEnabledState = (type) ->
       $http.get("rest/v1/siirto/"+type+"/isopen", {cache: true})
         .success (data) ->

@@ -18,9 +18,9 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
     initializeSearch = ->
       MessageService.clearMessages()
 
-      $('#henkiloTerm').placeholder();
-      $('#organisaatioTerm').placeholder();
-      $('#resultFilter').placeholder();
+      $('#henkiloTerm').placeholder()
+      $('#organisaatioTerm').placeholder()
+      $('#resultFilter').placeholder()
       $scope.loading = false
       $scope.showOnlyPuuttuvat = false
       $scope.filterParam = ""
