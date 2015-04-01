@@ -29,25 +29,33 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
     item.copy(child = (item \ "hetu") ++ (item \ "oppijanumero") ++ (item \ "henkiloTunniste"))
   }
 
-  def addHenkilotiedot(row: DataRow, nodes: Seq[Node]): Seq[Node] = {
-    val henkilotiedot: Seq[(String, String)] = row.collect {
-      case DataCell("HETU", i) if i != "" => ("hetu", i)
-      case DataCell("OPPIJANUMERO", i) if i != "" => ("oppijanumero", i)
-      case DataCell("HENKILOTUNNISTE", i) if i != "" => ("henkiloTunniste", i)
-      case DataCell("SYNTYMAAIKA", v) if v != "" => ("syntymaAika", toXmlDate(v))
-      case DataCell(name, v) if v != "" && Set("SUKUNIMI", "ETUNIMET", "KUTSUMANIMI").contains(name) => (name.toLowerCase, v)
+  def addHenkilotiedot(row: DataRow, henkiloElementContents: Seq[Node]): Seq[Node] = {
+    if (henkiloElementContents.isEmpty) {
+      convertPersonIdentification(row)
+    } else {
+      henkiloElementContents
     }
+  }
 
-    nodes match {
-      case n if !n.exists((n) => henkilotiedot.map(_._1).contains(n.label)) =>
-        nodes ++ henkilotiedot.map(h => <tag>{h._2}</tag>.copy(label = h._1))
+  def convertPersonIdentification(row: DataRow): Seq[Node] = {
+    val henkilotiedot: Seq[(String, String)] = row.collect { case DataCell("HETU", i) if i != "" => ("hetu", i)
+    case DataCell("OPPIJANUMERO", i) if i != "" => ("oppijanumero", i)
+    case DataCell("HENKILOTUNNISTE", i) if i != "" => ("henkiloTunniste", i)
+    case DataCell("SYNTYMAAIKA", v) if v != "" => ("syntymaAika", toXmlDate(v))
+    case DataCell(name, v) if v != "" && Set("SUKUNIMI", "ETUNIMET", "KUTSUMANIMI").contains(name) => (name.toLowerCase, v)
+    }
+    henkilotiedot.map{case (label, value) => <tag>{value}</tag>.copy(label = label)} ++ <todistukset/>
+  }
 
+  def addTodistus(henkiloElementContents: Seq[Node], todistusElem: Elem): Seq[Node] = {
+    henkiloElementContents.map {
+      case elem: Elem if (elem.label == "todistukset") => elem.copy(child = elem.child :+ todistusElem)
       case default => default
     }
   }
 
   def todistusLens(elementName: String): Elem @> DataRow = Lens.lensu(
-    (item, row) => {
+    (henkiloElem: Elem, row: DataRow) => {
       val todistus = <s>
         {row.collect {
           case DataCell("VALMISTUMINEN", v) => <valmistuminen>{toXmlDate(v)}</valmistuminen>
@@ -56,9 +64,7 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
         }}
       </s>.copy(label = elementName)
 
-      val todistukset = <todistukset>{todistus}</todistukset>
-
-      val result = item.copy(child = addHenkilotiedot(row, item.child) ++ todistukset)
+      val result = henkiloElem.copy(child = addTodistus(addHenkilotiedot(row, henkiloElem.child), todistus))
       result
     },
     (item) => Seq()
