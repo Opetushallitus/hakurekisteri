@@ -51,6 +51,8 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
   implicit val timeout: Timeout = 5.second
   import CustomMatchers._
 
+
+
   it should "add arvosanat only once" in {
     // Tätä ei suoriteta synkronisesti koko testijoukon suorituksen yhteydessä
     /*
@@ -118,6 +120,29 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
     suoritusRes.isSuccess should be (true)
     */
   }
+  it should "include arvosana 'S'" in {
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
+      Hakemus()
+        .setHakemusOid("hakemus1")
+        .setPersonOid("person1")
+        .setPerusopetuksenPaattotodistusvuosi(1988)
+        .putArvosana("PK_MA_VAL1","S")
+        .build
+    ) should contain theSameElementsAs Seq(
+      (ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"),
+        Seq(Arvosana(suoritus = null, arvio = Arvio410("S"), "MA", lisatieto = None, valinnainen = true, myonnetty = None, source = "person1", Some(1)))))
+
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
+      Hakemus()
+        .setHakemusOid("hakemus1")
+        .setPersonOid("person1")
+        .setPerusopetuksenPaattotodistusvuosi(1988)
+        .putArvosana("PK_MA_VAL1","NOT S")
+        .build
+    ) should contain theSameElementsAs Seq(
+      (ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"),
+        Seq()))
+  }
 
   it should "split arvosanat correctly in RicherOsaaminen" in {
     RicherOsaaminen(Map("roskaa" -> "1")).groupByKomoAndGroupByAine should be (empty)
@@ -145,6 +170,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
     r("LK")("AI")("OPPIAINE") should be ("FI")
 
   }
+
   it should "include valinnaiset arvosanat" in {
     IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
       Hakemus()
@@ -176,7 +202,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .build
     ) should contain theSameElementsAs Seq(ItseilmoitettuLukioTutkinto("hakemus1","person1", 2000, "FI"), ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"))
   }
-  it should "handle 'ei arvosanaa' and 'S' arvosanat" in {
+  it should "handle 'ei arvosanaa'" in {
     IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
       Hakemus()
         .setHakemusOid("hakemus1")
@@ -184,7 +210,6 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .setLukionPaattotodistusvuosi(2000)
         .setPerusopetuksenPaattotodistusvuosi(1988)
         .putArvosana("LK_MA","Ei arvosanaa")
-        .putArvosana("PK_AI","S")
         .build
     ) should contain theSameElementsAs Seq(
       (ItseilmoitettuLukioTutkinto("hakemus1","person1", 2000, "FI"),
@@ -221,6 +246,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .putArvosana("LK_AI", "8")
         .putArvosana("LK_AI_OPPIAINE", "FI")
         .putArvosana("LK_B1", "7")
+        .putArvosana("LK_MA", "")
         .putArvosana("LK_B1_OPPIAINE", "SV")
         .putArvosana("LK_", "ROSKAA")
         .putArvosana("LK_SA_SDF", "ROSKAA")
@@ -233,7 +259,6 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
           Arvosana(suoritus = null, arvio = Arvio410("8"), "AI", lisatieto = Some("FI"), valinnainen = false, myonnetty = None, source = "person1")
         )))
   }
-
 
   trait CustomMatchers {
 
