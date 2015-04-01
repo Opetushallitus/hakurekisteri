@@ -75,6 +75,10 @@ app.controller "HakeneetCtrl", [
   "haut"
   "hakukohdekoodit"
   ($scope, $http, $modal, MurupolkuService, MessageService, aste, haut, hakukohdekoodit) ->
+
+    $('#oppijanumero').placeholder()
+    $('#hakukohde').placeholder()
+
     isKk = ->
       aste is "kk"
 

@@ -95,6 +95,10 @@ body #raamit-header .header-content {
     width: 32px;
 }
 
+#oppijanumero {
+    width: 30%;
+}
+
 .entrylist > li {
     border-bottom: 1px solid #ccc;
     padding-bottom: 15px;

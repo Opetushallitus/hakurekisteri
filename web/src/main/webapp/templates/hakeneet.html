@@ -8,13 +8,11 @@
         <messages></messages>
         <form ng-submit="search()" class="well form-horizontal">
             <fieldset>
-                <div ng-if="vainKkHaut" class="form-group">
-                    <label for="oppijanumero" oph-msg="suoritusrekisteri.hakeneet.oppijanumero"
-                           class="col-sm-2 control-label">Oppijanumero</label>
-
+                <div class="form-group" ng-show="vainKkHaut">
+                    <label for="oppijanumero" oph-msg="suoritusrekisteri.hakeneet.oppijanumero" class="col-sm-2 control-label">Oppijanumero</label>
                     <div class="col-sm-10">
-                        <input type="text" id="oppijanumero" ng-model="oppijanumero" placeholder="Syötä oppijanumero"
-                               ng-change="searchHenkilo()" style="width: 30%" class="form-control"/><span>{{henkilo.etunimet}} {{henkilo.sukunimi}}</span>
+                        <input type="text" id="oppijanumero" ng-model="oppijanumero" placeholder="Syöta oppijanumero" ng-change="searchHenkilo()" class="form-control"/>
+                        <span>{{henkilo.etunimet}} {{henkilo.sukunimi}}</span>
                     </div>
                 </div>
                 <div class="form-group">
