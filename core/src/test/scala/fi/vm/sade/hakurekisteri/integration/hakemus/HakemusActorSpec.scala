@@ -120,6 +120,8 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
     suoritusRes.isSuccess should be (true)
     */
   }
+
+
   it should "include arvosana 'S'" in {
     IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
       Hakemus()
@@ -142,6 +144,23 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
     ) should contain theSameElementsAs Seq(
       (ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"),
         Seq()))
+
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
+      Hakemus()
+        .setHakemusOid("hakemus1")
+        .setPersonOid("person1")
+        .setPerusopetuksenPaattotodistusvuosi(None)
+        //.putArvosana("PK_PAATTOTODISTUSVUOSI","")
+        .build
+    ) should contain theSameElementsAs Seq()
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
+      Hakemus()
+        .setHakemusOid("hakemus1")
+        .setPersonOid("person1")
+        .setLukionPaattotodistusvuosi(None)
+        //.putArvosana("PK_PAATTOTODISTUSVUOSI","")
+        .build
+    ) should contain theSameElementsAs Seq()
   }
 
   it should "split arvosanat correctly in RicherOsaaminen" in {
@@ -306,8 +325,14 @@ case class HakemusBuilder(osaaminen: Map[String, String], hakemusOid: String = n
   def setPersonOid(pOid: String): HakemusBuilder =
     this.copy(personOid = Some(pOid))
 
+  def setPerusopetuksenPaattotodistusvuosi(paattotodistusvuosi: Option[String]): HakemusBuilder =
+    this.copy(PK_PAATTOTODISTUSVUOSI = paattotodistusvuosi)
+
   def setPerusopetuksenPaattotodistusvuosi(paattotodistusvuosi: Int): HakemusBuilder =
     this.copy(PK_PAATTOTODISTUSVUOSI = Some(paattotodistusvuosi.toString))
+
+  def setLukionPaattotodistusvuosi(paattotodistusvuosi: Option[String]): HakemusBuilder =
+    this.copy(lukioPaattotodistusVuosi = paattotodistusvuosi)
 
   def setLukionPaattotodistusvuosi(paattotodistusvuosi: Int): HakemusBuilder =
     this.copy(lukioPaattotodistusVuosi = Some(paattotodistusvuosi.toString))
