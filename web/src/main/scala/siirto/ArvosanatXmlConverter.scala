@@ -56,8 +56,8 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
     (henkiloElem: Elem, row: DataRow) => {
       val todistus = <s>
         {row.collect {
-          case DataCell("VALMISTUMINEN", v) => <valmistuminen>{toXmlDate(v)}</valmistuminen>
-          case DataCell(name, v) if v != "" && Set("MYONTAJA", "SUORITUSKIELI", "EIVALMISTU").contains(name) =>
+          case DataCell(name, v) if (Set("VALMISTUMINEN", "OLETETTUVALMISTUMINEN", "OPETUSPAATTYNYT").contains(name)) => <x>{toXmlDate(v)}</x>.copy(label = name.toLowerCase)
+          case DataCell(name, v) if v != "" && Set("MYONTAJA", "SUORITUSKIELI", "EIVALMISTU", "VALMISTUMINENSIIRTYY").contains(name) =>
             <tag>{v}</tag>.copy(label = name.toLowerCase)
         }}
       </s>.copy(label = elementName)
