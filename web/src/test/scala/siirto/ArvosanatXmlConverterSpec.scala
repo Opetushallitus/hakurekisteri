@@ -83,14 +83,16 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
     verifyConversion(wb, valid)
   }
 
-  it should "convert arvosanat.xls into valid xml" in {
-    // TODO
-    //val doc: Elem = ArvosanatXmlConverter.convert(getClass.getResourceAsStream("/tiedonsiirto/arvosanat.xls"), "arvosanat.xml")
-    //verifyValidity(doc)
-  }
-
   it should "convert an arvosanat row with oppijanumero into valid xml" in {
-    // TODO
+    val wb = WorkbookData(
+      "perusopetus" ->
+        """
+          |HETU       |OPPIJANUMERO              |HENKILOTUNNISTE|SYNTYMAAIKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|MYONTAJA|SUORITUSKIELI|VALMISTUMINEN|EIVALMISTU
+          |           |1.2.246.562.24.14229104472|               |           |Testi   |Test A  |Test       |05127   |FI           |31.05.2015   |
+        """
+    ).toExcel
+
+    verifyValidity(convertXls(wb))
   }
 
   it should "convert an arvosanat row with henkiloTunniste and syntymaAika into valid xml" in {
@@ -128,6 +130,13 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
   // TODO: arvosanat etc
   // TODO: perusopetuksenlisaopetus
   // TODO: eivalmistu
+
+  it should "convert arvosanat.xls into valid xml" in {
+    // TODO
+    //val doc: Elem = ArvosanatXmlConverter.convert(getClass.getResourceAsStream("/tiedonsiirto/arvosanat.xls"), "arvosanat.xml")
+    //verifyValidity(doc)
+  }
+
 
   private def verifyConversion(wb: usermodel.Workbook, valid: Elem) {
     val doc: Elem = convertXls(wb)
