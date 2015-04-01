@@ -71,10 +71,14 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
   }
 
   it should "convert an arvosanat row with oppijanumero into valid xml" in {
-
+    // TODO
   }
 
   it should "convert an arvosanat row with henkiloTunniste and syntymaAika into valid xml" in {
-
+    // TODO
   }
+
+  // TODO: arvosanat etc
+  // TODO: perusopetuksenlisaopetus
+  // TODO: eivalmistu
 }
