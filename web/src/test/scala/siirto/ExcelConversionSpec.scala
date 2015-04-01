@@ -1,14 +1,13 @@
 package siirto
 
-import org.scalatest.{FlatSpec, fixture, Matchers}
+import org.scalatest.{FlatSpec, Matchers}
 import fi.vm.sade.hakurekisteri.tools.{XmlEquality, ExcelTools}
 import scala.xml.{Elem, Node}
-import siirto.DataCollectionConversions._
+import DataCollectionConversions._
 import fi.vm.sade.hakurekisteri.rest.support.Workbook
 import scalaz._
-import siirto.DataCollectionConversions.DataCell
 
-class ExcelConversionSpec  extends FlatSpec with Matchers with XmlEquality with ExcelTools {
+class ExcelConversionSpec extends FlatSpec with Matchers with XmlEquality with ExcelTools {
 
   behavior of "Excel conversion"
 
@@ -101,7 +100,7 @@ class ExcelConversionSpec  extends FlatSpec with Matchers with XmlEquality with 
     )(after being normalized)
   }
 
-  it  should "use custom given custom conversion for worksheet" in {
+  it should "use given custom conversion for worksheet" in {
     val wb = WorkbookData(
       "sheet1" ->
         """
@@ -247,7 +246,6 @@ class ExcelConversionSpec  extends FlatSpec with Matchers with XmlEquality with 
     PerustiedotXmlConverter.converter.set(<perustiedot/>, Workbook(wb)) should equal (valid)(after being normalized)
   }
 
-
   it should "convert a perustiedot row with oppijanumero into valid xml" in {
     val wb = WorkbookData(
       "henkilotiedot" ->
@@ -288,6 +286,44 @@ class ExcelConversionSpec  extends FlatSpec with Matchers with XmlEquality with 
     </perustiedot>
 
     PerustiedotXmlConverter.converter.set(<perustiedot/>, Workbook(wb)) should equal (valid)(after being normalized)
+  }
+
+  it should "convert an arvosanat row with hetu into valid xml" in {
+
+    /*
+    val wb = WorkbookData(
+      "perusopetus" ->
+        """
+          |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|SYNTYMAAIKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|VALMISTUMINEN|MYONTAJA|SUORITUSKIELI|EIVALMISTU
+          |111111-1975|            |               |           |Testi   |Test A  |Test       |31.05.2015   |05127   |FI           |
+        """
+    ).toExcel
+
+    val valid = <arvosanat>
+      <henkilo>
+        <hetu>111111-1975</hetu>
+        <sukunimi>Testi</sukunimi>
+        <etunimet>Test A</etunimet>
+        <kutsumanimi>Test</kutsumanimi>
+        <todistukset>
+          <perusopetus>
+            <valmistuminen>2015-05-31</valmistuminen>
+            <myontaja>05127</myontaja>
+            <suorituskieli>FI</suorituskieli>
+          </perusopetus>
+        </todistukset>
+      </henkilo>
+    </arvosanat>
+
+    ArvosanatXmlConverter.converter.set(<arvosanat/>, Workbook(wb)) should equal (valid)(after being normalized)
+    */
+  }
+
+  it should "convert an arvosanat row with oppijanumero into valid xml" in {
+
+  }
+
+  it should "convert an arvosanat row with henkiloTunniste and syntymaAika into valid xml" in {
 
   }
 

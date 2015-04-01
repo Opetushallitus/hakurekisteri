@@ -1,11 +1,10 @@
 package siirto
 
-import scala.xml.Elem
+import fi.vm.sade.hakurekisteri.rest.support.{Cell, Row, Sheet, Workbook}
 
 import scala.language.implicitConversions
+import scala.xml.Elem
 import scalaz._
-import fi.vm.sade.hakurekisteri.rest.support.{Workbook, Cell, Row, Sheet}
-import siirto.DataCollectionConversions._
 
 
 object DataCollectionConversions {
@@ -30,11 +29,13 @@ object DataCollectionConversions {
   }
 }
 
+import siirto.DataCollectionConversions._
+
 object ExcelConversions {
   type ExcelSheetExtractor = Elem @> Sheet
 
   object ExcelSheetExtractor {
-    def readSheet(sheet: Sheet):DataCollection = {
+    def readSheet(sheet: Sheet): DataCollection = {
       val rows = sheet.rows.toList.sortBy(_.index)
       rows match {
         case headers :: data if data.length > 0  =>
@@ -82,14 +83,14 @@ object ExcelConversions {
       )
     }
 
-    def apply(itemIdentity: ItemElem => IdElem, itemTag: Elem)(lenses: (String, ItemElem @> DataRow)*):WorkBookExtractor = {
+    def apply(itemIdentity: ItemElem => IdElem, itemTag: Elem)(lenses: (String, ItemElem @> DataRow)*): WorkBookExtractor = {
       apply(lenses.map{case (sheet, lens) => sheet -> RowHandler(itemIdentity, itemTag, lens)}:_*)
     }
 
     object RowHandler {
-      import scalaz._, Scalaz._
+      import scalaz._
 
-      def itemSetter(identifier: ItemElem => scala.xml.Node => Boolean)(data: DataElem)(item:ItemElem): DataElem = {
+      def itemSetter(identifier: ItemElem => scala.xml.Node => Boolean)(data: DataElem)(item: ItemElem): DataElem = {
         val span = data.child.span((node) => !identifier(item)(node))
         val newItems = span match {
           case (before, empty) if empty.length == 0 =>
