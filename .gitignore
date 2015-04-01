@@ -81,3 +81,6 @@ data/
 
 buildversion.txt
 .sonar/
+
+# excel temp files
+*.xls#
