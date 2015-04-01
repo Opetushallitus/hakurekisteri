@@ -36,13 +36,13 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
   }
 
   def convertPersonIdentification(row: DataRow): Seq[Node] = {
-    val henkilotiedot: Seq[(String, String)] = row.collect { case DataCell("HETU", i) if i != "" => ("hetu", i)
-    case DataCell("OPPIJANUMERO", i) if i != "" => ("oppijanumero", i)
-    case DataCell("HENKILOTUNNISTE", i) if i != "" => ("henkiloTunniste", i)
-    case DataCell("SYNTYMAAIKA", v) if v != "" => ("syntymaAika", toXmlDate(v))
-    case DataCell(name, v) if v != "" && Set("SUKUNIMI", "ETUNIMET", "KUTSUMANIMI").contains(name) => (name.toLowerCase, v)
+    val henkilotiedot = row.collect { case DataCell("HETU", i) if i != "" => wrapIntoElement("hetu", i)
+    case DataCell("OPPIJANUMERO", i) if i != "" => wrapIntoElement("oppijanumero", i)
+    case DataCell("HENKILOTUNNISTE", i) if i != "" => wrapIntoElement("henkiloTunniste", i)
+    case DataCell("SYNTYMAAIKA", v) if v != "" => wrapIntoElement("syntymaAika", toXmlDate(v))
+    case DataCell(name, v) if v != "" && Set("SUKUNIMI", "ETUNIMET", "KUTSUMANIMI").contains(name) => wrapIntoElement(name.toLowerCase, v)
     }
-    henkilotiedot.map{case (label, value) => <tag>{value}</tag>.copy(label = label)} ++ <todistukset/>
+    henkilotiedot ++ <todistukset/>
   }
 
   def addTodistus(henkiloElementContents: Seq[Node], todistusElem: Elem): Seq[Node] = {
@@ -56,9 +56,8 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
     (henkiloElem: Elem, row: DataRow) => {
       val todistus = <s>
         {row.collect {
-          case DataCell(name, v) if (Set("VALMISTUMINEN", "OLETETTUVALMISTUMINEN", "OPETUSPAATTYNYT").contains(name)) => <x>{toXmlDate(v)}</x>.copy(label = name.toLowerCase)
-          case DataCell(name, v) if v != "" && Set("MYONTAJA", "SUORITUSKIELI", "EIVALMISTU", "VALMISTUMINENSIIRTYY").contains(name) =>
-            <tag>{v}</tag>.copy(label = name.toLowerCase)
+          case DataCell(name, v) if (Set("VALMISTUMINEN", "OLETETTUVALMISTUMINEN", "OPETUSPAATTYNYT").contains(name)) => wrapIntoElement(name.toLowerCase, toXmlDate(v))
+          case DataCell(name, v) if v != "" && Set("MYONTAJA", "SUORITUSKIELI", "EIVALMISTU", "VALMISTUMINENSIIRTYY").contains(name) => wrapIntoElement(name.toLowerCase, v)
         }}
       </s>.copy(label = elementName)
 
@@ -67,6 +66,10 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
     },
     (item) => Seq()
   )
+
+  def wrapIntoElement(label: String, content: Any): Elem = {
+    <x>{content}</x>.copy(label = label)
+  }
 
   val converter: WorkBookExtractor = ExcelExtractor(itemIdentity _, <henkilo/>)(
     "perusopetus" -> todistusLens("perusopetus"),

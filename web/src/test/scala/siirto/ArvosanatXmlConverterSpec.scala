@@ -132,7 +132,6 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
   }
 
   // TODO: arvosanat etc
-  // TODO: perusopetuksenlisaopetus
 
   it should "convert arvosanat.xls into valid xml" in {
     val doc: Elem = ArvosanatXmlConverter.convert(getClass.getResourceAsStream("/tiedonsiirto/arvosanat.xls"), "arvosanat.xml")
