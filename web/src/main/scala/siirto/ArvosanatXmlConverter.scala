@@ -11,7 +11,7 @@ import scala.xml.{Node, Elem}
 import scalaz._
 import fi.vm.sade.hakurekisteri.web.rest.support
 import org.apache.poi.ss.usermodel.WorkbookFactory
-
+import fi.vm.sade.hakurekisteri.tools.XmlHelpers.wrapIntoElement
 
 object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport {
   def convert(workbook: Workbook, filename: String): Elem = {
@@ -52,7 +52,7 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
     }
   }
 
-  def todistusLens(elementName: String): Elem @> DataRow = Lens.lensu(
+  private def todistusLens(elementName: String): Elem @> DataRow = Lens.lensu(
     (henkiloElem: Elem, row: DataRow) => {
       val todistusContents: Seq[Elem] = row.collect {
         case DataCell(name, v) if (Set("VALMISTUMINEN", "OLETETTUVALMISTUMINEN", "OPETUSPAATTYNYT").contains(name)) =>
@@ -61,30 +61,7 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
           wrapIntoElement(name.toLowerCase, v)
       }
 
-      val AineRegex = """(.+)_([A-Z]+).*""".r
-
-      val aineNimetJarjestyksessa = row
-        .collect {  case DataCell(AineRegex(aine, _), _) => aine}
-        .distinct
-
-      val aineTiedot = row
-        .collect {  case DataCell(AineRegex(aine, lisatieto), v) =>  (aine, lisatieto, v)}
-        .groupBy(_._1)
-
-      val aineet = aineNimetJarjestyksessa
-        .map(aine => (aine, aineTiedot(aine)))
-        .map{ case (aine, arvot: Seq[(String, String, String)]) =>
-          wrapIntoElement(aine, arvot.map { case (_, lisatieto, v) =>
-            val lisatietoElementName = lisatieto.toLowerCase match {
-              case "yh" => "yhteinen"
-              case "val" => "valinnainen"
-              case x => x
-            }
-            wrapIntoElement(lisatietoElementName, v)
-        })
-      }
-
-      val todistus = wrapIntoElement(elementName, todistusContents ++ aineet)
+      val todistus = wrapIntoElement(elementName, todistusContents ++ convertAineet(row))
 
       val result = henkiloElem.copy(child = addTodistus(addHenkilotiedot(row, henkiloElem.child), todistus))
       result
@@ -92,8 +69,24 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
     (item) => Seq()
   )
 
-  def wrapIntoElement(label: String, content: Any): Elem = {
-    <x>{content}</x>.copy(label = label)
+  private def convertAineet(row: DataRow): Seq[Elem] = {
+    val AineRegex = """(.+)_([A-Z]+).*""".r
+
+    val aineNimetJarjestyksessa = row.collect { case DataCell(AineRegex(aine, _), _) => aine}.distinct
+
+    val aineTiedot = row.collect { case DataCell(AineRegex(aine, lisatieto), v) => (aine, lisatieto, v)}.groupBy(_._1)
+
+    val aineet = aineNimetJarjestyksessa.map(aine => (aine, aineTiedot(aine))).map { case (aine, arvot: Seq[(String, String, String)]) =>
+      wrapIntoElement(aine, arvot.map { case (_, lisatieto, v) =>
+        val lisatietoElementName = lisatieto.toLowerCase match {
+          case "yh" => "yhteinen"
+          case "val" => "valinnainen"
+          case x => x
+        }
+        wrapIntoElement(lisatietoElementName, v)
+      })
+    }
+    aineet
   }
 
   val converter: WorkBookExtractor = ExcelExtractor(itemIdentity _, <henkilo/>)(

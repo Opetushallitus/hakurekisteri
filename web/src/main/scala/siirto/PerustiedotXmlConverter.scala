@@ -1,16 +1,13 @@
 package siirto
 
-import fi.vm.sade.hakurekisteri.rest.support.{LocalDateSerializer, Workbook}
-import org.joda.time.format.{ISODateTimeFormat, DateTimeFormat}
+import fi.vm.sade.hakurekisteri.rest.support.{Workbook}
 
-import org.scalatra.servlet.FileItem
 import DataCollectionConversions._
 import ExcelConversions._
 
 import scala.xml.{Node, Elem}
 import scalaz._
 import fi.vm.sade.hakurekisteri.web.rest.support
-import org.apache.poi.ss.usermodel.WorkbookFactory
 
 object PerustiedotXmlConverter extends support.XmlConverter with ExcelToXmlSupport {
   def convert(workbook: Workbook, filename: String): Elem = {
@@ -96,16 +93,4 @@ object PerustiedotXmlConverter extends support.XmlConverter with ExcelToXmlSuppo
     "lukio" -> suoritusLens("lukio"),
     "ammatillinen" -> suoritusLens("ammatillinen")
   )
-}
-
-trait ExcelToXmlSupport {
-  private val excelContentTypes = Set("application/vnd.ms-excel", "application/msexcel", "application/x-msexcel", "application/x-ms-excel", "application/x-excel", "application/x-dos_ms_excel", "application/xls", "application/x-xls", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-  private val XmlDate = "[0-9]{4}-[0-9]{2}-[0-9]{2}".r
-
-  def isExcel(f: FileItem): Boolean = f.name.toLowerCase.endsWith(".xls") || f.name.toLowerCase.endsWith(".xlsx") || f.getContentType.exists(excelContentTypes.contains)
-
-  def toXmlDate(value: String): String = value match {
-    case XmlDate() => value
-    case finDate => ISODateTimeFormat.yearMonthDay().print(DateTimeFormat.forPattern(LocalDateSerializer.dayFormat).parseDateTime(finDate))
-  }
 }

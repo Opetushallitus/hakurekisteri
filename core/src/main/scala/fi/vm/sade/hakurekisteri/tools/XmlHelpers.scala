@@ -77,4 +77,8 @@ object XmlHelpers {
       Elem(null, e.getTagName, attributes, TopScope, minimizeEmpty = true, children:_*)
     }
   }
+
+  def wrapIntoElement(label: String, content: Any): Elem = {
+    <x>{content}</x>.copy(label = label)
+  }
 }
