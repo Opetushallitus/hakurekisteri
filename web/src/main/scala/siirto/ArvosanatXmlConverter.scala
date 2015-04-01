@@ -40,7 +40,7 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
 
     nodes match {
       case n if !n.exists((n) => henkilotiedot.map(_._1).contains(n.label)) =>
-        nodes ++ henkilotiedot.map(h => <tag>{h._2}</tag>.copy(label = h._1)) ++ <todistukset/>
+        nodes ++ henkilotiedot.map(h => <tag>{h._2}</tag>.copy(label = h._1))
 
       case default => default
     }
@@ -48,14 +48,17 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
 
   def todistusLens(elementName: String): Elem @> DataRow = Lens.lensu(
     (item, row) => {
-      val sheetData = <s>
+      val todistus = <s>
         {row.collect {
           case DataCell("VALMISTUMINEN", v) => <valmistuminen>{toXmlDate(v)}</valmistuminen>
           case DataCell(name, v) if v != "" && Set("MYONTAJA", "SUORITUSKIELI", "EIVALMISTU").contains(name) =>
             <tag>{v}</tag>.copy(label = name.toLowerCase)
         }}
       </s>.copy(label = elementName)
-      val result = item.copy(child = addHenkilotiedot(row, item.child) ++ sheetData)
+
+      val todistukset = <todistukset>{todistus}</todistukset>
+
+      val result = item.copy(child = addHenkilotiedot(row, item.child) ++ todistukset)
       result
     },
     (item) => Seq()
