@@ -13,7 +13,6 @@ import org.apache.poi.ss.usermodel.WorkbookFactory
 
 
 object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport {
-
   override def convert(f: FileItem): Elem = f match {
     case excelFile if isExcel(excelFile) =>
       val xml = converter.set(<henkilot/>, Workbook(WorkbookFactory.create(f.getInputStream)))
