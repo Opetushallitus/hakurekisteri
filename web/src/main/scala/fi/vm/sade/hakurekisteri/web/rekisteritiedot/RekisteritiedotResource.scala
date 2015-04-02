@@ -88,6 +88,7 @@ class RekisteritiedotResource(val rekisterit: Registers)
     vuosi = params.get("vuosi").flatMap(_.blankOption)
   )
 
+  implicit val v: Validatable[Todistus] = SimpleValidatable((t) => ValidatedTodistus(t.suoritus, t.arvosanat))
 
   get("/:oid", operation(read)) {
     val t0 = Platform.currentTime
@@ -97,7 +98,11 @@ class RekisteritiedotResource(val rekisterit: Registers)
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
-      private val tiedotFuture = fetchTiedot(params("oid"))
+      private val tiedotFuture = fetchTiedot(params("oid")).map {oppija => new Oppija(oppija.oppijanumero, oppija.opiskelu, oppija.suoritukset, oppija.opiskeluoikeudet, oppija.ensikertalainen) with TodistusFailures {
+        val fails = oppija.suoritukset.map((s) =>  s -> valid.validateData(s)).collect{
+          case (s, Failure(failures)) => s.suoritus ->  failures
+        }.toMap
+      }}
       logQuery(q, t0, tiedotFuture)
 
       val is = tiedotFuture
@@ -105,6 +110,11 @@ class RekisteritiedotResource(val rekisterit: Registers)
 
   }
 
+
+  trait TodistusFailures {
+    val fails: Map[Suoritus, Any]
+
+  }
 
   get("/light") {
     val t0 = Platform.currentTime
@@ -126,7 +136,6 @@ class RekisteritiedotResource(val rekisterit: Registers)
 
 
       def hasArvosanat(todistukset:Seq[Todistus]): Boolean = {
-        implicit val v: Validatable[Todistus] = SimpleValidatable((t) => ValidatedTodistus(t.suoritus, t.arvosanat))
         !todistukset.exists{
           case Todistus(s: VirallinenSuoritus, arvosanat) if tarkastetut.contains(s.komo) && arvosanat.isEmpty => true
           case t:Todistus => valid.validateData(t).isFailure
