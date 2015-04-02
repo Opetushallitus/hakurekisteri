@@ -2,20 +2,20 @@ package fi.vm.sade.hakurekisteri.integration.organisaatio
 
 import java.net.URLEncoder
 
-import akka.actor.{ActorLogging, Actor, Cancellable}
+import akka.actor.Status.Failure
+import akka.actor.{ActorLogging, Actor}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedException, VirkailijaRestClient}
 
-import scala.compat.Platform
 import scala.concurrent.duration._
-import scala.concurrent.{Promise, ExecutionContext, Future}
-import scala.util.Try
+import scala.concurrent.{ExecutionContext, Future}
 
 case class OrganisaatioResponse(numHits: Option[Int], organisaatiot: Seq[Organisaatio])
 case class Oppilaitos(koodi: String)
 case class OppilaitosResponse(koodi: String, oppilaitos: Organisaatio)
 case class OppilaitosNotFoundException(koodi: String) extends Exception(s"Oppilaitosta ei löytynyt oppilaitoskoodilla $koodi.")
+case class OrganisaatioFetchFailedException(t: Throwable) extends Exception(t)
 
 class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
@@ -29,11 +29,10 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
   val refresh = context.system.scheduler.schedule(timeToLive.minus(15.minutes), timeToLive.minus(15.minutes), self, Refresh)
 
   def fetchAll(): Unit = {
-    organisaatioClient.readObject[OrganisaatioResponse](s"/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true", 200, maxRetries).onSuccess {
-      case s: OrganisaatioResponse =>
-        saveOrganisaatiot(s.organisaatiot)
-        log.info(s"all saved to cache: ${cache.size}")
+    val f = organisaatioClient.readObject[OrganisaatioResponse](s"/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true", 200).recover {
+      case t: Throwable => OrganisaatioFetchFailedException(t)
     }
+    f pipeTo self
   }
 
   def saveOrganisaatiot(s: Seq[Organisaatio]): Unit = {
@@ -54,6 +53,17 @@ class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor 
 
   override def receive: Receive = {
     case Refresh => fetchAll()
+
+    case s: OrganisaatioResponse =>
+      saveOrganisaatiot(s.organisaatiot)
+      log.info(s"all saved to cache: ${cache.size}")
+
+    case Failure(t: OrganisaatioFetchFailedException) =>
+      log.error("organisaatio refresh failed, retrying in 1 minute", t.t)
+      context.system.scheduler.scheduleOnce(1.minute, self, Refresh)
+
+    case Failure(t: Throwable) =>
+      log.error("error in organisaatio actor", t)
 
     case oid: String => find(oid) pipeTo sender
 

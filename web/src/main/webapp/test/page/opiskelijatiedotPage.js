@@ -44,6 +44,7 @@ opiskelijatiedot = initSelectors({
     hakijanIlmoittamaAlert: ".alert-info",
     suoritusMyontaja: ".test-suoritusMyontaja",
     suoritusKoulutus: ".test-suoritusKoulutus",
+    suoritusKoulutusText: ".test-suoritusKoulutusText",
     suoritusYksilollistetty: ".test-suoritusYksilollistetty",
     suoritusKieli: ".test-suoritusKieli",
     suoritusValmistuminen: ".test-suoritusValmistuminen",
@@ -53,6 +54,15 @@ opiskelijatiedot = initSelectors({
     luokkatietoLuokkaTaso: ".test-luokkatietoLuokkaTaso",
     luokkatietoAlkuPaiva: ".test-luokkatietoAlkuPaiva",
     luokkatietoLoppuPaiva: ".test-luokkatietoLoppuPaiva",
-    saveButton: ".test-saveButton"
-
+    opiskeluoikeusAlkuPaiva: ".test-opiskeluoikeusAlkuPaiva",
+    opiskeluoikeusLoppuPaiva: ".test-opiskeluoikeusLoppuPaiva",
+    opiskeluoikeusMyontaja: ".test-opiskeluoikeusMyontaja",
+    opiskeluoikeusKoulutus: ".test-opiskeluoikeusKoulutus",
+    saveButton: ".test-saveButton",
+    arvosanaAineRivi: ".test-aineRivi:visible",
+    arvosanaAineNimi: ".test-aineNimi",
+    arvosanaMyonnetty: ".test-arvosanaMyonnetty:visible",
+    arvosanaLisatieto: ".test-arvosanaLisatieto:visible",
+    arvosanaPakollinenArvosana: ".test-arvosanaPakollinenArvosana:visible",
+    arvosanaValinnainenArvosana: ".test-arvosanaValinnainenArvosana:visible"
 })

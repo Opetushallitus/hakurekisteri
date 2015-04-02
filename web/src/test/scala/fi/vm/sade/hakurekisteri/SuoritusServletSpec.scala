@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri
 
-import fi.vm.sade.hakurekisteri.rest.support.TestSecurity
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import akka.actor.{Props, ActorSystem}
 import java.util.UUID

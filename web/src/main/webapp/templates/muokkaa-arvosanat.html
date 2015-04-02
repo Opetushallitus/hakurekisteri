@@ -75,9 +75,9 @@
     </tr>
     </thead>
     <tbody>
-    <tr ng-repeat="aineRivi in suorituksenArvosanataulukko" class="{{aineRivi.rowClass}}">
-        <td><span>{{aineRivi.aineNimi || aineRivi.aine}}</span>
-            <span ng-show="suoritus.valmistuminen != aineRivi.myonnetty">({{aineRivi.myonnetty}})</span></td>
+    <tr ng-repeat="aineRivi in suorituksenArvosanataulukko" class="{{aineRivi.rowClass}} test-aineRivi">
+        <td class="test-arvosanaAine"><span class="test-aineNimi">{{aineRivi.aineNimi || aineRivi.aine}}</span>
+            <span class="test-arvosanaMyonnetty" ng-show="suoritus.valmistuminen != aineRivi.myonnetty">({{aineRivi.myonnetty}})</span></td>
         <td ng-show="info.editable">
             <select ng-show="aineRivi.aine == 'AI'" ng-model="aineRivi.lisatieto"
                     ng-options="k.value as k.text for k in aidinkieli"
@@ -104,13 +104,13 @@
                     required="required" ng-options="a.value as a.text for a in arvosanat"
                     class="form-control smallInline"></select>
         </td>
-        <td ng-hide="info.editable"><span ng-show="aineRivi.hasArvosana && (aineRivi.hasKielisyys || aineRivi.aine == 'AI')">{{aineRivi.lisatietoText || "Kieli puuttuu!!"}}</span>
+        <td ng-hide="info.editable"><span ng-show="aineRivi.hasArvosana && (aineRivi.hasKielisyys || aineRivi.aine == 'AI')" class="test-arvosanaLisatieto">{{aineRivi.lisatietoText || "Kieli puuttuu!!"}}</span>
         </td>
-        <td ng-hide="info.editable"><span ng-repeat="pakollinen in aineRivi.pakolliset">{{pakollinen.arvio.arvosana}}</span>
+        <td ng-hide="info.editable"><span ng-repeat="pakollinen in aineRivi.pakolliset" class="test-arvosanaPakollinenArvosana">{{pakollinen.arvio.arvosana}}</span>
         </td>
-        <td ng-hide="info.editable" style="white-space: nowrap;">{{aineRivi.valinnaiset[0].arvio.arvosana}}</td>
-        <td ng-hide="info.editable" style="white-space: nowrap;">{{aineRivi.valinnaiset[1].arvio.arvosana}}</td>
-        <td ng-hide="info.editable" style="white-space: nowrap;">{{aineRivi.valinnaiset[2].arvio.arvosana}}</td>
+        <td ng-hide="info.editable" class="test-arvosanaValinnainenArvosana" style="white-space: nowrap;">{{aineRivi.valinnaiset[0].arvio.arvosana}}</td>
+        <td ng-hide="info.editable" class="test-arvosanaValinnainenArvosana" style="white-space: nowrap;">{{aineRivi.valinnaiset[1].arvio.arvosana}}</td>
+        <td ng-hide="info.editable" class="test-arvosanaValinnainenArvosana" style="white-space: nowrap;">{{aineRivi.valinnaiset[2].arvio.arvosana}}</td>
     </tr>
     </tbody>
 </table>

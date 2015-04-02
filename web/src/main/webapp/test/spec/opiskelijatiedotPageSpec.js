@@ -31,6 +31,7 @@
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
                     koodistoFixtures()
@@ -60,7 +61,7 @@
         })
 
         describe('Henkilohaku', function () {
-            it('Voi hakea oidin perusteella - test-dsl', seqDone(
+            it('Voi hakea oidin perusteella', seqDone(
                 wait.forAngular,
                 function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
@@ -68,7 +69,9 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -90,6 +93,8 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -107,9 +112,6 @@
                 function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
                     httpFixtures().henkiloPalveluService.foobar()
-                    httpFixtures().arvosanatLocal.aarnenArvosanat()
-                    httpFixtures().suorituksetLocal.aarnenSuoritus()
-                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
                 },
                 input(opiskelijatiedot.henkiloSearch, 'foobar'),
                 click(opiskelijatiedot.searchButton),
@@ -143,8 +145,10 @@
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().suorituksetLocal.tyynenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.tyynenLuokkaTiedotEmpty()
+                    httpFixtures().opiskeluOikeudetLocal.tyynenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
                     koodistoFixtures()
@@ -182,6 +186,8 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -205,6 +211,8 @@
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
                     koodistoFixtures()
@@ -229,7 +237,44 @@
                 }
             }
 
-            it('Opiskelijan suoritukset, arvosanat, luokkatiedot ja opintooikeudet näkyvät oikein', seqDone(
+            function nonEmpty(i,e) {
+                return jQuery(e).text().trim().length > 0
+            }
+
+            function assertArvosanat(aineRiviCount, aineCount, korotusDateCount, pakollisetCount, valinnaisetCount) {
+                expect(opiskelijatiedot.arvosanaAineRivi().length).to.equal(aineRiviCount)
+                expect(jQuery.unique(jQuery.map(opiskelijatiedot.arvosanaAineNimi(),function(e){return jQuery(e).text()})).length).to.equal(aineCount)
+                expect(opiskelijatiedot.arvosanaMyonnetty().length).to.equal(korotusDateCount)
+                expect(opiskelijatiedot.arvosanaPakollinenArvosana().length).to.equal(pakollisetCount)
+                expect(opiskelijatiedot.arvosanaValinnainenArvosana().filter(nonEmpty).length).to.equal(valinnaisetCount)
+            }
+
+            function findAineRivi(aineTxt, myonnetty, lisatieto) {
+                return opiskelijatiedot.arvosanaAineRivi().filter(function(i, rivi){
+                    var aine = jQuery(rivi).find(opiskelijatiedot.arvosanaAineNimi().selector).text();
+                    var m = jQuery(rivi).find(opiskelijatiedot.arvosanaMyonnetty().selector).text();
+                    var l = jQuery(rivi).find(opiskelijatiedot.arvosanaLisatieto().selector).text();
+                    return aine == aineTxt && m == myonnetty && l == lisatieto
+                })
+            }
+
+            function txtArr(i, e) {
+                return jQuery(e).text();
+            }
+
+            function assertArvosanaRivi(aineTxt, myonnetty, lisatieto, pakolliset, valinnaiset) {
+                if(myonnetty.length > 0) {
+                    myonnetty = "(" + myonnetty + ")"
+                }
+                var aineRivit = findAineRivi(aineTxt, myonnetty, lisatieto)
+                expect(aineRivit.length).to.equal(1, "found " + aineRivit.length + " matching aineRivi when there was supposed to be 1: " + aineTxt + ": " + myonnetty)
+                var aineRivi = jQuery(aineRivit[0])
+                var p = jQuery.makeArray(jQuery(aineRivi).find(opiskelijatiedot.arvosanaPakollinenArvosana().selector).map(txtArr))
+                var v = jQuery.makeArray(jQuery(aineRivi).find(opiskelijatiedot.arvosanaValinnainenArvosana().selector).filter(nonEmpty).map(txtArr))
+                expect([aineTxt, myonnetty , lisatieto, p, v]).to.deep.equal([aineTxt, myonnetty, lisatieto, pakolliset, valinnaiset])
+            }
+
+            it('Opiskelijan peruskoulun suoritukset, ainelista, arvosanat, luokkatiedot ja opintooikeudet näkyvät oikein', seqDone(
                 wait.forAngular,
                 function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
@@ -240,6 +285,8 @@
                     httpFixtures().suorituksetLocal.aarnenSuoritus()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot(2015)
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeus()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -263,10 +310,95 @@
                     assertValue(opiskelijatiedot.luokkatietoLuokkaTaso, "2")
                     assertValue(opiskelijatiedot.luokkatietoAlkuPaiva, "18.8.2014")
                     assertValue(opiskelijatiedot.luokkatietoLoppuPaiva, "4.6.2015")
+                    assertText(opiskelijatiedot.opiskeluoikeusAlkuPaiva, "01.01.2000")
+                    assertText(opiskelijatiedot.opiskeluoikeusLoppuPaiva, "01.01.2014")
+                    assertText(opiskelijatiedot.opiskeluoikeusMyontaja, "06345 Pikkaralan ala-aste")
+                    assertText(opiskelijatiedot.opiskeluoikeusKoulutus, "Ensihoitaja (AMK)")
+                    assertArvosanat(38, 19, 15, 17, 1)
+                    assertArvosanaRivi("Äidinkieli ja kirjallisuus", "", "Kieli puuttuu!!", ["10"],[])
+                    // assertArvosanaRivi("A1-kieli", "", "englanti", ["9"],[])
+                    assertArvosanaRivi("Matematiikka", "", "", ["6"],[])
+                    assertArvosanaRivi("Matematiikka", "04.06.2015", "", ["10"],["9"])
                 }
             ))
-
-
+            it('Opiskelijan lukion suoritukset, ainelista ja arvosanat näkyvät oikein', seqDone(
+                wait.forAngular,
+                function () {
+                    suoritus = {}
+                    suoritus = jQuery.extend(suoritus, restData.suoritusRekisteri.suoritukset.aarne)
+                    suoritus.komo = restData.komo.lukioKomoOid
+                    httpFixtures().organisaatioService.pikkaralaOid()
+                    httpFixtures().organisaatioService.pikkaralaKoodi()
+                    httpFixtures().henkiloPalveluService.aarne()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                    testFrame().httpBackend.when('GET', serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619")).respond([suoritus])
+                    httpFixtures().arvosanatLocal.aarnenArvosanat()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
+                    httpFixtures().komoLocal.komoTiedot()
+                    koodistoFixtures()
+                },
+                input(opiskelijatiedot.henkiloSearch, '123456-789'),
+                click(opiskelijatiedot.searchButton),
+                wait.forAngular,
+                function () {
+                    expect(opiskelijatiedot.resultsTable().length).to.equal(1)
+                    expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
+                    expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
+                    expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
+                    assertText(opiskelijatiedot.hetu, "123456-789")
+                    assertValue(opiskelijatiedot.suoritusMyontaja, "06345")
+                    assertValue(opiskelijatiedot.suoritusKoulutus, "8")
+                    assertValue(opiskelijatiedot.suoritusYksilollistetty, "0")
+                    assertValue(opiskelijatiedot.suoritusKieli, "156")
+                    assertValue(opiskelijatiedot.suoritusValmistuminen, "3.6.2015")
+                    assertValue(opiskelijatiedot.suoritusTila, "0")
+                    assertArvosanat(39, 20, 13, 15, 1)
+                    assertArvosanaRivi("Äidinkieli ja kirjallisuus", "", "Kieli puuttuu!!", ["10"],[])
+                    // assertArvosanaRivi("A1-kieli", "", "englanti", ["9"],[])
+                    assertArvosanaRivi("Matematiikka", "", "", ["6"],[])
+                    assertArvosanaRivi("Matematiikka", "04.06.2015", "", ["10"],["9"])
+                }
+            ))
+            it('Opiskelijan amk suoritus (komo = koulutus_*) näkyy oikein eikä arvosanoja näytetä', seqDone(
+                wait.forAngular,
+                function () {
+                    suoritus = {}
+                    suoritus = jQuery.extend(suoritus, restData.suoritusRekisteri.suoritukset.aarne)
+                    suoritus.komo = "koulutus_671116"
+                    httpFixtures().organisaatioService.pikkaralaOid()
+                    httpFixtures().organisaatioService.pikkaralaKoodi()
+                    httpFixtures().henkiloPalveluService.aarne()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
+                    httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                    testFrame().httpBackend.when('GET', serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619")).respond([suoritus])
+                    httpFixtures().arvosanatLocal.aarnenArvosanat()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
+                    httpFixtures().komoLocal.komoTiedot()
+                    koodistoFixtures()
+                },
+                input(opiskelijatiedot.henkiloSearch, '123456-789'),
+                click(opiskelijatiedot.searchButton),
+                wait.forAngular,
+                function () {
+                    expect(opiskelijatiedot.resultsTable().length).to.equal(1)
+                    expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
+                    expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
+                    expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
+                    assertText(opiskelijatiedot.hetu, "123456-789")
+                    assertValue(opiskelijatiedot.suoritusMyontaja, "06345")
+                    assertText(opiskelijatiedot.suoritusKoulutusText, "Ensihoitaja (AMK)")
+                    assertValue(opiskelijatiedot.suoritusYksilollistetty, "0")
+                    assertValue(opiskelijatiedot.suoritusKieli, "156")
+                    assertValue(opiskelijatiedot.suoritusValmistuminen, "3.6.2015")
+                    assertValue(opiskelijatiedot.suoritusTila, "0")
+                    assertArvosanat(0, 0, 0, 0, 0)
+                }
+            ))
             it("Vahvistamattomalle suoritukselle näytetään info-viesti", seqDone(
                 function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
@@ -276,7 +408,9 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().suorituksetLocal.aarnenVahvistamatonSuoritus()
-                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -295,7 +429,9 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().arvosanatLocal.aarnenArvosanat()
                     httpFixtures().suorituksetLocal.aarnenVahvistamatonSuoritusHakemukselta()
-                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                    httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     koodistoFixtures()
                 },
@@ -317,7 +453,7 @@
                     return waitJqueryIs(opiskelijatiedot.saveButton, ":disabled", true)
                 }
 
-                it("Peruskoulun suoritustiedot ja arvosanat talletetaan vain jos muuttuneita arvoja", seqDone(
+                it("!! Peruskoulun suoritustiedot (ja arvosanat) talletetaan vain jos muuttuneita arvoja", seqDone(
                     function () {
                         httpFixtures().organisaatioService.pikkaralaOid()
                         httpFixtures().organisaatioService.pikkaralaKoodi()
@@ -327,6 +463,8 @@
                         httpFixtures().suorituksetLocal.aarnenSuoritus()
                         httpFixtures().arvosanatLocal.aarnenArvosanat()
                         httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                        httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                         httpFixtures().komoLocal.komoTiedot()
                         koodistoFixtures()
                     },
@@ -378,6 +516,17 @@
                         })
                     },
                     saveDisabled()
+                ))
+                it("!! YO tutkinnon suoritustiedot ja arvosanat talletetaan vain jos muuttuneita arvoja", seqDone(
+                ))
+                it("!! Suorituksen poistaminen", seqDone(
+
+                ))
+                it("!! Luokkatiedon poistaminen", seqDone(
+
+                ))
+                it("!! Lisää korotus tallentaa arvosanan", seqDone(
+
                 ))
             }
         )

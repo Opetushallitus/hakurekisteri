@@ -5,9 +5,6 @@ angular.module('e2e-mocks', ['ngMockE2E'])
   #Local templates
   $httpBackend.when('GET', /templates\/.*/).passThrough()
 
-  # Mocked local services
-  $httpBackend.when('GET', /.*rest\/v1\/opiskeluoikeudet\?henkilo.*/).respond([])
-
   $httpBackend.when('GET', /.*\/authentication-service\/buildversion\.txt\?auth/).respond("artifactId=authentication-service
                  version=13.0-MOCK
                  buildNumber=99

@@ -2,7 +2,8 @@ package fi.vm.sade.hakurekisteri.web.arvosana
 
 import akka.actor.{ActorSystem, ActorRef}
 import akka.event.{Logging, LoggingAdapter}
-import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import fi.vm.sade.hakurekisteri.web.rest.support.SpringSecuritySupport
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.{CorsSupport, FutureSupport}
 import scala.concurrent.ExecutionContext

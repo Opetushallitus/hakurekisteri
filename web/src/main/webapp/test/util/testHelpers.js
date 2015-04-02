@@ -150,6 +150,9 @@ function openPage(path, predicate) {
 var testHooks = []
 
 function addTestHook(fn) {
+    if(typeof fn !== 'function') {
+        throw new Error('Test hook is not a function, got typeof fn'+(typeof fn))
+    }
     return function() {
         testHooks.push(fn)
     }
@@ -199,7 +202,7 @@ function mockPostReturnData(triggerFn, urlPattern) {
 
 function assertText(selector, val) {
     chai.assert(typeof selector().val() !== 'undefined', "element "  + selector().selector + " should be defined, is undefined")
-    expect(selector().text().trim()).to.equal(val)
+    expect(selector().text().trim()).to.equal(val, selector().selector)
 }
 
 function assertValue(selector, val) {

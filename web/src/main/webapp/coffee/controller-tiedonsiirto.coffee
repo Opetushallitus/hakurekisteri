@@ -8,6 +8,20 @@ app.controller "TiedonsiirtoCtrl", [
   ($scope, MurupolkuService, MessageService, LokalisointiService, $log, $http) ->
     supportsFileApi = window.FileReader?
 
+    fetchEnabledState = (type) ->
+      $http.get("rest/v1/siirto/"+type+"/isopen", {cache: true})
+        .success (data) ->
+          $scope[type+"Enabled"] = data.open
+        .error ->
+          $scope[type+"Enabled"] = false
+          $log.error "cannot connect "+type
+
+    fetchEnabledState('perustiedot')
+    fetchEnabledState('arvosanat')
+
+    $scope.isSendingDisabled = () ->
+      !$scope.tyyppi
+
     $http.get(koodistoServiceUrl + "/rest/json/oppiaineetyleissivistava/koodi/", {cache: true}).success (koodit) ->
       translateWithMetadata = (koodi, metadatas) -> (lang) ->
         translations = R.fromPairs(R.map((metadata) -> [metadata.kieli.toLowerCase(), metadata.nimi])(metadatas))
@@ -54,7 +68,6 @@ app.controller "TiedonsiirtoCtrl", [
         else
           ruleId
         {ruleId, todistukset, count: todistukset.length, message}
-      console.log("validation result", $scope.validointiVirheet)
       $scope.$apply()
 
     $scope.beforeSubmitCheck = ->

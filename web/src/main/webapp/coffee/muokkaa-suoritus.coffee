@@ -5,11 +5,13 @@ app.controller "MuokkaaSuoritus", [
   "MessageService"
   ($scope, $http, $q, MessageService) ->
     enrichSuoritus = (suoritus) ->
+      $scope.info.showArvosanat = true
       if suoritus.myontaja
         getOrganisaatio $http, suoritus.myontaja, (organisaatio) ->
           $scope.info.oppilaitos = organisaatio.oppilaitosKoodi
           $scope.info.organisaatio = organisaatio
       if suoritus.komo and suoritus.komo.match(/^koulutus_\d*$/)
+        $scope.info.showArvosanat = false
         getKoulutusNimi $http, suoritus.komo, (koulutusNimi) ->
           $scope.info.koulutus = koulutusNimi
       else

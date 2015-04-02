@@ -4,7 +4,7 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
-import fi.vm.sade.hakurekisteri.rest.support.{SpringSecuritySupport, HakurekisteriJsonSupport}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import org.scalatra.swagger.{SwaggerEngine, Swagger}
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
@@ -12,7 +12,7 @@ import org.scalatra.json.JacksonJsonSupport
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.web.rest.support.IncidentReport
+import fi.vm.sade.hakurekisteri.web.rest.support.{SpringSecuritySupport, IncidentReport}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{HetuNotFoundException, Ensikertalainen,  EnsikertalainenQuery}
 
 case class ParamMissingException(message: String) extends IllegalArgumentException(message)

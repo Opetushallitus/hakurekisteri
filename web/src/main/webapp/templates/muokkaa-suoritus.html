@@ -21,7 +21,7 @@
                 ng-change="checkYlioppilastutkinto(suoritus)" required="required"
                 class="form-control input-sm test-suoritusKoulutus"></select>
 
-        <div ng-hide="info.editable">{{info.koulutus || suoritus.komo}}</div>
+        <div ng-hide="info.editable" class="test-suoritusKoulutusText">{{info.koulutus || suoritus.komo}}</div>
     </div>
     <div class="form-group col-sm-4"><strong
             oph-msg="suoritusrekisteri.muokkaa.yksilollistetty">Yksilöllistetty</strong>
@@ -60,7 +60,7 @@
         <div ng-hide="info.editable">{{suoritus.tila}}</div>
     </div>
 </div>
-<div class="row">
+<div class="row" ng-if="info.showArvosanat">
     <div class="form-group col-sm-12">
         <div ng-if="suoritus.id && suoritus.komo !== komo.ylioppilastutkinto" ng-include="'templates/muokkaa-arvosanat.html'"
              ng-controller="MuokkaaArvosanat"></div>

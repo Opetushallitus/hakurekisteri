@@ -76,6 +76,14 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
     }}
   }
 
+  it should "attach Content-Type: text/xml header into the request" in {
+    val response = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.3")
+
+    waitFuture(response) {o => {
+      verify(endPoint, atLeastOnce()).request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withHeader("Content-Type", "text/xml; charset=UTF-8"))
+    }}
+  }
+
   it should "return student information" in {
     val response: Future[Option[VirtaResult]] = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.3")
 

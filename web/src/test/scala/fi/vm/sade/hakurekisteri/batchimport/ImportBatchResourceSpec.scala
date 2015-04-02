@@ -2,31 +2,43 @@ package fi.vm.sade.hakurekisteri.batchimport
 
 import java.util.UUID
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{Actor, ActorSystem, Props}
+import fi.vm.sade.hakurekisteri.TestSecurity
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
+import fi.vm.sade.hakurekisteri.integration._
+import fi.vm.sade.hakurekisteri.integration.parametrit.IsSendingEnabled
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
-import fi.vm.sade.hakurekisteri.rest.support.{TestSecurity, HakurekisteriJsonSupport, JDBCJournal}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
 import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.web.batchimport.{TiedonsiirtoOpen, ImportBatchResource}
+import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 import org.json4s.Extraction
 import org.json4s.jackson.JsonMethods._
+import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.Uploadable
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import siirto.{PerustiedotXmlConverter, SchemaDefinition}
 
+import scala.concurrent.ExecutionContext
 import scala.xml.Elem
-import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchResource
-import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 
 
-class ImportBatchResourceSpec extends ScalatraFunSuite {
+class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("test-import-batch")
+  implicit val ec: ExecutionContext = system.dispatcher
 
   implicit val database = Database.forURL("jdbc:h2:mem:importbatchtest;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
   val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
   val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5)))
   val authorized = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
+
+  val parameterActor = system.actorOf(Props(new Actor {
+    override def receive: Receive = {
+      case IsSendingEnabled(_) => sender ! true
+    }
+  }))
 
   override def stop(): Unit = {
     system.shutdown()
@@ -52,7 +64,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   }
 
 
-  addServlet(new ImportBatchResource(authorized, (foo) => ImportBatchQuery(None, None, None))("identifier", "test", "data", PerustiedotXmlConverter, TestSchema) with TestSecurity, "/batch")
+  addServlet(new ImportBatchResource(authorized, parameterActor, (foo) => ImportBatchQuery(None, None, None))("identifier", "test", "data", PerustiedotXmlConverter, TestSchema) with TestSecurity, "/batch")
 
 
   test("post should return 201 created") {
@@ -105,7 +117,6 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   test("get withoutdata should contain the posted batch") {
     post("/batch", "<batch><identifier>foo5</identifier><data>foo</data></batch>") {
       import org.json4s.jackson.Serialization.read
-      implicit val formats = HakurekisteriJsonSupport.format
 
       val batch = read[ImportBatch with Identified[UUID]](response.body)
 
@@ -119,7 +130,6 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   test("post reprocess should fail on batch already in READY state") {
     post("/batch", "<batch><identifier>foo5</identifier><data>foo</data></batch>") {
       import org.json4s.jackson.Serialization.read
-      implicit val formats = HakurekisteriJsonSupport.format
 
       val batch = read[ImportBatch with Identified[UUID]](response.body)
 
@@ -138,7 +148,6 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
   test("post reprocess should set batch to a READY state") {
     post("/batch", "<batch><identifier>foo5</identifier><data>foo</data></batch>") {
       import org.json4s.jackson.Serialization.read
-      implicit val formats = HakurekisteriJsonSupport.format
 
       val batch = read[ImportBatch with Identified[UUID]](response.body)
 
@@ -150,6 +159,16 @@ class ImportBatchResourceSpec extends ScalatraFunSuite {
           }
         }
       }
+    }
+  }
+
+  test("isopen should return true") {
+    get("/batch/isopen") {
+      import org.json4s.jackson.Serialization.read
+
+      val isopen = read[TiedonsiirtoOpen](response.body)
+
+      isopen.open should be(true)
     }
   }
 

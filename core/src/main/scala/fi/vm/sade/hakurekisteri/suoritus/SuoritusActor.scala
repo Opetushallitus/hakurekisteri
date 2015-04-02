@@ -92,7 +92,9 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
 
   override val optimize: PartialFunction[Query[Suoritus], Future[Seq[Suoritus with Identified[UUID]]]] = {
     case SuoritusQuery(Some(henkilo), None, Some(vuosi), None, None) =>
-      Future { tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq()) }
+      Future {
+        tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq())
+      }
 
     case SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja, komo) =>
       val filtered = tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq())

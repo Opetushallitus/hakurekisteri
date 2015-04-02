@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
+import fi.vm.sade.hakurekisteri.TestSecurity
 import org.scalatra.test.{EmbeddedJettyContainer, HttpComponentsClient}
 
 import javax.servlet.http.HttpServletRequest

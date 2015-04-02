@@ -1,53 +1,45 @@
 package fi.vm.sade.hakurekisteri.web.batchimport
 
-import java.io.{PrintWriter, File, ByteArrayInputStream, InputStream}
+import java.io.{ByteArrayInputStream, File, InputStream, PrintWriter}
 import java.text.SimpleDateFormat
 import java.util
 import java.util.{Date, UUID}
-import javax.servlet.http.{Part, HttpServletRequest}
+import javax.servlet.http.{HttpServletRequest, Part}
 
+import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
-import akka.actor.{ActorRef, ActorSystem}
-import akka.pattern.{AskTimeoutException, ask}
+import _root_.akka.pattern.{AskTimeoutException, ask}
 import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.batchimport.{BatchesBySource, ImportBatch, ImportStatus, Reprocess, WrongBatchStateException, _}
+import fi.vm.sade.hakurekisteri.integration.parametrit.IsSendingEnabled
 import fi.vm.sade.hakurekisteri.rest.support._
+import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReport, UserNotAuthorized, _}
 import org.json4s.Extraction
-import org.scalatra.util.ValueReader
 import org.scalatra._
 import org.scalatra.commands._
-import org.scalatra.servlet.{SizeConstraintExceededException, FileUploadSupport}
-import org.scalatra.swagger.{DataType, SwaggerSupport, Swagger}
+import org.scalatra.servlet.{FileItem, FileUploadSupport, MultipartConfig, SizeConstraintExceededException}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
+import org.scalatra.swagger.{DataType, Swagger, SwaggerSupport}
+import org.scalatra.util.ValueReader
 import org.xml.sax.SAXParseException
-import siirto.{XMLValidator, ValidXml, SchemaDefinition}
+import siirto.{SchemaDefinition, ValidXml, XMLValidator}
 
 import scala.concurrent.duration._
 import scala.util.Try
 import scala.xml.Elem
 import scalaz._
-import fi.vm.sade.hakurekisteri.web.rest.support._
-import fi.vm.sade.hakurekisteri.batchimport._
-import org.scalatra.servlet.MultipartConfig
-import fi.vm.sade.hakurekisteri.batchimport.Reprocess
-import fi.vm.sade.hakurekisteri.batchimport.BatchesBySource
-import scala.Some
-import fi.vm.sade.hakurekisteri.batchimport.WrongBatchStateException
-import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
-import org.scalatra.servlet.FileItem
-import fi.vm.sade.hakurekisteri.web.rest.support.IncidentReport
-import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
-import fi.vm.sade.hakurekisteri.web.rest.support.UserNotAuthorized
 
 
 class ImportBatchResource(eraRekisteri: ActorRef,
-                                   queryMapper: (Map[String, String]) => Query[ImportBatch])
-                                  (externalIdField: String,
-                                   batchType: String,
-                                   dataField: String,
-                                   excelConverter: XmlConverter,
-                                   schema: SchemaDefinition,
-                                   imports: SchemaDefinition*)
-                                  (implicit sw: Swagger, system: ActorSystem, mf: Manifest[ImportBatch], cf: Manifest[ImportBatchCommand])
+                          parameterActor: ActorRef,
+                          queryMapper: (Map[String, String]) => Query[ImportBatch])
+                         (externalIdField: String,
+                          batchType: String,
+                          dataField: String,
+                          excelConverter: XmlConverter,
+                          schema: SchemaDefinition,
+                          imports: SchemaDefinition*)
+                         (implicit sw: Swagger, system: ActorSystem, mf: Manifest[ImportBatch], cf: Manifest[ImportBatchCommand])
     extends HakurekisteriResource[ImportBatch, ImportBatchCommand](eraRekisteri, queryMapper) with ImportBatchSwaggerApi with HakurekisteriCrudCommands[ImportBatch, ImportBatchCommand] with SpringSecuritySupport with FileUploadSupport with IncidentReporting {
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
@@ -134,6 +126,13 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     }
   }
 
+  get("/isopen", operation(isopen)) {
+    new AsyncResult() {
+      override implicit def timeout: Duration = 120.seconds
+      override val is = (parameterActor ? IsSendingEnabled(batchType))(120.seconds).mapTo[Boolean].map(TiedonsiirtoOpen)
+    }
+  }
+
   post("/reprocess/:id") {
     val user = getUser
     if (!user.orgsFor("WRITE", "ImportBatch").contains(Config.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
@@ -144,6 +143,51 @@ class ImportBatchResource(eraRekisteri: ActorRef,
       override val is = eraRekisteri.?(Reprocess(id))(60.seconds)
     }
   }
+
+  /*
+  post("/", operation(create)) {
+    val user = currentUser
+    if (!user.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
+    else new AsyncResult {
+      override implicit def timeout: Duration = 120.seconds
+      def createOrNotFound(sendingEnabled: Boolean): Future[ActionResult] = {
+        if (sendingEnabled) {
+          val msg = (command[ImportBatchCommand] >> (_.toValidatedResource(user.get.username))).flatMap(
+            _.fold(
+              errors => Future.failed(MalformedResourceException(errors)),
+              resource => Future.successful(AuthorizedCreate[ImportBatch, UUID](resource, user.get)))
+          )
+          msg.flatMap(eraRekisteri ? _).mapTo[ImportBatch with Identified[UUID]].map(ResourceCreated(request.getRequestURL))
+        }
+        else Future.successful(NotFound(IncidentReport(UUID.randomUUID(), "batch sending not enabled at the moment")))
+      }
+      override val is = (parameterActor ? IsSendingEnabled(batchType))(120.seconds).mapTo[Boolean].flatMap(createOrNotFound)
+    }
+  }
+
+
+  post("/:id", operation(update)) {
+    val user = currentUser
+    if (!user.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
+    else new AsyncResult {
+      override implicit def timeout: Duration = 120.seconds
+      def updateOrNotFound(id: UUID)(sendingEnabled: Boolean): Future[ActionResult] = {
+        if (sendingEnabled) {
+          val msg: Future[AuthorizedUpdate[ImportBatch, UUID]] = (command[ImportBatchCommand] >> (_.toValidatedResource(user.get.username))).flatMap(
+            _.fold(
+              errors => Future.failed(MalformedResourceException(errors)),
+              resource => Future.successful(AuthorizedUpdate[ImportBatch, UUID](identifyResource(resource, id), user.get)))
+          )
+          msg.flatMap(eraRekisteri ? _).mapTo[ImportBatch with Identified[UUID]].map(Ok(_))
+        }
+        else Future.successful(NotFound(IncidentReport(UUID.randomUUID(), "batch update not enabled at the moment")))
+      }
+      override val is = (parameterActor ? IsSendingEnabled(batchType))(120.seconds).mapTo[Boolean].flatMap(bool => {
+        Try(UUID.fromString(params("id"))).map(id => updateOrNotFound(id)(bool)).get
+      })
+    }
+  }
+  */
 
   incident {
     case t: WrongBatchStateException => (id) => BadRequest(IncidentReport(id, "illegal state for reprocessing"))
@@ -234,6 +278,9 @@ trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
     .consumes("application/xml", "multipart/form-data")
     .parameter(bodyParam[String].description("XML-tiedosto").required)
   val query: OperationBuilder = apiOperation[ImportBatch]("N/A 4")
+  val isopen: OperationBuilder = apiOperation[TiedonsiirtoOpen]("onkoAvoinna")
+    .summary("kertoo onko tiedonsiirto avoinna")
+    .notes("Kertoo onko tiedonsiirto avoinna.")
 }
 
 object EmptyFile extends FileItem(EmptyPart)
@@ -253,3 +300,4 @@ object EmptyPart extends Part {
   override def getHeader(name: String): String = null
 }
 
+case class TiedonsiirtoOpen(open: Boolean)

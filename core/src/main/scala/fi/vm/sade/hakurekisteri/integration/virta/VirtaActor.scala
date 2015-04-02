@@ -4,8 +4,10 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.Status.Failure
 import akka.actor.{Cancellable, ActorLogging, Actor, ActorRef}
+import akka.pattern.ask
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
+import fi.vm.sade.hakurekisteri.integration.haku.{HakuNotFoundException, Haku, GetHaku}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
@@ -38,13 +40,15 @@ object PrintStats
 object VirtaHealth
 object CancelSchedule
 
-class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor with ActorLogging {
+class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef, hakuActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   var virtaQueue: List[VirtaQuery] = List()
-
-  var lastProcessDone: Option[DateTime] = None
-  var scheduledProcessTime: Option[LocalTime] = None
+  private var lastProcessDone: Option[DateTime] = None
+  private var scheduledProcessTime: Option[LocalTime] = None
+  private var startedProcessing: Boolean = false
+  private var processing: Cancellable = scheduleProcessing("04:00")
+  private val statPrinter: Cancellable = context.system.scheduler.schedule(5.minutes, 10.minutes, self, PrintStats)
 
   def nextProcessTime: Option[DateTime] = scheduledProcessTime.map(t => {
     val atToday: DateTime = t.toDateTimeToday
@@ -59,9 +63,6 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
     context.system.scheduler.schedule(duration, 24.hours, self, StartVirta)
   }
 
-  var processing: Cancellable = scheduleProcessing("04:00")
-  val statPrinter: Cancellable = context.system.scheduler.schedule(5.minutes, 10.minutes, self, PrintStats)
-
   override def postStop(): Unit = {
     processing.cancel()
     statPrinter.cancel()
@@ -71,12 +72,12 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
     case VirtaQueuedQuery(q) if !virtaQueue.contains(q) =>
       virtaQueue = virtaQueue :+ q
 
-    case StartVirta =>
+    case StartVirta if !startedProcessing =>
       log.info("started to process virta queries")
-      if (virtaQueue.nonEmpty) 
-        virtaActor ! virtaQueue.head 
-      else 
-        log.info("no queries to process")
+      if (virtaQueue.nonEmpty) {
+        startedProcessing = true
+        virtaActor ! virtaQueue.head
+      } else log.info("no queries to process")
 
     case QueryProsessed(q) =>
       virtaQueue = virtaQueue.filterNot(_ == q)
@@ -85,6 +86,7 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
       } else {
         log.info(s"all virta queries processed, queue length ${virtaQueue.length}")
         lastProcessDone = Some(new DateTime())
+        startedProcessing = false
       }
 
     case PrintStats => log.info(s"queue length ${virtaQueue.length}")
@@ -103,14 +105,18 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef) extends Actor wit
   }
 
   override def preStart(): Unit = {
-    hakemusActor ! Trigger((oid, hetu) => if (!isYsiHetu(hetu)) self ! VirtaQueuedQuery(VirtaQuery(oid, Some(hetu))))
+    hakemusActor ! Trigger((oid, hetu, hakuOid) =>
+      if (!isYsiHetu(hetu))
+        (hakuActor ? GetHaku(hakuOid))(1.hour).mapTo[Haku].map(haku => haku.kkHaku).recoverWith {
+          case t: HakuNotFoundException => Future.successful(true)
+        }.map(isKkHaku => if (isKkHaku) self ! VirtaQueuedQuery(VirtaQuery(oid, Some(hetu))))
+    )
     super.preStart()
   }
 
   val ysiHetu = "\\d{6}[+-AB]9\\d{2}[0123456789ABCDEFHJKLMNPRSTUVWXY]"
   def isYsiHetu(hetu: String): Boolean = hetu.matches(ysiHetu)
 }
-
 
 
 class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef) extends Actor with ActorLogging {
@@ -193,7 +199,7 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
   def resolveOppilaitosOid(oppilaitosnumero: String): Future[String] = oppilaitosnumero match {
     case o if Seq("XX", "UK", "UM").contains(o) => Future.successful(Config.tuntematonOrganisaatioOid)
     case o =>
-      (organisaatioActor ? o)(30.seconds).mapTo[Option[Organisaatio]] map {
+      (organisaatioActor ? o)(1.hour).mapTo[Option[Organisaatio]] map {
           case Some(org) => org.oid
           case _ => log.error(s"oppilaitos not found with oppilaitosnumero $o"); throw OppilaitosNotFoundException(s"oppilaitos not found with oppilaitosnumero $o")
       }

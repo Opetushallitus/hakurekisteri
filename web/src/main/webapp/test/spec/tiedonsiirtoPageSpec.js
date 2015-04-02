@@ -14,15 +14,21 @@
             }
         });
 
-        describe("Tiedoston lähetys", function () {
+        initPage = function (enablePerustiedot, enableArvosanat) {
             before(
-                    addTestHook(koodistoFixtures),
-                    addTestHook(lokalisointiFixtures),
-                    page.openPage,
-                    wait.until(function () { return page.uploadForm().length === 1}),
-                    wait.forAngular,
-                    wait.until(function () { return page.alerts().length === 0 })
+                addTestHook(koodistoFixtures),
+                addTestHook(lokalisointiFixtures),
+                addTestHook(tiedostonSiirtoFixtures().perustiedotOpen(enablePerustiedot)),
+                addTestHook(tiedostonSiirtoFixtures().arvosanatOpen(enableArvosanat)),
+                page.openPage,
+                wait.until(function () { return page.uploadForm().length === 1}),
+                wait.forAngular,
+                wait.until(function () { return page.alerts().length === 0 })
             )
+        }
+
+        describe("Tiedoston lähetys", function () {
+            initPage(true, true)
 
             describe("Aluksi", function() {
                 it("Ei näytä virheitä", function () {
@@ -32,14 +38,9 @@
             })
 
             describe("Kun tiedoston tyyppiä ja tiedostoa ei ole valittu", function() {
-                before(
-                  page.submitButton().click,
-                  wait.until(function () { return page.alerts().length === 2 })
-                )
 
                 it('ilmoittaa, että tyyppiä ja tiedostoa ei ole valittu', function () {
-                    expect(page.alerts().text()).to.include('Tiedoston tyyppiä ei ole valittu')
-                    expect(page.alerts().text()).to.include('Tiedostoa ei ole valittu')
+                    expect(page.submitButton().isEnabled()).to.equal(false)
                 })
             })
 
@@ -50,6 +51,35 @@
                 )
                 it("Ei näytä virheitä", function () {
                     expect(page.alerts().length).to.equal(0)
+                })
+            })
+
+            describe("Tiedoston siirron enabloitu", function () {
+                it("Perustiedot enabloitu", function () {
+                    expect(page.perustiedotRadio().isEnabled()).to.equal(true)
+                })
+
+                it("Arvosanat enabloitu", function () {
+                    expect(page.arvosanatRadio().isEnabled()).to.equal(true)
+                })
+            })
+
+            describe("Tiedoston siirron disablointi", function () {
+                initPage(false, false)
+                it("Perustiedot disabloitu", function () {
+                    expect(page.perustiedotRadio().isEnabled()).to.equal(false)
+                })
+
+                it("Arvosanat disabloitu", function () {
+                    expect(page.arvosanatRadio().isEnabled()).to.equal(false)
+                })
+            })
+
+            describe("Eri arvot", function () {
+                initPage(false, true)
+                it("Perustiedot disabloitu ja arvosanat enabloitu", function () {
+                    expect(page.perustiedotRadio().isEnabled()).to.equal(false)
+                    expect(page.arvosanatRadio().isEnabled()).to.equal(true)
                 })
             })
 

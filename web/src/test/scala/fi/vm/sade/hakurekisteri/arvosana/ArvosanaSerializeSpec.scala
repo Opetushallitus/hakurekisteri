@@ -3,8 +3,9 @@ package fi.vm.sade.hakurekisteri.arvosana
 import java.util.UUID
 
 import akka.actor.{Props, ActorSystem}
+import fi.vm.sade.hakurekisteri.TestSecurity
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, TestSecurity}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaSwaggerApi, CreateArvosanaCommand}
