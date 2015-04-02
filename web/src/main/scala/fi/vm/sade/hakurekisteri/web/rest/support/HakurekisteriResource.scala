@@ -156,12 +156,15 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
   def updateEnabled = Future.successful(true)
 
   def updateResource(id: UUID, user: Option[User]): Object = {
+    val myCommand: C = command[C]
     val msg: Future[AuthorizedUpdate[A, UUID]] = updateEnabled.flatMap(enabled =>
-      if (enabled) (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(
-        _.fold(
-          errors => Future.failed(MalformedResourceException(errors)),
-          resource => Future.successful(AuthorizedUpdate[A,UUID](identifyResource(resource, id), user.get)))
-      )
+      if (enabled) {
+        (myCommand >> (_.toValidatedResource(user.get.username))).flatMap(
+          _.fold(
+            errors => Future.failed(MalformedResourceException(errors)),
+            resource => Future.successful(AuthorizedUpdate[A, UUID](identifyResource(resource, id), user.get)))
+        )
+      }
       else Future.failed(notEnabled)
     )
     new FutureActorResult[A with Identified[UUID]](msg , Ok(_))
