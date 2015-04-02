@@ -176,7 +176,7 @@ app.factory "MuokkaaTiedot", [
         Array.isArray($scope.myRoles) and ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1 or $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1)
 
       $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel = (info, model, validateError) ->
-        if not info["delete"] and info.editable and not (model.komo and model.komo is $scope.komo.ylioppilastutkinto)
+        if model.vahvistettu and not info["delete"] and info.editable and not (model.komo and model.komo is $scope.komo.ylioppilastutkinto)
           d = $q.defer()
           if not info.oppilaitos or not info.oppilaitos.match(/^\d{5}$/)
             if validateError
