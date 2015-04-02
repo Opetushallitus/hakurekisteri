@@ -1,13 +1,13 @@
 <div class="row test-suoritus">
 
     <div class="form-group col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</strong>
-        <input ng-show="info.editable && suoritus.komo !== komo.ylioppilastutkinto" type="text"
+        <input ng-show="suoritus.vahvistettu && info.editable && suoritus.komo !== komo.ylioppilastutkinto" type="text"
                title="{{info.organisaatio.nimi.fi || info.organisaatio.nimi.sv || info.organisaatio.nimi.en}}"
                ng-disabled="info.delete" ng-model="info.oppilaitos"
                typeahead="organisaatio.oppilaitosKoodi as (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv || organisaatio.nimi.en)) for organisaatio in getOppilaitos($viewValue, info) | filter:$viewValue | limitTo:10"
                typeahead-on-select="info.organisaatio = $item" typeahead-loading="myontajaLoading"
                typeahead-wait-ms="500" class="form-control input-sm {{myontajaLoading ? 'input-loading' : ''}} test-suoritusMyontaja"/>
-
+        <div ng-show="!suoritus.vahvistettu">Hakijan ilmoittama</div>
         <div ng-hide="info.editable">{{(info.organisaatio.oppilaitosKoodi + ' ' + (info.organisaatio.nimi.fi ||
             info.organisaatio.nimi.sv || info.organisaatio.nimi.en)) || suoritus.myontaja}}
         </div>
