@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 import akka.actor.Actor.Receive
 import akka.actor.Status.Success
@@ -89,6 +90,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
     */
   }
 
+
   it should "create suoritukset and arvosanat to rekisteri" in {
     // Tätä ei suoriteta synkronisesti koko testijoukon suorituksen yhteydessä
     /*
@@ -120,7 +122,6 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
     suoritusRes.isSuccess should be (true)
     */
   }
-
 
   it should "include arvosana 'S'" in {
     IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(

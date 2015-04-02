@@ -32,13 +32,13 @@ object IlmoitetutArvosanatTrigger {
 
   def muodostaSuorituksetJaArvosanat(hakemus: FullHakemus, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef)(implicit ec: ExecutionContext): Unit = {
     import akka.pattern.ask
-    implicit val timeout: Timeout = 5.second
+    implicit val timeout: Timeout = 1.minute
 
     def saveSuoritus(suor: Suoritus): Future[Suoritus with Identified[UUID]] =
-      (suoritusRekisteri ? suor).mapTo[Suoritus with Identified[UUID]].recoverWith {
+      (suoritusRekisteri ? InsertResource[UUID, Suoritus](suor)).mapTo[Suoritus with Identified[UUID]].recoverWith {
 
         case t: AskTimeoutException => saveSuoritus(suor)
-      }
+    }
 
     createSuorituksetKoulutustausta(hakemus).foreach(saveSuoritus)
 
