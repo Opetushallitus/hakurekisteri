@@ -70,9 +70,7 @@ class ScalatraBootstrap extends LifeCycle {
     mountServlets(context)(
       ("/rest/v1/komo", "komo") -> new GuiServlet,
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
-      ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", batchTypeArvosanat, "data", new XmlConverter {
-        override def convert(workbook: Workbook, filename: String) = ???
-      }, Arvosanat, ArvosanatKoodisto) with SpringSecuritySupport,
+      ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SpringSecuritySupport,
       ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SpringSecuritySupport,
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
       ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
