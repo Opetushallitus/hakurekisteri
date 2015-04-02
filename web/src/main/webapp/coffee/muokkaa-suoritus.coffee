@@ -6,7 +6,7 @@ app.controller "MuokkaaSuoritus", [
   ($scope, $http, $q, MessageService) ->
     enrichSuoritus = (suoritus) ->
       $scope.info.showArvosanat = true
-      if suoritus.myontaja
+      if suoritus.vahvistettu and suoritus.myontaja
         getOrganisaatio $http, suoritus.myontaja, (organisaatio) ->
           $scope.info.oppilaitos = organisaatio.oppilaitosKoodi
           $scope.info.organisaatio = organisaatio
