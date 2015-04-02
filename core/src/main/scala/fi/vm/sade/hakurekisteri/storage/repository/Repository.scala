@@ -26,7 +26,7 @@ trait Repository[T, I] {
 trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
 
   var store:Map[I,T with Identified[I]] = Map()
-  var reverseStore:Map[AnyRef, Seq[I]] = Map()
+  var reverseStore:Map[AnyRef, List[I]] = Map()
   var cursor:Map[Int, (Long, String)] = Map()
 
   def updateCursor(t:T, id:I) = (id, Platform.currentTime, cursor(t)) match {
@@ -38,12 +38,27 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
   override def cursor(t: T): Option[(Long, String)] = cursor.get(t.hashCode % 16384)
 
   def save(o: T ): T with Identified[I] = {
-    val oid = reverseStore.get(o.core).flatMap((ids) => ids.headOption.map((id) => o.identify(id)) ).getOrElse(o.identify)
-    val old = store.get(oid.id)
-    val result = saveIdentified(oid)
-    cursor = cursor + ((o.hashCode % 16384) -> updateCursor(o,oid.id))
-    old.foreach((item) => cursor = cursor + ((item.hashCode % 16384) -> updateCursor(item,oid.id)))
-    result
+    reverseStore.get(o.core) match {
+      case Some(id::ids)  => store(id) match {
+        case old if old == o =>
+          old
+        case old =>
+          val oid = o.identify(id)
+          val result = saveIdentified(oid)
+          cursor = cursor + ((o.hashCode % 16384) -> updateCursor(o,oid.id))
+          Some(old).foreach{(item) =>
+            cursor = cursor + ((item.hashCode % 16384) -> updateCursor(item,oid.id))
+          }
+          result
+      }
+      case _ =>
+        val oid = o.identify
+        val result = saveIdentified(oid)
+        cursor = cursor + ((o.hashCode % 16384) -> updateCursor(o,oid.id))
+        None.foreach((item) => cursor = cursor + ((item.hashCode % 16384) -> updateCursor(item,oid.id)))
+        result
+
+    }
   }
 
   def insert(o: T ): T with Identified[I] = {
@@ -69,7 +84,7 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
     store = store + (oid.id -> oid)
     val core = getCore(oid)
     deleteFromDeduplication(old)
-    val newSeq = reverseStore.get(core).map((s) => s.+:(oid.id)).getOrElse(Seq(oid.id))
+    val newSeq = reverseStore.get(core).map((s) => s.+:(oid.id)).getOrElse(List(oid.id))
     reverseStore = reverseStore + (core -> newSeq)
     index(old, Some(oid))
     oid

@@ -21,7 +21,7 @@ class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBeha
   }
 
   def itemUpdater(original:TestResource with Identified[UUID]):TestResource with Identified[UUID] = {
-    TestResource(original.id, original.name + " updated", value=Some("Updated"))
+    TestResource(original.id, original.name , value=Some(original.value.getOrElse(original.name) + " updated"))
   }
 
   it should behave like basicRepoBehaviors(repoConstructor, itemConstructor, itemUpdater)
