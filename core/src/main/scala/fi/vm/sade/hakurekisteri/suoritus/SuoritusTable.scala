@@ -46,7 +46,7 @@ class SuoritusTable(tag: Tag) extends JournalTable[Suoritus, UUID, SuoritusRow](
 
   }
 
-  override val deletedValues =(lahde: String) =>  ("", "", true, None, None, None, None, None, None, None, None, None, lahde)
+  override val deletedValues =(lahde: String) =>  ("", "", Some(true), None, None, None, None, None, None, None, None, None, lahde)
 
   override val resource: (SuoritusRow) => Suoritus = {
     case (myontaja, henkiloOid, vahvistettu, Some(komo), Some(tila), Some(valmistuminen), Some(yks), Some(suoritusKieli), _, _, _, _,  source) =>
