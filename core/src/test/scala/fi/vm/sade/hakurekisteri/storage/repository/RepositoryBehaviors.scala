@@ -157,7 +157,9 @@ trait RepositoryBehaviors[T] { this: FlatSpec with Matchers  =>
       (repo, items, itemConstructor, itemUpdater) =>
         val item = repo.save(repo.listAll().headOption.getOrElse(itemConstructor))
         val start = repo.cursor(item)
-        repo.save(itemUpdater(repo.listAll().head))
+        val updated = itemUpdater(repo.listAll().head)
+
+        repo.save(updated)
         repo.cursor(item) should not (be (start))
     }
 

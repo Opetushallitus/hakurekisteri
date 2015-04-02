@@ -5,6 +5,8 @@ import scala.xml.Elem
 import org.scalatest.{Matchers, FlatSpec}
 import org.scalatest.matchers.{MatchResult, Matcher}
 import generators.{DataGeneratorSupport, DataGen}
+import org.joda.time.LocalDate
+import org.joda.time.format.DateTimeFormat
 
 class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
 
@@ -158,6 +160,22 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
     ) should abideSchemas
   }
 
+  it should "mark perusopetus with date after 1.6.2015 as invalid" in {
+    siirto(
+      henkiloOidilla(
+        perusopetus("2.6.2015")
+      )
+    ) should not (abideSchemas)
+  }
+
+  it should "mark luokalle jaanyt with date before 1.8.2015 as invalid" in {
+    siirto(
+      henkiloOidilla(
+        jaaLuokalle("1.6.2015")
+      )
+    ) should not (abideSchemas)
+  }
+
   /*it should "mark todistus with multiple entries as valid" in {
     val todistus = siirto(
       henkilo(perusopetus),
@@ -205,9 +223,9 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
     </suoritus>.copy(label = name)
   )
 
-  def valmistunutSuoritus(name:String): DataGen[Elem] = for (
+  def valmistunutSuoritus(name:String, date: LocalDate = new LocalDate(2015, 5,30)): DataGen[Elem] = for (
     baseSuoritus <- suoritus(name)
-  ) yield baseSuoritus.copy(child = baseSuoritus.child ++ <valmistuminen>2014-05-30</valmistuminen>)
+  ) yield baseSuoritus.copy(child = baseSuoritus.child ++ <valmistuminen>{date.toString("yyyy-MM-dd")}</valmistuminen>)
 
   val perusopetuksenAineet = DataGen.always(
     <aineet>
@@ -272,22 +290,30 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
       </GE>
     </aineet>.child)
 
-  val perusopetus: DataGen[Elem] = for (
-    perusopetusBase <- valmistunutSuoritus("perusopetus");
+  def perusopetus: DataGen[Elem] = perusopetus("30.5.2015")
+
+  val suomalainenPaivays = DateTimeFormat.forPattern("dd.MM.yyyy")
+
+  def perusopetus(paiva:String) =  for (
+    perusopetusBase <- valmistunutSuoritus("perusopetus", LocalDate.parse(paiva, suomalainenPaivays));
     aineet <- perusopetuksenAineet
   ) yield perusopetusBase.copy(child = perusopetusBase.child ++ aineet)
 
-  val jaaLuokalleLisaTiedot =
+
+  def jaaLuokalleLisaTiedot(paiva: LocalDate = new LocalDate(2016, 6, 1)) =
     DataGen.always(<perusopetus>
-      <oletettuvalmistuminen>2016-06-01</oletettuvalmistuminen>
+      <oletettuvalmistuminen>{paiva.toString("yyyy-MM-dd")}</oletettuvalmistuminen>
       <valmistuminensiirtyy>JAA LUOKALLE</valmistuminensiirtyy>
     </perusopetus>.child)
 
-  val jaaLuokalle = for(
+  def jaaLuokalle: DataGen[Elem] = jaaLuokalle("1.6.2016")
+
+  def jaaLuokalle(paiva:String): DataGen[Elem] = for(
     perusopetusBase <- suoritus("perusopetus");
-    jaaLuokalleTiedot <- jaaLuokalleLisaTiedot
+    jaaLuokalleTiedot <- jaaLuokalleLisaTiedot(LocalDate.parse(paiva, suomalainenPaivays))
 
   ) yield perusopetusBase.copy(child = perusopetusBase.child ++ jaaLuokalleTiedot)
+
 
   val keskeyttanytLisatiedot =  DataGen.always(
     <perusopetus>
