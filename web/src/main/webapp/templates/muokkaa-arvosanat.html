@@ -19,41 +19,41 @@
     <tr class="oddRow">
         <td>
             <select ng-model="korotusRivi.aine" ng-options="k.aine as k.text for k in korotusAineet"
-                    class="form-control input-sm smallInline"></select>
+                    class="form-control input-sm"></select>
         </td>
         <td>
             <input type="text" ng-disabled="info.delete" ng-model="korotusRivi.myonnetty"
                    title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)" datepicker-popup="{{format}}"
                    datepicker-options="dateOptions" datepicker-append-to-body="true" is-open="korotusOpen"
                    ng-click="korotusOpen = true" show-button-bar="false"
-                   class="form-control input-sm datepicker smallInline"/>
+                   class="form-control input-sm datepicker"/>
         </td>
         <td>
             <select ng-show="korotusRivi.aine == 'AI'" ng-model="korotusRivi.lisatieto"
                     ng-options="k.value as k.text for k in aidinkieli"
-                    class="form-control input-sm smallInline"></select>
+                    class="form-control input-sm"></select>
             <select ng-show="korotusRivi.hasKielisyys" ng-model="korotusRivi.lisatieto"
                     ng-options="k.value as k.text for k in kielet"
-                    class="form-control input-sm smallInline"></select>
+                    class="form-control input-sm"></select>
         </td>
         <td><span ng-repeat="pakollinen in korotusRivi.pakolliset">
       <select ng-model="pakollinen.arvio.arvosana" required="required"
-              ng-options="a.value as a.text for a in arvosanat" class="form-control smallInline"></select></span>
+              ng-options="a.value as a.text for a in arvosanat" class="form-control"></select></span>
         </td>
         <td style="white-space: nowrap;">
             <select ng-show="korotusRivi.valinnaiset[0]" ng-model="korotusRivi.valinnaiset[0].arvio.arvosana"
                     required="required" ng-options="a.value as a.text for a in arvosanat"
-                    class="form-control smallInline"></select>
+                    class="form-control"></select>
         </td>
         <td style="white-space: nowrap;">
             <select ng-show="korotusRivi.valinnaiset[1]" ng-model="korotusRivi.valinnaiset[1].arvio.arvosana"
                     required="required" ng-options="a.value as a.text for a in arvosanat"
-                    class="form-control smallInline"></select>
+                    class="form-control"></select>
         </td>
         <td style="white-space: nowrap;">
             <select ng-show="korotusRivi.valinnaiset[2]" ng-model="korotusRivi.valinnaiset[2].arvio.arvosana"
                     required="required" ng-options="a.value as a.text for a in arvosanat"
-                    class="form-control smallInline"></select>
+                    class="form-control"></select>
         </td>
     </tr>
     </tbody>
