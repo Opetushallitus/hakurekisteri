@@ -30,13 +30,20 @@ app.factory "MuokkaaTiedot", [
         getKoodistoAsOptionArray $http, "yksilollistaminen", "fi", $scope.yksilollistamiset, "koodiArvo", true
         getKoodistoAsOptionArray $http, "suorituksentila", "fi", $scope.tilat, "koodiArvo"
 
-        LokalisointiService.loadMessages fetchKomos
+        messageLoaded = $q.defer()
+        LokalisointiService.loadMessages ->
+          messageLoaded.resolve()
         updateMurupolku()
         getMyRoles()
 
         fetchHenkilotiedot()
         fetchLuokkatiedot()
-        fetchSuoritukset()
+        $q.all([fetchKomos(), messageLoaded, fetchSuoritukset()]).then( (arr) ->
+          console.log arr
+          loadMenuTexts()
+          $scope.henkilo.suoritukset = arr[2]
+        )
+
         fetchOpiskeluoikeudet()
         initDatepicker()
 
@@ -91,6 +98,7 @@ app.factory "MuokkaaTiedot", [
           $log.error "cannot connect CAS"
 
       fetchKomos = ->
+        komosLoaded = $q.defer()
         $http.get("rest/v1/komo", { cache: true }).success((data) ->
           $scope.komo =
             ulkomainen: data.ulkomainenkorvaavaKomoOid
@@ -104,9 +112,10 @@ app.factory "MuokkaaTiedot", [
             ammatillinen: data.ammatillinenKomoOid
             lukio: data.lukioKomoOid
           $scope.ylioppilastutkintolautakunta = data.ylioppilastutkintolautakunta
-          loadMenuTexts()
-        ).error ->
-          $log.error "cannot get komos"
+          komosLoaded.resolve()
+        ).error(->komosLoaded.reject("cannot get komos"))
+        return komosLoaded
+
 
       fetchHenkilotiedot = ->
         $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(henkiloOid), { cache: false }).success((henkilo) ->
@@ -128,15 +137,15 @@ app.factory "MuokkaaTiedot", [
             messageKey: "suoritusrekisteri.muokkaa.luokkatietojenhakeminen"
 
       fetchSuoritukset = ->
-        Suoritukset.query { henkilo: henkiloOid }, ((suoritukset) ->
+        return Suoritukset.query({ henkilo: henkiloOid }, ((suoritukset) ->
           suoritukset.sort (a, b) -> sortByFinDateDesc a.valmistuminen, b.valmistuminen
-          $scope.henkilo.suoritukset = suoritukset
+          return $scope.henkilo.suoritukset = suoritukset
         ), ->
           MessageService.addMessage {
             type: "danger"
             message: "Suoritustietojen hakeminen ei onnistunut. Yritä uudelleen?"
             messageKey: "suoritusrekisteri.muokkaa.suoritustietojenhakeminen"
-          }
+          }).$promise
 
       fetchOpiskeluoikeudet = ->
         Opiskeluoikeudet.query { henkilo: henkiloOid }, (opiskeluoikeudet) ->
