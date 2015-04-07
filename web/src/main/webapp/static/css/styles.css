@@ -50,10 +50,6 @@ body #raamit-header .header-content {
     display: none;
 }
 
-.sticky-scroller {
-    position: fixed;
-}
-
 #result-filter {
     width: 18em;
 }

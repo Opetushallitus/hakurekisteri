@@ -8,7 +8,7 @@
 </script>
 
 <aside class="row">
-    <form id="filterForm" style="margin-left: 15px;" ng-submit="search()" class="well form-horizontal sticky-scroller">
+    <form id="filterForm" ng-submit="search()" class="well form-horizontal col-sm-3">
         <div class="form-group">
             <div class="col-sm-12">
                 <input id="henkiloTerm" ng-model="henkiloTerm" type="search" placeholder="Hetu tai henkilönumero"
@@ -78,7 +78,7 @@
             </div>
         </div>
     </form>
-    <div class="col-sm-9 col-sm-offset-3">
+    <div class="col-sm-9">
         <messages id="status-messages"></messages>
         <div ng-if="valittuHenkiloOid">
             <div ng-include="'templates/muokkaa-tiedot.html'"></div>
