@@ -10,40 +10,40 @@
         <th></th>
         </thead>
         <tbody>
-        <tr ng-repeat="k in koetaulukko">
+        <tr ng-repeat="k in koetaulukko" class="test-aineRivi">
             <td>
                 <select ng-show="k.editable" ng-model="k.arvosana.lisatieto" required="required"
                         ng-options="a.value as a.text for a in aineet" ng-disabled="k.arvosana.delete"
                         class="form-control"></select>
-                <span ng-hide="k.editable">{{getText(k.arvosana.lisatieto, aineet) || k.arvosana.lisatieto}}</span>
+                <span ng-hide="k.editable" class="test-yoTxt">{{getText(k.arvosana.lisatieto, aineet) || k.arvosana.lisatieto}}</span>
             </td>
             <td>
                 <select ng-show="k.editable" ng-model="k.arvosana.aine" required="required"
                         ng-options="t.value as t.text for t in getTasot(k.arvosana.lisatieto)" ng-disabled="k.arvosana.delete"
                         class="form-control"></select>
-                <span ng-hide="k.editable">{{getText(k.arvosana.aine, getTasot(k.arvosana.lisatieto)) || k.arvosana.aine}}</span>
+                <span ng-hide="k.editable" class="test-yoTxt">{{getText(k.arvosana.aine, getTasot(k.arvosana.lisatieto)) || k.arvosana.aine}}</span>
             </td>
             <td>
                 <select ng-show="k.editable" ng-model="k.arvosana.arvio.arvosana" required="required"
                         ng-options="a.value as a.text for a in arvosanat" ng-disabled="k.arvosana.delete"
                         class="form-control"></select>
-                <span ng-hide="k.editable">{{k.arvosana.arvion.arvosana}}</span>
+                <span ng-hide="k.editable" class="test-yoTxt">{{k.arvosana.arvion.arvosana}}</span>
             </td>
             <td>
                 <input ng-show="k.editable" type="number" step="1" min="0" max="999" maxlength="3" ng-model="k.arvosana.arvio.pisteet"
                        ng-disabled="k.arvosana.delete" class="form-control"/>
-                <span ng-hide="k.editable">{{k.arvosana.pisteet}}</span>
+                <span ng-hide="k.editable" class="test-yoTxt">{{k.arvosana.pisteet}}</span>
             </td>
             <td>
                 <select ng-show="k.editable" ng-model="k.arvosana.myonnetty" required="required"
                         ng-options="t.value as t.text for t in tutkintokerrat" ng-disabled="k.arvosana.delete"
                         class="form-control"></select>
-                <span ng-hide="k.editable">{{k.arvosana.myonnetty}}</span>
+                <span ng-hide="k.editable" class="test-yoTxt">{{k.arvosana.myonnetty}}</span>
             </td>
             <td>
                 <input ng-show="k.editable" type="checkbox" ng-model="k.arvosana.valinnainen" ng-disabled="k.arvosana.delete"
                        class="form-control" ng-true-value="false" ng-false-value="true"/>
-                <span ng-hide="k.editable">{{k.arvosana.valinnainen}}</span>
+                <span ng-hide="k.editable" class="test-yoTxt">{{k.arvosana.valinnainen}}</span>
             </td>
             <td>
                 <button ng-show="k.editable" type="button" ng-click="k.arvosana.delete = true" ng-disabled="k.arvosana.delete"
@@ -53,9 +53,9 @@
                 </button>
             </td>
         </tr>
-        <tr>
+        <tr ng-show="info.editable">
             <td colspan="7">
-                <button type="button" ng-click="addKoe()" class="btn btn-default btn-xs">
+                <button type="button" ng-click="addKoe()" class="btn btn-default btn-xs test-addKoe">
                     <span oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.lisaakoe">Lisää koe</span>
                     <span class="glyphicon glyphicon-plus"></span></button>
             </td>

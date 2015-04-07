@@ -200,9 +200,12 @@ function mockPostReturnData(triggerFn, urlPattern) {
     )
 }
 
-function assertText(selector, val) {
-    chai.assert(typeof selector().val() !== 'undefined', "element "  + selector().selector + " should be defined, is undefined")
-    expect(selector().text().trim()).to.equal(val, selector().selector)
+function assertText() {
+    var args = Array.prototype.slice.call(arguments);
+    var selector = args.shift()
+    chai.assert(typeof selector().text() !== 'undefined', "element "  + selector().selector + " should be defined, is undefined")
+    var trimmedTexts = jQuery.makeArray(selector().map(function(i,e){return jQuery(e).text().trim()}))
+    expect(trimmedTexts).to.deep.equal(args, selector().selector)
 }
 
 function assertValue(selector, val) {

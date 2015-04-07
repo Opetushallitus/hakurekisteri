@@ -14,6 +14,7 @@ app.controller "MuokkaaSuoritus", [
         $scope.info.showArvosanat = false
         getKoulutusNimi $http, suoritus.komo, (koulutusNimi) ->
           $scope.info.koulutus = koulutusNimi
+      else if $scope.suoritus.source == $scope.ylioppilastutkintolautakunta
       else
         $scope.info.editable = true
 

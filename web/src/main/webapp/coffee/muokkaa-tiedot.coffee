@@ -39,7 +39,6 @@ app.factory "MuokkaaTiedot", [
         fetchHenkilotiedot()
         fetchLuokkatiedot()
         $q.all([fetchKomos(), messageLoaded, fetchSuoritukset()]).then( (arr) ->
-          console.log arr
           loadMenuTexts()
           $scope.henkilo.suoritukset = arr[2]
         )
