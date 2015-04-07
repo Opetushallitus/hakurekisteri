@@ -57,7 +57,7 @@
             </div>
         </div>
         <div id="table-scroller" class="form-group">
-            <div class="col-sm-12"  id="table-settings">
+            <div class="col-sm-12" id="table-settings">
                 <div ng-if="loading">
                     <div class="loading-td loading-large"></div>
                 </div>
@@ -69,7 +69,7 @@
                             ng-click="valitseHenkilo(row.henkiloOid)">
                             <td>{{row.henkilo}}</td>
                             <td><span ng-repeat="o in row.opiskelijat">{{o.luokka}}</span></td>
-                            <td ng-if="!row.hasArvosana"><span ng-repeat="o in row.opiskelijat">puuttuu</span></td>
+                            <td ng-if="!row.hasArvosana"><span ng-repeat="o in row.opiskelijat">Arvosanoissa virheitä</span></td>
                             <td ng-if="row.hasArvosana"><span ng-repeat="o in row.opiskelijat"></span></td>
                         </tr>
                         </tbody>
