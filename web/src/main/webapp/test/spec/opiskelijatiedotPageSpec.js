@@ -267,7 +267,7 @@
                     myonnetty = "(" + myonnetty + ")"
                 }
                 var aineRivit = findAineRivi(aineTxt, myonnetty, lisatieto)
-                expect(aineRivit.length).to.equal(1, "found " + aineRivit.length + " matching aineRivi when there was supposed to be 1: " + aineTxt + ": " + myonnetty)
+                expect(aineRivit.length).to.equal(1, "found " + aineRivit.length + " matching aineRivi when there was supposed to be 1: " + aineTxt + ": " + myonnetty + ": " + lisatieto)
                 var aineRivi = jQuery(aineRivit[0])
                 var p = jQuery.makeArray(jQuery(aineRivi).find(opiskelijatiedot.arvosanaPakollinenArvosana().selector).map(txtArr))
                 var v = jQuery.makeArray(jQuery(aineRivi).find(opiskelijatiedot.arvosanaValinnainenArvosana().selector).filter(nonEmpty).map(txtArr))
@@ -314,9 +314,9 @@
                         assertText(opiskelijatiedot.opiskeluoikeusLoppuPaiva, "01.01.2014")
                         assertText(opiskelijatiedot.opiskeluoikeusMyontaja, "06345 Pikkaralan ala-aste")
                         assertText(opiskelijatiedot.opiskeluoikeusKoulutus, "Ensihoitaja (AMK)")
-                        assertArvosanat(38, 19, 15, 17, 1)
+                        assertArvosanat(37, 19, 14, 17, 1)
                         assertArvosanaRivi("Äidinkieli ja kirjallisuus", "", "Kieli puuttuu!!", ["10"], [])
-                        // assertArvosanaRivi("A1-kieli", "", "englanti", ["9"],[])
+                        assertArvosanaRivi("A1-kieli", "", "englanti", ["9"],[])
                         assertArvosanaRivi("Matematiikka", "", "", ["6"], [])
                         assertArvosanaRivi("Matematiikka", "04.06.2015", "", ["10"], ["9"])
                     }
@@ -355,7 +355,7 @@
                         assertValue(opiskelijatiedot.suoritusKieli, "156")
                         assertValue(opiskelijatiedot.suoritusValmistuminen, "3.6.2015")
                         assertValue(opiskelijatiedot.suoritusTila, "0")
-                        assertArvosanat(39, 20, 13, 15, 1)
+                        assertArvosanat(38, 20, 12, 15, 1)
                         assertArvosanaRivi("Äidinkieli ja kirjallisuus", "", "Kieli puuttuu!!", ["10"], [])
                         // assertArvosanaRivi("A1-kieli", "", "englanti", ["9"],[])
                         assertArvosanaRivi("Matematiikka", "", "", ["6"], [])

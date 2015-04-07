@@ -109,7 +109,8 @@ app.controller "MuokkaaArvosanat", [
         else
           delete arvosana.lisatieto
         if aineRivi.myonnetty
-          arvosana.myonnetty = $scope.formatDateWithZeroPaddedNumbers(aineRivi.myonnetty)
+          if arvosana.myonnetty
+            arvosana.myonnetty = $scope.formatDateWithZeroPaddedNumbers(aineRivi.myonnetty)
         else
           delete arvosana.myonnetty
       else
@@ -199,14 +200,14 @@ app.controller "MuokkaaArvosanat", [
         for oppiaine in koodistoOppiaineLista
           aine = oppiaine.koodi.koodiArvo
           aineenArvosanat = arvosanat.filter (a) -> a.aine is aine
-          arvosanatByMyonnettyLisatieto = collectToMap(aineenArvosanat, ((a) -> "#{a.myonnetty};#{a.lisatieto}"))
+          arvosanatByMyonnettyLisatieto = collectToMap(aineenArvosanat, ((a) -> "#{a.myonnetty || suoritus.valmistuminen};#{a.lisatieto}"))
           rivit = []
           suoritusPvm = false
           for key of arvosanatByMyonnettyLisatieto
             list = arvosanatByMyonnettyLisatieto[key]
             first = list[0]
-            rivit.push makeAineRivi(aine, list, first.myonnetty, first.lisatieto)
-            if first.myonnetty == $scope.suoritus.valmistuminen
+            rivit.push makeAineRivi(aine, list, first.myonnetty || $scope.suoritus.valmistuminen, first.lisatieto)
+            if !first.myonnetty or first.myonnetty == $scope.suoritus.valmistuminen
               suoritusPvm = true
           if !suoritusPvm
             taulukko.splice 0,0, makeAineRivi(aine, [], $scope.suoritus.valmistuminen, null)
