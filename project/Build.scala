@@ -150,7 +150,7 @@ object HakurekisteriBuild extends Build {
       parallelExecution := false))
   )
 
-  lazy val root = project.in(file(".")).aggregate(core, web)
+  lazy val hakurekisteri = project.in(file(".")).aggregate(core, web)
 
   lazy val web = {
     Project(
