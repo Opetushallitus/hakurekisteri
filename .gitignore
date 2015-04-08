@@ -84,3 +84,4 @@ buildversion.txt
 
 # excel temp files
 *.xls#
+.jvmopts
