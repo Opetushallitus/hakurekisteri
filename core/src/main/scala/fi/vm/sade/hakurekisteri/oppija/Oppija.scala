@@ -22,4 +22,6 @@ case class Oppija(oppijanumero: String, opiskelu: Seq[Opiskelija], suoritukset: 
 
 case class Todistus(suoritus: Suoritus, arvosanat: Seq[Arvosana])
 
+case class InvalidTodistus(todistus: Todistus, errors: Seq[String]) extends Todistus(todistus.suoritus, todistus.arvosanat)
+
 

@@ -4,7 +4,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport, Re
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import org.scalatra.swagger.{SwaggerEngine, Swagger}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.oppija.{Todistus, Oppija, OppijaFetcher}
+import fi.vm.sade.hakurekisteri.oppija.{InvalidTodistus, Todistus, Oppija, OppijaFetcher}
 import fi.vm.sade.hakurekisteri.web.oppija.OppijaSwaggerApi
 import org.scalatra.json.JacksonJsonSupport
 import fi.vm.sade.hakurekisteri.web.rest.support._
@@ -98,11 +98,16 @@ class RekisteritiedotResource(val rekisterit: Registers)
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
-      private val tiedotFuture = fetchTiedot(params("oid")).map {oppija => new Oppija(oppija.oppijanumero, oppija.opiskelu, oppija.suoritukset, oppija.opiskeluoikeudet, oppija.ensikertalainen) with TodistusFailures {
-        val fails = oppija.suoritukset.map((s) =>  s -> valid.validateData(s)).collect{
-          case (s, Failure(failures)) => s.suoritus ->  failures
-        }.toMap
-      }}
+
+      private val tiedotFuture = for (
+        oppija <- fetchTiedot(params("oid"))
+      ) yield for (
+          todistus <- oppija.suoritukset
+        ) yield {
+          valid.validateData(todistus).leftMap{(errors) =>
+            InvalidTodistus(todistus, errors.list)
+          }.fold(identity,identity)
+        }
       logQuery(q, t0, tiedotFuture)
 
       val is = tiedotFuture
