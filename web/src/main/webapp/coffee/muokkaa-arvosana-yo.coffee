@@ -104,11 +104,6 @@ app.controller "MuokkaaArvosanatYo", [
     $scope.addDataScope($scope)
 
     $scope.tutkintokerrat = tutkintokerrat()
-    $scope.getText = (value, values) ->
-      for v in values
-        if v.value is value
-          return v.text
-      return value
 
     aineet =
       SA: [

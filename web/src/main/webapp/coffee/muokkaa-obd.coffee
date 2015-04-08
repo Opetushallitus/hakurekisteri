@@ -39,7 +39,10 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
       stickyOrigTop = undefined
       $(window).bind "scroll", ->
         if !stickyOrigTop
-          stickyOrigTop = stickyElem.position().top
+          if stickyElem.position()
+            stickyOrigTop = stickyElem.position().top
+          else
+            stickyOrigTop = 0
         offset = stickyOrigTop - this.pageYOffset
         if offset < 0 then offset = 0
         stickyElem.css("top", offset + "px")

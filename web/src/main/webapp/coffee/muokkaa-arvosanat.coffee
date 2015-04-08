@@ -117,20 +117,18 @@ app.controller "MuokkaaArvosanat", [
         delete arvosana.lisatieto
         delete arvosana.myonnetty
 
-    resolveText = (list, value) ->
-      for i in list
-        if i.value == value
-          return i.text
-      value
+    resolveLanguageFromList = (langId, isAI) ->
+      list = if isAI
+        $scope.aidinkieli
+      else
+        $scope.kielet
+      $scope.resolveValueFromOptionArray(langId, list)
 
     updateAineRivi = (aineRivi, addNew) ->
       aineRivi.aineNimi = resolveAineNimi(aineRivi.aine)
       aineRivi.hasKielisyys = hasKielisyys(aineRivi.aine)
       if aineRivi.hasKielisyys || aineRivi.aine == 'AI'
-        aineRivi.lisatietoText = if aineRivi.aine == 'AI'
-            resolveText($scope.aidinkieli, aineRivi.lisatieto)
-          else
-            resolveText($scope.kielet, aineRivi.lisatieto)
+        aineRivi.lisatietoText = resolveLanguageFromList(aineRivi.lisatieto, aineRivi.aine == 'AI')
       else
         delete aineRivi.lisatieto
         delete aineRivi.lisatietoText

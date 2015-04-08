@@ -132,7 +132,7 @@ function openPage(path, predicate) {
         }
     }
     return function () {
-        var newTestFrame = $('<iframe/>').attr({src: path, width: 1024, height: 800, id: "testframe"});
+        var newTestFrame = $('<iframe/>').attr({src: path, width: 1200, height: 800, id: "testframe"});
         $("#testframe").replaceWith(newTestFrame);
         return wait.until(function () {
             testFrame().mocksOn = true

@@ -1,7 +1,4 @@
 <div class="row test-suoritus">
-
-    {{info.editable}}
-
     <div class="form-group col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</strong>
         <input ng-show="suoritus.vahvistettu && info.editable && suoritus.komo !== komo.ylioppilastutkinto" type="text"
                title="{{info.organisaatio.nimi.fi || info.organisaatio.nimi.sv || info.organisaatio.nimi.en}}"
@@ -10,7 +7,7 @@
                typeahead-on-select="info.organisaatio = $item" typeahead-loading="myontajaLoading"
                typeahead-wait-ms="500" class="form-control input-sm {{myontajaLoading ? 'input-loading' : ''}} test-suoritusMyontaja"/>
         <div ng-show="!suoritus.vahvistettu">Hakijan ilmoittama</div>
-        <div class="test-suoritusMyontaja" ng-hide="info.editable">{{(info.organisaatio.oppilaitosKoodi + ' ' + (info.organisaatio.nimi.fi ||
+        <div class="test-suoritusMyontaja" ng-hide="info.editable || suoritus.komo === komo.ylioppilastutkinto">{{(info.organisaatio.oppilaitosKoodi + ' ' + (info.organisaatio.nimi.fi ||
             info.organisaatio.nimi.sv || info.organisaatio.nimi.en)) || suoritus.myontaja}}
         </div>
         <div class="test-suoritusMyontaja" ng-show="suoritus.komo === komo.ylioppilastutkinto">{{(info.organisaatio.nimi.fi ||
@@ -23,7 +20,7 @@
                 ng-change="checkYlioppilastutkinto(suoritus)" required="required"
                 class="form-control input-sm test-suoritusKoulutus"></select>
 
-        <div ng-hide="info.editable" class="test-suoritusKoulutus">{{info.koulutus || suoritus.komo}}</div>
+        <div ng-hide="info.editable" class="test-suoritusKoulutus">{{info.koulutus || resolveValueFromOptionArray(suoritus.komo,koulutukset)}}</div>
     </div>
     <div class="form-group col-sm-4"><strong
             oph-msg="suoritusrekisteri.muokkaa.yksilollistetty">Yksilöllistetty</strong>
@@ -39,7 +36,7 @@
         <select ng-show="info.editable" ng-disabled="info.delete" ng-model="suoritus.suoritusKieli" required="required"
                 ng-options="k.value as k.text for k in kielet" class="form-control input-sm test-suoritusKieli"></select>
 
-        <div ng-hide="info.editable" class="test-suoritusKieli">{{suoritus.suoritusKieli}}</div>
+        <div ng-hide="info.editable" class="test-suoritusKieli">{{resolveValueFromOptionArray(suoritus.suoritusKieli, kielet)}}</div>
     </div>
     <div class="form-group col-sm-5"><strong
             oph-msg="suoritusrekisteri.muokkaa.valmistumispaiva">Valmistumispäivä</strong>
@@ -59,7 +56,7 @@
         <select ng-show="info.editable" ng-disabled="info.delete" ng-model="suoritus.tila" required="required"
                 ng-options="t.value as t.text for t in tilat" class="form-control input-sm test-suoritusTila"></select>
 
-        <div ng-hide="info.editable" class="test-suoritusTila">{{suoritus.tila}}</div>
+        <div ng-hide="info.editable" class="test-suoritusTila">{{resolveValueFromOptionArray(suoritus.tila, tilat)}}</div>
     </div>
 </div>
 <div class="row" ng-if="info.showArvosanat">

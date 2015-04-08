@@ -20,7 +20,7 @@
         })
 
         describe("Organisaatiohaku", function () {
-            it('Voi hakea oppilaitoksen perusteella - test-dsl', seqDone(
+            it('Voi hakea oppilaitoksen perusteella', seqDone(
                 wait.forAngular,
                 function () {
                     httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
@@ -393,9 +393,9 @@
                         assertText(opiskelijatiedot.suoritusMyontaja, '06345 Pikkaralan ala-aste')
                         assertText(opiskelijatiedot.suoritusKoulutus, "Ensihoitaja (AMK)")
                         assertText(opiskelijatiedot.suoritusYksilollistetty, "Ei")
-                        assertText(opiskelijatiedot.suoritusKieli, "FI")
+                        assertText(opiskelijatiedot.suoritusKieli, "suomi")
                         assertText(opiskelijatiedot.suoritusValmistuminen, "3.6.2015")
-                        assertText(opiskelijatiedot.suoritusTila, "KESKEN")
+                        assertText(opiskelijatiedot.suoritusTila, "Suoritus kesken")
                         assertArvosanat(0, 0, 0, 0, 0)
                     }
                 ))
@@ -423,20 +423,22 @@
                         expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
                         expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
                         assertText(opiskelijatiedot.hetu, "123456-789")
-                        assertText(opiskelijatiedot.suoritusMyontaja, 'Ylioppilastutkintolautakunta', 'Ylioppilastutkintolautakunta')
-                        assertText(opiskelijatiedot.suoritusKoulutus, "1.2.246.562.5.2013061010184237348007")
+                        assertText(opiskelijatiedot.suoritusMyontaja, 'Ylioppilastutkintolautakunta')
+                        assertText(opiskelijatiedot.suoritusKoulutus, "Ylioppilastutkinto")
                         assertText(opiskelijatiedot.suoritusYksilollistetty, "Ei")
-                        assertText(opiskelijatiedot.suoritusKieli, "FI")
+                        assertText(opiskelijatiedot.suoritusKieli, "suomi")
                         assertText(opiskelijatiedot.suoritusValmistuminen, "1.6.2013")
-                        assertText(opiskelijatiedot.suoritusTila, "VALMIS")
+                        assertText(opiskelijatiedot.suoritusTila, "Suoritus valmis")
                         expect(opiskelijatiedot.arvosanaAineRivi().length).to.equal(1)
-                        assertText(opiskelijatiedot.yoTxt, 'Biologia', 'Ainemuotoinen reaali', '01.06.2013', 'false' )
+                        assertText(opiskelijatiedot.yoTxt, 'Biologia',
+                            'Ainemuotoinen reaali',
+                            'M',
+                            '4',
+                            '01.06.2013',
+                            'false' )
                         expect(opiskelijatiedot.yoArvosanaAddKoe().is(':visible')).to.equal(false)
                         expect(opiskelijatiedot.suoritusPoista().is(':visible')).to.equal(false)
                     }
-                ))
-                it('!! Käyttöliittymän kautta syötettyä YO-suoritusta ja arvosanoja voi muokata vain 1.1.1990 ja aiemmille päivämäärille', seqDone(
-
                 ))
             })
             describe("Vahvistamattomat", function () {
@@ -572,7 +574,40 @@
                     },
                     saveDisabled()
                 ))
-                it("!! YO tutkinnon suoritustiedot ja arvosanat talletetaan vain jos muuttuneita arvoja", seqDone(
+                it("!! YO-suoritusta ja YOarvosanoja voi lisätä vain 1.1.1990 ja aiemmille päivämäärille", seqDone(
+                    wait.forAngular,
+                    function () {
+                        httpFixtures().henkiloPalveluService.aarne()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                        httpFixtures().get(serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619"), [restData.suoritusRekisteri.suoritukset.aarneYo])
+                        httpFixtures().get(serviceUrls.arvosanat.suoritus(restData.suoritusRekisteri.suoritukset.aarneYo.id), [])
+                        httpFixtures().get(serviceUrls.organisaatio(restData.organisaatioService.ytl.oid), restData.organisaatioService.ytl)
+                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                        httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
+                        httpFixtures().komoLocal.komoTiedot()
+                        koodistoFixtures()
+                    },
+                    input(opiskelijatiedot.henkiloSearch, '123456-789'),
+                    click(opiskelijatiedot.searchButton),
+                    wait.forAngular,
+                    function () {
+                        expect(opiskelijatiedot.resultsTable().length).to.equal(1)
+                        expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
+                        expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
+                        expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
+                        assertText(opiskelijatiedot.hetu, "123456-789")
+                        assertText(opiskelijatiedot.suoritusMyontaja, 'Ylioppilastutkintolautakunta')
+                        assertValue(opiskelijatiedot.suoritusKoulutus, "7")
+                        assertValue(opiskelijatiedot.suoritusYksilollistetty, "0")
+                        assertValue(opiskelijatiedot.suoritusKieli, "156")
+                        assertValue(opiskelijatiedot.suoritusValmistuminen, "28.5.1982")
+                        assertValue(opiskelijatiedot.suoritusTila, "2")
+                        expect(opiskelijatiedot.arvosanaAineRivi().length).to.equal(0)
+                        expect(opiskelijatiedot.yoArvosanaAddKoe().is(':visible')).to.equal(true)
+                        expect(opiskelijatiedot.suoritusPoista().is(':visible')).to.equal(true)
+                    }
                 ))
                 it("!! Suorituksen poistaminen", seqDone(
 

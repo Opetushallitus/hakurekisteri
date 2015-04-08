@@ -6,17 +6,24 @@ app.controller "MuokkaaSuoritus", [
   ($scope, $http, $q, MessageService) ->
     enrichSuoritus = (suoritus) ->
       $scope.info.showArvosanat = true
+      $scope.info.editable = false
       if suoritus.vahvistettu and suoritus.myontaja
         getOrganisaatio $http, suoritus.myontaja, (organisaatio) ->
           $scope.info.oppilaitos = organisaatio.oppilaitosKoodi
           $scope.info.organisaatio = organisaatio
+
       if suoritus.komo and suoritus.komo.match(/^koulutus_\d*$/)
         $scope.info.showArvosanat = false
         getKoulutusNimi $http, suoritus.komo, (koulutusNimi) ->
           $scope.info.koulutus = koulutusNimi
-      else if $scope.suoritus.source == $scope.ylioppilastutkintolautakunta
-      else
+      else if $scope.suoritus.source != $scope.ylioppilastutkintolautakunta
         $scope.info.editable = true
+
+    $scope.resolveValueFromOptionArray = (value, list) ->
+      for i in list
+        if i.value == value
+          return i.text
+      value
 
     $scope.validateData = (updateOnly) ->
       $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel($scope.info, $scope.suoritus, !updateOnly)

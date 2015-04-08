@@ -1,4 +1,5 @@
-<form ng-submit="save()"><span oph-msg="suoritusrekisteri.muokkaa.yoarvosana.ohje">Alla voit lisätä ennen vuotta 1990 myönnettyjä YO-arvosanoja.</span>
+<form ng-submit="save()">
+    <span ng-show="info.editable" oph-msg="suoritusrekisteri.muokkaa.yoarvosana.ohje">Alla voit lisätä ennen vuotta 1990 myönnettyjä YO-arvosanoja.</span>
     <table class="table table-condensed table-striped">
         <thead>
         <th oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.aine">Aine</th>
@@ -15,24 +16,24 @@
                 <select ng-show="k.editable" ng-model="k.arvosana.lisatieto" required="required"
                         ng-options="a.value as a.text for a in aineet" ng-disabled="k.arvosana.delete"
                         class="form-control"></select>
-                <span ng-hide="k.editable" class="test-yoTxt">{{getText(k.arvosana.lisatieto, aineet) || k.arvosana.lisatieto}}</span>
+                <span ng-hide="k.editable" class="test-yoTxt">{{resolveValueFromOptionArray(k.arvosana.lisatieto, aineet) || k.arvosana.lisatieto}}</span>
             </td>
             <td>
                 <select ng-show="k.editable" ng-model="k.arvosana.aine" required="required"
                         ng-options="t.value as t.text for t in getTasot(k.arvosana.lisatieto)" ng-disabled="k.arvosana.delete"
                         class="form-control"></select>
-                <span ng-hide="k.editable" class="test-yoTxt">{{getText(k.arvosana.aine, getTasot(k.arvosana.lisatieto)) || k.arvosana.aine}}</span>
+                <span ng-hide="k.editable" class="test-yoTxt">{{resolveValueFromOptionArray(k.arvosana.aine, getTasot(k.arvosana.lisatieto)) || k.arvosana.aine}}</span>
             </td>
             <td>
                 <select ng-show="k.editable" ng-model="k.arvosana.arvio.arvosana" required="required"
                         ng-options="a.value as a.text for a in arvosanat" ng-disabled="k.arvosana.delete"
                         class="form-control"></select>
-                <span ng-hide="k.editable" class="test-yoTxt">{{k.arvosana.arvion.arvosana}}</span>
+                <span ng-hide="k.editable" class="test-yoTxt">{{k.arvosana.arvio.arvosana}}</span>
             </td>
             <td>
                 <input ng-show="k.editable" type="number" step="1" min="0" max="999" maxlength="3" ng-model="k.arvosana.arvio.pisteet"
                        ng-disabled="k.arvosana.delete" class="form-control"/>
-                <span ng-hide="k.editable" class="test-yoTxt">{{k.arvosana.pisteet}}</span>
+                <span ng-hide="k.editable" class="test-yoTxt">{{k.arvosana.arvio.pisteet}}</span>
             </td>
             <td>
                 <select ng-show="k.editable" ng-model="k.arvosana.myonnetty" required="required"
