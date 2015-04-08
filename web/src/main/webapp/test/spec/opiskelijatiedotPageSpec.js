@@ -555,6 +555,21 @@
                             id: "4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9"
                         })
                     },
+                    saveDisabled(),
+                    click(opiskelijatiedot.editArvosanat),
+                    selectInput(opiskelijatiedot.arvosana(1,0), "5"),
+                    mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/arvosanat\/dc54970c-9cd1-4e8f-8d97-a37af3e99c10$/),
+                    function(savedData) {
+                        expect(JSON.parse(savedData)).to.deep.equal({
+                            id: "dc54970c-9cd1-4e8f-8d97-a37af3e99c10",
+                            suoritus: "4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9",
+                            arvio: {arvosana: "8", asteikko: "4-10"},
+                            aine: "A1",
+                            lisatieto: "EN",
+                            valinnainen: false,
+                            source: "Test"
+                        })
+                    },
                     saveDisabled()
                 ))
                 it("!! YO tutkinnon suoritustiedot ja arvosanat talletetaan vain jos muuttuneita arvoja", seqDone(

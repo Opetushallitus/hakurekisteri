@@ -183,6 +183,16 @@ function typeaheadInput(inputFn, text, selectItemFn) {
     )
 }
 
+function selectInput(inputFn, value) {
+    return seq(
+        function() {
+            dslDebug("select input:", inputFn().selector, "value:", value)
+        },
+        visible(inputFn),
+        function() {return inputFn().val(value).change()}
+    )
+}
+
 // Promise returning POST data triggered by triggerFn. urlPattern needs to match POST url
 function mockPostReturnData(triggerFn, urlPattern) {
     var deferred = Q.defer();

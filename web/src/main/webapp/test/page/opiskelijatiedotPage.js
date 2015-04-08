@@ -66,5 +66,9 @@ opiskelijatiedot = initSelectors({
     arvosanaValinnainenArvosana: ".test-arvosanaValinnainenArvosana:visible",
     yoArvosanaAddKoe: ".test-addKoe",
     suoritusPoista: ".test-suoritusPoista",
-    yoTxt: ".test-yoTxt:visible"
+    yoTxt: ".test-yoTxt:visible",
+    editArvosanat: ".test-editArvosanat",
+    arvosana: function(rowIndex, selectIndex) {
+        return ".test-aineRivi:eq(" + rowIndex + ") select.test-arvosanaSelect:eq(" + selectIndex + ")"
+    }
 })
