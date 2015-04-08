@@ -19,6 +19,14 @@ app.controller "MuokkaaSuoritus", [
       else if $scope.suoritus.source != $scope.ylioppilastutkintolautakunta
         $scope.info.editable = true
 
+    $scope.checkYlioppilastutkinto = (suoritus) ->
+      $scope.info.maxDate = null
+      if suoritus.komo is $scope.komo.ylioppilastutkinto
+        $scope.info.maxDate = '1989-12-31'
+        suoritus.myontaja = $scope.ylioppilastutkintolautakunta
+        getOrganisaatio $http, $scope.ylioppilastutkintolautakunta, (org) ->
+          $scope.info.organisaatio = org
+
     $scope.resolveValueFromOptionArray = (value, list) ->
       for i in list
         if i.value == value
@@ -96,6 +104,7 @@ app.controller "MuokkaaSuoritus", [
     $scope.info = {}
     $scope.info.valmistuminen = $scope.formatDateNoZeroPaddedNumbers($scope.suoritus.valmistuminen)
     enrichSuoritus($scope.suoritus)
+    $scope.checkYlioppilastutkinto($scope.suoritus)
     $scope.addDataScope($scope)
     $scope.$watch "info", $scope.enableSave, true
     $scope.$watch "suoritus", $scope.enableSave, true

@@ -17,7 +17,7 @@ var restData = {
                 "komo": "1.2.246.562.5.2013061010184237348007",
                 "myontaja": "1.2.246.562.10.43628088406",
                 "tila": "VALMIS",
-                "valmistuminen": "28.05.1982",
+                "valmistuminen": "29.12.1989",
                 "yksilollistaminen": "Ei",
                 "suoritusKieli": "FI",
                 "id": "c33ab9a2-e7b4-4e8d-9447-85637c4bc09d"
@@ -36,8 +36,8 @@ var restData = {
             }
         },
         arvosanat: {
-            aarneYo: [{"id":"3ba4b93c-87e8-4e6c-8b2d-704ae88a89af","suoritus":"64d26b8c-e2c8-4b13-9ac9-51c85e288bc0","arvio":{"arvosana":"M","asteikko":"YO","pisteet":4},"aine":"AINEREAALI","source":"1.2.246.562.24.72453542949","valinnainen":false,"lisatieto":"BI","myonnetty":"21.12.1989"}],
-            aarneYoYTL: [{"id":"3ba4b93c-87e8-4e6c-8b2d-704ae88a89af","suoritus":"64d26b8c-e2c8-4b13-9ac9-51c85e288bc0","arvio":{"arvosana":"M","asteikko":"YO","pisteet":4},"aine":"AINEREAALI","source":"1.2.246.562.24.72453542949","valinnainen":false,"lisatieto":"BI","myonnetty":"01.06.2013"}]
+            aarneYo: [{"id":"3ba4b93c-87e8-4e6c-8b2d-704ae88a89af","suoritus":"64d26b8c-e2c8-4b13-9ac9-51c85e288bc0","arvio":{"arvosana":"C","asteikko":"YO","pisteet":4},"aine":"AINEREAALI","source":"1.2.246.562.24.72453542949","valinnainen":false,"lisatieto":"UO","myonnetty":"21.12.1988"}],
+            aarneYoYTL: [{"id":"3ba4b93c-87e8-4e6c-8b2d-704ae88a89af","suoritus":"64d26b8c-e2c8-4b13-9ac9-51c85e288bc0","arvio":{"arvosana":"C","asteikko":"YO","pisteet":4},"aine":"AINEREAALI","source":"1.2.246.562.24.72453542949","valinnainen":false,"lisatieto":"UO","myonnetty":"01.06.2013"}]
         }
     },
     komo: {"yotutkintoKomoOid":"1.2.246.562.5.2013061010184237348007","perusopetusKomoOid":"1.2.246.562.13.62959769647","lisaopetusKomoOid":"1.2.246.562.5.2013112814572435044876","ammattistarttiKomoOid":"1.2.246.562.5.2013112814572438136372","valmentavaKomoOid":"1.2.246.562.5.2013112814572435755085","ammatilliseenvalmistavaKomoOid":"1.2.246.562.5.2013112814572441001730","ulkomainenkorvaavaKomoOid":"1.2.246.562.13.86722481404","lukioKomoOid":"TODO lukio komo oid","ammatillinenKomoOid":"TODO ammatillinen komo oid","lukioonvalmistavaKomoOid":"1.2.246.562.5.2013112814572429142840","ylioppilastutkintolautakunta":"1.2.246.562.10.43628088406"}

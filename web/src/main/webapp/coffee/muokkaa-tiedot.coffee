@@ -259,12 +259,6 @@ app.factory "MuokkaaTiedot", [
           if scope.hasOwnProperty("hasChanged") && scope.hasChanged()
             $scope.disableSave = false
 
-      $scope.checkYlioppilastutkinto = (suoritus) ->
-        if suoritus.komo is $scope.komo.ylioppilastutkinto
-          suoritus.myontaja = $scope.ylioppilastutkintolautakunta
-          getOrganisaatio $http, $scope.ylioppilastutkintolautakunta, (org) ->
-            suoritus.organisaatio = org
-
       $scope.addSuoritus = ->
         $scope.henkilo.suoritukset.push new Suoritukset(
           henkiloOid: henkiloOid
