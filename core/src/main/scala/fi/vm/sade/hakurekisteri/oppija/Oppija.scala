@@ -22,6 +22,12 @@ case class Oppija(oppijanumero: String, opiskelu: Seq[Opiskelija], suoritukset: 
 
 case class Todistus(suoritus: Suoritus, arvosanat: Seq[Arvosana])
 
-case class InvalidTodistus(todistus: Todistus, errors: Seq[String]) extends Todistus(todistus.suoritus, todistus.arvosanat)
+case class InvalidTodistus(suoritus: Suoritus, arvosanat: Seq[Arvosana], errors: Seq[String])
+
+object InvalidTodistus {
+
+  def apply(todistus: Todistus, errors: Seq[String]) = InvalidTodistus(todistus.suoritus, todistus.arvosanat, errors)
+
+}
 
 
