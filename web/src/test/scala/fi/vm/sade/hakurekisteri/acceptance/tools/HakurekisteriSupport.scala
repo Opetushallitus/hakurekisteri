@@ -63,15 +63,9 @@ trait HakurekisteriContainer extends EmbeddedJettyContainer {
     addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](guardedOpiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with TestSecurity , "/rest/v1/opiskelijat")
 
   }
-
 }
 
-
-
-
 trait HakurekisteriSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport { this: HakurekisteriContainer =>
-
-
 
   implicit val system: ActorSystem = ActorSystem()
 
@@ -89,7 +83,6 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
     }
   }
-
 
   val suoritusRekisteri = system.actorOf(Props(new SuoritusReloader))
 
@@ -110,11 +103,6 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
     db.initialized = false
     super.withFixture(test)
   }
-
-
-
-
-
 
   object db {
     var initialized = false
