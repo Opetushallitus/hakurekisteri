@@ -540,6 +540,12 @@
             })
         })
         describe('Suoritustietojen muokkaus', function () {
+                it("!! Lisää suoritus luo uuden suorituksen", seqDone(
+
+                ))
+                it("!! Lisää uusi luokkatieto  luo uuden luokkatiedon", seqDone(
+
+                ))
                 it("!! Peruskoulun suoritustiedot (ja arvosanat) talletetaan vain jos muuttuneita arvoja", seqDone(
                     function () {
                         httpFixtures().organisaatioService.pikkaralaOid()
@@ -671,6 +677,9 @@
 
                 ))
                 it("!! Luokkatiedon poistaminen", seqDone(
+
+                ))
+                it("!! Luokkatiedon muokkaaminen", seqDone(
 
                 ))
                 it("!! Peruskoulun arvosanan poistaminen", seqDone(
