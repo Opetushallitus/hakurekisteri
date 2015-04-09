@@ -1,40 +1,32 @@
 package fi.vm.sade.hakurekisteri.web.rekisteritiedot
 
-import fi.vm.sade.hakurekisteri.rest.support.{User, HakurekisteriJsonSupport, Registers}
-import _root_.akka.actor.{ActorRef, ActorSystem}
-import org.scalatra.swagger.{SwaggerEngine, Swagger}
-import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.oppija.{InvalidTodistus, Todistus, Oppija, OppijaFetcher}
-import fi.vm.sade.hakurekisteri.web.oppija.OppijaSwaggerApi
-import org.scalatra.json.JacksonJsonSupport
-import fi.vm.sade.hakurekisteri.web.rest.support._
-import scala.concurrent.{Future, ExecutionContext}
-import _root_.akka.util.Timeout
+import java.util.UUID
+
+import _root_.akka.actor.ActorSystem
 import _root_.akka.event.{Logging, LoggingAdapter}
+import _root_.akka.util.Timeout
+import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.HenkiloHakijaQuery
+import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
+import fi.vm.sade.hakurekisteri.oppija.{InvalidTodistus, Oppija, Todistus}
+import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Registers, User}
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.suoritus.{AllForMatchinHenkiloSuoritusQuery, Suoritus, SuoritusQuery, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.web.rest.support.{UserNotAuthorized, _}
+import fi.vm.sade.hakurekisteri.web.validation.{ScalaValidator, SimpleValidatable, Validatable}
+import org.scalatra.json.JacksonJsonSupport
+import org.scalatra.swagger.{Swagger, SwaggerEngine}
+import org.scalatra.{AsyncResult, CorsSupport, FutureSupport, InternalServerError}
+
+import scala.collection.JavaConversions._
 import scala.compat.Platform
 import scala.concurrent.duration._
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
-import scala.Some
-import fi.vm.sade.hakurekisteri.integration.hakemus.HenkiloHakijaQuery
-import fi.vm.sade.hakurekisteri.integration.hakemus.FullHakemus
-import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
-import fi.vm.sade.hakurekisteri.web.rest.support.UserNotAuthorized
-import fi.vm.sade.hakurekisteri.suoritus.{AllForMatchinHenkiloSuoritusQuery, VirallinenSuoritus, SuoritusQuery, Suoritus}
-import fi.vm.sade.hakurekisteri.storage.Identified
-import java.util.UUID
-import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
-import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenQuery, Ensikertalainen}
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.{OpiskeluoikeusQuery, Opiskeluoikeus}
-import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaQuery, Opiskelija}
-import org.scalatra.{InternalServerError, CorsSupport, FutureSupport, AsyncResult}
-import org.joda.time.DateTime
-import fi.vm.sade.hakurekisteri.Config
-import org.scalatra.commands.ModelValidation
-import scalaz.{Failure, Success, NonEmptyList, Validation}
-import java.util
-import fi.vm.sade.hakurekisteri.web.validation.{SimpleValidatable, Validatable, ScalaValidator}
-import collection.JavaConversions._
+import scala.concurrent.{ExecutionContext, Future}
 
 
 class RekisteritiedotResource(val rekisterit: Registers)
@@ -148,13 +140,7 @@ class RekisteritiedotResource(val rekisterit: Registers)
         }
       }
     }
-
-
-
-
   }
-
-
 
   incident {
     case t: VirtaConnectionErrorException => (id) => InternalServerError(IncidentReport(id, "virta error"))
