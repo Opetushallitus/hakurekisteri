@@ -128,7 +128,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           henkilo.henkilo = henkiloTieto.sukunimi + ", " + henkiloTieto.etunimet + " (" + ((if henkiloTieto.hetu then henkiloTieto.hetu else henkiloTieto.syntymaaika)) + ")"
           henkilo.luokka = henkilo.opiskelijat.map((o) -> o.luokka).join(" ")
           henkilo.sortBy = "#{henkilo.luokka};#{henkilo.henkilo}"
-          henkilo.hasArvosana = henkilo.opiskelijat[0].arvosanat
+          henkilo.hasArvosana = henkilo.opiskelijat[0].arvosanat != false # undefined temporarily accepted, because the flag is missing when searching by hetu
           unsorted.push henkilo
         allRows = unsorted.sort((a, b) -> a.sortBy.localeCompare(b.sortBy))
         $scope.loading = false
