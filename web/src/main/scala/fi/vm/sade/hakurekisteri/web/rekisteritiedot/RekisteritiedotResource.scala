@@ -99,7 +99,7 @@ class RekisteritiedotResource(val rekisterit: Registers)
       override implicit def timeout: Duration = 500.seconds
 
 
-      private val tiedotFuture = for (
+      private val tiedotFuture: Future[Seq[Product with Serializable]] = for (
         oppija <- fetchTiedot(params("oid"))
       ) yield for (
           todistus <- oppija.suoritukset
