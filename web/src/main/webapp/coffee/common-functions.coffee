@@ -167,6 +167,8 @@ changeDetection = (object) ->
     json != JSON.stringify(object)
   update: () ->
     json = JSON.stringify(object)
+  original: () ->
+    JSON.parse(json)
   }
 
 arrayCarousel = (args...) ->
