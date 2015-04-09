@@ -45,7 +45,7 @@ app.controller "MuokkaaSuoritus", [
         if $scope.suoritus.komo != $scope.komo.ylioppilastutkinto || yoSuoritusHasValidValmistuminen($scope.info.valmistuminen)
           $scope.suoritus.valmistuminen = $scope.formatDateWithZeroPaddedNumbers($scope.info.valmistuminen)
         else
-          alert("YO-suorituksen päivämäärä pitää olla ennen 1.1.1990")
+          # alert("YO-suorituksen päivämäärä pitää olla ennen 1.1.1990")
           $scope.suoritus.valmistuminen = modifiedCache.original().valmistuminen
           $scope.info.valmistuminen = $scope.formatDateNoZeroPaddedNumbers($scope.suoritus.valmistuminen)
       modifiedCache.hasChanged()
