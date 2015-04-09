@@ -131,10 +131,10 @@ class RekisteritiedotResource(val rekisterit: Registers)
 
       val tarkastetut = Set(Config.perusopetusKomoOid, Config.lisaopetusKomoOid, Config.lukioKomoOid)
 
-
       def hasArvosanat(todistukset:Seq[Todistus]): Boolean = {
         !todistukset.exists{
           case Todistus(s: VirallinenSuoritus, arvosanat) if tarkastetut.contains(s.komo) && arvosanat.isEmpty => true
+          case Todistus(s: VirallinenSuoritus, _) if s.valmistuminen.getYear < 2015 => false
           case t:Todistus => valid.validateData(t).isFailure
           case default => false
         }
