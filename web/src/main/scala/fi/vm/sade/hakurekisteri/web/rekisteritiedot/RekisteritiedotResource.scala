@@ -28,8 +28,7 @@ import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-
-class RekisteritiedotResource(val rekisterit: Registers)
+class RekisteritiedotResource(val rekisterit: Registers) // <- TODO: practically requires AuthorizedRegisters, because uses AuthorizedQuery
                     (implicit val system: ActorSystem, sw: Swagger)
   extends HakuJaValintarekisteriStack with TiedotFetcher with RekisteritiedotSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with QueryLogging {
 
