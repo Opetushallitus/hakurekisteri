@@ -26,7 +26,7 @@ case class InvalidTodistus(suoritus: Suoritus, arvosanat: Seq[Arvosana], errors:
 
 object InvalidTodistus {
 
-  def apply(todistus: Todistus, errors: Seq[String]) = InvalidTodistus(todistus.suoritus, todistus.arvosanat, errors)
+  def apply(todistus: Todistus, errors: Seq[String]): InvalidTodistus = InvalidTodistus(todistus.suoritus, todistus.arvosanat, errors)
 
 }
 
