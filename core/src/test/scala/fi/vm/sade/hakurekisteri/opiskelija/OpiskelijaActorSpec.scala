@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 import scala.util.Random
 import fi.vm.sade.hakurekisteri.tools.OidTools
 
-class OpiskelijaActorSpec extends FunSuite {
+class OpiskelijaActorSpec extends FunSuite { // TODO: ei testaa mitään
   
   val startDates = Array(DateTime.parse("2011-08-01"));
   val endDates = Array(DateTime.parse("2014-05-31"), None);
