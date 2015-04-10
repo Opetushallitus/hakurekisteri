@@ -4,27 +4,38 @@ import akka.actor._
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.Config
 
-import scala.xml.{XML, Node, Elem}
-import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen, Suoritus}
+import scala.xml._
+import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus}
 import fi.vm.sade.hakurekisteri.arvosana._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import akka.pattern.ask
 import akka.util.Timeout
 import java.util.concurrent.{Executors, TimeUnit}
 import org.joda.time._
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fr.janalyse.ssh.{SSHPassword, SSH}
+import fr.janalyse.ssh.{SSHOptions, SSHFtp, SSHPassword, SSH}
 import scala.concurrent.duration._
-import fi.vm.sade.hakurekisteri.integration.henkilo.Henkilo
-import fi.vm.sade.hakurekisteri.integration.henkilo.HetuQuery
+import akka.pattern.pipe
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
+import java.io.{FileOutputStream, File, IOException}
+import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.Aine
+import scala.compat.Platform
+import scala.io.{BufferedSource, Source}
+import scala.xml.pull.{EvText, EvElemEnd, XMLEventReader, EvElemStart}
+import fi.vm.sade.hakurekisteri.arvosana.ArvioYo
 import scala.util.Failure
+import scala.Some
+import fi.vm.sade.hakurekisteri.arvosana.ArvioOsakoe
+import fi.vm.sade.hakurekisteri.integration.hakemus.FullHakemus
+import fi.vm.sade.hakurekisteri.integration.henkilo.HetuQuery
+import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import scala.util.Success
 import akka.actor.ActorIdentity
 import akka.actor.Identify
-import akka.pattern.pipe
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
-import java.io.IOException
-import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.Aine
+import fi.vm.sade.hakurekisteri.integration.henkilo.Henkilo
+import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
+import com.jcraft.jsch.{SftpException, ChannelSftp}
+import java.nio.charset.Charset
 
 
 case class YtlReport(waitingforAnswers: Seq[Batch[KokelasRequest]], nextSend: Option[DateTime])
@@ -98,10 +109,10 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
 
     case Poll if config.isDefined  => poll(sent)
 
-    case YtlResult(id, data) if config.isDefined  =>
+    case YtlResult(id, file) if config.isDefined  =>
       val requested = sent.find(_.id == id)
       sent = sent.filterNot(_.id == id)
-      handleResponse(requested, data)
+      handleResponse(requested, Source.fromFile(file, "ISO-8859-1"))
 
     case k: Kokelas if config.isDefined  =>
       log.debug(s"sending ytl data for ${k.oid} yo: ${k.yo} lukio: ${k.lukio}")
@@ -175,8 +186,50 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   def poll(batches: Seq[Batch[KokelasRequest]]): Unit = config match {
     case Some(YTLConfig(host, username, password, inbox, outbox, _, localStore)) =>
       Future {
-        SSH.ftp(host = host, username =username, password = SSHPassword(Some(password))){
-          (sftp) =>
+
+        def using[T <: { def close() }, R](resource: T)(block: T => R) = {
+          try block(resource)
+          finally resource.close()
+        }
+
+
+
+        class YtlClient(implicit ssh: SSH) {
+
+          private val channel: ChannelSftp = {
+            val ch = ssh.jschsession.openChannel("sftp").asInstanceOf[ChannelSftp]
+            ch.connect(ssh.options.connectTimeout.toInt)
+            ch
+          }
+
+          def pollResponse(batch:Batch[KokelasRequest]): Option[String] =  {
+            val filename = s"outsiirto${batch.id.toString}.xml"
+            val path = s"$outbox/$filename"
+            val outputStream = new FileOutputStream(new File(s"$localStore/$filename"))
+            try {
+              channel.get(path, outputStream)
+              Some(filename)
+            } catch {
+              case e: SftpException if (e.id == 2) =>
+                None
+            } finally {
+              outputStream.close
+            }
+
+          }
+
+
+          def close() = {
+            channel.quit
+            channel.disconnect
+          }
+
+        }
+
+
+        val options = SSHOptions(host = host, username =username, password = SSHPassword(Some(password)))
+        using(new SSH(options)) { implicit ssh =>
+          using(new YtlClient) { ytl =>
             for (
               batch <- batches
             ) {
@@ -185,20 +238,16 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
               val path = s"$outbox/$filename"
               log.debug(s"polling for $path")
               for (
-                result <- sftp.get(path)
-              ) {
-                sftp.receive(path, s"$localStore/$filename")
-                val response = XML.loadString(result)
-                self ! YtlResult(batch.id, response)
-
-              }
+                result <- ytl.pollResponse(batch)
+              ) self ! YtlResult(batch.id, result)
             }
+          }
         }
       }(sftpPollContext)
     case None => log.warning("polling of files from YTL called without config")
   }
 
-  def handleResponse(requested: Option[Batch[KokelasRequest]], data: Elem) = {
+  def handleResponse(requested: Option[Batch[KokelasRequest]], source: Source) = {
     log.info("started processing YTL response")
 
     def batch2Finder(batch: Batch[KokelasRequest])(hetu: String): Future[String] = {
@@ -211,7 +260,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     import YTLXml._
     import akka.pattern.pipe
 
-    val kokelaat = parseKokelaat(data, finder)
+    val kokelaat = findKokelaat(source, finder)
 
     for (
       kokelas <- kokelaat
@@ -247,7 +296,7 @@ case class Batch[A](id: UUID = UUID.randomUUID(), items: Set[A] = Set[A]()) {
 
 case class KokelasRequest(oid: String, hetu: String)
 
-case class YtlResult(batch: UUID, data: Elem)
+case class YtlResult(batch: UUID, file: String)
 
 case class Kokelas(oid: String,
                    yo: Suoritus,
@@ -374,12 +423,61 @@ object YTLXml {
   }
 
   def parseKokelaat(data: Elem, oidFinder: String => Future[String])(implicit ec: ExecutionContext): Seq[Future[Kokelas]] = {
-    val kokelaat = data \\ "YLIOPPILAS"
+    val kokelaat = findKokelaat(data)
     kokelaat map {
       (kokelas) =>
         val hetu = (kokelas \ "HENKILOTUNNUS").text
         parseKokelas(oidFinder(hetu), kokelas)
     }
+  }
+
+
+  def findKokelaat(data: Elem): Seq[Node] = {
+    data \\ "YLIOPPILAS"
+  }
+
+  def findKokelaat(source:Source, oidFinder: String => Future[String])(implicit ec: ExecutionContext): Seq[Future[Kokelas]] = {
+    import Stream._
+    val reader = new XMLEventReader(source)
+    def kokelaat(reader: XMLEventReader):Stream[Future[Kokelas]] = {
+
+      def isKokelasElement(label:String) = "YLIOPPILAS".equalsIgnoreCase(label)
+
+      def parseSingleElem(elemStart: EvElemStart, reader:XMLEventReader):Elem = {
+        val pre = elemStart.pre
+        val label = elemStart.label
+        def loop(cur:Elem = Elem(pre, label, elemStart.attrs: MetaData, elemStart.scope: NamespaceBinding, true)):Elem = reader.next() match {
+          case e: EvElemStart =>
+            loop(cur.copy(child = cur.child ++ Seq(parseSingleElem(e,reader))))
+          case EvElemEnd(`pre`, `label`) =>
+            cur
+          case EvText(text) => loop(cur.copy(child = cur.child ++ Seq(Text(text))))
+          case event =>
+            loop(cur)
+        }
+        loop()
+      }
+
+
+      reader.collectFirst {
+        case e:EvElemStart if isKokelasElement(e.label) =>
+          e
+      }.map(parseSingleElem(_, reader)
+        ).map{(k:Elem) =>
+        parseKokelas(oidFinder((k \ "HENKILOTUNNUS").text), k) #:: kokelaat(reader)}.getOrElse(empty[Future[Kokelas]])
+
+
+    }
+
+    kokelaat(reader)
+  }
+
+  def parseFile(file:String)(implicit ec: ExecutionContext):Seq[Kokelas]  = {
+    println(s"start: ${Platform.currentTime}")
+    val results = findKokelaat(Source.fromFile(file,"ISO-8859-1"), Future.successful)
+    val result = Await.result(Future.sequence(results), scala.concurrent.duration.Duration.Inf)
+    println(s"end: ${Platform.currentTime}")
+    result
   }
 
   def parseKokelas(oidFuture: Future[String], kokelas: Node)(implicit ec: ExecutionContext): Future[Kokelas] = {
@@ -453,7 +551,6 @@ object YTLXml {
 
   def extractLukio(oid: String, kokelas:Node): Option[Suoritus] = None
 
-  import fi.vm.sade.hakurekisteri.Config
   import fi.vm.sade.hakurekisteri.tools.RicherString._
 
   def extractTodistus(yo: Suoritus, kokelas: Node): Seq[YoKoe] = {

@@ -5,12 +5,13 @@ import org.scalatest.matchers.ShouldMatchers
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import YtlData._
 import scala.concurrent.Future
+import scala.io.Source
 
 class KokelaatParserSpec extends FlatSpec with Matchers with FutureWaiting {
 
   behavior of "parsing Kokelaat"
 
-  import YTLXml.parseKokelaat
+  import YTLXml.findKokelaat
 
   it should "parse each kokelas like kokelas parser" in {
     val kokelaat =
@@ -20,8 +21,9 @@ class KokelaatParserSpec extends FlatSpec with Matchers with FutureWaiting {
         {suorittanut}
       </YLIOPPILAAT>
 
+
     val results = for (
-      parsed: Seq[Kokelas] <- Future.sequence(parseKokelaat(kokelaat, (_) => Future.successful("oid")));
+      parsed: Seq[Kokelas] <- Future.sequence(findKokelaat(Source.fromString(kokelaat.toString), (_) => Future.successful("oid")));
       expected: Seq[Kokelas] <- Future.sequence(Seq(ylioppilas,eiValmis,suorittanut).map(YTLXml.parseKokelas(Future.successful("oid"),_))))
     yield (parsed, expected)
 
