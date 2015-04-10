@@ -13,29 +13,33 @@ import akka.util.Timeout
 import java.util.concurrent.{Executors, TimeUnit}
 import org.joda.time._
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fr.janalyse.ssh.{SSHOptions, SSHFtp, SSHPassword, SSH}
+import fr.janalyse.ssh.{SSHPassword, SSH}
 import scala.concurrent.duration._
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
 import java.io.{FileOutputStream, File, IOException}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.Aine
 import scala.compat.Platform
-import scala.io.{BufferedSource, Source}
-import scala.xml.pull.{EvText, EvElemEnd, XMLEventReader, EvElemStart}
+import scala.io.Source
+import scala.xml.pull._
+import com.jcraft.jsch.{SftpException, ChannelSftp}
 import fi.vm.sade.hakurekisteri.arvosana.ArvioYo
+import fr.janalyse.ssh.SSHOptions
+import scala.xml.pull.EvElemEnd
 import scala.util.Failure
 import scala.Some
 import fi.vm.sade.hakurekisteri.arvosana.ArvioOsakoe
+import scala.xml.pull.EvElemStart
+import scala.xml.NamespaceBinding
 import fi.vm.sade.hakurekisteri.integration.hakemus.FullHakemus
 import fi.vm.sade.hakurekisteri.integration.henkilo.HetuQuery
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import scala.util.Success
+import scala.xml.pull.EvText
 import akka.actor.ActorIdentity
 import akka.actor.Identify
 import fi.vm.sade.hakurekisteri.integration.henkilo.Henkilo
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
-import com.jcraft.jsch.{SftpException, ChannelSftp}
-import java.nio.charset.Charset
 
 
 case class YtlReport(waitingforAnswers: Seq[Batch[KokelasRequest]], nextSend: Option[DateTime])
@@ -186,7 +190,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   def poll(batches: Seq[Batch[KokelasRequest]]): Unit = config match {
     case Some(YTLConfig(host, username, password, inbox, outbox, _, localStore)) =>
       Future {
-
+        import scala.language.reflectiveCalls
         def using[T <: { def close() }, R](resource: T)(block: T => R) = {
           try block(resource)
           finally resource.close()
@@ -422,16 +426,6 @@ object YTLXml {
         aineet(koetunnus)
   }
 
-  def parseKokelaat(data: Elem, oidFinder: String => Future[String])(implicit ec: ExecutionContext): Seq[Future[Kokelas]] = {
-    val kokelaat = findKokelaat(data)
-    kokelaat map {
-      (kokelas) =>
-        val hetu = (kokelas \ "HENKILOTUNNUS").text
-        parseKokelas(oidFinder(hetu), kokelas)
-    }
-  }
-
-
   def findKokelaat(data: Elem): Seq[Node] = {
     data \\ "YLIOPPILAS"
   }
@@ -439,6 +433,16 @@ object YTLXml {
   def findKokelaat(source:Source, oidFinder: String => Future[String])(implicit ec: ExecutionContext): Seq[Future[Kokelas]] = {
     import Stream._
     val reader = new XMLEventReader(source)
+    def youTutkinto(valmistuminen: Option[LocalDate], oid: String, kieli: Option[String]): VirallinenSuoritus = {
+      val suoritettu = for (
+        valm <- valmistuminen
+      ) yield YoTutkinto(suorittaja = oid, valmistuminen = valm, kieli = kieli.get)
+
+      val yo = suoritettu.getOrElse(
+        YoTutkinto(suorittaja = oid, valmistuminen = parseKausi(nextKausi).get, kieli = kieli.get, valmis = false)
+      )
+      yo
+    }
     def kokelaat(reader: XMLEventReader):Stream[Future[Kokelas]] = {
 
       def isKokelasElement(label:String) = "YLIOPPILAS".equalsIgnoreCase(label)
@@ -458,13 +462,107 @@ object YTLXml {
         loop()
       }
 
+      def readSingleText(label:String, reader:XMLEventReader): Option[String] = {
+        val text = reader.collectFirst{
+          case EvText(text) => Some(text)
+          case EvElemEnd(_, `label`) => None
+        }.get
+        if (text.isDefined) reader.collectFirst{case EvElemEnd(_, `label`) => true}.get
+        text
+      }
+
+      def parseOsakokeet(reader:XMLEventReader):Seq[(ArvioOsakoe, String)] = {
+        def loop(currentarvio: Option[ArvioOsakoe], currenttunnus: Option[String],found: Seq[(ArvioOsakoe, String)]):Seq[(ArvioOsakoe, String)] =  reader.next match {
+          case EvElemEnd(_,"OSAKOE") => loop(None, None, found ++ Seq((currentarvio.get, currenttunnus.get)))
+          case EvElemStart(_,"OSAKOEPISTEET", _,_) => loop(readSingleText("OSAKOEPISTEET", reader).map(ArvioOsakoe(_)), currenttunnus, found)
+          case EvElemStart(_,"OSAKOETUNNUS", _, _) => loop(currentarvio, readSingleText("OSAKOETUNNUS", reader), found)
+          case EvElemEnd(_,"OSAKOKEET") => found
+          case _ => loop(currentarvio, currenttunnus, found)
+        }
+        loop(None, None, Seq())
+      }
+
+      def parseKoe(reader:XMLEventReader):(YoKoe, Seq[Osakoe]) = {
+        def loop(arvosana:Option[String] = None,
+                 pisteet: Option[Int] = None,
+                 koetunnus: Option[String] = None,
+                 aineryhdistelmarooli: Option[String] = None,
+                 myonnetty: Option[LocalDate] = None,
+                 osakokeet: Seq[(ArvioOsakoe, String)] = Seq()):(YoKoe, Seq[Osakoe]) = reader.next() match {
+          case EvElemEnd(_,"KOE") =>
+            val finalOsakokeet = osakokeet.map{
+              case (arvio, osakoetunnus) => Osakoe(arvio, koetunnus.get, osakoetunnus, aineryhdistelmarooli.get, myonnetty.get)
+            }
+            (YoKoe(ArvioYo(arvosana.get, pisteet), koetunnus.get, aineryhdistelmarooli.get: String, myonnetty.get: LocalDate), finalOsakokeet)
+          case EvElemStart(_,"ARVOSANA", _, _) => loop(readSingleText("ARVOSANA", reader), pisteet, koetunnus, aineryhdistelmarooli, myonnetty, osakokeet)
+          case EvElemStart(_,"YHTEISPISTEMAARA",_,_) => loop(arvosana, readSingleText("YHTEISPISTEMAARA", reader).map(_.toInt), koetunnus, aineryhdistelmarooli, myonnetty, osakokeet)
+          case EvElemStart(_,"KOETUNNUS",_,_) => loop(arvosana, pisteet, readSingleText("KOETUNNUS", reader), aineryhdistelmarooli, myonnetty, osakokeet)
+          case EvElemStart(_,"AINEYHDISTELMAROOLI",_,_) => loop(arvosana, pisteet, koetunnus , readSingleText("AINEYHDISTELMAROOLI", reader), myonnetty, osakokeet)
+          case EvElemStart(_,"TUTKINTOKERTA",_,_) =>
+            loop(arvosana, pisteet, koetunnus , aineryhdistelmarooli, readSingleText("TUTKINTOKERTA",reader).flatMap(parseKausi), osakokeet)
+          case e:EvElemStart if "OSAKOKEET".equals(e.label) =>
+            loop(arvosana, pisteet, koetunnus , aineryhdistelmarooli, myonnetty, parseOsakokeet(reader))
+          case _ => loop(arvosana, pisteet, koetunnus , aineryhdistelmarooli, myonnetty, osakokeet)
+
+
+        }
+        loop()
+      }
+
+      def parseKokelas(reader:XMLEventReader): Future[Kokelas] = {
+
+        def loop(hetu: Option[String] = None,
+                 yoaika: Option[String] = None,
+                 tutkintoaika: Option[String] = None,
+                 kieli: Option[String] = None,
+                 lukio: Option[Suoritus] = None,
+
+                 yoTodistus: Seq[Koe] = Seq(),
+                 osakokeet: Seq[Koe] = Seq()):Future[Kokelas] = reader.next() match {
+          case e:EvElemStart if "HENKILOTUNNUS".equalsIgnoreCase(e.label) =>
+            loop(hetu = readSingleText("HENKILOTUNNUS", reader), yoaika, tutkintoaika, kieli, lukio, yoTodistus, osakokeet)
+
+          case EvElemEnd(_, "YLIOPPILAS") =>
+
+            hetu.map(oidFinder(_).map{(oid) =>
+              val valmistuminen = if (yoaika.get.isEmpty) None
+              else {
+                yoaika.get match {
+                  case suoritettu() =>
+                    parseKausi(tutkintoaika.get)
+                  case _ =>
+                    parseKausi(yoaika.get)
+                }
+              }
+              Kokelas(oid, youTutkinto(valmistuminen, oid, kieli), lukio, yoTodistus, osakokeet)}).get
+          case e:EvElemStart if "TUTKINTOKIELI".equalsIgnoreCase(e.label) =>
+            loop(hetu, yoaika, tutkintoaika, kieli = readSingleText("TUTKINTOKIELI", reader), lukio, yoTodistus, osakokeet)
+
+          case e:EvElemStart if "KOE".equalsIgnoreCase(e.label) =>
+
+            val (koe, uudetOsakokeet) = parseKoe(reader)
+            loop(hetu, yoaika, tutkintoaika, kieli, lukio, yoTodistus ++ Seq(koe), osakokeet ++ uudetOsakokeet)
+
+          case e:EvElemStart if "YLIOPPILAAKSITULOAIKA".equalsIgnoreCase(e.label) =>
+            loop(hetu, Some(readSingleText("YLIOPPILAAKSITULOAIKA", reader).getOrElse("")), tutkintoaika, kieli, lukio, yoTodistus, osakokeet)
+
+          case e:EvElemStart if "TUTKINTOAIKA".equalsIgnoreCase(e.label) =>
+            loop(hetu, yoaika, readSingleText("TUTKINTOAIKA", reader), kieli, lukio, yoTodistus, osakokeet)
+
+
+          case _ =>
+            loop(hetu, yoaika, tutkintoaika, kieli, lukio, yoTodistus, osakokeet)
+        }
+        loop()
+
+      }
+
+
 
       reader.collectFirst {
         case e:EvElemStart if isKokelasElement(e.label) =>
           e
-      }.map(parseSingleElem(_, reader)
-        ).map{(k:Elem) =>
-        parseKokelas(oidFinder((k \ "HENKILOTUNNUS").text), k) #:: kokelaat(reader)}.getOrElse(empty[Future[Kokelas]])
+      }.map((_) => parseKokelas(reader) #:: kokelaat(reader)).getOrElse(empty[Future[Kokelas]])
 
 
     }
@@ -480,14 +578,7 @@ object YTLXml {
     result
   }
 
-  def parseKokelas(oidFuture: Future[String], kokelas: Node)(implicit ec: ExecutionContext): Future[Kokelas] = {
-    for {
-      oid <- oidFuture
-    } yield {
-      val yo = extractYo(oid, kokelas)
-      Kokelas(oid, yo , extractLukio(oid, kokelas), extractTodistus(yo, kokelas), extractOsakoe(yo, kokelas))
-    }
-  }
+
 
 
   val YTL: String = Config.ytlOrganisaatioOid
@@ -555,23 +646,32 @@ object YTLXml {
 
   def extractTodistus(yo: Suoritus, kokelas: Node): Seq[YoKoe] = {
     (kokelas \\ "KOE").map{
-      (koe: Node) =>
-       val arvio = ArvioYo((koe \ "ARVOSANA").text, (koe \ "YHTEISPISTEMAARA").text.blankOption.map(_.toInt))
-        YoKoe(arvio, (koe \ "KOETUNNUS").text, (koe \ "AINEYHDISTELMAROOLI").text, parseKausi((koe \ "TUTKINTOKERTA").text).get)
+      extractKoe
     }
+  }
+
+
+  def extractKoe: (Node) => YoKoe = {
+    (koe: Node) =>
+      val arvio = ArvioYo((koe \ "ARVOSANA").text, (koe \ "YHTEISPISTEMAARA").text.blankOption.map(_.toInt))
+      YoKoe(arvio, (koe \ "KOETUNNUS").text, (koe \ "AINEYHDISTELMAROOLI").text, parseKausi((koe \ "TUTKINTOKERTA").text).get)
   }
 
   def extractOsakoe(yo: Suoritus, kokelas: Node): Seq[Osakoe] = {
     (kokelas \\ "KOE").flatMap {
-      (koe: Node) =>
-        val osakokeet = koe \\ "OSAKOE"
-        osakokeet.map(osakoe => {
-          val arvio = ArvioOsakoe((osakoe \ "OSAKOEPISTEET").text)
-          Osakoe(arvio, (koe \ "KOETUNNUS").text, (osakoe \ "OSAKOETUNNUS").text, (koe \ "AINEYHDISTELMAROOLI").text, parseKausi((koe \ "TUTKINTOKERTA").text).get)
-        })
+      extractOsakokeet
     }
   }
 
+
+  def extractOsakokeet: (Node) => Seq[Osakoe] = {
+    (koe: Node) =>
+      val osakokeet = koe \\ "OSAKOE"
+      osakokeet.map(osakoe => {
+        val arvio = ArvioOsakoe((osakoe \ "OSAKOEPISTEET").text)
+        Osakoe(arvio, (koe \ "KOETUNNUS").text, (osakoe \ "OSAKOETUNNUS").text, (koe \ "AINEYHDISTELMAROOLI").text, parseKausi((koe \ "TUTKINTOKERTA").text).get)
+      })
+  }
 }
 
 trait Koe {

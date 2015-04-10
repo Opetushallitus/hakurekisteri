@@ -11,7 +11,7 @@ class KokelasParserSpec extends FlatSpec with Matchers with FutureWaiting {
 
   behavior of "Kokelas parser"
 
-  import YTLXml.parseKokelas
+  import YtlParsing.parseKokelas
 
   it should "parse a kokelas with correct oid for successfully found oid" in {
 
