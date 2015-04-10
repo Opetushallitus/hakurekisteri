@@ -27,7 +27,10 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   val valintatulosRefreshTimeHours = Config.valintatulosRefreshTimeHours.hours
   var starting = true
 
-  context.system.scheduler.schedule(1.second, hakuRefreshTime, self, Update)
+  context.system.scheduler.schedule(1.second, hakuRefreshTime) {
+    log.info("updating all hakus")
+    self ! Update
+  }
 
   import FutureList._
 
