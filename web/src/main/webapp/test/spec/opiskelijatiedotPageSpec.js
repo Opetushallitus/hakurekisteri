@@ -211,7 +211,7 @@
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
                 function () {
-                    expect(testFrame().location.hash).to.equal('#/muokkaa-obd?henkilo=1.2.246.562.24.71944845619&oppilaitos=&vuosi='+getCurrentYear())
+                    expect(testFrame().location.hash).to.equal('#/opiskelijat?henkilo=1.2.246.562.24.71944845619&oppilaitos=&vuosi='+getCurrentYear())
                     assertText(opiskelijatiedot.hetu, "123456-789")
                 }
             ))
@@ -238,7 +238,7 @@
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
                 function () {
-                    expect(testFrame().location.hash).to.equal('#/muokkaa-obd?henkilo=&oppilaitos=06345&vuosi='+getCurrentYear())
+                    expect(testFrame().location.hash).to.equal('#/opiskelijat?henkilo=&oppilaitos=06345&vuosi='+getCurrentYear())
                     assertText(opiskelijatiedot.hetu, "123456-789")
                 }
             ))

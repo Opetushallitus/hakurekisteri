@@ -3,7 +3,7 @@ function opiskelijatiedotPage() {
         return location.host.indexOf('localhost') > -1
     }
 
-    var opiskelijatiedotPage = openPage((isLocalhost() ? '' : '/suoritusrekisteri') + "/#/muokkaa-obd", function () {
+    var opiskelijatiedotPage = openPage((isLocalhost() ? '' : '/suoritusrekisteri') + "/#/opiskelijat", function () {
         return S("#filterForm").length === 1
     })
 

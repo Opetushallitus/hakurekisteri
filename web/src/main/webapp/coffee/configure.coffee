@@ -1,13 +1,17 @@
 app.config ($locationProvider, $routeProvider, $httpProvider) ->
-  $routeProvider.when "/opiskelijat",
+  $routeProvider.when "/opiskelijat-vanha",
     templateUrl: "templates/opiskelijat.html"
     controller: "OpiskelijatCtrl"
 
-  $routeProvider.when "/muokkaa-obd",
+  $routeProvider.when "/opiskelijat",
     templateUrl: "templates/muokkaa-obd.html"
     controller: "MuokkaaSuorituksetObdCtrl"
 
-  $routeProvider.when "/muokkaa/:henkiloOid",
+  $routeProvider.when "/muokkaa/:henkilo",
+    templateUrl: "templates/muokkaa-obd.html"
+    controller: "MuokkaaSuorituksetObdCtrl"
+
+  $routeProvider.when "/muokkaa-vanha/:henkiloOid",
     templateUrl: "templates/muokkaa.html"
     controller: "MuokkaaCtrl"
 
@@ -70,7 +74,7 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
 
   $routeProvider.otherwise
     redirectTo: (routeParams, currentLocation, search) ->
-      "/muokkaa-obd"
+      "/opiskelijat"
   $locationProvider.html5Mode false
 
   $httpProvider.interceptors.push 'callerIdInterceptor'

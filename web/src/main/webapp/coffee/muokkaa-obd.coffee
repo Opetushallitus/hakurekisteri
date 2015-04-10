@@ -175,11 +175,11 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         []
 
     $scope.reset = ->
-      $location.path("/muokkaa-obd").search {}
+      $location.path("/opiskelijat").search {}
       return
 
     $scope.search = ->
-      $location.path("/muokkaa-obd").search
+      $location.path("/opiskelijat").search
         henkilo: (if $scope.henkiloTerm then $scope.henkiloTerm else "")
         oppilaitos: (if $scope.organisaatioTerm then $scope.organisaatioTerm.oppilaitosKoodi else "")
         vuosi: (if $scope.vuosiTerm then $scope.vuosiTerm else "")
