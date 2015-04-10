@@ -76,9 +76,6 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig, None)(ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool"), system))), "valintaTulos")
 
-  val haut = system.actorOf(Props(new HakuActor(tarjonta, parametrit, hakemukset, valintaTulos, ytl)))
-
   val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(system), organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
 
-  val virtaQueue = system.actorOf(Props(new VirtaQueue(virta, hakemukset, haut)), "virta-queue")
 }
