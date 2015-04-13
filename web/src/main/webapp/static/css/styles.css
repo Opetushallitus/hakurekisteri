@@ -84,6 +84,10 @@ body #raamit-header .header-content {
     color: #fff;
 }
 
+.student-row>th, .student-row>td{
+    padding: 4px !important;
+}
+
 #save-button {
     text-align: right;
     position: fixed;

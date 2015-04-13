@@ -66,7 +66,7 @@
                     <div ng-if="!loading">
                         <table typeahead-loading="loadingOppilaitos" class="table table-responsive">
                             <tbody>
-                            <tr ng-repeat="row in allRowsFiltered"
+                            <tr class="student-row" ng-repeat="row in allRowsFiltered"
                                 ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}"
                                 ng-click="valitseHenkilo(row.henkiloOid)">
                                 <td>{{row.henkilo}}</td>
