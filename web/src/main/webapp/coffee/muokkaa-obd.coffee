@@ -133,9 +133,10 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         unsorted = []
         for henkiloTieto in henkiloList
           henkilo = henkiloMap[henkiloTieto.oidHenkilo]
-          henkilo.henkilo = henkiloTieto.sukunimi + ", " + henkiloTieto.etunimet + " (" + ((if henkiloTieto.hetu then henkiloTieto.hetu else henkiloTieto.syntymaaika)) + ")"
+          henkilo.henkilo = henkiloTieto.sukunimi + ", " + henkiloTieto.etunimet
+          henkilo.hetu = (if henkiloTieto.hetu then henkiloTieto.hetu else henkiloTieto.syntymaaika)
           henkilo.luokka = henkilo.opiskelijat.map((o) -> o.luokka).join(" ")
-          henkilo.sortBy = "#{henkilo.luokka};#{henkilo.henkilo}"
+          henkilo.sortBy = "#{henkilo.luokka};#{henkilo.henkilo};#{henkilo.hetu}"
           henkilo.hasArvosana = henkilo.opiskelijat[0].arvosanat != false # undefined temporarily accepted, because the flag is missing when searching by hetu
           unsorted.push henkilo
         allRows = unsorted.sort((a, b) -> a.sortBy.localeCompare(b.sortBy))

@@ -51,7 +51,7 @@
                         <div class="checkbox" id="missingCheckbox">
                             <label for="missingToggleCheckbox">
                                 <input type="checkbox" id="missingToggleCheckbox" ng-model="showOnlyPuuttuvat"
-                                       ng-change="arvosanatPuuttuuFilter()"/>Näytä vain ne joiden tiedoissa puutteitta *
+                                       ng-change="arvosanatPuuttuuFilter()"/>Näytä vain ne joiden tiedoissa puutteita *
                             </label>
                         </div>
                     </div>
@@ -69,7 +69,7 @@
                             <tr class="student-row" ng-repeat="row in allRowsFiltered"
                                 ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}"
                                 ng-click="valitseHenkilo(row.henkiloOid)">
-                                <td>{{row.henkilo}}</td>
+                                <td>{{row.henkilo}}<br/>{{row.hetu}}</td>
                                 <td><span ng-repeat="o in row.opiskelijat">{{o.luokka}}</span></td>
                                 <td ng-if="!row.hasArvosana"><span ng-repeat="o in row.opiskelijat"><b>*</b></span></td>
                                 <td ng-if="row.hasArvosana"><span ng-repeat="o in row.opiskelijat"></span></td>
