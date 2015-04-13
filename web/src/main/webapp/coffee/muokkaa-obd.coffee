@@ -6,6 +6,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
   "$http"
   "$q"
   "$cookies"
+  "$window",
   "Opiskelijat"
   "RekisteriTiedot"
   "Suoritukset"
@@ -13,14 +14,21 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
   "MurupolkuService"
   "MessageService"
   "MuokkaaTiedot"
-  ($scope, $routeParams, $location, $log, $http, $q, $cookies, Opiskelijat, RekisteriTiedot, Suoritukset, Arvosanat, MurupolkuService, MessageService, MuokkaaTiedot) ->
+  ($scope, $routeParams, $location, $log, $http, $q, $cookies, $window, Opiskelijat, RekisteriTiedot, Suoritukset, Arvosanat, MurupolkuService, MessageService, MuokkaaTiedot) ->
 
     initializeSearch = ->
       MessageService.clearMessages()
-
       $('#henkiloTerm').placeholder()
       $('#organisaatioTerm').placeholder()
       $('#resultFilter').placeholder()
+
+      angular.element($window).bind 'resize', ->
+        $scope.setHiddenSpacerHeight()
+
+      $scope.$on('$viewContentLoaded', ->
+        $scope.setHiddenSpacerHeight()
+      )
+
       $scope.loading = false
       $scope.showOnlyPuuttuvat = false
       $scope.filterParam = ""
@@ -173,6 +181,10 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           []
       else
         []
+
+    $scope.setHiddenSpacerHeight = () ->
+      elementHeight = $("#filterForm").height()
+      $("#hiddenSpacer").height(elementHeight+50)
 
     $scope.reset = ->
       $location.path("/opiskelijat").search {}
