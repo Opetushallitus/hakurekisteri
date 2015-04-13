@@ -121,7 +121,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
       flatMap {
         case Some(s) => Future.successful(s)
         case None if todistus.komo == Config.lukioKomoOid => createLukioSuoritus(henkiloOid, todistus, oppilaitosOid, lahde)
-        case None => Future.failed(SuoritusNotFoundException(henkiloOid, todistus, oppilaitosOid))
+        case None => Future.failed(SuoritusNotFoundException(henkiloOid, oppilaitosOid, todistus.komo, todistus.valmistuminen))
       }
 
   private def createLukioSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String, lahde: String): Future[Suoritus with Identified[UUID]] =
@@ -179,7 +179,11 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   private def parseData(batch: ImportBatch)(oppiaineet: Seq[String]): Map[String, ImportArvosanaHenkilo] =
     (batch.data \ "henkilot" \ "henkilo").map(ImportArvosanaHenkilo(_)(batch.source)(oppiaineet)).groupBy(_.tunniste.tunniste).mapValues(_.head)
 
-  case class SuoritusNotFoundException(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String) extends Exception(s"suoritus not found for henkilo $henkiloOid with myontaja $oppilaitosOid for todistus $todistus")
+  case class SuoritusNotFoundException(henkiloOid: String,
+                                       oppilaitosOid: String,
+                                       komo: String,
+                                       valmistuminen: LocalDate)
+    extends Exception(s"Suoritus not found for henkilo $henkiloOid by myontaja $oppilaitosOid with komo $komo and valmistuminen $valmistuminen.")
   object HenkiloTunnisteNotSupportedException extends Exception("henkilo tunniste not yet supported in arvosana batch")
   case class ImportArvosana(aine: String, arvosana: String, lisatieto: Option[String], valinnainen: Boolean, jarjestys: Option[Int] = None)
   case class ImportTodistus(komo: String, myontaja: String, arvosanat: Seq[ImportArvosana], valmistuminen: LocalDate, suoritusKieli: String)
