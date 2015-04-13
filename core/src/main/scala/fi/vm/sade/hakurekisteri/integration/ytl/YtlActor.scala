@@ -267,13 +267,21 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     val kokelaat = findKokelaat(source, finder)
 
     for (
-      kokelas <- kokelaat
-    ) kokelas pipeTo self
+      kokelasFut <- kokelaat
+    ) kokelasFut.onComplete{
+      case Failure(f) ⇒ self ! Status.Failure(f)
+      case Success(Some(kokelas))  => self ! kokelas
+      case _ => log.info(s"ytl result with no exams found, discarding it")
+
+    }
+
+
+
 
     Future.sequence(kokelaat).onComplete {
       case Success(parsed) if requested.isDefined =>
         val batch = requested.get
-        val found = parsed.map(_.oid).toSet
+        val found = parsed.collect{case Some(k) => k}.map(_.oid).toSet
         val missing = batch.items.map(_.oid).toSet -- found
         for (problem <- missing) log.warning(s"Missing result from YTL for oid $problem in batch ${batch.id}")
         log.info(s"processed returned ${found.size} results of ${batch.items.size} requested, started saving")
@@ -430,7 +438,7 @@ object YTLXml {
     data \\ "YLIOPPILAS"
   }
 
-  def findKokelaat(source:Source, oidFinder: String => Future[String])(implicit ec: ExecutionContext): Seq[Future[Kokelas]] = {
+  def findKokelaat(source:Source, oidFinder: String => Future[String])(implicit ec: ExecutionContext): Seq[Future[Option[Kokelas]]] = {
     import Stream._
     val reader = new XMLEventReader(source)
     def youTutkinto(valmistuminen: Option[LocalDate], oid: String, kieli: Option[String]): VirallinenSuoritus = {
@@ -439,11 +447,14 @@ object YTLXml {
       ) yield YoTutkinto(suorittaja = oid, valmistuminen = valm, kieli = kieli.get)
 
       val yo = suoritettu.getOrElse(
-        YoTutkinto(suorittaja = oid, valmistuminen = parseKausi(nextKausi).get, kieli = kieli.get, valmis = false)
+        YoTutkinto(suorittaja = oid,
+          valmistuminen = parseKausi(nextKausi).get,
+          kieli = kieli.get,
+          valmis = false)
       )
       yo
     }
-    def kokelaat(reader: XMLEventReader):Stream[Future[Kokelas]] = {
+    def kokelaat(reader: XMLEventReader):Stream[Future[Option[Kokelas]]] = {
 
       def isKokelasElement(label:String) = "YLIOPPILAS".equalsIgnoreCase(label)
 
@@ -509,7 +520,7 @@ object YTLXml {
         loop()
       }
 
-      def parseKokelas(reader:XMLEventReader): Future[Kokelas] = {
+      def parseKokelas(reader:XMLEventReader): Future[Option[Kokelas]] = {
 
         def loop(hetu: Option[String] = None,
                  yoaika: Option[String] = None,
@@ -518,12 +529,13 @@ object YTLXml {
                  lukio: Option[Suoritus] = None,
 
                  yoTodistus: Seq[Koe] = Seq(),
-                 osakokeet: Seq[Koe] = Seq()):Future[Kokelas] = reader.next() match {
+                 osakokeet: Seq[Koe] = Seq()):Future[Option[Kokelas]] = reader.next() match {
           case e:EvElemStart if "HENKILOTUNNUS".equalsIgnoreCase(e.label) =>
             loop(hetu = readSingleText("HENKILOTUNNUS", reader), yoaika, tutkintoaika, kieli, lukio, yoTodistus, osakokeet)
 
-          case EvElemEnd(_, "YLIOPPILAS") =>
+          case EvElemEnd(_, "YLIOPPILAS") if yoTodistus.isEmpty => Future.successful(None)
 
+          case EvElemEnd(_, "YLIOPPILAS") =>
             hetu.map(oidFinder(_).map{(oid) =>
               val valmistuminen = if (yoaika.get.isEmpty) None
               else {
@@ -534,7 +546,9 @@ object YTLXml {
                     parseKausi(yoaika.get)
                 }
               }
-              Kokelas(oid, youTutkinto(valmistuminen, oid, kieli), lukio, yoTodistus, osakokeet)}).get
+              Some(Kokelas(oid, youTutkinto(valmistuminen, oid, kieli), lukio, yoTodistus, osakokeet))
+
+            }).get
           case e:EvElemStart if "TUTKINTOKIELI".equalsIgnoreCase(e.label) =>
             loop(hetu, yoaika, tutkintoaika, kieli = readSingleText("TUTKINTOKIELI", reader), lukio, yoTodistus, osakokeet)
 
@@ -550,7 +564,7 @@ object YTLXml {
             loop(hetu, yoaika, readSingleText("TUTKINTOAIKA", reader), kieli, lukio, yoTodistus, osakokeet)
 
 
-          case _ =>
+          case e =>
             loop(hetu, yoaika, tutkintoaika, kieli, lukio, yoTodistus, osakokeet)
         }
         loop()
@@ -562,7 +576,7 @@ object YTLXml {
       reader.collectFirst {
         case e:EvElemStart if isKokelasElement(e.label) =>
           e
-      }.map((_) => parseKokelas(reader) #:: kokelaat(reader)).getOrElse(empty[Future[Kokelas]])
+      }.map((_) => parseKokelas(reader) #:: kokelaat(reader)).getOrElse(empty[Future[Option[Kokelas]]])
 
 
     }

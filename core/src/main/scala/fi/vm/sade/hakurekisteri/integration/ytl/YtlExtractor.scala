@@ -9,19 +9,25 @@ object YtlExtractor {
 
     def main(args: Array[String]) {
       import scala.concurrent.ExecutionContext.Implicits.global
-      parseFile(args(0))
-
-
-
-
-
-    def parseFile(file:String)(implicit ec: ExecutionContext):Seq[Kokelas]  = {
       println(s"start: ${Platform.currentTime}")
-      val results = YTLXml.findKokelaat(Source.fromFile(file,"ISO-8859-1"), Future.successful)
-      val result = Await.result(Future.sequence(results), scala.concurrent.duration.Duration.Inf)
+      println("###############################")
+
+      println(parseFile(args(0)).toList)
+
+      println("###############################")
+
       println(s"end: ${Platform.currentTime}")
-      result
+
+
+
+
+
+
     }
+
+  def parseFile(file:String)(implicit ec: ExecutionContext):Seq[Kokelas]  = {
+    val results = YTLXml.findKokelaat(Source.fromFile(file,"ISO-8859-1"), Future.successful)
+    Await.result(Future.sequence(results), scala.concurrent.duration.Duration.Inf).flatten
   }
 
 }

@@ -24,13 +24,13 @@ class KokelaatParserSpec extends FlatSpec with Matchers with FutureWaiting {
 
 
     val results = for (
-      parsed: Seq[Kokelas] <- Future.sequence(findKokelaat(Source.fromString(kokelaat.toString), (hetu) => Future.successful(hetu)));
+      parsed: Seq[Option[Kokelas]] <- Future.sequence(findKokelaat(Source.fromString(kokelaat.toString), (hetu) => Future.successful(hetu)));
       expected: Seq[Kokelas] <- Future.sequence(Seq(ylioppilas,eiValmis,suorittanut).map((k) => YtlParsing.parseKokelas(Future.successful((k \ "HENKILOTUNNUS").text),k))))
     yield (parsed, expected)
 
     waitFuture(results){
       case (parsed, expected) =>
-        parsed should equal (expected)
+        parsed.flatten should equal (expected)
     }
   }
 
@@ -44,8 +44,12 @@ object YtlParsing {
     for {
       oid <- oidFuture
     } yield {
-      val yo = YTLXml.extractYo(oid, kokelas)
-      Kokelas(oid, yo , YTLXml.extractLukio(oid, kokelas), YTLXml.extractTodistus(yo, kokelas), YTLXml.extractOsakoe(yo, kokelas))
+      parseKokelasForOid(oid, kokelas)
     }
+  }
+
+  def parseKokelasForOid(oid: String, kokelas: Node): Kokelas = {
+    val yo = YTLXml.extractYo(oid, kokelas)
+    Kokelas(oid, yo, YTLXml.extractLukio(oid, kokelas), YTLXml.extractTodistus(yo, kokelas), YTLXml.extractOsakoe(yo, kokelas))
   }
 }
