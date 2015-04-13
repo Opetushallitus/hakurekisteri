@@ -8,76 +8,80 @@
 </script>
 
 <aside class="row">
-    <form id="filterForm" ng-submit="search()" class="well form-horizontal col-sm-3">
-        <div class="form-group">
-            <div class="col-sm-12">
-                <input id="henkiloTerm" ng-model="henkiloTerm" type="search" placeholder="Hetu tai henkilönumero"
-                       class="form-control"/>
+    <div class="col-sm-3">
+        <form id="filterForm" ng-submit="search()" class="well form-horizontal sticky-scroller">
+            <div class="form-group">
+                <div class="col-sm-12">
+                    <input id="henkiloTerm" ng-model="henkiloTerm" type="search" placeholder="Hetu tai henkilönumero"
+                           class="form-control"/>
+                </div>
             </div>
-        </div>
-        <div class="form-group">
-            <div class="col-sm-12">
-                <input id="organisaatioTerm" autocomplete="off" ng-model="organisaatioTerm" type="search"
-                       placeholder="Oppilaitoksen numero tai nimi"
-                       typeahead="organisaatio as organisaatio.nimi.fi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10"
-                       typeahead-loading="loadingOppilaitos" typeahead-wait-ms="300"
-                       typeahead-template-url="organisaatioTemplate.html" class="form-control"/>
+            <div class="form-group">
+                <div class="col-sm-12">
+                    <input id="organisaatioTerm" autocomplete="off" ng-model="organisaatioTerm" type="search"
+                           placeholder="Oppilaitoksen numero tai nimi"
+                           typeahead="organisaatio as organisaatio.nimi.fi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10"
+                           typeahead-loading="loadingOppilaitos" typeahead-wait-ms="300"
+                           typeahead-template-url="organisaatioTemplate.html" class="form-control"/>
+                </div>
             </div>
-        </div>
-        <div class="form-group">
-            <div class="col-sm-6">
-                <select id="vuosiTerm" ng-model="vuosiTerm" ng-options="v for v in vuodet"
-                        class="form-control"></select>
+            <div class="form-group">
+                <div class="col-sm-6">
+                    <select id="vuosiTerm" ng-model="vuosiTerm" ng-options="v for v in vuodet"
+                            class="form-control"></select>
+                </div>
             </div>
-        </div>
-        <div class="form-group">
-            <div class="col-sm-12">
-                <button type="button" ng-click="reset()" class="btn btn-default">
-                    <span oph-msg="suoritusrekisteri.opiskelijat.tyhjenna">Tyhjennä</span>
-                    <span class="glyphicon glyphicon-remove"></span></button>
-                <button type="submit" class="btn btn-primary">
-                    <span oph-msg="suoritusrekisteri.opiskelijat.hae" id="hae-button">Hae</span>
-                    <span class="glyphicon glyphicon-search"></span>
-                </button>
+            <div class="form-group">
+                <div class="col-sm-12">
+                    <button type="button" ng-click="reset()" class="btn btn-default">
+                        <span oph-msg="suoritusrekisteri.opiskelijat.tyhjenna">Tyhjennä</span>
+                        <span class="glyphicon glyphicon-remove"></span></button>
+                    <button type="submit" class="btn btn-primary">
+                        <span oph-msg="suoritusrekisteri.opiskelijat.hae" id="hae-button">Hae</span>
+                        <span class="glyphicon glyphicon-search"></span>
+                    </button>
+                </div>
             </div>
-        </div>
-        <div class="form-group">
-            <div class="col-sm-12">
-                <div ng-if="!loading && allRows.length > 0 && henkiloTerm.length == 0">
-                    <input id="result-filter" ng-model="filterParam" placeholder="Suodata tuloksia"
-                           ng-change="resultFilter(filterParam)" class="form-control"/>
+            <div class="form-group">
+                <div class="col-sm-12">
+                    <div ng-if="!loading && allRows.length > 0 && henkiloTerm.length == 0">
+                        <input id="result-filter" ng-model="filterParam" placeholder="Suodata tuloksia"
+                               ng-change="resultFilter(filterParam)" class="form-control"/>
 
-                    <div class="checkbox">
-                        <label for="missingToggleCheckbox">
-                            <input type="checkbox" id="missingToggleCheckbox" ng-model="showOnlyPuuttuvat"
-                                   ng-change="arvosanatPuuttuuFilter()"/> Näytä vain puuttuvat
-                        </label>
+                        <div class="checkbox" id="missingCheckbox">
+                            <label for="missingToggleCheckbox">
+                                <input type="checkbox" id="missingToggleCheckbox" ng-model="showOnlyPuuttuvat"
+                                       ng-change="arvosanatPuuttuuFilter()"/>Näytä vain ne joiden tiedoissa puutteitta *
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div id="table-scroller" class="form-group">
-            <div class="col-sm-12" id="table-settings">
-                <div ng-if="loading">
-                    <div class="loading-td loading-large"></div>
-                </div>
-                <div ng-if="!loading">
-                    <table typeahead-loading="loadingOppilaitos" class="table table-responsive">
-                        <tbody>
-                        <tr ng-repeat="row in allRowsFiltered"
-                            ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}"
-                            ng-click="valitseHenkilo(row.henkiloOid)">
-                            <td>{{row.henkilo}}</td>
-                            <td><span ng-repeat="o in row.opiskelijat">{{o.luokka}}</span></td>
-                            <td ng-if="!row.hasArvosana"><span ng-repeat="o in row.opiskelijat">Arvosanoissa puutteita</span></td>
-                            <td ng-if="row.hasArvosana"><span ng-repeat="o in row.opiskelijat"></span></td>
-                        </tr>
-                        </tbody>
-                    </table>
+
+            <div id="table-scroller" class="form-group">
+                <div class="col-sm-12" id="table-settings">
+                    <div ng-if="loading">
+                        <div class="loading-td loading-large"></div>
+                    </div>
+                    <div ng-if="!loading">
+                        <table typeahead-loading="loadingOppilaitos" class="table table-responsive">
+                            <tbody>
+                            <tr ng-repeat="row in allRowsFiltered"
+                                ng-class="{'table-selected' : row.henkiloOid === valittuHenkiloOid}"
+                                ng-click="valitseHenkilo(row.henkiloOid)">
+                                <td>{{row.henkilo}}</td>
+                                <td><span ng-repeat="o in row.opiskelijat">{{o.luokka}}</span></td>
+                                <td ng-if="!row.hasArvosana"><span ng-repeat="o in row.opiskelijat"><b>*</b></span></td>
+                                <td ng-if="row.hasArvosana"><span ng-repeat="o in row.opiskelijat"></span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
+
     <div class="col-sm-9">
         <messages id="status-messages"></messages>
         <div ng-if="valittuHenkiloOid">

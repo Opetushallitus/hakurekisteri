@@ -50,8 +50,8 @@ body #raamit-header .header-content {
     display: none;
 }
 
-#result-filter {
-    width: 18em;
+.sticky-scroller {
+    position: fixed;
 }
 
 #table-scroller {
@@ -64,7 +64,12 @@ body #raamit-header .header-content {
     cursor: pointer;
     color: #06526b;
     font-size: 12px;
-    width: 20em;
+    width: 22em;
+    padding-right: 0;
+    word-wrap: break-word;
+}
+
+#missingCheckbox {
     word-wrap: break-word;
 }
 
@@ -166,7 +171,6 @@ body #raamit-header .header-content {
 .input-group-btn .btn-default.btn-sm {
     height: 30px;
 }
-
 
 .organisaatiotulokset {
     height: 300px;
@@ -276,22 +280,24 @@ optgroup option {
     background-color: #f9f9f9;
 }
 
-.oddRow>td {
+.oddRow > td {
     background-color: rgba(20, 158, 203, 0.06);
     border-top-color: rgba(6, 82, 107, 0.12);
     border-bottom-color: rgba(6, 82, 107, 0.12);
 }
 
-.paddedRow>td {
+.paddedRow > td {
     border-top: none !important;
 }
 
-.paddedRow>td:first-child {
+.paddedRow > td:first-child {
     padding-left: 15px;
 }
+
 .validation-error {
     color: #a94442;
 }
+
 .validation-error .name:last-child .separator {
     display: none;
 }
