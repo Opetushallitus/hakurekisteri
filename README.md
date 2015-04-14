@@ -11,6 +11,12 @@ Setup:
 
 Mocha-testit selaimessa: http://localhost:8080/test/runner.html
 
+Alternative setup:
+
+1. Hanki "~/oph-configuration"-hakemisto (kysy devaajilta apua)
+2. Buildaa fronttikamat: `npm run watch`
+3. Käynnistä "oikea" serveri IDEAsta: `HakuRekisteriTomcat`.
+
 ## Build & Run ##
 
 Näin voit ajaa sovellusta paikallisesti tuotannonkaltaisena setuppina, käyttäen paikallista h2-kantaa.
