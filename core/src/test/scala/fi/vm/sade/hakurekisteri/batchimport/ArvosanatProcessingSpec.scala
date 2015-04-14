@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.batchimport
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{Actor, ActorSystem, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
@@ -20,6 +20,7 @@ import org.joda.time.LocalDate
 import org.mockito.Mockito._
 import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.mock.MockitoSugar
+import org.scalatest.time.SpanSugar._
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.concurrent.duration.Duration
@@ -32,138 +33,146 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
   import Fixtures._
 
   it should "resolve data from henkilopalvelu, organisaatiopalvelu and suoritusrekisteri, and then import data into arvosanarekisteri" in {
-    implicit val system = ActorSystem("test-import-arvosana-batch-processing")
-    implicit val ec: ExecutionContext = system.dispatcher
+    withSystem(
+      implicit system => {
+        implicit val ec: ExecutionContext = system.dispatcher
 
-    val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val henkiloActor = system.actorOf(Props(new HenkiloActor(henkiloClient)))
-    val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
+        val arvosanaWaiter = new Waiter()
+        val importBatchWaiter = new Waiter()
 
-    val suoritus = VirallinenSuoritus(Config.perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", new LocalDate(2001, 1, 1), "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
-    val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = {r => r}, query = {q => Seq(suoritus)})))
-    val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient)))
+        val s = suoritus(new LocalDate(2001, 1, 1))
+        val batch = batchGenerator.generate
 
-    val aWaiter = new Waiter()
-    val arvosanaHandler = (a: Arvosana) => {
-      aWaiter { a.suoritus should be (suoritus.id) }
-      aWaiter.dismiss()
-    }
-    val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana](save = arvosanaHandler, query = { (q) => Seq() })))
+        val arvosanatProcessing = new ArvosanatProcessing(
+          createOrganisaatioActor,
+          createHenkiloActor,
+          system.actorOf(Props(new MockedResourceActor[Suoritus](save = {s => s}, query = {q => Seq(s)}))),
+          system.actorOf(Props(new MockedResourceActor[Arvosana](save = (a: Arvosana) => {
+            arvosanaWaiter { a.suoritus should be (s.id) }
+            arvosanaWaiter.dismiss()
+          }, query = {q => Seq()}))),
+          createImportBatchActor(system, (b: ImportBatch) => {
+            importBatchWaiter { b.state should be (BatchState.DONE) }
+            importBatchWaiter.dismiss()
+          }, batch),
+          createKoodistoActor
+        )
 
-    val iWaiter = new Waiter()
-    val batchSaveHandler = (b: ImportBatch) => {
-      iWaiter { b.state should be (BatchState.DONE) }
-      iWaiter.dismiss()
-    }
-    val batch = batchGenerator.generate
-    val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchSaveHandler, query = { (q) => Seq(batch) })))
+        arvosanatProcessing.process(batch)
 
-    val arvosanatProcessing = new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)
-    arvosanatProcessing.process(batch)
-
-    import org.scalatest.time.SpanSugar._
-    aWaiter.await(timeout(30.seconds), dismissals(22))
-    iWaiter.await(timeout(30.seconds), dismissals(1))
-
-    system.shutdown()
-    system.awaitTermination()
+        arvosanaWaiter.await(timeout(30.seconds), dismissals(22))
+        importBatchWaiter.await(timeout(30.seconds), dismissals(1))
+      }
+    )
   }
 
   it should "report a row error if no matching suoritus was found" in {
-    implicit val system = ActorSystem("test-import-arvosana-batch-processing")
-    implicit val ec: ExecutionContext = system.dispatcher
+    withSystem(
+      implicit system => {
+        implicit val ec: ExecutionContext = system.dispatcher
 
-    val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val henkiloActor = system.actorOf(Props(new HenkiloActor(henkiloClient)))
-    val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
+        val importBatchWaiter = new Waiter()
 
-    val suoritus = VirallinenSuoritus(Config.perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", new LocalDate(2002, 1, 1), "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
-    val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = {r => r}, query = {q => Seq(suoritus)})))
-    val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient)))
+        val batch = batchGenerator.generate
 
-    val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana](save = {r => r}, query = { (q) => Seq() })))
+        val arvosanatProcessing = new ArvosanatProcessing(
+          createOrganisaatioActor,
+          createHenkiloActor,
+          system.actorOf(Props(new MockedResourceActor[Suoritus](save = {s => s}, query = {q => Seq(suoritus(new LocalDate(2002, 1, 1)))}))),
+          system.actorOf(Props(new MockedResourceActor[Arvosana](save = {a => a}, query = {q => Seq()}))),
+          createImportBatchActor(system, (b: ImportBatch) => {
+            importBatchWaiter { b.state should be (BatchState.DONE) }
+            importBatchWaiter.dismiss()
+          }, batch),
+          createKoodistoActor
+        )
 
-    val iWaiter = new Waiter()
-    val batchSaveHandler = (b: ImportBatch) => {
-      iWaiter { b.state should be (BatchState.DONE) }
-      iWaiter.dismiss()
-    }
-    val batch = batchGenerator.generate
-    val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchSaveHandler, query = { (q) => Seq(batch) })))
+        val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
 
-    val arvosanatProcessing = new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)
-    val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
-    saved.status.messages("111111-111L").find(_.contains("SuoritusNotFoundException")) should not be None
+        saved.status.messages("111111-111L").find(_.contains("SuoritusNotFoundException")) should not be None
 
-    import org.scalatest.time.SpanSugar._
-    iWaiter.await(timeout(30.seconds), dismissals(1))
-
-    system.shutdown()
-    system.awaitTermination()
+        importBatchWaiter.await(timeout(30.seconds), dismissals(1))
+      }
+    )
   }
 
   it should "report a row error if arvosana save fails" in {
-    implicit val system = ActorSystem("test-import-arvosana-batch-processing")
-    implicit val ec: ExecutionContext = system.dispatcher
+    withSystem(
+      implicit system => {
+        implicit val ec: ExecutionContext = system.dispatcher
 
-    val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val henkiloActor = system.actorOf(Props(new HenkiloActor(henkiloClient)))
-    val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
+        val importBatchWaiter = new Waiter()
 
-    val suoritus = VirallinenSuoritus(Config.perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", new LocalDate(2001, 1, 1), "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
-    val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = {r => r}, query = {q => Seq(suoritus)})))
-    val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient)))
+        val batch = batchGenerator.generate
 
-    val arvosanarekisteri = system.actorOf(Props(new FailingResourceActor[Arvosana]()))
+        val arvosanatProcessing = new ArvosanatProcessing(
+          createOrganisaatioActor,
+          createHenkiloActor,
+          system.actorOf(Props(new MockedResourceActor[Suoritus](save = {s => s}, query = {q => Seq(suoritus(new LocalDate(2001, 1, 1)))}))),
+          system.actorOf(Props(new FailingResourceActor[Arvosana]())),
+          createImportBatchActor(system, (b: ImportBatch) => {
+            importBatchWaiter { b.state should be (BatchState.DONE) }
+            importBatchWaiter.dismiss()
+          }, batch),
+          createKoodistoActor
+        )
 
-    val iWaiter = new Waiter()
-    val batchSaveHandler = (b: ImportBatch) => {
-      iWaiter { b.state should be (BatchState.DONE) }
-      iWaiter.dismiss()
-    }
-    val batch = batchGenerator.generate
-    val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchSaveHandler, query = { (q) => Seq(batch) })))
+        val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
 
-    val arvosanatProcessing = new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)
-    val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
-    saved.status.messages("111111-111L").find(_.contains("test save exception")) should not be None
+        saved.status.messages("111111-111L").find(_.contains("test save exception")) should not be None
 
-    import org.scalatest.time.SpanSugar._
-    iWaiter.await(timeout(30.seconds), dismissals(1))
-
-    system.shutdown()
-    system.awaitTermination()
+        importBatchWaiter.await(timeout(30.seconds), dismissals(1))
+      }
+    )
   }
 
   it should "create a lukio suoritus if it does not exist" in {
-    implicit val system = ActorSystem("test-import-arvosana-batch-processing")
-    implicit val ec: ExecutionContext = system.dispatcher
+    withSystem(
+      implicit system => {
+        implicit val ec: ExecutionContext = system.dispatcher
 
-    val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val henkiloActor = system.actorOf(Props(new HenkiloActor(henkiloClient)))
-    val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
+        val suoritusWaiter = new Waiter()
 
-    val sWaiter = new Waiter()
-    val suoritusHandler = (s: Suoritus) => {
-      sWaiter { s.asInstanceOf[VirallinenSuoritus].komo should be (Config.lukioKomoOid) }
-      sWaiter.dismiss()
-    }
-    val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = suoritusHandler, query = {q => {Seq()}})))
-    val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient)))
+        val batch = batchGeneratorLukio.generate
 
-    val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana](save = {r => r}, query = { (q) => Seq() })))
-    val batch = batchGeneratorLukio.generate
-    val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = {r => r}, query = { (q) => Seq(batch) })))
+        val arvosanatProcessing = new ArvosanatProcessing(
+          createOrganisaatioActor,
+          createHenkiloActor,
+          system.actorOf(Props(new MockedResourceActor[Suoritus](save = (s: Suoritus) => {
+            suoritusWaiter { s.asInstanceOf[VirallinenSuoritus].komo should be (Config.lukioKomoOid) }
+            suoritusWaiter.dismiss()
+          }, query = {q => Seq()}))),
+          system.actorOf(Props(new MockedResourceActor[Arvosana](save = {a => a}, query = {q => Seq()}))),
+          createImportBatchActor(system, { r => r }, batch),
+          createKoodistoActor
+        )
 
-    val arvosanatProcessing = new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)
-    arvosanatProcessing.process(batch)
+        arvosanatProcessing.process(batch)
 
-    import org.scalatest.time.SpanSugar._
-    sWaiter.await(timeout(10.seconds), dismissals(1))
+        suoritusWaiter.await(timeout(10.seconds), dismissals(1))
+      }
+    )
+  }
+
+  private def createKoodistoActor(implicit system: ActorSystem): ActorRef =
+    system.actorOf(Props(new MockedKoodistoActor()))
+
+  private def suoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
+    VirallinenSuoritus(Config.perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
+
+  private def createImportBatchActor(system: ActorSystem, batchSaveHandler: (ImportBatch) => Unit, batch: ImportBatch with Identified[UUID]): ActorRef =
+    system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchSaveHandler, query = {q => Seq(batch)})))
+
+  private def createOrganisaatioActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
+    system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider))))))
+
+  private def createHenkiloActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
+    system.actorOf(Props(new HenkiloActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider))))))
+
+  private def withSystem(f: ActorSystem => Unit) = {
+    val system = ActorSystem("test-import-arvosana-batch-processing")
+
+    f(system)
 
     system.shutdown()
     system.awaitTermination()
