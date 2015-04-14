@@ -84,7 +84,9 @@ object HakurekisteriBuild extends Build {
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion,
     "org.scalamock" %% "scalamock-scalatest-support" % "3.1.4",
-    "com.storm-enroute" %% "scalameter" % "0.6")
+    "com.storm-enroute" %% "scalameter" % "0.6",
+    "org.apache.tomcat.embed" % "tomcat-embed-core" % "7.0.39"
+  )
 
   lazy val npmBuild = taskKey[Unit]("run npm build")
   val npmBuildTask = npmBuild := {
