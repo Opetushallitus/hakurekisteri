@@ -31,7 +31,7 @@
                 <span ng-hide="k.editable" class="test-yoTxt">{{k.arvosana.arvio.arvosana}}</span>
             </td>
             <td>
-                <input ng-show="k.editable" type="number" step="1" min="0" max="999" maxlength="3" ng-model="k.arvosana.arvio.pisteet"
+                <input ng-show="k.editable" data-type="number" step="1" data-min="0" data-max="999" maxlength="3" ng-model="k.arvosana.arvio.pisteet"
                        ng-disabled="k.arvosana.delete" class="form-control test-yoArvosanaPistemaara"/>
                 <span ng-hide="k.editable" class="test-yoTxt">{{k.arvosana.arvio.pisteet}}</span>
             </td>
