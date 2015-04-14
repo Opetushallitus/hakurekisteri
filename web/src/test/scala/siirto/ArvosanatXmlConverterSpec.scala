@@ -195,6 +195,33 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
     verifyConversion(wb, valid)
   }
 
+  it should "convert ammattistartti" in {
+    verifyValidity(convertXls(lisaopetusExcel("ammattistartti")))
+  }
+
+  it should "convert valmentava" in {
+    verifyValidity(convertXls(lisaopetusExcel("valmentava")))
+  }
+
+  it should "convert maahanmuuttajienlukioonvalmistava" in {
+    // Cannot test, because worksheet name gets truncated at 31 chars.
+
+    //verifyValidity(convertXls(lisaopetusExcel("maahanmuuttajienlukioonvalmistava")))
+  }
+
+  it should "convert maahanmuuttajienammvalmistava" in {
+    verifyValidity(convertXls(lisaopetusExcel("maahanmuuttajienammvalmistava")))
+  }
+
+
+  private def lisaopetusExcel(todistusType: String) = WorkbookData(
+    todistusType ->
+      """
+        |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|SYNTYMAAIKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|MYONTAJA|SUORITUSKIELI|VALMISTUMINEN  |AI_YH | AI_TYYPPI
+        |111111-1975|            |               |           |Testi   |Test A  |Test       |05127   |SV           |31.05.2015     |9     | SV
+      """
+  ).toExcel
+
   it should "convert arvosanat.xls into valid xml" in {
     verifyValidity(XML.load(getClass.getResource("/tiedonsiirto/arvosanat.xml"))) // sanity check
     val doc: Elem = ArvosanatXmlConverter.convert(getClass.getResourceAsStream("/tiedonsiirto/arvosanat.xls"), "arvosanat.xml")
