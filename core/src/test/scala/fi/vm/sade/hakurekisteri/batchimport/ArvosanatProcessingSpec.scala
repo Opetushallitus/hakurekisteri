@@ -4,9 +4,11 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.pattern.ask
+import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.arvosana.Arvosana
+import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana, ArvosanaActor, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoKoodiArvot}
@@ -60,7 +62,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
         arvosanatProcessing.process(batch)
 
-        arvosanaWaiter.await(timeout(30.seconds), dismissals(22))
+        arvosanaWaiter.await(timeout(30.seconds), dismissals(23))
         importBatchWaiter.await(timeout(30.seconds), dismissals(1))
       }
     )
@@ -154,6 +156,92 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     )
   }
 
+  it should "set correct index numbers for optional grades" in {
+    withSystem(
+      implicit system => {
+        implicit val ec: ExecutionContext = system.dispatcher
+
+        val batch = batchGenerator.generate
+
+        val s = suoritus(new LocalDate(2001, 1, 1))
+
+        val arvosanaActor = system.actorOf(Props(new ArvosanaActor()))
+
+        val arvosanatProcessing = new ArvosanatProcessing(
+          createOrganisaatioActor,
+          createHenkiloActor,
+          system.actorOf(Props(new MockedResourceActor[Suoritus](save = {s => s}, query = {q => Seq(s)}))),
+          arvosanaActor,
+          createImportBatchActor(system, {r => r}, batch),
+          createKoodistoActor
+        )
+
+        Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
+
+        val savedArvosanat: Seq[Arvosana] = Await.result((arvosanaActor ? ArvosanaQuery(None))(Timeout(30, TimeUnit.SECONDS)).mapTo[Seq[Arvosana]], Duration(30, TimeUnit.SECONDS))
+
+        savedArvosanat should (
+          contain (
+            Arvosana(
+              suoritus = s.id,
+              arvio = Arvio410("6"),
+              aine = "A1",
+              lisatieto = Some("EN"),
+              valinnainen = true,
+              myonnetty = None,
+              source = lahde,
+              jarjestys = Some(0)
+            )
+          ) and contain (
+            Arvosana(
+              suoritus = s.id,
+              arvio = Arvio410("8"),
+              aine = "A1",
+              lisatieto = Some("EN"),
+              valinnainen = true,
+              myonnetty = None,
+              source = lahde,
+              jarjestys = Some(1)
+            )
+          ) and contain (
+            Arvosana(
+              suoritus = s.id,
+              arvio = Arvio410("10"),
+              aine = "A1",
+              lisatieto = Some("EN"),
+              valinnainen = true,
+              myonnetty = None,
+              source = lahde,
+              jarjestys = Some(2)
+            )
+          ) and contain (
+            Arvosana(
+              suoritus = s.id,
+              arvio = Arvio410("6"),
+              aine = "MA",
+              lisatieto = None,
+              valinnainen = true,
+              myonnetty = None,
+              source = lahde,
+              jarjestys = Some(0)
+            )
+          ) and contain (
+            Arvosana(
+              suoritus = s.id,
+              arvio = Arvio410("8"),
+              aine = "MA",
+              lisatieto = None,
+              valinnainen = true,
+              myonnetty = None,
+              source = lahde,
+              jarjestys = Some(1)
+            )
+          )
+        )
+      }
+    )
+  }
+
   private def createKoodistoActor(implicit system: ActorSystem): ActorRef =
     system.actorOf(Props(new MockedKoodistoActor()))
 
@@ -202,6 +290,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
                   <yhteinen>5</yhteinen>
                   <valinnainen>6</valinnainen>
                   <valinnainen>8</valinnainen>
+                  <valinnainen>10</valinnainen>
                   <kieli>EN</kieli>
                 </A1>
                 <B1>
