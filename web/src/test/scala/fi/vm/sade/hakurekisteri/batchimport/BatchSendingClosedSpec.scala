@@ -7,7 +7,7 @@ import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.TestSecurity
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.parametrit.{ParameterActor, SendingPeriod, TiedonsiirtoSendingPeriods}
+import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, ParameterActor, SendingPeriod, TiedonsiirtoSendingPeriods}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
 import fi.vm.sade.hakurekisteri.web.batchimport.{TiedonsiirtoOpen, ImportBatchResource}
@@ -48,7 +48,7 @@ class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with Dis
   }
   val asyncProvider = new CapturingProvider(createEndpointMock)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/ohjausparametrit-service"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  val parameterActor = system.actorOf(Props(new ParameterActor(client)))
+  val parameterActor = system.actorOf(Props(new HttpParameterActor(client)))
 
   override def stop(): Unit = {
     system.shutdown()

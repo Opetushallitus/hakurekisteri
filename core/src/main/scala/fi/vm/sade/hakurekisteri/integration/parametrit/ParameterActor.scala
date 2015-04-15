@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 case class ParamsFailedException(haku: String, from: ActorRef, t: Throwable) extends Exception(s"call to parameter service failed for haku $haku", t)
 case class NoParamFoundException(haku: String) extends Exception(s"no parameter found for haku $haku")
 
-class ParameterActor(restClient: VirkailijaRestClient) extends Actor with ActorLogging {
+abstract class ParameterActor extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
   private var calling = false
   private val tiedonsiirtoSendingPeriodCache = new FutureCache[String, Boolean](2.minute.toMillis)
@@ -42,7 +42,7 @@ class ParameterActor(restClient: VirkailijaRestClient) extends Actor with ActorL
     case IsSendingEnabled(key) =>
       isSendingEnabled(key) pipeTo sender
   }
-  
+
   private def isSendingEnabled(key: String): Future[Boolean] = {
     if (tiedonsiirtoSendingPeriodCache.contains(key))
       tiedonsiirtoSendingPeriodCache.get(key)
@@ -53,17 +53,23 @@ class ParameterActor(restClient: VirkailijaRestClient) extends Actor with ActorL
     }
   }
 
-  private def getParams(hakuOid: String): Future[DateTime] = restClient.readObject[KierrosParams](s"/api/v1/rest/parametri/$hakuOid", 200).map {
-    case KierrosParams(Some(KierrosEndParams(date))) => new DateTime(date)
-    case _ => throw NoParamFoundException(hakuOid)
-  }
-
-  private def isPeriodEffective(period: SendingPeriod): Boolean = {
+  protected def isPeriodEffective(period: SendingPeriod): Boolean = {
     val now = Platform.currentTime
     period.dateStart <= now && period.dateEnd > now
   }
 
-  private def isEnabledFromRest(key: String): Future[Boolean] = restClient.readObject[TiedonsiirtoSendingPeriods]("/api/v1/rest/parametri/tiedonsiirtosendingperiods", 200).map(p => key match {
+  protected def getParams(hakuOid: String): Future[DateTime]
+
+  protected def isEnabledFromRest(key: String): Future[Boolean]
+}
+
+class HttpParameterActor(restClient: VirkailijaRestClient) extends ParameterActor {
+  override def getParams(hakuOid: String): Future[DateTime] = restClient.readObject[KierrosParams](s"/api/v1/rest/parametri/$hakuOid", 200).map {
+    case KierrosParams(Some(KierrosEndParams(date))) => new DateTime(date)
+    case _ => throw NoParamFoundException(hakuOid)
+  }
+
+  override def isEnabledFromRest(key: String): Future[Boolean] = restClient.readObject[TiedonsiirtoSendingPeriods]("/api/v1/rest/parametri/tiedonsiirtosendingperiods", 200).map(p => key match {
     case k if k == Config.batchTypePerustiedot => isPeriodEffective(p.perustiedot)
     case k if k == Config.batchTypeArvosanat => isPeriodEffective(p.arvosanat)
     case _ => false
@@ -72,7 +78,12 @@ class ParameterActor(restClient: VirkailijaRestClient) extends Actor with ActorL
       log.error(t, "error retrieving parameter")
       Future.successful(false)
   }
+}
 
+class MockParameterActor extends ParameterActor {
+  override protected def getParams(hakuOid: String) = Future { new DateTime }
+
+  override protected def isEnabledFromRest(key: String) = Future { true }
 }
 
 case class KierrosRequest(haku: String)

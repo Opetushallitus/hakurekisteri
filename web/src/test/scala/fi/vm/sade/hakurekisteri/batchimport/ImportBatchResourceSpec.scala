@@ -6,7 +6,7 @@ import akka.actor.{ActorSystem, Props}
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.parametrit.{ParameterActor, SendingPeriod, TiedonsiirtoSendingPeriods}
+import fi.vm.sade.hakurekisteri.integration.parametrit._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -55,7 +55,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
   }
   val asyncProvider = new CapturingProvider(createEndpointMock)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/ohjausparametrit-service"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  val parameterActor = system.actorOf(Props(new ParameterActor(client)))
+  val parameterActor = system.actorOf(Props(new MockParameterActor()))
 
   override def stop(): Unit = {
     system.shutdown()
