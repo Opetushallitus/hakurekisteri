@@ -59,9 +59,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           }, batch),
           createKoodistoActor
         )
-
-        arvosanatProcessing.process(batch)
-
+        val status = Await.result(arvosanatProcessing.process(batch), Duration(10, TimeUnit.SECONDS)).status
+        status.messages shouldBe empty
         arvosanaWaiter.await(timeout(30.seconds), dismissals(23))
         importBatchWaiter.await(timeout(30.seconds), dismissals(1))
       }
