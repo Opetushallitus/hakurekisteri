@@ -22,9 +22,6 @@ import scala.concurrent.ExecutionContext
 object ProcessReadyBatches
 
 class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef, arvosanarekisteri: ActorRef, koodistoActor: ActorRef, config: Config) extends Actor with ActorLogging {
-
-  log.info("starting processing actor")
-
   implicit val ec: ExecutionContext = context.dispatcher
   private val processStarter: Cancellable = context.system.scheduler.schedule(config.importBatchProcessingInitialDelay, 15.seconds, self, ProcessReadyBatches)
 
@@ -38,6 +35,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
 
   override def receive: Receive = {
     case ProcessReadyBatches if readyForProcessing =>
+      log.info("checking for batches")
       fetching = true
       importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), None, Some(1))
 
@@ -47,6 +45,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
 
     case b: ImportBatch with Identified[UUID] =>
       fetching = false
+      log.info("got import batch")
       b.batchType match {
         case "perustiedot" =>
           context.actorOf(Props(new PerustiedotProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, config.oids)(b)))
