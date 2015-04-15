@@ -1,45 +1,29 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import akka.actor._
+import java.io.{File, FileOutputStream, IOException}
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.Config
-
-import scala.xml._
-import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus}
-import fi.vm.sade.hakurekisteri.arvosana._
-import scala.concurrent.{Await, ExecutionContext, Future}
-import akka.pattern.ask
-import akka.util.Timeout
 import java.util.concurrent.{Executors, TimeUnit}
-import org.joda.time._
-import fi.vm.sade.hakurekisteri.storage.Identified
-import fr.janalyse.ssh.{SSHPassword, SSH}
-import scala.concurrent.duration._
-import akka.pattern.pipe
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
-import java.io.{FileOutputStream, File, IOException}
+
+import akka.actor.{ActorIdentity, Identify, _}
+import akka.pattern.{ask, pipe}
+import akka.util.Timeout
+import com.jcraft.jsch.{ChannelSftp, SftpException}
+import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.arvosana.{ArvioOsakoe, ArvioYo, Arvosana, _}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HetuQuery}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.Aine
-import scala.compat.Platform
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
+import fr.janalyse.ssh.{SSH, SSHOptions, SSHPassword}
+import org.joda.time._
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
-import scala.xml.pull._
-import com.jcraft.jsch.{SftpException, ChannelSftp}
-import fi.vm.sade.hakurekisteri.arvosana.ArvioYo
-import fr.janalyse.ssh.SSHOptions
-import scala.xml.pull.EvElemEnd
-import scala.util.Failure
-import scala.Some
-import fi.vm.sade.hakurekisteri.arvosana.ArvioOsakoe
-import scala.xml.pull.EvElemStart
-import scala.xml.NamespaceBinding
-import fi.vm.sade.hakurekisteri.integration.hakemus.FullHakemus
-import fi.vm.sade.hakurekisteri.integration.henkilo.HetuQuery
-import fi.vm.sade.hakurekisteri.arvosana.Arvosana
-import scala.util.Success
-import scala.xml.pull.EvText
-import akka.actor.ActorIdentity
-import akka.actor.Identify
-import fi.vm.sade.hakurekisteri.integration.henkilo.Henkilo
-import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
+import scala.util.{Failure, Success}
+import scala.xml.{NamespaceBinding, _}
+import scala.xml.pull.{EvElemEnd, EvElemStart, EvText, _}
 
 
 case class YtlReport(waitingforAnswers: Seq[Batch[KokelasRequest]], nextSend: Option[DateTime])
@@ -212,20 +196,20 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
             val outputStream = new FileOutputStream(new File(s"$localStore/$filename"))
             try {
               channel.get(path, outputStream)
-              Some(filename)
+              Some(s"$localStore/$filename")
             } catch {
-              case e: SftpException if (e.id == 2) =>
+              case e: SftpException if e.id == 2 =>
                 None
             } finally {
-              outputStream.close
+              outputStream.close()
             }
 
           }
 
 
           def close() = {
-            channel.quit
-            channel.disconnect
+            channel.quit()
+            channel.disconnect()
           }
 
         }
@@ -262,7 +246,6 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     val finder = requested.map(batch2Finder).getOrElse(resolveOidFromHenkiloPalvelu _)
 
     import YTLXml._
-    import akka.pattern.pipe
 
     val kokelaat = findKokelaat(source, finder)
 
@@ -461,9 +444,9 @@ object YTLXml {
       def parseSingleElem(elemStart: EvElemStart, reader:XMLEventReader):Elem = {
         val pre = elemStart.pre
         val label = elemStart.label
-        def loop(cur:Elem = Elem(pre, label, elemStart.attrs: MetaData, elemStart.scope: NamespaceBinding, true)):Elem = reader.next() match {
+        def loop(cur:Elem = Elem(pre, label, elemStart.attrs: MetaData, elemStart.scope: NamespaceBinding, minimizeEmpty = true)):Elem = reader.next() match {
           case e: EvElemStart =>
-            loop(cur.copy(child = cur.child ++ Seq(parseSingleElem(e,reader))))
+            loop(cur.copy(child = cur.child ++ Seq(parseSingleElem(e, reader))))
           case EvElemEnd(`pre`, `label`) =>
             cur
           case EvText(text) => loop(cur.copy(child = cur.child ++ Seq(Text(text))))
@@ -475,7 +458,7 @@ object YTLXml {
 
       def readSingleText(label:String, reader:XMLEventReader): Option[String] = {
         val text = reader.collectFirst{
-          case EvText(text) => Some(text)
+          case EvText(t) => Some(t)
           case EvElemEnd(_, `label`) => None
         }.get
         if (text.isDefined) reader.collectFirst{case EvElemEnd(_, `label`) => true}.get
@@ -483,7 +466,7 @@ object YTLXml {
       }
 
       def parseOsakokeet(reader:XMLEventReader):Seq[(ArvioOsakoe, String)] = {
-        def loop(currentarvio: Option[ArvioOsakoe], currenttunnus: Option[String],found: Seq[(ArvioOsakoe, String)]):Seq[(ArvioOsakoe, String)] =  reader.next match {
+        def loop(currentarvio: Option[ArvioOsakoe], currenttunnus: Option[String],found: Seq[(ArvioOsakoe, String)]):Seq[(ArvioOsakoe, String)] =  reader.next() match {
           case EvElemEnd(_,"OSAKOE") => loop(None, None, found ++ Seq((currentarvio.get, currenttunnus.get)))
           case EvElemStart(_,"OSAKOEPISTEET", _,_) => loop(readSingleText("OSAKOEPISTEET", reader).map(ArvioOsakoe(_)), currenttunnus, found)
           case EvElemStart(_,"OSAKOETUNNUS", _, _) => loop(currentarvio, readSingleText("OSAKOETUNNUS", reader), found)
