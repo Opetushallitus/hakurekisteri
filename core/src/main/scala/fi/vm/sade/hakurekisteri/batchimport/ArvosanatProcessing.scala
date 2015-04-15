@@ -76,7 +76,9 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   private def saveArvosana(batch: ImportBatch, s: Suoritus with Identified[UUID], arvosana: ImportArvosana): Future[Arvosana with Identified[UUID]] =
     (arvosanarekisteri ? toArvosana(arvosana)(s.id)(batch.source)).mapTo[Arvosana with Identified[UUID]]
 
-  private def saveTodistus(batch: ImportBatch, henkilo: (String, String, Seq[(ImportTodistus, String)]), todistus: (ImportTodistus, String)): Future[Seq[ArvosanaStatus]] = {
+  private def saveTodistus(batch: ImportBatch,
+                           henkilo: (String, String, Seq[(ImportTodistus, String)]),
+                           todistus: (Valmistunut, String)): Future[Seq[ArvosanaStatus]] = {
     val savedTodistus =
       for (suoritus <- fetchSuoritus(henkilo._2, todistus._1, todistus._2, batch.source)) yield
         for (arvosana <- todistus._1.arvosanat) yield saveArvosana(batch, suoritus, arvosana)
@@ -94,9 +96,17 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
 
   private def processBatch(batch: ImportBatch)(oppiaineet: Seq[String]): Seq[Future[ImportArvosanaStatus]] =
     for (henkilot <- enrich(parseData(batch)(oppiaineet))(batch.source)) yield henkilot.flatMap(henkilo => {
-      val todistukset = for (todistus <- henkilo._3) yield saveTodistus(batch, henkilo, todistus)
+      val (tunniste, _, todistukset) = henkilo
+      val statuses = todistukset.collect {
+        case (todistus: Valmistunut, myontajaOid: String)
+        => saveTodistus(batch, henkilo, (todistus, myontajaOid))
+        case (todistus: Siirtynyt, myontajaOid: String)
+        => Future.successful(Seq(FailureArvosanaStatus(tunniste, new RuntimeException("siirtynyt suoritus not implemented"))))
+        case (todistus: Keskeytynyt, myontajaOid: String)
+        => Future.successful(Seq(FailureArvosanaStatus(tunniste, new RuntimeException("keskeytynyt suoritus not implemented"))))
+      }
 
-      Future.sequence(todistukset).map(tods => {
+      Future.sequence(statuses).map(tods => {
         val arvosanaStatukset = tods.foldLeft[Seq[ArvosanaStatus]](Seq())(_ ++ _)
         arvosanaStatukset.find(_.isInstanceOf[FailureArvosanaStatus]) match {
           case Some(FailureArvosanaStatus(tunniste, _)) =>
@@ -127,8 +137,8 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   private def createLukioSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String, lahde: String): Future[Suoritus with Identified[UUID]] =
     (suoritusrekisteri ? VirallinenSuoritus(todistus.komo, oppilaitosOid, "KESKEN", todistus.valmistuminen, henkiloOid, yksilollistaminen.Ei, todistus.suoritusKieli, None, vahv = true, lahde)).mapTo[Suoritus with Identified[UUID]]
 
-  private def matchSuoritus(todistus: ImportTodistus)(suoritus: Suoritus): Boolean = (todistus, suoritus) match {
-    case (ImportTodistus(komoOid, _, _, v, _), s: VirallinenSuoritus) if s.komo == komoOid && s.valmistuminen == v => true
+  private def matchSuoritus(todistus: ImportTodistus)(suoritus: Suoritus): Boolean = suoritus match {
+    case s: VirallinenSuoritus => todistus.komo == s.komo && todistus.valmistuminen == s.valmistuminen
     case _ => false
   }
 
@@ -184,7 +194,20 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     extends Exception(s"Suoritus not found for henkilo $henkiloOid by myontaja $oppilaitosOid with komo $komo and valmistuminen $valmistuminen.")
   object HenkiloTunnisteNotSupportedException extends Exception("henkilo tunniste not yet supported in arvosana batch")
   case class ImportArvosana(aine: String, arvosana: String, lisatieto: Option[String], valinnainen: Boolean, jarjestys: Option[Int] = None)
-  case class ImportTodistus(komo: String, myontaja: String, arvosanat: Seq[ImportArvosana], valmistuminen: LocalDate, suoritusKieli: String)
+
+  sealed trait ImportTodistus {
+    val komo: String
+    val myontaja: String
+    val suoritusKieli: String
+    val valmistuminen: LocalDate
+  }
+  case class Valmistunut(komo: String, myontaja: String, suoritusKieli: String, valmistuminen: LocalDate, arvosanat: Seq[ImportArvosana]) extends ImportTodistus
+  case class Siirtynyt(komo: String, myontaja: String, suoritusKieli: String, odotettuValmistuminen: LocalDate) extends ImportTodistus {
+    override val valmistuminen = odotettuValmistuminen
+  }
+  case class Keskeytynyt(komo: String, myontaja: String, suoritusKieli: String, opetusPaattynyt: LocalDate) extends ImportTodistus {
+    override  val valmistuminen = opetusPaattynyt
+  }
   case class ImportArvosanaHenkilo(tunniste: ImportTunniste, sukunimi: String, etunimet: String, kutsumanimi: String, todistukset: Seq[ImportTodistus])
   object ImportArvosanaHenkilo {
     def getField(name: String)(h: Node): String = (h \ name).head.text
@@ -200,11 +223,22 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
           map(t => ImportArvosana(name, t._1.text, lisatieto, valinnainen = true, Some(t._2))) :+ ImportArvosana(name, getField("yhteinen")(s), lisatieto, valinnainen = false)
     }).flatten.foldLeft[Seq[ImportArvosana]](Seq())(_ ++ _)
 
+    def valmistunutSuoritus(s: Node) = (s \ "valmistuminen").nonEmpty
+    def luokalleJaanytSuoritus(s: Node) = (s \ "valmistuminensiirtyy").nonEmpty
+    def keskeytynytSuoritus(s: Node) = (s \ "eivalmistu").nonEmpty
+
     def todistus(name: String, komoOid: String, oppijanumero: Option[String])(h: Node)(lahde: String)(oppiaineet: Seq[String]): Option[ImportTodistus] = (h \ name).headOption.map(s => {
-      val valmistuminen = getField("valmistuminen")(s)
       val myontaja = getField("myontaja")(s)
       val suoritusKieli = getField("suorituskieli")(s)
-      ImportTodistus(komoOid, myontaja, arvosanat(s)(oppiaineet), new LocalDate(valmistuminen), suoritusKieli)
+      if (valmistunutSuoritus(s)) {
+        Valmistunut(komoOid, myontaja, suoritusKieli, new LocalDate(getField("valmistuminen")(s)), arvosanat(s)(oppiaineet))
+      } else if (luokalleJaanytSuoritus(s)) {
+        Siirtynyt(komoOid, myontaja, suoritusKieli, new LocalDate(getField("oletettuvalmistuminen")(s)))
+      } else if (keskeytynytSuoritus(s)) {
+        Keskeytynyt(komoOid, myontaja, suoritusKieli, new LocalDate(getField("opetuspaattynyt")(s)))
+      } else {
+        throw new RuntimeException("unrecognized suoritus")
+      }
     })
 
     val tyypit = Map(
