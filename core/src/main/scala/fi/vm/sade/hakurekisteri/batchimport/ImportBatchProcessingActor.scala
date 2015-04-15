@@ -37,10 +37,10 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     case ProcessReadyBatches if readyForProcessing =>
       log.info("checking for batches")
       fetching = true
-      importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), None, Some(1))
+      importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), None, if (config.h2) { None } else { Some(1) })
 
     case b: Seq[ImportBatch with Identified[UUID]] =>
-      b.foreach(batch => importBatchActor ! batch.copy(state = BatchState.PROCESSING).identify(batch.id))
+      b.take(1).foreach(batch => importBatchActor ! batch.copy(state = BatchState.PROCESSING).identify(batch.id))
       if (b.isEmpty) fetching = false
 
     case b: ImportBatch with Identified[UUID] =>

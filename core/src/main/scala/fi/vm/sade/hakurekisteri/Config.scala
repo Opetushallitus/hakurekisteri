@@ -47,10 +47,12 @@ class DefaultConfig extends Config {
 class MockConfig extends Config {
   val mockMode = true
   override val importBatchProcessingInitialDelay = 1.seconds
+  override val h2 = true
 }
 
 abstract class Config {
   val mockMode: Boolean
+  val h2 = false
 
   val log = LoggerFactory.getLogger(getClass)
   val homeDir = sys.props.getOrElse("user.home", "")
