@@ -5,7 +5,7 @@ import java.util.UUID
 import _root_.akka.actor.ActorSystem
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.util.Timeout
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.HenkiloHakijaQuery
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
@@ -28,7 +28,7 @@ import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class RekisteritiedotResource(val rekisterit: Registers) // <- TODO: practically requires AuthorizedRegisters, because uses AuthorizedQuery
+class RekisteritiedotResource(val rekisterit: Registers, oids: Oids) // <- TODO: practically requires AuthorizedRegisters, because uses AuthorizedQuery
                     (implicit val system: ActorSystem, sw: Swagger)
   extends HakuJaValintarekisteriStack with TiedotFetcher with RekisteritiedotSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with QueryLogging {
 
@@ -128,7 +128,7 @@ class RekisteritiedotResource(val rekisterit: Registers) // <- TODO: practically
        oppija: Oppija <- _
       ) yield LightWeightTiedot(oppija.oppijanumero, oppija.opiskelu.map(_.luokka).mkString(", ").blankOption, hasArvosanat(oppija.suoritukset)))
 
-      val tarkastetut = Set(Config.perusopetusKomoOid, Config.lisaopetusKomoOid, Config.lukioKomoOid)
+      val tarkastetut = Set(oids.perusopetusKomoOid, oids.lisaopetusKomoOid, oids.lukioKomoOid)
 
       def hasArvosanat(todistukset:Seq[Todistus]): Boolean = {
         !todistukset.exists{

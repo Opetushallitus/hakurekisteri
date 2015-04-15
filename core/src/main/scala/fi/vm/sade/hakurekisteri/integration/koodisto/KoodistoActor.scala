@@ -21,14 +21,14 @@ case class GetKoodi(koodistoUri: String, koodiUri: String)
 case class KoodistoKoodiArvot(koodistoUri: String, arvot: Seq[String])
 case class GetKoodistoKoodiArvot(koodistoUri: String)
 
-class KoodistoActor(restClient: VirkailijaRestClient) extends Actor with ActorLogging {
+class KoodistoActor(restClient: VirkailijaRestClient, config: Config) extends Actor with ActorLogging {
 
   implicit val ec: ExecutionContext =  context.dispatcher
 
-  private val koodiCache = new FutureCache[String, Option[Koodi]](Config.koodistoCacheHours.hours.toMillis)
-  private val relaatioCache = new FutureCache[GetRinnasteinenKoodiArvoQuery, String](Config.koodistoCacheHours.hours.toMillis)
-  private val koodiArvotCache = new FutureCache[String, KoodistoKoodiArvot](Config.koodistoCacheHours.hours.toMillis)
-  val maxRetries = Config.httpClientMaxRetries
+  private val koodiCache = new FutureCache[String, Option[Koodi]](config.integrations.koodistoCacheHours.hours.toMillis)
+  private val relaatioCache = new FutureCache[GetRinnasteinenKoodiArvoQuery, String](config.integrations.koodistoCacheHours.hours.toMillis)
+  private val koodiArvotCache = new FutureCache[String, KoodistoKoodiArvot](config.integrations.koodistoCacheHours.hours.toMillis)
+  val maxRetries = config.integrations.koodistoConfig.httpClientMaxRetries
 
   override def receive: Receive = {
     case q: GetRinnasteinenKoodiArvoQuery =>

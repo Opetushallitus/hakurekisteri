@@ -48,9 +48,9 @@ case class HenkiloSearchResponse(totalCount: Int, results: Seq[Henkilo])
 
 case class FoundHenkilos(henkilot: Seq[Henkilo], tunniste: String)
 
-class HenkiloActor(henkiloClient: VirkailijaRestClient) extends Actor with ActorLogging {
+class HenkiloActor(henkiloClient: VirkailijaRestClient, config: Config) extends Actor with ActorLogging {
   implicit val ec: ExecutionContext = context.dispatcher
-  val maxRetries = Config.httpClientMaxRetries
+  val maxRetries = config.integrations.henkiloConfig.httpClientMaxRetries
   var savingHenkilo = false
 
   def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {

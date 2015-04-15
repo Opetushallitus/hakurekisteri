@@ -42,11 +42,10 @@ import siirto._
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
+
 import scala.xml.Elem
 
 class ScalatraBootstrap extends LifeCycle {
-  import AuthorizedRegisters._
   import fi.vm.sade.hakurekisteri.Config._
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("hakurekisteri")
@@ -55,23 +54,23 @@ class ScalatraBootstrap extends LifeCycle {
   override def init(context: ServletContext) {
     OPHSecurity.init(context)
 
-    val journals = new DbJournals(jndiName)
+    val journals = new DbJournals(config.jndiName)
     val registers = new BareRegisters(system, journals)
-    val authorizedRegisters = filter(registers) withAuthorizationDataFrom Config.integrations.organisaatioSoapServiceUrl
+    val authorizedRegisters = new AuthorizedRegisters(config.integrations.organisaatioSoapServiceUrl, registers, system, config)
 
-    val integrations = Integrations(registers, system)
+    val integrations = Integrations(registers, system, config)
 
-    val koosteet = new BaseKoosteet(system, integrations, registers)
+    val koosteet = new BaseKoosteet(system, integrations, registers, config)
 
-    val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, authorizedRegisters.eraRekisteri, integrations.ytl, integrations.hakemukset, koosteet.ensikertalainen, koosteet.virtaQueue)), "healthcheck")
+    val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, authorizedRegisters.eraRekisteri, integrations.ytl, integrations.hakemukset, koosteet.ensikertalainen, koosteet.virtaQueue, config)), "healthcheck")
 
-    val importBatchProcessing = system.actorOf(Props(new ImportBatchProcessingActor(authorizedRegisters.eraRekisteri, integrations.henkilo, authorizedRegisters.suoritusRekisteri, authorizedRegisters.opiskelijaRekisteri, integrations.organisaatiot, authorizedRegisters.arvosanaRekisteri, integrations.koodisto)), "importBatchProcessing")
+    val importBatchProcessing = system.actorOf(Props(new ImportBatchProcessingActor(authorizedRegisters.eraRekisteri, integrations.henkilo, authorizedRegisters.suoritusRekisteri, authorizedRegisters.opiskelijaRekisteri, integrations.organisaatiot, authorizedRegisters.arvosanaRekisteri, integrations.koodisto, config)), "importBatchProcessing")
 
     mountServlets(context)(
-      ("/rest/v1/komo", "komo") -> new GuiServlet,
+      ("/rest/v1/komo", "komo") -> new GuiServlet(config.oids),
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
-      ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SpringSecuritySupport,
-      ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SpringSecuritySupport,
+      ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SpringSecuritySupport,
+      ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SpringSecuritySupport,
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
       ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SpringSecuritySupport,
       ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),
@@ -82,9 +81,9 @@ class ScalatraBootstrap extends LifeCycle {
       ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
       ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SpringSecuritySupport,
       ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport,
-      ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(authorizedRegisters),
+      ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(authorizedRegisters, config.oids),
       ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto, Arvosanat, ArvosanatKoodisto),
-      ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue)
+      ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue, config.oids)
     )
 
     context mount (new ValidatorJavascriptServlet, "/hakurekisteri-validator")
@@ -96,6 +95,7 @@ class ScalatraBootstrap extends LifeCycle {
   }
 
   override def destroy(context: ServletContext) {
+    import concurrent.duration._
     system.shutdown()
     system.awaitTermination(15.seconds)
     OPHSecurity.destroy(context)
@@ -103,8 +103,8 @@ class ScalatraBootstrap extends LifeCycle {
 }
 
 object OPHSecurity extends ContextLoader with LifeCycle {
-  val config = OPHConfig(Config.ophConfDir,
-    Config.propertyLocations,
+  val config = OPHConfig(Config.config.ophConfDir,
+    Config.config.propertyLocations,
     "cas_mode" -> "front",
     "cas_key" -> "suoritusrekisteri",
     "spring_security_default_access" -> "hasRole('ROLE_APP_SUORITUSREKISTERI')",

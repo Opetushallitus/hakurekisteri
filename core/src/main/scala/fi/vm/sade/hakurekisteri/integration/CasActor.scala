@@ -19,20 +19,20 @@ import scala.util.{Failure, Try}
 case class JSessionKey(serviceUrl: String)
 case class JSessionId(sessionId: String)
 
-class CasActor(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
+class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
   val jSessionIdCache: FutureCache[JSessionKey, JSessionId] = new FutureCache[JSessionKey, JSessionId](5.minutes.toMillis)
 
-  val serviceUrl = config.serviceUrl
-  val casUrl = config.casUrl
-  val user = config.user
-  val password = config.password
+  val serviceUrl = serviceConfig.serviceUrl
+  val casUrl = serviceConfig.casUrl
+  val user = serviceConfig.user
+  val password = serviceConfig.password
 
   val cookieExpirationMillis = 5.minutes.toMillis
 
   private val internalClient: Http = aClient.map(Http(_)).getOrElse(Http.configure(_
-    .setConnectionTimeoutInMs(Config.httpClientConnectionTimeout)
-    .setRequestTimeoutInMs(Config.httpClientRequestTimeout)
-    .setIdleConnectionTimeoutInMs(Config.httpClientRequestTimeout)
+    .setConnectionTimeoutInMs(serviceConfig.httpClientConnectionTimeout)
+    .setRequestTimeoutInMs(serviceConfig.httpClientRequestTimeout)
+    .setIdleConnectionTimeoutInMs(serviceConfig.httpClientRequestTimeout)
     .setFollowRedirects(false)
     .setMaxRequestRetry(2)
   ))
@@ -104,7 +104,7 @@ class CasActor(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(i
   }
 
   private val serviceUrlSuffix = "/j_spring_cas_security_check"
-  private val maxRetriesCas = Config.httpClientMaxRetries
+  private val maxRetriesCas = serviceConfig.httpClientMaxRetries
 
   private def postfixServiceUrl(url: String): String = url match {
     case s if !s.endsWith(serviceUrlSuffix) => s"$url$serviceUrlSuffix"

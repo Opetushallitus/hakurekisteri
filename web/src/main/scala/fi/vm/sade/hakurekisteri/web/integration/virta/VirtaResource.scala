@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.web.integration.virta
 import _root_.akka.actor.{ActorSystem, ActorRef}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.AskTimeoutException
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.healthcheck.Status
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import org.scalatra._
@@ -16,7 +16,7 @@ import fi.vm.sade.hakurekisteri.integration.virta._
 import fi.vm.sade.hakurekisteri.integration.virta.RescheduleProcessing
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaStatus
 
-class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
+class VirtaResource(virtaQueue: ActorRef, oids: Oids) (implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
 
@@ -34,7 +34,7 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem) extends
     case e: Throwable => VirtaStatus(queueLength = 0, status = Status.FAILURE)
   }
 
-  def hasAccess: Boolean = currentUser.exists(_.orgsFor("WRITE", "Virta").contains(Config.ophOrganisaatioOid))
+  def hasAccess: Boolean = currentUser.exists(_.orgsFor("WRITE", "Virta").contains(oids.ophOrganisaatioOid))
 
   get("/process") {
     if (!hasAccess) throw UserNotAuthorized("not authorized")

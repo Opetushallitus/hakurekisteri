@@ -32,9 +32,9 @@ trait Integrations {
 }
 
 object Integrations {
-  def apply(rekisterit: Registers, system: ActorSystem) = Config.mockMode match {
+  def apply(rekisterit: Registers, system: ActorSystem, config: Config) = config.mockMode match {
     case true => new MockIntegrations(system)
-    case _ => new BaseIntegrations(rekisterit, system)
+    case _ => new BaseIntegrations(rekisterit, system, config)
   }
 }
 
@@ -54,7 +54,7 @@ class MockIntegrations(system: ActorSystem) extends Integrations {
 
 class DummyActor extends Actor {
   override def receive: Receive = {
-    case _ =>
+    case x => println("DummyActor: got " + x)
   }
 }
 
@@ -71,17 +71,17 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        system: ActorSystem) extends Integrations {
 
 
-  def this(rekisterit: Registers, system: ActorSystem) {
-    this(Config.integrations.virtaConfig, Config.integrations.henkiloConfig, Config.integrations.tarjontaConfig, Config.integrations.organisaatioConfig, Config.integrations.parameterConfig, Config.integrations.hakemusConfig, Config.integrations.ytlConfig, Config.integrations.koodistoConfig, Config.integrations.valintaTulosConfig, rekisterit, system)
+  def this(rekisterit: Registers, system: ActorSystem, config: Config) {
+    this(config.integrations.virtaConfig, config.integrations.henkiloConfig, config.integrations.tarjontaConfig, config.integrations.organisaatioConfig, config.integrations.parameterConfig, config.integrations.hakemusConfig, config.integrations.ytlConfig, config.integrations.koodistoConfig, config.integrations.valintaTulosConfig, rekisterit, system)
   }
 
   val ec: ExecutionContext = ExecutorUtil.createExecutor(10, "rest-client-pool")
 
-  val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig, None)(ec, system))), "tarjonta")
+  val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig, None)(ec, system), config)), "tarjonta")
 
-  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig, None)(ec, system))), "organisaatio")
+  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig, None)(ec, system), config)), "organisaatio")
 
-  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig, None)(ec, system))), "henkilo")
+  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig, None)(ec, system), config)), "henkilo")
 
   val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(hakemusConfig.serviceConf, None)(ec, system), hakemusConfig.maxApplications)), "hakemus")
 
@@ -104,11 +104,11 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, ytlConfig)), "ytl")
 
-  val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig, None)(ec, system))), "koodisto")
+  val koodisto = system.actorOf(Props(new KoodistoActor(new VirkailijaRestClient(koodistoConfig, None)(ec, system), config)), "koodisto")
 
   val parametrit = system.actorOf(Props(new HttpParameterActor(new VirkailijaRestClient(parameterConfig, None)(ec, system))), "parametrit")
 
-  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig, None)(ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool"), system))), "valintaTulos")
+  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig, None)(ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool"), system), config)), "valintaTulos")
 
   val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(virtaConfig)(system), organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
 

@@ -4,8 +4,8 @@ import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.TestSecurity
-import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
+import fi.vm.sade.hakurekisteri.{Config, TestSecurity}
+import fi.vm.sade.hakurekisteri.acceptance.tools.{ConfigurationSupport, FakeAuthorizer}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, ParameterActor, SendingPeriod, TiedonsiirtoSendingPeriods}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
@@ -22,7 +22,7 @@ import siirto.{PerustiedotXmlConverter, SchemaDefinition}
 import scala.concurrent.ExecutionContext
 import scala.xml.Elem
 
-class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport {
+class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport with ConfigurationSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("failing-import-batch")
   implicit val ec: ExecutionContext = system.dispatcher
@@ -73,7 +73,7 @@ class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with Dis
       </xs:schema>
   }
 
-  addServlet(new ImportBatchResource(authorized, parameterActor, (foo) => ImportBatchQuery(None, None, None))("identifier", "perustiedot", "data", PerustiedotXmlConverter, TestSchema) with TestSecurity, "/batch")
+  addServlet(new ImportBatchResource(authorized, parameterActor, config, (foo) => ImportBatchQuery(None, None, None))("identifier", "perustiedot", "data", PerustiedotXmlConverter, TestSchema) with TestSecurity, "/batch")
 
 
   test("create should return 404 not found") {

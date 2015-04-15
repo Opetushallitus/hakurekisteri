@@ -19,14 +19,14 @@ case class ValintaTulosQuery(hakuOid: String,
                              hakemusOid: Option[String],
                              cachedOk: Boolean = true)
 
-class ValintaTulosActor(client: VirkailijaRestClient) extends Actor with ActorLogging {
+class ValintaTulosActor(client: VirkailijaRestClient, config: Config) extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
 
-  private val maxRetries = Config.httpClientMaxRetries
-  private val refetch: FiniteDuration = (Config.valintatulosCacheHours / 2).hours
+  private val maxRetries = config.integrations.valintaTulosConfig.httpClientMaxRetries
+  private val refetch: FiniteDuration = (config.integrations.valintatulosCacheHours / 2).hours
   private val retry: FiniteDuration = 60.seconds
-  private val cache = new FutureCache[String, SijoitteluTulos](Config.valintatulosCacheHours.hours.toMillis)
+  private val cache = new FutureCache[String, SijoitteluTulos](config.integrations.valintatulosCacheHours.hours.toMillis)
   private var refresing: Boolean = false
 
   object RefreshDone

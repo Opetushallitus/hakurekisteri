@@ -64,10 +64,10 @@ case class HakukohdeNotFoundException(message: String) extends TarjontaException
 case class KoulutusNotFoundException(message: String) extends TarjontaException(message)
 case class KomoNotFoundException(message: String) extends TarjontaException(message)
 
-class TarjontaActor(restClient: VirkailijaRestClient) extends Actor with ActorLogging {
-  private val koulutusCache = new FutureCache[String, HakukohteenKoulutukset](Config.tarjontaCacheHours.hours.toMillis)
-  private val komoCache = new FutureCache[String, KomoResponse](Config.tarjontaCacheHours.hours.toMillis)
-  val maxRetries = Config.httpClientMaxRetries
+class TarjontaActor(restClient: VirkailijaRestClient, config: Config) extends Actor with ActorLogging {
+  private val koulutusCache = new FutureCache[String, HakukohteenKoulutukset](config.integrations.tarjontaCacheHours.hours.toMillis)
+  private val komoCache = new FutureCache[String, KomoResponse](config.integrations.tarjontaCacheHours.hours.toMillis)
+  val maxRetries = config.integrations.tarjontaConfig.httpClientMaxRetries
   implicit val ec: ExecutionContext = context.dispatcher
 
   override def receive: Receive = {

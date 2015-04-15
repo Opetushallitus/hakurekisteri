@@ -29,3 +29,8 @@ case class ImportBatch(data: Elem, externalId: Option[String] = None, batchType:
 class IdentifiedImportBatch(b: ImportBatch, identifier: UUID) extends ImportBatch(b.data, b.externalId, b.batchType, b.source, b.state, b.status) with Identified[UUID] {
   val id: UUID = identifier
 }
+
+object ImportBatch {
+  val batchTypeArvosanat = "arvosanat"
+  val batchTypePerustiedot = "perustiedot"
+}

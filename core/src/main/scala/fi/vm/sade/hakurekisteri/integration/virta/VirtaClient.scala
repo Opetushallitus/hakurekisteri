@@ -25,14 +25,14 @@ case class VirtaValidationError(m: String) extends Exception(m)
 class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot",
                                                     jarjestelma = "",
                                                     tunnus = "",
-                                                    avain = "salaisuus"),
-                   aClient: Option[AsyncHttpClient] = None)
+                                                    avain = "salaisuus", Map.empty),
+                                                    aClient: Option[AsyncHttpClient] = None)
                  (implicit val system: ActorSystem) {
 
   implicit val ec = ExecutorUtil.createExecutor(1, "virta-executor")
 
   private val defaultClient = Http.configure(_
-    .setConnectionTimeoutInMs(Config.httpClientConnectionTimeout)
+    .setConnectionTimeoutInMs(config.httpClientConnectionTimeout)
     .setRequestTimeoutInMs(120000)
     .setIdleConnectionTimeoutInMs(120000)
     .setFollowRedirects(true)
@@ -42,7 +42,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   val client: Http = aClient.map(Http(_)).getOrElse(defaultClient)
 
   val logger = Logging.getLogger(system, this)
-  val maxRetries = Config.httpClientMaxRetries
+  val maxRetries = config.httpClientMaxRetries
 
   def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
 

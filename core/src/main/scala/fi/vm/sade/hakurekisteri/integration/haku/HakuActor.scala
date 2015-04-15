@@ -18,13 +18,13 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 
-class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, valintaTulos: ActorRef, ytl: ActorRef) extends Actor with ActorLogging {
+class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, valintaTulos: ActorRef, ytl: ActorRef, config: Config) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
 
   var activeHakus: Seq[Haku] = Seq()
-  val hakuRefreshTime = Config.hakuRefreshTimeHours.hours
-  val hakemusRefreshTime = Config.hakemusRefreshTimeHours.hours
-  val valintatulosRefreshTimeHours = Config.valintatulosRefreshTimeHours.hours
+  val hakuRefreshTime = config.integrations.hakuRefreshTimeHours.hours
+  val hakemusRefreshTime = config.integrations.hakemusRefreshTimeHours.hours
+  val valintatulosRefreshTimeHours = config.integrations.valintatulosRefreshTimeHours.hours
   var starting = true
 
   context.system.scheduler.schedule(1.second, hakuRefreshTime) {

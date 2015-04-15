@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.organization
 
 import fi.vm.sade.hakurekisteri.Config
-
+import fi.vm.sade.hakurekisteri.integration.HttpConfig
 import scala.xml.Elem
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import org.joda.time.DateTime
@@ -17,10 +17,10 @@ import com.ning.http.client.Response
 import fi.vm.sade.hakurekisteri.storage.DeleteResource
 import fi.vm.sade.hakurekisteri.rest.support.User
 
-class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](serviceUrl:String, filteredActor: ActorRef, organizationFinder: (A) => Set[String]) extends FutureOrganizationHierarchy[A, I](serviceUrl, filteredActor, (item: A) => Future.successful(organizationFinder(item)) )
+class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](serviceUrl:String, filteredActor: ActorRef, organizationFinder: (A) => Set[String], config: Config) extends FutureOrganizationHierarchy[A, I](serviceUrl, filteredActor, ((item: A) => Future.successful(organizationFinder(item))), config)
 
-class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](serviceUrl:String, filteredActor: ActorRef, organizationFinder: (A) => concurrent.Future[Set[String]]) extends Actor {
-  val authorizer = new OrganizationHierarchyAuthorization[A, I](serviceUrl, organizationFinder)
+class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](serviceUrl:String, filteredActor: ActorRef, organizationFinder: (A) => concurrent.Future[Set[String]], config: Config) extends Actor {
+  val authorizer = new OrganizationHierarchyAuthorization[A, I](serviceUrl, organizationFinder, config.integrations.organisaatioConfig)
   val logger = Logging(context.system, this)
   private var scheduledTask: Cancellable = null
 
@@ -29,7 +29,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](s
 
   override def preStart() {
     scheduledTask = context.system.scheduler.schedule(
-      0.seconds, Config.organisaatioCacheHours.hours,
+      0.seconds, config.integrations.organisaatioCacheHours.hours,
       self, update)
   }
 
@@ -96,7 +96,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](s
   }
 }
 
-class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](serviceUrl: String, organizationFinder: A => Future[Set[String]]) {
+class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](serviceUrl: String, organizationFinder: A => Future[Set[String]], httpConfig: HttpConfig) {
   def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName
   lazy val resourceName = className[A]
   val subjectFinder = (resource: A) => organizationFinder(resource).map(Subject(resourceName, _))
@@ -119,9 +119,9 @@ class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](serv
 
   def readXml: Future[Elem] = {
     val http = Http.configure(_
-      .setConnectionTimeoutInMs(Config.httpClientConnectionTimeout)
-      .setRequestTimeoutInMs(Config.httpClientRequestTimeout)
-      .setIdleConnectionTimeoutInMs(Config.httpClientRequestTimeout)
+      .setConnectionTimeoutInMs(httpConfig.httpClientConnectionTimeout)
+      .setRequestTimeoutInMs(httpConfig.httpClientRequestTimeout)
+      .setIdleConnectionTimeoutInMs(httpConfig.httpClientRequestTimeout)
       .setFollowRedirects(true)
       .setMaxRequestRetry(2))
     
@@ -202,7 +202,7 @@ case class OrganizationAuthorizer(orgPaths: Map[String, Seq[String]]) {
   def checkAccess(user: User, action: String, futTarget: concurrent.Future[Subject]) = futTarget.map {
     (target: Subject) =>
     val allowedOrgs = user.orgsFor(action, target.resource)
-    val paths: Set[String] = target.orgs.flatMap((oid) => orgPaths.getOrElse(oid, Seq(Config.ophOrganisaatioOid, oid)))
+    val paths: Set[String] = target.orgs.flatMap((oid) => orgPaths.getOrElse(oid, Seq(Config.config.oids.ophOrganisaatioOid, oid)))
     paths.exists { x => user.username == x || allowedOrgs.contains(x) }
   }
 }

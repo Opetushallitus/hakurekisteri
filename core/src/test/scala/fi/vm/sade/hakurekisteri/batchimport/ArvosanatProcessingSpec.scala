@@ -7,7 +7,7 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana, ArvosanaActor, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor
@@ -29,6 +29,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
 class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions with HakurekisteriJsonSupport {
+  val oids = new Oids
 
   behavior of "ArvosanaProcessing"
 
@@ -57,7 +58,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          oids
         )
         val status = Await.result(arvosanatProcessing.process(batch), Duration(10, TimeUnit.SECONDS)).status
         status.messages shouldBe empty
@@ -85,7 +87,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          oids
         )
 
         val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
@@ -115,7 +118,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          oids
         )
 
         val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
@@ -140,12 +144,13 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createOrganisaatioActor,
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus](save = (s: Suoritus) => {
-            suoritusWaiter { s.asInstanceOf[VirallinenSuoritus].komo should be (Config.lukioKomoOid) }
+            suoritusWaiter { s.asInstanceOf[VirallinenSuoritus].komo should be (oids.lukioKomoOid) }
             suoritusWaiter.dismiss()
           }, query = {q => Seq()}))),
           system.actorOf(Props(new MockedResourceActor[Arvosana](save = {a => a}, query = {q => Seq()}))),
           createImportBatchActor(system, { r => r }, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          oids
         )
 
         arvosanatProcessing.process(batch)
@@ -172,7 +177,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           system.actorOf(Props(new MockedResourceActor[Suoritus](save = {s => s}, query = {q => Seq(s)}))),
           arvosanaActor,
           createImportBatchActor(system, {r => r}, batch),
-          createKoodistoActor
+          createKoodistoActor,
+          new Oids
         )
 
         Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
@@ -245,16 +251,16 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     system.actorOf(Props(new MockedKoodistoActor()))
 
   private def suoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
-    VirallinenSuoritus(Config.perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
+    VirallinenSuoritus(new Oids().perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
 
   private def createImportBatchActor(system: ActorSystem, batchSaveHandler: (ImportBatch) => Unit, batch: ImportBatch with Identified[UUID]): ActorRef =
     system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchSaveHandler, query = {q => Seq(batch)})))
 
   private def createOrganisaatioActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
-    system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider))))))
+    system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider))), Config.config)))
 
   private def createHenkiloActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
-    system.actorOf(Props(new HenkiloActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider))))))
+    system.actorOf(Props(new HenkiloActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider))), Config.config)))
 
   private def withSystem(f: ActorSystem => Unit) = {
     val system = ActorSystem("test-import-arvosana-batch-processing")

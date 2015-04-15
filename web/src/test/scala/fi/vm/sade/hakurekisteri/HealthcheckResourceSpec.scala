@@ -33,6 +33,7 @@ import scala.concurrent.{ExecutionContext, Await}
 
 
 class HealthcheckResourceSpec extends ScalatraFunSuite {
+  val config = Config.config
   val arvosana = Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", None, false, source = "Test")
   val opiskelija = Opiskelija("1.2.3", "9", "9A", "1.2.4", DateTime.now, None, source = "Test")
   val opiskeluoikeus = Opiskeluoikeus(LocalDate.now(), None, "1.2.4", "1.2.5", "1.2.3", source = "Test")
@@ -85,7 +86,7 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
     }
   }))
 
-  val healthcheck = system.actorOf(Props(new HealthcheckActor(guardedArvosanaRekisteri, guardedOpiskelijaRekisteri, guardedOpiskeluoikeusRekisteri, guardedSuoritusRekisteri, guardedEraRekisteri, ytl, hakemukset, ensikertalainen, virtaQueue)))
+  val healthcheck = system.actorOf(Props(new HealthcheckActor(guardedArvosanaRekisteri, guardedOpiskelijaRekisteri, guardedOpiskeluoikeusRekisteri, guardedSuoritusRekisteri, guardedEraRekisteri, ytl, hakemukset, ensikertalainen, virtaQueue, config)))
 
   addServlet(new HealthcheckResource(healthcheck), "/*")
 

@@ -9,11 +9,34 @@ import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
 import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
-
+import scala.concurrent.duration._
 import scala.util.{Success, Try}
 import fi.vm.sade.hakurekisteri.tools.RicherString
 
 object Config {
+  lazy val config: Config = new Config
+}
+
+class Oids(properties: Map[String, String] = Map.empty) {
+  val ophOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.oph", "1.2.246.562.10.00000000001")
+  val ytlOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.ytl", "1.2.246.562.10.43628088406")
+  val cscOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.csc", "1.2.246.562.10.2013112012294919827487")
+  val tuntematonOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.tuntematon", "1.2.246.562.10.57118763579")
+
+  val yotutkintoKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.yotutkinto", "1.2.246.562.5.2013061010184237348007")
+  val perusopetusKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.perusopetus", "1.2.246.562.13.62959769647")
+  val lisaopetusKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lisaopetus", "1.2.246.562.5.2013112814572435044876")
+  val lisaopetusTalousKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lisaopetus.talous", "1.2.246.562.5.2013061010184614853416")
+  val ammattistarttiKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ammattistartti", "1.2.246.562.5.2013112814572438136372")
+  val valmentavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.valmentava", "1.2.246.562.5.2013112814572435755085")
+  val ammatilliseenvalmistavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ammatilliseenvalmistava", "1.2.246.562.5.2013112814572441001730")
+  val ulkomainenkorvaavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ulkomainenkorvaava", "1.2.246.562.13.86722481404")
+  val lukioKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lukio", "TODO lukio komo oid")
+  val ammatillinenKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ammatillinen", "TODO ammatillinen komo oid")
+  val lukioonvalmistavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lukioonvalmistava", "1.2.246.562.5.2013112814572429142840")
+}
+
+class Config {
   val profile = sys.props.getOrElse("hakurekisteri.profile", "default")
   val mockMode = profile == "it"
 
@@ -25,8 +48,7 @@ object Config {
 
   val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
 
-  val batchTypeArvosanat = "arvosanat"
-  val batchTypePerustiedot = "perustiedot"
+  val importBatchProcessingInitialDelay = 20.minutes
 
   // by default the service urls point to QA
   val hostQa = "testi.virkailija.opintopolku.fi"
@@ -51,37 +73,10 @@ object Config {
 
   val integrations = new IntegrationConfig(hostQa, properties)
 
-  // props
-  val ophOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.oph", "1.2.246.562.10.00000000001")
-  val ytlOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.ytl", "1.2.246.562.10.43628088406")
-  val cscOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.csc", "1.2.246.562.10.2013112012294919827487")
-  val tuntematonOrganisaatioOid = properties.getOrElse("suoritusrekisteri.organisaatio.oid.tuntematon", "1.2.246.562.10.57118763579")
+  val oids = new Oids(properties)
 
-  val yotutkintoKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.yotutkinto", "1.2.246.562.5.2013061010184237348007")
-  val perusopetusKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.perusopetus", "1.2.246.562.13.62959769647")
-  val lisaopetusKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lisaopetus", "1.2.246.562.5.2013112814572435044876")
-  val lisaopetusTalousKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lisaopetus.talous", "1.2.246.562.5.2013061010184614853416")
-  val ammattistarttiKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ammattistartti", "1.2.246.562.5.2013112814572438136372")
-  val valmentavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.valmentava", "1.2.246.562.5.2013112814572435755085")
-  val ammatilliseenvalmistavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ammatilliseenvalmistava", "1.2.246.562.5.2013112814572441001730")
-  val ulkomainenkorvaavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ulkomainenkorvaava", "1.2.246.562.13.86722481404")
-  val lukioKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lukio", "TODO lukio komo oid")
-  val ammatillinenKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.ammatillinen", "TODO ammatillinen komo oid")
-  val lukioonvalmistavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lukioonvalmistava", "1.2.246.562.5.2013112814572429142840")
 
   val ensikertalainenCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.ensikertalainen", "6").toInt
-  val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt
-  val organisaatioCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.organisaatio", "12").toInt
-  val tarjontaCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.tarjonta", "12").toInt
-  val valintatulosCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.valintatulos", "4").toInt
-  val hakuRefreshTimeHours = properties.getOrElse("suoritusrekisteri.refresh.time.hours.haku", "12").toInt
-  val hakemusRefreshTimeHours = properties.getOrElse("suoritusrekisteri.refresh.time.hours.hakemus", "2").toInt
-  val valintatulosRefreshTimeHours = properties.getOrElse("suoritusrekisteri.refresh.time.hours.valintatulos", "2").toInt
-
-  val httpClientConnectionTimeout = properties.getOrElse("suoritusrekisteri.http.client.connection.timeout.ms", "10000").toInt
-  val httpClientRequestTimeout = properties.getOrElse("suoritusrekisteri.http.client.request.timeout.ms", "180000").toInt
-  val httpClientMaxRetries = properties.getOrElse("suoritusrekisteri.http.client.max.retries", "1").toInt
-  val httpClientSlowRequest = properties.getOrElse("suoritusrekisteri.http.client.slow.request.ms", "1000").toLong
 
   val tiedonsiirtoStorageDir = properties.getOrElse("suoritusrekisteri.tiedonsiirto.storage.dir", System.getProperty("java.io.tmpdir"))
 
@@ -138,15 +133,23 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val serviceUser = properties.get("suoritusrekisteri.app.username")
   val servicePassword = properties.get("suoritusrekisteri.app.password")
 
-  val virtaConfig = VirtaConfig(virtaServiceUrl, virtaJarjestelma, virtaTunnus, virtaAvain)
-  val henkiloConfig = ServiceConfig(casUrl, henkiloServiceUrl, serviceUser, servicePassword)
-  val sijoitteluConfig = ServiceConfig(casUrl, sijoitteluServiceUrl, serviceUser, servicePassword)
-  val parameterConfig = ServiceConfig(serviceUrl = parameterServiceUrl)
-  val hakemusConfig = HakemusConfig(ServiceConfig(casUrl, hakuappServiceUrl, serviceUser, servicePassword), maxApplications)
-  val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl)
-  val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl)
-  val organisaatioConfig = ServiceConfig(serviceUrl = organisaatioServiceUrl)
-  val valintaTulosConfig = ServiceConfig(serviceUrl = valintaTulosServiceUrl)
+  val virtaConfig = VirtaConfig(virtaServiceUrl, virtaJarjestelma, virtaTunnus, virtaAvain, properties)
+  val henkiloConfig = ServiceConfig(casUrl, henkiloServiceUrl, serviceUser, servicePassword, properties)
+  val sijoitteluConfig = ServiceConfig(casUrl, sijoitteluServiceUrl, serviceUser, servicePassword, properties)
+  val parameterConfig = ServiceConfig(serviceUrl = parameterServiceUrl, properties = properties)
+  val hakemusConfig = HakemusConfig(ServiceConfig(casUrl, hakuappServiceUrl, serviceUser, servicePassword, properties), maxApplications)
+  val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl, properties = properties)
+  val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl, properties = properties)
+  val organisaatioConfig = ServiceConfig(serviceUrl = organisaatioServiceUrl, properties = properties)
+  val valintaTulosConfig = ServiceConfig(serviceUrl = valintaTulosServiceUrl, properties = properties)
+
+  val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt
+  val organisaatioCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.organisaatio", "12").toInt
+  val tarjontaCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.tarjonta", "12").toInt
+  val valintatulosCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.valintatulos", "4").toInt
+  val hakuRefreshTimeHours = properties.getOrElse("suoritusrekisteri.refresh.time.hours.haku", "12").toInt
+  val hakemusRefreshTimeHours = properties.getOrElse("suoritusrekisteri.refresh.time.hours.hakemus", "2").toInt
+  val valintatulosRefreshTimeHours = properties.getOrElse("suoritusrekisteri.refresh.time.hours.valintatulos", "2").toInt
 
   import RicherString._
 

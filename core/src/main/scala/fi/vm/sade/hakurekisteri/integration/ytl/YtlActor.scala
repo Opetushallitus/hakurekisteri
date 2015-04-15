@@ -568,8 +568,8 @@ object YTLXml {
   }
 
 
-  val YTL: String = Config.ytlOrganisaatioOid
-  val yotutkinto = Config.yotutkintoKomoOid
+  val YTL: String = Config.config.oids.ytlOrganisaatioOid
+  val yotutkinto = Config.config.oids.yotutkintoKomoOid
 
   object YoTutkinto {
     def apply(suorittaja: String, valmistuminen: LocalDate, kieli: String, valmis: Boolean = true, vahvistettu: Boolean = true) = {

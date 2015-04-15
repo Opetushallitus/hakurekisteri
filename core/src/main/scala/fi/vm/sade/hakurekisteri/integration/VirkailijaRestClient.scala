@@ -11,7 +11,6 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.ning.http.client._
 import dispatch._
-import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 
 import scala.compat.Platform
@@ -23,10 +22,19 @@ import scala.util.{Failure, Success, Try}
 
 case class PreconditionFailedException(message: String, responseCode: Int) extends Exception(message)
 
+class HttpConfig(properties: Map[String, String] = Map.empty) {
+  val httpClientConnectionTimeout = properties.getOrElse("suoritusrekisteri.http.client.connection.timeout.ms", "10000").toInt
+  val httpClientRequestTimeout = properties.getOrElse("suoritusrekisteri.http.client.request.timeout.ms", "180000").toInt
+  val httpClientMaxRetries = properties.getOrElse("suoritusrekisteri.http.client.max.retries", "1").toInt
+  val httpClientSlowRequest = properties.getOrElse("suoritusrekisteri.http.client.slow.request.ms", "1000").toLong
+}
+
 case class ServiceConfig(casUrl: Option[String] = None,
                          serviceUrl: String,
                          user: Option[String] = None,
-                         password: Option[String] = None)
+                         password: Option[String] = None,
+                         properties: Map[String, String] = Map.empty) extends HttpConfig(properties) {
+}
 
 class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {
   implicit val defaultTimeout: Timeout = 60.seconds
@@ -37,9 +45,9 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   val logger = Logging.getLogger(system, this)
 
   private val internalClient: Http = aClient.map(Http(_)).getOrElse(Http.configure(_
-    .setConnectionTimeoutInMs(Config.httpClientConnectionTimeout)
-    .setRequestTimeoutInMs(Config.httpClientRequestTimeout)
-    .setIdleConnectionTimeoutInMs(Config.httpClientRequestTimeout)
+    .setConnectionTimeoutInMs(config.httpClientConnectionTimeout)
+    .setRequestTimeoutInMs(config.httpClientRequestTimeout)
+    .setIdleConnectionTimeoutInMs(config.httpClientRequestTimeout)
     .setFollowRedirects(true)
     .setMaxRequestRetry(2)
   ))
@@ -113,7 +121,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     val t0 = Platform.currentTime
     f.onComplete(t => {
       val took = Platform.currentTime - t0
-      if (took > Config.httpClientSlowRequest) {
+      if (took > config.httpClientSlowRequest) {
         logger.warning(s"slow request: url $serviceUrl$uri took $took ms to complete, result was ${result(t)}")
       }
     })

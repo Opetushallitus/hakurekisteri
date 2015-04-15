@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
-import fi.vm.sade.hakurekisteri.SpecsLikeMockito
+import fi.vm.sade.hakurekisteri.{Config, SpecsLikeMockito}
 import fi.vm.sade.hakurekisteri.dates.{InFuture, Ajanjakso}
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
@@ -27,7 +27,7 @@ import scala.language.implicitConversions
 import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 
 trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport with SpecsLikeMockito {
-
+  val config = Config.config
 
   object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None, Seq())
   object OppilaitosY extends Organisaatio("1.10.2", Map("fi" -> "Oppilaitos Y"), None, Some("00002"), None, Seq())
@@ -275,7 +275,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
   val koodistoClient = mock[VirkailijaRestClient]
   koodistoClient.readObject[Seq[Koodi]]("", 200, 2) returns Future.successful(Seq(Koodi("246", "", Koodisto(""), Seq())))
-  val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient)))
+  val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)))
 
   val f = Future.successful(
     Seq(
@@ -328,7 +328,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.1", 200) returns f
   sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.2", 200) returns f
 
-  val sijoittelu = system.actorOf(Props(new ValintaTulosActor(sijoitteluClient)))
+  val sijoittelu = system.actorOf(Props(new ValintaTulosActor(sijoitteluClient, config)))
 
   object testHakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger

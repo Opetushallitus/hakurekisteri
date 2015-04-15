@@ -31,7 +31,7 @@ class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
   override val eraRekisteri: ActorRef = system.actorOf(Props(new ImportBatchActor(journals.eraJournal.asInstanceOf[JDBCJournal[ImportBatch, UUID, ImportBatchTable]], 5)), "erat")
 }
 
-class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Registers, system: ActorSystem) extends Registers {
+class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Registers, system: ActorSystem, config: Config) extends Registers {
   import akka.pattern.ask
 
   import scala.reflect.runtime.universe._
@@ -39,7 +39,7 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Regi
 
   def authorizer[A <: Resource[I, A] : ClassTag: Manifest, I: Manifest](guarded: ActorRef, orgFinder: A => Option[String]): ActorRef = {
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-    system.actorOf(Props(new OrganizationHierarchy[A, I](organisaatioSoapServiceUrl, guarded, (i: A) => orgFinder(i).map(Set(_)).getOrElse(Set()))), s"$resource-authorizer")
+    system.actorOf(Props(new OrganizationHierarchy[A, I](organisaatioSoapServiceUrl, guarded, (i: A) => orgFinder(i).map(Set(_)).getOrElse(Set()), config)), s"$resource-authorizer")
   }
 
   val suoritusOrgResolver: PartialFunction[Suoritus, String] = {
@@ -66,18 +66,8 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Regi
   override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusOrgResolver.lift)
   override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija) => Some(opiskelija.oppilaitosOid))
   override val opiskeluoikeusRekisteri = authorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus) => Some(opiskeluoikeus.myontaja))
-  override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, unauthorized.arvosanaRekisteri,
-    resolve
-  )), "arvosana-authorizer")
-  override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era) => Some(Config.ophOrganisaatioOid))
-}
-
-object AuthorizedRegisters {
-  def filter(unauthorized: Registers): AuthorizerBuilder = new AuthorizerBuilder(unauthorized)
-
-  class AuthorizerBuilder(registers: Registers) {
-    def withAuthorizationDataFrom(url: String)(implicit system: ActorSystem) = new AuthorizedRegisters(url, registers, system)
-  }
+  override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, unauthorized.arvosanaRekisteri, resolve, config)), "arvosana-authorizer")
+  override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era) => Some(config.oids.ophOrganisaatioOid))
 }
 
 class AuditedRegisters(amqUrl: String, amqQueue: String, authorizedRegisters: Registers, system: ActorSystem) extends Registers {

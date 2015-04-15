@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.parametrit
 
 import akka.actor.Status.Failure
 import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, VirkailijaRestClient}
 import akka.actor.{ActorLogging, ActorRef, Actor}
 import akka.pattern.pipe
@@ -70,8 +71,8 @@ class HttpParameterActor(restClient: VirkailijaRestClient) extends ParameterActo
   }
 
   override def isEnabledFromRest(key: String): Future[Boolean] = restClient.readObject[TiedonsiirtoSendingPeriods]("/api/v1/rest/parametri/tiedonsiirtosendingperiods", 200).map(p => key match {
-    case k if k == Config.batchTypePerustiedot => isPeriodEffective(p.perustiedot)
-    case k if k == Config.batchTypeArvosanat => isPeriodEffective(p.arvosanat)
+    case k if k == ImportBatch.batchTypePerustiedot => isPeriodEffective(p.perustiedot)
+    case k if k == ImportBatch.batchTypeArvosanat => isPeriodEffective(p.arvosanat)
     case _ => false
   }).recoverWith {
     case t: Throwable =>

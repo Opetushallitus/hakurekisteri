@@ -17,11 +17,11 @@ case class OppilaitosResponse(koodi: String, oppilaitos: Organisaatio)
 case class OppilaitosNotFoundException(koodi: String) extends Exception(s"Oppilaitosta ei löytynyt oppilaitoskoodilla $koodi.")
 case class OrganisaatioFetchFailedException(t: Throwable) extends Exception(t)
 
-class OrganisaatioActor(organisaatioClient: VirkailijaRestClient) extends Actor with ActorLogging {
+class OrganisaatioActor(organisaatioClient: VirkailijaRestClient, config: Config) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
-  val maxRetries = Config.httpClientMaxRetries
-  val timeToLive = Config.organisaatioCacheHours.hours
+  val maxRetries = config.integrations.organisaatioConfig.httpClientMaxRetries
+  val timeToLive = config.integrations.organisaatioCacheHours.hours
   private val cache: FutureCache[String, Organisaatio] = new FutureCache[String, Organisaatio](timeToLive.toMillis)
   private var oppilaitoskoodiIndex: Map[String, String] = Map()
 

@@ -4,6 +4,7 @@ import java.util.UUID
 
 import akka.actor.{Props, ActorSystem}
 import com.ning.http.client.AsyncHttpClient
+import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
 import fi.vm.sade.hakurekisteri.integration._
@@ -17,13 +18,12 @@ import org.mockito.Mockito._
 import org.scalatest.{Matchers, FlatSpec}
 import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.mock.MockitoSugar
-
 import scala.concurrent.ExecutionContext
-
+import scala.concurrent.duration._
 
 class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions with HakurekisteriJsonSupport {
   behavior of "ImportBatchProcessingActor"
-
+  val oids = new Oids
   val lahde = "testitiedonsiirto"
 
   val batch: ImportBatch with Identified[UUID] = ImportBatch(<perustiedot>
@@ -88,7 +88,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
 
     val henkiloBody = {
       val oidResolver = (koodi: String) => s"1.2.246.562.5.$koodi"
-      val henkilo: CreateHenkilo = (batch.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(lahde)).head.toHenkilo(oidResolver)
+      val henkilo: CreateHenkilo = (batch.data \ "henkilot" \ "henkilo").map(ImportHenkilo(oids)(_)(lahde)).head.toHenkilo(oidResolver)
       import org.json4s.jackson.Serialization.write
       write[CreateHenkilo](henkilo)
     }
@@ -115,7 +115,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
 
     val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = {r =>}, query = { (q) => Seq(batch) })))
     val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val henkiloActor = system.actorOf(Props(new HenkiloActor(henkiloClient)))
+    val henkiloActor = system.actorOf(Props(new HenkiloActor(henkiloClient, Config.config)))
 
     val sWaiter = new Waiter()
     val oWaiter = new Waiter()
@@ -130,15 +130,13 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = suoritusHandler, query = {q => Seq()})))
     val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija](save = opiskelijaHandler, query = {q => Seq()})))
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient)))
+    val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient, Config.config)))
     val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
     val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana](save = {r => r}, query = { (q) => Seq() })))
 
-    val processingActor = system.actorOf(Props(new ImportBatchProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, arvosanarekisteri, koodistoActor)))
+    val processingActor = system.actorOf(Props(new ImportBatchProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, arvosanarekisteri, koodistoActor, Config.config)))
 
     processingActor ! ProcessReadyBatches
-
-    import org.scalatest.time.SpanSugar._
 
     sWaiter.await(timeout(30.seconds), dismissals(1))
     oWaiter.await(timeout(30.seconds), dismissals(1))
@@ -160,19 +158,17 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     }
     val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchHandler, query = { (q) => Seq(batch) })))
     val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(failingAsyncProvider)))
-    val henkiloActor = system.actorOf(Props(new HenkiloActor(henkiloClient)))
+    val henkiloActor = system.actorOf(Props(new HenkiloActor(henkiloClient, Config.config)))
     val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = {r => r}, query = {q => Seq()})))
     val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija](save = {r => r}, query = {q => Seq()})))
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient)))
+    val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient, Config.config)))
     val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
     val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana](save = {r => r}, query = { (q) => Seq() })))
 
-    val processingActor = system.actorOf(Props(new ImportBatchProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, arvosanarekisteri, koodistoActor)))
+    val processingActor = system.actorOf(Props(new ImportBatchProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, arvosanarekisteri, koodistoActor, Config.config)))
 
     processingActor ! ProcessReadyBatches
-
-    import org.scalatest.time.SpanSugar._
 
     iWaiter.await(timeout(30.seconds), dismissals(2))
 

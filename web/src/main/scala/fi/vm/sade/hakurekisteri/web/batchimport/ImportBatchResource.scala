@@ -32,6 +32,7 @@ import scalaz._
 
 class ImportBatchResource(eraRekisteri: ActorRef,
                           parameterActor: ActorRef,
+                          config: Config,
                           queryMapper: (Map[String, String]) => Query[ImportBatch])
                          (externalIdField: String,
                           batchType: String,
@@ -45,7 +46,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   val maxFileSize = 50 * 1024 * 1024L
-  val storageDir = Config.tiedonsiirtoStorageDir
+  val storageDir = config.tiedonsiirtoStorageDir
 
   configureMultipartHandling(MultipartConfig(
     maxFileSize = Some(maxFileSize)
@@ -118,7 +119,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 
   get("/withoutdata", operation(withoutdata)) {
     val user = getUser
-    if (!user.orgsFor("READ", "ImportBatch").contains(Config.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
+    if (!user.orgsFor("READ", "ImportBatch").contains(config.oids.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
     else new AsyncResult() {
       override implicit def timeout: Duration = 60.seconds
       override val is = eraRekisteri.?(AllBatchStatuses)(60.seconds)
@@ -141,7 +142,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 
   post("/reprocess/:id", operation(reprocess)) {
     val user = getUser
-    if (!user.orgsFor("WRITE", "ImportBatch").contains(Config.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
+    if (!user.orgsFor("WRITE", "ImportBatch").contains(config.oids.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
     else new AsyncResult() {
       override implicit def timeout: Duration = 60.seconds
       val id = Try(UUID.fromString(params("id"))).get

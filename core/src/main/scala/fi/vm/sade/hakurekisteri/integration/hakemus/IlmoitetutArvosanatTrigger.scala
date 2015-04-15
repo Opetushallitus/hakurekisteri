@@ -148,7 +148,7 @@ object IlmoitetutArvosanatTrigger {
             koulutustausta.LISAKOULUTUS_AMMATTISTARTTI.map(lk => {
               if("true".equals(lk)) {
                 Seq(ItseilmoitettuTutkinto(
-                  komoOid = Config.ammattistarttiKomoOid,
+                  komoOid = Config.config.oids.ammattistarttiKomoOid,
                   hakemusOid = hakemus.oid,
                   hakijaOid = personOid,
                   vuosi,
@@ -161,7 +161,7 @@ object IlmoitetutArvosanatTrigger {
             koulutustausta.LISAKOULUTUS_TALOUS.map(lk => {
               if("true".equals(lk)) {
                 Seq(ItseilmoitettuTutkinto(
-                  komoOid = Config.lisaopetusTalousKomoOid,
+                  komoOid = Config.config.oids.lisaopetusTalousKomoOid,
                   hakemusOid = hakemus.oid,
                   hakijaOid = personOid,
                   vuosi,
@@ -174,7 +174,7 @@ object IlmoitetutArvosanatTrigger {
             koulutustausta.LISAKOULUTUS_KYMPPI.map(lk => {
               if("true".equals(lk)) {
                 Seq(ItseilmoitettuTutkinto(
-                  komoOid = Config.lisaopetusKomoOid,
+                  komoOid = Config.config.oids.lisaopetusKomoOid,
                   hakemusOid = hakemus.oid,
                   hakijaOid = personOid,
                   vuosi,

@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoKoodiArvot}
@@ -21,7 +21,7 @@ import scala.xml.Node
 
 case class HenkiloNotFoundException(oid: String) extends Exception(s"henkilo not found with oid $oid")
 
-class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, importBatchActor: ActorRef, koodistoActor: ActorRef)(implicit val system: ActorSystem) {
+class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, importBatchActor: ActorRef, koodistoActor: ActorRef, oids: Oids)(implicit val system: ActorSystem) {
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val timeout: Timeout = 15.minutes
 
@@ -120,7 +120,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
       map(_.find(matchSuoritus(todistus))).
       flatMap {
         case Some(s) => Future.successful(s)
-        case None if todistus.komo == Config.lukioKomoOid => createLukioSuoritus(henkiloOid, todistus, oppilaitosOid, lahde)
+        case None if todistus.komo == oids.lukioKomoOid => createLukioSuoritus(henkiloOid, todistus, oppilaitosOid, lahde)
         case None => Future.failed(SuoritusNotFoundException(henkiloOid, oppilaitosOid, todistus.komo, todistus.valmistuminen))
       }
 
@@ -208,15 +208,15 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     })
 
     val tyypit = Map(
-      "perusopetus" -> Config.perusopetusKomoOid,
-      "perusopetuksenlisaopetus" -> Config.lisaopetusKomoOid,
-      "ammattistartti" -> Config.ammattistarttiKomoOid,
-      "valmentava" -> Config.valmentavaKomoOid,
-      "maahanmuuttajienlukioonvalmistava" -> Config.lukioonvalmistavaKomoOid,
-      "maahanmuuttajienammvalmistava" -> Config.ammatilliseenvalmistavaKomoOid,
-      "ulkomainen" -> Config.ulkomainenkorvaavaKomoOid,
-      "lukio" -> Config.lukioKomoOid,
-      "ammatillinen" -> Config.ammatillinenKomoOid
+      "perusopetus" -> oids.perusopetusKomoOid,
+      "perusopetuksenlisaopetus" -> oids.lisaopetusKomoOid,
+      "ammattistartti" -> oids.ammattistarttiKomoOid,
+      "valmentava" -> oids.valmentavaKomoOid,
+      "maahanmuuttajienlukioonvalmistava" -> oids.lukioonvalmistavaKomoOid,
+      "maahanmuuttajienammvalmistava" -> oids.ammatilliseenvalmistavaKomoOid,
+      "ulkomainen" -> oids.ulkomainenkorvaavaKomoOid,
+      "lukio" -> oids.lukioKomoOid,
+      "ammatillinen" -> oids.ammatillinenKomoOid
     )
 
     def apply(h: Node)(lahde: String)(oppiaineet: Seq[String]): ImportArvosanaHenkilo = {

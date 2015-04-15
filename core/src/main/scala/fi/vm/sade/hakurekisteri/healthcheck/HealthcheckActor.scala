@@ -40,13 +40,14 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
                        ytl: ActorRef,
                        hakemukset: ActorRef,
                        ensikertalainenActor: ActorRef,
-                       virtaQueue: ActorRef)(implicit system: ActorSystem) extends Actor with ActorLogging {
+                       virtaQueue: ActorRef,
+                       config: Config)(implicit system: ActorSystem) extends Actor with ActorLogging {
   protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(30, TimeUnit.SECONDS)
 
   val resources = Set("Arvosana", "Suoritus", "Opiskeluoikeus", "Opiskelija", "ImportBatch")
 
-  val healthCheckUser = BasicUser("healthcheck", resources.map(ReadRole( _, Config.ophOrganisaatioOid)))
+  val healthCheckUser = BasicUser("healthcheck", resources.map(ReadRole( _, config.oids.ophOrganisaatioOid)))
   var foundHakemukset:Map[String, RefreshingState] = Map()
 
   var selfChecks: Map[UUID, Long] = Map()
