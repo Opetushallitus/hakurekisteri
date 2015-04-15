@@ -14,7 +14,11 @@ import scala.util.{Success, Try}
 import fi.vm.sade.hakurekisteri.tools.RicherString
 
 object Config {
-  lazy val config: Config = new Config
+  val profile = sys.props.getOrElse("hakurekisteri.profile", "default")
+  lazy val config: Config = profile match {
+    case "it" => new MockConfig
+    case "default" => new DefaultConfig
+  }
 }
 
 class Oids(properties: Map[String, String] = Map.empty) {
@@ -36,9 +40,17 @@ class Oids(properties: Map[String, String] = Map.empty) {
   val lukioonvalmistavaKomoOid = properties.getOrElse("suoritusrekisteri.komo.oid.lukioonvalmistava", "1.2.246.562.5.2013112814572429142840")
 }
 
-class Config {
-  val profile = sys.props.getOrElse("hakurekisteri.profile", "default")
-  val mockMode = profile == "it"
+class DefaultConfig extends Config {
+  val mockMode = false
+}
+
+class MockConfig extends Config {
+  val mockMode = true
+  override val importBatchProcessingInitialDelay = 1.seconds
+}
+
+abstract class Config {
+  val mockMode: Boolean
 
   val log = LoggerFactory.getLogger(getClass)
   val homeDir = sys.props.getOrElse("user.home", "")
