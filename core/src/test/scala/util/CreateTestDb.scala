@@ -43,9 +43,9 @@ object CreateTestDb extends App {
   implicit val ec: ExecutionContext = system.dispatcher
 
 
-  println(Config.henkiloConfig)
+  println(Config.integrations.henkiloConfig)
 
-  val henkiloClient = new VirkailijaRestClient(Config.henkiloConfig, None)
+  val henkiloClient = new VirkailijaRestClient(Config.integrations.henkiloConfig, None)
 
   val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
   val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
@@ -62,10 +62,6 @@ object CreateTestDb extends App {
     ) createOppilas(henkilo.oidHenkilo, aineet)
     println()
     system.shutdown()
-
-
-
-
   }
 
   system.awaitTermination()
@@ -105,14 +101,10 @@ object CreateTestDb extends App {
         for (s <- sisaltyy(koodi)) yield (koodi, s.getOrElse(Seq()).map(_("koodiUri").toString).toSet))
 
     def yl: Future[Option[Seq[Map[String, Any]]]] = {
-      val req = url(s"${Config.koodistoServiceUrl}/rest/json/oppiaineetyleissivistava/koodi/")
+      val req = url(s"${Config.integrations.koodistoServiceUrl}/rest/json/oppiaineetyleissivistava/koodi/")
       val res: Future[String] = Http(req OK as.String)
       parseBody(res)
     }
-
-
-
-
 
     for (k: Option[Seq[Map[String, Any]]] <- yl;
          s <- withSisaltyy(k)) yield s
@@ -127,7 +119,7 @@ object CreateTestDb extends App {
 
   type Koodi = Map[String, Any]
   def sisaltyy(koodi: Koodi): Future[Option[Seq[Map[String, Any]]]] = {
-    val req = url(s"${Config.koodistoServiceUrl}/rest/json/relaatio/sisaltyy-alakoodit/${koodi("koodiUri")}")
+    val req = url(s"${Config.integrations.koodistoServiceUrl}/rest/json/relaatio/sisaltyy-alakoodit/${koodi("koodiUri")}")
     val res: Future[String] = Http(req OK as.String)
     parseBody(res)
   }

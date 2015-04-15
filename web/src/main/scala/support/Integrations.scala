@@ -1,6 +1,8 @@
 package support
 
-import akka.actor.{Props, ActorRef, ActorSystem}
+import akka.actor.{Actor, Props, ActorRef, ActorSystem}
+import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.Config._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.HakuActor
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
@@ -29,6 +31,33 @@ trait Integrations {
   val valintaTulos: ActorRef
 }
 
+object Integrations {
+  def apply(rekisterit: Registers, system: ActorSystem) = Config.mockMode match {
+    case true => new MockIntegrations(system)
+    case _ => new BaseIntegrations(rekisterit, system)
+  }
+}
+
+class MockIntegrations(system: ActorSystem) extends Integrations {
+  override val virta: ActorRef = mockActor("virta")
+  override val valintaTulos: ActorRef = mockActor("valintaTulos")
+  override val hakemukset: ActorRef = mockActor("hakemukset")
+  override val ytl: ActorRef = mockActor("ytl")
+  override val koodisto: ActorRef = mockActor("koodisto")
+  override val organisaatiot: ActorRef = mockActor("organisaatiot")
+  override val parametrit: ActorRef = mockActor("parametrit")
+  override val henkilo: ActorRef = mockActor("henkilo")
+  override val tarjonta: ActorRef = mockActor("tarjonta")
+
+  private def mockActor(name: String) = system.actorOf(Props(new DummyActor), name)
+
+  class DummyActor extends Actor {
+    override def receive: Receive = {
+      case _ =>
+    }
+  }
+}
+
 class BaseIntegrations(virtaConfig: VirtaConfig,
                        henkiloConfig: ServiceConfig,
                        tarjontaConfig: ServiceConfig,
@@ -40,6 +69,11 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
                        valintaTulosConfig: ServiceConfig,
                        rekisterit: Registers,
                        system: ActorSystem) extends Integrations {
+
+
+  def this(rekisterit: Registers, system: ActorSystem) {
+    this(Config.integrations.virtaConfig, Config.integrations.henkiloConfig, Config.integrations.tarjontaConfig, Config.integrations.organisaatioConfig, Config.integrations.parameterConfig, Config.integrations.hakemusConfig, Config.integrations.ytlConfig, Config.integrations.koodistoConfig, Config.integrations.valintaTulosConfig, rekisterit, system)
+  }
 
   val ec: ExecutionContext = ExecutorUtil.createExecutor(10, "rest-client-pool")
 

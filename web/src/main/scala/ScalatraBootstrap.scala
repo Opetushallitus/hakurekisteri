@@ -57,9 +57,9 @@ class ScalatraBootstrap extends LifeCycle {
 
     val journals = new DbJournals(jndiName)
     val registers = new BareRegisters(system, journals)
-    val authorizedRegisters = filter(registers) withAuthorizationDataFrom organisaatioSoapServiceUrl
+    val authorizedRegisters = filter(registers) withAuthorizationDataFrom Config.integrations.organisaatioSoapServiceUrl
 
-    val integrations = new BaseIntegrations(virtaConfig, henkiloConfig, tarjontaConfig, organisaatioConfig, parameterConfig, hakemusConfig, ytlConfig, koodistoConfig, valintaTulosConfig, registers, system)
+    val integrations = Integrations(registers, system)
 
     val koosteet = new BaseKoosteet(system, integrations, registers)
 
