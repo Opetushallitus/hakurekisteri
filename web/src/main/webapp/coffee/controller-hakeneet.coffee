@@ -149,13 +149,17 @@ app.controller "HakeneetCtrl", [
             MessageService.addMessage
               type: "danger"
               message: "Oppijanumeroa ei ole syötetty."
+              messageKey: "suoritusrekisteri.hakeneet.hakunumeroaeisyotetty"
               description: "Syötä oppijanumero ja yritä uudelleen."
+              descriptionKey: "suoritusrekisteri.hakeneet.hakunumeroaeisyotettyselite"
 
           unless $scope.hakukohde
             MessageService.addMessage
               type: "danger"
               message: "Hakukohdetta ei ole valittu."
+              messageKey: "suoritusrekisteri.hakeneet.hakukohdettaeisyotetty"
               description: "Valitse hakukohde ja yritä uudelleen. Hakukohde on helpompi löytää, jos valitset ensin haun ja organisaation."
+              descriptionKey: "suoritusrekisteri.hakeneet.hakukohdettaeisyotettyselite"
 
           return
       else
@@ -164,13 +168,17 @@ app.controller "HakeneetCtrl", [
             MessageService.addMessage
               type: "danger"
               message: "Hakua ei ole valittu."
+              messageKey: "suoritusrekisteri.hakeneet.hakueivalittu"
               description: "Valitse haku ja yritä uudelleen."
+              descriptionKey: "suoritusrekisteri.hakeneet.hakueivalittuselite"
 
           unless $scope.organisaatio
             MessageService.addMessage
               type: "danger"
               message: "Organisaatiota ei ole valittu."
+              messageKey: "suoritusrekisteri.hakeneet.organisaatioeivalittu"
               description: "Valitse organisaatio ja yritä uudelleen."
+              descriptionKey: "suoritusrekisteri.hakeneet.organisaatioeivalittuselite"
 
           return
       url = (if isKk() then "rest/v1/kkhakijat" else "rest/v1/hakijat")
@@ -197,23 +205,19 @@ app.controller "HakeneetCtrl", [
       ).done(->
         $scope.$apply ->
           delete $scope.fileLoading
-
           return
-
         return
       ).fail ->
         $scope.$apply ->
           MessageService.addMessage
             type: "danger"
             message: "Tiedoston lataaminen epäonnistui."
+            messageKey: "suoritusrekisteri.hakeneet.latausepaonnistui"
             description: "Palvelussa saattaa olla kuormaa. Yritä hetken kuluttua uudelleen."
-
+            descriptionKey: "suoritusrekisteri.hakeneet.latausepaonnistuiselite"
           delete $scope.fileLoading
-
           return
-
         return
-
       return
 
     $scope.reset = ->

@@ -122,7 +122,7 @@ app.factory "MessageService", ->
     messages: messages
     addMessage: (message, clear) ->
       if !message.descriptionKey? && !message.messageKey?
-        console.warn("Problem with message", message)
+        console.error("Problem with message", message)
         throw new Error("Problem with message")
       messages.length = 0  if clear
       messages.push message

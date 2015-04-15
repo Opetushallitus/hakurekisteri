@@ -114,12 +114,13 @@ app.controller "EihakeneetCtrl", [
           MessageService.addMessage
             type: "danger"
             message: "Virhe ladattaessa tietoja: " + errors
-            description: ""
+            messageKey: "suoritusrekisteri.eihakeneet.virhelatauksessa"
           $scope.loading = false
       else
         MessageService.addMessage
           type: "danger"
           message: "Virheelliset parametrit:"
+          messageKey: "suoritusrekisteri.eihakeneet.virheellisetparametrit"
           description: "haku=" + hakuOid + ", oppilaitos=" + oppilaitosOid + ", luokka=" + luokka
       return
 
