@@ -15,7 +15,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HetuQuery}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.Aine
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
-import fr.janalyse.ssh.{SSH, SSHOptions, SSHPassword}
+import fr.janalyse.ssh.{SSHFtp, SSH, SSHOptions, SSHPassword}
 import org.joda.time._
 
 import scala.concurrent.duration._
@@ -37,7 +37,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   var sent = Seq[Batch[KokelasRequest]]()
 
   val sendTicker = context.system.scheduler.schedule(1.millisecond, 1.minutes, self, CheckSend)
-  val pollTicker = context.system.scheduler.schedule(1.minutes, 1.minutes, self, Poll)
+  val pollTicker = context.system.scheduler.schedule(5.minutes, 5.minutes, self, Poll)
 
   var nextSend: Option[DateTime] = nextSendTime
 
@@ -94,6 +94,9 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     case akka.actor.Status.Failure(h: FtpException) =>
       log.info(s"retrying after FTP exception: ${h.getCause.getMessage}")
       self ! Send
+
+    case akka.actor.Status.Failure(t: Throwable) =>
+      log.error(t, s"got failure from ${sender()}")
 
     case Poll if config.isDefined  => poll(sent)
 
@@ -158,12 +161,14 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     case Some(YTLConfig(host, username, password, inbox, outbox, _, localStore)) =>
       Future {
         val (filename, localCopy) = uploadFile(batch, localStore)
-        SSH.ftp(host = host, username =username, password = SSHPassword(Some(password))){
-          (sftp) =>
+        log.info(s"sending file $filename to YTL")
+        SSH.ftp(host = host, username =username, password = SSHPassword(Some(password))) {
+          (sftp: SSHFtp) =>
             sftp.send(localCopy, s"$inbox/$filename")
+            log.info(s"file $filename sent")
         }
         batch
-      }(sftpSendContext).recoverWith{
+      }(sftpSendContext).recoverWith {
         case t: Throwable => Future.failed(FtpException(t))
       }
 
@@ -180,21 +185,26 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
           finally resource.close()
         }
 
-
-
         class YtlClient(implicit ssh: SSH) {
-
           private val channel: ChannelSftp = {
             val ch = ssh.jschsession.openChannel("sftp").asInstanceOf[ChannelSftp]
             ch.connect(ssh.options.connectTimeout.toInt)
             ch
           }
 
-          def pollResponse(batch:Batch[KokelasRequest]): Option[String] =  {
+          def pollResponse(batch: Batch[KokelasRequest]): Option[String] =  {
             val filename = s"outsiirto${batch.id.toString}.xml"
             val path = s"$outbox/$filename"
             val outputStream = new FileOutputStream(new File(s"$localStore/$filename"))
-            try {
+
+            def deleteOutsiirtoFile() = try {
+              if (!new File(s"$localStore/$filename").delete()) log.warning(s"file $localStore/$filename was not deleted")
+            } catch {
+              case t: Throwable =>
+                log.warning(s"error deleting file $localStore/$filename: $t")
+            }
+
+            val outsiirto = try {
               channel.get(path, outputStream)
               Some(s"$localStore/$filename")
             } catch {
@@ -204,24 +214,23 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
               outputStream.close()
             }
 
-          }
+            if (outsiirto.isEmpty) deleteOutsiirtoFile()
 
+            outsiirto
+          }
 
           def close() = {
             channel.quit()
             channel.disconnect()
           }
-
         }
 
-
-        val options = SSHOptions(host = host, username =username, password = SSHPassword(Some(password)))
+        val options = SSHOptions(host = host, username = username, password = SSHPassword(Some(password)))
         using(new SSH(options)) { implicit ssh =>
           using(new YtlClient) { ytl =>
             for (
               batch <- batches
             ) {
-
               val filename = s"outsiirto${batch.id.toString}.xml"
               val path = s"$outbox/$filename"
               log.debug(s"polling for $path")
@@ -255,11 +264,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
       case Failure(f) ⇒ self ! Status.Failure(f)
       case Success(Some(kokelas))  => self ! kokelas
       case _ => log.info(s"ytl result with no exams found, discarding it")
-
     }
-
-
-
 
     Future.sequence(kokelaat).onComplete {
       case Success(parsed) if requested.isDefined =>
