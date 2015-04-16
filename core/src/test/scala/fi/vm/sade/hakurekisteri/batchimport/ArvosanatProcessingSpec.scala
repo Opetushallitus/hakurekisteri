@@ -435,6 +435,30 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         ImportBatch(xmlLukio, Some("foo2"), "arvosanat", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
     }
 
+    val batchGeneratorJaaLuokalle = new DataGen[ImportBatch with Identified[UUID]] {
+      val xml = <arvosanat>
+        <eranTunniste>PKERA3_2015S_05127</eranTunniste>
+        <henkilot>
+          <henkilo>
+            <hetu>111111-111L</hetu>
+            <sukunimi>foo</sukunimi>
+            <etunimet>bar k</etunimet>
+            <kutsumanimi>bar</kutsumanimi>
+            <todistukset>
+              <perusopetus>
+                <oletusvalmistuminen>2017-06-06</oletusvalmistuminen>
+                <valmistuminensiirtyy>JAA LUOKALLE</valmistuminensiirtyy>
+                <myontaja>05127</myontaja>
+                <suorituskieli>FI</suorituskieli>
+              </perusopetus>
+            </todistukset>
+          </henkilo>
+        </henkilot>
+      </arvosanat>
+      override def generate: ImportBatch with Identified[UUID] =
+        ImportBatch(xml, Some("foo3"), "arvosanat", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
+    }
+
     def createEndpoint = {
       val result = mock[Endpoint]
       when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot"))).thenReturn((200, List(), "1.2.246.562.24.123"))
