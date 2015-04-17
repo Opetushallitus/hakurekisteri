@@ -244,8 +244,10 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     case None => log.warning("polling of files from YTL called without config")
   }
 
-  def handleResponse(requested: Option[Batch[KokelasRequest]], source: Source) = {
-    log.info("started processing YTL response")
+  def handleResponse(requested: Option[Batch[KokelasRequest]], source: Source) {
+    Future {
+      log.info("started processing YTL response")
+
 
     def batch2Finder(batch: Batch[KokelasRequest])(hetu: String): Future[String] = {
       val hetuMap = batch.items.map { case KokelasRequest(oid, kokelasHetu) => kokelasHetu -> oid }.toMap
@@ -262,7 +264,9 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
       kokelasFut <- kokelaat
     ) kokelasFut.onComplete{
       case Failure(f) ⇒ self ! Status.Failure(f)
-      case Success(Some(kokelas))  => self ! kokelas
+      case Success(Some(kokelas))  =>
+        log.info(s"sending kokelas ${kokelas.oid} for saving")
+        self ! kokelas
       case _ => log.info(s"ytl result with no exams found, discarding it")
     }
 
@@ -279,7 +283,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
       case Failure(t) => log.error(t, "failure fetching results from YTL")
 
       case _ =>  log.warning("no request in memory for a result from YTL")
-    }
+    }}
   }
 
   def resolveOidFromHenkiloPalvelu(hetu: String): Future[String] =
