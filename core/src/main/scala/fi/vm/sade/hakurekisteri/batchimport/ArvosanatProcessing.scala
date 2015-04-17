@@ -73,24 +73,23 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
       mapTo[KoodistoKoodiArvot].
       map(arvot => arvot.arvot)
 
-  private def saveArvosana(batch: ImportBatch, s: Suoritus with Identified[UUID], arvosana: ImportArvosana): Future[Arvosana with Identified[UUID]] =
-    (arvosanarekisteri ? toArvosana(arvosana)(s.id)(batch.source)).mapTo[Arvosana with Identified[UUID]]
+  private def saveArvosana(batchSource: String, suoritusId: UUID, arvosana: ImportArvosana): Future[Arvosana with Identified[UUID]] =
+    (arvosanarekisteri ? toArvosana(arvosana)(suoritusId)(batchSource)).mapTo[Arvosana with Identified[UUID]]
 
   private def saveTodistus(batch: ImportBatch,
                            henkilo: (String, String, Seq[(ImportTodistus, String)]),
-                           todistus: (Valmistunut, String)): Future[Seq[ArvosanaStatus]] = {
-    val savedTodistus =
-      for (suoritus <- fetchSuoritus(henkilo._2, todistus._1, todistus._2, batch.source)) yield
-        for (arvosana <- todistus._1.arvosanat) yield saveArvosana(batch, suoritus, arvosana)
-
-    savedTodistus.flatMap(arvosanat => {
-      Future.sequence(arvosanat.map(f => {
-        f.map(arvosana => OkArvosanaStatus(arvosana.id, arvosana.suoritus, henkilo._1)).recoverWith {
-          case th: Throwable => Future.successful(FailureArvosanaStatus(henkilo._1, th))
-        }
-      }))
-    }).recoverWith {
-      case th: Throwable => Future.successful(Seq(FailureArvosanaStatus(henkilo._1, th)))
+                           myonnettyTodistus: (Valmistunut, String)): Future[Seq[ArvosanaStatus]] = {
+    val (henkiloTunniste, henkiloOid, _) = henkilo
+    val (todistus, myontajaOid) = myonnettyTodistus
+    fetchSuoritus(henkiloOid, todistus, myontajaOid, batch.source).flatMap(suoritus =>
+      Future.traverse(todistus.arvosanat)(arvosana =>
+        saveArvosana(batch.source, suoritus.id, arvosana).map(storedArvosana =>
+          OkArvosanaStatus(storedArvosana.id, storedArvosana.suoritus, henkiloTunniste)
+        ).recover {
+          case t: Throwable => FailureArvosanaStatus(henkiloTunniste, t)
+        })
+    ).recover {
+      case t: Throwable => Seq(FailureArvosanaStatus(henkiloTunniste, t))
     }
   }
 
