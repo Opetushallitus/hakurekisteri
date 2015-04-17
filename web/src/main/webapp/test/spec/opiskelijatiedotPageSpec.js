@@ -452,7 +452,7 @@
                             'C',
                             '4',
                             '01.06.2013',
-                            'false' )
+                            'true' )
                         expect(opiskelijatiedot.yoArvosanaAddKoe().is(':visible')).to.equal(false)
                         expect(opiskelijatiedot.suoritusPoista().is(':visible')).to.equal(false)
                     },
