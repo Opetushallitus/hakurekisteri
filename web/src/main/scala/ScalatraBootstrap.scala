@@ -1,3 +1,4 @@
+import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import java.nio.file.Path
 import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEvent}
 
@@ -83,7 +84,8 @@ class ScalatraBootstrap extends LifeCycle {
       ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SpringSecuritySupport,
       ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(authorizedRegisters, config.oids),
       ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto, Arvosanat, ArvosanatKoodisto),
-      ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue, config.oids)
+      ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue, config.oids),
+      ("/ytl", "ytl") -> new YtlResource(integrations.ytl)
     )
 
     context mount (new ValidatorJavascriptServlet, "/hakurekisteri-validator")
