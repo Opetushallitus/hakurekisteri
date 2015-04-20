@@ -249,12 +249,15 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
       log.info("started processing YTL response")
 
 
-    def batch2Finder(batch: Batch[KokelasRequest])(hetu: String): Future[String] = {
-      val hetuMap = batch.items.map { case KokelasRequest(oid, kokelasHetu) => kokelasHetu -> oid }.toMap
-      hetuMap.get(hetu).map(Future.successful).getOrElse(Future.failed(new NoSuchElementException("can't find oid for hetu in requested data")))
-    }
+      val failed = Future.failed(new NoSuchElementException("can't find oid for hetu in requested data"))
 
-    val finder = requested.map(batch2Finder).getOrElse(resolveOidFromHenkiloPalvelu _)
+      def map2Finder(hetuMap: Map[String, Future[String]])(hetu: String): Future[String] = {
+        hetuMap.getOrElse(hetu, failed)
+      }
+
+    val hetuMap = requested.map(_.items.map { case KokelasRequest(oid, kokelasHetu) => kokelasHetu -> Future.successful(oid)}.toMap)
+
+    val finder = hetuMap.map(map2Finder).getOrElse(resolveOidFromHenkiloPalvelu _)
 
     import YTLXml._
 
