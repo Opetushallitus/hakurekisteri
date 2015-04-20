@@ -81,6 +81,10 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
                                       odotettuValmistuminen: LocalDate): Future[VirallinenSuoritus with Identified[UUID]] =
     (suoritusrekisteri ? suoritus.copy(tila = "KESKEN", valmistuminen = odotettuValmistuminen)).mapTo[VirallinenSuoritus with Identified[UUID]]
 
+  private def updateSuoritusKeskeytynyt(suoritus: VirallinenSuoritus with Identified[UUID],
+                                        opetusPaattynyt: LocalDate): Future[VirallinenSuoritus with Identified[UUID]] =
+    (suoritusrekisteri ? suoritus.copy(tila = "KESKEYTYNYT", valmistuminen = opetusPaattynyt)).mapTo[VirallinenSuoritus with Identified[UUID]]
+
   private def saveArvosana(batchSource: String, suoritusId: UUID, arvosana: ImportArvosana): Future[Arvosana with Identified[UUID]] =
     (arvosanarekisteri ? toArvosana(arvosana)(suoritusId)(batchSource)).mapTo[Arvosana with Identified[UUID]]
 
@@ -117,6 +121,19 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     }
   }
 
+  private def eiValmistu(batch: ImportBatch,
+                         henkilotunniste: String,
+                         henkiloOid: String,
+                         myontaja: String,
+                         todistus: Keskeytynyt): Future[Seq[ArvosanaStatus]] = {
+    (for {
+      suoritus <- fetchSuoritus(henkiloOid, todistus, myontaja, batch.source)
+      _ <- updateSuoritusKeskeytynyt(suoritus, todistus.opetusPaattynyt)
+    } yield Seq()).recover {
+      case t: Throwable => Seq(FailureArvosanaStatus(henkilotunniste, t))
+    }
+  }
+
   private def processBatch(batch: ImportBatch)(oppiaineet: Seq[String]): Seq[Future[ImportArvosanaStatus]] =
     for (henkilot <- enrich(parseData(batch)(oppiaineet))(batch.source)) yield henkilot.flatMap(henkilo => {
       val (henkilotunniste, henkiloOid, todistukset) = henkilo
@@ -126,7 +143,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
         case (todistus: Siirtynyt, myontajaOid: String)
         => valmistuminenSiirtynyt(batch, henkilotunniste, henkiloOid, myontajaOid, todistus)
         case (todistus: Keskeytynyt, myontajaOid: String)
-        => Future.successful(Seq(FailureArvosanaStatus(henkilotunniste, new RuntimeException("keskeytynyt suoritus not implemented"))))
+        => eiValmistu(batch, henkilotunniste, henkiloOid, myontajaOid, todistus)
       }
 
       statuses.map(tods => {

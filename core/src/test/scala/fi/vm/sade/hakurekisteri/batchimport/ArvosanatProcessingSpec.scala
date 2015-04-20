@@ -140,6 +140,40 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     )
   }
 
+  it should "import ei valmistu" in {
+    withSystem(
+      implicit system => {
+        implicit val ec: ExecutionContext = system.dispatcher
+
+        val importBatchWaiter = new Waiter()
+
+        val s = perusopetusSuoritus(new LocalDate(2001, 1, 1))
+        val batch = batchGeneratorEiValmistu.generate
+
+        val arvosanatProcessing = new ArvosanatProcessing(
+          createOrganisaatioActor,
+          createHenkiloActor,
+          system.actorOf(Props(new MockedResourceActor[Suoritus](save = {
+            case s: VirallinenSuoritus =>
+              s.tila should be ("KESKEYTYNYT")
+              s.valmistuminen should be (new LocalDate(2002, 1, 1))
+          }, query = {q => Seq(s)}))),
+          system.actorOf(Props(new MockedResourceActor[Arvosana](save = {a => a}, query = {q => Seq()}))),
+          createImportBatchActor(system, (b: ImportBatch) => {
+            importBatchWaiter { b.state should be (BatchState.DONE) }
+            importBatchWaiter.dismiss()
+          }, batch),
+          createKoodistoActor,
+          oids
+        )
+
+        val status = Await.result(arvosanatProcessing.process(batch), Duration(10, TimeUnit.SECONDS)).status
+        status.messages shouldBe empty
+        importBatchWaiter.await(timeout(30.seconds), dismissals(1))
+      }
+    )
+  }
+
   it should "report a row error if no matching suoritus was found" in {
     withSystem(
       implicit system => {
@@ -569,6 +603,30 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
       </arvosanat>
       override def generate: ImportBatch with Identified[UUID] =
         ImportBatch(xml, Some("foo1"), "arvosanat", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
+    }
+
+    val batchGeneratorEiValmistu = new DataGen[ImportBatch with Identified[UUID]] {
+      val xml = <arvosanat>
+        <eranTunniste>PKERA3_2015S_05127</eranTunniste>
+        <henkilot>
+          <henkilo>
+            <hetu>111111-111L</hetu>
+            <sukunimi>foo</sukunimi>
+            <etunimet>bar k</etunimet>
+            <kutsumanimi>bar</kutsumanimi>
+            <todistukset>
+              <perusopetus>
+                <myontaja>05127</myontaja>
+                <suorituskieli>FI</suorituskieli>
+                <opetuspaattynyt>2002-01-01</opetuspaattynyt>
+                <eivalmistu>PERUSOPETUS PAATTYNYT VALMISTUMATTA</eivalmistu>
+              </perusopetus>
+            </todistukset>
+          </henkilo>
+        </henkilot>
+      </arvosanat>
+      override def generate: ImportBatch with Identified[UUID] =
+        ImportBatch(xml, Some("foo2"), "arvosanat", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
     }
 
     val batchGeneratorLukio = new DataGen[ImportBatch with Identified[UUID]] {
