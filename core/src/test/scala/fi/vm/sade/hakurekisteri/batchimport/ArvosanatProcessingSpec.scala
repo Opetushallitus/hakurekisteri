@@ -40,16 +40,22 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
       implicit system => {
         implicit val ec: ExecutionContext = system.dispatcher
 
+        val suoritusWaiter = new Waiter()
         val arvosanaWaiter = new Waiter()
         val importBatchWaiter = new Waiter()
 
-        val s = suoritus(new LocalDate(2001, 1, 1))
+        var s = perusopetusSuoritus(new LocalDate(2001, 1, 1))
         val batch = batchGenerator.generate
 
         val arvosanatProcessing = new ArvosanatProcessing(
           createOrganisaatioActor,
           createHenkiloActor,
-          system.actorOf(Props(new MockedResourceActor[Suoritus](save = {s => s}, query = {q => Seq(s)}))),
+          system.actorOf(Props(new MockedResourceActor[Suoritus](save = {
+            case suoritus: VirallinenSuoritus with Identified[UUID] =>
+              suoritusWaiter { suoritus.tila should be ("VALMIS") }
+              suoritusWaiter.dismiss()
+              s = s.identify(suoritus.id)
+          }, query = { q => Seq(s) }))),
           system.actorOf(Props(new MockedResourceActor[Arvosana](save = (a: Arvosana) => {
             arvosanaWaiter { a.suoritus should be (s.id) }
             arvosanaWaiter.dismiss()
@@ -63,8 +69,39 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         )
         val status = Await.result(arvosanatProcessing.process(batch), Duration(10, TimeUnit.SECONDS)).status
         status.messages shouldBe empty
+        suoritusWaiter.await(timeout(10.seconds), dismissals(1))
         arvosanaWaiter.await(timeout(30.seconds), dismissals(23))
         importBatchWaiter.await(timeout(30.seconds), dismissals(1))
+      }
+    )
+  }
+
+  it should "update the valmistuminen date to the one from the arvosanat" in {
+    withSystem(
+      implicit system => {
+        implicit val ec: ExecutionContext = system.dispatcher
+
+        val suoritusWaiter = new Waiter()
+        val s = perusopetusSuoritus(new LocalDate(2001, 1, 1))
+        val batch = batchGeneratorUpdatedValmistuminen.generate
+
+        val arvosanatProcessing = new ArvosanatProcessing(
+          createOrganisaatioActor,
+          createHenkiloActor,
+          system.actorOf(Props(new MockedResourceActor[Suoritus](save = {
+            case suoritus: VirallinenSuoritus with Identified[UUID] =>
+              suoritusWaiter { suoritus.tila should be ("VALMIS") }
+              suoritusWaiter { suoritus.valmistuminen should be (new LocalDate(2001, 2, 2)) }
+              suoritusWaiter.dismiss()
+          }, query = { q => Seq(s) }))),
+          system.actorOf(Props(new MockedResourceActor[Arvosana](save = {a => a}, query = {q => Seq()}))),
+          createImportBatchActor(system, {b => b}, batch),
+          createKoodistoActor,
+          oids
+        )
+        val status = Await.result(arvosanatProcessing.process(batch), Duration(10, TimeUnit.SECONDS)).status
+        status.messages shouldBe empty
+        suoritusWaiter.await(timeout(10.seconds), dismissals(1))
       }
     )
   }
@@ -75,13 +112,14 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         implicit val ec: ExecutionContext = system.dispatcher
 
         val importBatchWaiter = new Waiter()
-
         val batch = batchGenerator.generate
-
         val arvosanatProcessing = new ArvosanatProcessing(
           createOrganisaatioActor,
           createHenkiloActor,
-          system.actorOf(Props(new MockedResourceActor[Suoritus](save = {s => s}, query = {q => Seq(suoritus(new LocalDate(2002, 1, 1)))}))),
+          system.actorOf(Props(new MockedResourceActor[Suoritus](
+            save = {s => s},
+            query = {q => Seq()}
+          ))),
           system.actorOf(Props(new MockedResourceActor[Arvosana](save = {a => a}, query = {q => Seq()}))),
           createImportBatchActor(system, (b: ImportBatch) => {
             importBatchWaiter { b.state should be (BatchState.DONE) }
@@ -92,9 +130,40 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         )
 
         val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
-
         saved.status.messages("111111-111L").find(_.contains("SuoritusNotFoundException")) should not be None
+        importBatchWaiter.await(timeout(30.seconds), dismissals(1))
+      }
+    )
+  }
 
+  it should "report a row error if multiple matching suoritus were found" in {
+    withSystem(
+      implicit system => {
+        implicit val ec: ExecutionContext = system.dispatcher
+
+        val importBatchWaiter = new Waiter()
+        val batch = batchGenerator.generate
+        val arvosanatProcessing = new ArvosanatProcessing(
+          createOrganisaatioActor,
+          createHenkiloActor,
+          system.actorOf(Props(new MockedResourceActor[Suoritus](
+            save = {s => s},
+            query = {q => Seq(
+              perusopetusSuoritus(new LocalDate(2001, 1, 1)),
+              lukioSuoritus(new LocalDate(2001, 1, 1))
+            )}
+          ))),
+          system.actorOf(Props(new MockedResourceActor[Arvosana](save = {a => a}, query = {q => Seq()}))),
+          createImportBatchActor(system, (b: ImportBatch) => {
+            importBatchWaiter { b.state should be (BatchState.DONE) }
+            importBatchWaiter.dismiss()
+          }, batch),
+          createKoodistoActor,
+          oids
+        )
+
+        val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
+        saved.status.messages("111111-111L").find(_.contains("MultipleSuoritusException")) should not be None
         importBatchWaiter.await(timeout(30.seconds), dismissals(1))
       }
     )
@@ -112,7 +181,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val arvosanatProcessing = new ArvosanatProcessing(
           createOrganisaatioActor,
           createHenkiloActor,
-          system.actorOf(Props(new MockedResourceActor[Suoritus](save = {s => s}, query = {q => Seq(suoritus(new LocalDate(2001, 1, 1)))}))),
+          system.actorOf(Props(new MockedResourceActor[Suoritus](save = {s => s}, query = {q => Seq(perusopetusSuoritus(new LocalDate(2001, 1, 1)))}))),
           system.actorOf(Props(new FailingResourceActor[Arvosana]())),
           createImportBatchActor(system, (b: ImportBatch) => {
             importBatchWaiter { b.state should be (BatchState.DONE) }
@@ -167,14 +236,16 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
         val batch = batchGenerator.generate
 
-        val s = suoritus(new LocalDate(2001, 1, 1))
+        var s = perusopetusSuoritus(new LocalDate(2001, 1, 1))
 
         val arvosanaActor = system.actorOf(Props(new ArvosanaActor()))
 
         val arvosanatProcessing = new ArvosanatProcessing(
           createOrganisaatioActor,
           createHenkiloActor,
-          system.actorOf(Props(new MockedResourceActor[Suoritus](save = {s => s}, query = {q => Seq(s)}))),
+          system.actorOf(Props(new MockedResourceActor[Suoritus](save = {ss =>
+            s = s.identify(ss.id)
+          }, query = {q => Seq(s)}))),
           arvosanaActor,
           createImportBatchActor(system, {r => r}, batch),
           createKoodistoActor,
@@ -250,8 +321,11 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
   private def createKoodistoActor(implicit system: ActorSystem): ActorRef =
     system.actorOf(Props(new MockedKoodistoActor()))
 
-  private def suoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
+  private def perusopetusSuoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
     VirallinenSuoritus(new Oids().perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
+
+  private def lukioSuoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
+    VirallinenSuoritus(new Oids().lukioKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
 
   private def createImportBatchActor(system: ActorSystem, batchSaveHandler: (ImportBatch) => Unit, batch: ImportBatch with Identified[UUID]): ActorRef =
     system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchSaveHandler, query = {q => Seq(batch)})))
@@ -285,6 +359,89 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             <todistukset>
               <perusopetus>
                 <valmistuminen>2001-01-01</valmistuminen>
+                <myontaja>05127</myontaja>
+                <suorituskieli>FI</suorituskieli>
+                <AI>
+                  <yhteinen>5</yhteinen>
+                  <tyyppi>FI</tyyppi>
+                </AI>
+                <A1>
+                  <yhteinen>5</yhteinen>
+                  <valinnainen>6</valinnainen>
+                  <valinnainen>8</valinnainen>
+                  <valinnainen>10</valinnainen>
+                  <kieli>EN</kieli>
+                </A1>
+                <B1>
+                  <yhteinen>5</yhteinen>
+                  <kieli>SV</kieli>
+                </B1>
+                <MA>
+                  <yhteinen>5</yhteinen>
+                  <valinnainen>6</valinnainen>
+                  <valinnainen>8</valinnainen>
+                </MA>
+                <KS>
+                  <yhteinen>5</yhteinen>
+                  <valinnainen>6</valinnainen>
+                </KS>
+                <KE>
+                  <yhteinen>5</yhteinen>
+                </KE>
+                <KU>
+                  <yhteinen>5</yhteinen>
+                </KU>
+                <KO>
+                  <yhteinen>5</yhteinen>
+                </KO>
+                <BI>
+                  <yhteinen>5</yhteinen>
+                </BI>
+                <MU>
+                  <yhteinen>5</yhteinen>
+                </MU>
+                <LI>
+                  <yhteinen>5</yhteinen>
+                </LI>
+                <HI>
+                  <yhteinen>5</yhteinen>
+                </HI>
+                <FY>
+                  <yhteinen>5</yhteinen>
+                </FY>
+                <YH>
+                  <yhteinen>5</yhteinen>
+                </YH>
+                <TE>
+                  <yhteinen>5</yhteinen>
+                </TE>
+                <KT>
+                  <yhteinen>5</yhteinen>
+                </KT>
+                <GE>
+                  <yhteinen>5</yhteinen>
+                </GE>
+              </perusopetus>
+            </todistukset>
+          </henkilo>
+        </henkilot>
+      </arvosanat>
+      override def generate: ImportBatch with Identified[UUID] =
+        ImportBatch(xml, Some("foo"), "arvosanat", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
+    }
+
+    val batchGeneratorUpdatedValmistuminen = new DataGen[ImportBatch with Identified[UUID]] {
+      val xml = <arvosanat>
+        <eranTunniste>PKERA3_2015S_05127</eranTunniste>
+        <henkilot>
+          <henkilo>
+            <hetu>111111-111L</hetu>
+            <sukunimi>foo</sukunimi>
+            <etunimet>bar k</etunimet>
+            <kutsumanimi>bar</kutsumanimi>
+            <todistukset>
+              <perusopetus>
+                <valmistuminen>2001-02-02</valmistuminen>
                 <myontaja>05127</myontaja>
                 <suorituskieli>FI</suorituskieli>
                 <AI>
@@ -432,7 +589,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         </henkilot>
       </arvosanat>
       override def generate: ImportBatch with Identified[UUID] =
-        ImportBatch(xmlLukio, Some("foo2"), "arvosanat", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
+        ImportBatch(xmlLukio, Some("foo3"), "arvosanat", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
     }
 
     val batchGeneratorJaaLuokalle = new DataGen[ImportBatch with Identified[UUID]] {

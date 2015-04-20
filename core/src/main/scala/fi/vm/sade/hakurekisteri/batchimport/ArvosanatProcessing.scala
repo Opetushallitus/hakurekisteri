@@ -73,39 +73,46 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
       mapTo[KoodistoKoodiArvot].
       map(arvot => arvot.arvot)
 
+  private def updateSuoritusValmis(suoritus: VirallinenSuoritus with Identified[UUID],
+                                   valmistuminen: LocalDate): Future[VirallinenSuoritus with Identified[UUID]] =
+    (suoritusrekisteri ? suoritus.copy(tila = "VALMIS", valmistuminen = valmistuminen)).mapTo[VirallinenSuoritus with Identified[UUID]]
+
   private def saveArvosana(batchSource: String, suoritusId: UUID, arvosana: ImportArvosana): Future[Arvosana with Identified[UUID]] =
     (arvosanarekisteri ? toArvosana(arvosana)(suoritusId)(batchSource)).mapTo[Arvosana with Identified[UUID]]
 
   private def saveTodistus(batch: ImportBatch,
                            henkilo: (String, String, Seq[(ImportTodistus, String)]),
-                           myonnettyTodistus: (Valmistunut, String)): Future[Seq[ArvosanaStatus]] = {
-    val (henkiloTunniste, henkiloOid, _) = henkilo
-    val (todistus, myontajaOid) = myonnettyTodistus
-    fetchSuoritus(henkiloOid, todistus, myontajaOid, batch.source).flatMap(suoritus =>
-      Future.traverse(todistus.arvosanat)(arvosana =>
-        saveArvosana(batch.source, suoritus.id, arvosana).map(storedArvosana =>
-          OkArvosanaStatus(storedArvosana.id, storedArvosana.suoritus, henkiloTunniste)
-        ).recover {
-          case t: Throwable => FailureArvosanaStatus(henkiloTunniste, t)
-        })
+                           myontaja: String,
+                           todistus: Valmistunut): Future[Seq[ArvosanaStatus]] = {
+    val (henkilotunniste, henkiloOid, _) = henkilo
+    fetchSuoritus(henkiloOid, todistus, myontaja, batch.source).flatMap(suoritus =>
+      updateSuoritusValmis(suoritus, todistus.valmistuminen).flatMap(suoritus =>
+        Future.traverse(todistus.arvosanat)(arvosana =>
+          saveArvosana(batch.source, suoritus.id, arvosana).map(storedArvosana =>
+            OkArvosanaStatus(storedArvosana.id, storedArvosana.suoritus, henkilotunniste)
+          ).recover {
+            case t: Throwable => FailureArvosanaStatus(henkilotunniste, t)
+          }
+        )
+      )
     ).recover {
-      case t: Throwable => Seq(FailureArvosanaStatus(henkiloTunniste, t))
+      case t: Throwable => Seq(FailureArvosanaStatus(henkilotunniste, t))
     }
   }
 
   private def processBatch(batch: ImportBatch)(oppiaineet: Seq[String]): Seq[Future[ImportArvosanaStatus]] =
     for (henkilot <- enrich(parseData(batch)(oppiaineet))(batch.source)) yield henkilot.flatMap(henkilo => {
       val (tunniste, _, todistukset) = henkilo
-      val statuses = todistukset.collect {
+      val statuses = Future.traverse(todistukset) {
         case (todistus: Valmistunut, myontajaOid: String)
-        => saveTodistus(batch, henkilo, (todistus, myontajaOid))
+        => saveTodistus(batch, henkilo, myontajaOid, todistus)
         case (todistus: Siirtynyt, myontajaOid: String)
         => Future.successful(Seq(FailureArvosanaStatus(tunniste, new RuntimeException("siirtynyt suoritus not implemented"))))
         case (todistus: Keskeytynyt, myontajaOid: String)
         => Future.successful(Seq(FailureArvosanaStatus(tunniste, new RuntimeException("keskeytynyt suoritus not implemented"))))
       }
 
-      Future.sequence(statuses).map(tods => {
+      statuses.map(tods => {
         val arvosanaStatukset = tods.foldLeft[Seq[ArvosanaStatus]](Seq())(_ ++ _)
         arvosanaStatukset.find(_.isInstanceOf[FailureArvosanaStatus]) match {
           case Some(FailureArvosanaStatus(tunniste, _)) =>
@@ -123,23 +130,27 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   private def toArvosana(arvosana: ImportArvosana)(suoritus: UUID)(source: String): Arvosana =
     Arvosana(suoritus, Arvio410(arvosana.arvosana), arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source, arvosana.jarjestys)
 
-  private def fetchSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String, lahde: String): Future[Suoritus with Identified[UUID]] =
-    (suoritusrekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid))).
-      mapTo[Seq[Suoritus with Identified[UUID]]].
-      map(_.find(matchSuoritus(todistus))).
-      flatMap {
-        case Some(s) => Future.successful(s)
-        case None if todistus.komo == oids.lukioKomoOid => createLukioSuoritus(henkiloOid, todistus, oppilaitosOid, lahde)
-        case None => Future.failed(SuoritusNotFoundException(henkiloOid, oppilaitosOid, todistus.komo, todistus.valmistuminen))
-      }
+  private def fetchSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String, lahde: String): Future[VirallinenSuoritus with Identified[UUID]] =
+    (suoritusrekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid), komo = Some(todistus.komo))).
+      mapTo[Seq[VirallinenSuoritus with Identified[UUID]]].
+      flatMap(suoritukset => suoritukset.headOption match {
+      case Some(suoritus) if suoritukset.length == 1 => Future.successful(suoritus)
+      case Some(_) if suoritukset.length > 1 => Future.failed(new MultipleSuoritusException(henkiloOid, oppilaitosOid, todistus.komo))
+      case None if todistus.komo == oids.lukioKomoOid => createLukioSuoritus(henkiloOid, todistus, oppilaitosOid, lahde)
+      case None => Future.failed(new SuoritusNotFoundException(henkiloOid, oppilaitosOid, todistus.komo))
+    })
 
-  private def createLukioSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String, lahde: String): Future[Suoritus with Identified[UUID]] =
-    (suoritusrekisteri ? VirallinenSuoritus(todistus.komo, oppilaitosOid, "KESKEN", todistus.valmistuminen, henkiloOid, yksilollistaminen.Ei, todistus.suoritusKieli, None, vahv = true, lahde)).mapTo[Suoritus with Identified[UUID]]
-
-  private def matchSuoritus(todistus: ImportTodistus)(suoritus: Suoritus): Boolean = suoritus match {
-    case s: VirallinenSuoritus => todistus.komo == s.komo && todistus.valmistuminen == s.valmistuminen
-    case _ => false
-  }
+  private def createLukioSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String, lahde: String): Future[VirallinenSuoritus with Identified[UUID]] =
+    (suoritusrekisteri ? VirallinenSuoritus(
+      todistus.komo,
+      oppilaitosOid, "KESKEN",
+      todistus.valmistuminen,
+      henkiloOid,
+      yksilollistaminen.Ei,
+      todistus.suoritusKieli,
+      None,
+      vahv = true,
+      lahde)).mapTo[VirallinenSuoritus with Identified[UUID]]
 
   private def saveHenkilo(henkilo: ImportArvosanaHenkilo)(lahde: String)(tunniste: String) = {
     val vuosi = new LocalDate() match {
@@ -187,10 +198,15 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     (batch.data \ "henkilot" \ "henkilo").map(ImportArvosanaHenkilo(_)(batch.source)(oppiaineet)).groupBy(_.tunniste.tunniste).mapValues(_.head)
 
   case class SuoritusNotFoundException(henkiloOid: String,
-                                       oppilaitosOid: String,
-                                       komo: String,
-                                       valmistuminen: LocalDate)
-    extends Exception(s"Suoritus not found for henkilo $henkiloOid by myontaja $oppilaitosOid with komo $komo and valmistuminen $valmistuminen.")
+                                       myontaja: String,
+                                       komo: String)
+    extends Exception(s"Suoritus not found for henkilo $henkiloOid by myontaja $myontaja with komo $komo.")
+
+  case class MultipleSuoritusException(henkiloOid: String,
+                                       myontaja: String,
+                                       komo: String)
+    extends Exception(s"Multiple suoritus found for henkilo $henkiloOid by myontaja $myontaja with komo $komo.")
+
   object HenkiloTunnisteNotSupportedException extends Exception("henkilo tunniste not yet supported in arvosana batch")
   case class ImportArvosana(aine: String, arvosana: String, lisatieto: Option[String], valinnainen: Boolean, jarjestys: Option[Int] = None)
 
