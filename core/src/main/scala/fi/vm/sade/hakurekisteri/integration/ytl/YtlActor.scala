@@ -88,12 +88,12 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     case SentBatch(batch) => sent = batch +: sent
 
     case akka.actor.Status.Failure(h: HakuException) =>
-      log.info(s"retrying after haku exception ${h.getCause.getMessage}")
-      self ! Send
+      log.info(s"retrying after haku exception: ${h.message}: ${h.getCause.getMessage}")
+      context.system.scheduler.scheduleOnce(5.seconds, self, Send)
 
     case akka.actor.Status.Failure(h: FtpException) =>
       log.info(s"retrying after FTP exception: ${h.getCause.getMessage}")
-      self ! Send
+      context.system.scheduler.scheduleOnce(5.seconds, self, Send)
 
     case akka.actor.Status.Failure(t: Throwable) =>
       log.error(t, s"got failure from ${sender()}")
