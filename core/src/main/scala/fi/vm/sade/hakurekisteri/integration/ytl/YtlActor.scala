@@ -36,7 +36,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   var haut = Set[String]()
   var sent = Seq[Batch[KokelasRequest]]()
 
-  val sendTicker = context.system.scheduler.schedule(1.millisecond, 1.minutes, self, CheckSend)
+  val sendTicker = context.system.scheduler.schedule(5.minutes, 1.minutes, self, CheckSend)
   val pollTicker = context.system.scheduler.schedule(5.minutes, 5.minutes, self, Poll)
 
   var nextSend: Option[DateTime] = nextSendTime
