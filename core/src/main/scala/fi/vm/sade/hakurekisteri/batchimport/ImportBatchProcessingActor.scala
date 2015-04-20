@@ -35,7 +35,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
 
   override def receive: Receive = {
     case ProcessReadyBatches if readyForProcessing =>
-      log.info("checking for batches")
+      log.debug("checking for batches")
       fetching = true
       importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), None, if (config.h2) { None } else { Some(1) })
 
@@ -45,7 +45,7 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
 
     case b: ImportBatch with Identified[UUID] =>
       fetching = false
-      log.info("got import batch")
+      log.debug("got import batch")
       b.batchType match {
         case "perustiedot" =>
           context.actorOf(Props(new PerustiedotProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, config.oids)(b)))

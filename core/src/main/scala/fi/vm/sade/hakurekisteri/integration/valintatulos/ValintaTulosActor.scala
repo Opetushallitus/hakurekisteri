@@ -3,16 +3,16 @@ package fi.vm.sade.hakurekisteri.integration.valintatulos
 import java.net.URLEncoder
 import java.util.concurrent.ExecutionException
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
-import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, FutureCache, VirkailijaRestClient}
-import scala.compat.Platform
-import scala.concurrent.duration._
+import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedException, VirkailijaRestClient}
+
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 case class ValintaTulosQuery(hakuOid: String,
@@ -134,7 +134,7 @@ class ValintaTulosActor(client: VirkailijaRestClient, config: Config) extends Ac
   }
 
   def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
-    log.info(s"rescheduling haku $haku in $time")
+    log.debug(s"rescheduling haku $haku in $time")
     context.system.scheduler.scheduleOnce(time, self, UpdateValintatulos(haku))
   }
 

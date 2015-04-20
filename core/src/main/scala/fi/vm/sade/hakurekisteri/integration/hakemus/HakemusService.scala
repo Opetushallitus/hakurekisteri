@@ -4,19 +4,19 @@ import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import akka.actor.{Actor, Props, ActorRef}
+import akka.actor.{Actor, ActorRef, Props}
 import akka.event.Logging
 import akka.pattern.pipe
-import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, HakijaQuery}
-import fi.vm.sade.hakurekisteri.healthcheck.{RefreshingResource, Hakemukset, Health}
+import fi.vm.sade.hakurekisteri.hakija.{HakijaQuery, Hakuehto}
+import fi.vm.sade.hakurekisteri.healthcheck.{Hakemukset, Health, RefreshingResource}
+import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.hakurekisteri.storage.repository._
-import fi.vm.sade.hakurekisteri.storage.{GetCount, InMemQueryingResourceService, Identified, ResourceActor}
+import fi.vm.sade.hakurekisteri.storage.{Identified, InMemQueryingResourceService, ResourceActor}
 
 import scala.compat.Platform
 import scala.concurrent.Future
 import scala.util.Try
-import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 
 trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
   var hakukohdeIndex: Map[String, Seq[FullHakemus with Identified[String]]] = Option(hakukohdeIndex).getOrElse(Map())
@@ -177,7 +177,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
       reloading = true
       logger.debug(s"fetching hakemukset for haku $haku")
       getHakemukset(HakijaQuery(haku = Some(haku), organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None), cursor).map(i => {
-        logger.info(s"found $i applications in $haku")
+        logger.debug(s"found $i applications in $haku")
         ReloadingDone(haku, Some(startTime))
       }).recover {
         case t: Throwable =>
