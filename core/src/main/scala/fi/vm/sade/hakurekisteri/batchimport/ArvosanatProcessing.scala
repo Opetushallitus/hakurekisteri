@@ -77,14 +77,18 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
                                    valmistuminen: LocalDate): Future[VirallinenSuoritus with Identified[UUID]] =
     (suoritusrekisteri ? suoritus.copy(tila = "VALMIS", valmistuminen = valmistuminen)).mapTo[VirallinenSuoritus with Identified[UUID]]
 
+  private def updateSuoritusSiirtynyt(suoritus: VirallinenSuoritus with Identified[UUID],
+                                      odotettuValmistuminen: LocalDate): Future[VirallinenSuoritus with Identified[UUID]] =
+    (suoritusrekisteri ? suoritus.copy(tila = "KESKEN", valmistuminen = odotettuValmistuminen)).mapTo[VirallinenSuoritus with Identified[UUID]]
+
   private def saveArvosana(batchSource: String, suoritusId: UUID, arvosana: ImportArvosana): Future[Arvosana with Identified[UUID]] =
     (arvosanarekisteri ? toArvosana(arvosana)(suoritusId)(batchSource)).mapTo[Arvosana with Identified[UUID]]
 
   private def saveTodistus(batch: ImportBatch,
-                           henkilo: (String, String, Seq[(ImportTodistus, String)]),
+                           henkilotunniste: String,
+                           henkiloOid: String,
                            myontaja: String,
                            todistus: Valmistunut): Future[Seq[ArvosanaStatus]] = {
-    val (henkilotunniste, henkiloOid, _) = henkilo
     fetchSuoritus(henkiloOid, todistus, myontaja, batch.source).flatMap(suoritus =>
       updateSuoritusValmis(suoritus, todistus.valmistuminen).flatMap(suoritus =>
         Future.traverse(todistus.arvosanat)(arvosana =>
@@ -100,16 +104,29 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     }
   }
 
+  private def valmistuminenSiirtynyt(batch: ImportBatch,
+                                     henkilotunniste: String,
+                                     henkiloOid: String,
+                                     myontaja: String,
+                                     todistus: Siirtynyt): Future[Seq[ArvosanaStatus]] = {
+    (for {
+      suoritus <- fetchSuoritus(henkiloOid, todistus, myontaja, batch.source)
+      _ <- updateSuoritusSiirtynyt(suoritus, todistus.odotettuValmistuminen)
+    } yield Seq()).recover {
+      case t: Throwable => Seq(FailureArvosanaStatus(henkilotunniste, t))
+    }
+  }
+
   private def processBatch(batch: ImportBatch)(oppiaineet: Seq[String]): Seq[Future[ImportArvosanaStatus]] =
     for (henkilot <- enrich(parseData(batch)(oppiaineet))(batch.source)) yield henkilot.flatMap(henkilo => {
-      val (tunniste, _, todistukset) = henkilo
+      val (henkilotunniste, henkiloOid, todistukset) = henkilo
       val statuses = Future.traverse(todistukset) {
         case (todistus: Valmistunut, myontajaOid: String)
-        => saveTodistus(batch, henkilo, myontajaOid, todistus)
+        => saveTodistus(batch, henkilotunniste, henkiloOid, myontajaOid, todistus)
         case (todistus: Siirtynyt, myontajaOid: String)
-        => Future.successful(Seq(FailureArvosanaStatus(tunniste, new RuntimeException("siirtynyt suoritus not implemented"))))
+        => valmistuminenSiirtynyt(batch, henkilotunniste, henkiloOid, myontajaOid, todistus)
         case (todistus: Keskeytynyt, myontajaOid: String)
-        => Future.successful(Seq(FailureArvosanaStatus(tunniste, new RuntimeException("keskeytynyt suoritus not implemented"))))
+        => Future.successful(Seq(FailureArvosanaStatus(henkilotunniste, new RuntimeException("keskeytynyt suoritus not implemented"))))
       }
 
       statuses.map(tods => {
