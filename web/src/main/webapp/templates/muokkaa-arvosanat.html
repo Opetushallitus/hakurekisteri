@@ -87,21 +87,21 @@
         </td>
         <td ng-show="info.editable"><span ng-repeat="pakollinen in aineRivi.pakolliset">
           <select ng-model="pakollinen.arvio.arvosana" required="required"
-                  ng-options="a.value as a.text for a in arvosanat"
+                  ng-options="a.value as a.text for a in arvosanat | orderBy: arvosanatCustomSort"
                   class="form-control smallInline test-arvosanaSelect"></select></span></td>
         <td ng-show="info.editable" style="white-space: nowrap;">
             <select ng-show="aineRivi.valinnaiset[0]" ng-model="aineRivi.valinnaiset[0].arvio.arvosana"
-                    required="required" ng-options="a.value as a.text for a in arvosanat"
+                    required="required" ng-options="a.value as a.text for a in arvosanat | orderBy: arvosanatCustomSort"
                     class="form-control smallInline test-arvosanaSelect"></select>
         </td>
         <td ng-show="info.editable" style="white-space: nowrap;">
             <select ng-show="aineRivi.valinnaiset[1]" ng-model="aineRivi.valinnaiset[1].arvio.arvosana"
-                    required="required" ng-options="a.value as a.text for a in arvosanat"
+                    required="required" ng-options="a.value as a.text for a in arvosanat | orderBy: arvosanatCustomSort"
                     class="form-control smallInline test-arvosanaSelect"></select>
         </td>
         <td ng-show="info.editable" style="white-space: nowrap;">
             <select ng-show="aineRivi.valinnaiset[2]" ng-model="aineRivi.valinnaiset[2].arvio.arvosana"
-                    required="required" ng-options="a.value as a.text for a in arvosanat"
+                    required="required" ng-options="a.value as a.text for a in arvosanat | orderBy: arvosanatCustomSort"
                     class="form-control smallInline test-arvosanaSelect"></select>
         </td>
         <td ng-hide="info.editable"><span ng-show="aineRivi.hasArvosana && (aineRivi.hasKielisyys || aineRivi.aine == 'AI')" class="test-arvosanaLisatieto">{{aineRivi.lisatietoText || "Kieli puuttuu!!"}}</span>

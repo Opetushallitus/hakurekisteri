@@ -617,7 +617,7 @@
                         },
                         saveDisabled(),
                         click(opiskelijatiedot.editArvosanat),
-                        selectInput(opiskelijatiedot.arvosana(1,0), "5"),
+                        selectInput(opiskelijatiedot.arvosana(1,0), "2"),
                         mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/arvosanat\/dc54970c-9cd1-4e8f-8d97-a37af3e99c10$/),
                         function(savedData) {
                             expect(JSON.parse(savedData)).to.deep.equal({

@@ -222,6 +222,12 @@ app.controller "MuokkaaArvosanat", [
       $scope.$watch "suorituksenArvosanataulukko", $scope.enableSave, true
     )
 
+    $scope.arvosanatCustomSort = (a) ->
+      if(isNaN(a["value"]))
+        (a["value"].length)
+      else
+        -parseFloat(a["value"])
+
     $scope.editArvosanat = () ->
       $scope.info.editable = true
       updateArvosanaTaulukko()
