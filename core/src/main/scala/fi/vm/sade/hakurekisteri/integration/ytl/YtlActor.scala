@@ -133,7 +133,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
       for (
         (suoritus, kokelas) <- suoritusKokelaat.get(id)
       ) {
-        context.actorOf(Props(new ArvosanaUpdateActor(suoritus, kokelas.yoTodistus, arvosanaRekisteri)), id.toString)
+        context.actorOf(Props(new ArvosanaUpdateActor(suoritus, kokelas.yoTodistus ++ kokelas.osakokeet, arvosanaRekisteri)), id.toString)
         suoritusKokelaat = suoritusKokelaat - id
       }
 
