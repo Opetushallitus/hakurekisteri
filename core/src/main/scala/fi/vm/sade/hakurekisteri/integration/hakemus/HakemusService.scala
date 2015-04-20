@@ -21,6 +21,7 @@ import scala.util.Try
 trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
   var hakukohdeIndex: Map[String, Seq[FullHakemus with Identified[String]]] = Option(hakukohdeIndex).getOrElse(Map())
   var hakijaIndex: Map[String, Seq[FullHakemus with Identified[String]]] = Option(hakijaIndex).getOrElse(Map())
+  var hakuIndex: Map[String, Seq[FullHakemus with Identified[String]]] = Option(hakuIndex).getOrElse(Map())
 
   override val emptyQuery: PartialFunction[Query[FullHakemus], Boolean] = {
     case HakemusQuery(None, None, None, None) => true
@@ -39,18 +40,25 @@ trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] w
   def addNew(hakemus: FullHakemus with Identified[String]) = {
     hakukohdeIndex = Option(hakukohdeIndex).getOrElse(Map())
     hakijaIndex = Option(hakijaIndex).getOrElse(Map())
-    for(
+    hakuIndex = Option(hakuIndex).getOrElse(Map())
+
+    for (
       kohde <- getKohteet(hakemus).getOrElse(Set())
-    )  hakukohdeIndex = hakukohdeIndex  + (kohde -> (hakemus +: hakukohdeIndex.getOrElse(kohde, Seq())))
+    ) hakukohdeIndex = hakukohdeIndex  + (kohde -> (hakemus +: hakukohdeIndex.getOrElse(kohde, Seq())))
+
     for (
       hakija <- hakemus.personOid
     ) hakijaIndex = hakijaIndex + (hakija -> (hakemus +: hakijaIndex.getOrElse(hakija, Seq())))
+
+    val haku = hakemus.applicationSystemId
+    hakuIndex = hakuIndex + (haku -> (hakemus +: hakuIndex.getOrElse(haku, Seq())))
   }
 
   override def index(old: Option[FullHakemus with Identified[String]], current: Option[FullHakemus with Identified[String]]) {
     def removeOld(hakemus: FullHakemus with Identified[String]) = {
       hakukohdeIndex = Option(hakukohdeIndex).getOrElse(Map())
       hakijaIndex = Option(hakijaIndex).getOrElse(Map())
+
       for (
         kohde <- getKohteet(hakemus).getOrElse(Set())
       ) hakukohdeIndex = hakukohdeIndex.get(kohde).
@@ -62,19 +70,34 @@ trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] w
       ) hakijaIndex = hakijaIndex.get(hakija).
         map(_.filter((a) => a != hakemus || a.id != hakemus.id)).
         map((ns: Seq[FullHakemus with Identified[String]]) => hakijaIndex + (hakija -> ns)).getOrElse(hakijaIndex)
+
+      hakuIndex = hakuIndex.filterNot(_._1 == hakemus.applicationSystemId)
     }
 
     old.foreach(removeOld)
     current.foreach(addNew)
   }
 
-  override val optimize:PartialFunction[Query[FullHakemus], Future[Seq[FullHakemus with Identified[String]]]] = {
-    case HakemusQuery(_, None, _, Some(kohde)) =>
-      Future { hakukohdeIndex.getOrElse(kohde, Seq()) }
+  override val optimize: PartialFunction[Query[FullHakemus], Future[Seq[FullHakemus with Identified[String]]]] = {
+    case HakemusQuery(Some(haku), None, None, None) => Future {
+      hakuIndex.getOrElse(haku, Seq())
+    }
+
+    case HakemusQuery(Some(haku), organisaatio, kohdekoodi, kohde) =>
+      val filtered = hakuIndex.getOrElse(haku, Seq())
+      executeQuery(filtered)(HakemusQuery(Some(haku), organisaatio, kohdekoodi, kohde))
+
+    case HakemusQuery(None, None, None, Some(kohde)) => Future {
+      hakukohdeIndex.getOrElse(kohde, Seq())
+    }
+
     case HakemusQuery(haku, organisaatio, kohdekoodi, Some(kohde)) =>
       val filtered = hakukohdeIndex.getOrElse(kohde, Seq())
       executeQuery(filtered)(HakemusQuery(haku, organisaatio, kohdekoodi, Some(kohde)))
-    case HenkiloHakijaQuery(henkilo) => Future.successful(hakijaIndex.getOrElse(henkilo, Seq()))
+
+    case HenkiloHakijaQuery(henkilo) => Future {
+      hakijaIndex.getOrElse(henkilo, Seq())
+    }
 
   }
 
@@ -107,7 +130,7 @@ trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] w
               filterKeys((k) => k.contains("Koulutus-id")).values.toSeq)(hakemus)
 
     case HenkiloHakijaQuery(henkilo) =>
-      (hakemus) => hakemus.personOid.exists(_ == henkilo)
+      (hakemus) => hakemus.personOid.contains(henkilo)
   }
 }
 
