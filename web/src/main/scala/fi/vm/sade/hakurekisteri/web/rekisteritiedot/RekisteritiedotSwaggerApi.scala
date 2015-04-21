@@ -10,12 +10,8 @@ import fi.vm.sade.hakurekisteri.oppija.Oppija
 import fi.vm.sade.hakurekisteri.web.oppija.OppijaSwaggerModel
 
 trait RekisteritiedotSwaggerApi extends SwaggerSupport with OppijaSwaggerModel with ArvosanaSwaggerModel with SuoritusSwaggerModel with OpiskelijaSwaggerModel with OpiskeluoikeusSwaggerModel with IncidentReportSwaggerModel {
-
-
-
   registerModel(arvioModel)
   registerModel(arvosanaModel)
-  //registerModel(suoritusModel)
   registerModel(virallinenSuoritusModel)
   registerModel(vapaamuotoinenSuoritusModel)
   registerModel(opiskelijaModel)
@@ -23,9 +19,8 @@ trait RekisteritiedotSwaggerApi extends SwaggerSupport with OppijaSwaggerModel w
   registerModel(todistusModel)
   registerModel(oppijaModel)
 
-
   val query = apiOperation[Seq[Oppija]]("haeOppijat")
-    .summary("näyttää oppijoiden tiedot")
+    .summary("Näyttää oppijoiden tiedot")
     .notes("Näyttää listauksen oppijoiden tiedoista parametrien mukaisesti. Tämän resurssin oppijoiden Opiskeluoikeudet ovat aina tyhjiä listoja")
     .parameter(queryParam[Option[String]]("oppilaitosOid").description("koulutuksen tarjoajan  oid").optional)
     .parameter(queryParam[Option[String]]("vuosi").description("vuosi jona ollut kirjoilla oppilaitoksessa tai suorittanut suorituksen").optional)
@@ -34,9 +29,17 @@ trait RekisteritiedotSwaggerApi extends SwaggerSupport with OppijaSwaggerModel w
     .responseMessage(ModelResponseMessage(500, "error in service"))
 
   val read = apiOperation[Oppija]("haeOppija")
-    .summary("näyttää yhden oppijan tiedot")
+    .summary("Näyttää yhden oppijan tiedot")
     .notes("Näyttää yhden oppijan tiedot oppijanumeron perusteella.")
     .parameter(pathParam[String]("oid").description("oppijanumero").required)
+    .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
+    .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
+    .responseMessage(ModelResponseMessage(500, "error in service"))
+
+  val light = apiOperation[Seq[LightWeightTiedot]]("haeOppijatKevyt")
+    .summary("Näyttää kevennetyn version opiskelijatiedoista")
+    .notes("Näyttää nimen luokan ja onko henkilön arvosanoissa puutteita")
+    .parameter(pathParam[String]("light").required)
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
