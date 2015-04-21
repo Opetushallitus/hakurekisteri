@@ -88,74 +88,49 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   private def saveArvosana(batchSource: String, suoritusId: UUID, arvosana: ImportArvosana): Future[Arvosana with Identified[UUID]] =
     (arvosanarekisteri ? toArvosana(arvosana)(suoritusId)(batchSource)).mapTo[Arvosana with Identified[UUID]]
 
-  private def saveTodistus(batch: ImportBatch,
-                           henkilotunniste: String,
-                           henkiloOid: String,
-                           myontaja: String,
-                           todistus: Valmistunut): Future[Seq[ArvosanaStatus]] = {
-    fetchSuoritus(henkiloOid, todistus, myontaja, batch.source).flatMap(suoritus =>
-      updateSuoritusValmis(suoritus, todistus.valmistuminen).flatMap(suoritus =>
-        Future.traverse(todistus.arvosanat)(arvosana =>
-          saveArvosana(batch.source, suoritus.id, arvosana).map(storedArvosana =>
-            OkArvosanaStatus(storedArvosana.id, storedArvosana.suoritus, henkilotunniste)
-          ).recover {
-            case t: Throwable => FailureArvosanaStatus(henkilotunniste, t)
-          }
-        )
-      )
-    ).recover {
-      case t: Throwable => Seq(FailureArvosanaStatus(henkilotunniste, t))
-    }
-  }
+  private def saveArvosanat(batch: ImportBatch,
+                            henkilotunniste: String,
+                            suoritus: VirallinenSuoritus with Identified[UUID],
+                            todistus: Valmistunut): Future[Seq[ArvosanaStatus]] =
+    Future.traverse(todistus.arvosanat)(arvosana =>
+      saveArvosana(batch.source, suoritus.id, arvosana) map (storedArvosana =>
+        OkArvosanaStatus(storedArvosana.id, storedArvosana.suoritus, henkilotunniste)
+      ) recover { case t: Throwable => FailureArvosanaStatus(henkilotunniste, t) }
+    )
 
-  private def valmistuminenSiirtynyt(batch: ImportBatch,
-                                     henkilotunniste: String,
-                                     henkiloOid: String,
-                                     myontaja: String,
-                                     todistus: Siirtynyt): Future[Seq[ArvosanaStatus]] = {
-    (for {
-      suoritus <- fetchSuoritus(henkiloOid, todistus, myontaja, batch.source)
-      _ <- updateSuoritusSiirtynyt(suoritus, todistus.odotettuValmistuminen)
-    } yield Seq()).recover {
-      case t: Throwable => Seq(FailureArvosanaStatus(henkilotunniste, t))
-    }
-  }
+  private def processTodistus(batch: ImportBatch,
+                              todistus: ImportTodistus,
+                              myontaja: String,
+                              henkilotunniste: String,
+                              henkiloOid: String): Future[Seq[ArvosanaStatus]] =
+    fetchSuoritus(henkiloOid, todistus, myontaja, batch.source) flatMap (suoritus =>
+      todistus match {
+        case t: Valmistunut => updateSuoritusValmis(suoritus, t.valmistuminen) flatMap (suoritus =>
+          saveArvosanat(batch, henkilotunniste, suoritus, t)
+          )
+        case t: Siirtynyt => updateSuoritusSiirtynyt(suoritus, t.odotettuValmistuminen) map (_ => Seq())
+        case t: Keskeytynyt => updateSuoritusKeskeytynyt(suoritus, t.opetusPaattynyt) map (_ => Seq())
+      }) recover { case t: Throwable => Seq(FailureArvosanaStatus(henkilotunniste, t)) }
 
-  private def eiValmistu(batch: ImportBatch,
-                         henkilotunniste: String,
-                         henkiloOid: String,
-                         myontaja: String,
-                         todistus: Keskeytynyt): Future[Seq[ArvosanaStatus]] = {
-    (for {
-      suoritus <- fetchSuoritus(henkiloOid, todistus, myontaja, batch.source)
-      _ <- updateSuoritusKeskeytynyt(suoritus, todistus.opetusPaattynyt)
-    } yield Seq()).recover {
-      case t: Throwable => Seq(FailureArvosanaStatus(henkilotunniste, t))
-    }
-  }
+  private def processHenkilo(batch: ImportBatch,
+                             henkilotunniste: String,
+                             henkiloOid: String,
+                             todistukset: Seq[(ImportTodistus, String)]): Future[ImportArvosanaStatus] =
+    Future.traverse(todistukset) {
+      case (todistus, myontaja) => processTodistus(batch, todistus, myontaja, henkilotunniste, henkiloOid)
+    } map (_.flatten[ArvosanaStatus]) map (statuses =>
+      statuses.find(_.isInstanceOf[FailureArvosanaStatus]) match {
+        case Some(FailureArvosanaStatus(tunniste, _)) =>
+          FailureStatus(tunniste, statuses collect { case FailureArvosanaStatus(_, t) => t })
+        case _ =>
+          OkStatus(henkilotunniste, statuses.asInstanceOf[Seq[OkArvosanaStatus]] groupBy (_.suoritus) mapValues (_ map (_.id)))
+      }
+    )
 
   private def processBatch(batch: ImportBatch)(oppiaineet: Seq[String]): Seq[Future[ImportArvosanaStatus]] =
-    for (henkilot <- enrich(parseData(batch)(oppiaineet))(batch.source)) yield henkilot.flatMap(henkilo => {
-      val (henkilotunniste, henkiloOid, todistukset) = henkilo
-      val statuses = Future.traverse(todistukset) {
-        case (todistus: Valmistunut, myontajaOid: String)
-        => saveTodistus(batch, henkilotunniste, henkiloOid, myontajaOid, todistus)
-        case (todistus: Siirtynyt, myontajaOid: String)
-        => valmistuminenSiirtynyt(batch, henkilotunniste, henkiloOid, myontajaOid, todistus)
-        case (todistus: Keskeytynyt, myontajaOid: String)
-        => eiValmistu(batch, henkilotunniste, henkiloOid, myontajaOid, todistus)
-      }
-
-      statuses.map(tods => {
-        val arvosanaStatukset = tods.foldLeft[Seq[ArvosanaStatus]](Seq())(_ ++ _)
-        arvosanaStatukset.find(_.isInstanceOf[FailureArvosanaStatus]) match {
-          case Some(FailureArvosanaStatus(tunniste, _)) =>
-            FailureStatus(tunniste, arvosanaStatukset.filter(_.isInstanceOf[FailureArvosanaStatus]).asInstanceOf[Seq[FailureArvosanaStatus]].map(_.t))
-          case _ =>
-            OkStatus(henkilo._1, arvosanaStatukset.asInstanceOf[Seq[OkArvosanaStatus]].groupBy(_.suoritus).map(t => t._1 -> t._2.map(_.id)))
-        }
-      })
-    })
+    for (henkilo <- enrich(parseData(batch)(oppiaineet))(batch.source)) yield henkilo flatMap {
+      case (henkilotunniste, henkiloOid, todistukset) => processHenkilo(batch, henkilotunniste, henkiloOid, todistukset)
+    }
 
   private trait ArvosanaStatus
   private case class OkArvosanaStatus(id: UUID, suoritus: UUID, tunniste: String) extends ArvosanaStatus
