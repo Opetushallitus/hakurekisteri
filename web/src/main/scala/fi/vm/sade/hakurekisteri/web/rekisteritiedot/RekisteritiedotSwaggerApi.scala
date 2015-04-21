@@ -40,6 +40,8 @@ trait RekisteritiedotSwaggerApi extends SwaggerSupport with OppijaSwaggerModel w
     .summary("Näyttää kevennetyn version opiskelijatiedoista")
     .notes("Näyttää nimen luokan ja onko henkilön arvosanoissa puutteita")
     .parameter(pathParam[String]("light").required)
+    .parameter(queryParam[Option[String]]("oppilaitosOid").description("koulutuksen tarjoajan  oid").optional)
+    .parameter(queryParam[Option[String]]("vuosi").description("vuosi jona ollut kirjoilla oppilaitoksessa tai suorittanut suorituksen").optional)
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
