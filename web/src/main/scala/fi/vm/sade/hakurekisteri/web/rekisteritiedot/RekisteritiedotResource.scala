@@ -112,7 +112,7 @@ class RekisteritiedotResource(val rekisterit: Registers, oids: Oids) // <- TODO:
 
   }
 
-  get("/light") {
+  get("/light", operation(light)) {
     val t0 = Platform.currentTime
     implicit val user = getUser
     val q = queryForParams(params)
