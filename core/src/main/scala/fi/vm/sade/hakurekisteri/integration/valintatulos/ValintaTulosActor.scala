@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.valintatulos
 import java.net.URLEncoder
 import java.util.concurrent.ExecutionException
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{Cancellable, Actor, ActorLogging}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
@@ -34,6 +34,8 @@ class ValintaTulosActor(client: VirkailijaRestClient, config: Config) extends Ac
 
   private var updates: Set[UpdateValintatulos] = Set()
   private val updateTrigger = context.system.scheduler.schedule(1.minutes, 1.minutes, self, UpdateNext)
+
+  private var schedules: Map[String, Cancellable] = Map()
 
   override def postStop(): Unit = {
     updateTrigger.cancel()
@@ -135,7 +137,10 @@ class ValintaTulosActor(client: VirkailijaRestClient, config: Config) extends Ac
 
   def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
     log.debug(s"rescheduling haku $haku in $time")
-    context.system.scheduler.scheduleOnce(time, self, UpdateValintatulos(haku))
+    if (schedules.contains(haku) && !schedules(haku).isCancelled) {
+      schedules(haku).cancel()
+    }
+    schedules = schedules + (haku -> context.system.scheduler.scheduleOnce(time, self, UpdateValintatulos(haku)))
   }
 
 }
