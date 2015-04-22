@@ -58,6 +58,7 @@ trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] w
     def removeOld(hakemus: FullHakemus with Identified[String]) = {
       hakukohdeIndex = Option(hakukohdeIndex).getOrElse(Map())
       hakijaIndex = Option(hakijaIndex).getOrElse(Map())
+      hakuIndex = Option(hakuIndex).getOrElse(Map())
 
       for (
         kohde <- getKohteet(hakemus).getOrElse(Set())
@@ -71,7 +72,10 @@ trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] w
         map(_.filter((a) => a != hakemus || a.id != hakemus.id)).
         map((ns: Seq[FullHakemus with Identified[String]]) => hakijaIndex + (hakija -> ns)).getOrElse(hakijaIndex)
 
-      hakuIndex = hakuIndex.filterNot(_._1 == hakemus.applicationSystemId)
+      val haku = hakemus.applicationSystemId
+      for (
+        indeksoidut <- hakuIndex.get(haku)
+      ) hakuIndex = hakuIndex + (haku -> indeksoidut.filter(_.id != hakemus.id))
     }
 
     old.foreach(removeOld)
