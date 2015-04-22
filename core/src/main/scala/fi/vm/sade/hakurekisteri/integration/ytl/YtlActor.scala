@@ -714,7 +714,7 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
       } foreach (arvosanaRekisteri ! _)
       uudet.filterNot((uusi) => s.exists { case old: Arvosana => isKorvaava(old)(uusi) }) foreach (arvosanaRekisteri ! _)
       context.stop(self)
-    case Kokelas(_, _, _ , todistus, _) => kokeet = todistus
+    case Kokelas(_, _, _ , todistus, osakokeet) => kokeet = todistus ++ osakokeet
   }
 
   var fetch: Option[Cancellable] = None
