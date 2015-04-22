@@ -185,7 +185,7 @@
                 }
             ))
         })
-        
+
         describe('URL parametrien käsittely', function () {
 
             function getCurrentYear() {
@@ -702,8 +702,46 @@
                     ))
                 })
                 describe("Luokkatieto", function() {
-                    it("!! Lisää uusi luokkatieto  luo uuden luokkatiedon", seqDone(
+                    it("Lisää uusi luokkatieto toiminto luo uuden luokkatiedon", seqDone(
+                        wait.forAngular,
+                        function () {
+                            httpFixtures().organisaatioService.pikkaralaOid()
+                            httpFixtures().organisaatioService.pikkaralaKoodi()
+                            httpFixtures().organisaatioService.pikkaralaLuokkaTieto()
+                            httpFixtures().henkiloPalveluService.aarne()
+                            httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
+                            httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                            httpFixtures().suorituksetLocal.aarnenSuoritus()
+                            httpFixtures().arvosanatLocal.aarnenArvosanat()
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                            httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeus()
+                            httpFixtures().komoLocal.komoTiedot()
+                            koodistoFixtures()
+                        },
+                        input(opiskelijatiedot.henkiloSearch, '123456-789'),
+                        click(opiskelijatiedot.searchButton),
+                        wait.forAngular,
+                        click(opiskelijatiedot.luokkatietoLisaa),
+                        wait.forAngular,
+                        input(opiskelijatiedot.luokkatietoOppilaitos, '06345'),
+                        input(opiskelijatiedot.luokkatietoLuokka, '9A'),
+                        input(opiskelijatiedot.luokkatietoLuokkaTaso, '7'),
+                        input(opiskelijatiedot.luokkatietoAlkuPaiva, '12.8.2014'),
+                        input(opiskelijatiedot.luokkatietoLoppuPaiva, '31.5.2015'),
+                        mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/opiskelijat$/),
+                        function (savedData) {
+                            expect(JSON.parse(savedData)).to.deep.equal({
+                                "henkiloOid": "1.2.246.562.24.71944845619",
+                                "oppilaitosOid": "1.2.246.562.10.39644336305",
+                                "editable": true,
+                                "luokka": "9A",
+                                "luokkataso": "9",
+                                "alkuPaiva": "2014-08-11T21:00:00.000Z",
+                                "loppuPaiva": "2015-05-30T21:00:00.000Z"
+                            })
 
+                        }
                     ))
                     it("!! Luokkatiedon poistaminen", seqDone(
 

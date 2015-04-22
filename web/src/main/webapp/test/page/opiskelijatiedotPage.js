@@ -53,6 +53,8 @@ opiskelijatiedot = initSelectors({
     luokkatietoLuokkaTaso: ".test-luokkatietoLuokkaTaso",
     luokkatietoAlkuPaiva: ".test-luokkatietoAlkuPaiva",
     luokkatietoLoppuPaiva: ".test-luokkatietoLoppuPaiva",
+    luokkatietoLisaa: ".test-luokkatietoLisaa",
+    luokkatietoPoista: ".test-luokkatietoPoista",
     opiskeluoikeusAlkuPaiva: ".test-opiskeluoikeusAlkuPaiva",
     opiskeluoikeusLoppuPaiva: ".test-opiskeluoikeusLoppuPaiva",
     opiskeluoikeusMyontaja: ".test-opiskeluoikeusMyontaja",

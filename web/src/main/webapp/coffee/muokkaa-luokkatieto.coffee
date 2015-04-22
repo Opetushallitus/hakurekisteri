@@ -11,28 +11,34 @@ app.controller "MuokkaaLuokkatieto", [
           $scope.info.organisaatio = organisaatio
       $scope.info.editable = true
 
-    $scope.validateData = (updateOnly) ->
-      $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel($scope.info, $scope.luokkatieto, !updateOnly)
+    getOppilaitosOid = () ->
+      d = $q.defer()
+      getOrganisaatio $http, $scope.info.oppilaitos, ((organisaatio) ->
+        $scope.luokkatieto.oppilaitosOid = organisaatio.oid
+        d.resolve "validated against organisaatio"
+      ), ->
+        d.reject "validationerror in call to organisaatio"
+      d.promise
 
     $scope.hasChanged = ->
-      $scope.validateData(true)
       modifiedCache.hasChanged()
 
     $scope.saveData = ->
-      luokkatieto = $scope.luokkatieto
       if $scope.hasChanged()
         d = $q.defer()
-        luokkatieto.$save (->
-          enrichLuokkatieto luokkatieto
-          d.resolve "done"
-        ), ->
-          MessageService.addMessage
-            type: "danger"
-            messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja"
-            message: "Virhe tallennettaessa luokkatietoja."
-            descriptionKey: "suoritusrekisteri.muokkaa.virheluokkayrita"
-            description: "Yritä uudelleen."
-          d.reject "error saving luokkatieto: " + luokkatieto
+        getOppilaitosOid().then () ->
+          luokkatieto = $scope.luokkatieto
+          luokkatieto.$save (->
+            enrichLuokkatieto luokkatieto
+            d.resolve "done"
+          ), ->
+            MessageService.addMessage
+              type: "danger"
+              messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessaluokkatietoja"
+              message: "Virhe tallennettaessa luokkatietoja."
+              descriptionKey: "suoritusrekisteri.muokkaa.virheluokkayrita"
+              description: "Yritä uudelleen."
+            d.reject "error saving luokkatieto: " + luokkatieto
         d.promise.then () ->
           modifiedCache.update()
         [d.promise]
