@@ -165,7 +165,7 @@ app.factory "MuokkaaTiedot", [
         $scope.dateOptions =
           startingDay: 1
           dayFormat: 'd'
-          formatMonth: 'm'
+          formatMonth: 'MMMM'
           formatYear: 'yyyy'
         return
 
