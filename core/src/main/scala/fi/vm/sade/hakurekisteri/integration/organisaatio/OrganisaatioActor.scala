@@ -36,7 +36,7 @@ abstract class OrganisaatioActor(config: Config) extends Actor with ActorLogging
 
   def findDirect(tunniste: String): Future[Option[Organisaatio]]
 
-def saveOrganisaatiot(s: Seq[Organisaatio]): Unit = {
+  def saveOrganisaatiot(s: Seq[Organisaatio]): Unit = {
     s.foreach(org => {
       cache +(org.oid, Future.successful(org))
       if (org.oppilaitosKoodi.isDefined) oppilaitoskoodiIndex = oppilaitoskoodiIndex + (org.oppilaitosKoodi.get -> org.oid)
@@ -84,7 +84,7 @@ def saveOrganisaatiot(s: Seq[Organisaatio]): Unit = {
 
 }
 
-class OrganisaatioHttpActor(organisaatioClient: VirkailijaRestClient, config: Config) extends OrganisaatioActor(config) {
+class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient, config: Config) extends OrganisaatioActor(config) {
 
   override def fetchAll(): Unit = {
     val f = organisaatioClient.readObject[OrganisaatioResponse](s"/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true", 200).recover {
@@ -100,7 +100,7 @@ class OrganisaatioHttpActor(organisaatioClient: VirkailijaRestClient, config: Co
   }
 }
 
-class MockOrganisaatio(config: Config) extends OrganisaatioActor(config) {
+class MockOrganisaatioActor(config: Config) extends OrganisaatioActor(config) {
   implicit val formats = DefaultFormats
 
   override def fetchAll(): Unit = {
