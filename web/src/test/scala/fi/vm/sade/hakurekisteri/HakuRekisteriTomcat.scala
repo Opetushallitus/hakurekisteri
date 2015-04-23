@@ -24,11 +24,11 @@ object HakuRekisteriTomcat extends App {
   this.tomcat.setPort(port);
 
 
-  val webContext = tomcat.addWebapp(contextPath, webappRoot);
-  tomcat.addWebapp("/compiled", projectRoot + "/web/target/javascript/compiled/")
+  val webapp = tomcat.addWebapp(contextPath, webappRoot)
+  val javascripts = tomcat.addWebapp("/compiled", projectRoot + "/web/target/javascript/compiled/")
 
   tomcat.start();
-  if(!webContext.getState().isAvailable()) {
+  if(!webapp.getState().isAvailable()) {
     this.tomcat.stop();
     this.tomcat.getServer().await();
     throw new RuntimeException("Tomcat context failed to start");
