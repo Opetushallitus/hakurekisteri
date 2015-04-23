@@ -1,5 +1,5 @@
 getBaseUrl = ->
-  if (location.host.indexOf('localhost') > -1) and (location.hash.indexOf("mock") < 0)
+  if (location.host.indexOf('localhost') > -1) and (!localStorage.mock)
     "https://itest-virkailija.oph.ware.fi"
   else
     ""
