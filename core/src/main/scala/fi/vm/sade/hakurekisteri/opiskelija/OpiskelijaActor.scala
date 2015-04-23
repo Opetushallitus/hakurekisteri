@@ -35,7 +35,7 @@ trait OpiskelijaRepository extends JournaledRepository[Opiskelija, UUID] {
       val startYear = opiskelija.alkuPaiva.getYear
       val endYear = opiskelija.loppuPaiva.getOrElse(new DateTime()).getYear
       for (year <- startYear to endYear) {
-        val opiskelijat = oppilaitosIndex.getOrElse((opiskelija.oppilaitosOid, year.toString), Seq()).filterNot(_.oppilaitosOid == opiskelija.oppilaitosOid)
+        val opiskelijat = oppilaitosIndex.getOrElse((opiskelija.oppilaitosOid, year.toString), Seq()).filterNot(_.id == opiskelija.id)
         if (opiskelijat.isEmpty)
           oppilaitosIndex = oppilaitosIndex - ((opiskelija.oppilaitosOid, year.toString))
         else
