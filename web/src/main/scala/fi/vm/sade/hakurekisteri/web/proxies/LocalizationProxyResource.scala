@@ -4,6 +4,6 @@ import org.scalatra.ScalatraServlet
 
 class LocalizationProxyResource extends ScalatraServlet {
   get("/cxf/rest/v1/localisation") {
-    getClass.getResourceAsStream("/sure-mockdata/localization.json")
+    getClass.getResourceAsStream("/proxy-mockdata/localization.json")
   }
 }
