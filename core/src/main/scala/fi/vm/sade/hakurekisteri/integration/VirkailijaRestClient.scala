@@ -55,11 +55,11 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   val casActor = system.actorOf(Props(new CasActor(config, aClient)), s"cas-client-${serviceName.getOrElse(UUID.randomUUID())}")
 
   object client {
-    def jSessionId: Future[JSessionId] = (casActor ? JSessionKey(serviceUrl)).mapTo[JSessionId]
+    private def jSessionId: Future[JSessionId] = (casActor ? JSessionKey(serviceUrl)).mapTo[JSessionId]
 
     import org.json4s.jackson.Serialization._
 
-    class JsonReq(request: Req) {
+    private class JsonReq(request: Req) {
       def attachJsonBody[A <: AnyRef : Manifest](body: Option[A]): Req = body match {
         case Some(a) =>
           (request << write[A](a)(jsonFormats)).setContentType("application/json", "UTF-8")
@@ -67,17 +67,17 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
       }
     }
 
-    implicit def req2JsonReq(req:Req):JsonReq = new JsonReq(req)
+    private implicit def req2JsonReq(req:Req):JsonReq = new JsonReq(req)
 
-    def withSessionAndBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(jSsessionId: String)(body: Option[A] = None): Future[B] = {
+    private def withSessionAndBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(jSsessionId: String)(body: Option[A] = None): Future[B] = {
       f(request.attachJsonBody(body) <:< Map("Cookie" -> s"${JSessionIdCookieParser.name}=$jSsessionId"))
     }
 
-    def withBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(body: Option[A] = None): Future[B] = {
+    private def withBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(body: Option[A] = None): Future[B] = {
       f(request.attachJsonBody(body))
     }
 
-    def apply[A <: AnyRef: Manifest, B <: AnyRef: Manifest](tuple: (String, AsyncHandler[B]), body: Option[A] = None): dispatch.Future[B] = {
+    def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](tuple: (String, AsyncHandler[B]), body: Option[A] = None): dispatch.Future[B] = {
       val (uri, handler) = tuple
       val request = dispatch.url(s"$serviceUrl$uri") <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend")
       (user, password) match{
@@ -104,7 +104,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     case _ => false
   }
 
-  private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = client[A, A](uri.accept(acceptedResponseCode).as[A]).recoverWith {
+  private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = client.request[A, A](uri.accept(acceptedResponseCode).as[A]).recoverWith {
     case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
       if (retryCount.getAndIncrement <= maxRetries) {
         logger.warning(s"retrying request to $uri due to $t, retry attempt #${retryCount.get - 1}")
@@ -135,7 +135,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   }
 
   def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, resource: A): Future[B] = {
-    val result = client[A, B](uri.accept(acceptedResponseCode).as[B], Some(resource))
+    val result = client.request[A, B](uri.accept(acceptedResponseCode).as[B], Some(resource))
     logLongQuery(result, uri)
     result
   }
