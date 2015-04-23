@@ -39,7 +39,7 @@ app.factory "LokalisointiService", [
       addTranslation msgKey, "en", elemText, oldTranslation
       return
 
-    backendUrl = (if location.host.indexOf("localhost") > -1 then "https://itest-virkailija.oph.ware.fi" else "")
+    backendUrl = getBaseUrl()
     localisationBackend = backendUrl + "/lokalisointi/cxf/rest/v1/localisation"
     msgResource = localisationBackend + "?category=" + msgCategory
     localisationMyroles = []
