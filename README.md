@@ -29,6 +29,8 @@ Näin voit ajaa sovellusta paikallisesti tuotannonkaltaisena setuppina, käyttä
 
 Sovellus on saatavilla osoitteessa http://localhost:8080/
 
+Salasanat devaajilta. Huom! Käy kirjautumassa sisään osoittessa https://itest-virkailija.oph.ware.fi että autentikaatio toimii.
+
 API-dokumentaatio löytyy http://localhost:8080//swagger/index.html
 
 ## Arvosanavalidaattori
