@@ -1,8 +1,4 @@
-getBaseUrl = ->
-  if (location.host.indexOf('localhost') > -1) and (!localStorage.mock)
-    "https://itest-virkailija.oph.ware.fi"
-  else
-    ""
+getBaseUrl = -> ""
 
 getOrganisaatio = ($http, organisaatioOid, successCallback, errorCallback) ->
   $http.get(organisaatioServiceUrl + "/rest/organisaatio/" + encodeURIComponent(organisaatioOid),
