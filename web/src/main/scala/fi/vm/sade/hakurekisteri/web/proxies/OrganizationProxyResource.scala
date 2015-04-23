@@ -9,7 +9,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class OrganizationProxyResource(config: Config, system: ActorSystem) extends ScalatraServlet with FutureSupport {
   implicit val executor: ExecutionContext = system.dispatcher
-  val proxy = OrganizationProxy.apply(config, system)
+
+  val proxy = config.mockMode match {
+    case true => new MockOrganizationProxy
+    case false => new HttpOrganizationProxy(config, system)
+  }
 
   before() {
     contentType = "application/json"
@@ -25,13 +29,6 @@ class OrganizationProxyResource(config: Config, system: ActorSystem) extends Sca
     new AsyncResult() {
       val is = proxy.get(params("oid")).map(_.getOrElse("???"))
     }
-  }
-}
-
-object OrganizationProxy {
-  def apply(config: Config, system: ActorSystem) = config.mockMode match {
-    case true => new MockOrganizationProxy
-    case false => new HttpOrganizationProxy(config, system)
   }
 }
 

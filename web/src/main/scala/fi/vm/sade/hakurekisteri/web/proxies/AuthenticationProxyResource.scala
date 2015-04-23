@@ -1,8 +1,17 @@
 package fi.vm.sade.hakurekisteri.web.proxies
 
-import org.scalatra.ScalatraServlet
+import akka.actor.ActorSystem
+import fi.vm.sade.hakurekisteri.Config
+import org.scalatra.{FutureSupport, AsyncResult, ScalatraServlet}
+import scala.concurrent.{ExecutionContext, Future}
 
-class AuthenticationProxyResource extends ScalatraServlet {
+class AuthenticationProxyResource(config: Config, system: ActorSystem) extends ScalatraServlet with FutureSupport {
+  implicit val executor: ExecutionContext = system.dispatcher
+
+  val proxy = config.mockMode match {
+    case _ => new MockAuthenticationProxy
+  }
+
   get("/buildversion.txt") {
     "artifactId=authentication-service\nmocked"
   }
@@ -12,6 +21,16 @@ class AuthenticationProxyResource extends ScalatraServlet {
   }
 
   post("/resources/henkilo/henkilotByHenkiloOidList") {
-    getClass.getResourceAsStream("/proxy-mockdata/henkilot-by-oid-list.json")
+    new AsyncResult() {
+      val is = proxy.henkilotByOidList("").map(_.getOrElse("???"))
+    }
   }
+}
+
+trait AuthenticationProxy {
+  def henkilotByOidList(oidList: String): Future[Option[String]]
+}
+
+class MockAuthenticationProxy {
+  def henkilotByOidList(oidList: String) = Future.successful(Some(getClass.getResourceAsStream("/proxy-mockdata/henkilot-by-oid-list.json")))
 }

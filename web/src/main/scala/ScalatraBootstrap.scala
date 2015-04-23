@@ -89,7 +89,7 @@ class ScalatraBootstrap extends LifeCycle {
       ("/ytl", "ytl") -> new YtlResource(integrations.ytl),
       ("/lokalisointi", "lokalisointi") -> new LocalizationProxyResource,
       ("/organisaatio-service", "organisaatio") -> new OrganizationProxyResource(config, system),
-      ("/authentication-service", "authentication") -> new AuthenticationProxyResource
+      ("/authentication-service", "authentication") -> new AuthenticationProxyResource(config, system)
     )
 
     context mount (new ValidatorJavascriptServlet, "/hakurekisteri-validator")
