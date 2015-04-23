@@ -7,8 +7,7 @@ import org.scalatra._
 import org.scalatra.json.JsonSupport
 import scala.concurrent.Future
 import scala.io.Source
-import org.json4s._
-import org.json4s.jackson.JsonMethods._
+
 
 class AuthenticationProxyResource(config: Config, system: ActorSystem) extends OPHProxyServlet(system) with HakurekisteriJsonSupport {
   val proxy = config.mockMode match {
@@ -27,6 +26,8 @@ class AuthenticationProxyResource(config: Config, system: ActorSystem) extends O
   }
 
   post("/resources/henkilo/henkilotByHenkiloOidList") {
+    import org.json4s._
+    import org.json4s.jackson.JsonMethods._
     new AsyncResult() {
       val parsedBody = parse(request.body)
       val is = proxy.henkilotByOidList(parsedBody.extract[List[String]])
