@@ -1,36 +1,40 @@
 package fi.vm.sade.hakurekisteri.web.proxies
 
-import akka.actor.ActorSystem
+import _root_.akka.actor.ActorSystem
 import fi.vm.sade.hakurekisteri.Config
-import org.scalatra.{FutureSupport, AsyncResult, ScalatraServlet}
-import scala.concurrent.{ExecutionContext, Future}
+import org.scalatra._
 
-class AuthenticationProxyResource(config: Config, system: ActorSystem) extends ScalatraServlet with FutureSupport {
-  implicit val executor: ExecutionContext = system.dispatcher
+import scala.concurrent.Future
+import scala.io.Source
 
+class AuthenticationProxyResource(config: Config, system: ActorSystem) extends OPHProxyServlet(system) {
   val proxy = config.mockMode match {
-    case _ => new MockAuthenticationProxy
+    case true => new MockAuthenticationProxy
+    case false => new HttpAuthenticationProxy(config, system)
   }
 
   get("/buildversion.txt") {
     "artifactId=authentication-service\nmocked"
   }
 
-  before() {
-    contentType = "application/json"
-  }
-
   post("/resources/henkilo/henkilotByHenkiloOidList") {
     new AsyncResult() {
-      val is = proxy.henkilotByOidList("").map(_.getOrElse("???"))
+      val is = proxy.henkilotByOidList(request.body)
     }
   }
 }
 
 trait AuthenticationProxy {
-  def henkilotByOidList(oidList: String): Future[Option[String]]
+  def henkilotByOidList(oidList: String): Future[String]
 }
 
-class MockAuthenticationProxy {
-  def henkilotByOidList(oidList: String) = Future.successful(Some(getClass.getResourceAsStream("/proxy-mockdata/henkilot-by-oid-list.json")))
+class MockAuthenticationProxy extends AuthenticationProxy {
+  lazy val data = Source.fromInputStream(getClass.getResourceAsStream("/proxy-mockdata/henkilot-by-oid-list.json")).mkString
+  def henkilotByOidList(oidList: String) = Future.successful(data)
+}
+
+class HttpAuthenticationProxy(config: Config, system: ActorSystem) extends OphProxy(config, system, config.integrations.henkiloConfig, "authentication-proxy") with AuthenticationProxy {
+  override def henkilotByOidList(oidList: String) = {
+    client.postObject[String, String]("/resources/henkilo/henkilotByHenkiloOidList", 200, oidList)
+  }
 }
