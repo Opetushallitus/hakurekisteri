@@ -17,7 +17,7 @@ class OrganizationProxyResource(config: Config, system: ActorSystem) extends Sca
     contentType = "application/json"
 
     new AsyncResult() {
-      val is = proxy.search(request.getQueryString)
+      val is = proxy.search(request.getQueryString).map(_.getOrElse("NOT FOUND")) // TODO not nice
     }
   }
 }
