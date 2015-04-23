@@ -6,7 +6,7 @@ import akka.actor.{Props, ActorSystem}
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
-import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{OrganisaatioHttpActor, OrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{CreateHenkilo, HenkiloActor}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
@@ -130,7 +130,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = suoritusHandler, query = {q => Seq()})))
     val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija](save = opiskelijaHandler, query = {q => Seq()})))
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient, Config.config)))
+    val organisaatioActor = system.actorOf(Props(new OrganisaatioHttpActor(organisaatioClient, Config.config)))
     val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
     val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana](save = {r => r}, query = { (q) => Seq() })))
 
@@ -162,7 +162,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = {r => r}, query = {q => Seq()})))
     val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija](save = {r => r}, query = {q => Seq()})))
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val organisaatioActor = system.actorOf(Props(new OrganisaatioActor(organisaatioClient, Config.config)))
+    val organisaatioActor = system.actorOf(Props(new OrganisaatioHttpActor(organisaatioClient, Config.config)))
     val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
     val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana](save = {r => r}, query = { (q) => Seq() })))
 

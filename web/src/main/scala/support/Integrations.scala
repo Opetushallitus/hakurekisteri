@@ -6,7 +6,7 @@ import fi.vm.sade.hakurekisteri.Config._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.HakuActor
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
-import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioActor
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{MockOrganisaatio, OrganisaatioHttpActor, OrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{MockParameterActor, HttpParameterActor, ParameterActor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
@@ -44,7 +44,7 @@ class MockIntegrations(system: ActorSystem) extends Integrations {
   override val hakemukset: ActorRef = mockActor("hakemukset", new DummyActor)
   override val ytl: ActorRef = mockActor("ytl", new DummyActor)
   override val koodisto: ActorRef = mockActor("koodisto", new DummyActor)
-  override val organisaatiot: ActorRef = mockActor("organisaatiot", new DummyActor)
+  override val organisaatiot: ActorRef = mockActor("organisaatiot", new MockOrganisaatio(config))
   override val parametrit: ActorRef = mockActor("parametrit", new MockParameterActor)
   override val henkilo: ActorRef = mockActor("henkilo", new DummyActor)
   override val tarjonta: ActorRef = mockActor("tarjonta", new DummyActor)
@@ -79,7 +79,7 @@ class BaseIntegrations(virtaConfig: VirtaConfig,
 
   val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(tarjontaConfig, None)(ec, system), config)), "tarjonta")
 
-  val organisaatiot = system.actorOf(Props(new OrganisaatioActor(new VirkailijaRestClient(organisaatioConfig, None)(ec, system), config)), "organisaatio")
+  val organisaatiot = system.actorOf(Props(new OrganisaatioHttpActor(new VirkailijaRestClient(organisaatioConfig, None)(ec, system), config)), "organisaatio")
 
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(henkiloConfig, None)(ec, system), config)), "henkilo")
 
