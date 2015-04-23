@@ -23,7 +23,7 @@ import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaResource
 import fi.vm.sade.hakurekisteri.web.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi}
 import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.{CreateOpiskeluoikeusCommand, OpiskeluoikeusSwaggerApi}
 import fi.vm.sade.hakurekisteri.web.oppija.OppijaResource
-import fi.vm.sade.hakurekisteri.web.proxies.{OrganizationProxyResource, LocalizationProxyResource}
+import fi.vm.sade.hakurekisteri.web.proxies.{AuthenticationProxyResource, OrganizationProxyResource, LocalizationProxyResource}
 import fi.vm.sade.hakurekisteri.web.rekisteritiedot.RekisteritiedotResource
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwaggerApi}
@@ -88,7 +88,8 @@ class ScalatraBootstrap extends LifeCycle {
       ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue, config.oids),
       ("/ytl", "ytl") -> new YtlResource(integrations.ytl),
       ("/lokalisointi", "lokalisointi") -> new LocalizationProxyResource,
-      ("/organisaatio-service", "organisaatio") -> new OrganizationProxyResource
+      ("/organisaatio-service", "organisaatio") -> new OrganizationProxyResource(config, system),
+      ("/authentication-service", "authentication") -> new AuthenticationProxyResource
     )
 
     context mount (new ValidatorJavascriptServlet, "/hakurekisteri-validator")

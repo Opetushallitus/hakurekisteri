@@ -51,7 +51,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     .setFollowRedirects(true)
     .setMaxRequestRetry(2)
   ))
-  val serviceName = serviceUrl.split("/").reverse.headOption
+  def serviceName = serviceUrl.split("/").reverse.headOption
   val casActor = system.actorOf(Props(new CasActor(config, aClient)), s"cas-client-${serviceName.getOrElse(UUID.randomUUID())}")
 
   object client {
