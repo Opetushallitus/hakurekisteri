@@ -29,7 +29,11 @@ Näin voit ajaa sovellusta paikallisesti tuotannonkaltaisena setuppina, käyttä
 
 Sovellus on saatavilla osoitteessa http://localhost:8080/
 
-Salasanat devaajilta. Huom! Käy kirjautumassa sisään osoittessa https://itest-virkailija.oph.ware.fi että autentikaatio toimii.
+Muutama huomio:
+
+- Tarvitset selaimen, jossa cors-turvallisuuscheckit on pois päältä. Esim. voit käyttää tällaista: `alias chrometest="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --user-data-dir=/tmp/chrometest2 --incognito --disable-web-security --disable-popup-blocking&"`
+- Salasanat devaajilta
+- Käy kirjautumassa sisään osoittessa https://itest-virkailija.oph.ware.fi että autentikaatio toimii
 
 API-dokumentaatio löytyy http://localhost:8080//swagger/index.html
 
