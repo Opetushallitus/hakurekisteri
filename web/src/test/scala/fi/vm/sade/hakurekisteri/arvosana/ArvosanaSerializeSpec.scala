@@ -3,13 +3,12 @@ package fi.vm.sade.hakurekisteri.arvosana
 import java.util.UUID
 
 import akka.actor.{Props, ActorSystem}
-import fi.vm.sade.hakurekisteri.TestSecurity
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaSwaggerApi, CreateArvosanaCommand}
-import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriCrudCommands, HakurekisteriResource, HakurekisteriSwagger}
+import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.joda.time.LocalDate
 import org.json4s.jackson.Serialization._
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -23,6 +22,7 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite {
   val arvosana3 = Arvosana(UUID.randomUUID(), ArvioOsakoe("10"), "AI", Some("FI"), valinnainen = false, Some(new LocalDate()), "Test")
 
   implicit val system = ActorSystem()
+  implicit val security = new TestSecurity
   implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]): InMemJournal[R, UUID] = {
     val journal = new InMemJournal[R, UUID]
     s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
@@ -32,7 +32,7 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite {
   val guardedArvosanaRekisteri = system.actorOf(Props(new FakeAuthorizer(arvosanaRekisteri)))
   implicit val swagger = new HakurekisteriSwagger
 
-  addServlet(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](guardedArvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with TestSecurity, "/*")
+  addServlet(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](guardedArvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand], "/*")
 
   test("get root should return 200") {
     get("/") {

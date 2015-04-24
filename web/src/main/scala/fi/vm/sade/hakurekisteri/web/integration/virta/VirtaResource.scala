@@ -16,7 +16,7 @@ import fi.vm.sade.hakurekisteri.integration.virta._
 import fi.vm.sade.hakurekisteri.integration.virta.RescheduleProcessing
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaStatus
 
-class VirtaResource(virtaQueue: ActorRef, oids: Oids) (implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport {
+class VirtaResource(virtaQueue: ActorRef, oids: Oids) (implicit system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SecuritySupport {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
 

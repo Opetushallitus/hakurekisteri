@@ -2,19 +2,31 @@ package fi.vm.sade.hakurekisteri.web.rest.support
 
 import java.security.Principal
 import javax.servlet.http.HttpServletRequest
-
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.rest.support.{OPHUser, User}
 import org.springframework.security.core.{Authentication, GrantedAuthority}
 
-
 trait SecuritySupport {
-  def currentUser(implicit request: HttpServletRequest): Option[User]
+  implicit val security: Security
+  def currentUser(implicit request: HttpServletRequest): Option[User] = security.currentUser
 }
 
-trait SpringSecuritySupport extends SecuritySupport {
+trait AutomaticSecuritySupport extends SecuritySupport {
+  implicit val security = Config.config.mockMode match {
+    case true => new TestSecurity
+    case false => new SpringSecuritySupport
+  }
+}
+
+trait Security {
+  def currentUser(implicit request: HttpServletRequest): Option[User]
+  def security = this
+}
+
+class SpringSecuritySupport extends Security {
   import scala.collection.JavaConverters._
 
-  def currentUser(implicit request: HttpServletRequest): Option[User] = userPrincipal.map {
+  override def currentUser(implicit request: HttpServletRequest): Option[User] = userPrincipal.map {
     case a: Authentication => OPHUser(username(a), authorities(a).toSet)
     case u: Principal => OPHUser(username(u), Set())
   }
@@ -35,5 +47,13 @@ trait SpringSecuritySupport extends SecuritySupport {
 
 
   def userPrincipal(implicit request: HttpServletRequest) = Option(request.getUserPrincipal)
+}
 
+class TestSecurity extends Security {
+  object TestUser extends User {
+    override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
+    override val username: String = "Test"
+  }
+
+  override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(TestUser)
 }

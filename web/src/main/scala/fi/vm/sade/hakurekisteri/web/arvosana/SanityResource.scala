@@ -1,25 +1,27 @@
 package fi.vm.sade.hakurekisteri.web.arvosana
 
-import akka.actor.{ActorSystem, ActorRef}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
+import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.arvosana.Problems
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import fi.vm.sade.hakurekisteri.web.rest.support.SpringSecuritySupport
+import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.web.rest.support.{SecuritySupport, Security}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.{CorsSupport, FutureSupport}
+
 import scala.concurrent.ExecutionContext
-import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.arvosana.Problems
 
 
-class SanityResource(sanityActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack  with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport{
+class SanityResource(sanityActor: ActorRef)(implicit system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack  with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SecuritySupport {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   import akka.pattern.ask
-  import scala.concurrent.duration._
+
+import scala.concurrent.duration._
 
   before() {
     contentType = formats("json")

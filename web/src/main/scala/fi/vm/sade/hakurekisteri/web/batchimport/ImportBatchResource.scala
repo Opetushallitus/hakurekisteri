@@ -29,7 +29,6 @@ import scala.util.Try
 import scala.xml.Elem
 import scalaz._
 
-
 class ImportBatchResource(eraRekisteri: ActorRef,
                           parameterActor: ActorRef,
                           config: Config,
@@ -40,8 +39,8 @@ class ImportBatchResource(eraRekisteri: ActorRef,
                           excelConverter: XmlConverter,
                           schema: SchemaDefinition,
                           imports: SchemaDefinition*)
-                         (implicit sw: Swagger, system: ActorSystem, mf: Manifest[ImportBatch], cf: Manifest[ImportBatchCommand])
-    extends HakurekisteriResource[ImportBatch, ImportBatchCommand](eraRekisteri, queryMapper) with ImportBatchSwaggerApi with HakurekisteriCrudCommands[ImportBatch, ImportBatchCommand] with SpringSecuritySupport with FileUploadSupport with IncidentReporting {
+                         (implicit sw: Swagger, s: Security, system: ActorSystem, mf: Manifest[ImportBatch], cf: Manifest[ImportBatchCommand])
+    extends HakurekisteriResource[ImportBatch, ImportBatchCommand](eraRekisteri, queryMapper) with ImportBatchSwaggerApi with HakurekisteriCrudCommands[ImportBatch, ImportBatchCommand] with SecuritySupport with FileUploadSupport with IncidentReporting {
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 

@@ -2,7 +2,6 @@ package fi.vm.sade.hakurekisteri.kkhakija
 
 import akka.actor.{Actor, Props}
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.TestSecurity
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.hakija.{Puuttuu, Syksy, _}
@@ -20,7 +19,7 @@ import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Journal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaQuery, KkHakijaResource}
-import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
+import fi.vm.sade.hakurekisteri.web.rest.support.{TestSecurity, HakurekisteriSwagger}
 import org.joda.time.LocalDate
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -30,6 +29,7 @@ import scala.concurrent.duration._
 
 class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger
+  implicit val security = new TestSecurity
 
   val asyncProvider = new CapturingProvider(mock[Endpoint])
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
@@ -41,7 +41,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   val valintaTulosMock = system.actorOf(Props(new MockedValintaTulosActor()))
   val koodistoMock = system.actorOf(Props(new MockedKoodistoActor()))
 
-  val resource = new KkHakijaResource(hakemusMock, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock) with TestSecurity
+  val resource = new KkHakijaResource(hakemusMock, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock)
   addServlet(resource, "/")
 
 

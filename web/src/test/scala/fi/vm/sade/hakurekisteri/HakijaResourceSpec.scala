@@ -6,11 +6,11 @@ import akka.actor.Props
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import org.scalatra.swagger.Swagger
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaResource
-import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
+import fi.vm.sade.hakurekisteri.web.rest.support.{TestSecurity, HakurekisteriSwagger}
 
 class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger
-
+  implicit val security = new TestSecurity
   val orgs = system.actorOf(Props(new MockedOrganisaatioActor()))
   val hakijat = system.actorOf(Props(new HakijaActor(hakupalvelu, orgs, koodisto, sijoittelu)))
   addServlet(new HakijaResource(hakijat), "/")

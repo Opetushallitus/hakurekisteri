@@ -97,8 +97,8 @@ class KkHakijaResource(hakemukset: ActorRef,
                        haut: ActorRef,
                        koodisto: ActorRef,
                        suoritukset: ActorRef,
-                       valintaTulos: ActorRef)(implicit system: ActorSystem, sw: Swagger, val ct: ClassTag[Seq[Hakija]])
-    extends HakuJaValintarekisteriStack with KkHakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with ExcelSupport[Seq[Hakija]] with DownloadSupport with QueryLogging {
+                       valintaTulos: ActorRef)(implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[Seq[Hakija]])
+    extends HakuJaValintarekisteriStack with KkHakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SecuritySupport with ExcelSupport[Seq[Hakija]] with DownloadSupport with QueryLogging {
 
   override protected def applicationDescription: String = "Korkeakouluhakijatietojen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw

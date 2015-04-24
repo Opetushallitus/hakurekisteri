@@ -6,25 +6,21 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
-import fi.vm.sade.hakurekisteri.web.rest.support._
+import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.rest.support._
+import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
+import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReport, _}
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
+import org.scalatra.util.RicherString._
 
 import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.Try
 import scala.xml._
-import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat
-import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
-import fi.vm.sade.hakurekisteri.web.rest.support.IncidentReport
-
-
-import org.scalatra.util.RicherString._
 
 object HakijaQuery {
   def apply(params: Map[String,String], currentUser: Option[User]): HakijaQuery = new HakijaQuery(
@@ -38,8 +34,8 @@ object HakijaQuery {
 import scala.concurrent.duration._
 
 class HakijaResource(hakijaActor: ActorRef)
-                    (implicit system: ActorSystem, sw: Swagger, val ct: ClassTag[XMLHakijat])
-    extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SpringSecuritySupport with ExcelSupport[XMLHakijat] with DownloadSupport with QueryLogging {
+                    (implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[XMLHakijat])
+    extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SecuritySupport with ExcelSupport[XMLHakijat] with DownloadSupport with QueryLogging {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override protected def applicationDescription: String = "Hakijatietojen rajapinta"

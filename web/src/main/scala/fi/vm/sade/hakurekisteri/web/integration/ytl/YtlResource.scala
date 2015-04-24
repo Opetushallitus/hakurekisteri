@@ -4,14 +4,13 @@ import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra._
-import fi.vm.sade.hakurekisteri.web.rest.support.{UserNotAuthorized, SpringSecuritySupport}
+import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, UserNotAuthorized, SpringSecuritySupport}
 import _root_.akka.actor.{ActorSystem, ActorRef}
 import scala.concurrent.ExecutionContext
 import _root_.akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.integration.ytl.Send
-import fi.vm.sade.hakurekisteri.web.rest.support.UserNotAuthorized
 
-class YtlResource(ytl:ActorRef)(implicit val system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with CorsSupport with SpringSecuritySupport {
+class YtlResource(ytl:ActorRef)(implicit val system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with CorsSupport with SecuritySupport {
 
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)

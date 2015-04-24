@@ -11,8 +11,6 @@ http://www.springframework.org/schema/security/spring-security.xsd">
 
     <http use-expressions="true">
         <http-basic/>
-        <intercept-url pattern="/" access="permitAll"/>
-        <intercept-url pattern="/index.html" access="permitAll"/>
         <intercept-url pattern="/**" access="permitAll"/>
         <custom-filter before="CAS_FILTER" ref="urlRewriteFilter" />
     </http>
