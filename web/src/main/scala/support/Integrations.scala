@@ -61,20 +61,21 @@ class DummyActor extends Actor {
 
 class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Config) extends Integrations {
   val ec: ExecutionContext = ExecutorUtil.createExecutor(10, "rest-client-pool")
-
-  val tarjonta = system.actorOf(Props(new TarjontaActor(new VirkailijaRestClient(config.integrations.tarjontaConfig, None)(ec, system), config)), "tarjonta")
-
+  private val tarjontaClient = new VirkailijaRestClient(config.integrations.tarjontaConfig, None)(ec, system)
   private val organisaatioClient = new VirkailijaRestClient(config.integrations.organisaatioConfig, None)(ec, system)
   private val koodistoClient = new VirkailijaRestClient(config.integrations.koodistoConfig, None)(ec, system)
   private val henkiloClient = new VirkailijaRestClient(config.integrations.henkiloConfig, None)(ec, system)
+  private val hakemusClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(ec, system)
+  private val parametritClient = new VirkailijaRestClient(config.integrations.parameterConfig, None)(ec, system)
+  private val valintatulosClient = new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool"), system)
 
+  val tarjonta = system.actorOf(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
   val organisaatiot = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
-
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(henkiloClient, config)), "henkilo")
-
-  val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(ec, system), config.integrations.hakemusConfig.maxApplications)), "hakemus")
-
-  val proxies = new HttpProxies(henkiloClient, koodistoClient, organisaatioClient)
+  val hakemukset = system.actorOf(Props(new HakemusActor(hakemusClient, config.integrations.hakemusConfig.maxApplications)), "hakemus")
+  val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
+  val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
+  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
 
   hakemukset ! Trigger {
     (hakemus: FullHakemus) =>
@@ -94,13 +95,6 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   hakemukset ! ilmoitetutArvosanat
 
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, config.integrations.ytlConfig)), "ytl")
-
-  val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
-
-  val parametrit = system.actorOf(Props(new HttpParameterActor(new VirkailijaRestClient(config.integrations.parameterConfig, None)(ec, system))), "parametrit")
-
-  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool"), system), config)), "valintaTulos")
-
   val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(config.integrations.virtaConfig)(system), organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
-
+  val proxies = new HttpProxies(henkiloClient, koodistoClient, organisaatioClient)
 }
