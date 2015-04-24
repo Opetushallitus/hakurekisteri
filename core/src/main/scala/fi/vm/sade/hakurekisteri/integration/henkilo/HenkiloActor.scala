@@ -6,6 +6,10 @@ import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioResponse
+import org.json4s.DefaultFormats
+import org.json4s._
+import org.json4s.jackson.JsonMethods._
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -75,6 +79,8 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
 }
 
 class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
+  implicit val formats = DefaultFormats
+
   override def receive: Receive = {
     case s: SavedHenkilo =>
       savingHenkilo = false
@@ -86,11 +92,12 @@ class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
   }
 
   override def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
-    log.warning("not implemented")
+    throw new UnsupportedOperationException("Not implemented")
   }
 
   override def findExistingOrganisaatiohenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
-    log.warning("not implemented")
+    val json = parse(getClass.getResourceAsStream("/mock-data/henkilopalvelu-singleoid"))
+    json.extract[OrganisaatioResponse]
   }
 }
 
