@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, OrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.henkilo.{CreateHenkilo, HenkiloActor}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{HttpHenkiloActor, CreateHenkilo, HenkiloActor}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -115,7 +115,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
 
     val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = {r =>}, query = { (q) => Seq(batch) })))
     val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val henkiloActor = system.actorOf(Props(new HenkiloActor(henkiloClient, Config.config)))
+    val henkiloActor = system.actorOf(Props(new HttpHenkiloActor(henkiloClient, Config.config)))
 
     val sWaiter = new Waiter()
     val oWaiter = new Waiter()
@@ -158,7 +158,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     }
     val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchHandler, query = { (q) => Seq(batch) })))
     val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(failingAsyncProvider)))
-    val henkiloActor = system.actorOf(Props(new HenkiloActor(henkiloClient, Config.config)))
+    val henkiloActor = system.actorOf(Props(new HttpHenkiloActor(henkiloClient, Config.config)))
     val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = {r => r}, query = {q => Seq()})))
     val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija](save = {r => r}, query = {q => Seq()})))
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))

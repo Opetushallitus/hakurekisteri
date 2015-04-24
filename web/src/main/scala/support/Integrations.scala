@@ -5,6 +5,7 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.Config._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.HakuActor
+import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{MockOrganisaatioActor, HttpOrganisaatioActor, OrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{MockParameterActor, HttpParameterActor, ParameterActor}
@@ -47,7 +48,7 @@ class MockIntegrations(system: ActorSystem) extends Integrations {
   override val koodisto: ActorRef = mockActor("koodisto", new DummyActor)
   override val organisaatiot: ActorRef = mockActor("organisaatiot", new MockOrganisaatioActor(config))
   override val parametrit: ActorRef = mockActor("parametrit", new MockParameterActor)
-  override val henkilo: ActorRef = mockActor("henkilo", new DummyActor)
+  override val henkilo: ActorRef = mockActor("henkilo", new MockHenkiloActor(config))
   override val tarjonta: ActorRef = mockActor("tarjonta", new DummyActor)
   override val proxies = new MockProxies
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)
@@ -71,7 +72,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   val tarjonta = system.actorOf(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
   val organisaatiot = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
-  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(henkiloClient, config)), "henkilo")
+  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(henkiloClient, config)), "henkilo")
   val hakemukset = system.actorOf(Props(new HakemusActor(hakemusClient, config.integrations.hakemusConfig.maxApplications)), "hakemus")
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")

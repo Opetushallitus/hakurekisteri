@@ -10,7 +10,7 @@ import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana, ArvosanaActor, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor
+import fi.vm.sade.hakurekisteri.integration.henkilo.{HttpHenkiloActor, HenkiloActor}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoKoodiArvot}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, OrganisaatioActor}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
@@ -402,7 +402,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     system.actorOf(Props(new HttpOrganisaatioActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider))), Config.config)))
 
   private def createHenkiloActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
-    system.actorOf(Props(new HenkiloActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider))), Config.config)))
+    system.actorOf(Props(new HttpHenkiloActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider))), Config.config)))
 
   private def withSystem(f: ActorSystem => Unit) = {
     val system = ActorSystem("test-import-arvosana-batch-processing")

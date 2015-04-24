@@ -104,12 +104,12 @@ class MockOrganisaatioActor(config: Config) extends OrganisaatioActor(config) {
   implicit val formats = DefaultFormats
 
   override def fetchAll(): Unit = {
-    val json = parse(getClass.getResourceAsStream("mock-data/organisaatio-all.json"))
+    val json = parse(getClass.getResourceAsStream("/mock-data/organisaatio-all.json"))
     json.extract[OrganisaatioResponse]
   }
 
   override def findDirect(tunniste: String): Future[Option[Organisaatio]] = {
-    val mockKoulu = parse(getClass.getResourceAsStream("mock-data/organisaatio-single.json"))
+    val mockKoulu = parse(getClass.getResourceAsStream("/mock-data/organisaatio-single.json"))
     Future.successful(Some(mockKoulu.extract[Organisaatio]))
   }
 

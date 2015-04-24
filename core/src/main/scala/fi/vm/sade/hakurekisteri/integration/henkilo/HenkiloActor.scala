@@ -9,37 +9,48 @@ import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.matching.Regex
 
-class HenkiloActor(henkiloClient: VirkailijaRestClient, config: Config) extends Actor with ActorLogging {
+abstract class HenkiloActor(config: Config) extends Actor with ActorLogging {
   implicit val ec: ExecutionContext = context.dispatcher
   val maxRetries = config.integrations.henkiloConfig.httpClientMaxRetries
   var savingHenkilo = false
 
-  def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
-    henkiloClient.postObject[OrganisaatioHenkilo, OrganisaatioHenkilo](s"/resources/henkilo/$oidHenkilo/organisaatiohenkilo", 200, organisaatioHenkilo)
-  }
+  def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo)
 
-  def findExistingOrganisaatiohenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
-    henkiloClient.readObject[Seq[OrganisaatioHenkilo]](s"/resources/henkilo/$oidHenkilo/organisaatiohenkilo", 200)
-  }
+  def findExistingOrganisaatiohenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo)
+
+
+  def receive: Receive
+}
+
+class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) extends HenkiloActor(config) {
 
   import fi.vm.sade.hakurekisteri.integration.henkilo.HetuUtil.Hetu
+
+  override def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
+    virkailijaClient.postObject[OrganisaatioHenkilo, OrganisaatioHenkilo](s"/resources/henkilo/$oidHenkilo/organisaatiohenkilo", 200, organisaatioHenkilo)
+  }
+
+  override def findExistingOrganisaatiohenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
+    virkailijaClient.readObject[Seq[OrganisaatioHenkilo]](s"/resources/henkilo/$oidHenkilo/organisaatiohenkilo", 200)
+  }
 
   override def receive: Receive = {
     case henkiloOid: String =>
       log.debug(s"received henkiloOid: $henkiloOid")
-      henkiloClient.readObject[Henkilo](s"/resources/henkilo/${URLEncoder.encode(henkiloOid, "UTF-8")}", 200, maxRetries) pipeTo sender
+      virkailijaClient.readObject[Henkilo](s"/resources/henkilo/${URLEncoder.encode(henkiloOid, "UTF-8")}", 200, maxRetries) pipeTo sender
 
     case HetuQuery(Hetu(hetu)) =>
       log.debug(s"received HetuQuery: ${hetu.substring(0, 6)}XXXX")
-      henkiloClient.readObject[Henkilo](s"/resources/s2s/byHetu/${URLEncoder.encode(hetu, "UTF-8")}", 200, maxRetries) pipeTo sender
+      virkailijaClient.readObject[Henkilo](s"/resources/s2s/byHetu/${URLEncoder.encode(hetu, "UTF-8")}", 200, maxRetries) pipeTo sender
 
     case q: HenkiloQuery =>
       log.debug(s"received HenkiloQuery: $q")
       if (q.oppijanumero.isEmpty && q.hetu.isEmpty) {
         sender ! FoundHenkilos(Seq(), q.tunniste)
       } else {
-        henkiloClient.readObject[HenkiloSearchResponse](s"/resources/henkilo?q=${URLEncoder.encode(q.oppijanumero.getOrElse(q.hetu.get), "UTF-8")}&index=0&count=2&no=true&s=true", 200, maxRetries).
+        virkailijaClient.readObject[HenkiloSearchResponse](s"/resources/henkilo?q=${URLEncoder.encode(q.oppijanumero.getOrElse(q.hetu.get), "UTF-8")}&index=0&count=2&no=true&s=true", 200, maxRetries).
           map(r => FoundHenkilos(r.results, q.tunniste)) pipeTo sender
       }
 
@@ -53,13 +64,33 @@ class HenkiloActor(henkiloClient: VirkailijaRestClient, config: Config) extends 
 
     case SaveHenkilo(henkilo, tunniste) if !savingHenkilo =>
       savingHenkilo = true
-      henkiloClient.postObject[CreateHenkilo, String](s"/resources/s2s/tiedonsiirrot", 200, henkilo).map(saved => SavedHenkilo(saved, tunniste)).recoverWith {
+      virkailijaClient.postObject[CreateHenkilo, String](s"/resources/s2s/tiedonsiirrot", 200, henkilo).map(saved => SavedHenkilo(saved, tunniste)).recoverWith {
         case t: Throwable => Future.successful(HenkiloSaveFailed(tunniste, t))
       }.pipeTo(self)(sender())
 
     case s: SaveHenkilo if savingHenkilo =>
       context.system.scheduler.scheduleOnce(50.milliseconds, self, s)(ec, sender())
 
+  }
+}
+
+class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
+  override def receive: Receive = {
+    case s: SavedHenkilo =>
+      savingHenkilo = false
+      sender ! s
+
+    case t: HenkiloSaveFailed =>
+      savingHenkilo = false
+      Future.failed(t) pipeTo sender
+  }
+
+  override def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
+    log.warning("not implemented")
+  }
+
+  override def findExistingOrganisaatiohenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
+    log.warning("not implemented")
   }
 }
 
@@ -73,7 +104,7 @@ object HetuUtil {
         case 'A' => "20"
       }
       Some(s"$vuosisata${h.substring(4, 6)}-${h.substring(2, 4)}-${h.substring(0, 2)}")
-   case _ => None
+    case _ => None
   }
 }
 
