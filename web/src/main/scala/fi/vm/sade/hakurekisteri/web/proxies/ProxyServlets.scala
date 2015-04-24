@@ -34,6 +34,7 @@ class OrganizationProxyServlet(proxy: OrganizationProxy, system: ActorSystem) ex
 
 class AuthenticationProxyServlet(proxy: AuthenticationProxy, system: ActorSystem) extends OPHProxyServlet(system) with HakurekisteriJsonSupport {
   get("/buildversion.txt") {
+    contentType = "text/plain"
     "artifactId=authentication-service\nmocked"
   }
 
