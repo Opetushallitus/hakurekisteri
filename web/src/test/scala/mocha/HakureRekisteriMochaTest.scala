@@ -33,7 +33,7 @@ class HakureRekisteriMochaTest extends FlatSpec with Matchers {
 
   "Mocha tests" should "pass" in {
     val port: Int = findFreeLocalPort
-    new HakuRekisteriJetty(port, new MockConfig).withTomcat {
+    new HakuRekisteriJetty(port, new MockConfig).withJetty {
       val pb = Seq("node_modules/mocha-phantomjs/bin/mocha-phantomjs", "-R", "spec", "http://localhost:" + port + "/test/runner.html")
       val res = pb.!
       res should be(0)

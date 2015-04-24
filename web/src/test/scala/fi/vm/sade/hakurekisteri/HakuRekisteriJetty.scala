@@ -30,7 +30,7 @@ class HakuRekisteriJetty(port: Int, config: Config = Config.config) {
     server
   }
 
-  def withTomcat[T](block: => T) = {
+  def withJetty[T](block: => T) = {
     val server = start
     try {
       block
