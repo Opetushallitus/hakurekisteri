@@ -14,7 +14,7 @@ object ProxyServlets {
     context.mount(new OrganizationProxyServlet(proxies.organization, system), "/organisaatio-service")
     context.mount(new AuthenticationProxyServlet(proxies.authentication, system), "/authentication-service")
     context.mount(new KoodistoProxyServlet(proxies.koodisto, system), "/koodisto-service")
-    context.mount(new LocalizationProxyServlet, "/lokalisointi")
+    context.mount(new LocalizationProxyServlet(system), "/lokalisointi")
   }
 }
 
@@ -59,7 +59,7 @@ class KoodistoProxyServlet(proxy: KoodistoProxy, system: ActorSystem) extends OP
   }
 }
 
-class LocalizationProxyServlet extends ScalatraServlet {
+class LocalizationProxyServlet(system: ActorSystem) extends OPHProxyServlet(system) {
   get("/cxf/rest/v1/localisation") {
     getClass.getResourceAsStream("/proxy-mockdata/localization.json")
   }
