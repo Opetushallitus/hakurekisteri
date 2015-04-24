@@ -65,6 +65,7 @@ trait KkHakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel 
     ModelField("koulusivistyskieli", null, DataType.String),
     ModelField("koulutusmarkkinointilupa", null, DataType.Boolean, required = false),
     ModelField("onYlioppilas", null, DataType.Boolean),
+    ModelField("turvakielto", null, DataType.Boolean),
     ModelField("hakemukset", null, DataType.GenList(DataType("Hakemus")))
   )
 
