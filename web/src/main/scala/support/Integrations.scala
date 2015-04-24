@@ -9,9 +9,10 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor,
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
-import fi.vm.sade.hakurekisteri.integration.virta.{VirtaActor, VirtaClient}
-import fi.vm.sade.hakurekisteri.integration.ytl.YtlActor
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaActor, VirtaClient}
+import fi.vm.sade.hakurekisteri.integration.ytl.{YtlActor}
+import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.rest.support.Registers
 import fi.vm.sade.hakurekisteri.suoritus.VapaamuotoinenKkTutkinto
 import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
@@ -54,11 +55,6 @@ class MockIntegrations(system: ActorSystem, config: Config) extends Integrations
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)
 }
 
-class DummyActor extends Actor {
-  override def receive: Receive = {
-    case x => println("DummyActor: got " + x)
-  }
-}
 
 class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Config) extends Integrations {
   val ec: ExecutionContext = ExecutorUtil.createExecutor(10, "rest-client-pool")
