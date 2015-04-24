@@ -2,8 +2,7 @@ package mocha
 
 import java.io.IOException
 import java.net.Socket
-
-import fi.vm.sade.hakurekisteri.JettyTestLauncher
+import fi.vm.sade.hakurekisteri.HakuRekisteriTomcat
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatra.{ScalatraContext, ScalatraBase}
 
@@ -12,7 +11,6 @@ import scala.sys.process._
 import scala.util.Random
 
 class HakureRekisteriMochaTest extends FlatSpec with Matchers {
-
   def isFreeLocalPort(port: Int): Boolean = {
     try {
       val socket = new Socket("127.0.0.1", port)
@@ -34,9 +32,9 @@ class HakureRekisteriMochaTest extends FlatSpec with Matchers {
   }
 
   "Mocha tests" should "pass" in {
-    val jettyPort: Int = findFreeLocalPort
-    new JettyTestLauncher(jettyPort).withJetty {
-      val pb = Seq("node_modules/mocha-phantomjs/bin/mocha-phantomjs", "-R", "spec", "http://localhost:" + jettyPort + "/test/runner.html")
+    val port: Int = findFreeLocalPort
+    new HakuRekisteriTomcat(port, "it").withTomcat {
+      val pb = Seq("node_modules/mocha-phantomjs/bin/mocha-phantomjs", "-R", "spec", "http://localhost:" + port + "/test/runner.html")
       val res = pb.!
       res should be(0)
     }
