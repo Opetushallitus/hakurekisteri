@@ -28,7 +28,7 @@ import scala.language.implicitConversions
 import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 
 trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport with SpecsLikeMockito {
-  val config = Config.config
+  val config = Config.mockConfig
 
   object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None, Seq())
   object OppilaitosY extends Organisaatio("1.10.2", Map("fi" -> "Oppilaitos Y"), None, Some("00002"), None, Seq())

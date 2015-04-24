@@ -42,9 +42,9 @@ object CreateTestDb extends App {
 
   implicit val ec: ExecutionContext = system.dispatcher
 
-  println(Config.config.integrations.henkiloConfig)
+  println(Config.globalConfig.integrations.henkiloConfig)
 
-  val henkiloClient = new VirkailijaRestClient(Config.config.integrations.henkiloConfig, None)
+  val henkiloClient = new VirkailijaRestClient(Config.globalConfig.integrations.henkiloConfig, None)
 
   val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
   val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
@@ -67,7 +67,7 @@ object CreateTestDb extends App {
 
   def createOppilas(oid:String, aineet: Set[String]) {
     val suoritus = UUID.randomUUID()
-    suoritusJournal.addModification(Updated(VirallinenSuoritus(Config.config.oids.perusopetusKomoOid, "1.2.246.562.10.39644336305", "KESKEN", kevatJuhla, oid, yksilollistaminen.Ei, "fi",  lahde = "Test").identify(suoritus)))
+    suoritusJournal.addModification(Updated(VirallinenSuoritus(Config.globalConfig.oids.perusopetusKomoOid, "1.2.246.562.10.39644336305", "KESKEN", kevatJuhla, oid, yksilollistaminen.Ei, "fi",  lahde = "Test").identify(suoritus)))
     opiskelijaJournal.addModification(Updated(Opiskelija("1.2.246.562.10.39644336305", "9", "9A", oid, syksynAlku.toDateTimeAtStartOfDay(), Some(kevatJuhla.toDateTimeAtStartOfDay()), "Test").identify(UUID.randomUUID())))
     for (
       aine <- aineet
@@ -100,7 +100,7 @@ object CreateTestDb extends App {
         for (s <- sisaltyy(koodi)) yield (koodi, s.getOrElse(Seq()).map(_("koodiUri").toString).toSet))
 
     def yl: Future[Option[Seq[Map[String, Any]]]] = {
-      val req = url(s"${Config.config.integrations.koodistoServiceUrl}/rest/json/oppiaineetyleissivistava/koodi/")
+      val req = url(s"${Config.globalConfig.integrations.koodistoServiceUrl}/rest/json/oppiaineetyleissivistava/koodi/")
       val res: Future[String] = Http(req OK as.String)
       parseBody(res)
     }
@@ -118,7 +118,7 @@ object CreateTestDb extends App {
 
   type Koodi = Map[String, Any]
   def sisaltyy(koodi: Koodi): Future[Option[Seq[Map[String, Any]]]] = {
-    val req = url(s"${Config.config.integrations.koodistoServiceUrl}/rest/json/relaatio/sisaltyy-alakoodit/${koodi("koodiUri")}")
+    val req = url(s"${Config.globalConfig.integrations.koodistoServiceUrl}/rest/json/relaatio/sisaltyy-alakoodit/${koodi("koodiUri")}")
     val res: Future[String] = Http(req OK as.String)
     parseBody(res)
   }

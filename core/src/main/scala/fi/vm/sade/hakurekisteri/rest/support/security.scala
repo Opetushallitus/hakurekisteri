@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.integration.virta.Virta
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 
@@ -81,7 +81,7 @@ trait User {
 
   def canRead(resource: String) = !orgsFor("READ", resource).isEmpty
 
-  def isAdmin:Boolean = orgsFor("DELETE", "Arvosana").contains(Config.config.oids.ophOrganisaatioOid)
+  def isAdmin:Boolean = orgsFor("DELETE", "Arvosana").contains(Oids.oids.ophOrganisaatioOid)
 
 
 }

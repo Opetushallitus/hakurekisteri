@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.organization
 
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.integration.HttpConfig
 import scala.xml.Elem
 import fi.vm.sade.hakurekisteri.tools.RicherString._
@@ -202,7 +202,7 @@ case class OrganizationAuthorizer(orgPaths: Map[String, Seq[String]]) {
   def checkAccess(user: User, action: String, futTarget: concurrent.Future[Subject]) = futTarget.map {
     (target: Subject) =>
     val allowedOrgs = user.orgsFor(action, target.resource)
-    val paths: Set[String] = target.orgs.flatMap((oid) => orgPaths.getOrElse(oid, Seq(Config.config.oids.ophOrganisaatioOid, oid)))
+    val paths: Set[String] = target.orgs.flatMap((oid) => orgPaths.getOrElse(oid, Seq(Oids.oids.ophOrganisaatioOid, oid)))
     paths.exists { x => user.username == x || allowedOrgs.contains(x) }
   }
 }

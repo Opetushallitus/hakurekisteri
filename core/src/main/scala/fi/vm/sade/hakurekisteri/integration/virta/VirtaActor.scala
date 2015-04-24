@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.Status.Failure
 import akka.actor.{Cancellable, ActorLogging, Actor, ActorRef}
 import akka.pattern.ask
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 import fi.vm.sade.hakurekisteri.integration.haku.{HakuNotFoundException, Haku, GetHaku}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
@@ -197,7 +197,7 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
   import akka.pattern.ask
 
   def resolveOppilaitosOid(oppilaitosnumero: String): Future[String] = oppilaitosnumero match {
-    case o if Seq("XX", "UK", "UM").contains(o) => Future.successful(Config.config.oids.tuntematonOrganisaatioOid)
+    case o if Seq("XX", "UK", "UM").contains(o) => Future.successful(Oids.oids.tuntematonOrganisaatioOid)
     case o =>
       (organisaatioActor ? o)(1.hour).mapTo[Option[Organisaatio]] map {
           case Some(org) => org.oid
@@ -207,7 +207,7 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
 }
 
 object Virta {
-  val CSC = Config.config.oids.cscOrganisaatioOid
+  val CSC = Oids.oids.cscOrganisaatioOid
 
   val timeFormat = "^[0-9]{2}:[0-9]{2}$"
 

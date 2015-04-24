@@ -11,10 +11,10 @@ trait SecuritySupport {
   def currentUser(implicit request: HttpServletRequest): Option[User] = security.currentUser
 }
 
-trait AutomaticSecuritySupport extends SecuritySupport {
-  implicit val security = Config.config.mockMode match {
+object Security {
+  def apply(config: Config) = config.mockMode match {
     case true => new TestSecurity
-    case false => new SpringSecuritySupport
+    case false => new SpringSecurity
   }
 }
 
@@ -23,7 +23,7 @@ trait Security {
   def security = this
 }
 
-class SpringSecuritySupport extends Security {
+class SpringSecurity extends Security {
   import scala.collection.JavaConverters._
 
   override def currentUser(implicit request: HttpServletRequest): Option[User] = userPrincipal.map {

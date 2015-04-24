@@ -115,7 +115,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
 
     val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = {r =>}, query = { (q) => Seq(batch) })))
     val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val henkiloActor = system.actorOf(Props(new HttpHenkiloActor(henkiloClient, Config.config)))
+    val henkiloActor = system.actorOf(Props(new HttpHenkiloActor(henkiloClient, Config.globalConfig)))
 
     val sWaiter = new Waiter()
     val oWaiter = new Waiter()
@@ -130,11 +130,11 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = suoritusHandler, query = {q => Seq()})))
     val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija](save = opiskelijaHandler, query = {q => Seq()})))
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val organisaatioActor = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, Config.config)))
+    val organisaatioActor = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, Config.globalConfig)))
     val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
     val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana](save = {r => r}, query = { (q) => Seq() })))
 
-    val processingActor = system.actorOf(Props(new ImportBatchProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, arvosanarekisteri, koodistoActor, Config.config)))
+    val processingActor = system.actorOf(Props(new ImportBatchProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, arvosanarekisteri, koodistoActor, Config.globalConfig)))
 
     processingActor ! ProcessReadyBatches
 
@@ -158,15 +158,15 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     }
     val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchHandler, query = { (q) => Seq(batch) })))
     val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(failingAsyncProvider)))
-    val henkiloActor = system.actorOf(Props(new HttpHenkiloActor(henkiloClient, Config.config)))
+    val henkiloActor = system.actorOf(Props(new HttpHenkiloActor(henkiloClient, Config.globalConfig)))
     val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = {r => r}, query = {q => Seq()})))
     val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija](save = {r => r}, query = {q => Seq()})))
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
-    val organisaatioActor = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, Config.config)))
+    val organisaatioActor = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, Config.globalConfig)))
     val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
     val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana](save = {r => r}, query = { (q) => Seq() })))
 
-    val processingActor = system.actorOf(Props(new ImportBatchProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, arvosanarekisteri, koodistoActor, Config.config)))
+    val processingActor = system.actorOf(Props(new ImportBatchProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, arvosanarekisteri, koodistoActor, Config.globalConfig)))
 
     processingActor ! ProcessReadyBatches
 

@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.storage.repository
 
+import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 
@@ -56,7 +57,7 @@ trait JournaledRepository[T <: Resource[I, T], I] extends InMemRepository[T, I] 
     if (time.isEmpty && deduplicate)
       for (oids <- reverseSnapShot.values
            if oids.size > 1;
-           duplicate <- oids.tail.toSet[I]) delete(duplicate, source = Config.config.oids.ophOrganisaatioOid)
+           duplicate <- oids.tail.toSet[I]) delete(duplicate, source = Oids.oids.ophOrganisaatioOid)
     indexSwapSnapshot()
   }
 

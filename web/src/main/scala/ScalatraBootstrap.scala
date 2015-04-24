@@ -47,7 +47,7 @@ import scala.concurrent.ExecutionContext
 
 import scala.xml.Elem
 
-class ScalatraBootstrap extends LifeCycle with AutomaticSecuritySupport {
+class ScalatraBootstrap extends LifeCycle {
   import fi.vm.sade.hakurekisteri.Config._
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("hakurekisteri")
@@ -55,6 +55,8 @@ class ScalatraBootstrap extends LifeCycle with AutomaticSecuritySupport {
 
   override def init(context: ServletContext) {
     OPHSecurity.init(context)
+    val config = globalConfig
+    implicit val security = Security(config)
 
     val journals = new DbJournals(config.jndiName)
     val registers = new BareRegisters(system, journals)
@@ -108,8 +110,8 @@ class ScalatraBootstrap extends LifeCycle with AutomaticSecuritySupport {
 }
 
 object OPHSecurity extends ContextLoader with LifeCycle {
-  val config = OPHConfig(Config.config.ophConfDir,
-    Config.config.propertyLocations,
+  val config = OPHConfig(Config.globalConfig.ophConfDir,
+    Config.globalConfig.propertyLocations,
     "cas_mode" -> "front",
     "cas_key" -> "suoritusrekisteri",
     "spring_security_default_access" -> "hasRole('ROLE_APP_SUORITUSREKISTERI')",

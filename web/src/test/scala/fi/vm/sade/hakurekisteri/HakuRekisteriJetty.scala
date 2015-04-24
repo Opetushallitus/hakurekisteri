@@ -9,7 +9,7 @@ object HakuRekisteriJetty extends App {
   new HakuRekisteriJetty(8080).start
 }
 
-class HakuRekisteriJetty(port: Int, config: Config = Config.config) {
+class HakuRekisteriJetty(port: Int, config: Config = Config.globalConfig) {
   Config.setConfig(config)
   val root = ProjectRootFinder.findProjectRoot()
   val contextPath = "/"

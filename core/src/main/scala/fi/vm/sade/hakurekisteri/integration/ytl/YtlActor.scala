@@ -8,7 +8,7 @@ import akka.actor.{ActorIdentity, Identify, _}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import com.jcraft.jsch.{ChannelSftp, SftpException}
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.arvosana.{ArvioOsakoe, ArvioYo, Arvosana, _}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HetuQuery}
@@ -580,8 +580,8 @@ object YTLXml {
   }
 
 
-  val YTL: String = Config.config.oids.ytlOrganisaatioOid
-  val yotutkinto = Config.config.oids.yotutkintoKomoOid
+  val YTL: String = Oids.oids.ytlOrganisaatioOid
+  val yotutkinto = Oids.oids.yotutkintoKomoOid
 
   object YoTutkinto {
     def apply(suorittaja: String, valmistuminen: LocalDate, kieli: String, valmis: Boolean = true, vahvistettu: Boolean = true) = {

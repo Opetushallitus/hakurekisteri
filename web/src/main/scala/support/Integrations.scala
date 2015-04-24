@@ -35,12 +35,12 @@ trait Integrations {
 
 object Integrations {
   def apply(rekisterit: Registers, system: ActorSystem, config: Config) = config.mockMode match {
-    case true => new MockIntegrations(system)
+    case true => new MockIntegrations(system, config)
     case _ => new BaseIntegrations(rekisterit, system, config)
   }
 }
 
-class MockIntegrations(system: ActorSystem) extends Integrations {
+class MockIntegrations(system: ActorSystem, config: Config) extends Integrations {
   override val virta: ActorRef = mockActor("virta", new DummyActor)
   override val valintaTulos: ActorRef = mockActor("valintaTulos", new DummyActor)
   override val hakemukset: ActorRef = mockActor("hakemukset", new DummyActor)

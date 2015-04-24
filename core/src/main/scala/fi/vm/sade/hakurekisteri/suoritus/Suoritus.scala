@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
 import java.util.{GregorianCalendar, UUID}
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.{DateTimeConstants, LocalDate}
 import fi.vm.sade.hakurekisteri.rest.support.UUIDResource
@@ -71,7 +71,7 @@ import DayFinder._
 object ItseilmoitettuPeruskouluTutkinto {
 
   def apply(hakemusOid: String, hakijaOid: String, valmistumisvuosi: Int, suoritusKieli: String) =
-    VirallinenSuoritus(Config.config.oids.perusopetusKomoOid,
+    VirallinenSuoritus(Oids.oids.perusopetusKomoOid,
       myontaja = hakemusOid,
       tila = "VALMIS",
       valmistuminen = saturdayOfWeek22(valmistumisvuosi),
@@ -103,7 +103,7 @@ object ItseilmoitettuTutkinto {
 object ItseilmoitettuLukioTutkinto {
 
   def apply(hakemusOid: String, hakijaOid: String, valmistumisvuosi: Int, suoritusKieli: String) =
-    VirallinenSuoritus(Config.config.oids.lukioKomoOid,
+    VirallinenSuoritus(Oids.oids.lukioKomoOid,
       myontaja = hakemusOid,
       tila = "VALMIS",
       valmistuminen = saturdayOfWeek22(valmistumisvuosi),

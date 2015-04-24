@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.oppija
 
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.rest.support.Resource
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -13,7 +13,7 @@ case class Oppija(oppijanumero: String, opiskelu: Seq[Opiskelija], suoritukset: 
   override val id = oppijanumero
 
   override def identify(identity: String): Oppija with Identified[String] = this
-  override val source = Config.config.oids.ophOrganisaatioOid
+  override val source = Oids.oids.ophOrganisaatioOid
 
   def newId = oppijanumero
 

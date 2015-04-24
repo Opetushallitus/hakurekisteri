@@ -17,11 +17,16 @@ object Config {
   private var c: Config = fromString(sys.props.getOrElse("hakurekisteri.profile", "default"))
 
   def fromString(profile: String) = profile match {
-    case "it" => new MockConfig
+    case "it" => mockConfig
     case "default" => new DefaultConfig
   }
-  def config = this.synchronized(c)
+  def globalConfig = this.synchronized(c)
   def setConfig(config: Config) = this.synchronized( c = config )
+  def mockConfig = new MockConfig
+}
+
+object Oids {
+  def oids = Config.globalConfig.oids
 }
 
 class Oids(properties: Map[String, String] = Map.empty) {
