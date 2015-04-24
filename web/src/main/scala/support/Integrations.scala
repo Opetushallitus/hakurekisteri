@@ -66,15 +66,15 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 
   private val organisaatioClient = new VirkailijaRestClient(config.integrations.organisaatioConfig, None)(ec, system)
   private val koodistoClient = new VirkailijaRestClient(config.integrations.koodistoConfig, None)(ec, system)
-  private val authenticationClient = new VirkailijaRestClient(config.integrations.henkiloConfig, None)(ec, system)
+  private val henkiloClient = new VirkailijaRestClient(config.integrations.henkiloConfig, None)(ec, system)
 
   val organisaatiot = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
 
-  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(new VirkailijaRestClient(config.integrations.henkiloConfig, None)(ec, system), config)), "henkilo")
+  val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor(henkiloClient, config)), "henkilo")
 
   val hakemukset = system.actorOf(Props(new HakemusActor(new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(ec, system), config.integrations.hakemusConfig.maxApplications)), "hakemus")
 
-  val proxies = new HttpProxies(authenticationClient, koodistoClient, organisaatioClient)
+  val proxies = new HttpProxies(henkiloClient, koodistoClient, organisaatioClient)
 
   hakemukset ! Trigger {
     (hakemus: FullHakemus) =>
