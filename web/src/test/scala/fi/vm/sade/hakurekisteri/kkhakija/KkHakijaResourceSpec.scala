@@ -21,14 +21,14 @@ import fi.vm.sade.hakurekisteri.integration.{CapturingProvider, Endpoint, Servic
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Journal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
-import fi.vm.sade.hakurekisteri.web.kkhakija.{Hakija, KkHakijaQuery, KkHakijaResource}
+import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaQuery, KkHakijaResource}
 import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 import org.joda.time.LocalDate
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
+import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
 
 class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger
@@ -45,6 +45,9 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
 
   val resource = new KkHakijaResource(hakemusMock, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock) with TestSecurity
   addServlet(resource, "/")
+
+
+
 
   test("should return 200 OK") {
     get("/?hakukohde=1.11.1") {
@@ -63,9 +66,8 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       override val username: String = "test"
       override def orgsFor(action: String, resource: String): Set[String] = Set("1.1")
     }
-    val q = KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(TestUser))
-    val res: Future[Seq[Hakija]] = resource.getKkHakijat(q)
-    val hakijat = Await.result(res, Duration(10, TimeUnit.SECONDS))
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(TestUser))), Duration(10, TimeUnit.SECONDS))
+
     hakijat.size should be (0)
   }
 
@@ -74,9 +76,8 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       override val username: String = "test"
       override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
     }
-    val q = KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(TestUser))
-    val res: Future[Seq[Hakija]] = resource.getKkHakijat(q)
-    val hakijat = Await.result(res, Duration(10, TimeUnit.SECONDS))
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(TestUser))), Duration(10, TimeUnit.SECONDS))
+
     hakijat.size should be (2)
   }
 
@@ -85,9 +86,8 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       override val username: String = "test"
       override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
     }
-    val q = KkHakijaQuery(None, None, None, None, Hakuehto.Hyvaksytyt, Some(TestUser))
-    val res: Future[Seq[Hakija]] = resource.getKkHakijat(q)
-    val hakijat = Await.result(res, Duration(10, TimeUnit.SECONDS))
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Hyvaksytyt, Some(TestUser))), Duration(10, TimeUnit.SECONDS))
+
     hakijat.size should be (1)
   }
 
@@ -108,11 +108,9 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.KESKEN)
       override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
     }
-    val f = resource.getLasnaolot(sijoitteluTulos, "1.5.1", haku, "")
+    val ilmoittautumiset: Seq[Lasnaolo] = Await.result(resource.getLasnaolot(sijoitteluTulos, "1.5.1", haku, ""), Duration(10, TimeUnit.SECONDS))
 
-    val ilmoittautumiset: Seq[Lasnaolo] = Await.result(f, Duration(10, TimeUnit.SECONDS))
-
-    ilmoittautumiset should (contain(Puuttuu(Syksy(2014))) and contain(Puuttuu(Kevat(2015))))
+    ilmoittautumiset should (contain(Puuttuu(Syksy(2015))) and contain(Puuttuu(Kevat(2015))))
   }
 
   test("should convert ilmoittautumiset into sequence in kevään haku") {
@@ -132,12 +130,9 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.KESKEN)
       override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
     }
+    val ilmoittautumiset = Await.result(resource.getLasnaolot(sijoitteluTulos, "1.5.1", haku, ""), Duration(10, TimeUnit.SECONDS))
 
-    val f = resource.getLasnaolot(sijoitteluTulos, "1.5.1", haku, "")
-
-    val ilmoittautumiset = Await.result(f, Duration(10, TimeUnit.SECONDS))
-
-    ilmoittautumiset should (contain(Lasna(Syksy(2015))) and contain(Poissa(Kevat(2015))))
+    ilmoittautumiset should (contain(Lasna(Syksy(2015))) and contain(Poissa(Kevat(2016))))
   }
 
   test("should show turvakielto true from hakemus") {
@@ -145,9 +140,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       override val username: String = "test"
       override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
     }
-
-    val res = resource.getKkHakijat(KkHakijaQuery(Some("1.24.1"), None, None, None, Hakuehto.Kaikki, Some(TestUser)))
-    val hakijat = Await.result(res, Duration(10, TimeUnit.SECONDS))
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.1"), None, None, None, Hakuehto.Kaikki, Some(TestUser))), Duration(10, TimeUnit.SECONDS))
 
     hakijat.head.turvakielto should be (true)
   }
@@ -157,12 +150,14 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       override val username: String = "test"
       override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
     }
-
-    val res = resource.getKkHakijat(KkHakijaQuery(Some("1.24.2"), None, None, None, Hakuehto.Kaikki, Some(TestUser)))
-    val hakijat = Await.result(res, Duration(10, TimeUnit.SECONDS))
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.2"), None, None, None, Hakuehto.Kaikki, Some(TestUser))), Duration(10, TimeUnit.SECONDS))
 
     hakijat.head.turvakielto should be (false)
   }
+
+
+
+
 
   import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 

@@ -187,21 +187,21 @@ class KkHakijaResource(hakemukset: ActorRef,
 
     kausi.map(k => {
       val lukuvuosi = k match {
-        case "S" => (haku.vuosi, haku.vuosi + 1)
-        case "K" => (haku.vuosi, haku.vuosi)
+        case "S" => (haku.vuosi + 1, haku.vuosi + 1)
+        case "K" => (haku.vuosi, haku.vuosi + 1)
         case _ => throw new IllegalArgumentException(s"invalid kausi $k")
       }
 
       t.ilmoittautumistila(hakemusOid, hakukohde).map {
-        case Ilmoittautumistila.EI_TEHTY =>Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2)))
-        case Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI => Seq(Lasna(Syksy(lukuvuosi._1)), Lasna(Kevat(lukuvuosi._2)))
+        case Ilmoittautumistila.EI_TEHTY              => Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2)))
+        case Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI  => Seq(Lasna(Syksy(lukuvuosi._1)), Lasna(Kevat(lukuvuosi._2)))
         case Ilmoittautumistila.POISSA_KOKO_LUKUVUOSI => Seq(Poissa(Syksy(lukuvuosi._1)), Poissa(Kevat(lukuvuosi._2)))
-        case Ilmoittautumistila.EI_ILMOITTAUTUNUT => Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2)))
-        case Ilmoittautumistila.LASNA_SYKSY => Seq(Lasna(Syksy(lukuvuosi._1)), Poissa(Kevat(lukuvuosi._2)))
-        case Ilmoittautumistila.POISSA_SYKSY => Seq(Poissa(Syksy(lukuvuosi._1)), Lasna(Kevat(lukuvuosi._2)))
-        case Ilmoittautumistila.LASNA => Seq(Lasna(Kevat(lukuvuosi._2)))
-        case Ilmoittautumistila.POISSA => Seq(Poissa(Kevat(lukuvuosi._2)))
-        case _ => Seq()
+        case Ilmoittautumistila.EI_ILMOITTAUTUNUT     => Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2)))
+        case Ilmoittautumistila.LASNA_SYKSY           => Seq(Lasna(Syksy(lukuvuosi._1)), Poissa(Kevat(lukuvuosi._2)))
+        case Ilmoittautumistila.POISSA_SYKSY          => Seq(Poissa(Syksy(lukuvuosi._1)), Lasna(Kevat(lukuvuosi._2)))
+        case Ilmoittautumistila.LASNA                 => Seq(Lasna(Kevat(lukuvuosi._2)))
+        case Ilmoittautumistila.POISSA                => Seq(Poissa(Kevat(lukuvuosi._2)))
+        case _                                        => Seq()
       }.getOrElse(Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2))))
     })
   }
