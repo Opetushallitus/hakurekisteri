@@ -1,4 +1,3 @@
-import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import java.nio.file.Path
 import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEvent}
 
@@ -10,7 +9,6 @@ import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.healthcheck.HealthcheckActor
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
-import fi.vm.sade.hakurekisteri.rest.support.Workbook
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaSwaggerApi, CreateArvosanaCommand}
 import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchResource
@@ -19,6 +17,7 @@ import fi.vm.sade.hakurekisteri.web.hakija.HakijaResource
 import fi.vm.sade.hakurekisteri.web.haku.HakuResource
 import fi.vm.sade.hakurekisteri.web.healthcheck.HealthcheckResource
 import fi.vm.sade.hakurekisteri.web.integration.virta.VirtaResource
+import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaResource
 import fi.vm.sade.hakurekisteri.web.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi}
 import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.{CreateOpiskeluoikeusCommand, OpiskeluoikeusSwaggerApi}
@@ -28,7 +27,6 @@ import fi.vm.sade.hakurekisteri.web.rekisteritiedot.RekisteritiedotResource
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwaggerApi}
 import gui.GuiServlet
-import org.scalatra.servlet.FileItem
 import org.scalatra.swagger.Swagger
 import org.scalatra.{Handler, LifeCycle}
 import org.springframework.beans.MutablePropertyValues
@@ -45,17 +43,14 @@ import siirto._
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 
-import scala.xml.Elem
-
 class ScalatraBootstrap extends LifeCycle {
-  import fi.vm.sade.hakurekisteri.Config._
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("hakurekisteri")
   implicit val ec: ExecutionContext = system.dispatcher
 
   override def init(context: ServletContext) {
     OPHSecurity.init(context)
-    val config = globalConfig
+    val config = WebAppConfig.getConfig(context)
     implicit val security = Security(config)
 
     val journals = new DbJournals(config.jndiName)
@@ -102,23 +97,20 @@ class ScalatraBootstrap extends LifeCycle {
   }
 
   override def destroy(context: ServletContext) {
-    import concurrent.duration._
+    import scala.concurrent.duration._
     system.shutdown()
     system.awaitTermination(15.seconds)
     OPHSecurity.destroy(context)
   }
 }
 
-object OPHSecurity extends ContextLoader with LifeCycle {
-  val config = OPHConfig(Config.globalConfig.ophConfDir,
-    Config.globalConfig.propertyLocations,
-    "cas_mode" -> "front",
-    "cas_key" -> "suoritusrekisteri",
-    "spring_security_default_access" -> "hasRole('ROLE_APP_SUORITUSREKISTERI')",
-    "cas_service" -> "${cas.service.suoritusrekisteri}",
-    "cas_callback_url" -> "${cas.callback.suoritusrekisteri}"
-  )
+object WebAppConfig {
+  def getConfig(context: ServletContext) = {
+    Option(context.getAttribute("hakurekisteri.config").asInstanceOf[Config]).getOrElse(Config.globalConfig)
+  }
+}
 
+object OPHSecurity extends ContextLoader with LifeCycle {
   val cleanupListener = new ContextCleanupListener
 
   override def init(context: ServletContext) {
@@ -135,7 +127,15 @@ object OPHSecurity extends ContextLoader with LifeCycle {
   }
 
   override def createWebApplicationContext(sc: ServletContext): WebApplicationContext = {
-    config
+    val config = WebAppConfig.getConfig(sc)
+    OPHConfig(config.ophConfDir,
+      config.propertyLocations,
+      "cas_mode" -> "front",
+      "cas_key" -> "suoritusrekisteri",
+      "spring_security_default_access" -> "hasRole('ROLE_APP_SUORITUSREKISTERI')",
+      "cas_service" -> "${cas.service.suoritusrekisteri}",
+      "cas_callback_url" -> "${cas.callback.suoritusrekisteri}"
+    )
   }
 }
 

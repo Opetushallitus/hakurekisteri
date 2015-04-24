@@ -2,9 +2,9 @@ package mocha
 
 import java.io.IOException
 import java.net.Socket
-import fi.vm.sade.hakurekisteri.{MockConfig, HakuRekisteriJetty}
+
+import fi.vm.sade.hakurekisteri.{Config, HakuRekisteriJetty}
 import org.scalatest.{FlatSpec, Matchers}
-import org.scalatra.{ScalatraContext, ScalatraBase}
 
 import scala.language.postfixOps
 import scala.sys.process._
@@ -33,7 +33,7 @@ class HakureRekisteriMochaTest extends FlatSpec with Matchers {
 
   "Mocha tests" should "pass" in {
     val port: Int = findFreeLocalPort
-    new HakuRekisteriJetty(port, new MockConfig).withJetty {
+    new HakuRekisteriJetty(port, Config.mockConfig).withJetty {
       val pb = Seq("node_modules/mocha-phantomjs/bin/mocha-phantomjs", "-R", "spec", "http://localhost:" + port + "/test/runner.html")
       val res = pb.!
       res should be(0)

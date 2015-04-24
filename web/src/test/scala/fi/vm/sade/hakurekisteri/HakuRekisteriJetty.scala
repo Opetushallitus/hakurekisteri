@@ -10,13 +10,12 @@ object HakuRekisteriJetty extends App {
 }
 
 class HakuRekisteriJetty(port: Int, config: Config = Config.globalConfig) {
-  Config.setConfig(config)
   val root = ProjectRootFinder.findProjectRoot()
   val contextPath = "/"
-
-
   val server = new Server(port)
   val context = new WebAppContext()
+
+  context.setAttribute("hakurekisteri.config", config)
   context.setBaseResource(
     new ResourceCollection(Array(root + "/web/src/main/webapp", root + "/web/target/javascript", root + "/web/src/test/front-mock-files")))
   context.setContextPath("/")
