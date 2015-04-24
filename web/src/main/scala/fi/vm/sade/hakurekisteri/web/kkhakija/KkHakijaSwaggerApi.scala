@@ -37,7 +37,7 @@ trait KkHakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel 
     ModelField("ilmoittautumiset", null, DataType.GenList(DataType("Ilmoittautuminen"))),
     ModelField("pohjakoulutus", null, DataType.GenList(DataType.String), None, AllowableValues("yo", "am", "amt", "kk", "ulk", "avoin", "muu")),
     ModelField("julkaisulupa", null, DataType.Boolean, required = false),
-    ModelField("hKelpoisuus", null, DataType.String, None, AllowableValues("NOT_CHECKED", "ELIGIBLE", "INADEQUATE", "INELIGIBLE")),
+    ModelField("hKelpoisuus", null, DataType.String, Some(""), AllowableValues("NOT_CHECKED", "ELIGIBLE", "INADEQUATE", "INELIGIBLE")),
     ModelField("hKelpoisuusLahde", null, DataType.String, None, AllowableValues("UNKNOWN", "REGISTER", "ORIGINAL_DIPLOMA", "OFFICIALLY_AUTHENTICATED_COPY", "LEARNING_PROVIDER", "COPY", "AUTHENTICATED_COPY"), required = false),
     ModelField("hakukohteenKoulutukset", null, DataType.GenList(DataType("HakukohteenKoulutus")))
   )
@@ -58,7 +58,7 @@ trait KkHakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel 
     ModelField("matkapuhelin", null, DataType.String, required = false),
     ModelField("puhelin", null, DataType.String, required = false),
     ModelField("sahkoposti", null, DataType.String, required = false),
-    ModelField("kotikunta", null, DataType.String),
+    ModelField("kotikunta", null, DataType.String, defaultValue = Some("200")),
     ModelField("sukupuoli", null, DataType.String, None, AllowableValues("0", "1", "2", "9"), required = false),
     ModelField("aidinkieli", null, DataType.String),
     ModelField("asiointikieli", null, DataType.String, None, AllowableValues("1", "2", "3", "9")),
