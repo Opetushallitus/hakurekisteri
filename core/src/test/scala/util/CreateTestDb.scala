@@ -69,7 +69,7 @@ object CreateDevDb extends App {
     for (
       aine <- aineet
     ) {
-      val arvosana = Arvosana(suoritus, Arvio410(DataGen.int(5,10).generate.toString), aine, if (aine == "A1") Some("EN") else None , false, Some(kevatJuhla), "Test")
+      val arvosana = Arvosana(suoritus, koetunnus = None, Arvio410(DataGen.int(5,10).generate.toString), aine, aineyhdistelmarooli = None, if (aine == "A1") Some("EN") else None , false, Some(kevatJuhla), "Test")
       arvosanaJournal.addModification(Updated(arvosana.identify(UUID.randomUUID())))
     }
     print(".")

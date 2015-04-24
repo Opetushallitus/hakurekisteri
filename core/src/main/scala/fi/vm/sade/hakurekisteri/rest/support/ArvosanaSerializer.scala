@@ -13,9 +13,11 @@ class ArvosanaSerializer extends CustomSerializer[Arvosana](format => (
   {
     case arvosana: JObject  =>
       val id: Option[UUID] = arvosana.findField(jf => jf._1 == "id").map(_._2).collect { case JString(i) => UUID.fromString(i) }
+      val koetunnus: Option[String] = arvosana.findField(_._1 == "koetunnus").map(_._2).collect { case JString(v) => v }
       val JString(suoritus) = arvosana \ "suoritus"
       val arvio = arvosana \ "arvio"
       val JString(aine) = arvosana \ "aine"
+      val aineyhdistelmarooli: Option[String] = arvosana.findField(_._1 == "aineyhdistelmarooli").map(_._2).collect { case JString(v) => v }
       val lisatieto: Option[String] = arvosana.findField(_._1 == "lisatieto").map(_._2).collect { case JString(v) => v }
       val valinnainen: Boolean = arvosana.findField(jf => jf._1 == "valinnainen").map(_._2) match {
         case Some(JBool(v)) => v
@@ -28,7 +30,7 @@ class ArvosanaSerializer extends CustomSerializer[Arvosana](format => (
       val JString(source) = arvosana \ "source"
       val jarjestys: Option[Int] = arvosana.findField(_._1 == "jarjestys").map(_._2).collect { case JInt(v) => v.toInt }
 
-      Arvosana(UUID.fromString(suoritus), arv, aine, lisatieto, valinnainen, myonnetty, source, jarjestys)
+      Arvosana(UUID.fromString(suoritus), koetunnus, arv, aine, aineyhdistelmarooli, lisatieto, valinnainen, myonnetty, source, jarjestys)
   },
   {
     case arvosana: Arvosana with Identified[UUID @unchecked] =>
@@ -39,6 +41,8 @@ class ArvosanaSerializer extends CustomSerializer[Arvosana](format => (
       val arvio = Extraction.decompose(arvosana.arvio)
 
       val aine: String = arvosana.aine
+      val koetunnus: Option[String] = arvosana.koetunnus
+      val aineyhdistelmarooli: Option[String] = arvosana.aineyhdistelmarooli
       val lisatieto: Option[String] = arvosana.lisatieto
       val valinnainen: Boolean = arvosana.valinnainen
       val myonnetty: Option[LocalDate] = arvosana.myonnetty
@@ -52,7 +56,9 @@ class ArvosanaSerializer extends CustomSerializer[Arvosana](format => (
         ("source" -> source) ~
         ("valinnainen" -> valinnainen)
 
-      val withLisatieto = lisatieto.map(l => core ~ ("lisatieto" -> l)).getOrElse(core)
+      val withKoetunnus = koetunnus.map(k => core ~ ("koetunnus" -> k)).getOrElse(core)
+      val withAineyhdistelmarooli = aineyhdistelmarooli.map(a => withKoetunnus ~ ("aineyhdistelmarooli" -> a)).getOrElse(withKoetunnus)
+      val withLisatieto = lisatieto.map(l => withAineyhdistelmarooli ~ ("lisatieto" -> l)).getOrElse(withAineyhdistelmarooli)
       val withMyonnetty = myonnetty.map(m => withLisatieto ~ ("myonnetty" -> Extraction.decompose(m))).getOrElse(withLisatieto)
       val withJarjestys = jarjestys.map(j => withMyonnetty ~ ("jarjestys" -> j)).getOrElse(withMyonnetty)
 

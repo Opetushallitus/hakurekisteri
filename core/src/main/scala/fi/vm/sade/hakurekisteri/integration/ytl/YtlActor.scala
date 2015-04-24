@@ -682,7 +682,7 @@ case class Osakoe(arvio: ArvioOsakoe, koetunnus: String, osakoetunnus: String, a
   val valinnainen = aineyhdistelmarooli.toInt >= 60
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]) = {
-    Arvosana(suoritus.id, arvio, aine.aine + "_" + osakoetunnus: String, Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL)
+    Arvosana(suoritus.id, Some(koetunnus), arvio, aine.aine + "_" + osakoetunnus: String, Some(aineyhdistelmarooli), Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL)
   }
 }
 
@@ -691,7 +691,7 @@ case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String,
   val valinnainen = aineyhdistelmarooli.toInt >= 60
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]):Arvosana = {
-    Arvosana(suoritus.id, arvio, aine.aine: String, Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL)
+    Arvosana(suoritus.id, Some(koetunnus), arvio, aine.aine: String, Some(aineyhdistelmarooli), Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL)
   }
 
 

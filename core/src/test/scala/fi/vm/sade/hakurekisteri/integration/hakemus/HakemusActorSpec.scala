@@ -105,7 +105,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .build
     ) should contain theSameElementsAs Seq(
       (ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"),
-        Seq(Arvosana(suoritus = null, arvio = Arvio410("S"), "MA", lisatieto = None, valinnainen = true, myonnetty = None, source = "person1", Some(1)))))
+        Seq(Arvosana(suoritus = null, koetunnus = None, arvio = Arvio410("S"), "MA", aineyhdistelmarooli = None, lisatieto = None, valinnainen = true, myonnetty = None, source = "person1", Some(1)))))
 
     IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
       Hakemus()
@@ -177,10 +177,10 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
     ) should contain theSameElementsAs Seq(
       (ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"),
         Seq(
-          Arvosana(suoritus = null, arvio = Arvio410("6"), "MA", lisatieto = None, valinnainen = true, myonnetty = None, source = "person1", Some(1)),
-          Arvosana(suoritus = null, arvio = Arvio410("5"), "MA", lisatieto = None, valinnainen = true, myonnetty = None, source = "person1", Some(2)),
-          Arvosana(suoritus = null, arvio = Arvio410("7"), "MA", lisatieto = None, valinnainen = true, myonnetty = None, source = "person1", Some(3)),
-          Arvosana(suoritus = null, arvio = Arvio410("8"), "MA", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1"))
+          Arvosana(suoritus = null, koetunnus = None, arvio = Arvio410("6"), "MA", aineyhdistelmarooli = None, lisatieto = None, valinnainen = true, myonnetty = None, source = "person1", Some(1)),
+          Arvosana(suoritus = null, koetunnus = None, arvio = Arvio410("5"), "MA", aineyhdistelmarooli = None, lisatieto = None, valinnainen = true, myonnetty = None, source = "person1", Some(2)),
+          Arvosana(suoritus = null, koetunnus = None, arvio = Arvio410("7"), "MA", aineyhdistelmarooli = None, lisatieto = None, valinnainen = true, myonnetty = None, source = "person1", Some(3)),
+          Arvosana(suoritus = null, koetunnus = None, arvio = Arvio410("8"), "MA", aineyhdistelmarooli = None, lisatieto = None, valinnainen = false, myonnetty = None, source = "person1"))
         ))
   }
   it should "create suorituksia from koulutustausta" in {
@@ -222,9 +222,9 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .build
     ) should contain theSameElementsAs Seq(
       (ItseilmoitettuLukioTutkinto("hakemus1","person1", 2000, "FI"),
-        Seq(Arvosana(suoritus = null, arvio = Arvio410("8"), "MA", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1"))),
+        Seq(Arvosana(suoritus = null, koetunnus = None, arvio = Arvio410("8"), "MA", aineyhdistelmarooli = None, lisatieto = None, valinnainen = false, myonnetty = None, source = "person1"))),
       (ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"),
-        Seq(Arvosana(suoritus = null, arvio = Arvio410("7"), "AI", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1"))
+        Seq(Arvosana(suoritus = null, koetunnus = None, arvio = Arvio410("7"), "AI", aineyhdistelmarooli = None, lisatieto = None, valinnainen = false, myonnetty = None, source = "person1"))
         ))
   }
 
@@ -247,8 +247,8 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
     ) should contain theSameElementsAs Seq(
       (ItseilmoitettuLukioTutkinto("hakemus1","person1", 2000, "FI"),
         Seq(
-          Arvosana(suoritus = null, arvio = Arvio410("7"), "B1", lisatieto = Some("SV"), valinnainen = false, myonnetty = None, source = "person1"),
-          Arvosana(suoritus = null, arvio = Arvio410("8"), "AI", lisatieto = Some("FI"), valinnainen = false, myonnetty = None, source = "person1")
+          Arvosana(suoritus = null, koetunnus = None, arvio = Arvio410("7"), "B1", aineyhdistelmarooli = None, lisatieto = Some("SV"), valinnainen = false, myonnetty = None, source = "person1"),
+          Arvosana(suoritus = null, koetunnus = None, arvio = Arvio410("8"), "AI", aineyhdistelmarooli = None, lisatieto = Some("FI"), valinnainen = false, myonnetty = None, source = "person1")
         )))
   }
 
