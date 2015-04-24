@@ -14,8 +14,7 @@ import scala.util.{Success, Try}
 import fi.vm.sade.hakurekisteri.tools.RicherString
 
 object Config {
-  var profile: String = sys.props.getOrElse("hakurekisteri.profile", "default")
-
+  val profile = sys.props.getOrElse("hakurekisteri.profile", "default")
   lazy val config: Config = profile match {
     case "it" => new MockConfig
     case "default" => new DefaultConfig
