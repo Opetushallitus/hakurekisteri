@@ -107,6 +107,9 @@ class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
 
     case s: SaveHenkilo if savingHenkilo =>
       throw new UnsupportedOperationException("Not implemented")
+
+    case msg =>
+      log.warning(s"not implemented receive(${msg})")
   }
 
   override def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
