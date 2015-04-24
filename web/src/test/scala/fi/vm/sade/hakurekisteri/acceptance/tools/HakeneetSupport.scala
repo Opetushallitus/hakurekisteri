@@ -146,7 +146,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             Sähköposti = Some("mikko@testi.oph.fi"),
             Kutsumanimi = Some("Mikko"),
             Etunimet = Some("Mikko"),
-            kotikunta = Some("098"),
+            kotikunta = None,
             aidinkieli = Some("FI"),
             syntymaaika = Some("20.03.1994"),
             onkoSinullaSuomalainenHetu = Some("true"),

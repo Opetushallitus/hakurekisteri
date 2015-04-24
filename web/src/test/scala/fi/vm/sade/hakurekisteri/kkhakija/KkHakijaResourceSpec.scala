@@ -145,10 +145,22 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
     hakijat.head.hakemukset.foreach(hak => hak.hKelpoisuus should be ("NOT_CHECKED"))
   }
 
+  test("should return kotikunta 200 if it is not defined in hakemus") {
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.2"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
+
+    hakijat.head.kotikunta should be ("200")
+  }
+
+  test("should return kotikunta from hakemus") {
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.1"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
+
+    hakijat.head.kotikunta should be ("098")
+  }
 
 
-  def testUser(username: String, organisaatioOid: String) = new User {
-    override val username: String = username
+
+  def testUser(user: String, organisaatioOid: String) = new User {
+    override val username: String = user
     override def orgsFor(action: String, resource: String): Set[String] = Set(organisaatioOid)
   }
 
