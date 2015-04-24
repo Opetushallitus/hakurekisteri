@@ -6,8 +6,8 @@ import scala.concurrent.Future
 
 class HttpProxies(authenticationClient: VirkailijaRestClient, koodistoClient: VirkailijaRestClient, organizationClient: VirkailijaRestClient) extends Proxies {
   lazy val koodisto = new KoodistoProxy {
-    def koodi(id: String): Future[JValue] = {
-      koodistoClient.readObject[JValue]("/rest/json/" + id + "/koodi", 200, 1)
+    def koodi(path: String): Future[JValue] = {
+      koodistoClient.readObject[JValue]("/rest/json/" + path, 200, 1)
     }
   }
   lazy val authentication = new AuthenticationProxy {

@@ -57,9 +57,10 @@ class AuthenticationProxyServlet(proxy: AuthenticationProxy, system: ActorSystem
 }
 
 class KoodistoProxyServlet(proxy: KoodistoProxy, system: ActorSystem) extends OPHProxyServlet(system) with HakurekisteriJsonSupport {
-  get("/rest/json/:id/koodi*") {
+  get("""/rest/json/(.*)""".r) {
     new AsyncResult() {
-      val is = proxy.koodi(params("id")).map(compact(_))
+      val path = multiParams("captures").head
+      val is = proxy.koodi(path).map(compact(_))
     }
   }
 }

@@ -10,8 +10,8 @@ import scala.io.Source
 class MockProxies extends Proxies with HakurekisteriJsonSupport {
   lazy val koodisto = new KoodistoProxy {
     lazy val koodit: Map[String, JValue] = Extraction.extract[Map[String, JValue]](parse(getClass.getResourceAsStream("/proxy-mockdata/koodisto.json")))
-    def koodi(id: String) = {
-      Future.successful(koodit(id.replaceAll("/$", "")))
+    def koodi(path: String) = {
+      Future.successful(koodit(path.replaceAll("/$", "")))
     }
   }
   lazy val authentication = new AuthenticationProxy {
