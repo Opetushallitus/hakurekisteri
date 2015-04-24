@@ -10,44 +10,6 @@ import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-case class Kieli(kieliKoodi: String, kieliTyyppi: Option[String] = None)
-
-case class OrganisaatioHenkilo(organisaatioOid: String,
-                               organisaatioHenkiloTyyppi: Option[String] = None,
-                               voimassaAlkuPvm: Option[String] = None,
-                               voimassaLoppuPvm: Option[String] = None,
-                               tehtavanimike: Option[String] = None)
-
-case class CreateHenkilo(etunimet: String,
-                         kutsumanimi: String,
-                         sukunimi: String,
-                         hetu: Option[String] = None,
-                         oidHenkilo: Option[String] = None,
-                         externalId: Option[String] = None,
-                         syntymaaika: Option[String] = None,
-                         sukupuoli: Option[String] = None,
-                         aidinkieli: Option[Kieli] = None,
-                         henkiloTyyppi: String,
-                         kasittelijaOid: String,
-                         organisaatioHenkilo: Seq[OrganisaatioHenkilo] = Seq())
-
-case class Henkilo(oidHenkilo: String,
-                   hetu: Option[String],
-                   henkiloTyyppi: String,
-                   etunimet: Option[String],
-                   kutsumanimi: Option[String],
-                   sukunimi: Option[String],
-                   kotikunta: Option[String],
-                   aidinkieli: Option[Kieli])
-
-case class SaveHenkilo(henkilo: CreateHenkilo, tunniste: String)
-case class SavedHenkilo(henkiloOid: String, tunniste: String)
-case class HenkiloSaveFailed(tunniste: String, t: Throwable) extends Exception(s"henkilo save failed for tunniste $tunniste", t)
-
-case class HenkiloSearchResponse(totalCount: Int, results: Seq[Henkilo])
-
-case class FoundHenkilos(henkilot: Seq[Henkilo], tunniste: String)
-
 class HenkiloActor(henkiloClient: VirkailijaRestClient, config: Config) extends Actor with ActorLogging {
   implicit val ec: ExecutionContext = context.dispatcher
   val maxRetries = config.integrations.henkiloConfig.httpClientMaxRetries
@@ -118,3 +80,43 @@ object HetuUtil {
 case class HetuQuery(hetu: String)
 
 case class HenkiloQuery(oppijanumero: Option[String] = None, hetu: Option[String] = None, tunniste: String)
+
+case class Kieli(kieliKoodi: String, kieliTyyppi: Option[String] = None)
+
+case class OrganisaatioHenkilo(organisaatioOid: String,
+                               organisaatioHenkiloTyyppi: Option[String] = None,
+                               voimassaAlkuPvm: Option[String] = None,
+                               voimassaLoppuPvm: Option[String] = None,
+                               tehtavanimike: Option[String] = None)
+
+case class CreateHenkilo(etunimet: String,
+                         kutsumanimi: String,
+                         sukunimi: String,
+                         hetu: Option[String] = None,
+                         oidHenkilo: Option[String] = None,
+                         externalId: Option[String] = None,
+                         syntymaaika: Option[String] = None,
+                         sukupuoli: Option[String] = None,
+                         aidinkieli: Option[Kieli] = None,
+                         henkiloTyyppi: String,
+                         kasittelijaOid: String,
+                         organisaatioHenkilo: Seq[OrganisaatioHenkilo] = Seq())
+
+case class Henkilo(oidHenkilo: String,
+                   hetu: Option[String],
+                   henkiloTyyppi: String,
+                   etunimet: Option[String],
+                   kutsumanimi: Option[String],
+                   sukunimi: Option[String],
+                   kotikunta: Option[String],
+                   aidinkieli: Option[Kieli])
+
+case class SaveHenkilo(henkilo: CreateHenkilo, tunniste: String)
+
+case class SavedHenkilo(henkiloOid: String, tunniste: String)
+
+case class HenkiloSaveFailed(tunniste: String, t: Throwable) extends Exception(s"henkilo save failed for tunniste $tunniste", t)
+
+case class HenkiloSearchResponse(totalCount: Int, results: Seq[Henkilo])
+
+case class FoundHenkilos(henkilot: Seq[Henkilo], tunniste: String)
