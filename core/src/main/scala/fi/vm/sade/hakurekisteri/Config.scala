@@ -14,12 +14,14 @@ import scala.util.{Success, Try}
 import fi.vm.sade.hakurekisteri.tools.RicherString
 
 object Config {
-  var profile: String = sys.props.getOrElse("hakurekisteri.profile", "default")
+  private var c: Config = fromString(sys.props.getOrElse("hakurekisteri.profile", "default"))
 
-  lazy val config: Config = profile match {
+  def fromString(profile: String) = profile match {
     case "it" => new MockConfig
     case "default" => new DefaultConfig
   }
+  def config = this.synchronized(c)
+  def setConfig(config: Config) = this.synchronized( c = config )
 }
 
 class Oids(properties: Map[String, String] = Map.empty) {
