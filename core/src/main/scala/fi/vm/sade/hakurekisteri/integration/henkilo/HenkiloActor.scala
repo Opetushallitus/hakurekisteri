@@ -7,13 +7,11 @@ import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioResponse
-import org.json4s.DefaultFormats
-import org.json4s._
+import org.json4s.{DefaultFormats, _}
 import org.json4s.jackson.JsonMethods._
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.matching.Regex
 
 abstract class HenkiloActor(config: Config) extends Actor with ActorLogging {
   implicit val ec: ExecutionContext = context.dispatcher
@@ -23,7 +21,6 @@ abstract class HenkiloActor(config: Config) extends Actor with ActorLogging {
   def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo)
 
   def findExistingOrganisaatiohenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo)
-
 
   def receive: Receive
 }
@@ -81,7 +78,21 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
 class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
   implicit val formats = DefaultFormats
 
+  import fi.vm.sade.hakurekisteri.integration.henkilo.HetuUtil.Hetu
+
   override def receive: Receive = {
+    case henkiloOid: String =>
+      log.debug(s"received henkiloOid: $henkiloOid")
+      val json = parse(getClass.getResourceAsStream("/mock-data/henkilopalvelu-singleoid.json"))
+      sender ! json.extract[Henkilo]
+
+    case HetuQuery(Hetu(hetu)) =>
+      val json = parse(getClass.getResourceAsStream("/mock-data/henkilopalvelu-singleoid.json"))
+      sender ! json.extract[Henkilo]
+
+    case q: HenkiloQuery =>
+      throw new UnsupportedOperationException("Not implemented")
+
     case s: SavedHenkilo =>
       savingHenkilo = false
       sender ! s
@@ -89,6 +100,12 @@ class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
     case t: HenkiloSaveFailed =>
       savingHenkilo = false
       Future.failed(t) pipeTo sender
+
+    case SaveHenkilo(henkilo, tunniste) if !savingHenkilo =>
+      throw new UnsupportedOperationException("Not implemented")
+
+    case s: SaveHenkilo if savingHenkilo =>
+      throw new UnsupportedOperationException("Not implemented")
   }
 
   override def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
