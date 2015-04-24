@@ -15,7 +15,7 @@ Alternative setup:
 
 1. Hanki "~/oph-configuration"-hakemisto (kysy devaajilta apua)
 2. Buildaa fronttikamat: `npm run watch`
-3. Käynnistä "oikea" serveri IDEAsta: `HakuRekisteriTomcat`.
+3. Käynnistä "oikea" serveri IDEAsta: `HakuRekisteriJetty`.
 
 ## Build & Run ##
 
