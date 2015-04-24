@@ -5,17 +5,16 @@
 
 Setup:
 
-1. Aja `./sbt compile` joka myös buildaa frontin.
-2. Käynnistä mock-serveri IDEAsta: `JettyTestLauncher`.
+1. Laita fronttikäännös pyörimään: `npm run watch`. Tämä kääntää coffeescriptit aina kun ne muuttuvat.
+2. Käynnistä serveri IDEAsta: `HakuRekisteriJetty`, käytä asetusta `-Dhakurekisteri.profile=it` jolloin serveri toimii ilman ulkoisia depsuja
 3. Buildaa fronttikamat: `npm run watch`
+4. Aja Mocha-testit selaimessa: http://localhost:8080/test/runner.html
 
-Mocha-testit selaimessa: http://localhost:8080/test/runner.html
+Mocha-testit käyttävät tällä hetkellä suurelta osin frontend-mockeja, joten ne eivät juurikaan testaa serverikoodia.
 
-Alternative setup:
+## Kaikki testit
 
-1. Hanki "~/oph-configuration"-hakemisto (kysy devaajilta apua)
-2. Buildaa fronttikamat: `npm run watch`
-3. Käynnistä "oikea" serveri IDEAsta: `HakuRekisteriJetty`.
+Voit ajaa kaikki testit komentoriviltä komennolla `./sbt test`. Tämä ajaa myös mocha-testit phantomjs:llä.
 
 ## Build & Run ##
 
@@ -25,17 +24,16 @@ Näin voit ajaa sovellusta paikallisesti tuotannonkaltaisena setuppina, käyttä
 
 2. Luo paikallinen h2-tietokanta: `./sbt createTestDb`. Tämä kopioi datat luokka-ympäristöstä paikalliseen data-nimiseen hakemistoon.
 
-3. Käynnistä paikallinen serveri: `./sbt ~container:start`
+3. Käynnistä paikallinen serveri: `./sbt ~container:start`. Vaihtoehtoisesti aja IDEA:ssa luokka `HakuRekisteriJetty`.
 
 Sovellus on saatavilla osoitteessa http://localhost:8080/
 
 Muutama huomio:
 
-- Tarvitset selaimen, jossa cors-turvallisuuscheckit on pois päältä. Esim. voit käyttää tällaista: `alias chrometest="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --user-data-dir=/tmp/chrometest2 --incognito --disable-web-security --disable-popup-blocking&"`
 - Katso tunnus ja salasana `~/oph-configuration/security-context-backend.xml`:stä, käyttäjällä pitää olla ainakin `ROLE_APP_SUORITUSREKISTERI` rooli
 - Käy kirjautumassa sisään osoittessa https://itest-virkailija.oph.ware.fi, jotta autentikaatio muihin palveluihin toimii
 
-API-dokumentaatio löytyy http://localhost:8080//swagger/index.html
+API-dokumentaatio löytyy http://localhost:8080/swagger/index.html
 
 ## Arvosanavalidaattori
 
