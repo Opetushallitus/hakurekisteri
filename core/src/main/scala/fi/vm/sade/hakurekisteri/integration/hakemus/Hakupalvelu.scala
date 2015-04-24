@@ -2,17 +2,17 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import akka.actor.ActorRef
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.{Oids, Config}
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.integration.haku.{Haku, GetHaku}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Komoto, Suoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, VirallinenSuoritus, yksilollistaminen}
 import org.joda.time.{DateTime, LocalDate, MonthDay}
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 trait Hakupalvelu {
@@ -192,7 +192,8 @@ case class HakemusHenkilotiedot(Henkilotunnus: Option[String],
                                 onkoSinullaSuomalainenHetu: Option[String],
                                 sukupuoli: Option[String],
                                 syntymaaika: Option[String],
-                                koulusivistyskieli: Option[String])
+                                koulusivistyskieli: Option[String],
+                                turvakielto: Option[String])
 
 case class Koulutustausta(lahtokoulu:Option[String],
                           POHJAKOULUTUS: Option[String],

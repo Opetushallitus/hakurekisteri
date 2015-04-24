@@ -37,7 +37,8 @@ class HakijaSpec extends FlatSpec with Matchers {
             aidinkieli = Some("FI"),
             syntymaaika = Some("20.03.1994"),
             onkoSinullaSuomalainenHetu = Some("true"),
-            koulusivistyskieli = Some("FI"))),
+            koulusivistyskieli = Some("FI"),
+            turvakielto = None)),
         koulutustausta = Some(
           Koulutustausta(
             PK_PAATTOTODISTUSVUOSI = Some("2014"),

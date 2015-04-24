@@ -61,7 +61,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             aidinkieli = Some("FI"),
             syntymaaika = Some("20.03.1994"),
             onkoSinullaSuomalainenHetu = Some("true"),
-            koulusivistyskieli = Some("FI"))),
+            koulusivistyskieli = Some("FI"),
+            turvakielto = Some("true"))),
         koulutustausta = Some(
           Koulutustausta(
             pohjakoulutus_muu_vuosi = None,
@@ -148,7 +149,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             aidinkieli = Some("FI"),
             syntymaaika = Some("20.03.1994"),
             onkoSinullaSuomalainenHetu = Some("true"),
-            koulusivistyskieli = Some("FI"))),
+            koulusivistyskieli = Some("FI"),
+            turvakielto = None)),
         koulutustausta = Some(
           Koulutustausta(
             pohjakoulutus_muu_vuosi = None,

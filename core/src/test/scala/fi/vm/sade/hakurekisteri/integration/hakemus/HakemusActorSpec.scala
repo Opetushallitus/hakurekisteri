@@ -1,44 +1,17 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
-import java.util.UUID
-import java.util.concurrent.TimeUnit
-
-import akka.actor.Actor.Receive
-import akka.actor.Status.Success
 import akka.actor._
-import akka.testkit.TestActorRef
-import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.{suoritus, SpecsLikeMockito}
-import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana, ArvosanaQuery, ArvosanaActor}
+import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.SpecsLikeMockito
+import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.rest.support.Resource
-import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
-import org.json4s.JsonAST.JObject
-import org.mockito.Mockito._
-import org.scalatest.{Matchers, FlatSpec}
 import org.json4s._
-import org.json4s.jackson.Serialization
-import org.json4s.jackson.Serialization.{read, write}
-import akka.pattern.AskTimeoutException
-import akka.pattern.ask
-import akka.util.Timeout
-import akka.testkit.{ TestActors, TestKit, ImplicitSender }
-import org.scalatest.WordSpecLike
-import org.scalatest.Matchers
-import org.scalatest.BeforeAndAfterAll
+import org.scalatest.matchers._
+import org.scalatest.{FlatSpec, Matchers}
 
-import scala.collection
-import scala.collection.{immutable, Seq}
-import scala.collection.immutable.List
-import scala.concurrent.{Await, Future}
-import akka.testkit.TestActorRef
-import scala.concurrent.duration._
-import scala.concurrent.Await
-import akka.pattern.ask
-import org.scalatest._
-import matchers._
+import scala.collection.Seq
 
 /**
  * @author Jussi Jartamo
@@ -50,7 +23,6 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
   implicit val system = ActorSystem("test-hakemus-system")
   import scala.concurrent.duration._
   implicit val timeout: Timeout = 5.second
-  import CustomMatchers._
 
 
 
@@ -361,7 +333,8 @@ case class HakemusBuilder(osaaminen: Map[String, String], hakemusOid: String = n
       onkoSinullaSuomalainenHetu = None,
       sukupuoli = None,
       syntymaaika = None,
-      koulusivistyskieli = None))
+      koulusivistyskieli = None,
+      turvakielto = None))
     , Some(Koulutustausta(
       lahtokoulu = None,
       POHJAKOULUTUS = None,

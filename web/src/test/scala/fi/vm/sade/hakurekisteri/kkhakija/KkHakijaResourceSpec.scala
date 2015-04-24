@@ -3,46 +3,40 @@ package fi.vm.sade.hakurekisteri.kkhakija
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, Props}
+import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.TestSecurity
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
-import fi.vm.sade.hakurekisteri.integration.haku.Haku
+import fi.vm.sade.hakurekisteri.hakija.{Puuttuu, Syksy, _}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusActor}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.koodisto._
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohdeOid, HakukohteenKoulutukset, Hakukohteenkoulutus, RestHaku, RestHakuAika}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
-import fi.vm.sade.hakurekisteri.integration.valintatulos._
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosQuery, _}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
+import fi.vm.sade.hakurekisteri.integration.{CapturingProvider, Endpoint, ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.User
+import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Journal, Updated}
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.web.kkhakija.{Hakija, KkHakijaQuery, KkHakijaResource}
+import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 import org.joda.time.LocalDate
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
-import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaQuery, KkHakijaResource}
-import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.integration.tarjonta.RestHakuAika
-import fi.vm.sade.hakurekisteri.hakija.Puuttuu
-import fi.vm.sade.hakurekisteri.integration.haku.Kieliversiot
-import fi.vm.sade.hakurekisteri.integration.koodisto._
-import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosQuery
-import fi.vm.sade.hakurekisteri.integration.tarjonta.HakukohdeOid
-import scala.Some
-import fi.vm.sade.hakurekisteri.integration.tarjonta.HakukohteenKoulutukset
-import fi.vm.sade.hakurekisteri.suoritus.SuoritysTyyppiQuery
-import fi.vm.sade.hakurekisteri.web.kkhakija.Hakija
-import fi.vm.sade.hakurekisteri.hakija.Syksy
-import fi.vm.sade.hakurekisteri.integration.tarjonta.RestHaku
-import fi.vm.sade.hakurekisteri.integration.tarjonta.Hakukohteenkoulutus
-import fi.vm.sade.hakurekisteri.integration.haku.GetHaku
-import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 
 class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger
 
-  val hakemusMock = system.actorOf(Props(new MockedHakemusActor()))
+  val asyncProvider = new CapturingProvider(mock[Endpoint])
+  val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
+  val hakemusJournal: Journal[FullHakemus, String] = seq2journal(Seq(FullHakemus1, FullHakemus2))
+  val hakemusMock = system.actorOf(Props(new HakemusActor(hakemusClient = client, journal = hakemusJournal)))
   val tarjontaMock = system.actorOf(Props(new MockedTarjontaActor()))
   val hakuMock = system.actorOf(Props(new MockedHakuActor()))
   val suoritusMock = system.actorOf(Props(new MockedSuoritusActor()))
@@ -146,16 +140,42 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
     ilmoittautumiset should (contain(Lasna(Syksy(2015))) and contain(Poissa(Kevat(2015))))
   }
 
+  test("should show turvakielto true from hakemus") {
+    object TestUser extends User {
+      override val username: String = "test"
+      override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
+    }
+
+    val res = resource.getKkHakijat(KkHakijaQuery(Some("1.24.1"), None, None, None, Hakuehto.Kaikki, Some(TestUser)))
+    val hakijat = Await.result(res, Duration(10, TimeUnit.SECONDS))
+
+    hakijat.head.turvakielto should be (true)
+  }
+
+  test("should return turvakielto false from hakemus") {
+    object TestUser extends User {
+      override val username: String = "test"
+      override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
+    }
+
+    val res = resource.getKkHakijat(KkHakijaQuery(Some("1.24.2"), None, None, None, Hakuehto.Kaikki, Some(TestUser)))
+    val hakijat = Await.result(res, Duration(10, TimeUnit.SECONDS))
+
+    hakijat.head.turvakielto should be (false)
+  }
+
   import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 
   val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L)), Map("fi" -> "testihaku"), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), "JULKAISTU")
   val koulutus1 = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"))
   val suoritus1 = VirallinenSuoritus(YTLXml.yotutkinto, YTLXml.YTL, "VALMIS", new LocalDate(), "1.2.3", Ei, "FI", None, true, "1")
 
-  class MockedHakemusActor extends Actor {
-    override def receive: Receive = {
-      case q: HakemusQuery =>  sender ! Seq(FullHakemus1, FullHakemus2)
-    }
+  def seq2journal(s: Seq[FullHakemus]) = {
+    val journal = new InMemJournal[FullHakemus, String]
+    s.foreach((h: FullHakemus) => {
+      journal.addModification(Updated[FullHakemus, String](h.identify(h.oid)))
+    })
+    journal
   }
 
   class MockedTarjontaActor extends Actor {

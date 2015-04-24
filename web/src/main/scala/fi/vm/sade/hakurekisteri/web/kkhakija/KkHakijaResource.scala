@@ -5,58 +5,34 @@ import java.text.{ParseException, SimpleDateFormat}
 import java.util.{Calendar, Date}
 
 import akka.actor.{ActorRef, ActorSystem}
-import akka.event.{LoggingAdapter, Logging}
+import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.rest.support._
-import fi.vm.sade.hakurekisteri.web.rest.support._
-import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.integration.haku.Haku
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, Valintatila, SijoitteluTulos}
+import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
+import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Kevat, Lasna, Lasnaolo, Poissa, Puuttuu, Syksy}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakemusHenkilotiedot, HenkiloHakijaQuery, Koulutustausta, Lisatiedot, PreferenceEligibility, _}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
+import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, GetRinnasteinenKoodiArvoQuery, Koodi}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohdeOid, HakukohteenKoulutukset, Hakukohteenkoulutus, TarjontaException}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
-import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaException
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, SijoitteluTulos, ValintaTulosQuery, Valintatila}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
-import org.scalatra.swagger.{SwaggerEngine, Swagger}
+import fi.vm.sade.hakurekisteri.rest.support._
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
+import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReport, _}
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
+import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra.util.RicherString._
 
 import scala.compat.Platform
-import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
-import scala.util.Try
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
-import fi.vm.sade.hakurekisteri.hakija._
-import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat
-import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
-import fi.vm.sade.hakurekisteri.hakija.Hakuehto.Hakuehto
-import fi.vm.sade.hakurekisteri.integration.koodisto.GetKoodi
-import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosQuery
-import scala.Some
-import fi.vm.sade.hakurekisteri.hakija.Kevat
-import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
-import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
-import fi.vm.sade.hakurekisteri.integration.hakemus.FullHakemus
-import fi.vm.sade.hakurekisteri.hakija.Lasna
-import fi.vm.sade.hakurekisteri.hakija.Syksy
-import fi.vm.sade.hakurekisteri.integration.hakemus.PreferenceEligibility
-import fi.vm.sade.hakurekisteri.integration.tarjonta.Hakukohteenkoulutus
-import fi.vm.sade.hakurekisteri.integration.haku.GetHaku
-import fi.vm.sade.hakurekisteri.integration.hakemus.Koulutustausta
-import fi.vm.sade.hakurekisteri.hakija.Puuttuu
-import fi.vm.sade.hakurekisteri.hakija.Poissa
-import fi.vm.sade.hakurekisteri.integration.tarjonta.HakukohdeOid
-import fi.vm.sade.hakurekisteri.integration.hakemus.HenkiloHakijaQuery
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusAnswers
-import fi.vm.sade.hakurekisteri.web.rest.support.IncidentReport
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusHenkilotiedot
-import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
-import fi.vm.sade.hakurekisteri.integration.tarjonta.HakukohteenKoulutukset
-import fi.vm.sade.hakurekisteri.suoritus.SuoritysTyyppiQuery
-import fi.vm.sade.hakurekisteri.integration.hakemus.Lisatiedot
-import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
+import scala.util.Try
 
 case class KkHakijaQuery(oppijanumero: Option[String], haku: Option[String], organisaatio: Option[String], hakukohde: Option[String], hakuehto: Hakuehto.Hakuehto, user: Option[User])
 
@@ -111,6 +87,7 @@ case class Hakija(hetu: String,
                   koulusivistyskieli: String,
                   koulutusmarkkinointilupa: Option[Boolean],
                   onYlioppilas: Boolean,
+                  turvakielto: Boolean,
                   hakemukset: Seq[Hakemus])
 
 object KkHakijaParamMissingException extends Exception
@@ -455,6 +432,7 @@ class KkHakijaResource(hakemukset: ActorRef,
         koulusivistyskieli = henkilotiedot.koulusivistyskieli.getOrElse("FI"),
         koulutusmarkkinointilupa = lisatiedot.lupaMarkkinointi.map(_ == "true"),
         onYlioppilas = isYlioppilas(suoritukset),
+        turvakielto = Try(henkilotiedot.turvakielto.get.toBoolean).getOrElse(false),
         hakemukset = hakemukset
       )
 
