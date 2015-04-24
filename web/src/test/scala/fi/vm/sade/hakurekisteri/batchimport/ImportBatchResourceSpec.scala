@@ -4,6 +4,7 @@ import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
 import com.ning.http.client.AsyncHttpClient
+import fi.vm.sade.hakurekisteri.TestSecurity
 import fi.vm.sade.hakurekisteri.acceptance.tools.{ConfigurationSupport, FakeAuthorizer}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.parametrit._
@@ -12,7 +13,6 @@ import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJour
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.web.batchimport.{ImportBatchResource, TiedonsiirtoOpen}
 import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
-import fi.vm.sade.hakurekisteri.{Config, TestSecurity}
 import org.json4s.Extraction
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization._
@@ -25,6 +25,7 @@ import siirto.{PerustiedotXmlConverter, SchemaDefinition}
 
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 import scala.xml.Elem
 
 
@@ -59,7 +60,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
 
   override def stop(): Unit = {
     system.shutdown()
-    system.awaitTermination()
+    system.awaitTermination(15.seconds)
     super.stop()
   }
 

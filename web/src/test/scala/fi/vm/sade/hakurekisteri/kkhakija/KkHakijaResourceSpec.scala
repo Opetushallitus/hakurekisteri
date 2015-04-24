@@ -1,7 +1,5 @@
 package fi.vm.sade.hakurekisteri.kkhakija
 
-import java.util.concurrent.TimeUnit
-
 import akka.actor.{Actor, Props}
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.TestSecurity
@@ -28,7 +26,7 @@ import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 
 class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger
@@ -66,7 +64,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       override val username: String = "test"
       override def orgsFor(action: String, resource: String): Set[String] = Set("1.1")
     }
-    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(TestUser))), Duration(10, TimeUnit.SECONDS))
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(TestUser))), 15.seconds)
 
     hakijat.size should be (0)
   }
@@ -76,7 +74,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       override val username: String = "test"
       override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
     }
-    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(TestUser))), Duration(10, TimeUnit.SECONDS))
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(TestUser))), 15.seconds)
 
     hakijat.size should be (2)
   }
@@ -86,7 +84,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       override val username: String = "test"
       override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
     }
-    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Hyvaksytyt, Some(TestUser))), Duration(10, TimeUnit.SECONDS))
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Hyvaksytyt, Some(TestUser))), 15.seconds)
 
     hakijat.size should be (1)
   }
@@ -108,7 +106,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.KESKEN)
       override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
     }
-    val ilmoittautumiset: Seq[Lasnaolo] = Await.result(resource.getLasnaolot(sijoitteluTulos, "1.5.1", haku, ""), Duration(10, TimeUnit.SECONDS))
+    val ilmoittautumiset: Seq[Lasnaolo] = Await.result(resource.getLasnaolot(sijoitteluTulos, "1.5.1", haku, ""), 15.seconds)
 
     ilmoittautumiset should (contain(Puuttuu(Syksy(2015))) and contain(Puuttuu(Kevat(2015))))
   }
@@ -130,7 +128,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.KESKEN)
       override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
     }
-    val ilmoittautumiset = Await.result(resource.getLasnaolot(sijoitteluTulos, "1.5.1", haku, ""), Duration(10, TimeUnit.SECONDS))
+    val ilmoittautumiset = Await.result(resource.getLasnaolot(sijoitteluTulos, "1.5.1", haku, ""), 15.seconds)
 
     ilmoittautumiset should (contain(Lasna(Syksy(2015))) and contain(Poissa(Kevat(2016))))
   }
@@ -140,7 +138,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       override val username: String = "test"
       override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
     }
-    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.1"), None, None, None, Hakuehto.Kaikki, Some(TestUser))), Duration(10, TimeUnit.SECONDS))
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.1"), None, None, None, Hakuehto.Kaikki, Some(TestUser))), 15.seconds)
 
     hakijat.head.turvakielto should be (true)
   }
@@ -150,7 +148,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       override val username: String = "test"
       override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
     }
-    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.2"), None, None, None, Hakuehto.Kaikki, Some(TestUser))), Duration(10, TimeUnit.SECONDS))
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.2"), None, None, None, Hakuehto.Kaikki, Some(TestUser))), 15.seconds)
 
     hakijat.head.turvakielto should be (false)
   }
@@ -221,6 +219,12 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
         )
       }
     }
+  }
+
+  override def stop(): Unit = {
+    system.shutdown()
+    system.awaitTermination(15.seconds)
+    super.stop()
   }
 }
 

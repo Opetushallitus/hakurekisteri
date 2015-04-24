@@ -34,4 +34,11 @@ class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
       header("Content-Disposition") should be ("attachment;filename=hakijat.xls")
     }
   }
+
+  override def stop(): Unit = {
+    import scala.concurrent.duration._
+    system.shutdown()
+    system.awaitTermination(15.seconds)
+    super.stop()
+  }
 }
