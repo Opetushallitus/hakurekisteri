@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri
 
 import java.io.InputStream
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Path, Files, Paths}
 
 import fi.vm.sade.hakurekisteri.integration.ServiceConfig
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
@@ -43,12 +43,15 @@ class Oids(properties: Map[String, String] = Map.empty) {
 
 class DefaultConfig extends Config {
   val mockMode = false
+  private val homeDir = sys.props.getOrElse("user.home", "")
+  lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
 }
 
 class MockConfig extends Config {
   val mockMode = true
   override val importBatchProcessingInitialDelay = 1.seconds
   override val h2 = true
+  lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "web/src/test/resources/oph-configuration")
 }
 
 abstract class Config {
@@ -56,8 +59,7 @@ abstract class Config {
   val h2 = false
 
   val log = LoggerFactory.getLogger(getClass)
-  val homeDir = sys.props.getOrElse("user.home", "")
-  val ophConfDir = Paths.get(homeDir, "/oph-configuration/")
+  def ophConfDir: Path
 
   val propertyLocations = Seq("suoritusrekisteri.properties", "common.properties")
 
@@ -69,9 +71,7 @@ abstract class Config {
   val hostQa = "testi.virkailija.opintopolku.fi"
 
 
-  val resources = for {
-    file <- propertyLocations.reverse
-  } yield ophConfDir.resolve(file)
+  lazy val resources = propertyLocations.map(ophConfDir.resolve(_))
 
   log.info(s"lazy loading properties from paths $resources")
 
