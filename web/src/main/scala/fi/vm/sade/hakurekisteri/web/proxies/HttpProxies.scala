@@ -2,10 +2,11 @@ package fi.vm.sade.hakurekisteri.web.proxies
 
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import org.json4s._
+import scala.concurrent.Future
 
 class HttpProxies(authenticationClient: VirkailijaRestClient, koodistoClient: VirkailijaRestClient, organizationClient: VirkailijaRestClient) extends Proxies {
   lazy val koodisto = new KoodistoProxy {
-    def koodi(id: String) = {
+    def koodi(id: String): Future[JValue] = {
       koodistoClient.readObject[JValue]("/rest/json/" + id + "/koodi", 200, 1)
     }
   }

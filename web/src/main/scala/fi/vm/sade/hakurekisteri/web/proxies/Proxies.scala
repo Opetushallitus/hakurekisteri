@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.proxies
 
+import org.json4s._
 import scala.concurrent.Future
 
 trait Proxies {
@@ -9,7 +10,7 @@ trait Proxies {
 }
 
 trait KoodistoProxy {
-  def koodi(id: String)
+  def koodi(id: String): Future[JValue]
 }
 
 trait AuthenticationProxy {

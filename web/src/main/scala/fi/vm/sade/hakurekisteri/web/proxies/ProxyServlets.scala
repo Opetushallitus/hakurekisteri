@@ -3,11 +3,14 @@ package fi.vm.sade.hakurekisteri.web.proxies
 import javax.servlet.ServletContext
 import akka.actor.ActorSystem
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import org.json4s.jackson.JsonMethods
 import org.scalatra.{InternalServerError, FutureSupport, ScalatraServlet, AsyncResult}
 import org.scalatra.servlet.ServletApiImplicits
 import ServletApiImplicits._
 import org.slf4j.LoggerFactory
 import scala.concurrent.ExecutionContext
+import org.json4s._
+import org.json4s.jackson.JsonMethods._
 
 object ProxyServlets {
   def mount(proxies: Proxies, context: ServletContext)(implicit system: ActorSystem) {
@@ -46,8 +49,6 @@ class AuthenticationProxyServlet(proxy: AuthenticationProxy, system: ActorSystem
   }
 
   post("/resources/henkilo/henkilotByHenkiloOidList") {
-    import org.json4s._
-    import org.json4s.jackson.JsonMethods._
     new AsyncResult() {
       val parsedBody = parse(request.body)
       val is = proxy.henkilotByOidList(parsedBody.extract[List[String]])
@@ -57,7 +58,9 @@ class AuthenticationProxyServlet(proxy: AuthenticationProxy, system: ActorSystem
 
 class KoodistoProxyServlet(proxy: KoodistoProxy, system: ActorSystem) extends OPHProxyServlet(system) with HakurekisteriJsonSupport {
   get("/rest/json/:id/koodi*") {
-    proxy.koodi(params("id"))
+    new AsyncResult() {
+      val is = proxy.koodi(params("id")).map(compact(_))
+    }
   }
 }
 
