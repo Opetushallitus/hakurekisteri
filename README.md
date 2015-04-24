@@ -32,8 +32,8 @@ Sovellus on saatavilla osoitteessa http://localhost:8080/
 Muutama huomio:
 
 - Tarvitset selaimen, jossa cors-turvallisuuscheckit on pois päältä. Esim. voit käyttää tällaista: `alias chrometest="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --user-data-dir=/tmp/chrometest2 --incognito --disable-web-security --disable-popup-blocking&"`
-- Salasanat devaajilta
-- Käy kirjautumassa sisään osoittessa https://itest-virkailija.oph.ware.fi että autentikaatio toimii
+- Katso tunnus ja salasana `~/oph-configuration/security-context-backend.xml`:stä, käyttäjällä pitää olla ainakin `ROLE_APP_SUORITUSREKISTERI` rooli
+- Käy kirjautumassa sisään osoittessa https://itest-virkailija.oph.ware.fi, jotta autentikaatio muihin palveluihin toimii
 
 API-dokumentaatio löytyy http://localhost:8080//swagger/index.html
 
