@@ -225,7 +225,7 @@ class KkHakijaResource(hakemukset: ActorRef,
       case Some(h) => h
 
       case None =>
-        val defaultState = "NOT_CHECKED"
+        val defaultState = ""
         PreferenceEligibility(hakukohdeOid, defaultState, None)
 
     }

@@ -16,6 +16,7 @@ import akka.util.Timeout
 import java.util.concurrent.TimeUnit
 import org.scalatest.Suite
 import org.scalatra.test.HttpComponentsClient
+import scala.compat.Platform
 import scala.concurrent.{Future, ExecutionContext}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.hakemus.ListHakemus
@@ -122,7 +123,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             lupaMarkkinointi = Some("true"),
             lupaJulkaisu = Some("true"))))),
     state = Some("ACTIVE"),
-    preferenceEligibilities = Seq()
+    preferenceEligibilities = Seq(PreferenceEligibility("1.11.1", "NOT_CHECKED", Some("UNKNOWN")), PreferenceEligibility("1.11.2", "NOT_CHECKED", Some("UNKNOWN")))
   )
   object FullHakemus2 extends FullHakemus("1.25.2", Some("1.24.2"), "1.2",
     answers = Some(
@@ -220,7 +221,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   }
 
   import _root_.akka.pattern.ask
-  implicit val system = ActorSystem()
+  implicit val system = ActorSystem(s"test-system-${Platform.currentTime.toString}")
   implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(60, TimeUnit.SECONDS)
 

@@ -59,32 +59,20 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
     }
   }
 
-  test("should not return hakijas if user not in hakukohde organization hierarchy") {
-    object TestUser extends User {
-      override val username: String = "test"
-      override def orgsFor(action: String, resource: String): Set[String] = Set("1.1")
-    }
-    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(TestUser))), 15.seconds)
+  test("should not return results if user not in hakukohde organization hierarchy") {
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.1")))), 15.seconds)
 
     hakijat.size should be (0)
   }
 
   test("should return two hakijas") {
-    object TestUser extends User {
-      override val username: String = "test"
-      override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
-    }
-    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(TestUser))), 15.seconds)
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
 
     hakijat.size should be (2)
   }
 
   test("should return one hyvaksytty hakija") {
-    object TestUser extends User {
-      override val username: String = "test"
-      override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
-    }
-    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Hyvaksytyt, Some(TestUser))), 15.seconds)
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Hyvaksytyt, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
 
     hakijat.size should be (1)
   }
@@ -134,28 +122,35 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   }
 
   test("should show turvakielto true from hakemus") {
-    object TestUser extends User {
-      override val username: String = "test"
-      override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
-    }
-    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.1"), None, None, None, Hakuehto.Kaikki, Some(TestUser))), 15.seconds)
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.1"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
 
     hakijat.head.turvakielto should be (true)
   }
 
   test("should return turvakielto false from hakemus") {
-    object TestUser extends User {
-      override val username: String = "test"
-      override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
-    }
-    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.2"), None, None, None, Hakuehto.Kaikki, Some(TestUser))), 15.seconds)
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.2"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
 
     hakijat.head.turvakielto should be (false)
   }
 
+  test("should return empty hakukelpoisuus by default") {
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.2"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
+
+    hakijat.head.hakemukset.foreach(hak => hak.hKelpoisuus should be (""))
+  }
+
+  test("should return hakukelpoisuus from hakemus") {
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.1"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
+
+    hakijat.head.hakemukset.foreach(hak => hak.hKelpoisuus should be ("NOT_CHECKED"))
+  }
 
 
 
+  def testUser(username: String, organisaatioOid: String) = new User {
+    override val username: String = username
+    override def orgsFor(action: String, resource: String): Set[String] = Set(organisaatioOid)
+  }
 
   import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 
