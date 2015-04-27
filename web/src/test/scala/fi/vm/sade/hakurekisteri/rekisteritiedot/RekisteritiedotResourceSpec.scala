@@ -66,9 +66,9 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite {
 
   val resource = new RekisteritiedotResource(rekisterit, Oids.oids)
 
-  test("oppilaitos query to light endpoint should match only to suoritus.myontaja") {
+  test("oppilaitos query should match only to suoritus.myontaja") {
     val tiedot = Await.result(resource.fetchTiedot(RekisteriQuery(oppilaitosOid = Some("1.2.3"), vuosi = None)), 15.seconds)
-    
+
     tiedot should be(Seq(Oppija(
       oppijanumero = "1.24.1",
       opiskelu = Seq(),
