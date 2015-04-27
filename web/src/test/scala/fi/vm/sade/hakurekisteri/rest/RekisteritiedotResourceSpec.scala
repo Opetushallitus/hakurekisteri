@@ -1,4 +1,4 @@
-package fi.vm.sade.hakurekisteri.rekisteritiedot
+package fi.vm.sade.hakurekisteri.rest
 
 import java.util.UUID
 
@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.oppija.{Oppija, Todistus}
-import fi.vm.sade.hakurekisteri.rest.support.{User, Registers}
+import fi.vm.sade.hakurekisteri.rest.support.{Registers, User}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.MockedResourceActor
 import fi.vm.sade.hakurekisteri.web.rekisteritiedot.{RekisteriQuery, RekisteritiedotResource}

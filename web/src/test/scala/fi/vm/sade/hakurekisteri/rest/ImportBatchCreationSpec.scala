@@ -1,6 +1,7 @@
-package fi.vm.sade.hakurekisteri.batchimport
+package fi.vm.sade.hakurekisteri.rest
 
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchCommand
 import org.json4s.JsonAST.{JObject, JValue}
 import org.json4s.jackson.JsonMethods
 import org.scalatest.{FlatSpec, Matchers}
@@ -8,14 +9,13 @@ import org.scalatra.commands._
 import org.scalatra.json.JacksonJsonValueReaderProperty
 import org.scalatra.util.ParamsValueReaderProperties
 import org.scalatra.validation.{FieldName, ValidationError}
-import siirto.{PerustiedotXmlConverter, ValidXml, SchemaDefinition, NoSchemaValidator}
+import siirto.{NoSchemaValidator, PerustiedotXmlConverter, SchemaDefinition, ValidXml}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.language.implicitConversions
 import scala.xml.Elem
 import scalaz._
-import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchCommand
 
 
 class ImportBatchCreationSpec extends FlatSpec

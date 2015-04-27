@@ -1,12 +1,12 @@
-package fi.vm.sade.hakurekisteri
+package fi.vm.sade.hakurekisteri.rest
 
-import org.scalatra.test.scalatest.ScalatraFunSuite
-import fi.vm.sade.hakurekisteri.hakija._
 import akka.actor.Props
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
-import org.scalatra.swagger.Swagger
+import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaResource
-import fi.vm.sade.hakurekisteri.web.rest.support.{TestSecurity, HakurekisteriSwagger}
+import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
+import org.scalatra.swagger.Swagger
+import org.scalatra.test.scalatest.ScalatraFunSuite
 
 class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger

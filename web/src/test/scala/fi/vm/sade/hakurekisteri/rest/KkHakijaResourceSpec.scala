@@ -1,4 +1,4 @@
-package fi.vm.sade.hakurekisteri.kkhakija
+package fi.vm.sade.hakurekisteri.rest
 
 import akka.actor.{Actor, Props}
 import com.ning.http.client.AsyncHttpClient
@@ -19,7 +19,7 @@ import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Journal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaQuery, KkHakijaResource}
-import fi.vm.sade.hakurekisteri.web.rest.support.{TestSecurity, HakurekisteriSwagger}
+import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.joda.time.LocalDate
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite

@@ -1,4 +1,4 @@
-package mocha
+package fi.vm.sade.hakurekisteri.mocha
 
 import java.io.IOException
 import java.net.Socket

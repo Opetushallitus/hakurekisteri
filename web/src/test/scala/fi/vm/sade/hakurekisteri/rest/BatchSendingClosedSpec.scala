@@ -1,17 +1,17 @@
-package fi.vm.sade.hakurekisteri.batchimport
+package fi.vm.sade.hakurekisteri.rest
 
 import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.acceptance.tools.{ConfigurationSupport, FakeAuthorizer}
+import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, ParameterActor, SendingPeriod, TiedonsiirtoSendingPeriods}
+import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, SendingPeriod, TiedonsiirtoSendingPeriods}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
-import fi.vm.sade.hakurekisteri.web.batchimport.{TiedonsiirtoOpen, ImportBatchResource}
-import fi.vm.sade.hakurekisteri.web.rest.support.{TestSecurity, HakurekisteriSwagger}
+import fi.vm.sade.hakurekisteri.web.batchimport.{ImportBatchResource, TiedonsiirtoOpen}
+import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.json4s.jackson.Serialization._
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar

@@ -1,35 +1,35 @@
-package fi.vm.sade.hakurekisteri
+package fi.vm.sade.hakurekisteri.rest
 
 import java.nio.charset.Charset
-
-import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.arvosana.{ArvosanaActor, Arvio410, Arvosana}
-import fi.vm.sade.hakurekisteri.batchimport._
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, FullHakemus}
-import fi.vm.sade.hakurekisteri.integration.virta.{VirtaStatus, VirtaHealth}
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusActor}
-import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, HakurekisteriDriver}
-import org.h2.tools.RunScript
-import org.scalatra.test.scalatest.ScalatraFunSuite
-import fi.vm.sade.hakurekisteri.suoritus._
-import org.joda.time.{LocalDate, DateTime}
-import akka.actor.{Props, Actor, ActorSystem}
-import akka.pattern.ask
-
-import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
-import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaActor, Opiskelija}
-import fi.vm.sade.hakurekisteri.healthcheck.{Status, HealthcheckActor}
-import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.integration.ytl.{Report, YtlReport}
-import org.json4s.JsonAST.JInt
-import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
-import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.web.healthcheck.HealthcheckResource
-import fi.vm.sade.hakurekisteri.tools.Peruskoulu
-import HakurekisteriDriver.simple._
 
-import scala.concurrent.{ExecutionContext, Await}
+import akka.actor.{Actor, ActorSystem, Props}
+import akka.pattern.ask
+import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
+import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana, ArvosanaActor}
+import fi.vm.sade.hakurekisteri.batchimport._
+import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
+import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, Status}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaHealth, VirtaStatus}
+import fi.vm.sade.hakurekisteri.integration.ytl.{Report, YtlReport}
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaActor}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusActor}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriDriver, JDBCJournal}
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
+import fi.vm.sade.hakurekisteri.suoritus._
+import fi.vm.sade.hakurekisteri.tools.Peruskoulu
+import fi.vm.sade.hakurekisteri.web.healthcheck.HealthcheckResource
+import org.h2.tools.RunScript
+import org.joda.time.{DateTime, LocalDate}
+import org.json4s.JsonAST.JInt
+import org.scalatra.test.scalatest.ScalatraFunSuite
+
+import scala.concurrent.{Await, ExecutionContext}
 
 
 class HealthcheckResourceSpec extends ScalatraFunSuite {

@@ -1,12 +1,13 @@
-package fi.vm.sade.hakurekisteri.arvosana
+package fi.vm.sade.hakurekisteri.rest
 
 import java.util.UUID
 
-import akka.actor.{Props, ActorSystem}
+import akka.actor.{ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
+import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
+import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaSwaggerApi, CreateArvosanaCommand}
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.joda.time.LocalDate

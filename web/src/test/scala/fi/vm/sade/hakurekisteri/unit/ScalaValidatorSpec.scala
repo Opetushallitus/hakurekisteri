@@ -1,13 +1,14 @@
-package fi.vm.sade.hakurekisteri.validation
+package fi.vm.sade.hakurekisteri.unit
 
-import org.scalatest.{Matchers, FlatSpec}
-import validator.api.{ValidationResult, Validator}
 import _root_.java.{util => java}
-import org.scalatest.mock.MockitoSugar
-import fi.vm.sade.hakurekisteri.web.validation.{SimpleValidatable, Validatable, ScalaValidator}
+
 import fi.vm.sade.hakurekisteri.TestResource
+import fi.vm.sade.hakurekisteri.web.validation.{ScalaValidator, SimpleValidatable, Validatable}
 import org.mockito.Mockito._
-import org.mockito.Mockito
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{FlatSpec, Matchers}
+import validator.api.{ValidationResult, Validator}
+
 import scalaz.NonEmptyList
 
 class ScalaValidatorSpec extends FlatSpec with Matchers with MockitoSugar {
