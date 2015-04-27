@@ -75,7 +75,7 @@ object DataGen {
   def paiva = for (
     kk <- kk;
     pv <- DataGen.int(1,maxPaiva(kk))
-  ) yield new LocalDate(1999,kk,pv)
+  ) yield new LocalDate(1901 + new Random().nextInt(99),kk,pv)
 
 
   def sukupuoli = DataGen.values("mies", "nainen")

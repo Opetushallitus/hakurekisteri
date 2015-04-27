@@ -187,9 +187,13 @@ class TiedonsiirtoTestFileGenerator extends DataGeneratorSupport {
    * @param maara
    */
   def generateFiles(oppilaitosnumero: String, maara: Int): Unit = {
-    val henkilot = (0 until maara).map(i => {
+    var hetut: Set[String] = Set()
+    while (hetut.size < maara) {
+      hetut = hetut + DataGen.hetu.generate
+    }
+    val henkilot = hetut.map(hetu => {
       val etunimi = randomStringFromCharList(5, 'a' to 'z').capitalize
-      (DataGen.hetu.generate, randomStringFromCharList(12, 'a' to 'z').capitalize, etunimi, etunimi)
+      (hetu, randomStringFromCharList(12, 'a' to 'z').capitalize, etunimi, etunimi)
     }).toSeq
     val perustiedot: DataGen[Elem] = perustiedotSiirto(oppilaitosnumero, henkilot.map(h => perustiedotHenkilo(h, oppilaitosnumero, perustiedotPerusopetus(oppilaitosnumero))):_*)
     val arvosanat: DataGen[Elem] = arvosanaSiirto(oppilaitosnumero, henkilot.map(h => arvosanaHenkilo(h, arvosanaPerusopetus(oppilaitosnumero))):_*)
