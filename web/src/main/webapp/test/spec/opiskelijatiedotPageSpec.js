@@ -550,7 +550,7 @@
         })
         describe('Tietojen muokkaus', function () {
                 describe("Peruskoulun suoritus", function() {
-                    it("!! Lisää suoritus luo uuden suorituksen", seqDone(
+                    it.skip("!! Lisää suoritus luo uuden suorituksen", seqDone(
 
                     ))
                     it("!! Peruskoulun suoritustiedot (ja arvosanat) talletetaan vain jos muuttuneita arvoja", seqDone(
