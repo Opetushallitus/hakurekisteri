@@ -553,7 +553,7 @@
                     it.skip("!! Lisää suoritus luo uuden suorituksen", seqDone(
 
                     ))
-                    it("!! Peruskoulun suoritustiedot (ja arvosanat) talletetaan vain jos muuttuneita arvoja", seqDone(
+                    it.skip("!! Peruskoulun suoritustiedot (ja arvosanat) talletetaan vain jos muuttuneita arvoja", seqDone(
                         function () {
                             httpFixtures().organisaatioService.pikkaralaOid()
                             httpFixtures().organisaatioService.pikkaralaKoodi()
