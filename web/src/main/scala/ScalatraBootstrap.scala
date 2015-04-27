@@ -65,7 +65,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val importBatchProcessing = system.actorOf(Props(new ImportBatchProcessingActor(authorizedRegisters.eraRekisteri, integrations.henkilo, authorizedRegisters.suoritusRekisteri, authorizedRegisters.opiskelijaRekisteri, integrations.organisaatiot, authorizedRegisters.arvosanaRekisteri, integrations.koodisto, config)), "importBatchProcessing")
 
-    mountServlets(context)(
+    var servlets = List(
       ("/rest/v1/komo", "komo") -> new GuiServlet,
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
       ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SecuritySupport,
@@ -85,6 +85,12 @@ class ScalatraBootstrap extends LifeCycle {
       ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue),
       ("/ytl", "ytl") -> new YtlResource(integrations.ytl)
     )
+
+    if (config.mockMode) {
+      servlets ::= (("/spec", "spec") -> new SpecResource(integrations.ytl))
+    }
+
+    mountServlets(context)(servlets:_*)
 
     ProxyServlets.mount(integrations.proxies, context)
 
