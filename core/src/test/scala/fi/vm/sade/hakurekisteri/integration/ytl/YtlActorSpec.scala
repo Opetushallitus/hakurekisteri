@@ -21,7 +21,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.slick.lifted.TableQuery
 
-class YtlIntegrationSpec extends ScalatraFunSuite {
+class YtlActorSpec extends ScalatraFunSuite {
 
   implicit val system = ActorSystem("ytl-integration-test-system")
   implicit val ec = system.dispatcher
