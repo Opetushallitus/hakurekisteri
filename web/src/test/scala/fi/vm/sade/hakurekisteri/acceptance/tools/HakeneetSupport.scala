@@ -280,7 +280,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   koodistoClient.readObject[Seq[Koodi]]("", 200, 2) returns Future.successful(Seq(Koodi("246", "", Koodisto(""), Seq())))
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)))
 
-  val f = Future.successful(
+  val valintatulokset = Future.successful(
     Seq(
       ValintaTulos(
         FullHakemus1.oid,
@@ -328,8 +328,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   )
 
   val sijoitteluClient = mock[VirkailijaRestClient]
-  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.1", 200) returns f
-  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.2", 200) returns f
+  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.1", 200) returns valintatulokset
+  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.2", 200) returns valintatulokset
 
   val sijoittelu = system.actorOf(Props(new ValintaTulosActor(sijoitteluClient, config)))
 

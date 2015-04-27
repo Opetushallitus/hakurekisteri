@@ -106,12 +106,9 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
     def init() {
       if (!initialized) {
-        implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]) = {
-          var journal = new InMemJournal[R, UUID]
-          s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
-          journal
-        }
-        swap(tehdytSuoritukset)
+        val journal = new InMemJournal[Suoritus, UUID]
+        tehdytSuoritukset.foreach((resource: Suoritus) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
+        swap(journal)
         initialized = true
       }
     }
