@@ -7,7 +7,7 @@ import fi.vm.sade.hakurekisteri.batchimport.{ImportStatus, BatchState, ImportBat
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, VirallinenSuoritus, Suoritus, SuoritusTable}
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import akka.actor.ActorSystem
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloSearchResponse
 import scala.concurrent.{Future, ExecutionContext}
@@ -67,7 +67,7 @@ object CreateTestDb extends App {
 
   def createOppilas(oid:String, aineet: Set[String]) {
     val suoritus = UUID.randomUUID()
-    suoritusJournal.addModification(Updated(VirallinenSuoritus(Config.globalConfig.oids.perusopetusKomoOid, "1.2.246.562.10.39644336305", "KESKEN", kevatJuhla, oid, yksilollistaminen.Ei, "fi",  lahde = "Test").identify(suoritus)))
+    suoritusJournal.addModification(Updated(VirallinenSuoritus(Oids.perusopetusKomoOid, "1.2.246.562.10.39644336305", "KESKEN", kevatJuhla, oid, yksilollistaminen.Ei, "fi",  lahde = "Test").identify(suoritus)))
     opiskelijaJournal.addModification(Updated(Opiskelija("1.2.246.562.10.39644336305", "9", "9A", oid, syksynAlku.toDateTimeAtStartOfDay(), Some(kevatJuhla.toDateTimeAtStartOfDay()), "Test").identify(UUID.randomUUID())))
     for (
       aine <- aineet

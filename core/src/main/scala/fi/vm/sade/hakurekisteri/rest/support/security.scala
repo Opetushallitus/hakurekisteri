@@ -81,7 +81,7 @@ trait User {
 
   def canRead(resource: String) = !orgsFor("READ", resource).isEmpty
 
-  def isAdmin:Boolean = orgsFor("DELETE", "Arvosana").contains(Oids.oids.ophOrganisaatioOid)
+  def isAdmin:Boolean = orgsFor("DELETE", "Arvosana").contains(Oids.ophOrganisaatioOid)
 
 
 }

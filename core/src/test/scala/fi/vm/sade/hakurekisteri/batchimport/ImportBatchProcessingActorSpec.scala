@@ -23,7 +23,6 @@ import scala.concurrent.duration._
 
 class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions with HakurekisteriJsonSupport {
   behavior of "ImportBatchProcessingActor"
-  val oids = new Oids
   val lahde = "testitiedonsiirto"
 
   val batch: ImportBatch with Identified[UUID] = ImportBatch(<perustiedot>
@@ -88,7 +87,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
 
     val henkiloBody = {
       val oidResolver = (koodi: String) => s"1.2.246.562.5.$koodi"
-      val henkilo: CreateHenkilo = (batch.data \ "henkilot" \ "henkilo").map(ImportHenkilo(oids)(_)(lahde)).head.toHenkilo(oidResolver)
+      val henkilo: CreateHenkilo = (batch.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(lahde)).head.toHenkilo(oidResolver)
       import org.json4s.jackson.Serialization.write
       write[CreateHenkilo](henkilo)
     }

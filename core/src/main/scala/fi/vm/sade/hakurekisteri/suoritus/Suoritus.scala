@@ -71,7 +71,7 @@ import DayFinder._
 object ItseilmoitettuPeruskouluTutkinto {
 
   def apply(hakemusOid: String, hakijaOid: String, valmistumisvuosi: Int, suoritusKieli: String) =
-    VirallinenSuoritus(Oids.oids.perusopetusKomoOid,
+    VirallinenSuoritus(Oids.perusopetusKomoOid,
       myontaja = hakemusOid,
       tila = "VALMIS",
       valmistuminen = saturdayOfWeek22(valmistumisvuosi),
@@ -103,7 +103,7 @@ object ItseilmoitettuTutkinto {
 object ItseilmoitettuLukioTutkinto {
 
   def apply(hakemusOid: String, hakijaOid: String, valmistumisvuosi: Int, suoritusKieli: String) =
-    VirallinenSuoritus(Oids.oids.lukioKomoOid,
+    VirallinenSuoritus(Oids.lukioKomoOid,
       myontaja = hakemusOid,
       tila = "VALMIS",
       valmistuminen = saturdayOfWeek22(valmistumisvuosi),

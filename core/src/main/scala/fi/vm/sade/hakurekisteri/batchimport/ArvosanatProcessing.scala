@@ -21,7 +21,7 @@ import scala.xml.Node
 
 case class HenkiloNotFoundException(oid: String) extends Exception(s"henkilo not found with oid $oid")
 
-class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, importBatchActor: ActorRef, koodistoActor: ActorRef, oids: Oids)(implicit val system: ActorSystem) {
+class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, importBatchActor: ActorRef, koodistoActor: ActorRef)(implicit val system: ActorSystem) {
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val timeout: Timeout = 15.minutes
 
@@ -145,7 +145,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
       flatMap(suoritukset => suoritukset.headOption match {
       case Some(suoritus) if suoritukset.length == 1 => Future.successful(suoritus)
       case Some(_) if suoritukset.length > 1 => Future.failed(new MultipleSuoritusException(henkiloOid, oppilaitosOid, todistus.komo))
-      case None if todistus.komo == oids.lukioKomoOid => createLukioSuoritus(henkiloOid, todistus, oppilaitosOid, lahde)
+      case None if todistus.komo == Oids.lukioKomoOid => createLukioSuoritus(henkiloOid, todistus, oppilaitosOid, lahde)
       case None => Future.failed(new SuoritusNotFoundException(henkiloOid, oppilaitosOid, todistus.komo))
     })
 
@@ -266,15 +266,15 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     })
 
     val tyypit = Map(
-      "perusopetus" -> oids.perusopetusKomoOid,
-      "perusopetuksenlisaopetus" -> oids.lisaopetusKomoOid,
-      "ammattistartti" -> oids.ammattistarttiKomoOid,
-      "valmentava" -> oids.valmentavaKomoOid,
-      "maahanmuuttajienlukioonvalmistava" -> oids.lukioonvalmistavaKomoOid,
-      "maahanmuuttajienammvalmistava" -> oids.ammatilliseenvalmistavaKomoOid,
-      "ulkomainen" -> oids.ulkomainenkorvaavaKomoOid,
-      "lukio" -> oids.lukioKomoOid,
-      "ammatillinen" -> oids.ammatillinenKomoOid
+      "perusopetus" -> Oids.perusopetusKomoOid,
+      "perusopetuksenlisaopetus" -> Oids.lisaopetusKomoOid,
+      "ammattistartti" -> Oids.ammattistarttiKomoOid,
+      "valmentava" -> Oids.valmentavaKomoOid,
+      "maahanmuuttajienlukioonvalmistava" -> Oids.lukioonvalmistavaKomoOid,
+      "maahanmuuttajienammvalmistava" -> Oids.ammatilliseenvalmistavaKomoOid,
+      "ulkomainen" -> Oids.ulkomainenkorvaavaKomoOid,
+      "lukio" -> Oids.lukioKomoOid,
+      "ammatillinen" -> Oids.ammatillinenKomoOid
     )
 
     def apply(h: Node)(lahde: String)(oppiaineet: Seq[String]): ImportArvosanaHenkilo = {

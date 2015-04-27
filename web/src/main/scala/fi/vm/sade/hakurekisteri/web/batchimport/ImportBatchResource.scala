@@ -9,7 +9,7 @@ import javax.servlet.http.{HttpServletRequest, Part}
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.{AskTimeoutException, ask}
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.batchimport.{BatchesBySource, ImportBatch, ImportStatus, Reprocess, WrongBatchStateException, _}
 import fi.vm.sade.hakurekisteri.integration.parametrit.IsSendingEnabled
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -118,7 +118,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 
   get("/withoutdata", operation(withoutdata)) {
     val user = getUser
-    if (!user.orgsFor("READ", "ImportBatch").contains(config.oids.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
+    if (!user.orgsFor("READ", "ImportBatch").contains(Oids.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
     else new AsyncResult() {
       override implicit def timeout: Duration = 60.seconds
       override val is = eraRekisteri.?(AllBatchStatuses)(60.seconds)
@@ -141,7 +141,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 
   post("/reprocess/:id", operation(reprocess)) {
     val user = getUser
-    if (!user.orgsFor("WRITE", "ImportBatch").contains(config.oids.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
+    if (!user.orgsFor("WRITE", "ImportBatch").contains(Oids.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
     else new AsyncResult() {
       override implicit def timeout: Duration = 60.seconds
       val id = Try(UUID.fromString(params("id"))).get

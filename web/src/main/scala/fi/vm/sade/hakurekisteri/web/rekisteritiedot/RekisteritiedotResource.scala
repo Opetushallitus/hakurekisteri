@@ -28,7 +28,7 @@ import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class RekisteritiedotResource(val rekisterit: Registers, oids: Oids) // <- TODO: practically requires AuthorizedRegisters, because uses AuthorizedQuery
+class RekisteritiedotResource(val rekisterit: Registers) // <- TODO: practically requires AuthorizedRegisters, because uses AuthorizedQuery
                     (implicit val system: ActorSystem, sw: Swagger, val security: Security)
   extends HakuJaValintarekisteriStack with TiedotFetcher with RekisteritiedotSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SecuritySupport with QueryLogging {
 
@@ -128,7 +128,7 @@ class RekisteritiedotResource(val rekisterit: Registers, oids: Oids) // <- TODO:
        oppija: Oppija <- _
       ) yield LightWeightTiedot(oppija.oppijanumero, oppija.opiskelu.map(_.luokka).mkString(", ").blankOption, hasArvosanat(oppija.suoritukset)))
 
-      val tarkastetut = Set(oids.perusopetusKomoOid, oids.lisaopetusKomoOid, oids.lukioKomoOid)
+      val tarkastetut = Set(Oids.perusopetusKomoOid, Oids.lisaopetusKomoOid, Oids.lukioKomoOid)
 
       def hasArvosanat(todistukset:Seq[Todistus]): Boolean = {
         !todistukset.exists{

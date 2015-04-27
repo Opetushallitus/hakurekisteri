@@ -6,7 +6,7 @@ import java.util.UUID
 import akka.util.Timeout
 import akka.actor._
 import akka.pattern.{AskTimeoutException, ask, pipe}
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchQuery}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
@@ -47,7 +47,7 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
 
   val resources = Set("Arvosana", "Suoritus", "Opiskeluoikeus", "Opiskelija", "ImportBatch")
 
-  val healthCheckUser = BasicUser("healthcheck", resources.map(ReadRole( _, config.oids.ophOrganisaatioOid)))
+  val healthCheckUser = BasicUser("healthcheck", resources.map(ReadRole( _, Oids.ophOrganisaatioOid)))
   var foundHakemukset:Map[String, RefreshingState] = Map()
 
   var selfChecks: Map[UUID, Long] = Map()

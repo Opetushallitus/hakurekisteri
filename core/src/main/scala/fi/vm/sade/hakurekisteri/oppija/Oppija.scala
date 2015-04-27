@@ -13,7 +13,7 @@ case class Oppija(oppijanumero: String, opiskelu: Seq[Opiskelija], suoritukset: 
   override val id = oppijanumero
 
   override def identify(identity: String): Oppija with Identified[String] = this
-  override val source = Oids.oids.ophOrganisaatioOid
+  override val source = Oids.ophOrganisaatioOid
 
   def newId = oppijanumero
 

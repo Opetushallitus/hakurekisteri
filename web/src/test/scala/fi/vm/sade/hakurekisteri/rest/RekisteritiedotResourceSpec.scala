@@ -64,7 +64,7 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite {
     override val suoritusRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(suoritukset)))
   }
 
-  val resource = new RekisteritiedotResource(rekisterit, Oids.oids)
+  val resource = new RekisteritiedotResource(rekisterit)
 
   test("oppilaitos query should match only to suoritus.myontaja") {
     val tiedot = Await.result(resource.fetchTiedot(RekisteriQuery(oppilaitosOid = Some("1.2.3"), vuosi = None)), 15.seconds)

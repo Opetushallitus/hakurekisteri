@@ -29,8 +29,6 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
 class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions with HakurekisteriJsonSupport {
-  val oids = new Oids
-
   behavior of "ArvosanaProcessing"
 
   import Fixtures._
@@ -64,8 +62,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor,
-          oids
+          createKoodistoActor
         )
         val status = Await.result(arvosanatProcessing.process(batch), Duration(10, TimeUnit.SECONDS)).status
         status.messages shouldBe empty
@@ -96,8 +93,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           }, query = { q => Seq(s) }))),
           system.actorOf(Props(new MockedResourceActor[Arvosana](save = {a => a}, query = {q => Seq()}))),
           createImportBatchActor(system, {b => b}, batch),
-          createKoodistoActor,
-          oids
+          createKoodistoActor
         )
         val status = Await.result(arvosanatProcessing.process(batch), Duration(10, TimeUnit.SECONDS)).status
         status.messages shouldBe empty
@@ -129,8 +125,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor,
-          oids
+          createKoodistoActor
         )
 
         val status = Await.result(arvosanatProcessing.process(batch), Duration(10, TimeUnit.SECONDS)).status
@@ -163,8 +158,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor,
-          oids
+          createKoodistoActor
         )
 
         val status = Await.result(arvosanatProcessing.process(batch), Duration(10, TimeUnit.SECONDS)).status
@@ -193,8 +187,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor,
-          oids
+          createKoodistoActor
         )
 
         val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
@@ -226,8 +219,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor,
-          oids
+          createKoodistoActor
         )
 
         val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
@@ -255,8 +247,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             importBatchWaiter { b.state should be (BatchState.DONE) }
             importBatchWaiter.dismiss()
           }, batch),
-          createKoodistoActor,
-          oids
+          createKoodistoActor
         )
 
         val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
@@ -281,13 +272,12 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createOrganisaatioActor,
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus](save = (s: Suoritus) => {
-            suoritusWaiter { s.asInstanceOf[VirallinenSuoritus].komo should be (oids.lukioKomoOid) }
+            suoritusWaiter { s.asInstanceOf[VirallinenSuoritus].komo should be (Oids.lukioKomoOid) }
             suoritusWaiter.dismiss()
           }, query = {q => Seq()}))),
           system.actorOf(Props(new MockedResourceActor[Arvosana](save = {a => a}, query = {q => Seq()}))),
           createImportBatchActor(system, { r => r }, batch),
-          createKoodistoActor,
-          oids
+          createKoodistoActor
         )
 
         arvosanatProcessing.process(batch)
@@ -316,8 +306,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           }, query = {q => Seq(s)}))),
           arvosanaActor,
           createImportBatchActor(system, {r => r}, batch),
-          createKoodistoActor,
-          new Oids
+          createKoodistoActor
         )
 
         Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
@@ -390,10 +379,10 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     system.actorOf(Props(new MockedKoodistoActor()))
 
   private def perusopetusSuoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
-    VirallinenSuoritus(new Oids().perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
+    VirallinenSuoritus(Oids.perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
 
   private def lukioSuoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
-    VirallinenSuoritus(new Oids().lukioKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
+    VirallinenSuoritus(Oids.lukioKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
 
   private def createImportBatchActor(system: ActorSystem, batchSaveHandler: (ImportBatch) => Unit, batch: ImportBatch with Identified[UUID]): ActorRef =
     system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchSaveHandler, query = {q => Seq(batch)})))

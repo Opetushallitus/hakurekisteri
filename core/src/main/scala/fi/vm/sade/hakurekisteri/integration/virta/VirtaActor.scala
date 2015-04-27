@@ -197,7 +197,7 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
   import akka.pattern.ask
 
   def resolveOppilaitosOid(oppilaitosnumero: String): Future[String] = oppilaitosnumero match {
-    case o if Seq("XX", "UK", "UM").contains(o) => Future.successful(Oids.oids.tuntematonOrganisaatioOid)
+    case o if Seq("XX", "UK", "UM").contains(o) => Future.successful(Oids.tuntematonOrganisaatioOid)
     case o =>
       (organisaatioActor ? o)(1.hour).mapTo[Option[Organisaatio]] map {
           case Some(org) => org.oid
@@ -207,7 +207,7 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
 }
 
 object Virta {
-  val CSC = Oids.oids.cscOrganisaatioOid
+  val CSC = Oids.cscOrganisaatioOid
 
   val timeFormat = "^[0-9]{2}:[0-9]{2}$"
 

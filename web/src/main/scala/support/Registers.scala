@@ -7,7 +7,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.camel.CamelExtension
 import akka.routing.BroadcastGroup
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaActor}
 import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchActor, ImportBatchTable}
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
@@ -67,7 +67,7 @@ class AuthorizedRegisters(organisaatioSoapServiceUrl: String, unauthorized: Regi
   override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija) => Some(opiskelija.oppilaitosOid))
   override val opiskeluoikeusRekisteri = authorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus) => Some(opiskeluoikeus.myontaja))
   override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](organisaatioSoapServiceUrl, unauthorized.arvosanaRekisteri, resolve, config)), "arvosana-authorizer")
-  override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era) => Some(config.oids.ophOrganisaatioOid))
+  override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era) => Some(Oids.ophOrganisaatioOid))
 }
 
 class AuditedRegisters(amqUrl: String, amqQueue: String, authorizedRegisters: Registers, system: ActorSystem) extends Registers {

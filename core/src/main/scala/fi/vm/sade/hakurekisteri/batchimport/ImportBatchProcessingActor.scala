@@ -48,9 +48,9 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       log.debug("got import batch")
       b.batchType match {
         case "perustiedot" =>
-          context.actorOf(Props(new PerustiedotProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, config.oids)(b)))
+          context.actorOf(Props(new PerustiedotProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)(b)))
         case "arvosanat" =>
-          context.actorOf(Props(new ArvosanatProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, organisaatioActor, koodistoActor, config.oids)(b)))
+          context.actorOf(Props(new ArvosanatProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, organisaatioActor, koodistoActor)(b)))
         case t => throw new Exception(s"unknown batchType $t")
       }
 
@@ -59,11 +59,11 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
 
 object ProcessingJammedException extends Exception("processing jammed")
 
-class ArvosanatProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, organisaatioActor: ActorRef, koodistoActor: ActorRef, oids: Oids)(b: ImportBatch with Identified[UUID])
+class ArvosanatProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, organisaatioActor: ActorRef, koodistoActor: ActorRef)(b: ImportBatch with Identified[UUID])
   extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
-  private val processor = new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor, oids)(context.system)
+  private val processor = new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)(context.system)
   private val startTime = Platform.currentTime
   log.info(s"started processing batch ${b.id}")
 
@@ -93,7 +93,7 @@ class ArvosanatProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRe
   }
 }
 
-class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef, oids: Oids)(b: ImportBatch with Identified[UUID])
+class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef)(b: ImportBatch with Identified[UUID])
   extends Actor with ActorLogging {
 
   private val startTime = Platform.currentTime
@@ -157,14 +157,14 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   private def hasKomo(s: Seq[VirallinenSuoritus], oid: String): Boolean = s.exists(_.komo == oid)
 
   private def detectLuokkataso(suoritukset: Seq[VirallinenSuoritus]): String = suoritukset match {
-    case s if hasKomo(s, oids.lukioKomoOid)                   => "L"
-    case s if hasKomo(s, oids.lukioonvalmistavaKomoOid)       => "ML"
-    case s if hasKomo(s, oids.ammatillinenKomoOid)            => "AK"
-    case s if hasKomo(s, oids.ammatilliseenvalmistavaKomoOid) => "M"
-    case s if hasKomo(s, oids.ammattistarttiKomoOid)          => "A"
-    case s if hasKomo(s, oids.valmentavaKomoOid)              => "V"
-    case s if hasKomo(s, oids.lisaopetusKomoOid)              => "10"
-    case s if hasKomo(s, oids.perusopetusKomoOid)             => "9"
+    case s if hasKomo(s, Oids.lukioKomoOid)                   => "L"
+    case s if hasKomo(s, Oids.lukioonvalmistavaKomoOid)       => "ML"
+    case s if hasKomo(s, Oids.ammatillinenKomoOid)            => "AK"
+    case s if hasKomo(s, Oids.ammatilliseenvalmistavaKomoOid) => "M"
+    case s if hasKomo(s, Oids.ammattistarttiKomoOid)          => "A"
+    case s if hasKomo(s, Oids.valmentavaKomoOid)              => "V"
+    case s if hasKomo(s, Oids.lisaopetusKomoOid)              => "10"
+    case s if hasKomo(s, Oids.perusopetusKomoOid)             => "9"
     case _                                                      => ""
   }
 
@@ -212,7 +212,7 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   }
 
   private def parseData(): Map[String, ImportHenkilo] = try {
-    val henkilot = (b.data \ "henkilot" \ "henkilo").map(ImportHenkilo(oids)(_)(b.source)).groupBy(_.tunniste.tunniste).mapValues(_.head)
+    val henkilot = (b.data \ "henkilot" \ "henkilo").map(ImportHenkilo(_)(b.source)).groupBy(_.tunniste.tunniste).mapValues(_.head)
     totalRows = Some(henkilot.size)
     henkilot
   } catch {
@@ -236,15 +236,15 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   }
 
   def suoritusType(s: VirallinenSuoritus): String = s.komo match {
-    case oids.perusopetusKomoOid => "perusopetus"
-    case oids.lisaopetusKomoOid => "perusopetuksenlisaopetus"
-    case oids.ammattistarttiKomoOid => "ammattistartti"
-    case oids.valmentavaKomoOid => "valmentava"
-    case oids.lukioonvalmistavaKomoOid => "maahanmuuttajienlukioonvalmistava"
-    case oids.ammatilliseenvalmistavaKomoOid => "maahanmuuttajienammvalmistava"
-    case oids.ulkomainenkorvaavaKomoOid => "ulkomainen"
-    case oids.lukioKomoOid => "lukio"
-    case oids.ammatillinenKomoOid => "ammatillinen"
+    case Oids.perusopetusKomoOid => "perusopetus"
+    case Oids.lisaopetusKomoOid => "perusopetuksenlisaopetus"
+    case Oids.ammattistarttiKomoOid => "ammattistartti"
+    case Oids.valmentavaKomoOid => "valmentava"
+    case Oids.lukioonvalmistavaKomoOid => "maahanmuuttajienlukioonvalmistava"
+    case Oids.ammatilliseenvalmistavaKomoOid => "maahanmuuttajienammvalmistava"
+    case Oids.ulkomainenkorvaavaKomoOid => "ulkomainen"
+    case Oids.lukioKomoOid => "lukio"
+    case Oids.ammatillinenKomoOid => "ammatillinen"
     case oid => oid
   }
 
@@ -422,7 +422,7 @@ object ImportHenkilo {
     )
   })
 
-  def apply(oids: Oids)(h: Node)(lahde: String): ImportHenkilo = {
+  def apply(h: Node)(lahde: String): ImportHenkilo = {
     val hetu = getOptionField("hetu")(h)
     val oppijanumero = getOptionField("oppijanumero")(h)
     val henkiloTunniste = getOptionField("henkiloTunniste")(h)
@@ -438,15 +438,15 @@ object ImportHenkilo {
     }
 
     val suoritukset = Seq(
-      suoritus("perusopetus", oids.perusopetusKomoOid, oppijanumero, yksilollistetty = true)(h)(lahde),
-      suoritus("perusopetuksenlisaopetus", oids.lisaopetusKomoOid, oppijanumero, yksilollistetty = true)(h)(lahde),
-      suoritus("ammattistartti", oids.ammattistarttiKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
-      suoritus("valmentava", oids.valmentavaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
-      suoritus("maahanmuuttajienlukioonvalmistava", oids.lukioonvalmistavaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
-      suoritus("maahanmuuttajienammvalmistava", oids.ammatilliseenvalmistavaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
-      suoritus("ulkomainen", oids.ulkomainenkorvaavaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
-      suoritus("lukio", oids.lukioKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
-      suoritus("ammatillinen", oids.ammatillinenKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde)
+      suoritus("perusopetus", Oids.perusopetusKomoOid, oppijanumero, yksilollistetty = true)(h)(lahde),
+      suoritus("perusopetuksenlisaopetus", Oids.lisaopetusKomoOid, oppijanumero, yksilollistetty = true)(h)(lahde),
+      suoritus("ammattistartti", Oids.ammattistarttiKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
+      suoritus("valmentava", Oids.valmentavaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
+      suoritus("maahanmuuttajienlukioonvalmistava", Oids.lukioonvalmistavaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
+      suoritus("maahanmuuttajienammvalmistava", Oids.ammatilliseenvalmistavaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
+      suoritus("ulkomainen", Oids.ulkomainenkorvaavaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
+      suoritus("lukio", Oids.lukioKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
+      suoritus("ammatillinen", Oids.ammatillinenKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde)
     ).flatten
 
     ImportHenkilo(

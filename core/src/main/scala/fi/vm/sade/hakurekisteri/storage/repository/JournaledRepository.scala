@@ -57,7 +57,7 @@ trait JournaledRepository[T <: Resource[I, T], I] extends InMemRepository[T, I] 
     if (time.isEmpty && deduplicate)
       for (oids <- reverseSnapShot.values
            if oids.size > 1;
-           duplicate <- oids.tail.toSet[I]) delete(duplicate, source = Oids.oids.ophOrganisaatioOid)
+           duplicate <- oids.tail.toSet[I]) delete(duplicate, source = Oids.ophOrganisaatioOid)
     indexSwapSnapshot()
   }
 

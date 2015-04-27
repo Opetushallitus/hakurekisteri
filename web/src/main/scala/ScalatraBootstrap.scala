@@ -3,7 +3,7 @@ import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEve
 
 import _root_.support._
 import akka.actor.{ActorSystem, Props}
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.healthcheck.HealthcheckActor
@@ -66,7 +66,7 @@ class ScalatraBootstrap extends LifeCycle {
     val importBatchProcessing = system.actorOf(Props(new ImportBatchProcessingActor(authorizedRegisters.eraRekisteri, integrations.henkilo, authorizedRegisters.suoritusRekisteri, authorizedRegisters.opiskelijaRekisteri, integrations.organisaatiot, authorizedRegisters.arvosanaRekisteri, integrations.koodisto, config)), "importBatchProcessing")
 
     mountServlets(context)(
-      ("/rest/v1/komo", "komo") -> new GuiServlet(config.oids),
+      ("/rest/v1/komo", "komo") -> new GuiServlet,
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
       ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SecuritySupport,
       ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SecuritySupport,
@@ -80,9 +80,9 @@ class ScalatraBootstrap extends LifeCycle {
       ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
       ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SecuritySupport,
       ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SecuritySupport,
-      ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(authorizedRegisters, config.oids),
+      ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(authorizedRegisters),
       ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto, Arvosanat, ArvosanatKoodisto),
-      ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue, config.oids),
+      ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue),
       ("/ytl", "ytl") -> new YtlResource(integrations.ytl)
     )
 
