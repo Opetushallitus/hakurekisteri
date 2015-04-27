@@ -483,59 +483,25 @@ var httpFixtures = function () {
 
     fixtures.organisaatioService = {
         pikkaralaPikkoloOrganisaatioLista: function () {
-            fixtures.get(/.*\/organisaatio-service\/rest\/organisaatio\/v2\/hae\?aktiiviset=true&lakkautetut=false&organisaatiotyyppi=Oppilaitos&searchStr=Pik&suunnitellut=true$/, {
-                "numHits": 2,
-                "organisaatiot": [{
-                    "oid": "1.2.246.562.10.39644336305",
-                    "alkuPvm": 694216800000,
-                    "parentOid": "1.2.246.562.10.80381044462",
-                    "parentOidPath": "1.2.246.562.10.39644336305/1.2.246.562.10.80381044462/1.2.246.562.10.00000000001",
-                    "oppilaitosKoodi": "06345",
-                    "oppilaitostyyppi": "oppilaitostyyppi_11#1",
-                    "match": true,
-                    "nimi": {"fi": "Pikkaralan ala-aste"},
-                    "kieletUris": ["oppilaitoksenopetuskieli_1#1"],
-                    "kotipaikkaUri": "kunta_564",
-                    "children": [],
-                    "organisaatiotyypit": ["OPPILAITOS"],
-                    "aliOrganisaatioMaara": 0
-                }, {
-                    "oid": "1.2.246.562.10.16546622305",
-                    "alkuPvm": 694216800000,
-                    "parentOid": "1.2.246.562.10.77047788581",
-                    "parentOidPath": "1.2.246.562.10.16546622305/1.2.246.562.10.77047788581/1.2.246.562.10.00000000001",
-                    "oppilaitosKoodi": "05127",
-                    "oppilaitostyyppi": "oppilaitostyyppi_11#1",
-                    "match": true,
-                    "nimi": {"fi": "Pikkolan koulu"},
-                    "kieletUris": ["oppilaitoksenopetuskieli_1#1"],
-                    "kotipaikkaUri": "kunta_211",
-                    "children": [],
-                    "organisaatiotyypit": ["OPPILAITOS"],
-                    "aliOrganisaatioMaara": 0
-                }]
-            })
+            fixtures.get(/.*\/organisaatio-service\/rest\/organisaatio\/v2\/hae\?aktiiviset=true&lakkautetut=false&organisaatiotyyppi=Oppilaitos&searchStr=Pik&suunnitellut=true$/).passThrough()
         },
         pikkaralaOid: function () {
-            fixtures.get(/.*\/organisaatio-service\/rest\/organisaatio\/1\.2\.246\.562\.10\.39644336305$/, restData.organisaatioService.pikkarala)
+            fixtures.get(/.*\/organisaatio-service\/rest\/organisaatio\/1\.2\.246\.562\.10\.39644336305$/).passThrough()
         },
         pikkoloOid: function () {
-            fixtures.get(/.*\/organisaatio-service\/rest\/organisaatio\/1\.2\.246\.562\.10\.16546622305/, restData.organisaatioService.pikkolo)
+            fixtures.get(/.*\/organisaatio-service\/rest\/organisaatio\/1\.2\.246\.562\.10\.16546622305/).passThrough()
         },
         pikkaralaKoodi: function () {
-            fixtures.get(/.*\/organisaatio-service\/rest\/organisaatio\/06345$/, restData.organisaatioService.pikkarala)
+            fixtures.get(/.*\/organisaatio-service\/rest\/organisaatio\/06345$/).passThrough()
         },
         pikkoloKoodi: function () {
-            fixtures.get(/.*\/organisaatio-service\/rest\/organisaatio\/05127$/, restData.organisaatioService.pikkolo)
+            fixtures.get(/.*\/organisaatio-service\/rest\/organisaatio\/05127$/).passThrough()
         },
         foobarKoulu: function () {
-            fixtures.get(/organisaatio-service\/rest\/organisaatio\/v2\/hae\?aktiiviset=true&lakkautetut=false&organisaatiotyyppi=Oppilaitos&searchStr=foobar&suunnitellut=true/, {
-                "numHits": 1,
-                "organisaatiot": []
-            })
+            fixtures.get(/organisaatio-service\/rest\/organisaatio\/v2\/hae\?aktiiviset=true&lakkautetut=false&organisaatiotyyppi=Oppilaitos&searchStr=foobar&suunnitellut=true/).passThrough()
         },
         pikkaralaLuokkaTieto: function () {
-            fixtures.get(/organisaatio-service\/rest\/organisaatio\/v2\/hae\?aktiiviset=true&lakkautetut=false&organisaatiotyyppi=Oppilaitos&searchStr=06345&suunnitellut=true/, restData.organisaatioService.pikkarala)
+            fixtures.get(/organisaatio-service\/rest\/organisaatio\/v2\/hae\?aktiiviset=true&lakkautetut=false&organisaatiotyyppi=Oppilaitos&searchStr=06345&suunnitellut=true/).passThrough()
         }
 
     }

@@ -6,6 +6,7 @@ import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.integration.mocks.OrganisaatioMock
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedException, VirkailijaRestClient}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -101,16 +102,15 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient, config: Co
 }
 
 class MockOrganisaatioActor(config: Config) extends OrganisaatioActor(config) {
+
   implicit val formats = DefaultFormats
 
   override def fetchAll(): Unit = {
-    val json = parse(getClass.getResourceAsStream("/mock-data/organisaatio-all.json"))
-    json.extract[OrganisaatioResponse]
+    self ! Future.successful(parse(OrganisaatioMock.findAll()))
   }
 
   override def findDirect(tunniste: String): Future[Option[Organisaatio]] = {
-    val mockKoulu = parse(getClass.getResourceAsStream("/mock-data/organisaatio-single.json"))
-    Future.successful(Some(mockKoulu.extract[Organisaatio]))
+    Future.successful(Some(parse(OrganisaatioMock.findByOid(tunniste)).extract[Organisaatio]))
   }
 
 }
