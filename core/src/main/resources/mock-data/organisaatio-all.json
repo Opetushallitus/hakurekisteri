@@ -1,5 +1,5 @@
 {
-  "numHits": 1,
+  "numHits": 2,
   "organisaatiot": [
     {
       "oid": "1.2.246.562.10.39644336305",
@@ -9,17 +9,26 @@
       "oppilaitosKoodi": "06345",
       "oppilaitostyyppi": "oppilaitostyyppi_11#1",
       "match": true,
-      "nimi": {
-        "fi": "Pikkaralan ala-aste"
-      },
-      "kieletUris": [
-        "oppilaitoksenopetuskieli_1#1"
-      ],
+      "nimi": {"fi": "Pikkaralan ala-aste"},
+      "kieletUris": ["oppilaitoksenopetuskieli_1#1"],
       "kotipaikkaUri": "kunta_564",
       "children": [],
-      "organisaatiotyypit": [
-        "OPPILAITOS"
-      ],
+      "organisaatiotyypit": ["OPPILAITOS"],
+      "aliOrganisaatioMaara": 0
+    },
+    {
+      "oid": "1.2.246.562.10.16546622305",
+      "alkuPvm": 694216800000,
+      "parentOid": "1.2.246.562.10.77047788581",
+      "parentOidPath": "1.2.246.562.10.16546622305/1.2.246.562.10.77047788581/1.2.246.562.10.00000000001",
+      "oppilaitosKoodi": "05127",
+      "oppilaitostyyppi": "oppilaitostyyppi_11#1",
+      "match": true,
+      "nimi": {"fi": "Pikkolan koulu"},
+      "kieletUris": ["oppilaitoksenopetuskieli_1#1"],
+      "kotipaikkaUri": "kunta_211",
+      "children": [],
+      "organisaatiotyypit": ["OPPILAITOS"],
       "aliOrganisaatioMaara": 0
     }
   ]

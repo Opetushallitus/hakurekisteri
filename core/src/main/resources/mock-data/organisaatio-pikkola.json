@@ -1,0 +1,132 @@
+{
+  "oid": "1.2.246.562.10.16546622305",
+  "nimi": {"fi": "Pikkolan koulu"},
+  "metadata": {
+    "nimi": {},
+    "yhteystiedot": [],
+    "hakutoimistoEctsNimi": {},
+    "hakutoimistoEctsEmail": {},
+    "hakutoimistoEctsPuhelin": {},
+    "hakutoimistoEctsTehtavanimike": {},
+    "luontiPvm": 1380219200951,
+    "muokkausPvm": 1380219200951,
+    "hakutoimistonNimi": {},
+    "data": {}
+  },
+  "alkuPvm": "1992-01-01",
+  "postiosoite": {
+    "osoiteTyyppi": "posti",
+    "yhteystietoOid": "1.2.246.562.5.20961755772",
+    "postinumeroUri": "posti_36200",
+    "osoite": "Finnentie 40",
+    "postitoimipaikka": "KANGASALA",
+    "ytjPaivitysPvm": null,
+    "lng": null,
+    "lap": null,
+    "coordinateType": null,
+    "osavaltio": null,
+    "extraRivi": null,
+    "maaUri": null
+  },
+  "parentOid": "1.2.246.562.10.77047788581",
+  "parentOidPath": "|1.2.246.562.10.00000000001|1.2.246.562.10.77047788581|",
+  "vuosiluokat": [
+    "vuosiluokat_9#1",
+    "vuosiluokat_7#1",
+    "vuosiluokat_8#1"
+  ],
+  "oppilaitosKoodi": "05127",
+  "kieletUris": ["oppilaitoksenopetuskieli_1#1"],
+  "oppilaitosTyyppiUri": "oppilaitostyyppi_11#1",
+  "yhteystiedot": [
+    {
+      "kieli": "kieli_fi#1",
+      "id": "35631",
+      "yhteystietoOid": "1.2.246.562.5.93573068579",
+      "email": "ville.vuorisalmi@kangasala.fi"
+    },
+    {
+      "tyyppi": "faksi",
+      "kieli": "kieli_fi#1",
+      "id": "35632",
+      "yhteystietoOid": "1.2.246.562.5.46294326098",
+      "numero": "03 5655 3067"
+    },
+    {
+      "tyyppi": "puhelin",
+      "kieli": "kieli_fi#1",
+      "id": "35633",
+      "yhteystietoOid": "1.2.246.562.5.21206776961",
+      "numero": "050 3876166"
+    },
+    {
+      "kieli": "kieli_fi#1",
+      "id": "35634",
+      "yhteystietoOid": "1.2.246.562.5.117046839010",
+      "www": "http://www.kangasala.fi"
+    },
+    {
+      "osoiteTyyppi": "posti",
+      "kieli": "kieli_fi#1",
+      "id": "35635",
+      "yhteystietoOid": "1.2.246.562.5.20961755772",
+      "osoite": "Finnentie 40",
+      "postinumeroUri": "posti_36200",
+      "postitoimipaikka": "KANGASALA",
+      "ytjPaivitysPvm": null,
+      "coordinateType": null,
+      "lap": null,
+      "lng": null,
+      "osavaltio": null,
+      "extraRivi": null,
+      "maaUri": null
+    },
+    {
+      "osoiteTyyppi": "kaynti",
+      "kieli": "kieli_fi#1",
+      "id": "35636",
+      "yhteystietoOid": "1.2.246.562.5.50397813051",
+      "osoite": "Finnentie 40",
+      "postinumeroUri": "posti_36200",
+      "postitoimipaikka": "KANGASALA",
+      "ytjPaivitysPvm": null,
+      "coordinateType": null,
+      "lap": null,
+      "lng": null,
+      "osavaltio": null,
+      "extraRivi": null,
+      "maaUri": null
+    }
+  ],
+  "kuvaus2": {},
+  "tyypit": ["Oppilaitos"],
+  "yhteystietoArvos": [],
+  "nimet": [
+    {
+      "nimi": {"fi": "Pikkolan koulu"},
+      "alkuPvm": "1992-01-01",
+      "version": 1
+    }
+  ],
+  "ryhmatyypit": [],
+  "kayttoryhmat": [],
+  "toimipistekoodi": "05127",
+  "kayntiosoite": {
+    "osoiteTyyppi": "kaynti",
+    "yhteystietoOid": "1.2.246.562.5.50397813051",
+    "postinumeroUri": "posti_36200",
+    "osoite": "Finnentie 40",
+    "postitoimipaikka": "KANGASALA",
+    "ytjPaivitysPvm": null,
+    "lng": null,
+    "lap": null,
+    "coordinateType": null,
+    "osavaltio": null,
+    "extraRivi": null,
+    "maaUri": null
+  },
+  "kotipaikkaUri": "kunta_211",
+  "maaUri": "maatjavaltiot1_fin",
+  "version": 3,
+  "status": "AKTIIVINEN"
+}
