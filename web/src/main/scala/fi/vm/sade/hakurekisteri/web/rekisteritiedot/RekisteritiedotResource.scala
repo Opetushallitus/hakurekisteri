@@ -5,7 +5,7 @@ import java.util.UUID
 import _root_.akka.actor.ActorSystem
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.util.Timeout
-import fi.vm.sade.hakurekisteri.{Oids, Config}
+import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.HenkiloHakijaQuery
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
@@ -180,12 +180,9 @@ trait TiedotFetcher {
   def crossCheck(opiskelijat: Seq[Opiskelija], todistukset: Seq[Suoritus with Identified[UUID]])(implicit user: User): Future[Seq[Oppija]] = {
     val opiskelijatiedot = opiskelijat.groupBy(_.henkiloOid)
     val suorittajat = todistukset.groupBy(_.henkiloOid)
-    val found = (for (
+    val found = for (
       (suorittaja, suoritukset) <- suorittajat
-    ) yield fetchTodistukset(suoritukset).map(Oppija(suorittaja, opiskelijatiedot.getOrElse(suorittaja, Seq()), _, Seq(), None))) ++
-    (for (
-      (opiskelija, historia) <- opiskelijatiedot   if !suorittajat.contains(opiskelija)
-    ) yield fetchTodistukset(opiskelija).map(Oppija(opiskelija, historia, _, Seq(), None)))
+    ) yield fetchTodistukset(suoritukset).map(Oppija(suorittaja, opiskelijatiedot.getOrElse(suorittaja, Seq()), _, Seq(), None))
 
 
     Future.sequence(found.toSeq)
@@ -218,7 +215,7 @@ trait TiedotFetcher {
   }
 
   def fetchOpiskelu(q: RekisteriQuery)(implicit user: User): Future[Seq[Opiskelija]] = {
-    (rekisterit.opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaQuery(oppilaitosOid = q.oppilaitosOid, vuosi = q.vuosi), user)).mapTo[Seq[Opiskelija]]
+    (rekisterit.opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaQuery(oppilaitosOid = q.oppilaitosOid), user)).mapTo[Seq[Opiskelija]]
   }
 
   def fetchSuoritukset(henkiloOid: String)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] = {
