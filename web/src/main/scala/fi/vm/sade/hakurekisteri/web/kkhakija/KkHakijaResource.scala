@@ -432,7 +432,7 @@ class KkHakijaResource(hakemukset: ActorRef,
         koulusivistyskieli = henkilotiedot.koulusivistyskieli.getOrElse("FI"),
         koulutusmarkkinointilupa = lisatiedot.lupaMarkkinointi.map(_ == "true"),
         onYlioppilas = isYlioppilas(suoritukset),
-        turvakielto = Try(henkilotiedot.turvakielto.get.toBoolean).getOrElse(false),
+        turvakielto = henkilotiedot.turvakielto.contains("true"),
         hakemukset = hakemukset
       )
 
