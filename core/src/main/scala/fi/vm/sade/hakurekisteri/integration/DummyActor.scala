@@ -4,6 +4,6 @@ import akka.actor.Actor
 
 class DummyActor extends Actor {
   override def receive: Receive = {
-    case x => println("DummyActor: got " + x)
+    case x => println(s"DummyActor($self): received $x")
   }
 }
