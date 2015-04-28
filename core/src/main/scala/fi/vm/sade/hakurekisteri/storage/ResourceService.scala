@@ -30,12 +30,11 @@ trait InMemQueryingResourceService[T,I] extends ResourceService[T,I] { this: Rep
 
   def findBy(o: Query[T]):Future[Seq[T with Identified[I]]] = {
     val current = listAll()
-    lazy val iter = o.productIterator.filter{
-      case None => false
-      case _ => true
+    lazy val allFieldsNone = o.productIterator.forall {
+      case None => true
+      case _ => false
     }
-    val empty = emptyQuery.lift(o).getOrElse(iter.size == 0)
-    if (empty)
+    if (emptyQuery.lift(o).getOrElse(allFieldsNone))
       Future { current }
     else
       optimize.applyOrElse(o, executeQuery(current))
