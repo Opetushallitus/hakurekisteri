@@ -28,7 +28,7 @@
         }
 
         describe("Organisaatiohaku", function () {
-            it('!! Voi hakea oppilaitoksen numeron perusteella', seqDone(
+            it.skip('!! Voi hakea oppilaitoksen numeron perusteella', seqDone(
 
             ))
             it('Voi hakea oppilaitoksen nimen perusteella', seqDone(
@@ -56,7 +56,7 @@
                     assertText(opiskelijatiedot.hetu, "123456-789")
                 }
             ))
-            it('!! Voi hakea oppilaitoksen nimen ja vuoden perusteella', seqDone(
+            it.skip('!! Voi hakea oppilaitoksen nimen ja vuoden perusteella', seqDone(
 
             ))
             it('Virheellinen oppilaitos haku', seqDone(
@@ -501,7 +501,7 @@
                 ))
             })
             describe("Vahvistamattomat hakemukselta tulleet suoritukset", function () {
-                it('!! Hakemukselta tullut arvosana näkyy oikein', seqDone(
+                it.skip('!! Hakemukselta tullut arvosana näkyy oikein', seqDone(
 
                 ))
                 it("Vahvistamattomalle suoritukselle näytetään info-viesti", seqDone(
@@ -553,7 +553,7 @@
                     it.skip("!! Lisää suoritus luo uuden suorituksen", seqDone(
 
                     ))
-                    it.skip("!! Peruskoulun suoritustiedot (ja arvosanat) talletetaan vain jos muuttuneita arvoja", seqDone(
+                    it("Peruskoulun suoritustiedot (ja arvosanat) talletetaan vain jos muuttuneita arvoja", seqDone(
                         function () {
                             httpFixtures().organisaatioService.pikkaralaOid()
                             httpFixtures().organisaatioService.pikkaralaKoodi()
@@ -632,19 +632,19 @@
                         },
                         saveDisabled()
                     ))
-                    it("!! Peruskoulun suoritukselle voi lisätä pakollisen arvosanan", seqDone(
+                    it.skip("!! Peruskoulun suoritukselle voi lisätä pakollisen arvosanan", seqDone(
                     ))
-                    it("!! Peruskoulun suoritukselle voi lisätä valinnaisen arvosanan", seqDone(
+                    it.skip("!! Peruskoulun suoritukselle voi lisätä valinnaisen arvosanan", seqDone(
                     ))
-                    it("!! Peruskoulun suorituksen arvosanan muuttaminen tallentaa null-päivämäärä jos arvosanalla alunperin null-päivä", seqDone(
+                    it.skip("!! Peruskoulun suorituksen arvosanan muuttaminen tallentaa null-päivämäärä jos arvosanalla alunperin null-päivä", seqDone(
                     ))
-                    it("!! Suorituksen poistaminen", seqDone(
+                    it.skip("!! Suorituksen poistaminen", seqDone(
 
                     ))
-                    it("!! Peruskoulun arvosanan poistaminen", seqDone(
+                    it.skip("!! Peruskoulun arvosanan poistaminen", seqDone(
 
                     ))
-                    it("!! Lisää korotus tallentaa arvosanan", seqDone(
+                    it.skip("!! Lisää korotus tallentaa arvosanan", seqDone(
 
                     ))
                 })
@@ -697,7 +697,7 @@
                         },
                         saveDisabled()
                     ))
-                    it("!! YO arvosanan poistaminen", seqDone(
+                    it.skip("!! YO arvosanan poistaminen", seqDone(
 
                     ))
                 })
@@ -743,10 +743,10 @@
 
                         }
                     ))
-                    it("!! Luokkatiedon poistaminen", seqDone(
+                    it.skip("!! Luokkatiedon poistaminen", seqDone(
 
                     ))
-                    it("!! Luokkatiedon muokkaaminen", seqDone(
+                    it.skip("!! Luokkatiedon muokkaaminen", seqDone(
 
                     ))
                 })
