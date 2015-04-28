@@ -23,15 +23,15 @@ object HakuRekisteriJettyWithMocks extends App {
 object SharedJetty {
   private lazy val jetty = new HakuRekisteriJetty(config = Config.mockConfig)
   def start = {
-    if(jetty.server.isStopped) {
-      Timer.timed("Jetty start") {
+    Timer.timed("Jetty start") {
+      if(!jetty.server.isRunning) {
         RunScript.execute("jdbc:h2:file:data/sample", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
-        jetty.start
       }
+      jetty.start
     }
   }
   def restart = {
-    if(jetty.server.isStarted) {
+    if(jetty.server.isRunning) {
       Timer.timed("Jetty stop") {
         jetty.server.stop
       }
