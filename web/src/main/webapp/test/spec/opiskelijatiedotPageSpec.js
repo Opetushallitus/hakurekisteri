@@ -564,6 +564,10 @@
                             httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                             httpFixtures().komoLocal.komoTiedot()
                             koodistoFixtures()
+
+                            httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
+                            httpFixtures().organisaatioService.pikkoloKoodi()
+                            httpFixtures().organisaatioService.pikkoloOid()
                         },
                         function () {
                             console.log("1")
@@ -596,11 +600,6 @@
                             console.log("5")
                         },
                         saveDisabled(),
-                        function () {
-                            httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
-                            httpFixtures().organisaatioService.pikkoloKoodi()
-                            httpFixtures().organisaatioService.pikkoloOid()
-                        },
                         function () {
                             console.log("6")
                         },
