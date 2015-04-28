@@ -5,6 +5,7 @@ import java.net.Socket
 import java.nio.charset.Charset
 import fi.vm.sade.utils.Timer
 import fi.vm.sade.utils.slf4j.Logging
+import fi.vm.sade.utils.tcp.PortChecker
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.ResourceCollection
 import org.eclipse.jetty.webapp.WebAppContext
@@ -42,7 +43,7 @@ object SharedJetty {
   def port = jetty.port
 }
 
-class HakuRekisteriJetty(val port: Int = PortFinder.findFreeLocalPort, config: Config = Config.globalConfig) {
+class HakuRekisteriJetty(val port: Int = PortChecker.findFreeLocalPort, config: Config = Config.globalConfig) {
   val root = ProjectRootFinder.findProjectRoot()
   val contextPath = "/"
   val server = new Server(port)
@@ -71,26 +72,4 @@ class HakuRekisteriJetty(val port: Int = PortFinder.findFreeLocalPort, config: C
     }
   }
 
-}
-
-object PortFinder {
-  def findFreeLocalPort: Int = {
-    val range = 1024 to 60000
-    val port = ((range(new Random().nextInt(range length))))
-    if (isFreeLocalPort(port)) {
-      port
-    } else {
-      findFreeLocalPort
-    }
-  }
-
-  def isFreeLocalPort(port: Int): Boolean = {
-    try {
-      val socket = new Socket("127.0.0.1", port)
-      socket.close()
-      false
-    } catch {
-      case e: IOException => true
-    }
-  }
 }
