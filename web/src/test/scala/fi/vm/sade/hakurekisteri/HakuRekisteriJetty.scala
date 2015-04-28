@@ -17,15 +17,16 @@ object HakuRekisteriJetty extends App {
 }
 
 object HakuRekisteriJettyWithMocks extends App {
-  new HakuRekisteriJetty(port = 8080, config = Config.mockConfig).start
+  new HakuRekisteriJetty(8080, config = Config.mockConfig).start
 }
 
 object SharedJetty {
-  private lazy val jetty = new HakuRekisteriJetty(config = Config.mockConfig)
+  private val config = Config.mockConfig
+  private lazy val jetty = new HakuRekisteriJetty(config = config)
   def start = {
     Timer.timed("Jetty start") {
       if(!jetty.server.isRunning) {
-        RunScript.execute("jdbc:h2:file:data/sample", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
+        RunScript.execute(config.h2DatabaseUrl, "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
       }
       jetty.start
     }

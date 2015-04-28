@@ -43,18 +43,22 @@ object Oids {
 
 class DefaultConfig extends Config {
   def mockMode = false
+  val h2DatabaseUrl= "jdbc:h2:file:data/development"
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
 }
 
 class MockConfig extends Config {
   def mockMode = true
+  val h2DatabaseUrl = "jdbc:h2:file:data/integration-test"
   override val importBatchProcessingInitialDelay = 1.seconds
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "web/src/test/resources/oph-configuration")
 }
 
 abstract class Config {
   def mockMode: Boolean
+
+  val h2DatabaseUrl: String
 
   val log = LoggerFactory.getLogger(getClass)
   def ophConfDir: Path

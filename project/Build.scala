@@ -21,7 +21,7 @@ object HakurekisteriBuild extends Build {
 
   lazy val LoadSpecs = config("load") extend Test
 
-  lazy val createTestDb = taskKey[Unit]("create h2 test db")
+  lazy val createDevDb = taskKey[Unit]("create h2 db for development")
 
   val ScalatraStack = Seq(
     "org.scalatra" %% "scalatra",
@@ -147,7 +147,7 @@ object HakurekisteriBuild extends Build {
       artifactoryPublish,
       libraryDependencies   ++= AkkaStack ++ dependencies
         ++ testDependencies.map((m) => m % "test"),
-      fullRunTask(createTestDb, Test, "util.CreateTestDb")
+      fullRunTask(createDevDb, Test, "util.CreateDevDb")
     ) ++ inConfig(LoadSpecs)(Defaults.testSettings)
       ++ inConfig(LoadSpecs)(Seq(
       testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),

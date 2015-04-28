@@ -1,30 +1,27 @@
 package util
 
-import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, HakurekisteriDriver}
-import HakurekisteriDriver.simple._
-import scala.slick.jdbc.meta.MTable
-import fi.vm.sade.hakurekisteri.batchimport.{ImportStatus, BatchState, ImportBatch, ImportBatchTable}
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, VirallinenSuoritus, Suoritus, SuoritusTable}
-import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
-import fi.vm.sade.hakurekisteri.{Oids, Config}
-import akka.actor.ActorSystem
-import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloSearchResponse
-import scala.concurrent.{Future, ExecutionContext}
-import fi.vm.sade.hakurekisteri.storage.repository.Updated
-import fi.vm.sade.hakurekisteri.tools.Peruskoulu
-import com.github.nscala_time.time.TypeImports._
-import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloSearchResponse
-import fi.vm.sade.hakurekisteri.storage.repository.Updated
-import org.joda.time.{DateTime, LocalDate}
-import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaTable, Opiskelija}
-import dispatch.{Http, as, url}
-import scala.util.Try
-import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, ArvosanaTable, Arvosana}
-import generators.DataGen
 
-object CreateTestDb extends App {
-  println("Creating a test db")
+import akka.actor.ActorSystem
+import com.github.nscala_time.time.TypeImports._
+import dispatch.{Http, as, url}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana, ArvosanaTable}
+import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloSearchResponse
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaTable}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriDriver, JDBCJournal}
+import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusTable, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.{Config, Oids}
+import generators.DataGen
+import org.joda.time.DateTime
+
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
+
+object CreateDevDb extends App {
+  println("Creating a development db")
 
   val kevaanVuosi = if (DateTime.now isBefore(new MonthDay(8, 18).toLocalDate(DateTime.now.getYear).toDateTimeAtStartOfDay()))
     DateTime.now.getYear
@@ -36,7 +33,7 @@ object CreateTestDb extends App {
 
 
 
-  implicit val db = Database.forURL("jdbc:h2:file:data/sample", driver = "org.h2.Driver")
+  implicit val db = Database.forURL(Config.globalConfig.h2DatabaseUrl, driver = "org.h2.Driver")
 
   implicit val system = ActorSystem("db-import")
 

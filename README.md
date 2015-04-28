@@ -6,7 +6,7 @@
 Setup:
 
 1. Laita fronttikäännös pyörimään: `npm run watch`. Tämä kääntää coffeescriptit aina kun ne muuttuvat.
-2. Käynnistä serveri IDEAsta: `HakuRekisteriJetty`, käytä asetusta `-Dhakurekisteri.profile=it` jolloin serveri toimii ilman ulkoisia depsuja
+2. Käynnistä serveri IDEAsta: `HakuRekisteriJettyWithMocks`, jolloin serveri toimii ilman ulkoisia depsuja
 3. Aja Mocha-testit selaimessa: http://localhost:8080/test/runner.html
 
 Mocha-testit käyttävät tällä hetkellä suurelta osin frontend-mockeja, joten ne eivät juurikaan testaa serverikoodia.
@@ -21,7 +21,7 @@ Näin voit ajaa sovellusta paikallisesti tuotannonkaltaisena setuppina, käyttä
 
 1. Ihan ensin tarvitset devaukseen soveltuvan `~/oph-configuration`-hakemiston. Kysy devaajilta apua!
 
-2. Luo paikallinen h2-tietokanta: `./sbt createTestDb`. Tämä kopioi datat luokka-ympäristöstä paikalliseen data-nimiseen hakemistoon.
+2. Luo paikallinen h2-tietokanta: `./sbt createDevDb`. Tämä kopioi datat luokka-ympäristöstä paikalliseen data-nimiseen hakemistoon.
 
 3. Käynnistä paikallinen serveri: `./sbt ~container:start`. Vaihtoehtoisesti aja IDEA:ssa luokka `HakuRekisteriJetty`.
 
