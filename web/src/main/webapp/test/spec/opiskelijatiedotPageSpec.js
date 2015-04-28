@@ -372,7 +372,7 @@
                         assertValue(opiskelijatiedot.suoritusTila, "0")
                         assertArvosanat(38, 20, 12, 15, 1)
                         assertArvosanaRivi("Äidinkieli ja kirjallisuus", "", "Kieli puuttuu!!", ["10"], [])
-                        // assertArvosanaRivi("A1-kieli", "", "englanti", ["9"],[])
+                        assertArvosanaRivi("A1-kieli", "", "englanti", ["9"],[])
                         assertArvosanaRivi("Matematiikka", "", "", ["6"], [])
                         assertArvosanaRivi("Matematiikka", "04.06.2015", "", ["10"], ["9"])
                     },
@@ -502,7 +502,6 @@
             })
             describe("Vahvistamattomat hakemukselta tulleet suoritukset", function () {
                 it.skip('!! Hakemukselta tullut arvosana näkyy oikein', seqDone(
-
                 ))
                 it("Vahvistamattomalle suoritukselle näytetään info-viesti", seqDone(
                     function () {
@@ -630,7 +629,6 @@
                         saveDisabled()
                     ))
                     it.skip("!! Lisää suoritus luo uuden suorituksen", seqDone(
-
                     ))
                     it.skip("!! Peruskoulun suoritukselle voi lisätä pakollisen arvosanan", seqDone(
                     ))
@@ -639,13 +637,10 @@
                     it.skip("!! Peruskoulun suorituksen arvosanan muuttaminen tallentaa null-päivämäärä jos arvosanalla alunperin null-päivä", seqDone(
                     ))
                     it.skip("!! Suorituksen poistaminen", seqDone(
-
                     ))
                     it.skip("!! Peruskoulun arvosanan poistaminen", seqDone(
-
                     ))
                     it.skip("!! Lisää korotus tallentaa arvosanan", seqDone(
-
                     ))
                 })
                 describe("Yo suoritus", function() {
@@ -698,7 +693,6 @@
                         saveDisabled()
                     ))
                     it.skip("!! YO arvosanan poistaminen", seqDone(
-
                     ))
                 })
                 describe("Luokkatieto", function() {
@@ -744,10 +738,8 @@
                         }
                     ))
                     it.skip("!! Luokkatiedon poistaminen", seqDone(
-
                     ))
                     it.skip("!! Luokkatiedon muokkaaminen", seqDone(
-
                     ))
                 })
             }
