@@ -7,12 +7,12 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
-import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
-import fi.vm.sade.hakurekisteri.integration.virta.{VirtaActor, VirtaClient}
-import fi.vm.sade.hakurekisteri.integration.ytl.{YtlActor}
 import fi.vm.sade.hakurekisteri.integration._
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, TarjontaActor}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaActor, VirtaClient}
+import fi.vm.sade.hakurekisteri.integration.ytl.YtlActor
 import fi.vm.sade.hakurekisteri.rest.support.Registers
 import fi.vm.sade.hakurekisteri.suoritus.VapaamuotoinenKkTutkinto
 import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
@@ -35,21 +35,21 @@ trait Integrations {
 
 object Integrations {
   def apply(rekisterit: Registers, system: ActorSystem, config: Config) = config.mockMode match {
-    case true => new MockIntegrations(system, config)
+    case true => new MockIntegrations(rekisterit, system, config)
     case _ => new BaseIntegrations(rekisterit, system, config)
   }
 }
 
-class MockIntegrations(system: ActorSystem, config: Config) extends Integrations {
+class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Config) extends Integrations {
   override val virta: ActorRef = mockActor("virta", new DummyActor)
   override val valintaTulos: ActorRef = mockActor("valintaTulos", new DummyActor)
-  override val hakemukset: ActorRef = mockActor("hakemukset", new DummyActor)
-  override val ytl: ActorRef = mockActor("ytl", new DummyActor)
+  override val hakemukset: ActorRef = mockActor("hakemukset", new MockHakemusActor)
   override val koodisto: ActorRef = mockActor("koodisto", new DummyActor)
   override val organisaatiot: ActorRef = mockActor("organisaatiot", new MockOrganisaatioActor(config))
   override val parametrit: ActorRef = mockActor("parametrit", new MockParameterActor)
   override val henkilo: ActorRef = mockActor("henkilo", new MockHenkiloActor(config))
-  override val tarjonta: ActorRef = mockActor("tarjonta", new DummyActor)
+  override val tarjonta: ActorRef = mockActor("tarjonta", new MockTarjontaActor(config))
+  override val ytl: ActorRef = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, config.integrations.ytlConfig)), "ytl")
   override val proxies = new MockProxies
 
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)

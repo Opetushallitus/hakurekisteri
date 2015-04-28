@@ -129,4 +129,14 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config) extends Ac
   }
 }
 
+class MockTarjontaActor(config: Config) extends TarjontaActor(null, config) {
+
+  override def receive: Receive = {
+    case GetKomoQuery(oid) =>
+      sender ! KomoResponse(oid, None)
+
+    case msg =>
+      log.warning(s"not implemented receive(${msg})")
+  }
+}
 
