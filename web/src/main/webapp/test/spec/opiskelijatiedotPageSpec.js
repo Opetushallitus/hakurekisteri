@@ -550,9 +550,6 @@
         })
         describe('Tietojen muokkaus', function () {
                 describe("Peruskoulun suoritus", function() {
-                    it.skip("!! Lisää suoritus luo uuden suorituksen", seqDone(
-
-                    ))
                     it("Peruskoulun suoritustiedot (ja arvosanat) talletetaan vain jos muuttuneita arvoja", seqDone(
                         function () {
                             httpFixtures().organisaatioService.pikkaralaOid()
@@ -631,6 +628,9 @@
                             })
                         },
                         saveDisabled()
+                    ))
+                    it.skip("!! Lisää suoritus luo uuden suorituksen", seqDone(
+
                     ))
                     it.skip("!! Peruskoulun suoritukselle voi lisätä pakollisen arvosanan", seqDone(
                     ))
