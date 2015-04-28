@@ -50,13 +50,11 @@ class DefaultConfig extends Config {
 class MockConfig extends Config {
   def mockMode = true
   override val importBatchProcessingInitialDelay = 1.seconds
-  override val h2 = true
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "web/src/test/resources/oph-configuration")
 }
 
 abstract class Config {
   def mockMode: Boolean
-  val h2 = false
 
   val log = LoggerFactory.getLogger(getClass)
   def ophConfDir: Path
