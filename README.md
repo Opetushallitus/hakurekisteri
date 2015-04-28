@@ -7,8 +7,7 @@ Setup:
 
 1. Laita fronttikäännös pyörimään: `npm run watch`. Tämä kääntää coffeescriptit aina kun ne muuttuvat.
 2. Käynnistä serveri IDEAsta: `HakuRekisteriJetty`, käytä asetusta `-Dhakurekisteri.profile=it` jolloin serveri toimii ilman ulkoisia depsuja
-3. Buildaa fronttikamat: `npm run watch`
-4. Aja Mocha-testit selaimessa: http://localhost:8080/test/runner.html
+3. Aja Mocha-testit selaimessa: http://localhost:8080/test/runner.html
 
 Mocha-testit käyttävät tällä hetkellä suurelta osin frontend-mockeja, joten ne eivät juurikaan testaa serverikoodia.
 
