@@ -35,13 +35,13 @@
                         <td rowspan="2" class="{{statusClass(b)}}">
                             <div oph-msg="suoritusrekisteri.tiedonsiirtotila.tila.{{b.state}}">{{b.state}}</div>
                             <div ng-if="b.status.successRows" class="text-success text-nowrap"><strong
-                                    oph-msg="suoritusrekisteri.tiedonsiirtotila.ok">OK</strong><span>{{b.status.successRows}}</span>
+                                    oph-msg="suoritusrekisteri.tiedonsiirtotila.ok">OK</strong> <span>{{b.status.successRows}}</span>
                             </div>
                             <div ng-if="b.status.failureRows" class="text-danger text-nowrap"><strong
-                                    oph-msg="suoritusrekisteri.tiedonsiirtotila.nok">NOK</strong><span>{{b.status.failureRows}}</span>
+                                    oph-msg="suoritusrekisteri.tiedonsiirtotila.nok">NOK</strong> <span>{{b.status.failureRows}}</span>
                             </div>
                             <div ng-if="b.status.totalRows" class="text-nowrap"><strong
-                                    oph-msg="suoritusrekisteri.tiedonsiirtotila.total">TOTAL</strong><span>{{b.status.totalRows}}</span>
+                                    oph-msg="suoritusrekisteri.tiedonsiirtotila.total">TOTAL</strong> <span>{{b.status.totalRows}}</span>
                             </div>
                             <div>
                                 <button ng-if="b.state === 'DONE' || b.state === 'FAILED'" ng-click="reprocess(b.id)"
