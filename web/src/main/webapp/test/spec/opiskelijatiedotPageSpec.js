@@ -565,39 +565,62 @@
                             httpFixtures().komoLocal.komoTiedot()
                             koodistoFixtures()
                         },
+                        function () {
+                            console.log("1")
+                        },
                         input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                         click(opiskelijatiedot.searchButton),
                         wait.forAngular,
-
+                        function () {
+                            console.log("2")
+                        },
                         saveDisabled(),
                         select(opiskelijatiedot.suoritusKoulutus, "2"),
                         saveEnabled(),
                         select(opiskelijatiedot.suoritusKoulutus, "1"),
-
+                        function () {
+                            console.log("3")
+                        },
                         saveDisabled(),
                         select(opiskelijatiedot.suoritusYksilollistetty, "2"),
                         saveEnabled(),
                         select(opiskelijatiedot.suoritusYksilollistetty, "0"),
-
+                        function () {
+                            console.log("4")
+                        },
                         saveDisabled(),
                         select(opiskelijatiedot.suoritusTila, "1"),
                         saveEnabled(),
                         select(opiskelijatiedot.suoritusTila, "0"),
-
+                        function () {
+                            console.log("5")
+                        },
                         saveDisabled(),
                         function () {
                             httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
                             httpFixtures().organisaatioService.pikkoloKoodi()
                             httpFixtures().organisaatioService.pikkoloOid()
                         },
+                        function () {
+                            console.log("6")
+                        },
                         typeaheadInput(opiskelijatiedot.suoritusMyontaja, "Pik", opiskelijatiedot.typeaheadMenuChild(2)),
                         saveEnabled(),
+                        function () {
+                            console.log("7")
+                        },
                         typeaheadInput(opiskelijatiedot.suoritusMyontaja, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
                         saveDisabled(),
-
+                        function () {
+                            console.log("8")
+                        },
                         select(opiskelijatiedot.suoritusKieli, "2"),
                         saveEnabled(),
+                        function () {
+                            console.log("9")
+                        },
                         mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/suoritukset\/4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9$/),
+
                         function (savedData) {
                             expect(JSON.parse(savedData)).to.deep.equal({
                                 henkiloOid: "1.2.246.562.24.71944845619",
@@ -612,9 +635,15 @@
                                 id: "4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9"
                             })
                         },
+                        function () {
+                            console.log("10")
+                        },
                         saveDisabled(),
                         click(opiskelijatiedot.editArvosanat),
                         selectInput(opiskelijatiedot.arvosana(1,0), "2"),
+                        function () {
+                            console.log("11")
+                        },
                         mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/arvosanat\/dc54970c-9cd1-4e8f-8d97-a37af3e99c10$/),
                         function(savedData) {
                             expect(JSON.parse(savedData)).to.deep.equal({
@@ -626,6 +655,9 @@
                                 valinnainen: false,
                                 source: "Test"
                             })
+                        },
+                        function () {
+                            console.log("12")
                         },
                         saveDisabled()
                     ))
