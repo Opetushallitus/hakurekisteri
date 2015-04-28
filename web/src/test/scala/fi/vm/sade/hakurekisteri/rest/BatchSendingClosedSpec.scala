@@ -20,6 +20,7 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 import siirto.{PerustiedotXmlConverter, SchemaDefinition}
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 import scala.xml.Elem
 
 class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport with ConfigurationSupport {
@@ -53,7 +54,7 @@ class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with Dis
 
   override def stop(): Unit = {
     system.shutdown()
-    system.awaitTermination()
+    system.awaitTermination(15.seconds)
     super.stop()
   }
 

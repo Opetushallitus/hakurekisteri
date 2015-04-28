@@ -42,7 +42,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
 
   def createEndpointMock = {
     val result = mock[Endpoint]
-    val inFuture = Platform.currentTime + (120 * 60 * 1000)
+    val inFuture = Platform.currentTime + (300 * 60 * 1000)
 
     when(result.request(forUrl("http://localhost/ohjausparametrit-service/api/v1/rest/parametri/tiedonsiirtosendingperiods"))).thenReturn(
       (200,

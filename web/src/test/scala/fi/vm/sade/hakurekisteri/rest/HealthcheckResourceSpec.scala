@@ -95,9 +95,9 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
   test("healthcheck should return OK and correct resource counts") {
 
     import scala.concurrent.duration._
-    implicit val timeout: Timeout = 20.seconds
+    implicit val timeout: Timeout = 60.seconds
     val saved = (eraRekisteri ? importBatch).mapTo[ImportBatch with Identified[UUID]]
-    Await.result(saved, 20.seconds)
+    Await.result(saved, 60.seconds)
 
     get("/") {
       status should equal (200)
