@@ -199,7 +199,9 @@ function mockPostReturnData(triggerFn, urlPattern) {
     return seq(
         function () {
             var savedData
+            dslDebug("mockPostReturnData", "expected POST", urlPattern)
             testFrame().httpBackend.when('POST', urlPattern, function (data) {
+                dslDebug("mockPostReturnData", "handling POST to", urlPattern)
                 deferred.resolve(data)
                 savedData = data
                 return true

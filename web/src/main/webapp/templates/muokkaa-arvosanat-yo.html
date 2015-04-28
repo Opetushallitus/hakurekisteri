@@ -44,7 +44,7 @@
             <td>
                 <input ng-show="k.editable" type="checkbox" ng-model="k.arvosana.valinnainen" ng-disabled="k.arvosana.delete"
                        class="form-control" ng-true-value="false" ng-false-value="true"/>
-                <span ng-hide="k.editable" class="test-yoTxt">{{k.arvosana.valinnainen}}</span>
+                <span ng-hide="k.editable || k.arvosana.valinnainen" class="test-yoTxt">pakollinen</span>
             </td>
             <td>
                 <button ng-show="k.editable" type="button" ng-click="k.arvosana.delete = true" ng-disabled="k.arvosana.delete"

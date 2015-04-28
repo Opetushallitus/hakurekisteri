@@ -436,6 +436,15 @@ var restData = {
                 "valinnainen": false,
                 "lisatieto": "UO",
                 "myonnetty": "01.06.2013"
+            },{
+                "id": "3ba4b93c-87e8-4e6c-8b2d-704ae88a89af",
+                "suoritus": "64d26b8c-e2c8-4b13-9ac9-51c85e288bc0",
+                "arvio": {"arvosana": "C", "asteikko": "YO", "pisteet": 4},
+                "aine": "PITKA",
+                "source": "1.2.246.562.24.72453542949",
+                "valinnainen": true,
+                "lisatieto": "MA",
+                "myonnetty": "02.06.2013"
             }]
         }
     },
@@ -463,6 +472,9 @@ var serviceUrls = {
     arvosanat: {
         suoritus: function (oid) {
             return new RegExp(".*rest/v1/arvosanat\\?suoritus=" + oid + "$")
+        },
+        arvosana: function(oid) {
+            return new RegExp(".*rest/v1/arvosanat/" + oid + "$")
         }
     },
     opiskelijat: {

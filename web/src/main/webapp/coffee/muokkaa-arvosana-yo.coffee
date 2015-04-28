@@ -34,7 +34,6 @@ app.controller "MuokkaaArvosanatYo", [
       $scope.koetaulukko = arvosanat.filter((a) ->
         a.arvio.asteikko is "YO"
       ).map((a) ->
-        a.valinnainen = not a.valinnainen
         arvosanatModified.push changeDetection(a)
         {
           arvosana: a
