@@ -17,6 +17,10 @@ class HttpProxies(authenticationClient: VirkailijaRestClient, koodistoClient: Vi
     def henkiloByOid(oid: String) = {
       authenticationClient.readObject[String]("/resources/henkilo/" + oid, 200, 1)
     }
+
+    def henkiloByQparam(hetu: String): Future[String] = {
+      authenticationClient.readObject[String]("/resources/henkilo?index=0&count=1&no=true&p=false&s=true&q=" + hetu, 200 , 1)
+    }
   }
   lazy val organization = new OrganizationProxy {
     def search(query: String) = {

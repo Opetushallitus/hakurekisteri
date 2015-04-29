@@ -16,6 +16,7 @@ trait KoodistoProxy {
 trait AuthenticationProxy {
   def henkilotByOidList(oidList: List[String]): Future[String]
   def henkiloByOid(oid: String): Future[String]
+  def henkiloByQparam(hetu: String): Future[String]
 }
 
 trait OrganizationProxy {

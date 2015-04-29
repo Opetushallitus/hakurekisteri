@@ -8,7 +8,7 @@ import org.scalatra.{InternalServerError, FutureSupport, ScalatraServlet, AsyncR
 import org.scalatra.servlet.ServletApiImplicits
 import ServletApiImplicits._
 import org.slf4j.LoggerFactory
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
@@ -45,6 +45,12 @@ class AuthenticationProxyServlet(proxy: AuthenticationProxy, system: ActorSystem
   get("/resources/henkilo/:oid") {
     new AsyncResult() {
       val is = proxy.henkiloByOid(params("oid"))
+    }
+  }
+
+  get("/resources/henkilo") {
+    new AsyncResult() {
+      val is = proxy.henkiloByQparam(params("q"))
     }
   }
 

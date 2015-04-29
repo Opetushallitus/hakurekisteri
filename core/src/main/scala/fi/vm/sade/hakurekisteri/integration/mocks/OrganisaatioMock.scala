@@ -1,26 +1,20 @@
 package fi.vm.sade.hakurekisteri.integration.mocks
 
+import fi.vm.sade.hakurekisteri.integration.mocks.HenkiloMock._
+
 object OrganisaatioMock {
 
   def findAll(): String = {
-    scala.io.Source.fromInputStream(getClass.getResourceAsStream("/mock-data/organisaatio-all.json"))
-      .getLines
-      .mkString
+    getResourceJson("/mock-data/organisaatio-all.json")
   }
 
   def findByOid(tunniste: String): String = {
     if (tunniste.equals("06345") || tunniste.equals("1.2.246.562.10.39644336305")) {
-      scala.io.Source.fromInputStream(getClass.getResourceAsStream("/mock-data/organisaatio-pikkarala.json"))
-        .getLines
-        .mkString
+      getResourceJson("/mock-data/organisaatio-pikkarala.json")
     } else if (tunniste.equals("05127") || tunniste.equals("1.2.246.562.10.16546622305")) {
-      scala.io.Source.fromInputStream(getClass.getResourceAsStream("/mock-data/organisaatio-pikkola.json"))
-        .getLines
-        .mkString
+      getResourceJson("/mock-data/organisaatio-pikkola.json")
     } else {
-      scala.io.Source.fromInputStream(getClass.getResourceAsStream("/mock-data/organisaatio-foobar.json"))
-        .getLines
-        .mkString
+      getResourceJson("/mock-data/organisaatio-foobar.json")
     }
   }
 }
