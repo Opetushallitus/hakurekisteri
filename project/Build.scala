@@ -166,8 +166,7 @@ object HakurekisteriBuild extends Build {
         ++ inConfig(LoadSpecs)(Defaults.testSettings)
         ++ inConfig(LoadSpecs)(Seq(
           testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
-          logBuffered := false,
-          parallelExecution := false))
+          logBuffered := false))
         ++ Seq(ideaExtraTestConfigurations := Seq(LoadSpecs))
         ++ org.scalastyle.sbt.ScalastylePlugin.Settings
         ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8"))
@@ -182,6 +181,7 @@ object HakurekisteriBuild extends Build {
         version := Version,
         scalaVersion := ScalaVersion,
         artifactName := ArtifactName,
+        parallelExecution := false,
         resolvers += Classpaths.typesafeReleases,
         resolvers += "oph-snapshots" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local",
         resolvers += "oph-releases" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local",
