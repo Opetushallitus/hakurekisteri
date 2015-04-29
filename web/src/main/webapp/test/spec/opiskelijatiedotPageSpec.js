@@ -566,7 +566,7 @@
                                 source: "ophadmin",
                                 vahvistettu: true,
                                 komo: "1.2.246.562.13.62959769647",
-                                myontaja: restData.organisaatioService.pikkarala.oid,
+                                myontaja: "1.2.246.562.10.39644336305",
                                 tila: "KESKEN",
                                 valmistuminen: "03.06.2015",
                                 yksilollistaminen: "Ei",
