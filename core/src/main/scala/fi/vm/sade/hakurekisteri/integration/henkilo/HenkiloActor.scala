@@ -6,6 +6,7 @@ import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
+import fi.vm.sade.hakurekisteri.integration.mocks.HenkiloMock
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioResponse
 import org.json4s.{DefaultFormats, _}
 import org.json4s.jackson.JsonMethods._
@@ -83,11 +84,11 @@ class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
   override def receive: Receive = {
     case henkiloOid: String =>
       log.debug(s"received henkiloOid: $henkiloOid")
-      val json = parse(getClass.getResourceAsStream("/mock-data/henkilopalvelu-singleoid.json"))
+      val json = parse(HenkiloMock.getHenkiloByOid("1.2.246.562.24.71944845619"))
       sender ! json.extract[Henkilo]
 
     case HetuQuery(Hetu(hetu)) =>
-      val json = parse(getClass.getResourceAsStream("/mock-data/henkilopalvelu-singleoid.json"))
+      val json = parse(HenkiloMock.getHenkiloByOid("1.2.246.562.24.71944845619"))
       sender ! json.extract[Henkilo]
 
     case q: HenkiloQuery =>
@@ -113,7 +114,7 @@ class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
   }
 
   override def findExistingOrganisaatiohenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
-    val json = parse(getClass.getResourceAsStream("/mock-data/henkilopalvelu-singleoid"))
+    val json = parse(HenkiloMock.getHenkiloByOid("1.2.246.562.24.71944845619"))
     json.extract[OrganisaatioResponse]
   }
 }
