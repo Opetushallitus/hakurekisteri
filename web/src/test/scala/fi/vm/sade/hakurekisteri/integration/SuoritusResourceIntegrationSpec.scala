@@ -45,7 +45,7 @@ trait Teppo extends Henkilo { this: Suite =>
 
 class SuoritusResourceIntegrationSpec extends FlatSpec with Matti with Teppo with CleanSharedJettyBeforeEach with Matchers with HakurekisteriJsonSupport {
   val contentTypeJson = Map("Content-Type" -> "application/json; charset=UTF-8")
-  val matinSuoritus = """{
+  val matinLukio = """{
   "komo": "1.2.246.562.5.2013061010184237348007",
   "myontaja": "1.2.246.562.10.96421158856",
   "tila": "KESKEN",
@@ -53,7 +53,7 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with Matti with Teppo wit
   "henkiloOid": "1.2.246.562.24.12345678910",
   "suoritusKieli": "FI"
 }"""
-  val teponSuoritus = """{
+  val teponLukio = """{
   "komo": "1.2.246.562.5.2013061010184237348007",
   "myontaja": "1.2.246.562.10.96421158856",
   "tila": "KESKEN",
@@ -61,7 +61,7 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with Matti with Teppo wit
   "henkiloOid": "1.2.246.562.24.12345678911",
   "suoritusKieli": "FI"
 }"""
-  val matinValmistuminen = """{
+  val matinLukioValmistuminen = """{
   "komo": "1.2.246.562.5.2013061010184237348007",
   "myontaja": "1.2.246.562.10.96421158856",
   "tila": "VALMIS",
@@ -69,12 +69,20 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with Matti with Teppo wit
   "henkiloOid": "1.2.246.562.24.12345678910",
   "suoritusKieli": "FI"
 }"""
+  val teponPeruskoulu = """{
+  "komo": "1.2.246.562.13.62959769647",
+  "myontaja": "1.2.246.562.10.96421158856",
+  "tila": "KESKEN",
+  "valmistuminen": "01.01.2016",
+  "henkiloOid": "1.2.246.562.24.12345678911",
+  "suoritusKieli": "FI"
+}"""
 
   behavior of "SuoritusResource"
 
   it should "only return Suoritukset modified after muokattuJalkeen" in {
     val before = DateTime.now()
-    post("/rest/v1/suoritukset", matinSuoritus, contentTypeJson) {
+    post("/rest/v1/suoritukset", matinLukio, contentTypeJson) {
       response.status should be(201)
     }
     val after = DateTime.now()
@@ -87,7 +95,7 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with Matti with Teppo wit
       parse(response.body).extract[JArray].arr shouldBe empty
     }
 
-    post("/rest/v1/suoritukset", matinValmistuminen, contentTypeJson) {
+    post("/rest/v1/suoritukset", matinLukioValmistuminen, contentTypeJson) {
       response.status should be(201)
     }
     get("/rest/v1/suoritukset", ("muokattuJalkeen", after.toString)) {
@@ -100,11 +108,11 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with Matti with Teppo wit
 
   it should "handle Suoritukset by multiple persons correctly" in {
     val before = DateTime.now()
-    post("/rest/v1/suoritukset", matinSuoritus, contentTypeJson) {
+    post("/rest/v1/suoritukset", matinLukio, contentTypeJson) {
       response.status should be(201)
     }
     val afterMatti = DateTime.now()
-    post("/rest/v1/suoritukset", teponSuoritus, contentTypeJson) {
+    post("/rest/v1/suoritukset", teponLukio, contentTypeJson) {
       response.status should be(201)
     }
     val after = DateTime.now()
@@ -121,6 +129,33 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with Matti with Teppo wit
     get("/rest/v1/suoritukset", ("muokattuJalkeen", after.toString)) {
       response.status should be(200)
       parse(response.body).extract[JArray].arr shouldBe empty
+    }
+  }
+
+  it should "correctly return all Suoritukset with a same komo after an update to one" in {
+    post("/rest/v1/suoritukset", matinLukio, contentTypeJson) {
+      response.status should be(201)
+    }
+    post("/rest/v1/suoritukset", teponLukio, contentTypeJson) {
+      response.status should be(201)
+    }
+    post("/rest/v1/suoritukset", teponPeruskoulu, contentTypeJson) {
+      response.status should be(201)
+    }
+    get("/rest/v1/suoritukset", ("komo", "1.2.246.562.5.2013061010184237348007")) {
+      response.status should be(200)
+      val result = parse(response.body).extract[JArray].arr
+      result.length should be(2)
+      result.foreach(_.extract[JObject].values("tila") should be("KESKEN"))
+    }
+    post("/rest/v1/suoritukset", matinLukioValmistuminen, contentTypeJson) {
+      response.status should be(201)
+    }
+    get("/rest/v1/suoritukset", ("komo", "1.2.246.562.5.2013061010184237348007")) {
+      response.status should be(200)
+      val result = parse(response.body).extract[JArray].arr
+      result.length should be(2)
+      result.map(_.extract[JObject].values("tila")) should contain("VALMIS")
     }
   }
 }

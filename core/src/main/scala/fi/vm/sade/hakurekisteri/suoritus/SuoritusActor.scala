@@ -20,6 +20,8 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
 
   var myontajaIndex: Map[(String, String), Seq[Suoritus with Identified[UUID]]] = Option(myontajaIndex).getOrElse(Map())
 
+  var komoIndex: Map[String, Seq[VirallinenSuoritus with Identified[UUID]]] = Option(komoIndex).getOrElse(Map())
+
   def year(suoritus:Suoritus): String = suoritus match {
     case s: VirallinenSuoritus =>  s.valmistuminen.getYear.toString
     case s: VapaamuotoinenSuoritus => s.vuosi.toString
@@ -45,6 +47,12 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
     for (
       virallinen <- Option(suoritus).collect { case v: VirallinenSuoritus => v }
     ) myontajaIndex = myontajaIndex + ((virallinen.myontaja, virallinen.valmistuminen.getYear.toString) -> (myontajaIndex.getOrElse((virallinen.myontaja, virallinen.valmistuminen.getYear.toString), Seq()) :+ virallinen))
+
+    komoIndex = Option(komoIndex).getOrElse(Map())
+    suoritus match {
+      case virallinen: VirallinenSuoritus =>
+        komoIndex = komoIndex.updated(virallinen.komo, virallinen +: komoIndex.getOrElse(virallinen.komo, Seq()))
+    }
   }
 
   override def index(old: Option[Suoritus with Identified[UUID]], current: Option[Suoritus with Identified[UUID]]) {
@@ -76,6 +84,16 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
           myontajaIndex = myontajaIndex - ((virallinen.myontaja, virallinen.valmistuminen.getYear.toString))
         else
           myontajaIndex = myontajaIndex + ((virallinen.myontaja, virallinen.valmistuminen.getYear.toString) -> suoritukset)
+      }
+
+      komoIndex = Option(komoIndex).getOrElse(Map())
+      suoritus match {
+        case virallinen: VirallinenSuoritus =>
+          komoIndex = komoIndex.get(virallinen.komo) map (_ filterNot ((s) => s.id == virallinen.id)) match {
+            case Some(suoritukset) if suoritukset.nonEmpty => komoIndex.updated(virallinen.komo, suoritukset)
+            case Some(_) => komoIndex - virallinen.komo
+            case None => komoIndex
+          }
       }
     }
 
@@ -112,6 +130,14 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
           case ((oid, _), value) if oid == myontaja => value
         }.foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _).toSet.toSeq
       }
+
+    case SuoritusQuery(None, None, None, None, Some(komo), None) =>
+      Future { komoIndex.getOrElse(komo, Seq()) }
+
+    case SuoritusQuery(None, None, None, None, Some(komo), Some(muokattuJalkeen)) =>
+      Future { komoIndex.getOrElse(komo, Seq()) } flatMap ((filtered) =>
+        executeQuery(filtered)(SuoritusQuery(None, None, None, None, None, Some(muokattuJalkeen)))
+      )
 
     case SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja, komo, muokattuJalkeen) =>
       val filtered = tiedonSiirtoIndex.get(henkilo).map(_.values.reduce(_ ++ _)).getOrElse(Seq())
