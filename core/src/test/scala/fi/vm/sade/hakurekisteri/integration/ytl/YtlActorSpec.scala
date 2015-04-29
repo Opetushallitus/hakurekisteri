@@ -39,7 +39,7 @@ class YtlActorSpec extends ScalatraFunSuite {
 
   private def waitForSuoritus: Future[Suoritus with Identified[UUID]] = {
     Future {
-      val suoritusQ = SuoritusQuery(Some("210452-138M"))
+      val suoritusQ = SuoritusQuery(Some("123456-789"))
       var results: Seq[Suoritus with Identified[UUID]] = List()
       while(results.isEmpty) {
         Thread.sleep(100)
