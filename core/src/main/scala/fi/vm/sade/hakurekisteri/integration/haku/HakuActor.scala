@@ -28,8 +28,10 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   var starting = true
 
   context.system.scheduler.schedule(1.second, hakuRefreshTime) {
-    log.info(s"updating all hakus for ${self.path.toString}")
-    self ! Update
+    if (context != null) {
+      log.info(s"updating all hakus for ${self.path.toString}")
+      self ! Update
+    }
   }
 
   import FutureList._
