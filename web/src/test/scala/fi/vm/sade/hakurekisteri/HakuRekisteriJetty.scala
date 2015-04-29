@@ -10,8 +10,9 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.ResourceCollection
 import org.eclipse.jetty.webapp.WebAppContext
 import org.h2.tools.RunScript
+import org.scalatest.{BeforeAndAfterEach, Suite, BeforeAndAfterAll}
 import org.scalatra.servlet.ScalatraListener
-import scala.util.Random
+import org.scalatra.test.HttpComponentsClient
 
 object HakuRekisteriJetty extends App {
   new HakuRekisteriJetty(8080).start
@@ -72,4 +73,24 @@ class HakuRekisteriJetty(val port: Int = PortChecker.findFreeLocalPort, config: 
     }
   }
 
+}
+
+trait CleanSharedJetty extends BeforeAndAfterAll with HttpComponentsClient { this: Suite =>
+  val port = SharedJetty.port
+  val baseUrl = s"http://localhost:$port"
+
+  override def beforeAll() = {
+    SharedJetty.restart
+    super.beforeAll()
+  }
+}
+
+trait CleanSharedJettyBeforeEach extends BeforeAndAfterEach with HttpComponentsClient { this: Suite =>
+  val port = SharedJetty.port
+  val baseUrl = s"http://localhost:$port"
+
+  override def beforeEach() = {
+    SharedJetty.restart
+    super.beforeEach()
+  }
 }
