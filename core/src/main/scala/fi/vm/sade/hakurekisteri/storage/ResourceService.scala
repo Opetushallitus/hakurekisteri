@@ -1,16 +1,16 @@
 package fi.vm.sade.hakurekisteri.storage
 
 import akka.event.LoggingAdapter
-import fi.vm.sade.hakurekisteri.rest.support.Query
+import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
 import scala.concurrent.{ExecutionContext, Future}
-import fi.vm.sade.hakurekisteri.storage.repository.Repository
+import fi.vm.sade.hakurekisteri.storage.repository._
 
 
 trait ResourceService[T, I] {
   def findBy(o: Query[T]):Future[Seq[T with Identified[I]]]
 }
 
-trait InMemQueryingResourceService[T,I] extends ResourceService[T,I] { this: Repository[T,I] =>
+trait InMemQueryingResourceService[T <: Resource[I, T], I] extends ResourceService[T,I] { this: JournaledRepository[T,I] =>
 
   val matcher: PartialFunction[Query[T], (T with Identified[I]) => Boolean]
 
@@ -40,8 +40,22 @@ trait InMemQueryingResourceService[T,I] extends ResourceService[T,I] { this: Rep
       optimize.applyOrElse(o, executeQuery(current))
   }
 
-  def executeQuery(current: Seq[T with Identified[I]])( o: Query[T]): Future[Seq[T with Identified[I]]] = {
-    Future.traverse(current)(check(o)).map(_.flatten)
+  private def idsModifiedSince(since: Long): Set[I] = {
+    this.journal.journal(Some(since)).map {
+      case Updated(t) => t.id
+      case Insert(t) => t.id
+      case Deleted(id, _) => id
+    }.toSet
+  }
+
+  def executeQuery(current: Seq[T with Identified[I]])(query: Query[T]): Future[Seq[T with Identified[I]]] = {
+    val resources = query.muokattuJalkeen match {
+      case Some(time) =>
+        val modifiedIds = idsModifiedSince(time.getMillis)
+        current filter ((r) => modifiedIds.contains(r.id))
+      case None => current
+    }
+    Future.traverse(resources)(check(query)) map (_.flatten)
   }
 }
 

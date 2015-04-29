@@ -78,15 +78,18 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
 trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends ResourceService[R,I] { this: JDBCRepository[R,I,T] =>
   val dbExecutor:ExecutionContext
 
-  override def findBy(q: Query[R]): Future[Seq[R with Identified[I]]] =
+  override def findBy(q: Query[R]): Future[Seq[R with Identified[I]]] = {
+    if (q.muokattuJalkeen.isDefined) {
+      throw new NotImplementedError("muokattuJalkeen not implemented in JDBCService")
+    }
     Future {
       journal.db withSession {
         implicit session =>
           dbQuery.lift(q).map(_.list.collect{ case Updated(res) => res}).getOrElse(Seq())
-
       }
 
     }(dbExecutor)
+  }
 
 
   val dbQuery: PartialFunction[Query[R], lifted.Query[T, Delta[R,I], Seq]]
