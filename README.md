@@ -21,7 +21,7 @@ Näin voit ajaa sovellusta paikallisesti tuotannonkaltaisena setuppina, käyttä
 
 1. Ihan ensin tarvitset devaukseen soveltuvan `~/oph-configuration`-hakemiston. Kysy devaajilta apua!
 
-2. Luo paikallinen h2-tietokanta: `./sbt createDevDb`. Tämä kopioi datat luokka-ympäristöstä paikalliseen data-nimiseen hakemistoon.
+2. Luo paikallinen h2-tietokanta: `./sbt createDevDb`. Tämä kopioi datat luokka-ympäristöstä tietokantaan `data/development.h2.db`.
 
 3. Käynnistä paikallinen serveri: `./sbt ~container:start`. Vaihtoehtoisesti aja IDEA:ssa luokka `HakuRekisteriJetty`.
 
@@ -33,6 +33,15 @@ Muutama huomio:
 - Käy kirjautumassa sisään osoittessa https://itest-virkailija.oph.ware.fi, jotta autentikaatio muihin palveluihin toimii
 
 API-dokumentaatio löytyy http://localhost:8080/swagger/index.html
+
+## Kehitystietokannat
+
+Sovellusta paikallisesti ajettaessa se käyttää paikallista H2-tietokantaa.
+
+- `data/development.h2.db` jos ajetaan "default"-profiililla
+- `data/integration-test.h2.db` jos ajetan "it"-profiililla. Tätä käytetään integraatiotesteissä, ja kanta tyhjennetään testiajojen aluksi.
+
+Kantoja pääsee tutkimaan kätevästi esim. IDEA:n Database-näkymässä. 
 
 ## Arvosanavalidaattori
 
