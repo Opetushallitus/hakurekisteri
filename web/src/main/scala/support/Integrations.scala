@@ -1,22 +1,21 @@
 package support
 
-import akka.actor.{Actor, Props, ActorRef, ActorSystem}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.Config._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.integration.haku.HakuActor
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{MockOrganisaatioActor, HttpOrganisaatioActor, OrganisaatioActor}
-import fi.vm.sade.hakurekisteri.integration.parametrit.{MockParameterActor, HttpParameterActor, ParameterActor}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor}
+import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.TarjontaActor
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
-import fi.vm.sade.hakurekisteri.integration.virta.{VirtaActor, VirtaClient, VirtaConfig, VirtaQueue}
-import fi.vm.sade.hakurekisteri.integration.ytl.{YTLConfig, YtlActor}
-import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, ServiceConfig, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaActor, VirtaClient}
+import fi.vm.sade.hakurekisteri.integration.ytl.YtlActor
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.Registers
 import fi.vm.sade.hakurekisteri.suoritus.VapaamuotoinenKkTutkinto
 import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
+
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
@@ -51,6 +50,7 @@ class MockIntegrations(system: ActorSystem, config: Config) extends Integrations
   override val henkilo: ActorRef = mockActor("henkilo", new MockHenkiloActor(config))
   override val tarjonta: ActorRef = mockActor("tarjonta", new DummyActor)
   override val proxies = new MockProxies
+
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)
 }
 
@@ -91,7 +91,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       ) rekisterit.suoritusRekisteri ! VapaamuotoinenKkTutkinto(person, kuvaus, myontaja, vuosi, 0, person)
   }
 
-  val ilmoitetutArvosanat = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri,rekisterit.arvosanaRekisteri)(ec);
+  val ilmoitetutArvosanat = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(ec);
 
   hakemukset ! ilmoitetutArvosanat
 
