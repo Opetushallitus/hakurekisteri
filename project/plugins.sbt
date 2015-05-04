@@ -4,8 +4,6 @@ resolvers += "sonatype-snapshots" at "https://oss.sonatype.org/content/repositor
 
 resolvers += "sbt-plugin-snapshots" at "http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-snapshots/"
 
-addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.7.0-SNAPSHOT")
-
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.4")
 
 addSbtPlugin("com.mojolly.scalate" % "xsbt-scalate-generator" % "0.5.0")

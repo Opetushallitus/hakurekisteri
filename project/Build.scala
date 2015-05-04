@@ -3,7 +3,6 @@ import java.util.Date
 import sbt._
 import sbt.Keys._
 import com.mojolly.scalate.ScalatePlugin._
-import org.sbtidea.SbtIdeaPlugin._
 import scala.language.postfixOps
 import com.earldouglas.xsbtwebplugin._
 
@@ -167,7 +166,6 @@ object HakurekisteriBuild extends Build {
         ++ inConfig(LoadSpecs)(Seq(
           testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
           logBuffered := false))
-        ++ Seq(ideaExtraTestConfigurations := Seq(LoadSpecs))
         ++ org.scalastyle.sbt.ScalastylePlugin.Settings
         ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8"))
         ++ Seq(compile in Compile <<= (compile in Compile) dependsOn npmBuild)
