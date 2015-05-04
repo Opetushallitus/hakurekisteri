@@ -5,10 +5,10 @@
     <eranTunniste>PKERA3_2015S_00256</eranTunniste>
     <henkilot>
         <henkilo>
-            <hetu>111111-111C</hetu>
+            <hetu>010101-9755</hetu>
             <sukunimi>Testinen</sukunimi>
-            <etunimet>Foo Bar</etunimet>
-            <kutsumanimi>Foo</kutsumanimi>
+            <etunimet>Mikko Matias</etunimet>
+            <kutsumanimi>Matias</kutsumanimi>
             <todistukset>
                 <lukio>
                     <myontaja>00256</myontaja>
