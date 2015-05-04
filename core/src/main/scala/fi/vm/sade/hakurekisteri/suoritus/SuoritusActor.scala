@@ -49,9 +49,10 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
     ) myontajaIndex = myontajaIndex + ((virallinen.myontaja, virallinen.valmistuminen.getYear.toString) -> (myontajaIndex.getOrElse((virallinen.myontaja, virallinen.valmistuminen.getYear.toString), Seq()) :+ virallinen))
 
     komoIndex = Option(komoIndex).getOrElse(Map())
-    suoritus match {
+    komoIndex = suoritus match {
       case virallinen: VirallinenSuoritus =>
-        komoIndex = komoIndex.updated(virallinen.komo, virallinen +: komoIndex.getOrElse(virallinen.komo, Seq()))
+        komoIndex.updated(virallinen.komo, virallinen +: komoIndex.getOrElse(virallinen.komo, Seq()))
+      case _ => komoIndex
     }
   }
 
@@ -87,13 +88,14 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
       }
 
       komoIndex = Option(komoIndex).getOrElse(Map())
-      suoritus match {
+      komoIndex = suoritus match {
         case virallinen: VirallinenSuoritus =>
-          komoIndex = komoIndex.get(virallinen.komo) map (_ filterNot ((s) => s.id == virallinen.id)) match {
+          komoIndex.get(virallinen.komo) map (_ filterNot ((s) => s.id == virallinen.id)) match {
             case Some(suoritukset) if suoritukset.nonEmpty => komoIndex.updated(virallinen.komo, suoritukset)
             case Some(_) => komoIndex - virallinen.komo
             case None => komoIndex
           }
+        case _ => komoIndex
       }
     }
 
