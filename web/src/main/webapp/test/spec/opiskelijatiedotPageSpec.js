@@ -375,6 +375,8 @@
                         assertArvosanaRivi("A1-kieli", "", "englanti", ["9"],[])
                         assertArvosanaRivi("Matematiikka", "", "", ["6"], [])
                         assertArvosanaRivi("Matematiikka", "04.06.2015", "", ["10"], ["9"])
+                        assertArvosanaRivi("Psykologia", "", "", [], [])
+                        assertArvosanaRivi("Filosofia", "", "", [], [])
                     },
                     saveDisabled()
                 ))
