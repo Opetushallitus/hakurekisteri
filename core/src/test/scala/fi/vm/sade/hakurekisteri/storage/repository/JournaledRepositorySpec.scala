@@ -1,12 +1,11 @@
 package fi.vm.sade.hakurekisteri.storage.repository
 
-import org.scalatest.{Matchers, FlatSpec}
-import org.scalatest.matchers.ShouldMatchers
-import org.scalatest.prop.TableDrivenPropertyChecks._
-import scala.Some
-import fi.vm.sade.hakurekisteri.{TestJournal, TestRepo, TestResource}
-import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
+
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.{TestJournal, TestRepo, TestResource}
+import org.scalatest.prop.TableDrivenPropertyChecks._
+import org.scalatest.{FlatSpec, Matchers}
 
 
 class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBehaviors[TestResource] {
@@ -49,6 +48,15 @@ class JournaledRepositorySpec extends FlatSpec with Matchers with RepositoryBeha
     val idResource = repo.save(TestResource("first item"))
     val delta:Delta[TestResource, UUID] = Updated(idResource)
     journal.journal(None).last should be (delta)
+
+  }
+
+  it should "not add a modification to the journal if the resource is not changed" in new EmptyJournal {
+
+    val resu = TestResource("test")
+    repo.save(resu)
+    repo.save(resu)
+    journal.journal(None).length should be (1)
 
   }
 
