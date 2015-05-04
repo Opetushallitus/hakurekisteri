@@ -27,12 +27,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   val valintatulosRefreshTimeHours = config.integrations.valintatulosRefreshTimeHours.hours
   var starting = true
 
-  context.system.scheduler.schedule(1.second, hakuRefreshTime) {
-    if (context != null) {
-      log.info(s"updating all hakus for ${self.path.toString}")
-      self ! Update
-    }
-  }
+  context.system.scheduler.schedule(1.second, hakuRefreshTime, self, Update)
 
   import FutureList._
 
@@ -44,7 +39,9 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   }
 
   override def receive: Actor.Receive = {
-    case Update => tarjonta ! GetHautQuery
+    case Update =>
+      log.info(s"updating all hakus for ${self.path.toString}")
+      tarjonta ! GetHautQuery
 
     case HakuRequest => sender ! activeHakus
 
