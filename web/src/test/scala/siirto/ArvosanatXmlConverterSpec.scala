@@ -7,6 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import org.xml.sax.SAXParseException
 import scala.xml.{XML, Elem}
 import scalaz.ValidationNel
+import org.scalatest.matchers.{BeMatcher, MatchResult}
 
 class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality with ExcelTools {
   behavior of "ArvosanatXMLConverter"
@@ -128,7 +129,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
         """
     ).toExcel
 
-    verifyValidity(convertXls(wb))
+    convertXls(wb) should be (valid)
   }
 
   it should "konvertoi aineiden arvosanat" in {
@@ -196,11 +197,11 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
   }
 
   it should "convert ammattistartti" in {
-    verifyValidity(convertXls(lisaopetusExcel("ammattistartti")))
+    convertXls(lisaopetusExcel("ammattistartti")) should be (valid)
   }
 
   it should "convert valmentava" in {
-    verifyValidity(convertXls(lisaopetusExcel("valmentava")))
+    convertXls(lisaopetusExcel("valmentava")) should be (valid)
   }
 
   it should "convert maahanmuuttajienlukioonvalmistava" in {
@@ -210,7 +211,8 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
   }
 
   it should "convert maahanmuuttajienammvalmistava" in {
-    verifyValidity(convertXls(lisaopetusExcel("maahanmuuttajienammvalmistava")))
+    convertXls(lisaopetusExcel("maahanmuuttajienammvalmistava")) should be (valid)
+
   }
 
 
@@ -223,23 +225,35 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
   ).toExcel
 
   it should "convert arvosanat.xls into valid xml" in {
-    verifyValidity(XML.load(getClass.getResource("/tiedonsiirto/arvosanat.xml"))) // sanity check
+    XML.load(getClass.getResource("/tiedonsiirto/arvosanat.xml")) should be (valid) // sanity check
     val doc: Elem = ArvosanatXmlConverter.convert(getClass.getResourceAsStream("/tiedonsiirto/arvosanat.xls"), "arvosanat.xml")
     println(doc)
-    verifyValidity(doc)
+
+    doc should be (valid)
+
   }
 
 
-  private def verifyConversion(wb: usermodel.Workbook, valid: Elem) {
+  private def verifyConversion(wb: usermodel.Workbook, expected: Elem) {
     val doc: Elem = convertXls(wb)
-    doc should equal(valid)(after being normalized)
-    verifyValidity(doc)
+    doc should equal(expected)(after being normalized)
+
+
+
+    doc should be (valid)
   }
 
-  def verifyValidity(doc: Elem) {
-    val validationResult: ValidationNel[(String, SAXParseException), Elem] = new ValidXml(Arvosanat, ArvosanatKoodisto).validate(doc)
-    validationResult should equal(scalaz.Success(doc))
+  val valid =  BeMatcher[Elem]{e =>
+    val validationResult: ValidationNel[(String, SAXParseException), Elem] = new ValidXml(Arvosanat, ArvosanatKoodisto).validate(e)
+    MatchResult(
+      validationResult == scalaz.Success(e),
+      s"""elem is not valid""",
+      s"""elem is valid""""
+
+    )
   }
+
+
 
   def convertXls(wb: usermodel.Workbook): Elem = {
     ArvosanatXmlConverter.convert(Workbook(wb), "balaillaan")
