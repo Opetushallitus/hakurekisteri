@@ -7,7 +7,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import org.xml.sax.SAXParseException
 import scala.xml.{XML, Elem}
 import scalaz.ValidationNel
-import org.scalatest.matchers.{BeMatcher, MatchResult}
+import org.scalatest.matchers.{Matcher, BeMatcher, MatchResult}
 
 class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality with ExcelTools {
   behavior of "ArvosanatXMLConverter"
@@ -41,7 +41,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
       </henkilot>
     </arvosanat>
 
-    verifyConversion(wb, valid)
+    convertXls(wb) should convertValidlyTo(valid)
   }
 
 
@@ -75,7 +75,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
       </henkilot>
     </arvosanat>
 
-    verifyConversion(wb, valid)
+    convertXls(wb) should convertValidlyTo(valid)
   }
 
   it should "group by hetu (10. luokka ei valmistu)" in {
@@ -117,7 +117,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
       </henkilot>
     </arvosanat>
 
-    verifyConversion(wb, valid)
+    convertXls(wb) should convertValidlyTo(valid)
   }
 
   it should "convert an arvosanat row with oppijanumero into valid xml" in {
@@ -193,7 +193,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
       </henkilot>
     </arvosanat>
 
-    verifyConversion(wb, valid)
+    convertXls(wb) should convertValidlyTo(valid)
   }
 
   it should "convert ammattistartti" in {
@@ -234,14 +234,8 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
   }
 
 
-  private def verifyConversion(wb: usermodel.Workbook, expected: Elem) {
-    val doc: Elem = convertXls(wb)
-    doc should equal(expected)(after being normalized)
 
-
-
-    doc should be (valid)
-  }
+  def convertValidlyTo(expected:Elem) = {equal(expected)(after being normalized)}.and(be (valid))
 
   val valid =  BeMatcher[Elem]{e =>
     val validationResult: ValidationNel[(String, SAXParseException), Elem] = new ValidXml(Arvosanat, ArvosanatKoodisto).validate(e)
