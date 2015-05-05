@@ -1,16 +1,14 @@
 package fi.vm.sade.hakurekisteri
 
-import java.io.IOException
-import java.net.Socket
 import java.nio.charset.Charset
+
 import fi.vm.sade.utils.Timer
-import fi.vm.sade.utils.slf4j.Logging
 import fi.vm.sade.utils.tcp.PortChecker
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.ResourceCollection
 import org.eclipse.jetty.webapp.WebAppContext
 import org.h2.tools.RunScript
-import org.scalatest.{BeforeAndAfterEach, Suite, BeforeAndAfterAll}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import org.scalatra.servlet.ScalatraListener
 import org.scalatra.test.HttpComponentsClient
 
@@ -25,22 +23,25 @@ object HakuRekisteriJettyWithMocks extends App {
 object SharedJetty {
   private val config = Config.mockConfig
   private lazy val jetty = new HakuRekisteriJetty(config = config)
+
   def start = {
     Timer.timed("Jetty start") {
-      if(!jetty.server.isRunning) {
+      if (!jetty.server.isRunning) {
         RunScript.execute(config.h2DatabaseUrl, "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
       }
       jetty.start
     }
   }
+
   def restart = {
-    if(jetty.server.isRunning) {
+    if (jetty.server.isRunning) {
       Timer.timed("Jetty stop") {
         jetty.server.stop
       }
     }
     start
   }
+
   def port = jetty.port
 }
 
@@ -75,7 +76,8 @@ class HakuRekisteriJetty(val port: Int = PortChecker.findFreeLocalPort, config: 
 
 }
 
-trait CleanSharedJetty extends BeforeAndAfterAll with HttpComponentsClient { this: Suite =>
+trait CleanSharedJetty extends BeforeAndAfterAll with HttpComponentsClient {
+  this: Suite =>
   val port = SharedJetty.port
   val baseUrl = s"http://localhost:$port"
 
@@ -85,7 +87,8 @@ trait CleanSharedJetty extends BeforeAndAfterAll with HttpComponentsClient { thi
   }
 }
 
-trait CleanSharedJettyBeforeEach extends BeforeAndAfterEach with HttpComponentsClient { this: Suite =>
+trait CleanSharedJettyBeforeEach extends BeforeAndAfterEach with HttpComponentsClient {
+  this: Suite =>
   val port = SharedJetty.port
   val baseUrl = s"http://localhost:$port"
 
