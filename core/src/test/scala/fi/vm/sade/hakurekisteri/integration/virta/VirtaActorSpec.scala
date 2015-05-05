@@ -1,11 +1,13 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
+import java.util.UUID
+
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.rest.support.Query
-import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
 import org.joda.time.LocalDate
 import org.scalatest.{Matchers, FlatSpec}
 
@@ -54,18 +56,19 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
     val sWaiter = new Waiter()
     val oWaiter = new Waiter()
 
-    val suoritusHandler = (suoritus: VirallinenSuoritus) => {
-      sWaiter { suoritus.myontaja should be ("1.3.0") }
-      sWaiter.dismiss()
-    }
-
     val opiskeluoikeusHandler = (o: Opiskeluoikeus) => {
       oWaiter { o.myontaja should be ("1.3.0") }
       oWaiter.dismiss()
     }
 
-    val suoritusActor = system.actorOf(Props(new MockedResourceActor[VirallinenSuoritus](suoritusHandler)))
-    val opiskeluoikeusActor = system.actorOf(Props(new MockedResourceActor[Opiskeluoikeus](opiskeluoikeusHandler)))
+    val suoritusActor = system.actorOf(Props(new MockedResourceActor[Suoritus, UUID]({
+      case suoritus: VirallinenSuoritus =>
+        sWaiter {
+          suoritus.myontaja should be("1.3.0")
+        }
+        sWaiter.dismiss()
+    })))
+    val opiskeluoikeusActor = system.actorOf(Props(new MockedResourceActor[Opiskeluoikeus, UUID](opiskeluoikeusHandler)))
     val virtaActor: ActorRef = system.actorOf(Props(new VirtaActor(virtaClient, organisaatioActor, suoritusActor, opiskeluoikeusActor)))
 
     virtaActor ! VirtaQuery("1.2.3", Some("111111-1975"))

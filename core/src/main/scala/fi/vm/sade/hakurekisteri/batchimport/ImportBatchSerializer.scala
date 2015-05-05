@@ -32,7 +32,7 @@ class ImportBatchSerializer extends CustomSerializer[ImportBatch] (format => (
       id.map(i => batch.identify(i)).getOrElse(batch)
   },
   {
-    case ib: ImportBatch with Identified[UUID] =>
+    case ib: ImportBatch with Identified[UUID @unchecked] =>
       implicit val formats = HakurekisteriJsonSupport.format
       val s: JObject = Extraction.decompose(ib.status) match {
         case o: JObject => o

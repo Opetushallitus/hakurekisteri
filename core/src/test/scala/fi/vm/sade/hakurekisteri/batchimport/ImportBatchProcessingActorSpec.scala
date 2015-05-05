@@ -112,7 +112,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     implicit val system = ActorSystem("test-import-batch-processing")
     implicit val ec: ExecutionContext = system.dispatcher
 
-    val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = {r =>}, query = { (q) => Seq(batch) })))
+    val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID](save = {r =>}, query = { (q) => Seq(batch) })))
     val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))
     val henkiloActor = system.actorOf(Props(new HttpHenkiloActor(henkiloClient, Config.mockConfig)))
 
@@ -126,12 +126,12 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
       oWaiter { o.oppilaitosOid should be ("1.2.246.562.5.05127") }
       oWaiter.dismiss()
     }
-    val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = suoritusHandler, query = {q => Seq()})))
-    val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija](save = opiskelijaHandler, query = {q => Seq()})))
+    val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = suoritusHandler, query = {q => Seq()})))
+    val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija, UUID](save = opiskelijaHandler, query = {q => Seq()})))
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
     val organisaatioActor = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, Config.mockConfig)))
     val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
-    val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana](save = {r => r}, query = { (q) => Seq() })))
+    val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana, UUID](save = {r => r}, query = { (q) => Seq() })))
 
     val processingActor = system.actorOf(Props(new ImportBatchProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, arvosanarekisteri, koodistoActor, Config.mockConfig)))
 
@@ -155,15 +155,15 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
       }
       iWaiter.dismiss()
     }
-    val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch](save = batchHandler, query = { (q) => Seq(batch) })))
+    val importBatchActor = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID](save = batchHandler, query = { (q) => Seq(batch) })))
     val henkiloClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(failingAsyncProvider)))
     val henkiloActor = system.actorOf(Props(new HttpHenkiloActor(henkiloClient, Config.mockConfig)))
-    val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus](save = {r => r}, query = {q => Seq()})))
-    val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija](save = {r => r}, query = {q => Seq()})))
+    val suoritusrekisteri = system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = {r => r}, query = {q => Seq()})))
+    val opiskelijarekisteri = system.actorOf(Props(new MockedResourceActor[Opiskelija, UUID](save = {r => r}, query = {q => Seq()})))
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider)))
     val organisaatioActor = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, Config.mockConfig)))
     val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
-    val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana](save = {r => r}, query = { (q) => Seq() })))
+    val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana, UUID](save = {r => r}, query = { (q) => Seq() })))
 
     val processingActor = system.actorOf(Props(new ImportBatchProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, arvosanarekisteri, koodistoActor, Config.mockConfig)))
 

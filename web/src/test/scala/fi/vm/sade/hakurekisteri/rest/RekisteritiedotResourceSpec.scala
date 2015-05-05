@@ -51,11 +51,11 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite {
   ).identify(UUID.randomUUID())
 
   val rekisterit = new Registers {
-    val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch]()))
-    val arvosanat = system.actorOf(Props(new MockedResourceActor[Arvosana]()))
-    val opiskeluoikeudet = system.actorOf(Props(new MockedResourceActor[Opiskeluoikeus]()))
-    val opiskelijat = system.actorOf(Props(new MockedResourceActor[Opiskelija](query = q => Seq(opiskelija))))
-    val suoritukset = system.actorOf(Props(new MockedResourceActor[Suoritus](query = q => Seq(suoritus))))
+    val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
+    val arvosanat = system.actorOf(Props(new MockedResourceActor[Arvosana, UUID]()))
+    val opiskeluoikeudet = system.actorOf(Props(new MockedResourceActor[Opiskeluoikeus, UUID]()))
+    val opiskelijat = system.actorOf(Props(new MockedResourceActor[Opiskelija, UUID](query = q => Seq(opiskelija))))
+    val suoritukset = system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](query = q => Seq(suoritus))))
 
     override val eraRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(erat)))
     override val arvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(arvosanat)))

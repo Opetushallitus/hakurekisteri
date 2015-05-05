@@ -39,11 +39,11 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       fetching = true
       importBatchActor ! ImportBatchQuery(None, Some(BatchState.READY), None, if (config.mockMode) { None } else { Some(1) })
 
-    case b: Seq[ImportBatch with Identified[UUID]] =>
+    case b: Seq[ImportBatch with Identified[UUID]] @unchecked =>
       b.take(1).foreach(batch => importBatchActor ! batch.copy(state = BatchState.PROCESSING).identify(batch.id))
       if (b.isEmpty) fetching = false
 
-    case b: ImportBatch with Identified[UUID] =>
+    case b: ImportBatch with Identified[UUID @unchecked] =>
       fetching = false
       log.debug("got import batch")
       b.batchType match {
@@ -281,14 +281,14 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
         batchProcessed()
       }
 
-    case s: VirallinenSuoritus with Identified[UUID] =>
+    case s: VirallinenSuoritus with Identified[UUID @unchecked] =>
       savedSuoritukset = savedSuoritukset :+ s
       addReference(s.henkiloOid, suoritusType(s), s.id.toString)
       if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
         batchProcessed()
       }
 
-    case o: Opiskelija with Identified[UUID] =>
+    case o: Opiskelija with Identified[UUID @unchecked] =>
       savedOpiskelijat = savedOpiskelijat :+ o
       addReference(o.henkiloOid, "opiskelija", o.id.toString)
       if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {

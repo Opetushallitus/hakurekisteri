@@ -46,6 +46,9 @@ trait JournaledRepository[T <: Resource[I, T], I] extends InMemRepository[T, I] 
       }
       snapShot = snapShot - id
       index(old, None)
+
+    case Insert(_) =>
+      throw new NotImplementedError("Insert deltas not implemented in JournaledRepository")
   }
 
   def loadJournal(time: Option[Long] = None) {

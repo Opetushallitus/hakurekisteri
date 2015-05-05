@@ -31,7 +31,7 @@ class ArvosanaSerializer extends CustomSerializer[Arvosana](format => (
       Arvosana(UUID.fromString(suoritus), arv, aine, lisatieto, valinnainen, myonnetty, source, jarjestys)
   },
   {
-    case arvosana: Arvosana with Identified[UUID] =>
+    case arvosana: Arvosana with Identified[UUID @unchecked] =>
       val id = arvosana.id
       val suoritus = arvosana.suoritus
 

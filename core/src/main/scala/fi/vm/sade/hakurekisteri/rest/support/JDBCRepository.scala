@@ -40,14 +40,9 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
       all.length.run
   )
 
-  def doSave(t: R): R with Identified[I] = t match {
-    case current: R with Identified[I] =>
-      journal.addModification(Updated[R, I](current))
-      current
-    case _ =>
-      val identified = t.identify
-      journal.addModification(Updated[R, I](identified))
-      identified
+  def doSave(t: R with Identified[I]): R with Identified[I] = {
+    journal.addModification(Updated[R, I](t))
+    t
   }
 
   def deduplicationQuery(i: R)(t: T): lifted.Column[Boolean]
@@ -64,13 +59,13 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
   override def save(t: R): R with Identified[I] = {
     deduplicate(t) match {
       case Some(i) => doSave(t.identify(i.id))
-      case None => doSave(t)
+      case None => doSave(t.identify)
     }
   }
   override def insert(t: R): R with Identified[I] = {
     deduplicate(t) match {
       case Some(i) => i
-      case None => doSave(t)
+      case None => doSave(t.identify)
     }
   }
 }

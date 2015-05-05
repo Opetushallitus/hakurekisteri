@@ -7,7 +7,7 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, Delta, Journal, Updated}
+import fi.vm.sade.hakurekisteri.storage.repository._
 import org.json4s.JsonAST.JValue
 
 import scala.compat.Platform
@@ -113,8 +113,8 @@ abstract class JournalTable[R <: Resource[I, R], I, ResourceRow](tag: Tag, name:
 
   def rowShaper(d: Delta[R, I]) = d match {
     case Deleted(id, source) => Some((id, Platform.currentTime, true), deletedValues(source))
-    case Updated(r) =>
-      row(r).map(updateRow(r))
+    case Updated(r) => row(r).map(updateRow(r))
+    case Insert(r) => throw new NotImplementedError("Insert deltas not implemented in JDBCJournal")
   }
 
   def updateRow(r: R with Identified[I])(resourceData: ResourceRow) = ((r.id, Platform.currentTime, false), resourceData)

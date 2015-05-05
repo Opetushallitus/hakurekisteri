@@ -135,7 +135,7 @@ object HakurekisteriBuild extends Build {
       version               := Version,
       scalaVersion          := ScalaVersion,
       artifactName          := ArtifactName,
-      scalacOptions         := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8"),
+      scalacOptions         := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8", "-Xfatal-warnings"),
       resolvers += Classpaths.typesafeReleases,
       resolvers += "oph-snapshots" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local",
       resolvers += "oph-releases" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local",
@@ -167,7 +167,7 @@ object HakurekisteriBuild extends Build {
           testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
           logBuffered := false))
         ++ org.scalastyle.sbt.ScalastylePlugin.Settings
-        ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8"))
+        ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8", "-Xfatal-warnings"))
         ++ Seq(compile in Compile <<= (compile in Compile) dependsOn npmBuild)
         ++ Seq(webappResources in Compile <+= (target in Runtime)(t => t / "javascript") )
         ++ Seq(webappResources in Compile <+= (sourceDirectory in Runtime) { sd => sd / "resources" / "tiedonsiirto"})
