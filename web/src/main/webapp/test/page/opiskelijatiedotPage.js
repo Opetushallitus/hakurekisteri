@@ -66,6 +66,7 @@ opiskelijatiedot = initSelectors({
     arvosanaLisatieto: ".test-arvosanaLisatieto:visible",
     arvosanaPakollinenArvosana: ".test-arvosanaPakollinenArvosana:visible",
     arvosanaValinnainenArvosana: ".test-arvosanaValinnainenArvosana:visible",
+    arvosanaValinnainenHeader: ".test-valinnaiset-header",
     yoArvosanaAddKoe: ".test-addKoe",
     yoArvosanaAine: ".test-yoArvosanaAine:visible",
     yoArvosanaTaso: ".test-yoArvosanaTaso:visible",

@@ -133,7 +133,7 @@ app.controller "MuokkaaArvosanat", [
         delete aineRivi.lisatieto
         delete aineRivi.lisatietoText
       if aineRivi.hasValinnaisuus = hasValinnaisuus(aineRivi.aine)
-        if addNew
+        if addNew && $scope.suoritus.komo != $scope.komo.lukio
           addArvosanaIfNeeded aineRivi.valinnaiset, true, 3, aineRivi
       else
         aineRivi.valinnaiset = filterArvosanatAndRemove aineRivi.valinnaiset, (a) -> a.id

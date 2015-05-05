@@ -174,6 +174,18 @@ var restData = {
                 "suoritusKieli": "FI",
                 "id": "4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9"
             },
+            aarneLukio: {
+                "henkiloOid": "1.2.246.562.24.71944845619",
+                "source": "ophadmin",
+                "vahvistettu": true,
+                "komo": "1.2.246.562.13.62959769647",
+                "myontaja": "1.2.246.562.10.39644336305",
+                "tila": "KESKEN",
+                "valmistuminen": "04.06.2015",
+                "yksilollistaminen": "Ei",
+                "suoritusKieli": "FI",
+                "id": "b3704e86-942f-43ed-b842-9d6570ecab4c"
+            },
             aarneYo: {
                 "henkiloOid": "1.2.246.562.24.71944845619",
                 "source": "1.2.246.562.24.98860524987",
@@ -525,9 +537,9 @@ var httpFixtures = function () {
                 "valinnainen": false,
                 "myonnetty": "03.06.2015",
                 "source": "Test"
-            }])
+        }])
         },
-        tyynenArvosanat: function () {
+        aarnenLukioArvosanat: function () {
             fixtures.get(serviceUrls.arvosanat.suoritus("b3704e86-942f-43ed-b842-9d6570ecab4c"), [{
                 "id": "c8eec1d9-2287-4eb6-aa6c-099f787936d1",
                 "suoritus": "b3704e86-942f-43ed-b842-9d6570ecab4c",
@@ -657,6 +669,22 @@ var httpFixtures = function () {
                 "valinnainen": false,
                 "myonnetty": "04.06.2015",
                 "source": "Test"
+            },
+            {
+                "id": "2fe26f51-de2e-421f-a8ee-ca3fdb17a786",
+                "suoritus": "b3704e86-942f-43ed-b842-9d6570ecab4c",
+                "arvio": { "arvosana": "6", "asteikko": "4-10" },
+                "aine": "FI",
+                "source": "Test",
+                "valinnainen": false
+            },
+            {
+                "id": "e3b97a04-8032-4fb1-85a5-a6385da9a0c7",
+                "suoritus": "b3704e86-942f-43ed-b842-9d6570ecab4c",
+                "arvio": { "arvosana": "8", "asteikko": "4-10" },
+                "aine": "PS",
+                "source": "Test",
+                "valinnainen": false
             }])
         }
     }
