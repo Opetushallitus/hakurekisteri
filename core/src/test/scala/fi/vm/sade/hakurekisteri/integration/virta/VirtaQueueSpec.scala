@@ -1,12 +1,16 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
 import akka.actor.{Actor, Props, ActorSystem}
+import akka.pattern.ask
 import akka.testkit.TestActorRef
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.dates.{InFuture, Ajanjakso}
 import fi.vm.sade.hakurekisteri.integration.haku.{Kieliversiot, Haku, GetHaku}
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.joda.time.DateTime
 import org.scalatest.{WordSpec, Matchers}
+
+import scala.concurrent.Await
 
 class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
   implicit val system = ActorSystem("test-virta-queue")
@@ -46,7 +50,7 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
       "start consuming queries in the queue" in {
         import org.scalatest.time.SpanSugar._
         virtaWaiter.await(timeout(10.seconds), dismissals(2))
-        virtaQueue.underlyingActor.virtaQueue.length should be(0)
+        virtaQueue.underlyingActor.virtaQueue.size should be(0)
       }
     }
 
@@ -58,7 +62,20 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
       virtaQueue ! VirtaQueuedQuery(q2)
 
       "put it in the queue only once" in {
-        virtaQueue.underlyingActor.virtaQueue.length should be(1)
+        virtaQueue.underlyingActor.virtaQueue.size should be(1)
+      }
+    }
+
+    "receiving 1 000 000 queries" should {
+      import scala.concurrent.duration._
+      implicit val timeout: Timeout = 30.seconds
+
+      val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor, hakuActor)))
+      (0 until 1000000).foreach(i => virtaQueue ! VirtaQueuedQuery(VirtaQuery(s"foo$i", None)))
+
+      val healthcheck = Await.result((virtaQueue ? VirtaHealth).mapTo[VirtaStatus], 30.seconds)
+      "be fast enough to respond to healthcheck in 30 seconds" in {
+        healthcheck.queueLength should be (1000000)
       }
     }
   }

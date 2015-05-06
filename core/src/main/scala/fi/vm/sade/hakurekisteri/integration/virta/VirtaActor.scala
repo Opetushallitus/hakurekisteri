@@ -13,6 +13,7 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import org.joda.time.{LocalTime, DateTime, LocalDateTime, LocalDate}
 
+import scala.collection.mutable
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -43,7 +44,7 @@ object CancelSchedule
 class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef, hakuActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
-  var virtaQueue: List[VirtaQuery] = List()
+  val virtaQueue: mutable.Set[VirtaQuery] = mutable.LinkedHashSet()
   private var lastProcessDone: Option[DateTime] = None
   private var scheduledProcessTime: Option[LocalTime] = None
   private var startedProcessing: Boolean = false
@@ -70,7 +71,7 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef, hakuActor: ActorR
   
   def receive: Receive = {
     case VirtaQueuedQuery(q) if !virtaQueue.contains(q) =>
-      virtaQueue = virtaQueue :+ q
+      virtaQueue.add(q)
 
     case StartVirta if !startedProcessing =>
       log.info("started to process virta queries")
@@ -80,22 +81,22 @@ class VirtaQueue(virtaActor: ActorRef, hakemusActor: ActorRef, hakuActor: ActorR
       } else log.info("no queries to process")
 
     case QueryProsessed(q) =>
-      virtaQueue = virtaQueue.filterNot(_ == q)
+      virtaQueue.remove(q)
       if (virtaQueue.nonEmpty) {
         virtaActor ! virtaQueue.head
       } else {
-        log.info(s"all virta queries processed, queue length ${virtaQueue.length}")
+        log.info(s"all virta queries processed, queue length ${virtaQueue.size}")
         lastProcessDone = Some(new DateTime())
         startedProcessing = false
       }
 
-    case PrintStats => log.info(s"queue length ${virtaQueue.length}")
+    case PrintStats => log.info(s"queue length ${virtaQueue.size}")
 
-    case VirtaHealth => sender ! VirtaStatus(lastProcessDone, nextProcessTime, virtaQueue.length, Status.OK)
+    case VirtaHealth => sender ! VirtaStatus(lastProcessDone, nextProcessTime, virtaQueue.size, Status.OK)
 
     case CancelSchedule =>
       processing.cancel()
-      virtaQueue = List()
+      virtaQueue.clear()
       scheduledProcessTime = None
       log.info(s"cancelled scheduled processing")
 
