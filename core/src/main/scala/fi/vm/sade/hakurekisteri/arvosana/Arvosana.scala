@@ -1,9 +1,9 @@
 package fi.vm.sade.hakurekisteri.arvosana
 
-import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.rest.support.{UUIDResource, Resource}
-import scala.util.Try
+
+import fi.vm.sade.hakurekisteri.rest.support.UUIDResource
+import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.LocalDate
 
 case class Arvosana(suoritus: UUID,
@@ -14,6 +14,12 @@ case class Arvosana(suoritus: UUID,
                     myonnetty: Option[LocalDate] = None,
                     source: String,
                     jarjestys: Option[Int] = None) extends UUIDResource[Arvosana] {
+
+  if (arvio.isInstanceOf[ArvioYo] || arvio.isInstanceOf[ArvioOsakoe])
+    require(myonnetty.isDefined, "myonnetty is required for asteikko YO and OSAKOE")
+
+  if (arvio.isInstanceOf[Arvio410] && valinnainen)
+    require(jarjestys.isDefined, "jarjestys is required for valinnainen arvosana")
 
   override def identify(identity: UUID): Arvosana with Identified[UUID]= new IdentifiedArvosana(this, identity)
 

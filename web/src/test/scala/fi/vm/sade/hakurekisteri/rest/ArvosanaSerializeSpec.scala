@@ -76,4 +76,20 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite {
       }
     })
   }
+
+  test("send YO arvosana without myonnetty should return bad request") {
+    val json = "{\"suoritus\":\"" + UUID.randomUUID().toString + "\",\"arvio\":{\"asteikko\":\"YO\",\"arvosana\":\"L\"},\"aine\":\"MA\",\"valinnainen\":false}"
+    post("/", json, Map("Content-Type" -> "application/json; charset=utf-8")) {
+      status should be (400)
+      body should include ("myonnetty is required for asteikko YO and OSAKOE")
+    }
+  }
+
+  test("send valinnainen 4-10 arvosana without jarjestys should return bad request") {
+    val json = "{\"suoritus\":\"" + UUID.randomUUID().toString + "\",\"arvio\":{\"asteikko\":\"4-10\",\"arvosana\":\"10\"},\"aine\":\"MA\",\"valinnainen\":true}"
+    post("/", json, Map("Content-Type" -> "application/json; charset=utf-8")) {
+      status should be (400)
+      body should include ("jarjestys is required for valinnainen arvosana")
+    }
+  }
 }
