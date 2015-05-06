@@ -68,10 +68,10 @@ class YtlActorSpec extends ScalatraFunSuite {
     val arvosanat = Await.result(waitForArvosanat(), 15.seconds)
     arvosanat.length should equal (27)
     val arvosanaSA = arvosanat.filter(arvosana => {
-      arvosana.aine.equals("A") && arvosana.koetunnus.equals(Some("SA"))
+      arvosana.aine.equals("A") && arvosana.lahdeArvot.get("koetunnus").equals(Some("SA"))
     })
     arvosanaSA.length should equal (1)
-    arvosanaSA(0).aineyhdistelmarooli should equal (Some("61"))
+    arvosanaSA(0).lahdeArvot.get("aineyhdistelmarooli") should equal (Some("61"))
   }
 
   override def stop(): Unit = {

@@ -21,14 +21,13 @@ class CreateArvosanaCommand extends HakurekisteriCommand[Arvosana] with LocalDat
   override def toResource(user: String): Arvosana =
     Arvosana(
       suoritus = suoritus.value.map(UUID.fromString).get,
-      koetunnus = None,
       arvio = Arvio(arvio.value.get, asteikko.value.get, pisteet.value.get),
       aine = aine.value.get,
-      aineyhdistelmarooli = None,
       lisatieto = lisatieto.value.get,
       valinnainen = valinnainen.value.getOrElse(false),
       myonnetty = myonnetty.value.get,
       source = user,
+      lahdeArvot = Map(),
       jarjestys = jarjestys.value.get
     )
 }

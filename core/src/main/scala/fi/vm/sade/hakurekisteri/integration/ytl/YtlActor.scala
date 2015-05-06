@@ -680,18 +680,20 @@ trait Koe {
 case class Osakoe(arvio: ArvioOsakoe, koetunnus: String, osakoetunnus: String, aineyhdistelmarooli: String, myonnetty: LocalDate) extends Koe {
   val aine = Aine(koetunnus, Some(aineyhdistelmarooli))
   val valinnainen = aineyhdistelmarooli.toInt >= 60
+  val lahdeArvot = Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> aineyhdistelmarooli)
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]) = {
-    Arvosana(suoritus.id, Some(koetunnus), arvio, aine.aine + "_" + osakoetunnus: String, Some(aineyhdistelmarooli), Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL)
+    Arvosana(suoritus.id, arvio, aine.aine + "_" + osakoetunnus: String, Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL, lahdeArvot)
   }
 }
 
 case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String, myonnetty: LocalDate) extends Koe {
   val aine = Aine(koetunnus, Some(aineyhdistelmarooli))
   val valinnainen = aineyhdistelmarooli.toInt >= 60
+  val lahdeArvot = Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> aineyhdistelmarooli)
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]):Arvosana = {
-    Arvosana(suoritus.id, Some(koetunnus), arvio, aine.aine: String, Some(aineyhdistelmarooli), Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL)
+    Arvosana(suoritus.id, arvio, aine.aine: String, Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL, lahdeArvot)
   }
 
 

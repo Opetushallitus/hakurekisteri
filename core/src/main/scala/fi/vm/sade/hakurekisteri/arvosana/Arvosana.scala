@@ -7,14 +7,13 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.LocalDate
 
 case class Arvosana(suoritus: UUID,
-                    koetunnus: Option[String],
                     arvio: Arvio,
                     aine: String,
-                    aineyhdistelmarooli: Option[String],
                     lisatieto: Option[String],
                     valinnainen: Boolean,
                     myonnetty: Option[LocalDate] = None,
                     source: String,
+                    lahdeArvot: Map[String,String],
                     jarjestys: Option[Int] = None) extends UUIDResource[Arvosana] {
 
   if (arvio.isInstanceOf[ArvioYo] || arvio.isInstanceOf[ArvioOsakoe])
@@ -35,7 +34,7 @@ case class Arvosana(suoritus: UUID,
   override val core = ArvosanaCore(suoritus, aine, lisatieto, valinnainen, myonnetty, jarjestys)
 }
 
-class IdentifiedArvosana(a: Arvosana, val id: UUID) extends Arvosana(a.suoritus, a.koetunnus, a.arvio , a.aine, a.aineyhdistelmarooli, a.lisatieto, a.valinnainen, a.myonnetty, a.source, a.jarjestys) with Identified[UUID]
+class IdentifiedArvosana(a: Arvosana, val id: UUID) extends Arvosana(a.suoritus, a.arvio , a.aine, a.lisatieto, a.valinnainen, a.myonnetty, a.source, a.lahdeArvot, a.jarjestys) with Identified[UUID]
 
 sealed abstract class Arvio
 

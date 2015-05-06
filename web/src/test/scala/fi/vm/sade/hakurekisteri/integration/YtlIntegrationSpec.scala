@@ -35,13 +35,15 @@ class YtlIntegrationSpec extends FlatSpec with Matchers with CleanSharedJetty {
       asteikko = "YO",
       pisteet = Some(181)
     ),
-    koetunnus = Some("SA"),
     aine = "A",
-    aineyhdistelmarooli = Some("61"),
     lisatieto = Some("SA"),
     myonnetty = Some(new LocalDate(2013, 6, 1)),
     valinnainen = true,
     source = "1.2.246.562.10.43628088406",
+    lahdeArvot = Map(
+      "koetunnus" -> "SA",
+      "aineyhdistelmarooli" -> "61"
+    ),
     jarjestys = None
   )
 
@@ -75,7 +77,7 @@ class YtlIntegrationSpec extends FlatSpec with Matchers with CleanSharedJetty {
     todistukset.head.arvosanat.size should equal(27)
 
     val arvosanaSA = todistukset.head.arvosanat.filter(arvosana => {
-      arvosana.aine.equals("A") && arvosana.koetunnus.equals(Some("SA"))
+      arvosana.aine.equals("A") && arvosana.lahdeArvot.get("koetunnus").equals(Some("SA"))
     })
     arvosanaSA.length should equal (1)
     arvosanaSA.head should equal (expectedSaArvosana.copy(suoritus = arvosanaSA.head.suoritus))

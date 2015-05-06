@@ -317,66 +317,61 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           contain (
             Arvosana(
               suoritus = s.id,
-              koetunnus = None,
               arvio = Arvio410("6"),
               aine = "A1",
-              aineyhdistelmarooli = None,
               lisatieto = Some("EN"),
               valinnainen = true,
               myonnetty = None,
               source = lahde,
+              lahdeArvot = Map(),
               jarjestys = Some(0)
             )
           ) and contain (
             Arvosana(
               suoritus = s.id,
-              koetunnus = None,
               arvio = Arvio410("8"),
               aine = "A1",
-              aineyhdistelmarooli = None,
               lisatieto = Some("EN"),
               valinnainen = true,
               myonnetty = None,
               source = lahde,
+              lahdeArvot = Map(),
               jarjestys = Some(1)
             )
           ) and contain (
             Arvosana(
               suoritus = s.id,
-              koetunnus = None,
               arvio = Arvio410("10"),
               aine = "A1",
-              aineyhdistelmarooli = None,
               lisatieto = Some("EN"),
               valinnainen = true,
               myonnetty = None,
               source = lahde,
+              lahdeArvot = Map(),
               jarjestys = Some(2)
             )
           ) and contain (
             Arvosana(
               suoritus = s.id,
-              koetunnus = None,
               arvio = Arvio410("6"),
               aine = "MA",
-              aineyhdistelmarooli = None,
               lisatieto = None,
               valinnainen = true,
               myonnetty = None,
               source = lahde,
+              lahdeArvot = Map(),
               jarjestys = Some(0)
             )
           ) and contain (
             Arvosana(
               suoritus = s.id,
-              koetunnus = None,
               arvio = Arvio410("8"),
               aine = "MA",
-              aineyhdistelmarooli = None,
               lisatieto = None,
               valinnainen = true,
               myonnetty = None,
               source = lahde,
+              lahdeArvot = Map(),
               jarjestys = Some(1)
             )
           )
