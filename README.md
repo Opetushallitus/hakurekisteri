@@ -13,7 +13,7 @@ Mocha-testit käyttävät tällä hetkellä suurelta osin frontend-mockeja, jote
 
 ## Kaikki testit
 
-Voit ajaa kaikki testit komentoriviltä komennolla `./sbt test`. Tämä ajaa myös mocha-testit phantomjs:llä.
+Voit ajaa kaikki testit komentoriviltä komennolla `./sbt test it:test`. Tämä ajaa myös mocha-testit phantomjs:llä.
 
 ## Build & Run ##
 
@@ -41,7 +41,7 @@ Sovellusta paikallisesti ajettaessa se käyttää paikallista H2-tietokantaa.
 - `data/development.h2.db` jos ajetaan "default"-profiililla
 - `data/integration-test.h2.db` jos ajetan "it"-profiililla. Tätä käytetään integraatiotesteissä, ja kanta tyhjennetään testiajojen aluksi.
 
-Kantoja pääsee tutkimaan kätevästi esim. IDEA:n Database-näkymässä. 
+Kantoja pääsee tutkimaan kätevästi esim. IDEA:n Database-näkymässä.
 
 ## Arvosanavalidaattori
 
