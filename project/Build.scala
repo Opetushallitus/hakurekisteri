@@ -19,6 +19,7 @@ object HakurekisteriBuild extends Build {
   val SpringVersion = "3.2.1.RELEASE"
 
   lazy val LoadSpecs = config("load") extend Test
+  lazy val IntegrationTest = config("it") extend Test
 
   lazy val createDevDb = taskKey[Unit]("create h2 db for development")
 
@@ -128,7 +129,7 @@ object HakurekisteriBuild extends Build {
   lazy val core = Project(
     id = "hakurekisteri-core",
     base = file("core"),
-    configurations = Seq(LoadSpecs),
+    configurations = Seq(LoadSpecs, IntegrationTest),
     settings = Seq(
       name                  := "hakurekisteri-core",
       organization          := Organization,
@@ -145,13 +146,15 @@ object HakurekisteriBuild extends Build {
       resolvers             += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
       artifactoryPublish,
       libraryDependencies   ++= AkkaStack ++ dependencies
-        ++ testDependencies.map((m) => m % "test"),
+        ++ testDependencies.map((m) => m % "test,it"),
       fullRunTask(createDevDb, Test, "util.CreateDevDb")
     ) ++ inConfig(LoadSpecs)(Defaults.testSettings)
       ++ inConfig(LoadSpecs)(Seq(
       testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
       logBuffered := false,
-      parallelExecution := false))
+      parallelExecution := false)
+    ) ++ inConfig(IntegrationTest)(Defaults.testSettings)
+      ++ inConfig(IntegrationTest)(Seq(parallelExecution := false))
   )
 
   lazy val hakurekisteri = project.in(file(".")).aggregate(core, web)
@@ -160,12 +163,15 @@ object HakurekisteriBuild extends Build {
     Project(
       s"hakurekisteri-web",
       file("web"),
-      configurations = Seq(LoadSpecs),
+      configurations = Seq(LoadSpecs, IntegrationTest),
       settings = WebPlugin.webSettings ++ scalateSettings
         ++ inConfig(LoadSpecs)(Defaults.testSettings)
         ++ inConfig(LoadSpecs)(Seq(
           testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
+          parallelExecution := false,
           logBuffered := false))
+        ++ inConfig(IntegrationTest)(Defaults.testSettings)
+        ++ inConfig(IntegrationTest)(Seq(parallelExecution := false))
         ++ org.scalastyle.sbt.ScalastylePlugin.Settings
         ++ Seq(scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8", "-Xfatal-warnings"))
         ++ Seq(compile in Compile <<= (compile in Compile) dependsOn npmBuild)
@@ -179,7 +185,6 @@ object HakurekisteriBuild extends Build {
         version := Version,
         scalaVersion := ScalaVersion,
         artifactName := ArtifactName,
-        parallelExecution := false,
         resolvers += Classpaths.typesafeReleases,
         resolvers += "oph-snapshots" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local",
         resolvers += "oph-releases" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local",
@@ -194,8 +199,5 @@ object HakurekisteriBuild extends Build {
           ++ SecurityStack ++ webDeps
       )).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
 
-  }.dependsOn(core % "test->test;compile->compile")
-
-
-
+  }.dependsOn(core % "it->it;test->test;compile->compile")
 }

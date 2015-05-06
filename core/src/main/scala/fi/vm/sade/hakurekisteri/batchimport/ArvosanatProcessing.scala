@@ -137,7 +137,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   private case class FailureArvosanaStatus(tunniste: String, t: Throwable) extends ArvosanaStatus
 
   private def toArvosana(arvosana: ImportArvosana)(suoritus: UUID)(source: String): Arvosana =
-    Arvosana(suoritus, Arvio410(arvosana.arvosana), arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source, arvosana.jarjestys)
+    Arvosana(suoritus, Arvio410(arvosana.arvosana), arvosana.aine, arvosana.lisatieto, arvosana.valinnainen, None, source, Map(), arvosana.jarjestys)
 
   private def fetchSuoritus(henkiloOid: String, todistus: ImportTodistus, oppilaitosOid: String, lahde: String): Future[VirallinenSuoritus with Identified[UUID]] =
     (suoritusrekisteri ? SuoritusQuery(henkilo = Some(henkiloOid), myontaja = Some(oppilaitosOid), komo = Some(todistus.komo))).

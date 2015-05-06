@@ -17,10 +17,10 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 import scala.language.implicitConversions
 
 class ArvosanaSerializeSpec extends ScalatraFunSuite {
-  val arvosana1 = Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", Some("FI"), valinnainen = false, None, "Test")
-  val arvosana12 = Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", Some("FI"), valinnainen = true, None, "Test", Some(0))
-  val arvosana2 = Arvosana(UUID.randomUUID(), ArvioYo("L", Some(100)), "AI", Some("FI"), valinnainen = false, Some(new LocalDate()), "Test")
-  val arvosana3 = Arvosana(UUID.randomUUID(), ArvioOsakoe("10"), "AI", Some("FI"), valinnainen = false, Some(new LocalDate()), "Test")
+  val arvosana1 = Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", Some("FI"), valinnainen = false, None, "Test", Map())
+  val arvosana12 = Arvosana(UUID.randomUUID(),Arvio410("10"), "AI", Some("FI"), valinnainen = true, None, "Test", Map(), Some(0))
+  val arvosana2 = Arvosana(UUID.randomUUID(), ArvioYo("L", Some(100)), "AI", Some("FI"), valinnainen = false, Some(new LocalDate()), "Test", Map())
+  val arvosana3 = Arvosana(UUID.randomUUID(), ArvioOsakoe("10"), "AI", Some("FI"), valinnainen = false, Some(new LocalDate()), "Test", Map())
 
   implicit val system = ActorSystem()
   implicit val security = new TestSecurity

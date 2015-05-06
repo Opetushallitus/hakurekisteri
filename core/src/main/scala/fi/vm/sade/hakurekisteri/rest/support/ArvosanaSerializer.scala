@@ -26,9 +26,10 @@ class ArvosanaSerializer extends CustomSerializer[Arvosana](format => (
       val arv = Extraction.extract[Arvio](arvio)
       val myonnetty = arvosana.findField(_._1 == "myonnetty").map(_._2).collect { case JString(v) => Extraction.extract[LocalDate](v) }
       val JString(source) = arvosana \ "source"
+      val lahdeArvot: Map[String, String] = arvosana.findField(_._1 == "lahdeArvot").map(_._2.extract[Map[String,String]]).getOrElse(Map())
       val jarjestys: Option[Int] = arvosana.findField(_._1 == "jarjestys").map(_._2).collect { case JInt(v) => v.toInt }
 
-      Arvosana(UUID.fromString(suoritus), arv, aine, lisatieto, valinnainen, myonnetty, source, jarjestys)
+      Arvosana(UUID.fromString(suoritus), arv, aine, lisatieto, valinnainen, myonnetty, source, lahdeArvot, jarjestys)
   },
   {
     case arvosana: Arvosana with Identified[UUID @unchecked] =>
@@ -43,6 +44,7 @@ class ArvosanaSerializer extends CustomSerializer[Arvosana](format => (
       val valinnainen: Boolean = arvosana.valinnainen
       val myonnetty: Option[LocalDate] = arvosana.myonnetty
       val source: String = arvosana.source
+      val lahdeArvot: Map[String,String] = arvosana.lahdeArvot
       val jarjestys: Option[Int] = arvosana.jarjestys
 
       val core = ("id" -> id.toString) ~
@@ -50,6 +52,7 @@ class ArvosanaSerializer extends CustomSerializer[Arvosana](format => (
         ("arvio" -> arvio) ~
         ("aine" -> aine) ~
         ("source" -> source) ~
+        ("lahdeArvot" -> lahdeArvot) ~
         ("valinnainen" -> valinnainen)
 
       val withLisatieto = lisatieto.map(l => core ~ ("lisatieto" -> l)).getOrElse(core)

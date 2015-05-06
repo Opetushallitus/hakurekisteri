@@ -27,6 +27,7 @@ class CreateArvosanaCommand extends HakurekisteriCommand[Arvosana] with LocalDat
       valinnainen = valinnainen.value.getOrElse(false),
       myonnetty = myonnetty.value.get,
       source = user,
+      lahdeArvot = Map(),
       jarjestys = jarjestys.value.get
     )
 }

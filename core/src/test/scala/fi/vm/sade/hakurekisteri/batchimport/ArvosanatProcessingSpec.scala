@@ -323,6 +323,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
               valinnainen = true,
               myonnetty = None,
               source = lahde,
+              lahdeArvot = Map(),
               jarjestys = Some(0)
             )
           ) and contain (
@@ -334,6 +335,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
               valinnainen = true,
               myonnetty = None,
               source = lahde,
+              lahdeArvot = Map(),
               jarjestys = Some(1)
             )
           ) and contain (
@@ -345,6 +347,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
               valinnainen = true,
               myonnetty = None,
               source = lahde,
+              lahdeArvot = Map(),
               jarjestys = Some(2)
             )
           ) and contain (
@@ -356,6 +359,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
               valinnainen = true,
               myonnetty = None,
               source = lahde,
+              lahdeArvot = Map(),
               jarjestys = Some(0)
             )
           ) and contain (
@@ -367,6 +371,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
               valinnainen = true,
               myonnetty = None,
               source = lahde,
+              lahdeArvot = Map(),
               jarjestys = Some(1)
             )
           )

@@ -12,6 +12,7 @@ trait OppijaSwaggerApi extends SwaggerSupport with OppijaSwaggerModel with Arvos
 
 
   registerModel(arvioModel)
+  registerModel(lahdeArvotModel)
   registerModel(arvosanaModel)
   //registerModel(suoritusModel)
   registerModel(virallinenSuoritusModel)

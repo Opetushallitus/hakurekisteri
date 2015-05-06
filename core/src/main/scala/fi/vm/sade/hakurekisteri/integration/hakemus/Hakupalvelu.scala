@@ -173,27 +173,27 @@ case class ListHakemus(oid: String)
 
 case class HakemusHaku(totalCount: Long, results: Seq[ListHakemus])
 
-case class HakemusHenkilotiedot(Henkilotunnus: Option[String],
-                                aidinkieli: Option[String],
-                                lahiosoite: Option[String],
-                                Postinumero: Option[String],
-                                osoiteUlkomaa: Option[String],
-                                postinumeroUlkomaa: Option[String],
-                                kaupunkiUlkomaa: Option[String],
-                                asuinmaa: Option[String],
-                                matkapuhelinnumero1: Option[String],
-                                matkapuhelinnumero2: Option[String],
-                                Sähköposti: Option[String],
-                                kotikunta: Option[String],
-                                Sukunimi: Option[String],
-                                Etunimet: Option[String],
-                                Kutsumanimi: Option[String],
-                                kansalaisuus: Option[String],
-                                onkoSinullaSuomalainenHetu: Option[String],
-                                sukupuoli: Option[String],
-                                syntymaaika: Option[String],
-                                koulusivistyskieli: Option[String],
-                                turvakielto: Option[String])
+case class HakemusHenkilotiedot(Henkilotunnus: Option[String] = None,
+                                aidinkieli: Option[String] = None,
+                                lahiosoite: Option[String] = None,
+                                Postinumero: Option[String] = None,
+                                osoiteUlkomaa: Option[String] = None,
+                                postinumeroUlkomaa: Option[String] = None,
+                                kaupunkiUlkomaa: Option[String] = None,
+                                asuinmaa: Option[String] = None,
+                                matkapuhelinnumero1: Option[String] = None,
+                                matkapuhelinnumero2: Option[String] = None,
+                                Sähköposti: Option[String] = None,
+                                kotikunta: Option[String] = None,
+                                Sukunimi: Option[String] = None,
+                                Etunimet: Option[String] = None,
+                                Kutsumanimi: Option[String] = None,
+                                kansalaisuus: Option[String] = None,
+                                onkoSinullaSuomalainenHetu: Option[String] = None,
+                                sukupuoli: Option[String] = None,
+                                syntymaaika: Option[String] = None,
+                                koulusivistyskieli: Option[String] = None,
+                                turvakielto: Option[String] = None)
 
 case class Koulutustausta(lahtokoulu:Option[String],
                           POHJAKOULUTUS: Option[String],
@@ -227,7 +227,7 @@ case class Koulutustausta(lahtokoulu:Option[String],
 
 case class Lisatiedot(lupaJulkaisu: Option[String], lupaMarkkinointi: Option[String])
 
-case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot], koulutustausta: Option[Koulutustausta], lisatiedot: Option[Lisatiedot], hakutoiveet: Option[Map[String, String]], osaaminen: Option[Map[String, String]])
+case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot] = None, koulutustausta: Option[Koulutustausta] = None, lisatiedot: Option[Lisatiedot] = None, hakutoiveet: Option[Map[String, String]] = None, osaaminen: Option[Map[String, String]] = None)
 
 case class PreferenceEligibility(aoId: String, status: String, source: Option[String])
 

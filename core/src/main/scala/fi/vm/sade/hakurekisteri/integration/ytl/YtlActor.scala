@@ -100,18 +100,18 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
 
     case Poll if config.isDefined  => poll(sent)
 
-    case YtlResult(id, file) if config.isDefined  =>
+    case YtlResult(id, file) =>
       val requested = sent.find(_.id == id)
       sent = sent.filterNot(_.id == id)
       handleResponse(requested, Source.fromFile(file, "ISO-8859-1"))
 
-    case k: Kokelas if config.isDefined  =>
+    case k: Kokelas =>
       log.debug(s"sending ytl data for ${k.oid} yo: ${k.yo} lukio: ${k.lukio}")
       suoritusRekisteri ! k.yo
       kokelaat = kokelaat + (k.oid -> k)
       k.lukio foreach (suoritusRekisteri ! _)
 
-    case vs: VirallinenSuoritus with Identified[_] if vs.id.isInstanceOf[UUID] && vs.komo == YTLXml.yotutkinto && config.isDefined =>
+    case vs: VirallinenSuoritus with Identified[_] if vs.id.isInstanceOf[UUID] && vs.komo == YTLXml.yotutkinto =>
       val s = vs.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
       for (
         kokelas <- kokelaat.get(s.henkiloOid)
@@ -121,7 +121,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
         suoritusKokelaat = suoritusKokelaat + (s.id -> (s, kokelas))
       }
 
-    case ActorIdentity(id: UUID, Some(ref)) if config.isDefined  =>
+    case ActorIdentity(id: UUID, Some(ref)) =>
       for (
         (suoritus, kokelas) <- suoritusKokelaat.get(id)
       ) {
@@ -129,7 +129,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
         suoritusKokelaat = suoritusKokelaat - id
       }
 
-    case ActorIdentity(id: UUID, None) if config.isDefined => try {
+    case ActorIdentity(id: UUID, None) => try {
       for (
         (suoritus, kokelas) <- suoritusKokelaat.get(id)
       ) {
@@ -680,18 +680,20 @@ trait Koe {
 case class Osakoe(arvio: ArvioOsakoe, koetunnus: String, osakoetunnus: String, aineyhdistelmarooli: String, myonnetty: LocalDate) extends Koe {
   val aine = Aine(koetunnus, Some(aineyhdistelmarooli))
   val valinnainen = aineyhdistelmarooli.toInt >= 60
+  val lahdeArvot = Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> aineyhdistelmarooli)
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]) = {
-    Arvosana(suoritus.id, arvio, aine.aine + "_" + osakoetunnus: String, Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL)
+    Arvosana(suoritus.id, arvio, aine.aine + "_" + osakoetunnus: String, Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL, lahdeArvot)
   }
 }
 
 case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String, myonnetty: LocalDate) extends Koe {
   val aine = Aine(koetunnus, Some(aineyhdistelmarooli))
   val valinnainen = aineyhdistelmarooli.toInt >= 60
+  val lahdeArvot = Map("koetunnus" -> koetunnus, "aineyhdistelmarooli" -> aineyhdistelmarooli)
 
   def toArvosana(suoritus: Suoritus with Identified[UUID]):Arvosana = {
-    Arvosana(suoritus.id, arvio, aine.aine: String, Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL)
+    Arvosana(suoritus.id, arvio, aine.aine: String, Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL, lahdeArvot)
   }
 
 

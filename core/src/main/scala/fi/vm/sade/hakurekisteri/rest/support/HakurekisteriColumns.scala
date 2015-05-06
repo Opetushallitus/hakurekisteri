@@ -4,13 +4,10 @@ import org.joda.time.{LocalDate, DateTime}
 import HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
-import java.util.UUID
-import scala.slick.jdbc.{PositionedResult, PositionedParameters}
-import scala.reflect.ClassTag
-import org.json4s.JsonAST.JValue
-import java.sql.Clob
+import org.json4s.JValue
+import org.json4s.JsonDSL._
 
-trait HakurekisteriColumns {
+trait HakurekisteriColumns extends HakurekisteriJsonSupport {
   implicit val datetimeLong = MappedColumnType.base[DateTime, Long](
     _.getMillis ,
     new DateTime(_)
@@ -24,6 +21,11 @@ trait HakurekisteriColumns {
   implicit val yksilollistaminenString = MappedColumnType.base[Yksilollistetty, String](
     _.toString,
     yksilollistaminen.withName
+  )
+
+  implicit val jsonMap = MappedColumnType.base[Map[String, String], JValue](
+    map => map2jvalue(map),
+    _.extractOpt[Map[String, String]].getOrElse(Map())
   )
 
 }

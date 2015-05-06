@@ -276,6 +276,17 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   }
 }
 
+class MockHakemusActor() extends HakemusActor(hakemusClient = null) {
+  override def receive: Receive = {
+    case HenkiloHakijaQuery(oid) => {
+      sender ! Seq(new FullHakemus(oid = oid, personOid = Some(oid), "1.2.3", Some(HakemusAnswers(Some(HakemusHenkilotiedot(Henkilotunnus = Some(oid))))), Some("ACTIVE"), Seq()))
+    }
+
+    case msg =>
+      log.warning(s"not implemented receive(${msg})")
+  }
+}
+
 case class ReloadHaku(haku: String)
 
 class HakijaTrigger(newApplicant: (FullHakemus) => Unit) extends Actor {

@@ -65,7 +65,7 @@ object IlmoitetutArvosanatTrigger {
   }
 
   def createArvosana(personOid: String, arvo: String, aine: String, lisatieto: Option[String], valinnainen: Boolean, jarjestys: Option[Int] = None): Arvosana = {
-    Arvosana(suoritus = null, arvio = Arvio410(arvo), aine, lisatieto, valinnainen, myonnetty = None, source = personOid, jarjestys = jarjestys)
+    Arvosana(suoritus = null, arvio = Arvio410(arvo), aine, lisatieto, valinnainen, myonnetty = None, source = personOid, Map(), jarjestys = jarjestys)
   }
 
   def aineArvotToArvosanat(personOid: String, aine: String, arvot: Map[String, String]) = {
