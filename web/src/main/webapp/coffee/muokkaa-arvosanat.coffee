@@ -80,6 +80,12 @@ app.controller "MuokkaaArvosanat", [
       d.promise
 
     addArvosanaIfNeeded = (list, valinnainen, maxCount, aineRivi) ->
+      nextJarjestys = ->
+        jarjestykset = list.filter((a) -> a.valinnainen and typeof a.jarjestys isnt 'undefined').map((a) -> a.jarjestys)
+        if (jarjestykset.length > 0)
+          Math.max.apply(Math, jarjestykset) + 1
+        else
+          0
       if list.length >= maxCount || list.some( (a) -> ( a.arvio.arvosana == "Ei arvosanaa" ))
         return
       arvosana = new Arvosanat(
@@ -90,6 +96,8 @@ app.controller "MuokkaaArvosanat", [
           asteikko: "4-10"
         valinnainen: valinnainen
       )
+      if (valinnainen)
+        arvosana.jarjestys = nextJarjestys()
       list.push arvosana
       copyAineRiviInfoToArvosana(aineRivi, arvosana)
       arvosanatModified.push changeDetection(arvosana)
@@ -185,6 +193,23 @@ app.controller "MuokkaaArvosanat", [
           1
       arvosanataulukko
 
+    sortByValinnainenAndJarjestys = (list) ->
+      list.sort((a, b) ->
+        if (a.valinnainen is false and b.valinnainen)
+          return -1
+        if (a.valinnainen and b.valinnainen is false)
+          return 1
+        if (a.valinnainen and b.valinnainen)
+          if (a.jarjestys is b.jarjestys)
+            return 0
+          if (a.jarjestys < b.jarjestys)
+            -1
+          else
+            1
+        else
+          0
+      )
+
     $q.all([updateOppiaineLista(), getSuorituksenArvosanat()]).then (->
       collectToMap = (list, keyFn) ->
         ret = {}
@@ -204,6 +229,7 @@ app.controller "MuokkaaArvosanat", [
           for key of arvosanatByMyonnettyLisatieto
             list = arvosanatByMyonnettyLisatieto[key]
             first = list[0]
+            sortByValinnainenAndJarjestys(list)
             rivit.push makeAineRivi(aine, list, first.myonnetty || $scope.suoritus.valmistuminen, first.lisatieto)
             if !first.myonnetty or first.myonnetty == $scope.suoritus.valmistuminen
               suoritusPvm = true
