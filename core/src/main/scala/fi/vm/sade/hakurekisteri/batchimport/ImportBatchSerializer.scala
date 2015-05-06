@@ -4,7 +4,7 @@ import java.util.UUID
 
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.Identified
-import org.json4s.{Extraction, CustomSerializer}
+import org.json4s._
 import org.json4s.JsonAST.{JValue, JString, JObject}
 import org.json4s.JsonDSL._
 
@@ -54,6 +54,11 @@ class ImportBatchSerializer extends CustomSerializer[ImportBatch] (format => (
 import BatchState.BatchState
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 
-object ImportBatchImplicits {
+object ImportBatchImplicits extends HakurekisteriJsonSupport {
   implicit val batchStateColumnType = MappedColumnType.base[BatchState, String]({ c => c.toString }, { s => BatchState.withName(s)})
+
+  implicit val importstatusType =  MappedColumnType.base[ImportStatus, JValue](
+    status => Extraction.decompose(status),
+    _.extract[ImportStatus]
+  )
 }
