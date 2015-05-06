@@ -11,6 +11,7 @@ import fi.vm.sade.hakurekisteri.web.oppija.OppijaSwaggerModel
 
 trait RekisteritiedotSwaggerApi extends SwaggerSupport with OppijaSwaggerModel with ArvosanaSwaggerModel with SuoritusSwaggerModel with OpiskelijaSwaggerModel with OpiskeluoikeusSwaggerModel with IncidentReportSwaggerModel {
   registerModel(arvioModel)
+  registerModel(lahdeArvotModel)
   registerModel(arvosanaModel)
   registerModel(virallinenSuoritusModel)
   registerModel(vapaamuotoinenSuoritusModel)

@@ -10,6 +10,7 @@ trait ArvosanaSwaggerApi extends OldSwaggerSyntax with ArvosanaSwaggerModel { th
   protected val applicationDescription = "Arvosanatietojen rajapinta"
 
   registerModel(arvioModel)
+  registerModel(lahdeArvotModel)
   registerModel(arvosanaModel)
 
   val query = apiOperation[Seq[Arvosana]]("haeArvosanat")
@@ -44,6 +45,13 @@ trait ArvosanaSwaggerModel extends OldSwaggerSyntax {
 
   def arvioModel = Model("Arvio", "Arvosana", arvioFields.map(t => (t.name, t)).toMap)
 
+  val lahdeArvotFields = Seq(
+    ModelField("koetunnus", "YTL koetunnus", DataType.String, required = false),
+    ModelField("aineyhdistelmarooli", "YTL aineyhdistelmarooli", DataType.String, required = false)
+  )
+
+  def lahdeArvotModel = Model("LahdeArvot", "lähdejärjestelmän arvot", lahdeArvotFields.map(t => (t.name, t)).toMap)
+
   val arvosanaFields = Seq(
     ModelField("id", "arvosanan uuid", DataType.String),
     ModelField("suoritus", "suorituksen uuid", DataType.String),
@@ -52,7 +60,8 @@ trait ArvosanaSwaggerModel extends OldSwaggerSyntax {
     ModelField("lisatieto", "aineen lisätieto. esim kieli", DataType.String, required = false),
     ModelField("valinnainen", "onko aine ollut valinnainen", DataType.Boolean, Some("false"), required = false),
     ModelField("myonnetty", "milloin arvosana on myönnetty", DataType.Date, required = false),
-    ModelField("jarjestys", "monesko valinnainen arvosana on kyseessä", DataType.Int, required = false)
+    ModelField("jarjestys", "monesko valinnainen arvosana on kyseessä", DataType.Int, required = false),
+    ModelField("lahdeArvot", "lähdejärjestelmästä saadut alkuperäiset arvot", DataType("LahdeArvot"), required = false)
   )
 
   def arvosanaModel = Model("Arvosana", "Arvosanatiedot", arvosanaFields.map(t => (t.name, t)).toMap)
