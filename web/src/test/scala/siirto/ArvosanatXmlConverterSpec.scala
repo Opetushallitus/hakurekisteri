@@ -41,7 +41,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
       </henkilot>
     </arvosanat>
 
-    convertXls(wb) should convertValidlyTo(valid)
+    wb should convertValidlyTo(valid)
   }
 
 
@@ -75,7 +75,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
       </henkilot>
     </arvosanat>
 
-    convertXls(wb) should convertValidlyTo(valid)
+    wb should convertValidlyTo(valid)
   }
 
   it should "group by hetu (10. luokka ei valmistu)" in {
@@ -117,7 +117,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
       </henkilot>
     </arvosanat>
 
-    convertXls(wb) should convertValidlyTo(valid)
+    wb should convertValidlyTo(valid)
   }
 
   it should "convert an arvosanat row with oppijanumero into valid xml" in {
@@ -193,7 +193,54 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
       </henkilot>
     </arvosanat>
 
-    convertXls(wb) should convertValidlyTo(valid)
+    wb should convertValidlyTo(valid)
+  }
+
+  it should "konvertoi lukion arvosanat" in {
+    val wb = WorkbookData(
+      "lukio" ->
+        """
+          |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|SYNTYMAAIKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|MYONTAJA|SUORITUSKIELI|VALMISTUMINEN|AI_YH  |AI_TYYPPI|A1_YH|A1_KIELI|B23_YH|B23_KIELI|MA_YH|MA_LAAJUUS|
+          |111111-1975|            |               |           |Testi   |Test A  |Test       |05127   |FI           |31.05.2015   |  9    |FI       |6    |SV      | 4    |FR       |10   |pitka     |
+        """
+    ).toExcel
+
+    val valid = <arvosanat>
+      <eranTunniste>balaillaan</eranTunniste>
+      <henkilot>
+        <henkilo>
+          <hetu>111111-1975</hetu>
+          <sukunimi>Testi</sukunimi>
+          <etunimet>Test A</etunimet>
+          <kutsumanimi>Test</kutsumanimi>
+          <todistukset>
+            <lukio>
+              <myontaja>05127</myontaja>
+              <suorituskieli>FI</suorituskieli>
+              <valmistuminen>2015-05-31</valmistuminen>
+              <AI>
+                <yhteinen>9</yhteinen>
+                <tyyppi>FI</tyyppi>
+              </AI>
+              <A1>
+                <yhteinen>6</yhteinen>
+                <kieli>SV</kieli>
+              </A1>
+              <B23>
+                <yhteinen>4</yhteinen>
+                <kieli>FR</kieli>
+              </B23>
+              <MA>
+                <yhteinen>10</yhteinen>
+                <laajuus>pitka</laajuus>
+              </MA>
+            </lukio>
+          </todistukset>
+        </henkilo>
+      </henkilot>
+    </arvosanat>
+
+    wb should convertValidlyTo(valid)
   }
 
   it should "convert ammattistartti" in {
@@ -216,6 +263,8 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
   }
 
 
+
+
   private def lisaopetusExcel(todistusType: String) = WorkbookData(
     todistusType ->
       """
@@ -235,7 +284,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
 
 
 
-  def convertValidlyTo(expected:Elem) = {equal(expected)(after being normalized)}.and(be (valid))
+  def convertValidlyTo(expected:Elem): Matcher[usermodel.Workbook] = (equal(expected)(after being normalized) and be (valid)) compose (convertXls)
 
   val valid =  BeMatcher[Elem]{e =>
     val validationResult: ValidationNel[(String, SAXParseException), Elem] = new ValidXml(Arvosanat, ArvosanatKoodisto).validate(e)

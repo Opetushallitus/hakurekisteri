@@ -92,6 +92,7 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
     "ammattistartti" -> todistusLens("ammattistartti"),
     "valmentava" -> todistusLens("valmentava"),
     "maahanmuuttajienlukioonvalmistava" -> todistusLens("maahanmuuttajienlukioonvalmistava"),
-    "maahanmuuttajienammvalmistava" -> todistusLens("maahanmuuttajienammvalmistava")
+    "maahanmuuttajienammvalmistava" -> todistusLens("maahanmuuttajienammvalmistava"),
+    "lukio" -> todistusLens("lukio")
   )
 }
