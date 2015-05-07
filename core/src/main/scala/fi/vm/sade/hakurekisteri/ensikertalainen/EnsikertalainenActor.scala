@@ -85,7 +85,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         case _ if opiskeluOikeudet.isDefined && !foundAllKomos =>  "resolving komos"
         case _ => "unknown"
       }
-      QueryStatus(state)
+      QueryStatus(oid, state)
     }
 
     override def receive: Actor.Receive = {
@@ -195,7 +195,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
   }
 }
 
-case class QueryStatus(status: String)
+case class QueryStatus(oid: Option[String], status: String)
 
 object ReportStatus
 
