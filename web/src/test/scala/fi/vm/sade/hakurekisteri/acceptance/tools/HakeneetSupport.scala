@@ -32,6 +32,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
   object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None, Seq())
   object OppilaitosY extends Organisaatio("1.10.2", Map("fi" -> "Oppilaitos Y"), None, Some("00002"), None, Seq())
+  object OppilaitosZ extends Organisaatio("1.10.6", Map("fi" -> "Oppilaitos Z"), None, Some("00003"), None, Seq())
 
   object OpetuspisteX extends Organisaatio("1.10.3", Map("fi" -> "Opetuspiste X"), Some("0000101"), None, Some("1.10.1"), Seq())
   object OpetuspisteZ extends Organisaatio("1.10.5", Map("fi" -> "Opetuspiste Z"), Some("0000101"), None, Some("1.10.1"), Seq())
@@ -214,6 +215,43 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     preferenceEligibilities = Seq()
   )
 
+  object SynteettinenHakemus extends FullHakemus("1.25.3", Some("1.24.3"), "1.3",
+    answers = Some(
+      HakemusAnswers(
+        osaaminen = None,
+        henkilotiedot = Some(
+          HakemusHenkilotiedot(
+            kansalaisuus =  None,
+            asuinmaa = None,
+            matkapuhelinnumero1 = None,
+            matkapuhelinnumero2 = None,
+            Sukunimi = Some("Mäkinen"),
+            Henkilotunnus = Some("200394-9839"),
+            Postinumero = None,
+            osoiteUlkomaa = None,
+            postinumeroUlkomaa = None,
+            kaupunkiUlkomaa = None,
+            lahiosoite = None,
+            sukupuoli = Some("1"),
+            Sähköposti = Some("mikko@testi.oph.fi"),
+            Kutsumanimi = Some("Mikko"),
+            Etunimet = Some("Mikko"),
+            kotikunta = None,
+            aidinkieli = Some("FI"),
+            syntymaaika = Some("20.03.1994"),
+            onkoSinullaSuomalainenHetu = None,
+            koulusivistyskieli = None,
+            turvakielto = None)),
+        koulutustausta = None,
+        hakutoiveet =  Some(Map(
+          "preference1-Koulutus-id" -> "1.2.246.562.20.41053753277",
+          "preference1-Opetuspiste-id" -> "1.10.6",
+          "preference1-Opetuspiste-id-parents" -> "1.10.1,1.2.246.562.10.00000000001")),
+        lisatiedot = None)),
+    state = Some("ACTIVE"),
+    preferenceEligibilities = Seq()
+  )
+
   object notEmpty
 
   implicit def fullHakemus2SmallHakemus(h: FullHakemus): ListHakemus = {
@@ -244,6 +282,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {
       case Some(OpetuspisteX.oid) => Future(Seq(FullHakemus1))
       case Some(OpetuspisteY.oid) => Future(Seq(FullHakemus2))
+      case Some(OppilaitosZ.oid) => Future(Seq(SynteettinenHakemus))
       case Some(_) => Future(Seq[ListHakemus]())
       case None => Future(Seq(FullHakemus1, FullHakemus2))
     }
@@ -251,6 +290,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     def get(hakemusOid: String, user: Option[User]): Future[Option[FullHakemus]] = hakemusOid match {
       case "1.25.1" => Future(Some(FullHakemus1))
       case "1.25.2" => Future(Some(FullHakemus2))
+      case "1.25.3" => Future(Some(SynteettinenHakemus))
       case default => Future(None)
     }
 
@@ -268,6 +308,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     override def receive: Receive = {
       case OppilaitosX.oid => Future.successful(Some(OppilaitosX)) pipeTo sender
       case OppilaitosY.oid => Future.successful(Some(OppilaitosY)) pipeTo sender
+      case OppilaitosZ.oid => Future.successful(Some(OppilaitosZ)) pipeTo sender
       case OpetuspisteX.oid => Future.successful(Some(OpetuspisteX)) pipeTo sender
       case OpetuspisteY.oid => Future.successful(Some(OpetuspisteY)) pipeTo sender
       case default => Future.successful(None) pipeTo sender
@@ -330,6 +371,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   val sijoitteluClient = mock[VirkailijaRestClient]
   sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.1", 200) returns valintatulokset
   sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.2", 200) returns valintatulokset
+  sijoitteluClient.readObject[Seq[ValintaTulos]]("/haku/1.3", 200) returns valintatulokset
 
   val sijoittelu = system.actorOf(Props(new ValintaTulosActor(sijoitteluClient, config)))
 

@@ -281,11 +281,9 @@ class KkHakijaResource(hakemukset: ActorRef,
     (for {
       answers: HakemusAnswers <- hakemus.answers
       hakutoiveet: Map[String, String] <- answers.hakutoiveet
-      lisatiedot: Lisatiedot <- answers.lisatiedot
-      koulutustausta: Koulutustausta <- answers.koulutustausta
     } yield hakutoiveet.keys.collect {
         case Pattern(jno: String) if hakutoiveet(s"preference$jno-Koulutus-id") != "" && queryMatches(q, hakutoiveet, jno) =>
-          extractSingleHakemus(hakemus)(q)(hakutoiveet)(lisatiedot)(koulutustausta)(jno)(haku)
+          extractSingleHakemus(hakemus)(q)(hakutoiveet)(answers.lisatiedot.getOrElse(Lisatiedot(None, None)))(answers.koulutustausta.getOrElse(Koulutustausta()))(jno)(haku)
       }.toSeq).getOrElse(Seq())
 
   def queryMatches(q: KkHakijaQuery, hakutoiveet: Map[String, String], jno: String): Boolean = {
@@ -401,7 +399,6 @@ class KkHakijaResource(hakemukset: ActorRef,
       answers: HakemusAnswers <- hakemus.answers
       henkilotiedot: HakemusHenkilotiedot <- answers.henkilotiedot
       hakutoiveet: Map[String, String] <- answers.hakutoiveet
-      lisatiedot: Lisatiedot <- answers.lisatiedot
       henkiloOid <- hakemus.personOid
     } yield for {
       hakemukset <- getHakemukset(hakemus)(q)
@@ -430,7 +427,7 @@ class KkHakijaResource(hakemukset: ActorRef,
         aidinkieli = henkilotiedot.aidinkieli.getOrElse("FI"),
         asiointikieli = getAsiointikieli(henkilotiedot.aidinkieli.getOrElse("FI")),
         koulusivistyskieli = henkilotiedot.koulusivistyskieli.getOrElse("FI"),
-        koulutusmarkkinointilupa = lisatiedot.lupaMarkkinointi.map(_ == "true"),
+        koulutusmarkkinointilupa = answers.lisatiedot.getOrElse(Lisatiedot(None, None)).lupaMarkkinointi.map(_ == "true"),
         onYlioppilas = isYlioppilas(suoritukset),
         turvakielto = henkilotiedot.turvakielto.contains("true"),
         hakemukset = hakemukset

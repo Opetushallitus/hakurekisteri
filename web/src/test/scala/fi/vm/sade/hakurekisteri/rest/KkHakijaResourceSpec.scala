@@ -33,7 +33,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
 
   val asyncProvider = new CapturingProvider(mock[Endpoint])
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  val hakemusJournal: Journal[FullHakemus, String] = seq2journal(Seq(FullHakemus1, FullHakemus2))
+  val hakemusJournal: Journal[FullHakemus, String] = seq2journal(Seq(FullHakemus1, FullHakemus2, SynteettinenHakemus))
   val hakemusMock = system.actorOf(Props(new HakemusActor(hakemusClient = client, journal = hakemusJournal)))
   val tarjontaMock = system.actorOf(Props(new MockedTarjontaActor()))
   val hakuMock = system.actorOf(Props(new MockedHakuActor()))
@@ -65,10 +65,10 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
     hakijat.size should be (0)
   }
 
-  test("should return two hakijas") {
+  test("should return three hakijas") {
     val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
 
-    hakijat.size should be (2)
+    hakijat.size should be (3)
   }
 
   test("should return one hyvaksytty hakija") {
@@ -155,6 +155,14 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
     val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.1"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
 
     hakijat.head.kotikunta should be ("098")
+  }
+
+  test("should return synteettinen hakemus from erillishaku") {
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.3"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
+
+    System.out.println("Hakijat: " + hakijat)
+
+    hakijat.size should be (1)
   }
 
 
