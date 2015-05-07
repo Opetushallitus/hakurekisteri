@@ -7,6 +7,7 @@ import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
+import org.joda.time.DateTime
 import org.json4s._
 import org.scalatest.matchers._
 import org.scalatest.{FlatSpec, Matchers}
@@ -193,6 +194,18 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .putArvosana("LK_MA","8")
         .build
     ) should contain theSameElementsAs Seq(ItseilmoitettuLukioTutkinto("hakemus1","person1", 2000, "FI"), ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"))
+  }
+  it should "not create suorituksia from koulutustausta if application current year" in {
+    val currentYear = new DateTime().year().get()
+    IlmoitetutArvosanatTrigger.createSuorituksetKoulutustausta(
+      Hakemus()
+        .setHakemusOid("hakemus1")
+        .setPersonOid("person1")
+        .setLukionPaattotodistusvuosi(currentYear)
+        .setPerusopetuksenPaattotodistusvuosi(currentYear)
+        .putArvosana("LK_MA","8")
+        .build
+    ) should equal(Seq.empty)
   }
   it should "handle 'ei arvosanaa'" in {
     IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(

@@ -9,6 +9,7 @@ import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
+import org.joda.time.DateTime
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -127,11 +128,12 @@ object IlmoitetutArvosanatTrigger {
   import fi.vm.sade.hakurekisteri.tools.RicherString._
 
   def createSuorituksetKoulutustausta(hakemus: FullHakemus): Seq[VirallinenSuoritus] = {
+    val currentYear = new DateTime().year().get()
     (for(
       personOid <- hakemus.personOid;
       answers <- hakemus.answers;
       koulutustausta <- answers.koulutustausta
-    ) yield koulutustausta.lukioPaattotodistusVuosi.flatMap(_.blankOption).map(_.toInt).map(vuosi => {
+    ) yield koulutustausta.lukioPaattotodistusVuosi.flatMap(_.blankOption).map(_.toInt).filter( vuosi => vuosi != currentYear).map(vuosi => {
         // Lukion suoritus
         Seq(ItseilmoitettuLukioTutkinto(
           hakemusOid = hakemus.oid,
@@ -183,12 +185,16 @@ object IlmoitetutArvosanatTrigger {
               }
             }).getOrElse(Seq.empty),
           // PERUSKOULUTUTKINTO AINA KUN PK_PAATTOTODISTUSVUOSI LOYTYY
+          if(vuosi != currentYear) {
             Seq(ItseilmoitettuPeruskouluTutkinto(
             hakemusOid = hakemus.oid,
             hakijaOid = personOid,
             vuosi,
-            suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI"))))
-            .flatMap(s => s)
+            suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
+          } else {
+            Seq.empty
+          }
+          ).flatMap(s => s)
         }).getOrElse(Seq.empty)).getOrElse(Seq.empty)
 
   }
