@@ -2,19 +2,16 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import java.util.UUID
 
-
-import fi.vm.sade.hakurekisteri.rest.support.Resource
-import fi.vm.sade.hakurekisteri.storage.{InsertResource, Identified}
-import fi.vm.sade.hakurekisteri.suoritus._
 import akka.actor.ActorRef
 import akka.pattern.AskTimeoutException
-import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
-import org.joda.time.LocalDate
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri._
+import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
+import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource}
+import fi.vm.sade.hakurekisteri.suoritus._
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * @author Jussi Jartamo
@@ -127,12 +124,14 @@ object IlmoitetutArvosanatTrigger {
     }).getOrElse(Seq.empty)
   }
 
+  import fi.vm.sade.hakurekisteri.tools.RicherString._
+
   def createSuorituksetKoulutustausta(hakemus: FullHakemus): Seq[VirallinenSuoritus] = {
     (for(
       personOid <- hakemus.personOid;
       answers <- hakemus.answers;
       koulutustausta <- answers.koulutustausta
-    ) yield koulutustausta.lukioPaattotodistusVuosi.map(_.toInt).map(vuosi => {
+    ) yield koulutustausta.lukioPaattotodistusVuosi.flatMap(_.blankOption).map(_.toInt).map(vuosi => {
         // Lukion suoritus
         Seq(ItseilmoitettuLukioTutkinto(
           hakemusOid = hakemus.oid,
@@ -141,7 +140,7 @@ object IlmoitetutArvosanatTrigger {
           suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
       }).getOrElse(Seq.empty) ++
         // Peruskoulun suoritus
-        koulutustausta.PK_PAATTOTODISTUSVUOSI.map(_.toInt).map(vuosi => {
+        koulutustausta.PK_PAATTOTODISTUSVUOSI.flatMap(_.blankOption).map(_.toInt).map(vuosi => {
 
           Seq(
             // AMMATTISTARTTI
