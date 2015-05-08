@@ -1,11 +1,10 @@
 package fi.vm.sade.hakurekisteri.integration.parametrit
 
 import akka.actor.Status.Failure
-import fi.vm.sade.hakurekisteri.Config
+import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, VirkailijaRestClient}
-import akka.actor.{ActorLogging, ActorRef, Actor}
-import akka.pattern.pipe
 import org.joda.time.DateTime
 
 import scala.compat.Platform
@@ -19,26 +18,35 @@ abstract class ParameterActor extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
   private var calling = false
   private val tiedonsiirtoSendingPeriodCache = new FutureCache[String, Boolean](2.minute.toMillis)
-
-  import scala.concurrent.duration._
+  private var kierrosQueue: Map[KierrosRequest, ActorRef] = Map()
+  object ProcessNext
 
   override def receive: Actor.Receive = {
-    case r: KierrosRequest if calling =>
-      val from = sender()
-      context.system.scheduler.scheduleOnce(100.milliseconds, self, r)(ec, from)
-
-    case r: KierrosRequest if !calling =>
-      calling = true
-      val from = sender()
-      getParams(r.haku).map(HakuParams).pipeTo(self)(from)
+    case r: KierrosRequest =>
+      if (!calling) {
+        calling = true
+        val from = sender()
+        getParams(r.haku).map(HakuParams).pipeTo(self)(from)
+      } else {
+        val from = sender()
+        kierrosQueue = kierrosQueue + (r -> from)
+      }
 
     case h: HakuParams =>
       calling = false
       sender ! h
+      self ! ProcessNext
+
+    case ProcessNext if kierrosQueue.nonEmpty =>
+      calling = true
+      val r: (KierrosRequest, ActorRef) = kierrosQueue.head
+      kierrosQueue = kierrosQueue.filterKeys(_ != r._1)
+      getParams(r._1.haku).map(HakuParams).pipeTo(self)(r._2)
 
     case Failure(t: Throwable) =>
       calling = false
       Future.failed(t) pipeTo sender
+      self ! ProcessNext
 
     case IsSendingEnabled(key) =>
       isSendingEnabled(key) pipeTo sender
