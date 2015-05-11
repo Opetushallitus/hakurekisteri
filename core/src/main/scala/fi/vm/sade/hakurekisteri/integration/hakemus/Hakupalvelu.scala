@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import akka.actor.ActorRef
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.{Oids, Config}
+import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
@@ -56,7 +56,8 @@ object AkkaHakupalvelu {
         "LISAKOULUTUS_TALOUS" -> tausta.LISAKOULUTUS_TALOUS,
         "LISAKOULUTUS_AMMATTISTARTTI" -> tausta.LISAKOULUTUS_AMMATTISTARTTI,
         "LISAKOULUTUS_KANSANOPISTO" -> tausta.LISAKOULUTUS_KANSANOPISTO,
-        "LISAKOULUTUS_MAAHANMUUTTO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO
+        "LISAKOULUTUS_MAAHANMUUTTO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO,
+        "LISAKOULUTUS_MAAHANMUUTTO_LUKIO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO_LUKIO
       ).mapValues(checkKoulutus).filter{case (_, done) => done}.keys
     }
 
@@ -205,6 +206,7 @@ case class Koulutustausta(lahtokoulu:Option[String],
                           LISAKOULUTUS_AMMATTISTARTTI: Option[String],
                           LISAKOULUTUS_KANSANOPISTO: Option[String],
                           LISAKOULUTUS_MAAHANMUUTTO: Option[String],
+                          LISAKOULUTUS_MAAHANMUUTTO_LUKIO: Option[String],
                           luokkataso: Option[String],
                           lahtoluokka: Option[String],
                           perusopetuksen_kieli: Option[String],
@@ -226,7 +228,7 @@ case class Koulutustausta(lahtokoulu:Option[String],
                           aiempitutkinto_vuosi: Option[String])
 
 object Koulutustausta{
-  def apply(): Koulutustausta = Koulutustausta(None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
+  def apply(): Koulutustausta = Koulutustausta(None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
 }
 
 case class Lisatiedot(lupaJulkaisu: Option[String], lupaMarkkinointi: Option[String])

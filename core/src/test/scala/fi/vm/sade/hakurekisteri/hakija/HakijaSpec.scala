@@ -51,6 +51,7 @@ class HakijaSpec extends FlatSpec with Matchers {
             LISAKOULUTUS_AMMATTISTARTTI = None,
             LISAKOULUTUS_KANSANOPISTO = None,
             LISAKOULUTUS_MAAHANMUUTTO = None,
+            LISAKOULUTUS_MAAHANMUUTTO_LUKIO = None,
             lahtoluokka = Some("9A"),
             perusopetuksen_kieli = None,
             lukioPaattotodistusVuosi = None,

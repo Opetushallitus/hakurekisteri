@@ -359,6 +359,7 @@ case class HakemusBuilder(osaaminen: Map[String, String], hakemusOid: String = n
       LISAKOULUTUS_AMMATTISTARTTI = None,
       LISAKOULUTUS_KANSANOPISTO = None,
       LISAKOULUTUS_MAAHANMUUTTO = None,
+      LISAKOULUTUS_MAAHANMUUTTO_LUKIO = None,
       luokkataso = None,
       lahtoluokka = None,
       perusopetuksen_kieli = None,
