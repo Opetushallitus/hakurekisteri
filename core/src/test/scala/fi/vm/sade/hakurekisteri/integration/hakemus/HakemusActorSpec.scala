@@ -97,7 +97,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
   }
 
   it should "include arvosana 'S'" in {
-    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")
@@ -108,7 +108,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
       (ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"),
         Seq(Arvosana(suoritus = null, arvio = Arvio410("S"), "MA", lisatieto = None, valinnainen = true, myonnetty = None, source = "person1", Map(), Some(1)))))
 
-    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")
@@ -119,7 +119,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
       (ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"),
         Seq()))
 
-    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")
@@ -127,7 +127,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         //.putArvosana("PK_PAATTOTODISTUSVUOSI","")
         .build
     ) should contain theSameElementsAs Seq()
-    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")
@@ -165,7 +165,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
   }
 
   it should "include valinnaiset arvosanat" in {
-    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")
@@ -185,7 +185,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         ))
   }
   it should "create suorituksia from koulutustausta" in {
-    IlmoitetutArvosanatTrigger.createSuorituksetKoulutustausta(
+    val a = IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")
@@ -193,22 +193,25 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .setPerusopetuksenPaattotodistusvuosi(1988)
         .putArvosana("LK_MA","8")
         .build
-    ) should contain theSameElementsAs Seq(ItseilmoitettuLukioTutkinto("hakemus1","person1", 2000, "FI"), ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"))
+    )
+    a should contain theSameElementsAs Seq(
+      (ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"),Seq.empty),
+      (ItseilmoitettuLukioTutkinto("hakemus1","person1", 2000, "FI"), Seq(Arvosana(suoritus = null, arvio = Arvio410("8"), "MA", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1", Map())))
+    )
   }
   it should "not create suorituksia from koulutustausta if application current year" in {
     val currentYear = new DateTime().year().get()
-    IlmoitetutArvosanatTrigger.createSuorituksetKoulutustausta(
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")
         .setLukionPaattotodistusvuosi(currentYear)
         .setPerusopetuksenPaattotodistusvuosi(currentYear)
-        .putArvosana("LK_MA","8")
         .build
     ) should equal(Seq.empty)
   }
   it should "handle 'ei arvosanaa'" in {
-    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")
@@ -224,7 +227,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         ))
   }
   it should "create suorituksia ja arvosanoja from oppimiset" in {
-    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")
@@ -243,7 +246,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
 
   //
   it should "handle arvosana special cases" in {
-    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromOppimiset(
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")

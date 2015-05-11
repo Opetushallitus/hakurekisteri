@@ -38,9 +38,7 @@ object IlmoitetutArvosanatTrigger {
         case t: AskTimeoutException => saveSuoritus(suor)
     }
 
-    createSuorituksetKoulutustausta(hakemus).foreach(saveSuoritus)
-
-    createSuorituksetJaArvosanatFromOppimiset(hakemus).foreach(suoritusJaArvosanat => {
+    createSuorituksetJaArvosanatFromHakemus(hakemus).foreach(suoritusJaArvosanat => {
       for (
         suoritus <- saveSuoritus(suoritusJaArvosanat._1)
       ) {
@@ -75,128 +73,122 @@ object IlmoitetutArvosanatTrigger {
     ).flatten
   }
 
-  def createSuorituksetJaArvosanatFromOppimiset(hakemus: FullHakemus): Seq[(Suoritus, Seq[Arvosana])] = {
-    // Arvosanojen merkkaaminen
-    (for(
+  def createSuorituksetJaArvosanatFromHakemus(hakemus: FullHakemus): Seq[(Suoritus, Seq[Arvosana])] = {
+    (for (
       personOid <- hakemus.personOid;
       answers <- hakemus.answers;
-      osaaminen <- answers.osaaminen;
       koulutustausta <- answers.koulutustausta
     ) yield {
-      // PK Arvosanat
-      val peruskoulunArvosanat: Seq[(Suoritus, Seq[Arvosana])] = (for (
-        valmistumisvuosi <- koulutustausta.PK_PAATTOTODISTUSVUOSI
-      ) yield {
-        val itseIlmoitettuSuoritus: Suoritus =
-          ItseilmoitettuPeruskouluTutkinto(
-            hakemusOid = hakemus.oid,
-            hakijaOid = personOid,
-            valmistumisvuosi.toInt,
-            suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI"))
         try {
-          Seq((itseIlmoitettuSuoritus, osaaminen.getPeruskoulu.map({case (aine,arvot) => aineArvotToArvosanat(personOid, aine, arvot)}).flatten.toSeq))
+          val peruskoulu = createPkSuoritusArvosanat(hakemus, personOid, answers, koulutustausta)
+          val pkLisapiste = createPkLisapisteSuoritukset(hakemus, personOid, answers, koulutustausta)
+          val lukio = createLukioSuoritusArvosanat(hakemus, personOid, answers, koulutustausta)
+          peruskoulu ++ lukio ++ pkLisapiste
         } catch {
           case anyException: Throwable => {
             anyException.printStackTrace()
-            throw new Exception("Collecting peruskouluarvosanat from hakemus " + hakemus.oid + " with personID " + personOid + " failed on exception: " + anyException.getMessage)
+            throw new Exception("Collecting peruskouluarvosanat from hakemus " + hakemus.oid + " with personID " + personOid, anyException)
           }
         }
       }).getOrElse(Seq.empty)
-
-      // Lukio Arvosanat
-      val lukionArvosanat: Seq[(Suoritus, Seq[Arvosana])] = (for (valmistumisvuosi <- koulutustausta.lukioPaattotodistusVuosi) yield {
-        val itseIlmoitettuSuoritus: Suoritus =
-          ItseilmoitettuLukioTutkinto(
-            hakemusOid = hakemus.oid,
-            hakijaOid = personOid,
-            valmistumisvuosi.toInt,
-            suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI"))
-        try {
-          Seq((itseIlmoitettuSuoritus, osaaminen.getLukio.map({case (aine,arvot) => aineArvotToArvosanat(personOid, aine, arvot)}).flatten.toSeq))
-        } catch {
-          case anyException: Throwable => {
-            anyException.printStackTrace()
-            throw new Exception("Collecting lukioarvosanat from hakemus " + hakemus.oid + " with personID " + personOid + " failed on exception: " + anyException.getMessage)
-          }
-        }
-      }).getOrElse(Seq.empty)
-
-      (peruskoulunArvosanat ++ lukionArvosanat)
-    }).getOrElse(Seq.empty)
   }
 
   import fi.vm.sade.hakurekisteri.tools.RicherString._
 
-  def createSuorituksetKoulutustausta(hakemus: FullHakemus): Seq[VirallinenSuoritus] = {
-    val currentYear = new DateTime().year().get()
-    (for(
-      personOid <- hakemus.personOid;
-      answers <- hakemus.answers;
-      koulutustausta <- answers.koulutustausta
-    ) yield koulutustausta.lukioPaattotodistusVuosi.flatMap(_.blankOption).map(_.toInt).filter( vuosi => vuosi != currentYear).map(vuosi => {
-        // Lukion suoritus
-        Seq(ItseilmoitettuLukioTutkinto(
-          hakemusOid = hakemus.oid,
-          hakijaOid = personOid,
-          vuosi,
-          suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
-      }).getOrElse(Seq.empty) ++
-        // Peruskoulun suoritus
-        koulutustausta.PK_PAATTOTODISTUSVUOSI.flatMap(_.blankOption).map(_.toInt).map(vuosi => {
-
+  def createPkSuoritusArvosanat(hakemus: FullHakemus, personOid: String, answers: HakemusAnswers, koulutustausta: Koulutustausta): Seq[(Suoritus, Seq[Arvosana])] = {
+    (for (
+      valmistumisvuosiStr <- koulutustausta.PK_PAATTOTODISTUSVUOSI;
+      valmistumisvuosi <- valmistumisvuosiStr.blankOption
+    ) yield {
+        val arvosanat: Seq[Arvosana] = answers.osaaminen match {
+          case Some(osaaminen) => osaaminen.getPeruskoulu.map({ case (aine, arvot) => aineArvotToArvosanat(personOid, aine, arvot) }).flatten.toSeq
+          case None => Seq.empty
+        }
+        val currentYear = new DateTime().year().get()
+        if (arvosanat.nonEmpty || currentYear != valmistumisvuosi.toInt) {
           Seq(
-            // AMMATTISTARTTI
-            koulutustausta.LISAKOULUTUS_AMMATTISTARTTI.map(lk => {
-              if("true".equals(lk)) {
-                Seq(ItseilmoitettuTutkinto(
-                  komoOid = Oids.ammattistarttiKomoOid,
-                  hakemusOid = hakemus.oid,
-                  hakijaOid = personOid,
-                  vuosi,
-                  suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
-              } else {
-                Seq.empty
-              }
-            }).getOrElse(Seq.empty),
-            // LISÄOPETUSTALOUS
-            koulutustausta.LISAKOULUTUS_TALOUS.map(lk => {
-              if("true".equals(lk)) {
-                Seq(ItseilmoitettuTutkinto(
-                  komoOid = Oids.lisaopetusTalousKomoOid,
-                  hakemusOid = hakemus.oid,
-                  hakijaOid = personOid,
-                  vuosi,
-                  suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
-              } else {
-                Seq.empty
-              }
-            }).getOrElse(Seq.empty),
-          // LISAOPETUSTUTKINTO
-            koulutustausta.LISAKOULUTUS_KYMPPI.map(lk => {
-              if("true".equals(lk)) {
-                Seq(ItseilmoitettuTutkinto(
-                  komoOid = Oids.lisaopetusKomoOid,
-                  hakemusOid = hakemus.oid,
-                  hakijaOid = personOid,
-                  vuosi,
-                  suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
-              } else {
-                Seq.empty
-              }
-            }).getOrElse(Seq.empty),
-          // PERUSKOULUTUTKINTO AINA KUN PK_PAATTOTODISTUSVUOSI LOYTYY
-          if(vuosi != currentYear) {
-            Seq(ItseilmoitettuPeruskouluTutkinto(
+            (ItseilmoitettuPeruskouluTutkinto(
             hakemusOid = hakemus.oid,
             hakijaOid = personOid,
-            vuosi,
-            suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
-          } else {
-            Seq.empty
-          }
-          ).flatMap(s => s)
-        }).getOrElse(Seq.empty)).getOrElse(Seq.empty)
+            valmistumisvuosi.toInt,
+            suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")), arvosanat))
+        } else {
+          Seq.empty
+        }
+      }).getOrElse(Seq.empty)
+  }
 
+  def createLukioSuoritusArvosanat(hakemus: FullHakemus, personOid: String, answers: HakemusAnswers, koulutustausta: Koulutustausta): Seq[(Suoritus, Seq[Arvosana])] = {
+    (for (
+      valmistumisvuosiStr <- koulutustausta.lukioPaattotodistusVuosi;
+      valmistumisvuosi <- valmistumisvuosiStr.blankOption
+    ) yield {
+        val arvosanat: Seq[Arvosana] = answers.osaaminen match {
+          case Some(osaaminen) => osaaminen.getLukio.map({ case (aine, arvot) => aineArvotToArvosanat(personOid, aine, arvot) }).flatten.toSeq
+          case None => Seq.empty
+        }
+        val currentYear = new DateTime().year().get()
+        if (arvosanat.nonEmpty || currentYear != valmistumisvuosi.toInt) {
+          Seq(
+            (ItseilmoitettuLukioTutkinto(
+            hakemusOid = hakemus.oid,
+            hakijaOid = personOid,
+            valmistumisvuosi.toInt,
+            suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")), arvosanat))
+        } else {
+          Seq.empty
+        }
+      }).getOrElse(Seq.empty)
+  }
+
+  def createPkLisapisteSuoritukset(hakemus: FullHakemus, personOid: String, answers: HakemusAnswers, koulutustausta: Koulutustausta): Seq[(Suoritus, Seq[Arvosana])] = {
+    (for (
+      valmistumisvuosiStr <- koulutustausta.PK_PAATTOTODISTUSVUOSI;
+      valmistumisvuosi <- valmistumisvuosiStr.blankOption
+    ) yield {
+        val vuosi = valmistumisvuosi.toInt
+        Seq(
+          // AMMATTISTARTTI
+          koulutustausta.LISAKOULUTUS_AMMATTISTARTTI.map(lk => {
+            if ("true".equals(lk)) {
+              Seq(ItseilmoitettuTutkinto(
+                komoOid = Oids.ammattistarttiKomoOid,
+                hakemusOid = hakemus.oid,
+                hakijaOid = personOid,
+                vuosi,
+                suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
+            } else {
+              Seq.empty
+            }
+          }).getOrElse(Seq.empty),
+          // LISÄOPETUSTALOUS
+          koulutustausta.LISAKOULUTUS_TALOUS.map(lk => {
+            if ("true".equals(lk)) {
+              Seq(ItseilmoitettuTutkinto(
+                komoOid = Oids.lisaopetusTalousKomoOid,
+                hakemusOid = hakemus.oid,
+                hakijaOid = personOid,
+                vuosi,
+                suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
+            } else {
+              Seq.empty
+            }
+          }).getOrElse(Seq.empty),
+          // LISAOPETUSTUTKINTO
+          koulutustausta.LISAKOULUTUS_KYMPPI.map(lk => {
+            if ("true".equals(lk)) {
+              Seq(ItseilmoitettuTutkinto(
+                komoOid = Oids.lisaopetusKomoOid,
+                hakemusOid = hakemus.oid,
+                hakijaOid = personOid,
+                vuosi,
+                suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
+            } else {
+              Seq.empty
+            }
+          }).getOrElse(Seq.empty)
+        ).flatMap(s => s)
+      }).getOrElse(Seq.empty).map(s => (s, Seq.empty))
   }
 }
 
