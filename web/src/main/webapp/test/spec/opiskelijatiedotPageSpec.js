@@ -580,7 +580,7 @@
                         saveDisabled(),
                         click(opiskelijatiedot.editArvosanat),
                         selectInput(opiskelijatiedot.arvosana(1,0), "2"),
-
+                        saveEnabled(),
                         mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/arvosanat\/dc54970c-9cd1-4e8f-8d97-a37af3e99c10$/),
                         function(savedData) {
                             expect(JSON.parse(savedData)).to.deep.equal({
@@ -599,7 +599,78 @@
                     ))
                     it.skip("!! Peruskoulun suoritukselle voi lisätä pakollisen arvosanan", seqDone(
                     ))
-                    it.skip("!! Peruskoulun suoritukselle voi lisätä valinnaisen arvosanan", seqDone(
+                    it("Peruskoulun suoritukselle voi lisätä valinnaisen arvosanan", seqDone(
+                        function () {
+                            httpFixtures().organisaatioService.pikkaralaOid()
+                            httpFixtures().organisaatioService.pikkaralaKoodi()
+                            httpFixtures().henkiloPalveluService.aarne()
+                            httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
+                            httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                            httpFixtures().suorituksetLocal.aarnenSuoritus()
+                            httpFixtures().arvosanatLocal.aarnenArvosanat()
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                            httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
+                            httpFixtures().komoLocal.komoTiedot()
+                            koodistoFixtures()
+
+                            httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
+                            httpFixtures().organisaatioService.pikkoloKoodi()
+                            httpFixtures().organisaatioService.pikkoloOid()
+                        },
+                        input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                        click(opiskelijatiedot.searchButton),
+                        wait.forAngular,
+                        saveDisabled(),
+                        click(opiskelijatiedot.editArvosanat),
+                        selectInput(opiskelijatiedot.arvosana(1,1), "3"),
+                        saveEnabled(),
+                        mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/arvosanat$/),
+                        function(savedData) {
+                            expect(JSON.parse(savedData)).to.deep.equal({ aine: 'A1',
+                                suoritus: '4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9',
+                                arvio: { arvosana: '7', asteikko: '4-10' },
+                                valinnainen: true,
+                                jarjestys: 0,
+                                lisatieto: 'EN' })
+                        },
+                        saveDisabled()
+                    ))
+                    it("Peruskoulun suoritukselle voi lisätä toisen valinnaisen arvosanan", seqDone(
+                        function () {
+                            httpFixtures().organisaatioService.pikkaralaOid()
+                            httpFixtures().organisaatioService.pikkaralaKoodi()
+                            httpFixtures().henkiloPalveluService.aarne()
+                            httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
+                            httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                            httpFixtures().suorituksetLocal.aarnenSuoritus()
+                            httpFixtures().arvosanatLocal.aarnenArvosanat()
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                            httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
+                            httpFixtures().komoLocal.komoTiedot()
+                            koodistoFixtures()
+
+                            httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
+                            httpFixtures().organisaatioService.pikkoloKoodi()
+                            httpFixtures().organisaatioService.pikkoloOid()
+                        },
+                        input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                        click(opiskelijatiedot.searchButton),
+                        wait.forAngular,
+                        saveDisabled(),
+                        click(opiskelijatiedot.editArvosanat),
+                        selectInput(opiskelijatiedot.arvosana(10,2), "3"),
+                        saveEnabled(),
+                        mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/arvosanat$/),
+                        function(savedData) {
+                            expect(JSON.parse(savedData)).to.deep.equal({ aine: 'MA',
+                                suoritus: '4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9',
+                                arvio: { arvosana: '7', asteikko: '4-10' },
+                                valinnainen: true,
+                                jarjestys: 3 })
+                        },
+                        saveDisabled()
                     ))
                     it.skip("!! Peruskoulun suorituksen arvosanan muuttaminen tallentaa null-päivämäärä jos arvosanalla alunperin null-päivä", seqDone(
                     ))

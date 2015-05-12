@@ -528,7 +528,8 @@ var httpFixtures = function () {
                 "aine": "MA",
                 "valinnainen": true,
                 "myonnetty": "04.06.2015",
-                "source": "Test"
+                "source": "Test",
+                "jarjestys": 2
             }, {
                 "id": "cd60df16-7afe-4591-95d9-6804b0f7a9f6",
                 "suoritus": "4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9",
