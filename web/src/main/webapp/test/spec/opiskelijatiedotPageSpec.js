@@ -211,7 +211,7 @@
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
                 function () {
-                    expect(testFrame().location.hash).to.equal('#/opiskelijat?henkilo=1.2.246.562.24.71944845619&oppilaitos=&vuosi='+getCurrentYear())
+                    expect(testFrame().location.hash).to.equal('#/opiskelijat?henkilo=1.2.246.562.24.71944845619&oppilaitos=&vuosi=' + getCurrentYear())
                     assertText(opiskelijatiedot.hetu, "123456-789")
                 }
             ))
@@ -238,33 +238,35 @@
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
                 function () {
-                    expect(testFrame().location.hash).to.equal('#/opiskelijat?henkilo=&oppilaitos=06345&vuosi='+getCurrentYear())
+                    expect(testFrame().location.hash).to.equal('#/opiskelijat?henkilo=&oppilaitos=06345&vuosi=' + getCurrentYear())
                     assertText(opiskelijatiedot.hetu, "123456-789")
                 }
             ))
         })
 
-        describe("Tietojen näyttö", function() {
-            function testAlertText (selector, expected) {
-                return function() {
+        describe("Tietojen näyttö", function () {
+            function testAlertText(selector, expected) {
+                return function () {
                     expect(selector().text().indexOf(expected)).not.to.equal(-1)
                 }
             }
 
-            function nonEmpty(i,e) {
+            function nonEmpty(i, e) {
                 return jQuery(e).text().trim().length > 0
             }
 
             function assertArvosanat(aineRiviCount, aineCount, korotusDateCount, pakollisetCount, valinnaisetCount) {
                 expect(opiskelijatiedot.arvosanaAineRivi().length).to.equal(aineRiviCount)
-                expect(jQuery.unique(jQuery.map(opiskelijatiedot.arvosanaAineNimi(),function(e){return jQuery(e).text()})).length).to.equal(aineCount)
+                expect(jQuery.unique(jQuery.map(opiskelijatiedot.arvosanaAineNimi(), function (e) {
+                    return jQuery(e).text()
+                })).length).to.equal(aineCount)
                 expect(opiskelijatiedot.arvosanaMyonnetty().length).to.equal(korotusDateCount)
                 expect(opiskelijatiedot.arvosanaPakollinenArvosana().length).to.equal(pakollisetCount)
                 expect(opiskelijatiedot.arvosanaValinnainenArvosana().filter(nonEmpty).length).to.equal(valinnaisetCount)
             }
 
             function findAineRivi(aineTxt, myonnetty, lisatieto) {
-                return opiskelijatiedot.arvosanaAineRivi().filter(function(i, rivi){
+                return opiskelijatiedot.arvosanaAineRivi().filter(function (i, rivi) {
                     var aine = jQuery(rivi).find(opiskelijatiedot.arvosanaAineNimi().selector).text();
                     var m = jQuery(rivi).find(opiskelijatiedot.arvosanaMyonnetty().selector).text();
                     var l = jQuery(rivi).find(opiskelijatiedot.arvosanaLisatieto().selector).text();
@@ -277,7 +279,7 @@
             }
 
             function assertArvosanaRivi(aineTxt, myonnetty, lisatieto, pakolliset, valinnaiset) {
-                if(myonnetty.length > 0) {
+                if (myonnetty.length > 0) {
                     myonnetty = "(" + myonnetty + ")"
                 }
                 var aineRivit = findAineRivi(aineTxt, myonnetty, lisatieto)
@@ -285,8 +287,9 @@
                 var aineRivi = jQuery(aineRivit[0])
                 var p = jQuery.makeArray(jQuery(aineRivi).find(opiskelijatiedot.arvosanaPakollinenArvosana().selector).map(txtArr))
                 var v = jQuery.makeArray(jQuery(aineRivi).find(opiskelijatiedot.arvosanaValinnainenArvosana().selector).filter(nonEmpty).map(txtArr))
-                expect([aineTxt, myonnetty , lisatieto, p, v]).to.deep.equal([aineTxt, myonnetty, lisatieto, pakolliset, valinnaiset])
+                expect([aineTxt, myonnetty, lisatieto, p, v]).to.deep.equal([aineTxt, myonnetty, lisatieto, pakolliset, valinnaiset])
             }
+
             describe('Vahvistetut', function () {
                 it('Opiskelijan peruskoulun suoritukset, ainelista, arvosanat, luokkatiedot ja opintooikeudet näkyvät oikein', seqDone(
                     wait.forAngular,
@@ -331,7 +334,7 @@
                         assertText(opiskelijatiedot.opiskeluoikeusKoulutus, "Ensihoitaja (AMK)")
                         assertArvosanat(37, 19, 14, 17, 1)
                         assertArvosanaRivi("Äidinkieli ja kirjallisuus", "", "Kieli puuttuu!!", ["10"], [])
-                        assertArvosanaRivi("A1-kieli", "", "englanti", ["9"],[])
+                        assertArvosanaRivi("A1-kieli", "", "englanti", ["9"], [])
                         assertArvosanaRivi("Matematiikka", "", "", ["6"], [])
                         assertArvosanaRivi("Matematiikka", "04.06.2015", "", ["10"], ["9"])
                     },
@@ -374,7 +377,7 @@
                         assertValue(opiskelijatiedot.suoritusTila, "0")
                         assertArvosanat(26, 20, 0, 16, 0)
                         assertArvosanaRivi("Äidinkieli ja kirjallisuus", "", "Kieli puuttuu!!", ["10"], [])
-                        assertArvosanaRivi("A1-kieli", "", "englanti", ["9"],[])
+                        assertArvosanaRivi("A1-kieli", "", "englanti", ["9"], [])
                         assertArvosanaRivi("Matematiikka", "", "", ["10"], [])
                         assertArvosanaRivi("Psykologia", "", "", ['8'], [])
                         assertArvosanaRivi("Filosofia", "", "", ['6'], [])
@@ -460,7 +463,7 @@
                             'Pitkä oppimäärä (MA)',
                             'C',
                             '4',
-                            '02.06.2013' )
+                            '02.06.2013')
                         expect(opiskelijatiedot.yoArvosanaAddKoe().is(':visible')).to.equal(false)
                         expect(opiskelijatiedot.suoritusPoista().is(':visible')).to.equal(false)
                     },
@@ -515,26 +518,28 @@
             })
         })
         describe('Tietojen muokkaus', function () {
-                describe("Peruskoulun suoritus", function() {
-                    it("Peruskoulun suoritustiedot (ja arvosanat) talletetaan vain jos muuttuneita arvoja", seqDone(
-                        function () {
-                            httpFixtures().organisaatioService.pikkaralaOid()
-                            httpFixtures().organisaatioService.pikkaralaKoodi()
-                            httpFixtures().henkiloPalveluService.aarne()
-                            httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
-                            httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                            httpFixtures().suorituksetLocal.aarnenSuoritus()
-                            httpFixtures().arvosanatLocal.aarnenArvosanat()
-                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
-                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
-                            httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
-                            httpFixtures().komoLocal.komoTiedot()
-                            koodistoFixtures()
+                describe("Peruskoulun suoritus", function () {
+                    function aarnenPeruskouluDatat() {
+                        httpFixtures().organisaatioService.pikkaralaOid()
+                        httpFixtures().organisaatioService.pikkaralaKoodi()
+                        httpFixtures().henkiloPalveluService.aarne()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                        httpFixtures().suorituksetLocal.aarnenSuoritus()
+                        httpFixtures().arvosanatLocal.aarnenArvosanat()
+                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                        httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
+                        httpFixtures().komoLocal.komoTiedot()
+                        koodistoFixtures()
 
-                            httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
-                            httpFixtures().organisaatioService.pikkoloKoodi()
-                            httpFixtures().organisaatioService.pikkoloOid()
-                        },
+                        httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
+                        httpFixtures().organisaatioService.pikkoloKoodi()
+                        httpFixtures().organisaatioService.pikkoloOid()
+                    }
+
+                    it("Peruskoulun suoritustiedot (ja arvosanat) talletetaan vain jos muuttuneita arvoja", seqDone(
+                        aarnenPeruskouluDatat,
                         input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                         click(opiskelijatiedot.searchButton),
                         wait.forAngular,
@@ -597,78 +602,64 @@
                     ))
                     it.skip("!! Lisää suoritus luo uuden suorituksen", seqDone(
                     ))
-                    it.skip("!! Peruskoulun suoritukselle voi lisätä pakollisen arvosanan", seqDone(
-                    ))
-                    it("Peruskoulun suoritukselle voi lisätä valinnaisen arvosanan", seqDone(
-                        function () {
-                            httpFixtures().organisaatioService.pikkaralaOid()
-                            httpFixtures().organisaatioService.pikkaralaKoodi()
-                            httpFixtures().henkiloPalveluService.aarne()
-                            httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
-                            httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                            httpFixtures().suorituksetLocal.aarnenSuoritus()
-                            httpFixtures().arvosanatLocal.aarnenArvosanat()
-                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
-                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
-                            httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
-                            httpFixtures().komoLocal.komoTiedot()
-                            koodistoFixtures()
-
-                            httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
-                            httpFixtures().organisaatioService.pikkoloKoodi()
-                            httpFixtures().organisaatioService.pikkoloOid()
-                        },
+                    it("Peruskoulun suoritukselle voi lisätä pakollisen arvosanan", seqDone(
+                        aarnenPeruskouluDatat,
                         input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                         click(opiskelijatiedot.searchButton),
                         wait.forAngular,
                         saveDisabled(),
                         click(opiskelijatiedot.editArvosanat),
-                        selectInput(opiskelijatiedot.arvosana(1,1), "3"),
+                        selectInput(opiskelijatiedot.arvosana(2, 0), "2"),
                         saveEnabled(),
                         mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/arvosanat$/),
-                        function(savedData) {
-                            expect(JSON.parse(savedData)).to.deep.equal({ aine: 'A1',
+                        function (savedData) {
+                            expect(JSON.parse(savedData)).to.deep.equal({ aine: 'A12',
                                 suoritus: '4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9',
-                                arvio: { arvosana: '7', asteikko: '4-10' },
+                                arvio: { arvosana: '8', asteikko: '4-10' },
+                                valinnainen: false })
+                        },
+                        saveDisabled()
+                    ))
+                    it("Peruskoulun suoritukselle voi lisätä valinnaisen arvosanan", seqDone(
+                        aarnenPeruskouluDatat,
+                        input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                        click(opiskelijatiedot.searchButton),
+                        wait.forAngular,
+                        saveDisabled(),
+                        click(opiskelijatiedot.editArvosanat),
+                        selectInput(opiskelijatiedot.arvosana(1, 1), "3"),
+                        saveEnabled(),
+                        mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/arvosanat$/),
+                        function (savedData) {
+                            expect(JSON.parse(savedData)).to.deep.equal({
+                                aine: 'A1',
+                                suoritus: '4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9',
+                                arvio: {arvosana: '7', asteikko: '4-10'},
                                 valinnainen: true,
                                 jarjestys: 0,
-                                lisatieto: 'EN' })
+                                lisatieto: 'EN'
+                            })
                         },
                         saveDisabled()
                     ))
                     it("Peruskoulun suoritukselle voi lisätä toisen valinnaisen arvosanan", seqDone(
-                        function () {
-                            httpFixtures().organisaatioService.pikkaralaOid()
-                            httpFixtures().organisaatioService.pikkaralaKoodi()
-                            httpFixtures().henkiloPalveluService.aarne()
-                            httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
-                            httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                            httpFixtures().suorituksetLocal.aarnenSuoritus()
-                            httpFixtures().arvosanatLocal.aarnenArvosanat()
-                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
-                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
-                            httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
-                            httpFixtures().komoLocal.komoTiedot()
-                            koodistoFixtures()
-
-                            httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
-                            httpFixtures().organisaatioService.pikkoloKoodi()
-                            httpFixtures().organisaatioService.pikkoloOid()
-                        },
+                        aarnenPeruskouluDatat,
                         input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                         click(opiskelijatiedot.searchButton),
                         wait.forAngular,
                         saveDisabled(),
                         click(opiskelijatiedot.editArvosanat),
-                        selectInput(opiskelijatiedot.arvosana(10,2), "3"),
+                        selectInput(opiskelijatiedot.arvosana(10, 2), "3"),
                         saveEnabled(),
                         mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/arvosanat$/),
-                        function(savedData) {
-                            expect(JSON.parse(savedData)).to.deep.equal({ aine: 'MA',
+                        function (savedData) {
+                            expect(JSON.parse(savedData)).to.deep.equal({
+                                aine: 'MA',
                                 suoritus: '4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9',
-                                arvio: { arvosana: '7', asteikko: '4-10' },
+                                arvio: {arvosana: '7', asteikko: '4-10'},
                                 valinnainen: true,
-                                jarjestys: 3 })
+                                jarjestys: 3
+                            })
                         },
                         saveDisabled()
                     ))
@@ -681,7 +672,7 @@
                     it.skip("!! Lisää korotus tallentaa arvosanan", seqDone(
                     ))
                 })
-                describe("Yo suoritus", function() {
+                describe("Yo suoritus", function () {
                     it("Vanhempi YO-suoritus (tehty ennen 1.1.1990) on muokattavissa", seqDone(
                         wait.forAngular,
                         function () {
@@ -725,15 +716,17 @@
                         select(opiskelijatiedot.yoArvosanaArvosana, "1"),
                         saveEnabled(),
                         mockPostReturnData(click(opiskelijatiedot.saveButton), serviceUrls.arvosanat.arvosana(restData.suoritusRekisteri.arvosanat.aarneYo[0].id)),
-                        function(savedData) {
-                            expect(JSON.parse(savedData)).to.deep.equal({ id: '3ba4b93c-87e8-4e6c-8b2d-704ae88a89af',
+                        function (savedData) {
+                            expect(JSON.parse(savedData)).to.deep.equal({
+                                    id: '3ba4b93c-87e8-4e6c-8b2d-704ae88a89af',
                                     suoritus: '64d26b8c-e2c8-4b13-9ac9-51c85e288bc0',
-                                    arvio: { arvosana: 'M', asteikko: 'YO', pisteet: 4 },
+                                    arvio: {arvosana: 'M', asteikko: 'YO', pisteet: 4},
                                     aine: 'AINEREAALI',
                                     source: '1.2.246.562.24.72453542949',
                                     valinnainen: false,
                                     lisatieto: 'UO',
-                                    myonnetty: '21.12.1988' }
+                                    myonnetty: '21.12.1988'
+                                }
                             )
                         },
                         saveDisabled()
@@ -775,13 +768,15 @@
                         input(opiskelijatiedot.yoArvosanaPistemaara, "10"),
                         saveEnabled(),
                         mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/arvosanat$/),
-                        function(savedData) {
-                            expect(JSON.parse(savedData)).to.deep.equal({ suoritus: 'c33ab9a2-e7b4-4e8d-9447-85637c4bc09d',
+                        function (savedData) {
+                            expect(JSON.parse(savedData)).to.deep.equal({
+                                    suoritus: 'c33ab9a2-e7b4-4e8d-9447-85637c4bc09d',
                                     valinnainen: false,
-                                    arvio: { asteikko: 'YO', arvosana: 'A', pisteet: 10 },
+                                    arvio: {asteikko: 'YO', arvosana: 'A', pisteet: 10},
                                     lisatieto: 'RU',
                                     aine: 'B',
-                                    myonnetty: '21.12.1986' }
+                                    myonnetty: '21.12.1986'
+                                }
                             )
                         },
                         saveDisabled()
@@ -789,7 +784,7 @@
                     it.skip("!! YO arvosanan poistaminen", seqDone(
                     ))
                 })
-                describe("Luokkatieto", function() {
+                describe("Luokkatieto", function () {
                     it("Lisää uusi luokkatieto toiminto luo uuden luokkatiedon", seqDone(
                         wait.forAngular,
                         function () {
