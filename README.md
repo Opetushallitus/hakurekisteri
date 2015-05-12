@@ -1,5 +1,7 @@
 # Haku- ja valintarekisteri #
 
+[![Join the chat at https://gitter.im/Opetushallitus/hakurekisteri](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Opetushallitus/hakurekisteri?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 
 ## Fronttidevaus ja mocha-testit
 
