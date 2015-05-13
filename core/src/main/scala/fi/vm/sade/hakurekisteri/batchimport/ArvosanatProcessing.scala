@@ -5,13 +5,13 @@ import java.util.UUID
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.{Oids, Config}
+import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.integration.henkilo._
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoKoodiArvot}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse}
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus, SuoritusQuery, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import org.joda.time.{DateTime, LocalDate}
 
@@ -23,7 +23,7 @@ case class HenkiloNotFoundException(oid: String) extends Exception(s"henkilo not
 
 class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, importBatchActor: ActorRef, koodistoActor: ActorRef)(implicit val system: ActorSystem) {
   implicit val ec: ExecutionContext = system.dispatcher
-  implicit val timeout: Timeout = 15.minutes
+  implicit val timeout: Timeout = 1.hour
 
   def process(batch: ImportBatch): Future[ImportBatch with Identified[UUID]] = {
     fetchOppiaineetKoodisto() flatMap
@@ -266,15 +266,15 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     })
 
     val tyypit = Map(
-      "perusopetus" -> Oids.perusopetusKomoOid,
-      "perusopetuksenlisaopetus" -> Oids.lisaopetusKomoOid,
-      "ammattistartti" -> Oids.ammattistarttiKomoOid,
-      "valmentava" -> Oids.valmentavaKomoOid,
+      "perusopetus"                       -> Oids.perusopetusKomoOid,
+      "perusopetuksenlisaopetus"          -> Oids.lisaopetusKomoOid,
+      "ammattistartti"                    -> Oids.ammattistarttiKomoOid,
+      "valmentava"                        -> Oids.valmentavaKomoOid,
       "maahanmuuttajienlukioonvalmistava" -> Oids.lukioonvalmistavaKomoOid,
-      "maahanmuuttajienammvalmistava" -> Oids.ammatilliseenvalmistavaKomoOid,
-      "ulkomainen" -> Oids.ulkomainenkorvaavaKomoOid,
-      "lukio" -> Oids.lukioKomoOid,
-      "ammatillinen" -> Oids.ammatillinenKomoOid
+      "maahanmuuttajienammvalmistava"     -> Oids.ammatilliseenvalmistavaKomoOid,
+      "ulkomainen"                        -> Oids.ulkomainenkorvaavaKomoOid,
+      "lukio"                             -> Oids.lukioKomoOid,
+      "ammatillinen"                      -> Oids.ammatillinenKomoOid
     )
 
     def apply(h: Node)(lahde: String)(oppiaineet: Seq[String]): ImportArvosanaHenkilo = {

@@ -165,7 +165,7 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     case s if hasKomo(s, Oids.valmentavaKomoOid)              => "V"
     case s if hasKomo(s, Oids.lisaopetusKomoOid)              => "10"
     case s if hasKomo(s, Oids.perusopetusKomoOid)             => "9"
-    case _                                                      => ""
+    case _                                                    => ""
   }
 
   private case object Start
@@ -173,7 +173,7 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   implicit val ec = context.dispatcher
 
   private val start = context.system.scheduler.scheduleOnce(1.millisecond, self, Start)
-  private val stop = context.system.scheduler.scheduleOnce(30.minutes, self, Stop)
+  private val stop = context.system.scheduler.scheduleOnce(1.hour, self, Stop)
 
   override def postStop(): Unit = {
     start.cancel()
