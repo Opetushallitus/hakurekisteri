@@ -13,6 +13,7 @@ import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.joda.time.LocalDate
 import org.json4s.jackson.Serialization._
 import org.scalatra.test.scalatest.ScalatraFunSuite
+import scala.concurrent.duration._
 
 import scala.language.implicitConversions
 
@@ -34,6 +35,8 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite {
   implicit val swagger = new HakurekisteriSwagger
 
   addServlet(new HakurekisteriResource[Arvosana, CreateArvosanaCommand](guardedArvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand], "/*")
+
+
 
   test("get root should return 200") {
     get("/") {
@@ -91,5 +94,10 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite {
       status should be (400)
       body should include ("jarjestys is required for valinnainen arvosana")
     }
+  }
+
+  override def stop(): Unit = {
+    system.shutdown()
+    system.awaitTermination(15.seconds)
   }
 }

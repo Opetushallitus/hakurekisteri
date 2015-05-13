@@ -1,12 +1,17 @@
 package fi.vm.sade.hakurekisteri.opiskelija
 
 import java.util.UUID
+
+import fi.vm.sade.hakurekisteri.rest.support.UUIDResource
 import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.DateTime
-import fi.vm.sade.hakurekisteri.rest.support.{UUIDResource, Resource}
 
 case class Opiskelija(oppilaitosOid: String, luokkataso: String, luokka: String, henkiloOid: String, alkuPaiva: DateTime, loppuPaiva: Option[DateTime] = None, source: String) extends UUIDResource[Opiskelija] {
-   override def identify(identity: UUID): Opiskelija with Identified[UUID] = new IdentifiedOpiskelija(this, identity)
+
+  if (loppuPaiva.isDefined)
+    require(!loppuPaiva.get.isBefore(alkuPaiva), "loppuPaiva must be after alkuPaiva")
+
+  override def identify(identity: UUID): Opiskelija with Identified[UUID] = new IdentifiedOpiskelija(this, identity)
 
   private[Opiskelija] case class OpiskelijaCore(oppilaitosOid: String, luokkataso: String, henkiloOid: String)
 

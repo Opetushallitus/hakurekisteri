@@ -22,7 +22,7 @@
         <div class="input-group">
             <input type="text" ng-disabled="info.delete" ng-model="luokkatieto.alkuPaiva"
                    title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)" datepicker-popup="{{format}}"
-                   datepicker-options="dateOptions" required="required" datepicker-append-to-body="true"
+                   datepicker-options="dateOptions" max-date="luokkatieto.loppuPaiva" required="required" datepicker-append-to-body="true"
                    is-open="alkuOpen" ng-click="alkuOpen = true" show-button-bar="false"
                    class="form-control input-sm datepicker test-luokkatietoAlkuPaiva"/><span class="input-group-btn">
         <button type="button" ng-click="luokkatieto.alkuPaiva = null; luokkatieto.loppuPaiva = null;"
