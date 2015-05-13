@@ -92,11 +92,12 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
                             henkilotunniste: String,
                             suoritus: VirallinenSuoritus with Identified[UUID],
                             todistus: Valmistunut): Future[Seq[ArvosanaStatus]] =
-    Future.traverse(todistus.arvosanat)(arvosana =>
+    Future.traverse(todistus.arvosanat)(arvosana => {
+      Thread.sleep(50)
       saveArvosana(batch.source, suoritus.id, arvosana) map (storedArvosana =>
         OkArvosanaStatus(storedArvosana.id, storedArvosana.suoritus, henkilotunniste)
-      ) recover { case t: Throwable => FailureArvosanaStatus(henkilotunniste, t) }
-    )
+        ) recover { case t: Throwable => FailureArvosanaStatus(henkilotunniste, t) }
+    })
 
   private def processTodistus(batch: ImportBatch,
                               todistus: ImportTodistus,
