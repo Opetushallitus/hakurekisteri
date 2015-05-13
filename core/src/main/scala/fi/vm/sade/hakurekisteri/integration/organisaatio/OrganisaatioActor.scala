@@ -95,9 +95,13 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient, config: Co
   }
 
   def findDirect(tunniste: String): Future[Option[Organisaatio]] = {
-    organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(tunniste, "UTF-8")}", 200, maxRetries).map(Option(_)).recoverWith {
+    val org = organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(tunniste, "UTF-8")}", 200, maxRetries).map(Option(_)).recoverWith {
       case p: PreconditionFailedException if p.responseCode == 204 => log.warning(s"organisaatio not found with tunniste $tunniste"); Future.successful(None)
     }
+    org.onSuccess {
+      case Some(o) => saveOrganisaatiot(Seq(o))
+    }
+    org
   }
 }
 
