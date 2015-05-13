@@ -160,8 +160,6 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   test("should return synteettinen hakemus from erillishaku") {
     val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.3"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
 
-    System.out.println("Hakijat: " + hakijat)
-
     hakijat.size should be (1)
   }
 
