@@ -7,16 +7,16 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana, ArvosanaActor, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.henkilo.{HttpHenkiloActor, HenkiloActor}
+import fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoKoodiArvot}
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, OrganisaatioActor}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.HttpOrganisaatioActor
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.{FailingResourceActor, MockedResourceActor}
+import fi.vm.sade.hakurekisteri.{Config, Oids}
 import generators.DataGen
 import org.joda.time.LocalDate
 import org.mockito.Mockito._
@@ -64,11 +64,11 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           }, batch),
           createKoodistoActor
         )
-        val status = Await.result(arvosanatProcessing.process(batch), Duration(10, TimeUnit.SECONDS)).status
+        val status = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS)).status
         status.messages shouldBe empty
-        suoritusWaiter.await(timeout(10.seconds), dismissals(1))
-        arvosanaWaiter.await(timeout(30.seconds), dismissals(23))
-        importBatchWaiter.await(timeout(30.seconds), dismissals(1))
+        suoritusWaiter.await(timeout(60.seconds), dismissals(1))
+        arvosanaWaiter.await(timeout(60.seconds), dismissals(23))
+        importBatchWaiter.await(timeout(60.seconds), dismissals(1))
       }
     )
   }
@@ -95,9 +95,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createImportBatchActor(system, {b => b}, batch),
           createKoodistoActor
         )
-        val status = Await.result(arvosanatProcessing.process(batch), Duration(10, TimeUnit.SECONDS)).status
+        val status = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS)).status
         status.messages shouldBe empty
-        suoritusWaiter.await(timeout(10.seconds), dismissals(1))
+        suoritusWaiter.await(timeout(60.seconds), dismissals(1))
       }
     )
   }
@@ -128,9 +128,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createKoodistoActor
         )
 
-        val status = Await.result(arvosanatProcessing.process(batch), Duration(10, TimeUnit.SECONDS)).status
+        val status = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS)).status
         status.messages shouldBe empty
-        importBatchWaiter.await(timeout(30.seconds), dismissals(1))
+        importBatchWaiter.await(timeout(60.seconds), dismissals(1))
       }
     )
   }
@@ -161,9 +161,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createKoodistoActor
         )
 
-        val status = Await.result(arvosanatProcessing.process(batch), Duration(10, TimeUnit.SECONDS)).status
+        val status = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS)).status
         status.messages shouldBe empty
-        importBatchWaiter.await(timeout(30.seconds), dismissals(1))
+        importBatchWaiter.await(timeout(60.seconds), dismissals(1))
       }
     )
   }
@@ -190,9 +190,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createKoodistoActor
         )
 
-        val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
+        val saved = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS))
         saved.status.messages("111111-111L").find(_.contains("SuoritusNotFoundException")) should not be None
-        importBatchWaiter.await(timeout(30.seconds), dismissals(1))
+        importBatchWaiter.await(timeout(60.seconds), dismissals(1))
       }
     )
   }
@@ -222,9 +222,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createKoodistoActor
         )
 
-        val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
+        val saved = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS))
         saved.status.messages("111111-111L").find(_.contains("MultipleSuoritusException")) should not be None
-        importBatchWaiter.await(timeout(30.seconds), dismissals(1))
+        importBatchWaiter.await(timeout(60.seconds), dismissals(1))
       }
     )
   }
@@ -250,11 +250,11 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createKoodistoActor
         )
 
-        val saved = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
+        val saved = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS))
 
         saved.status.messages("111111-111L").find(_.contains("test save exception")) should not be None
 
-        importBatchWaiter.await(timeout(30.seconds), dismissals(1))
+        importBatchWaiter.await(timeout(60.seconds), dismissals(1))
       }
     )
   }
@@ -282,7 +282,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
         arvosanatProcessing.process(batch)
 
-        suoritusWaiter.await(timeout(10.seconds), dismissals(1))
+        suoritusWaiter.await(timeout(60.seconds), dismissals(1))
       }
     )
   }
@@ -309,9 +309,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createKoodistoActor
         )
 
-        Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS))
+        Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS))
 
-        val savedArvosanat: Seq[Arvosana] = Await.result((arvosanaActor ? ArvosanaQuery(None))(Timeout(30, TimeUnit.SECONDS)).mapTo[Seq[Arvosana]], Duration(30, TimeUnit.SECONDS))
+        val savedArvosanat: Seq[Arvosana] = Await.result((arvosanaActor ? ArvosanaQuery(None))(Timeout(60, TimeUnit.SECONDS)).mapTo[Seq[Arvosana]], Duration(60, TimeUnit.SECONDS))
 
         savedArvosanat should (
           contain (
