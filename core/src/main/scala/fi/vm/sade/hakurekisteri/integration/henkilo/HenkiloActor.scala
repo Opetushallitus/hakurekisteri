@@ -69,9 +69,11 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
       savingHenkilo = true
       val (save, actor) = saveQueue.head
       saveQueue.remove(save)
-      virkailijaClient.postObject[CreateHenkilo, String](s"/resources/s2s/tiedonsiirrot", 200, save.henkilo).map(saved => SavedHenkilo(saved, save.tunniste)).recoverWith {
+      Future {
+        Thread.sleep(100)
+      }.flatMap(u => virkailijaClient.postObject[CreateHenkilo, String](s"/resources/s2s/tiedonsiirrot", 200, save.henkilo).map(saved => SavedHenkilo(saved, save.tunniste)).recoverWith {
         case t: Throwable => Future.successful(HenkiloSaveFailed(save.tunniste, t))
-      }.pipeTo(self)(actor)
+      }).pipeTo(self)(actor)
 
     case s: SavedHenkilo =>
       savingHenkilo = false
