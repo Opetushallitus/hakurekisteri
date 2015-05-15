@@ -2,22 +2,21 @@ package fi.vm.sade.hakurekisteri.integration.henkilo
 
 import java.net.URLEncoder
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.mocks.HenkiloMock
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioResponse
-import org.json4s.{DefaultFormats, _}
 import org.json4s.jackson.JsonMethods._
+import org.json4s.{DefaultFormats, _}
 
-import scala.concurrent.duration._
+import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
+import fi.vm.sade.hakurekisteri.integration.henkilo.HetuUtil.Hetu
 
 abstract class HenkiloActor(config: Config) extends Actor with ActorLogging {
   implicit val ec: ExecutionContext = context.dispatcher
-  val maxRetries = config.integrations.henkiloConfig.httpClientMaxRetries
-  var savingHenkilo = false
 
   def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo)
 
@@ -27,8 +26,9 @@ abstract class HenkiloActor(config: Config) extends Actor with ActorLogging {
 }
 
 class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) extends HenkiloActor(config) {
-
-  import fi.vm.sade.hakurekisteri.integration.henkilo.HetuUtil.Hetu
+  private val maxRetries = config.integrations.henkiloConfig.httpClientMaxRetries
+  private var savingHenkilo = false
+  private val saveQueue: mutable.Map[SaveHenkilo, ActorRef] = new mutable.LinkedHashMap[SaveHenkilo, ActorRef]()
 
   override def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
     virkailijaClient.postObject[OrganisaatioHenkilo, OrganisaatioHenkilo](s"/resources/henkilo/$oidHenkilo/organisaatiohenkilo", 200, organisaatioHenkilo)
@@ -37,6 +37,8 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
   override def findExistingOrganisaatiohenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
     virkailijaClient.readObject[Seq[OrganisaatioHenkilo]](s"/resources/henkilo/$oidHenkilo/organisaatiohenkilo", 200)
   }
+
+  private object SaveNext
 
   override def receive: Receive = {
     case henkiloOid: String =>
@@ -56,30 +58,36 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
           map(r => FoundHenkilos(r.results, q.tunniste)) pipeTo sender
       }
 
+
+
+    case s: SaveHenkilo =>
+      saveQueue.put(s, sender())
+      if (!savingHenkilo)
+        self ! SaveNext
+
+    case SaveNext if !savingHenkilo && saveQueue.nonEmpty =>
+      savingHenkilo = true
+      val (save, actor) = saveQueue.head
+      saveQueue.remove(save)
+      virkailijaClient.postObject[CreateHenkilo, String](s"/resources/s2s/tiedonsiirrot", 200, save.henkilo).map(saved => SavedHenkilo(saved, save.tunniste)).recoverWith {
+        case t: Throwable => Future.successful(HenkiloSaveFailed(save.tunniste, t))
+      }.pipeTo(self)(actor)
+
     case s: SavedHenkilo =>
       savingHenkilo = false
       sender ! s
+      self ! SaveNext
 
     case t: HenkiloSaveFailed =>
       savingHenkilo = false
       Future.failed(t) pipeTo sender
-
-    case SaveHenkilo(henkilo, tunniste) if !savingHenkilo =>
-      savingHenkilo = true
-      virkailijaClient.postObject[CreateHenkilo, String](s"/resources/s2s/tiedonsiirrot", 200, henkilo).map(saved => SavedHenkilo(saved, tunniste)).recoverWith {
-        case t: Throwable => Future.successful(HenkiloSaveFailed(tunniste, t))
-      }.pipeTo(self)(sender())
-
-    case s: SaveHenkilo if savingHenkilo =>
-      context.system.scheduler.scheduleOnce(50.milliseconds, self, s)(ec, sender())
+      self ! SaveNext
 
   }
 }
 
 class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
   implicit val formats = DefaultFormats
-
-  import fi.vm.sade.hakurekisteri.integration.henkilo.HetuUtil.Hetu
 
   override def receive: Receive = {
     case henkiloOid: String =>
@@ -94,18 +102,7 @@ class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
     case q: HenkiloQuery =>
       throw new UnsupportedOperationException("Not implemented")
 
-    case s: SavedHenkilo =>
-      savingHenkilo = false
-      sender ! s
-
-    case t: HenkiloSaveFailed =>
-      savingHenkilo = false
-      Future.failed(t) pipeTo sender
-
-    case SaveHenkilo(henkilo, tunniste) if !savingHenkilo =>
-      throw new UnsupportedOperationException("Not implemented")
-
-    case s: SaveHenkilo if savingHenkilo =>
+    case s: SaveHenkilo =>
       throw new UnsupportedOperationException("Not implemented")
 
     case msg =>
