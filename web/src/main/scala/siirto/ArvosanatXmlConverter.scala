@@ -44,7 +44,7 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
 
   def addTodistus(henkiloElementContents: Seq[Node], todistusElem: Elem): Seq[Node] = {
     henkiloElementContents.map {
-      case elem: Elem if (elem.label == "todistukset") => elem.copy(child = elem.child :+ todistusElem)
+      case elem: Elem if elem.label == "todistukset" => elem.copy(child = elem.child :+ todistusElem)
       case default => default
     }
   }
@@ -52,13 +52,17 @@ object ArvosanatXmlConverter extends support.XmlConverter with ExcelToXmlSupport
   private def todistusLens(elementName: String): Elem @> DataRow = Lens.lensu(
     (henkiloElem: Elem, row: DataRow) => {
       val todistusContents: Seq[Elem] = row.collect {
-        case DataCell(name, v) if (Set("VALMISTUMINEN", "OLETETTUVALMISTUMINEN", "OPETUSPAATTYNYT").contains(name)) =>
+        case DataCell(name, v) if Set("VALMISTUMINEN", "OLETETTUVALMISTUMINEN", "OPETUSPAATTYNYT").contains(name) =>
           wrapIntoElement(name.toLowerCase, toXmlDate(v))
-        case DataCell(name, v) if (Set("MYONTAJA", "SUORITUSKIELI", "EIVALMISTU", "VALMISTUMINENSIIRTYY").contains(name)) =>
+        case DataCell(name, v) if Set("MYONTAJA", "SUORITUSKIELI", "VALMISTUMINENSIIRTYY").contains(name) =>
           wrapIntoElement(name.toLowerCase, v)
       }
 
-      val todistus = wrapIntoElement(elementName, todistusContents ++ convertAineet(row))
+      val eivalmistuElem: Seq[Elem] = row.collect {
+        case DataCell(name, v) if name == "EIVALMISTU"=> wrapIntoElement(name.toLowerCase, v)
+      }
+
+      val todistus = wrapIntoElement(elementName, todistusContents ++ convertAineet(row) ++ eivalmistuElem)
 
       val result = henkiloElem.copy(child = addTodistus(addHenkilotiedot(row, henkiloElem.child), todistus))
       result

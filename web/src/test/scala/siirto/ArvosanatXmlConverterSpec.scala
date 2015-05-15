@@ -268,8 +268,8 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
   private def lisaopetusExcel(todistusType: String) = WorkbookData(
     todistusType ->
       """
-        |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|SYNTYMAAIKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|MYONTAJA|SUORITUSKIELI|VALMISTUMINEN  |AI_YH | AI_TYYPPI
-        |111111-1975|            |               |           |Testi   |Test A  |Test       |05127   |SV           |31.05.2015     |9     | SV
+        |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|SYNTYMAAIKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|MYONTAJA|SUORITUSKIELI|VALMISTUMINEN  |AI_YH |AI_TYYPPI
+        |111111-1975|            |               |           |Testi   |Test A  |Test       |05127   |SV           |31.05.2015     |9     |SV
       """
   ).toExcel
 
@@ -281,6 +281,17 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
 
   }
 
+  private def eivalmistuLisaopetusExcel(todistusType: String) = WorkbookData(
+    todistusType ->
+      """
+        |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|SYNTYMAAIKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|MYONTAJA|SUORITUSKIELI|VALMISTUMINEN  |AI_YH |AI_TYYPPI|EIVALMISTU
+        |111111-1975|            |               |           |Testi   |Test A  |Test       |05127   |SV           |31.05.2015     |9     |SV       |SUORITUS HYLATTY
+      """
+  ).toExcel
+
+  it should "convert eivalmistu perusopetuksenlisaopetus xls into valid xml" in {
+    convertXls(eivalmistuLisaopetusExcel("perusopetuksenlisaopetus")) should be (valid)
+  }
 
 
   def convertValidlyTo(expected:Elem): Matcher[usermodel.Workbook] = (equal(expected)(after being normalized) and be (valid)) compose (convertXls)
