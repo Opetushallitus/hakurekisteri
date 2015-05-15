@@ -93,7 +93,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
                             suoritus: VirallinenSuoritus with Identified[UUID],
                             todistus: Valmistunut): Future[Seq[ArvosanaStatus]] =
     Future.traverse(todistus.arvosanat)(arvosana => {
-      Thread.sleep(50)
+      Thread.sleep(50L)
       saveArvosana(batch.source, suoritus.id, arvosana) map (storedArvosana =>
         OkArvosanaStatus(storedArvosana.id, storedArvosana.suoritus, henkilotunniste)
         ) recover { case t: Throwable => FailureArvosanaStatus(henkilotunniste, t) }
@@ -130,7 +130,9 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
 
   private def processBatch(batch: ImportBatch)(oppiaineet: Seq[String]): Seq[Future[ImportArvosanaStatus]] =
     for (henkilo <- enrich(parseData(batch)(oppiaineet))(batch.source)) yield henkilo flatMap {
-      case (henkilotunniste, henkiloOid, todistukset) => processHenkilo(batch, henkilotunniste, henkiloOid, todistukset)
+      case (henkilotunniste, henkiloOid, todistukset) =>
+        Thread.sleep(50L)
+        processHenkilo(batch, henkilotunniste, henkiloOid, todistukset)
     }
 
   private trait ArvosanaStatus
