@@ -1,11 +1,12 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
-import java.util.{GregorianCalendar, UUID}
-import fi.vm.sade.hakurekisteri.{Oids, Config}
+import java.util.UUID
+
+import fi.vm.sade.hakurekisteri.Oids
+import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
+import fi.vm.sade.hakurekisteri.rest.support.UUIDResource
 import fi.vm.sade.hakurekisteri.storage.Identified
 import org.joda.time.{DateTimeConstants, LocalDate}
-import fi.vm.sade.hakurekisteri.rest.support.UUIDResource
-import fi.vm.sade.hakurekisteri.rest.support.Kausi.Kausi
 
 import scala.annotation.tailrec
 
@@ -17,7 +18,7 @@ object yksilollistaminen extends Enumeration {
   val Alueittain = Value("Alueittain")
 }
 
-import yksilollistaminen._
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 
 case class Komoto(oid: String, komo: String, tarjoaja: String, alkamisvuosi: Option[String], alkamiskausi: Option[Kausi])
 
@@ -66,12 +67,13 @@ object DayFinder {
   }
 }
 
-import DayFinder._
+import fi.vm.sade.hakurekisteri.suoritus.DayFinder._
 
 object ItseilmoitettuPeruskouluTutkinto {
 
   def apply(hakemusOid: String, hakijaOid: String, valmistumisvuosi: Int, suoritusKieli: String) =
-    VirallinenSuoritus(Oids.perusopetusKomoOid,
+    VirallinenSuoritus(
+      Oids.perusopetusKomoOid,
       myontaja = hakemusOid,
       tila = "VALMIS",
       valmistuminen = saturdayOfWeek22(valmistumisvuosi),
@@ -80,14 +82,16 @@ object ItseilmoitettuPeruskouluTutkinto {
       suoritusKieli,
       opiskeluoikeus = None,
       vahv = false,
-      lahde = hakijaOid)
+      lahde = hakijaOid
+    )
 
 }
 
 object ItseilmoitettuTutkinto {
 
   def apply(komoOid: String, hakemusOid: String, hakijaOid: String, valmistumisvuosi: Int, suoritusKieli: String) =
-    VirallinenSuoritus(komo = komoOid, //Config.lisaopetusKomoOid,
+    VirallinenSuoritus(
+      komo = komoOid, //Config.lisaopetusKomoOid,
       myontaja = hakemusOid,
       tila = "VALMIS",
       valmistuminen = saturdayOfWeek22(valmistumisvuosi),
@@ -96,15 +100,17 @@ object ItseilmoitettuTutkinto {
       suoritusKieli,
       opiskeluoikeus = None,
       vahv = false,
-      lahde = hakijaOid)
+      lahde = hakijaOid
+    )
 
 }
 
 object ItseilmoitettuLukioTutkinto {
 
-  def apply(hakemusOid: String, hakijaOid: String, valmistumisvuosi: Int, suoritusKieli: String) =
-    VirallinenSuoritus(Oids.lukioKomoOid,
-      myontaja = hakemusOid,
+  def apply(myontaja: String, hakijaOid: String, valmistumisvuosi: Int, suoritusKieli: String) =
+    VirallinenSuoritus(
+      Oids.lukioKomoOid,
+      myontaja = myontaja,
       tila = "VALMIS",
       valmistuminen = saturdayOfWeek22(valmistumisvuosi),
       hakijaOid,
@@ -112,7 +118,8 @@ object ItseilmoitettuLukioTutkinto {
       suoritusKieli,
       opiskeluoikeus = None,
       vahv = false,
-      lahde = hakijaOid)
+      lahde = hakijaOid
+    )
 
 }
 

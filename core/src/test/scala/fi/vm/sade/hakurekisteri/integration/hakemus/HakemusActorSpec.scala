@@ -7,7 +7,7 @@ import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
-import org.joda.time.DateTime
+import org.joda.time.{LocalDate, DateTime}
 import org.json4s._
 import org.scalatest.matchers._
 import org.scalatest.{FlatSpec, Matchers}
@@ -189,14 +189,15 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")
+        .setLahtokoulu("foobarKoulu")
         .setLukionPaattotodistusvuosi(2000)
         .setPerusopetuksenPaattotodistusvuosi(1988)
         .putArvosana("LK_MA","8")
         .build
     )
     a should contain theSameElementsAs Seq(
-      (ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"),Seq.empty),
-      (ItseilmoitettuLukioTutkinto("hakemus1","person1", 2000, "FI"), Seq(Arvosana(suoritus = null, arvio = Arvio410("8"), "MA", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1", Map())))
+      (ItseilmoitettuPeruskouluTutkinto("hakemus1", "person1", 1988, "FI"),Seq.empty),
+      (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2000, "FI"), Seq(Arvosana(suoritus = null, arvio = Arvio410("8"), "MA", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1", Map())))
     )
   }
   it should "not create suorituksia from koulutustausta if application current year" in {
@@ -215,14 +216,15 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")
+        .setLahtokoulu("foobarKoulu")
         .setLukionPaattotodistusvuosi(2000)
         .setPerusopetuksenPaattotodistusvuosi(1988)
         .putArvosana("LK_MA","Ei arvosanaa")
         .build
     ) should contain theSameElementsAs Seq(
-      (ItseilmoitettuLukioTutkinto("hakemus1","person1", 2000, "FI"),
+      (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2000, "FI"),
         Seq()),
-      (ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"),
+      (ItseilmoitettuPeruskouluTutkinto("hakemus1", "person1", 1988, "FI"),
         Seq()
         ))
   }
@@ -231,17 +233,19 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")
+        .setLahtokoulu("foobarKoulu")
         .setLukionPaattotodistusvuosi(2000)
         .setPerusopetuksenPaattotodistusvuosi(1988)
         .putArvosana("LK_MA","8")
         .putArvosana("PK_AI","7")
         .build
     ) should contain theSameElementsAs Seq(
-      (ItseilmoitettuLukioTutkinto("hakemus1","person1", 2000, "FI"),
+      (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2000, "FI"),
         Seq(Arvosana(suoritus = null, arvio = Arvio410("8"), "MA", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1", Map()))),
-      (ItseilmoitettuPeruskouluTutkinto("hakemus1","person1", 1988, "FI"),
+      (ItseilmoitettuPeruskouluTutkinto("hakemus1", "person1", 1988, "FI"),
         Seq(Arvosana(suoritus = null, arvio = Arvio410("7"), "AI", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1", Map()))
         ))
+    // FIXME: PK+LK combination not possible with the current application logic
   }
 
   //
@@ -250,6 +254,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")
+        .setLahtokoulu("foobarKoulu")
         .setLukionPaattotodistusvuosi(2000)
         .putArvosana("LK_AI", "8")
         .putArvosana("LK_AI_OPPIAINE", "FI")
@@ -261,11 +266,22 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .putArvosana("LK_SA_SDF_ASDF_ASDF_ASDF_ASDF", "ROSKAA")
         .build
     ) should contain theSameElementsAs Seq(
-      (ItseilmoitettuLukioTutkinto("hakemus1","person1", 2000, "FI"),
+      (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2000, "FI"),
         Seq(
           Arvosana(suoritus = null, arvio = Arvio410("7"), "B1", lisatieto = Some("SV"), valinnainen = false, myonnetty = None, source = "person1", Map()),
           Arvosana(suoritus = null, arvio = Arvio410("8"), "AI", lisatieto = Some("FI"), valinnainen = false, myonnetty = None, source = "person1", Map())
         )))
+  }
+
+  it should "create empty lukiosuoritus for current year" in {
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
+      Hakemus()
+        .setHakemusOid("hakemus1")
+        .setPersonOid("person1")
+        .setLahtokoulu("foobarKoulu")
+        .setLukionPaattotodistusvuosi(new LocalDate().getYear)
+        .build
+    ) should contain theSameElementsAs Seq( (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2015, "FI"), Seq()) )
   }
 
   trait CustomMatchers {
@@ -303,16 +319,19 @@ class TestActor(handler: PartialFunction[Any, Unit]) extends Actor {
 object Triggered
 
 object Hakemus {
-  def apply(): HakemusBuilder = HakemusBuilder(Map.empty, null, None, None, None)
+  def apply(): HakemusBuilder = HakemusBuilder(Map.empty, null, None, None, None, None)
 }
 
-case class HakemusBuilder(osaaminen: Map[String, String], hakemusOid: String = null, personOid: Option[String], PK_PAATTOTODISTUSVUOSI: Option[String], lukioPaattotodistusVuosi: Option[String]) {
+case class HakemusBuilder(osaaminen: Map[String, String], hakemusOid: String = null, personOid: Option[String], PK_PAATTOTODISTUSVUOSI: Option[String], lukioPaattotodistusVuosi: Option[String], lahtokoulu: Option[String]) {
 
   def setHakemusOid(hOid: String): HakemusBuilder =
     this.copy(hakemusOid = hOid)
 
   def setPersonOid(pOid: String): HakemusBuilder =
     this.copy(personOid = Some(pOid))
+
+  def setLahtokoulu(kouluOid: String): HakemusBuilder =
+    this.copy(lahtokoulu = Some(kouluOid))
 
   def setPerusopetuksenPaattotodistusvuosi(paattotodistusvuosi: Option[String]): HakemusBuilder =
     this.copy(PK_PAATTOTODISTUSVUOSI = paattotodistusvuosi)
@@ -352,7 +371,7 @@ case class HakemusBuilder(osaaminen: Map[String, String], hakemusOid: String = n
       koulusivistyskieli = None,
       turvakielto = None))
     , Some(Koulutustausta(
-      lahtokoulu = None,
+      lahtokoulu = lahtokoulu,
       POHJAKOULUTUS = None,
       lukioPaattotodistusVuosi,
       PK_PAATTOTODISTUSVUOSI,

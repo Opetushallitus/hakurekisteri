@@ -34,9 +34,8 @@ object IlmoitetutArvosanatTrigger {
 
     def saveSuoritus(suor: Suoritus): Future[Suoritus with Identified[UUID]] =
       (suoritusRekisteri ? InsertResource[UUID, Suoritus](suor)).mapTo[Suoritus with Identified[UUID]].recoverWith {
-
         case t: AskTimeoutException => saveSuoritus(suor)
-    }
+      }
 
     createSuorituksetJaArvosanatFromHakemus(hakemus).foreach(suoritusJaArvosanat => {
       for (
@@ -121,23 +120,20 @@ object IlmoitetutArvosanatTrigger {
   def createLukioSuoritusArvosanat(hakemus: FullHakemus, personOid: String, answers: HakemusAnswers, koulutustausta: Koulutustausta): Seq[(Suoritus, Seq[Arvosana])] = {
     (for (
       valmistumisvuosiStr <- koulutustausta.lukioPaattotodistusVuosi;
+      lahtokoulu <- koulutustausta.lahtokoulu;
       valmistumisvuosi <- valmistumisvuosiStr.blankOption
     ) yield {
         val arvosanat: Seq[Arvosana] = answers.osaaminen match {
           case Some(osaaminen) => osaaminen.getLukio.map({ case (aine, arvot) => aineArvotToArvosanat(personOid, aine, arvot) }).flatten.toSeq
           case None => Seq.empty
         }
-        val currentYear = new DateTime().year().get()
-        if (arvosanat.nonEmpty || currentYear != valmistumisvuosi.toInt) {
-          Seq(
-            (ItseilmoitettuLukioTutkinto(
-            hakemusOid = hakemus.oid,
-            hakijaOid = personOid,
-            valmistumisvuosi.toInt,
-            suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")), arvosanat))
-        } else {
-          Seq.empty
-        }
+        val tutkinto = ItseilmoitettuLukioTutkinto(
+          myontaja = lahtokoulu,
+          hakijaOid = personOid,
+          valmistumisvuosi.toInt,
+          suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")
+        )
+        Seq((tutkinto, arvosanat))
       }).getOrElse(Seq.empty)
   }
 
