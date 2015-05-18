@@ -87,8 +87,10 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = {
             case suoritus: VirallinenSuoritus with Identified[UUID] =>
-              suoritusWaiter { suoritus.tila should be ("VALMIS") }
-              suoritusWaiter { suoritus.valmistuminen should be (new LocalDate(2001, 2, 2)) }
+              suoritusWaiter {
+                suoritus.tila should be ("VALMIS")
+                suoritus.valmistuminen should be (new LocalDate(2001, 2, 2))
+              }
               suoritusWaiter.dismiss()
           }, query = { q => Seq(s) }))),
           system.actorOf(Props(new MockedResourceActor[Arvosana, UUID](save = {a => }, query = {q => Seq()}))),
@@ -107,6 +109,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
       implicit system => {
         implicit val ec: ExecutionContext = system.dispatcher
 
+        val suoritusWaiter = new Waiter()
         val importBatchWaiter = new Waiter()
 
         val s = perusopetusSuoritus(new LocalDate(2001, 1, 1))
@@ -117,8 +120,11 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = {
             case s: VirallinenSuoritus =>
-              s.tila should be ("KESKEN")
-              s.valmistuminen should be (new LocalDate(2002, 1, 1))
+              suoritusWaiter {
+                s.tila should be ("KESKEN")
+                s.valmistuminen should be (new LocalDate(2002, 1, 1))
+              }
+              suoritusWaiter.dismiss()
           }, query = {q => Seq(s)}))),
           system.actorOf(Props(new MockedResourceActor[Arvosana, UUID](save = {a => }, query = {q => Seq()}))),
           createImportBatchActor(system, (b: ImportBatch) => {
@@ -130,6 +136,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
         val status = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS)).status
         status.messages shouldBe empty
+        suoritusWaiter.await(timeout(60.seconds), dismissals(1))
         importBatchWaiter.await(timeout(60.seconds), dismissals(1))
       }
     )
@@ -141,6 +148,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         implicit val ec: ExecutionContext = system.dispatcher
 
         val importBatchWaiter = new Waiter()
+        val suoritusWaiter = new Waiter()
 
         val s = perusopetusSuoritus(new LocalDate(2001, 1, 1))
         val batch = batchGeneratorEiValmistu.generate
@@ -150,8 +158,11 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createHenkiloActor,
           system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = {
             case s: VirallinenSuoritus =>
-              s.tila should be ("KESKEYTYNYT")
-              s.valmistuminen should be (new LocalDate(2002, 1, 1))
+              suoritusWaiter {
+                s.tila should be ("KESKEYTYNYT")
+                s.valmistuminen should be (new LocalDate(2002, 1, 1))
+              }
+              suoritusWaiter.dismiss()
           }, query = {q => Seq(s)}))),
           system.actorOf(Props(new MockedResourceActor[Arvosana, UUID](save = {a => }, query = {q => Seq()}))),
           createImportBatchActor(system, (b: ImportBatch) => {
@@ -164,6 +175,53 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         val status = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS)).status
         status.messages shouldBe empty
         importBatchWaiter.await(timeout(60.seconds), dismissals(1))
+        suoritusWaiter.await(timeout(60.seconds), dismissals(1))
+      }
+    )
+  }
+
+  it should "import ei valmistu lisaopetus with korotettu arvosana" in {
+    withSystem(
+      implicit system => {
+        implicit val ec: ExecutionContext = system.dispatcher
+
+        val importBatchWaiter = new Waiter()
+        val suoritusWaiter = new Waiter()
+        val arvosanaWaiter = new Waiter()
+
+        val l = lisaopetusSuoritus(new LocalDate(2015, 5, 30))
+        val batch = batchGeneratorKymppiEiValmistuKorotuksilla.generate
+
+        val arvosanatProcessing = new ArvosanatProcessing(
+          createOrganisaatioActor,
+          createHenkiloActor,
+          system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = {
+            case s: VirallinenSuoritus =>
+              suoritusWaiter {
+                s.tila should be ("KESKEYTYNYT")
+                s.valmistuminen should be (new LocalDate(2015, 3, 1))
+              }
+              suoritusWaiter.dismiss()
+          }, query = {q => Seq(l)}))),
+          system.actorOf(Props(new MockedResourceActor[Arvosana, UUID](save = a => {
+            arvosanaWaiter {
+              a.aine should be ("MA")
+              a.arvio.asInstanceOf[Arvio410].arvosana should be ("10")
+            }
+            arvosanaWaiter.dismiss()
+          }, query = {q => Seq()}))),
+          createImportBatchActor(system, (b: ImportBatch) => {
+            importBatchWaiter { b.state should be (BatchState.DONE) }
+            importBatchWaiter.dismiss()
+          }, batch),
+          createKoodistoActor
+        )
+
+        val status = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS)).status
+        status.messages shouldBe empty
+        importBatchWaiter.await(timeout(30.seconds), dismissals(1))
+        suoritusWaiter.await(timeout(30.seconds), dismissals(1))
+        arvosanaWaiter.await(timeout(30.seconds), dismissals(1))
       }
     )
   }
@@ -385,6 +443,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
   private def perusopetusSuoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
     VirallinenSuoritus(Oids.perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
+
+  private def lisaopetusSuoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
+    VirallinenSuoritus(Oids.lisaopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
 
   private def lukioSuoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
     VirallinenSuoritus(Oids.lukioKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
@@ -615,6 +676,33 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
                 <opetuspaattynyt>2002-01-01</opetuspaattynyt>
                 <eivalmistu>PERUSOPETUS PAATTYNYT VALMISTUMATTA</eivalmistu>
               </perusopetus>
+            </todistukset>
+          </henkilo>
+        </henkilot>
+      </arvosanat>
+      override def generate: ImportBatch with Identified[UUID] =
+        ImportBatch(xml, Some("foo2"), "arvosanat", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
+    }
+
+    val batchGeneratorKymppiEiValmistuKorotuksilla = new DataGen[ImportBatch with Identified[UUID]] {
+      val xml = <arvosanat>
+        <eranTunniste>PKERA3_2015S_05127</eranTunniste>
+        <henkilot>
+          <henkilo>
+            <hetu>111111-111L</hetu>
+            <sukunimi>foo</sukunimi>
+            <etunimet>bar k</etunimet>
+            <kutsumanimi>bar</kutsumanimi>
+            <todistukset>
+              <perusopetuksenlisaopetus>
+                <myontaja>05127</myontaja>
+                <suorituskieli>FI</suorituskieli>
+                <valmistuminen>2015-03-01</valmistuminen>
+                <MA>
+                  <yhteinen>10</yhteinen>
+                </MA>
+                <eivalmistu>SUORITUS HYLATTY</eivalmistu>
+              </perusopetuksenlisaopetus>
             </todistukset>
           </henkilo>
         </henkilot>

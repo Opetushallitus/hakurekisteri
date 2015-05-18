@@ -91,7 +91,7 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
   private def saveArvosanat(batch: ImportBatch,
                             henkilotunniste: String,
                             suoritus: VirallinenSuoritus with Identified[UUID],
-                            todistus: Valmistunut): Future[Seq[ArvosanaStatus]] =
+                            todistus: WithArvosanat): Future[Seq[ArvosanaStatus]] =
     Future.traverse(todistus.arvosanat)(arvosana => {
       Thread.sleep(50L)
       saveArvosana(batch.source, suoritus.id, arvosana) map (storedArvosana =>
@@ -110,7 +110,9 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
           saveArvosanat(batch, henkilotunniste, suoritus, t)
           )
         case t: Siirtynyt => updateSuoritusSiirtynyt(suoritus, t.odotettuValmistuminen) map (_ => Seq())
-        case t: Keskeytynyt => updateSuoritusKeskeytynyt(suoritus, t.opetusPaattynyt) map (_ => Seq())
+        case t: Keskeytynyt => updateSuoritusKeskeytynyt(suoritus, t.opetusPaattynyt) flatMap (suoritus =>
+          saveArvosanat(batch, henkilotunniste, suoritus, t)
+          )
       }) recover { case t: Throwable => Seq(FailureArvosanaStatus(henkilotunniste, t)) }
 
   private def processHenkilo(batch: ImportBatch,
@@ -228,12 +230,15 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     val suoritusKieli: String
     val valmistuminen: LocalDate
   }
-  case class Valmistunut(komo: String, myontaja: String, suoritusKieli: String, valmistuminen: LocalDate, arvosanat: Seq[ImportArvosana]) extends ImportTodistus
+  sealed trait WithArvosanat extends ImportTodistus {
+    val arvosanat: Seq[ImportArvosana]
+  }
+  case class Valmistunut(komo: String, myontaja: String, suoritusKieli: String, valmistuminen: LocalDate, arvosanat: Seq[ImportArvosana]) extends WithArvosanat
   case class Siirtynyt(komo: String, myontaja: String, suoritusKieli: String, odotettuValmistuminen: LocalDate) extends ImportTodistus {
     override val valmistuminen = odotettuValmistuminen
   }
-  case class Keskeytynyt(komo: String, myontaja: String, suoritusKieli: String, opetusPaattynyt: LocalDate) extends ImportTodistus {
-    override  val valmistuminen = opetusPaattynyt
+  case class Keskeytynyt(komo: String, myontaja: String, suoritusKieli: String, opetusPaattynyt: LocalDate, arvosanat: Seq[ImportArvosana]) extends WithArvosanat {
+    override val valmistuminen = opetusPaattynyt
   }
   case class ImportArvosanaHenkilo(tunniste: ImportTunniste, sukunimi: String, etunimet: String, kutsumanimi: String, todistukset: Seq[ImportTodistus])
   object ImportArvosanaHenkilo {
@@ -257,12 +262,19 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
     def todistus(name: String, komoOid: String, oppijanumero: Option[String])(h: Node)(lahde: String)(oppiaineet: Seq[String]): Option[ImportTodistus] = (h \ name).headOption.map(s => {
       val myontaja = getField("myontaja")(s)
       val suoritusKieli = getField("suorituskieli")(s)
-      if (valmistunutSuoritus(s)) {
-        Valmistunut(komoOid, myontaja, suoritusKieli, new LocalDate(getField("valmistuminen")(s)), arvosanat(s)(oppiaineet))
+      if (keskeytynytSuoritus(s)) {
+        val valmistunutPvm = (s \ "opetuspaattynyt") ++ (s \ "valmistuminen") match {
+          case valm if valm.nonEmpty => new LocalDate(valm.head.text)
+          case _ => throw new RuntimeException("value for eivalmistu given, but no value in opetuspaattynyt or valmistuminen")
+        }
+        if (name == "perusopetuksenlisaopetus")
+          Keskeytynyt(komoOid, myontaja, suoritusKieli, valmistunutPvm, arvosanat(s)(oppiaineet))
+        else
+          Keskeytynyt(komoOid, myontaja, suoritusKieli, valmistunutPvm, Seq())
       } else if (luokalleJaanytSuoritus(s)) {
         Siirtynyt(komoOid, myontaja, suoritusKieli, new LocalDate(getField("oletettuvalmistuminen")(s)))
-      } else if (keskeytynytSuoritus(s)) {
-        Keskeytynyt(komoOid, myontaja, suoritusKieli, new LocalDate(getField("opetuspaattynyt")(s)))
+      } else if (valmistunutSuoritus(s)) {
+        Valmistunut(komoOid, myontaja, suoritusKieli, new LocalDate(getField("valmistuminen")(s)), arvosanat(s)(oppiaineet))
       } else {
         throw new RuntimeException("unrecognized suoritus")
       }
