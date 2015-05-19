@@ -18,7 +18,8 @@ class CreateSuoritusCommand extends HakurekisteriCommand[Suoritus] with LocalDat
   val yks: Field[Yksilollistetty]  = asType[Yksilollistetty]("yksilollistaminen")
   val languages = Seq(Locale.getISOLanguages:_*) ++ Seq(Locale.getISOLanguages:_*).map(_.toUpperCase)
   val suoritusKieli: Field[String] = asType[String]("suoritusKieli").required.allowableValues(languages:_*)
+  val vahvistettu: Field[Boolean] = asType[Boolean]("vahvistettu")
 
-  override def toResource(user: String): Suoritus = VirallinenSuoritus(komo.value.get, myontaja.value.get, tila.value.get, valmistuminen.value.get, henkiloOid.value.get, yks.value.get, suoritusKieli.value.get, lahde = user)}
+  override def toResource(user: String): Suoritus = VirallinenSuoritus(komo.value.get, myontaja.value.get, tila.value.get, valmistuminen.value.get, henkiloOid.value.get, yks.value.get, suoritusKieli.value.get, vahv = vahvistettu.value.get, lahde = user)}
 
 
