@@ -8,22 +8,22 @@ import akka.actor.{ActorIdentity, Identify, _}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import com.jcraft.jsch.{ChannelSftp, SftpException}
-import fi.vm.sade.hakurekisteri.{Oids, Config}
+import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{ArvioOsakoe, ArvioYo, Arvosana, _}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HetuQuery}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.Aine
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
-import fr.janalyse.ssh.{SSHFtp, SSH, SSHOptions, SSHPassword}
+import fr.janalyse.ssh.{SSH, SSHFtp, SSHOptions, SSHPassword}
 import org.joda.time._
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 import scala.util.{Failure, Success}
-import scala.xml.{NamespaceBinding, _}
 import scala.xml.pull.{EvElemEnd, EvElemStart, EvText, _}
+import scala.xml.{NamespaceBinding, _}
 
 
 case class YtlReport(waitingforAnswers: Seq[Batch[KokelasRequest]], nextSend: Option[DateTime])
@@ -36,14 +36,19 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   var haut = Set[String]()
   var sent = Seq[Batch[KokelasRequest]]()
 
+  def startSaveTicker() {
+    saveTicker = Some(context.system.scheduler.schedule(1.seconds, 30.seconds, self, IsSaving))
+  }
+
   val sendTicker = context.system.scheduler.schedule(5.minutes, 1.minutes, self, CheckSend)
   val pollTicker = context.system.scheduler.schedule(5.minutes, 5.minutes, self, Poll)
+  var saveTicker: Option[Cancellable] = None
 
   var nextSend: Option[DateTime] = nextSendTime
 
-  val sftpSendContext  =  ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
+  val sftpSendContext = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
 
-  val sftpPollContext =  ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
+  val sftpPollContext = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
 
   def nextSendTime: Option[DateTime] = {
     val times = config.map(_.sendTimes).filter(_.nonEmpty)
@@ -67,6 +72,14 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
         map((hakemus) => (hakemus.personOid, hakemus.hetu)).
         collect{case (Some(oid), Some(hetu)) => KokelasRequest(oid, hetu)}).
       map((rs) => Batch(items = rs.toSet))
+  }
+
+
+  @throws[Exception](classOf[Exception])
+  override def postStop(): Unit = {
+    sendTicker.cancel()
+    pollTicker.cancel()
+    saveTicker.foreach(_.cancel())
   }
 
   override def receive: Actor.Receive = {
@@ -104,6 +117,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
       val requested = sent.find(_.id == id)
       sent = sent.filterNot(_.id == id)
       handleResponse(requested, Source.fromFile(file, "ISO-8859-1"))
+      startSaveTicker()
 
     case k: Kokelas =>
       log.debug(s"sending ytl data for ${k.oid} yo: ${k.yo} lukio: ${k.lukio}")
@@ -119,6 +133,8 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
         context.actorSelection(s.id.toString) ! Identify(s.id)
         kokelaat = kokelaat - kokelas.oid
         suoritusKokelaat = suoritusKokelaat + (s.id -> (s, kokelas))
+        if (kokelaat.isEmpty)
+          log.info("all suoritukset saved")
       }
 
     case ActorIdentity(id: UUID, Some(ref)) =>
@@ -129,19 +145,26 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
         suoritusKokelaat = suoritusKokelaat - id
       }
 
-    case ActorIdentity(id: UUID, None) => try {
-      for (
-        (suoritus, kokelas) <- suoritusKokelaat.get(id)
-      ) {
-        context.actorOf(Props(new ArvosanaUpdateActor(suoritus, kokelas.yoTodistus ++ kokelas.osakokeet, arvosanaRekisteri)), id.toString)
-        suoritusKokelaat = suoritusKokelaat - id
+    case ActorIdentity(id: UUID, None) =>
+      try {
+        for (
+          (suoritus, kokelas) <- suoritusKokelaat.get(id)
+        ) {
+          context.actorOf(Props(new ArvosanaUpdateActor(suoritus, kokelas.yoTodistus ++ kokelas.osakokeet, arvosanaRekisteri)), id.toString)
+          suoritusKokelaat = suoritusKokelaat - id
+        }
+      } catch {
+        case t: Throwable =>
+          context.actorSelection(id.toString) ! Identify(id)
+          log.warning(s"problem creating arvosana update for ${id.toString} retrying search", t)
       }
 
-    } catch {
-      case t: Throwable =>
-        context.actorSelection(id.toString) ! Identify(id)
-        log.warning(s"problem creating arvosana update for ${id.toString} retrying search", t)
-    }
+    case IsSaving =>
+      if (context.children.isEmpty) {
+        saveTicker.foreach(_.cancel())
+        saveTicker = None
+        log.info("all arvosanat saved")
+      }
   }
 
   def batchMessage(batch: Batch[KokelasRequest]) =
@@ -279,7 +302,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
         val found = parsed.collect{case Some(k) => k}.map(_.oid).toSet
         val missing = batch.items.map(_.oid).toSet -- found
         for (problem <- missing) log.warning(s"Missing result from YTL for oid $problem in batch ${batch.id}")
-        log.info(s"processed returned ${found.size} results of ${batch.items.size} requested, started saving")
+        log.info(s"process returned ${found.size} results of ${batch.items.size} requested, started saving")
 
       case Failure(t) if requested.isDefined => log.error(t, s"failure in fetching results for ${requested.get.id}")
 
@@ -310,6 +333,8 @@ case class Kokelas(oid: String,
                    lukio: Option[Suoritus],
                    yoTodistus: Seq[Koe],
                    osakokeet: Seq[Koe])
+
+object IsSaving
 
 object Send
 
@@ -563,17 +588,12 @@ object YTLXml {
             loop(hetu, yoaika, tutkintoaika, kieli, lukio, yoTodistus, osakokeet)
         }
         loop()
-
       }
-
-
 
       reader.collectFirst {
         case e:EvElemStart if isKokelasElement(e.label) =>
           e
       }.map((_) => parseKokelas(reader) #:: kokelaat(reader)).getOrElse(empty[Future[Option[Kokelas]]])
-
-
     }
 
     kokelaat(reader)
@@ -649,7 +669,6 @@ object YTLXml {
     }
   }
 
-
   def extractKoe: (Node) => YoKoe = {
     (koe: Node) =>
       val arvio = ArvioYo((koe \ "ARVOSANA").text, (koe \ "YHTEISPISTEMAARA").text.blankOption.map(_.toInt))
@@ -661,7 +680,6 @@ object YTLXml {
       extractOsakokeet
     }
   }
-
 
   def extractOsakokeet: (Node) => Seq[Osakoe] = {
     (koe: Node) =>
@@ -695,8 +713,6 @@ case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String,
   def toArvosana(suoritus: Suoritus with Identified[UUID]):Arvosana = {
     Arvosana(suoritus.id, arvio, aine.aine: String, Some(aine.lisatiedot), valinnainen: Boolean, Some(myonnetty), YTLXml.YTL, lahdeArvot)
   }
-
-
 }
 
 
@@ -723,7 +739,7 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
 
   override def preStart(): Unit = {
     implicit val ec = context.dispatcher
-     fetch = Some(context.system.scheduler.schedule(1.millisecond, 1.minute, arvosanaRekisteri, ArvosanaQuery(Some(suoritus.id))))
+    fetch = Some(context.system.scheduler.schedule(1.millisecond, 1.minute, arvosanaRekisteri, ArvosanaQuery(Some(suoritus.id))))
   }
 }
 
