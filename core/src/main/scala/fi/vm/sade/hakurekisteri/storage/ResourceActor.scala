@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.storage
 
 import akka.actor.{ActorLogging, Cancellable, Actor}
+import akka.event.Logging
 import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
 import akka.pattern.pipe
 import scala.concurrent.ExecutionContext
@@ -67,6 +68,8 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
     case Reload  =>
       //log.debug(s"reloading from ${journal.latestReload}")
       //loadJournal(journal.latestReload)
+    case LogMessage(message, level) =>
+      log.log(level, message)
   }
 }
 
@@ -74,3 +77,5 @@ case class DeleteResource[I](id: I, source: String)
 case class InsertResource[I, T <: Resource[I, T]](resource: T)
 
 object Reload
+
+case class LogMessage(message: String, level: Logging.LogLevel)
