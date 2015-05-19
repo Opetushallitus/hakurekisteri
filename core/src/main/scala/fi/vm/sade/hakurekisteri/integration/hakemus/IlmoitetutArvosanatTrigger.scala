@@ -9,7 +9,7 @@ import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource}
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.joda.time.DateTime
+import org.joda.time.{LocalDate, DateTime}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -126,13 +126,17 @@ object IlmoitetutArvosanatTrigger {
           case Some(osaaminen) => osaaminen.getLukio.map({ case (aine, arvot) => aineArvotToArvosanat(personOid, aine, arvot) }).flatten.toSeq
           case None => Seq.empty
         }
-        val tutkinto = ItseilmoitettuLukioTutkinto(
-          myontaja = koulutustausta.lahtokoulu.getOrElse(hakemus.oid),
-          hakijaOid = personOid,
-          valmistumisvuosi.toInt,
-          suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")
-        )
-        Seq((tutkinto, arvosanat))
+        val currentYear = new LocalDate().getYear.toString
+        val lahtokoulu = koulutustausta.lahtokoulu.flatMap(_.blankOption)
+        if (arvosanat.nonEmpty || (valmistumisvuosi == currentYear && lahtokoulu.isDefined) || valmistumisvuosi != currentYear) {
+          val tutkinto = ItseilmoitettuLukioTutkinto(
+            myontaja = lahtokoulu.getOrElse(hakemus.oid),
+            hakijaOid = personOid,
+            valmistumisvuosi.toInt,
+            suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")
+          )
+          Seq((tutkinto, arvosanat))
+        } else Seq.empty
       }).getOrElse(Seq.empty)
   }
 

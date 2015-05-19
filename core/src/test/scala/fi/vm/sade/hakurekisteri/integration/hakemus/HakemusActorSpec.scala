@@ -184,6 +184,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
           Arvosana(suoritus = null, arvio = Arvio410("8"), "MA", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1", Map()))
         ))
   }
+
   it should "create suorituksia from koulutustausta" in {
     val a = IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
@@ -200,6 +201,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
       (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2000, "FI"), Seq(Arvosana(suoritus = null, arvio = Arvio410("8"), "MA", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1", Map())))
     )
   }
+
   it should "not create perusopetus suorituksia from koulutustausta if application current year" in {
     val currentYear = new DateTime().year().get()
     IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
@@ -210,6 +212,42 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .build
     ) should equal(Seq.empty)
   }
+
+  it should "create lukio if valmistuminen in current year and lahtokoulu is given" in {
+    val currentYear = new DateTime().year().get()
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
+      Hakemus()
+        .setHakemusOid("hakemus1")
+        .setPersonOid("person1")
+        .setLahtokoulu("foobarKoulu")
+        .setLukionPaattotodistusvuosi(currentYear)
+        .build
+    ) should equal(Seq((ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", currentYear, "FI"), Seq())))
+  }
+
+  it should "not create lukio if valmistuminen in current year and lahtokoulu not given" in {
+    val currentYear = new DateTime().year().get()
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
+      Hakemus()
+        .setHakemusOid("hakemus1")
+        .setPersonOid("person1")
+        .setLukionPaattotodistusvuosi(currentYear)
+        .build
+    ) should equal(Seq.empty)
+  }
+
+  it should "create lukio is valmistuminen not in current year" in {
+    val currentYear = new DateTime().year().get()
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
+      Hakemus()
+        .setHakemusOid("hakemus1")
+        .setPersonOid("person1")
+        .setLahtokoulu("foobarKoulu")
+        .setLukionPaattotodistusvuosi(currentYear - 1)
+        .build
+    ) should equal(Seq((ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", currentYear - 1, "FI"), Seq())))
+  }
+
   it should "handle 'ei arvosanaa'" in {
     IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
@@ -221,12 +259,11 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .putArvosana("LK_MA","Ei arvosanaa")
         .build
     ) should contain theSameElementsAs Seq(
-      (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2000, "FI"),
-        Seq()),
-      (ItseilmoitettuPeruskouluTutkinto("hakemus1", "person1", 1988, "FI"),
-        Seq()
-        ))
+      (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2000, "FI"), Seq()),
+      (ItseilmoitettuPeruskouluTutkinto("hakemus1", "person1", 1988, "FI"), Seq())
+    )
   }
+
   it should "create suorituksia ja arvosanoja from oppimiset" in {
     IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
