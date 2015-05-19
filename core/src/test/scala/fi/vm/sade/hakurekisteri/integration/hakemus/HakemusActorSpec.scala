@@ -200,13 +200,12 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
       (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2000, "FI"), Seq(Arvosana(suoritus = null, arvio = Arvio410("8"), "MA", lisatieto = None, valinnainen = false, myonnetty = None, source = "person1", Map())))
     )
   }
-  it should "not create suorituksia from koulutustausta if application current year" in {
+  it should "not create perusopetus suorituksia from koulutustausta if application current year" in {
     val currentYear = new DateTime().year().get()
     IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
       Hakemus()
         .setHakemusOid("hakemus1")
         .setPersonOid("person1")
-        .setLukionPaattotodistusvuosi(currentYear)
         .setPerusopetuksenPaattotodistusvuosi(currentYear)
         .build
     ) should equal(Seq.empty)
