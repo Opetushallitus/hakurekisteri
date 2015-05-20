@@ -59,10 +59,21 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
       if $scope.henkiloTerm
         henkiloTerm = $q.defer()
         searchTerms.push henkiloTerm
-        henkiloSearchUrl = henkiloServiceUrl + "/resources/henkilo?index=0&count=1&no=true&p=false&s=true&q=" + encodeURIComponent($scope.henkiloTerm.trim().toUpperCase())
+        henkiloOidPattern = new RegExp("^1\\.2\\.246\\.562\\.24\\.")
+        trimmedHenkiloSearchTerm = $scope.henkiloTerm.trim().toUpperCase()
+        if trimmedHenkiloSearchTerm.match(henkiloOidPattern)
+          henkiloSearchUrl = henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(trimmedHenkiloSearchTerm)
+          optimizedHenkiloSearch = true
+        else
+          optimizedHenkiloSearch = false
+          henkiloSearchUrl = henkiloServiceUrl + "/resources/henkilo?index=0&count=1&no=true&p=false&s=true&q=" + encodeURIComponent(trimmedHenkiloSearchTerm)
         $http.get(henkiloSearchUrl,
           cache: false
         ).success((henkilo) ->
+          if optimizedHenkiloSearch
+            henkilo = {
+              results: [henkilo]
+            }
           if henkilo.results and henkilo.results.length is 1
             $scope.henkilo = henkilo.results[0]
             henkiloTerm.resolve()
