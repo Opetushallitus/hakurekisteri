@@ -133,8 +133,6 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
         context.actorSelection(s.id.toString) ! Identify(s.id)
         kokelaat = kokelaat - kokelas.oid
         suoritusKokelaat = suoritusKokelaat + (s.id -> (s, kokelas))
-        if (kokelaat.isEmpty)
-          log.info("all suoritukset saved")
       }
 
     case ActorIdentity(id: UUID, Some(ref)) =>
@@ -291,7 +289,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     ) kokelasFut.onComplete{
       case Failure(f) ⇒ self ! Status.Failure(f)
       case Success(Some(kokelas))  =>
-        log.info(s"sending kokelas ${kokelas.oid} for saving")
+        log.debug(s"sending kokelas ${kokelas.oid} for saving")
         self ! kokelas
       case _ => log.info(s"ytl result with no exams found, discarding it")
     }
