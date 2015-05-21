@@ -7,7 +7,7 @@ app.controller "MuokkaaSuoritus", [
     enrichSuoritus = (suoritus) ->
       $scope.info.showArvosanat = true
       $scope.info.editable = false
-      if suoritus.myontaja and suoritus.myontaja.match(/^1\.2\.246\.562\.10\.\d{11}$/)
+      if suoritus.myontaja and suoritus.myontaja.match(/^1\.2\.246\.562\.10\.\d+$/)
         getOrganisaatio $http, suoritus.myontaja, (organisaatio) ->
           $scope.info.oppilaitos = organisaatio.oppilaitosKoodi
           $scope.info.organisaatio = organisaatio
