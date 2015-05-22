@@ -39,7 +39,7 @@ abstract class OrganisaatioActor(config: Config) extends Actor with ActorLogging
 
   def saveOrganisaatiot(s: Seq[Organisaatio]): Unit = {
     s.foreach(org => {
-      cache +(org.oid, Future.successful(org))
+      cache + (org.oid, Future.successful(org))
       if (org.oppilaitosKoodi.isDefined) oppilaitoskoodiIndex = oppilaitoskoodiIndex + (org.oppilaitosKoodi.get -> org.oid)
       if (org.children.nonEmpty) saveOrganisaatiot(org.children)
     })
@@ -66,6 +66,10 @@ abstract class OrganisaatioActor(config: Config) extends Actor with ActorLogging
     case s: OrganisaatioResponse =>
       saveOrganisaatiot(s.organisaatiot)
       log.info(s"all saved to cache: ${cache.size}")
+
+    case o: Organisaatio =>
+      saveOrganisaatiot(Seq(o))
+      log.info(s"saved a single organisaatio to cache: ${o.oid} ${o.oppilaitosKoodi.foreach(koodi => s"($koodi)")}")
 
     case Failure(t: OrganisaatioFetchFailedException) =>
       log.error("organisaatio refresh failed, retrying in 1 minute", t.t)
@@ -99,7 +103,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient, config: Co
       case p: PreconditionFailedException if p.responseCode == 204 => log.warning(s"organisaatio not found with tunniste $tunniste"); Future.successful(None)
     }
     org.onSuccess {
-      case Some(o) => saveOrganisaatiot(Seq(o))
+      case Some(o) => self ! o
     }
     org
   }
