@@ -369,7 +369,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
         Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS))
 
-        val savedArvosanat: Seq[Arvosana] = Await.result((arvosanaActor ? ArvosanaQuery(None))(Timeout(60, TimeUnit.SECONDS)).mapTo[Seq[Arvosana]], Duration(60, TimeUnit.SECONDS))
+        val savedArvosanat: Seq[Arvosana] = Await.result((arvosanaActor ? ArvosanaQuery(Some(s.id)))(Timeout(60, TimeUnit.SECONDS)).mapTo[Seq[Arvosana]], Duration(60, TimeUnit.SECONDS))
 
         savedArvosanat should (
           contain (

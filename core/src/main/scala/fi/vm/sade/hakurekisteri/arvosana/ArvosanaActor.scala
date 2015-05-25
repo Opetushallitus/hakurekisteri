@@ -48,4 +48,13 @@ trait ArvosanaService extends InMemQueryingResourceService[Arvosana, UUID]  with
 
 class ArvosanaActor(val journal:Journal[Arvosana, UUID] = new InMemJournal[Arvosana, UUID]) extends ResourceActor[Arvosana, UUID] with ArvosanaRepository with ArvosanaService {
   override val logger = Logging(context.system, this)
+
+  import akka.pattern.pipe
+
+  def illegalQuery: Receive = {
+    case ArvosanaQuery(None) =>
+      Future.failed(new IllegalArgumentException("empty query not supported for arvosana")) pipeTo sender
+  }
+
+  override def receive: Receive = illegalQuery orElse super.receive
 }

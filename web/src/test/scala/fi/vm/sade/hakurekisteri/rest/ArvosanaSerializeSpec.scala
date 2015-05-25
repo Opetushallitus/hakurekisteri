@@ -18,8 +18,9 @@ import scala.concurrent.duration._
 import scala.language.implicitConversions
 
 class ArvosanaSerializeSpec extends ScalatraFunSuite {
-  val arvosana1 = Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", Some("FI"), valinnainen = false, None, "Test", Map())
-  val arvosana12 = Arvosana(UUID.randomUUID(),Arvio410("10"), "AI", Some("FI"), valinnainen = true, None, "Test", Map(), Some(0))
+  val suoritus = UUID.randomUUID()
+  val arvosana1 = Arvosana(suoritus, Arvio410("10"), "AI", Some("FI"), valinnainen = false, None, "Test", Map())
+  val arvosana12 = Arvosana(suoritus,Arvio410("10"), "AI", Some("FI"), valinnainen = true, None, "Test", Map(), Some(0))
   val arvosana2 = Arvosana(UUID.randomUUID(), ArvioYo("L", Some(100)), "AI", Some("FI"), valinnainen = false, Some(new LocalDate()), "Test", Map())
   val arvosana3 = Arvosana(UUID.randomUUID(), ArvioOsakoe("10"), "AI", Some("FI"), valinnainen = false, Some(new LocalDate()), "Test", Map())
 
@@ -38,20 +39,26 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite {
 
 
 
-  test("get root should return 200") {
-    get("/") {
+  test("query should return 200") {
+    get(s"/?suoritus=${suoritus.toString}") {
       status should equal (200)
     }
   }
 
-  test("body should contain a sequence with three arvosanas") {
-    get("/") {
+  test("body should contain a sequence with two arvosanas") {
+    get(s"/?suoritus=${suoritus.toString}") {
       implicit val formats = HakurekisteriJsonSupport.format
       import org.json4s.jackson.Serialization.read
 
       val arvosanat = read[Seq[Arvosana]](body)
 
-      arvosanat.length should equal (4)
+      arvosanat.length should equal (2)
+    }
+  }
+
+  test("empty query should return 400") {
+    get("/") {
+      status should be (400)
     }
   }
 
