@@ -1,9 +1,8 @@
 package fi.vm.sade.hakurekisteri.web.arvosana
 
-import org.scalatra.swagger._
-import scala.Some
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvosana}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriResource, OldSwaggerSyntax}
+import org.scalatra.swagger._
 
 trait ArvosanaSwaggerApi extends OldSwaggerSyntax with ArvosanaSwaggerModel { this: HakurekisteriResource[Arvosana, CreateArvosanaCommand] =>
 
@@ -16,7 +15,7 @@ trait ArvosanaSwaggerApi extends OldSwaggerSyntax with ArvosanaSwaggerModel { th
   val query = apiOperation[Seq[Arvosana]]("haeArvosanat")
     .summary("näyttää kaikki arvosanat")
     .notes("Näyttää kaikki arvosanat. Voit myös hakea suorituksella.")
-    .parameter(queryParam[Option[String]]("suoritus").description("suorituksen uuid"))
+    .parameter(queryParam[Option[String]]("suoritus").description("suorituksen uuid").required)
 
   val create = apiOperation[Arvosana]("lisääArvosana")
     .summary("luo arvosanatiedon ja palauttaa sen tiedot")
