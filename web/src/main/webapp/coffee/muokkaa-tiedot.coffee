@@ -61,6 +61,10 @@ app.factory "MuokkaaTiedot", [
             text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.lisaopetus, "Perusopetuksen lisäopetus")
           }
           {
+            value: $scope.komo.kotitalous
+            text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.kotitalous, "Kotitalousopetus")
+          }
+          {
             value: $scope.komo.ammattistartti
             text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.ammattistartti, "Ammattistartti")
           }
@@ -88,6 +92,10 @@ app.factory "MuokkaaTiedot", [
             value: $scope.komo.ammatillinen
             text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.ammatillinen, "Ammatillinen")
           }
+          {
+            value: $scope.komo.kansanopisto
+            text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.kansanopisto, "Kansanopiston lukuvuoden mittainen linja")
+          }
         ]
 
       getMyRoles = ->
@@ -103,6 +111,7 @@ app.factory "MuokkaaTiedot", [
             ulkomainen: data.ulkomainenkorvaavaKomoOid
             peruskoulu: data.perusopetusKomoOid
             lisaopetus: data.lisaopetusKomoOid
+            kotitalous: data.lisaopetusTalousKomoOid
             ammattistartti: data.ammattistarttiKomoOid
             maahanmuuttaja: data.ammatilliseenvalmistavaKomoOid
             maahanmuuttajalukio: data.lukioonvalmistavaKomoOid
@@ -110,6 +119,7 @@ app.factory "MuokkaaTiedot", [
             ylioppilastutkinto: data.yotutkintoKomoOid
             ammatillinen: data.ammatillinenKomoOid
             lukio: data.lukioKomoOid
+            kansanopisto: data.kansanopistoKomoOid
           $scope.ylioppilastutkintolautakunta = data.ylioppilastutkintolautakunta
           komosLoaded.resolve()
         ).error(->komosLoaded.reject("cannot get komos"))

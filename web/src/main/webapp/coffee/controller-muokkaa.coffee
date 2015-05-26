@@ -28,6 +28,10 @@ app.controller "MuokkaaCtrl", [
           text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.lisaopetus, "Perusopetuksen lisäopetus")
         }
         {
+          value: $scope.komo.kotitalous
+          text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.kotitalous, "Kotitalousopetus")
+        }
+        {
           value: $scope.komo.ammattistartti
           text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.ammattistartti, "Ammattistartti")
         }
@@ -55,6 +59,10 @@ app.controller "MuokkaaCtrl", [
           value: $scope.komo.ammatillinen
           text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.ammatillinen, "Ammatillinen")
         }
+        {
+          value: $scope.komo.kansanopisto
+          text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.kansanopisto, "Kansanopiston lukuvuoden mittainen linja")
+        }
       ]
 
     fetchKomos = ->
@@ -63,6 +71,7 @@ app.controller "MuokkaaCtrl", [
           ulkomainen: data.ulkomainenkorvaavaKomoOid
           peruskoulu: data.perusopetusKomoOid
           lisaopetus: data.lisaopetusKomoOid
+          kotitalous: data.lisaopetusTalousKomoOid
           ammattistartti: data.ammattistarttiKomoOid
           maahanmuuttaja: data.ammatilliseenvalmistavaKomoOid
           maahanmuuttajalukio: data.lukioonvalmistavaKomoOid
@@ -70,6 +79,7 @@ app.controller "MuokkaaCtrl", [
           ylioppilastutkinto: data.yotutkintoKomoOid
           ammatillinen: data.ammatillinenKomoOid
           lukio: data.lukioKomoOid
+          kansanopisto: data.kansanopistoKomoOid
         $scope.ylioppilastutkintolautakunta = data.ylioppilastutkintolautakunta
         loadMenuTexts($scope.komo)
       ).error ->

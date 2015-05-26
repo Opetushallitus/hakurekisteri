@@ -39,6 +39,7 @@ object Oids {
   val lukioKomoOid = "TODO lukio komo oid"
   val ammatillinenKomoOid = "TODO ammatillinen komo oid"
   val lukioonvalmistavaKomoOid = "1.2.246.562.5.2013112814572429142840"
+  val kansanopistoKomoOid = "kansanopisto"
 }
 
 class DefaultConfig extends Config {
