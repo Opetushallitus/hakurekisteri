@@ -69,7 +69,7 @@ abstract class OrganisaatioActor(config: Config) extends Actor with ActorLogging
 
     case o: Organisaatio =>
       saveOrganisaatiot(Seq(o))
-      log.info(s"saved a single organisaatio to cache: ${o.oid} ${o.oppilaitosKoodi.foreach(koodi => s"($koodi)")}")
+      log.info(s"saved a single organisaatio to cache: ${o.oid}, cache size: ${cache.size}")
 
     case Failure(t: OrganisaatioFetchFailedException) =>
       log.error("organisaatio refresh failed, retrying in 1 minute", t.t)
