@@ -46,6 +46,8 @@ trait ArvosanaService extends InMemQueryingResourceService[Arvosana, UUID]  with
   }
 }
 
+case class EmptyLisatiedot() extends Query[Arvosana]
+
 class ArvosanaActor(val journal:Journal[Arvosana, UUID] = new InMemJournal[Arvosana, UUID]) extends ResourceActor[Arvosana, UUID] with ArvosanaRepository with ArvosanaService {
   override val logger = Logging(context.system, this)
 
@@ -56,5 +58,12 @@ class ArvosanaActor(val journal:Journal[Arvosana, UUID] = new InMemJournal[Arvos
       Future.failed(new IllegalArgumentException("empty query not supported for arvosana")) pipeTo sender
   }
 
-  override def receive: Receive = illegalQuery orElse super.receive
+  def emptyLisatieto: Receive = {
+    case EmptyLisatiedot() =>
+      val emptyString: Some[String] = Some("")
+      Future {
+        listAll().toStream.filter( (a) => {a.lisatieto == emptyString}).take(30000).toList
+      } pipeTo sender
+  }
+  override def receive: Receive = illegalQuery orElse emptyLisatieto orElse super.receive
 }
