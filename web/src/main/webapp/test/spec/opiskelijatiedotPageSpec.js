@@ -422,7 +422,7 @@
                     },
                     saveDisabled()
                 ))
-                it('YTL:n lähettämää YO-suoritusta ja sen arvosanoja ei voi muokata', seqDone(
+                it('YTL:n lähettämää YO-suoritusta ja sen arvosanoja ei voi muokata. vanhempia arvosanoja muokata', seqDone(
                     wait.forAngular,
                     function () {
                         httpFixtures().henkiloPalveluService.aarne()
@@ -452,7 +452,7 @@
                         assertText(opiskelijatiedot.suoritusKieli, "suomi")
                         assertText(opiskelijatiedot.suoritusValmistuminen, "1.6.2013")
                         assertText(opiskelijatiedot.suoritusTila, "Suoritus valmis")
-                        expect(opiskelijatiedot.arvosanaAineRivi().length).to.equal(2)
+                        expect(opiskelijatiedot.arvosanaAineRivi().length).to.equal(3)
                         assertText(opiskelijatiedot.yoTxt, 'Ortodoksiuskonto',
                             'Ainemuotoinen reaali',
                             'C',
@@ -464,8 +464,25 @@
                             'C',
                             '4',
                             '02.06.2013')
-                        expect(opiskelijatiedot.yoArvosanaAddKoe().is(':visible')).to.equal(false)
+                        expect(opiskelijatiedot.yoArvosanaAddKoe().is(':visible')).to.equal(true)
                         expect(opiskelijatiedot.suoritusPoista().is(':visible')).to.equal(false)
+                    },
+                    saveDisabled(),
+                    select(opiskelijatiedot.yoArvosanaArvosana, "1"),
+                    saveEnabled(),
+                    mockPostReturnData(click(opiskelijatiedot.saveButton), serviceUrls.arvosanat.arvosana(restData.suoritusRekisteri.arvosanat.aarneYo[0].id)),
+                    function (savedData) {
+                        expect(JSON.parse(savedData)).to.deep.equal({
+                                id: '3ba4b93c-87e8-4e6c-8b2d-704ae88a89af',
+                                suoritus: '64d26b8c-e2c8-4b13-9ac9-51c85e288bc0',
+                                arvio: {arvosana: 'M', asteikko: 'YO', pisteet: 4},
+                                aine: 'AINEREAALI',
+                                source: '1.2.246.562.24.72453542949',
+                                valinnainen: false,
+                                lisatieto: 'UO',
+                                myonnetty: '21.12.1988'
+                            }
+                        )
                     },
                     saveDisabled()
                 ))
