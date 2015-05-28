@@ -176,7 +176,9 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   override val logger = Logging(context.system, this)
   var hakijaTrigger: Seq[ActorRef] = Seq()
   var reloading = false
+  var initialLoadingDone = false
   var hakuCursors: Map[String, String] = Map()
+  var reloadRequests: Set[ReloadHaku] = Set()
   val cursorFormat = "yyyyMMddHHmm"
   val resetCursors = context.system.scheduler.schedule(7.days, 7.days, self, ResetCursors)
 
@@ -187,17 +189,30 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
 
   case class ReloadingDone(haku: String, startTime: Option[Long])
   object ResetCursors
+  
+  private def initialBlocking: Receive = {
+    case q: Query[_] if !initialLoadingDone =>
+      Future.failed(HakemuksetNotYetLoadedException()) pipeTo sender
+  }
 
-  override def receive: Receive = super.receive.orElse({
+  override def receive: Receive = initialBlocking orElse super.receive orElse {
     case ResetCursors if !reloading =>
       hakuCursors = Map()
 
     case ResetCursors if reloading =>
       context.system.scheduler.scheduleOnce(1.minute, self, ResetCursors)
-      
-    case ReloadHaku(haku) if reloading =>
-      context.system.scheduler.scheduleOnce(200.milliseconds, self, ReloadHaku(haku))
 
+    case BatchReload(haut) =>
+      reloadRequests = reloadRequests ++ haut
+      if (!reloading) {
+        val r = reloadRequests.head
+        reloadRequests = reloadRequests.filterNot(_ == r)
+        self ! r
+      }
+      
+    case r: ReloadHaku if reloading =>
+      reloadRequests = reloadRequests + r
+      
     case ReloadHaku(haku) if !reloading =>
       val startTime = Platform.currentTime
       val cursor: Option[String] = hakuCursors.get(haku)
@@ -216,11 +231,13 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
       if (startTime.isDefined)
         hakuCursors = hakuCursors + (haku -> new SimpleDateFormat(cursorFormat).format(new Date(startTime.get - (5 * 60 * 1000))))
       reloading = false
+      if (reloadRequests.isEmpty && !initialLoadingDone)
+        initialLoadingDone = true
 
     case Health(actor) => healthCheck = Some(actor)
 
     case Trigger(trig) => hakijaTrigger = context.actorOf(Props(new HakijaTrigger(trig))) +: hakijaTrigger
-  })
+  }
 
   def getHakemukset(q: HakijaQuery, cursor: Option[String]): Future[Int] = {
     def getUri(page: Int = 0): String = {
@@ -245,8 +262,8 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
     }
 
     responseFuture.
-      flatMap(getAll(0)).
-      map(_.getOrElse(0))
+        flatMap(getAll(0)).
+        map(_.getOrElse(0))
   }
 
   def handleNew(hakemukset: List[FullHakemus]) {
@@ -288,6 +305,10 @@ class MockHakemusActor() extends HakemusActor(hakemusClient = null) {
 }
 
 case class ReloadHaku(haku: String)
+
+case class BatchReload(haut: Set[ReloadHaku])
+
+case class HakemuksetNotYetLoadedException() extends Exception("hakemukset not yet loaded")
 
 class HakijaTrigger(newApplicant: (FullHakemus) => Unit) extends Actor {
   override def receive: Actor.Receive = {

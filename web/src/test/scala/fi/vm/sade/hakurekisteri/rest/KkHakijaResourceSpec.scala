@@ -5,7 +5,7 @@ import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.hakija.{Puuttuu, Syksy, _}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusActor}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{ReloadHaku, FullHakemus, HakemusActor}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohdeOid, HakukohteenKoulutukset, Hakukohteenkoulutus, RestHaku, RestHakuAika}
@@ -45,9 +45,12 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   addServlet(resource, "/")
 
 
+  hakemusMock ! ReloadHaku("1.2.3")
 
 
   test("should return 200 OK") {
+    Thread.sleep(2000)
+
     get("/?hakukohde=1.11.1") {
       status should be (200)
     }

@@ -1,99 +1,69 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import akka.actor._
+import akka.pattern.ask
+import akka.testkit.TestActorRef
 import akka.util.Timeout
+import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.SpecsLikeMockito
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.integration._
+import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
-import org.joda.time.{LocalDate, DateTime}
+import org.joda.time.{DateTime, LocalDate}
 import org.json4s._
+import org.mockito.Mockito._
+import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.matchers._
+import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.Seq
+import scala.language.implicitConversions
+import scala.concurrent.duration._
 
-/**
- * @author Jussi Jartamo
- */
-class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with DispatchSupport {
 
+class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with AsyncAssertions with MockitoSugar with DispatchSupport {
   implicit val formats = DefaultFormats
-  import scala.language.implicitConversions
-  implicit val system = ActorSystem("test-hakemus-system")
-  import scala.concurrent.duration._
   implicit val timeout: Timeout = 5.second
+  val hakuappConfig = ServiceConfig(serviceUrl = "http://localhost/haku-app")
 
 
+  it should "block queries if initial loading is still on-going" in {
+    withSystem(
+      implicit system => {
+        val endPoint = mock[Endpoint]
+        when(endPoint.request(forPattern("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=.*"))).thenReturn((200, List(), "[]"))
+        val hakemusActor = TestActorRef(new HakemusActor(hakemusClient = new VirkailijaRestClient(config = hakuappConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint))))))
 
-  it should "add arvosanat only once" in {
-    // Tätä ei suoriteta synkronisesti koko testijoukon suorituksen yhteydessä
-    /*
-    val suoritusRekisteri = TestActorRef(new SuoritusActor)
-    val arvosanaRekisteri = TestActorRef(new ArvosanaActor)
+        hakemusActor ! BatchReload((1 until 1000).map(i => ReloadHaku(s"1.2.3.$i")).toSet)
 
-    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(
-      Hakemus()
-        .setPersonOid("person1")
-        .setLukionPaattotodistusvuosi(2000)
-        .setPerusopetuksenPaattotodistusvuosi(1988)
-        .putArvosana("LK_MA","8")
-        .build,
-      suoritusRekisteri, arvosanaRekisteri)
-    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(
-      Hakemus()
-        .setPersonOid("person1")
-        .setLukionPaattotodistusvuosi(2000)
-        .setPerusopetuksenPaattotodistusvuosi(1988)
-        .putArvosana("LK_MA","9")
-        .build,
-      suoritusRekisteri, arvosanaRekisteri)
-    val future = (arvosanaRekisteri ? ArvosanaQuery(None)).mapTo[Seq[Arvosana with Identified[UUID]]]
-    val result = future.value.get
+        expectFailure[HakemuksetNotYetLoadedException](hakemusActor ? HakemusQuery(Some("1.2.3"), None, None))
 
-    result.isSuccess should be (true)
-    result.get should containArvosanat (Seq(
-      Arvosana(null,Arvio410("8"),"MA",None,false,None,"person1")
-    ))
-
-    val suoritusFut = (suoritusRekisteri ? SuoritusQuery(None))
-    val suoritusRes = suoritusFut.value.get
-    suoritusRes.isSuccess should be (true)
-    */
+        verify(endPoint, atLeastOnce()).request(forPattern("http://localhost/haku-app/applications/listfull\\?start=0&rows=2000&asId=.+"))
+      }
+    )
   }
 
+  it should "not block queries after the initial loading is done" in {
+    withSystem(
+      implicit system => {
+        val endPoint = mock[Endpoint]
+        when(endPoint.request(forUrl("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=1.2.3.1"))).thenReturn((200, List(), "[]"))
+        val hakemusActor = TestActorRef(new HakemusActor(hakemusClient = new VirkailijaRestClient(config = hakuappConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint))))))
 
-  it should "create suoritukset and arvosanat to rekisteri" in {
-    // Tätä ei suoriteta synkronisesti koko testijoukon suorituksen yhteydessä
-    /*
-    val suoritusRekisteri = TestActorRef(new SuoritusActor)
-    val arvosanaRekisteri = TestActorRef(new ArvosanaActor)
+        hakemusActor ! BatchReload(Set(ReloadHaku(s"1.2.3.1")))
 
-    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(
-      Hakemus()
-        .setPersonOid("person1")
-        .setLukionPaattotodistusvuosi(2000)
-        .setPerusopetuksenPaattotodistusvuosi(1988)
-        .putArvosana("LK_MA","8")
-        .putArvosana("PK_AI","7")
-        .putArvosana("PK_AI_OPPIAINE","FI")
-        .build,
-      suoritusRekisteri, arvosanaRekisteri)
+        Thread.sleep(500)
 
-    val future = (arvosanaRekisteri ? ArvosanaQuery(None)).mapTo[Seq[Arvosana with Identified[UUID]]]
-    val result = future.value.get
+        waitFuture((hakemusActor ? HakemusQuery(Some("1.2.3"), None, None)).mapTo[Seq[FullHakemus with Identified[String]]])(s => {
+          s.length should be (0)
+        })
 
-    result.isSuccess should be (true)
-    result.get should containArvosanat (Seq(
-      Arvosana(null,Arvio410("7"),"AI",Some("FI"),false,None,"person1"),
-      Arvosana(null,Arvio410("8"),"MA",None,false,None,"person1")
-      ))
-
-    val suoritusFut = (suoritusRekisteri ? SuoritusQuery(None))
-    val suoritusRes = suoritusFut.value.get
-    suoritusRes.isSuccess should be (true)
-    */
+        verify(endPoint, atLeastOnce()).request(forUrl("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=1.2.3.1"))
+      }
+    )
   }
 
   it should "include arvosana 'S'" in {
@@ -318,6 +288,15 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .setLukionPaattotodistusvuosi(new LocalDate().getYear)
         .build
     ) should contain theSameElementsAs Seq( (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2015, "FI"), Seq()) )
+  }
+
+  private def withSystem(f: ActorSystem => Unit) = {
+    val system = ActorSystem("test-hakemusactor-system")
+
+    f(system)
+
+    system.shutdown()
+    system.awaitTermination()
   }
 
   trait CustomMatchers {
