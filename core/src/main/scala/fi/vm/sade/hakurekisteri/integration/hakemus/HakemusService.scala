@@ -195,6 +195,14 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
       Future.failed(HakemuksetNotYetLoadedException()) pipeTo sender
   }
 
+  private def nextRequest() {
+    if (reloadRequests.nonEmpty) {
+      val r = reloadRequests.head
+      reloadRequests = reloadRequests.filterNot(_ == r)
+      self ! r
+    }
+  }
+
   override def receive: Receive = initialBlocking orElse super.receive orElse {
     case ResetCursors if !reloading =>
       hakuCursors = Map()
@@ -204,11 +212,8 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
 
     case BatchReload(haut) =>
       reloadRequests = reloadRequests ++ haut
-      if (!reloading && reloadRequests.nonEmpty) {
-        val r = reloadRequests.head
-        reloadRequests = reloadRequests.filterNot(_ == r)
-        self ! r
-      }
+      if (!reloading)
+        nextRequest()
       
     case r: ReloadHaku if reloading =>
       reloadRequests = reloadRequests + r
@@ -233,11 +238,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
         hakuCursors = hakuCursors + (haku -> new SimpleDateFormat(cursorFormat).format(new Date(startTime.get - (5 * 60 * 1000))))
       if (reloadRequests.isEmpty && !initialLoadingDone)
         initialLoadingDone = true
-      if (reloadRequests.nonEmpty) {
-        val r = reloadRequests.head
-        reloadRequests = reloadRequests.filterNot(_ == r)
-        self ! r
-      }
+      nextRequest()
 
     case Health(actor) => healthCheck = Some(actor)
 
