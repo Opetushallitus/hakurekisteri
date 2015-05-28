@@ -236,8 +236,10 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
       reloading = false
       if (startTime.isDefined)
         hakuCursors = hakuCursors + (haku -> new SimpleDateFormat(cursorFormat).format(new Date(startTime.get - (5 * 60 * 1000))))
-      if (reloadRequests.isEmpty && !initialLoadingDone)
+      if (reloadRequests.isEmpty && !initialLoadingDone) {
         initialLoadingDone = true
+        log.info("initial loading done")
+      }
       nextRequest()
 
     case Health(actor) => healthCheck = Some(actor)
