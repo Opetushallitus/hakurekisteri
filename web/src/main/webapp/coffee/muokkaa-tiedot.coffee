@@ -38,63 +38,64 @@ app.factory "MuokkaaTiedot", [
 
         fetchHenkilotiedot()
         fetchLuokkatiedot()
-        $q.all([fetchKomos(), messageLoaded, fetchSuoritukset()]).then( (arr) ->
-          loadMenuTexts()
+        $q.all([fetchKomos(), messageLoaded.promise, fetchSuoritukset()]).then( (arr) ->
+          $scope.komo = arr[0]
+          loadMenuTexts($scope.komo)
           $scope.henkilo.suoritukset = arr[2]
         )
 
         fetchOpiskeluoikeudet()
         initDatepicker()
 
-      loadMenuTexts = ->
+      loadMenuTexts = (komo) ->
         $scope.koulutukset = [
           {
-            value: $scope.komo.ulkomainen
-            text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.ulkomainen, "Ulkomainen")
+            value: komo.ulkomainen
+            text: getOphMsg("suoritusrekisteri.komo." + komo.ulkomainen, "Ulkomainen")
           }
           {
-            value: $scope.komo.peruskoulu
-            text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.peruskoulu, "Peruskoulu")
+            value: komo.peruskoulu
+            text: getOphMsg("suoritusrekisteri.komo." + komo.peruskoulu, "Peruskoulu")
           }
           {
-            value: $scope.komo.lisaopetus
-            text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.lisaopetus, "Perusopetuksen lisäopetus")
+            value: komo.lisaopetus
+            text: getOphMsg("suoritusrekisteri.komo." + komo.lisaopetus, "Perusopetuksen lisäopetus")
           }
           {
-            value: $scope.komo.kotitalous
-            text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.kotitalous, "Kotitalousopetus")
+            value: komo.kotitalous
+            text: getOphMsg("suoritusrekisteri.komo." + komo.kotitalous, "Kotitalousopetus")
           }
           {
-            value: $scope.komo.ammattistartti
-            text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.ammattistartti, "Ammattistartti")
+            value: komo.ammattistartti
+            text: getOphMsg("suoritusrekisteri.komo." + komo.ammattistartti, "Ammattistartti")
           }
           {
-            value: $scope.komo.maahanmuuttaja
-            text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.maahanmuuttaja, "Maahanmuuttajien ammatilliseen valmistava")
+            value: komo.maahanmuuttaja
+            text: getOphMsg("suoritusrekisteri.komo." + komo.maahanmuuttaja, "Maahanmuuttajien ammatilliseen valmistava")
           }
           {
-            value: $scope.komo.maahanmuuttajalukio
-            text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.maahanmuuttajalukio, "Maahanmuuttajien lukioon valmistava")
+            value: komo.maahanmuuttajalukio
+            text: getOphMsg("suoritusrekisteri.komo." + komo.maahanmuuttajalukio, "Maahanmuuttajien lukioon valmistava")
           }
           {
-            value: $scope.komo.valmentava
-            text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.valmentava, "Valmentava")
+            value: komo.valmentava
+            text: getOphMsg("suoritusrekisteri.komo." + komo.valmentava, "Valmentava")
           }
           {
-            value: $scope.komo.ylioppilastutkinto
-            text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.ylioppilastutkinto, "Ylioppilastutkinto")
+            value: komo.ylioppilastutkinto
+            text: getOphMsg("suoritusrekisteri.komo." + komo.ylioppilastutkinto, "Ylioppilastutkinto")
           }
           {
-            value: $scope.komo.lukio
-            text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.lukio, "Lukio")
+            value: komo.lukio
+            text: getOphMsg("suoritusrekisteri.komo." + komo.lukio, "Lukio")
           }
           {
-            value: $scope.komo.ammatillinen
-            text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.ammatillinen, "Ammatillinen")
+            value: komo.ammatillinen
+            text: getOphMsg("suoritusrekisteri.komo." + komo.ammatillinen, "Ammatillinen")
           }
           {
-            value: $scope.komo.kansanopisto
-            text: getOphMsg("suoritusrekisteri.komo." + $scope.komo.kansanopisto, "Kansanopiston lukuvuoden mittainen linja")
+            value: komo.kansanopisto
+            text: getOphMsg("suoritusrekisteri.komo." + komo.kansanopisto, "Kansanopiston lukuvuoden mittainen linja")
           }
         ]
 
@@ -107,7 +108,8 @@ app.factory "MuokkaaTiedot", [
       fetchKomos = ->
         komosLoaded = $q.defer()
         $http.get("rest/v1/komo", { cache: true }).success((data) ->
-          $scope.komo =
+          $scope.ylioppilastutkintolautakunta = data.ylioppilastutkintolautakunta
+          komosLoaded.resolve
             ulkomainen: data.ulkomainenkorvaavaKomoOid
             peruskoulu: data.perusopetusKomoOid
             lisaopetus: data.lisaopetusKomoOid
@@ -120,10 +122,8 @@ app.factory "MuokkaaTiedot", [
             ammatillinen: data.ammatillinenKomoOid
             lukio: data.lukioKomoOid
             kansanopisto: data.kansanopistoKomoOid
-          $scope.ylioppilastutkintolautakunta = data.ylioppilastutkintolautakunta
-          komosLoaded.resolve()
         ).error(->komosLoaded.reject("cannot get komos"))
-        return komosLoaded
+        return komosLoaded.promise
 
 
       fetchHenkilotiedot = ->
