@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.organisaatio
 import java.net.URLEncoder
 
 import akka.actor.Status.Failure
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{ActorRef, Actor, ActorLogging}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.mocks.OrganisaatioMock
@@ -14,21 +14,25 @@ import org.json4s.jackson.JsonMethods._
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
+
+object RefreshOrganisaatioCache
+
 abstract class OrganisaatioActor(config: Config) extends Actor with ActorLogging {
+
+  val initDuringStartup: Boolean = true
 
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   val maxRetries = config.integrations.organisaatioConfig.httpClientMaxRetries
   val timeToLive = config.integrations.organisaatioCacheHours.hours
 
-  object Refresh
 
-  val refresh = context.system.scheduler.schedule(timeToLive.minus(15.minutes), timeToLive.minus(15.minutes), self, Refresh)
+  val refresh = context.system.scheduler.schedule(timeToLive.minus(15.minutes), timeToLive.minus(15.minutes), self, RefreshOrganisaatioCache)
 
   private val cache: FutureCache[String, Organisaatio] = new FutureCache[String, Organisaatio](timeToLive.toMillis)
   private var oppilaitoskoodiIndex: Map[String, String] = Map()
 
-  def fetchAll()
+  def fetchAll(actor: ActorRef = ActorRef.noSender)
 
   def find(oid: String): Future[Option[Organisaatio]] = {
     if (cache.contains(oid)) cache.get(oid).map(Some(_))
@@ -46,7 +50,8 @@ abstract class OrganisaatioActor(config: Config) extends Actor with ActorLogging
   }
 
   override def preStart(): Unit = {
-    fetchAll()
+    if (initDuringStartup)
+      fetchAll()
   }
 
   override def postStop(): Unit = {
@@ -61,11 +66,12 @@ abstract class OrganisaatioActor(config: Config) extends Actor with ActorLogging
   }
 
   override def receive: Receive = {
-    case Refresh => fetchAll()
+    case RefreshOrganisaatioCache => fetchAll(sender())
 
     case s: OrganisaatioResponse =>
       saveOrganisaatiot(s.organisaatiot)
       log.info(s"all saved to cache: ${cache.size}")
+      sender ! true
 
     case o: Organisaatio =>
       saveOrganisaatiot(Seq(o))
@@ -73,7 +79,7 @@ abstract class OrganisaatioActor(config: Config) extends Actor with ActorLogging
 
     case Failure(t: OrganisaatioFetchFailedException) =>
       log.error("organisaatio refresh failed, retrying in 1 minute", t.t)
-      context.system.scheduler.scheduleOnce(1.minute, self, Refresh)
+      context.system.scheduler.scheduleOnce(1.minute, self, RefreshOrganisaatioCache)
 
     case Failure(t: Throwable) =>
       log.error("error in organisaatio actor", t)
@@ -89,13 +95,13 @@ abstract class OrganisaatioActor(config: Config) extends Actor with ActorLogging
 
 }
 
-class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient, config: Config) extends OrganisaatioActor(config) {
+class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient, config: Config, override val initDuringStartup: Boolean = true) extends OrganisaatioActor(config) {
 
-  override def fetchAll(): Unit = {
+  override def fetchAll(actor: ActorRef = ActorRef.noSender): Unit = {
     val f = organisaatioClient.readObject[OrganisaatioResponse](s"/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true", 200).recover {
       case t: Throwable => OrganisaatioFetchFailedException(t)
     }
-    f pipeTo self
+    f.pipeTo(self)(actor)
   }
 
   def findDirect(tunniste: String): Future[Option[Organisaatio]] = {
@@ -113,7 +119,7 @@ class MockOrganisaatioActor(config: Config) extends OrganisaatioActor(config) {
 
   implicit val formats = DefaultFormats
 
-  override def fetchAll(): Unit = {
+  override def fetchAll(actor: ActorRef = ActorRef.noSender): Unit = {
     self ! Future.successful(parse(OrganisaatioMock.findAll()))
   }
 
