@@ -17,57 +17,51 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
   val reloadInterval = 10.seconds
 
   override def postStop(): Unit = {
-    report.foreach((c) => c.cancel())
     reload.foreach((c) => c.cancel())
   }
 
-  object Report
-
-  var report: Option[Cancellable] = None
   var reload: Option[Cancellable] = None
-  var saved = 0
 
   override def preStart(): Unit = {
-    report = Some(context.system.scheduler.schedule(1.minute, 1.minute, self, Report))
     reload = Some(context.system.scheduler.schedule(reloadInterval, reloadInterval, self, Reload))
+  }
+
+  private def operationOrFailure(operation: () => Any) = {
+    val t = Try(operation())
+    if (t.isFailure) {
+      log.error(t.failed.get, "operation failed")
+      Failure(t.failed.get)
+    } else {
+      t.get
+    }
   }
 
   def receive: Receive = {
     case GetCount =>
-      sender ! count
+      sender ! operationOrFailure(() => count)
 
     case q: Query[T] =>
-      log.debug(s"received: $q from $sender")
-      val result = findBy(q)
-      val recipient = sender
-      result pipeTo recipient
-      result.onSuccess{
-        case s => log.debug(s"answered query $q with ${s.size} results to $recipient")
-      }
+      findBy(q) pipeTo sender
+
     case o: T =>
-      saved = saved + 1
-      val saveTry = Try(save(o))
-      if (saveTry.isFailure)
-        log.error(saveTry.failed.get, "save failed")
-      sender ! saveTry.recover{ case e: Exception => Failure(e)}.get
+      sender ! operationOrFailure(() => save(o))
+
     case id: I =>
-      sender ! get(id)
+      sender ! operationOrFailure(() => get(id))
+
     case DeleteResource(id: I, user: String) =>
-      log.debug(s"received delete request for resource: $id from $sender")
-      delete(id, user)
-      sender ! id
-      log.debug(s"deleted $id answered to $sender")
+      sender ! operationOrFailure(() => {
+        delete(id, user)
+        id
+      })
+
     case InsertResource(resource: T) =>
-      log.debug(s"received insert request for resource: $resource from $sender")
-      val insertTry = Try(insert(resource))
-      if (insertTry.isFailure)
-        log.error(insertTry.failed.get, "insert failed")
-      sender ! insertTry.recover{ case e: Exception => Failure(e)}.get
-    case Report =>
-      log.debug(s"saved: $saved")
+      sender ! operationOrFailure(() => insert(resource))
+
     case Reload  =>
       //log.debug(s"reloading from ${journal.latestReload}")
       //loadJournal(journal.latestReload)
+
     case LogMessage(message, level) =>
       log.log(level, message)
   }
