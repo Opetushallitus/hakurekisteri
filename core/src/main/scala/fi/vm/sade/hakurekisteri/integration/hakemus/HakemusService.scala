@@ -228,7 +228,8 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
         ReloadingDone(haku, Some(startTime))
       }).recover {
         case t: Throwable =>
-          logger.error(t, s"failed fetching Hakemukset for $haku")
+          logger.error(t, s"failed fetching Hakemukset for $haku, retrying soon")
+          self ! ReloadHaku(haku)
           ReloadingDone(haku, None)
       } pipeTo self
 

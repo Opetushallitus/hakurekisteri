@@ -14,24 +14,31 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{ValintaTulosQuery, _}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
-import fi.vm.sade.hakurekisteri.integration.{CapturingProvider, Endpoint, ServiceConfig, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Journal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaQuery, KkHakijaResource}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.joda.time.LocalDate
+import org.scalatest.concurrent.AsyncAssertions
+import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import org.mockito.Mockito._
 
-class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
+class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with MockitoSugar with DispatchSupport with AsyncAssertions {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
 
-  val asyncProvider = new CapturingProvider(mock[Endpoint])
+  val endPoint = mock[Endpoint]
+
+  when(endPoint.request(forPattern("http://localhost/haku-app/applications/listfull.+"))).thenReturn((200, List(), "[]"))
+
+  val asyncProvider = new CapturingProvider(endPoint)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   val hakemusJournal: Journal[FullHakemus, String] = seq2journal(Seq(FullHakemus1, FullHakemus2, SynteettinenHakemus))
   val hakemusMock = system.actorOf(Props(new HakemusActor(hakemusClient = client, journal = hakemusJournal)))
