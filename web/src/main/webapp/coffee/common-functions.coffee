@@ -162,6 +162,10 @@ changeDetection = (object) ->
   {
   object: object
   hasChanged: () ->
+    if json != JSON.stringify(object)
+      console.log "hasChanged"
+      console.log "old:", json
+      console.log "new:", JSON.stringify(object)
     json != JSON.stringify(object)
   update: () ->
     json = JSON.stringify(object)

@@ -60,6 +60,8 @@ opiskelijatiedot = initSelectors({
     opiskeluoikeusMyontaja: ".test-opiskeluoikeusMyontaja",
     opiskeluoikeusKoulutus: ".test-opiskeluoikeusKoulutus",
     saveButton: ".test-saveButton",
+    showKorotus: ".test-showKorotus:visible",
+    korotusPvm: ".test-korotusPvm:visible",
     arvosanaAineRivi: ".test-aineRivi:visible",
     arvosanaAineNimi: ".test-aineNimi",
     arvosanaMyonnetty: ".test-arvosanaMyonnetty:visible",
@@ -77,6 +79,6 @@ opiskelijatiedot = initSelectors({
     yoTxt: ".test-yoTxt:visible",
     editArvosanat: ".test-editArvosanat",
     arvosana: function(rowIndex, selectIndex) {
-        return ".test-aineRivi:eq(" + rowIndex + ") select.test-arvosanaSelect:eq(" + selectIndex + ")"
+        return ".test-aineRivi:visible:eq(" + rowIndex + ") select.test-arvosanaSelect:eq(" + selectIndex + ")"
     }
 })

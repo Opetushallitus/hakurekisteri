@@ -5,6 +5,45 @@
         }
     }
 
+    function assertArvosanat(aineRiviCount, aineCount, korotusDateCount, pakollisetCount, valinnaisetCount) {
+        expect(opiskelijatiedot.arvosanaAineRivi().length).to.equal(aineRiviCount)
+        expect(jQuery.unique(jQuery.map(opiskelijatiedot.arvosanaAineNimi(), function (e) {
+            return jQuery(e).text()
+        })).length).to.equal(aineCount)
+        expect(opiskelijatiedot.arvosanaMyonnetty().length).to.equal(korotusDateCount)
+        expect(opiskelijatiedot.arvosanaPakollinenArvosana().length).to.equal(pakollisetCount)
+        expect(opiskelijatiedot.arvosanaValinnainenArvosana().filter(nonEmpty).length).to.equal(valinnaisetCount)
+    }
+
+    function nonEmpty(i, e) {
+        return jQuery(e).text().trim().length > 0
+    }
+
+    function findAineRivi(aineTxt, myonnetty, lisatieto) {
+        return opiskelijatiedot.arvosanaAineRivi().filter(function (i, rivi) {
+            var aine = jQuery(rivi).find(opiskelijatiedot.arvosanaAineNimi().selector).text();
+            var m = jQuery(rivi).find(opiskelijatiedot.arvosanaMyonnetty().selector).text();
+            var l = jQuery(rivi).find(opiskelijatiedot.arvosanaLisatieto().selector).text();
+            return aine == aineTxt && m == myonnetty && l == lisatieto
+        })
+    }
+
+    function txtArr(i, e) {
+        return jQuery(e).text();
+    }
+
+    function assertArvosanaRivi(aineTxt, myonnetty, lisatieto, pakolliset, valinnaiset) {
+        if (myonnetty.length > 0) {
+            myonnetty = "(" + myonnetty + ")"
+        }
+        var aineRivit = findAineRivi(aineTxt, myonnetty, lisatieto)
+        expect(aineRivit.length).to.equal(1, "found " + aineRivit.length + " matching aineRivi when there was supposed to be 1: " + aineTxt + ": " + myonnetty + ": " + lisatieto)
+        var aineRivi = jQuery(aineRivit[0])
+        var p = jQuery.makeArray(jQuery(aineRivi).find(opiskelijatiedot.arvosanaPakollinenArvosana().selector).map(txtArr))
+        var v = jQuery.makeArray(jQuery(aineRivi).find(opiskelijatiedot.arvosanaValinnainenArvosana().selector).filter(nonEmpty).map(txtArr))
+        expect([aineTxt, myonnetty, lisatieto, p, v]).to.deep.equal([aineTxt, myonnetty, lisatieto, pakolliset, valinnaiset])
+    }
+
     describe('Opiskelijatiedot', function () {
         var page = opiskelijatiedotPage()
 
@@ -249,45 +288,6 @@
                 return function () {
                     expect(selector().text().indexOf(expected)).not.to.equal(-1)
                 }
-            }
-
-            function nonEmpty(i, e) {
-                return jQuery(e).text().trim().length > 0
-            }
-
-            function assertArvosanat(aineRiviCount, aineCount, korotusDateCount, pakollisetCount, valinnaisetCount) {
-                expect(opiskelijatiedot.arvosanaAineRivi().length).to.equal(aineRiviCount)
-                expect(jQuery.unique(jQuery.map(opiskelijatiedot.arvosanaAineNimi(), function (e) {
-                    return jQuery(e).text()
-                })).length).to.equal(aineCount)
-                expect(opiskelijatiedot.arvosanaMyonnetty().length).to.equal(korotusDateCount)
-                expect(opiskelijatiedot.arvosanaPakollinenArvosana().length).to.equal(pakollisetCount)
-                expect(opiskelijatiedot.arvosanaValinnainenArvosana().filter(nonEmpty).length).to.equal(valinnaisetCount)
-            }
-
-            function findAineRivi(aineTxt, myonnetty, lisatieto) {
-                return opiskelijatiedot.arvosanaAineRivi().filter(function (i, rivi) {
-                    var aine = jQuery(rivi).find(opiskelijatiedot.arvosanaAineNimi().selector).text();
-                    var m = jQuery(rivi).find(opiskelijatiedot.arvosanaMyonnetty().selector).text();
-                    var l = jQuery(rivi).find(opiskelijatiedot.arvosanaLisatieto().selector).text();
-                    return aine == aineTxt && m == myonnetty && l == lisatieto
-                })
-            }
-
-            function txtArr(i, e) {
-                return jQuery(e).text();
-            }
-
-            function assertArvosanaRivi(aineTxt, myonnetty, lisatieto, pakolliset, valinnaiset) {
-                if (myonnetty.length > 0) {
-                    myonnetty = "(" + myonnetty + ")"
-                }
-                var aineRivit = findAineRivi(aineTxt, myonnetty, lisatieto)
-                expect(aineRivit.length).to.equal(1, "found " + aineRivit.length + " matching aineRivi when there was supposed to be 1: " + aineTxt + ": " + myonnetty + ": " + lisatieto)
-                var aineRivi = jQuery(aineRivit[0])
-                var p = jQuery.makeArray(jQuery(aineRivi).find(opiskelijatiedot.arvosanaPakollinenArvosana().selector).map(txtArr))
-                var v = jQuery.makeArray(jQuery(aineRivi).find(opiskelijatiedot.arvosanaValinnainenArvosana().selector).filter(nonEmpty).map(txtArr))
-                expect([aineTxt, myonnetty, lisatieto, p, v]).to.deep.equal([aineTxt, myonnetty, lisatieto, pakolliset, valinnaiset])
             }
 
             describe('Vahvistetut', function () {
@@ -555,7 +555,7 @@
                         httpFixtures().organisaatioService.pikkoloOid()
                     }
 
-                    it("Peruskoulun suoritustiedot (ja arvosanat) talletetaan vain jos muuttuneita arvoja", seqDone(
+                    it("Peruskoulun suoritustiedot ja arvosanat talletetaan vain jos muuttuneita arvoja", seqDone(
                         aarnenPeruskouluDatat,
                         input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                         click(opiskelijatiedot.searchButton),
@@ -659,7 +659,7 @@
                         },
                         saveDisabled()
                     ))
-                    it("Peruskoulun suoritukselle voi lisätä toisen valinnaisen arvosanan", seqDone(
+                    it("Peruskoulun suorituksen arvosanan korotukselle voi lisätä toisen valinnaisen arvosanan", seqDone(
                         aarnenPeruskouluDatat,
                         input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                         click(opiskelijatiedot.searchButton),
@@ -675,7 +675,8 @@
                                 suoritus: '4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9',
                                 arvio: {arvosana: '7', asteikko: '4-10'},
                                 valinnainen: true,
-                                jarjestys: 3
+                                jarjestys: 3,
+                                myonnetty: '04.06.2015'
                             })
                         },
                         saveDisabled()
@@ -686,7 +687,33 @@
                     ))
                     it.skip("!! Peruskoulun arvosanan poistaminen", seqDone(
                     ))
-                    it.skip("!! Lisää korotus tallentaa arvosanan", seqDone(
+                    it("Lisää korotus tallentaa arvosanan", seqDone(
+                        function() {
+                            testDslDebug = true
+                        },
+                        aarnenPeruskouluDatat,
+                        input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                        click(opiskelijatiedot.searchButton),
+                        wait.forAngular,
+                        saveDisabled(),
+                        click(opiskelijatiedot.showKorotus),
+                        selectInput(opiskelijatiedot.arvosana(0, 0), "3"),
+                        input(opiskelijatiedot.korotusPvm, "6.6.2015"),
+                        saveEnabled(),
+                        mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/arvosanat$/),
+                        function (savedData) {
+                            expect(JSON.parse(savedData)).to.deep.equal({ aine: 'AI',
+                                suoritus: '4eed24c3-9569-4dd1-b7c7-8e0121f6a2b9',
+                                arvio: { arvosana: '6', asteikko: '4-10' },
+                                valinnainen: false,
+                                myonnetty: "6.6.2015"})
+                        },
+                        function() {
+                            assertArvosanat(38, 19, 15, 18, 2)
+                            assertArvosanaRivi("Äidinkieli ja kirjallisuus", "", "Kieli puuttuu!!", ["10"], [])
+                            assertArvosanaRivi("Äidinkieli ja kirjallisuus", "6.6.2015", "Kieli puuttuu!!", ["6"], ["Ei arvosanaa"])
+                        },
+                        saveDisabled()
                     ))
                 })
                 describe("Yo suoritus", function () {

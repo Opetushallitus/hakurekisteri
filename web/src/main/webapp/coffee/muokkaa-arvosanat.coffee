@@ -98,6 +98,8 @@ app.controller "MuokkaaArvosanat", [
       )
       if (valinnainen)
         arvosana.jarjestys = nextJarjestys()
+      if aineRivi.myonnetty
+        arvosana.myonnetty = aineRivi.myonnetty
       list.push arvosana
       copyAineRiviInfoToArvosana(aineRivi, arvosana)
       arvosanatModified.push changeDetection(arvosana)
@@ -116,14 +118,8 @@ app.controller "MuokkaaArvosanat", [
           arvosana.lisatieto = aineRivi.lisatieto
         else
           delete arvosana.lisatieto
-        if aineRivi.myonnetty
-          if arvosana.myonnetty
-            arvosana.myonnetty = $scope.formatDateWithZeroPaddedNumbers(aineRivi.myonnetty)
-        else
-          delete arvosana.myonnetty
       else
         delete arvosana.lisatieto
-        delete arvosana.myonnetty
 
     resolveLanguageFromList = (langId, isAI) ->
       list = if isAI
@@ -181,9 +177,11 @@ app.controller "MuokkaaArvosanat", [
     sortByAine = (arvosanataulukko) ->
       arvosanataulukko.sort (a, b) ->
         if a.aine is b.aine
-          if a.myonnetty && b.myonnetty
-            aPvm = $scope.parseFinDate(a.myonnetty)
-            bPvm = $scope.parseFinDate(b.myonnetty)
+          am = a.myonnetty || suoritus.valmistuminen
+          bm = b.myonnetty || suoritus.valmistuminen
+          if am && bm
+            aPvm = $scope.parseFinDate(am)
+            bPvm = $scope.parseFinDate(bm)
             if aPvm > bPvm then 1 else if aPvm < bPvm then -1 else 0
           else
             0
@@ -225,16 +223,18 @@ app.controller "MuokkaaArvosanat", [
           aineenArvosanat = arvosanat.filter (a) -> a.aine is aine
           arvosanatByMyonnettyLisatieto = collectToMap(aineenArvosanat, ((a) -> "#{a.myonnetty || suoritus.valmistuminen};#{a.lisatieto}"))
           rivit = []
-          suoritusPvm = false
+          aineHasArvosanaRiviForSuoritusDate = false
           for key of arvosanatByMyonnettyLisatieto
             list = arvosanatByMyonnettyLisatieto[key]
             first = list[0]
             sortByValinnainenAndJarjestys(list)
-            rivit.push makeAineRivi(aine, list, first.myonnetty || $scope.suoritus.valmistuminen, first.lisatieto)
-            if !first.myonnetty or first.myonnetty == $scope.suoritus.valmistuminen
-              suoritusPvm = true
-          if !suoritusPvm
-            taulukko.splice 0,0, makeAineRivi(aine, [], $scope.suoritus.valmistuminen, null)
+            dateForNewArvosanat = first.myonnetty || $scope.suoritus.valmistuminen
+            if dateForNewArvosanat == $scope.suoritus.valmistuminen
+              dateForNewArvosanat = null
+              aineHasArvosanaRiviForSuoritusDate = true
+            rivit.push makeAineRivi(aine, list, dateForNewArvosanat, first.lisatieto)
+          if !aineHasArvosanaRiviForSuoritusDate
+            taulukko.splice 0,0, makeAineRivi(aine, [], null, null)
           taulukko = taulukko.concat(rivit)
         sortByAine(taulukko)
 
@@ -259,7 +259,7 @@ app.controller "MuokkaaArvosanat", [
       updateArvosanaTaulukko()
 
     $scope.showKorotus = () ->
-      $scope.korotusRivi = makeAineRivi("AI", [], $scope.formatDateNoZeroPaddedNumbers($scope.suoritus.valmistuminen), null)
+      $scope.korotusRivi = makeAineRivi("AI", [], $scope.formatDateNoZeroPaddedNumbers(new Date()), null)
       updateKorotus()
       $scope.$watch "korotusRivi", updateKorotus, true
 
@@ -269,13 +269,13 @@ app.controller "MuokkaaArvosanat", [
       $scope.enableSave()
 
     addKorotus = () ->
-      if $scope.korotusRivi
-        if $scope.korotusRivi.myonnetty instanceof Date
-          $scope.korotusRivi.myonnetty = $scope.formatDateNoZeroPaddedNumbers($scope.korotusRivi.myonnetty)
-        $scope.suorituksenArvosanataulukko.push $scope.korotusRivi
+      aineRivi = $scope.korotusRivi
+      if aineRivi
+        aineRivi.myonnetty = $scope.formatDateNoZeroPaddedNumbers(aineRivi.myonnetty)
+        for arvosana in aineRivi.pakolliset.concat(aineRivi.valinnaiset)
+          arvosana.myonnetty = aineRivi.myonnetty
+        $scope.suorituksenArvosanataulukko.push aineRivi
         $scope.korotusRivi = null
-        updateArvosanaTaulukko()
-        $scope.suorituksenArvosanataulukko = sortByAine $scope.suorituksenArvosanataulukko
 
     resolveAineNimi = (aine) ->
       for oppiaine in koodistoOppiaineLista
@@ -297,6 +297,9 @@ app.controller "MuokkaaArvosanat", [
       if $scope.suorituksenArvosanataulukko
         updateArvosanaTaulukko()
         arvosanatModified.some((a) -> a.hasChanged()) || $scope.korotusRivi && $scope.korotusRivi.hasArvosana
+
+    $scope.korotusDateOk = (date, mode) ->
+      $scope.formatDateNoZeroPaddedNumbers(date) == $scope.formatDateNoZeroPaddedNumbers($scope.suoritus.valmistuminen)
 
     $scope.saveData = ->
       removeArvosana = (arvosana, d) ->
@@ -334,6 +337,7 @@ app.controller "MuokkaaArvosanat", [
       $scope.info.editable = false
       addKorotus()
       updateArvosanaTaulukko()
+      $scope.suorituksenArvosanataulukko = sortByAine $scope.suorituksenArvosanataulukko
       p = $q.all(saveArvosanat()).then (->
       ), ->
         $scope.info.editable = true
