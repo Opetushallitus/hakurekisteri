@@ -63,13 +63,8 @@ class HttpParameterActor(restClient: VirkailijaRestClient) extends ParameterActo
   override def getParams(hakuOid: String): Future[DateTime] = {
     val allMap = getAll
     allMap.map(m => m.get(hakuOid) match {
-      case Some(params) =>
-        params.PH_HKP match {
-          case Some(KierrosEndParams(date)) => new DateTime(date)
-          case _ => throw NoParamFoundException(hakuOid)
-        }
-      case _ =>
-        throw NoParamFoundException(hakuOid)
+      case Some(KierrosParams(Some(KierrosEndParams(date)))) => new DateTime(date)
+      case _ => throw NoParamFoundException(hakuOid)
     })
   }
 
