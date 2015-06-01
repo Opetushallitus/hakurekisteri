@@ -1,11 +1,13 @@
 package fi.vm.sade.hakurekisteri.web.rest.support
 
 import java.io.InputStream
-import fi.vm.sade.hakurekisteri.rest.support.{Workbook, HakurekisteriJsonSupport}
+
+import fi.vm.sade.hakurekisteri.integration.parametrit.KierrosParams
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Workbook}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 import org.apache.poi.ss.usermodel.WorkbookFactory
-import org.json4s.JsonAST.{JInt, JString}
+import org.json4s.JsonAST.{JInt, JString, JValue}
 import org.json4s._
 import org.scalatra.commands._
 import org.scalatra.json.JsonValueReader
@@ -20,6 +22,7 @@ import siirto.XMLValidator
 
 import scala.concurrent.Future
 import scala.language.implicitConversions
+import scala.util.Try
 import scala.util.control.Exception._
 import scala.xml.{Elem, XML}
 import scalaz.Scalaz._
@@ -88,6 +91,14 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
   implicit val jsontoOptionString: TypeConverter[JValue, Option[String]] = safe((jvalue: JValue) => jvalue match {
     case JString(value) => Some(value)
     case _ => None
+  })
+
+  implicit val jsonToKierrosParamsMap: TypeConverter[JValue, Map[String, KierrosParams]] = safe((jvalue: JValue) => jvalue match {
+    case JObject(m) => m.collect {
+      case (key, value) if Try(value.asInstanceOf[KierrosParams]).isSuccess =>
+        key -> value.asInstanceOf[KierrosParams]
+    }.toMap
+    case _ => Map[String, KierrosParams]()
   })
 
   implicit val fileToOptionString: TypeConverter[FileItem, Option[String]] = safe(f => scala.io.Source.fromInputStream(f.getInputStream).getLines().mkString("\n").blankOption)

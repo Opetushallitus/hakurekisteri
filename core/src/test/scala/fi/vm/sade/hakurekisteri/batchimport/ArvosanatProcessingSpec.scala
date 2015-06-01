@@ -28,7 +28,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
-class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions with HakurekisteriJsonSupport {
+class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions with HakurekisteriJsonSupport with ActorSystemSupport {
   behavior of "ArvosanaProcessing"
 
   import Fixtures._
@@ -458,15 +458,6 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
 
   private def createHenkiloActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
     system.actorOf(Props(new HttpHenkiloActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider))), Config.mockConfig)))
-
-  private def withSystem(f: ActorSystem => Unit) = {
-    val system = ActorSystem("test-import-arvosana-batch-processing")
-
-    f(system)
-
-    system.shutdown()
-    system.awaitTermination()
-  }
 
   object Fixtures {
     val lahde = "testiarvosanatiedonsiirto"

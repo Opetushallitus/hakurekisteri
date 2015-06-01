@@ -24,7 +24,7 @@ import scala.language.implicitConversions
 import scala.concurrent.duration._
 
 
-class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with AsyncAssertions with MockitoSugar with DispatchSupport {
+class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with AsyncAssertions with MockitoSugar with DispatchSupport with ActorSystemSupport {
   implicit val formats = DefaultFormats
   implicit val timeout: Timeout = 5.second
   val hakuappConfig = ServiceConfig(serviceUrl = "http://localhost/haku-app")
@@ -288,15 +288,6 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .setLukionPaattotodistusvuosi(new LocalDate().getYear)
         .build
     ) should contain theSameElementsAs Seq( (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2015, "FI"), Seq()) )
-  }
-
-  private def withSystem(f: ActorSystem => Unit) = {
-    val system = ActorSystem("test-hakemusactor-system")
-
-    f(system)
-
-    system.shutdown()
-    system.awaitTermination()
   }
 
   trait CustomMatchers {

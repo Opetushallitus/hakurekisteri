@@ -17,19 +17,10 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 
-class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAssertions with MockitoSugar with DispatchSupport {
+class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAssertions with MockitoSugar with DispatchSupport with ActorSystemSupport {
 
   implicit val timeout: Timeout = 60.seconds
   val organisaatioConfig = ServiceConfig(serviceUrl = "http://localhost/organisaatio-service")
-
-  private def withSystem(f: ActorSystem => Unit) = {
-    val system = ActorSystem("test-organisaatioactor-system")
-
-    f(system)
-
-    system.shutdown()
-    system.awaitTermination(15.seconds)
-  }
 
   def createEndPoint = {
     val e = mock[Endpoint]

@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.integration.parametrit
 
-import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
@@ -16,37 +15,12 @@ case class NoParamFoundException(haku: String) extends Exception(s"no parameter 
 
 abstract class ParameterActor extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
-  private var calling = false
   private val tiedonsiirtoSendingPeriodCache = new FutureCache[String, Boolean](2.minute.toMillis)
-  private var kierrosQueue: Map[KierrosRequest, ActorRef] = Map()
   object ProcessNext
 
   override def receive: Actor.Receive = {
-    case r: KierrosRequest =>
-      if (!calling) {
-        calling = true
-        val from = sender()
-        getParams(r.haku).map(HakuParams).pipeTo(self)(from)
-      } else {
-        val from = sender()
-        kierrosQueue = kierrosQueue + (r -> from)
-      }
-
-    case h: HakuParams =>
-      calling = false
-      sender ! h
-      self ! ProcessNext
-
-    case ProcessNext if kierrosQueue.nonEmpty =>
-      calling = true
-      val r: (KierrosRequest, ActorRef) = kierrosQueue.head
-      kierrosQueue = kierrosQueue.filterKeys(_ != r._1)
-      getParams(r._1.haku).map(HakuParams).pipeTo(self)(r._2)
-
-    case Failure(t: Throwable) =>
-      calling = false
-      Future.failed(t) pipeTo sender
-      self ! ProcessNext
+    case KierrosRequest(haku) =>
+      getParams(haku).map(HakuParams) pipeTo sender
 
     case IsSendingEnabled(key) =>
       isSendingEnabled(key) pipeTo sender
@@ -73,9 +47,30 @@ abstract class ParameterActor extends Actor with ActorLogging {
 }
 
 class HttpParameterActor(restClient: VirkailijaRestClient) extends ParameterActor {
-  override def getParams(hakuOid: String): Future[DateTime] = restClient.readObject[KierrosParams](s"/api/v1/rest/parametri/$hakuOid", 200).map {
-    case KierrosParams(Some(KierrosEndParams(date))) => new DateTime(date)
-    case _ => throw NoParamFoundException(hakuOid)
+  private val allResponseCache = new FutureCache[String, Map[String, KierrosParams]](1.minute.toMillis)
+  private val all = "ALL"
+
+  private def getAll: Future[Map[String, KierrosParams]] = {
+    if (allResponseCache.contains(all))
+      allResponseCache.get(all)
+    else {
+      val allFuture = restClient.readObject[Map[String, KierrosParams]](s"/api/v1/rest/parametri/ALL", 200, 2)
+      allResponseCache + (all, allFuture)
+      allFuture
+    }
+  }
+
+  override def getParams(hakuOid: String): Future[DateTime] = {
+    val allMap = getAll
+    allMap.map(m => m.get(hakuOid) match {
+      case Some(params) =>
+        params.PH_HKP match {
+          case Some(KierrosEndParams(date)) => new DateTime(date)
+          case _ => throw NoParamFoundException(hakuOid)
+        }
+      case _ =>
+        throw NoParamFoundException(hakuOid)
+    })
   }
 
   override def isEnabledFromRest(key: String): Future[Boolean] = restClient.readObject[TiedonsiirtoSendingPeriods]("/api/v1/rest/parametri/tiedonsiirtosendingperiods", 200).map(p => key match {
