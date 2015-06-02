@@ -108,7 +108,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
       if (retryCount.getAndIncrement <= maxRetries) {
         logger.warning(s"retrying request to $uri due to $t, retry attempt #${retryCount.get - 1}")
-        tryClient(uri, acceptedResponseCode, maxRetries, retryCount)
+        Future { Thread.sleep(1000) }.flatMap(u => tryClient(uri, acceptedResponseCode, maxRetries, retryCount))
       } else Future.failed(t)
   }
 
