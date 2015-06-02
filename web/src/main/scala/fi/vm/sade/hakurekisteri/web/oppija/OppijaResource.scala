@@ -48,7 +48,9 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
   get("/", operation(query)) {
     val t0 = Platform.currentTime
     implicit val user = getUser
-    val q = queryForParams(params)
+    val q: HakemusQuery = queryForParams(params)
+
+    if (q.hakukohde.isEmpty && q.organisaatio.isEmpty) throw new IllegalArgumentException("either hakukohde or organisaatio must be given")
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
