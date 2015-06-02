@@ -16,11 +16,8 @@ SELECT resource_id, komo, myontaja, tila, valmistuminen, henkilo_oid, yksilollis
 FROM v_suoritus s
 WHERE vahvistettu = false
 AND myontaja LIKE '1.2.246.562.%'
-AND (
-  NOT EXISTS(SELECT 1 FROM arvosana WHERE suoritus = s.resource_id)
-  OR
-  NOT EXISTS(SELECT 1 FROM arvosana WHERE suoritus = s.resource_id AND source <> s.henkilo_oid)
-);
+AND NOT EXISTS(SELECT 1 FROM arvosana WHERE suoritus = s.resource_id)
+AND source = henkilo_oid;
 
 COMMIT TRANSACTION;
 
