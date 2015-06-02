@@ -50,6 +50,10 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     implicit val user = getUser
     val q = queryForParams(params)
 
+    if (q.haku.isEmpty
+      && q.hakukohde.isEmpty
+      && q.organisaatio.isEmpty) throw new IllegalArgumentException("at least one of parameters (haku, hakukohde, organisaatio) must be given")
+
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 

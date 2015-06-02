@@ -30,7 +30,7 @@ import scala.language.implicitConversions
 
 class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with FutureWaiting {
 
-  implicit val system = ActorSystem("rekisteritiedot-resource-test-system")
+  implicit val system = ActorSystem("oppija-resource-test-system")
   implicit val security = new TestSecurity
   implicit val user: User = security.TestUser
   implicit val swagger: Swagger = new HakurekisteriSwagger
@@ -87,8 +87,14 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
 
 
   test("OppijaResource should return 200") {
-    get("/") {
+    get("/?haku=1") {
       response.status should be (200)
+    }
+  }
+
+  test("OppijaResource should return 400 if no parameters are given") {
+    get("/") {
+      response.status should be (400)
     }
   }
 
