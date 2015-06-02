@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.ensikertalainen
 
 
-import akka.actor.{ActorLogging, Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.pipe
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
@@ -18,7 +18,9 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
-case class EnsikertalainenQuery(henkiloOid: String)
+case class EnsikertalainenQuery(henkiloOid: String,
+                                suoritukset: Option[Seq[Suoritus]] = None,
+                                opiskeluoikeudet: Option[Seq[Opiskeluoikeus]] = None)
 
 object QueryCount
 
@@ -92,14 +94,20 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
       case ReportStatus =>
         sender ! getStatus
 
-      case EnsikertalainenQuery(henkiloOid) =>
+      case EnsikertalainenQuery(henkiloOid, s, o) =>
         oid = Some(henkiloOid)
         result pipeTo sender onComplete { res =>
           if (res.isSuccess) context.parent ! CacheResult(EnsikertalainenQuery(henkiloOid), result)
           context.stop(self)
         }
-        requestSuoritukset(henkiloOid)
-        requestOpiskeluOikeudet(henkiloOid)
+        if (s.isDefined)
+          self ! SuoritusResponse(s.get)
+        else
+          requestSuoritukset(henkiloOid)
+        if (o.isDefined)
+          self ! OpiskeluoikeusResponse(o.get)
+        else
+          requestOpiskeluOikeudet(henkiloOid)
 
       case SuoritusResponse(suor) =>
         suoritukset = Some(suor)

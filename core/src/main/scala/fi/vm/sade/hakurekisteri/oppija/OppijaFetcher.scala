@@ -51,7 +51,7 @@ trait OppijaFetcher {
       todistukset <- fetchTodistukset(suoritukset);
       opiskelu <- fetchOpiskelu(henkiloOid);
       opiskeluoikeudet <- fetchOpiskeluoikeudet(henkiloOid);
-      ensikertalainen <- fetchEnsikertalaisuus(henkiloOid, hetu)
+      ensikertalainen <- fetchEnsikertalaisuus(henkiloOid, hetu, suoritukset, opiskeluoikeudet)
     ) yield Oppija(
       oppijanumero = henkiloOid,
       opiskelu = opiskelu,
@@ -61,8 +61,8 @@ trait OppijaFetcher {
     )
   }
 
-  def fetchEnsikertalaisuus(henkiloOid: String, hetu: Option[String]): Future[Option[Ensikertalainen]] = hetu match {
-    case Some(_) => (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid)).mapTo[Ensikertalainen].map(Some(_))
+  def fetchEnsikertalaisuus(henkiloOid: String, hetu: Option[String], suoritukset: Seq[Suoritus], opiskeluoikeudet: Seq[Opiskeluoikeus]): Future[Option[Ensikertalainen]] = hetu match {
+    case Some(_) => (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, Some(suoritukset), Some(opiskeluoikeudet))).mapTo[Ensikertalainen].map(Some(_))
     case None => Future.successful(None)
   }
 
