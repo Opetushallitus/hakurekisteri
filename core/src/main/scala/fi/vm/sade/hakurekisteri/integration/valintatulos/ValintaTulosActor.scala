@@ -30,67 +30,58 @@ class ValintaTulosActor(client: VirkailijaRestClient, config: Config) extends Ac
   private var refresing: Boolean = false
 
   object RefreshDone
-  object UpdateNext
 
   private var updates: Set[UpdateValintatulos] = Set()
-  private val updateTrigger = context.system.scheduler.schedule(1.minutes, 1.minutes, self, UpdateNext)
-
   private var schedules: Map[String, Cancellable] = Map()
-
-  override def postStop(): Unit = {
-    updateTrigger.cancel()
-  }
 
   override def receive: Receive = {
     case q: ValintaTulosQuery =>
       getSijoittelu(q) pipeTo sender
 
-    case UpdateValintatulos(haku) if cache.contains(haku) && !cache.inUse(haku) =>
-      cache - haku
-
     case u: UpdateValintatulos =>
       updates = updates + u
-      self ! UpdateNext
+      tryNext()
 
     case RefreshDone =>
       refresing = false
-      self ! UpdateNext
-
-    case UpdateNext =>
-      if (!refresing && updates.nonEmpty) {
-        refresing = true
-        val u = updates.head
-        updates = updates.filterNot(_ == u)
-        log.debug(s"refreshing haku ${u.haku}")
-        updateCacheAndReschedule(u.haku, sijoitteluTulos(u.haku, None))
-      }
+      tryNext()
   }
 
-  def updateCacheAndReschedule(hakuOid: String, tulos: Future[SijoitteluTulos]): Unit = {
-    tulos.onComplete {
-      case Success(t) =>
-        self ! RefreshDone
-        rescheduleHaku(hakuOid)
-      case Failure(t) =>
-        self ! RefreshDone
-        log.error(t, s"failed to fetch sijoittelu for haku $hakuOid")
-        rescheduleHaku(hakuOid, retry)
-    }
-    if (!cache.contains(hakuOid) || cache.inUse(hakuOid)) {
-      cache + (hakuOid, tulos)
-    }
+  private def updateCache(hakuOid: String, tulos: Future[SijoitteluTulos]) = cache + (hakuOid, tulos)
+
+  private def tryNext() = if (!refresing && updates.nonEmpty) {
+    refresing = true
+    val u = updates.head
+    updates = updates.filterNot(_ == u)
+    log.debug(s"refreshing haku ${u.haku}")
+    val tulos = callBackend(u.haku, None)
+    reschedule(u.haku, tulos)
+    updateCache(u.haku, tulos)
   }
 
-  def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
-    if (q.cachedOk && cache.contains(q.hakuOid)) cache.get(q.hakuOid)
+  private def done() = self ! RefreshDone
+
+  private def reschedule(hakuOid: String, tulos: Future[SijoitteluTulos]) = tulos.onComplete {
+    case Success(_) =>
+      rescheduleHaku(hakuOid)
+      done()
+    case Failure(t) =>
+      log.error(t, s"failed to fetch sijoittelu for haku $hakuOid")
+      rescheduleHaku(hakuOid, retry)
+      done()
+  }
+
+  private def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
+    if (q.cachedOk && cache.contains(q.hakuOid))
+      cache.get(q.hakuOid)
     else {
-      val tulos = sijoitteluTulos(q.hakuOid, q.hakemusOid)
-      if (q.hakemusOid.isEmpty) updateCacheAndReschedule(q.hakuOid, tulos)
+      val tulos = callBackend(q.hakuOid, q.hakemusOid)
+      if (q.hakemusOid.isEmpty) updateCache(q.hakuOid, tulos)
       tulos
     }
   }
 
-  def sijoitteluTulos(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = {
+  private def callBackend(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = {
     def is404(t: Throwable): Boolean = t match {
       case PreconditionFailedException(_, 404) => true
       case _ => false
@@ -135,7 +126,7 @@ class ValintaTulosActor(client: VirkailijaRestClient, config: Config) extends Ac
 
   }
 
-  def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
+  private def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
     log.debug(s"rescheduling haku $haku in $time")
     if (schedules.contains(haku) && !schedules(haku).isCancelled) {
       schedules(haku).cancel()
