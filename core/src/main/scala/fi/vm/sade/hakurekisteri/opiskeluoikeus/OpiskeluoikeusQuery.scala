@@ -9,3 +9,5 @@ object OpiskeluoikeusQuery {
     OpiskeluoikeusQuery(params.get("henkilo"), params.get("myontaja"))
   }
 }
+
+case class OpiskeluoikeusHenkilotQuery(henkilot: Set[String]) extends Query[Opiskeluoikeus]

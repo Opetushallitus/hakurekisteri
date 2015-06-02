@@ -84,6 +84,11 @@ trait OpiskelijaService extends InMemQueryingResourceService[Opiskelija, UUID] w
       val filtered = henkiloIndex.getOrElse(henkilo, Seq())
       executeQuery(filtered)(OpiskelijaQuery(Some(henkilo), kausi, vuosi, paiva, oppilaitosOid, luokka))
 
+    case OpiskelijaHenkilotQuery(henkilot) =>
+      Future.sequence(henkilot.map(henkilo => Future {
+        henkiloIndex.getOrElse(henkilo, Seq())
+      })).map(_.foldLeft[Seq[Opiskelija with Identified[UUID]]](Seq())(_ ++ _).toSet.toSeq)
+
   }
 
   def checkOppilaitos(oppilaitos:Option[String])(o:Opiskelija):Boolean = oppilaitos match {

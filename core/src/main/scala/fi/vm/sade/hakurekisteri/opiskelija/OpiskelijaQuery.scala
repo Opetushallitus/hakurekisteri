@@ -26,3 +26,5 @@ object OpiskelijaQuery{
     OpiskelijaQuery(params.get("henkilo"), params.get("kausi").map(Kausi.withName), params.get("vuosi"), params.get("paiva").map(extractDate), params.get("oppilaitosOid"), params.get("luokka"))
   }
 }
+
+case class OpiskelijaHenkilotQuery(henkilot: Set[String]) extends Query[Opiskelija]

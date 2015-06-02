@@ -145,6 +145,11 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
       val filtered = tiedonSiirtoIndex.get(henkilo).map(_.values.reduce(_ ++ _)).getOrElse(Seq())
       executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja, komo, muokattuJalkeen))
 
+    case SuoritusHenkilotQuery(henkilot) =>
+      Future.sequence(henkilot.map(henkilo => Future {
+        tiedonSiirtoIndex.get(henkilo).map(_.values.foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _).toSet.toSeq).getOrElse(Seq())
+      })).map(_.foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _))
+
     case SuoritysTyyppiQuery(henkilo, komo) => Future {
       (for (
         henk <- suoritusTyyppiIndex.get(henkilo);

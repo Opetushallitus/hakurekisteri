@@ -168,6 +168,8 @@ class HakemusJournal extends InMemJournal[FullHakemus, String] {
 
 import scala.concurrent.duration._
 
+case class ReloadingDone(haku: String, startTime: Option[Long])
+
 class HakemusActor(hakemusClient: VirkailijaRestClient,
                    maxApplications: Int = 2000,
                    override val journal: Journal[FullHakemus, String] = new HakemusJournal()
@@ -187,7 +189,6 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
     super.postStop()
   }
 
-  case class ReloadingDone(haku: String, startTime: Option[Long])
   object ResetCursors
   
   private def initialBlocking: Receive = {

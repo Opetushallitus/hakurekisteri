@@ -23,5 +23,6 @@ object SuoritusQuery{
   }
 }
 
+case class SuoritusHenkilotQuery(henkilot: Set[String]) extends Query[Suoritus]
 case class SuoritysTyyppiQuery(henkilo: String, komo: String) extends Query[Suoritus]
 case class AllForMatchinHenkiloSuoritusQuery(vuosi: Option[String] = None, myontaja: Option[String] = None) extends Query[Suoritus]
