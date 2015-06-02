@@ -130,7 +130,7 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
       Future {
         myontajaIndex.collect {
           case ((oid, _), value) if oid == myontaja => value
-        }.foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _).toSet.toSeq
+        }.foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _).distinct
       }
 
     case SuoritusQuery(None, None, None, None, Some(komo), None) =>
@@ -146,9 +146,13 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
       executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja, komo, muokattuJalkeen))
 
     case SuoritusHenkilotQuery(henkilot) =>
-      Future.sequence(henkilot.map(henkilo => Future {
-        tiedonSiirtoIndex.get(henkilo).map(_.values.foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _).toSet.toSeq).getOrElse(Seq())
-      })).map(_.foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _))
+      Future {
+        tiedonSiirtoIndex.
+          filterKeys(henkilot.contains).
+          values.
+          map(_.values.foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _).distinct).
+          foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _)
+      }
 
     case SuoritysTyyppiQuery(henkilo, komo) => Future {
       (for (
@@ -164,7 +168,7 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
       Future {
         myontajaIndex.collect {
           case ((oid, _), value) if oid == myontaja => value
-        }.foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _).toSet.toSeq
+        }.foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _).distinct
       }.map(_.flatMap(s => getByHenkilo(s.henkiloOid)).toSet.toSeq)
 
   }
