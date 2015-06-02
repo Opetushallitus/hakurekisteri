@@ -35,7 +35,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
   implicit val user: User = security.TestUser
   implicit val swagger: Swagger = new HakurekisteriSwagger
 
-  val henkilot = (0 until 2000).map(i => UUID.randomUUID().toString)
+  val henkilot = (0 until 10001).map(i => UUID.randomUUID().toString)
 
   val opiskeluoikeudetSeq: IndexedSeq[Opiskeluoikeus] = henkilot.map(henkilo =>
     Opiskeluoikeus(new LocalDate(), None, henkilo, "koulutus_999999", "", "")
@@ -92,9 +92,9 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     }
   }
 
-  test("OppijaResource should return 2000 oppijas with ensikertalainen false") {
-    waitFuture(resource.fetchOppijat(HakemusQuery(None, None, None)))(oppijat => {
-      oppijat.length should be (2000)
+  test("OppijaResource should return 10001 oppijas with ensikertalainen false") {
+    waitFuture(resource.fetchOppijat(HakemusQuery(Some("foo"), None, None)))(oppijat => {
+      oppijat.length should be (10001)
       oppijat.foreach(o => o.ensikertalainen should be (Some(false)))
     })
   }

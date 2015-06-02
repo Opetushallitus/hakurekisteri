@@ -37,7 +37,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](s
     scheduledTask.cancel()
   }
 
-  implicit val timeout: akka.util.Timeout = 30.seconds
+  implicit val timeout: akka.util.Timeout = 300.seconds
 
   def futfilt(s: Seq[A], authorizer: A => concurrent.Future[Boolean]) = {
     Future.traverse(s)((item) => authorizer(item).map((_ , item))).map(_.filter(_._1).map(_._2))

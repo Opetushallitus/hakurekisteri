@@ -21,7 +21,7 @@ trait OppijaFetcher {
   val hakemusRekisteri: ActorRef
   val ensikertalaisuus: ActorRef
 
-  val megaQueryLimit = 1000
+  val megaQueryTreshold = 10000
 
   protected implicit def executor: ExecutionContext
   implicit val defaultTimeout: Timeout
@@ -32,7 +32,7 @@ trait OppijaFetcher {
       oppijat <- fetchOppijatFor(hakemukset)
     ) yield oppijat
 
-  private def isMegaQuery(persons: Set[(String, Option[String])]): Boolean = persons.size > megaQueryLimit
+  private def isMegaQuery(persons: Set[(String, Option[String])]): Boolean = persons.size > megaQueryTreshold
 
   def fetchOppijatFor(hakemukset: Seq[FullHakemus])(implicit user: User): Future[Seq[Oppija]] = {
     val persons = extractPersons(hakemukset)
@@ -79,7 +79,7 @@ trait OppijaFetcher {
 
     oppijaData.map {
       case (opiskelijat, opiskeluoikeudet, todistukset) =>
-        (opiskelijat.keys ++ opiskeluoikeudet.keys ++ todistukset.keys).toSet.map((oid: String) => {
+        (opiskelijat.keySet ++ opiskeluoikeudet.keySet ++ todistukset.keySet).map((oid: String) => {
           Oppija(
             oppijanumero = oid,
             opiskelu = opiskelijat.getOrElse(oid, Seq()),
