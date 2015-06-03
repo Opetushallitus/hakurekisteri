@@ -25,24 +25,58 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
+import scala.concurrent.duration._
 import scala.language.implicitConversions
 
-class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with FutureWaiting {
+class OppijaResourceSpec extends OppijaResourceSetup {
+  
+  test("OppijaResource should return 200") {
+    get("/?haku=1") {
+      response.status should be (200)
+    }
+  }
 
+  test("OppijaResource should return 400 if no parameters are given") {
+    get("/") {
+      response.status should be (400)
+    }
+  }
+
+  test("OppijaResource should return 10001 oppijas with ensikertalainen false") {
+    waitFuture(resource.fetchOppijat(HakemusQuery(Some("foo"), None, None)))(oppijat => {
+      oppijat.length should be (10001)
+      oppijat.foreach(o => o.ensikertalainen should be (Some(false)))
+    })
+  }
+
+}
+
+abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar with DispatchSupport with FutureWaiting {
   implicit val system = ActorSystem("oppija-resource-test-system")
   implicit val security = new TestSecurity
   implicit val user: User = security.TestUser
   implicit val swagger: Swagger = new HakurekisteriSwagger
 
-  val henkilot = (0 until 10001).map(i => UUID.randomUUID().toString)
+  val henkilot: Set[String] = (0 until 10001).map(i => UUID.randomUUID().toString).toSet
 
   val opiskeluoikeudetSeq = henkilot.map(henkilo =>
     Opiskeluoikeus(new LocalDate(), None, henkilo, "koulutus_999999", "", "")
-  )
+  ).toSeq
 
   val suorituksetSeq = henkilot.map(henkilo =>
-    VirallinenSuoritus("bar", "foo", "KESKEN", new LocalDate(), henkilo, yksilollistaminen.Ei, "FI", None, true, "")
-  )
+    VirallinenSuoritus("bar", "foo", "KESKEN", new LocalDate(), henkilo, yksilollistaminen.Ei, "FI", None, vahv = true, "")
+  ).toSeq
+
+  implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]): InMemJournal[R, UUID] = {
+    val journal = new InMemJournal[R, UUID]
+    s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
+    journal
+  }
+  implicit def seq2journalString[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[String, R]](s:Seq[R]): InMemJournal[R, String] = {
+    val journal = new InMemJournal[R, String]
+    s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID().toString))))
+    journal
+  }
 
   val rekisterit = new Registers {
     private val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
@@ -70,7 +104,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
       state = Some("INCOMPLETE"),
       preferenceEligibilities = Seq()
     )
-  })
+  }).toSeq
 
   val hakemusActor = system.actorOf(Props(new HakemusActor(hakemusClient = new VirkailijaRestClient(config = hakuappConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endpoint)))), journal = hakemukset)))
 
@@ -88,34 +122,8 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
 
   addServlet(resource, "/*")
 
-
-  test("OppijaResource should return 200") {
-    get("/?haku=1") {
-      response.status should be (200)
-    }
-  }
-
-  test("OppijaResource should return 400 if no parameters are given") {
-    get("/") {
-      response.status should be (400)
-    }
-  }
-
-  test("OppijaResource should return 10001 oppijas with ensikertalainen false") {
-    waitFuture(resource.fetchOppijat(HakemusQuery(Some("foo"), None, None)))(oppijat => {
-      oppijat.length should be (10001)
-      oppijat.foreach(o => o.ensikertalainen should be (Some(false)))
-    })
-  }
-
-  implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]): InMemJournal[R, UUID] = {
-    val journal = new InMemJournal[R, UUID]
-    s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
-    journal
-  }
-  implicit def seq2journalString[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[String, R]](s:Seq[R]): InMemJournal[R, String] = {
-    val journal = new InMemJournal[R, String]
-    s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID().toString))))
-    journal
+  override def stop(): Unit = {
+    system.shutdown()
+    system.awaitTermination(15.seconds)
   }
 }
