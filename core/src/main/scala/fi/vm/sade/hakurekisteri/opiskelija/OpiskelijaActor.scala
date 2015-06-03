@@ -77,7 +77,7 @@ trait OpiskelijaService extends InMemQueryingResourceService[Opiskelija, UUID] w
       Future {
         oppilaitosIndex.collect {
           case ((oid, _), value) if oid == oppilaitosOid => value
-        }.foldLeft[Seq[Opiskelija with Identified[UUID]]](Seq())(_ ++ _).distinct
+        }.foldLeft[Seq[Opiskelija with Identified[UUID]]](Seq())(_ ++ _)
       }
 
     case OpiskelijaQuery(Some(henkilo), kausi, vuosi, paiva, oppilaitosOid, luokka) =>
@@ -86,11 +86,9 @@ trait OpiskelijaService extends InMemQueryingResourceService[Opiskelija, UUID] w
 
     case OpiskelijaHenkilotQuery(henkilot) =>
       Future {
-        henkiloIndex.
-          filterKeys(henkilot.contains).
-          values.
-          foldLeft[Seq[Opiskelija with Identified[UUID]]](Seq())(_ ++ _).
-          distinct
+        henkiloIndex.collect {
+          case (oid, value) if henkilot.contains(oid) => value
+        }.foldLeft[Seq[Opiskelija with Identified[UUID]]](Seq())(_ ++ _)
       }
   }
 

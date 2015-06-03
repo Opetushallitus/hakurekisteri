@@ -147,10 +147,9 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
 
     case SuoritusHenkilotQuery(henkilot) =>
       Future {
-        tiedonSiirtoIndex.
-          filterKeys(henkilot.contains).
-          values.
-          map(_.values.foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _).distinct).
+        tiedonSiirtoIndex.collect {
+          case (oid, value) if henkilot.contains(oid) => value
+        }.map(_.values.foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _)).
           foldLeft[Seq[Suoritus with Identified[UUID]]](Seq())(_ ++ _)
       }
 

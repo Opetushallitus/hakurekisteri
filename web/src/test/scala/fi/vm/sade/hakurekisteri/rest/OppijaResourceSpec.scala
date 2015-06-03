@@ -15,7 +15,7 @@ import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusActor}
 import fi.vm.sade.hakurekisteri.rest.support.{Registers, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
-import fi.vm.sade.hakurekisteri.suoritus.SuoritusActor
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
 import fi.vm.sade.hakurekisteri.web.oppija.OppijaResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
@@ -25,7 +25,6 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.collection.immutable.IndexedSeq
 import scala.language.implicitConversions
 
 class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with FutureWaiting {
@@ -37,8 +36,12 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
 
   val henkilot = (0 until 10001).map(i => UUID.randomUUID().toString)
 
-  val opiskeluoikeudetSeq: IndexedSeq[Opiskeluoikeus] = henkilot.map(henkilo =>
+  val opiskeluoikeudetSeq = henkilot.map(henkilo =>
     Opiskeluoikeus(new LocalDate(), None, henkilo, "koulutus_999999", "", "")
+  )
+
+  val suorituksetSeq = henkilot.map(henkilo =>
+    VirallinenSuoritus("bar", "foo", "KESKEN", new LocalDate(), henkilo, yksilollistaminen.Ei, "FI", None, true, "")
   )
 
   val rekisterit = new Registers {
@@ -46,7 +49,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
     private val arvosanat = system.actorOf(Props(new ArvosanaActor()))
     private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusActor(opiskeluoikeudetSeq)))
     private val opiskelijat = system.actorOf(Props(new OpiskelijaActor()))
-    private val suoritukset = system.actorOf(Props(new SuoritusActor()))
+    private val suoritukset = system.actorOf(Props(new SuoritusActor(suorituksetSeq)))
 
     override val eraRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(erat)))
     override val arvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(arvosanat)))

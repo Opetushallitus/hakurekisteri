@@ -6,7 +6,7 @@ import org.scalatest.time.{Millis, Span}
 
 trait FutureWaiting extends AsyncAssertions {
 
-  val span = Span(30000, Millis)
+  val span = Span(120000, Millis)
   implicit val ec:ExecutionContext = ExecutionContext.Implicits.global
 
   def waitFuture[A](f: Future[A])(assertion: A => Unit) = {

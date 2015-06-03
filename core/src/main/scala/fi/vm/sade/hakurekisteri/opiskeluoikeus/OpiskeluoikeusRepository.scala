@@ -62,11 +62,9 @@ trait OpiskeluoikeusService extends InMemQueryingResourceService[Opiskeluoikeus,
 
     case OpiskeluoikeusHenkilotQuery(henkilot) =>
       Future {
-        henkiloIndex.
-          filterKeys(henkilot.contains).
-          values.
-          foldLeft[Seq[Opiskeluoikeus with Identified[UUID]]](Seq())(_ ++ _).
-          distinct
+        henkiloIndex.collect {
+          case (oid, value) if henkilot.contains(oid) => value
+        }.foldLeft[Seq[Opiskeluoikeus with Identified[UUID]]](Seq())(_ ++ _)
       }
   }
 
