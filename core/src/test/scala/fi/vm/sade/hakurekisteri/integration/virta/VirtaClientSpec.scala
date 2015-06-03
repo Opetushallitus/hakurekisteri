@@ -2,16 +2,16 @@ package fi.vm.sade.hakurekisteri.integration.virta
 
 
 import akka.actor.ActorSystem
-import org.scalatest.{Matchers, FlatSpec}
-import org.scalatest.concurrent.AsyncAssertions
-import org.scalatest.time.{Millis, Span}
-
-import scala.concurrent.{Await, Future}
-import fi.vm.sade.hakurekisteri.integration.{Endpoint, DispatchSupport, CapturingProvider}
 import com.ning.http.client.AsyncHttpClient
+import fi.vm.sade.hakurekisteri.integration.{CapturingProvider, DispatchSupport, Endpoint}
+import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.mockito.Mockito
+import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.mock.MockitoSugar
+import org.scalatest.{FlatSpec, Matchers}
+
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 object VirtaResults {
 
@@ -23,13 +23,14 @@ object VirtaResults {
 
   val testResponse = scala.io.Source.fromURL(getClass.getResource("/test-response.xml")).mkString
 
+  val opiskeluoikeustyypit = scala.io.Source.fromURL(getClass.getResource("/test-response-opiskeluoikeustyypit.xml")).mkString
+
 }
 
 
 
-class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with MockitoSugar with DispatchSupport {
+class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with MockitoSugar with DispatchSupport with FutureWaiting {
   implicit val system = ActorSystem("test-virta-system")
-  implicit val ec = system.dispatcher
   import Mockito._
 
   val endPoint = mock[Endpoint]
@@ -39,9 +40,8 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.3.0"))).thenReturn((200, List(), VirtaResults.multipleStudents))
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.5.0"))).thenReturn((500, List(), VirtaResults.fault))
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.3"))).thenReturn((200, List(), VirtaResults.testResponse))
+  when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.9"))).thenReturn((200, List(), VirtaResults.opiskeluoikeustyypit))
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("111111-1975"))).thenReturn((200, List(), VirtaResults.testResponse))
-
-
 
   val virtaClient = new VirtaClient(aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint))))
 
@@ -127,18 +127,11 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
     }
   }
 
+  it should "parse only opiskeluoikeustyypit 1, 2, 3, 4, 5, 6 and 7" in {
+    val response = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.9")
 
-
-  def waitFuture[A](f: Future[A])(assertion: A => Unit) = {
-    val w = new Waiter
-
-    f.onComplete(r => {
-      w(assertion(r.get))
-      w.dismiss()
+    waitFuture(response)((o: Option[VirtaResult]) => {
+      o.get.opiskeluoikeudet.size should be (2)
     })
-
-    w.await(timeout(Span(5000, Millis)), dismissals(1))
   }
-
-
 }

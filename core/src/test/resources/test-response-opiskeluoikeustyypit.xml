@@ -1,0 +1,127 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <virtaluku:OpiskelijanKaikkiTiedotResponse xmlns:virtaluku="http://tietovaranto.csc.fi/luku">
+            <virta:Virta xmlns:virta="urn:mace:funet.fi:virta/2013/01/29">
+                <virta:Opiskelija avain="537516325">
+                    <virta:Henkilotunnus>111111-1975</virta:Henkilotunnus>
+                    <virta:KansallinenOppijanumero>1.2.3</virta:KansallinenOppijanumero>
+                    <virta:Opiskeluoikeudet>
+                        <virta:Opiskeluoikeus avain="1" opiskelijaAvain="537516325">
+                            <virta:AlkuPvm>2003-11-04</virta:AlkuPvm>
+                            <virta:LoppuPvm>2114-09-26</virta:LoppuPvm>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2003-11-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2015-06-08</virta:LoppuPvm>
+                                <virta:Koodi>1</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2014-07-07</virta:AlkuPvm>
+                                <virta:Koodi>4</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tyyppi>5</virta:Tyyppi>
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Jakso koulutusmoduulitunniste="KMT13674">
+                                <virta:AlkuPvm>2003-11-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2014-10-05</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>775101</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>999</virta:Koulutuskunta>
+                            </virta:Jakso>
+                            <virta:Jakso koulutusmoduulitunniste="KMT15722">
+                                <virta:AlkuPvm>2013-11-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2114-09-26</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>775101</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>999</virta:Koulutuskunta>
+                            </virta:Jakso>
+                            <virta:Ensisijaisuus>
+                                <virta:AlkuPvm>2001-10-10</virta:AlkuPvm>
+                                <virta:LoppuPvm>2121-12-21</virta:LoppuPvm>
+                            </virta:Ensisijaisuus>
+                            <virta:Ensisijaisuus>
+                                <virta:AlkuPvm>2001-10-10</virta:AlkuPvm>
+                                <virta:LoppuPvm>2121-12-21</virta:LoppuPvm>
+                            </virta:Ensisijaisuus>
+                            <virta:Opintoala1995>90</virta:Opintoala1995>
+                            <virta:AvoinVayla>0</virta:AvoinVayla>
+                            <virta:AsetusMaisteriohjelma>0</virta:AsetusMaisteriohjelma>
+                        </virta:Opiskeluoikeus>
+                        <virta:Opiskeluoikeus avain="2" opiskelijaAvain="537516325">
+                            <virta:AlkuPvm>2005-04-04</virta:AlkuPvm>
+                            <virta:LoppuPvm>2014-05-05</virta:LoppuPvm>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2005-04-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2014-05-05</virta:LoppuPvm>
+                                <virta:Koodi>1</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2013-06-04</virta:AlkuPvm>
+                                <virta:Koodi>3</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tyyppi>7</virta:Tyyppi>
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Jakso koulutusmoduulitunniste="KMT17770">
+                                <virta:AlkuPvm>2005-04-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2010-05-05</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>875101</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>999</virta:Koulutuskunta>
+                            </virta:Jakso>
+                            <virta:Jakso koulutusmoduulitunniste="KMT19818">
+                                <virta:AlkuPvm>2009-06-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2014-05-05</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>875101</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>999</virta:Koulutuskunta>
+                            </virta:Jakso>
+                            <virta:Ensisijaisuus>
+                                <virta:AlkuPvm>2001-10-10</virta:AlkuPvm>
+                                <virta:LoppuPvm>2121-12-21</virta:LoppuPvm>
+                            </virta:Ensisijaisuus>
+                            <virta:Opintoala1995>90</virta:Opintoala1995>
+                            <virta:AvoinVayla>0</virta:AvoinVayla>
+                            <virta:AsetusMaisteriohjelma>0</virta:AsetusMaisteriohjelma>
+                        </virta:Opiskeluoikeus>
+                        <virta:Opiskeluoikeus avain="3" opiskelijaAvain="537516325">
+                            <virta:AlkuPvm>2005-04-04</virta:AlkuPvm>
+                            <virta:LoppuPvm>2014-05-05</virta:LoppuPvm>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2005-04-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2014-05-05</virta:LoppuPvm>
+                                <virta:Koodi>1</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tila>
+                                <virta:AlkuPvm>2013-06-04</virta:AlkuPvm>
+                                <virta:Koodi>3</virta:Koodi>
+                            </virta:Tila>
+                            <virta:Tyyppi>15</virta:Tyyppi>
+                            <virta:Myontaja>
+                                <virta:Koodi>XX</virta:Koodi>
+                            </virta:Myontaja>
+                            <virta:Jakso koulutusmoduulitunniste="KMT17770">
+                                <virta:AlkuPvm>2005-04-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2010-05-05</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>875101</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>999</virta:Koulutuskunta>
+                            </virta:Jakso>
+                            <virta:Jakso koulutusmoduulitunniste="KMT19818">
+                                <virta:AlkuPvm>2009-06-04</virta:AlkuPvm>
+                                <virta:LoppuPvm>2014-05-05</virta:LoppuPvm>
+                                <virta:Koulutuskoodi>875101</virta:Koulutuskoodi>
+                                <virta:Koulutuskunta>999</virta:Koulutuskunta>
+                            </virta:Jakso>
+                            <virta:Ensisijaisuus>
+                                <virta:AlkuPvm>2001-10-10</virta:AlkuPvm>
+                                <virta:LoppuPvm>2121-12-21</virta:LoppuPvm>
+                            </virta:Ensisijaisuus>
+                            <virta:Opintoala1995>90</virta:Opintoala1995>
+                            <virta:AvoinVayla>0</virta:AvoinVayla>
+                            <virta:AsetusMaisteriohjelma>0</virta:AsetusMaisteriohjelma>
+                        </virta:Opiskeluoikeus>
+                    </virta:Opiskeluoikeudet>
+                </virta:Opiskelija>
+            </virta:Virta>
+        </virtaluku:OpiskelijanKaikkiTiedotResponse>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

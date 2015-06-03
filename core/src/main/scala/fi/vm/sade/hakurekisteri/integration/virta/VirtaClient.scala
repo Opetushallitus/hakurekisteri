@@ -1,23 +1,18 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
-import java.net.ConnectException
-import java.util.concurrent.{TimeoutException, ExecutionException}
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 import akka.event.Logging
-import fi.vm.sade.hakurekisteri.Config
+import com.ning.http.client._
+import dispatch.Http
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import org.joda.time.format.DateTimeFormat
 
 import scala.compat.Platform
 import scala.concurrent.Future
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import scala.xml.{Elem, Node, NodeSeq, XML}
-import com.ning.http.client._
-import scala.util.Failure
-import scala.util.Success
-import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
-import dispatch.Http
 
 
 case class VirtaValidationError(m: String) extends Exception(m)
@@ -43,6 +38,8 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
 
   val logger = Logging.getLogger(system, this)
   val maxRetries = config.httpClientMaxRetries
+
+  val tallennettavatOpiskeluoikeustyypit = Seq("1", "2", "3", "4", "5", "6", "7")
 
   def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
 
@@ -119,7 +116,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
 
   def getOpiskeluoikeudet(response: NodeSeq): Seq[VirtaOpiskeluoikeus] = {
     val opiskeluoikeudet: NodeSeq = response \ "Body" \ "OpiskelijanKaikkiTiedotResponse" \ "Virta" \ "Opiskelija" \ "Opiskeluoikeudet" \ "Opiskeluoikeus"
-    opiskeluoikeudet.map((oo: Node) => {
+    opiskeluoikeudet.withFilter((oo: Node) => tallennettavatOpiskeluoikeustyypit.contains((oo \ "Tyyppi").text)).map((oo: Node) => {
       val avain = oo.map(_ \ "@avain")
 
       VirtaOpiskeluoikeus(
