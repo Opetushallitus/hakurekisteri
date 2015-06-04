@@ -5,7 +5,7 @@
     <eranTunniste>eranTunniste 66</eranTunniste>
     <henkilot>
         <henkilo>
-            <hetu>131094-919B</hetu>
+            <hetu>131094-XXXX</hetu>
             <lahtokoulu>05127</lahtokoulu>
             <luokka>9A</luokka>
             <sukunimi>Åädas</sukunimi>
@@ -28,7 +28,7 @@
         </henkilo>
         <henkilo>
             <henkiloTunniste>TUNNISTE</henkiloTunniste>
-            <syntymaAika>1999-03-29</syntymaAika>
+            <syntymaAika>1999-03-32</syntymaAika>
             <sukupuoli>1</sukupuoli>
             <lahtokoulu>05127</lahtokoulu>
             <luokka>9A</luokka>
@@ -56,7 +56,7 @@
             </maahanmuuttajienammvalmistava>
         </henkilo>
         <henkilo>
-            <oppijanumero>1.2.246.562.24.12345678901</oppijanumero>
+            <oppijanumero>1.2.246.562.24.esimerkki</oppijanumero>
             <lahtokoulu>05127</lahtokoulu>
             <luokka>9A</luokka>
             <sukunimi>Testinen</sukunimi>

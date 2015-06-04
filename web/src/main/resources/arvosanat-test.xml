@@ -5,7 +5,7 @@
     <eranTunniste>PKERA3_2015S_05127</eranTunniste>
     <henkilot>
         <henkilo>
-            <hetu>111111-XXXX</hetu>
+            <hetu>111111-111L</hetu>
             <sukunimi>Hetullinen</sukunimi>
             <etunimet>Juha Jaakko</etunimet>
             <kutsumanimi>Juha</kutsumanimi>
@@ -77,7 +77,7 @@
             </todistukset>
         </henkilo>
         <henkilo>
-            <oppijanumero>1.2.246.562.24.esimerkki</oppijanumero>
+            <oppijanumero>1.2.246.562.24.12345678901</oppijanumero>
             <sukunimi>Oppijanumerollinen</sukunimi>
             <etunimet>Juha Jaakko</etunimet>
             <kutsumanimi>Jaakko</kutsumanimi>
