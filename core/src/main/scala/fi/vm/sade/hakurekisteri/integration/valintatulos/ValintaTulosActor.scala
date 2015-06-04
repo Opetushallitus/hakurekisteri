@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedException, VirkailijaRestClient}
 
-import scala.concurrent.Future
+import scala.concurrent.{Promise, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
@@ -51,12 +51,25 @@ class ValintaTulosActor(client: VirkailijaRestClient, config: Config) extends Ac
 
   private def tryNext() = if (!refresing && updates.nonEmpty) {
     refresing = true
-    val u = updates.head
-    updates = updates.filterNot(_ == u)
-    log.debug(s"refreshing haku ${u.haku}")
-    val tulos = callBackend(u.haku, None)
-    reschedule(u.haku, tulos)
-    updateCache(u.haku, tulos)
+
+    val priorityUpdates = updates.filter(_.withPromise.isDefined)
+    val update = if (priorityUpdates.nonEmpty) {
+      priorityUpdates.head
+    } else {
+      updates.head
+    }
+    updates = updates.filterNot(_ == update)
+
+    log.debug(s"refreshing haku ${update.haku}")
+
+    val tulos = callBackend(update.haku, None)
+
+    if (update.withPromise.isDefined) {
+      update.withPromise.get.tryCompleteWith(tulos)
+    }
+
+    reschedule(update.haku, tulos)
+    updateCache(update.haku, tulos)
   }
 
   private def done() = self ! RefreshDone
@@ -75,9 +88,13 @@ class ValintaTulosActor(client: VirkailijaRestClient, config: Config) extends Ac
     if (q.cachedOk && cache.contains(q.hakuOid))
       cache.get(q.hakuOid)
     else {
-      val tulos = callBackend(q.hakuOid, q.hakemusOid)
-      if (q.hakemusOid.isEmpty) updateCache(q.hakuOid, tulos)
-      tulos
+      if (q.hakemusOid.isEmpty) {
+        val promise = Promise[SijoitteluTulos]()
+        self ! UpdateValintatulos(haku = q.hakuOid, withPromise = Some(promise))
+        promise.future
+      } else {
+        callBackend(q.hakuOid, q.hakemusOid)
+      }
     }
   }
 
@@ -136,4 +153,4 @@ class ValintaTulosActor(client: VirkailijaRestClient, config: Config) extends Ac
 
 }
 
-case class UpdateValintatulos(haku: String)
+case class UpdateValintatulos(haku: String, withPromise: Option[Promise[SijoitteluTulos]] = None)

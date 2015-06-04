@@ -1,0 +1,23 @@
+{
+  "hakuOid": "1.2.246.562.29.90697286251",
+  "hakemusOid": "1.2.246.562.11.00000000576",
+  "hakijaOid": "1.2.246.562.24.62222128355",
+  "aikataulu": {},
+  "hakutoiveet": [
+    {
+      "hakukohdeOid": "1.2.246.562.20.25463238029",
+      "tarjoajaOid": "1.2.246.562.10.60222091211",
+      "valintatapajonoOid": "",
+      "valintatila": "KESKEN",
+      "vastaanottotila": "KESKEN",
+      "ilmoittautumistila": {
+        "ilmoittautumisaika": {},
+        "ilmoittautumistila": "EI_TEHTY",
+        "ilmoittauduttavissa": false
+      },
+      "vastaanotettavuustila": "EI_VASTAANOTETTAVISSA",
+      "julkaistavissa": true,
+      "tilanKuvaukset": {}
+    }
+  ]
+}
