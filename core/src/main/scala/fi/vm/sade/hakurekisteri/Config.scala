@@ -130,7 +130,6 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val virtaAvainTest = "salaisuus"
 
   val casUrl = Some(properties.getOrElse("web.url.cas", casUrlQa))
-  val sijoitteluServiceUrl = properties.getOrElse("cas.service.sijoittelu-service", sijoitteluServiceUrlQa)
   val tarjontaServiceUrl = properties.getOrElse("cas.service.tarjonta-service", tarjontaServiceUrlQa)
   val henkiloServiceUrl = properties.getOrElse("cas.service.authentication-service", henkiloServiceUrlQa)
   val hakuappServiceUrl = properties.getOrElse("cas.service.haku-service", hakuappServiceUrlQa)
@@ -150,13 +149,14 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
 
   val virtaConfig = VirtaConfig(virtaServiceUrl, virtaJarjestelma, virtaTunnus, virtaAvain, properties)
   val henkiloConfig = ServiceConfig(casUrl, henkiloServiceUrl, serviceUser, servicePassword, properties)
-  val sijoitteluConfig = ServiceConfig(casUrl, sijoitteluServiceUrl, serviceUser, servicePassword, properties)
   val parameterConfig = ServiceConfig(serviceUrl = parameterServiceUrl, properties = properties)
   val hakemusConfig = HakemusConfig(ServiceConfig(casUrl, hakuappServiceUrl, serviceUser, servicePassword, properties), maxApplications)
   val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl, properties = properties)
   val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl, properties = properties)
   val organisaatioConfig = ServiceConfig(serviceUrl = organisaatioServiceUrl, properties = properties)
-  val valintaTulosConfig = ServiceConfig(serviceUrl = valintaTulosServiceUrl, properties = properties)
+  val valintaTulosConfig = new ServiceConfig(serviceUrl = valintaTulosServiceUrl, properties = properties) {
+    override val httpClientRequestTimeout: Int = 600000
+  }
 
   val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt
   val organisaatioCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.organisaatio", "12").toInt
