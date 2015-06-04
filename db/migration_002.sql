@@ -41,7 +41,7 @@ SELECT resource_id, komo, myontaja, 'VALMIS' as tila, valmistuminen, henkilo_oid
 FROM v_suoritus s
 WHERE valmistuminen < '2015-08-01'
 AND tila = 'KESKEN'
-AND vahvistettu = true
+AND (vahvistettu = true OR vahvistettu IS NULL)
 AND komo <> '1.2.246.562.5.2013061010184237348007'
 AND EXISTS(SELECT 1 FROM v_arvosana WHERE suoritus = s.resource_id);
 
