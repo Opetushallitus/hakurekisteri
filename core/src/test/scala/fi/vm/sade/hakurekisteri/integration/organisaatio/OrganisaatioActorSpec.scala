@@ -22,7 +22,7 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
   implicit val timeout: Timeout = 60.seconds
   val organisaatioConfig = ServiceConfig(serviceUrl = "http://localhost/organisaatio-service")
 
-  def createEndPoint = {
+  def createEndPoint(implicit ec: ExecutionContext) = {
     val e = mock[Endpoint]
 
     when(e.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))).thenReturn((200, List(), OrganisaatioResults.hae))
@@ -105,11 +105,9 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
         implicit val ec = system.dispatcher
         val (endPoint, organisaatioActor) = initOrganisaatioActor()
 
-        waitFuture((organisaatioActor ? Oppilaitos("99999")).mapTo[OppilaitosResponse])(o => {
-          o.oppilaitos.oppilaitosKoodi.get should be ("99999")
-        })
+        (1 to 100).foreach(i => organisaatioActor ! Oppilaitos("99999"))
 
-        Thread.sleep(200)
+        Thread.sleep(500)
 
         waitFuture((organisaatioActor ? Oppilaitos("99999")).mapTo[OppilaitosResponse])(o => {
           o.oppilaitos.oppilaitosKoodi.get should be ("99999")
@@ -121,9 +119,22 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
     )
   }
 
-  def initOrganisaatioActor()(implicit system: ActorSystem, ec: ExecutionContext): (Endpoint, ActorRef) = {
+  test("OrganisaatioActor should refresh cache") {
+    withSystem(
+      implicit system => {
+        implicit val ec = system.dispatcher
+        val (endPoint, organisaatioActor) = initOrganisaatioActor(Some(2.seconds))
+
+        Thread.sleep(1500)
+
+        verify(endPoint, times(2)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))
+      }
+    )
+  }
+
+  def initOrganisaatioActor(ttl: Option[FiniteDuration] = None)(implicit system: ActorSystem, ec: ExecutionContext): (Endpoint, ActorRef) = {
     val endPoint = createEndPoint
-    val organisaatioActor = system.actorOf(Props(new HttpOrganisaatioActor(new VirkailijaRestClient(config = organisaatioConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))), Config.mockConfig, initDuringStartup = false)))
+    val organisaatioActor = system.actorOf(Props(new HttpOrganisaatioActor(new VirkailijaRestClient(config = organisaatioConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))), Config.mockConfig, initDuringStartup = false, ttl)))
 
     Await.result((organisaatioActor ? RefreshOrganisaatioCache).mapTo[Boolean], Duration(10, TimeUnit.SECONDS))
 
@@ -144,7 +155,13 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
 }
 
 object OrganisaatioResults {
-  val hae = scala.io.Source.fromURL(getClass.getResource("/mock-data/organisaatio/organisaatio-hae.json")).mkString
+  def hae(implicit ec: ExecutionContext) = {
+    Await.result(Future { Thread.sleep(50) }, Duration(1, TimeUnit.SECONDS))
+    scala.io.Source.fromURL(getClass.getResource("/mock-data/organisaatio/organisaatio-hae.json")).mkString
+  }
   val pikkola = scala.io.Source.fromURL(getClass.getResource("/mock-data/organisaatio/organisaatio-pikkola.json")).mkString
-  val ysiysiysiysiysi = scala.io.Source.fromURL(getClass.getResource("/mock-data/organisaatio/organisaatio-99999.json")).mkString
+  def ysiysiysiysiysi(implicit ec: ExecutionContext) = {
+    Await.result(Future { Thread.sleep(100) }, Duration(1, TimeUnit.SECONDS))
+    scala.io.Source.fromURL(getClass.getResource("/mock-data/organisaatio/organisaatio-99999.json")).mkString
+  }
 }

@@ -2,22 +2,23 @@ package fi.vm.sade.hakurekisteri.batchimport
 
 import java.util.UUID
 
-import akka.actor.{Props, ActorSystem}
+import akka.actor.{ActorSystem, Props}
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.{Config, Oids}
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, OrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.henkilo.{HttpHenkiloActor, CreateHenkilo, HenkiloActor}
+import fi.vm.sade.hakurekisteri.integration.henkilo.{CreateHenkilo, HttpHenkiloActor}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.HttpOrganisaatioActor
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.test.tools.MockedResourceActor
 import org.mockito.Mockito._
-import org.scalatest.{Matchers, FlatSpec}
 import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.mock.MockitoSugar
+import org.scalatest.{FlatSpec, Matchers}
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
