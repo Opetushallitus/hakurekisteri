@@ -20,7 +20,7 @@
                 <div class="col-sm-12">
                     <input id="organisaatioTerm" autocomplete="off" ng-model="organisaatioTerm" type="search"
                            placeholder="Oppilaitoksen numero tai nimi"
-                           typeahead="organisaatio as organisaatio.nimi.fi for organisaatio in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10"
+                           typeahead="o as (o.nimi.fi ? o.nimi.fi : (o.nimi.sv ? o.nimi.sv : o.nimi.en)) for o in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10"
                            typeahead-loading="loadingOppilaitos" typeahead-wait-ms="300"
                            typeahead-template-url="organisaatioTemplate.html" class="form-control"/>
                 </div>
