@@ -33,6 +33,7 @@ trait OppijaSwaggerApi extends SwaggerSupport with OppijaSwaggerModel with Arvos
     .responseMessage(ModelResponseMessage(500, "virta error"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
+    .responseMessage(ModelResponseMessage(503, "hakemukset not yet loaded: utilise Retry-After response header"))
 
   val read = apiOperation[Oppija]("haeOppija")
     .summary("näyttää yhden oppijan tiedot")
@@ -42,6 +43,7 @@ trait OppijaSwaggerApi extends SwaggerSupport with OppijaSwaggerModel with Arvos
     .responseMessage(ModelResponseMessage(500, "virta error"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
+    .responseMessage(ModelResponseMessage(503, "hakemukset not yet loaded: utilise Retry-After response header"))
 
 }
 

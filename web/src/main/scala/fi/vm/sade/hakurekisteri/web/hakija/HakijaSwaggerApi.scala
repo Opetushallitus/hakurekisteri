@@ -85,5 +85,6 @@ trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel wi
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "internal server error"))
+    .responseMessage(ModelResponseMessage(503, "hakemukset not yet loaded: utilise Retry-After response header"))
 
 }
