@@ -22,24 +22,56 @@ object Config {
   lazy val mockConfig = new MockConfig
 }
 
-object Oids {
-  val ophOrganisaatioOid = "1.2.246.562.10.00000000001"
-  val ytlOrganisaatioOid = "1.2.246.562.10.43628088406"
-  val cscOrganisaatioOid = "1.2.246.562.10.2013112012294919827487"
-  val tuntematonOrganisaatioOid = "1.2.246.562.10.57118763579"
+object OrganisaatioOids {
+  val oph = "1.2.246.562.10.00000000001"
+  val ytl = "1.2.246.562.10.43628088406"
+  val csc = "1.2.246.562.10.2013112012294919827487"
+  val tuntematon = "1.2.246.562.10.57118763579"
+}
 
-  val yotutkintoKomoOid = "1.2.246.562.5.2013061010184237348007"
-  val perusopetusKomoOid = "1.2.246.562.13.62959769647"
-  val lisaopetusKomoOid = "1.2.246.562.5.2013112814572435044876"
-  val lisaopetusTalousKomoOid = "1.2.246.562.5.2013061010184614853416"
-  val ammattistarttiKomoOid = "1.2.246.562.5.2013112814572438136372"
-  val valmentavaKomoOid = "1.2.246.562.5.2013112814572435755085"
-  val ammatilliseenvalmistavaKomoOid = "1.2.246.562.5.2013112814572441001730"
-  val ulkomainenkorvaavaKomoOid = "1.2.246.562.13.86722481404"
-  val lukioKomoOid = "TODO lukio komo oid"
-  val ammatillinenKomoOid = "TODO ammatillinen komo oid"
-  val lukioonvalmistavaKomoOid = "1.2.246.562.5.2013112814572429142840"
-  val kansanopistoKomoOid = "kansanopisto"
+object PohjakoulutusOids {
+  val perusopetus = "1.2.246.562.13.62959769647"
+  val lukio = "TODO lukio komo oid"
+  val ammatillinen = "TODO ammatillinen komo oid"
+  val ulkomainen = "1.2.246.562.13.86722481404"
+  val yoTutkinto = "1.2.246.562.5.2013061010184237348007"
+}
+
+object LisapistekoulutusOids {
+  val kymppi = "1.2.246.562.5.2013112814572435044876"
+  val talous = "1.2.246.562.5.2013061010184614853416"
+  val ammattistartti = "1.2.246.562.5.2013112814572438136372"
+  val kansanopisto = "kansanopisto"
+  val maahanmuuttajienLukioonValmistava = "1.2.246.562.5.2013112814572429142840"
+  val maahanmuuttajienAmmatilliseenValmistava = "1.2.246.562.5.2013112814572441001730"
+  val valmentavaJaKuntouttava = "1.2.246.562.5.2013112814572435755085"
+}
+
+object KomoOids {
+  val pohjakoulutus = PohjakoulutusOids
+  val lisapistekoulutus = LisapistekoulutusOids
+}
+
+object Oids {
+  val ophOrganisaatioOid = OrganisaatioOids.oph
+  val ytlOrganisaatioOid = OrganisaatioOids.ytl
+  val cscOrganisaatioOid = OrganisaatioOids.csc
+  val tuntematonOrganisaatioOid = OrganisaatioOids.tuntematon
+
+  val yotutkintoKomoOid = KomoOids.pohjakoulutus.yoTutkinto
+  val perusopetusKomoOid = KomoOids.pohjakoulutus.perusopetus
+  val ulkomainenkorvaavaKomoOid = KomoOids.pohjakoulutus.ulkomainen
+  val lukioKomoOid = KomoOids.pohjakoulutus.lukio
+  val ammatillinenKomoOid = KomoOids.pohjakoulutus.ammatillinen
+
+  val lisaopetusKomoOid = KomoOids.lisapistekoulutus.kymppi
+  val lisaopetusTalousKomoOid = KomoOids.lisapistekoulutus.talous
+  val ammattistarttiKomoOid = KomoOids.lisapistekoulutus.ammattistartti
+  val valmentavaKomoOid = KomoOids.lisapistekoulutus.valmentavaJaKuntouttava
+  val ammatilliseenvalmistavaKomoOid = KomoOids.lisapistekoulutus.maahanmuuttajienAmmatilliseenValmistava
+  val lukioonvalmistavaKomoOid = KomoOids.lisapistekoulutus.maahanmuuttajienLukioonValmistava
+  val kansanopistoKomoOid = KomoOids.lisapistekoulutus.kansanopisto
+
 }
 
 class DefaultConfig extends Config {
