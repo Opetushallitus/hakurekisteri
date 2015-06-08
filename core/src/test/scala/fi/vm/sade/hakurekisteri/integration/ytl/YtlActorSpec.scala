@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.integration.DummyActor
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
-import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.h2.tools.RunScript
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -37,24 +37,24 @@ class YtlActorSpec extends ScalatraFunSuite {
   val hakemusActor = system.actorOf(Props(new DummyActor()))
   val actor = system.actorOf(Props(new YtlActor(henkiloActor, suoritusActor, arvosanaActor, hakemusActor, Some(YTLConfig("","","","","",List(),"")))), "ytl")
 
-  private def waitForSuoritus: Future[Suoritus with Identified[UUID]] = {
+  private def waitForSuoritus(henkilo: String): Future[Suoritus with Identified[UUID]] = {
     Future {
-      val suoritusQ = SuoritusQuery(Some("123456-789"))
+      val suoritusQ = SuoritusQuery(henkilo = Some(henkilo))
       var results: Seq[Suoritus with Identified[UUID]] = List()
       while(results.isEmpty) {
         Thread.sleep(100)
         results = Await.result((suoritusActor ? suoritusQ).mapTo[Seq[Suoritus with Identified[UUID]]], 15.seconds)
       }
-      results(0)
+      results.head
     }
   }
 
-  private def waitForArvosanat(): Future[Seq[Arvosana with Identified[UUID]]] = {
+  private def waitForArvosanat(henkilo: String = "123456-789", len: Int = 27): Future[Seq[Arvosana with Identified[UUID]]] = {
     Future {
-      val suoritus = Await.result(waitForSuoritus, 15.seconds)
+      val suoritus = Await.result(waitForSuoritus(henkilo), 15.seconds)
       val arvosanatQ= ArvosanaQuery(Some(suoritus.id))
       var results: Seq[Arvosana with Identified[UUID]] = List()
-      while(results.length < 27) {
+      while(results.length < len) {
         Thread.sleep(100)
         results = Await.result((arvosanaActor ? arvosanatQ).mapTo[Seq[Arvosana with Identified[UUID]]], 15.seconds)
       }
@@ -68,10 +68,26 @@ class YtlActorSpec extends ScalatraFunSuite {
     val arvosanat = Await.result(waitForArvosanat(), 15.seconds)
     arvosanat.length should equal (27)
     val arvosanaSA = arvosanat.filter(arvosana => {
-      arvosana.aine.equals("A") && arvosana.lahdeArvot.get("koetunnus").equals(Some("SA"))
+      arvosana.aine.equals("A") && arvosana.lahdeArvot.get("koetunnus").contains("SA")
     })
     arvosanaSA.length should equal (1)
-    arvosanaSA(0).lahdeArvot.get("aineyhdistelmarooli") should equal (Some("61"))
+    arvosanaSA.head.lahdeArvot.get("aineyhdistelmarooli") should equal (Some("61"))
+
+    Await.result(suoritusActor ? DeleteResource(arvosanaSA.head.suoritus, "test"), 15.seconds)
+  }
+
+  test("YtlActor should deduplicate kokeet properly") {
+    actor ! YtlResult(UUID.randomUUID(), getClass.getResource("/ytl-koe-test.xml").getFile)
+
+    val arvosanat = Await.result(waitForArvosanat(len = 17), 15.seconds)
+    arvosanat.length should be (17)
+
+    actor ! YtlResult(UUID.randomUUID(), getClass.getResource("/ytl-koe-test2.xml").getFile)
+
+    val arvosanat2 = Await.result(waitForArvosanat(len = 19), 15.seconds)
+    arvosanat2.length should be (19)
+
+    Await.result(suoritusActor ? DeleteResource(arvosanat.head.suoritus, "test"), 15.seconds)
   }
 
   override def stop(): Unit = {

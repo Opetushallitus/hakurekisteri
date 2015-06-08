@@ -715,7 +715,8 @@ case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String,
 
 
 class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: Seq[Koe], arvosanaRekisteri: ActorRef) extends Actor {
-  def isKorvaava(old: Arvosana) = (uusi: Arvosana) => uusi.aine == old.aine && uusi.myonnetty == old.myonnetty
+  def isKorvaava(old: Arvosana) = (uusi: Arvosana) =>
+    uusi.aine == old.aine && uusi.myonnetty == old.myonnetty && uusi.lisatieto == old.lisatieto && uusi.lahdeArvot == old.lahdeArvot
 
   override def receive: Actor.Receive = {
     case s: Seq[_] =>
