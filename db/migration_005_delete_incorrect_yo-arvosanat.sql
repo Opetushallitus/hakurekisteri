@@ -91,3 +91,23 @@ INSERT INTO suoritus (resource_id, komo, myontaja, tila, valmistuminen, henkilo_
 COMMIT TRANSACTION;
 
 SELECT 'hetulliset yo-suoritukset loppu' as t, current_timestamp;
+
+
+
+
+BEGIN TRANSACTION;
+
+SELECT 'orvot arvosanat alku' as t, current_timestamp;
+
+INSERT INTO arvosana (resource_id, suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, inserted, deleted, pisteet, myonnetty, source, jarjestys, lahde_arvot)
+  SELECT v.resource_id, v.suoritus, v.arvosana, v.asteikko, v.aine, v.lisatieto, v.valinnainen, floor(extract(epoch from now()) * 1000), true as deleted, v.pisteet, v.myonnetty, v.source, v.jarjestys, v.lahde_arvot
+  FROM v_arvosana v
+  WHERE suoritus IN (
+    SELECT DISTINCT suoritus FROM v_arvosana
+    EXCEPT
+    SELECT resource_id FROM v_suoritus
+  );
+
+COMMIT TRANSACTION;
+
+SELECT 'orvot arvosanat loppu' as t, current_timestamp;
