@@ -173,6 +173,12 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
     hakijat.size should be (1)
   }
 
+  test("should return postitoimipaikka") {
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.1"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
+
+    hakijat.head.postitoimipaikka should be ("Posti_00100")
+  }
+
 
 
   def testUser(user: String, organisaatioOid: String) = new User {
@@ -234,7 +240,8 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   class MockedKoodistoActor extends Actor {
     override def receive: Actor.Receive = {
       case q: GetRinnasteinenKoodiArvoQuery => sender ! "246"
-      case q: GetKoodi =>  sender ! Some(Koodi(q.koodiUri.split("_").last.split("#").head.toUpperCase, q.koodiUri, Koodisto(q.koodistoUri), Seq(KoodiMetadata(q.koodiUri, "FI"))))
+      case q: GetKoodi =>
+        sender ! Some(Koodi(q.koodiUri.split("_").last.split("#").head.toUpperCase, q.koodiUri, Koodisto(q.koodistoUri), Seq(KoodiMetadata(q.koodiUri.capitalize, "FI"))))
       case q: GetKoodistoKoodiArvot => q.koodistoUri match {
         case "oppiaineetyleissivistava" => sender ! KoodistoKoodiArvot(
           koodistoUri = "oppiaineetyleissivistava",
