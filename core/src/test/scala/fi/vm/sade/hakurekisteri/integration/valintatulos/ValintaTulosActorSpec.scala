@@ -40,7 +40,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
 
         valintaTulosActor ! UpdateValintatulos("1.2.246.562.29.90697286251")
 
-        Thread.sleep(300)
+        Thread.sleep(100)
 
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
@@ -77,7 +77,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
     )
   }
 
-  test("ValintaTulosActor should use cached result also after refetch") {
+  test("ValintaTulosActor should use cached result also during refetch") {
     withSystem(
       implicit system => {
         implicit val ec = system.dispatcher
@@ -86,12 +86,12 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
           config = Config.mockConfig,
           client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
           refetchTime = Some(500),
-          cacheTime = Some(600)
+          cacheTime = Some(1000)
         )))
 
         valintaTulosActor ! UpdateValintatulos("1.2.246.562.29.90697286251")
 
-        Thread.sleep(700)
+        Thread.sleep(550)
 
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
