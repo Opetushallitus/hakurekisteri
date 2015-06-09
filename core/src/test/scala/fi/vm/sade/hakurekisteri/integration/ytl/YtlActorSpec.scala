@@ -49,10 +49,10 @@ class YtlActorSpec extends ScalatraFunSuite {
     }
   }
 
-  private def waitForArvosanat(henkilo: String = "123456-789", len: Int = 27): Future[Seq[Arvosana with Identified[UUID]]] = {
+  private def waitForArvosanat(len: Int = 27): Future[Seq[Arvosana with Identified[UUID]]] = {
     Future {
-      val suoritus = Await.result(waitForSuoritus(henkilo), 15.seconds)
-      val arvosanatQ= ArvosanaQuery(Some(suoritus.id))
+      val suoritus = Await.result(waitForSuoritus("1.2.246.562.24.71944845619"), 15.seconds)
+      val arvosanatQ = ArvosanaQuery(Some(suoritus.id))
       var results: Seq[Arvosana with Identified[UUID]] = List()
       while(results.length < len) {
         Thread.sleep(100)

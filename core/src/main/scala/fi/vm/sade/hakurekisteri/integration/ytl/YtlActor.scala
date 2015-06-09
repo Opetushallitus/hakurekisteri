@@ -313,8 +313,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
   def resolveOidFromHenkiloPalvelu(hetu: String): Future[String] =
   {
     implicit val timeout: Timeout = Timeout(60, TimeUnit.SECONDS)
-    (henkiloActor ? HetuQuery(hetu)).mapTo[Henkilo].map(_.hetu).flatMap(
-      _.map(Future.successful).getOrElse(Future.failed(new NoSuchElementException("can't find oid for hetu in henkilopalvelu"))))
+    (henkiloActor ? HetuQuery(hetu)).mapTo[Henkilo].map(_.oidHenkilo).flatMap(Future.successful)
   }
 }
 
