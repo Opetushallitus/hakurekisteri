@@ -57,7 +57,7 @@ class YtlIntegrationSpec extends FlatSpec with Matchers with CleanSharedJetty {
         val check = get("/rest/v1/oppijat/123456-789") { response }
         if (check.status == 200) {
           val json = JsonMethods.parse(check.body)
-          if((json \\ "arvosanat").children.size > 0) {
+          if((json \\ "arvosanat").children.nonEmpty) {
             result = (json \\ "suoritukset").extractOpt[Seq[Todistus]]
           }
         }
@@ -71,7 +71,7 @@ class YtlIntegrationSpec extends FlatSpec with Matchers with CleanSharedJetty {
       response.status should be(202)
     }
 
-    val todistukset = Await.result(waitForArvosanat(), 15.seconds)
+    val todistukset = Await.result(waitForArvosanat(), 60.seconds)
     todistukset.size should equal(1)
     todistukset.head.suoritus should equal(expectedSuoritus)
     todistukset.head.arvosanat.size should equal(27)
