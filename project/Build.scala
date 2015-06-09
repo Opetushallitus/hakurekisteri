@@ -145,6 +145,7 @@ object HakurekisteriBuild extends Build {
       resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
       resolvers             += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
       artifactoryPublish,
+      parallelExecution := false,
       libraryDependencies   ++= AkkaStack ++ dependencies
         ++ testDependencies.map((m) => m % "test,it"),
       fullRunTask(createDevDb, Test, "util.CreateDevDb")
@@ -194,6 +195,7 @@ object HakurekisteriBuild extends Build {
         resolvers += "clojars.org" at "http://clojars.org/repo",
         credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
         artifactoryPublish,
+        parallelExecution := false,
         buildversionTask,
         libraryDependencies ++=  ScalatraStack.map(_ % ScalatraVersion)
           ++ SecurityStack ++ webDeps
