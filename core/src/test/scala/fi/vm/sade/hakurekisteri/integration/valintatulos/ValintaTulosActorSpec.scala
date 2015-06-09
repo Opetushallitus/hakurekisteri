@@ -132,7 +132,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
 
 object ValintaTulosResults {
   def haku(implicit ec: ExecutionContext) =  {
-    Await.result(Future { Thread.sleep(200) }, Duration(1, TimeUnit.SECONDS))
+    Await.result(Future { Thread.sleep(20) }, Duration(1, TimeUnit.SECONDS))
     scala.io.Source.fromURL(getClass.getResource("/mock-data/valintatulos/valintatulos-haku.json")).mkString
   }
   val hakemus = scala.io.Source.fromURL(getClass.getResource("/mock-data/valintatulos/valintatulos-hakemus.json")).mkString
