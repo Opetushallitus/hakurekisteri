@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.organisaatio
 
 import java.net.URLEncoder
+import java.util.concurrent.ExecutionException
 
 import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorLogging, ActorRef}
@@ -83,9 +84,16 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
     }
   }
 
+  private def notFound(t: Throwable) = t match {
+    case PreconditionFailedException(_, 204) => true
+    case _ => false
+  }
+
   private def findDirect(tunniste: String): Future[Option[Organisaatio]] = {
     val org = organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(tunniste, "UTF-8")}", 200, maxRetries).map(Option(_)).recoverWith {
-      case p: PreconditionFailedException if p.responseCode == 204 => log.warning(s"organisaatio not found with tunniste $tunniste"); Future.successful(None)
+      case p: ExecutionException if p.getCause != null && notFound(p.getCause) =>
+        log.warning(s"organisaatio not found with tunniste $tunniste")
+        Future.successful(None)
     }
     org
   }

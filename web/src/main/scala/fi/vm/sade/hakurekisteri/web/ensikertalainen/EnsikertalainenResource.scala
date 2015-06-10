@@ -1,5 +1,7 @@
 package fi.vm.sade.hakurekisteri.web.ensikertalainen
 
+import java.util.concurrent.ExecutionException
+
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
@@ -48,6 +50,7 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef)
   incident {
     case t: ParamMissingException => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: HetuNotFoundException => (id) => BadRequest(IncidentReport(id, "henkilo does not have hetu; add hetu and try again"))
+    case t: ExecutionException => (id) => InternalServerError(IncidentReport(id, "backend service failed"))
     case t: PreconditionFailedException => (id) => InternalServerError(IncidentReport(id, "backend service failed"))
   }
 
