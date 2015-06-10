@@ -24,7 +24,7 @@ class AkkaHakupalvelu(hakemusActor: ActorRef, hakuActor: ActorRef)(implicit val 
 
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     import akka.pattern._
-    implicit val timeout: Timeout = 60.seconds
+    implicit val timeout: Timeout = 120.seconds
 
     (for (
       hakemukset <- (hakemusActor ? HakemusQuery(q)).mapTo[Seq[FullHakemus]]
