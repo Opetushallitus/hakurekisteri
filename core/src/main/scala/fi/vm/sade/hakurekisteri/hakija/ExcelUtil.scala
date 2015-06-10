@@ -6,8 +6,8 @@ import fi.vm.sade.hakurekisteri.rest.support.{Cell, StringCell, Row, HakijatExce
 object ExcelUtil extends HakijatExcelWriter[XMLHakijat] {
   
   private val headers = Seq(
-    "Hetu", "Oppijanumero", "Sukunimi", "Etunimet", "Kutsumanimi", "Lahiosoite", "Postinumero", "Maa", "Kansalaisuus", 
-    "Matkapuhelin", "Muupuhelin", "Sahkoposti", "Kotikunta", "Sukupuoli", "Aidinkieli", "Koulutusmarkkinointilupa", 
+    "Hetu", "Oppijanumero", "Sukunimi", "Etunimet", "Kutsumanimi", "Lahiosoite", "Postinumero", "Postitoimipaikka", "Maa",
+    "Kansalaisuus", "Matkapuhelin", "Muupuhelin", "Sahkoposti", "Kotikunta", "Sukupuoli", "Aidinkieli", "Koulutusmarkkinointilupa",
     "Vuosi", "Kausi", "Hakemusnumero", "Lahtokoulu", "Lahtokoulunnimi", "Luokka", "Luokkataso", "Pohjakoulutus", 
     "Todistusvuosi", "Julkaisulupa", "Yhteisetaineet", "Lukiontasapisteet", "Yleinenkoulumenestys", "Lisapistekoulutus", 
     "Painotettavataineet", "Hakujno", "Oppilaitos", "Opetuspiste", "Opetuspisteennimi", "Koulutus", 
@@ -26,6 +26,7 @@ object ExcelUtil extends HakijatExcelWriter[XMLHakijat] {
       h.kutsumanimi.getOrElse(""),
       h.lahiosoite,
       h.postinumero,
+      h.postitoimipaikka,
       h.maa,
       h.kansalaisuus,
       h.matkapuhelin.getOrElse(""),

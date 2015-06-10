@@ -5,6 +5,8 @@ import fi.vm.sade.hakurekisteri.hakija._
 import java.io.{ByteArrayInputStream,  ByteArrayOutputStream}
 import org.apache.poi.ss.usermodel.{Workbook, WorkbookFactory}
 
+import scala.collection.immutable.IndexedSeq
+
 class ExcelUtilSpec extends ScalatraFunSuite {
 
   test("write as excel should return non zero length result") {
@@ -66,11 +68,15 @@ class ExcelUtilSpec extends ScalatraFunSuite {
 
     val wb: Workbook = WorkbookFactory.create(new ByteArrayInputStream(out.toByteArray))
     import scala.collection.JavaConversions._
-    val result = for (
+    val result: IndexedSeq[((Int, Int), String)] = for (
       index <- 0 until wb.getNumberOfSheets;
       row <- wb.getSheetAt(index).toList;
       cell <- row.cellIterator().toList
     ) yield (row.getRowNum, cell.getColumnIndex) -> cell.getStringCellValue
-    result.toMap.get((1,1)) should be (Some("1.1"))
+
+    val resultMap = result.toMap
+
+    resultMap.get((1,1)) should be (Some("1.1"))
+    resultMap.get((1,7)) should be (Some("NotHelsinki"))
   }
 }
