@@ -127,7 +127,7 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
 
         Thread.sleep(1500)
 
-        verify(endPoint, times(2)).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))
+        verify(endPoint, atLeastOnce()).request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))
       }
     )
   }
