@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.koodisto
 
 import java.net.URLEncoder
+import java.util.concurrent.ExecutionException
 
 import akka.actor.{ActorLogging, Actor}
 import akka.pattern.pipe
@@ -51,11 +52,16 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config) extends Ac
     }
   }
 
+  def notFound(t: Throwable): Boolean = t match {
+    case PreconditionFailedException(_, 500) => true
+    case _ => false
+  }
+
   def getKoodi(koodistoUri: String, koodiUri: String): Future[Option[Koodi]] = {
     if (koodiCache.contains(koodiUri)) koodiCache.get(koodiUri)
     else {
       val koodi = restClient.readObject[Koodi](s"/rest/json/${URLEncoder.encode(koodistoUri, "UTF-8")}/koodi/${URLEncoder.encode(koodiUri, "UTF-8")}", 200, maxRetries).map(Some(_)).recoverWith {
-        case t: PreconditionFailedException if t.responseCode == 500 =>
+        case t: ExecutionException if t.getCause != null && notFound(t.getCause) =>
           log.warning(s"koodi not found with koodiUri $koodiUri: $t")
           Future.successful(None)
       }
