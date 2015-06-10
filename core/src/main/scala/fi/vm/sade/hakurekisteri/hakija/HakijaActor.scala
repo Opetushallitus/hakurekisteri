@@ -238,7 +238,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
   def getPostitoimipaikka(koodiArvo: String): Future[String] = {
-    val postitoimipaikkaFuture = (koodistoActor ? GetKoodi("posti", koodiArvo)).mapTo[Option[Koodi]]
+    val postitoimipaikkaFuture = (koodistoActor ? GetKoodi("posti", s"posti_$koodiArvo")).mapTo[Option[Koodi]]
     postitoimipaikkaFuture.onFailure {
       case t: Throwable => log.error(t, s"failed to fetch postoffice $koodiArvo")
     }
