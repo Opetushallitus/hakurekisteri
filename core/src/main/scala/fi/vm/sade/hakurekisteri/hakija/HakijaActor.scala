@@ -237,18 +237,20 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
       maaFuture
   }
 
-  def getPostitoimipaikka(koodiArvo: String): Future[String] = {
-    val postitoimipaikkaFuture = (koodistoActor ? GetKoodi("posti", s"posti_$koodiArvo")).mapTo[Option[Koodi]]
-    postitoimipaikkaFuture.onFailure {
-      case t: Throwable => log.error(t, s"failed to fetch postoffice $koodiArvo")
-    }
-    postitoimipaikkaFuture.map(koodi => {
-      koodi
-        .map(_.metadata.find(_.kieli.toLowerCase == "fi")
-          .map(_.nimi)
-          .getOrElse(""))
-        .getOrElse("")
-    })
+  def getPostitoimipaikka(maa: String, postinumero: String): Future[String] = maa match {
+    case "246" =>
+      val postitoimipaikkaFuture = (koodistoActor ? GetKoodi("posti", s"posti_$postinumero")).mapTo[Option[Koodi]]
+      postitoimipaikkaFuture.onFailure {
+        case t: Throwable => log.error(t, s"failed to fetch postoffice for code $postinumero")
+      }
+      postitoimipaikkaFuture.map(koodi => {
+        koodi
+          .map(_.metadata.find(_.kieli.toLowerCase == "fi")
+            .map(_.nimi)
+            .getOrElse(""))
+          .getOrElse("")
+      })
+    case arvo => Future.successful("")
   }
 
   def hakija2XMLHakija(hakija: Hakija): Future[XMLHakija] = {
@@ -321,7 +323,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   } yield for {
       kansalaisuus <- getMaakoodi(hakija.henkilo.kansalaisuus)
       maa <- getMaakoodi(hakija.henkilo.maa)
-      postitoimipaikka <- getPostitoimipaikka(hakija.henkilo.postinumero)
+      postitoimipaikka <- getPostitoimipaikka(maa, hakija.henkilo.postinumero)
     } yield {
       val h = hakija.henkilo
       Hakija(
