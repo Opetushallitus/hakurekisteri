@@ -90,8 +90,8 @@ object AkkaHakupalvelu {
     Hakija(
       Henkilo(
         lahiosoite = getHenkiloTietoOrElse(_.lahiosoite, getHenkiloTietoOrBlank(_.osoiteUlkomaa)),
-        postinumero = getHenkiloTietoOrElse(_.Postinumero, getHenkiloTietoOrBlank(_.postinumeroUlkomaa)),
-        postitoimipaikka = getHenkiloTietoOrBlank(_.Postitoimipaikka),
+        postinumero = getHenkiloTietoOrElse(_.Postinumero, "00000"),
+        postitoimipaikka = getHenkiloTietoOrElse(_.Postitoimipaikka, getHenkiloTietoOrBlank(_.kaupunkiUlkomaa)),
         maa = getHenkiloTietoOrElse(_.asuinmaa, "FIN"),
         matkapuhelin = getHenkiloTietoOrBlank(_.matkapuhelinnumero1),
         puhelin = getHenkiloTietoOrBlank(_.matkapuhelinnumero2),

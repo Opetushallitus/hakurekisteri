@@ -237,7 +237,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
       maaFuture
   }
 
-  def getPostitoimipaikka(maa: String, postinumero: String): Future[String] = maa match {
+  def getPostitoimipaikka(maa: String, postitoimipaikka: String, postinumero: String): Future[String] = maa match {
     case "246" =>
       val postitoimipaikkaFuture = (koodistoActor ? GetKoodi("posti", s"posti_$postinumero")).mapTo[Option[Koodi]]
       postitoimipaikkaFuture.onFailure {
@@ -250,7 +250,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
             .getOrElse(""))
           .getOrElse("")
       })
-    case arvo => Future.successful("")
+    case arvo => Future.successful(postitoimipaikka)
   }
 
   def hakija2XMLHakija(hakija: Hakija): Future[XMLHakija] = {
@@ -323,7 +323,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   } yield for {
       kansalaisuus <- getMaakoodi(hakija.henkilo.kansalaisuus)
       maa <- getMaakoodi(hakija.henkilo.maa)
-      postitoimipaikka <- getPostitoimipaikka(maa, hakija.henkilo.postinumero)
+      postitoimipaikka <- getPostitoimipaikka(maa, hakija.henkilo.postitoimipaikka, hakija.henkilo.postinumero)
     } yield {
       val h = hakija.henkilo
       Hakija(

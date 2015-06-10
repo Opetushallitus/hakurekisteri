@@ -30,7 +30,14 @@ class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   test("JSON contains postoffice") {
     hakupalvelu has (FullHakemus1)
     get("/?hakuehto=Kaikki&tyyppi=Json") {
-      body should include ("postitoimipaikka")
+      body should include ("\"postitoimipaikka\":\"Posti_00100\"")
+    }
+  }
+
+  test("JSON contains foreign postoffice") {
+    hakupalvelu has (FullHakemus3)
+    get("/?hakuehto=Kaikki&tyyppi=Json") {
+      body should include ("\"postitoimipaikka\":\"Parc la Vuori\"")
     }
   }
 
