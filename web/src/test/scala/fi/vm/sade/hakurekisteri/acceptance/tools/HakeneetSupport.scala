@@ -6,7 +6,7 @@ import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{Kieliversiot, Haku}
-import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
+import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import org.joda.time.DateTime
 import org.scalatra.swagger.Swagger
@@ -20,10 +20,8 @@ import scala.compat.Platform
 import scala.concurrent.{Future, ExecutionContext}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.hakemus.ListHakemus
-import fi.vm.sade.hakurekisteri.integration.koodisto.Koodisto
 import fi.vm.sade.hakurekisteri.hakija.Hakija
 import fi.vm.sade.hakurekisteri.rest.support.User
-import fi.vm.sade.hakurekisteri.integration.koodisto.Koodi
 import scala.language.implicitConversions
 import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 
@@ -140,6 +138,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             Sukunimi = Some("Mäkinen"),
             Henkilotunnus = Some("200394-9839"),
             Postinumero = Some("00100"),
+            Postitoimipaikka = Some("Helsinki"),
             osoiteUlkomaa = None,
             postinumeroUlkomaa = None,
             kaupunkiUlkomaa = None,
@@ -319,9 +318,15 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
 
   val organisaatioActor = system.actorOf(Props(new MockedOrganisaatioActor()))
 
-  val koodistoClient = mock[VirkailijaRestClient]
-  koodistoClient.readObject[Seq[Koodi]]("", 200, 2) returns Future.successful(Seq(Koodi("246", "", Koodisto(""), Seq())))
-  val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)))
+  class MockedKoodistoActor extends Actor {
+    override def receive: Actor.Receive = {
+      case q: GetRinnasteinenKoodiArvoQuery => sender ! "246"
+      case q: GetKoodi =>
+        sender ! Some(Koodi(q.koodiUri.split("_").last.split("#").head.toUpperCase, q.koodiUri, Koodisto(q.koodistoUri), Seq(KoodiMetadata(q.koodiUri.capitalize, "FI"))))
+    }
+  }
+
+  val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
 
   val valintatulokset = Future.successful(
     Seq(
@@ -380,8 +385,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object testHakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
-    val orgAct = system.actorOf(Props(new MockedOrganisaatioActor()))
-    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, orgAct, koodisto, sijoittelu)))
+    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, organisaatioActor, koodistoActor, sijoittelu)))
 
     def get(q: HakijaQuery) = {
       hakijaActor ? q

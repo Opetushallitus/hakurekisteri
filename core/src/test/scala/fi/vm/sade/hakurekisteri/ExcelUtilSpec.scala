@@ -16,6 +16,7 @@ class ExcelUtilSpec extends ScalatraFunSuite {
       kutsumanimi = None,
       lahiosoite = "K",
       postinumero = "00000",
+      postitoimipaikka = "NotHelsinki",
       maa = "246",
       kansalaisuus = "246",
       matkapuhelin = None,
