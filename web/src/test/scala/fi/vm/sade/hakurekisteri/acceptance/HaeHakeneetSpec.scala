@@ -11,11 +11,9 @@ import scala.language.postfixOps
 
 class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with HakeneetSupport {
 
-
   info("Koulun virkailijana")
   info("haluan tiedon kouluuni hakeneista oppilaista")
   info("että voin alkaa tekemään valmisteluja tulevaa varten")
-
 
   feature("Muodosta hakeneet ja valitut siirtotiedosto") {
 

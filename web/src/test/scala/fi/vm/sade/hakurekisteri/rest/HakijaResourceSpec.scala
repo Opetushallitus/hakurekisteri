@@ -1,8 +1,9 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import akka.actor.Props
+import akka.actor.{Actor, Props}
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.scalatra.swagger.Swagger
@@ -11,8 +12,7 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
-  val orgs = system.actorOf(Props(new MockedOrganisaatioActor()))
-  val hakijat = system.actorOf(Props(new HakijaActor(hakupalvelu, orgs, koodisto, sijoittelu)))
+  val hakijat = system.actorOf(Props(new HakijaActor(hakupalvelu, organisaatioActor, koodistoActor, sijoittelu)))
   addServlet(new HakijaResource(hakijat), "/")
 
   test("result is XML") {
@@ -24,6 +24,13 @@ class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
   test("XML contains root element") {
     get("/?hakuehto=Kaikki&tyyppi=Xml") {
       body should include ("<Hakijat")
+    }
+  }
+
+  test("JSON contains postoffice") {
+    hakupalvelu has (FullHakemus1)
+    get("/?hakuehto=Kaikki&tyyppi=Json") {
+      body should include ("postitoimipaikka")
     }
   }
 
@@ -41,4 +48,5 @@ class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
     system.awaitTermination(15.seconds)
     super.stop()
   }
+
 }

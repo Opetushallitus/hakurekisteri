@@ -21,7 +21,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosQuery
 import scala.Some
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.suoritus.Komoto
-import fi.vm.sade.hakurekisteri.integration.koodisto.GetRinnasteinenKoodiArvoQuery
+import fi.vm.sade.hakurekisteri.integration.koodisto.{KoodiMetadata, Koodi, GetKoodi, GetRinnasteinenKoodiArvoQuery}
 import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
 import java.text.SimpleDateFormat
 import fi.vm.sade.hakurekisteri.tools.RicherString
@@ -237,6 +237,19 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
       maaFuture
   }
 
+  def getPostitoimipaikka(koodiArvo: String): Future[String] = {
+    val postitoimipaikkaFuture = (koodistoActor ? GetKoodi("posti", koodiArvo)).mapTo[Option[Koodi]]
+    postitoimipaikkaFuture.onFailure {
+      case t: Throwable => log.error(t, s"failed to fetch postoffice $koodiArvo")
+    }
+    postitoimipaikkaFuture.map(koodi => {
+      koodi
+        .map(_.metadata.find(_.kieli.toLowerCase == "fi")
+          .map(_.nimi)
+          .getOrElse(""))
+        .getOrElse("")
+    })
+  }
 
   def hakija2XMLHakija(hakija: Hakija): Future[XMLHakija] = {
     getXmlHakemus(hakija).map(data2XmlHakija(hakija))
@@ -308,6 +321,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   } yield for {
       kansalaisuus <- getMaakoodi(hakija.henkilo.kansalaisuus)
       maa <- getMaakoodi(hakija.henkilo.maa)
+      postitoimipaikka <- getPostitoimipaikka(hakija.henkilo.postinumero)
     } yield {
       val h = hakija.henkilo
       Hakija(
@@ -322,6 +336,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
           lahiosoite = h.lahiosoite,
           postinumero = h.postinumero,
           maa = maa,
+          postitoimipaikka = postitoimipaikka,
           matkapuhelin = h.matkapuhelin,
           puhelin = h.puhelin,
           sahkoposti = h.sahkoposti,
@@ -479,8 +494,9 @@ object XMLHakemus {
 }
 
 case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
-                     postinumero: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String], muupuhelin: Option[String], sahkoposti: Option[String],
-                     kotikunta: Option[String], sukupuoli: String, aidinkieli: String, koulutusmarkkinointilupa: Boolean, hakemus: XMLHakemus) {
+                     postinumero: String, postitoimipaikka: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String],
+                     muupuhelin: Option[String], sahkoposti: Option[String], kotikunta: Option[String], sukupuoli: String,
+                     aidinkieli: String, koulutusmarkkinointilupa: Boolean, hakemus: XMLHakemus) {
   def toXml: Node = {
     <Hakija>
       <Hetu>{hetu}</Hetu>
@@ -490,6 +506,7 @@ case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etuni
       {if (kutsumanimi.isDefined) <Kutsumanimi>{kutsumanimi.get}</Kutsumanimi>}
       <Lahiosoite>{lahiosoite}</Lahiosoite>
       <Postinumero>{postinumero}</Postinumero>
+      <Postitoimipaikka>{postitoimipaikka}</Postitoimipaikka>
       <Maa>{maa}</Maa>
       <Kansalaisuus>{kansalaisuus}</Kansalaisuus>
       {if (matkapuhelin.isDefined) <Matkapuhelin>{matkapuhelin.get}</Matkapuhelin>}
@@ -529,6 +546,7 @@ object XMLHakija {
       kutsumanimi = hakija.henkilo.kutsumanimi.blankOption,
       lahiosoite = hakija.henkilo.lahiosoite,
       postinumero = hakija.henkilo.postinumero,
+      postitoimipaikka = hakija.henkilo.postitoimipaikka,
       maa = hakija.henkilo.maa,
       kansalaisuus = hakija.henkilo.kansalaisuus,
       matkapuhelin = hakija.henkilo.matkapuhelin.blankOption,
