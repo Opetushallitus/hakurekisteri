@@ -54,6 +54,7 @@ trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel wi
     ModelField("kutsumanimi", null, DataType.String, required = false),
     ModelField("lahiosoite", null, DataType.String),
     ModelField("postinumero", null, DataType.String),
+    ModelField("postitoimipaikka", null, DataType.String),
     ModelField("maa", null, DataType.String),
     ModelField("kansalaisuus", null, DataType.String),
     ModelField("matkapuhelin", null, DataType.String, required = false),
