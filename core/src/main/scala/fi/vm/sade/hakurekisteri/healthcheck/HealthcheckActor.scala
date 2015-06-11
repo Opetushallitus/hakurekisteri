@@ -1,26 +1,20 @@
 package fi.vm.sade.hakurekisteri.healthcheck
 
-import java.util.concurrent.TimeUnit
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
-import akka.util.Timeout
 import akka.actor._
 import akka.pattern.{AskTimeoutException, ask, pipe}
-import fi.vm.sade.hakurekisteri.{Oids, Config}
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
-import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchQuery}
+import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
 import fi.vm.sade.hakurekisteri.hakija.Hakemus
 import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaHealth, VirtaStatus}
 import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
-import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
-import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.{GetCount, Identified}
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery}
+import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.DateTime
 
 import scala.compat.Platform

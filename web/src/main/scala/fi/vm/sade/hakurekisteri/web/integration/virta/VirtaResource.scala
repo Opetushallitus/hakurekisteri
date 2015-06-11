@@ -13,7 +13,7 @@ import scala.concurrent.{Future, ExecutionContext}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import fi.vm.sade.hakurekisteri.integration.virta._
-import fi.vm.sade.hakurekisteri.integration.virta.RescheduleProcessing
+import fi.vm.sade.hakurekisteri.integration.virta.RescheduleVirtaProcessing
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaStatus
 
 class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SecuritySupport {
@@ -34,14 +34,14 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem, val sec
     case e: Throwable => VirtaStatus(queueLength = 0, status = Status.FAILURE)
   }
 
-  def hasAccess: Boolean = currentUser.exists(_.orgsFor("WRITE", "Virta").contains(Oids.ophOrganisaatioOid))
+  def hasAccess: Boolean = currentUser.exists(_.isAdmin)
 
   get("/process") {
     if (!hasAccess) throw UserNotAuthorized("not authorized")
     else new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
 
-      virtaQueue ! StartVirta
+      virtaQueue ! StartVirtaProcessing
 
       override val is = virtaStatus
     }
@@ -61,13 +61,10 @@ class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem, val sec
   get("/reschedule") {
     if (!hasAccess) throw UserNotAuthorized("not authorized")
     else {
-      val time = params.get("time")
-      if (time.isDefined && !time.get.matches(Virta.timeFormat)) throw new IllegalArgumentException(s"time format is not HH:mm")
-
       new AsyncResult() {
         override implicit def timeout: Duration = 120.seconds
 
-        virtaQueue ! RescheduleProcessing(time.getOrElse("04:00"))
+        virtaQueue ! RescheduleVirtaProcessing
 
         override val is = virtaStatus
       }

@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import fi.vm.sade.hakurekisteri.{Oids, Config}
-import fi.vm.sade.hakurekisteri.integration.virta.Virta
+import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 
 sealed trait Role
@@ -9,17 +8,12 @@ sealed trait Role
 case class DefinedRole(action: String, resource: String, organization: String) extends Role
 
 object ReadRole {
-
   def apply(resource: String, organization: String) = DefinedRole("READ", resource, organization)
 }
-
-
 
 object UnknownRole extends Role
 
 object Roles {
-
-
   val subjects: PartialFunction[String, PartialFunction[String, (String) => Set[String]]] =
     Map(
       "SUORITUSREKISTERI" -> {
@@ -27,12 +21,10 @@ object Roles {
       },
       "KKHAKUVIRKAILIJA" -> {
         case "Arvosana" =>  (_) => Set(YTLXml.YTL)
-        case "Suoritus" => (_) => Set(YTLXml.YTL, Virta.CSC)
-        case "Opiskeluoikeus" => (_) => Set(Virta.CSC)
+        case "Suoritus" => (_) => Set(YTLXml.YTL, Oids.cscOrganisaatioOid)
+        case "Opiskeluoikeus" => (_) => Set(Oids.cscOrganisaatioOid)
       }
-
     )
-
 
   def findSubjects(service: String, org: String)(resource: String) = for (
     serviceResolver <- subjects.lift(service);
@@ -49,7 +41,6 @@ object Roles {
     ) yield DefinedRole(action, resource,  subject)
   }
 
-
   def apply(authority:String) =  authority match {
     case role(service, right, org) =>
       def roleFinder(roles: String*):Set[DefinedRole] = findRoles(findSubjects(service, org))(roles.toSet)
@@ -63,12 +54,7 @@ object Roles {
     case _ => Set(UnknownRole)
   }
 
-
-
-
   val role = "ROLE_APP_([^_]*)_(.*)_(\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+\\.\\d+)".r
-
-
 }
 
 trait User {
@@ -81,32 +67,23 @@ trait User {
 
   def canRead(resource: String) = !orgsFor("READ", resource).isEmpty
 
-  def isAdmin:Boolean = orgsFor("DELETE", "Arvosana").contains(Oids.ophOrganisaatioOid)
-
-
+  def isAdmin: Boolean = orgsFor("DELETE", "Arvosana").contains(Oids.ophOrganisaatioOid)
 }
 
 trait Roles {
-
   val roles: Set[DefinedRole]
-
 }
 
 trait RoleUser extends User with Roles {
-
   override def orgsFor(action: String, resource: String): Set[String] = roles.collect{
     case DefinedRole(`action`,`resource`, org) => org
   }
-
 }
 
 case class OPHUser(username: String, authorities: Set[String]) extends RoleUser {
-
-
   override val roles: Set[DefinedRole] = authorities.map(Roles(_).toList).flatten.collect{
     case d: DefinedRole => d
   }
-
 }
 
 case class BasicUser(username: String, roles: Set[DefinedRole]) extends RoleUser

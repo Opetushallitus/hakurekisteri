@@ -34,7 +34,7 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
     "receiving query" should {
       val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor, hakuActor)))
       val q = VirtaQuery("foo", Some("bar"))
-      virtaQueue ! VirtaQueuedQuery(q)
+      virtaQueue ! q
 
       "put it in queue" in {
         virtaQueue.underlyingActor.virtaQueue should contain(q)
@@ -43,9 +43,9 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
 
     "consuming all" should {
       val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor, hakuActor)))
-      virtaQueue ! VirtaQueuedQuery(VirtaQuery("foo", Some("bar")))
-      virtaQueue ! VirtaQueuedQuery(VirtaQuery("foo", Some("bar2")))
-      virtaQueue ! StartVirta
+      virtaQueue ! VirtaQuery("foo", Some("bar"))
+      virtaQueue ! VirtaQuery("foo", Some("bar2"))
+      virtaQueue ! StartVirtaProcessing
 
       "start consuming queries in the queue" in {
         import org.scalatest.time.SpanSugar._
@@ -58,8 +58,8 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
       val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor, hakuActor)))
       val q1 = VirtaQuery("foo", Some("bar"))
       val q2 = VirtaQuery("foo", Some("bar"))
-      virtaQueue ! VirtaQueuedQuery(q1)
-      virtaQueue ! VirtaQueuedQuery(q2)
+      virtaQueue ! q1
+      virtaQueue ! q2
 
       "put it in the queue only once" in {
         virtaQueue.underlyingActor.virtaQueue.size should be(1)
@@ -71,7 +71,7 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
       implicit val timeout: Timeout = 30.seconds
 
       val virtaQueue: TestActorRef[VirtaQueue] = TestActorRef[VirtaQueue](Props(new VirtaQueue(virtaActor, hakemusActor, hakuActor)))
-      (0 until 1000000).foreach(i => virtaQueue ! VirtaQueuedQuery(VirtaQuery(s"foo$i", None)))
+      (0 until 1000000).foreach(i => virtaQueue ! VirtaQuery(s"foo$i", None))
 
       val healthcheck = Await.result((virtaQueue ? VirtaHealth).mapTo[VirtaStatus], 30.seconds)
       "be fast enough to respond to healthcheck in 30 seconds" in {

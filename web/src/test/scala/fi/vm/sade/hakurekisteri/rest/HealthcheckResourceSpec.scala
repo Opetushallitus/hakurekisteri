@@ -82,7 +82,7 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
 
   val virtaQueue = system.actorOf(Props(new Actor {
     override def receive: Receive = {
-      case VirtaHealth => sender ! VirtaStatus(Some(new DateTime()), Some(new DateTime().plusDays(1)), 1000, Status.OK)
+      case VirtaHealth => sender ! VirtaStatus(Some(new DateTime()), Some(false), 1000, Status.OK)
     }
   }))
 
