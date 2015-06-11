@@ -3,17 +3,15 @@ package fi.vm.sade.hakurekisteri.integration.virta
 import java.util.UUID
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
-import akka.pattern
-import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
-import fi.vm.sade.hakurekisteri.rest.support.Query
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
-import org.joda.time.LocalDate
-import org.scalatest.{Matchers, FlatSpec}
-
-import scala.concurrent.{ExecutionContext, Future}
-import fi.vm.sade.hakurekisteri.test.tools.{MockedResourceActor, FutureWaiting}
 import fi.vm.sade.hakurekisteri.SpecsLikeMockito
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, Organisaatio}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
+import org.joda.time.LocalDate
+import org.scalatest.{FlatSpec, Matchers}
+
+import scala.concurrent.Future
 
 
 class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito {
@@ -81,10 +79,18 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
 
 
   class MockedOrganisaatioActor extends Actor {
-    import akka.pattern.pipe
+    val hkiYliopisto = Organisaatio(
+      oid = "1.3.0",
+      nimi = Map("fi" -> "Helsingin yliopisto"),
+      toimipistekoodi = None,
+      oppilaitosKoodi = Some("01901"),
+      parentOid = None,
+      children = Seq()
+    )
+
     override def receive: Receive = {
-      case "01901" => Future.successful(Some(Organisaatio(oid = "1.3.0", nimi = Map("fi" -> "Helsingin yliopisto"), toimipistekoodi = None, oppilaitosKoodi = Some("01901"), parentOid = None, children = Seq()))) pipeTo sender
-      case default => Future.successful(None) pipeTo sender
+      case Oppilaitos(o) => sender ! OppilaitosResponse(o, hkiYliopisto)
+      case oid: String => sender ! None
     }
   }
 

@@ -3,26 +3,23 @@ package fi.vm.sade.hakurekisteri.integration.virta
 import java.util.concurrent.TimeUnit
 
 import akka.actor.Status.Failure
-import akka.actor.{Cancellable, ActorLogging, Actor, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.ask
-import fi.vm.sade.hakurekisteri.{Oids, Config}
+import fi.vm.sade.hakurekisteri.Oids
+import fi.vm.sade.hakurekisteri.healthcheck.Status
+import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
 import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
-import fi.vm.sade.hakurekisteri.integration.haku.{HakuNotFoundException, Haku, GetHaku}
-import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse}
+import fi.vm.sade.hakurekisteri.integration.virta.Virta.at
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
-import org.joda.time.{LocalTime, DateTime, LocalDateTime, LocalDate}
+import org.joda.time.{DateTime, LocalDate, LocalDateTime, LocalTime}
 
 import scala.collection.mutable
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import fi.vm.sade.hakurekisteri.healthcheck.Status
-import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
-
-import Virta.at
-
-import scala.util.Success
 
 
 case class VirtaQuery(oppijanumero: String, hetu: Option[String])
@@ -199,11 +196,7 @@ class VirtaActor(virtaClient: VirtaClient, organisaatioActor: ActorRef, suoritus
 
   def resolveOppilaitosOid(oppilaitosnumero: String): Future[String] = oppilaitosnumero match {
     case o if Seq("XX", "UK", "UM").contains(o) => Future.successful(Oids.tuntematonOrganisaatioOid)
-    case o =>
-      (organisaatioActor ? o)(1.hour).mapTo[Option[Organisaatio]] map {
-          case Some(org) => org.oid
-          case _ => log.error(s"oppilaitos not found with oppilaitosnumero $o"); throw OppilaitosNotFoundException(s"oppilaitos not found with oppilaitosnumero $o")
-      }
+    case o => (organisaatioActor ? Oppilaitos(o))(1.hour).mapTo[OppilaitosResponse].map(_.oppilaitos.oid)
   }
 }
 
