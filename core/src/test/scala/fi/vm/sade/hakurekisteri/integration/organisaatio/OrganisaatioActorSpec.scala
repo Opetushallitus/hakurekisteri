@@ -105,9 +105,9 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
         implicit val ec = system.dispatcher
         val (endPoint, organisaatioActor) = initOrganisaatioActor()
 
-        (1 to 100).foreach(i => organisaatioActor ! Oppilaitos("99999"))
+        organisaatioActor ! Oppilaitos("99999")
 
-        Thread.sleep(500)
+        Thread.sleep(100)
 
         waitFuture((organisaatioActor ? Oppilaitos("99999")).mapTo[OppilaitosResponse])(o => {
           o.oppilaitos.oppilaitosKoodi.get should be ("99999")
@@ -161,7 +161,7 @@ object OrganisaatioResults {
   }
   val pikkola = scala.io.Source.fromURL(getClass.getResource("/mock-data/organisaatio/organisaatio-pikkola.json")).mkString
   def ysiysiysiysiysi(implicit ec: ExecutionContext) = {
-    Await.result(Future { Thread.sleep(100) }, Duration(1, TimeUnit.SECONDS))
+    Await.result(Future { Thread.sleep(10) }, Duration(1, TimeUnit.SECONDS))
     scala.io.Source.fromURL(getClass.getResource("/mock-data/organisaatio/organisaatio-99999.json")).mkString
   }
 }
