@@ -53,17 +53,22 @@ class ValintaTulosActor(client: VirkailijaRestClient,
     case UpdateNext if !calling && updateRequestQueue.nonEmpty =>
       calling = true
       val (haku, waitingRequests) = nextUpdateRequest
-      callBackend(haku, None).onComplete {
-        case Success(result) =>
-          waitingRequests.foreach(_.trySuccess(result))
-          self ! CacheResponse(haku, result)
+      val result = callBackend(haku, None)
+      result.onComplete {
+        case Success(r) =>
+          waitingRequests.foreach(_.trySuccess(r))
           rescheduleHaku(haku)
 
         case Failure(t) =>
           waitingRequests.foreach(_.tryFailure(t))
-          self ! UpdateFailed(haku, t)
           rescheduleHaku(haku, retry)
       }
+      result
+        .map(CacheResponse(haku, _))
+        .recoverWith {
+        case t: Throwable =>
+          Future.successful(UpdateFailed(haku, t))
+      } pipeTo self
 
     case CacheResponse(haku, tulos) =>
       cache + (haku, Future.successful(tulos))
