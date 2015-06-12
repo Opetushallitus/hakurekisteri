@@ -40,7 +40,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
 
         valintaTulosActor ! UpdateValintatulos("1.2.246.562.29.90697286251")
 
-        Thread.sleep(500)
+        Thread.sleep(3000)
 
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
