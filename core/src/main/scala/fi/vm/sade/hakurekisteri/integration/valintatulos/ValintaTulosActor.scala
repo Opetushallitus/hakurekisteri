@@ -54,14 +54,10 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       calling = true
       val (haku, waitingRequests) = nextUpdateRequest
       val result = callBackend(haku, None)
+      waitingRequests.foreach(_.tryCompleteWith(result))
       result.onComplete {
-        case Success(r) =>
-          waitingRequests.foreach(_.trySuccess(r))
-          rescheduleHaku(haku)
-
-        case Failure(t) =>
-          waitingRequests.foreach(_.tryFailure(t))
-          rescheduleHaku(haku, retry)
+        case Success(r) => rescheduleHaku(haku)
+        case Failure(t) => rescheduleHaku(haku, retry)
       }
       result
         .map(CacheResponse(haku, _))
