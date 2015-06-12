@@ -4,7 +4,7 @@ import java.io.{File, FileOutputStream, IOException}
 import java.util.UUID
 import java.util.concurrent.{Executors, TimeUnit}
 
-import akka.actor.{ActorIdentity, Identify, _}
+import akka.actor._
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import com.jcraft.jsch.{ChannelSftp, SftpException}
@@ -14,7 +14,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HetuQuery}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.Aine
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fr.janalyse.ssh.{SSH, SSHFtp, SSHOptions, SSHPassword}
 import org.joda.time._
 
@@ -121,7 +121,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
 
     case k: Kokelas =>
       log.debug(s"sending ytl data for ${k.oid} yo: ${k.yo} lukio: ${k.lukio}")
-      suoritusRekisteri ! k.yo
+      context.actorOf(Props(new YoSuoritusUpdateActor(k.yo, suoritusRekisteri)))
       kokelaat = kokelaat + (k.oid -> k)
       k.lukio foreach (suoritusRekisteri ! _)
 
@@ -326,7 +326,7 @@ case class KokelasRequest(oid: String, hetu: String)
 case class YtlResult(batch: UUID, file: String)
 
 case class Kokelas(oid: String,
-                   yo: Suoritus,
+                   yo: VirallinenSuoritus,
                    lukio: Option[Suoritus],
                    yoTodistus: Seq[Koe],
                    osakokeet: Seq[Koe])
@@ -713,6 +713,40 @@ case class YoKoe(arvio: ArvioYo, koetunnus: String, aineyhdistelmarooli: String,
 }
 
 
+class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus, suoritusRekisteri: ActorRef) extends Actor {
+  private def ennenVuotta1990Valmistuneet(s: Seq[_]) = s.map {
+    case v: VirallinenSuoritus with Identified[_] if v.id.isInstanceOf[UUID] =>
+      v.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
+  }.filter(s => s.valmistuminen.isBefore(new LocalDate(1990, 1, 1)) && s.tila == "VALMIS" && s.vahvistettu)
+
+  override def receive: Actor.Receive = {
+    case s: Seq[_] =>
+      fetch.foreach(_.cancel())
+      if (s.isEmpty)
+        suoritusRekisteri ! yoSuoritus
+      else {
+        val suoritukset = ennenVuotta1990Valmistuneet(s)
+        if (suoritukset.nonEmpty) {
+          context.parent ! suoritukset.head
+          context.stop(self)
+        } else {
+          suoritusRekisteri ! yoSuoritus
+        }
+      }
+    case v: VirallinenSuoritus with Identified[_] if v.id.isInstanceOf[UUID] =>
+      context.parent ! v.asInstanceOf[VirallinenSuoritus with Identified[UUID]]
+      context.stop(self)
+  }
+
+  var fetch: Option[Cancellable] = None
+
+  override def preStart(): Unit = {
+    implicit val ec = context.dispatcher
+    fetch = Some(context.system.scheduler.schedule(1.millisecond, 130.seconds, suoritusRekisteri, SuoritusQuery(henkilo = Some(yoSuoritus.henkilo), komo = Some(Oids.yotutkintoKomoOid))))
+  }
+}
+
+
 class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: Seq[Koe], arvosanaRekisteri: ActorRef) extends Actor {
   def isKorvaava(old: Arvosana) = (uusi: Arvosana) =>
     uusi.aine == old.aine && uusi.myonnetty == old.myonnetty && uusi.lisatieto == old.lisatieto && uusi.lahdeArvot == old.lahdeArvot
@@ -737,7 +771,7 @@ class ArvosanaUpdateActor(suoritus: Suoritus with Identified[UUID], var kokeet: 
 
   override def preStart(): Unit = {
     implicit val ec = context.dispatcher
-    fetch = Some(context.system.scheduler.schedule(1.millisecond, 1.minute, arvosanaRekisteri, ArvosanaQuery(Some(suoritus.id))))
+    fetch = Some(context.system.scheduler.schedule(1.millisecond, 130.seconds, arvosanaRekisteri, ArvosanaQuery(Some(suoritus.id))))
   }
 }
 
