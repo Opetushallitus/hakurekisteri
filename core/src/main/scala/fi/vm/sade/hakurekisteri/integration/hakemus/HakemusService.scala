@@ -276,12 +276,16 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
         map(_.getOrElse(0))
   }
 
+  def waitABit = Future { Thread.sleep(5) }
+
   def handleNew(hakemukset: List[FullHakemus]) {
     for (
       hakemus: FullHakemus <- hakemukset
     ) {
-      self.!(hakemus)(ActorRef.noSender)
-      hakijaTrigger foreach (_ ! hakemus)
+      waitABit.foreach(u => {
+        self.!(hakemus)(ActorRef.noSender)
+        hakijaTrigger foreach (_ ! hakemus)
+      })
     }
   }
 
