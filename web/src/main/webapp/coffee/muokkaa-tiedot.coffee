@@ -165,9 +165,14 @@ app.factory "MuokkaaTiedot", [
                 getOrganisaatio $http, opiskeluoikeus.myontaja, (organisaatio) ->
                   opiskeluoikeus.oppilaitos = organisaatio.oppilaitosKoodi
                   opiskeluoikeus.organisaatio = organisaatio
+                  return
               if opiskeluoikeus.komo and opiskeluoikeus.komo.match(/^koulutus_\d*$/)
                 getKoulutusNimi $http, opiskeluoikeus.komo, (koulutusNimi) ->
                   opiskeluoikeus.koulutus = koulutusNimi
+                  return
+              return
+            return
+          return
 
       initDatepicker = ->
         $scope.showWeeks = true
