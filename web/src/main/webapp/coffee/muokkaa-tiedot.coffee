@@ -170,8 +170,6 @@ app.factory "MuokkaaTiedot", [
                 getKoulutusNimi $http, opiskeluoikeus.komo, (koulutusNimi) ->
                   opiskeluoikeus.koulutus = koulutusNimi
                   return
-              return
-            return
           return
 
       initDatepicker = ->
