@@ -138,7 +138,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
 
       VirtaTutkinto(
         suoritusPvm = Try(DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate((os \ "SuoritusPvm").head.text)).get,
-        koulutuskoodi = extractTextOption(os \ "Koulutuskoodi", avain, required = true),
+        koulutuskoodi = extractTextOption(os \ "Koulutuskoodi", avain), // not available in every tutkinto
         opintoala1995 = extractTextOption(os \ "Opintoala1995", avain), // Universities use this
         koulutusala2002 = extractTextOption(os \ "Koulutusala2002", avain), // AMK
         myontaja = extractTextOption(os \ "Myontaja" \ "Koodi", avain, required = true).get,
