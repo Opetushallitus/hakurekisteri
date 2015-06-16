@@ -160,7 +160,7 @@ app.factory "MuokkaaTiedot", [
         Opiskeluoikeudet.query { henkilo: henkiloOid }, (opiskeluoikeudet) ->
           $scope.henkilo.opiskeluoikeudet = opiskeluoikeudet
           if $scope.henkilo.opiskeluoikeudet
-            for opiskeluoikeus in $scope.henkilo.opiskeluoikeudet
+            $scope.henkilo.opiskeluoikeudet.forEach (opiskeluoikeus) ->
               if opiskeluoikeus.myontaja
                 getOrganisaatio $http, opiskeluoikeus.myontaja, (organisaatio) ->
                   opiskeluoikeus.oppilaitos = organisaatio.oppilaitosKoodi
@@ -170,6 +170,7 @@ app.factory "MuokkaaTiedot", [
                 getKoulutusNimi $http, opiskeluoikeus.komo, (koulutusNimi) ->
                   opiskeluoikeus.koulutus = koulutusNimi
                   return
+              return
           return
 
       initDatepicker = ->
