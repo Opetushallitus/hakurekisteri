@@ -87,17 +87,17 @@ trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] w
       hakuIndex.getOrElse(haku, Seq())
     }
 
-    case HakemusQuery(Some(haku), organisaatio, kohdekoodi, kohde) =>
-      val filtered = hakuIndex.getOrElse(haku, Seq())
-      executeQuery(filtered)(HakemusQuery(Some(haku), organisaatio, kohdekoodi, kohde))
+    case HakemusQuery(Some(haku), organisaatio, kohdekoodi, None) => Future {
+      hakuIndex.getOrElse(haku, Seq())
+    } flatMap(filtered => executeQuery(filtered)(HakemusQuery(None, organisaatio, kohdekoodi, None)))
 
     case HakemusQuery(None, None, None, Some(kohde)) => Future {
       hakukohdeIndex.getOrElse(kohde, Seq())
     }
 
-    case HakemusQuery(haku, organisaatio, kohdekoodi, Some(kohde)) =>
-      val filtered = hakukohdeIndex.getOrElse(kohde, Seq())
-      executeQuery(filtered)(HakemusQuery(haku, organisaatio, kohdekoodi, Some(kohde)))
+    case HakemusQuery(haku, organisaatio, kohdekoodi, Some(kohde)) => Future {
+      hakukohdeIndex.getOrElse(kohde, Seq())
+    } flatMap(filtered => executeQuery(filtered)(HakemusQuery(haku, organisaatio, kohdekoodi, None)))
 
     case HenkiloHakijaQuery(henkilo) => Future {
       hakijaIndex.getOrElse(henkilo, Seq())
