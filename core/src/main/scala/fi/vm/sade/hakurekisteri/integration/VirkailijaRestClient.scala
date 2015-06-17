@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration
 
+import java.io.InputStreamReader
 import java.net.ConnectException
 import java.util.UUID
 import java.util.concurrent._
@@ -186,7 +187,7 @@ abstract class JsonExtractor(val uri: String) extends HakurekisteriJsonSupport {
     val f = (resp: Response) => {
       import org.json4s.jackson.Serialization.read
       if (manifest[T] == manifest[String]) resp.getResponseBody.asInstanceOf[T]
-      else read[T](resp.getResponseBody)
+      else read[T](new InputStreamReader(resp.getResponseBodyAsStream))
     }
 
     (uri, handler(f))
