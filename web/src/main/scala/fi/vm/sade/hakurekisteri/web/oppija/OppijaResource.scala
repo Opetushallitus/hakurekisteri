@@ -87,7 +87,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
 
       private val oppijaFuture = for (
         hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
-        oppijat <- fetchOppijatFor(hakemukset.filter((fh) => fh.personOid.isDefined).slice(0, 1))
+        oppijat <- fetchOppijatFor(hakemukset.filter((fh) => fh.personOid.isDefined && fh.stateValid).take(1))
       ) yield {
         oppijat.headOption.fold(NotFound(body = ""))(Ok(_))
       }
