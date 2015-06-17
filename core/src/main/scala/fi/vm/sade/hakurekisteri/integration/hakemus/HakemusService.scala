@@ -275,17 +275,20 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
         map(_.getOrElse(0))
   }
 
-  def throttleABit = Future { if (initialLoadingDone) Thread.sleep(20) }
-
   def handleNew(hakemukset: List[FullHakemus]) {
-    for (
-      hakemus: FullHakemus <- hakemukset
-    ) {
-      throttleABit.foreach(u => {
+    if (initialLoadingDone)
+      hakemukset.zipWithIndex.foreach {
+        case (hakemus: FullHakemus, index: Int) =>
+          val delay = (index * 20).milliseconds
+          val scheduler = context.system.scheduler
+          scheduler.scheduleOnce(delay, self, hakemus)
+          hakijaTrigger foreach (actor => scheduler.scheduleOnce(delay, actor, hakemus))
+      }
+    else
+      hakemukset.foreach(hakemus => {
         self.!(hakemus)(ActorRef.noSender)
         hakijaTrigger foreach (_ ! hakemus)
       })
-    }
   }
 
   def restRequest[A <: AnyRef](uri: String)(implicit mf: Manifest[A]): Future[A] = hakemusClient.readObject[A](uri, 200, 2)

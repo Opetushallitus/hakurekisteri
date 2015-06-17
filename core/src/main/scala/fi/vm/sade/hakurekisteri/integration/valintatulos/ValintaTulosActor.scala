@@ -155,6 +155,8 @@ class ValintaTulosActor(client: VirkailijaRestClient,
     scheduledUpdates = scheduledUpdates + (haku -> context.system.scheduler.scheduleOnce(time, self, UpdateValintatulos(haku)))
   }
 
+  override def postStop(): Unit = scheduledUpdates.foreach(_._2.cancel())
+
 }
 
 case class UpdateValintatulos(haku: String)
