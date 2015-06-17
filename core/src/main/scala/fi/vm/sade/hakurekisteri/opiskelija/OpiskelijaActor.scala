@@ -81,8 +81,9 @@ trait OpiskelijaService extends InMemQueryingResourceService[Opiskelija, UUID] w
       }
 
     case OpiskelijaQuery(Some(henkilo), kausi, vuosi, paiva, oppilaitosOid, luokka) =>
-      val filtered = henkiloIndex.getOrElse(henkilo, Seq())
-      executeQuery(filtered)(OpiskelijaQuery(Some(henkilo), kausi, vuosi, paiva, oppilaitosOid, luokka))
+      Future {
+        henkiloIndex.getOrElse(henkilo, Seq())
+      } flatMap(filtered => executeQuery(filtered)(OpiskelijaQuery(Some(henkilo), kausi, vuosi, paiva, oppilaitosOid, luokka)))
 
     case OpiskelijaHenkilotQuery(henkilot) =>
       Future {

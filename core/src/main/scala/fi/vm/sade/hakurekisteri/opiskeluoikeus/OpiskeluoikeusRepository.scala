@@ -57,8 +57,9 @@ trait OpiskeluoikeusService extends InMemQueryingResourceService[Opiskeluoikeus,
       Future { henkiloIndex.getOrElse(henkilo, Seq()) }
 
     case OpiskeluoikeusQuery(Some(henkilo), myontaja) =>
-      val filtered = henkiloIndex.getOrElse(henkilo, Seq())
-      executeQuery(filtered)(OpiskeluoikeusQuery(Some(henkilo), myontaja))
+      Future {
+        henkiloIndex.getOrElse(henkilo, Seq())
+      } flatMap(filtered => executeQuery(filtered)(OpiskeluoikeusQuery(Some(henkilo), myontaja)))
 
     case OpiskeluoikeusHenkilotQuery(henkilot) =>
       Future {

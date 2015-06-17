@@ -83,25 +83,24 @@ trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] w
   }
 
   override val optimize: PartialFunction[Query[FullHakemus], Future[Seq[FullHakemus with Identified[String]]]] = {
-    case HakemusQuery(Some(haku), None, None, None) => Future {
-      hakuIndex.getOrElse(haku, Seq())
-    }
+    case HakemusQuery(Some(haku), None, None, None) =>
+      Future { hakuIndex.getOrElse(haku, Seq()) }
 
-    case HakemusQuery(Some(haku), organisaatio, kohdekoodi, None) => Future {
-      hakuIndex.getOrElse(haku, Seq())
-    } flatMap(filtered => executeQuery(filtered)(HakemusQuery(None, organisaatio, kohdekoodi, None)))
+    case HakemusQuery(Some(haku), organisaatio, kohdekoodi, None) =>
+      Future {
+        hakuIndex.getOrElse(haku, Seq())
+      } flatMap(filtered => executeQuery(filtered)(HakemusQuery(None, organisaatio, kohdekoodi, None)))
 
-    case HakemusQuery(None, None, None, Some(kohde)) => Future {
-      hakukohdeIndex.getOrElse(kohde, Seq())
-    }
+    case HakemusQuery(None, None, None, Some(kohde)) =>
+      Future { hakukohdeIndex.getOrElse(kohde, Seq()) }
 
-    case HakemusQuery(haku, organisaatio, kohdekoodi, Some(kohde)) => Future {
-      hakukohdeIndex.getOrElse(kohde, Seq())
-    } flatMap(filtered => executeQuery(filtered)(HakemusQuery(haku, organisaatio, kohdekoodi, None)))
+    case HakemusQuery(haku, organisaatio, kohdekoodi, Some(kohde)) =>
+      Future {
+        hakukohdeIndex.getOrElse(kohde, Seq())
+      } flatMap(filtered => executeQuery(filtered)(HakemusQuery(haku, organisaatio, kohdekoodi, None)))
 
-    case HenkiloHakijaQuery(henkilo) => Future {
-      hakijaIndex.getOrElse(henkilo, Seq())
-    }
+    case HenkiloHakijaQuery(henkilo) =>
+      Future { hakijaIndex.getOrElse(henkilo, Seq()) }
 
   }
 

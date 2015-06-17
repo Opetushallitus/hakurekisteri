@@ -117,8 +117,9 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
       }
 
     case SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja, komo, muokattuJalkeen) =>
-      val filtered = tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq())
-      executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja, komo, muokattuJalkeen))
+      Future {
+        tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq())
+      } flatMap(filtered => executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, Some(vuosi), myontaja, komo, muokattuJalkeen)))
 
     case SuoritusQuery(Some(henkilo), None, None, None, None, None) =>
       Future { getByHenkilo(henkilo) }
@@ -142,8 +143,9 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
       )
 
     case SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja, komo, muokattuJalkeen) =>
-      val filtered = tiedonSiirtoIndex.get(henkilo).map(_.values.reduce(_ ++ _)).getOrElse(Seq())
-      executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja, komo, muokattuJalkeen))
+      Future {
+        tiedonSiirtoIndex.get(henkilo).map(_.values.reduce(_ ++ _)).getOrElse(Seq())
+      } flatMap(filtered => executeQuery(filtered)(SuoritusQuery(Some(henkilo), kausi, vuosi, myontaja, komo, muokattuJalkeen)))
 
     case SuoritusHenkilotQuery(henkilot) =>
       Future {
