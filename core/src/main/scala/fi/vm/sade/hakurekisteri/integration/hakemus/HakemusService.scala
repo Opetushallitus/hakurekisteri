@@ -251,6 +251,8 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
       "/applications/listfull?" + getQueryParams(q, page, cursor)
     }
 
+    val hakuOids = aktiivisetHaut.map(_.oid)
+
     val responseFuture: Future[List[FullHakemus]] = restRequest[List[FullHakemus]](getUri())
 
     def getAll(cur: Int)(res: List[FullHakemus]): Future[Option[Int]] = res match {
@@ -258,12 +260,12 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
       case l if l.length < maxApplications =>
         for (actor <- healthCheck)
           actor ! Hakemukset(q.haku.getOrElse("unknown"), RefreshingResource(cur + l.length))
-        handleNew(l)
+        handleNew(l, hakuOids)
         Future.successful(Some(cur + l.length))
       case l =>
         for (actor <- healthCheck)
           actor ! Hakemukset(q.haku.getOrElse("unknown"), RefreshingResource(cur + l.length, reloading = true))
-        handleNew(l)
+        handleNew(l, hakuOids)
         log.debug(s"requesting $maxApplications new Hakemukset for ${q.haku.getOrElse("not specified")} current count $cur")
         restRequest[List[FullHakemus]](getUri((cur / maxApplications) + 1)).flatMap(getAll(cur + l.length))
     }
@@ -273,20 +275,24 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
         map(_.getOrElse(0))
   }
 
-  def handleNew(hakemukset: List[FullHakemus]) {
-    val hakuOids: Set[String] = aktiivisetHaut.map(_.oid)
+  def handleNew(hakemukset: List[FullHakemus], hakuOids: Set[String]) {
+    val scheduler = context.system.scheduler
     if (initialLoadingDone)
       hakemukset.filter(h => hakuOids.contains(h.applicationSystemId)).zipWithIndex.foreach {
         case (hakemus: FullHakemus, index: Int) =>
           val delay = (index * 20).milliseconds
-          val scheduler = context.system.scheduler
-          scheduler.scheduleOnce(delay, self, hakemus)
-          hakijaTrigger foreach (actor => scheduler.scheduleOnce(delay, actor, hakemus))
+          val actor = self
+          scheduler.scheduleOnce(delay) {
+            actor.!(hakemus)(ActorRef.noSender)
+          }
+          hakijaTrigger foreach (actor => scheduler.scheduleOnce(delay) {
+            actor.!(hakemus)(ActorRef.noSender)
+          })
       }
     else
       hakemukset.withFilter(h => hakuOids.contains(h.applicationSystemId)).foreach(hakemus => {
         self.!(hakemus)(ActorRef.noSender)
-        hakijaTrigger foreach (_ ! hakemus)
+        hakijaTrigger foreach (_.!(hakemus)(ActorRef.noSender))
       })
   }
 
