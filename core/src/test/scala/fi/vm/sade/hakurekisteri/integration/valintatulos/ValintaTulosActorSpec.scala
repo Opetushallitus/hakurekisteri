@@ -8,6 +8,7 @@ import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration._
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemuksetNotYetLoadedException
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
@@ -24,9 +25,9 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
   def createEndPoint = {
     val e = mock[Endpoint]
 
-    when(e.request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))).thenReturn((200, List(), ValintaTulosResults.haku))
-    when(e.request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251/hakemus/1.2.246.562.11.00000000576"))).thenReturn((200, List(), ValintaTulosResults.hakemus))
     when(e.request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.broken"))).thenReturn((500, List(), ""))
+    when(e.request(forPattern("http://localhost/valinta-tulos-service/haku/1\\.2\\.246\\.562\\.29\\.[0-9]+"))).thenReturn((200, List(), ValintaTulosResults.haku))
+    when(e.request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251/hakemus/1.2.246.562.11.00000000576"))).thenReturn((200, List(), ValintaTulosResults.hakemus))
 
     e
   }
@@ -125,6 +126,26 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
         Thread.sleep(200)
 
         verify(endPoint, atLeastOnce()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.broken"))
+      }
+    )
+  }
+
+  test("ValintaTulosActor should block queries if initial loading is still on-going") {
+    withSystem(
+      implicit system => {
+        implicit val ec = system.dispatcher
+        val endPoint = createEndPoint
+        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
+          config = Config.mockConfig,
+          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
+          refetchTime = Some(500),
+          cacheTime = Some(1000),
+          retryTime = Some(100)
+        )))
+
+        valintaTulosActor ! BatchUpdateValintatulos((1 to 10).map(i => UpdateValintatulos(s"1.2.246.562.29.$i")).toSet)
+
+        expectFailure[HakemuksetNotYetLoadedException]((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.1", None, cachedOk = true)).mapTo[SijoitteluTulos])
       }
     )
   }

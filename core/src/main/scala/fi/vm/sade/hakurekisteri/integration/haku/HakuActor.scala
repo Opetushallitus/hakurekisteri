@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{RefreshHakemukset, AktiivisetHaut}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
-import fi.vm.sade.hakurekisteri.integration.valintatulos.UpdateValintatulos
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{BatchUpdateValintatulos, UpdateValintatulos}
 import fi.vm.sade.hakurekisteri.integration.ytl.HakuList
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import org.joda.time.{DateTime, ReadableInstant}
@@ -95,7 +95,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   }
 
   def refreshKeepAlives() {
-    activeHakus.foreach((haku: Haku) => valintaTulos.!(UpdateValintatulos(haku.oid))(ActorRef.noSender))
+    valintaTulos.!(BatchUpdateValintatulos(activeHakus.map(h => UpdateValintatulos(h.oid)).toSet))
   }
 }
 

@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutionException
 import akka.actor.{Actor, ActorLogging, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemuksetNotYetLoadedException
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
@@ -23,7 +24,8 @@ class ValintaTulosActor(client: VirkailijaRestClient,
                         config: Config,
                         refetchTime: Option[Long] = None,
                         cacheTime: Option[Long] = None,
-                        retryTime: Option[Long] = None) extends Actor with ActorLogging {
+                        retryTime: Option[Long] = None,
+                        initOnStartup: Boolean = false) extends Actor with ActorLogging {
 
   implicit val ec: ExecutionContext = context.dispatcher
   private val maxRetries: Int = config.integrations.valintaTulosConfig.httpClientMaxRetries
@@ -31,6 +33,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
   private val retry: FiniteDuration = retryTime.map(_.milliseconds).getOrElse(60.seconds)
   private val cache: FutureCache[String, SijoitteluTulos] = new FutureCache[String, SijoitteluTulos](cacheTime.getOrElse(config.integrations.valintatulosCacheHours.hours.toMillis))
   private var calling: Boolean = false
+  private var initialLoadingDone = initOnStartup
 
   case class CacheResponse(haku: String, response: SijoitteluTulos)
   case class UpdateFailed(haku: String, t: Throwable)
@@ -44,11 +47,19 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       getSijoittelu(q) pipeTo sender
       self ! UpdateNext
 
+    case BatchUpdateValintatulos(haut) =>
+      haut.foreach(haku => if (!updateRequestQueue.contains(haku.haku)) updateRequestQueue = updateRequestQueue + (haku.haku -> Seq()))
+      self ! UpdateNext
+
     case UpdateValintatulos(haku) =>
       if (!updateRequestQueue.contains(haku)) {
         updateRequestQueue = updateRequestQueue + (haku -> Seq())
       }
       self ! UpdateNext
+
+    case UpdateNext if !calling && updateRequestQueue.isEmpty && !initialLoadingDone =>
+      initialLoadingDone = true
+      log.info("initial loading done")
 
     case UpdateNext if !calling && updateRequestQueue.nonEmpty =>
       calling = true
@@ -85,13 +96,17 @@ class ValintaTulosActor(client: VirkailijaRestClient,
   }
 
   private def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
-    if (q.cachedOk && cache.contains(q.hakuOid))
-      cache.get(q.hakuOid)
-    else {
-      if (q.hakemusOid.isEmpty) {
-        queueForResult(q.hakuOid)
-      } else {
-        callBackend(q.hakuOid, q.hakemusOid)
+    if (!initialLoadingDone) {
+      Future.failed(HakemuksetNotYetLoadedException())
+    } else {
+      if (q.cachedOk && cache.contains(q.hakuOid))
+        cache.get(q.hakuOid)
+      else {
+        if (q.hakemusOid.isEmpty) {
+          queueForResult(q.hakuOid)
+        } else {
+          callBackend(q.hakuOid, q.hakemusOid)
+        }
       }
     }
   }
@@ -160,3 +175,5 @@ class ValintaTulosActor(client: VirkailijaRestClient,
 }
 
 case class UpdateValintatulos(haku: String)
+
+case class BatchUpdateValintatulos(haut: Set[UpdateValintatulos])
