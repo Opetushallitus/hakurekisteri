@@ -25,6 +25,7 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
+import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 
@@ -108,7 +109,7 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
 
   val hakemusActor = system.actorOf(Props(new HakemusActor(hakemusClient = new VirkailijaRestClient(config = hakuappConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endpoint)))), journal = hakemukset)))
 
-  hakemusActor ! ReloadingDone("foo", None)
+  hakemusActor ! RefreshingDone(Some(Platform.currentTime))
 
   val tarjontaActor = system.actorOf(Props(new Actor {
     override def receive: Receive = {

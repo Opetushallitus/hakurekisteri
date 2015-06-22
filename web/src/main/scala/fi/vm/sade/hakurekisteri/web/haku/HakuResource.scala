@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.web.haku
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.AskTimeoutException
-import fi.vm.sade.hakurekisteri.integration.hakemus.ReloadHaku
+import fi.vm.sade.hakurekisteri.integration.hakemus.RefreshHakemukset
 import fi.vm.sade.hakurekisteri.integration.haku.HakuRequest
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -38,10 +38,10 @@ import scala.concurrent.duration._
   }
 
 
-  get("/refresh/:oid") {
+  get("/refresh/hakemukset") {
     currentUser.collect {
       case p if p.isAdmin =>
-        hakuActor ! ReloadHaku(params("oid"))
+        hakuActor ! RefreshHakemukset
         Some(Accepted())
     }.getOrElse(Unauthorized())
 

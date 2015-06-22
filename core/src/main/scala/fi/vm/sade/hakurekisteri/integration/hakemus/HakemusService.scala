@@ -9,6 +9,7 @@ import akka.event.Logging
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.hakija.{HakijaQuery, Hakuehto}
 import fi.vm.sade.hakurekisteri.healthcheck.{Hakemukset, Health, RefreshingResource}
+import fi.vm.sade.hakurekisteri.integration.haku.Haku
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.hakurekisteri.storage.repository._
@@ -167,7 +168,7 @@ class HakemusJournal extends InMemJournal[FullHakemus, String] {
 
 import scala.concurrent.duration._
 
-case class ReloadingDone(haku: String, startTime: Option[Long])
+case class RefreshingDone(startTime: Option[Long])
 
 class HakemusActor(hakemusClient: VirkailijaRestClient,
                    maxApplications: Int = 2000,
@@ -178,77 +179,74 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   var hakijaTrigger: Seq[ActorRef] = Seq()
   var reloading = false
   var initialLoadingDone = false
-  var hakuCursors: Map[String, String] = Map()
-  var reloadRequests: Set[ReloadHaku] = Set()
+  var hakuCursor: Option[String] = None
+  var aktiivisetHaut: Set[Haku] = Set()
   val cursorFormat = "yyyyMMddHHmm"
-  val resetCursors = context.system.scheduler.schedule(7.days, 7.days, self, ResetCursors)
+  val resetCursor = context.system.scheduler.schedule(7.days, 7.days, self, ResetCursor)
 
   override def postStop(): Unit = {
-    resetCursors.cancel()
+    resetCursor.cancel()
     super.postStop()
   }
 
-  object ResetCursors
+  object ResetCursor
   
   private def initialBlocking: Receive = {
     case q: Query[_] if !initialLoadingDone =>
       Future.failed(HakemuksetNotYetLoadedException()) pipeTo sender
   }
+  
+  private def earliestHakuAlku: Long = aktiivisetHaut.toList.sortBy(_.aika.alku).headOption.map(_.aika.alku.getMillis).getOrElse(0)
 
-  private def nextRequest() {
-    if (reloadRequests.nonEmpty) {
-      val r = reloadRequests.head
-      reloadRequests = reloadRequests.filterNot(_ == r)
-      self ! r
-    }
+  private def toCursor(time: Option[Long] = None): String = time match {
+    case Some(t) => new SimpleDateFormat(cursorFormat).format(new Date(t - (5 * 60 * 1000)))
+    case None => new SimpleDateFormat(cursorFormat).format(new Date(earliestHakuAlku - (5 * 60 * 1000)))
   }
 
   override def receive: Receive = initialBlocking orElse super.receive orElse {
-    case ResetCursors if !reloading =>
-      hakuCursors = Map()
+    case ResetCursor if !reloading =>
+      hakuCursor = None
 
-    case ResetCursors if reloading =>
-      context.system.scheduler.scheduleOnce(1.minute, self, ResetCursors)
+    case ResetCursor if reloading =>
+      context.system.scheduler.scheduleOnce(1.minute, self, ResetCursor)
 
-    case BatchReload(haut) =>
-      reloadRequests = reloadRequests ++ haut
-      if (!reloading)
-        nextRequest()
-      
-    case r: ReloadHaku if reloading =>
-      reloadRequests = reloadRequests + r
-      
-    case ReloadHaku(haku) if !reloading =>
+    case AktiivisetHaut(haut) =>
+      aktiivisetHaut = haut
+      self ! RefreshHakemukset
+
+    case RefreshHakemukset if !reloading =>
       val startTime = Platform.currentTime
-      val cursor: Option[String] = hakuCursors.get(haku)
+      val cursor: String = hakuCursor.getOrElse(toCursor())
       reloading = true
-      logger.debug(s"fetching hakemukset for haku $haku")
-      getHakemukset(HakijaQuery(haku = Some(haku), organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None), cursor).map(i => {
-        logger.debug(s"found $i applications in $haku")
-        ReloadingDone(haku, Some(startTime))
+      logger.info(s"fetching hakemukset since $cursor")
+      getHakemukset(HakijaQuery(haku = None, organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None), cursor).map(i => {
+        logger.debug(s"found $i applications")
+        RefreshingDone(Some(startTime))
       }).recover {
         case t: Throwable =>
-          logger.error(t, s"failed fetching Hakemukset for $haku, retrying soon")
-          self ! ReloadHaku(haku)
-          ReloadingDone(haku, None)
+          logger.error(t, s"failed fetching hakemukset, retrying soon")
+          RefreshingDone(None)
       } pipeTo self
 
-    case ReloadingDone(haku, startTime) =>
+    case RefreshingDone(startTime) =>
       reloading = false
-      if (startTime.isDefined)
-        hakuCursors = hakuCursors + (haku -> new SimpleDateFormat(cursorFormat).format(new Date(startTime.get - (5 * 60 * 1000))))
-      if (reloadRequests.isEmpty && !initialLoadingDone) {
-        initialLoadingDone = true
-        log.info("initial loading done")
+      if (startTime.isDefined) {
+        hakuCursor = Some(toCursor(startTime))
+        if (!initialLoadingDone) {
+          initialLoadingDone = true
+          log.info("initial loading done")
+        }
+      } else {
+        context.system.scheduler.scheduleOnce(1.minute, self, RefreshHakemukset)
       }
-      nextRequest()
+
 
     case Health(actor) => healthCheck = Some(actor)
 
     case Trigger(trig) => hakijaTrigger = context.actorOf(Props(new HakijaTrigger(trig))) +: hakijaTrigger
   }
 
-  def getHakemukset(q: HakijaQuery, cursor: Option[String]): Future[Int] = {
+  def getHakemukset(q: HakijaQuery, cursor: String): Future[Int] = {
     def getUri(page: Int = 0): String = {
       "/applications/listfull?" + getQueryParams(q, page, cursor)
     }
@@ -276,8 +274,9 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   }
 
   def handleNew(hakemukset: List[FullHakemus]) {
+    val hakuOids: Set[String] = aktiivisetHaut.map(_.oid)
     if (initialLoadingDone)
-      hakemukset.zipWithIndex.foreach {
+      hakemukset.filter(h => hakuOids.contains(h.applicationSystemId)).zipWithIndex.foreach {
         case (hakemus: FullHakemus, index: Int) =>
           val delay = (index * 20).milliseconds
           val scheduler = context.system.scheduler
@@ -285,7 +284,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
           hakijaTrigger foreach (actor => scheduler.scheduleOnce(delay, actor, hakemus))
       }
     else
-      hakemukset.foreach(hakemus => {
+      hakemukset.withFilter(h => hakuOids.contains(h.applicationSystemId)).foreach(hakemus => {
         self.!(hakemus)(ActorRef.noSender)
         hakijaTrigger foreach (_ ! hakemus)
       })
@@ -295,9 +294,9 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
 
   def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
-  def getQueryParams(q: HakijaQuery, page: Int, cursor: Option[String]): String = {
+  def getQueryParams(q: HakijaQuery, page: Int, cursor: String): String = {
     val params: Seq[String] = Seq(
-      cursor.map(c => s"updatedAfter=$c"),
+      Some(s"updatedAfter=$cursor"),
       Some(s"start=${page * maxApplications}"),
       Some(s"rows=$maxApplications"),
       q.haku.map(s => s"asId=${urlencode(s)}"),
@@ -320,9 +319,9 @@ class MockHakemusActor() extends HakemusActor(hakemusClient = null) {
   }
 }
 
-case class ReloadHaku(haku: String)
+object RefreshHakemukset
 
-case class BatchReload(haut: Set[ReloadHaku])
+case class AktiivisetHaut(haut: Set[Haku])
 
 case class HakemuksetNotYetLoadedException() extends Exception("hakemukset not yet loaded")
 

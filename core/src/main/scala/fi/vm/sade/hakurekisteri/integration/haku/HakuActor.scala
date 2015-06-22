@@ -5,7 +5,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{BatchReload, ReloadHaku}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{RefreshHakemukset, AktiivisetHaut}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.UpdateValintatulos
@@ -49,7 +49,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
     case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
 
-    case rh:ReloadHaku if activeHakus.exists(_.oid == rh.haku) => hakemukset forward rh
+    case RefreshHakemukset => hakemukset forward RefreshHakemukset
 
     case sq: Seq[_] =>
       val s = sq.collect{ case h: Haku => h}
@@ -65,7 +65,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
     case RefreshSijoittelu => refreshKeepAlives()
 
     case ReloadHakemukset =>
-      hakemukset ! BatchReload(activeHakus.map(h => ReloadHaku(h.oid)).toSet)
+      hakemukset ! AktiivisetHaut(activeHakus.toSet)
 
     case Failure(t: GetHautQueryFailedException) =>
       log.error(s"${t.getMessage}, retrying in a minute")
