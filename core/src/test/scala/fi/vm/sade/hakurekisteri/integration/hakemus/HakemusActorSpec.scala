@@ -99,8 +99,11 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         val now = new SimpleDateFormat("yyyyMMddHHmm").format(new Date())
         val endPoint = mock[Endpoint]
         when(endPoint.request(forUrl("http://localhost/haku-app/applications/listfull?updatedAfter=201312312355&start=0&rows=2000"))).thenReturn((200, List(), "[]"))
-        when(endPoint.request(forPattern(s"http://localhost/haku-app/applications/listfull\\?updatedAfter=${now.take(8)}.+&start=0&rows=2000"))).thenReturn((200, List(), "[]"))
-        val hakemusActor = TestActorRef(new HakemusActor(hakemusClient = new VirkailijaRestClient(config = hakuappConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint))))))
+        when(endPoint.request(forPattern(s"http://localhost/haku-app/applications/listfull\\?updatedAfter=${now.take(8)}.+&start=0&rows=200"))).thenReturn((200, List(), "[]"))
+        val hakemusActor = TestActorRef(new HakemusActor(
+          hakemusClient = new VirkailijaRestClient(config = hakuappConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
+          nextPageDelay = 10)
+        )
 
         val since = new LocalDate(2014, 1, 1)
 
@@ -124,7 +127,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         Thread.sleep(500)
 
         verify(endPoint, atLeastOnce()).request(forUrl("http://localhost/haku-app/applications/listfull?updatedAfter=201312312355&start=0&rows=2000"))
-        verify(endPoint, atLeastOnce()).request(forPattern(s"http://localhost/haku-app/applications/listfull\\?updatedAfter=${now.take(8)}.+&start=0&rows=2000"))
+        verify(endPoint, atLeastOnce()).request(forPattern(s"http://localhost/haku-app/applications/listfull\\?updatedAfter=${now.take(8)}.+&start=0&rows=200"))
 
       }
     )

@@ -172,6 +172,7 @@ case class RefreshingDone(startTime: Option[Long])
 
 class HakemusActor(hakemusClient: VirkailijaRestClient,
                    maxApplications: Int = 2000,
+                   nextPageDelay: Int = 10000,
                    override val journal: Journal[FullHakemus, String] = new HakemusJournal()
                    ) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
   var healthCheck: Option[ActorRef] = None
@@ -190,7 +191,12 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   }
 
   object ResetCursor
-  
+
+  private def pageSize: Int = initialLoadingDone match {
+    case true => maxApplications / 10
+    case false => maxApplications
+  }
+
   private def initialBlocking: Receive = {
     case q: Query[_] if !initialLoadingDone =>
       Future.failed(HakemuksetNotYetLoadedException()) pipeTo sender
@@ -246,65 +252,60 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
     case Trigger(trig) => hakijaTrigger = context.actorOf(Props(new HakijaTrigger(trig))) +: hakijaTrigger
   }
 
-  def getHakemukset(q: HakijaQuery, cursor: String): Future[Int] = {
+  private def getHakemukset(q: HakijaQuery, cursor: String): Future[Int] = {
     def getUri(page: Int = 0): String = {
       "/applications/listfull?" + getQueryParams(q, page, cursor)
     }
 
-    val hakuOids = aktiivisetHaut.map(_.oid)
+    val hakuOidit = aktiivisetHaut.map(_.oid)
 
-    val responseFuture: Future[List[FullHakemus]] = restRequest[List[FullHakemus]](getUri())
+    val firstPage: Future[List[FullHakemus]] = restRequest[List[FullHakemus]](getUri())
 
-    def getAll(cur: Int)(res: List[FullHakemus]): Future[Option[Int]] = res match {
-      case l if l.isEmpty => Future.successful(None)
-      case l if l.length < maxApplications =>
-        for (actor <- healthCheck)
-          actor ! Hakemukset(q.haku.getOrElse("unknown"), RefreshingResource(cur + l.length))
-        handleNew(l, hakuOids)
-        Future.successful(Some(cur + l.length))
-      case l =>
-        for (actor <- healthCheck)
-          actor ! Hakemukset(q.haku.getOrElse("unknown"), RefreshingResource(cur + l.length, reloading = true))
-        handleNew(l, hakuOids)
-        log.debug(s"requesting $maxApplications new Hakemukset for ${q.haku.getOrElse("not specified")} current count $cur")
-        restRequest[List[FullHakemus]](getUri((cur / maxApplications) + 1)).flatMap(getAll(cur + l.length))
+    def throttle = Future {
+      if (initialLoadingDone) Thread.sleep(nextPageDelay)
     }
 
-    responseFuture.
-        flatMap(getAll(0)).
-        map(_.getOrElse(0))
+    def loadNextPage(cur: Int, hakemukset: List[FullHakemus])(u: Unit): Future[Option[Int]] =
+      restRequest[List[FullHakemus]](getUri((cur / pageSize) + 1)).flatMap(getAll(cur + hakemukset.length))
+
+    def getAll(cur: Int)(pageResult: List[FullHakemus]): Future[Option[Int]] = pageResult match {
+      case hakemukset if hakemukset.isEmpty => Future.successful(None)
+      case hakemukset if hakemukset.length < pageSize =>
+        for (actor <- healthCheck)
+          actor ! Hakemukset(q.haku.getOrElse("all"), RefreshingResource(cur + hakemukset.length))
+        save(hakemukset, hakuOidit)
+        Future.successful(Some(cur + hakemukset.length))
+      case hakemukset =>
+        for (actor <- healthCheck)
+          actor ! Hakemukset(q.haku.getOrElse("all"), RefreshingResource(cur + hakemukset.length, reloading = true))
+        save(hakemukset, hakuOidit)
+        throttle.
+          flatMap(loadNextPage(cur, hakemukset))
+    }
+
+    firstPage.
+      flatMap(getAll(0)).
+      map(_.getOrElse(0))
   }
 
-  def handleNew(hakemukset: List[FullHakemus], hakuOids: Set[String]) {
-    val scheduler = context.system.scheduler
-    if (initialLoadingDone)
-      hakemukset.filter(h => hakuOids.contains(h.applicationSystemId)).zipWithIndex.foreach {
-        case (hakemus: FullHakemus, index: Int) =>
-          val delay = (index * 20).milliseconds
-          val actor = self
-          scheduler.scheduleOnce(delay) {
-            actor.!(hakemus)(ActorRef.noSender)
-          }
-          hakijaTrigger foreach (actor => scheduler.scheduleOnce(delay) {
-            actor.!(hakemus)(ActorRef.noSender)
-          })
-      }
-    else
-      hakemukset.withFilter(h => hakuOids.contains(h.applicationSystemId)).foreach(hakemus => {
-        self.!(hakemus)(ActorRef.noSender)
-        hakijaTrigger foreach (_.!(hakemus)(ActorRef.noSender))
-      })
+  private def isCurrent(haut: Set[String])(hakemus: FullHakemus): Boolean = haut.contains(hakemus.applicationSystemId)
+
+  private def save(hakemukset: List[FullHakemus], hakuOids: Set[String]) {
+    hakemukset.withFilter(isCurrent(hakuOids)).foreach(hakemus => {
+      self.!(hakemus)(ActorRef.noSender)
+      hakijaTrigger foreach (_.!(hakemus)(ActorRef.noSender))
+    })
   }
 
-  def restRequest[A <: AnyRef](uri: String)(implicit mf: Manifest[A]): Future[A] = hakemusClient.readObject[A](uri, 200, 2)
+  private def restRequest[A <: AnyRef](uri: String)(implicit mf: Manifest[A]): Future[A] = hakemusClient.readObject[A](uri, 200, 2)
 
-  def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
+  private def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
-  def getQueryParams(q: HakijaQuery, page: Int, cursor: String): String = {
+  private def getQueryParams(q: HakijaQuery, page: Int, cursor: String): String = {
     val params: Seq[String] = Seq(
       Some(s"updatedAfter=$cursor"),
-      Some(s"start=${page * maxApplications}"),
-      Some(s"rows=$maxApplications"),
+      Some(s"start=${page * pageSize}"),
+      Some(s"rows=$pageSize"),
       q.haku.map(s => s"asId=${urlencode(s)}"),
       q.organisaatio.map(s => s"lopoid=${urlencode(s)}"),
       q.hakukohdekoodi.map(s => s"aoid=${urlencode(s)}")
@@ -321,7 +322,7 @@ class MockHakemusActor() extends HakemusActor(hakemusClient = null) {
     }
 
     case msg =>
-      log.warning(s"not implemented receive(${msg})")
+      log.warning(s"not implemented receive($msg)")
   }
 }
 
