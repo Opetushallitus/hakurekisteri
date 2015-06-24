@@ -535,6 +535,43 @@
             })
         })
         describe('Tietojen muokkaus', function () {
+                describe("Korjaa nykyisiä arvosanoja -painike", function() {
+                    function aarnenPeruskouluDatat() {
+                        httpFixtures().organisaatioService.pikkaralaOid()
+                        httpFixtures().organisaatioService.pikkaralaKoodi()
+                        httpFixtures().henkiloPalveluService.aarne()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                        httpFixtures().suorituksetLocal.aarnenSuoritus()
+                        httpFixtures().arvosanatLocal.aarnenArvosanat()
+                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                        httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
+                        httpFixtures().komoLocal.komoTiedot()
+                        koodistoFixtures()
+
+                        httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
+                        httpFixtures().organisaatioService.pikkoloKoodi()
+                        httpFixtures().organisaatioService.pikkoloOid()
+                    }
+
+                    it("Näkyy OPH käyttäjälle", seqDone(
+                        aarnenPeruskouluDatat,
+                        input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                        click(opiskelijatiedot.searchButton),
+                        wait.forAngular,
+                        visible(opiskelijatiedot.editArvosanat)
+                    ))
+                    it("Ei näy lukiokäyttäjälle", seqDone(
+                        function() { httpFixtures().casRoles.empty() },
+                        aarnenPeruskouluDatat,
+                        input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                        click(opiskelijatiedot.searchButton),
+                        wait.forAngular,
+                        hidden(opiskelijatiedot.editArvosanat),
+                        function() { httpFixtures().casRoles.robotti() }
+                    ))
+                })
                 describe("Peruskoulun suoritus", function () {
                     function aarnenPeruskouluDatat() {
                         httpFixtures().organisaatioService.pikkaralaOid()

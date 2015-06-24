@@ -213,7 +213,9 @@ app.controller "MuokkaaCtrl", [
     getMyRoles()
 
     $scope.isOPH = ->
-      Array.isArray($scope.myRoles) and ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1 or $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1)
+      (Array.isArray($scope.myRoles) and
+        ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1 or
+          $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1))
 
     fetchHenkilotiedot()
     fetchLuokkatiedot()

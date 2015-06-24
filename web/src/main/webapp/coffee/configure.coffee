@@ -81,7 +81,10 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
 
   return
 
-app.run ($http, $log, MessageService) ->
+app.run ($cacheFactory, $http, $log, MessageService) ->
+  if (window.mocksOn)
+    $http.defaults.cache = $cacheFactory("test")
+    window.testCache = $http.defaults.cache
   $http.get(henkiloServiceUrl + "/buildversion.txt?auth").success(->
     return
   ).error ->
