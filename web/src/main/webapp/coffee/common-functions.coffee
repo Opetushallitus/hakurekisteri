@@ -57,13 +57,13 @@ collect = (arr) ->
     i++
   ret
 
-parseFinDate = (d) ->
-  date = d.trim()
-  if date and date.match(/[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{4}/)
-    dateParts = date.split(".")
-    new Date(parseInt(dateParts[2], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[0], 10))
-  else
-    null
+parseFinDate = (date) ->
+  if typeof date is "object"
+    return date
+  else if typeof date is "string" and date.trim().match(/[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{4}/)
+    dateParts = date.trim().split(".")
+    return new Date(parseInt(dateParts[2], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[0], 10))
+  null
 
 sortByFinDateDesc = (a, b) ->
   aDate = parseFinDate(a)

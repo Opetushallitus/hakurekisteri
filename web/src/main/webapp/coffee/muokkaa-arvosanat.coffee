@@ -305,12 +305,22 @@ app.controller "MuokkaaArvosanat", [
     $scope.hasChanged = ->
       if $scope.suorituksenArvosanataulukko
         updateArvosanaTaulukko()
-        arvosanatModified.some((a) -> a.hasChanged()) || $scope.korotusRivi && $scope.korotusRivi.hasArvosana
+        hasModifications = arvosanatModified.some((a) -> a.hasChanged())
+        hasValidKorotus = typeof $scope.korotusRivi is "object" and $scope.korotusRivi.hasArvosana and not $scope.isKorotusDateInvalid(parseFinDate($scope.korotusRivi.myonnetty))
+        hasNotKorotus = typeof $scope.korotusRivi is "undefined"
+        return hasModifications and (hasNotKorotus or hasValidKorotus)
+      false
 
-    $scope.korotusDateOk = (date, mode) ->
-      valm = parseFinDate($scope.suoritus.valmistuminen)
-      valm.setDate(valm.getDate() + 1)
-      date <= valm
+    $scope.isKorotusDateInvalid = (date, mode) ->
+      if date
+        valmistuminen = parseFinDate($scope.suoritus.valmistuminen)
+        d = new Date(date.getTime())
+        d.setMinutes(0)
+        d.setHours(0)
+        d.setSeconds(0)
+        d.setMilliseconds(0)
+        return d <= valmistuminen
+      true
 
     $scope.saveData = ->
       removeArvosana = (arvosana, d) ->

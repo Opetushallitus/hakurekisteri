@@ -752,6 +752,20 @@
                         },
                         saveDisabled()
                     ))
+                    it("Korotuksen päivämäärä pitää olla valmistumispäivän jälkeen", seqDone(
+                        function() {
+                            testDslDebug = true
+                        },
+                        aarnenPeruskouluDatat,
+                        input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                        click(opiskelijatiedot.searchButton),
+                        wait.forAngular,
+                        saveDisabled(),
+                        click(opiskelijatiedot.showKorotus),
+                        selectInput(opiskelijatiedot.arvosana(0, 0), "3"),
+                        input(opiskelijatiedot.korotusPvm, "1.6.2015"),
+                        saveDisabled()
+                    ))
                 })
                 describe("Yo suoritus", function () {
                     it("Vanhempi YO-suoritus (tehty ennen 1.1.1990) on muokattavissa", seqDone(

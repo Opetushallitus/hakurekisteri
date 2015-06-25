@@ -24,7 +24,7 @@
         </td>
         <td>
             <input type="text" ng-disabled="info.delete" ng-model="korotusRivi.myonnetty"
-                   title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)" datepicker-popup="{{format}}" date-disabled="korotusDateOk(date, mode)"
+                   title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)" datepicker-popup="{{format}}" date-disabled="isKorotusDateInvalid(date, mode)"
                    datepicker-options="dateOptions" datepicker-append-to-body="true" is-open="korotusOpen"
                    ng-click="korotusOpen = true" show-button-bar="false"
                    class="form-control input-sm datepicker test-korotusPvm"/>
