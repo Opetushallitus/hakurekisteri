@@ -308,7 +308,9 @@ app.controller "MuokkaaArvosanat", [
         arvosanatModified.some((a) -> a.hasChanged()) || $scope.korotusRivi && $scope.korotusRivi.hasArvosana
 
     $scope.korotusDateOk = (date, mode) ->
-      $scope.formatDateNoZeroPaddedNumbers(date) == $scope.formatDateNoZeroPaddedNumbers($scope.suoritus.valmistuminen)
+      valm = parseFinDate($scope.suoritus.valmistuminen)
+      valm.setDate(valm.getDate() + 1)
+      date <= valm
 
     $scope.saveData = ->
       removeArvosana = (arvosana, d) ->

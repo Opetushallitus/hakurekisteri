@@ -58,7 +58,12 @@ collect = (arr) ->
   ret
 
 parseFinDate = (d) ->
-  (if (d and d.match(/[0-3][0-9]\.[0-1][0-9]\.[0-9]{4}/)) then new Date(parseInt(d.substr(6, 4), 10), parseInt(d.substr(3, 2), 10) - 1, parseInt(d.substr(0, 2), 10)) else null)
+  date = d.trim()
+  if date and date.match(/[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{4}/)
+    dateParts = date.split(".")
+    new Date(parseInt(dateParts[2], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[0], 10))
+  else
+    null
 
 sortByFinDateDesc = (a, b) ->
   aDate = parseFinDate(a)
@@ -162,10 +167,6 @@ changeDetection = (object) ->
   {
   object: object
   hasChanged: () ->
-    if json != JSON.stringify(object)
-      console.log "hasChanged"
-      console.log "old:", json
-      console.log "new:", JSON.stringify(object)
     json != JSON.stringify(object)
   update: () ->
     json = JSON.stringify(object)
