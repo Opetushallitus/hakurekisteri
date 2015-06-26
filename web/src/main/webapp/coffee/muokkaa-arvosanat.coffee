@@ -18,15 +18,6 @@ app.controller "MuokkaaArvosanat", [
     $scope.kielet = []
     $scope.aidinkieli = []
     $scope.info = { editable: false }
-    $scope.isOPH = false
-
-    $http.get("/cas/myroles", {cache: true}).success((data) ->
-      roles = angular.fromJson(data)
-      $scope.isOPH = (Array.isArray(roles) and
-        (roles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1 or
-          roles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1))
-    ).error ->
-      $log.error "cannot connect to CAS"
 
     getKoodistoAsOptionArray $http, "arvosanat", "fi", $scope.arvosanat, "koodiArvo"
     getKoodistoAsOptionArray $http, "kielivalikoima", "fi", $scope.kielet, "koodiArvo"

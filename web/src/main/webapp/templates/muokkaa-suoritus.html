@@ -45,7 +45,7 @@
             oph-msg="suoritusrekisteri.muokkaa.valmistumispaiva">Valmistumispäivä</strong>
 
         <div ng-show="info.editable" class="input-group">
-            <input type="text" ng-disabled="info.delete" ng-model="info.valmistuminen" max-date="info.maxDate"
+            <input type="text" ng-disabled="info.delete || !isOPH()" ng-model="info.valmistuminen" max-date="info.maxDate"
                    title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)" datepicker-popup="{{format}}"
                    datepicker-options="dateOptions" datepicker-append-to-body="true" is-open="valmistuminenOpen"
                    ng-click="valmistuminenOpen = true" show-button-bar="false"
@@ -56,7 +56,7 @@
         <div ng-hide="info.editable" class="test-suoritusValmistuminen">{{info.valmistuminen}}</div>
     </div>
     <div class="form-group col-sm-4"><strong oph-msg="suoritusrekisteri.muokkaa.tila">Tila</strong>
-        <select ng-show="info.editable" ng-disabled="info.delete" ng-model="suoritus.tila" required="required"
+        <select ng-show="info.editable" ng-disabled="info.delete || !isOPH()" ng-model="suoritus.tila" required="required"
                 ng-options="t.value as t.text for t in tilat" class="form-control input-sm test-suoritusTila"></select>
 
         <div ng-hide="info.editable" class="test-suoritusTila">{{resolveValueFromOptionArray(suoritus.tila, tilat)}}</div>

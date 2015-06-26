@@ -194,8 +194,15 @@ app.factory "MuokkaaTiedot", [
           text: "Muokkaa opiskelijan tietoja"
         }, false
 
-      $scope.isOPH = ->
-        Array.isArray($scope.myRoles) and ($scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1 or $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1)
+      $scope.isOPH = () -> false
+      $http.get("/cas/myroles", {cache: true}).success((data) ->
+        $scope.myRoles = angular.fromJson(data)
+        if Array.isArray($scope.myRoles)
+          $scope.isOPH = () ->
+            $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001") > -1 or
+              $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1
+      ).error ->
+        $log.error "cannot connect to CAS"
 
       $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel = (info, model, validateError) ->
         if model.vahvistettu and not info["delete"] and info.editable and not (model.komo and model.komo is $scope.komo.ylioppilastutkinto)

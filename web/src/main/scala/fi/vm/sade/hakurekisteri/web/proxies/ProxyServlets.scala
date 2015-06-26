@@ -1,16 +1,16 @@
 package fi.vm.sade.hakurekisteri.web.proxies
 
 import javax.servlet.ServletContext
-import akka.actor.ActorSystem
+
+import _root_.akka.actor.ActorSystem
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import org.json4s.jackson.JsonMethods
-import org.scalatra.{InternalServerError, FutureSupport, ScalatraServlet, AsyncResult}
-import org.scalatra.servlet.ServletApiImplicits
-import ServletApiImplicits._
-import org.slf4j.LoggerFactory
-import scala.concurrent.{Future, ExecutionContext}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import org.scalatra._
+import org.scalatra.servlet.ServletApiImplicits._
+import org.slf4j.LoggerFactory
+
+import scala.concurrent.ExecutionContext
 
 object ProxyServlets {
   def mount(proxies: Proxies, context: ServletContext)(implicit system: ActorSystem) {
@@ -74,6 +74,10 @@ class KoodistoProxyServlet(proxy: KoodistoProxy, system: ActorSystem) extends OP
 class LocalizationMockServlet(system: ActorSystem) extends OPHProxyServlet(system) {
   get("/cxf/rest/v1/localisation") {
     getClass.getResourceAsStream("/proxy-mockdata/localization.json")
+  }
+
+  post("/cxf/rest/v1/localisation") {
+    Created
   }
 }
 

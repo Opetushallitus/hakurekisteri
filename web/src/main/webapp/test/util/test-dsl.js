@@ -73,6 +73,10 @@ function hidden(fn) {
     return waitJqueryIs(fn, ':hidden')
 }
 
+function disabled(fn) {
+    return waitJqueryIs(fn, ':disabled')
+}
+
 function input1(fn, value) {
     return seq(
         visible(fn),
