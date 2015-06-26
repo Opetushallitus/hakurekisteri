@@ -297,8 +297,8 @@ app.controller "MuokkaaArvosanat", [
       if $scope.suorituksenArvosanataulukko
         updateArvosanaTaulukko()
         hasModifications = arvosanatModified.some((a) -> a.hasChanged())
-        hasValidKorotus = typeof $scope.korotusRivi is "object" and $scope.korotusRivi.hasArvosana and not $scope.isKorotusDateInvalid(parseFinDate($scope.korotusRivi.myonnetty))
-        hasNotKorotus = typeof $scope.korotusRivi is "undefined"
+        hasValidKorotus = $scope.korotusRivi and $scope.korotusRivi.hasArvosana and not $scope.isKorotusDateInvalid(parseFinDate($scope.korotusRivi.myonnetty))
+        hasNotKorotus = not $scope.korotusRivi
         return hasModifications and (hasNotKorotus or hasValidKorotus)
       false
 
