@@ -574,6 +574,42 @@
                         function() { httpFixtures().casRoles.robotti() }
                     ))
                 })
+                describe("Valmistuminen ja tila ei-rekisterinpitäjälle", function() {
+                    function aarnenDatat() {
+                        httpFixtures().organisaatioService.pikkaralaOid()
+                        httpFixtures().organisaatioService.pikkaralaKoodi()
+                        httpFixtures().henkiloPalveluService.aarne()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
+                        httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                        httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
+                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(2015)
+                        httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
+                        httpFixtures().komoLocal.komoTiedot()
+                        koodistoFixtures()
+
+                        httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
+                        httpFixtures().organisaatioService.pikkoloKoodi()
+                        httpFixtures().organisaatioService.pikkoloOid()
+                    }
+                    it("on muokattavissa lisättäessä uusi suoritus", seqDone(
+                        function() { httpFixtures().casRoles.empty() },
+                        aarnenDatat,
+                        input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
+                        click(opiskelijatiedot.searchButton),
+                        wait.forAngular,
+                        click(opiskelijatiedot.suoritusLisaa),
+                        wait.forAngular,
+                        typeaheadInput(opiskelijatiedot.suoritusMyontaja, "Pik", opiskelijatiedot.typeaheadMenuChild(2)),
+                        select(opiskelijatiedot.suoritusKoulutus, '1'),
+                        select(opiskelijatiedot.suoritusYksilollistetty, "0"),
+                        select(opiskelijatiedot.suoritusKieli, "2"),
+                        input(opiskelijatiedot.suoritusValmistuminen, '1.1.2014'),
+                        select(opiskelijatiedot.suoritusTila, '1'),
+                        saveEnabled(),
+                        function() { httpFixtures().casRoles.robotti() }
+                    ))
+                })
                 describe("Peruskoulun suoritus", function () {
                     function aarnenPeruskouluDatat() {
                         httpFixtures().organisaatioService.pikkaralaOid()

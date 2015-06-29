@@ -42,6 +42,7 @@ opiskelijatiedot = initSelectors({
     suoritusTiedot: "#suoritusTiedot",
     luokkaTiedot: "#luokkaTiedot",
     hakijanIlmoittamaAlert: ".alert-info",
+    suoritusLisaa: ".test-suoritusLisaa",
     suoritusMyontaja: ".test-suoritusMyontaja:visible",
     suoritusKoulutus: ".test-suoritusKoulutus:visible",
     suoritusYksilollistetty: ".test-suoritusYksilollistetty:visible",
