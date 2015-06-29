@@ -271,19 +271,31 @@ class KkHakijaResource(hakemukset: ActorRef,
   val Pattern = "preference(\\d+)-Koulutus-id".r
 
   def getHakemukset(hakemus: FullHakemus)(q: KkHakijaQuery): Future[Seq[Hakemus]] = {
-    (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku].flatMap(haku => {
-      if (haku.kkHaku) Future.sequence(extractHakemukset(hakemus)(q)(haku)).map(_.flatten)
-      else Future.successful(Seq())
+    val valintaTulosQuery = q.oppijanumero match {
+      case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemus.oid), cachedOk = false)
+      case None => ValintaTulosQuery(hakemus.applicationSystemId, None)
+    }
+
+    (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku].flatMap((haku: Haku) => {
+      if (haku.kkHaku)
+        (valintaTulos ? valintaTulosQuery).
+          mapTo[SijoitteluTulos].
+          flatMap(sijoitteluTulos => Future.sequence(extractHakemukset(hakemus, q, haku, sijoitteluTulos)).map(_.flatten))
+      else
+        Future.successful(Seq())
     })
   }
 
-  def extractHakemukset(hakemus: FullHakemus)(q: KkHakijaQuery)(haku: Haku): Seq[Future[Option[Hakemus]]] =
+  def extractHakemukset(hakemus: FullHakemus,
+                        q: KkHakijaQuery,
+                        haku: Haku,
+                        sijoitteluTulos: SijoitteluTulos): Seq[Future[Option[Hakemus]]] =
     (for {
       answers: HakemusAnswers <- hakemus.answers
       hakutoiveet: Map[String, String] <- answers.hakutoiveet
     } yield hakutoiveet.keys.collect {
         case Pattern(jno: String) if hakutoiveet(s"preference$jno-Koulutus-id") != "" && queryMatches(q, hakutoiveet, jno) =>
-          extractSingleHakemus(hakemus)(q)(hakutoiveet)(answers.lisatiedot.getOrElse(Lisatiedot(None, None)))(answers.koulutustausta.getOrElse(Koulutustausta()))(jno)(haku)
+          extractSingleHakemus(hakemus, q, hakutoiveet, answers.lisatiedot.getOrElse(Lisatiedot(None, None)), answers.koulutustausta.getOrElse(Koulutustausta()), jno, haku, sijoitteluTulos)
       }.toSeq).getOrElse(Seq())
 
   def queryMatches(q: KkHakijaQuery, hakutoiveet: Map[String, String], jno: String): Boolean = {
@@ -292,16 +304,19 @@ class KkHakijaResource(hakemukset: ActorRef,
       isAuthorized(hakutoiveet.get(s"preference$jno-Opetuspiste-id-parents"), getKnownOrganizations(q.user))
   }
 
-  def extractSingleHakemus(hakemus: FullHakemus)(q: KkHakijaQuery)(hakutoiveet: Map[String, String])(lisatiedot: Lisatiedot)(koulutustausta: Koulutustausta)(jno: String)(haku: Haku): Future[Option[Hakemus]] = {
+  def extractSingleHakemus(hakemus: FullHakemus,
+                           q: KkHakijaQuery,
+                           hakutoiveet: Map[String, String],
+                           lisatiedot: Lisatiedot,
+                           koulutustausta: Koulutustausta,
+                           jno: String,
+                           haku: Haku,
+                           sijoitteluTulos: SijoitteluTulos): Future[Option[Hakemus]] = {
     val hakemusOid = hakemus.oid
     val hakukohdeOid = hakutoiveet(s"preference$jno-Koulutus-id")
     val hakukelpoisuus = getHakukelpoisuus(hakukohdeOid, hakemus.preferenceEligibilities)
-    val valintaTulosQuery = q.oppijanumero match {
-      case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemusOid), cachedOk = false)
-      case None => ValintaTulosQuery(hakemus.applicationSystemId, None)
-    }
+
     for {
-      sijoitteluTulos: SijoitteluTulos <- (valintaTulos ? valintaTulosQuery).mapTo[SijoitteluTulos]
       hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
       kausi: String <- getKausi(haku.kausi, hakemusOid)
       lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, haku, hakemusOid)
@@ -330,7 +345,7 @@ class KkHakijaResource(hakemukset: ActorRef,
   }
 
   def getHakukohdeOids(hakutoiveet: Map[String, String]): Seq[String] = {
-    hakutoiveet.filter((t) => t._1.endsWith("Koulutus-id") && t._2 != "").map((t) => t._2).toSeq
+    hakutoiveet.filter((t) => t._1.endsWith("Koulutus-id") && t._2 != "").values.toSeq
   }
 
   def toKkSyntymaaika(d: Date): String = {
