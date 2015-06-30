@@ -270,20 +270,17 @@ class KkHakijaResource(hakemukset: ActorRef,
 
   val Pattern = "preference(\\d+)-Koulutus-id".r
 
-  def getHakemukset(hakemus: FullHakemus)(q: KkHakijaQuery): Future[Seq[Hakemus]] = {
+  def getValintaTulos(q: ValintaTulosQuery): Future[SijoitteluTulos] = (valintaTulos ? q).mapTo[SijoitteluTulos]
+
+  def getHakemukset(haku: Haku, hakemus: FullHakemus, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos]): Future[Seq[Hakemus]] = {
     val valintaTulosQuery = q.oppijanumero match {
       case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemus.oid), cachedOk = false)
       case None => ValintaTulosQuery(hakemus.applicationSystemId, None)
     }
 
-    (haut ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku].flatMap((haku: Haku) => {
-      if (haku.kkHaku)
-        (valintaTulos ? valintaTulosQuery).
-          mapTo[SijoitteluTulos].
-          flatMap(sijoitteluTulos => Future.sequence(extractHakemukset(hakemus, q, haku, sijoitteluTulos)).map(_.flatten))
-      else
-        Future.successful(Seq())
-    })
+    kokoHaunTulos.map(Future.successful)
+      .getOrElse(getValintaTulos(valintaTulosQuery))
+      .flatMap(tulos => Future.sequence(extractHakemukset(hakemus, q, haku, tulos)).map(_.flatten))
   }
 
   def extractHakemukset(hakemus: FullHakemus,
@@ -409,14 +406,14 @@ class KkHakijaResource(hakemukset: ActorRef,
     else Future.successful("")
   }
 
-  def getKkHakija(q: KkHakijaQuery)(hakemus: FullHakemus): Option[Future[Hakija]] =
+  def getKkHakija(haku: Haku, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos])(hakemus: FullHakemus): Option[Future[Hakija]] =
     for {
       answers: HakemusAnswers <- hakemus.answers
       henkilotiedot: HakemusHenkilotiedot <- answers.henkilotiedot
       hakutoiveet: Map[String, String] <- answers.hakutoiveet
       henkiloOid <- hakemus.personOid
     } yield for {
-      hakemukset <- getHakemukset(hakemus)(q)
+      hakemukset <- getHakemukset(haku, hakemus, q, kokoHaunTulos)
       maa <- getMaakoodi(henkilotiedot.asuinmaa.getOrElse("FIN"))
       toimipaikka <- getToimipaikka(maa, henkilotiedot.Postinumero, henkilotiedot.kaupunkiUlkomaa)
       suoritukset <- (suoritukset ? SuoritysTyyppiQuery(henkilo = henkiloOid, komo = YTLXml.yotutkinto)).mapTo[Seq[VirallinenSuoritus]]
@@ -448,6 +445,22 @@ class KkHakijaResource(hakemukset: ActorRef,
         hakemukset = hakemukset
       )
 
-  def fullHakemukset2hakijat(hakemukset: Seq[FullHakemus])(q: KkHakijaQuery): Future[Seq[Hakija]] =
-    Future.sequence(hakemukset.map(getKkHakija(q)).flatten).map(_.filter(_.hakemukset.nonEmpty))
+  def fullHakemukset2hakijat(hakemukset: Seq[FullHakemus])(q: KkHakijaQuery): Future[Seq[Hakija]] = {
+    Future.sequence(hakemukset.groupBy(_.applicationSystemId).map {
+      case (hakuOid, h) =>
+        (haut ? GetHaku(hakuOid)).mapTo[Haku].flatMap(haku =>
+          if (haku.kkHaku) {
+            if (q.oppijanumero.isEmpty) {
+              getValintaTulos(ValintaTulosQuery(hakuOid, None)).flatMap(kokoHaunTulos =>
+                Future.sequence(h.map(getKkHakija(haku, q, Some(kokoHaunTulos))).flatten).map(_.filter(_.hakemukset.nonEmpty))
+              )
+            } else {
+              Future.sequence(h.map(getKkHakija(haku, q, None)).flatten).map(_.filter(_.hakemukset.nonEmpty))
+            }
+          } else {
+            Future.successful(Seq())
+          }
+        )
+    }.toSeq).map(_.foldLeft(Seq[Hakija]())(_ ++ _)).map(_.filter(_.hakemukset.nonEmpty))
+  }
 }
