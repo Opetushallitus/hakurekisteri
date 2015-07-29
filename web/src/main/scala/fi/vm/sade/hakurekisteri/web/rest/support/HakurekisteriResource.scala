@@ -6,6 +6,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import akka.util.Timeout
+import fi.vm.sade.auditlog.Audit
 import fi.vm.sade.hakurekisteri.organization.{AuthorizedCreate, AuthorizedDelete, AuthorizedQuery, AuthorizedRead, AuthorizedUpdate}
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -61,6 +62,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   }
 
   get("/:id", operation(read)) {
+    audit.log("GET ID testi viesti")
     if (!currentUser.exists(_.canRead(resourceName))) throw UserNotAuthorized("not authorized")
     else getResource
   }
