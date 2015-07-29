@@ -39,6 +39,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   val delete: OperationBuilder
 
   delete("/:id", operation(delete)) {
+    audit.log(s"Käyttäjä ${currentUser.get.username} poisti resurssin ${params("id")}")
     if (!currentUser.exists(_.canDelete(resourceName))) throw UserNotAuthorized("not authorized")
     else deleteResource()
   }
@@ -48,11 +49,13 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   }
 
   post("/", operation(create)) {
+    audit.log(s"Käyttäjä ${currentUser.get.username} loi uuden resurssin")
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
     else createResource(currentUser)
   }
 
   post("/:id", operation(update)) {
+    audit.log(s"Käyttäjä ${currentUser.get.username} päivitti resurssia ${params("id")}")
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
     else updateResource()
   }
@@ -62,7 +65,6 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   }
 
   get("/:id", operation(read)) {
-    audit.log("GET ID testi viesti")
     if (!currentUser.exists(_.canRead(resourceName))) throw UserNotAuthorized("not authorized")
     else getResource
   }
