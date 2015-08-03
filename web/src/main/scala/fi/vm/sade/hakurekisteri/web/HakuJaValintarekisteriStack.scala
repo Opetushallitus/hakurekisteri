@@ -8,6 +8,6 @@ import org.scalatra._
 trait HakuJaValintarekisteriStack extends ScalatraServlet with IncidentReporting {
 
   val logger: LoggingAdapter
-  val audit = new Audit("hakureisteri", ApplicationType.VIRKAILIJA)
+  val audit = new Audit("hakurekisteri", ApplicationType.VIRKAILIJA)
 
 }
