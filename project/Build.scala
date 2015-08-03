@@ -139,7 +139,6 @@ object HakurekisteriBuild extends Build {
       artifactName          := ArtifactName,
       scalacOptions         := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8", "-Xfatal-warnings"),
       resolvers += Classpaths.typesafeReleases,
-      resolvers += Resolver.mavenLocal,
       resolvers += "oph-snapshots" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local",
       resolvers += "oph-releases" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local",
       resolvers += "Sonatype" at "http://oss.sonatype.org/content/repositories/releases/",
