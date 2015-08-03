@@ -1,6 +1,6 @@
 <configuration>
     <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>auditlog.log</file>
+        <file>auditlog_hakurekisteri.log</file>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
             <fileNamePattern>auditlog.%i.log.zip</fileNamePattern>
