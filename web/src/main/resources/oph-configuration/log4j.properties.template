@@ -57,7 +57,7 @@ log4j.appender.audit.Append=true
 log4j.appender.audit.MaxFileSize=20MB
 log4j.appender.audit.MaxBackupIndex=20
 log4j.appender.audit.layout=org.apache.log4j.PatternLayout
-log4j.appender.audit.layout.ConversionPattern=%date AUDIT %m%n
+log4j.appender.audit.layout.ConversionPattern=%d AUDIT %m%n
 log4j.appender.audit.encoding=UTF-8
 
 # By default hide these spammers by default
