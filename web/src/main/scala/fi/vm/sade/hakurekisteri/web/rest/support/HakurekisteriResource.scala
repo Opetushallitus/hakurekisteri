@@ -6,6 +6,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import akka.util.Timeout
+import fi.vm.sade.auditlog.{LogMessage, Audit}
 import fi.vm.sade.hakurekisteri.organization.{AuthorizedCreate, AuthorizedDelete, AuthorizedQuery, AuthorizedRead, AuthorizedUpdate}
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -38,6 +39,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   val delete: OperationBuilder
 
   delete("/:id", operation(delete)) {
+    audit.log(new LogMessage(s"${currentUser.get.username}", "virkailija", s"Käyttäjä ${currentUser.get.username} poisti resurssin ${params("id")}"))
     if (!currentUser.exists(_.canDelete(resourceName))) throw UserNotAuthorized("not authorized")
     else deleteResource()
   }
@@ -47,11 +49,13 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   }
 
   post("/", operation(create)) {
+    audit.log(new LogMessage(s"${currentUser.get.username}", "virkailija", s"Käyttäjä ${currentUser.get.username} loi uuden resurssin"))
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
     else createResource(currentUser)
   }
 
   post("/:id", operation(update)) {
+    audit.log(new LogMessage(s"${currentUser.get.username}", "virkailija", s"Käyttäjä ${currentUser.get.username} päivitti resurssia ${params("id")}"))
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
     else updateResource()
   }

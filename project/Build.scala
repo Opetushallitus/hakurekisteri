@@ -79,6 +79,7 @@ object HakurekisteriBuild extends Build {
     "org.apache.activemq" % "activemq-all" % "5.9.1",
     "org.apache.camel" % "camel-jms" % "2.13.0",
     "fi.vm.sade.log" % "log-client" % "7.0",
+    "fi.vm.sade" % "auditlogger" % "1.0-SNAPSHOT",
     "fr.janalyse" %% "janalyse-ssh" % "0.9.14",
     "fi.vm.sade" %% "scala-utils" % "0.1.0-SNAPSHOT"
   )
@@ -143,7 +144,7 @@ object HakurekisteriBuild extends Build {
       resolvers += "Sonatype" at "http://oss.sonatype.org/content/repositories/releases/",
       resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
       resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
-      resolvers             += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
+      resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
       artifactoryPublish,
       libraryDependencies   ++= AkkaStack ++ dependencies
         ++ testDependencies.map((m) => m % "test,it"),

@@ -231,7 +231,7 @@ var restData = {
                 "valinnainen": false,
                 "lisatieto": "UO",
                 "myonnetty": "01.06.2013"
-            },{
+            }, {
                 "id": "3ba4b93c-87e8-4e6c-8b2d-704ae88a89af",
                 "suoritus": "64d26b8c-e2c8-4b13-9ac9-51c85e288bc0",
                 "arvio": {"arvosana": "C", "asteikko": "YO", "pisteet": 4},
@@ -240,7 +240,7 @@ var restData = {
                 "valinnainen": false,
                 "lisatieto": "UO",
                 "myonnetty": "21.12.1988"
-            },{
+            }, {
                 "id": "3ba4b93c-87e8-4e6c-8b2d-704ae88a89af",
                 "suoritus": "64d26b8c-e2c8-4b13-9ac9-51c85e288bc0",
                 "arvio": {"arvosana": "C", "asteikko": "YO", "pisteet": 4},
@@ -277,7 +277,7 @@ var serviceUrls = {
         suoritus: function (oid) {
             return new RegExp(".*rest/v1/arvosanat\\?suoritus=" + oid + "$")
         },
-        arvosana: function(oid) {
+        arvosana: function (oid) {
             return new RegExp(".*rest/v1/arvosanat/" + oid + "$")
         }
     },
@@ -297,11 +297,11 @@ var httpFixtures = function () {
     var fixtures = {}
 
     fixtures.casRoles = {
-        robotti: function() {
+        robotti: function () {
             testFrame().testCache.removeAll()
             testFrame().casRolesMock.respond(["USER_robotti", "APP_HENKILONHALLINTA_CRUD", "APP_OID", "APP_HENKILONHALLINTA", "APP_ORGANISAATIOHALLINTA", "APP_KOODISTO_READ", "APP_VALINTAPERUSTEKUVAUSTENHALLINTA_READ", "APP_TARJONTA_CRUD", "APP_HENKILONHALLINTA_OPHREKISTERI", "APP_KOOSTEROOLIENHALLINTA_READ", "APP_KOODISTO", "APP_ANOMUSTENHALLINTA", "APP_OMATTIEDOT", "APP_TARJONTA", "APP_HAKUJENHALLINTA", "APP_OMATTIEDOT_READ_UPDATE", "APP_RAPORTOINTI", "APP_ANOMUSTENHALLINTA_CRUD", "APP_HAKUJENHALLINTA_CRUD", "VIRKAILIJA", "APP_VALINTAPERUSTEKUVAUSTENHALLINTA", "APP_KOOSTEROOLIENHALLINTA", "APP_ORGANISAATIOHALLINTA_CRUD", "APP_OID_READ", "APP_HENKILONHALLINTA_READ", "APP_SIJOITTELU", "APP_HAKUJENHALLINTA_CRUD_1.2.246.562.10.00000000001", "APP_LOKALISOINTI_CRUD_1.2.246.562.10.00000000001", "APP_YHTEYSTIETOTYYPPIENHALLINTA_CRUD_1.2.246.562.10.00000000001", "APP_VALINTAPERUSTEET_CRUD", "APP_SUORITUSREKISTERI_CRUD_1.2.246.562.10.00000000001", "APP_KOODISTO_READ_1.2.246.562.10.00000000001", "APP_OMATTIEDOT_CRUD_1.2.246.562.10.00000000001", "APP_TARJONTA_READ_1.2.246.562.10.00000000001", "APP_VALINTAPERUSTEKUVAUSTENHALLINTA_CRUD", "APP_AITU_CRUD", "APP_VALINTOJENTOTEUTTAMINEN_CRUD_1.2.246.562.10.00000000001", "APP_ANOMUSTENHALLINTA_CRUD_1.2.246.562.10.00000000001", "APP_LOKALISOINTI", "APP_SISALLONHALLINTA", "APP_TARJONTA_CRUD_1.2.246.562.10.00000000001", "APP_ORGANISAATIOHALLINTA_READ", "APP_TIEDONSIIRTO_CRUD_1.2.246.562.10.00000000001", "APP_OMATTIEDOT_CRUD", "APP_OID_CRUD", "APP_KOOSTEROOLIENHALLINTA_READ_1.2.246.562.10.00000000001", "APP_KOODISTO_CRUD_1.2.246.562.10.00000000001", "APP_HENKILONHALLINTA_READ_1.2.246.562.10.00000000001", "APP_SISALLONHALLINTA_CRUD_1.2.246.562.10.00000000001", "APP_ANOMUSTENHALLINTA_READ", "APP_YHTEYSTIETOTYYPPIENHALLINTA_CRUD", "APP_KOODISTO_CRUD", "APP_AITU_CRUD_1.2.246.562.10.00000000001", "APP_ANOMUSTENHALLINTA_READ_1.2.246.562.10.00000000001", "APP_VALINTOJENTOTEUTTAMINEN", "APP_SUORITUSREKISTERI_CRUD", "APP_HAKEMUS_READ_UPDATE", "APP_HAKUJENHALLINTA_READ", "APP_RYHMASAHKOPOSTI_VIEW_1.2.246.562.10.00000000001", "APP_HAKULOMAKKEENHALLINTA", "APP_TIEDONSIIRTO_CRUD", "APP_SISALLONHALLINTA_CRUD", "APP_HAKEMUS", "APP_HAKEMUS_CRUD_1.2.246.562.10.00000000001", "APP_VALINTAPERUSTEKUVAUSTENHALLINTA_CRUD_1.2.246.562.10.00000000001", "APP_HAKEMUS_CRUD", "APP_OSOITE_CRUD", "APP_YHTEYSTIETOTYYPPIENHALLINTA", "APP_OMATTIEDOT_READ_UPDATE_1.2.246.562.10.00000000001", "APP_ORGANISAATIOHALLINTA_READ_1.2.246.562.10.00000000001", "APP_HENKILONHALLINTA_CRUD_1.2.246.562.10.00000000001", "APP_VALINTAPERUSTEKUVAUSTENHALLINTA_READ_1.2.246.562.10.00000000001", "APP_HAKULOMAKKEENHALLINTA_CRUD_1.2.246.562.10.00000000001", "APP_OSOITE_CRUD_1.2.246.562.10.00000000001", "APP_RYHMASAHKOPOSTI", "APP_SIJOITTELU_CRUD_1.2.246.562.10.00000000001", "APP_LOKALISOINTI_CRUD", "APP_RYHMASAHKOPOSTI_SEND_1.2.246.562.10.00000000001", "APP_OID_READ_1.2.246.562.10.00000000001", "APP_HENKILONHALLINTA_OPHREKISTERI_1.2.246.562.10.00000000001", "APP_ORGANISAATIOHALLINTA_CRUD_1.2.246.562.10.00000000001", "APP_YHTEYSTIETOTYYPPIENHALLINTA_READ_1.2.246.562.10.00000000001", "APP_KOOSTEROOLIENHALLINTA_CRUD", "APP_AITU", "APP_SUORITUSREKISTERI", "APP_TIEDONSIIRTO", "APP_YHTEYSTIETOTYYPPIENHALLINTA_READ", "APP_VALINTAPERUSTEET", "APP_TARJONTA_READ", "APP_VALINTOJENTOTEUTTAMINEN_CRUD", "APP_OID_CRUD_1.2.246.562.10.00000000001", "APP_HAKEMUS_READ_UPDATE_1.2.246.562.10.00000000001", "APP_VALINTAPERUSTEET_CRUD_1.2.246.562.10.00000000001", "APP_KOOSTEROOLIENHALLINTA_CRUD_1.2.246.562.10.00000000001", "APP_SIJOITTELU_CRUD", "APP_HAKUJENHALLINTA_READ_1.2.246.562.10.00000000001", "APP_RYHMASAHKOPOSTI_SEND", "APP_HAKULOMAKKEENHALLINTA_CRUD", "APP_RYHMASAHKOPOSTI_VIEW", "APP_OSOITE", "APP_HAKEMUS_LISATIETOCRUD_1.2.246.562.10.00000000001", "APP_ASIAKIRJAPALVELU_CREATE_TEMPLATE_1.2.246.562.10.00000000001", "APP_IPOSTI_SEND", "APP_VALINTAPERUSTEETKK_CRUD", "APP_ASIAKIRJAPALVELU_READ", "APP_ASIAKIRJAPALVELU_CREATE_TEMPLATE", "APP_IPOSTI_READ_1.2.246.562.10.00000000001", "APP_VALINTOJENTOTEUTTAMINENKK_CRUD_1.2.246.562.10.00000000001", "APP_VALINTOJENTOTEUTTAMINENKK_CRUD", "APP_ASIAKIRJAPALVELU_ASIOINTITILICRUD_1.2.246.562.10.00000000001", "APP_RAPORTOINTI_CRUD", "APP_IPOSTI_SEND_1.2.246.562.10.00000000001", "APP_KKHAKUVIRKAILIJA_CRUD_1.2.246.562.10.00000000001", "APP_IPOSTI", "APP_VALINTAPERUSTEKUVAUSTENHALLINTA_KK", "APP_IPOSTI_READ", "APP_VALINTOJENTOTEUTTAMINENKK", "APP_ASIAKIRJAPALVELU_CREATE_LETTER_1.2.246.562.10.00000000001", "APP_ASIAKIRJAPALVELU", "APP_KKHAKUVIRKAILIJA_CRUD", "APP_TARJONTA_KK_CRUD", "APP_ASIAKIRJAPALVELU_CREATE_LETTER", "APP_TARJONTA_KK_CRUD_1.2.246.562.10.00000000001", "APP_TARJONTA_KK", "APP_HAKEMUS_LISATIETOCRUD", "APP_VALINTAPERUSTEETKK_CRUD_1.2.246.562.10.00000000001", "APP_ASIAKIRJAPALVELU_ASIOINTITILICRUD", "APP_KKHAKUVIRKAILIJA", "APP_VALINTAPERUSTEKUVAUSTENHALLINTA_KK_CRUD", "APP_RAPORTOINTI_CRUD_1.2.246.562.10.00000000001", "APP_ASIAKIRJAPALVELU_READ_1.2.246.562.10.00000000001", "APP_VALINTAPERUSTEETKK", "APP_VALINTAPERUSTEKUVAUSTENHALLINTA_KK_CRUD_1.2.246.562.10.00000000001", "APP_ASIAKIRJAPALVELU_SEND_LETTER_EMAIL", "APP_ASIAKIRJAPALVELU_SEND_LETTER_EMAIL_1.2.246.562.10.00000000001", "APP_TIEDONSIIRTO_VALINTA_1.2.246.562.10.00000000001", "APP_TIEDONSIIRTO_VALINTA", "APP_VALINTOJENTOTEUTTAMINEN_TULOSTENTUONTI_1.2.246.562.10.00000000001", "APP_VALINTOJENTOTEUTTAMINEN_TULOSTENTUONTI", "APP_HAKULOMAKKEENHALLINTA_LOMAKEPOHJANVAIHTO", "APP_HAKULOMAKKEENHALLINTA_LOMAKEPOHJANVAIHTO_1.2.246.562.10.00000000001"])
         },
-        empty: function() {
+        empty: function () {
             testFrame().testCache.removeAll()
             testFrame().casRolesMock.respond([])
         }
@@ -557,7 +557,7 @@ var httpFixtures = function () {
                 "valinnainen": false,
                 "myonnetty": "03.06.2015",
                 "source": "Test"
-        }])
+            }])
         },
         aarnenLukioArvosanat: function () {
             fixtures.get(serviceUrls.arvosanat.suoritus("b3704e86-942f-43ed-b842-9d6570ecab4c"), [{
@@ -690,22 +690,22 @@ var httpFixtures = function () {
                 "myonnetty": "04.06.2015",
                 "source": "Test"
             },
-            {
-                "id": "2fe26f51-de2e-421f-a8ee-ca3fdb17a786",
-                "suoritus": "b3704e86-942f-43ed-b842-9d6570ecab4c",
-                "arvio": { "arvosana": "6", "asteikko": "4-10" },
-                "aine": "FI",
-                "source": "Test",
-                "valinnainen": false
-            },
-            {
-                "id": "e3b97a04-8032-4fb1-85a5-a6385da9a0c7",
-                "suoritus": "b3704e86-942f-43ed-b842-9d6570ecab4c",
-                "arvio": { "arvosana": "8", "asteikko": "4-10" },
-                "aine": "PS",
-                "source": "Test",
-                "valinnainen": false
-            }])
+                {
+                    "id": "2fe26f51-de2e-421f-a8ee-ca3fdb17a786",
+                    "suoritus": "b3704e86-942f-43ed-b842-9d6570ecab4c",
+                    "arvio": {"arvosana": "6", "asteikko": "4-10"},
+                    "aine": "FI",
+                    "source": "Test",
+                    "valinnainen": false
+                },
+                {
+                    "id": "e3b97a04-8032-4fb1-85a5-a6385da9a0c7",
+                    "suoritus": "b3704e86-942f-43ed-b842-9d6570ecab4c",
+                    "arvio": {"arvosana": "8", "asteikko": "4-10"},
+                    "aine": "PS",
+                    "source": "Test",
+                    "valinnainen": false
+                }])
         }
     }
 
@@ -749,8 +749,14 @@ var httpFixtures = function () {
     }
 
     fixtures.rekisteriTiedotLocal = {
+
         rekisteriTiedot: function () {
-            fixtures.get(/.*rest\/v1\/rekisteritiedot\/light\?oppilaitosOid=1\.2\.246\.562\.10\.39644336305&vuosi=2015$/, [{
+            function getCurrentYear() {
+                var d = new Date()
+                return d.getMonth() > 6 ? d.getFullYear() + 1 : d.getFullYear()
+            }
+
+            fixtures.get(new RegExp(".*rest\\/v1\\/rekisteritiedot\\/light\\?oppilaitosOid=1\\.2\\.246\\.562\\.10\\.39644336305&vuosi=" + getCurrentYear() + "$"), [{
                 "henkilo": "1.2.246.562.24.71944845619",
                 "luokka": "9A",
                 "arvosanat": true
