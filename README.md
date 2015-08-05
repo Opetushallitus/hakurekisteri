@@ -23,7 +23,7 @@ Näin voit ajaa sovellusta paikallisesti tuotannonkaltaisena setuppina, käyttä
 
 2. Luo paikallinen h2-tietokanta: `./sbt createDevDb`. Tämä kopioi datat luokka-ympäristöstä tietokantaan `data/development.h2.db`.
 
-3. Käynnistä paikallinen serveri: `./sbt ~container:start`. Vaihtoehtoisesti aja IDEA:ssa luokka `HakuRekisteriJetty`.
+3. Käynnistä paikallinen serveri: `./sbt ~container:start` (vaatii oph-configuration kansion). Vaihtoehtoisesti aja IDEA:ssa luokka `HakuRekisteriJetty` (ei vaadi oph-configuration kansion).
 
 Sovellus on saatavilla osoitteessa http://localhost:8080/
 
