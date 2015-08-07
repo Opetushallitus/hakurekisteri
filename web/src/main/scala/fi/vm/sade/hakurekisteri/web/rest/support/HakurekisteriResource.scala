@@ -39,7 +39,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   val delete: OperationBuilder
 
   delete("/:id", operation(delete)) {
-    audit.log(new LogMessage(s"${currentUser.get.username}", "virkailija", s"Käyttäjä ${currentUser.get.username} poisti resurssin ${params("id")}"))
+    audit.log(new LogMessage(s"${currentUser.get.username}", s"Käyttäjä ${currentUser.get.username} poisti resurssin ${params("id")}"))
     if (!currentUser.exists(_.canDelete(resourceName))) throw UserNotAuthorized("not authorized")
     else deleteResource()
   }
@@ -49,13 +49,13 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   }
 
   post("/", operation(create)) {
-    audit.log(new LogMessage(s"${currentUser.get.username}", "virkailija", s"Käyttäjä ${currentUser.get.username} loi uuden resurssin"))
+    audit.log(new LogMessage(s"${currentUser.get.username}", s"Käyttäjä ${currentUser.get.username} loi uuden resurssin"))
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
     else createResource(currentUser)
   }
 
   post("/:id", operation(update)) {
-    audit.log(new LogMessage(s"${currentUser.get.username}", "virkailija", s"Käyttäjä ${currentUser.get.username} päivitti resurssia ${params("id")}"))
+    audit.log(new LogMessage(s"${currentUser.get.username}", s"Käyttäjä ${currentUser.get.username} päivitti resurssia ${params("id")}"))
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
     else updateResource()
   }
