@@ -1,4 +1,4 @@
-# Haku- ja valintarekisteri #
+# Suoritusrekisteri #
 
 
 ## Fronttidevaus ja mocha-testit
