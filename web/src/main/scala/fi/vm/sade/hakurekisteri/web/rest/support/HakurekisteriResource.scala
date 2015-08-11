@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.auditlog.{LogMessage, Audit}
+import fi.vm.sade.auditlog.LogMessage
 import fi.vm.sade.hakurekisteri.organization.{AuthorizedCreate, AuthorizedDelete, AuthorizedQuery, AuthorizedRead, AuthorizedUpdate}
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -26,7 +26,7 @@ import scala.language.implicitConversions
 import scala.util.Try
 import scalaz.NonEmptyList
 
-trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A , C] with SecuritySupport with JsonSupport[_] =>
+trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]] extends ScalatraServlet with SwaggerSupport { this: HakurekisteriResource[A, C] with SecuritySupport with JsonSupport[_] =>
 
   before() {
     contentType = formats("json")
@@ -39,9 +39,12 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   val delete: OperationBuilder
 
   delete("/:id", operation(delete)) {
-    audit.log(new LogMessage(s"${currentUser.get.username}", s"Käyttäjä ${currentUser.get.username} poisti resurssin ${params("id")}"))
     if (!currentUser.exists(_.canDelete(resourceName))) throw UserNotAuthorized("not authorized")
-    else deleteResource()
+    else {
+      val res = deleteResource()
+      audit.log(new LogMessage(s"${currentUser.get.username}", s"Käyttäjä ${currentUser.get.username} poisti resurssin ${params("id")} ($resourceName)"))
+      res
+    }
   }
 
   def deleteResource(): Object = {
@@ -49,15 +52,26 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   }
 
   post("/", operation(create)) {
-    audit.log(new LogMessage(s"${currentUser.get.username}", s"Käyttäjä ${currentUser.get.username} loi uuden resurssin"))
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
-    else createResource(currentUser)
+    else {
+      val res = createResource(currentUser)
+      val user = currentUser.get.username
+      res.is.onSuccess {
+        case ActionResult(_, r, headers) =>
+          val id = Try(r.asInstanceOf[A with Identified[UUID]].id.toString).getOrElse(r)
+          audit.log(new LogMessage(s"$user", s"Käyttäjä $user loi uuden resurssin $id ($resourceName)"))
+      }
+      res
+    }
   }
 
   post("/:id", operation(update)) {
-    audit.log(new LogMessage(s"${currentUser.get.username}", s"Käyttäjä ${currentUser.get.username} päivitti resurssia ${params("id")}"))
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
-    else updateResource()
+    else {
+      val res = updateResource()
+      audit.log(new LogMessage(s"${currentUser.get.username}", s"Käyttäjä ${currentUser.get.username} päivitti resurssia ${params("id")} ($resourceName)"))
+      res
+    }
   }
 
   def updateResource(): Object = {
@@ -134,7 +148,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
 
   def notEnabled = new Exception("operation not enabled")
 
-  def createResource(user: Option[User]): Object = {
+  def createResource(user: Option[User]) = {
     val msg: Future[AuthorizedCreate[A, UUID]] = (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(_.fold(
       errors => Future.failed(MalformedResourceException(errors)),
       resource =>
