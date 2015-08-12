@@ -81,6 +81,7 @@ data/
 
 buildversion.txt
 .sonar/
+db/schema.ddl
 
 # excel temp files
 *.xls#

@@ -125,6 +125,8 @@ object HakurekisteriBuild extends Build {
       IO.write(f, buildversionTxt)
   }
 
+  lazy val generateSchema = taskKey[Unit]("start database schema generator")
+
   val scalac = Seq(scalacOptions ++= Seq( "-deprecation", "-unchecked", "-feature" ))
 
   lazy val core = Project(
@@ -148,7 +150,8 @@ object HakurekisteriBuild extends Build {
       artifactoryPublish,
       libraryDependencies   ++= AkkaStack ++ dependencies
         ++ testDependencies.map((m) => m % "test,it"),
-      fullRunTask(createDevDb, Test, "util.CreateDevDb")
+      fullRunTask(createDevDb, Test, "util.CreateDevDb"),
+      fullRunTask(generateSchema, Compile, "fi.vm.sade.hakurekisteri.storage.SchemaGenerator")
     ) ++ inConfig(LoadSpecs)(Defaults.testSettings)
       ++ inConfig(LoadSpecs)(Seq(
       testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
