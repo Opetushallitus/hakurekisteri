@@ -1,14 +1,17 @@
 import java.text.SimpleDateFormat
 import java.util.Date
-import sbt._
-import sbt.Keys._
-import com.mojolly.scalate.ScalatePlugin._
-import scala.language.postfixOps
+
 import com.earldouglas.xsbtwebplugin._
+import com.mojolly.scalate.ScalatePlugin._
+import sbt.Keys._
+import sbt._
+
+import scala.language.postfixOps
 
 object HakurekisteriBuild extends Build {
-  import sys.process._
   import com.earldouglas.xsbtwebplugin.PluginKeys._
+
+  import sys.process._
 
   val Organization = "fi.vm.sade"
   val Name = "hakurekisteri"
@@ -127,6 +130,14 @@ object HakurekisteriBuild extends Build {
 
   lazy val generateSchema = taskKey[Unit]("start database schema generator")
 
+  lazy val generateDbDiagram = taskKey[Unit]("start schema diagram generator")
+
+  val generateDbDiagramTask = generateDbDiagram <<= version map {
+    (ver: String) =>
+      println("generating db diagram...")
+      s"/usr/sbin/sql2diagram db/schema.ddl target/sql2diagram/suoritusrekisteri-$ver" #&& s"scp target/sql2diagram/* bamboo@pulpetti:/var/www/html/db/" !
+  }
+
   val scalac = Seq(scalacOptions ++= Seq( "-deprecation", "-unchecked", "-feature" ))
 
   lazy val core = Project(
@@ -148,6 +159,7 @@ object HakurekisteriBuild extends Build {
       resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
       resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
       artifactoryPublish,
+      generateDbDiagramTask,
       libraryDependencies   ++= AkkaStack ++ dependencies
         ++ testDependencies.map((m) => m % "test,it"),
       fullRunTask(createDevDb, Test, "util.CreateDevDb"),
