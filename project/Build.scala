@@ -135,7 +135,7 @@ object HakurekisteriBuild extends Build {
   val generateDbDiagramTask = generateDbDiagram <<= version map {
     (ver: String) =>
       println("generating db diagram...")
-      s"/usr/sbin/sql2diagram db/schema.ddl target/sql2diagram/suoritusrekisteri-$ver" #&& s"scp target/sql2diagram/* bamboo@pulpetti:/var/www/html/db/" !
+      s"/usr/sbin/sql2diagram db/schema.ddl target/suoritusrekisteri-$ver" #&& s"scp target/suoritusrekisteri-$ver* bamboo@pulpetti:/var/www/html/db/" !
   }
 
   val scalac = Seq(scalacOptions ++= Seq( "-deprecation", "-unchecked", "-feature" ))
