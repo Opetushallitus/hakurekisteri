@@ -135,7 +135,15 @@ object HakurekisteriBuild extends Build {
   val generateDbDiagramTask = generateDbDiagram <<= (version, baseDirectory) map {
     (ver: String, dir: File) =>
       println(s"generating db diagram in $dir...")
-      s"/usr/sbin/sql2diagram db/schema.ddl $dir/target/suoritusrekisteri-$ver" #&& s"scp $dir/target/suoritusrekisteri-$ver.* bamboo@pulpetti:/var/www/html/db/" !
+      s"/usr/sbin/sql2diagram db/schema.ddl $dir/target/suoritusrekisteri-$ver" !
+  }
+
+  lazy val uploadDbDiagram = taskKey[Unit]("start schema diagram uploader")
+
+  val uploadDbDiagramTask = uploadDbDiagram <<= (version, baseDirectory) map {
+    (ver: String, dir: File) =>
+      println(s"uploading db diagram from $dir...")
+      s"scp $dir/target/suoritusrekisteri-$ver.* bamboo@pulpetti:/var/www/html/db/" !
   }
 
   val scalac = Seq(scalacOptions ++= Seq( "-deprecation", "-unchecked", "-feature" ))
@@ -160,6 +168,7 @@ object HakurekisteriBuild extends Build {
       resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
       artifactoryPublish,
       generateDbDiagramTask,
+      uploadDbDiagramTask,
       libraryDependencies   ++= AkkaStack ++ dependencies
         ++ testDependencies.map((m) => m % "test,it"),
       fullRunTask(createDevDb, Test, "util.CreateDevDb"),
