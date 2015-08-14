@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
 import akka.actor.Status.Failure
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{Cancellable, Actor, ActorLogging, ActorRef}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
@@ -27,7 +27,10 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   val valintatulosRefreshTimeHours = config.integrations.valintatulosRefreshTimeHours.hours
   var starting = true
 
-  context.system.scheduler.schedule(1.second, hakuRefreshTime, self, Update)
+  val update = context.system.scheduler.schedule(1.second, hakuRefreshTime, self, Update)
+  var retryUpdate: Option[Cancellable] = None
+  var hakemusUpdate: Option[Cancellable] = None
+  var vtsUpdate: Option[Cancellable] = None
 
   import FutureList._
 
@@ -58,8 +61,10 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
       log.info(s"current hakus [${activeHakus.map(h => h.oid).mkString(", ")}]")
       if (starting) {
         starting = false
-        context.system.scheduler.schedule(1.second, valintatulosRefreshTimeHours, self, RefreshSijoittelu)
-        context.system.scheduler.schedule(1.second, hakemusRefreshTime, self, ReloadHakemukset)
+        vtsUpdate.foreach(_.cancel())
+        vtsUpdate = Some(context.system.scheduler.schedule(1.second, valintatulosRefreshTimeHours, self, RefreshSijoittelu))
+        hakemusUpdate.foreach(_.cancel())
+        hakemusUpdate = Some(context.system.scheduler.schedule(1.second, hakemusRefreshTime, self, ReloadHakemukset))
       }
 
     case RefreshSijoittelu => refreshKeepAlives()
@@ -69,7 +74,8 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
     case Failure(t: GetHautQueryFailedException) =>
       log.error(s"${t.getMessage}, retrying in a minute")
-      context.system.scheduler.scheduleOnce(1.minute, self, Update)
+      retryUpdate.foreach(_.cancel())
+      retryUpdate = Some(context.system.scheduler.scheduleOnce(1.minute, self, Update))
 
     case Failure(t) =>
       log.error(t, s"got failure from ${sender()}")
@@ -96,6 +102,12 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
   def refreshKeepAlives() {
     valintaTulos.!(BatchUpdateValintatulos(activeHakus.map(h => UpdateValintatulos(h.oid)).toSet))
+  }
+
+  override def postStop(): Unit = {
+    update.cancel()
+    Seq(retryUpdate, hakemusUpdate, vtsUpdate).foreach(_.foreach(_.cancel()))
+    super.postStop()
   }
 }
 

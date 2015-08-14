@@ -4,7 +4,7 @@ import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Cancellable, Actor, ActorRef, Props}
 import akka.event.Logging
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.hakija.{HakijaQuery, Hakuehto}
@@ -184,9 +184,13 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   var aktiivisetHaut: Set[Haku] = Set()
   val cursorFormat = "yyyyMMddHHmm"
   val resetCursor = context.system.scheduler.schedule(7.days, 7.days, self, ResetCursor)
+  var retryResetCursor: Option[Cancellable] = None
+  var retryRefresh: Option[Cancellable] = None
 
   override def postStop(): Unit = {
     resetCursor.cancel()
+    retryResetCursor.foreach(_.cancel())
+    retryRefresh.foreach(_.cancel())
     super.postStop()
   }
 
@@ -214,7 +218,8 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
       hakuCursor = None
 
     case ResetCursor if reloading =>
-      context.system.scheduler.scheduleOnce(1.minute, self, ResetCursor)
+      retryResetCursor.foreach(_.cancel())
+      retryResetCursor = Some(context.system.scheduler.scheduleOnce(1.minute, self, ResetCursor))
 
     case AktiivisetHaut(haut) =>
       aktiivisetHaut = haut
@@ -243,7 +248,8 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
           log.info("initial loading done")
         }
       } else {
-        context.system.scheduler.scheduleOnce(1.minute, self, RefreshHakemukset)
+        retryRefresh.foreach(_.cancel())
+        retryRefresh = Some(context.system.scheduler.scheduleOnce(1.minute, self, RefreshHakemukset))
       }
 
 

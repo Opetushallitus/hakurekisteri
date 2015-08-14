@@ -4,7 +4,7 @@ import java.net.URLEncoder
 import java.util.concurrent.ExecutionException
 
 import akka.actor.Status.Failure
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{Cancellable, Actor, ActorLogging, ActorRef}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.mocks.OrganisaatioMock
@@ -28,6 +28,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   val timeToLive: FiniteDuration = ttl.getOrElse(config.integrations.organisaatioCacheHours.hours)
   val reloadInterval = timeToLive / 2
   val refresh = context.system.scheduler.schedule(reloadInterval, reloadInterval, self, RefreshOrganisaatioCache)
+  var retryRefresh: Option[Cancellable] = None
 
   log.info(s"timeToLive: $timeToLive, reloadInterval: $reloadInterval")
 
@@ -95,6 +96,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
 
   override def postStop(): Unit = {
     refresh.cancel()
+    retryRefresh.foreach(_.cancel())
   }
   
   case class CacheOrganisaatiot(o: Seq[Organisaatio])
@@ -110,7 +112,8 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
 
     case Failure(t: OrganisaatioFetchFailedException) =>
       log.error("organisaatio refresh failed, retrying in 1 minute", t.t)
-      context.system.scheduler.scheduleOnce(1.minute, self, RefreshOrganisaatioCache)
+      retryRefresh.foreach(_.cancel())
+      retryRefresh = Some(context.system.scheduler.scheduleOnce(1.minute, self, RefreshOrganisaatioCache))
 
     case Failure(t: Throwable) =>
       log.error("error in organisaatio actor", t)

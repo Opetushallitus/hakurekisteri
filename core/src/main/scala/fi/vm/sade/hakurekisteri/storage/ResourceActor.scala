@@ -1,30 +1,19 @@
 package fi.vm.sade.hakurekisteri.storage
 
-import akka.actor.{ActorLogging, Cancellable, Actor}
-import akka.event.Logging
-import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
-import akka.pattern.pipe
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
 import akka.actor.Status.Failure
-import scala.util.Try
+import akka.actor.{Actor, ActorLogging}
+import akka.event.Logging
+import akka.pattern.pipe
+import fi.vm.sade.hakurekisteri.rest.support.{Query, Resource}
 import fi.vm.sade.hakurekisteri.storage.repository.Repository
+
+import scala.concurrent.ExecutionContext
+import scala.util.Try
 
 object GetCount
 
 abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] extends Actor with ActorLogging { this: Repository[T, I] with ResourceService[T, I] =>
   implicit val executionContext: ExecutionContext = context.dispatcher
-  val reloadInterval = 10.seconds
-
-  override def postStop(): Unit = {
-    reload.foreach((c) => c.cancel())
-  }
-
-  var reload: Option[Cancellable] = None
-
-  override def preStart(): Unit = {
-    reload = Some(context.system.scheduler.schedule(reloadInterval, reloadInterval, self, Reload))
-  }
 
   private def operationOrFailure(operation: () => Any) = {
     val t = Try(operation())
@@ -58,10 +47,6 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
     case InsertResource(resource: T) =>
       sender ! operationOrFailure(() => insert(resource))
 
-    case Reload  =>
-      //log.debug(s"reloading from ${journal.latestReload}")
-      //loadJournal(journal.latestReload)
-
     case LogMessage(message, level) =>
       log.log(level, message)
   }
@@ -69,7 +54,4 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
 
 case class DeleteResource[I](id: I, source: String)
 case class InsertResource[I, T <: Resource[I, T]](resource: T)
-
-object Reload
-
 case class LogMessage(message: String, level: Logging.LogLevel)
