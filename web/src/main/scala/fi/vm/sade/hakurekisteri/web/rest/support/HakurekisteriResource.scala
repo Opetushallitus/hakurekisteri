@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.auditlog.LogMessage
+import fi.vm.sade.auditlog.hakurekisteri.{HakuRekisteriOperation, LogMessage}
 import fi.vm.sade.hakurekisteri.organization.{AuthorizedCreate, AuthorizedDelete, AuthorizedQuery, AuthorizedRead, AuthorizedUpdate}
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -42,7 +42,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     if (!currentUser.exists(_.canDelete(resourceName))) throw UserNotAuthorized("not authorized")
     else {
       val res = deleteResource()
-      audit.log(new LogMessage(s"${currentUser.get.username}", s"Käyttäjä ${currentUser.get.username} poisti resurssin ${params("id")} ($resourceName)"))
+      auditLog(currentUser.get.username, HakuRekisteriOperation.RESOURCE_DELETE, resourceName)
       res
     }
   }
@@ -59,7 +59,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
       res.is.onSuccess {
         case ActionResult(_, r, headers) =>
           val id = Try(r.asInstanceOf[A with Identified[UUID]].id.toString).getOrElse(r)
-          audit.log(new LogMessage(s"$user", s"Käyttäjä $user loi uuden resurssin $id ($resourceName)"))
+          auditLog(user, HakuRekisteriOperation.RESOURCE_CREATE, resourceName)
       }
       res
     }
@@ -69,10 +69,17 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
     else {
       val res = updateResource()
-      audit.log(new LogMessage(s"${currentUser.get.username}", s"Käyttäjä ${currentUser.get.username} päivitti resurssia ${params("id")} ($resourceName)"))
+      auditLog(currentUser.get.username, HakuRekisteriOperation.RESOURCE_UPDATE, resourceName)
       res
     }
   }
+
+  private def auditLog(username: String, operation: HakuRekisteriOperation, resourceName: String) =
+    audit.log(LogMessage.builder()
+      .id(username)
+      .setOperaatio(operation)
+      .setResourceName(resourceName)
+      .build())
 
   def updateResource(): Object = {
     Try(UUID.fromString(params("id"))).map(updateResource(_, currentUser)).get
