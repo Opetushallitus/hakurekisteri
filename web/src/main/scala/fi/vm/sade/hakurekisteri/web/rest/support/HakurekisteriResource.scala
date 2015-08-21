@@ -2,10 +2,11 @@ package fi.vm.sade.hakurekisteri.web.rest.support
 
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.{Logging, LoggingAdapter}
-import akka.pattern.ask
-import akka.util.Timeout
+import _root_.akka.actor.{ActorRef, ActorSystem}
+import _root_.akka.event.{Logging, LoggingAdapter}
+import _root_.akka.pattern.ask
+import _root_.akka.util.Timeout
+import fi.vm.sade.auditlog.hakurekisteri.LogMessage.LogMessageBuilder
 import fi.vm.sade.auditlog.hakurekisteri.{HakuRekisteriOperation, LogMessage}
 import fi.vm.sade.hakurekisteri.organization.{AuthorizedCreate, AuthorizedDelete, AuthorizedQuery, AuthorizedRead, AuthorizedUpdate}
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -42,7 +43,7 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     if (!currentUser.exists(_.canDelete(resourceName))) throw UserNotAuthorized("not authorized")
     else {
       val res = deleteResource()
-      auditLog(currentUser.get.username, HakuRekisteriOperation.RESOURCE_DELETE, resourceName)
+      auditLog(currentUser.get.username, HakuRekisteriOperation.RESOURCE_DELETE, resourceName, params("id"))
       res
     }
   }
@@ -58,8 +59,8 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
       val user = currentUser.get.username
       res.is.onSuccess {
         case ActionResult(_, r, headers) =>
-          val id = Try(r.asInstanceOf[A with Identified[UUID]].id.toString).getOrElse(r)
-          auditLog(user, HakuRekisteriOperation.RESOURCE_CREATE, resourceName)
+          val id: String = Try(r.asInstanceOf[A with Identified[UUID]].id.toString).getOrElse(r.toString)
+          auditLog(user, HakuRekisteriOperation.RESOURCE_CREATE, resourceName, id)
       }
       res
     }
@@ -68,17 +69,25 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
   post("/:id", operation(update)) {
     if (!currentUser.exists(_.canWrite(resourceName))) throw UserNotAuthorized("not authorized")
     else {
-      val res = updateResource()
-      auditLog(currentUser.get.username, HakuRekisteriOperation.RESOURCE_UPDATE, resourceName)
-      res
+      val updated = updateResource()
+      auditLog(currentUser.get.username, HakuRekisteriOperation.RESOURCE_UPDATE, resourceName, params("id"))
+      updated
     }
   }
 
-  private def auditLog(username: String, operation: HakuRekisteriOperation, resourceName: String) =
-    audit.log(LogMessage.builder()
+  private def auditAddMuutokset(muutokset: Map[String, (String, String)])(builder: LogMessageBuilder): LogMessageBuilder = {
+    muutokset.foreach {
+      case (kentta, (vanhaArvo, uusiArvo)) => builder.add(kentta, vanhaArvo, uusiArvo)
+    }
+    builder
+  }
+
+  private def auditLog(username: String, operation: HakuRekisteriOperation, resourceName: String, resourceId: String, muutokset: Map[String, (String, String)] = Map()) =
+    audit.log(auditAddMuutokset(muutokset)(LogMessage.builder())
       .id(username)
       .setOperaatio(operation)
       .setResourceName(resourceName)
+      .setResourceId(resourceId)
       .build())
 
   def updateResource(): Object = {
@@ -191,7 +200,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
       }
       else Future.failed(notEnabled)
     )
-    new FutureActorResult[A with Identified[UUID]](msg , Ok(_))
+    new FutureActorResult[A with Identified[UUID]](msg, Ok(_))
   }
 
   def deleteResource(id: UUID, user: Option[User]): Object = {
