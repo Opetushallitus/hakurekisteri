@@ -45,7 +45,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
   override def receive: Actor.Receive = {
     case Update =>
-      log.info(s"updating all hakus for ${self.path.toString} from ${sender()}")
+      log.info(s"updating all hakus for $self from ${sender()}")
       tarjonta ! GetHautQuery
 
     case HakuRequest => sender ! activeHakus
