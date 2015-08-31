@@ -41,9 +41,11 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
     }
   }
 
+  log.info(s"starting haku actor (hakuRefreshTime: $hakuRefreshTime, valintatulosRefreshTimeHours: $valintatulosRefreshTimeHours, hakemusRefreshTime: $hakemusRefreshTime, starting: $starting)")
+
   override def receive: Actor.Receive = {
     case Update =>
-      log.info(s"updating all hakus for ${self.path.toString}")
+      log.info(s"updating all hakus for ${self.path.toString} from ${sender()}")
       tarjonta ! GetHautQuery
 
     case HakuRequest => sender ! activeHakus
@@ -65,11 +67,15 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
         vtsUpdate = Some(context.system.scheduler.schedule(1.second, valintatulosRefreshTimeHours, self, RefreshSijoittelu))
         hakemusUpdate.foreach(_.cancel())
         hakemusUpdate = Some(context.system.scheduler.schedule(1.second, hakemusRefreshTime, self, ReloadHakemukset))
+        log.info(s"started VTS & hakemus schedulers, starting: $starting")
       }
 
-    case RefreshSijoittelu => refreshKeepAlives()
+    case RefreshSijoittelu =>
+      log.info(s"refreshing sijoittelu from ${sender()}")
+      refreshKeepAlives()
 
     case ReloadHakemukset =>
+      log.info(s"loading hakemukset from ${sender()}")
       hakemukset ! AktiivisetHaut(activeHakus.toSet)
 
     case Failure(t: GetHautQueryFailedException) =>
