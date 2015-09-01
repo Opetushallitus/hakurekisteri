@@ -14,7 +14,6 @@ import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedExce
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Failure, Success}
 
 case class ValintaTulosQuery(hakuOid: String,
                              hakemusOid: Option[String],
@@ -66,9 +65,10 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       val (haku, waitingRequests) = nextUpdateRequest
       val result = callBackend(haku, None)
       waitingRequests.foreach(_.tryCompleteWith(result))
-      result.onComplete {
-        case Success(r) => rescheduleHaku(haku)
-        case Failure(t) => rescheduleHaku(haku, retry)
+      result.onFailure {
+        case t =>
+          log.error(s"valinta tulos update failed for haku $haku", t)
+          rescheduleHaku(haku, retry)
       }
       result
         .map(CacheResponse(haku, _))
@@ -162,8 +162,8 @@ class ValintaTulosActor(client: VirkailijaRestClient,
 
   }
 
-  private def rescheduleHaku(haku: String, time: FiniteDuration = refetch) {
-    log.debug(s"rescheduling haku $haku in $time")
+  private def rescheduleHaku(haku: String, time: FiniteDuration) {
+    log.warning(s"rescheduling haku $haku in $time")
     if (scheduledUpdates.contains(haku) && !scheduledUpdates(haku).isCancelled) {
       scheduledUpdates(haku).cancel()
     }

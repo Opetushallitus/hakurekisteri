@@ -41,6 +41,7 @@ import scala.concurrent.duration._
   get("/refresh/hakemukset") {
     currentUser.collect {
       case p if p.isAdmin =>
+        logger.warning(s"user ${p.username} triggered hakemus refresh")
         hakuActor ! RefreshHakemukset
         Some(Accepted())
     }.getOrElse(Unauthorized())
