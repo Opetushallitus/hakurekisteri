@@ -34,14 +34,14 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
   import FutureList._
 
-  def getHaku(q: GetHaku): Haku = {
+  def getHaku(q: GetHaku): Future[Haku] = Future {
     activeHakus.find(_.oid == q.oid) match {
       case None => throw HakuNotFoundException(s"haku not found with oid ${q.oid}")
       case Some(h) => h
     }
   }
 
-  log.info(s"starting haku actor (hakuRefreshTime: $hakuRefreshTime, valintatulosRefreshTimeHours: $valintatulosRefreshTimeHours, hakemusRefreshTime: $hakemusRefreshTime, starting: $starting)")
+  log.info(s"starting haku actor $self (hakuRefreshTime: $hakuRefreshTime, valintatulosRefreshTimeHours: $valintatulosRefreshTimeHours, hakemusRefreshTime: $hakemusRefreshTime, starting: $starting)")
 
   override def receive: Actor.Receive = {
     case Update =>
@@ -50,7 +50,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
     case HakuRequest => sender ! activeHakus
 
-    case q: GetHaku => sender ! getHaku(q)
+    case q: GetHaku => getHaku(q) pipeTo sender
 
     case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
 
