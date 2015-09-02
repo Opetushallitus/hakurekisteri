@@ -24,7 +24,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
   var activeHakus: Seq[Haku] = Seq()
   val hakuRefreshTime = config.integrations.hakuRefreshTimeHours.hours
   val hakemusRefreshTime = config.integrations.hakemusRefreshTimeHours.hours
-  val valintatulosRefreshTimeHours = (config.integrations.valintatulosRefreshTimeHours / 2).hours
+  val valintatulosRefreshTimeHours = config.integrations.valintatulosRefreshTimeHours.hours
   var starting = true
 
   val update = context.system.scheduler.schedule(1.second, hakuRefreshTime, self, Update)
