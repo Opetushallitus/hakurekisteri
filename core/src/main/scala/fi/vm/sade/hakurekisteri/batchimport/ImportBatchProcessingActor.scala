@@ -51,7 +51,8 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
           context.actorOf(Props(new PerustiedotProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)(b)))
         case "arvosanat" =>
           context.actorOf(Props(new ArvosanatProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, organisaatioActor, koodistoActor)(b)))
-        case t => throw new Exception(s"unknown batchType $t")
+        case t =>
+          log.error(s"unknown batchType $t")
       }
 
   }
