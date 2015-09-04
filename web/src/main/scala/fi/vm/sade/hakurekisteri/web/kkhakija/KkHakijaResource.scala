@@ -149,7 +149,7 @@ class KkHakijaResource(hakemukset: ActorRef,
   incident {
     case KkHakijaParamMissingException => (id) => BadRequest(IncidentReport(id, "either parameter oppijanumero or hakukohde must be given"))
     case t: TarjontaException => (id) => InternalServerError(IncidentReport(id, s"error with tarjonta: $t"))
-    case t: HakuNotFoundException => (id) => InternalServerError(IncidentReport(id, s"error: $t"))
+    case t: HakuNotFoundException => (id) => NotFound(IncidentReport(id, s"$t"))
     case t: InvalidSyntymaaikaException => (id) => InternalServerError(IncidentReport(id, s"error: $t"))
     case t: InvalidKausiException => (id) => InternalServerError(IncidentReport(id, s"error: $t"))
   }
