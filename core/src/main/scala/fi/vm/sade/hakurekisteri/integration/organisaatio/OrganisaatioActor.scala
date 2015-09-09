@@ -111,12 +111,12 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
         sender ! true
 
     case Failure(t: OrganisaatioFetchFailedException) =>
-      log.error("organisaatio refresh failed, retrying in 1 minute", t.t)
+      log.error(t.t, "organisaatio refresh failed, retrying in 1 minute")
       retryRefresh.foreach(_.cancel())
       retryRefresh = Some(context.system.scheduler.scheduleOnce(1.minute, self, RefreshOrganisaatioCache))
 
     case Failure(t: Throwable) =>
-      log.error("error in organisaatio actor", t)
+      log.error(t, "error in organisaatio actor")
 
     case oid: String =>
       findByOid(oid) pipeTo sender
