@@ -7,6 +7,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActor
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, TarjontaActor}
@@ -30,6 +31,7 @@ trait Integrations {
   val ytl: ActorRef
   val parametrit: ActorRef
   val valintaTulos: ActorRef
+  val valintarekisteri: ActorRef
   val proxies: Proxies
 }
 
@@ -43,6 +45,7 @@ object Integrations {
 class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Config) extends Integrations {
   override val virta: ActorRef = mockActor("virta", new DummyActor)
   override val valintaTulos: ActorRef = mockActor("valintaTulos", new DummyActor)
+  override val valintarekisteri: ActorRef = mockActor("valintarekisteri", new DummyActor)
   override val hakemukset: ActorRef = mockActor("hakemukset", new MockHakemusActor)
   override val koodisto: ActorRef = mockActor("koodisto", new DummyActor)
   override val organisaatiot: ActorRef = mockActor("organisaatiot", new MockOrganisaatioActor(config))
@@ -73,6 +76,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
   val valintaTulos = system.actorOf(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
+  val valintarekisteri = system.actorOf(Props(new ValintarekisteriActor), "valintarekisteri")
 
   hakemukset ! Trigger {
     (hakemus: FullHakemus) =>

@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutionException
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
-import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery, HetuNotFoundException}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenQuery, HetuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -40,7 +40,7 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef)
       val henkiloOid = params("henkilo")
       new AsyncResult() {
         override implicit def timeout: Duration = 90.seconds
-        override val is = (ensikertalainenActor ? EnsikertalainenQuery(henkiloOid))(90.seconds).mapTo[Ensikertalainen]
+        override val is = (ensikertalainenActor ? EnsikertalainenQuery(henkiloOid))(90.seconds)
       }
     } catch {
       case t: NoSuchElementException => throw ParamMissingException("parameter henkilo missing")
