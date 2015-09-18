@@ -31,8 +31,6 @@ object QueryCount
 
 case class QueriesRunning(count: Map[String, Int], timestamp: Long = Platform.currentTime)
 
-case class CacheResult(q: EnsikertalainenQuery, f: Future[Ensikertalainen])
-
 case class Ensikertalainen(ensikertalainen: Boolean)
 
 case class HetuNotFoundException(message: String) extends Exception(message)
@@ -42,8 +40,6 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
   val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
 
   implicit val defaultTimeout: Timeout = 30.seconds
-
-  private val cache = new FutureCache[EnsikertalainenQuery, Ensikertalainen](config.ensikertalainenCacheHours.hours.toMillis)
 
   implicit def future2Task[A](future: Future[A]): Task[A] = Task.async {
     register =>
@@ -59,70 +55,58 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
 
   override def receive: Receive = {
     case q: EnsikertalainenQuery =>
-      if (cache.contains(q)) cache.get(q)
-      else {
-        log.debug(q.toString)
+      val promise = Promise[Ensikertalainen]()
 
-        val promise = Promise[Ensikertalainen]()
+      val me = self
 
-        val eventualEnsikertalainen: Future[Ensikertalainen] = promise.future
+      Future {
 
-        val me = self
+        val henkiloOid = Process(q.henkiloOid).toSource
 
-        Future {
+        val henkilonSuoritukset: Channel[Task, String, Seq[Suoritus]] =
+          channel.lift[Task, String, Seq[Suoritus]]((henkiloOid: String) => {
+            if (q.suoritukset.isDefined)
+              Task.now(q.suoritukset.get)
+            else
+              (suoritusActor ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]]
+          })
 
-          val henkiloOid = Process(q.henkiloOid).toSource
+        val resolveKomo: Channel[Task, VirallinenSuoritus, Komo] =
+          channel.lift[Task, VirallinenSuoritus, Komo]((s: VirallinenSuoritus) => {
+            if (s.komo.startsWith("koulutus_")) {
+              Task.now(Komo(s.komo, Koulutuskoodi(s.komo.substring(9)), "TUTKINTO", "KORKEAKOULUTUS"))
+            } else {
+              (tarjontaActor ? GetKomoQuery(s.komo)).mapTo[KomoResponse].flatMap(_.komo match {
+                case Some(komo) => Future.successful(komo)
+                case None => Future.failed(new Exception(s"komo ${s.komo} not found"))
+              })
+            }
+          })
 
-          val henkilonSuoritukset: Channel[Task, String, Seq[Suoritus]] =
-            channel.lift[Task, String, Seq[Suoritus]]((henkiloOid: String) => {
-              if (q.suoritukset.isDefined)
-                Task.now(q.suoritukset.get)
-              else
-                (suoritusActor ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]]
-            })
+        val kkVastaanotto: Channel[Task, String, Option[DateTime]] =
+          channel.lift[Task, String, Option[DateTime]]((henkiloOid: String) => (valintarekisterActor ? henkiloOid).mapTo[Option[DateTime]])
 
-          val resolveKomo: Channel[Task, VirallinenSuoritus, Komo] =
-            channel.lift[Task, VirallinenSuoritus, Komo]((s: VirallinenSuoritus) => {
-              if (s.komo.startsWith("koulutus_")) {
-                Task.now(Komo(s.komo, Koulutuskoodi(s.komo.substring(9)), "TUTKINTO", "KORKEAKOULUTUS"))
-              } else {
-                (tarjontaActor ? GetKomoQuery(s.komo)).mapTo[KomoResponse].flatMap(_.komo match {
-                  case Some(komo) => Future.successful(komo)
-                  case None => Future.failed(new Exception(s"komo ${s.komo} not found"))
-                })
-              }
-            })
+        val kkTutkinnot = henkiloOid through henkilonSuoritukset pipe process1.unchunk map {
+          case vs: VirallinenSuoritus => right(vs)
+          case vms: VapaamuotoinenSuoritus => left(vms)
+        } observeOThrough resolveKomo collect {
+          case \/-((VirallinenSuoritus(_, _, "VALMIS", valmistuminen, _, _, _, _, _, _), k: Komo)) if k.isKorkeakoulututkinto => valmistuminen.toDateTimeAtStartOfDay
+          case -\/(s@VapaamuotoinenSuoritus(_, _, _, vuosi, _, _, _)) if s.kkTutkinto => new LocalDate(vuosi, 1, 1).toDateTimeAtStartOfDay
+        } minimumBy (_.getMillis) pipe process1.awaitOption
 
-          val kkVastaanotto: Channel[Task, String, Option[DateTime]] =
-            channel.lift[Task, String, Option[DateTime]]((henkiloOid: String) => (valintarekisterActor ? henkiloOid).mapTo[Option[DateTime]])
+        val ensimmainenVastaanotto = henkiloOid through kkVastaanotto
 
-          val kkTutkinnot = henkiloOid through henkilonSuoritukset pipe process1.unchunk map {
-            case vs: VirallinenSuoritus => right(vs)
-            case vms: VapaamuotoinenSuoritus => left(vms)
-          } observeOThrough resolveKomo collect {
-            case \/-((VirallinenSuoritus(_, _, "VALMIS", valmistuminen, _, _, _, _, _, _), k: Komo)) if k.isKorkeakoulututkinto => valmistuminen.toDateTimeAtStartOfDay
-            case -\/(s@VapaamuotoinenSuoritus(_, _, _, vuosi, _, _, _)) if s.kkTutkinto => new LocalDate(vuosi, 1, 1).toDateTimeAtStartOfDay
-          } minimumBy (_.getMillis) pipe process1.awaitOption
+        kkTutkinnot.zip(ensimmainenVastaanotto).runLastOr(None -> None).
+          map(ensikertalaisuusPaattely(q.paivamaara.getOrElse(new LocalDate().toDateTimeAtStartOfDay))).
+          timed(1.minutes.toMillis).
+          runAsync {
+          case -\/(failure) => promise.tryFailure(failure)
+          case \/-(ensikertalainen) => promise.trySuccess(ensikertalainen)
+        }
 
-          val ensimmainenVastaanotto = henkiloOid through kkVastaanotto
+      }(queryEc)
 
-          kkTutkinnot.zip(ensimmainenVastaanotto).runLastOr(None -> None).
-            map(ensikertalaisuusPaattely(q.paivamaara.getOrElse(new LocalDate().toDateTimeAtStartOfDay))).
-            timed(1.minutes.toMillis).
-            runAsync {
-            case -\/(failure) => promise.failure(failure)
-            case \/-(ensikertalainen) =>
-              me ! CacheResult(q, eventualEnsikertalainen)
-              promise.success(ensikertalainen)
-          }
-
-        }(queryEc)
-
-        eventualEnsikertalainen
-
-      } pipeTo sender
-
-    case CacheResult(q, f) => cache +(q, f)
+      promise.future pipeTo sender
 
     case QueryCount =>
       sender ! Map[String, Int]()
