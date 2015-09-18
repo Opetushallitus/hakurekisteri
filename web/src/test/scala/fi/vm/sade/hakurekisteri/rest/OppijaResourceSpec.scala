@@ -11,6 +11,7 @@ import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenActor
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActor
 import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusActor}
 import fi.vm.sade.hakurekisteri.rest.support.{Registers, User}
@@ -60,12 +61,8 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
 
   val henkilot: Set[String] = (0 until 10001).map(i => UUID.randomUUID().toString).toSet
 
-  val opiskeluoikeudetSeq = henkilot.map(henkilo =>
-    Opiskeluoikeus(new LocalDate(), None, henkilo, "koulutus_999999", "", "")
-  ).toSeq
-
   val suorituksetSeq = henkilot.map(henkilo =>
-    VirallinenSuoritus("bar", "foo", "KESKEN", new LocalDate(), henkilo, yksilollistaminen.Ei, "FI", None, vahv = true, "")
+    VirallinenSuoritus("koulutus_123456", "foo", "VALMIS", new LocalDate(2001, 1, 1), henkilo, yksilollistaminen.Ei, "FI", None, vahv = true, "")
   ).toSeq
 
   implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]): InMemJournal[R, UUID] = {
@@ -82,7 +79,7 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   val rekisterit = new Registers {
     private val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
     private val arvosanat = system.actorOf(Props(new ArvosanaActor()))
-    private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusActor(opiskeluoikeudetSeq)))
+    private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusActor()))
     private val opiskelijat = system.actorOf(Props(new OpiskelijaActor()))
     private val suoritukset = system.actorOf(Props(new SuoritusActor(suorituksetSeq)))
 
@@ -117,7 +114,9 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
     }
   }))
 
-  val ensikertalaisuusActor = system.actorOf(Props(new EnsikertalainenActor(rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri, tarjontaActor, Config.mockConfig)))
+  private val valintarekisteri = system.actorOf(Props(new ValintarekisteriActor))
+
+  val ensikertalaisuusActor = system.actorOf(Props(new EnsikertalainenActor(rekisterit.suoritusRekisteri, valintarekisteri, tarjontaActor, Config.mockConfig)))
 
   val resource = new OppijaResource(rekisterit, hakemusActor, ensikertalaisuusActor)
 

@@ -7,7 +7,7 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.FutureCache
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VapaamuotoinenSuoritus, VirallinenSuoritus}
 import org.joda.time.{DateTime, LocalDate}
@@ -16,10 +16,11 @@ import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.language.implicitConversions
-import scalaz.stream._
+import scalaz.Scalaz._
+import scalaz.\/._
+import scalaz._
 import scalaz.concurrent.Task
-import scalaz._, Scalaz._
-import \/._
+import scalaz.stream._
 
 case class EnsikertalainenQuery(henkiloOid: String,
                                 suoritukset: Option[Seq[Suoritus]] = None,
@@ -52,23 +53,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
       }
   }
 
-  val henkilonSuoritukset: Channel[Task, String, Seq[Suoritus]] =
-    channel.lift[Task, String, Seq[Suoritus]](henkiloOid => (suoritusActor ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]])
-
-  val resolveKomo: Channel[Task, VirallinenSuoritus, Komo] =
-    channel.lift[Task, VirallinenSuoritus, Komo]((s: VirallinenSuoritus) => {
-      if (s.komo.startsWith("koulutus_")) {
-        Task.now(Komo(s.komo, Koulutuskoodi(s.komo.substring(9)), "TUTKINTO", "KORKEAKOULUTUS"))
-      } else {
-        (tarjontaActor ? GetKomoQuery(s.komo)).mapTo[KomoResponse].flatMap(_.komo match {
-          case Some(komo) => Future.successful(komo)
-          case None => Future.failed(new Exception(s"komo ${s.komo} not found"))
-        })
-      }
-    })
-
-  val kkVastaanotto: Channel[Task, String, Option[DateTime]] =
-    channel.lift[Task, String, Option[DateTime]]((henkiloOid: String) => (valintarekisterActor ? henkiloOid).mapTo[Option[DateTime]])
+  log.info(s"started ensikertalaisuus actor: $self")
 
   val queryEc = ec
 
@@ -88,6 +73,29 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
 
           val henkiloOid = Process(q.henkiloOid).toSource
 
+          val henkilonSuoritukset: Channel[Task, String, Seq[Suoritus]] =
+            channel.lift[Task, String, Seq[Suoritus]]((henkiloOid: String) => {
+              if (q.suoritukset.isDefined)
+                Task.now(q.suoritukset.get)
+              else
+                (suoritusActor ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]]
+            })
+
+          val resolveKomo: Channel[Task, VirallinenSuoritus, Komo] =
+            channel.lift[Task, VirallinenSuoritus, Komo]((s: VirallinenSuoritus) => {
+              if (s.komo.startsWith("koulutus_")) {
+                Task.now(Komo(s.komo, Koulutuskoodi(s.komo.substring(9)), "TUTKINTO", "KORKEAKOULUTUS"))
+              } else {
+                (tarjontaActor ? GetKomoQuery(s.komo)).mapTo[KomoResponse].flatMap(_.komo match {
+                  case Some(komo) => Future.successful(komo)
+                  case None => Future.failed(new Exception(s"komo ${s.komo} not found"))
+                })
+              }
+            })
+
+          val kkVastaanotto: Channel[Task, String, Option[DateTime]] =
+            channel.lift[Task, String, Option[DateTime]]((henkiloOid: String) => (valintarekisterActor ? henkiloOid).mapTo[Option[DateTime]])
+
           val kkTutkinnot = henkiloOid through henkilonSuoritukset pipe process1.unchunk map {
             case vs: VirallinenSuoritus => right(vs)
             case vms: VapaamuotoinenSuoritus => left(vms)
@@ -100,7 +108,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
 
           kkTutkinnot.zip(ensimmainenVastaanotto).runLastOr(None -> None).
             map(ensikertalaisuusPaattely(q.paivamaara.getOrElse(new LocalDate().toDateTimeAtStartOfDay))).
-            timed(2.minutes.toMillis).
+            timed(1.minutes.toMillis).
             runAsync {
             case -\/(failure) => promise.failure(failure)
             case \/-(ensikertalainen) =>
