@@ -1,5 +1,6 @@
 package support
 
+import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.hakemus._
@@ -45,7 +46,12 @@ object Integrations {
 class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Config) extends Integrations {
   override val virta: ActorRef = mockActor("virta", new DummyActor)
   override val valintaTulos: ActorRef = mockActor("valintaTulos", new DummyActor)
-  override val valintarekisteri: ActorRef = mockActor("valintarekisteri", new DummyActor)
+  override val valintarekisteri: ActorRef = mockActor("valintarekisteri", new Actor {
+    override def receive: Receive = {
+      case oid: String => sender ! None
+      case a => println(s"DummyActor($self): received $a")
+    }
+  })
   override val hakemukset: ActorRef = mockActor("hakemukset", new MockHakemusActor)
   override val koodisto: ActorRef = mockActor("koodisto", new DummyActor)
   override val organisaatiot: ActorRef = mockActor("organisaatiot", new MockOrganisaatioActor(config))
