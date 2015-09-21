@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.tarjonta
 import java.net.URLEncoder
 
 import akka.actor.{ActorLogging, Actor}
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, VirkailijaRestClient}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -133,7 +133,8 @@ class MockTarjontaActor(config: Config) extends TarjontaActor(null, config) {
 
   override def receive: Receive = {
     case GetKomoQuery(oid) =>
-      sender ! KomoResponse(oid, None)
+      val response: KomoResponse = if (oid == Oids.yotutkintoKomoOid) KomoResponse(oid, Some(Komo(oid, Koulutuskoodi("301101"), "TUTKINTO", "LUKIOKOULUTUS"))) else KomoResponse(oid, None)
+      sender ! response
 
     case msg =>
       log.warning(s"not implemented receive(${msg})")
