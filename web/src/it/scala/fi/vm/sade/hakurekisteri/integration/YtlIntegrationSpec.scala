@@ -71,13 +71,13 @@ class YtlIntegrationSpec extends FlatSpec with Matchers with CleanSharedJetty {
       response.status should be(202)
     }
 
-    val todistukset = Await.result(waitForArvosanat(), 60.seconds)
+    val todistukset = Await.result(waitForArvosanat(), 120.seconds)
     todistukset.size should equal(1)
     todistukset.head.suoritus should equal(expectedSuoritus)
     todistukset.head.arvosanat.size should equal(27)
 
     val arvosanaSA = todistukset.head.arvosanat.filter(arvosana => {
-      arvosana.aine.equals("A") && arvosana.lahdeArvot.get("koetunnus").equals(Some("SA"))
+      arvosana.aine.equals("A") && arvosana.lahdeArvot.get("koetunnus").contains("SA")
     })
     arvosanaSA.length should equal (1)
     arvosanaSA.head should equal (expectedSaArvosana.copy(suoritus = arvosanaSA.head.suoritus))
