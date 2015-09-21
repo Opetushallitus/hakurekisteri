@@ -39,7 +39,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
 
   val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
 
-  implicit val defaultTimeout: Timeout = 30.seconds
+  implicit val defaultTimeout: Timeout = 2.minutes
 
   implicit def future2Task[A](future: Future[A]): Task[A] = Task.async {
     register =>
@@ -56,8 +56,6 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
   override def receive: Receive = {
     case q: EnsikertalainenQuery =>
       val promise = Promise[Ensikertalainen]()
-
-      val me = self
 
       Future {
 
@@ -100,9 +98,9 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
           map(ensikertalaisuusPaattely(q.paivamaara.getOrElse(new LocalDate().toDateTimeAtStartOfDay))).
           timed(1.minutes.toMillis).
           runAsync {
-          case -\/(failure) => promise.tryFailure(failure)
-          case \/-(ensikertalainen) => promise.trySuccess(ensikertalainen)
-        }
+            case -\/(failure) => promise.tryFailure(failure)
+            case \/-(ensikertalainen) => promise.trySuccess(ensikertalainen)
+          }
 
       }(queryEc)
 
