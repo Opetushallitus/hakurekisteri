@@ -5,7 +5,6 @@ import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.FutureCache
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.rest.support.Query
@@ -41,7 +40,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
 
   implicit val defaultTimeout: Timeout = 2.minutes
 
-  implicit def future2Task[A](future: Future[A]): Task[A] = Task.async {
+  implicit def future2Task[A](future: Future[A]): Task[A] = Task.async[A] {
     register =>
       future.onComplete {
         case scala.util.Success(v) => register(v.right)
@@ -62,12 +61,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
         val henkiloOid = Process(q.henkiloOid).toSource
 
         val henkilonSuoritukset: Channel[Task, String, Seq[Suoritus]] =
-          channel.lift[Task, String, Seq[Suoritus]]((henkiloOid: String) => {
-            if (q.suoritukset.isDefined)
-              Task.now(q.suoritukset.get)
-            else
-              (suoritusActor ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]]
-          })
+          channel.lift[Task, String, Seq[Suoritus]]((henkiloOid: String) => q.suoritukset.map(Task.now).getOrElse((suoritusActor ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]]))
 
         val resolveKomo: Channel[Task, VirallinenSuoritus, Komo] =
           channel.lift[Task, VirallinenSuoritus, Komo]((s: VirallinenSuoritus) => {
