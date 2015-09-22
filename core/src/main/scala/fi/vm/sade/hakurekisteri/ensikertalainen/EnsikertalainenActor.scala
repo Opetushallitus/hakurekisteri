@@ -37,6 +37,8 @@ case class HetuNotFoundException(message: String) extends Exception(message)
 class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorRef, tarjontaActor: ActorRef, config: Config)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
 
   val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
+  val Oid = "(1\\.2\\.246\\.562\\.[0-9.]+)".r
+  val KkKoulutusUri = "koulutus_[67][1-9][0-9]{4}".r
 
   implicit val defaultTimeout: Timeout = 2.minutes
 
@@ -65,8 +67,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
 
         val isKkTutkinto: Channel[Task, VirallinenSuoritus, Boolean] =
           channel.lift[Task, VirallinenSuoritus, Boolean]((s: VirallinenSuoritus) => s.komo match {
-            case komo if komo.startsWith("koulutus_") => Task.now(true)
-            case komo if komo.startsWith("1.2.246.562.") =>
+            case KkKoulutusUri() => Task.now(true)
+            case Oid(komo) =>
               (tarjontaActor ? GetKomoQuery(komo)).mapTo[KomoResponse].flatMap(_.komo match {
                 case Some(k) => Future.successful(k.isKorkeakoulututkinto)
                 case None => Future.failed(new Exception(s"komo $komo not found"))

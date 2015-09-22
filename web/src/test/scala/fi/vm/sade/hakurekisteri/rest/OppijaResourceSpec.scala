@@ -33,63 +33,64 @@ import scala.compat.Platform
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.implicitConversions
+import scala.util.Random
 
 class OppijaResourceSpec extends OppijaResourceSetup {
-  
+
   test("OppijaResource should return 200") {
     get("/?haku=1") {
-      response.status should be (200)
+      response.status should be(200)
     }
   }
 
   test("OppijaResource should return 400 if no parameters are given") {
     get("/") {
-      response.status should be (400)
+      response.status should be(400)
     }
   }
 
   test("OppijaResource should return 10001 oppijas with ensikertalainen false") {
-    waitFuture(resource.fetchOppijat(HakemusQuery(Some("foo"), None, None)))(oppijat => {
-      oppijat.length should be (10001)
-      oppijat.foreach(o => o.ensikertalainen should be (Some(false)))
+    waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None)))(oppijat => {
+      oppijat.length should be(10001)
+      oppijat.foreach(o => o.ensikertalainen should be(Some(false)))
     })
   }
 
   test("OppijaResource should return oppija with ensikertalainen true when asked with ensikertalaisuus timestamp earlier than vastaanotto") {
-    get("/1.2.4?ensikertalaisuudenRajapvm=2014-06-01T00:00:00.000Z") {
-      response.status should be (200)
+    get("/1.2.246.562.24.00000000001?ensikertalaisuudenRajapvm=2014-06-01T00:00:00.000Z") {
+      response.status should be(200)
 
-      body should include ("\"ensikertalainen\":true")
+      body should include("\"ensikertalainen\":true")
     }
   }
 
   test("OppijaResource should return oppija with ensikertalainen false when asked with ensikertalaisuus timestamp after than vastaanotto") {
-    get("/1.2.4?ensikertalaisuudenRajapvm=2014-10-01T16:00:00.000+03:00") {
-      response.status should be (200)
+    get("/1.2.246.562.24.00000000001?ensikertalaisuudenRajapvm=2014-10-01T16:00:00.000+03:00") {
+      response.status should be(200)
 
-      body should include ("\"ensikertalainen\":false")
+      body should include("\"ensikertalainen\":false")
     }
   }
 
   test("OppijaResource should not cache ensikertalaisuus") {
     valintarekisteri.underlyingActor.requestCount = 0
-    get("/?haku=foo") {
-      get("/?haku=foo") {
-        valintarekisteri.underlyingActor.requestCount should be (20002)
+    get("/?haku=1.2.246.562.6.00000000001") {
+      get("/?haku=1.2.246.562.6.00000000001") {
+        valintarekisteri.underlyingActor.requestCount should be(20002)
       }
     }
   }
 
   test("OppijaResource should not tell ensikertalaisuus for oppija without hetu when EnsikertalaisuusActor returns true") {
     waitFuture(resource.fetchOppijatFor(Seq(FullHakemus(
-      oid = "1.2.3.4",
-      personOid = Some("1.2.3"),
-      applicationSystemId = "bar",
+      oid = "1.2.246.562.11.00000000001",
+      personOid = Some("1.2.246.562.24.00000000002"),
+      applicationSystemId = "1.2.246.562.6.00000000001",
       answers = Some(HakemusAnswers(Some(HakemusHenkilotiedot()))),
       state = Some("INCOMPLETE"),
       preferenceEligibilities = Seq()
     ))))((s: Seq[Oppija]) => {
-      s.head.ensikertalainen should be (None)
+      s.head.ensikertalainen should be(None)
     })
   }
 
@@ -101,20 +102,27 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   implicit val user: User = security.TestUser
   implicit val swagger: Swagger = new HakurekisteriSwagger
 
-  val henkilot: Set[String] = (0 until 10000).map(i => UUID.randomUUID().toString).toSet + "1.2.4"
+  val henkilot: Set[String] = {
+    var oids: Set[String] = Set("1.2.246.562.24.00000000001")
+    while (oids.size < 10001) {
+      oids = oids + s"1.2.246.562.24.${new Random().nextInt(99999999).toString.padTo(11, '0')}"
+    }
+    oids
+  }
 
   val suorituksetSeq = henkilot.map(henkilo =>
-    VirallinenSuoritus("bar", "foo", "VALMIS", new LocalDate(2001, 1, 1), henkilo, yksilollistaminen.Ei, "FI", None, vahv = true, "")
+    VirallinenSuoritus("1.2.246.562.5.00000000001", "1.2.246.562.10.00000000001", "VALMIS", new LocalDate(2001, 1, 1), henkilo, yksilollistaminen.Ei, "FI", None, vahv = true, "")
   ).toSeq
 
-  implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]): InMemJournal[R, UUID] = {
+  implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s: Seq[R]): InMemJournal[R, UUID] = {
     val journal = new InMemJournal[R, UUID]
-    s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
+    s.foreach((resource: R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
     journal
   }
-  implicit def seq2journalString[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[String, R]](s:Seq[R]): InMemJournal[R, String] = {
+
+  implicit def seq2journalString[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[String, R]](s: Seq[R]): InMemJournal[R, String] = {
     val journal = new InMemJournal[R, String]
-    s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID().toString))))
+    s.foreach((resource: R) => journal.addModification(Updated(resource.identify(UUID.randomUUID().toString))))
     journal
   }
 
@@ -135,13 +143,13 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   val endpoint = mock[Endpoint]
   when(endpoint.request(forPattern("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=.*"))).thenReturn((200, List(), "[]"))
   when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/.*"))).thenReturn((200, List(), """{"oid":"foo","paattyi":"2014-09-01T00:00:00Z"}"""))
-  when(endpoint.request(forUrl("http://localhost/valintarekisteri/ensikertalaisuus/1.2.3"))).thenReturn((200, List(), """{"oid":"1.2.3"}"""))
+  when(endpoint.request(forUrl("http://localhost/valintarekisteri/ensikertalaisuus/1.2.246.562.24.00000000002"))).thenReturn((200, List(), """{"oid":"1.2.246.562.24.00000000001"}"""))
 
   val hakemukset: Seq[FullHakemus] = henkilot.map(henkilo => {
     FullHakemus(
       oid = UUID.randomUUID().toString,
       personOid = Some(henkilo),
-      applicationSystemId = "foo",
+      applicationSystemId = "1.2.246.562.6.00000000001",
       answers = Some(HakemusAnswers(Some(HakemusHenkilotiedot(Henkilotunnus = Some(henkilo))))),
       state = Some("INCOMPLETE"),
       preferenceEligibilities = Seq()
