@@ -16,6 +16,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoRe
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActor
 import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusActor
+import fi.vm.sade.hakurekisteri.oppija.Oppija
 import fi.vm.sade.hakurekisteri.rest.support.{Registers, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, VirallinenSuoritus, yksilollistaminen}
@@ -63,6 +64,19 @@ class OppijaResourceSpec extends OppijaResourceSetup {
     }
   }
 
+  test("OppijaResource should not tell ensikertalaisuus for oppija without hetu when EnsikertalaisuusActor returns true") {
+    waitFuture(resource.fetchOppijatFor(Seq(FullHakemus(
+      oid = "1.2.3.4",
+      personOid = Some("1.2.3"),
+      applicationSystemId = "bar",
+      answers = Some(HakemusAnswers(Some(HakemusHenkilotiedot()))),
+      state = Some("INCOMPLETE"),
+      preferenceEligibilities = Seq()
+    ))))((s: Seq[Oppija]) => {
+      s.head.ensikertalainen should be (None)
+    })
+  }
+
 }
 
 abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar with DispatchSupport with FutureWaiting {
@@ -105,8 +119,9 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   val endpoint = mock[Endpoint]
   when(endpoint.request(forPattern("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=.*"))).thenReturn((200, List(), "[]"))
   when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/.*"))).thenReturn((200, List(), """{"oid":"foo","paattyi":"2014-09-01T00:00:00Z"}"""))
+  when(endpoint.request(forUrl("http://localhost/valintarekisteri/ensikertalaisuus/1.2.3"))).thenReturn((200, List(), """{"oid":"1.2.3"}"""))
 
-  val hakemukset = henkilot.map(henkilo => {
+  val hakemukset: Seq[FullHakemus] = henkilot.map(henkilo => {
     FullHakemus(
       oid = UUID.randomUUID().toString,
       personOid = Some(henkilo),

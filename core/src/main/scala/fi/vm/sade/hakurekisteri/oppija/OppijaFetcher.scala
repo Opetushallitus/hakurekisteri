@@ -115,9 +115,12 @@ trait OppijaFetcher {
       ensikertalainen = ensikertalainen.map(_.ensikertalainen)
     )
 
-  private def fetchEnsikertalaisuus(henkiloOid: String, hetu: Option[String], suoritukset: Seq[Suoritus], opiskeluoikeudet: Seq[Opiskeluoikeus]): Future[Option[Ensikertalainen]] = hetu match {
-    case Some(_) => (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, Some(suoritukset), Some(opiskeluoikeudet))).mapTo[Ensikertalainen].map(Some(_))
-    case None => Future.successful(None)
+  private def fetchEnsikertalaisuus(henkiloOid: String, hetu: Option[String], suoritukset: Seq[Suoritus], opiskeluoikeudet: Seq[Opiskeluoikeus]): Future[Option[Ensikertalainen]] = {
+    val ensikertalainen: Future[Ensikertalainen] = (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, Some(suoritukset), Some(opiskeluoikeudet))).mapTo[Ensikertalainen]
+    hetu match {
+      case Some(_) => ensikertalainen.map(Some(_))
+      case None => ensikertalainen.map(e => if (e.ensikertalainen) None else Some(e))
+    }
   }
 
   private def fetchOpiskeluoikeudet(henkiloOid: String)(implicit user: User): Future[Seq[Opiskeluoikeus]] =
