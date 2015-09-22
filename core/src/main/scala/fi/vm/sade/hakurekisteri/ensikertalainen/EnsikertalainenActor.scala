@@ -63,16 +63,15 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
         val henkilonSuoritukset: Channel[Task, String, Seq[Suoritus]] =
           channel.lift[Task, String, Seq[Suoritus]]((henkiloOid: String) => q.suoritukset.map(Task.now).getOrElse((suoritusActor ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]]))
 
-        val resolveKomo: Channel[Task, VirallinenSuoritus, Komo] =
-          channel.lift[Task, VirallinenSuoritus, Komo]((s: VirallinenSuoritus) => {
-            if (s.komo.startsWith("koulutus_")) {
-              Task.now(Komo(s.komo, Koulutuskoodi(s.komo.substring(9)), "TUTKINTO", "KORKEAKOULUTUS"))
-            } else {
-              (tarjontaActor ? GetKomoQuery(s.komo)).mapTo[KomoResponse].flatMap(_.komo match {
-                case Some(komo) => Future.successful(komo)
-                case None => Future.failed(new Exception(s"komo ${s.komo} not found"))
+        val isKkTutkinto: Channel[Task, VirallinenSuoritus, Boolean] =
+          channel.lift[Task, VirallinenSuoritus, Boolean]((s: VirallinenSuoritus) => s.komo match {
+            case komo if komo.startsWith("koulutus_") => Task.now(true)
+            case komo if komo.startsWith("1.2.246.562.") =>
+              (tarjontaActor ? GetKomoQuery(komo)).mapTo[KomoResponse].flatMap(_.komo match {
+                case Some(k) => Future.successful(k.isKorkeakoulututkinto)
+                case None => Future.failed(new Exception(s"komo $komo not found"))
               })
-            }
+            case _ => Task.now(false)
           })
 
         val kkVastaanotto: Channel[Task, String, Option[DateTime]] =
@@ -81,8 +80,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
         val kkTutkinnot = henkiloOid through henkilonSuoritukset pipe process1.unchunk map {
           case vs: VirallinenSuoritus => right(vs)
           case vms: VapaamuotoinenSuoritus => left(vms)
-        } observeOThrough resolveKomo collect {
-          case \/-((VirallinenSuoritus(_, _, "VALMIS", valmistuminen, _, _, _, _, _, _), k: Komo)) if k.isKorkeakoulututkinto => valmistuminen.toDateTimeAtStartOfDay
+        } observeOThrough isKkTutkinto collect {
+          case \/-((VirallinenSuoritus(_, _, "VALMIS", valmistuminen, _, _, _, _, _, _), true)) => valmistuminen.toDateTimeAtStartOfDay
           case -\/(s@VapaamuotoinenSuoritus(_, _, _, vuosi, _, _, _)) if s.kkTutkinto => new LocalDate(vuosi, 1, 1).toDateTimeAtStartOfDay
         } minimumBy (_.getMillis) pipe process1.awaitOption
 
