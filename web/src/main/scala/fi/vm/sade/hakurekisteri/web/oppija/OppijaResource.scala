@@ -8,6 +8,8 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery, HenkiloHakijaQuery}
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.rest.support._
+import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.format.{ISODateTimeFormat, DateTimeFormat}
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{SwaggerEngine, Swagger}
@@ -18,6 +20,8 @@ import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import fi.vm.sade.hakurekisteri.oppija.OppijaFetcher
+
+import scala.util.Try
 
 
 class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, val ensikertalaisuus: ActorRef)
@@ -45,10 +49,13 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     }
   }
 
+  def ensikertalaisuudenRajapvm(d: Option[String]): Option[DateTime] = d.flatMap(date => Try(ISODateTimeFormat.dateTimeParser.parseDateTime(date)).toOption)
+
   get("/", operation(query)) {
     val t0 = Platform.currentTime
     implicit val user = getUser
     val q = queryForParams(params)
+    val rajapvm = ensikertalaisuudenRajapvm(params.get("ensikertalaisuudenRajapvm"))
 
     if (q.haku.isEmpty
       && q.hakukohde.isEmpty
@@ -57,7 +64,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
-      private val oppijatFuture = fetchOppijat(q)
+      private val oppijatFuture = fetchOppijat(q, rajapvm)
 
       logQuery(q, t0, oppijatFuture)
 
@@ -81,13 +88,14 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     val t0 = Platform.currentTime
     implicit val user = getUser
     val q = HenkiloHakijaQuery(params("oid"))
+    val rajapvm = ensikertalaisuudenRajapvm(params.get("ensikertalaisuudenRajapvm"))
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
       private val oppijaFuture = for (
         hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
-        oppijat <- fetchOppijatFor(hakemukset.filter((fh) => fh.personOid.isDefined && fh.stateValid).take(1))
+        oppijat <- fetchOppijatFor(hakemukset.filter((fh) => fh.personOid.isDefined && fh.stateValid).take(1), rajapvm)
       ) yield {
         oppijat.headOption.fold(NotFound(body = ""))(Ok(_))
       }

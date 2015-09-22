@@ -10,12 +10,15 @@ import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, IncidentReport}
+import org.joda.time.DateTime
+import org.joda.time.format.ISODateTimeFormat
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.util.Try
 
 case class ParamMissingException(message: String) extends IllegalArgumentException(message)
 
@@ -35,12 +38,16 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef)
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
+  def ensikertalaisuudenRajapvm(d: Option[String]): Option[DateTime] = d.flatMap(date => Try(ISODateTimeFormat.dateTimeParser.parseDateTime(date)).toOption)
+
   get("/", operation(query)) {
     try {
       val henkiloOid = params("henkilo")
+      val rajapvm = ensikertalaisuudenRajapvm(params.get("ensikertalaisuudenRajapvm"))
+
       new AsyncResult() {
         override implicit def timeout: Duration = 90.seconds
-        override val is = (ensikertalainenActor ? EnsikertalainenQuery(henkiloOid))(90.seconds)
+        override val is = (ensikertalainenActor ? EnsikertalainenQuery(henkiloOid, paivamaara = rajapvm))(90.seconds)
       }
     } catch {
       case t: NoSuchElementException => throw ParamMissingException("parameter henkilo missing")

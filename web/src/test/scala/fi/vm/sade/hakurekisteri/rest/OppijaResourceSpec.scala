@@ -55,6 +55,22 @@ class OppijaResourceSpec extends OppijaResourceSetup {
     })
   }
 
+  test("OppijaResource should return oppija with ensikertalainen true when asked with ensikertalaisuus timestamp earlier than vastaanotto") {
+    get("/1.2.4?ensikertalaisuudenRajapvm=2014-06-01T00:00:00.000Z") {
+      response.status should be (200)
+
+      body should include ("\"ensikertalainen\":true")
+    }
+  }
+
+  test("OppijaResource should return oppija with ensikertalainen false when asked with ensikertalaisuus timestamp after than vastaanotto") {
+    get("/1.2.4?ensikertalaisuudenRajapvm=2014-10-01T16:00:00.000+03:00") {
+      response.status should be (200)
+
+      body should include ("\"ensikertalainen\":false")
+    }
+  }
+
   test("OppijaResource should not cache ensikertalaisuus") {
     valintarekisteri.underlyingActor.requestCount = 0
     get("/?haku=foo") {
@@ -85,7 +101,7 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   implicit val user: User = security.TestUser
   implicit val swagger: Swagger = new HakurekisteriSwagger
 
-  val henkilot: Set[String] = (0 until 10001).map(i => UUID.randomUUID().toString).toSet
+  val henkilot: Set[String] = (0 until 10000).map(i => UUID.randomUUID().toString).toSet + "1.2.4"
 
   val suorituksetSeq = henkilot.map(henkilo =>
     VirallinenSuoritus("bar", "foo", "VALMIS", new LocalDate(2001, 1, 1), henkilo, yksilollistaminen.Ei, "FI", None, vahv = true, "")
