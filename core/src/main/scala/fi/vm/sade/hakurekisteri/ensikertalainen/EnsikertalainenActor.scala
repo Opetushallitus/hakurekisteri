@@ -6,10 +6,11 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriQuery
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VapaamuotoinenSuoritus, VirallinenSuoritus}
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.{DateTimeZone, DateTime, LocalDate}
 
 import scala.compat.Platform
 import scala.concurrent.duration._
@@ -36,7 +37,7 @@ case class HetuNotFoundException(message: String) extends Exception(message)
 
 class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorRef, tarjontaActor: ActorRef, config: Config)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
 
-  val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
+  val kesa2014: DateTime = new DateTime(2014, 7, 1, 0, 0, 0, 0, DateTimeZone.forOffsetHours(3))
   val Oid = "(1\\.2\\.246\\.562\\.[0-9.]+)".r
   val KkKoulutusUri = "koulutus_[67][1-9][0-9]{4}".r
 
@@ -77,7 +78,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
           })
 
         val kkVastaanotto: Channel[Task, String, Option[DateTime]] =
-          channel.lift[Task, String, Option[DateTime]]((henkiloOid: String) => (valintarekisterActor ? henkiloOid).mapTo[Option[DateTime]])
+          channel.lift[Task, String, Option[DateTime]]((henkiloOid: String) => (valintarekisterActor ? ValintarekisteriQuery(henkiloOid, kesa2014)).mapTo[Option[DateTime]])
 
         val kkTutkinnot = henkiloOid through henkilonSuoritukset pipe process1.unchunk map {
           case vs: VirallinenSuoritus => right(vs)
@@ -108,7 +109,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
   def ensikertalaisuusPaattely(leikkuripaiva: DateTime)(t: (Option[DateTime], Option[DateTime])) = Ensikertalainen {
     t match {
       case (Some(tutkintopaiva), _) if tutkintopaiva.isBefore(leikkuripaiva) => false
-      case (_, Some(vastaanottopaiva)) if vastaanottopaiva.isBefore(leikkuripaiva) && vastaanottopaiva.isAfter(kesa2014) => false
+      case (_, Some(vastaanottopaiva)) if vastaanottopaiva.isBefore(leikkuripaiva) => false
       case default => true
     }
   }

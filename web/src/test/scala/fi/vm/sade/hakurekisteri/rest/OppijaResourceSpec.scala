@@ -143,7 +143,7 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   val endpoint = mock[Endpoint]
   when(endpoint.request(forPattern("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=.*"))).thenReturn((200, List(), "[]"))
   when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/.*"))).thenReturn((200, List(), """{"oid":"foo","paattyi":"2014-09-01T00:00:00Z"}"""))
-  when(endpoint.request(forUrl("http://localhost/valintarekisteri/ensikertalaisuus/1.2.246.562.24.00000000002"))).thenReturn((200, List(), """{"oid":"1.2.246.562.24.00000000001"}"""))
+  when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/1\\.2\\.246\\.562\\.24\\.00000000002\\?koulutuksenAlkamispvm=.+"))).thenReturn((200, List(), """{"oid":"1.2.246.562.24.00000000002"}"""))
 
   val hakemukset: Seq[FullHakemus] = henkilot.map(henkilo => {
     FullHakemus(
@@ -185,8 +185,8 @@ class TestingValintarekisteriActor(restClient: VirkailijaRestClient, config: Con
 
   var requestCount: Long = 0
 
-  override def fetchEnsimmainenVastaanotto(henkiloOid: String): Future[Option[DateTime]] = {
+  override def fetchEnsimmainenVastaanotto(henkiloOid: String, koulutuksenAlkamispvm: DateTime): Future[Option[DateTime]] = {
     requestCount = requestCount + 1
-    super.fetchEnsimmainenVastaanotto(henkiloOid)
+    super.fetchEnsimmainenVastaanotto(henkiloOid, koulutuksenAlkamispvm)
   }
 }

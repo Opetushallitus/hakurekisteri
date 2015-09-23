@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor}
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActor
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{ValintarekisteriQuery, ValintarekisteriActor}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, TarjontaActor}
@@ -48,7 +48,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val valintaTulos: ActorRef = mockActor("valintaTulos", new DummyActor)
   override val valintarekisteri: ActorRef = mockActor("valintarekisteri", new Actor {
     override def receive: Receive = {
-      case oid: String => sender ! None
+      case ValintarekisteriQuery(_, _) => sender ! None
       case a => println(s"DummyActor($self): received $a")
     }
   })
