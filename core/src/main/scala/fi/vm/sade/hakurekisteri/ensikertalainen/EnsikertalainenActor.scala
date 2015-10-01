@@ -5,11 +5,11 @@ import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriQuery
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.rest.support.Query
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VapaamuotoinenSuoritus, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus}
 import org.joda.time.{DateTimeZone, DateTime, LocalDate}
 
 import scala.compat.Platform
@@ -17,7 +17,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.language.implicitConversions
 import scalaz.Scalaz._
-import scalaz.\/._
 import scalaz._
 import scalaz.concurrent.Task
 import scalaz.stream._
@@ -80,12 +79,10 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
         val kkVastaanotto: Channel[Task, String, Option[DateTime]] =
           channel.lift[Task, String, Option[DateTime]]((henkiloOid: String) => (valintarekisterActor ? ValintarekisteriQuery(henkiloOid, kesa2014)).mapTo[Option[DateTime]])
 
-        val kkTutkinnot = henkiloOid through henkilonSuoritukset pipe process1.unchunk map {
-          case vs: VirallinenSuoritus => right(vs)
-          case vms: VapaamuotoinenSuoritus => left(vms)
-        } observeOThrough isKkTutkinto collect {
-          case \/-((VirallinenSuoritus(_, _, "VALMIS", valmistuminen, _, _, _, _, _, _), true)) => valmistuminen.toDateTimeAtStartOfDay
-          case -\/(s@VapaamuotoinenSuoritus(_, _, _, vuosi, _, _, _)) if s.kkTutkinto => new LocalDate(vuosi, 1, 1).toDateTimeAtStartOfDay
+        val kkTutkinnot = henkiloOid through henkilonSuoritukset pipe process1.unchunk collect {
+          case vs: VirallinenSuoritus => vs
+        } observeThrough isKkTutkinto collect {
+          case (VirallinenSuoritus(_, _, "VALMIS", valmistuminen, _, _, _, _, _, _), true) => valmistuminen.toDateTimeAtStartOfDay
         } minimumBy (_.getMillis) pipe process1.awaitOption
 
         val ensimmainenVastaanotto = henkiloOid through kkVastaanotto
