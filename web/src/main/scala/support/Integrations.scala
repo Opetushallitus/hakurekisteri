@@ -84,25 +84,10 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
   val valintaTulos = system.actorOf(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
   val valintarekisteri = system.actorOf(Props(new ValintarekisteriActor(valintarekisteriClient, config)), "valintarekisteri")
-
-  hakemukset ! Trigger {
-    (hakemus: FullHakemus) =>
-      for (
-        person <- hakemus.personOid;
-        answers <- hakemus.answers;
-        koulutus <- answers.koulutustausta;
-        myontaja <- koulutus.aiempitutkinto_korkeakoulu;
-        kuvaus <- koulutus.aiempitutkinto_tutkinto;
-        vuosiString <- koulutus.aiempitutkinto_vuosi;
-        vuosi <- Try(vuosiString.toInt).toOption
-      ) rekisterit.suoritusRekisteri ! VapaamuotoinenKkTutkinto(person, kuvaus, myontaja, vuosi, 0, person)
-  }
-
-  val ilmoitetutArvosanat = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(ec);
-
-  hakemukset ! ilmoitetutArvosanat
-
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, config.integrations.ytlConfig)), "ytl")
   val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(config.integrations.virtaConfig)(system), organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
   val proxies = new HttpProxies(henkiloClient, koodistoClient, organisaatioClient)
+
+  hakemukset ! IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(ec)
+
 }
