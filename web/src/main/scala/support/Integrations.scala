@@ -74,7 +74,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   private val hakemusClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(ec, system)
   private val parametritClient = new VirkailijaRestClient(config.integrations.parameterConfig, None)(ec, system)
   private val valintatulosClient = new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool"), system)
-  private val valintarekisteriClient = new VirkailijaRestClient(config.integrations.valintarekisteriConfig, None)(ec, system)
+  private val valintarekisteriClient = new VirkailijaRestClient(config.integrations.valintarekisteriConfig, None)(ExecutorUtil.createExecutor(10, "valintarekisteri-client-pool"), system)
 
   val tarjonta = system.actorOf(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
   val organisaatiot = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
