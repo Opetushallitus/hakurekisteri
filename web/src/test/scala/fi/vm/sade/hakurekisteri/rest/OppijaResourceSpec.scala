@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.rest
 import java.util.UUID
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.testkit.TestActorRef
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
@@ -11,42 +12,85 @@ import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenActor
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActor
 import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusActor}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusActor
+import fi.vm.sade.hakurekisteri.oppija.Oppija
 import fi.vm.sade.hakurekisteri.rest.support.{Registers, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
 import fi.vm.sade.hakurekisteri.web.oppija.OppijaResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
-import org.joda.time.LocalDate
+import org.joda.time.{DateTime, LocalDate}
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.compat.Platform
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.implicitConversions
+import scala.util.Random
 
 class OppijaResourceSpec extends OppijaResourceSetup {
-  
+
   test("OppijaResource should return 200") {
     get("/?haku=1") {
-      response.status should be (200)
+      response.status should be(200)
     }
   }
 
   test("OppijaResource should return 400 if no parameters are given") {
     get("/") {
-      response.status should be (400)
+      response.status should be(400)
     }
   }
 
   test("OppijaResource should return 10001 oppijas with ensikertalainen false") {
-    waitFuture(resource.fetchOppijat(HakemusQuery(Some("foo"), None, None)))(oppijat => {
-      oppijat.length should be (10001)
-      oppijat.foreach(o => o.ensikertalainen should be (Some(false)))
+    waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None)))(oppijat => {
+      oppijat.length should be(10001)
+      oppijat.foreach(o => o.ensikertalainen should be(Some(false)))
+    })
+  }
+
+  test("OppijaResource should return oppija with ensikertalainen true when asked with ensikertalaisuus timestamp earlier than vastaanotto") {
+    get("/1.2.246.562.24.00000000001?ensikertalaisuudenRajapvm=2014-06-01T00:00:00.000Z") {
+      response.status should be(200)
+
+      body should include("\"ensikertalainen\":true")
+    }
+  }
+
+  test("OppijaResource should return oppija with ensikertalainen false when asked with ensikertalaisuus timestamp after than vastaanotto") {
+    get("/1.2.246.562.24.00000000001?ensikertalaisuudenRajapvm=2014-10-01T16:00:00.000+03:00") {
+      response.status should be(200)
+
+      body should include("\"ensikertalainen\":false")
+    }
+  }
+
+  test("OppijaResource should not cache ensikertalaisuus") {
+    valintarekisteri.underlyingActor.requestCount = 0
+    get("/?haku=1.2.246.562.6.00000000001") {
+      get("/?haku=1.2.246.562.6.00000000001") {
+        valintarekisteri.underlyingActor.requestCount should be(20002)
+      }
+    }
+  }
+
+  test("OppijaResource should not tell ensikertalaisuus for oppija without hetu when EnsikertalaisuusActor returns true") {
+    waitFuture(resource.fetchOppijatFor(Seq(FullHakemus(
+      oid = "1.2.246.562.11.00000000001",
+      personOid = Some("1.2.246.562.24.00000000002"),
+      applicationSystemId = "1.2.246.562.6.00000000001",
+      answers = Some(HakemusAnswers(Some(HakemusHenkilotiedot()))),
+      state = Some("INCOMPLETE"),
+      preferenceEligibilities = Seq()
+    ))))((s: Seq[Oppija]) => {
+      s.head.ensikertalainen should be(None)
     })
   }
 
@@ -58,31 +102,34 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   implicit val user: User = security.TestUser
   implicit val swagger: Swagger = new HakurekisteriSwagger
 
-  val henkilot: Set[String] = (0 until 10001).map(i => UUID.randomUUID().toString).toSet
-
-  val opiskeluoikeudetSeq = henkilot.map(henkilo =>
-    Opiskeluoikeus(new LocalDate(), None, henkilo, "koulutus_999999", "", "")
-  ).toSeq
+  val henkilot: Set[String] = {
+    var oids: Set[String] = Set("1.2.246.562.24.00000000001")
+    while (oids.size < 10001) {
+      oids = oids + s"1.2.246.562.24.${new Random().nextInt(99999999).toString.padTo(11, '0')}"
+    }
+    oids
+  }
 
   val suorituksetSeq = henkilot.map(henkilo =>
-    VirallinenSuoritus("bar", "foo", "KESKEN", new LocalDate(), henkilo, yksilollistaminen.Ei, "FI", None, vahv = true, "")
+    VirallinenSuoritus("1.2.246.562.5.00000000001", "1.2.246.562.10.00000000001", "VALMIS", new LocalDate(2001, 1, 1), henkilo, yksilollistaminen.Ei, "FI", None, vahv = true, "")
   ).toSeq
 
-  implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]): InMemJournal[R, UUID] = {
+  implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s: Seq[R]): InMemJournal[R, UUID] = {
     val journal = new InMemJournal[R, UUID]
-    s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
+    s.foreach((resource: R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
     journal
   }
-  implicit def seq2journalString[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[String, R]](s:Seq[R]): InMemJournal[R, String] = {
+
+  implicit def seq2journalString[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[String, R]](s: Seq[R]): InMemJournal[R, String] = {
     val journal = new InMemJournal[R, String]
-    s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID().toString))))
+    s.foreach((resource: R) => journal.addModification(Updated(resource.identify(UUID.randomUUID().toString))))
     journal
   }
 
   val rekisterit = new Registers {
     private val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
     private val arvosanat = system.actorOf(Props(new ArvosanaActor()))
-    private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusActor(opiskeluoikeudetSeq)))
+    private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusActor()))
     private val opiskelijat = system.actorOf(Props(new OpiskelijaActor()))
     private val suoritukset = system.actorOf(Props(new SuoritusActor(suorituksetSeq)))
 
@@ -95,12 +142,14 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   val hakuappConfig = ServiceConfig(serviceUrl = "http://localhost/haku-app")
   val endpoint = mock[Endpoint]
   when(endpoint.request(forPattern("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=.*"))).thenReturn((200, List(), "[]"))
+  when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/.*"))).thenReturn((200, List(), """{"oid":"foo","paattyi":"2014-09-01T00:00:00Z"}"""))
+  when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/1\\.2\\.246\\.562\\.24\\.00000000002\\?koulutuksenAlkamispvm=.+"))).thenReturn((200, List(), """{"oid":"1.2.246.562.24.00000000002"}"""))
 
-  val hakemukset = henkilot.map(henkilo => {
+  val hakemukset: Seq[FullHakemus] = henkilot.map(henkilo => {
     FullHakemus(
       oid = UUID.randomUUID().toString,
       personOid = Some(henkilo),
-      applicationSystemId = "foo",
+      applicationSystemId = "1.2.246.562.6.00000000001",
       answers = Some(HakemusAnswers(Some(HakemusHenkilotiedot(Henkilotunnus = Some(henkilo))))),
       state = Some("INCOMPLETE"),
       preferenceEligibilities = Seq()
@@ -113,11 +162,14 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
 
   val tarjontaActor = system.actorOf(Props(new Actor {
     override def receive: Receive = {
+      case GetKomoQuery(oid) => sender ! KomoResponse(oid, Some(Komo(oid, Koulutuskoodi("123456"), "TUTKINTO_OHJELMA", "LUKIOKOULUTUS")))
       case a => sender ! a
     }
   }))
 
-  val ensikertalaisuusActor = system.actorOf(Props(new EnsikertalainenActor(rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri, tarjontaActor, Config.mockConfig)))
+  val valintarekisteri = TestActorRef(new TestingValintarekisteriActor(new VirkailijaRestClient(config = ServiceConfig(serviceUrl = "http://localhost/valintarekisteri"), aClient = Some(new AsyncHttpClient(new CapturingProvider(endpoint)))), Config.mockConfig))
+
+  val ensikertalaisuusActor = system.actorOf(Props(new EnsikertalainenActor(rekisterit.suoritusRekisteri, valintarekisteri, tarjontaActor, Config.mockConfig)))
 
   val resource = new OppijaResource(rekisterit, hakemusActor, ensikertalaisuusActor)
 
@@ -126,5 +178,15 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   override def stop(): Unit = {
     system.shutdown()
     system.awaitTermination(15.seconds)
+  }
+}
+
+class TestingValintarekisteriActor(restClient: VirkailijaRestClient, config: Config) extends ValintarekisteriActor(restClient, config) {
+
+  var requestCount: Long = 0
+
+  override def fetchEnsimmainenVastaanotto(henkiloOid: String, koulutuksenAlkamispvm: DateTime): Future[Option[DateTime]] = {
+    requestCount = requestCount + 1
+    super.fetchEnsimmainenVastaanotto(henkiloOid, koulutuksenAlkamispvm)
   }
 }

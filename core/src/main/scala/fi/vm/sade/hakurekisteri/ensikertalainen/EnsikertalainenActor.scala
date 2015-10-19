@@ -1,194 +1,116 @@
 package fi.vm.sade.hakurekisteri.ensikertalainen
 
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import akka.pattern.pipe
+import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.FutureCache
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriQuery
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.rest.support.Query
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VapaamuotoinenSuoritus, VirallinenSuoritus}
-import org.joda.time.{DateTime, LocalDate}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus}
+import org.joda.time.{DateTimeZone, DateTime, LocalDate}
 
-import scala.collection.immutable.Iterable
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Failure, Success, Try}
+import scala.language.implicitConversions
+import scalaz.Scalaz._
+import scalaz._
+import scalaz.concurrent.Task
+import scalaz.stream._
 
 case class EnsikertalainenQuery(henkiloOid: String,
                                 suoritukset: Option[Seq[Suoritus]] = None,
-                                opiskeluoikeudet: Option[Seq[Opiskeluoikeus]] = None)
+                                opiskeluoikeudet: Option[Seq[Opiskeluoikeus]] = None,
+                                paivamaara: Option[DateTime] = None)
 
 object QueryCount
 
 case class QueriesRunning(count: Map[String, Int], timestamp: Long = Platform.currentTime)
 
-case class CacheResult(q: EnsikertalainenQuery, f: Future[Ensikertalainen])
-
 case class Ensikertalainen(ensikertalainen: Boolean)
+
 case class HetuNotFoundException(message: String) extends Exception(message)
 
-class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRef, tarjontaActor: ActorRef, config: Config)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
-  val kesa2014: DateTime = new LocalDate(2014, 7, 1).toDateTimeAtStartOfDay
-  implicit val defaultTimeout: Timeout = 30.seconds
-  private val cache = new FutureCache[EnsikertalainenQuery, Ensikertalainen](config.ensikertalainenCacheHours.hours.toMillis)
+class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorRef, tarjontaActor: ActorRef, config: Config)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
+
+  val kesa2014: DateTime = new DateTime(2014, 7, 1, 0, 0, 0, 0, DateTimeZone.forOffsetHours(3))
+  val Oid = "(1\\.2\\.246\\.562\\.[0-9.]+)".r
+  val KkKoulutusUri = "koulutus_[67][1-9][0-9]{4}".r
+
+  implicit val defaultTimeout: Timeout = 2.minutes
+
+  implicit def future2Task[A](future: Future[A]): Task[A] = Task.async[A] {
+    register =>
+      future.onComplete {
+        case scala.util.Success(v) => register(v.right)
+        case scala.util.Failure(ex) => register(ex.left)
+      }
+  }
+
+  log.info(s"started ensikertalaisuus actor: $self")
+
+  val queryEc = ec
 
   override def receive: Receive = {
     case q: EnsikertalainenQuery =>
-      if (cache.contains(q)) cache.get(q) pipeTo sender
-      else {
-        log.debug(q.toString)
-        context.actorOf(Props(new EnsikertalaisuusCheck())).forward(q)
-      }
+      val promise = Promise[Ensikertalainen]()
 
-    case CacheResult(q, f) => cache + (q, f)
+      Future {
+
+        val henkiloOid = Process(q.henkiloOid).toSource
+
+        val henkilonSuoritukset: Channel[Task, String, Seq[Suoritus]] =
+          channel.lift[Task, String, Seq[Suoritus]]((henkiloOid: String) => q.suoritukset.map(Task.now).getOrElse((suoritusActor ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]]))
+
+        val isKkTutkinto: Channel[Task, VirallinenSuoritus, Boolean] =
+          channel.lift[Task, VirallinenSuoritus, Boolean]((s: VirallinenSuoritus) => s.komo match {
+            case KkKoulutusUri() => Task.now(true)
+            case Oid(komo) =>
+              (tarjontaActor ? GetKomoQuery(komo)).mapTo[KomoResponse].flatMap(_.komo match {
+                case Some(k) => Future.successful(k.isKorkeakoulututkinto)
+                case None => Future.failed(new Exception(s"komo $komo not found"))
+              })
+            case _ => Task.now(false)
+          })
+
+        val kkVastaanotto: Channel[Task, String, Option[DateTime]] =
+          channel.lift[Task, String, Option[DateTime]]((henkiloOid: String) => (valintarekisterActor ? ValintarekisteriQuery(henkiloOid, kesa2014)).mapTo[Option[DateTime]])
+
+        val kkTutkinnot = henkiloOid through henkilonSuoritukset pipe process1.unchunk collect {
+          case vs: VirallinenSuoritus => vs
+        } observeThrough isKkTutkinto collect {
+          case (VirallinenSuoritus(_, _, "VALMIS", valmistuminen, _, _, _, _, _, _), true) => valmistuminen.toDateTimeAtStartOfDay
+        } minimumBy (_.getMillis) pipe process1.awaitOption
+
+        val ensimmainenVastaanotto = henkiloOid through kkVastaanotto
+
+        kkTutkinnot.zip(ensimmainenVastaanotto).runLastOr(None -> None).
+          map(ensikertalaisuusPaattely(q.paivamaara.getOrElse(new LocalDate().toDateTimeAtStartOfDay))).
+          timed(1.minutes.toMillis).
+          runAsync {
+            case -\/(failure) => promise.tryFailure(failure)
+            case \/-(ensikertalainen) => promise.trySuccess(ensikertalainen)
+          }
+
+      }(queryEc)
+
+      promise.future pipeTo sender
 
     case QueryCount =>
-      import akka.pattern.ask
-      implicit val ec = context.dispatcher
-      val statusRequests: Iterable[Future[String]] = for (
-        query: ActorRef <- context.children
-      ) yield (query ? ReportStatus)(5.seconds).mapTo[QueryStatus].map(_.status).recover{case _ => "status query failed"}
-
-      val statuses = Future.sequence(statusRequests)
-
-      val counts: Future[Map[String, Int]] = statuses.
-        map(_.groupBy(i => i).
-        map((t) => (t._1, t._2.toList.length)))
-      counts.map(QueriesRunning(_)) pipeTo sender
+      sender ! Map[String, Int]()
   }
 
-  case class EnsikertalaisuusCheckFailed(status: QueryStatus) extends Exception(s"ensikertalaisuus check failed: $status")
-  
-  class EnsikertalaisuusCheck() extends Actor with ActorLogging {
-    var suoritukset: Option[Seq[Suoritus]] = None
-
-    var opiskeluOikeudet: Option[Seq[Opiskeluoikeus]] = None
-
-    var komos: Map[String, Option[Komo]] = Map()
-
-    var oid: Option[String] = None
-
-    val resolver = Promise[Ensikertalainen]()
-    val result: Future[Ensikertalainen] = resolver.future
-
-    context.system.scheduler.scheduleOnce(2.minutes)(failQuery(EnsikertalaisuusCheckFailed(getStatus)))
-    
-    def getStatus: QueryStatus = {
-      val state = this match {
-        case _ if result.isCompleted => result.value.flatMap(
-          _.recover{case ex => "failed: " + ex.getMessage}.map((queryRes) => "done " + queryRes).toOption).getOrElse("empty")
-        case _ if suoritukset.isEmpty && opiskeluOikeudet.isEmpty =>  "resolving suoritukset and opinto-oikeudet"
-        case _ if suoritukset.isEmpty =>  "resolving suoritukset"
-        case _ if opiskeluOikeudet.isEmpty && !foundAllKomos =>  "resolving opinto-oikeudet and komos"
-        case _ if opiskeluOikeudet.isDefined && !foundAllKomos =>  "resolving komos"
-        case _ => "unknown"
-      }
-      QueryStatus(oid, state)
+  def ensikertalaisuusPaattely(leikkuripaiva: DateTime)(t: (Option[DateTime], Option[DateTime])) = Ensikertalainen {
+    t match {
+      case (Some(tutkintopaiva), _) if tutkintopaiva.isBefore(leikkuripaiva) => false
+      case (_, Some(vastaanottopaiva)) if vastaanottopaiva.isBefore(leikkuripaiva) => false
+      case default => true
     }
-
-    override def receive: Actor.Receive = {
-      case ReportStatus =>
-        sender ! getStatus
-
-      case EnsikertalainenQuery(henkiloOid, s, o) =>
-        oid = Some(henkiloOid)
-        result pipeTo sender onComplete { res =>
-          if (res.isSuccess) context.parent ! CacheResult(EnsikertalainenQuery(henkiloOid), result)
-          context.stop(self)
-        }
-        if (s.isDefined)
-          self ! SuoritusResponse(s.get)
-        else
-          requestSuoritukset(henkiloOid)
-        if (o.isDefined)
-          self ! OpiskeluoikeusResponse(o.get)
-        else
-          requestOpiskeluOikeudet(henkiloOid)
-
-      case SuoritusResponse(suor) =>
-        suoritukset = Some(suor)
-        if (suoritukset.exists {
-          case v: VapaamuotoinenSuoritus => v.kkTutkinto
-          case _ => false
-        }) resolveQuery(ensikertalainen = false) else {
-
-          requestKomos(suor)
-          if (suor.collect{ case v: VirallinenSuoritus => v}.isEmpty && opiskeluOikeudet.isDefined) resolveQuery(true)
-        }
-
-      case OpiskeluoikeusResponse(oo) =>
-        opiskeluOikeudet = Some(oo.filter(_.aika.alku.isAfter(kesa2014)))
-        if (opiskeluOikeudet.getOrElse(Seq()).nonEmpty) resolveQuery(ensikertalainen = false)
-        else if (foundAllKomos) {
-          resolveQuery(true)
-        }
-
-      case k: KomoResponse =>
-        komos += (k.oid -> k.komo)
-        if (foundAllKomos) {
-          val kkTutkinnot = for (
-            suoritus <- suoritukset.getOrElse(Seq())
-            if isKkTutkinto(suoritus)
-          ) yield suoritus
-          if (kkTutkinnot.nonEmpty) resolveQuery(ensikertalainen = false)
-          else if (opiskeluOikeudet.isDefined) {
-            resolveQuery(true)
-          }
-        }
-
-      case akka.actor.Status.Failure(e: Throwable) =>
-        log.error(e, s"got error from ${sender()}")
-        failQuery(e)
-    }
-
-
-    def isKkTutkinto(suoritus: Suoritus): Boolean = suoritus match{
-      case s: VirallinenSuoritus => komos.get(s.komo).exists(_.exists(_.isKorkeakoulututkinto))
-      case s: VapaamuotoinenSuoritus => s.kkTutkinto
-    }
-
-    def foundAllKomos: Boolean = suoritukset match {
-      case None => false
-      case Some(s) => s.forall{
-        case suoritus: VirallinenSuoritus => komos.get(suoritus.komo).isDefined
-        case suoritus: VapaamuotoinenSuoritus => true
-      }
-    }
-
-    def resolveQuery(ensikertalainen: Boolean) {
-      resolve(Success(Ensikertalainen(ensikertalainen = ensikertalainen)))
-    }
-
-    def failQuery(failure: Throwable) {
-      resolve(Failure(failure))
-    }
-
-    def resolve(message: Try[Ensikertalainen]) {
-      resolver.tryComplete(message)
-    }
-
-    def requestOpiskeluOikeudet(henkiloOid: String)  {
-      context.actorOf(Props(new FetchResource[Opiskeluoikeus, OpiskeluoikeusResponse](OpiskeluoikeusQuery(henkilo = Some(henkiloOid)), OpiskeluoikeusResponse, self, opiskeluoikeusActor)))
-    }
-
-    case class OpiskeluoikeusResponse(opiskeluoikeudet: Seq[Opiskeluoikeus])
-
-    def requestKomos(suoritukset: Seq[Suoritus]) {
-      for (
-        suoritus <- suoritukset.collect{case s: VirallinenSuoritus => s}
-      ) if (suoritus.komo.startsWith("koulutus_")) self ! KomoResponse(suoritus.komo, Some(Komo(suoritus.komo, Koulutuskoodi(suoritus.komo.substring(9)), "TUTKINTO", "KORKEAKOULUTUS"))) else tarjontaActor ! GetKomoQuery(suoritus.komo)
-    }
-
-    def requestSuoritukset(henkiloOid: String) {
-      context.actorOf(Props(new FetchResource[Suoritus, SuoritusResponse](SuoritusQuery(henkilo = Some(henkiloOid)), SuoritusResponse, self, suoritusActor)))
-    }
-
-    case class SuoritusResponse(suoritukset: Seq[Suoritus])
   }
+
 
   class FetchResource[T, R](query: Query[T], wrapper: (Seq[T]) => R, receiver: ActorRef, resourceActor: ActorRef) extends Actor {
     override def preStart(): Unit = {
@@ -201,10 +123,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, opiskeluoikeusActor: ActorRe
         context.stop(self)
     }
   }
+
 }
-
-case class QueryStatus(oid: Option[String], status: String)
-
-object ReportStatus
 
 

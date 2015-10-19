@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.oppija
 
 import fi.vm.sade.hakurekisteri.rest.support.{Query, User, Registers}
 import akka.actor.ActorRef
+import org.joda.time.{DateTime, LocalDate}
 import scala.concurrent.{Future, ExecutionContext}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
@@ -27,22 +28,22 @@ trait OppijaFetcher {
   protected implicit def executor: ExecutionContext
   implicit val defaultTimeout: Timeout
 
-  def fetchOppijat(q: HakemusQuery)(implicit user: User): Future[Seq[Oppija]] =
+  def fetchOppijat(q: HakemusQuery, ensikertalaisuudenRajapvm: Option[DateTime] = None)(implicit user: User): Future[Seq[Oppija]] =
     for (
       hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
-      oppijat <- fetchOppijatFor(hakemukset)
+      oppijat <- fetchOppijatFor(hakemukset, ensikertalaisuudenRajapvm)
     ) yield oppijat
 
   private def isMegaQuery(persons: Set[(String, Option[String])]): Boolean = persons.size > megaQueryTreshold
 
-  def fetchOppijatFor(hakemukset: Seq[FullHakemus])(implicit user: User): Future[Seq[Oppija]] = {
+  def fetchOppijatFor(hakemukset: Seq[FullHakemus], ensikertalaisuudenRajapvm: Option[DateTime] = None)(implicit user: User): Future[Seq[Oppija]] = {
     val persons = extractPersons(hakemukset)
 
     if (isMegaQuery(persons)) {
-      enrichWithEnsikertalaisuus(persons, getRekisteriData(persons.map(_._1)))
+      enrichWithEnsikertalaisuus(persons, getRekisteriData(persons.map(_._1)), ensikertalaisuudenRajapvm)
     } else {
       Future.sequence(persons.map {
-        case (personOid, hetu) => fetchOppijaData(personOid, hetu)
+        case (personOid, hetu) => fetchOppijaData(personOid, hetu, ensikertalaisuudenRajapvm)
       }.toSeq)
     }
   }
@@ -54,7 +55,8 @@ trait OppijaFetcher {
     ) yield (hakemus.personOid.get, hakemus.hetu)).toSet
 
   private def enrichWithEnsikertalaisuus(persons: Set[(String, Option[String])],
-                                 rekisteriData: Future[Seq[Oppija]])(implicit user: User): Future[Seq[Oppija]] = {
+                                         rekisteriData: Future[Seq[Oppija]],
+                                         ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Seq[Oppija]] = {
     val hetuMap = persons.groupBy(_._1).mapValues(_.headOption.flatMap(_._2))
 
     rekisteriData.flatMap(o => Future.sequence(o.map(oppija => for (
@@ -62,7 +64,8 @@ trait OppijaFetcher {
         oppija.oppijanumero,
         hetuMap.getOrElse(oppija.oppijanumero, None),
         oppija.suoritukset.map(_.suoritus),
-        oppija.opiskeluoikeudet
+        oppija.opiskeluoikeudet,
+        ensikertalaisuudenRajapvm
       )
     ) yield oppija.copy(
         ensikertalainen = ensikertalaisuus.map(_.ensikertalainen)
@@ -100,13 +103,13 @@ trait OppijaFetcher {
     ) yield Todistus(suoritus, arvosanat)
   )
 
-  private def fetchOppijaData(henkiloOid: String, hetu: Option[String])(implicit user: User): Future[Oppija] =
+  private def fetchOppijaData(henkiloOid: String, hetu: Option[String], ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Oppija] =
     for (
       suoritukset <- fetchSuoritukset(henkiloOid);
       todistukset <- fetchTodistukset(suoritukset);
       opiskelu <- fetchOpiskelu(henkiloOid);
       opiskeluoikeudet <- fetchOpiskeluoikeudet(henkiloOid);
-      ensikertalainen <- fetchEnsikertalaisuus(henkiloOid, hetu, suoritukset, opiskeluoikeudet)
+      ensikertalainen <- fetchEnsikertalaisuus(henkiloOid, hetu, suoritukset, opiskeluoikeudet, ensikertalaisuudenRajapvm)
     ) yield Oppija(
       oppijanumero = henkiloOid,
       opiskelu = opiskelu,
@@ -115,9 +118,16 @@ trait OppijaFetcher {
       ensikertalainen = ensikertalainen.map(_.ensikertalainen)
     )
 
-  private def fetchEnsikertalaisuus(henkiloOid: String, hetu: Option[String], suoritukset: Seq[Suoritus], opiskeluoikeudet: Seq[Opiskeluoikeus]): Future[Option[Ensikertalainen]] = hetu match {
-    case Some(_) => (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, Some(suoritukset), Some(opiskeluoikeudet))).mapTo[Ensikertalainen].map(Some(_))
-    case None => Future.successful(None)
+  private def fetchEnsikertalaisuus(henkiloOid: String,
+                                    hetu: Option[String],
+                                    suoritukset: Seq[Suoritus],
+                                    opiskeluoikeudet: Seq[Opiskeluoikeus],
+                                    ensikertalaisuudenRajapvm: Option[DateTime]): Future[Option[Ensikertalainen]] = {
+    val ensikertalainen: Future[Ensikertalainen] = (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, Some(suoritukset), Some(opiskeluoikeudet), ensikertalaisuudenRajapvm)).mapTo[Ensikertalainen]
+    hetu match {
+      case Some(_) => ensikertalainen.map(Some(_))
+      case None => ensikertalainen.map(e => if (e.ensikertalainen) None else Some(e))
+    }
   }
 
   private def fetchOpiskeluoikeudet(henkiloOid: String)(implicit user: User): Future[Seq[Opiskeluoikeus]] =

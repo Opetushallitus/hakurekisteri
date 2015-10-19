@@ -1,5 +1,6 @@
 package support
 
+import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.hakemus._
@@ -7,6 +8,7 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{ValintarekisteriQuery, ValintarekisteriActor}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, TarjontaActor}
@@ -30,6 +32,7 @@ trait Integrations {
   val ytl: ActorRef
   val parametrit: ActorRef
   val valintaTulos: ActorRef
+  val valintarekisteri: ActorRef
   val proxies: Proxies
 }
 
@@ -43,6 +46,12 @@ object Integrations {
 class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Config) extends Integrations {
   override val virta: ActorRef = mockActor("virta", new DummyActor)
   override val valintaTulos: ActorRef = mockActor("valintaTulos", new DummyActor)
+  override val valintarekisteri: ActorRef = mockActor("valintarekisteri", new Actor {
+    override def receive: Receive = {
+      case ValintarekisteriQuery(_, _) => sender ! None
+      case a => println(s"DummyActor($self): received $a")
+    }
+  })
   override val hakemukset: ActorRef = mockActor("hakemukset", new MockHakemusActor)
   override val koodisto: ActorRef = mockActor("koodisto", new DummyActor)
   override val organisaatiot: ActorRef = mockActor("organisaatiot", new MockOrganisaatioActor(config))
@@ -65,6 +74,7 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   private val hakemusClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(ec, system)
   private val parametritClient = new VirkailijaRestClient(config.integrations.parameterConfig, None)(ec, system)
   private val valintatulosClient = new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool"), system)
+  private val valintarekisteriClient = new VirkailijaRestClient(config.integrations.valintarekisteriConfig, None)(ec, system)
 
   val tarjonta = system.actorOf(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
   val organisaatiot = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
@@ -73,25 +83,11 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
   val valintaTulos = system.actorOf(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
-
-  hakemukset ! Trigger {
-    (hakemus: FullHakemus) =>
-      for (
-        person <- hakemus.personOid;
-        answers <- hakemus.answers;
-        koulutus <- answers.koulutustausta;
-        myontaja <- koulutus.aiempitutkinto_korkeakoulu;
-        kuvaus <- koulutus.aiempitutkinto_tutkinto;
-        vuosiString <- koulutus.aiempitutkinto_vuosi;
-        vuosi <- Try(vuosiString.toInt).toOption
-      ) rekisterit.suoritusRekisteri ! VapaamuotoinenKkTutkinto(person, kuvaus, myontaja, vuosi, 0, person)
-  }
-
-  val ilmoitetutArvosanat = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(ec);
-
-  hakemukset ! ilmoitetutArvosanat
-
+  val valintarekisteri = system.actorOf(Props(new ValintarekisteriActor(valintarekisteriClient, config)), "valintarekisteri")
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, config.integrations.ytlConfig)), "ytl")
   val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(config.integrations.virtaConfig)(system), organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
   val proxies = new HttpProxies(henkiloClient, koodistoClient, organisaatioClient)
+
+  hakemukset ! IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(ec)
+
 }

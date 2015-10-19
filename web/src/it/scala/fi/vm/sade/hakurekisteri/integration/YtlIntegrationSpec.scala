@@ -53,7 +53,7 @@ class YtlIntegrationSpec extends FlatSpec with Matchers with CleanSharedJetty {
     Future {
       var result: Option[Seq[Todistus]] = None
       while (result.isEmpty) {
-        Thread.sleep(50)
+        Thread.sleep(100)
         val check = get("/rest/v1/oppijat/1.2.246.562.24.71944845619") { response }
         if (check.status == 200) {
           val json = JsonMethods.parse(check.body)
@@ -77,7 +77,7 @@ class YtlIntegrationSpec extends FlatSpec with Matchers with CleanSharedJetty {
     todistukset.head.arvosanat.size should equal(27)
 
     val arvosanaSA = todistukset.head.arvosanat.filter(arvosana => {
-      arvosana.aine.equals("A") && arvosana.lahdeArvot.get("koetunnus").equals(Some("SA"))
+      arvosana.aine.equals("A") && arvosana.lahdeArvot.get("koetunnus").contains("SA")
     })
     arvosanaSA.length should equal (1)
     arvosanaSA.head should equal (expectedSaArvosana.copy(suoritus = arvosanaSA.head.suoritus))
