@@ -19,7 +19,7 @@ class ValintarekisteriActor(restClient: VirkailijaRestClient, config: Config)  e
     case ValintarekisteriQuery(henkiloOid, koulutuksenAlkamispmv) => pipe(fetchEnsimmainenVastaanotto(henkiloOid, koulutuksenAlkamispmv)) pipeTo sender
   }
 
-  def fetchEnsimmainenVastaanotto(henkiloOid: String, koulutuksenAlkamispvm: DateTime): Future[Option[DateTime]] = restClient.readObject[EnsimmainenVastaanotto](s"/ensikertalaisuus/$henkiloOid?koulutuksenAlkamispvm=${URLEncoder.encode(koulutuksenAlkamispvm.toDateTimeISO.toString, "UTF-8")}", 200).map(_.paattyi)
+  def fetchEnsimmainenVastaanotto(henkiloOid: String, koulutuksenAlkamispvm: DateTime): Future[Option[DateTime]] = restClient.readObject[EnsimmainenVastaanotto](s"/ensikertalaisuus/$henkiloOid?koulutuksenAlkamispvm=${URLEncoder.encode(koulutuksenAlkamispvm.toDateTimeISO.toString, "UTF-8")}", 200, 2).map(_.paattyi)
 
 }
 
