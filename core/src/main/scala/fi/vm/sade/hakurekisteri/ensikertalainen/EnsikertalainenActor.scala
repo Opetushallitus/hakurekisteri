@@ -36,7 +36,7 @@ case class HetuNotFoundException(message: String) extends Exception(message)
 
 class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorRef, tarjontaActor: ActorRef, config: Config)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
 
-  val kesa2014: DateTime = new DateTime(2014, 7, 1, 0, 0, 0, 0, DateTimeZone.forOffsetHours(3))
+  val syksy2014: DateTime = new DateTime(2014, 8, 1, 0, 0, 0, 0, DateTimeZone.forID("Europe/Helsinki"))
   val Oid = "(1\\.2\\.246\\.562\\.[0-9.]+)".r
   val KkKoulutusUri = "koulutus_[67][1-9][0-9]{4}".r
 
@@ -77,7 +77,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
           })
 
         val kkVastaanotto: Channel[Task, String, Option[DateTime]] =
-          channel.lift[Task, String, Option[DateTime]]((henkiloOid: String) => (valintarekisterActor ? ValintarekisteriQuery(henkiloOid, kesa2014)).mapTo[Option[DateTime]])
+          channel.lift[Task, String, Option[DateTime]]((henkiloOid: String) => (valintarekisterActor ? ValintarekisteriQuery(henkiloOid, syksy2014)).mapTo[Option[DateTime]])
 
         val kkTutkinnot = henkiloOid through henkilonSuoritukset pipe process1.unchunk collect {
           case vs: VirallinenSuoritus => vs
