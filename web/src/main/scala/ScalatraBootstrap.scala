@@ -1,8 +1,10 @@
 import java.nio.file.Path
+import java.util.concurrent.TimeUnit
 import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEvent}
 
 import _root_.support._
 import akka.actor.{ActorSystem, Props}
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.batchimport._
@@ -41,12 +43,12 @@ import org.springframework.web.filter.DelegatingFilterProxy
 import siirto._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContextExecutor, ExecutionContext}
 
 class ScalatraBootstrap extends LifeCycle {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("hakurekisteri")
-  implicit val ec: ExecutionContext = system.dispatcher
+  implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   override def init(context: ServletContext) {
     OPHSecurity.init(context)
@@ -105,8 +107,10 @@ class ScalatraBootstrap extends LifeCycle {
 
   override def destroy(context: ServletContext) {
     import scala.concurrent.duration._
+
     system.shutdown()
     system.awaitTermination(15.seconds)
+
     OPHSecurity.destroy(context)
   }
 }

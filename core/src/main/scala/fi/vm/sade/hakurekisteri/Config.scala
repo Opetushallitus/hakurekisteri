@@ -181,17 +181,17 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val serviceUser = properties.get("suoritusrekisteri.app.username")
   val servicePassword = properties.get("suoritusrekisteri.app.password")
 
-  val virtaConfig = VirtaConfig(virtaServiceUrl, virtaJarjestelma, virtaTunnus, virtaAvain, properties)
+  val virtaConfig = VirtaConfig(virtaServiceUrl, virtaJarjestelma, virtaTunnus, virtaAvain, properties, threads = 1)
   val henkiloConfig = ServiceConfig(casUrl, henkiloServiceUrl, serviceUser, servicePassword, properties)
   val parameterConfig = ServiceConfig(serviceUrl = parameterServiceUrl, properties = properties)
   val hakemusConfig = HakemusConfig(ServiceConfig(casUrl, hakuappServiceUrl, serviceUser, servicePassword, properties), maxApplications)
   val tarjontaConfig = ServiceConfig(serviceUrl = tarjontaServiceUrl, properties = properties)
   val koodistoConfig = ServiceConfig(serviceUrl = koodistoServiceUrl, properties = properties)
   val organisaatioConfig = ServiceConfig(serviceUrl = organisaatioServiceUrl, properties = properties)
-  val valintaTulosConfig = new ServiceConfig(serviceUrl = valintaTulosServiceUrl, properties = properties) {
+  val valintaTulosConfig = new ServiceConfig(serviceUrl = valintaTulosServiceUrl, properties = properties, threads = 5) {
     override val httpClientRequestTimeout: Int = 600000
   }
-  val valintarekisteriConfig = ServiceConfig(serviceUrl = valintarekisteriServiceUrl, properties = properties)
+  val valintarekisteriConfig = ServiceConfig(serviceUrl = valintarekisteriServiceUrl, properties = properties, threads = 10)
 
   val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt
   val organisaatioCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.organisaatio", "12").toInt

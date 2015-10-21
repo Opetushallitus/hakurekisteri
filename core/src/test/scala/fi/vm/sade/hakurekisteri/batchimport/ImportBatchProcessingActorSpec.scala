@@ -142,7 +142,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     oWaiter.await(timeout(30.seconds), dismissals(1))
 
     system.shutdown()
-    system.awaitTermination()
+    system.awaitTermination(15.seconds)
   }
 
   it should "report error for failed henkilo save" in {
@@ -173,7 +173,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     iWaiter.await(timeout(30.seconds), dismissals(2))
 
     system.shutdown()
-    system.awaitTermination()
+    system.awaitTermination(15.seconds)
   }
 
 }

@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloSearchResponse
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaTable}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriDriver, JDBCJournal}
+import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusTable, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
@@ -18,6 +18,7 @@ import generators.DataGen
 import org.joda.time.DateTime
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
 import scala.util.Try
 
 object CreateDevDb extends App {
@@ -60,7 +61,7 @@ object CreateDevDb extends App {
     system.shutdown()
   }
 
-  system.awaitTermination()
+  system.awaitTermination(15.seconds)
 
   def createOppilas(oid:String, aineet: Set[String]) {
     val suoritus = UUID.randomUUID()

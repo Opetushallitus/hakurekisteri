@@ -60,7 +60,7 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
     val suoritukset = Await.result(suoritusFuture, Duration(30, TimeUnit.SECONDS))
 
     system.shutdown()
-    system.awaitTermination()
+    system.awaitTermination(15.seconds)
 
     suoritukset
   }

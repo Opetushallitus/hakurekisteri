@@ -1,14 +1,16 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.ActorSystem
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.integration.{CapturingProvider, DispatchSupport, Endpoint}
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, CapturingProvider, DispatchSupport, Endpoint}
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.mockito.Mockito
 import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -29,9 +31,15 @@ object VirtaResults {
 
 
 
-class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with MockitoSugar with DispatchSupport with FutureWaiting {
+class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with MockitoSugar with DispatchSupport with FutureWaiting with BeforeAndAfterAll {
   implicit val system = ActorSystem("test-virta-system")
+  implicit val clientEc = ExecutorUtil.createExecutor(1, "virta-test-pool")
   import Mockito._
+
+  override def afterAll() = {
+    clientEc.shutdown()
+    clientEc.awaitTermination(3, TimeUnit.SECONDS)
+  }
 
   val endPoint = mock[Endpoint]
 
@@ -63,7 +71,6 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
 
     waitFuture(response) {o => {
       verify(endPoint, atLeastOnce()).request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart(s"<henkilotunnus>$hetu</henkilotunnus>"))
-
     }}
   }
 
@@ -72,7 +79,6 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
 
     waitFuture(response) {o => {
       verify(endPoint, atLeastOnce()).request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("<SOAP-ENV:Envelope"))
-
     }}
   }
 
@@ -115,7 +121,6 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
     intercept[VirtaConnectionErrorException] {
       val response = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.5")
       Await.result(response, 10.seconds)
-
     }
   }
 

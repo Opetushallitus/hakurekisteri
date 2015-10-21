@@ -10,7 +10,7 @@ import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import org.joda.time.format.DateTimeFormat
 
 import scala.compat.Platform
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 import scala.xml.{Elem, Node, NodeSeq, XML}
 
@@ -22,9 +22,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
                                                     tunnus = "",
                                                     avain = "salaisuus", Map.empty),
                                                     aClient: Option[AsyncHttpClient] = None)
-                 (implicit val system: ActorSystem) {
-
-  implicit val ec = ExecutorUtil.createExecutor(1, "virta-executor")
+                 (implicit val ec: ExecutionContext, system: ActorSystem) {
 
   private val defaultClient = Http.configure(_
     .setConnectionTimeoutInMs(config.httpClientConnectionTimeout)
@@ -32,6 +30,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     .setIdleConnectionTimeoutInMs(120000)
     .setFollowRedirects(true)
     .setMaxRequestRetry(2)
+    .setExecutorService(ExecutorUtil.createExecutor(config.threads, "virta-client-response-pool"))
   )
 
   val client: Http = aClient.map(Http(_)).getOrElse(defaultClient)

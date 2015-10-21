@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration
 
-import akka.actor.{Props, ActorSystem}
+import akka.actor.ActorSystem
 import org.scalatest.{Matchers, FlatSpec}
 
 import scala.concurrent.duration._
@@ -8,8 +8,7 @@ import scala.concurrent.{Await, Future, ExecutionContext}
 import com.ning.http.client._
 import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito._
-import scala.Some
-import org.mockito.Mockito
+
 
 class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport {
   implicit val system = ActorSystem("test-virkailija")

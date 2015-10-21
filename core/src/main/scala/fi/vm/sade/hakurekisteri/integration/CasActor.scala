@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import java.net.{ConnectException, URLEncoder}
+import java.util.UUID
 import java.util.concurrent.{ExecutionException, TimeoutException}
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -29,12 +30,15 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
 
   val cookieExpirationMillis = 5.minutes.toMillis
 
+  def serviceName = serviceUrl.split("/").lastOption
+
   private val internalClient: Http = aClient.map(Http(_)).getOrElse(Http.configure(_
     .setConnectionTimeoutInMs(serviceConfig.httpClientConnectionTimeout)
     .setRequestTimeoutInMs(serviceConfig.httpClientRequestTimeout)
     .setIdleConnectionTimeoutInMs(serviceConfig.httpClientRequestTimeout)
     .setFollowRedirects(false)
     .setMaxRequestRetry(2)
+    .setExecutorService(ExecutorUtil.createExecutor(2, s"cas-client-response-pool-${serviceName.getOrElse(UUID.randomUUID())}"))
   ))
 
   override def receive: Receive = {

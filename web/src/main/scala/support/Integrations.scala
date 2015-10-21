@@ -1,5 +1,7 @@
 package support
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.Config
@@ -19,7 +21,7 @@ import fi.vm.sade.hakurekisteri.rest.support.Registers
 import fi.vm.sade.hakurekisteri.suoritus.VapaamuotoinenKkTutkinto
 import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContextExecutorService, ExecutionContext}
 import scala.util.Try
 
 trait Integrations {
@@ -37,7 +39,9 @@ trait Integrations {
 }
 
 object Integrations {
-  def apply(rekisterit: Registers, system: ActorSystem, config: Config) = config.mockMode match {
+  def apply(rekisterit: Registers,
+            system: ActorSystem,
+            config: Config) = config.mockMode match {
     case true => new MockIntegrations(rekisterit, system, config)
     case _ => new BaseIntegrations(rekisterit, system, config)
   }
@@ -65,16 +69,34 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 }
 
 
-class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Config) extends Integrations {
-  val ec: ExecutionContext = ExecutorUtil.createExecutor(10, "rest-client-pool")
-  private val tarjontaClient = new VirkailijaRestClient(config.integrations.tarjontaConfig, None)(ec, system)
-  private val organisaatioClient = new VirkailijaRestClient(config.integrations.organisaatioConfig, None)(ec, system)
-  private val koodistoClient = new VirkailijaRestClient(config.integrations.koodistoConfig, None)(ec, system)
-  private val henkiloClient = new VirkailijaRestClient(config.integrations.henkiloConfig, None)(ec, system)
-  private val hakemusClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(ec, system)
-  private val parametritClient = new VirkailijaRestClient(config.integrations.parameterConfig, None)(ec, system)
-  private val valintatulosClient = new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool"), system)
-  private val valintarekisteriClient = new VirkailijaRestClient(config.integrations.valintarekisteriConfig, None)(ExecutorUtil.createExecutor(10, "valintarekisteri-client-pool"), system)
+class BaseIntegrations(rekisterit: Registers, 
+                       system: ActorSystem, 
+                       config: Config) extends Integrations {
+  val restEc = ExecutorUtil.createExecutor(10, "rest-client-pool")
+  val vtsEc = ExecutorUtil.createExecutor(config.integrations.valintaTulosConfig.threads, "valinta-tulos-client-pool")
+  val vrEc = ExecutorUtil.createExecutor(config.integrations.valintarekisteriConfig.threads, "valintarekisteri-client-pool")
+  val virtaEc = ExecutorUtil.createExecutor(config.integrations.virtaConfig.threads, "virta-client-pool")
+
+  system.registerOnTermination(() => {
+    restEc.shutdown()
+    vtsEc.shutdown()
+    vrEc.shutdown()
+    virtaEc.shutdown()
+
+    restEc.awaitTermination(3, TimeUnit.SECONDS)
+    vtsEc.awaitTermination(3, TimeUnit.SECONDS)
+    vrEc.awaitTermination(3, TimeUnit.SECONDS)
+    virtaEc.awaitTermination(3, TimeUnit.SECONDS)
+  })
+
+  private val tarjontaClient = new VirkailijaRestClient(config.integrations.tarjontaConfig, None)(restEc, system)
+  private val organisaatioClient = new VirkailijaRestClient(config.integrations.organisaatioConfig, None)(restEc, system)
+  private val koodistoClient = new VirkailijaRestClient(config.integrations.koodistoConfig, None)(restEc, system)
+  private val henkiloClient = new VirkailijaRestClient(config.integrations.henkiloConfig, None)(restEc, system)
+  private val hakemusClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(restEc, system)
+  private val parametritClient = new VirkailijaRestClient(config.integrations.parameterConfig, None)(restEc, system)
+  private val valintatulosClient = new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(vtsEc, system)
+  private val valintarekisteriClient = new VirkailijaRestClient(config.integrations.valintarekisteriConfig, None)(vrEc, system)
 
   val tarjonta = system.actorOf(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
   val organisaatiot = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
@@ -85,9 +107,9 @@ class BaseIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   val valintaTulos = system.actorOf(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
   val valintarekisteri = system.actorOf(Props(new ValintarekisteriActor(valintarekisteriClient, config)), "valintarekisteri")
   val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, config.integrations.ytlConfig)), "ytl")
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(config.integrations.virtaConfig)(system), organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
+  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(config.integrations.virtaConfig)(virtaEc, system), organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
   val proxies = new HttpProxies(henkiloClient, koodistoClient, organisaatioClient)
 
-  hakemukset ! IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(ec)
+  hakemukset ! IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
 
 }

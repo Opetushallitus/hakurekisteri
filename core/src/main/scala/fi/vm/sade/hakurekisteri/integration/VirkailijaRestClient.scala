@@ -34,7 +34,8 @@ case class ServiceConfig(casUrl: Option[String] = None,
                          serviceUrl: String,
                          user: Option[String] = None,
                          password: Option[String] = None,
-                         properties: Map[String, String] = Map.empty) extends HttpConfig(properties) {
+                         properties: Map[String, String] = Map.empty,
+                         threads: Int = 3) extends HttpConfig(properties) {
 }
 
 class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {
@@ -51,8 +52,9 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     .setIdleConnectionTimeoutInMs(config.httpClientRequestTimeout)
     .setFollowRedirects(true)
     .setMaxRequestRetry(2)
+    .setExecutorService(ExecutorUtil.createExecutor(config.threads, "virkailija-client-response-pool"))
   ))
-  def serviceName = serviceUrl.split("/").reverse.headOption
+  def serviceName = serviceUrl.split("/").lastOption
   val casActor = system.actorOf(Props(new CasActor(config, aClient)), s"cas-client-${serviceName.getOrElse(UUID.randomUUID())}")
 
   object client {
@@ -172,7 +174,9 @@ object ExecutorUtil {
 
     val pool = Executors.newFixedThreadPool(threads, new ThreadFactory() {
       override def newThread(r: Runnable): Thread = {
-        new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
+        val t = new Thread(r, poolName + "-" + threadNumber.getAndIncrement)
+        t.setDaemon(true)
+        t
       }
     })
 
