@@ -46,16 +46,17 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   val password = config.password
   val logger = Logging.getLogger(system, this)
 
+  def serviceName = serviceUrl.split("/").lastOption.getOrElse(UUID.randomUUID())
+
   private val internalClient: Http = aClient.map(Http(_)).getOrElse(Http.configure(_
     .setConnectionTimeoutInMs(config.httpClientConnectionTimeout)
     .setRequestTimeoutInMs(config.httpClientRequestTimeout)
     .setIdleConnectionTimeoutInMs(config.httpClientRequestTimeout)
     .setFollowRedirects(true)
     .setMaxRequestRetry(2)
-    .setExecutorService(ExecutorUtil.createExecutor(config.threads, "virkailija-client-response-pool"))
+    .setExecutorService(ExecutorUtil.createExecutor(config.threads, s"$serviceName-client-response-pool"))
   ))
-  def serviceName = serviceUrl.split("/").lastOption
-  val casActor = system.actorOf(Props(new CasActor(config, aClient)), s"cas-client-${serviceName.getOrElse(UUID.randomUUID())}")
+  val casActor = system.actorOf(Props(new CasActor(config, aClient)), s"$serviceName-cas-client-pool")
 
   object client {
     private def jSessionId: Future[JSessionId] = (casActor ? JSessionKey(serviceUrl)).mapTo[JSessionId]

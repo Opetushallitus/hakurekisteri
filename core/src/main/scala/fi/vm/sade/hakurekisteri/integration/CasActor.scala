@@ -38,7 +38,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
     .setIdleConnectionTimeoutInMs(serviceConfig.httpClientRequestTimeout)
     .setFollowRedirects(false)
     .setMaxRequestRetry(2)
-    .setExecutorService(ExecutorUtil.createExecutor(2, s"cas-client-response-pool-${serviceName.getOrElse(UUID.randomUUID())}"))
+    .setExecutorService(ExecutorUtil.createExecutor(2, s"${serviceName.getOrElse(UUID.randomUUID())}-cas-client-response-pool"))
   ))
 
   override def receive: Receive = {
