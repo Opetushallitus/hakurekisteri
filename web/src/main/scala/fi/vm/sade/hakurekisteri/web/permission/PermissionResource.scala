@@ -13,6 +13,7 @@ import fi.vm.sade.hakurekisteri.web.rest.support.QueryLogging
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.json4s.jackson.Serialization._
+import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
 
 import scala.compat.Platform
@@ -20,15 +21,23 @@ import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 
 
-case class PermissionCheckRequest(personOidsForSamePerson: Set[String], organisationOids: Set[String])
+case class PermissionCheckRequest(personOidsForSamePerson: Set[String], organisationOids: Set[String]) {
+  require(personOidsForSamePerson.nonEmpty, "Person oid list empty.")
+  require(!personOidsForSamePerson.exists(_.isEmpty), "Blank person oid in oid list.")
+  require(organisationOids.nonEmpty, "Organisation oid list empty.")
+  require(!organisationOids.exists(_.isEmpty), "Blank organisation oid in organisation oid list.")
+}
 
 case class PermissionCheckResponse(accessAllowed: Option[Boolean] = None, errorMessage: Option[String] = None)
 
-class PermissionResource(suoritusActor: ActorRef, opiskelijaActor: ActorRef, timeout: Option[Timeout] = Some(2.minutes))(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with QueryLogging {
+class PermissionResource(suoritusActor: ActorRef, opiskelijaActor: ActorRef, timeout: Option[Timeout] = Some(2.minutes))
+                        (implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with PermissionSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with QueryLogging {
 
+  override protected def applicationDescription: String = "Oikeuksien tarkistuksen rajapinta"
+  override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
-  override val logger: LoggingAdapter = Logging.getLogger(system, this)
   implicit val askTimeout: Timeout = timeout.getOrElse(2.minutes)
+  override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
@@ -70,12 +79,15 @@ class PermissionResource(suoritusActor: ActorRef, opiskelijaActor: ActorRef, tim
   }
   
   error {
-    case t: AskTimeoutException =>
-      logger.error(t, "permission check timed out")
-      GatewayTimeout(PermissionCheckResponse(errorMessage = Some("timeout occurred during permission check")))
+    case t: IllegalArgumentException =>
+      logger.warning(s"cannot parse request object: $t")
+      BadRequest(PermissionCheckResponse(errorMessage = Some("cannot parse request object")))
     case t: JsonMappingException =>
       logger.warning(s"cannot parse request object: $t")
       BadRequest(PermissionCheckResponse(errorMessage = Some("cannot parse request object")))
+    case t: AskTimeoutException =>
+      logger.error(t, "permission check timed out")
+      GatewayTimeout(PermissionCheckResponse(errorMessage = Some("timeout occurred during permission check")))
     case t: Throwable =>
       logger.error(t, "error occurred during permission check")
       InternalServerError(PermissionCheckResponse(errorMessage = Some(t.getMessage)))

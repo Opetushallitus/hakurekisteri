@@ -7,9 +7,11 @@ import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, VirallinenSuoritus, SuoritusHenkilotQuery}
 import fi.vm.sade.hakurekisteri.web.permission.{PermissionCheckResponse, PermissionResource}
+import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 import org.joda.time.{DateTime, LocalDate}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.mock.MockitoSugar
+import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -20,6 +22,7 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
   implicit val system = ActorSystem("permission-test-system")
   implicit val format = HakurekisteriJsonSupport.format
   implicit val ec: ExecutionContext = system.dispatcher
+  implicit val swagger: Swagger = new HakurekisteriSwagger
 
   val suoritusActor = system.actorOf(Props(new Actor {
     override def receive: Receive = {
@@ -107,7 +110,7 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
     val json =
       """{
         |  "personOidsForSamePerson": ["rikki"],
-        |  "organisationOids": []
+        |  "organisationOids": ["foo"]
         |}""".stripMargin
 
     post("/", json) {
@@ -120,7 +123,7 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
     val json =
       """{
         |  "personOidsForSamePerson": ["rikki"],
-        |  "organisationOids": []
+        |  "organisationOids": ["foo"]
         |}""".stripMargin
 
     post("/", json) {
@@ -133,7 +136,7 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
     val json =
       """{
         |  "personOidsForSamePerson": ["timeout"],
-        |  "organisationOids": []
+        |  "organisationOids": ["foo"]
         |}""".stripMargin
 
     post("/", json) {

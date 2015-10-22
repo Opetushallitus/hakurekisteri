@@ -1,18 +1,16 @@
 import java.nio.file.Path
-import java.util.concurrent.TimeUnit
 import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEvent}
 
 import _root_.support._
 import akka.actor.{ActorSystem, Props}
-import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
-import fi.vm.sade.hakurekisteri.{Oids, Config}
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.healthcheck.HealthcheckActor
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
 import fi.vm.sade.hakurekisteri.suoritus._
-import fi.vm.sade.hakurekisteri.web.arvosana.{EmptyLisatiedotResource, ArvosanaSwaggerApi, CreateArvosanaCommand}
+import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaSwaggerApi, CreateArvosanaCommand, EmptyLisatiedotResource}
 import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchResource
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaResource
@@ -24,6 +22,7 @@ import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaResource
 import fi.vm.sade.hakurekisteri.web.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi}
 import fi.vm.sade.hakurekisteri.web.opiskeluoikeus.{CreateOpiskeluoikeusCommand, OpiskeluoikeusSwaggerApi}
 import fi.vm.sade.hakurekisteri.web.oppija.OppijaResource
+import fi.vm.sade.hakurekisteri.web.permission.PermissionResource
 import fi.vm.sade.hakurekisteri.web.proxies._
 import fi.vm.sade.hakurekisteri.web.rekisteritiedot.RekisteritiedotResource
 import fi.vm.sade.hakurekisteri.web.rest.support._
@@ -43,7 +42,7 @@ import org.springframework.web.filter.DelegatingFilterProxy
 import siirto._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContextExecutor, ExecutionContext}
+import scala.concurrent.ExecutionContextExecutor
 
 class ScalatraBootstrap extends LifeCycle {
   implicit val swagger: Swagger = new HakurekisteriSwagger
@@ -70,6 +69,7 @@ class ScalatraBootstrap extends LifeCycle {
     var servlets = List(
       ("/rest/v1/komo", "komo") -> new GuiServlet,
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
+      ("/permission/checkpermission", "permission/checkpermission") -> new PermissionResource(registers.suoritusRekisteri, registers.opiskelijaRekisteri),
       ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SecuritySupport,
       ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SecuritySupport,
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
