@@ -24,7 +24,7 @@ trait PermissionSwaggerApi extends OldSwaggerSyntax with SwaggerSupport {
   registerModel(permissionResponseModel)
   registerModel(permissionErrorResponseModel)
 
-  val query = apiOperation[PermissionCheckResponse]("checkPermission")
+  val checkPermission = apiOperation[PermissionCheckResponse]("checkPermission")
     .summary("tarkistaa käyttöoikeuden")
     .notes("Tarkistaa onko henkilöllä käyttöoikeus johonkin listatuista organisaatioista. " +
       "Virkailijat annetuista organisaatioista saavat katsella vain ko. organisaatioihin liittettyjen henkilöiden tietoja. " +

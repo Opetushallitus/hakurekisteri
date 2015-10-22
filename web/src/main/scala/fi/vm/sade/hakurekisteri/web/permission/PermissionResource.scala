@@ -53,7 +53,7 @@ class PermissionResource(suoritusActor: ActorRef, opiskelijaActor: ActorRef, tim
     case _ => false
   }
   
-  post("/") {
+  post("/", operation(checkPermission)) {
     val t0 = Platform.currentTime
     val r: PermissionCheckRequest = read[PermissionCheckRequest](request.body)
 
