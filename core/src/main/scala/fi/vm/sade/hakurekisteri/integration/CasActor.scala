@@ -38,7 +38,6 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
     .setIdleConnectionTimeoutInMs(serviceConfig.httpClientRequestTimeout)
     .setFollowRedirects(false)
     .setMaxRequestRetry(2)
-    .setExecutorService(ExecutorUtil.createExecutor(2, s"${serviceName.getOrElse(UUID.randomUUID())}-cas-client-response-pool"))
   ))
 
   override def receive: Receive = {
@@ -68,7 +67,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
   private object LocationHeader extends (Response => String) {
     def apply(r: Response) =
       Try(Option(r.getHeader("Location")).get).recoverWith{
-        case  e: NoSuchElementException =>  Failure(LocationHeaderNotFoundException("location header not found"))
+        case  e: NoSuchElementException => Failure(LocationHeaderNotFoundException("location header not found"))
       }.get
   }
 

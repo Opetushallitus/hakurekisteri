@@ -30,7 +30,6 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     .setIdleConnectionTimeoutInMs(120000)
     .setFollowRedirects(true)
     .setMaxRequestRetry(2)
-    .setExecutorService(ExecutorUtil.createExecutor(config.threads, "virta-client-response-pool"))
   )
 
   val client: Http = aClient.map(Http(_)).getOrElse(defaultClient)

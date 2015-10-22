@@ -73,9 +73,9 @@ class BaseIntegrations(rekisterit: Registers,
                        system: ActorSystem, 
                        config: Config) extends Integrations {
   val restEc = ExecutorUtil.createExecutor(10, "rest-client-pool")
-  val vtsEc = ExecutorUtil.createExecutor(config.integrations.valintaTulosConfig.threads, "valinta-tulos-client-pool")
-  val vrEc = ExecutorUtil.createExecutor(config.integrations.valintarekisteriConfig.threads, "valintarekisteri-client-pool")
-  val virtaEc = ExecutorUtil.createExecutor(config.integrations.virtaConfig.threads, "virta-client-pool")
+  val vtsEc = ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool")
+  val vrEc = ExecutorUtil.createExecutor(10, "valintarekisteri-client-pool")
+  val virtaEc = ExecutorUtil.createExecutor(1, "virta-client-pool")
 
   system.registerOnTermination(() => {
     restEc.shutdown()

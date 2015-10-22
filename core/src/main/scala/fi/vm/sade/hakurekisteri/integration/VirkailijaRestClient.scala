@@ -34,8 +34,7 @@ case class ServiceConfig(casUrl: Option[String] = None,
                          serviceUrl: String,
                          user: Option[String] = None,
                          password: Option[String] = None,
-                         properties: Map[String, String] = Map.empty,
-                         threads: Int = 3) extends HttpConfig(properties) {
+                         properties: Map[String, String] = Map.empty) extends HttpConfig(properties) {
 }
 
 class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {
@@ -45,8 +44,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   val user = config.user
   val password = config.password
   val logger = Logging.getLogger(system, this)
-
-  def serviceName = serviceUrl.split("/").lastOption.getOrElse(UUID.randomUUID())
+  val serviceName = serviceUrl.split("/").lastOption.getOrElse(UUID.randomUUID())
 
   private val internalClient: Http = aClient.map(Http(_)).getOrElse(Http.configure(_
     .setConnectionTimeoutInMs(config.httpClientConnectionTimeout)
@@ -54,7 +52,6 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     .setIdleConnectionTimeoutInMs(config.httpClientRequestTimeout)
     .setFollowRedirects(true)
     .setMaxRequestRetry(2)
-    .setExecutorService(ExecutorUtil.createExecutor(config.threads, s"$serviceName-client-response-pool"))
   ))
   val casActor = system.actorOf(Props(new CasActor(config, aClient)), s"$serviceName-cas-client-pool")
 
