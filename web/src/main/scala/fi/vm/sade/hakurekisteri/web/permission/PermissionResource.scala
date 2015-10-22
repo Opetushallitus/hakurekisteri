@@ -1,24 +1,24 @@
 package fi.vm.sade.hakurekisteri.web.permission
 
 import _root_.akka.actor.{ActorRef, ActorSystem}
-import _root_.akka.pattern.{AskTimeoutException, ask}
 import _root_.akka.event.{Logging, LoggingAdapter}
+import _root_.akka.pattern.{AskTimeoutException, ask}
 import _root_.akka.util.Timeout
 import com.fasterxml.jackson.databind.JsonMappingException
-import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaHenkilotQuery, Opiskelija}
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.QueryLogging
+import org.json4s.MappingException
+import org.json4s.jackson.Serialization._
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
-import org.json4s.jackson.Serialization._
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
-
 import scala.compat.Platform
-import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 
 case class PermissionCheckRequest(personOidsForSamePerson: Set[String], organisationOids: Set[String]) {
@@ -81,7 +81,12 @@ class PermissionResource(suoritusActor: ActorRef, opiskelijaActor: ActorRef, tim
   error {
     case t: IllegalArgumentException =>
       logger.warning(s"cannot parse request object: $t")
-      BadRequest(PermissionCheckResponse(errorMessage = Some("cannot parse request object")))
+      BadRequest(PermissionCheckResponse(errorMessage = Some(t.getMessage)))
+    case MappingException(_, e: Throwable) if e.getCause != null => e.getCause match {
+      case t: Throwable =>
+        logger.warning(s"cannot parse request object: $t")
+        BadRequest(PermissionCheckResponse(errorMessage = Some(t.getMessage)))
+    }
     case t: JsonMappingException =>
       logger.warning(s"cannot parse request object: $t")
       BadRequest(PermissionCheckResponse(errorMessage = Some("cannot parse request object")))

@@ -6,8 +6,8 @@ import org.scalatra.swagger.{DataType, SwaggerSupport}
 trait PermissionSwaggerApi extends OldSwaggerSyntax with SwaggerSupport {
 
   val permissionRequestFields = Seq(
-    ModelField("accessAllowed", "onko pääsy sallittu", DataType.Boolean),
-    ModelField("errorMessage", "mahdollinen virheviesti virhetilanteessa", DataType.String)
+    ModelField("personOidsForSamePerson", "kohdehenkilön henkilöoidit", DataType.GenList(DataType.String)),
+    ModelField("organisationOids", "virkailijan organisaatiot ja niiden lapsiorganisaatiot", DataType.GenList(DataType.String))
   )
   val permissionResponseFields = Seq(
     ModelField("accessAllowed", "onko pääsy sallittu", DataType.Boolean)
@@ -27,8 +27,7 @@ trait PermissionSwaggerApi extends OldSwaggerSyntax with SwaggerSupport {
   val checkPermission = apiOperation[PermissionCheckResponse]("checkPermission")
     .summary("tarkistaa käyttöoikeuden")
     .notes("Tarkistaa onko henkilöllä käyttöoikeus johonkin listatuista organisaatioista. " +
-      "Virkailijat annetuista organisaatioista saavat katsella vain ko. organisaatioihin liittettyjen henkilöiden tietoja. " +
-      "personOidsForSamePerson: Kohdehenkilön henkilöoidit, organisationOids: Virkailijan organisaatiot ja niiden lapsiorganisaatiot")
+      "Virkailijat annetuista organisaatioista saavat katsella vain ko. organisaatioihin liittettyjen henkilöiden tietoja.")
     .parameter(bodyParam(permissionRequestModel))
     .responseMessage(ModelResponseMessage(400, "virhe kutsussa", "PermissionErrorResponse"))
     .responseMessage(ModelResponseMessage(504, "käyttöoikeustarkistusta ei ehditty tehdä määrätyssä ajassa", "PermissionErrorResponse"))

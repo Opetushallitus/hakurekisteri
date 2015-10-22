@@ -98,7 +98,7 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
     val json =
       """{
         |  "personOidsForSamePerson": ["rikki"],
-        |  "organisationOids": []
+        |  "organisationOids": ["foo"]
         |}""".stripMargin
 
     post("/", json) {
@@ -119,16 +119,17 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
     }
   }
 
-  test("should return specific errorMessage if an error occurred") {
+  test("should return specific errorMessage if a validation error occurred") {
     val json =
       """{
-        |  "personOidsForSamePerson": ["rikki"],
+        |  "personOidsForSamePerson": [""],
         |  "organisationOids": ["foo"]
         |}""".stripMargin
 
     post("/", json) {
       val checkResponse = read[PermissionCheckResponse](response.body)
-      checkResponse.errorMessage should be (Some("palvelu rikki"))
+      checkResponse.errorMessage should be (Some("requirement failed: Blank person oid in oid list."))
+      response.status should be (400)
     }
   }
 
