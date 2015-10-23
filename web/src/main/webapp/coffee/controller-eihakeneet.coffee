@@ -1,11 +1,10 @@
 app.controller "EihakeneetCtrl", [
   "$scope"
-  "MurupolkuService"
   "MessageService"
   "$routeParams"
   "$http"
   "$q"
-  ($scope, MurupolkuService, MessageService, $routeParams, $http, $q) ->
+  ($scope, MessageService, $routeParams, $http, $q) ->
     enrichOpiskelijat = ->
       deferredEnrichments = []
 
@@ -133,8 +132,6 @@ app.controller "EihakeneetCtrl", [
     $scope.loading = false
 
     $scope.allRows = []
-
-    MurupolkuService.hideMurupolku()
 
     fetchData()
 ]

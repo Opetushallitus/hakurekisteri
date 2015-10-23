@@ -11,10 +11,9 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
   "RekisteriTiedot"
   "Suoritukset"
   "Arvosanat"
-  "MurupolkuService"
   "MessageService"
   "MuokkaaTiedot"
-  ($scope, $routeParams, $location, $log, $http, $q, $cookies, $window, Opiskelijat, RekisteriTiedot, Suoritukset, Arvosanat, MurupolkuService, MessageService, MuokkaaTiedot) ->
+  ($scope, $routeParams, $location, $log, $http, $q, $cookies, $window, Opiskelijat, RekisteriTiedot, Suoritukset, Arvosanat, MessageService, MuokkaaTiedot) ->
 
     initializeSearch = ->
       MessageService.clearMessages()
@@ -168,11 +167,6 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
       end = new Date().getFullYear() - 50
       [""].concat([start..end]).map (v) ->
         "" + v
-
-    MurupolkuService.addToMurupolku
-      key: "suoritusrekisteri.opiskelijat.muru"
-      text: "Opiskelijoiden haku"
-    , true
 
     $scope.getOppilaitos = (searchStr, obj) ->
       if (obj and typeof obj.organisaatio is "object") and obj.organisaatio.oppilaitosKoodi is searchStr

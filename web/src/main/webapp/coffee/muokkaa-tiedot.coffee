@@ -7,9 +7,8 @@ app.factory "MuokkaaTiedot", [
   "Suoritukset"
   "Opiskeluoikeudet"
   "LokalisointiService"
-  "MurupolkuService"
   "MessageService"
-  ($location, $http, $log, $q, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MurupolkuService, MessageService) ->
+  ($location, $http, $log, $q, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MessageService) ->
     muokkaaHenkilo: (henkiloOid, $scope) ->
       initializeHenkilotiedot = ->
         $scope.henkilo = # // main data object
@@ -33,7 +32,6 @@ app.factory "MuokkaaTiedot", [
         messageLoaded = $q.defer()
         LokalisointiService.loadMessages ->
           messageLoaded.resolve()
-        updateMurupolku()
         getMyRoles()
 
         fetchHenkilotiedot()
@@ -182,17 +180,6 @@ app.factory "MuokkaaTiedot", [
           formatMonth: 'MMMM'
           formatYear: 'yyyy'
         return
-
-      updateMurupolku = ->
-        MurupolkuService.addToMurupolku {
-          href: "#/opiskelijat"
-          key: "suoritusrekisteri.muokkaa.muru1"
-          text: "Opiskelijoiden haku"
-        }, true
-        MurupolkuService.addToMurupolku {
-          key: "suoritusrekisteri.muokkaa.muru"
-          text: "Muokkaa opiskelijan tietoja"
-        }, false
 
       $scope.isOPH = () -> false
       $http.get("/cas/myroles", {cache: true}).success((data) ->

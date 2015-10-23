@@ -1,8 +1,4 @@
 app.config ($locationProvider, $routeProvider, $httpProvider) ->
-  $routeProvider.when "/opiskelijat-vanha",
-    templateUrl: "templates/opiskelijat.html"
-    controller: "OpiskelijatCtrl"
-
   $routeProvider.when "/opiskelijat",
     templateUrl: "templates/muokkaa-obd.html"
     controller: "MuokkaaSuorituksetObdCtrl"
@@ -10,10 +6,6 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
   $routeProvider.when "/muokkaa/:henkilo",
     templateUrl: "templates/muokkaa-obd.html"
     controller: "MuokkaaSuorituksetObdCtrl"
-
-  $routeProvider.when "/muokkaa-vanha/:henkiloOid",
-    templateUrl: "templates/muokkaa.html"
-    controller: "MuokkaaCtrl"
 
   $routeProvider.when "/eihakeneet",
     templateUrl: "templates/eihakeneet.html"

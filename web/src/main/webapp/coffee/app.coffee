@@ -98,24 +98,6 @@ app.factory "RekisteriTiedot", ($resource) ->
   }
 
 
-app.factory "MurupolkuService", ->
-  murupolku = []
-  hide = false
-
-  return (
-    murupolku: murupolku
-    addToMurupolku: (item, reset) ->
-      murupolku.length = 0  if reset
-      murupolku.push item
-      hide = false
-      return
-    hideMurupolku: ->
-      hide = true
-      return
-    isHidden: ->
-      hide
-  )
-
 app.factory "MessageService", ->
   messages = []
   return (

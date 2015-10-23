@@ -1,11 +1,10 @@
 app.controller "TiedonsiirtoCtrl", [
   "$scope"
-  "MurupolkuService"
   "MessageService"
   "LokalisointiService"
   "$log"
   "$http"
-  ($scope, MurupolkuService, MessageService, LokalisointiService, $log, $http) ->
+  ($scope, MessageService, LokalisointiService, $log, $http) ->
     supportsFileApi = window.FileReader?
 
 
@@ -33,11 +32,6 @@ app.controller "TiedonsiirtoCtrl", [
     $scope.validointiVirheet = []
 
     fileupload = document.getElementById("tiedosto")
-
-    MurupolkuService.addToMurupolku
-      key: "suoritusrekisteri.tiedonsiirto.muru"
-      text: "Tiedonsiirto"
-    , true
 
     clearFile = () ->
       try

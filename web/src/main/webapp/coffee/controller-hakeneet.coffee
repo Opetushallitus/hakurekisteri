@@ -69,12 +69,11 @@ app.controller "HakeneetCtrl", [
   "$scope"
   "$http"
   "$modal"
-  "MurupolkuService"
   "MessageService"
   "aste"
   "haut"
   "hakukohdekoodit"
-  ($scope, $http, $modal, MurupolkuService, MessageService, aste, haut, hakukohdekoodit) ->
+  ($scope, $http, $modal, MessageService, aste, haut, hakukohdekoodit) ->
 
     $('#oppijanumero').placeholder()
     $('#hakukohde').placeholder()
@@ -127,17 +126,6 @@ app.controller "HakeneetCtrl", [
     ]
     $scope.tiedostotyypit = tiedostotyypit()
     $scope.vainKkHaut = true if isKk()
-
-    if isKk()
-      MurupolkuService.addToMurupolku
-        key: "suoritusrekisteri.hakeneet.muru.kk"
-        text: "Hakeneet ja valitut opiskelijat (KK)"
-      , true
-    else
-      MurupolkuService.addToMurupolku
-        key: "suoritusrekisteri.hakeneet.muru"
-        text: "Hakeneet ja valitut opiskelijat"
-      , true
 
     loadHakutiedot haut, $scope
 

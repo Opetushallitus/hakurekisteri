@@ -4,19 +4,13 @@ app.controller "TiedonsiirtotilaCtrl", [
   "$log"
   "$q"
   "$cookies"
-  "MurupolkuService"
   "LokalisointiService"
   "MessageService"
-  ($scope, $http, $log, $q, $cookies, MurupolkuService, LokalisointiService, MessageService) ->
+  ($scope, $http, $log, $q, $cookies, LokalisointiService, MessageService) ->
 
     $scope.loading = false
     $scope.currentRows = []
     $scope.allRows = []
-
-    MurupolkuService.addToMurupolku
-      key: "suoritusrekisteri.tiedonsiirtotila.muru"
-      text: "Tiedonsiirtojen tila"
-    , true
 
     pageSizeFromCookie = () ->
       cookieValue = $cookies.tiedonsiirtotilaPageSize

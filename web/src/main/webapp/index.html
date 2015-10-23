@@ -30,14 +30,6 @@
 </head>
 <body>
 <div class="container">
-    <div ng-controller="MurupolkuCtrl" ng-hide="isHidden()" class="row">
-        <div class="col-sm-12">
-            <ul id="bread-crumb" class="breadcrumb">
-                <li><a ng-click="goHome()" class="link"><span class="icon-breadcrumb-home"></span></a></li>
-                <li ng-repeat="muru in murupolku"><a ng-show="muru.href" href="{{muru.href}}"><span ng-show="muru.icon" class="{{muru.icon}}"></span><span oph-msg="{{muru.key}}">{{muru.text}}</span></a><span ng-hide="muru.href" oph-msg="{{muru.key}}">{{muru.text}}</span></li>
-            </ul>
-        </div>
-    </div>
     <div class="row">
         <div class="col-xs-12">
             <ng-view></ng-view>
