@@ -297,7 +297,8 @@ app.controller "HakeneetCtrl", [
     $scope.searchHenkilo = ->
       if $scope.oppijanumero and $scope.oppijanumero.trim().match(/[0-9.]{11,30}/)
         $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent($scope.oppijanumero.trim()),
-          cache: true
+          cache: true,
+          headers: { 'External-Permission-Service': 'SURE' }
         ).then (res) ->
           $scope.henkilo = res.data
           return

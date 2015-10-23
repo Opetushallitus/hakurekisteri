@@ -29,7 +29,8 @@ app.controller "OpiskelijatCtrl", [
         d = $q.defer()
         enrichments.push d
         $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(row.henkiloOid),
-          cache: false
+          cache: false,
+          headers: { 'External-Permission-Service': 'SURE' }
         ).success((henkilo) ->
           row.henkilo = henkilo.sukunimi + ", " + henkilo.etunimet + " (" + ((if henkilo.hetu then henkilo.hetu else henkilo.syntymaaika)) + ")"  if henkilo
           d.resolve()
@@ -248,7 +249,8 @@ app.controller "OpiskelijatCtrl", [
         searchTerms.push henkiloTerm
         henkiloSearchUrl = henkiloServiceUrl + "/resources/henkilo?index=0&count=1&no=true&p=false&s=true&q=" + encodeURIComponent($scope.henkiloTerm.trim().toUpperCase())
         $http.get(henkiloSearchUrl,
-          cache: false
+          cache: false,
+          headers: { 'External-Permission-Service': 'SURE' }
         ).success((henkilo) ->
           if henkilo.results and henkilo.results.length is 1
             $scope.henkilo = henkilo.results[0]

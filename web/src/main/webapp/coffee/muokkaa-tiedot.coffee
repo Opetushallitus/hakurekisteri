@@ -127,7 +127,7 @@ app.factory "MuokkaaTiedot", [
 
 
       fetchHenkilotiedot = ->
-        $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(henkiloOid), { cache: false }).success((henkilo) ->
+        $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->
           jQuery.extend($scope.henkilo, henkilo)  if henkilo
           return
         ).error ->

@@ -15,7 +15,7 @@ app.controller "EihakeneetCtrl", [
             deferredEnrichment = $q.defer()
             deferredEnrichments.push deferredEnrichment
 
-            $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(opiskelija.henkiloOid), { cache: false }).success((henkilo) ->
+            $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(opiskelija.henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->
               if henkilo and henkilo.oidHenkilo is opiskelija.henkiloOid
                 opiskelija.sukunimi = henkilo.sukunimi
                 opiskelija.etunimet = henkilo.etunimet

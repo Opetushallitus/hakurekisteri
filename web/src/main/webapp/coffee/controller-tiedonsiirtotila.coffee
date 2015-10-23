@@ -33,7 +33,7 @@ app.controller "TiedonsiirtotilaCtrl", [
     stopLoading = -> $scope.loading = false
 
     enrichBatch = (b, d) ->
-      $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(b.source), { cache: true }).success((henkilo) ->
+      $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(b.source), { cache: true, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->
         b.lahettaja = henkilo.etunimet + ' ' + henkilo.sukunimi
         d.resolve()
       ).error(->

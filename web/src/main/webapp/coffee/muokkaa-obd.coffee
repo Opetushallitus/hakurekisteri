@@ -68,7 +68,8 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           optimizedHenkiloSearch = false
           henkiloSearchUrl = henkiloServiceUrl + "/resources/henkilo?index=0&count=1&no=true&p=false&s=true&q=" + encodeURIComponent(trimmedHenkiloSearchTerm)
         $http.get(henkiloSearchUrl,
-          cache: false
+          cache: false,
+          headers: { 'External-Permission-Service': 'SURE' }
         ).success((henkilo) ->
           if optimizedHenkiloSearch
             henkilo = {
@@ -135,7 +136,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           message: "Haussa tapahtui virhe. Yritä uudelleen."
 
     showCurrentRows = (henkiloMap) ->
-      $http.post(henkiloServiceUrl + "/resources/henkilo/henkilotByHenkiloOidList", Object.keys(henkiloMap)
+      $http.post(henkiloServiceUrl + "/resources/henkilo/henkilotByHenkiloOidList", Object.keys(henkiloMap), { headers: { 'External-Permission-Service': 'SURE' } }
       ).success((henkiloList, status) ->
         if status != 200 || typeof henkiloList == "string"
           $scope.loading = false

@@ -92,7 +92,7 @@ app.controller "MuokkaaCtrl", [
         $log.error "cannot connect to CAS"
 
     fetchHenkilotiedot = ->
-      $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent($scope.henkiloOid), { cache: false }).success((henkilo) ->
+      $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent($scope.henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->
         $scope.henkilo = henkilo  if henkilo
         return
       ).error ->
