@@ -100,7 +100,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
       promise.future pipeTo sender
 
     case QueryCount =>
-      sender ! Map[String, Int]()
+      sender ! QueriesRunning(Map[String, Int]())
   }
 
   def ensikertalaisuusPaattely(leikkuripaiva: DateTime)(t: (Option[DateTime], Option[DateTime])) = Ensikertalainen {
