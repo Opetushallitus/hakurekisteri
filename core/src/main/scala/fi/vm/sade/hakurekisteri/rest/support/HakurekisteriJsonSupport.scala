@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatchSerializer
+import fi.vm.sade.hakurekisteri.ensikertalainen.{SuoritettuKkTutkinto, KkVastaanotto, MenettamisenPeruste}
 import org.joda.time.{DateTimeZone, DateTime}
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import org.json4s.JsonAST.JString
@@ -32,7 +33,8 @@ trait HakurekisteriJsonSupport {
     new AjanjaksoSerializer +
     new SuoritusSerializer +
     new LasnaoloSerializer +
-    new ImportBatchSerializer
+    new ImportBatchSerializer +
+    MenettamisenPerusteSerializer
 
 }
 
@@ -91,4 +93,17 @@ case object HakurekisteriDateTimeSerializer extends CustomSerializer[DateTime](f
     case d: DateTime =>
       JString(format.dateFormat.format(d.toDate))
   }
-  ))
+  )
+)
+
+case object MenettamisenPerusteSerializer extends CustomSerializer[MenettamisenPeruste](format => (
+  {
+    case JString(s) if s.toLowerCase == "kkvastaanotto" => KkVastaanotto
+    case JString(s) if s.toLowerCase == "suoritettukktutkinto" => SuoritettuKkTutkinto
+    case JString(s) => throw new IllegalArgumentException(s"unknown MenettamisenPeruste $s")
+  },
+  {
+    case m: MenettamisenPeruste => JString(m.getClass.getSimpleName)
+  }
+  )
+)
