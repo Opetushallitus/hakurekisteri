@@ -9,9 +9,16 @@ import fi.vm.sade.hakurekisteri.ensikertalainen._
 trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel with OldSwaggerSyntax {
   override protected val applicationName = Some("rest/v1/ensikertalainen")
 
+  val perusteFields = Seq(
+    ModelField("peruste", null, DataType.String, allowableValues = AllowableValuesList(List("KkVastaanotto", "SuoritettuKkTutkinto"))),
+    ModelField("paivamaara", null, DataType.DateTime)
+  )
+
+  registerModel(Model("MenettamisenPeruste", "MenettamisenPeruste", perusteFields.map{ t => (t.name, t) }.toMap))
+
   val fields = Seq(
     ModelField("ensikertalainen", null, DataType.Boolean),
-    ModelField("menettamisenPeruste", null, DataType.String, allowableValues = AllowableValuesList[MenettamisenPeruste](List(KkVastaanotto, SuoritettuKkTutkinto)))
+    ModelField("menettamisenPeruste", null, DataType("MenettamisenPeruste"), required = false)
   )
 
   registerModel(Model("Ensikertalainen", "Ensikertalainen", fields.map{ t => (t.name, t) }.toMap))

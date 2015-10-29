@@ -30,13 +30,18 @@ object QueryCount
 
 case class QueriesRunning(count: Map[String, Int], timestamp: Long = Platform.currentTime)
 
-sealed trait MenettamisenPeruste
+sealed trait MenettamisenPeruste {
+  val peruste: String
+  val paivamaara: DateTime
+}
 
-case object KkVastaanotto extends MenettamisenPeruste
+case class KkVastaanotto(paivamaara: DateTime) extends MenettamisenPeruste {
+  override val peruste: String = "KkVastaanotto"
+}
 
-case object SuoritettuKkTutkinto extends MenettamisenPeruste
-
-case object HakemuksellaIlmoitettuKkTutkinto extends MenettamisenPeruste
+case class SuoritettuKkTutkinto(paivamaara: DateTime) extends MenettamisenPeruste {
+  override val peruste: String = "SuoritettuKkTutkinto"
+}
 
 case class Ensikertalainen(ensikertalainen: Boolean, menettamisenPeruste: Option[MenettamisenPeruste])
 
@@ -117,9 +122,9 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
   }
 
   def ensikertalaisuusPaattely(leikkuripaiva: DateTime)(t: (Option[DateTime], Option[DateTime])) = t match {
-    case (Some(tutkintopaiva), _) if tutkintopaiva.isBefore(leikkuripaiva) => Ensikertalainen(false, Some(SuoritettuKkTutkinto))
-    case (_, Some(vastaanottopaiva)) if vastaanottopaiva.isBefore(leikkuripaiva) => Ensikertalainen(false, Some(KkVastaanotto))
-    case default => Ensikertalainen(true, None)
+    case (Some(tutkintopaiva), _) if tutkintopaiva.isBefore(leikkuripaiva) => Ensikertalainen(ensikertalainen = false, Some(SuoritettuKkTutkinto(tutkintopaiva)))
+    case (_, Some(vastaanottopaiva)) if vastaanottopaiva.isBefore(leikkuripaiva) => Ensikertalainen(ensikertalainen = false, Some(KkVastaanotto(vastaanottopaiva)))
+    case default => Ensikertalainen(ensikertalainen = true, None)
   }
 
 

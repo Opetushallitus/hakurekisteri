@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{KomoResponse, GetKomoQuery}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriQuery
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, yksilollistaminen, VirallinenSuoritus, SuoritusQuery}
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.{DateTimeZone, DateTime, LocalDate}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 import scala.concurrent.duration._
@@ -35,7 +35,7 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
 
     waitFuture((actor ? EnsikertalainenQuery(henkiloOid = "1.2.246.562.24.1")).mapTo[Ensikertalainen])((e: Ensikertalainen) => {
       e.ensikertalainen should be (false)
-      e.menettamisenPeruste should be (Some(SuoritettuKkTutkinto))
+      e.menettamisenPeruste should be (Some(SuoritettuKkTutkinto(new DateTime(2014, 1, 1, 0, 0, 0, 0, DateTimeZone.forID("Europe/Helsinki")))))
     })
   }
 
@@ -44,7 +44,7 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
 
     waitFuture((actor ? EnsikertalainenQuery(henkiloOid = "1.2.246.562.24.1")).mapTo[Ensikertalainen])((e: Ensikertalainen) => {
       e.ensikertalainen should be (false)
-      e.menettamisenPeruste should be (Some(KkVastaanotto))
+      e.menettamisenPeruste should be (Some(KkVastaanotto(new DateTime(2015, 1, 1, 0, 0, 0, 0))))
     })
   }
 

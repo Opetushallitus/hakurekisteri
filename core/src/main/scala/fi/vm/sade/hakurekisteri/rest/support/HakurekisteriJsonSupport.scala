@@ -4,7 +4,7 @@ import fi.vm.sade.hakurekisteri.batchimport.ImportBatchSerializer
 import fi.vm.sade.hakurekisteri.ensikertalainen.{SuoritettuKkTutkinto, KkVastaanotto, MenettamisenPeruste}
 import org.joda.time.{DateTimeZone, DateTime}
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
-import org.json4s.JsonAST.JString
+import org.json4s.JsonAST.{JField, JObject, JString}
 import org.json4s._
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -34,7 +34,7 @@ trait HakurekisteriJsonSupport {
     new SuoritusSerializer +
     new LasnaoloSerializer +
     new ImportBatchSerializer +
-    MenettamisenPerusteSerializer
+    new MenettamisenPerusteSerializer
 
 }
 
@@ -96,14 +96,20 @@ case object HakurekisteriDateTimeSerializer extends CustomSerializer[DateTime](f
   )
 )
 
-case object MenettamisenPerusteSerializer extends CustomSerializer[MenettamisenPeruste](format => (
+class MenettamisenPerusteSerializer extends CustomSerializer[MenettamisenPeruste](format => (
   {
-    case JString(s) if s.toLowerCase == "kkvastaanotto" => KkVastaanotto
-    case JString(s) if s.toLowerCase == "suoritettukktutkinto" => SuoritettuKkTutkinto
-    case JString(s) => throw new IllegalArgumentException(s"unknown MenettamisenPeruste $s")
+    case m: JObject  =>
+      val JString(peruste) = m \ "peruste"
+      val JString(paivamaara) = m \ "paivamaara"
+      peruste match {
+        case "KkVastaanotto" => KkVastaanotto(DateTime.parse(paivamaara))
+        case "SuoritettuKkTutkinto" => SuoritettuKkTutkinto(DateTime.parse(paivamaara))
+        case s => throw new IllegalArgumentException(s"unknown MenettamisenPeruste $s")
+      }
   },
   {
-    case m: MenettamisenPeruste => JString(m.getClass.getSimpleName)
+    case m: MenettamisenPeruste =>
+      JObject(JField("peruste", JString(m.peruste)) :: JField("paivamaara", JString(m.paivamaara.toString)) :: Nil)
   }
   )
 )

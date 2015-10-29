@@ -2,14 +2,16 @@ package fi.vm.sade.hakurekisteri.rest
 
 import akka.actor.{Actor, Props, ActorSystem}
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenActor
+import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{KomoResponse, GetKomoQuery}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriQuery
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.joda.time.DateTime
 import org.scalatra.test.scalatest.ScalatraFunSuite
+import org.json4s.jackson.Serialization._
 
 import scala.concurrent.ExecutionContext
 
@@ -19,6 +21,9 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val security = new TestSecurity
   implicit val swagger = new HakurekisteriSwagger
+  implicit val formats = HakurekisteriJsonSupport.format
+
+  val vastaanottohetki = new DateTime(2015, 1, 1, 0, 0, 0, 0)
 
   addServlet(new EnsikertalainenResource(system.actorOf(Props(new EnsikertalainenActor(
     suoritusActor = system.actorOf(Props(new Actor {
@@ -29,7 +34,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
     })),
     valintarekisterActor = system.actorOf(Props(new Actor {
       override def receive: Actor.Receive = {
-        case q: ValintarekisteriQuery => sender ! Some(new DateTime(2015, 1, 1, 0, 0, 0, 0))
+        case q: ValintarekisteriQuery => sender ! Some(vastaanottohetki)
       }
     })),
     tarjontaActor = system.actorOf(Props(new Actor {
@@ -48,13 +53,15 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
 
   test("returns ensikertalainen false") {
     get("/?henkilo=foo") {
-      response.body should include ("false")
+      read[Ensikertalainen](response.body).ensikertalainen should be (false)
     }
   }
 
   test("returns ensikertalaisuus lost by KkVastaanotto") {
     get("/?henkilo=foo") {
-      response.body should include ("KkVastaanotto")
+      val e = read[Ensikertalainen](response.body)
+      e.menettamisenPeruste.map(_.peruste) should be (Some("KkVastaanotto"))
+      e.menettamisenPeruste.map(_.paivamaara.toString) should be (Some(vastaanottohetki.toString))
     }
   }
 
