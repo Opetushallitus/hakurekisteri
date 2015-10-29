@@ -1,14 +1,18 @@
 package fi.vm.sade.hakurekisteri.web.ensikertalainen
 
+import org.scalatra.swagger.AllowableValues.AllowableValuesList
 import org.scalatra.swagger.{DataType, SwaggerSupport}
 import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import fi.vm.sade.hakurekisteri.web.rest.support.{ModelResponseMessage, IncidentReportSwaggerModel, OldSwaggerSyntax}
-import fi.vm.sade.hakurekisteri.ensikertalainen.Ensikertalainen
+import fi.vm.sade.hakurekisteri.ensikertalainen._
 
 trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel with OldSwaggerSyntax {
   override protected val applicationName = Some("rest/v1/ensikertalainen")
 
-  val fields = Seq(ModelField("ensikertalainen", null, DataType.Boolean))
+  val fields = Seq(
+    ModelField("ensikertalainen", null, DataType.Boolean),
+    ModelField("menettamisenPeruste", null, DataType.String, allowableValues = AllowableValuesList[MenettamisenPeruste](List(KkVastaanotto, SuoritettuKkTutkinto)))
+  )
 
   registerModel(Model("Ensikertalainen", "Ensikertalainen", fields.map{ t => (t.name, t) }.toMap))
 

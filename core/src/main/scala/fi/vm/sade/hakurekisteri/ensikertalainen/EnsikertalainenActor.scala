@@ -30,7 +30,15 @@ object QueryCount
 
 case class QueriesRunning(count: Map[String, Int], timestamp: Long = Platform.currentTime)
 
-case class Ensikertalainen(ensikertalainen: Boolean)
+sealed trait MenettamisenPeruste
+
+case object KkVastaanotto extends MenettamisenPeruste
+
+case object SuoritettuKkTutkinto extends MenettamisenPeruste
+
+case object HakemuksellaIlmoitettuKkTutkinto extends MenettamisenPeruste
+
+case class Ensikertalainen(ensikertalainen: Boolean, menettamisenPeruste: Option[MenettamisenPeruste])
 
 case class HetuNotFoundException(message: String) extends Exception(message)
 
@@ -62,10 +70,10 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
 
         val henkiloOid = Process(q.henkiloOid).toSource
 
-        val henkilonSuoritukset: Channel[Task, String, Seq[Suoritus]] =
+        val henkilonSuoritukset =
           channel.lift[Task, String, Seq[Suoritus]]((henkiloOid: String) => q.suoritukset.map(Task.now).getOrElse((suoritusActor ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]]))
 
-        val isKkTutkinto: Channel[Task, VirallinenSuoritus, Boolean] =
+        val isKkTutkinto =
           channel.lift[Task, VirallinenSuoritus, Boolean]((s: VirallinenSuoritus) => s.komo match {
             case KkKoulutusUri() => Task.now(true)
             case Oid(komo) =>
@@ -76,7 +84,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
             case _ => Task.now(false)
           })
 
-        val kkVastaanotto: Channel[Task, String, Option[DateTime]] =
+        val kkVastaanotto =
           channel.lift[Task, String, Option[DateTime]]((henkiloOid: String) => (valintarekisterActor ? ValintarekisteriQuery(henkiloOid, syksy2014)).mapTo[Option[DateTime]])
 
         val kkTutkinnot = henkiloOid through henkilonSuoritukset pipe process1.unchunk collect {
@@ -87,7 +95,12 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
 
         val ensimmainenVastaanotto = henkiloOid through kkVastaanotto
 
-        kkTutkinnot.zip(ensimmainenVastaanotto).runLastOr(None -> None).
+        val query = kkTutkinnot.flatMap {
+          case tutkintoDate@Some(_) => Process.emit((tutkintoDate, None)).toSource
+          case tutkintoDate@None => ensimmainenVastaanotto.map(vastaanottoDate => (tutkintoDate, vastaanottoDate))
+        }
+
+        query.runLastOr(None -> None).
           map(ensikertalaisuusPaattely(q.paivamaara.getOrElse(new LocalDate().toDateTimeAtStartOfDay))).
           timed(1.minutes.toMillis).
           runAsync {
@@ -103,12 +116,10 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
       sender ! QueriesRunning(Map[String, Int]())
   }
 
-  def ensikertalaisuusPaattely(leikkuripaiva: DateTime)(t: (Option[DateTime], Option[DateTime])) = Ensikertalainen {
-    t match {
-      case (Some(tutkintopaiva), _) if tutkintopaiva.isBefore(leikkuripaiva) => false
-      case (_, Some(vastaanottopaiva)) if vastaanottopaiva.isBefore(leikkuripaiva) => false
-      case default => true
-    }
+  def ensikertalaisuusPaattely(leikkuripaiva: DateTime)(t: (Option[DateTime], Option[DateTime])) = t match {
+    case (Some(tutkintopaiva), _) if tutkintopaiva.isBefore(leikkuripaiva) => Ensikertalainen(false, Some(SuoritettuKkTutkinto))
+    case (_, Some(vastaanottopaiva)) if vastaanottopaiva.isBefore(leikkuripaiva) => Ensikertalainen(false, Some(KkVastaanotto))
+    case default => Ensikertalainen(true, None)
   }
 
 
