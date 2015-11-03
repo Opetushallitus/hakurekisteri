@@ -343,6 +343,43 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     preferenceEligibilities = Seq()
   )
 
+  object VanhentuneenHaunHakemus extends FullHakemus("1.25.10", Some("1.24.10"), "1.3.10",
+    answers = Some(
+      HakemusAnswers(
+        osaaminen = None,
+        henkilotiedot = Some(
+          HakemusHenkilotiedot(
+            kansalaisuus =  None,
+            asuinmaa = None,
+            matkapuhelinnumero1 = None,
+            matkapuhelinnumero2 = None,
+            Sukunimi = Some("Mäkinen"),
+            Henkilotunnus = Some("200394-9837"),
+            Postinumero = None,
+            osoiteUlkomaa = None,
+            postinumeroUlkomaa = None,
+            kaupunkiUlkomaa = None,
+            lahiosoite = None,
+            sukupuoli = Some("1"),
+            Sähköposti = Some("mikko@testi.oph.fi"),
+            Kutsumanimi = Some("Mikko"),
+            Etunimet = Some("Mikko"),
+            kotikunta = None,
+            aidinkieli = Some("FI"),
+            syntymaaika = Some("20.03.1994"),
+            onkoSinullaSuomalainenHetu = None,
+            koulusivistyskieli = None,
+            turvakielto = None)),
+        koulutustausta = None,
+        hakutoiveet =  Some(Map(
+          "preference1-Koulutus-id" -> "1.2.246.562.20.41053753277",
+          "preference1-Opetuspiste-id" -> "1.10.6",
+          "preference1-Opetuspiste-id-parents" -> "1.10.1,1.2.246.562.10.00000000001")),
+        lisatiedot = None)),
+    state = Some("ACTIVE"),
+    preferenceEligibilities = Seq()
+  )
+
   object notEmpty
 
   implicit def fullHakemus2SmallHakemus(h: FullHakemus): ListHakemus = {
@@ -382,6 +419,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       case "1.25.1" => Future(Some(FullHakemus1))
       case "1.25.2" => Future(Some(FullHakemus2))
       case "1.25.3" => Future(Some(SynteettinenHakemus))
+      case "1.25.10" => Future(Some(VanhentuneenHaunHakemus))
       case default => Future(None)
     }
 

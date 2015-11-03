@@ -1,12 +1,13 @@
 package fi.vm.sade.hakurekisteri.rest
 
 import akka.actor.{Actor, Props}
+import akka.pattern.pipe
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.hakija.{Puuttuu, Syksy, _}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{RefreshHakemukset, FullHakemus, HakemusActor}
-import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.haku.{HakuNotFoundException, GetHaku, Haku, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohdeOid, HakukohteenKoulutukset, Hakukohteenkoulutus, RestHaku, RestHakuAika}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
@@ -18,7 +19,7 @@ import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Journal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
-import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaQuery, KkHakijaResource}
+import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaUtil, KkHakijaQuery, KkHakijaResource}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.joda.time.LocalDate
 import org.scalatest.concurrent.AsyncAssertions
@@ -26,7 +27,7 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.concurrent.Await
+import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
 import org.mockito.Mockito._
 
@@ -40,7 +41,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
 
   val asyncProvider = new CapturingProvider(endPoint)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  val hakemusJournal: Journal[FullHakemus, String] = seq2journal(Seq(FullHakemus1, FullHakemus2, SynteettinenHakemus))
+  val hakemusJournal: Journal[FullHakemus, String] = seq2journal(Seq(FullHakemus1, FullHakemus2, SynteettinenHakemus, VanhentuneenHaunHakemus))
   val hakemusMock = system.actorOf(Props(new HakemusActor(hakemusClient = client, journal = hakemusJournal)))
   val tarjontaMock = system.actorOf(Props(new MockedTarjontaActor()))
   val hakuMock = system.actorOf(Props(new MockedHakuActor()))
@@ -70,19 +71,25 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   }
 
   test("should not return results if user not in hakukohde organization hierarchy") {
-    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.1")))), 15.seconds)
+    val hakijat = Await.result(
+      resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.1")))), 15.seconds
+    )
 
     hakijat.size should be (0)
   }
 
   test("should return three hakijas") {
-    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
+    val hakijat = Await.result(
+      resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds
+    )
 
     hakijat.size should be (3)
   }
 
   test("should return one hyvaksytty hakija") {
-    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Hyvaksytyt, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
+    val hakijat = Await.result(
+      resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Hyvaksytyt, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds
+    )
 
     hakijat.size should be (1)
   }
@@ -104,7 +111,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
       override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.KESKEN)
       override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
     }
-    val ilmoittautumiset: Seq[Lasnaolo] = Await.result(resource.getLasnaolot(sijoitteluTulos, "1.5.1", haku, ""), 15.seconds)
+    val ilmoittautumiset: Seq[Lasnaolo] = Await.result(KkHakijaUtil.getLasnaolot(sijoitteluTulos, "1.5.1", haku, "", koodistoMock), 15.seconds)
 
     ilmoittautumiset should (contain(Puuttuu(Syksy(2015))) and contain(Puuttuu(Kevat(2015))))
   }
@@ -126,7 +133,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
       override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.KESKEN)
       override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
     }
-    val ilmoittautumiset = Await.result(resource.getLasnaolot(sijoitteluTulos, "1.5.1", haku, ""), 15.seconds)
+    val ilmoittautumiset = Await.result(KkHakijaUtil.getLasnaolot(sijoitteluTulos, "1.5.1", haku, "", koodistoMock), 15.seconds)
 
     ilmoittautumiset should (contain(Lasna(Syksy(2015))) and contain(Poissa(Kevat(2016))))
   }
@@ -179,6 +186,12 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
     hakijat.head.postitoimipaikka should be ("Posti_00100")
   }
 
+  test("should not return hakemus of expired haku") {
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.10"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
+
+    hakijat.size should be (0)
+  }
+
 
 
   def testUser(user: String, organisaatioOid: String) = new User {
@@ -208,6 +221,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
 
   class MockedHakuActor extends Actor {
     override def receive: Actor.Receive = {
+      case q: GetHaku if q.oid == "1.3.10" => Future.failed(HakuNotFoundException(s"haku not found with oid ${q.oid}")) pipeTo sender
       case q: GetHaku =>  sender ! Haku(haku1)(InFuture)
     }
   }
