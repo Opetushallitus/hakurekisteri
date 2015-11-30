@@ -17,13 +17,17 @@ import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriAct
 import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusActor
 import fi.vm.sade.hakurekisteri.oppija.Oppija
-import fi.vm.sade.hakurekisteri.rest.support.{Registers, User}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Registers, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
 import fi.vm.sade.hakurekisteri.web.oppija.OppijaResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.joda.time.{DateTime, LocalDate}
+import org.json4s.Extraction.decompose
+import org.json4s.jackson.Serialization.read
+import org.json4s.JsonAST.JObject
+import org.json4s.jackson.JsonMethods._
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
@@ -37,9 +41,14 @@ import scala.util.Random
 
 class OppijaResourceSpec extends OppijaResourceSetup {
 
+  implicit val formats = HakurekisteriJsonSupport.format
+
+  private val OK: Int = 200
+  private val BAD_REQUEST: Int = 400
+
   test("OppijaResource should return 200") {
     get("/?haku=1") {
-      response.status should be(200)
+      response.status should be(OK)
     }
   }
 
@@ -51,14 +60,15 @@ class OppijaResourceSpec extends OppijaResourceSetup {
 
   test("OppijaResource should return 10001 oppijas with ensikertalainen false") {
     waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None)))(oppijat => {
-      oppijat.length should be(10001)
+      val expectedSize: Int = 10001
+      oppijat.length should be(expectedSize)
       oppijat.foreach(o => o.ensikertalainen should be(Some(false)))
     })
   }
 
   test("OppijaResource should return oppija with ensikertalainen true when asked with ensikertalaisuus timestamp earlier than vastaanotto") {
     get("/1.2.246.562.24.00000000001?ensikertalaisuudenRajapvm=2014-06-01T00:00:00.000Z") {
-      response.status should be(200)
+      response.status should be(OK)
 
       body should include("\"ensikertalainen\":true")
     }
@@ -66,7 +76,7 @@ class OppijaResourceSpec extends OppijaResourceSetup {
 
   test("OppijaResource should return oppija with ensikertalainen false when asked with ensikertalaisuus timestamp after than vastaanotto") {
     get("/1.2.246.562.24.00000000001?ensikertalaisuudenRajapvm=2014-10-01T16:00:00.000+03:00") {
-      response.status should be(200)
+      response.status should be(OK)
 
       body should include("\"ensikertalainen\":false")
     }
@@ -76,7 +86,8 @@ class OppijaResourceSpec extends OppijaResourceSetup {
     valintarekisteri.underlyingActor.requestCount = 0
     get("/?haku=1.2.246.562.6.00000000001") {
       get("/?haku=1.2.246.562.6.00000000001") {
-        valintarekisteri.underlyingActor.requestCount should be(20002)
+        val expectedSize: Int = 20002
+        valintarekisteri.underlyingActor.requestCount should be(expectedSize)
       }
     }
   }
@@ -92,6 +103,51 @@ class OppijaResourceSpec extends OppijaResourceSetup {
     ))))((s: Seq[Oppija]) => {
       s.head.ensikertalainen should be(None)
     })
+  }
+
+  test("OppijaResource should 200 when a list of person oids is sent as POST") {
+    post("/", """["1.2.246.562.24.00000000002"]""") {
+      response.status should be (OK)
+    }
+  }
+
+  test("OppijaResource should return 400 if too many person oids is sent as POST") {
+    val json = decompose((1 to (resource.maxOppijatPostSize + 1)).map(i => s"1.2.246.562.24.$i"))
+
+    post("/", compact(json)) {
+      response.status should be (BAD_REQUEST)
+      response.body should include("too many person oids")
+    }
+  }
+
+  test("OppijaResource should return 400 if invalid person oids is sent as POST") {
+    post("/", """["foo","1.2.246.562.24.00000000002"]""") {
+      response.status should be (BAD_REQUEST)
+      response.body should include("person oid must start with 1.2.246.562.24.")
+    }
+  }
+
+  test("OppijaResource should return 100 oppijas when 100 person oids is sent as POST") {
+    val json = decompose(henkilot.take(100).map(i => s"1.2.246.562.24.$i"))
+
+    post("/", compact(json)) {
+      val oppijat = parse(response.body).extract[List[JObject]]
+      oppijat.size should be (100)
+    }
+  }
+
+  test("OppijaResource should return an empty oppija object if no matching oppija found when person oid is sent as POST") {
+    post("/", """["1.2.246.562.24.00000000010"]""") {
+      val oppijat = read[List[Oppija]](response.body)
+
+      oppijat.size should be (1)
+
+      val o = oppijat.head
+      o.oppijanumero should be("1.2.246.562.24.00000000010")
+      o.opiskelu.size should be (0)
+      o.suoritukset.size should be(0)
+      o.opiskeluoikeudet.size should be (0)
+    }
   }
 
 }
@@ -111,7 +167,18 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   }
 
   val suorituksetSeq = henkilot.map(henkilo =>
-    VirallinenSuoritus("1.2.246.562.5.00000000001", "1.2.246.562.10.00000000001", "VALMIS", new LocalDate(2001, 1, 1), henkilo, yksilollistaminen.Ei, "FI", None, vahv = true, "")
+    VirallinenSuoritus(
+      "1.2.246.562.5.00000000001",
+      "1.2.246.562.10.00000000001",
+      "VALMIS",
+      new LocalDate(2001, 1, 1),
+      henkilo,
+      yksilollistaminen.Ei,
+      "FI",
+      None,
+      vahv = true,
+      ""
+    )
   ).toSeq
 
   implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s: Seq[R]): InMemJournal[R, UUID] = {
@@ -141,9 +208,12 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   }
   val hakuappConfig = ServiceConfig(serviceUrl = "http://localhost/haku-app")
   val endpoint = mock[Endpoint]
-  when(endpoint.request(forPattern("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=.*"))).thenReturn((200, List(), "[]"))
-  when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/.*"))).thenReturn((200, List(), """{"oid":"foo","paattyi":"2014-09-01T00:00:00Z"}"""))
-  when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/1\\.2\\.246\\.562\\.24\\.00000000002\\?koulutuksenAlkamispvm=.+"))).thenReturn((200, List(), """{"oid":"1.2.246.562.24.00000000002"}"""))
+  when(endpoint.request(forPattern("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=.*"))).
+    thenReturn((200, List(), "[]"))
+  when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/.*"))).
+    thenReturn((200, List(), """{"oid":"foo","paattyi":"2014-09-01T00:00:00Z"}"""))
+  when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/1\\.2\\.246\\.562\\.24\\.00000000002\\?koulutuksenAlkamispvm=.+"))).
+    thenReturn((200, List(), """{"oid":"1.2.246.562.24.00000000002"}"""))
 
   val hakemukset: Seq[FullHakemus] = henkilot.map(henkilo => {
     FullHakemus(
@@ -156,7 +226,10 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
     )
   }).toSeq
 
-  val hakemusActor = system.actorOf(Props(new HakemusActor(hakemusClient = new VirkailijaRestClient(config = hakuappConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endpoint)))), journal = hakemukset)))
+  val hakemusActor = system.actorOf(Props(new HakemusActor(
+    hakemusClient = new VirkailijaRestClient(config = hakuappConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endpoint)))),
+    journal = hakemukset
+  )))
 
   hakemusActor ! RefreshingDone(Some(Platform.currentTime))
 
@@ -167,7 +240,13 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
     }
   }))
 
-  val valintarekisteri = TestActorRef(new TestingValintarekisteriActor(new VirkailijaRestClient(config = ServiceConfig(serviceUrl = "http://localhost/valintarekisteri"), aClient = Some(new AsyncHttpClient(new CapturingProvider(endpoint)))), Config.mockConfig))
+  val valintarekisteri = TestActorRef(new TestingValintarekisteriActor(
+    new VirkailijaRestClient(
+      config = ServiceConfig(serviceUrl = "http://localhost/valintarekisteri"),
+      aClient = Some(new AsyncHttpClient(new CapturingProvider(endpoint)))
+    ),
+    Config.mockConfig)
+  )
 
   val ensikertalaisuusActor = system.actorOf(Props(new EnsikertalainenActor(rekisterit.suoritusRekisteri, valintarekisteri, tarjontaActor, Config.mockConfig)))
 

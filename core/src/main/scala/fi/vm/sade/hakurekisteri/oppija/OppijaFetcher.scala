@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.oppija
 
 import fi.vm.sade.hakurekisteri.rest.support.{Query, User, Registers}
 import akka.actor.ActorRef
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.DateTime
 import scala.concurrent.{Future, ExecutionContext}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
@@ -43,9 +43,13 @@ trait OppijaFetcher {
       enrichWithEnsikertalaisuus(persons, getRekisteriData(persons.map(_._1)), ensikertalaisuudenRajapvm)
     } else {
       Future.sequence(persons.map {
-        case (personOid, hetu) => fetchOppijaData(personOid, hetu, ensikertalaisuudenRajapvm)
+        case (personOid, hetu) => fetchOppijaData(personOid, hetu.isDefined, ensikertalaisuudenRajapvm)
       }.toSeq)
     }
+  }
+
+  def fetchOppijat(persons: List[String], hetuExists: Boolean, rajapvm: Option[DateTime])(implicit user: User): Future[Seq[Oppija]] = {
+    Future.sequence(persons.map(personOid => fetchOppijaData(personOid, hetuExists, rajapvm)).toSeq)
   }
 
   private def extractPersons(hakemukset: Seq[FullHakemus]): Set[(String, Option[String])] =
@@ -62,7 +66,7 @@ trait OppijaFetcher {
     rekisteriData.flatMap(o => Future.sequence(o.map(oppija => for (
       ensikertalaisuus <- fetchEnsikertalaisuus(
         oppija.oppijanumero,
-        hetuMap.getOrElse(oppija.oppijanumero, None),
+        hetuMap.getOrElse(oppija.oppijanumero, None).isDefined,
         oppija.suoritukset.map(_.suoritus),
         oppija.opiskeluoikeudet,
         ensikertalaisuudenRajapvm
@@ -103,13 +107,13 @@ trait OppijaFetcher {
     ) yield Todistus(suoritus, arvosanat)
   )
 
-  private def fetchOppijaData(henkiloOid: String, hetu: Option[String], ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Oppija] =
+  private def fetchOppijaData(henkiloOid: String, hetuExists: Boolean, ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Oppija] =
     for (
       suoritukset <- fetchSuoritukset(henkiloOid);
       todistukset <- fetchTodistukset(suoritukset);
       opiskelu <- fetchOpiskelu(henkiloOid);
       opiskeluoikeudet <- fetchOpiskeluoikeudet(henkiloOid);
-      ensikertalainen <- fetchEnsikertalaisuus(henkiloOid, hetu, suoritukset, opiskeluoikeudet, ensikertalaisuudenRajapvm)
+      ensikertalainen <- fetchEnsikertalaisuus(henkiloOid, hetuExists, suoritukset, opiskeluoikeudet, ensikertalaisuudenRajapvm)
     ) yield Oppija(
       oppijanumero = henkiloOid,
       opiskelu = opiskelu,
@@ -119,14 +123,16 @@ trait OppijaFetcher {
     )
 
   private def fetchEnsikertalaisuus(henkiloOid: String,
-                                    hetu: Option[String],
+                                    hetuExists: Boolean,
                                     suoritukset: Seq[Suoritus],
                                     opiskeluoikeudet: Seq[Opiskeluoikeus],
                                     ensikertalaisuudenRajapvm: Option[DateTime]): Future[Option[Ensikertalainen]] = {
-    val ensikertalainen: Future[Ensikertalainen] = (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, Some(suoritukset), Some(opiskeluoikeudet), ensikertalaisuudenRajapvm)).mapTo[Ensikertalainen]
-    hetu match {
-      case Some(_) => ensikertalainen.map(Some(_))
-      case None => ensikertalainen.map(e => if (e.ensikertalainen) None else Some(e))
+    val ensikertalainen: Future[Ensikertalainen] =
+      (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, Some(suoritukset), Some(opiskeluoikeudet), ensikertalaisuudenRajapvm)).mapTo[Ensikertalainen]
+    if (hetuExists) {
+      ensikertalainen.map(Some(_))
+    } else {
+      ensikertalainen.map(e => if (e.ensikertalainen) None else Some(e))
     }
   }
 
@@ -154,7 +160,7 @@ trait OppijaFetcher {
     )).map(_.foldLeft[Seq[A]](Seq())(_ ++ _))
 
   private def grouped[A](xs: Set[A], size: Int) = {
-    def grouped[A](xs: Set[A], size: Int, result: Set[Set[A]]): Set[Set[A]] = {
+    def grouped[B](xs: Set[B], size: Int, result: Set[Set[B]]): Set[Set[B]] = {
       if(xs.isEmpty) {
         result
       } else {

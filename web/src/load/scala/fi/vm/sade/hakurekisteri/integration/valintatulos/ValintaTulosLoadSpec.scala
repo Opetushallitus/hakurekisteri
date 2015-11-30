@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{ActorSystem, Props}
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import org.scalatest.{Matchers, FlatSpec}
 
@@ -26,7 +27,7 @@ class ValintaTulosLoadSpec extends FlatSpec with Matchers {
   implicit val ec: ExecutionContext = system.dispatcher
 
   val valintaTulosConfig = ServiceConfig(serviceUrl = "https://localhost:33000/valinta-tulos-service")
-  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(ec, system))), "valintaTulos")
+  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(new VirkailijaRestClient(valintaTulosConfig)(ec, system), Config.mockConfig)), "valintaTulos")
 
   ignore should "handle loading the status of 5000 applications" in {
     val jsonString = scala.io.Source.fromFile("src/test/resources/test-applications.json").mkString
