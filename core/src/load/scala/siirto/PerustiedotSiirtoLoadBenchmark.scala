@@ -1,6 +1,7 @@
 package siirto
 
 import akka.actor._
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.batchimport.{PerustiedotProcessingActor, BatchState}
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -12,7 +13,7 @@ import org.scalameter.api._
 import scala.xml.{Node, XML}
 import fi.vm.sade.hakurekisteri.batchimport.BatchState._
 import fi.vm.sade.hakurekisteri.integration.organisaatio._
-import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloActor
+import fi.vm.sade.hakurekisteri.integration.henkilo.{HttpHenkiloActor, HenkiloActor, SavedHenkilo, SaveHenkilo}
 import java.io.{ObjectInputStream, ObjectOutputStream, IOException}
 import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.integration._
@@ -24,8 +25,6 @@ import akka.actor.Status.Failure
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.batchimport.ImportStatus
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Oppilaitos
-import fi.vm.sade.hakurekisteri.integration.henkilo.SavedHenkilo
-import fi.vm.sade.hakurekisteri.integration.henkilo.SaveHenkilo
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OppilaitosResponse
 import org.json4s.JsonAST.JString
@@ -207,7 +206,7 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.OfflineReport {
           val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))(system.dispatcher, system)
 
 
-          henkiloActorHolder = Some(system.actorOf(Props(new HenkiloActor(client))))
+          henkiloActorHolder = Some(system.actorOf(Props(new HttpHenkiloActor(client, Config.mockConfig))))
           val orgs = (b.batch.data \\ "myontaja" ++ b.batch.data \\ "lahtokoulu").map(_.text).toSet.map((koodi: String) => koodi -> s"1.2.246.562.5.$koodi").toMap
 
 
@@ -225,7 +224,7 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.OfflineReport {
           }
           val orgProvider = new DelayingProvider(orgEndPoint, 20.milliseconds)(system.dispatcher, system.scheduler)
           val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(orgProvider)))(system.dispatcher, system)
-          organisaatioActorHolder = Some(system.actorOf(Props(new OrganisaatioActor(organisaatioClient))))
+          organisaatioActorHolder = Some(system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, Config.mockConfig))))
 
         }
       }
@@ -308,8 +307,8 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.OfflineReport {
     private def readObject(in: ObjectInputStream): Unit = {
       val obj: AnyRef = in.readObject()
       obj match {
-        case (xml:String, externalId: Option[String], batchType:String ,source: String, state: BatchState, status: ImportStatus, id:UUID) =>
-          batch = ImportBatch(XML.loadString(xml), externalId, batchType, source, state, status).identify(id)
+        case (xml:String, externalId: Option[_], batchType:String ,source: String, state: BatchState, status: ImportStatus, id:UUID) =>
+          batch = ImportBatch(XML.loadString(xml), externalId.map(_.asInstanceOf[String]), batchType, source, state, status).identify(id)
         case _ => sys.error("wrong object type")
       }
     }

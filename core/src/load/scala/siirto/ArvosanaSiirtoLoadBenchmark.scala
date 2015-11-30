@@ -3,6 +3,7 @@ package siirto
 package siirto
 
 import akka.actor._
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.batchimport.{PerustiedotProcessingActor, BatchState}
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -219,7 +220,7 @@ object ArvosanaSiirtoLoadBenchmark extends PerformanceTest.Quickbenchmark {
           val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))(system.dispatcher, system)
 
 
-          henkiloActorHolder = Some(system.actorOf(Props(new HenkiloActor(client))))
+          henkiloActorHolder = Some(system.actorOf(Props(new HttpHenkiloActor(client, Config.mockConfig))))
           val orgs = (b.batch.data \\ "myontaja" ++ b.batch.data \\ "lahtokoulu").map(_.text).toSet.map((koodi: String) => koodi -> s"1.2.246.562.5.$koodi").toMap
 
 
@@ -237,7 +238,7 @@ object ArvosanaSiirtoLoadBenchmark extends PerformanceTest.Quickbenchmark {
           }
           val orgProvider = new DelayingProvider(orgEndPoint, 20.milliseconds)(system.dispatcher, system.scheduler)
           val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(orgProvider)))(system.dispatcher, system)
-          organisaatioActorHolder = Some(system.actorOf(Props(new OrganisaatioActor(organisaatioClient))))
+          organisaatioActorHolder = Some(system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, Config.mockConfig))))
 
         }
       }
@@ -329,8 +330,8 @@ object ArvosanaSiirtoLoadBenchmark extends PerformanceTest.Quickbenchmark {
     private def readObject(in: ObjectInputStream): Unit = {
       val obj: AnyRef = in.readObject()
       obj match {
-        case (xml:String, externalId: Option[String], batchType:String ,source: String, state: BatchState, status: ImportStatus, id:UUID) =>
-          batch = ImportBatch(XML.loadString(xml), externalId, batchType, source, state, status).identify(id)
+        case (xml: String, externalId: Option[_], batchType:String ,source: String, state: BatchState, status: ImportStatus, id:UUID) =>
+          batch = ImportBatch(XML.loadString(xml), externalId.map(_.asInstanceOf[String]), batchType, source, state, status).identify(id)
         case _ => sys.error("wrong object type")
       }
     }

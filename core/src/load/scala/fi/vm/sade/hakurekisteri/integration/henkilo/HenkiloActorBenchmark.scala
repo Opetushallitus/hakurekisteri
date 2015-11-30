@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.henkilo
 
+import fi.vm.sade.hakurekisteri.Config
 import org.scalameter.api._
 import akka.actor.{ActorRef, ActorSystem, Props}
 import generators.DataGen
@@ -50,7 +51,9 @@ object HenkiloActorBenchmark extends PerformanceTest.OfflineReport {
         case (henkiloSeq, lag) =>
           val sys = ActorSystem("perf-test")
 
-          val henkilot: Map[String, String] = henkiloSeq.collect{ case h: CreateHenkilo if h.hetu.isDefined => h.hetu.get}.toSet[String].toList.zipWithIndex.toMap.mapValues((i: String) => s"1.2.246.562.24.$i")
+          val henkilot: Map[String, String] = henkiloSeq.collect {
+            case h: CreateHenkilo if h.hetu.isDefined => h.hetu.get
+          }.toSet[String].toList.zipWithIndex.toMap.mapValues[String]((i: Int) => s"1.2.246.562.24.$i")
 
           def url(pattern:String) ="\\$".r.replaceAllIn(s"${pattern.replaceAll("\\?", "\\\\?")}", "(.*)").r
 
@@ -69,7 +72,7 @@ object HenkiloActorBenchmark extends PerformanceTest.OfflineReport {
           val asyncProvider =  new DelayingProvider(endPoint, lag.milliseconds)(sys.dispatcher, sys.scheduler)
           val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider)))(sys.dispatcher, sys)
 
-          val ha = sys.actorOf(Props(new HenkiloActor(client)))
+          val ha = sys.actorOf(Props(new HttpHenkiloActor(client, config = Config.mockConfig)))
           system = Some(sys)
           henkiloActor = Some(ha)
       } tearDown {
