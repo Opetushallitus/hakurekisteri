@@ -49,6 +49,8 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       b.batchType match {
         case "perustiedot" =>
           context.actorOf(Props(new PerustiedotProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)(b)))
+        case "perustiedotV2" =>
+          log.error("Tried to process perustiedot with schema v2")
         case "arvosanat" =>
           context.actorOf(Props(new ArvosanatProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, organisaatioActor, koodistoActor)(b)))
         case t =>

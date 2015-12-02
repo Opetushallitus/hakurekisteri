@@ -33,4 +33,5 @@ class IdentifiedImportBatch(b: ImportBatch, identifier: UUID) extends ImportBatc
 object ImportBatch {
   val batchTypeArvosanat = "arvosanat"
   val batchTypePerustiedot = "perustiedot"
+  val batchTypePerustiedotV2 = "perustiedotV2"
 }
