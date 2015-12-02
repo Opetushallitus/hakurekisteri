@@ -239,6 +239,10 @@ object PerustiedotV2 extends SchemaDefinition {
 
     <xs:group name="LisapisteKoulutukset">
       <xs:sequence>
+        <xs:element name="ammattistartti" type="SuoritusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="valmentava" type="SuoritusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="maahanmuuttajienlukioonvalmistava" type="SuoritusType" maxOccurs="1" minOccurs="0"/>
+        <xs:element name="maahanmuuttajienammvalmistava" type="SuoritusType" maxOccurs="1" minOccurs="0"/>
         <xs:element name="valma" type="SuoritusType" maxOccurs="1" minOccurs="0"/>
         <xs:element name="telma" type="SuoritusType" maxOccurs="1" minOccurs="0"/>
       </xs:sequence>

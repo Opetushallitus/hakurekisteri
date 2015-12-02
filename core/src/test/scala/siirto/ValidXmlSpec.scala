@@ -176,6 +176,12 @@ class ValidXmlSpec extends FlatSpec with Matchers {
             <suorituskieli>FI</suorituskieli>
             <tila>KESKEN</tila>
           </ulkomainen>
+          <maahanmuuttajienammvalmistava>
+            <valmistuminen>2015-06-04</valmistuminen>
+            <myontaja>05127</myontaja>
+            <suorituskieli>FI</suorituskieli>
+            <tila>VALMIS</tila>
+          </maahanmuuttajienammvalmistava>
           <valma>
             <valmistuminen>2015-06-04</valmistuminen>
             <myontaja>05127</myontaja>
