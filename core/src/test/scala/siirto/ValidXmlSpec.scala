@@ -21,6 +21,8 @@ class ValidXmlSpec extends FlatSpec with Matchers {
 
   val validator = new ValidXml(Perustiedot,  (PerustiedotKoodisto +: testiKoodisto):_*)
 
+  val validatorV2 = new ValidXml(PerustiedotV2,  (PerustiedotKoodisto +: testiKoodisto):_*)
+
   it should "find invalid xml" in {
     validator.load(<perustiedot></perustiedot>).isFailure should be (true)
   }
@@ -33,6 +35,11 @@ class ValidXmlSpec extends FlatSpec with Matchers {
     val path = getClass.getClassLoader.getResource("simple.xml")
     validator.load(path).isSuccess should be (false)
   }
+
+  it should "validate v2 schema" in {
+    validatorV2.load(validV2).isSuccess should be (true)
+  }
+
 
   val valid =
     <perustiedot>
@@ -120,6 +127,66 @@ class ValidXmlSpec extends FlatSpec with Matchers {
         </henkilo>
       </henkilot>
     </perustiedot>
+
+  val validV2 =
+    <perustiedot>
+      <eranTunniste>eranTunniste</eranTunniste>
+      <henkilot>
+        <henkilo>
+          <hetu>131094-919B</hetu>
+          <lahtokoulu>05127</lahtokoulu>
+          <luokka>9A</luokka>
+          <sukunimi>Testinen</sukunimi>
+          <etunimet>Juha Jaakko</etunimet>
+          <kutsumanimi>Jaakko</kutsumanimi>
+          <kotikunta>020</kotikunta>
+          <aidinkieli>FI</aidinkieli>
+          <kansalaisuus>246</kansalaisuus>
+          <lahiosoite>Katu 1 A 1</lahiosoite>
+          <postinumero>00100</postinumero>
+          <matkapuhelin>040 1234 567</matkapuhelin>
+          <muuPuhelin>09 1234 567</muuPuhelin>
+          <perusopetus>
+            <valmistuminen>2015-06-04</valmistuminen>
+            <myontaja>05127</myontaja>
+            <suorituskieli>FI</suorituskieli>
+            <tila>KESKEN</tila>
+            <yksilollistaminen>EI</yksilollistaminen>
+          </perusopetus>
+        </henkilo>
+        <henkilo>
+          <henkiloTunniste>TUNNISTE</henkiloTunniste>
+          <syntymaAika>1999-03-29</syntymaAika>
+          <sukupuoli>1</sukupuoli>
+          <lahtokoulu>05127</lahtokoulu>
+          <luokka>9A</luokka>
+          <sukunimi>Testinen</sukunimi>
+          <etunimet>Juha Jaakko</etunimet>
+          <kutsumanimi>Jaakko</kutsumanimi>
+          <kotikunta>020</kotikunta>
+          <aidinkieli>FI</aidinkieli>
+          <kansalaisuus>246</kansalaisuus>
+          <lahiosoite>Katu 1 A 1</lahiosoite>
+          <postinumero>00100</postinumero>
+          <matkapuhelin>040 1234 567</matkapuhelin>
+          <muuPuhelin>09 1234 567</muuPuhelin>
+          <ulkomainen>
+            <valmistuminen>2014-06-04</valmistuminen>
+            <myontaja>05127</myontaja>
+            <suorituskieli>FI</suorituskieli>
+            <tila>KESKEN</tila>
+          </ulkomainen>
+          <valma>
+            <valmistuminen>2015-06-04</valmistuminen>
+            <myontaja>05127</myontaja>
+            <suorituskieli>FI</suorituskieli>
+            <tila>VALMIS</tila>
+          </valma>
+        </henkilo>
+      </henkilot>
+    </perustiedot>
+
+
 
   object Kunnat extends SchemaDefinition {
     override val schema: Elem =

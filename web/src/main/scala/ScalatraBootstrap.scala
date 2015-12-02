@@ -71,7 +71,10 @@ class ScalatraBootstrap extends LifeCycle {
       ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
       ("/permission/checkpermission", "permission/checkpermission") -> new PermissionResource(registers.suoritusRekisteri, registers.opiskelijaRekisteri),
       ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SecuritySupport,
-      ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SecuritySupport,
+      ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))
+            ("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SecuritySupport,
+      ("/rest/v2/siirto/perustiedot", "rest/v2/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))
+            ("eranTunniste", ImportBatch.batchTypePerustiedotV2, "data", PerustiedotXmlConverter, PerustiedotV2, PerustiedotKoodisto) with SecuritySupport,
       ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
       ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SecuritySupport,
       ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),
