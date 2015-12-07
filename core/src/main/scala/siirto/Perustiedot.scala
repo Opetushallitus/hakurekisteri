@@ -231,7 +231,7 @@ object PerustiedotV2 extends SchemaDefinition {
 
     <xs:group name="PerusopetuksenKaynyt">
       <xs:sequence>
-        <xs:element name="perusopetus" type="PerusopetusType" maxOccurs="1" minOccurs="1"/>
+        <xs:element name="perusopetus" type="PerusopetusType" maxOccurs="1" minOccurs="0"/>
         <xs:element name="perusopetuksenlisaopetus" type="PerusopetusType" maxOccurs="1" minOccurs="0"/>
         <xs:group ref="LisapisteKoulutukset"/>
       </xs:sequence>

@@ -155,6 +155,27 @@ class ValidXmlSpec extends FlatSpec with Matchers {
           </perusopetus>
         </henkilo>
         <henkilo>
+          <hetu>071295-903U</hetu>
+          <lahtokoulu>05127</lahtokoulu>
+          <luokka>9A</luokka>
+          <sukunimi>Testinen</sukunimi>
+          <etunimet>Mikko</etunimet>
+          <kutsumanimi>Mikko</kutsumanimi>
+          <kotikunta>020</kotikunta>
+          <aidinkieli>FI</aidinkieli>
+          <kansalaisuus>246</kansalaisuus>
+          <lahiosoite>Katu 1 A 1</lahiosoite>
+          <postinumero>00100</postinumero>
+          <matkapuhelin>040 1234 567</matkapuhelin>
+          <muuPuhelin>09 1234 567</muuPuhelin>
+          <valma>
+            <valmistuminen>2015-06-04</valmistuminen>
+            <myontaja>05127</myontaja>
+            <suorituskieli>FI</suorituskieli>
+            <tila>VALMIS</tila>
+          </valma>
+        </henkilo>
+        <henkilo>
           <henkiloTunniste>TUNNISTE</henkiloTunniste>
           <syntymaAika>1999-03-29</syntymaAika>
           <sukupuoli>1</sukupuoli>

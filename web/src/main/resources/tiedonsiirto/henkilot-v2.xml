@@ -27,6 +27,27 @@
             </perusopetus>
         </henkilo>
         <henkilo>
+            <hetu>131094-YYYY</hetu>
+            <lahtokoulu>05127</lahtokoulu>
+            <luokka>9A</luokka>
+            <sukunimi>Åädas</sukunimi>
+            <etunimet>Juha Jaakko</etunimet>
+            <kutsumanimi>Jaakko</kutsumanimi>
+            <kotikunta>020</kotikunta>
+            <aidinkieli>FI</aidinkieli>
+            <kansalaisuus>246</kansalaisuus>
+            <lahiosoite>Katu 1 A 1</lahiosoite>
+            <postinumero>00100</postinumero>
+            <matkapuhelin>040 1234 567</matkapuhelin>
+            <muuPuhelin>09 1234 567</muuPuhelin>
+            <valma>
+                <valmistuminen>2015-06-04</valmistuminen>
+                <myontaja>05127</myontaja>
+                <suorituskieli>FI</suorituskieli>
+                <tila>VALMIS</tila>
+            </valma>
+        </henkilo>
+        <henkilo>
             <henkiloTunniste>TUNNISTE</henkiloTunniste>
             <syntymaAika>1999-03-32</syntymaAika>
             <sukupuoli>1</sukupuoli>
