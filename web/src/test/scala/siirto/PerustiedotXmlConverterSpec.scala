@@ -22,7 +22,12 @@ class PerustiedotXmlConverterSpec extends FlatSpec with Matchers with XmlEqualit
       "perusopetuksenlisaopetus" ->
         """
           |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|VALMISTUMINEN|MYONTAJA|SUORITUSKIELI|TILA  |YKSILOLLISTAMINEN
-          |111111-1975|            |               |1.6.2015     |05127   |FI           |KESKEN|EI
+          |111111-1975|            |               |1.6.2015     |05127   |FI           |VALMIS|EI
+        """,
+      "valma" ->
+        """
+          |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|VALMISTUMINEN|MYONTAJA|SUORITUSKIELI|TILA  |YKSILOLLISTAMINEN
+          |111111-1975|            |               |1.6.2016     |05127   |FI           |KESKEN|EI
         """
     ).toExcel
 
@@ -52,9 +57,15 @@ class PerustiedotXmlConverterSpec extends FlatSpec with Matchers with XmlEqualit
           <valmistuminen>2015-06-01</valmistuminen>
           <myontaja>05127</myontaja>
           <suorituskieli>FI</suorituskieli>
-          <tila>KESKEN</tila>
+          <tila>VALMIS</tila>
           <yksilollistaminen>EI</yksilollistaminen>
         </perusopetuksenlisaopetus>
+        <valma>
+          <valmistuminen>2016-06-01</valmistuminen>
+          <myontaja>05127</myontaja>
+          <suorituskieli>FI</suorituskieli>
+          <tila>KESKEN</tila>
+        </valma>
       </henkilo>
     </perustiedot>
 

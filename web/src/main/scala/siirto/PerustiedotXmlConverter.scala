@@ -85,11 +85,13 @@ object PerustiedotXmlConverter extends support.XmlConverter with ExcelToXmlSuppo
     "henkilotiedot" -> henkiloLens,
     "perusopetus" -> yksilollistettavaLens("perusopetus"),
     "perusopetuksenlisaopetus" -> yksilollistettavaLens("perusopetuksenlisaopetus"),
+    "ulkomainen" -> suoritusLens("ulkomainen"),
     "ammattistartti" -> suoritusLens("ammattistartti"),
     "valmentava" -> suoritusLens("valmentava"),
     "maahanmuuttajienlukioonvalmistava" -> suoritusLens("maahanmuuttajienlukioonvalmistava"),
     "maahanmuuttajienammvalmistava" -> suoritusLens("maahanmuuttajienammvalmistava"),
-    "ulkomainen" -> suoritusLens("ulkomainen"),
+    "valma" -> suoritusLens("valma"),
+    "telma" -> suoritusLens("telma"),
     "lukio" -> suoritusLens("lukio"),
     "ammatillinen" -> suoritusLens("ammatillinen")
   )
