@@ -139,17 +139,17 @@ app.filter "hilight", ->
     input.replace new RegExp("(" + query + ")", "gi"), "<strong>$1</strong>"
 
 app.directive "messages", ->
-  return (
+  return {
     controller: ($scope, MessageService) ->
       $scope.messages = MessageService.messages
       $scope.removeMessage = MessageService.removeMessage
       return
 
     templateUrl: "templates/messages.html"
-  )
+  }
 
 app.directive "tiedonsiirtomenu", ->
-  return (
+  return {
     controller: ($scope, $location) ->
       $scope.menu = [
         {
@@ -198,4 +198,4 @@ app.directive "tiedonsiirtomenu", ->
       return
 
     templateUrl: "templates/tiedonsiirtomenu.html"
-  )
+  }

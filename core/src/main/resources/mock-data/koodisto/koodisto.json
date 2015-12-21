@@ -10879,6 +10879,94 @@
           "kieli": "SV"
         }
       ]
+    },
+    {
+      "koodiUri": "luokkataso_valma",
+      "resourceUri": "https://virkailija.opintopolku.fi/koodisto-service/rest/codeelement/luokkataso_valma",
+      "version": 0,
+      "versio": 1,
+      "koodisto": {
+        "koodistoUri": "luokkataso",
+        "organisaatioOid": "1.2.246.562.10.00000000001",
+        "koodistoVersios": [
+          1
+        ]
+      },
+      "koodiArvo": "VALMA",
+      "paivitysPvm": 1450686923120,
+      "voimassaAlkuPvm": "2015-12-01",
+      "voimassaLoppuPvm": null,
+      "tila": "LUONNOS",
+      "metadata": [
+        {
+          "nimi": "ammatilliseen peruskoulutukseen valmentava koulutus",
+          "kuvaus": null,
+          "lyhytNimi": "valma",
+          "kayttoohje": null,
+          "kasite": null,
+          "sisaltaaMerkityksen": null,
+          "eiSisallaMerkitysta": null,
+          "huomioitavaKoodi": null,
+          "sisaltaaKoodiston": null,
+          "kieli": "FI"
+        },
+        {
+          "nimi": "utbildning som handleder för grundläggande yrkesutbildning",
+          "kuvaus": null,
+          "lyhytNimi": "valma",
+          "kayttoohje": null,
+          "kasite": null,
+          "sisaltaaMerkityksen": null,
+          "eiSisallaMerkitysta": null,
+          "huomioitavaKoodi": null,
+          "sisaltaaKoodiston": null,
+          "kieli": "SV"
+        }
+      ]
+    },
+    {
+      "koodiUri": "luokkataso_telma",
+      "resourceUri": "https://virkailija.opintopolku.fi/koodisto-service/rest/codeelement/luokkataso_telma",
+      "version": 0,
+      "versio": 1,
+      "koodisto": {
+        "koodistoUri": "luokkataso",
+        "organisaatioOid": "1.2.246.562.10.00000000001",
+        "koodistoVersios": [
+          1
+        ]
+      },
+      "koodiArvo": "TELMA",
+      "paivitysPvm": 1450687133601,
+      "voimassaAlkuPvm": "2015-12-01",
+      "voimassaLoppuPvm": null,
+      "tila": "LUONNOS",
+      "metadata": [
+        {
+          "nimi": "utbildning som förbereder för arbete och ett självständigt liv",
+          "kuvaus": null,
+          "lyhytNimi": "telma",
+          "kayttoohje": null,
+          "kasite": null,
+          "sisaltaaMerkityksen": null,
+          "eiSisallaMerkitysta": null,
+          "huomioitavaKoodi": null,
+          "sisaltaaKoodiston": null,
+          "kieli": "SV"
+        },
+        {
+          "nimi": "työhön ja itsenäiseen elämään valmentava koulutus",
+          "kuvaus": null,
+          "lyhytNimi": "telma",
+          "kayttoohje": null,
+          "kasite": null,
+          "sisaltaaMerkityksen": null,
+          "eiSisallaMerkitysta": null,
+          "huomioitavaKoodi": null,
+          "sisaltaaKoodiston": null,
+          "kieli": "FI"
+        }
+      ]
     }
   ],
   "yksilollistaminen/koodi": [

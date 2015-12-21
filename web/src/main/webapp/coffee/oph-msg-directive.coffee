@@ -65,7 +65,6 @@ app.factory "LokalisointiService", [
               translations[t.key][t.locale] = t
               i++
             translations.inited = true
-#            $log.info "localisations inited, lang: " + service.lang + ", localisationBackend: " + localisationBackend + ", translations: " + translations.length
           callback()  if callback
           return
         return
@@ -91,11 +90,9 @@ app.factory "LokalisointiService", [
       if x is "" or not x
         addTranslations msgKey, elemText, oldTranslation
         return "[" + msgKey + "-" + lang + "]"
-      #$log.debug "getTranslation, lang: " + lang + ", key: " + msgKey + " => " + x
       x
 
     if window.msgCategory is `undefined`
-#      $log.warn "msgCategory global variable not defined -> setting to: " + msgCategory
       window.msgCategory = msgCategory
 
     window.globalInitOphMsg = (callback) ->
@@ -118,10 +115,9 @@ app.directive "ophMsg", [
   "$log"
   "LokalisointiService"
   ($log, LokalisointiService) ->
-    return (
+    return {
       scope:
         msgKey: "@ophMsg"
-
       link: ($scope, element, attrs) ->
         attrs.$observe "ophMsg", (msgKey) ->
           $scope.msgKey = msgKey
@@ -133,7 +129,7 @@ app.directive "ophMsg", [
             return
           return
         return
-    )
+    }
 ]
 app.run ($log) ->
   if window.globalInitOphMsg

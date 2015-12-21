@@ -45,6 +45,8 @@ object LisapistekoulutusOids {
   val maahanmuuttajienLukioonValmistava = "1.2.246.562.5.2013112814572429142840"
   val maahanmuuttajienAmmatilliseenValmistava = "1.2.246.562.5.2013112814572441001730"
   val valmentavaJaKuntouttava = "1.2.246.562.5.2013112814572435755085"
+  val valma = "valma"
+  val telma = "telma"
 }
 
 object KomoOids {
@@ -71,6 +73,8 @@ object Oids {
   val ammatilliseenvalmistavaKomoOid = KomoOids.lisapistekoulutus.maahanmuuttajienAmmatilliseenValmistava
   val lukioonvalmistavaKomoOid = KomoOids.lisapistekoulutus.maahanmuuttajienLukioonValmistava
   val kansanopistoKomoOid = KomoOids.lisapistekoulutus.kansanopisto
+  val valmaKomoOid = KomoOids.lisapistekoulutus.valma
+  val telmaKomoOid = KomoOids.lisapistekoulutus.telma
 
 }
 

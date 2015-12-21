@@ -21,7 +21,15 @@ import scala.concurrent.ExecutionContext
 
 object ProcessReadyBatches
 
-class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef, arvosanarekisteri: ActorRef, koodistoActor: ActorRef, config: Config) extends Actor with ActorLogging {
+class ImportBatchProcessingActor(importBatchActor: ActorRef,
+                                 henkiloActor: ActorRef,
+                                 suoritusrekisteri: ActorRef,
+                                 opiskelijarekisteri: ActorRef,
+                                 organisaatioActor: ActorRef,
+                                 arvosanarekisteri: ActorRef,
+                                 koodistoActor: ActorRef,
+                                 config: Config) extends Actor with ActorLogging {
+
   implicit val ec: ExecutionContext = context.dispatcher
   private val processStarter: Cancellable = context.system.scheduler.schedule(config.importBatchProcessingInitialDelay, 15.seconds, self, ProcessReadyBatches)
 
@@ -48,25 +56,35 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       log.debug("got import batch")
       b.batchType match {
         case "perustiedot" =>
-          context.actorOf(Props(new PerustiedotProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)(b)))
-        case "perustiedotV2" =>
-          log.error("Tried to process perustiedot with schema v2")
+          context.actorOf(Props(
+            new PerustiedotProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor)(b)
+          ))
         case "arvosanat" =>
-          context.actorOf(Props(new ArvosanatProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, organisaatioActor, koodistoActor)(b)))
+          context.actorOf(Props(
+            new ArvosanatProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, organisaatioActor, koodistoActor)(b)
+          ))
         case t =>
           log.error(s"unknown batchType $t")
       }
-
   }
+
 }
 
 object ProcessingJammedException extends Exception("processing jammed")
 
-class ArvosanatProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, arvosanarekisteri: ActorRef, organisaatioActor: ActorRef, koodistoActor: ActorRef)(b: ImportBatch with Identified[UUID])
+class ArvosanatProcessingActor(importBatchActor: ActorRef,
+                               henkiloActor: ActorRef,
+                               suoritusrekisteri: ActorRef,
+                               arvosanarekisteri: ActorRef,
+                               organisaatioActor: ActorRef,
+                               koodistoActor: ActorRef)(b: ImportBatch with Identified[UUID])
   extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
-  private val processor = new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)(context.system)
+
+  private val processor =
+    new ArvosanatProcessing(organisaatioActor, henkiloActor, suoritusrekisteri, arvosanarekisteri, importBatchActor, koodistoActor)(context.system)
+
   private val startTime = Platform.currentTime
   log.info(s"started processing batch ${b.id}")
 
@@ -82,9 +100,9 @@ class ArvosanatProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRe
   override def receive: Actor.Receive = {
     case Start =>
       processor.process(b).onComplete(t => {
-        if (t.isSuccess)
+        if (t.isSuccess) {
           log.info(s"batch ${b.id} was processed successfully, processing took ${Platform.currentTime - startTime} ms")
-        else {
+        } else {
           log.info(s"batch ${b.id} failed, processing took ${Platform.currentTime - startTime} ms")
           log.error(t.failed.get, s"batch ${b.id} failed")
         }
@@ -96,7 +114,11 @@ class ArvosanatProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRe
   }
 }
 
-class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: ActorRef, suoritusrekisteri: ActorRef, opiskelijarekisteri: ActorRef, organisaatioActor: ActorRef)(b: ImportBatch with Identified[UUID])
+class PerustiedotProcessingActor(importBatchActor: ActorRef,
+                                 henkiloActor: ActorRef,
+                                 suoritusrekisteri: ActorRef,
+                                 opiskelijarekisteri: ActorRef,
+                                 organisaatioActor: ActorRef)(b: ImportBatch with Identified[UUID])
   extends Actor with ActorLogging {
 
   private val startTime = Platform.currentTime
@@ -159,6 +181,7 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
 
   private def hasKomo(s: Seq[VirallinenSuoritus], oid: String): Boolean = s.exists(_.komo == oid)
 
+  //noinspection ScalaStyle
   private def detectLuokkataso(suoritukset: Seq[VirallinenSuoritus]): String = suoritukset match {
     case s if hasKomo(s, Oids.lukioKomoOid)                   => "L"
     case s if hasKomo(s, Oids.lukioonvalmistavaKomoOid)       => "ML"
@@ -166,6 +189,8 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     case s if hasKomo(s, Oids.ammatilliseenvalmistavaKomoOid) => "M"
     case s if hasKomo(s, Oids.ammattistarttiKomoOid)          => "A"
     case s if hasKomo(s, Oids.valmentavaKomoOid)              => "V"
+    case s if hasKomo(s, Oids.valmaKomoOid)                   => "VALMA"
+    case s if hasKomo(s, Oids.telmaKomoOid)                   => "TELMA"
     case s if hasKomo(s, Oids.lisaopetusKomoOid)              => "10"
     case s if hasKomo(s, Oids.perusopetusKomoOid)             => "9"
     case _                                                    => ""
@@ -178,7 +203,7 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
   private val start = context.system.scheduler.scheduleOnce(1.millisecond, self, Start)
   private val stop = context.system.scheduler.scheduleOnce(1.hour, self, Stop)
 
-  override def postStop(): Unit = {
+  override def postStop() {
     start.cancel()
     stop.cancel()
   }
@@ -197,7 +222,7 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     ).identify(b.id)
   }
 
-  private def batchProcessed() = {
+  private def batchProcessed() {
     importBatchActor ! batch(b, BatchState.DONE)
 
     log.info(s"batch ${b.id} was processed successfully, processing took ${Platform.currentTime - startTime} ms")
@@ -205,7 +230,7 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     context.stop(self)
   }
 
-  private def batchFailed(t: Throwable) = {
+  private def batchFailed(t: Throwable) {
     importBatchActor ! batch(b, BatchState.FAILED, Some("Virhe tiedoston käsittelyssä", Set(t.toString)))
 
     log.info(s"batch ${b.id} failed, processing took ${Platform.currentTime - startTime} ms")
@@ -224,11 +249,11 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       Map()
   }
 
-  def henkiloDone(tunniste: String) = {
+  private def henkiloDone(tunniste: String) {
     importHenkilot = importHenkilot.filterNot(_._1 == tunniste)
   }
 
-  def addReference(henkiloOid: String, refName: String, refId: String): Unit = {
+  private def addReference(henkiloOid: String, refName: String, refId: String) {
     val henkiloRefs: Map[String, String] = savedReferences.get(henkiloOid) match {
       case Some(refs) => refs + (refName -> refId)
       case None =>
@@ -238,6 +263,7 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     savedReferences = savedReferences + (henkiloOid -> henkiloRefs)
   }
 
+  //noinspection ScalaStyle
   def suoritusType(s: VirallinenSuoritus): String = s.komo match {
     case Oids.perusopetusKomoOid => "perusopetus"
     case Oids.lisaopetusKomoOid => "perusopetuksenlisaopetus"
@@ -248,13 +274,16 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
     case Oids.ulkomainenkorvaavaKomoOid => "ulkomainen"
     case Oids.lukioKomoOid => "lukio"
     case Oids.ammatillinenKomoOid => "ammatillinen"
+    case Oids.valmaKomoOid => "valma"
+    case Oids.telmaKomoOid => "telma"
     case oid => oid
   }
 
+  //noinspection ScalaStyle
   override def receive: Actor.Receive = {
     case Start =>
       importHenkilot = parseData()
-      if (importHenkilot.size == 0)
+      if (importHenkilot.isEmpty)
         batchProcessed()
       fetchAllOppilaitokset()
 
@@ -280,21 +309,21 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef, henkiloActor: Actor
       val errors = failures.getOrElse(tunniste, Set[String]()) + t.toString
       failures = failures + (tunniste -> errors)
       henkiloDone(tunniste)
-      if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
+      if (importHenkilot.isEmpty && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
         batchProcessed()
       }
 
     case s: VirallinenSuoritus with Identified[UUID @unchecked] =>
       savedSuoritukset = savedSuoritukset :+ s
       addReference(s.henkiloOid, suoritusType(s), s.id.toString)
-      if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
+      if (importHenkilot.isEmpty && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
         batchProcessed()
       }
 
     case o: Opiskelija with Identified[UUID @unchecked] =>
       savedOpiskelijat = savedOpiskelijat :+ o
       addReference(o.henkiloOid, "opiskelija", o.id.toString)
-      if (importHenkilot.size == 0 && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
+      if (importHenkilot.isEmpty && sentSuoritukset.size == savedSuoritukset.size && sentOpiskelijat.size == savedOpiskelijat.size) {
         batchProcessed()
       }
 
@@ -330,24 +359,31 @@ case class ImportHenkilonTunniste(henkilonTunniste: String, syntymaAika: String,
   override val tunniste = henkilonTunniste
 }
 
+import ImportHenkilo.opiskelijaAlkuPaiva
+import ImportHenkilo.opiskelijaLoppuPaiva
+import HetuUtil._
+
 case class ImportHenkilo(tunniste: ImportTunniste, lahtokoulu: String, luokka: String, sukunimi: String, etunimet: String,
                          kutsumanimi: String, kotikunta: String, aidinkieli: String, kansalaisuus: Option[String],
                          lahiosoite: Option[String], postinumero: Option[String], maa: Option[String], matkapuhelin: Option[String],
                          muuPuhelin: Option[String], suoritukset: Seq[VirallinenSuoritus], lahde: String) {
-  import HetuUtil._
   val mies = "1"
   val nainen = "2"
+  val sukupuoliIndex = 9
 
-  def koulut = (lahtokoulu +: suoritukset.map(_.myontaja)).toSet.toList.sorted.mkString(",")
+  private def koulut = (lahtokoulu +: suoritukset.map(_.myontaja)).toSet.toList.sorted.mkString(",")
+
+  private def isEven(c: Char): Boolean = c.toInt % 2 == 0
 
   def toHenkilo(resolveOid: (String) => String): CreateHenkilo = {
     val (syntymaaika: Option[String], sukupuoli: Option[String]) = tunniste match {
       case ImportHenkilonTunniste(_, syntymaAika, sukup) => (Some(syntymaAika), Some(sukup))
       case ImportHetu(Hetu(hetu)) =>
-        if (hetu.charAt(9).toInt % 2 == 0)
+        if (isEven(hetu.charAt(sukupuoliIndex))) {
           (toSyntymaAika(hetu), Some(nainen))
-        else
+        } else {
           (toSyntymaAika(hetu), Some(mies))
+        }
       case _ => (None, None)
     }
 
@@ -356,25 +392,13 @@ case class ImportHenkilo(tunniste: ImportTunniste, lahtokoulu: String, luokka: S
       case v => v.getYear
     }
 
-    import ImportHenkilo.opiskelijaAlkuPaiva
-    import ImportHenkilo.opiskelijaLoppuPaiva
-
     CreateHenkilo(
       etunimet = etunimet,
       kutsumanimi = kutsumanimi,
       sukunimi = sukunimi,
-      hetu = tunniste match {
-        case ImportHetu(h) => Some(h)
-        case _ => None
-      },
-      oidHenkilo = tunniste match {
-        case ImportOppijanumero(oid) => Some(oid)
-        case _ => None
-      },
-      externalId = tunniste match {
-        case ImportHenkilonTunniste(t, sa, _) => Some(s"${koulut}_${vuosi}_${t}_$sa")
-        case _ => None
-      },
+      hetu = extractHetu,
+      oidHenkilo = extractOppijanumero,
+      externalId = extractHenkilontunniste(vuosi),
       syntymaaika = syntymaaika,
       sukupuoli = sukupuoli,
       aidinkieli = Some(Kieli(aidinkieli.toLowerCase)),
@@ -388,6 +412,21 @@ case class ImportHenkilo(tunniste: ImportTunniste, lahtokoulu: String, luokka: S
         tehtavanimike = Some(luokka)
       ))
     )
+  }
+
+  private def extractHenkilontunniste(vuosi: Int): Option[String] = tunniste match {
+    case ImportHenkilonTunniste(t, sa, _) => Some(s"${koulut}_${vuosi}_${t}_$sa")
+    case _ => None
+  }
+
+  private def extractOppijanumero: Option[String] = tunniste match {
+    case ImportOppijanumero(oid) => Some(oid)
+    case _ => None
+  }
+
+  private def extractHetu: Option[String] = tunniste match {
+    case ImportHetu(h) => Some(h)
+    case _ => None
   }
 }
 
@@ -404,7 +443,9 @@ object ImportHenkilo {
     val loppu = new DateTime().withDayOfMonth(1).withMonthOfYear(6).withMillisOfDay(0)
     if (currentMonth > 6) loppu.plusYears(1) else loppu
   }
-  def suoritus(name: String, komoOid: String, oppijanumero: Option[String], yksilollistetty: Boolean)(h: Node)(lahde: String): Option[VirallinenSuoritus] = (h \ name).headOption.map(s => {
+  def suoritus(name: String, komoOid: String, oppijanumero: Option[String], yksilollistetty: Boolean)
+              (h: Node)
+              (lahde: String): Option[VirallinenSuoritus] = (h \ name).headOption.map(s => {
     val valmistuminen = getField("valmistuminen")(s)
     val myontaja = getField("myontaja")(s)
     val suorituskieli = getField("suorituskieli")(s)
@@ -449,7 +490,9 @@ object ImportHenkilo {
       suoritus("maahanmuuttajienammvalmistava", Oids.ammatilliseenvalmistavaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
       suoritus("ulkomainen", Oids.ulkomainenkorvaavaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
       suoritus("lukio", Oids.lukioKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
-      suoritus("ammatillinen", Oids.ammatillinenKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde)
+      suoritus("ammatillinen", Oids.ammatillinenKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
+      suoritus("valma", Oids.valmaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde),
+      suoritus("telma", Oids.telmaKomoOid, oppijanumero, yksilollistetty = false)(h)(lahde)
     ).flatten
 
     ImportHenkilo(

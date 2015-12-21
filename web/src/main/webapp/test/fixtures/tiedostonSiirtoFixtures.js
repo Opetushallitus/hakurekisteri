@@ -8,7 +8,7 @@ function tiedostonSiirtoFixtures() {
         perustiedotOpen: function (isOpen) {
             return function () {
                 console.log('perustiedotOpen='+JSON.stringify({"open": isOpen}))
-                mockHttpBackEnd().when('GET', /.*rest\/v1\/siirto\/perustiedot\/isopen$/).respond({"open": isOpen})
+                mockHttpBackEnd().when('GET', /.*rest\/v2\/siirto\/perustiedot\/isopen$/).respond({"open": isOpen})
             }
         },
 

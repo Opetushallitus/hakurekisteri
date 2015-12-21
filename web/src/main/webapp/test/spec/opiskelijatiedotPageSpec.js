@@ -330,7 +330,7 @@
                         assertValue(opiskelijatiedot.suoritusTila, "0")
                         assertValue(opiskelijatiedot.luokkatietoOppilaitos, "06345")
                         assertValue(opiskelijatiedot.luokkatietoLuokka, "10A")
-                        assertValue(opiskelijatiedot.luokkatietoLuokkaTaso, "2")
+                        assertValue(opiskelijatiedot.luokkatietoLuokkaTaso, "3")
                         assertValue(opiskelijatiedot.luokkatietoAlkuPaiva, "18.8.2014")
                         assertValue(opiskelijatiedot.luokkatietoLoppuPaiva, "4.6.2015")
                         assertText(opiskelijatiedot.opiskeluoikeusAlkuPaiva, "01.01.2000")
@@ -945,9 +945,13 @@
                         wait.forAngular,
                         click(opiskelijatiedot.luokkatietoLisaa),
                         wait.forAngular,
+                        function() {
+                            expect(opiskelijatiedot.luokkatietoLuokkaTasoValma().length).to.equal(1)
+                            expect(opiskelijatiedot.luokkatietoLuokkaTasoTelma().length).to.equal(1)
+                        },
                         input(opiskelijatiedot.luokkatietoOppilaitos, '06345'),
                         input(opiskelijatiedot.luokkatietoLuokka, '9A'),
-                        input(opiskelijatiedot.luokkatietoLuokkaTaso, '7'),
+                        input(opiskelijatiedot.luokkatietoLuokkaTaso, '9'),
                         input(opiskelijatiedot.luokkatietoAlkuPaiva, '12.8.2014'),
                         input(opiskelijatiedot.luokkatietoLoppuPaiva, '31.5.2015'),
                         mockPostReturnData(click(opiskelijatiedot.saveButton), /.*rest\/v1\/opiskelijat$/),

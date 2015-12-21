@@ -52,6 +52,8 @@ opiskelijatiedot = initSelectors({
     luokkatietoOppilaitos: ".test-luokkatietoOppilaitos",
     luokkatietoLuokka: ".test-luokkatietoLuokka",
     luokkatietoLuokkaTaso: ".test-luokkatietoLuokkaTaso",
+    luokkatietoLuokkaTasoValma: ".test-luokkatietoLuokkaTaso option[label='ammatilliseen peruskoulutukseen valmentava koulutus']",
+    luokkatietoLuokkaTasoTelma: ".test-luokkatietoLuokkaTaso option[label='työhön ja itsenäiseen elämään valmentava koulutus']",
     luokkatietoAlkuPaiva: ".test-luokkatietoAlkuPaiva",
     luokkatietoLoppuPaiva: ".test-luokkatietoLoppuPaiva",
     luokkatietoLisaa: ".test-luokkatietoLisaa",

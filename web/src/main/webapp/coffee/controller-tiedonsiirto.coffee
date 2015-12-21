@@ -7,14 +7,19 @@ app.controller "TiedonsiirtoCtrl", [
   ($scope, MessageService, LokalisointiService, $log, $http) ->
     supportsFileApi = window.FileReader?
 
-
     fetchEnabledState = (type) ->
-      $http.get("rest/v1/siirto/"+type+"/isopen", {cache: true})
+      url =
+        if type is "perustiedot"
+          "rest/v2/siirto/" + type + "/isopen"
+        else
+          "rest/v1/siirto/" + type + "/isopen"
+
+      $http.get(url, {cache: true})
         .success (data) ->
-          $scope[type+"Enabled"] = data.open
+          $scope[type + "Enabled"] = data.open
         .error ->
-          $scope[type+"Enabled"] = false
-          $log.error "cannot connect "+type
+          $scope[type + "Enabled"] = false
+          $log.error "cannot connect " + type
 
     fetchEnabledState('perustiedot')
     fetchEnabledState('arvosanat')
@@ -88,7 +93,13 @@ app.controller "TiedonsiirtoCtrl", [
       else
         form = jQuery("#uploadForm")
         if form.get(0)
-          form.get(0).setAttribute('action', 'rest/v1/siirto/' + $scope.tyyppi)
+          url =
+            if $scope.tyyppi is "perustiedot"
+              'rest/v2/siirto/' + $scope.tyyppi
+            else
+              'rest/v1/siirto/' + $scope.tyyppi
+
+          form.get(0).setAttribute('action', url)
         $scope.sending = true
         delete $scope.uploadResult
         true

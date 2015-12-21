@@ -2,7 +2,7 @@ import java.nio.file.Path
 import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEvent}
 
 import _root_.support._
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.batchimport._
@@ -29,7 +29,7 @@ import fi.vm.sade.hakurekisteri.web.rest.support._
 import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwaggerApi}
 import gui.GuiServlet
 import org.scalatra.swagger.Swagger
-import org.scalatra.{Handler, LifeCycle}
+import org.scalatra.{ScalatraServlet, Handler, LifeCycle}
 import org.springframework.beans.MutablePropertyValues
 import org.springframework.beans.factory.config.BeanDefinition
 import org.springframework.beans.factory.support.RootBeanDefinition
@@ -62,35 +62,9 @@ class ScalatraBootstrap extends LifeCycle {
 
     val koosteet = new BaseKoosteet(system, integrations, registers, config)
 
-    val healthcheck = system.actorOf(Props(new HealthcheckActor(authorizedRegisters.arvosanaRekisteri, authorizedRegisters.opiskelijaRekisteri, authorizedRegisters.opiskeluoikeusRekisteri, authorizedRegisters.suoritusRekisteri, authorizedRegisters.eraRekisteri, integrations.ytl, integrations.hakemukset, koosteet.ensikertalainen, koosteet.virtaQueue, config)), "healthcheck")
+    val importBatchProcessing = initBatchProcessing(config, authorizedRegisters, integrations)
 
-    val importBatchProcessing = system.actorOf(Props(new ImportBatchProcessingActor(authorizedRegisters.eraRekisteri, integrations.henkilo, authorizedRegisters.suoritusRekisteri, authorizedRegisters.opiskelijaRekisteri, integrations.organisaatiot, authorizedRegisters.arvosanaRekisteri, integrations.koodisto, config)), "importBatchProcessing")
-
-    var servlets = List(
-      ("/rest/v1/komo", "komo") -> new GuiServlet,
-      ("/healthcheck", "healthcheck") -> new HealthcheckResource(healthcheck),
-      ("/permission/checkpermission", "permission/checkpermission") -> new PermissionResource(registers.suoritusRekisteri, registers.opiskelijaRekisteri),
-      ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SecuritySupport,
-      ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))
-            ("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SecuritySupport,
-      ("/rest/v2/siirto/perustiedot", "rest/v2/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))
-            ("eranTunniste", ImportBatch.batchTypePerustiedotV2, "data", PerustiedotXmlConverter, PerustiedotV2, PerustiedotKoodisto) with SecuritySupport,
-      ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
-      ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SecuritySupport,
-      ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),
-      ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(koosteet.haut),
-      ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),
-      ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),
-      ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SecuritySupport,
-      ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
-      ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SecuritySupport,
-      ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SecuritySupport,
-      ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(authorizedRegisters),
-      ("/rest/v1/tyhjalisatiedollisetarvosanat", "rest/v1/tyhjalisatiedollisetarvosanat") -> new EmptyLisatiedotResource(authorizedRegisters.arvosanaRekisteri) ,
-      ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto, Arvosanat, ArvosanatKoodisto),
-      ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue),
-      ("/ytl", "ytl") -> new YtlResource(integrations.ytl)
-    )
+    var servlets = initServlets(config, registers, authorizedRegisters, integrations, koosteet)
 
     if (config.mockMode) {
       servlets ::= (("/spec", "spec") -> new SpecResource(integrations.ytl))
@@ -103,7 +77,62 @@ class ScalatraBootstrap extends LifeCycle {
     context mount (new ValidatorJavascriptServlet, "/hakurekisteri-validator")
   }
 
-  def mountServlets(context: ServletContext)(servlets: ((String, String), Servlet with Handler)*) = {
+  //noinspection ScalaStyle
+  private def initServlets(config: Config,
+                           registers: BareRegisters,
+                           authorizedRegisters: AuthorizedRegisters,
+                           integrations: Integrations,
+                           koosteet: BaseKoosteet)(implicit security: Security): List[((String, String), ScalatraServlet)] = List(
+    ("/rest/v1/komo", "komo") -> new GuiServlet,
+    ("/healthcheck", "healthcheck") -> new HealthcheckResource(initHealthcheck(config, authorizedRegisters, integrations, koosteet)),
+    ("/permission/checkpermission", "permission/checkpermission") -> new PermissionResource(registers.suoritusRekisteri, registers.opiskelijaRekisteri),
+    ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SecuritySupport,
+    ("/rest/v1/siirto/perustiedot", "rest/v1/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, Perustiedot, PerustiedotKoodisto) with SecuritySupport,
+    ("/rest/v2/siirto/perustiedot", "rest/v2/siirto/perustiedot") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, PerustiedotV2, PerustiedotKoodisto) with SecuritySupport,
+    ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
+    ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SecuritySupport,
+    ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen),
+    ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(koosteet.haut),
+    ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),
+    ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),
+    ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SecuritySupport,
+    ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
+    ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SecuritySupport,
+    ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SecuritySupport,
+    ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(authorizedRegisters),
+    ("/rest/v1/tyhjalisatiedollisetarvosanat", "rest/v1/tyhjalisatiedollisetarvosanat") -> new EmptyLisatiedotResource(authorizedRegisters.arvosanaRekisteri),
+    ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto, Arvosanat, ArvosanatKoodisto),
+    ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue),
+    ("/ytl", "ytl") -> new YtlResource(integrations.ytl)
+  )
+
+  private def initBatchProcessing(config: Config, authorizedRegisters: AuthorizedRegisters, integrations: Integrations): ActorRef =
+    system.actorOf(Props(new ImportBatchProcessingActor(
+      authorizedRegisters.eraRekisteri,
+      integrations.henkilo,
+      authorizedRegisters.suoritusRekisteri,
+      authorizedRegisters.opiskelijaRekisteri,
+      integrations.organisaatiot,
+      authorizedRegisters.arvosanaRekisteri,
+      integrations.koodisto,
+      config
+    )), "importBatchProcessing")
+
+  private def initHealthcheck(config: Config, authorizedRegisters: AuthorizedRegisters, integrations: Integrations, koosteet: BaseKoosteet): ActorRef =
+    system.actorOf(Props(new HealthcheckActor(
+      authorizedRegisters.arvosanaRekisteri,
+      authorizedRegisters.opiskelijaRekisteri,
+      authorizedRegisters.opiskeluoikeusRekisteri,
+      authorizedRegisters.suoritusRekisteri,
+      authorizedRegisters.eraRekisteri,
+      integrations.ytl,
+      integrations.hakemukset,
+      koosteet.ensikertalainen,
+      koosteet.virtaQueue,
+      config
+    )), "healthcheck")
+
+  def mountServlets(context: ServletContext)(servlets: ((String, String), Servlet with Handler)*) {
     implicit val sc = context
     for (((path, name), servlet) <- servlets) context.mount(handler = servlet, urlPattern = path, name = name, loadOnStartup = 1)
   }
@@ -119,7 +148,7 @@ class ScalatraBootstrap extends LifeCycle {
 }
 
 object WebAppConfig {
-  def getConfig(context: ServletContext) = {
+  def getConfig(context: ServletContext): Config = {
     Option(context.getAttribute("hakurekisteri.config").asInstanceOf[Config]).getOrElse(Config.globalConfig)
   }
 }
