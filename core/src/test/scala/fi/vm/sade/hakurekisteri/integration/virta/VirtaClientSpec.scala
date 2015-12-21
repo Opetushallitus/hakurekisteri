@@ -7,6 +7,7 @@ import akka.actor.ActorSystem
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, CapturingProvider, DispatchSupport, Endpoint}
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
+import org.joda.time.LocalDate
 import org.mockito.Mockito
 import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.mock.MockitoSugar
@@ -139,4 +140,23 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
       o.get.opiskeluoikeudet.size should be (2)
     })
   }
+
+  it should "parse local date with timezone" in {
+    virtaClient.parseLocalDate("2011-08-10+03:00") should be (new LocalDate(2011, 8, 10))
+  }
+
+  it should "throw IllegalArgumentException with invalid date" in {
+    intercept[IllegalArgumentException] {
+      virtaClient.parseLocalDate("2011-08-10+foo")
+    }
+  }
+
+  it should "parse local date with timezone to some" in {
+    virtaClient.parseLocalDateOption("2011-08-10+03:00") should be (Some(new LocalDate(2011, 8, 10)))
+  }
+
+  it should "parse local date with timezone to none" in {
+    virtaClient.parseLocalDateOption("2011-08-10+foo") should be (None)
+  }
+
 }

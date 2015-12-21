@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import com.ning.http.client._
 import dispatch.Http
-import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
+import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 
 import scala.compat.Platform
@@ -73,7 +73,11 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     }
   }
 
-  def tryPost(requestUrl: String, requestEnvelope: String, oppijanumero: String, hetu: Option[String], retryCount: AtomicInteger): Future[Option[VirtaResult]] = {
+  def tryPost(requestUrl: String,
+              requestEnvelope: String,
+              oppijanumero: String,
+              hetu: Option[String],
+              retryCount: AtomicInteger): Future[Option[VirtaResult]] = {
     val t0 = Platform.currentTime
 
     import dispatch._
@@ -112,14 +116,25 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     res
   }
 
+  def parseLocalDate(s: String): LocalDate =
+    if (s.length() > 10) {
+      DateTimeFormat.forPattern("yyyy-MM-ddZ").parseLocalDate(s)
+    } else {
+      DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate(s)
+    }
+
+  def parseLocalDateOption(s: String): Option[LocalDate] = {
+    Try(parseLocalDate(s)).toOption
+  }
+
   def getOpiskeluoikeudet(response: NodeSeq): Seq[VirtaOpiskeluoikeus] = {
     val opiskeluoikeudet: NodeSeq = response \ "Body" \ "OpiskelijanKaikkiTiedotResponse" \ "Virta" \ "Opiskelija" \ "Opiskeluoikeudet" \ "Opiskeluoikeus"
     opiskeluoikeudet.withFilter((oo: Node) => tallennettavatOpiskeluoikeustyypit.contains((oo \ "Tyyppi").text)).map((oo: Node) => {
       val avain = oo.map(_ \ "@avain")
 
       VirtaOpiskeluoikeus(
-        alkuPvm = Try(DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate((oo \ "AlkuPvm").head.text)).get,
-        loppuPvm = Try(DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate((oo \ "LoppuPvm").head.text)).toOption,
+        alkuPvm = parseLocalDate((oo \ "AlkuPvm").head.text),
+        loppuPvm = parseLocalDateOption((oo \ "LoppuPvm").head.text),
         myontaja = extractTextOption(oo \ "Myontaja" \ "Koodi", avain, required = true).get,
         koulutuskoodit = Try((oo \ "Jakso" \ "Koulutuskoodi").map(_.text)).get,
         opintoala1995 = extractTextOption(oo \ "Opintoala1995", avain), // Universities use this
@@ -135,7 +150,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
       val avain = os.map(_ \ "@avain")
 
       VirtaTutkinto(
-        suoritusPvm = Try(DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate((os \ "SuoritusPvm").head.text)).get,
+        suoritusPvm = parseLocalDate((os \ "SuoritusPvm").head.text),
         koulutuskoodi = extractTextOption(os \ "Koulutuskoodi", avain), // not available in every tutkinto
         opintoala1995 = extractTextOption(os \ "Opintoala1995", avain), // Universities use this
         koulutusala2002 = extractTextOption(os \ "Koulutusala2002", avain), // AMK
