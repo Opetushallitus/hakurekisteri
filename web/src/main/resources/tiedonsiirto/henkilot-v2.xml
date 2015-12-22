@@ -2,7 +2,7 @@
 <perustiedot xmlns:p="http://service.koodisto.sade.vm.fi/types/koodisto"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:noNamespaceSchemaLocation="perusaste-henkilot.xsd">
-    <eranTunniste>eranTunniste 66</eranTunniste>
+    <eranTunniste>eranTunniste 67</eranTunniste>
     <henkilot>
         <henkilo>
             <hetu>131094-XXXX</hetu>
@@ -19,7 +19,7 @@
             <matkapuhelin>040 1234 567</matkapuhelin>
             <muuPuhelin>09 1234 567</muuPuhelin>
             <perusopetus>
-                <valmistuminen>2015-05-30</valmistuminen>
+                <valmistuminen>2016-05-30</valmistuminen>
                 <myontaja>05127</myontaja>
                 <suorituskieli>FI</suorituskieli>
                 <tila>KESKEN</tila>
@@ -41,10 +41,10 @@
             <matkapuhelin>040 1234 567</matkapuhelin>
             <muuPuhelin>09 1234 567</muuPuhelin>
             <valma>
-                <valmistuminen>2015-06-04</valmistuminen>
+                <valmistuminen>2016-06-04</valmistuminen>
                 <myontaja>05127</myontaja>
                 <suorituskieli>FI</suorituskieli>
-                <tila>VALMIS</tila>
+                <tila>KESKEN</tila>
             </valma>
         </henkilo>
         <henkilo>
@@ -76,10 +76,10 @@
                 <tila>VALMIS</tila>
             </maahanmuuttajienammvalmistava>
             <valma>
-                <valmistuminen>2015-06-04</valmistuminen>
+                <valmistuminen>2016-06-04</valmistuminen>
                 <myontaja>05127</myontaja>
                 <suorituskieli>FI</suorituskieli>
-                <tila>VALMIS</tila>
+                <tila>KESKEN</tila>
             </valma>
         </henkilo>
         <henkilo>
@@ -97,14 +97,14 @@
             <matkapuhelin>040 1234 567</matkapuhelin>
             <muuPuhelin>09 1234 567</muuPuhelin>
             <perusopetus>
-                <valmistuminen>2014-06-04</valmistuminen>
+                <valmistuminen>2015-06-04</valmistuminen>
                 <myontaja>05127</myontaja>
                 <suorituskieli>FI</suorituskieli>
                 <tila>VALMIS</tila>
                 <yksilollistaminen>EI</yksilollistaminen>
             </perusopetus>
             <perusopetuksenlisaopetus>
-                <valmistuminen>2015-06-04</valmistuminen>
+                <valmistuminen>2016-06-04</valmistuminen>
                 <myontaja>05127</myontaja>
                 <suorituskieli>FI</suorituskieli>
                 <tila>KESKEN</tila>
