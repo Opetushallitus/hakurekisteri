@@ -95,6 +95,14 @@ app.factory "MuokkaaTiedot", [
             value: komo.kansanopisto
             text: getOphMsg("suoritusrekisteri.komo." + komo.kansanopisto, "Kansanopiston lukuvuoden mittainen linja")
           }
+          {
+            value: komo.valma
+            text: getOphMsg("suoritusrekisteri.komo." + komo.valma, "Ammatilliseen peruskoulutukseen valmentava koulutus")
+          }
+          {
+            value: komo.telma
+            text: getOphMsg("suoritusrekisteri.komo." + komo.telma, "Työhön ja itsenäiseen elämään valmentava koulutus")
+          }
         ]
 
       getMyRoles = ->
@@ -120,6 +128,8 @@ app.factory "MuokkaaTiedot", [
             ammatillinen: data.ammatillinenKomoOid
             lukio: data.lukioKomoOid
             kansanopisto: data.kansanopistoKomoOid
+            valma: data.valmaKomoOid
+            telma: data.telmaKomoOid
         ).error(->komosLoaded.reject("cannot get komos"))
         return komosLoaded.promise
 
