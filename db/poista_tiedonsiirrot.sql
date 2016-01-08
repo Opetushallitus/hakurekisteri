@@ -1,0 +1,2 @@
+﻿-- insert into import_batch (resource_id, inserted, deleted, data, external_id, batch_type, source, state, status)
+select i.resource_id, floor(extract(epoch from now()) * 1000) as inserted, true as deleted, '' as data, i.external_id, i.batch_type, 'arkistointi' as source, i.state, i.status from v_import_batch i where i.inserted <= 1443780404894;
