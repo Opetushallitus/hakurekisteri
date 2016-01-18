@@ -355,7 +355,7 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
         .setLahtokoulu("foobarKoulu")
         .setLukionPaattotodistusvuosi(new LocalDate().getYear)
         .build
-    ) should contain theSameElementsAs Seq( (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", 2015, "FI"), Seq()) )
+    ) should contain theSameElementsAs Seq( (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", new LocalDate().getYear, "FI"), Seq()) )
   }
 
   trait CustomMatchers {
