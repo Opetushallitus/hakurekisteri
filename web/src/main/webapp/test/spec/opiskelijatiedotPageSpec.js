@@ -6,8 +6,7 @@
     }
 
     function getCurrentYear() {
-        var d = new Date()
-        return d.getMonth() > 6 ? d.getFullYear() + 1 : d.getFullYear()
+      return new Date().getFullYear()
     }
 
     function assertArvosanat(aineRiviCount, aineCount, korotusDateCount, pakollisetCount, valinnaisetCount) {
@@ -231,12 +230,6 @@
         })
 
         describe('URL parametrien käsittely', function () {
-
-            function getCurrentYear() {
-                var d = new Date()
-                return d.getMonth() > 6 ? d.getFullYear() + 1 : d.getFullYear()
-            }
-
             it('Henkilo haku URL parametri', seqDone(
                 function () {
                     httpFixtures().organisaatioService.pikkaralaOid()
@@ -244,6 +237,7 @@
                     httpFixtures().henkiloPalveluService.aarneHenkiloPalvelu()
                     httpFixtures().henkiloPalveluService.aarneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
                     httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
@@ -251,11 +245,10 @@
                 },
                 input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                 wait.forAngular,
-                select(opiskelijatiedot.vuosiSearch, '1'),
+                select(opiskelijatiedot.vuosiSearch, '2'),
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,
                 function () {
-                    console.log(getCurrentYear())
                     expect(testFrame().location.hash).to.equal('#/opiskelijat?henkilo=1.2.246.562.24.71944845619&oppilaitos=&vuosi=' + getCurrentYear())
                     assertText(opiskelijatiedot.hetu, "123456-789")
                 }
@@ -270,6 +263,7 @@
                     httpFixtures().henkiloPalveluService.aarneJaTyyneHenkiloListana()
                     httpFixtures().suorituksetLocal.aarnenSuorituksetEmpty()
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                    httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
                     httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
@@ -277,7 +271,7 @@
                 },
                 typeaheadInput(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
                 wait.forAngular,
-                select(opiskelijatiedot.vuosiSearch, '1'),
+                select(opiskelijatiedot.vuosiSearch, '2'),
                 wait.forAngular,
                 click(opiskelijatiedot.searchButton),
                 wait.forAngular,

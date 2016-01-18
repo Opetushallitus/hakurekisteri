@@ -749,14 +749,8 @@ var httpFixtures = function () {
     }
 
     fixtures.rekisteriTiedotLocal = {
-
         rekisteriTiedot: function () {
-            function getCurrentYear() {
-                var d = new Date()
-                return d.getMonth() > 6 ? d.getFullYear() + 1 : d.getFullYear()
-            }
-
-            fixtures.get(new RegExp(".*rest\\/v1\\/rekisteritiedot\\/light\\?oppilaitosOid=1\\.2\\.246\\.562\\.10\\.39644336305&vuosi=" + getCurrentYear() + "$"), [{
+            fixtures.get(new RegExp(".*rest\\/v1\\/rekisteritiedot\\/light\\?oppilaitosOid=1\\.2\\.246\\.562\\.10\\.39644336305.*$"), [{
                 "henkilo": "1.2.246.562.24.71944845619",
                 "luokka": "9A",
                 "arvosanat": true
