@@ -123,8 +123,9 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
       DateTimeFormat.forPattern("yyyy-MM-dd").parseLocalDate(s)
     }
 
-  def parseLocalDateOption(s: String): Option[LocalDate] = {
-    Try(parseLocalDate(s)).toOption
+  def parseLocalDateOption(s: Option[String]): Option[LocalDate] = {
+    import fi.vm.sade.hakurekisteri.tools.RicherString._
+    s.flatMap(_.blankOption).map(d => parseLocalDate(d))
   }
 
   def getOpiskeluoikeudet(response: NodeSeq): Seq[VirtaOpiskeluoikeus] = {
@@ -134,7 +135,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
 
       VirtaOpiskeluoikeus(
         alkuPvm = parseLocalDate((oo \ "AlkuPvm").head.text),
-        loppuPvm = parseLocalDateOption((oo \ "LoppuPvm").head.text),
+        loppuPvm = parseLocalDateOption((oo \ "LoppuPvm").headOption.map(_.text)),
         myontaja = extractTextOption(oo \ "Myontaja" \ "Koodi", avain, required = true).get,
         koulutuskoodit = Try((oo \ "Jakso" \ "Koulutuskoodi").map(_.text)).get,
         opintoala1995 = extractTextOption(oo \ "Opintoala1995", avain), // Universities use this

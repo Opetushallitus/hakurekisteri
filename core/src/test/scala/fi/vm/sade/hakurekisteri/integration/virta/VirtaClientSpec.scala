@@ -118,7 +118,6 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
   }
 
   it should "throw VirtaConnectionErrorException if an error occurred" in {
-
     intercept[VirtaConnectionErrorException] {
       val response = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.5")
       Await.result(response, 10.seconds)
@@ -152,11 +151,21 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
   }
 
   it should "parse local date with timezone to some" in {
-    virtaClient.parseLocalDateOption("2011-08-10+03:00") should be (Some(new LocalDate(2011, 8, 10)))
+    virtaClient.parseLocalDateOption(Some("2011-08-10+03:00")) should be (Some(new LocalDate(2011, 8, 10)))
   }
 
-  it should "parse local date with timezone to none" in {
-    virtaClient.parseLocalDateOption("2011-08-10+foo") should be (None)
+  it should "throw exception when parsing local date with invalid timezone" in {
+    intercept[IllegalArgumentException] {
+      virtaClient.parseLocalDateOption(Some("2011-08-10+foo")) should be (None)
+    }
+  }
+
+  it should "parse empty date to None" in {
+    virtaClient.parseLocalDateOption(Some("")) should be (None)
+  }
+
+  it should "pass None as None" in {
+    virtaClient.parseLocalDateOption(None) should be (None)
   }
 
 }
