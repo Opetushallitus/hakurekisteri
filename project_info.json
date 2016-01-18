@@ -1,0 +1,10 @@
+{
+  "name": "suoritusrekisteri",
+
+  "Makefile": "no",
+
+  "projects": [
+    {"name": "suoritusrekisteri-web", "uses": "suoritusrekisteri-rest"},
+    {"name": "suoritusrekisteri-rest", "uses": "cas activemq ldap ytl virta haku tarjonta organisaatio koodisto henkilo ohjausparametrit sijoittelu valinta-tulos-service valintarekisteri"}
+  ]
+}
