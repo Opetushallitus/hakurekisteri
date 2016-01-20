@@ -5,6 +5,6 @@
 
   "projects": [
     {"name": "suoritusrekisteri-web", "uses": "suoritusrekisteri-rest"},
-    {"name": "suoritusrekisteri-rest", "uses": "cas activemq ldap ytl virta haku tarjonta-rest organisaatio-rest koodisto-rest henkilo ohjausparametrit sijoittelu valinta-tulos-service valintarekisteri"}
+    {"name": "suoritusrekisteri-rest", "uses": "cas activemq ldap ytl virta haku tarjonta-rest organisaatio-rest organisaatio-soap koodisto-rest henkilo ohjausparametrit valinta-tulos-service valintarekisteri"}
   ]
 }
