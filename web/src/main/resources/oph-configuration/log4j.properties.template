@@ -51,11 +51,10 @@ log4j.appender.P.layout.ConversionPattern=%d{ISO8601} %-5p {%X{user}} [%t] %-5p 
 
 # Audit logger configuration
 log4j.logger.fi.vm.sade.auditlog.Audit=INFO, audit
+log4j.appender.audit=org.apache.log4j.FileAppender
+log4j.appender.audit.immediateFlush=true
 log4j.appender.audit.File=${user.home}/tomcat/logs/auditlog_hakurekisteri.log
-log4j.appender.audit=org.apache.log4j.RollingFileAppender
 log4j.appender.audit.Append=true
-log4j.appender.audit.MaxFileSize=20MB
-log4j.appender.audit.MaxBackupIndex=20
 log4j.appender.audit.layout=org.apache.log4j.PatternLayout
 log4j.appender.audit.layout.ConversionPattern=%m%n
 log4j.appender.audit.encoding=UTF-8
