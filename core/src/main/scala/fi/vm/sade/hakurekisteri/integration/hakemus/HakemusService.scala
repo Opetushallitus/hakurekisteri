@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 import akka.actor.{Cancellable, Actor, ActorRef, Props}
 import akka.event.Logging
@@ -14,6 +15,9 @@ import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.hakurekisteri.storage.repository._
 import fi.vm.sade.hakurekisteri.storage.{Identified, InMemQueryingResourceService, ResourceActor}
+import fi.vm.sade.hakurekisteri.tools.DurationHelper
+import fi.vm.sade.hakurekisteri.tools.DurationHelper.atTime
+import org.joda.time.{LocalDateTime, LocalTime}
 
 import scala.compat.Platform
 import scala.concurrent.Future
@@ -183,7 +187,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   var hakuCursor: Option[String] = None
   var aktiivisetHaut: Set[Haku] = Set()
   val cursorFormat = "yyyyMMddHHmm"
-  val resetCursor = context.system.scheduler.schedule(7.days, 7.days, self, ResetCursor)
+  val resetCursor = context.system.scheduler.schedule(atTime(hour = 4, minute = 15), 1.day, self, ResetCursor)
   var retryResetCursor: Option[Cancellable] = None
   var retryRefresh: Option[Cancellable] = None
 
