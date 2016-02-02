@@ -52,6 +52,10 @@ trait OppijaFetcher {
     Future.sequence(persons.map(personOid => fetchOppijaData(personOid, hetuExists, rajapvm)).toSeq)
   }
 
+  def fetchOppija(person: String, rajaPvm: Option[DateTime])(implicit user: User): Future[Oppija] ={
+    fetchOppijaData(person, true, rajaPvm)
+  }
+
   private def extractPersons(hakemukset: Seq[FullHakemus]): Set[(String, Option[String])] =
     (for (
       hakemus <- hakemukset
