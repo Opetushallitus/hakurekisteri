@@ -4,9 +4,9 @@ import akka.actor.{Actor, Props, ActorSystem}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{KomoResponse, GetKomoQuery}
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriQuery
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritusHenkilotQuery, SuoritusQuery}
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.joda.time.DateTime
@@ -28,13 +28,15 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
   addServlet(new EnsikertalainenResource(system.actorOf(Props(new EnsikertalainenActor(
     suoritusActor = system.actorOf(Props(new Actor {
       override def receive: Receive = {
-        case q: SuoritusQuery =>
+        case q: SuoritusHenkilotQuery =>
           sender ! Seq()
       }
     })),
     valintarekisterActor = system.actorOf(Props(new Actor {
       override def receive: Actor.Receive = {
-        case q: ValintarekisteriQuery => sender ! Some(vastaanottohetki)
+        case q: ValintarekisteriQuery =>
+          val map: Seq[EnsimmainenVastaanotto] = q.henkiloOids.toSeq.map(o => EnsimmainenVastaanotto(o, Some(vastaanottohetki)))
+          sender ! map
       }
     })),
     tarjontaActor = system.actorOf(Props(new Actor {

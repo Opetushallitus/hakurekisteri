@@ -123,7 +123,7 @@ trait OppijaFetcher {
                                     opiskeluoikeudet: Seq[Opiskeluoikeus],
                                     ensikertalaisuudenRajapvm: Option[DateTime]): Future[Option[Ensikertalainen]] = {
     val ensikertalainen: Future[Ensikertalainen] =
-      (ensikertalaisuus ? EnsikertalainenQuery(henkiloOid, Some(suoritukset), Some(opiskeluoikeudet), ensikertalaisuudenRajapvm)).mapTo[Ensikertalainen]
+      (ensikertalaisuus ? EnsikertalainenQuery(Set(henkiloOid), Some(suoritukset), Some(opiskeluoikeudet), ensikertalaisuudenRajapvm)).mapTo[Seq[Ensikertalainen]].map(_.head)
     if (hetuExists) {
       ensikertalainen.map(Some(_))
     } else {

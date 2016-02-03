@@ -86,7 +86,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
-      private val oppijaFuture =  fetchOppija(personOid, rajapvm)
+      private val oppijaFuture = fetchOppija(personOid, rajapvm)
 
       logQuery(personOid, t0, oppijaFuture)
 
