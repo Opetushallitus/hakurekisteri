@@ -81,7 +81,7 @@ trait OppijaFetcher {
 
     oppijaData.map {
       case (opiskelijat, opiskeluoikeudet, todistukset) =>
-        (opiskelijat.keySet ++ opiskeluoikeudet.keySet ++ todistukset.keySet).map((oid: String) => {
+        personOids.map((oid: String) => {
           Oppija(
             oppijanumero = oid,
             opiskelu = opiskelijat.getOrElse(oid, Seq()),
