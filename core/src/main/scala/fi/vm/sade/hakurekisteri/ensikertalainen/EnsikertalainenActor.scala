@@ -45,7 +45,7 @@ case class HetuNotFoundException(message: String) extends Exception(message)
 
 class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorRef, tarjontaActor: ActorRef, config: Config)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
 
-  val syksy2014: DateTime = new DateTime(2014, 8, 1, 0, 0, 0, 0, DateTimeZone.forID("Europe/Helsinki"))
+  val syksy2014 = "2014S"
   val Oid = "(1\\.2\\.246\\.562\\.[0-9.]+)".r
   val KkKoulutusUri = "koulutus_[67][1-9][0-9]{4}".r
 

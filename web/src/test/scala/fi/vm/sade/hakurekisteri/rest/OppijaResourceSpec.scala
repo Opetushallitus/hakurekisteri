@@ -212,7 +212,7 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
     thenReturn((200, List(), "[]"))
   when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/.*"))).
     thenReturn((200, List(), """{"oid":"foo","paattyi":"2014-09-01T00:00:00Z"}"""))
-  when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/1\\.2\\.246\\.562\\.24\\.00000000002\\?koulutuksenAlkamispvm=.+"))).
+  when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/1\\.2\\.246\\.562\\.24\\.00000000002\\?koulutuksenAlkamiskausi=2014S"))).
     thenReturn((200, List(), """{"oid":"1.2.246.562.24.00000000002"}"""))
 
   val hakemukset: Seq[FullHakemus] = henkilot.map(henkilo => {
@@ -264,8 +264,8 @@ class TestingValintarekisteriActor(restClient: VirkailijaRestClient, config: Con
 
   var requestCount: Long = 0
 
-  override def fetchEnsimmainenVastaanotto(henkiloOid: String, koulutuksenAlkamispvm: DateTime): Future[Option[DateTime]] = {
+  override def fetchEnsimmainenVastaanotto(henkiloOid: String, koulutuksenAlkamiskausi: String): Future[Option[DateTime]] = {
     requestCount = requestCount + 1
-    super.fetchEnsimmainenVastaanotto(henkiloOid, koulutuksenAlkamispvm)
+    super.fetchEnsimmainenVastaanotto(henkiloOid, koulutuksenAlkamiskausi)
   }
 }

@@ -16,13 +16,14 @@ class ValintarekisteriActor(restClient: VirkailijaRestClient, config: Config)  e
   implicit val ec: ExecutionContext = context.dispatcher
 
   override def receive: Receive = {
-    case ValintarekisteriQuery(henkiloOid, koulutuksenAlkamispmv) => pipe(fetchEnsimmainenVastaanotto(henkiloOid, koulutuksenAlkamispmv)) pipeTo sender
+    case ValintarekisteriQuery(henkiloOid, koulutuksenAlkamiskausi) => pipe(fetchEnsimmainenVastaanotto(henkiloOid, koulutuksenAlkamiskausi)) pipeTo sender
   }
 
-  def fetchEnsimmainenVastaanotto(henkiloOid: String, koulutuksenAlkamispvm: DateTime): Future[Option[DateTime]] = restClient.readObject[EnsimmainenVastaanotto]("valintarekisteri.ensikertalaisuus",henkiloOid,koulutuksenAlkamispvm.toDateTimeISO.toString)(200, 2).map(_.paattyi)
-
+  def fetchEnsimmainenVastaanotto(henkiloOid: String, koulutuksenAlkamiskausi: String): Future[Option[DateTime]] = {
+    restClient.readObject[EnsimmainenVastaanotto]("valintarekisteri.ensikertalaisuus", henkiloOid, koulutuksenAlkamiskausi)(200, 2).map(_.paattyi)
+  }
 }
 
-case class ValintarekisteriQuery(henkiloOid: String, koulutuksenAlkamispvm: DateTime)
+case class ValintarekisteriQuery(henkiloOid: String, koulutuksenAlkamiskausi: String)
 
 case class EnsimmainenVastaanotto(oid: String, paattyi: Option[DateTime])
