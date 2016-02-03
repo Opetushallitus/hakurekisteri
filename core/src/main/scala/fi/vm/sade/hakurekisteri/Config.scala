@@ -197,7 +197,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val valintaTulosConfig = new ServiceConfig(serviceUrl = valintaTulosServiceUrl, properties = properties) {
     override val httpClientRequestTimeout: Int = 600000
   }
-  val valintarekisteriConfig = ServiceConfig(serviceUrl = valintarekisteriServiceUrl, properties = properties)
+  val valintarekisteriConfig = ServiceConfig(serviceUrl = valintaTulosServiceUrl, properties = properties)
 
   val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt
   val organisaatioCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.organisaatio", "12").toInt

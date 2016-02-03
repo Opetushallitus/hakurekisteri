@@ -210,9 +210,9 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   val endpoint = mock[Endpoint]
   when(endpoint.request(forPattern("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=.*"))).
     thenReturn((200, List(), "[]"))
-  when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/.*"))).
+  when(endpoint.request(forPattern("http://localhost/valinta-tulos-service/ensikertalaisuus/.*"))).
     thenReturn((200, List(), """{"oid":"foo","paattyi":"2014-09-01T00:00:00Z"}"""))
-  when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/1\\.2\\.246\\.562\\.24\\.00000000002\\?koulutuksenAlkamiskausi=2014S"))).
+  when(endpoint.request(forUrl("http://localhost/valinta-tulos-service/ensikertalaisuus/1.2.246.562.24.00000000002?koulutuksenAlkamiskausi=2014S"))).
     thenReturn((200, List(), """{"oid":"1.2.246.562.24.00000000002"}"""))
 
   val hakemukset: Seq[FullHakemus] = henkilot.map(henkilo => {
@@ -242,7 +242,7 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
 
   val valintarekisteri = TestActorRef(new TestingValintarekisteriActor(
     new VirkailijaRestClient(
-      config = ServiceConfig(serviceUrl = "http://localhost/valintarekisteri"),
+      config = ServiceConfig(serviceUrl = "http://localhost/valinta-tulos-service"),
       aClient = Some(new AsyncHttpClient(new CapturingProvider(endpoint)))
     ),
     Config.mockConfig)
