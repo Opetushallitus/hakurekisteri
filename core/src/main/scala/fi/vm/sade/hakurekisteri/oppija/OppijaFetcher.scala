@@ -35,7 +35,7 @@ trait OppijaFetcher {
 
   def fetchOppijatFor(hakemukset: Seq[FullHakemus], ensikertalaisuudenRajapvm: Option[DateTime] = None)(implicit user: User): Future[Seq[Oppija]] = {
     val persons = extractPersons(hakemukset)
-    enrichWithEnsikertalaisuus(persons, getRekisteriData(persons.map(_._1)), ensikertalaisuudenRajapvm)
+    enrichWithEnsikertalaisuus(persons, getRekisteriData(persons.keySet), ensikertalaisuudenRajapvm)
   }
 
   def fetchOppijat(persons: List[String], hetuExists: Boolean, rajapvm: Option[DateTime])(implicit user: User): Future[Seq[Oppija]] = {
@@ -46,21 +46,22 @@ trait OppijaFetcher {
     fetchOppijaData(person, true, rajaPvm)
   }
 
-  private def extractPersons(hakemukset: Seq[FullHakemus]): Set[(String, Option[String])] =
+  private def extractPersons(hakemukset: Seq[FullHakemus]): Map[String, Boolean] =
     (for (
       hakemus <- hakemukset
       if hakemus.personOid.isDefined && hakemus.stateValid
-    ) yield (hakemus.personOid.get, hakemus.hetu)).toSet
+    ) yield (hakemus.personOid.get, hakemus.hetu.isDefined)).groupBy(_._1).map {
+      case (personOid, (_, hasHetu) :: rest) if rest.forall(hasHetu == _._2) => (personOid, hasHetu)
+      case (personOid, _) => throw new Exception(s"$personOid has applications with conflicting hetu info")
+    }
 
-  private def enrichWithEnsikertalaisuus(persons: Set[(String, Option[String])],
+  private def enrichWithEnsikertalaisuus(persons: Map[String, Boolean],
                                          rekisteriData: Future[Seq[Oppija]],
                                          ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Seq[Oppija]] = {
-    val hetuMap = persons.groupBy(_._1).mapValues(_.headOption.flatMap(_._2))
-
     rekisteriData.flatMap(o => Future.sequence(o.map(oppija => for (
       ensikertalaisuus <- fetchEnsikertalaisuus(
         oppija.oppijanumero,
-        hetuMap.getOrElse(oppija.oppijanumero, None).isDefined,
+        persons.getOrElse(oppija.oppijanumero, false),
         oppija.suoritukset.map(_.suoritus),
         oppija.opiskeluoikeudet,
         ensikertalaisuudenRajapvm
