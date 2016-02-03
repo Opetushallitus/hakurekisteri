@@ -22,7 +22,6 @@ trait OppijaFetcher {
   val hakemusRekisteri: ActorRef
   val ensikertalaisuus: ActorRef
 
-  val megaQueryTreshold = 10000
   val singleSplitQuerySize = 5000
 
   protected implicit def executor: ExecutionContext
@@ -34,18 +33,9 @@ trait OppijaFetcher {
       oppijat <- fetchOppijatFor(hakemukset, ensikertalaisuudenRajapvm)
     ) yield oppijat
 
-  private def isMegaQuery(persons: Set[(String, Option[String])]): Boolean = persons.size > megaQueryTreshold
-
   def fetchOppijatFor(hakemukset: Seq[FullHakemus], ensikertalaisuudenRajapvm: Option[DateTime] = None)(implicit user: User): Future[Seq[Oppija]] = {
     val persons = extractPersons(hakemukset)
-
-    if (isMegaQuery(persons)) {
-      enrichWithEnsikertalaisuus(persons, getRekisteriData(persons.map(_._1)), ensikertalaisuudenRajapvm)
-    } else {
-      Future.sequence(persons.map {
-        case (personOid, hetu) => fetchOppijaData(personOid, hetu.isDefined, ensikertalaisuudenRajapvm)
-      }.toSeq)
-    }
+    enrichWithEnsikertalaisuus(persons, getRekisteriData(persons.map(_._1)), ensikertalaisuudenRajapvm)
   }
 
   def fetchOppijat(persons: List[String], hetuExists: Boolean, rajapvm: Option[DateTime])(implicit user: User): Future[Seq[Oppija]] = {
