@@ -98,7 +98,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
   post("/", operation(post)) {
     val t0 = Platform.currentTime
     implicit val user = getUser
-    val henkilot = parse(request.body).extract[List[String]]
+    val henkilot = parse(request.body).extract[Set[String]]
     if (henkilot.size > maxOppijatPostSize) throw new IllegalArgumentException("too many person oids")
     if (henkilot.exists(!_.startsWith("1.2.246.562.24."))) throw new IllegalArgumentException("person oid must start with 1.2.246.562.24.")
     val rajapvm = ensikertalaisuudenRajapvm(params.get("ensikertalaisuudenRajapvm"))
@@ -106,7 +106,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
-      private val oppijat = fetchOppijat(henkilot, hetuExists = true, rajapvm)
+      private val oppijat = fetchOppijat(henkilot, rajapvm)
 
       logQuery(henkilot, t0, oppijat)
 

@@ -8,7 +8,6 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
-import fi.vm.sade.hakurekisteri.rest.support.Query
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusHenkilotQuery, Suoritus, VirallinenSuoritus}
 import org.joda.time.{DateTime, LocalDate}
 
@@ -39,7 +38,7 @@ case class SuoritettuKkTutkinto(paivamaara: DateTime) extends MenettamisenPerust
   override val peruste: String = "SuoritettuKkTutkinto"
 }
 
-case class Ensikertalainen(ensikertalainen: Boolean, menettamisenPeruste: Option[MenettamisenPeruste])
+case class Ensikertalainen(henkiloOid: String, ensikertalainen: Boolean, menettamisenPeruste: Option[MenettamisenPeruste])
 
 class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorRef, tarjontaActor: ActorRef, config: Config)
                           (implicit val ec: ExecutionContext) extends Actor with ActorLogging {
@@ -54,13 +53,14 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
 
   override def receive: Receive = {
     case q: EnsikertalainenQuery =>
-      val ensikertalaisuudet = for {
+      val ensikertalaisuudet: Future[Seq[Ensikertalainen]] = for {
         valmistumishetket: Map[String, DateTime] <- valmistumiset(q)
         vastaanottohetket: Map[String, DateTime] <- vastaanotot(q)(valmistumishetket.keySet)
       } yield for (
         henkilo <- q.henkiloOids.toSeq
       ) yield ensikertalaisuus(
-        q.paivamaara.getOrElse(LocalDate.now().toDateTimeAtStartOfDay),
+        henkilo,
+        q.paivamaara.getOrElse(DateTime.now()),
         valmistumishetket.get(henkilo),
         vastaanottohetket.get(henkilo)
       )
@@ -118,15 +118,16 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
     (valintarekisterActor ? ValintarekisteriQuery(henkiloOids, syksy2014)).mapTo[Seq[EnsimmainenVastaanotto]]
   }
 
-  def ensikertalaisuus(leikkuripaiva: DateTime,
+  def ensikertalaisuus(henkilo: String,
+                       leikkuripaiva: DateTime,
                        valmistuminen: Option[DateTime],
                        vastaanotto: Option[DateTime]): Ensikertalainen = (valmistuminen, vastaanotto) match {
     case (Some(tutkintopaiva), _) if tutkintopaiva.isBefore(leikkuripaiva) =>
-      Ensikertalainen(ensikertalainen = false, Some(SuoritettuKkTutkinto(tutkintopaiva)))
+      Ensikertalainen(henkilo, ensikertalainen = false, Some(SuoritettuKkTutkinto(tutkintopaiva)))
     case (_, Some(vastaanottopaiva)) if vastaanottopaiva.isBefore(leikkuripaiva) =>
-      Ensikertalainen(ensikertalainen = false, Some(KkVastaanotto(vastaanottopaiva)))
+      Ensikertalainen(henkilo, ensikertalainen = false, Some(KkVastaanotto(vastaanottopaiva)))
     case _ =>
-      Ensikertalainen(ensikertalainen = true, None)
+      Ensikertalainen(henkilo, ensikertalainen = true, None)
   }
 
 }

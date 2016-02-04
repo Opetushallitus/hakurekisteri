@@ -59,7 +59,7 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
   }
 
   test("OppijaResource should return 10001 oppijas with ensikertalainen false") {
-    waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None)))(oppijat => {
+    waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None), None))(oppijat => {
       val expectedSize: Int = 10001
       oppijat.length should be(expectedSize)
       oppijat.foreach(o => o.ensikertalainen should be(Some(true)))
@@ -86,13 +86,13 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
     valintarekisteri.underlyingActor.requestCount = 0
     get("/?haku=1.2.246.562.6.00000000001") {
       get("/?haku=1.2.246.562.6.00000000001") {
-        val expectedSize: Int = 20002
-        valintarekisteri.underlyingActor.requestCount should be(expectedSize)
+        val expectedCount: Int = 2
+        valintarekisteri.underlyingActor.requestCount should be (expectedCount)
       }
     }
   }
 
-  test("OppijaResource should not tell ensikertalaisuus for oppija without hetu when EnsikertalaisuusActor returns true") {
+  test("OppijaResource should tell ensikertalaisuus true also for oppija without hetu") {
     waitFuture(resource.fetchOppijatFor(Seq(FullHakemus(
       oid = "1.2.246.562.11.00000000001",
       personOid = Some("1.2.246.562.24.00000000002"),
@@ -100,8 +100,8 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
       answers = Some(HakemusAnswers(Some(HakemusHenkilotiedot()))),
       state = Some("INCOMPLETE"),
       preferenceEligibilities = Seq()
-    ))))((s: Seq[Oppija]) => {
-      s.head.ensikertalainen should be(None)
+    )), None))((s: Seq[Oppija]) => {
+      s.head.ensikertalainen should be(Some(true))
     })
   }
 

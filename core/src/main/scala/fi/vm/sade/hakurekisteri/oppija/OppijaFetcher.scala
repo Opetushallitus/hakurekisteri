@@ -27,49 +27,34 @@ trait OppijaFetcher {
   protected implicit def executor: ExecutionContext
   implicit val defaultTimeout: Timeout
 
-  def fetchOppijat(q: HakemusQuery, ensikertalaisuudenRajapvm: Option[DateTime] = None)(implicit user: User): Future[Seq[Oppija]] =
+  def fetchOppijat(q: HakemusQuery, ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Seq[Oppija]] =
     for (
       hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
       oppijat <- fetchOppijatFor(hakemukset, ensikertalaisuudenRajapvm)
     ) yield oppijat
 
-  def fetchOppijatFor(hakemukset: Seq[FullHakemus], ensikertalaisuudenRajapvm: Option[DateTime] = None)(implicit user: User): Future[Seq[Oppija]] = {
+  def fetchOppijatFor(hakemukset: Seq[FullHakemus], ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Seq[Oppija]] = {
     val persons = extractPersons(hakemukset)
-    enrichWithEnsikertalaisuus(persons, getRekisteriData(persons.keySet), ensikertalaisuudenRajapvm)
+    fetchOppijat(persons, ensikertalaisuudenRajapvm)
   }
 
-  def fetchOppijat(persons: List[String], hetuExists: Boolean, rajapvm: Option[DateTime])(implicit user: User): Future[Seq[Oppija]] = {
-    Future.sequence(persons.map(personOid => fetchOppijaData(personOid, hetuExists, rajapvm)).toSeq)
+  def fetchOppijat(persons: Set[String], ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Seq[Oppija]] = {
+    enrichWithEnsikertalaisuus(getRekisteriData(persons), ensikertalaisuudenRajapvm)
   }
 
-  def fetchOppija(person: String, rajaPvm: Option[DateTime])(implicit user: User): Future[Oppija] ={
-    fetchOppijaData(person, true, rajaPvm)
+  def fetchOppija(person: String, ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Oppija] = {
+    fetchOppijat(Set(person), ensikertalaisuudenRajapvm).map(_.head)
   }
 
-  private def extractPersons(hakemukset: Seq[FullHakemus]): Map[String, Boolean] =
+  private def extractPersons(hakemukset: Seq[FullHakemus]): Set[String] =
     (for (
       hakemus <- hakemukset
       if hakemus.personOid.isDefined && hakemus.stateValid
-    ) yield (hakemus.personOid.get, hakemus.hetu.isDefined)).groupBy(_._1).map {
-      case (personOid, (_, hasHetu) :: rest) if rest.forall(hasHetu == _._2) => (personOid, hasHetu)
-      case (personOid, _) => throw new Exception(s"$personOid has applications with conflicting hetu info")
-    }
+    ) yield hakemus.personOid.get).toSet
 
-  private def enrichWithEnsikertalaisuus(persons: Map[String, Boolean],
-                                         rekisteriData: Future[Seq[Oppija]],
+  private def enrichWithEnsikertalaisuus(rekisteriData: Future[Seq[Oppija]],
                                          ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Seq[Oppija]] = {
-    rekisteriData.flatMap(o => Future.sequence(o.map(oppija => for (
-      ensikertalaisuus <- fetchEnsikertalaisuus(
-        oppija.oppijanumero,
-        persons.getOrElse(oppija.oppijanumero, false),
-        oppija.suoritukset.map(_.suoritus),
-        oppija.opiskeluoikeudet,
-        ensikertalaisuudenRajapvm
-      )
-    ) yield oppija.copy(
-        ensikertalainen = ensikertalaisuus.map(_.ensikertalainen)
-      )
-    )))
+    rekisteriData.flatMap(fetchEnsikertalaisuudet(ensikertalaisuudenRajapvm))
   }
 
   private def getRekisteriData(personOids: Set[String])(implicit user: User): Future[Seq[Oppija]] = {
@@ -102,49 +87,25 @@ trait OppijaFetcher {
     ) yield Todistus(suoritus, arvosanat)
   )
 
-  private def fetchOppijaData(henkiloOid: String, hetuExists: Boolean, ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Oppija] =
+  private def fetchEnsikertalaisuudet(ensikertalaisuudenRajapvm: Option[DateTime])
+                                     (rekisteriData: Seq[Oppija]): Future[Seq[Oppija]] = {
     for (
-      suoritukset <- fetchSuoritukset(henkiloOid);
-      todistukset <- fetchTodistukset(suoritukset);
-      opiskelu <- fetchOpiskelu(henkiloOid);
-      opiskeluoikeudet <- fetchOpiskeluoikeudet(henkiloOid);
-      ensikertalainen <- fetchEnsikertalaisuus(henkiloOid, hetuExists, suoritukset, opiskeluoikeudet, ensikertalaisuudenRajapvm)
-    ) yield Oppija(
-      oppijanumero = henkiloOid,
-      opiskelu = opiskelu,
-      suoritukset = todistukset,
-      opiskeluoikeudet = opiskeluoikeudet,
-      ensikertalainen = ensikertalainen.map(_.ensikertalainen)
-    )
-
-  private def fetchEnsikertalaisuus(henkiloOid: String,
-                                    hetuExists: Boolean,
-                                    suoritukset: Seq[Suoritus],
-                                    opiskeluoikeudet: Seq[Opiskeluoikeus],
-                                    ensikertalaisuudenRajapvm: Option[DateTime]): Future[Option[Ensikertalainen]] = {
-    val ensikertalainen: Future[Ensikertalainen] =
-      (ensikertalaisuus ? EnsikertalainenQuery(Set(henkiloOid), Some(suoritukset), Some(opiskeluoikeudet), ensikertalaisuudenRajapvm)).mapTo[Seq[Ensikertalainen]].map(_.head)
-    if (hetuExists) {
-      ensikertalainen.map(Some(_))
-    } else {
-      ensikertalainen.map(e => if (e.ensikertalainen) None else Some(e))
-    }
+      ensikertalaisuudet <- (ensikertalaisuus ? EnsikertalainenQuery(
+        rekisteriData.map(_.oppijanumero).toSet,
+        Some(rekisteriData.flatMap(_.suoritukset.map(_.suoritus))),
+        Some(rekisteriData.flatMap(_.opiskeluoikeudet)),
+        ensikertalaisuudenRajapvm
+      )).mapTo[Seq[Ensikertalainen]].map(_.groupBy(_.henkiloOid).mapValues(_.head))
+    ) yield for (
+      oppija <- rekisteriData
+    ) yield oppija.copy(ensikertalainen = ensikertalaisuudet.get(oppija.oppijanumero).map(_.ensikertalainen))
   }
-
-  private def fetchOpiskeluoikeudet(henkiloOid: String)(implicit user: User): Future[Seq[Opiskeluoikeus]] =
-    (rekisterit.opiskeluoikeusRekisteri ? AuthorizedQuery(OpiskeluoikeusQuery(henkilo = Some(henkiloOid)), user)).mapTo[Seq[Opiskeluoikeus]]
 
   private def fetchOpiskeluoikeudet(henkilot: Set[String])(implicit user: User): Future[Seq[Opiskeluoikeus]] =
     splittedQuery[Opiskeluoikeus, Opiskeluoikeus](henkilot, rekisterit.opiskeluoikeusRekisteri, (henkilot) => OpiskeluoikeusHenkilotQuery(henkilot))
 
-  private def fetchOpiskelu(henkiloOid: String)(implicit user: User): Future[Seq[Opiskelija]] =
-    (rekisterit.opiskelijaRekisteri ? AuthorizedQuery(OpiskelijaQuery(henkilo = Some(henkiloOid)), user)).mapTo[Seq[Opiskelija]]
-
   private def fetchOpiskelu(henkilot: Set[String])(implicit user: User): Future[Seq[Opiskelija]] =
     splittedQuery[Opiskelija, Opiskelija](henkilot, rekisterit.opiskelijaRekisteri, (henkilot) => OpiskelijaHenkilotQuery(henkilot))
-
-  private def fetchSuoritukset(henkiloOid: String)(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] =
-    (rekisterit.suoritusRekisteri ? AuthorizedQuery(SuoritusQuery(henkilo = Some(henkiloOid)), user)).mapTo[Seq[Suoritus with Identified[UUID]]]
 
   private def fetchSuoritukset(henkilot: Set[String])(implicit user: User): Future[Seq[Suoritus with Identified[UUID]]] =
     splittedQuery[Suoritus with Identified[UUID], Suoritus](henkilot, rekisterit.suoritusRekisteri, (henkilot) => SuoritusHenkilotQuery(henkilot))
