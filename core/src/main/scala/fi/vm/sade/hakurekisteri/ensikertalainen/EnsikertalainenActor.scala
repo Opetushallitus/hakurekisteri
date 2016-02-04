@@ -41,8 +41,6 @@ case class SuoritettuKkTutkinto(paivamaara: DateTime) extends MenettamisenPerust
 
 case class Ensikertalainen(ensikertalainen: Boolean, menettamisenPeruste: Option[MenettamisenPeruste])
 
-case class HetuNotFoundException(message: String) extends Exception(message)
-
 class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorRef, tarjontaActor: ActorRef, config: Config)
                           (implicit val ec: ExecutionContext) extends Actor with ActorLogging {
 
@@ -56,34 +54,41 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
 
   override def receive: Receive = {
     case q: EnsikertalainenQuery =>
-      val kaikkienKkSuoritukset = q.suoritukset.map(Future.successful).getOrElse(suoritukset(q.henkiloOids)).flatMap(kkSuoritukset).map(_.groupBy(_.henkiloOid))
-
-      val ensimmaisetValmistumiset: Future[Map[String, Option[DateTime]]] = kaikkienKkSuoritukset.map(_.mapValues(aikaisinValmistuminen))
-
-      val ensimmaisetVastaanotot: Future[Seq[EnsimmainenVastaanotto]] = ensimmaisetValmistumiset.map(e => {
-        q.henkiloOids.diff(e.collect{
-          case (oid, Some(_)) => oid
-        }.toSet)
-      }).flatMap {
-        case s: Set[String] if s.isEmpty => Future.successful(Seq())
-        case kysyttavat => getKkVastaanotonHetket(kysyttavat)
-      }
-
-      val result: Future[Set[Ensikertalainen]] = for (
-        valmistumishetket: Map[String, Option[DateTime]] <- ensimmaisetValmistumiset;
-        vastaanottohetket: Map[String, Option[DateTime]] <- ensimmaisetVastaanotot.map(_.map(v => (v.oid, v.paattyi)).toMap)
-      ) yield for (
-        henkilo <- q.henkiloOids
-      ) yield ensikertalaisuus(q.paivamaara.getOrElse(LocalDate.now().toDateTimeAtStartOfDay), (valmistumishetket.getOrElse(henkilo, None), vastaanottohetket.getOrElse(henkilo, None)))
-
-      result.map(_.toSeq) pipeTo sender
+      val ensikertalaisuudet = for {
+        valmistumishetket: Map[String, DateTime] <- valmistumiset(q)
+        vastaanottohetket: Map[String, DateTime] <- vastaanotot(q)(valmistumishetket.keySet)
+      } yield for (
+        henkilo <- q.henkiloOids.toSeq
+      ) yield ensikertalaisuus(
+        q.paivamaara.getOrElse(LocalDate.now().toDateTimeAtStartOfDay),
+        valmistumishetket.get(henkilo),
+        vastaanottohetket.get(henkilo)
+      )
+      ensikertalaisuudet pipeTo sender
     case QueryCount =>
       sender ! QueriesRunning(Map[String, Int]())
   }
 
-  private def suoritukset(henkiloOids: Set[String]): Future[Seq[Suoritus]] = {
+  private def vastaanotot(q: EnsikertalainenQuery)(valmistuneet: Set[String]): Future[Map[String, DateTime]] =
+    (q.henkiloOids.diff(valmistuneet) match {
+      case kysyttavat if kysyttavat.isEmpty => Future.successful(Seq[EnsimmainenVastaanotto]())
+      case kysyttavat => getKkVastaanotonHetket(kysyttavat)
+    }).map(_.collect {
+      case EnsimmainenVastaanotto(oid, Some(date)) => (oid, date)
+    }.toMap)
+
+  private def valmistumiset(q: EnsikertalainenQuery): Future[Map[String, DateTime]] = q.suoritukset
+    .map(Future.successful)
+    .getOrElse(suoritukset(q.henkiloOids))
+    .flatMap(kkSuoritukset)
+    .map(_.groupBy(_.henkiloOid))
+    .map(_.mapValues(aikaisinValmistuminen))
+    .map(_.collect {
+      case (key, Some(date)) => (key, date)
+    })
+
+  private def suoritukset(henkiloOids: Set[String]): Future[Seq[Suoritus]] =
     (suoritusActor ? SuoritusHenkilotQuery(henkilot = henkiloOids)).mapTo[Seq[Suoritus]]
-  }
 
   private def isKkTutkinto(suoritus: Suoritus): Future[Option[Suoritus]] = suoritus match {
     case s: VirallinenSuoritus => s.komo match {
@@ -99,11 +104,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
     case _ => Future.successful(None)
   }
 
-  private def kkSuoritukset(suoritukset: Seq[Suoritus]): Future[Seq[Suoritus]] = {
-    Future.sequence(suoritukset.map(isKkTutkinto)).map(_.collect {
-      case Some(s) => s
-    })
-  }
+  private def kkSuoritukset(suoritukset: Seq[Suoritus]): Future[Seq[Suoritus]] =
+    Future.sequence(suoritukset.map(isKkTutkinto)).map(_.flatten)
 
   private def aikaisinValmistuminen(suoritukset: Seq[Suoritus]): Option[DateTime] = {
     val valmistumishetket = suoritukset.collect {
@@ -116,25 +118,15 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
     (valintarekisterActor ? ValintarekisteriQuery(henkiloOids, syksy2014)).mapTo[Seq[EnsimmainenVastaanotto]]
   }
 
-  def ensikertalaisuus(leikkuripaiva: DateTime, t: (Option[DateTime], Option[DateTime])): Ensikertalainen = t match {
+  def ensikertalaisuus(leikkuripaiva: DateTime,
+                       valmistuminen: Option[DateTime],
+                       vastaanotto: Option[DateTime]): Ensikertalainen = (valmistuminen, vastaanotto) match {
     case (Some(tutkintopaiva), _) if tutkintopaiva.isBefore(leikkuripaiva) =>
       Ensikertalainen(ensikertalainen = false, Some(SuoritettuKkTutkinto(tutkintopaiva)))
     case (_, Some(vastaanottopaiva)) if vastaanottopaiva.isBefore(leikkuripaiva) =>
       Ensikertalainen(ensikertalainen = false, Some(KkVastaanotto(vastaanottopaiva)))
     case _ =>
       Ensikertalainen(ensikertalainen = true, None)
-  }
-
-  class FetchResource[T, R](query: Query[T], wrapper: (Seq[T]) => R, receiver: ActorRef, resourceActor: ActorRef) extends Actor {
-    override def preStart(): Unit = {
-      resourceActor ! query
-    }
-
-    override def receive: Actor.Receive = {
-      case s: Seq[T] =>
-        receiver ! wrapper(s)
-        context.stop(self)
-    }
   }
 
 }
