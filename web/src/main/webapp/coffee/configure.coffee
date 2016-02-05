@@ -69,10 +69,6 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
       "/opiskelijat"
   $locationProvider.html5Mode false
 
-  $httpProvider.interceptors.push 'callerIdInterceptor'
-
-  return
-
 app.run ($cacheFactory, $http, $log, MessageService) ->
   if (window.mocksOn)
     $http.defaults.cache = $cacheFactory("test")
@@ -86,7 +82,3 @@ app.run ($cacheFactory, $http, $log, MessageService) ->
       message: "Henkilöpalveluun ei juuri nyt saada yhteyttä."
       descriptionKey: "suoritusrekisteri.opiskelijat.henkiloyrita"
       description: "Yritä hetken kuluttua uudelleen."
-
-    return
-
-  return

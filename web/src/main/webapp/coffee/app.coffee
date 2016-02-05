@@ -127,13 +127,11 @@ app.factory "MessageService", ->
       return
   )
 
-app.factory "callerIdInterceptor", ->
-  return {
-    request: (config) ->
-      config.headers["Caller-Id"] = "suoritusrekisteri.suoritusrekisteri.frontend"
-      return config
-  }
-
+app.run ["$http","$cookies", ($http, $cookies) ->
+  $http.defaults.headers.common['clientSubSystemCode'] = "suoritusrekisteri.suoritusrekisteri.frontend";
+  if $cookies.get('CSRF')
+    $http.defaults.headers.common['CSRF'] = $cookies.get('CSRF');
+]
 app.filter "hilight", ->
   (input, query) ->
     input.replace new RegExp("(" + query + ")", "gi"), "<strong>$1</strong>"
