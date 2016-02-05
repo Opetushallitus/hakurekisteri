@@ -56,7 +56,6 @@ ldap.cache.size=10000
 ldap.data.dir=${user.home}/data
 ldap.filter.people=uid\=%u
 ldap.index.cache.size=10000
-ldap.manager.userdn=cn=admin,ou=People,dc=opintopolku,dc=fi
 ldap.manager-dn=${ldap.manager.userdn}
 ldap.search.base.people=ou=People,dc=opintopolku,dc=fi
 ldap.url=ldap://${host.ldap}
