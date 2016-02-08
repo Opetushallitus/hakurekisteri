@@ -158,6 +158,6 @@ trait OpiskelijaService extends InMemQueryingResourceService[Opiskelija, UUID] w
 
 }
 
-class OpiskelijaActor(val journal:Journal[Opiskelija, UUID] = new InMemJournal[Opiskelija, UUID]) extends ResourceActor[Opiskelija, UUID] with OpiskelijaRepository with OpiskelijaService {
+class OpiskelijaActor(val journal:Journal[Opiskelija, UUID] = new InMemJournal[Opiskelija, UUID]) extends ResourceActor[Opiskelija, UUID] with OpiskelijaService {
   override val logger = Logging(context.system, this)
 }
