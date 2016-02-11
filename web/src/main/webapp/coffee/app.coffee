@@ -12,8 +12,10 @@ app = angular.module "myApp", [
 if (window.mocksOn)
   angular.module('myApp').requires.push('e2e-mocks')
 
+urls = window.urls({encode: false})
+  
 app.factory "Opiskelijat", ($resource) ->
-  $resource "rest/v1/opiskelijat/:opiskelijaId", { opiskelijaId: "@id" }, {
+  $resource urls.url("suoritusrekisteri-web.opiskelija", ":opiskelijaId"), { opiskelijaId: "@id" }, {
       query:
         method: "GET"
         isArray: true
@@ -31,7 +33,7 @@ app.factory "Opiskelijat", ($resource) ->
 
 
 app.factory "Suoritukset", ($resource) ->
-  $resource "rest/v1/suoritukset/:suoritusId", { suoritusId: "@id" }, {
+  $resource urls.url("suoritusrekisteri-web.suoritus",":suoritusId"), { suoritusId: "@id" }, {
     query:
       method: "GET"
       isArray: true
@@ -47,7 +49,7 @@ app.factory "Suoritukset", ($resource) ->
 
 
 app.factory "Opiskeluoikeudet", ($resource) ->
-  $resource "rest/v1/opiskeluoikeudet/:opiskeluoikeusId", { opiskeluoikeusId: "@id" }, {
+  $resource urls.url("suoritusrekisteri-web.opiskeluoikeus",":opiskeluoikeusId"), { opiskeluoikeusId: "@id" }, {
     query:
       method: "GET"
       isArray: true
@@ -64,7 +66,7 @@ app.factory "Opiskeluoikeudet", ($resource) ->
   }
 
 app.factory "Arvosanat", ($resource) ->
-  $resource "rest/v1/arvosanat/:arvosanaId", { arvosanaId: "@id" }, {
+  $resource urls.url("suoritusrekisteri-web.arvosana",":arvosanaId"), { arvosanaId: "@id" }, {
     query:
       method: "GET"
       isArray: true
@@ -81,7 +83,7 @@ app.factory "Arvosanat", ($resource) ->
   }
 
 app.factory "RekisteriTiedot", ($resource) ->
-  $resource "rest/v1/rekisteritiedot/light:opiskelijaId", { opiskelijaId: "@id" }, {
+  $resource urls.url("suoritusrekisteri-web.rekisteritieto"), { }, {
     query:
       method: "GET"
       isArray: true
@@ -128,7 +130,7 @@ app.factory "MessageService", ->
   )
 
 app.run ["$http","$cookies", ($http, $cookies) ->
-  $http.defaults.headers.common['clientSubSystemCode'] = "suoritusrekisteri.suoritusrekisteri.frontend";
+  $http.defaults.headers.common['clientSubSystemCode'] = "suoritusrekisteri.suoritusrekisteri-web.frontend";
   if $cookies['CSRF']
     $http.defaults.headers.common['CSRF'] = $cookies['CSRF']
 ]

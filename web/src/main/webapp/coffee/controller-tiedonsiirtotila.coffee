@@ -27,7 +27,7 @@ app.controller "TiedonsiirtotilaCtrl", [
     stopLoading = -> $scope.loading = false
 
     enrichBatch = (b, d) ->
-      $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(b.source), { cache: true, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->
+      $http.get(window.url("authentication-service.henkilo", b.source), { cache: true, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->
         b.lahettaja = henkilo.etunimet + ' ' + henkilo.sukunimi
         d.resolve()
       ).error(->
@@ -75,7 +75,7 @@ app.controller "TiedonsiirtotilaCtrl", [
     getBatches = ->
       startLoading()
       $scope.chart.destroy()  if $scope.chart and typeof $scope.chart.destroy is 'function'
-      $http.get("rest/v1/siirto/perustiedot/withoutdata", { cache: false }).success (batches) ->
+      $http.get(window.url("suoritusrekisteri-web.siirtoPerustiedot"), { cache: false }).success (batches) ->
         if batches
           batches.sort (a, b) ->
             if a.status and b.status
@@ -142,7 +142,7 @@ app.controller "TiedonsiirtotilaCtrl", [
 
     $scope.reprocess = (id) ->
       startLoading()
-      $http.post('rest/v1/siirto/perustiedot/reprocess/' + encodeURIComponent(id)).success(-> getBatches()).error(->
+      $http.post(window.url("suoritusrekisteri-web.siirtoReprocess", id)).success(-> getBatches()).error(->
         MessageService.addMessage
           type: "danger"
           message: "Tiedonsiirron tilan muuttaminen ei onnistunut. Yritä uudelleen hetken kuluttua."

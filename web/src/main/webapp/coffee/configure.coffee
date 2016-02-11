@@ -26,7 +26,7 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
       aste: ->
         "toinenaste"
       haut: ($http, MessageService) ->
-        $http.get("rest/v1/haut", { cache: true }).then(((response) -> response.data), ->
+        $http.get(window.url("suoritusrekisteri-web.haut"), { cache: true }).then(((response) -> response.data), ->
           MessageService.addMessage
             type: "danger"
             message: "Tietojen lataaminen näytölle epäonnistui."
@@ -34,7 +34,7 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
           []
         )
       hakukohdekoodit: ($http, MessageService) ->
-        $http.get(koodistoServiceUrl + "/rest/json/hakukohteet/koodi", { cache: true }).then(((response) -> response.data), ->
+        $http.get(window.url("skoodisto-service.koodisByKoodisto","hakukohteet"), { cache: true }).then(((response) -> response.data), ->
           MessageService.addMessage
             type: "danger"
             message: "Tietojen lataaminen näytölle epäonnistui."
@@ -54,7 +54,7 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
       aste: ->
         "kk"
       haut: ($http, MessageService) ->
-        $http.get("rest/v1/haut", { cache: true }).then(((response) -> response.data), ->
+        $http.get(window.url("suoritusrekisteri-web.haut"), { cache: true }).then(((response) -> response.data), ->
           MessageService.addMessage
             type: "danger"
             message: "Tietojen lataaminen näytölle epäonnistui."
@@ -73,7 +73,7 @@ app.run ($cacheFactory, $http, $log, MessageService) ->
   if (window.mocksOn)
     $http.defaults.cache = $cacheFactory("test")
     window.testCache = $http.defaults.cache
-  $http.get(henkiloServiceUrl + "/buildversion.txt?auth").success(->
+  $http.get(window.url("authentication-service.buildversion")).success(->
     return
   ).error ->
     MessageService.addMessage

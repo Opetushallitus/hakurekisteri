@@ -7,7 +7,7 @@ function koodistoFixtures() {
     httpBackend.when('GET', /.*koodisto-service\/rest\/json\/arvosanat\/koodi$/).passThrough()
     httpBackend.when('GET', /.*koodisto-service\/rest\/json\/kielivalikoima\/koodi$/).passThrough()
     httpBackend.when('GET', /.*koodisto-service\/rest\/json\/aidinkielijakirjallisuus\/koodi$/).passThrough()
-    httpBackend.when('GET', /.*koodisto-service\/rest\/json\/oppiaineetyleissivistava\/koodi\/$/).passThrough()
+    httpBackend.when('GET', /.*koodisto-service\/rest\/json\/oppiaineetyleissivistava\/koodi$/).passThrough()
     httpBackend.when('GET', /.*koodisto-service\/rest\/json\/relaatio\/sisaltyy-alakoodit\/oppiaineetyleissivistava_a1$/).passThrough()
     httpBackend.when('GET', /.*koodisto-service\/rest\/json\/relaatio\/sisaltyy-alakoodit\/oppiaineetyleissivistava_a12$/).passThrough()
     httpBackend.when('GET', /.*koodisto-service\/rest\/json\/relaatio\/sisaltyy-alakoodit\/oppiaineetyleissivistava_a2$/).passThrough()

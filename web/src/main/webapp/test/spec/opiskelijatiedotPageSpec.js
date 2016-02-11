@@ -763,7 +763,7 @@
                     ))
                     it("Lisää korotus tallentaa arvosanan", seqDone(
                         function() {
-                            testDslDebug = true
+                            testDslDebug = false
                         },
                         aarnenPeruskouluDatat,
                         input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
@@ -791,7 +791,7 @@
                     ))
                     it("Korotuksen päivämäärä pitää olla valmistumispäivän jälkeen", seqDone(
                         function() {
-                            testDslDebug = true
+                            testDslDebug = false
                         },
                         aarnenPeruskouluDatat,
                         input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),

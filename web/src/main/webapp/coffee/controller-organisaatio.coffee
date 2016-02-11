@@ -9,7 +9,7 @@ app.controller "OrganisaatioCtrl", [
     getKoodistoAsOptionArray $http, "organisaatiotyyppi", "fi", $scope.organisaatiotyypit, "nimi"
     getKoodistoAsOptionArray $http, "oppilaitostyyppi", "fi", $scope.oppilaitostyypit
     $scope.myOrganisaatioOids = ["1.2.246.562.10.00000000001"]
-    $http.get(getBaseUrl() + "/cas/myroles",
+    $http.get(window.url("cas.myroles"),
       cache: true
     ).success (roles) ->
       oidPattern = /[0-9.]+/
@@ -30,7 +30,7 @@ app.controller "OrganisaatioCtrl", [
 
     $scope.hae = ->
       $scope.loading = true
-      $http.get(organisaatioServiceUrl + "/rest/organisaatio/hae",
+      $http.get(window.url("organisaatio-service.hae"),
         params:
           searchstr: $scope.hakuehto
           organisaatiotyyppi: $scope.organisaatiotyyppi

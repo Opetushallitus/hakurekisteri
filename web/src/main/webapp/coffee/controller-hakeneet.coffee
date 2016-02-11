@@ -249,7 +249,7 @@ app.controller "HakeneetCtrl", [
     $scope.hakukohdekoodit = []
     loadHakukohdekoodit hakukohdekoodit, $scope
     $scope.searchHakukohde = ->
-      $http.get(tarjontaServiceUrl + "/rest/v1/hakukohde/search",
+      $http.get(window.url("tarjonta-service.hakukohde"),
         params:
           searchTerms: $scope.hakukohdenimi
           hakuOid: (if $scope.haku then $scope.haku.oid else null)
@@ -284,7 +284,7 @@ app.controller "HakeneetCtrl", [
 
     $scope.searchHenkilo = ->
       if $scope.oppijanumero and $scope.oppijanumero.trim().match(/[0-9.]{11,30}/)
-        $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent($scope.oppijanumero.trim()),
+        $http.get(window.url("authentication-service.henkilo", $scope.oppijanumero.trim()),
           cache: true,
           headers: { 'External-Permission-Service': 'SURE' }
         ).then (res) ->

@@ -8,13 +8,13 @@ app.controller "TiedonsiirtoCtrl", [
     supportsFileApi = window.FileReader?
 
     fetchEnabledState = (type) ->
-      url =
+      apiVersion =
         if type is "perustiedot"
-          "rest/v2/siirto/" + type + "/isopen"
+          "v2"
         else
-          "rest/v1/siirto/" + type + "/isopen"
+          "v1"
 
-      $http.get(url, {cache: true})
+      $http.get(window.url("suoritusrekisteri-web.siirtoIsOpen", apiVersion, type), {cache: true})
         .success (data) ->
           $scope[type + "Enabled"] = data.open
         .error ->
@@ -27,7 +27,7 @@ app.controller "TiedonsiirtoCtrl", [
     $scope.isSendingDisabled = () ->
       !$scope.tyyppi
 
-    $http.get(koodistoServiceUrl + "/rest/json/oppiaineetyleissivistava/koodi/", {cache: true}).success (koodit) ->
+    $http.get(window.url("koodisto-service.koodisByKoodisto","oppiaineetyleissivistava"), {cache: true}).success (koodit) ->
       translateWithMetadata = (koodi, metadatas) -> (lang) ->
         translations = R.fromPairs(R.map((metadata) -> [metadata.kieli.toLowerCase(), metadata.nimi])(metadatas))
         translations[lang] || translations["fi"] || koodi

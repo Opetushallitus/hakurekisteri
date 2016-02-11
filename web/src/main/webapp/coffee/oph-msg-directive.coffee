@@ -27,7 +27,7 @@ app.factory "LokalisointiService", [
 
         $.ajax
           type: (if oldTranslation then "PUT" else "POST")
-          url: localisationBackend + ((if oldTranslation then "/" + oldTranslation.id else ""))
+          url: (if oldTranslation then window.url("lokalisointi.update", oldTranslation.id) else window.url("lokalisointi.add"))
           data: JSON.stringify(data)
           contentType: "application/json; charset=UTF-8"
           dataType: "json"
@@ -41,17 +41,16 @@ app.factory "LokalisointiService", [
 
     backendUrl = getBaseUrl()
     localisationBackend = backendUrl + "/lokalisointi/cxf/rest/v1/localisation"
-    msgResource = localisationBackend + "?category=" + msgCategory
     localisationMyroles = []
     translations = inited: false
 
     service =
       lang: "fi"
     service.loadMessages = (callback) ->
-      $http.get(msgResource,
+      $http.get(window.url("lokalisointi.category", msgCategory),
         cache: true
       ).success (data) ->
-        $http.get(backendUrl + "/cas/myroles",
+        $http.get(window.url("cas.myroles"),
           cache: true
         ).success (myroles) ->
           unless translations.inited

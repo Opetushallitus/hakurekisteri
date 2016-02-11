@@ -106,14 +106,14 @@ app.factory "MuokkaaTiedot", [
         ]
 
       getMyRoles = ->
-        $http.get("/cas/myroles", { cache: true }).success((data) ->
+        $http.get(window.url("cas.myroles"), { cache: true }).success((data) ->
           $scope.myRoles = angular.fromJson(data)
         ).error ->
           $log.error "cannot connect CAS"
 
       fetchKomos = ->
         komosLoaded = $q.defer()
-        $http.get("rest/v1/komo", { cache: true }).success((data) ->
+        $http.get(window.url("suoritusrekisteri-web.komo"), { cache: true }).success((data) ->
           $scope.ylioppilastutkintolautakunta = data.ylioppilastutkintolautakunta
           komosLoaded.resolve
             ulkomainen: data.ulkomainenkorvaavaKomoOid
@@ -135,7 +135,7 @@ app.factory "MuokkaaTiedot", [
 
 
       fetchHenkilotiedot = ->
-        $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->
+        $http.get(window.url("authentication-service.henkilo", henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->
           jQuery.extend($scope.henkilo, henkilo)  if henkilo
           return
         ).error ->
@@ -192,7 +192,7 @@ app.factory "MuokkaaTiedot", [
         return
 
       $scope.isOPH = () -> false
-      $http.get("/cas/myroles", {cache: true}).success((data) ->
+      $http.get(window.url("cas.myroles"), {cache: true}).success((data) ->
         $scope.myRoles = angular.fromJson(data)
         if Array.isArray($scope.myRoles)
           $scope.isOPH = () ->

@@ -61,11 +61,18 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
         henkiloOidPattern = new RegExp("^1\\.2\\.246\\.562\\.24\\.")
         trimmedHenkiloSearchTerm = $scope.henkiloTerm.trim().toUpperCase()
         if trimmedHenkiloSearchTerm.match(henkiloOidPattern)
-          henkiloSearchUrl = henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(trimmedHenkiloSearchTerm)
+          henkiloSearchUrl = window.url("authentication-service.henkilo", trimmedHenkiloSearchTerm)
           optimizedHenkiloSearch = true
         else
           optimizedHenkiloSearch = false
-          henkiloSearchUrl = henkiloServiceUrl + "/resources/henkilo?index=0&count=1&no=true&p=false&s=true&q=" + encodeURIComponent(trimmedHenkiloSearchTerm)
+          henkiloSearchUrl = window.url("authentication-service.henkiloSearch", {
+            index: 0,
+            count: 1,
+            no: true,
+            p: false,
+            s: true,
+            q: trimmedHenkiloSearchTerm
+          })
         $http.get(henkiloSearchUrl,
           cache: false,
           headers: { 'External-Permission-Service': 'SURE' }
@@ -135,7 +142,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
           message: "Haussa tapahtui virhe. Yritä uudelleen."
 
     showCurrentRows = (henkiloMap) ->
-      $http.post(henkiloServiceUrl + "/resources/henkilo/henkilotByHenkiloOidList", Object.keys(henkiloMap), { headers: { 'External-Permission-Service': 'SURE' } }
+      $http.post(window.url("authentication-service.henkilotByHenkiloOidList"), Object.keys(henkiloMap), { headers: { 'External-Permission-Service': 'SURE' } }
       ).success((henkiloList, status) ->
         if status != 200 || typeof henkiloList == "string"
           $scope.loading = false
@@ -172,7 +179,7 @@ app.controller "MuokkaaSuorituksetObdCtrl", [
       if (obj and typeof obj.organisaatio is "object") and obj.organisaatio.oppilaitosKoodi is searchStr
         return [{organisaatio: {nimi: {fi: "suomi"}}}]
       if searchStr and searchStr.length >= 3
-        $http.get(organisaatioServiceUrl + "/rest/organisaatio/v2/hae",
+        $http.get(window.url("organisaatio-service.haeV2"),
           params:
             searchStr: searchStr.trim()
             organisaatiotyyppi: "Oppilaitos"

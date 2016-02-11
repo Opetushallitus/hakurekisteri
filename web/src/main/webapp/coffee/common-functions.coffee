@@ -1,13 +1,13 @@
 getBaseUrl = -> ""
 
 getOrganisaatio = ($http, organisaatioOid, successCallback, errorCallback) ->
-  $http.get(organisaatioServiceUrl + "/rest/organisaatio/" + encodeURIComponent(organisaatioOid),
+  $http.get(window.url("organisaatio-service.organisaatio", organisaatioOid),
     cache: true
   ).success(successCallback).error errorCallback
   return
 
 getKoulutusNimi = ($http, koulutusUri, successCallback, errorCallback) ->
-  $http.get(koodistoServiceUrl + "/rest/json/koulutus/koodi/" + encodeURIComponent(koulutusUri),
+  $http.get(window.url("koodisto-service.koodiByUri", "koulutus", koulutusUri),
     cache: true
   ).success((koodi) ->
     if koodi.metadata
@@ -26,7 +26,7 @@ getOphMsg = (key, def) ->
     key
 
 getKoodistoAsOptionArray = ($http, koodisto, kielikoodi, options, valueFromField = "koodiArvo", capitalizeValues = false) ->
-  $http.get(getBaseUrl() + "/koodisto-service/rest/json/" + encodeURIComponent(koodisto) + "/koodi", { cache: true }).then (response) ->
+  $http.get(window.url("koodisto-service.koodisByKoodisto", koodisto), { cache: true }).then (response) ->
     if response.data
       for koodi in response.data
         do (koodi) ->

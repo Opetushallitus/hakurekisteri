@@ -14,7 +14,7 @@ app.controller "EihakeneetCtrl", [
             deferredEnrichment = $q.defer()
             deferredEnrichments.push deferredEnrichment
 
-            $http.get(henkiloServiceUrl + "/resources/henkilo/" + encodeURIComponent(opiskelija.henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->
+            $http.get(window.url("authentication-service.henkilo", opiskelija.henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->
               if henkilo and henkilo.oidHenkilo is opiskelija.henkiloOid
                 opiskelija.sukunimi = henkilo.sukunimi
                 opiskelija.etunimet = henkilo.etunimet
@@ -64,7 +64,7 @@ app.controller "EihakeneetCtrl", [
         opiskelijatConfig.params.kausi = kausi if kausi
         opiskelijatConfig.params.luokka = luokka  if luokka
 
-        $http.get("rest/v1/opiskelijat", opiskelijatConfig)
+        $http.get(window.url("suoritusrekisteri-web.opiskelijat"), opiskelijatConfig)
           .success((opiskelijat) ->
             if opiskelijat
               luokanOpiskelijat = opiskelijat.filter((o) ->
@@ -87,7 +87,7 @@ app.controller "EihakeneetCtrl", [
 
         hakemusConfig.params.sendingClass = luokka  if luokka
 
-        $http.get(hakuAppServiceUrl + "/applications/listshort", hakemusConfig)
+        $http.get(window.url("haku-app.listshort"), hakemusConfig)
           .success((hakemukset) ->
             if hakemukset and hakemukset.results
               luokanHakemukset = hakemukset.results.filter((h) ->

@@ -30,12 +30,12 @@ app.controller "MuokkaaArvosanat", [
 
     updateOppiaineLista = ->
       d = $q.defer()
-      $http.get(koodistoServiceUrl + "/rest/json/oppiaineetyleissivistava/koodi/", {cache: true}).success((koodit) ->
+      $http.get(window.url("koodisto-service.koodisByKoodisto", "oppiaineetyleissivistava"), {cache: true}).success((koodit) ->
         koodiPromises = koodit.map (koodi) ->
           koodi.metadata.sort((a, b) ->
             (if a.kieli < b.kieli then -1 else 1)
           )
-          $http.get(koodistoServiceUrl + "/rest/json/relaatio/sisaltyy-alakoodit/" + koodi.koodiUri,
+          $http.get(window.url("koodisto-service.relaatio", koodi.koodiUri),
             {cache: true}).success((alaKoodit) ->
             koodistoOppiaineLista.push
               koodi: koodi
