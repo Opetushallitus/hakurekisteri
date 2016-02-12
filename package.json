@@ -1,7 +1,8 @@
 {
   "scripts": {
     "build" : "npm install -s && coffee --join web/target/javascript/compiled/scripts.js --compile web/src/main/webapp/coffee/*.coffee",
-    "watch" : "npm install -s && coffee --watch --join  web/target/javascript/compiled/scripts.js --compile web/src/main/webapp/coffee/*.coffee"
+    "watch" : "npm install -s && coffee --watch --join  web/target/javascript/compiled/scripts.js --compile web/src/main/webapp/coffee/*.coffee",
+    "test_url_properties": "mocha web/src/test/oph_urls/test"
   },
   "name": "hakurekisteri",
   "description": "hakurekisteri",

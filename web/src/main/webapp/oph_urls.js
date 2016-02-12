@@ -1,10 +1,16 @@
 "use strict";
 
 /**
- * window.url(key, param1, param2, {key3: value}
+ * window.url("service.info", param1, param2, {key3: value})
+ *
  * window.urls(baseUrl).url(key, param)
  * window.urls(baseUrl, {encode: false}).url(key, param)
  * window.urls({baseUrl: baseUrl, encode: false}).url(key, param)
+ *
+ * Config lookup order: urls_config, window.urls.defaults.override, window.url_properties, window.urls.defaults
+ * Lookup key order:
+ * * for main url window.url's first parameter: "service.info" from all configs
+ * * baseUrl: "service.baseUrl" from all configs and "baseUrl" from all configs
  *
  * window.url_properties = {
  *   "service.status": "/rest/status",
@@ -13,51 +19,72 @@
  *   }
  *
  * window.urls.defaults = {
- *   baseUrl: null,
- *   encode: true
+ *   encode: true,
+ *   override: {}
  * }
  */
-(function(window) {
+
+(function(exportDest) {
     function joinUrl() {
         var args = Array.prototype.slice.call(arguments)
         if(args.length === 0) {
             throw new Error("no arguments");
         }
         var url = null
-        args.forEach(function(i) {
+        args.forEach(function(arg) {
             if(!url) {
-                url = i
-            } else if(url.endsWith("/") || i.startsWith("/")) {
-                url = url + i;
+                url = arg
             } else {
-                url = url + +"/" + i
+                if(url.endsWith("/") || arg.startsWith("/")) {
+                    url = url + arg
+                } else {
+                    url = url + "/" + arg
+                }
             }
         })
         return url
     }
-    window.urls = function() {
-        var baseUrl = window.urls.defaults.baseUrl, encode= window.urls.defaults.encode
+    exportDest.urls = function() {
+        var urls_config = {}
 
         for (var i = 0; i < arguments.length;  i++) {
             var arg = arguments[i]
             if(typeof arg === "string" || arg == null) {
-                baseUrl = arg
+                urls_config.baseUrl = arg
             } else {
-                if(arg.baseUrl !== undefined) {
-                    baseUrl = arg.baseUrl
-                }
-                if(arg.encode !== undefined) {
-                    encode = arg.encode
+                Object.keys(arg).forEach(function(key){
+                    urls_config[key] = arg[key]
+                })
+            }
+        }
+
+        var resolveConfig = function(key, defaultValue) {
+            var configs = [urls_config, exportDest.urls.defaults.override, exportDest.url_properties, exportDest.urls.defaults]
+            for (var i = 0; i < configs.length; i++) {
+                var c = configs[i]
+                if(c.hasOwnProperty(key)) {
+                    return c[key]
                 }
             }
+            if(typeof defaultValue == 'function') {
+                return defaultValue()
+            }
+            if(typeof defaultValue == 'undefined') {
+                throw new Error("Could not resolve value for '"+key+"'")
+            }
+            return defaultValue
         }
 
         var enc = function(arg) {
             arg = arg !== undefined ? arg : ""
-            if(encode) {
+            if(resolveConfig("encode")) {
                 arg = encodeURIComponent(arg)
             }
             return arg
+        }
+
+        var parseService = function(key) {
+            return key.substring(0, key.indexOf("."))
         }
 
         return {
@@ -66,36 +93,35 @@
                 var args = Array.prototype.slice.call(arguments)
                 var queryString = "";
                 var tmpUrl;
-                if(!window.url_properties) {
+                if(!exportDest.url_properties) {
                     throw new Error("window.url_properties not defined!");
                 }
                 if(!key) {
                     throw new Error("first parameter 'key' not defined!");
                 }
-                var url = window.url_properties[key]
-                if(!url) {
-                    throw new Error("window.url_properties does not define url for '"+key+"'");
-                }
+                var url = resolveConfig(key)
                 for (var i = args.length; i > 0; i--) {
                     var arg = args[i-1];
-                    if(typeof arg === "string") {
-                        var value = enc(arg)
-                        url = url.replace("$"+i, value)
-                    } else {
+                    if(typeof arg === "object") {
                         Object.keys(arg).forEach(function(k){
                             var value = enc(arg[k])
-                            tmpUrl = url.replace("$" + key, value)
-                            if(tmpUrl === url) {
+                            tmpUrl = url.replace("$" + k, value)
+                            if(tmpUrl == url) {
                                 if(queryString.length > 0 ) {
                                     queryString = queryString + "&"
                                 } else {
                                     queryString = "?"
                                 }
-                                queryString = queryString + encodeURIComponent(k) + "=" + value
+                                queryString = queryString + enc(k) + "=" + value
                             }
+                            url = tmpUrl
                         })
+                    } else {
+                        var value = enc(arg)
+                        url = url.replace("$"+i, value)
                     }
                 }
+                var baseUrl = resolveConfig(parseService(key)+".baseUrl", function(){return resolveConfig("baseUrl", null)})
                 if(baseUrl) {
                     url = joinUrl(baseUrl, url)
                 }
@@ -104,13 +130,34 @@
         }
     }
 
-    window.urls.defaults = {
-        baseUrl: null,
-        decode: true
+    exportDest.urls.defaults = {
+        encode: true,
+        override: {}
     }
 
-    window.url = function() {
-        var urlResolver = window.urls(null);
+    exportDest.url = function() {
+        var urlResolver = exportDest.urls();
         return urlResolver.url.apply(urlResolver, arguments)
     }
-})(window);
+})(typeof window === 'undefined' ? module.exports : window);
+
+// polyfills for IE
+
+if (!String.prototype.startsWith) {
+    String.prototype.startsWith = function(searchString, position){
+        position = position || 0;
+        return this.substr(position, searchString.length) === searchString;
+    };
+}
+
+if (!String.prototype.endsWith) {
+    String.prototype.endsWith = function(searchString, position) {
+        var subjectString = this.toString();
+        if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+            position = subjectString.length;
+        }
+        position -= searchString.length;
+        var lastIndex = subjectString.indexOf(searchString, position);
+        return lastIndex !== -1 && lastIndex === position;
+    };
+}
