@@ -135,10 +135,7 @@
         override: {}
     }
 
-    exportDest.url = function() {
-        var urlResolver = exportDest.urls();
-        return urlResolver.url.apply(urlResolver, arguments)
-    }
+    exportDest.url = exportDest.urls().url
 })(typeof window === 'undefined' ? module.exports : window);
 
 // polyfills for IE
