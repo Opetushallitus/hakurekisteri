@@ -25,25 +25,6 @@
  */
 
 (function(exportDest) {
-    function joinUrl() {
-        var args = Array.prototype.slice.call(arguments)
-        if(args.length === 0) {
-            throw new Error("no arguments");
-        }
-        var url = null
-        args.forEach(function(arg) {
-            if(!url) {
-                url = arg
-            } else {
-                if(url.endsWith("/") || arg.startsWith("/")) {
-                    url = url + arg
-                } else {
-                    url = url + "/" + arg
-                }
-            }
-        })
-        return url
-    }
     exportDest.urls = function() {
         var urls_config = {}
 
@@ -81,10 +62,6 @@
                 arg = encodeURIComponent(arg)
             }
             return arg
-        }
-
-        var parseService = function(key) {
-            return key.substring(0, key.indexOf("."))
         }
 
         return {
@@ -136,6 +113,30 @@
     }
 
     exportDest.url = exportDest.urls().url
+
+    function parseService (key) {
+        return key.substring(0, key.indexOf("."))
+    }
+
+    function joinUrl() {
+        var args = Array.prototype.slice.call(arguments)
+        if(args.length === 0) {
+            throw new Error("no arguments");
+        }
+        var url = null
+        args.forEach(function(arg) {
+            if(!url) {
+                url = arg
+            } else {
+                if(url.endsWith("/") || arg.startsWith("/")) {
+                    url = url + arg
+                } else {
+                    url = url + "/" + arg
+                }
+            }
+        })
+        return url
+    }
 })(typeof window === 'undefined' ? module.exports : window);
 
 // polyfills for IE
