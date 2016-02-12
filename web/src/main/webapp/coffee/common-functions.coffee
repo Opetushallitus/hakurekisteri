@@ -1,5 +1,3 @@
-getBaseUrl = -> ""
-
 getOrganisaatio = ($http, organisaatioOid, successCallback, errorCallback) ->
   $http.get(window.url("organisaatio-service.organisaatio", organisaatioOid),
     cache: true
@@ -108,11 +106,6 @@ ensureConsoleMethods = ->
   return
 
 msgCategory = "suoritusrekisteri"
-henkiloServiceUrl = getBaseUrl() + "/authentication-service"
-organisaatioServiceUrl = getBaseUrl() + "/organisaatio-service"
-hakuAppServiceUrl = getBaseUrl() + "/haku-app"
-koodistoServiceUrl = getBaseUrl() + "/koodisto-service"
-tarjontaServiceUrl = getBaseUrl() + "/tarjonta-service"
 
 String::hashCode = ->
   hash = 0

@@ -292,7 +292,7 @@ app.factory "MuokkaaTiedot", [
         oid.indexOf("1.2.246.562.11") > -1
 
       $scope.hakemusLink = (oid) ->
-        getBaseUrl() + "/haku-app/virkailija/hakemus/" + oid
+        window.url("haku-app.virkailija.hakemus", oid)
 
       $scope.addLuokkatieto = ->
         $scope.henkilo.luokkatiedot.push new Opiskelijat(

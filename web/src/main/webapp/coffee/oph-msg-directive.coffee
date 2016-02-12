@@ -39,8 +39,6 @@ app.factory "LokalisointiService", [
       addTranslation msgKey, "en", elemText, oldTranslation
       return
 
-    backendUrl = getBaseUrl()
-    localisationBackend = backendUrl + "/lokalisointi/cxf/rest/v1/localisation"
     localisationMyroles = []
     translations = inited: false
 

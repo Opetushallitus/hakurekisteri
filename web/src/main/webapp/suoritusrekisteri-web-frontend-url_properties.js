@@ -24,6 +24,7 @@ window.url_properties = {
     "lokalisointi.add": "/lokalisointi/cxf/rest/v1/localisation",
     "lokalisointi.update": "/lokalisointi/cxf/rest/v1/localisation/$1",
     "haku-app.listshort": "/haku-app/applications/listshort",
+    "haku-app.virkailija.hakemus": "/haku-app/virkailija/hakemus/$1",
     "tarjonta-service.hakukohde": "/tarjonta-service/rest/v1/hakukohde/search",
     "cas.myroles": "/cas/myroles"
 }
