@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.integration
 
 import java.io.InputStreamReader
 import java.net.ConnectException
+import java.security.SecureRandom
 import java.nio.file.Paths
 import java.util.UUID
 import java.util.concurrent._
@@ -60,7 +61,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     .setFollowRedirects(true)
     .setMaxRequestRetry(2)
   ))
-  val casActor = system.actorOf(Props(new CasActor(config, aClient)), s"$serviceName-cas-client-pool")
+  val casActor = system.actorOf(Props(new CasActor(config, aClient)), s"$serviceName-cas-client-pool-${new SecureRandom().nextLong().toString}")
 
   object client {
     private def jSessionId: Future[JSessionId] = (casActor ? JSessionKey(serviceUrl)).mapTo[JSessionId]
