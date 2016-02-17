@@ -12,6 +12,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
+import com.ning.http.client.AsyncHandler.STATE
 import com.ning.http.client._
 import dispatch._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
@@ -19,7 +20,7 @@ import fi.vm.sade.scalaproperties.OphProperties
 
 import scala.compat.Platform
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContextExecutorService, ExecutionContext, Future}
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
@@ -37,8 +38,7 @@ case class ServiceConfig(casUrl: Option[String] = None,
                          serviceUrl: String,
                          user: Option[String] = None,
                          password: Option[String] = None,
-                         properties: Map[String, String] = Map.empty) extends HttpConfig(properties) {
-}
+                         properties: Map[String, String] = Map.empty) extends HttpConfig(properties)
 
 object OphUrlProperties {
   val ophProperties = new OphProperties("/suoritusrekisteri-web-oph.properties").addOptionalFiles(Paths.get(sys.props.getOrElse("user.home", ""), "/oph-configuration/common.properties").toString)
@@ -46,13 +46,14 @@ object OphUrlProperties {
 
 class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {
   val ophProperties = OphUrlProperties.ophProperties
-  implicit val defaultTimeout: Timeout = 60.seconds
 
-  val serviceUrl: String = config.serviceUrl
-  val user = config.user
-  val password = config.password
-  val logger = Logging.getLogger(system, this)
-  val serviceName = serviceUrl.split("/").lastOption.getOrElse(UUID.randomUUID())
+  private implicit val defaultTimeout: Timeout = 60.seconds
+
+  private val serviceUrl: String = config.serviceUrl
+  private val user = config.user
+  private val password = config.password
+  private val logger = Logging.getLogger(system, this)
+  private val serviceName = serviceUrl.split("/").lastOption.getOrElse(UUID.randomUUID())
 
   private val internalClient: Http = aClient.map(Http(_)).getOrElse(Http.configure(_
     .setConnectionTimeoutInMs(config.httpClientConnectionTimeout)
@@ -61,9 +62,9 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     .setFollowRedirects(true)
     .setMaxRequestRetry(2)
   ))
-  val casActor = system.actorOf(Props(new CasActor(config, aClient)), s"$serviceName-cas-client-pool-${new SecureRandom().nextLong().toString}")
+  private lazy val casActor = system.actorOf(Props(new CasActor(config, aClient)), s"$serviceName-cas-client-pool-${new SecureRandom().nextLong().toString}")
 
-  object client {
+  object Client {
     private def jSessionId: Future[JSessionId] = (casActor ? JSessionKey(serviceUrl)).mapTo[JSessionId]
 
     import org.json4s.jackson.Serialization._
@@ -112,7 +113,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   }
 
   private def tryClient[A <: AnyRef: Manifest](url: String)(acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] =
-    client.request[A, A](url)(JsonExtractor.handler[A](acceptedResponseCode)).recoverWith {
+    Client.request[A, A](url)(JsonExtractor.handler[A](acceptedResponseCode)).recoverWith {
       case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
         if (retryCount.getAndIncrement <= maxRetries) {
           logger.warning(s"retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
@@ -120,12 +121,12 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
         } else Future.failed(t)
     }
 
-  def result(t: Try[_]): String = t match {
+  private def result(t: Try[_]): String = t match {
     case Success(_) => "success"
     case Failure(e) => s"failure: $e"
   }
 
-  def logLongQuery(f: Future[_], url: String) = {
+  private def logLongQuery(f: Future[_], url: String) = {
     val t0 = Platform.currentTime
     f.onComplete(t => {
       val took = Platform.currentTime - t0
@@ -149,7 +150,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
   def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, resource: A): Future[B] = {
     val url = ophProperties.url(uriKey, args:_*)
-    val result = client.request[A, B](url)(JsonExtractor.handler[B](acceptedResponseCode), Some(resource))
+    val result = Client.request[A, B](url)(JsonExtractor.handler[B](acceptedResponseCode), Some(resource))
     logLongQuery(result, url)
     result
   }
@@ -180,7 +181,7 @@ object JSessionIdCookieParser {
 }
 
 object ExecutorUtil {
-  def createExecutor(threads: Int, poolName: String) = {
+  def createExecutor(threads: Int, poolName: String): ExecutionContextExecutorService = {
     val threadNumber = new AtomicInteger(1)
 
     val pool = Executors.newFixedThreadPool(threads, new ThreadFactory() {
@@ -199,8 +200,11 @@ object JsonExtractor extends HakurekisteriJsonSupport {
   def handler[T: Manifest](codes: Int*) = {
     val f: (Res) => T = (resp: Res) => {
       import org.json4s.jackson.Serialization.read
-      if (manifest[T] == manifest[String]) resp.getResponseBody.asInstanceOf[T]
-      else read[T](new InputStreamReader(resp.getResponseBodyAsStream))
+      if (manifest[T] == manifest[String]) {
+        resp.getResponseBody.asInstanceOf[T]
+      } else {
+        read[T](new InputStreamReader(resp.getResponseBodyAsStream))
+      }
     }
     new FunctionHandler[T](f) {
       override def onStatusReceived(status: HttpResponseStatus) = {
