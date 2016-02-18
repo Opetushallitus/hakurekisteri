@@ -34,7 +34,7 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
           []
         )
       hakukohdekoodit: ($http, MessageService) ->
-        $http.get(window.url("skoodisto-service.koodisByKoodisto","hakukohteet"), { cache: true }).then(((response) -> response.data), ->
+        $http.get(window.url("koodisto-service.koodisByKoodisto","hakukohteet"), { cache: true }).then(((response) -> response.data), ->
           MessageService.addMessage
             type: "danger"
             message: "Tietojen lataaminen näytölle epäonnistui."
