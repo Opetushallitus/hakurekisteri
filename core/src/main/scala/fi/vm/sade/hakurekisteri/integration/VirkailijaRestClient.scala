@@ -102,7 +102,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     case _ => false
   }
 
-  private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = client.request[A, A](uri, new JsonExtractor(acceptedResponseCode).handler[A]).recoverWith {
+  private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = client.request[A, A](uri, JsonExtractor.handler[A](acceptedResponseCode)).recoverWith {
     case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
       if (retryCount.getAndIncrement <= maxRetries) {
         logger.warning(s"retrying request to $uri due to $t, retry attempt #${retryCount.get - 1}")
@@ -133,7 +133,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   }
 
   def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, resource: A): Future[B] = {
-    val result = client.request[A, B](uri, new JsonExtractor(acceptedResponseCode).handler[B], Some(resource))
+    val result = client.request[A, B](uri,  JsonExtractor.handler[B](acceptedResponseCode), Some(resource))
     logLongQuery(result, uri)
     result
   }
@@ -179,25 +179,20 @@ object ExecutorUtil {
   }
 }
 
-class JsonExtractor(codes: Int*) extends HakurekisteriJsonSupport {
-  def handler[T: Manifest] = {
-    new CodeFunctionHandler(codes.toSet, (resp: Response) => {
+object JsonExtractor extends HakurekisteriJsonSupport {
+  def handler[T: Manifest](codes: Int*) = {
+    val f: (Res) => T = (resp: Res) => {
       import org.json4s.jackson.Serialization.read
       if (manifest[T] == manifest[String]) resp.getResponseBody.asInstanceOf[T]
       else read[T](new InputStreamReader(resp.getResponseBodyAsStream))
-    })
-  }
-}
-
-class CodeFunctionHandler[T](override val codes: Set[Int], f: Response => T) extends FunctionHandler[T](f) with CodeHandler[T]
-
-trait CodeHandler[T] extends AsyncHandler[T] {
-  val codes: Set[Int]
-
-  abstract override def onStatusReceived(status: HttpResponseStatus) = {
-    if (codes.contains(status.getStatusCode))
-      super.onStatusReceived(status)
-    else
-      throw PreconditionFailedException(s"precondition failed for url: ${status.getUrl}, response code: ${status.getStatusCode}", status.getStatusCode)
+    }
+    new FunctionHandler[T](f) {
+      override def onStatusReceived(status: HttpResponseStatus) = {
+        if (codes.contains(status.getStatusCode))
+          super.onStatusReceived(status)
+        else
+          throw PreconditionFailedException(s"precondition failed for url: ${status.getUrl}, response code: ${status.getStatusCode}", status.getStatusCode)
+      }
+    }
   }
 }

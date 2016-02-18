@@ -51,7 +51,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
     } else {
       log.debug(s"no jsession found or it was expired, fetching a new one for $serviceUrl")
 
-      val jSession = getJSession(postfixServiceUrl(serviceUrl), new JsonExtractor(302, 200, 404).handler[Unit])
+      val jSession = getJSession(postfixServiceUrl(serviceUrl), JsonExtractor.handler[Unit](302, 200, 404))
 
       jSessionIdCache + (JSessionKey(serviceUrl), jSession)
 

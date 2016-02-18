@@ -44,7 +44,7 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
   behavior of "VirkailijaRestClient"
 
   it should "serialize response into a case class" in {
-    val response =  client.client.request("/rest/blaa", new JsonExtractor(200).handler[TestResponse])
+    val response =  client.client.request("/rest/blaa", JsonExtractor.handler[TestResponse](200))
     val testResponse = Await.result(response, 10.seconds)
     testResponse.id should be("abc")
   }
