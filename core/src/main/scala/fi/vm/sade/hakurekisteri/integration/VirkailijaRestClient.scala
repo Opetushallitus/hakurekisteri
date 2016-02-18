@@ -78,8 +78,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
       f(request.attachJsonBody(body))
     }
 
-    def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](tuple: (String, AsyncHandler[B]), body: Option[A] = None): dispatch.Future[B] = {
-      val (uri, handler) = tuple
+    def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uri: String, handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
       val request = dispatch.url(s"$serviceUrl$uri") <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend")
       (user, password) match{
         case (Some(un), Some(pw)) =>
@@ -96,8 +95,6 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     }
   }
 
-  import fi.vm.sade.hakurekisteri.integration.VirkailijaRestImplicits._
-
   def retryable(t: Throwable): Boolean = t match {
     case t: TimeoutException => true
     case t: ConnectException => true
@@ -105,7 +102,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     case _ => false
   }
 
-  private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = client.request[A, A](uri.accept(acceptedResponseCode).as[A]).recoverWith {
+  private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = client.request[A, A](uri, new JsonExtractor(acceptedResponseCode).handler[A]).recoverWith {
     case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
       if (retryCount.getAndIncrement <= maxRetries) {
         logger.warning(s"retrying request to $uri due to $t, retry attempt #${retryCount.get - 1}")
@@ -136,7 +133,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   }
 
   def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, resource: A): Future[B] = {
-    val result = client.request[A, B](uri.accept(acceptedResponseCode).as[B], Some(resource))
+    val result = client.request[A, B](uri, new JsonExtractor(acceptedResponseCode).handler[B], Some(resource))
     logLongQuery(result, uri)
     result
   }
@@ -182,28 +179,14 @@ object ExecutorUtil {
   }
 }
 
-abstract class JsonExtractor(val uri: String) extends HakurekisteriJsonSupport {
-  def handler[T](f: (Response) => T): AsyncHandler[T]
-
-  def as[T: Manifest] = {
-    val f = (resp: Response) => {
+class JsonExtractor(codes: Int*) extends HakurekisteriJsonSupport {
+  def handler[T: Manifest] = {
+    new CodeFunctionHandler(codes.toSet, (resp: Response) => {
       import org.json4s.jackson.Serialization.read
       if (manifest[T] == manifest[String]) resp.getResponseBody.asInstanceOf[T]
       else read[T](new InputStreamReader(resp.getResponseBodyAsStream))
-    }
-
-    (uri, handler(f))
+    })
   }
-}
-
-class VirkailijaResultTuples(uri: String) {
-  def accept[T](codes: Int*): JsonExtractor = new JsonExtractor(uri) {
-    override def handler[T](f: (Response) => T): AsyncHandler[T] = new CodeFunctionHandler(codes.toSet, f)
-  }
-}
-
-object VirkailijaRestImplicits {
-  implicit def req2VirkailijaResulTuples(uri:String): VirkailijaResultTuples = new VirkailijaResultTuples(uri)
 }
 
 class CodeFunctionHandler[T](override val codes: Set[Int], f: Response => T) extends FunctionHandler[T](f) with CodeHandler[T]

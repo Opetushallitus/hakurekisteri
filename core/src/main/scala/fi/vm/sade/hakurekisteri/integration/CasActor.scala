@@ -50,9 +50,8 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
       jSessionIdCache.get(key)
     } else {
       log.debug(s"no jsession found or it was expired, fetching a new one for $serviceUrl")
-      import fi.vm.sade.hakurekisteri.integration.VirkailijaRestImplicits._
 
-      val jSession = getJSession(postfixServiceUrl(serviceUrl).accept(302, 200, 404).as[Unit])
+      val jSession = getJSession(postfixServiceUrl(serviceUrl), new JsonExtractor(302, 200, 404).handler[Unit])
 
       jSessionIdCache + (JSessionKey(serviceUrl), jSession)
 
@@ -178,8 +177,7 @@ class CasActor(serviceConfig: ServiceConfig, aClient: Option[AsyncHttpClient] = 
     override def onThrowable(t: Throwable): Unit = inner.onThrowable(t)
   }
 
-  private def getJSession[T](tuple: (String, AsyncHandler[T])): dispatch.Future[JSessionId] = {
-    val (uri, handler) = tuple
+  private def getJSession[T](uri: String, handler: AsyncHandler[T]): dispatch.Future[JSessionId] = {
     val request: Req = dispatch.url(uri)
     val sessionCapturer = new SessionCapturer(handler)
 
