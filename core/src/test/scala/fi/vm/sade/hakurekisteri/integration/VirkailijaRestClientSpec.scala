@@ -51,16 +51,18 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
 
   it should "throw PreconditionFailedException if undesired response code was returned from the remote service" in {
     val response = client.readObject[TestResponse]("/rest/throwMe", 200)
-    intercept[PreconditionFailedException] {
+    val thrown = intercept[PreconditionFailedException] {
       Await.result(response, 10.seconds)
     }
+    assert(thrown.getMessage === "precondition failed for url: http://localhost/test/rest/throwMe, response code: 404")
   }
 
   it should "throw Exception if invalid content was returned from the remote service" in {
-    intercept[Exception] {
+    val thrown = intercept[Exception] {
       val response = client.readObject[TestResponse]("/rest/invalidContent", 200)
       Await.result(response, 10.seconds)
     }
+    thrown.getMessage() should include("Unrecognized token 'invalid': was expecting ('true', 'false' or 'null')")
   }
 
   it should "send JSESSIONID cookie in requests" in {
