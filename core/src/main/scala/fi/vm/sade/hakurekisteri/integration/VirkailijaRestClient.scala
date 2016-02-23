@@ -12,7 +12,6 @@ import akka.actor.{ActorSystem, Props}
 import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
-import com.ning.http.client.AsyncHandler.STATE
 import com.ning.http.client._
 import dispatch._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport

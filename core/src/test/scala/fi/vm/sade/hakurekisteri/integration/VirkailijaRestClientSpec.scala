@@ -1,13 +1,13 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import akka.actor.ActorSystem
-import org.scalatest.{BeforeAndAfterEach, BeforeAndAfter, Matchers, FlatSpec}
+import com.ning.http.client._
+import org.mockito.Mockito._
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future, ExecutionContext}
-import com.ning.http.client._
-import org.scalatest.mock.MockitoSugar
-import org.mockito.Mockito._
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 
 class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with BeforeAndAfterEach with LocalhostProperties {
