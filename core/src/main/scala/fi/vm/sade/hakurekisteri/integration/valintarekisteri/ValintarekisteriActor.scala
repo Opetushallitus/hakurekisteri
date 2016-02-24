@@ -27,4 +27,4 @@ class ValintarekisteriActor(restClient: VirkailijaRestClient, config: Config) ex
 
 case class ValintarekisteriQuery(henkiloOids: Set[String], koulutuksenAlkamiskausi: String)
 
-case class EnsimmainenVastaanotto(oid: String, paattyi: Option[DateTime])
+case class EnsimmainenVastaanotto(personOid: String, paattyi: Option[DateTime])
