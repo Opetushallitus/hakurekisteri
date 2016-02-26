@@ -31,7 +31,7 @@ import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
 import org.mockito.Mockito._
 
-class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with MockitoSugar with DispatchSupport with AsyncAssertions {
+class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with MockitoSugar with DispatchSupport with AsyncAssertions with LocalhostProperties {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
 
@@ -53,7 +53,10 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   addServlet(resource, "/")
 
 
-  hakemusMock ! RefreshHakemukset
+  override def beforeEach() {
+    super.beforeEach()
+    hakemusMock ! RefreshHakemukset
+  }
 
 
   test("should return 200 OK") {

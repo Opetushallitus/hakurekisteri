@@ -15,7 +15,7 @@ window.url_properties = {
     "organisaatio-service.haeV2": "/organisaatio-service/rest/organisaatio/v2/hae",
     "koodisto-service.koodiByUri": "/koodisto-service/rest/json/$1/koodi/$2",
     "koodisto-service.koodisByKoodisto": "/koodisto-service/rest/json/$1/koodi",
-    "koodisto-service.relaatio": "/koodisto-service/rest/json/relaatio/sisaltyy-alakoodit/$1",
+    "koodisto-service.relaatio": "/koodisto-service/rest/json/relaatio/$1/$2",
     "authentication-service.buildversion": "/authentication-service/buildversion.txt?auth",
     "authentication-service.henkilo": "/authentication-service/resources/henkilo/$1",
     "authentication-service.henkiloSearch": "/authentication-service/resources/henkilo",

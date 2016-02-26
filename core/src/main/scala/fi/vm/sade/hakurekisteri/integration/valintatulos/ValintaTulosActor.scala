@@ -124,7 +124,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
     }
 
     def getSingleHakemus(hakemusOid: String): Future[SijoitteluTulos] = client.
-      readObject[ValintaTulos](s"/haku/${URLEncoder.encode(hakuOid, "UTF-8")}/hakemus/${URLEncoder.encode(hakemusOid, "UTF-8")}", 200, maxRetries).
+      readObject[ValintaTulos]("valinta-tulos-service.hakemus",hakuOid,hakemusOid)(200, maxRetries).
       recoverWith {
         case t: ExecutionException if t.getCause != null && is404(t.getCause) =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
@@ -133,7 +133,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
       map(t => valintaTulokset2SijoitteluTulos(t))
 
     def getHaku(haku: String): Future[SijoitteluTulos] = client.
-      readObject[Seq[ValintaTulos]](s"/haku/${URLEncoder.encode(haku, "UTF-8")}", 200).
+      readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", haku)(200).
       recoverWith {
         case t: ExecutionException if t.getCause != null && is404(t.getCause) =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")

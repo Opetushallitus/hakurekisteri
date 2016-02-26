@@ -31,7 +31,7 @@ import scala.concurrent.duration._
 import scala.language.implicitConversions
 
 
-class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with AsyncAssertions with MockitoSugar with DispatchSupport with ActorSystemSupport {
+class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with AsyncAssertions with MockitoSugar with DispatchSupport with ActorSystemSupport with LocalhostProperties {
   implicit val formats = DefaultFormats
   implicit val timeout: Timeout = 5.second
   val hakuappConfig = ServiceConfig(serviceUrl = "http://localhost/haku-app")

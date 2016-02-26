@@ -3,13 +3,14 @@ package fi.vm.sade.hakurekisteri.rest
 import akka.actor.{Actor, Props}
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.integration.LocalhostProperties
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.web.hakija.HakijaResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport {
+class HakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with LocalhostProperties {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
   val hakijat = system.actorOf(Props(new HakijaActor(hakupalvelu, organisaatioActor, koodistoActor, sijoittelu)))

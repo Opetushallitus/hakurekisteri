@@ -20,6 +20,6 @@ trait AuthenticationProxy {
 }
 
 trait OrganizationProxy {
-  def search(query: String): Future[String]
+  def search(query: AnyRef): Future[String]
   def get(oid: String): Future[String]
 }

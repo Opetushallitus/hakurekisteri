@@ -263,20 +263,16 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   }
 
   private def getHakemukset(q: HakijaQuery, cursor: String): Future[Int] = {
-    def getUri(page: Int = 0): String = {
-      "/applications/listfull?" + getQueryParams(q, page, cursor)
-    }
-
     val hakuOidit = aktiivisetHaut.map(_.oid)
 
-    val firstPage: Future[List[FullHakemus]] = restRequest[List[FullHakemus]](getUri())
+    val firstPage: Future[List[FullHakemus]] = restRequest[List[FullHakemus]]("haku-app.listfull", getQueryParams(q, 0, cursor))
 
     def throttle = Future {
       if (initialLoadingDone) Thread.sleep(nextPageDelay)
     }
 
     def loadNextPage(cur: Int, hakemukset: List[FullHakemus])(u: Unit): Future[Option[Int]] =
-      restRequest[List[FullHakemus]](getUri((cur / pageSize) + 1)).flatMap(getAll(cur + hakemukset.length))
+      restRequest[List[FullHakemus]]("haku-app.listfull", getQueryParams(q, (cur / pageSize) + 1, cursor)).flatMap(getAll(cur + hakemukset.length))
 
     def getAll(cur: Int)(pageResult: List[FullHakemus]): Future[Option[Int]] = pageResult match {
       case hakemukset if hakemukset.isEmpty => Future.successful(None)
@@ -307,21 +303,19 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
     })
   }
 
-  private def restRequest[A <: AnyRef](uri: String)(implicit mf: Manifest[A]): Future[A] = hakemusClient.readObject[A](uri, 200, 2)
+  private def restRequest[A <: AnyRef](uri: String, args: AnyRef*)(implicit mf: Manifest[A]): Future[A] =
+    hakemusClient.readObject[A](uri, args:_*)( 200, 2)
 
   private def urlencode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
-  private def getQueryParams(q: HakijaQuery, page: Int, cursor: String): String = {
-    val params: Seq[String] = Seq(
-      Some(s"updatedAfter=$cursor"),
-      Some(s"start=${page * pageSize}"),
-      Some(s"rows=$pageSize"),
-      q.haku.map(s => s"asId=${urlencode(s)}"),
-      q.organisaatio.map(s => s"lopoid=${urlencode(s)}"),
-      q.hakukohdekoodi.map(s => s"aoid=${urlencode(s)}")
-    ).flatten
-
-    Try((for(i <- params; p <- List("&", i)) yield p).tail.reduce(_ + _)).getOrElse("")
+  private def getQueryParams(q: HakijaQuery, page: Int, cursor: String) = {
+    Map("updatedAfter" -> cursor,
+    "start" -> page * pageSize,
+    "rows" -> pageSize,
+    "asId" -> q.haku,
+    "lopoid" -> q.organisaatio,
+    "aoid" -> q.hakukohdekoodi
+    )
   }
 }
 

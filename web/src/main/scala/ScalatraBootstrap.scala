@@ -66,13 +66,12 @@ class ScalatraBootstrap extends LifeCycle {
 
     var servlets = initServlets(config, registers, authorizedRegisters, integrations, koosteet)
 
-    if (config.mockMode) {
+    if(config.mockMode) {
       servlets ::= (("/spec", "spec") -> new SpecResource(integrations.ytl))
+      ProxyServlets.mount(integrations.proxies, context)
     }
 
     mountServlets(context)(servlets:_*)
-
-    ProxyServlets.mount(integrations.proxies, context)
 
     context mount (new ValidatorJavascriptServlet, "/hakurekisteri-validator")
   }

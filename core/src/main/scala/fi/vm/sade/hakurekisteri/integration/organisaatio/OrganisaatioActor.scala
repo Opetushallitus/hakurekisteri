@@ -53,7 +53,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
       case _ => false
     }
 
-    val tulos = organisaatioClient.readObject[Organisaatio](s"/rest/organisaatio/${URLEncoder.encode(tunniste, "UTF-8")}", 200, maxRetries).map(Option(_)).recoverWith {
+    val tulos = organisaatioClient.readObject[Organisaatio]("organisaatio-service.organisaatio", tunniste)(200, maxRetries).map(Option(_)).recoverWith {
       case p: ExecutionException if p.getCause != null && notFound(p.getCause) =>
         log.warning(s"organisaatio not found with tunniste $tunniste")
         Future.successful(None)
@@ -81,7 +81,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   }
 
   private def fetchAll(actor: ActorRef = ActorRef.noSender): Unit = {
-    val all = organisaatioClient.readObject[OrganisaatioResponse](s"/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true", 200).recoverWith {
+    val all = organisaatioClient.readObject[OrganisaatioResponse]("organisaatio-service.hierarkia.hae")(200).recoverWith {
       case t: Throwable => Future.failed(OrganisaatioFetchFailedException(t))
     }
 

@@ -54,7 +54,7 @@ class HttpParameterActor(restClient: VirkailijaRestClient) extends ParameterActo
     if (allResponseCache.contains(all))
       allResponseCache.get(all)
     else {
-      val allFuture = restClient.readObject[Map[String, KierrosParams]](s"/api/v1/rest/parametri/ALL", 200, 2)
+      val allFuture = restClient.readObject[Map[String, KierrosParams]]("ohjausparametrit-service.all")(200, 2)
       allResponseCache + (all, allFuture)
       allFuture
     }
@@ -68,7 +68,7 @@ class HttpParameterActor(restClient: VirkailijaRestClient) extends ParameterActo
     })
   }
 
-  override def isEnabledFromRest(key: String): Future[Boolean] = restClient.readObject[TiedonsiirtoSendingPeriods]("/api/v1/rest/parametri/tiedonsiirtosendingperiods", 200).map(p => key match {
+  override def isEnabledFromRest(key: String): Future[Boolean] = restClient.readObject[TiedonsiirtoSendingPeriods]("ohjausparametrit-service.parametri", "tiedonsiirtosendingperiods")(200).map(p => key match {
     case k if k == ImportBatch.batchTypePerustiedot => isPeriodEffective(p.perustiedot)
     case k if k == ImportBatch.batchTypeArvosanat => isPeriodEffective(p.arvosanat)
     case _ => false

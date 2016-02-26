@@ -35,7 +35,7 @@ app.controller "MuokkaaArvosanat", [
           koodi.metadata.sort((a, b) ->
             (if a.kieli < b.kieli then -1 else 1)
           )
-          $http.get(window.url("koodisto-service.relaatio", koodi.koodiUri),
+          $http.get(window.url("koodisto-service.relaatio", "sisaltyy-alakoodit", koodi.koodiUri),
             {cache: true}).success((alaKoodit) ->
             koodistoOppiaineLista.push
               koodi: koodi

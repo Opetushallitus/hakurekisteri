@@ -25,7 +25,7 @@ object ProxyServlets {
 class OrganizationProxyServlet(proxy: OrganizationProxy, system: ActorSystem) extends OPHProxyServlet(system) {
   get("/rest/organisaatio/v2/hae") {
     new AsyncResult() {
-      val is = proxy.search(request.getQueryString)
+      val is = proxy.search(request.getParameterMap)
     }
   }
 

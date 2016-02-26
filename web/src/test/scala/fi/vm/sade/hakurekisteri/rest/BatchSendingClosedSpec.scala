@@ -23,7 +23,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.xml.Elem
 
-class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport with ConfigurationSupport {
+class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport with ConfigurationSupport with LocalhostProperties {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("failing-import-batch")
   implicit val ec: ExecutionContext = system.dispatcher

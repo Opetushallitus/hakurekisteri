@@ -51,7 +51,7 @@ object CreateDevDb extends App {
 
 
   for (
-    henkilos <- henkiloClient.readObject[HenkiloSearchResponse]("/resources/henkilo/?ht=OPPIJA&index=0&count=50&no=true&s=true&p=false", 200);
+    henkilos <- henkiloClient.readObject[HenkiloSearchResponse]("authentication-service.henkilo", Map("ht" -> "OPPIJA", "index" -> 0, "count" -> 50, "no" -> true, "s" -> true, "p" -> false))(200);
     aineet <- findPakolliset
   ) {
     for (

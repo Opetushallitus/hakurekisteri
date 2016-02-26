@@ -85,7 +85,8 @@ object HakurekisteriBuild extends Build {
     "fi.vm.sade.log" % "log-client" % "7.0",
     "fi.vm.sade" % "auditlogger" % "5.0.0-SNAPSHOT",
     "fr.janalyse" %% "janalyse-ssh" % "0.9.14",
-    "fi.vm.sade" %% "scala-utils" % "0.1.0-SNAPSHOT"
+    "fi.vm.sade" %% "scala-utils" % "0.1.0-SNAPSHOT",
+    "fi.vm.sade" %% "scala-properties" % "0.0.1-SNAPSHOT"
   )
 
   val testDependencies = Seq("org.scalatra" %% "scalatra-scalatest" % ScalatraVersion,
@@ -159,6 +160,7 @@ object HakurekisteriBuild extends Build {
       resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
       resolvers += "JAnalyse Repository" at "http://www.janalyse.fr/repository/",
       artifactoryPublish,
+      parallelExecution := false,
       generateDbDiagramTask,
       libraryDependencies   ++= AkkaStack ++ dependencies
         ++ testDependencies.map((m) => m % "test,it"),
@@ -210,6 +212,7 @@ object HakurekisteriBuild extends Build {
         resolvers += "clojars.org" at "http://clojars.org/repo",
         credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
         artifactoryPublish,
+        parallelExecution := false,
         buildversionTask,
         libraryDependencies ++=  ScalatraStack.map(_ % ScalatraVersion)
           ++ SecurityStack ++ webDeps

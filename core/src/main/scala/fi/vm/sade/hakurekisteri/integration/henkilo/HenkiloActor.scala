@@ -31,11 +31,11 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
   private val saveQueue: mutable.Map[SaveHenkilo, ActorRef] = new mutable.LinkedHashMap[SaveHenkilo, ActorRef]()
 
   override def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
-    virkailijaClient.postObject[OrganisaatioHenkilo, OrganisaatioHenkilo](s"/resources/henkilo/$oidHenkilo/organisaatiohenkilo", 200, organisaatioHenkilo)
+    virkailijaClient.postObject[OrganisaatioHenkilo, OrganisaatioHenkilo]("authentication-service.henkilo.organisaatiohenkilo",oidHenkilo)(200, organisaatioHenkilo)
   }
 
   override def findExistingOrganisaatiohenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
-    virkailijaClient.readObject[Seq[OrganisaatioHenkilo]](s"/resources/henkilo/$oidHenkilo/organisaatiohenkilo", 200)
+    virkailijaClient.readObject[Seq[OrganisaatioHenkilo]]("authentication-service.henkilo.organisaatiohenkilo",oidHenkilo)(200)
   }
 
   private object SaveNext
@@ -43,18 +43,18 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
   override def receive: Receive = {
     case henkiloOid: String =>
       log.debug(s"received henkiloOid: $henkiloOid")
-      virkailijaClient.readObject[Henkilo](s"/resources/henkilo/${URLEncoder.encode(henkiloOid, "UTF-8")}", 200, maxRetries) pipeTo sender
+      virkailijaClient.readObject[Henkilo]("authentication-service.henkilo", henkiloOid)(200, maxRetries) pipeTo sender
 
     case HetuQuery(Hetu(hetu)) =>
       log.debug(s"received HetuQuery: ${hetu.substring(0, 6)}XXXX")
-      virkailijaClient.readObject[Henkilo](s"/resources/s2s/byHetu/${URLEncoder.encode(hetu, "UTF-8")}", 200, maxRetries) pipeTo sender
+      virkailijaClient.readObject[Henkilo]("authentication-service.s2s.byHetu", hetu)(200, maxRetries) pipeTo sender
 
     case q: HenkiloQuery =>
       log.debug(s"received HenkiloQuery: $q")
       if (q.oppijanumero.isEmpty && q.hetu.isEmpty) {
         sender ! FoundHenkilos(Seq(), q.tunniste)
       } else {
-        virkailijaClient.readObject[HenkiloSearchResponse](s"/resources/henkilo?q=${URLEncoder.encode(q.oppijanumero.getOrElse(q.hetu.get), "UTF-8")}&index=0&count=2&no=true&s=true", 200, maxRetries).
+        virkailijaClient.readObject[HenkiloSearchResponse]("authentication-service.henkiloSearchQ",q.oppijanumero.getOrElse(q.hetu.get), "2")(200, maxRetries).
           map(r => FoundHenkilos(r.results, q.tunniste)) pipeTo sender
       }
 
@@ -71,7 +71,7 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
       saveQueue.remove(save)
       Future {
         Thread.sleep(100)
-      }.flatMap(u => virkailijaClient.postObject[CreateHenkilo, String](s"/resources/s2s/tiedonsiirrot", 200, save.henkilo).map(saved => SavedHenkilo(saved, save.tunniste)).recoverWith {
+      }.flatMap(u => virkailijaClient.postObject[CreateHenkilo, String]("authentication-service.s2s.tiedonsiirrot")(200, save.henkilo).map(saved => SavedHenkilo(saved, save.tunniste)).recoverWith {
         case t: Throwable => Future.successful(HenkiloSaveFailed(save.tunniste, t))
       }).pipeTo(self)(actor)
 

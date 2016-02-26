@@ -45,7 +45,7 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config) extends Ac
   def getKoodistoKoodiArvot(koodistoUri: String): Future[KoodistoKoodiArvot] = {
     if (koodiArvotCache.contains(koodistoUri)) koodiArvotCache.get(koodistoUri)
     else {
-      val f = restClient.readObject[Seq[Koodi]](s"/rest/json/${URLEncoder.encode(koodistoUri, "UTF-8")}/koodi", 200, maxRetries)
+      val f = restClient.readObject[Seq[Koodi]]("koodisto-service.koodisByKoodisto", koodistoUri)(200, maxRetries)
         .map(koodit => KoodistoKoodiArvot(koodistoUri, koodit.map(_.koodiArvo)))
       koodiArvotCache + (koodistoUri, f)
       f
@@ -60,7 +60,7 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config) extends Ac
   def getKoodi(koodistoUri: String, koodiUri: String): Future[Option[Koodi]] = {
     if (koodiCache.contains(koodiUri)) koodiCache.get(koodiUri)
     else {
-      val koodi = restClient.readObject[Koodi](s"/rest/json/${URLEncoder.encode(koodistoUri, "UTF-8")}/koodi/${URLEncoder.encode(koodiUri, "UTF-8")}", 200, maxRetries).map(Some(_)).recoverWith {
+      val koodi = restClient.readObject[Koodi]("koodisto-service.koodiByUri", koodistoUri, koodiUri)(200, maxRetries).map(Some(_)).recoverWith {
         case t: ExecutionException if t.getCause != null && notFound(t.getCause) =>
           log.warning(s"koodi not found with koodiUri $koodiUri: $t")
           Future.successful(None)
@@ -73,7 +73,7 @@ class KoodistoActor(restClient: VirkailijaRestClient, config: Config) extends Ac
   def getRinnasteinenKoodiArvo(q: GetRinnasteinenKoodiArvoQuery): Future[String] = {
     if (relaatioCache.contains(q)) relaatioCache.get(q)
     else {
-      val f: Future[Seq[Koodi]] = restClient.readObject[Seq[Koodi]](s"/rest/json/relaatio/rinnasteinen/${URLEncoder.encode(q.koodiUri, "UTF-8")}", 200, maxRetries)
+      val f: Future[Seq[Koodi]] = restClient.readObject[Seq[Koodi]]("koodisto-service.relaatio","rinnasteinen",q.koodiUri)(200, maxRetries)
       val fs = f.map(_.find(_.koodisto.koodistoUri == q.rinnasteinenKoodistoUri) match {
         case None => throw RinnasteinenKoodiNotFoundException(s"rinnasteisia koodeja ei löytynyt koodiurilla ${q.koodiUri}")
         case Some(k) => k.koodiArvo

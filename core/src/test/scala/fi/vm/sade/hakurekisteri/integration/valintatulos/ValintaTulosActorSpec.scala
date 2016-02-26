@@ -17,7 +17,7 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with DispatchSupport with MockitoSugar with ActorSystemSupport {
+class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with DispatchSupport with MockitoSugar with ActorSystemSupport with LocalhostProperties {
 
   implicit val timeout: Timeout = 60.seconds
   val vtsConfig = ServiceConfig(serviceUrl = "http://localhost/valinta-tulos-service")

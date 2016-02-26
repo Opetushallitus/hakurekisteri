@@ -39,7 +39,7 @@ import scala.concurrent.duration._
 import scala.language.implicitConversions
 import scala.util.Random
 
-class OppijaResourceSpec extends OppijaResourceSetup {
+class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
 
   implicit val formats = HakurekisteriJsonSupport.format
 

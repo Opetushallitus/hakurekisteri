@@ -17,7 +17,7 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 
-class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAssertions with MockitoSugar with DispatchSupport with ActorSystemSupport {
+class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAssertions with MockitoSugar with DispatchSupport with ActorSystemSupport with LocalhostProperties {
 
   implicit val timeout: Timeout = 60.seconds
   val organisaatioConfig = ServiceConfig(serviceUrl = "http://localhost/organisaatio-service")

@@ -23,7 +23,7 @@ class MockProxies extends Proxies with HakurekisteriJsonSupport {
     def henkiloByQparam(hetu: String) = Future.successful(HenkiloMock.getHenkiloByQParam(hetu))
   }
   lazy val organization = new OrganizationProxy {
-    def search(query: String): Future[String] = Future.successful(OrganisaatioMock.findAll())
+    def search(query: AnyRef): Future[String] = Future.successful(OrganisaatioMock.findAll())
 
     def get(oid: String): Future[String] = Future.successful(OrganisaatioMock.findByOid(oid))
   }

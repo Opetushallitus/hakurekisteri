@@ -15,7 +15,7 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.duration._
 
-class ParameterActorSpec extends ScalatraFunSuite with Matchers with AsyncAssertions with MockitoSugar with DispatchSupport with ActorSystemSupport with FutureWaiting {
+class ParameterActorSpec extends ScalatraFunSuite with Matchers with AsyncAssertions with MockitoSugar with DispatchSupport with ActorSystemSupport with FutureWaiting with LocalhostProperties {
 
   implicit val timeout: Timeout = 60.seconds
   val parameterConfig = ServiceConfig(serviceUrl = "http://localhost/ohjausparametrit-service")

@@ -28,7 +28,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
-class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions with HakurekisteriJsonSupport with ActorSystemSupport {
+class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions with HakurekisteriJsonSupport with ActorSystemSupport with LocalhostProperties {
   behavior of "ArvosanaProcessing"
 
   import Fixtures._

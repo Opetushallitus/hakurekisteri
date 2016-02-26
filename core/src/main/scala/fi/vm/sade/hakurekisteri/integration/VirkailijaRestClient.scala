@@ -13,6 +13,7 @@ import akka.util.Timeout
 import com.ning.http.client._
 import dispatch._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import fi.vm.sade.scalaproperties.OphProperties
 
 import scala.compat.Platform
 import scala.concurrent.duration._
@@ -37,7 +38,17 @@ case class ServiceConfig(casUrl: Option[String] = None,
                          properties: Map[String, String] = Map.empty) extends HttpConfig(properties) {
 }
 
+object OphUrlProperties {
+  def setupProperties = {
+    val p = new OphProperties()
+    p.config.addClassPathFile("/suoritusrekisteri-web-oph.properties")
+    p.reload()
+  }
+  val ophProperties = setupProperties
+}
+
 class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {
+  val ophProperties = OphUrlProperties.ophProperties
   implicit val defaultTimeout: Timeout = 60.seconds
 
   val serviceUrl: String = config.serviceUrl
@@ -78,8 +89,8 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
       f(request.attachJsonBody(body))
     }
 
-    def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uri: String, handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
-      val request = dispatch.url(s"$serviceUrl$uri") <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend")
+    def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String)(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
+      val request = dispatch.url(url) <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend")
       (user, password) match{
         case (Some(un), Some(pw)) =>
           for (
@@ -102,13 +113,14 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     case _ => false
   }
 
-  private def tryClient[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] = client.request[A, A](uri, JsonExtractor.handler[A](acceptedResponseCode)).recoverWith {
-    case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
-      if (retryCount.getAndIncrement <= maxRetries) {
-        logger.warning(s"retrying request to $uri due to $t, retry attempt #${retryCount.get - 1}")
-        Future { Thread.sleep(1000) }.flatMap(u => tryClient(uri, acceptedResponseCode, maxRetries, retryCount))
-      } else Future.failed(t)
-  }
+  private def tryClient[A <: AnyRef: Manifest](url: String)(acceptedResponseCode: Int, maxRetries: Int, retryCount: AtomicInteger): Future[A] =
+    client.request[A, A](url)(JsonExtractor.handler[A](acceptedResponseCode)).recoverWith {
+      case t: ExecutionException if t.getCause != null && retryable(t.getCause) =>
+        if (retryCount.getAndIncrement <= maxRetries) {
+          logger.warning(s"retrying request to $url due to $t, retry attempt #${retryCount.get - 1}")
+          Future { Thread.sleep(1000) }.flatMap(u => tryClient(url)(acceptedResponseCode, maxRetries, retryCount))
+        } else Future.failed(t)
+    }
 
   def result(t: Try[_]): String = t match {
     case Success(_) => "success"
@@ -125,16 +137,22 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     })
   }
 
-  def readObject[A <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, maxRetries: Int = 0): Future[A] = {
+  def readObject[A <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, maxRetries: Int = 0): Future[A] = {
+    val url1: String = ophProperties.url(uriKey, args:_*)
+    readObjectFromUrl(url1, acceptedResponseCode, maxRetries)
+  }
+
+  def readObjectFromUrl[A <: AnyRef : Manifest](url: String, acceptedResponseCode: Int, maxRetries: Int): Future[A] = {
     val retryCount = new AtomicInteger(1)
-    val result = tryClient[A](uri, acceptedResponseCode, maxRetries, retryCount)
-    logLongQuery(result, uri)
+    val result = tryClient[A](url)(acceptedResponseCode, maxRetries, retryCount)
+    logLongQuery(result, url)
     result
   }
 
-  def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uri: String, acceptedResponseCode: Int, resource: A): Future[B] = {
-    val result = client.request[A, B](uri,  JsonExtractor.handler[B](acceptedResponseCode), Some(resource))
-    logLongQuery(result, uri)
+  def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, resource: A): Future[B] = {
+    val url = ophProperties.url(uriKey, args:_*)
+    val result = client.request[A, B](url)(JsonExtractor.handler[B](acceptedResponseCode), Some(resource))
+    logLongQuery(result, url)
     result
   }
 }
