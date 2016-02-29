@@ -127,12 +127,12 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     case Failure(e) => s"failure: $e"
   }
 
-  def logLongQuery(f: Future[_], uri: String) = {
+  def logLongQuery(f: Future[_], url: String) = {
     val t0 = Platform.currentTime
     f.onComplete(t => {
       val took = Platform.currentTime - t0
       if (took > config.httpClientSlowRequest) {
-        logger.warning(s"slow request: url $serviceUrl$uri took $took ms to complete, result was ${result(t)}")
+        logger.warning(s"slow request: url $url took $took ms to complete, result was ${result(t)}")
       }
     })
   }
