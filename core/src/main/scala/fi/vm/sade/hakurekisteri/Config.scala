@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri
 import java.io.InputStream
 import java.nio.file.{Path, Files, Paths}
 
-import fi.vm.sade.hakurekisteri.integration.ServiceConfig
+import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig}
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
@@ -126,6 +126,8 @@ abstract class Config {
   }
 
   val integrations = new IntegrationConfig(hostQa, properties)
+
+  OphUrlProperties.ophProperties.defaults.put("baseUrl", properties.getOrElse("host.virkailija", hostQa))
 
   val ensikertalainenCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.ensikertalainen", "6").toInt
 
