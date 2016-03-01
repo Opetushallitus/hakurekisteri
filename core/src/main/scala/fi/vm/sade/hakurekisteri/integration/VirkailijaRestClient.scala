@@ -16,7 +16,6 @@ import com.ning.http.client._
 import dispatch._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.scalaproperties.OphProperties
-import org.apache.commons.lang3.StringUtils
 
 import scala.compat.Platform
 import scala.concurrent.duration._
