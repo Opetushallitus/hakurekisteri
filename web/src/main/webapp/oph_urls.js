@@ -121,7 +121,6 @@
                     }
                 } else {
                     if(onerror) {
-                        console.log("XMLHttpRequest", url + " status " +oReq.status + ": " + oReq.responseText)
                         onerror(url + " status " +oReq.status + ": " + oReq.responseText)
                     }
                 }
