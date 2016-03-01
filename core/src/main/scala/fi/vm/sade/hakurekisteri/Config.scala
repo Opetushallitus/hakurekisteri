@@ -159,7 +159,6 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val koodistoServiceUrlQa = s"https://$hostQa/koodisto-service"
   val parameterServiceUrlQa = s"https://$hostQa/ohjausparametrit-service"
   val valintaTulosServiceUrlQa = s"https://$hostQa/valinta-tulos-service"
-  val valintarekisteriServiceUrlQa = s"https://$hostQa/valintarekisteri"
 
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
   val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
