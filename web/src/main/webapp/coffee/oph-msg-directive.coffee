@@ -134,5 +134,4 @@ app.run [
   ($log, LokalisointiService) ->
     if window.globalInitOphMsg
       window.globalInitOphMsg ->
-        $log.info "messages loaded"
 ]

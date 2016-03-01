@@ -112,19 +112,22 @@
 
     function ajaxJson(method, url, onload, onerror) {
         var oReq = new XMLHttpRequest();
-        if(onload) {
-            oReq.onload = function (e) {
-                onload(e.target.response)
-            };
-        }
-        if(onerror) {
-            oReq.onerror = function (e) {
-                onload(e.target.response)
-            };
-        }
         oReq.open(method, url, true);
-        oReq.responseType = 'json';
-        oReq.send();
+        oReq.onreadystatechange = function() {
+            if (oReq.readyState == 4) {
+                if(oReq.status == 200) {
+                    if(onload) {
+                        onload(JSON.parse(oReq.responseText))
+                    }
+                } else {
+                    if(onerror) {
+                        console.log("XMLHttpRequest", url + " status " +oReq.status + ": " + oReq.responseText)
+                        onerror(url + " status " +oReq.status + ": " + oReq.responseText)
+                    }
+                }
+            }
+        }
+        oReq.send(null);
     }
 
     // minimalist angular Promise implementation, returns object with .success(cb)
