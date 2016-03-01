@@ -1,5 +1,9 @@
 "use strict"
 
+window.urls.loadFromUrls("suoritusrekisteri-web-frontend-url_properties.json", "rest/v1/properties").success ->
+  angular.element(document).ready ->
+    angular.bootstrap(document, ['myApp'])
+
 app = angular.module "myApp", [
   "ngRoute"
   "ngResource"

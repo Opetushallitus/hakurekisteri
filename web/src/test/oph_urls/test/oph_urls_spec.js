@@ -3,15 +3,15 @@ var assert = require('assert');
 describe('oph_urls.js', function() {
     var ctx = require("../../../main/webapp/oph_urls.js")
     beforeEach(function() {
-        ctx.url_properties = {}
+        ctx.urls.properties = {}
         ctx.urls.defaults = {
-            encode: true,
-            override: {}
+            encode: true
         }
+        ctx.urls.override = {}
     });
 
     it('resolve url and throw error on unknown', function () {
-        ctx.url_properties = {
+        ctx.urls.properties = {
             "a.b": "1"
         }
 
@@ -26,7 +26,7 @@ describe('oph_urls.js', function() {
     });
 
     it('handle baseUrl', function () {
-        ctx.url_properties = {
+        ctx.urls.properties = {
             "a.a": "1",
             "b.b": "2",
             "c.c": "3",
@@ -37,21 +37,21 @@ describe('oph_urls.js', function() {
         assert.equal(ctx.url("a.a"), "http://pow/1");
         assert.equal(ctx.url("b.b"), "http://bar/2");
 
-        // ctx.urls.defaults.override overrides baseUrl
-        ctx.urls.defaults.override = {
+        // ctx.urls.override overrides baseUrl
+        ctx.urls.override = {
             "baseUrl": "http://foo"
         }
         assert.equal(ctx.url("a.a"), "http://pow/1");
         assert.equal(ctx.url("b.b"), "http://foo/2");
 
-        // window.urls() overrides baseUrl and ctx.urls.defaults.override
+        // window.urls() overrides baseUrl and ctx.urls.override
         var ctx2 = ctx.urls({"baseUrl": "http://zap"});
         assert.equal(ctx2.url("a.a"), "http://pow/1");
         assert.equal(ctx2.url("b.b"), "http://zap/2");
     });
 
     it('parameter replace', function () {
-        ctx.url_properties = {
+        ctx.urls.properties = {
             "a.a": "/a/$1",
             "b.b": "/b/$param"
         }
@@ -71,7 +71,7 @@ describe('oph_urls.js', function() {
     });
 
     it('parameter encode', function () {
-        ctx.url_properties = {
+        ctx.urls.properties = {
             "a.a": "/a/$1",
             "b.b": "/b/$param"
         }
@@ -100,10 +100,10 @@ describe('oph_urls.js', function() {
         ctx.urls.defaults["a.a"] = "b"
         assert.equal(ctx.url("a.a"), "b");
 
-        ctx.url_properties = {"a.a": "c"}
+        ctx.urls.properties = {"a.a": "c"}
         assert.equal(ctx.url("a.a"), "c");
 
-        ctx.urls.defaults.override["a.a"] = "d"
+        ctx.urls.override["a.a"] = "d"
         assert.equal(ctx.url("a.a"), "d");
 
         var ctx2 = ctx.urls({"a.a": "e"});

@@ -128,10 +128,11 @@ app.directive "ophMsg", [
         return
     }
 ]
-app.run ($log) ->
-  if window.globalInitOphMsg
-    window.globalInitOphMsg ->
-      $log.info "messages loaded"
-      return
-
-  return
+app.run [
+  "$log"
+  "LokalisointiService"
+  ($log, LokalisointiService) ->
+    if window.globalInitOphMsg
+      window.globalInitOphMsg ->
+        $log.info "messages loaded"
+]

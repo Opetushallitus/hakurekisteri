@@ -3,13 +3,16 @@ import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEve
 
 import _root_.support._
 import akka.actor.{ActorRef, ActorSystem, Props}
-import fi.vm.sade.hakurekisteri.Config
+import akka.event.{Logging, LoggingAdapter}
+import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
+import fi.vm.sade.hakurekisteri.{Oids, Config}
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.healthcheck.HealthcheckActor
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
 import fi.vm.sade.hakurekisteri.suoritus._
+import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaSwaggerApi, CreateArvosanaCommand, EmptyLisatiedotResource}
 import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchResource
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
@@ -27,7 +30,9 @@ import fi.vm.sade.hakurekisteri.web.proxies._
 import fi.vm.sade.hakurekisteri.web.rekisteritiedot.RekisteritiedotResource
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwaggerApi}
-import gui.GuiServlet
+import gui.{GuiOidit, GuiServlet}
+import org.json4s.{DefaultFormats, Formats}
+import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.Swagger
 import org.scalatra.{ScalatraServlet, Handler, LifeCycle}
 import org.springframework.beans.MutablePropertyValues
@@ -83,6 +88,7 @@ class ScalatraBootstrap extends LifeCycle {
                            integrations: Integrations,
                            koosteet: BaseKoosteet)(implicit security: Security): List[((String, String), ScalatraServlet)] = List(
     ("/rest/v1/komo", "komo") -> new GuiServlet,
+    ("/rest/v1/properties", "properties") -> new FrontPropertiesServlet,
     ("/healthcheck", "healthcheck") -> new HealthcheckResource(initHealthcheck(config, authorizedRegisters, integrations, koosteet)),
     ("/permission/checkpermission", "permission/checkpermission") -> new PermissionResource(registers.suoritusRekisteri, registers.opiskelijaRekisteri),
     ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SecuritySupport,
@@ -205,5 +211,17 @@ case class OPHConfig(confDir: Path, propertyFiles: Seq[String], props:(String, S
 
   override def initBeanDefinitionReader(beanDefinitionReader: XmlBeanDefinitionReader) {
     beanDefinitionReader.getRegistry.registerBeanDefinition("propertyPlaceHolder", placeholder)
+  }
+}
+
+class FrontPropertiesServlet(implicit val system: ActorSystem) extends HakuJaValintarekisteriStack with JacksonJsonSupport {
+  override val logger: LoggingAdapter = Logging.getLogger(system, this)
+
+  override protected implicit def jsonFormats: Formats = DefaultFormats
+
+  get("/") {
+    import scala.collection.JavaConversions._
+    contentType = "application/json"
+    OphUrlProperties.ophProperties.frontProperties.asScala
   }
 }

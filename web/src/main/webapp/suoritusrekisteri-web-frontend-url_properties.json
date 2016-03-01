@@ -1,4 +1,4 @@
-window.url_properties = {
+{
     "suoritusrekisteri-web.opiskelija": "rest/v1/opiskelijat/$1",
     "suoritusrekisteri-web.suoritus": "rest/v1/suoritukset/$1",
     "suoritusrekisteri-web.opiskeluoikeus": "rest/v1/opiskeluoikeudet/$1",

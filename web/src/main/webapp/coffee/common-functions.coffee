@@ -196,8 +196,4 @@ lastIndex = (arr, fn) ->
 
 (->
   ensureConsoleMethods()
-  if window.globalInitOphMsg
-    window.globalInitOphMsg ->
-
-  return
 )()

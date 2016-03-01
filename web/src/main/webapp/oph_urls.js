@@ -7,7 +7,7 @@
  * window.urls(baseUrl, {encode: false}).url(key, param)
  * window.urls({baseUrl: baseUrl, encode: false}).url(key, param)
  *
- * Config lookup order: urls_config, window.urls.defaults.override, window.url_properties, window.urls.defaults
+ * Config lookup order: urls_config, window.urls.override, window.urls.properties, window.urls.defaults
  * Lookup key order:
  * * for main url window.url's first parameter: "service.info" from all configs
  * * baseUrl: "service.baseUrl" from all configs and "baseUrl" from all configs
@@ -19,8 +19,7 @@
  *   }
  *
  * window.urls.defaults = {
- *   encode: true,
- *   override: {}
+ *   encode: true
  * }
  */
 
@@ -40,7 +39,7 @@
         }
 
         var resolveConfig = function(key, defaultValue) {
-            var configs = [urls_config, exportDest.urls.defaults.override, exportDest.url_properties, exportDest.urls.defaults]
+            var configs = [urls_config, exportDest.urls.override, exportDest.urls.properties, exportDest.urls.defaults]
             for (var i = 0; i < configs.length; i++) {
                 var c = configs[i]
                 if(c.hasOwnProperty(key)) {
@@ -70,9 +69,6 @@
                 var args = Array.prototype.slice.call(arguments)
                 var queryString = "";
                 var tmpUrl;
-                if(!exportDest.url_properties) {
-                    throw new Error("window.url_properties not defined!");
-                }
                 if(!key) {
                     throw new Error("first parameter 'key' not defined!");
                 }
@@ -107,9 +103,78 @@
         }
     }
 
+    exportDest.urls.properties = {}
+
     exportDest.urls.defaults = {
-        encode: true,
-        override: {}
+        encode: true
+    }
+    exportDest.urls.override = {}
+
+    function ajaxJson(method, url, onload, onerror) {
+        var oReq = new XMLHttpRequest();
+        if(onload) {
+            oReq.onload = function (e) {
+                onload(e.target.response)
+            };
+        }
+        if(onerror) {
+            oReq.onerror = function (e) {
+                onload(e.target.response)
+            };
+        }
+        oReq.open(method, url, true);
+        oReq.responseType = 'json';
+        oReq.send();
+    }
+
+    // minimalist angular Promise implementation, returns object with .success(cb)
+    var successCBs = []
+    var fulfilled = false, fulfillFailed = false
+    var fulfillCount = 0, fulfillCountDest = 0
+    function checkfulfill() {
+        fulfillCount += 1
+        if(fulfillCount == fulfillCountDest) {
+            fulfilled = true
+            if(!fulfillFailed) {
+                successCBs.forEach(function(cb){cb()})
+            }
+        }
+    }
+    exportDest.urls.success = function(cb) {
+        if(fulfilled) {
+            if(!fulfillFailed) {
+                cb()
+            }
+        } else {
+            successCBs.push(cb)
+        }
+    }
+
+    exportDest.urls.loadFromUrls = function() {
+        var args = Array.prototype.slice.call(arguments)
+        var jsonProperties = []
+        successCBs.push(function(){
+            jsonProperties.forEach(function(json){merge(exportDest.urls.properties, json)})
+        })
+        fulfillCountDest += args.length
+        args.forEach(function(url, index){
+            ajaxJson("GET", url, function(data) {
+                jsonProperties.splice(index, 0, data)
+                checkfulfill()
+            }, function() {
+                fulfillFailed = true
+                checkfulfill()
+            })
+        })
+        return {
+            success: exportDest.urls.success
+        };
+    }
+
+    function merge(dest, from) {
+        Object.keys(from).forEach(function(key){
+            dest[key]=from[key];
+        })
     }
 
     exportDest.url = exportDest.urls().url
