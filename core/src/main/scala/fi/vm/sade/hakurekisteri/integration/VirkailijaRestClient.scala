@@ -16,6 +16,7 @@ import com.ning.http.client._
 import dispatch._
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.scalaproperties.OphProperties
+import org.apache.commons.lang3.StringUtils
 
 import scala.compat.Platform
 import scala.concurrent.duration._
@@ -196,21 +197,29 @@ object ExecutorUtil {
 }
 
 object JsonExtractor extends HakurekisteriJsonSupport {
-  def handler[T: Manifest](codes: Int*) = {
+  def handler[T: Manifest](codes: Int*)(implicit system: ActorSystem) = {
     val f: (Res) => T = (resp: Res) => {
       import org.json4s.jackson.Serialization.read
+      val responseBody = resp.getResponseBody
       if (manifest[T] == manifest[String]) {
-        resp.getResponseBody.asInstanceOf[T]
+        responseBody.asInstanceOf[T]
       } else {
-        read[T](new InputStreamReader(resp.getResponseBodyAsStream))
+        Try(read[T](responseBody)).recover {
+          case t: Throwable =>
+            val logger = Logging.getLogger(system, this)
+            val truncatedBody = responseBody.takeRight(20000)
+            logger.error(s"Error when parsing data from ${resp.getUri}, got: ... $truncatedBody")
+            throw t
+        }.get
       }
     }
     new FunctionHandler[T](f) {
       override def onStatusReceived(status: HttpResponseStatus) = {
         if (codes.contains(status.getStatusCode))
           super.onStatusReceived(status)
-        else
+        else {
           throw PreconditionFailedException(s"precondition failed for url: ${status.getUrl}, response code: ${status.getStatusCode}", status.getStatusCode)
+        }
       }
     }
   }
