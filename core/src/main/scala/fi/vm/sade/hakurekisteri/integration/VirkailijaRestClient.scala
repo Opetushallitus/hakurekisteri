@@ -39,12 +39,7 @@ case class ServiceConfig(casUrl: Option[String] = None,
 }
 
 object OphUrlProperties {
-  def setupProperties = {
-    val p = new OphProperties()
-    p.config.addClassPathFile("/suoritusrekisteri-web-oph.properties")
-    p.reload()
-  }
-  val ophProperties = setupProperties
+  val ophProperties = new OphProperties("/suoritusrekisteri-web-oph.properties")
 }
 
 class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {
