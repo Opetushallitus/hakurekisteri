@@ -1,13 +1,13 @@
 {
   "scripts": {
-    "build" : "npm install -s && coffee --join web/target/javascript/compiled/scripts.js --compile web/src/main/webapp/coffee/*.coffee",
-    "watch" : "npm install -s && coffee --watch --join  web/target/javascript/compiled/scripts.js --compile web/src/main/webapp/coffee/*.coffee",
-    "test_url_properties": "mocha web/src/test/oph_urls/test"
+    "build": "npm install -s && bower install && coffee --join web/target/javascript/compiled/scripts.js --compile web/src/main/webapp/coffee/*.coffee",
+    "watch": "npm install -s && bower install && coffee --watch --join  web/target/javascript/compiled/scripts.js --compile web/src/main/webapp/coffee/*.coffee",
   },
   "name": "hakurekisteri",
   "description": "hakurekisteri",
   "version": "0.0.1",
   "devDependencies": {
+    "bower": "1.7.7",
     "coffee-script": "1.7.0",
     "mocha-phantomjs": "3.5.3",
     "phantomjs": "1.9.16"
