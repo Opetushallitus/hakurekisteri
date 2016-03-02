@@ -1,0 +1,14 @@
+{
+  "name": "suoritusrekisteri",
+  "version": "0.0.1",
+  "homepage": "https://github.com/Opetushallitus/hakurekisteri",
+  "authors": [],
+  "license": "EUPL, Version 1.1",
+  "private": true,
+  "ignore": [
+    "**/.*"
+  ],
+  "dependencies": {
+    "oph_urls.js": "https://raw.githubusercontent.com/Opetushallitus/java-utils/master/java-properties/src/main/javascript/oph_urls.js"
+  }
+}
