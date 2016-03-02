@@ -1,7 +1,7 @@
 package fi.vm.sade.hakurekisteri.organization
 
 import fi.vm.sade.hakurekisteri.{Oids, Config}
-import fi.vm.sade.hakurekisteri.integration.HttpConfig
+import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, HttpConfig}
 import scala.xml.Elem
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import org.joda.time.DateTime
@@ -17,10 +17,10 @@ import com.ning.http.client.Response
 import fi.vm.sade.hakurekisteri.storage.DeleteResource
 import fi.vm.sade.hakurekisteri.rest.support.User
 
-class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](serviceUrl:String, filteredActor: ActorRef, organizationFinder: (A) => Set[String], config: Config) extends FutureOrganizationHierarchy[A, I](serviceUrl, filteredActor, ((item: A) => Future.successful(organizationFinder(item))), config)
+class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef, organizationFinder: (A) => Set[String], config: Config) extends FutureOrganizationHierarchy[A, I](filteredActor, ((item: A) => Future.successful(organizationFinder(item))), config)
 
-class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](serviceUrl:String, filteredActor: ActorRef, organizationFinder: (A) => concurrent.Future[Set[String]], config: Config) extends Actor {
-  val authorizer = new OrganizationHierarchyAuthorization[A, I](serviceUrl, organizationFinder, config.integrations.organisaatioConfig)
+class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](filteredActor: ActorRef, organizationFinder: (A) => concurrent.Future[Set[String]], config: Config) extends Actor {
+  val authorizer = new OrganizationHierarchyAuthorization[A, I](organizationFinder, config.integrations.organisaatioConfig)
   val logger = Logging(context.system, this)
   private var scheduledTask: Cancellable = null
 
@@ -88,7 +88,6 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](s
 
   def fetch() {
     val orgAuth: Future[OrganizationAuthorizer] = authorizer.createAuthorizer
-    logger.info(s"fetching organizations from: $serviceUrl")
     orgAuth pipeTo self
     orgAuth.onFailure {
       case e: Exception => logger.error(e, "failed loading organizations")
@@ -96,11 +95,11 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](s
   }
 }
 
-class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](serviceUrl: String, organizationFinder: A => Future[Set[String]], httpConfig: HttpConfig) {
+class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](organizationFinder: A => Future[Set[String]], httpConfig: HttpConfig) {
   def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName
   lazy val resourceName = className[A]
   val subjectFinder = (resource: A) => organizationFinder(resource).map(Subject(resourceName, _))
-  val svc = url(serviceUrl).POST <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend")
+  val svc = url(OphUrlProperties.ophProperties.url("organisaatio-service.soap")).POST <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend")
   var authorizer = OrganizationAuthorizer(Map())
 
   def addSelfToPaths(m: Map[String,Seq[String]], org:Org) = {

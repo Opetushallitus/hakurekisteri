@@ -177,7 +177,6 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val organisaatioServiceUrl = properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa)
   val valintaTulosServiceUrl = properties.getOrElse("cas.service.valintatulos-service", valintaTulosServiceUrlQa)
   val valintarekisteriServiceUrl = properties.getOrElse("cas.service.valintarekisteri-service", valintarekisteriServiceUrlQa)
-  val organisaatioSoapServiceUrl = properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa) + "/services/organisaatioService"
   val maxApplications = properties.getOrElse("suoritusrekisteri.hakijat.max.applications", "2000").toInt
   val virtaServiceUrl = properties.getOrElse("suoritusrekisteri.virta.service.url", virtaServiceUrlTest)
   val virtaJarjestelma = properties.getOrElse("suoritusrekisteri.virta.jarjestelma", virtaJarjestelmaTest)

@@ -61,7 +61,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     val journals = new DbJournals(config)
     val registers = new BareRegisters(system, journals)
-    val authorizedRegisters = new AuthorizedRegisters(config.integrations.organisaatioSoapServiceUrl, registers, system, config)
+    val authorizedRegisters = new AuthorizedRegisters(registers, system, config)
 
     val integrations = Integrations(registers, system, config)
 
