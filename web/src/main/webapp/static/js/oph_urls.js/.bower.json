@@ -7,7 +7,7 @@
   },
   "_release": "e-tag:e6150ded6",
   "main": "index.js",
-  "_source": "https://raw.githubusercontent.com/Opetushallitus/java-utils/master/java-properties/src/main/javascript/oph_urls.js",
+  "_source": "https://raw.githubusercontent.com/Opetushallitus/java-utils/master/java-properties/javascript/oph_urls.js",
   "_target": "*",
-  "_originalSource": "https://raw.githubusercontent.com/Opetushallitus/java-utils/master/java-properties/src/main/javascript/oph_urls.js"
+  "_originalSource": "https://raw.githubusercontent.com/Opetushallitus/java-utils/master/java-properties/javascript/oph_urls.js"
 }
