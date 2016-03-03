@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.integration
 
 import java.io.InputStreamReader
 import java.net.ConnectException
+import java.nio.file.Paths
 import java.util.UUID
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicInteger
@@ -39,7 +40,7 @@ case class ServiceConfig(casUrl: Option[String] = None,
 }
 
 object OphUrlProperties {
-  val ophProperties = new OphProperties("/suoritusrekisteri-web-oph.properties")
+  val ophProperties = new OphProperties("/suoritusrekisteri-web-oph.properties").addOptionalFiles(Paths.get(sys.props.getOrElse("user.home", ""), "/oph-configuration/common.properties").toString)
 }
 
 class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {

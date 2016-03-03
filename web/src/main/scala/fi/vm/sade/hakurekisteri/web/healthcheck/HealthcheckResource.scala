@@ -1,21 +1,23 @@
 package fi.vm.sade.hakurekisteri.web.healthcheck
 
-import akka.actor.{ActorSystem, ActorRef}
-import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.{AsyncResult, CorsSupport, FutureSupport}
-import scala.concurrent.ExecutionContext
-import akka.util.Timeout
-import akka.event.{Logging, LoggingAdapter}
-import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import java.util.Locale
-import org.joda.time.DateTimeZone
-import scala.concurrent.duration._
+
+import akka.actor.{ActorRef, ActorSystem}
+import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
+import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
+import org.joda.time.DateTimeZone
+import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
+import org.scalatra.json.JacksonJsonSupport
+import org.scalatra.{AsyncResult, FutureSupport}
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 
 
-class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport {
+class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSystem) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport {
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 60.seconds
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
@@ -26,10 +28,6 @@ class HealthcheckResource(healthcheckActor: ActorRef)(implicit system: ActorSyst
 
   before() {
     contentType = formats("json")
-  }
-
-  options("/*") {
-    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
   get("/") {

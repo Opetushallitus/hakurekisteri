@@ -127,13 +127,9 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
 
 case class UserNotAuthorized(message: String) extends Exception(message)
 
-abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]](actor: ActorRef, qb: Map[String, String] => Query[A])(implicit val security: Security, sw: Swagger, system: ActorSystem, mf: Manifest[A], cf: Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with HakurekisteriParsing[A] with CorsSupport with QueryLogging with SecuritySupport {
+abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]](actor: ActorRef, qb: Map[String, String] => Query[A])(implicit val security: Security, sw: Swagger, system: ActorSystem, mf: Manifest[A], cf: Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with HakurekisteriParsing[A] with QueryLogging with SecuritySupport {
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
-
-  options("/*") {
-    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
-  }
 
   case class MalformedResourceException(errors: NonEmptyList[ValidationError]) extends Exception {
     override def getMessage: String = {

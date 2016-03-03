@@ -6,14 +6,14 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana.Problems
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.web.rest.support.{SecuritySupport, Security}
+import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport}
+import org.scalatra.FutureSupport
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.{CorsSupport, FutureSupport}
 
 import scala.concurrent.ExecutionContext
 
 
-class SanityResource(sanityActor: ActorRef)(implicit system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack  with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SecuritySupport {
+class SanityResource(sanityActor: ActorRef)(implicit system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack  with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
 
@@ -21,7 +21,7 @@ class SanityResource(sanityActor: ActorRef)(implicit system: ActorSystem, val se
 
   import akka.pattern.ask
 
-import scala.concurrent.duration._
+  import scala.concurrent.duration._
 
   before() {
     contentType = formats("json")

@@ -35,17 +35,13 @@ import scala.concurrent.duration._
 
 class HakijaResource(hakijaActor: ActorRef)
                     (implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[XMLHakijat])
-    extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SecuritySupport with ExcelSupport[XMLHakijat] with DownloadSupport with QueryLogging {
+    extends HakuJaValintarekisteriStack with HakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport with ExcelSupport[XMLHakijat] with DownloadSupport with QueryLogging {
 
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override protected def applicationDescription: String = "Hakijatietojen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
   implicit val defaultTimeout: Timeout = 120.seconds
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
-
-  options("/*") {
-    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
-  }
 
   def getContentType(t: ApiFormat): String = t match {
     case ApiFormat.Json => formats("json")

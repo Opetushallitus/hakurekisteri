@@ -9,7 +9,7 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenQuery, HetuNotFo
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.web.rest.support.{Security, SecuritySupport, IncidentReport}
+import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReport, Security, SecuritySupport}
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 import org.scalatra._
@@ -23,7 +23,7 @@ import scala.util.Try
 case class ParamMissingException(message: String) extends IllegalArgumentException(message)
 
 class EnsikertalainenResource(ensikertalainenActor: ActorRef)
-                             (implicit val sw: Swagger, system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport with FutureSupport with CorsSupport with SecuritySupport {
+                             (implicit val sw: Swagger, system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport with FutureSupport with SecuritySupport {
 
   override protected def applicationDescription: String = "Korkeakouluhakujen kiintiöiden ensikertalaisuuden kyselyrajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
@@ -32,10 +32,6 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef)
 
   before() {
     contentType = formats("json")
-  }
-
-  options("/*") {
-    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
   def ensikertalaisuudenRajapvm(d: Option[String]): Option[DateTime] = d.flatMap(date => Try(ISODateTimeFormat.dateTimeParser.parseDateTime(date)).toOption)

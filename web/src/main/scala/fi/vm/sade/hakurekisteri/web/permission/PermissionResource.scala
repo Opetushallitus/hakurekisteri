@@ -31,17 +31,13 @@ case class PermissionCheckRequest(personOidsForSamePerson: Set[String], organisa
 case class PermissionCheckResponse(accessAllowed: Option[Boolean] = None, errorMessage: Option[String] = None)
 
 class PermissionResource(suoritusActor: ActorRef, opiskelijaActor: ActorRef, timeout: Option[Timeout] = Some(2.minutes))
-                        (implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with PermissionSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with QueryLogging {
+                        (implicit system: ActorSystem, sw: Swagger) extends HakuJaValintarekisteriStack with PermissionSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with QueryLogging {
 
   override protected def applicationDescription: String = "Oikeuksien tarkistuksen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val askTimeout: Timeout = timeout.getOrElse(2.minutes)
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
-
-  options("/*") {
-    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
-  }
 
   before() {
     contentType = formats("json")

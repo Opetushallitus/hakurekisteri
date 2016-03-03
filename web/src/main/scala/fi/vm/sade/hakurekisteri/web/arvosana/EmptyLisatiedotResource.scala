@@ -1,23 +1,22 @@
 package fi.vm.sade.hakurekisteri.web.arvosana
 
-import akka.actor.{ActorSystem, ActorRef}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
+import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana.EmptyLisatiedot
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.web.rest.support.{QueryLogging, SecuritySupport, UserNotAuthorized, Security}
-import org.scalatra.{CorsSupport, FutureSupport, AsyncResult}
+import fi.vm.sade.hakurekisteri.web.rest.support.{QueryLogging, Security, SecuritySupport, UserNotAuthorized}
 import org.scalatra.json.JacksonJsonSupport
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
-import akka.pattern.ask
+import org.scalatra.{AsyncResult, FutureSupport}
 
 import scala.compat.Platform
-import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.{Duration, _}
 
 class EmptyLisatiedotResource(arvosanaActor: ActorRef) (implicit val system: ActorSystem, val security: Security)
-  extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SecuritySupport with QueryLogging {
+  extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport with QueryLogging {
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
   implicit val defaultTimeout: Timeout = 120.seconds

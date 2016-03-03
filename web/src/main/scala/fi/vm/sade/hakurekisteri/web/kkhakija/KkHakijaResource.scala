@@ -21,6 +21,7 @@ import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
+import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaUtil._
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReport, _}
 import org.scalatra._
@@ -33,8 +34,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.Try
-
-import KkHakijaUtil._
 
 case class KkHakijaQuery(oppijanumero: Option[String],
                          haku: Option[String],
@@ -106,7 +105,7 @@ class KkHakijaResource(hakemukset: ActorRef,
                        suoritukset: ActorRef,
                        valintaTulos: ActorRef)(implicit system: ActorSystem, sw: Swagger, val security: Security, val ct: ClassTag[Seq[Hakija]])
     extends HakuJaValintarekisteriStack with KkHakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport
-    with CorsSupport with SecuritySupport with ExcelSupport[Seq[Hakija]] with DownloadSupport with QueryLogging {
+    with SecuritySupport with ExcelSupport[Seq[Hakija]] with DownloadSupport with QueryLogging {
 
   override protected def applicationDescription: String = "Korkeakouluhakijatietojen rajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
@@ -114,10 +113,6 @@ class KkHakijaResource(hakemukset: ActorRef,
   implicit val defaultTimeout: Timeout = 120.seconds
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
-
-  options("/*") {
-    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
-  }
 
   def getContentType(t: ApiFormat): String = t match {
     case ApiFormat.Json => formats("json")
@@ -201,8 +196,8 @@ class KkHakijaResource(hakemukset: ActorRef,
     case Some(oid) => hakutoive == oid
   }
 
-  import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.isVastaanottanut
   import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.isHyvaksytty
+  import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.isVastaanottanut
 
   private def matchHakuehto(valintaTulos: SijoitteluTulos, hakemusOid: String, hakukohdeOid: String): (Hakuehto) => Boolean = {
     case Hakuehto.Kaikki => true

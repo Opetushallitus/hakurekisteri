@@ -48,3 +48,8 @@ Kantoja pääsee tutkimaan kätevästi esim. IDEA:n Database-näkymässä.
 Arvosanojen tuonnissa käytettävä validaattori on erillisessä [repositoriossa](https://github.com/Opetushallitus/validaattori).
 
 Validaattorin server-side -versio on buildattu sieltä Artifactoryyn ja on käytössä jarrina. Validaattorin client-side -versio on bundlattu samaan jarriin ja serveröidään ValidatorJavasccriptServletin toimesta.
+
+# Kehitykseen
+
+* aseta common.corsfilter.mode=DEVELOPMENT common.properties-tiedostoon tai -D avaimella käyttöön jos kehität HTML-käyttöliittymää ja käytät REST-palveluita toisesta osoitteesta
+*

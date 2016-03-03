@@ -1,17 +1,18 @@
 package fi.vm.sade.hakurekisteri
 
 import java.io.InputStream
-import java.nio.file.{Path, Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 
-import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig}
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
+import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig}
+import fi.vm.sade.hakurekisteri.tools.RicherString
 import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
+
 import scala.concurrent.duration._
 import scala.util.{Success, Try}
-import fi.vm.sade.hakurekisteri.tools.RicherString
 
 object Config {
   def fromString(profile: String) = profile match {
@@ -100,7 +101,7 @@ abstract class Config {
   val log = LoggerFactory.getLogger(getClass)
   def ophConfDir: Path
 
-  val propertyLocations = Seq("suoritusrekisteri.properties", "common.properties")
+  val propertyLocations = Seq("common.properties")
 
   val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
 

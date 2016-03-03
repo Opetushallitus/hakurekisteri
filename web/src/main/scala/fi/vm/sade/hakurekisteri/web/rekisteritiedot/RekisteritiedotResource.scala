@@ -21,7 +21,7 @@ import fi.vm.sade.hakurekisteri.web.rest.support.{UserNotAuthorized, _}
 import fi.vm.sade.hakurekisteri.web.validation.{ScalaValidator, SimpleValidatable, Validatable}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
-import org.scalatra.{AsyncResult, CorsSupport, FutureSupport, InternalServerError}
+import org.scalatra.{AsyncResult, FutureSupport, InternalServerError}
 
 import scala.collection.JavaConversions._
 import scala.compat.Platform
@@ -30,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class RekisteritiedotResource(val rekisterit: Registers) // <- TODO: practically requires AuthorizedRegisters, because uses AuthorizedQuery
                     (implicit val system: ActorSystem, sw: Swagger, val security: Security)
-  extends HakuJaValintarekisteriStack with TiedotFetcher with RekisteritiedotSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with CorsSupport with SecuritySupport with QueryLogging {
+  extends HakuJaValintarekisteriStack with TiedotFetcher with RekisteritiedotSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport with QueryLogging {
 
   override protected def applicationDescription: String = "Oppijan tietojen koosterajapinta"
   override protected implicit def swagger: SwaggerEngine[_] = sw
@@ -38,10 +38,6 @@ class RekisteritiedotResource(val rekisterit: Registers) // <- TODO: practically
   implicit val defaultTimeout: Timeout = 500.seconds
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
   val valid = new hakurekisteri.api.HakurekisteriValidator() with ScalaValidator
-
-  options("/*") {
-    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
-  }
 
   before() {
     contentType = formats("json")
