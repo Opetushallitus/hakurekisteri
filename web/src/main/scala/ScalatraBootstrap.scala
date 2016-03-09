@@ -4,11 +4,11 @@ import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEve
 import _root_.support._
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
-import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
-import fi.vm.sade.hakurekisteri.{Oids, Config}
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.healthcheck.HealthcheckActor
+import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -30,11 +30,10 @@ import fi.vm.sade.hakurekisteri.web.proxies._
 import fi.vm.sade.hakurekisteri.web.rekisteritiedot.RekisteritiedotResource
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwaggerApi}
-import gui.{GuiOidit, GuiServlet}
+import gui.GuiServlet
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.swagger.Swagger
-import org.scalatra.{ScalatraServlet, Handler, LifeCycle}
+import org.scalatra.{Handler, LifeCycle, ScalatraServlet}
 import org.springframework.beans.MutablePropertyValues
 import org.springframework.beans.factory.config.BeanDefinition
 import org.springframework.beans.factory.support.RootBeanDefinition
@@ -50,7 +49,6 @@ import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContextExecutor
 
 class ScalatraBootstrap extends LifeCycle {
-  implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("hakurekisteri")
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -68,6 +66,10 @@ class ScalatraBootstrap extends LifeCycle {
     val koosteet = new BaseKoosteet(system, integrations, registers, config)
 
     val importBatchProcessing = initBatchProcessing(config, authorizedRegisters, integrations)
+
+    if("DEVELOPMENT" != OphUrlProperties.ophProperties.getProperty("common.corsfilter.mode")) {
+      context.initParameters("org.scalatra.cors.enable") = "false"
+    }
 
     var servlets = initServlets(config, registers, authorizedRegisters, integrations, koosteet)
 
@@ -220,7 +222,6 @@ class FrontPropertiesServlet(implicit val system: ActorSystem) extends HakuJaVal
   override protected implicit def jsonFormats: Formats = DefaultFormats
 
   get("/") {
-    import scala.collection.JavaConversions._
     contentType = "application/json"
     OphUrlProperties.ophProperties.frontProperties.asScala
   }
