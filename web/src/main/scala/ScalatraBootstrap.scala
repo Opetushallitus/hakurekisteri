@@ -33,6 +33,7 @@ import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwa
 import gui.GuiServlet
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.json.JacksonJsonSupport
+import org.scalatra.swagger.Swagger
 import org.scalatra.{Handler, LifeCycle, ScalatraServlet}
 import org.springframework.beans.MutablePropertyValues
 import org.springframework.beans.factory.config.BeanDefinition
@@ -49,6 +50,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContextExecutor
 
 class ScalatraBootstrap extends LifeCycle {
+  implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("hakurekisteri")
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
