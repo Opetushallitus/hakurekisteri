@@ -1,21 +1,21 @@
 package fi.vm.sade.hakurekisteri.organization
 
-import fi.vm.sade.hakurekisteri.{Oids, Config}
-import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, HttpConfig}
-import scala.xml.Elem
-import fi.vm.sade.hakurekisteri.tools.RicherString._
-import org.joda.time.DateTime
-import dispatch._
-import Defaults._
-import akka.actor.{Cancellable, ActorRef, Actor}
-import fi.vm.sade.hakurekisteri.rest.support.{Resource, Query}
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.storage.Identified
-import scala.concurrent.duration._
+
+import akka.actor.{Actor, ActorRef, Cancellable}
 import akka.event.Logging
 import com.ning.http.client.Response
-import fi.vm.sade.hakurekisteri.storage.DeleteResource
-import fi.vm.sade.hakurekisteri.rest.support.User
+import dispatch.Defaults._
+import dispatch._
+import fi.vm.sade.hakurekisteri.integration.{HttpConfig, OphUrlProperties}
+import fi.vm.sade.hakurekisteri.rest.support.{Query, Resource, User}
+import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
+import fi.vm.sade.hakurekisteri.tools.RicherString._
+import fi.vm.sade.hakurekisteri.{Config, Oids}
+import org.joda.time.DateTime
+
+import scala.concurrent.duration._
+import scala.xml.Elem
 
 class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef, organizationFinder: (A) => Set[String], config: Config) extends FutureOrganizationHierarchy[A, I](filteredActor, ((item: A) => Future.successful(organizationFinder(item))), config)
 
@@ -45,8 +45,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](f
 
   val log = Logging(context.system, this)
 
-  import akka.pattern.ask
-  import akka.pattern.pipe
+  import akka.pattern.{ask, pipe}
   override def receive: Receive = {
     case a:Update => fetch()
 
@@ -99,7 +98,9 @@ class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](orga
   def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName
   lazy val resourceName = className[A]
   val subjectFinder = (resource: A) => organizationFinder(resource).map(Subject(resourceName, _))
-  val svc = url(OphUrlProperties.ophProperties.url("organisaatio-service.soap")).POST <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend")
+  val svc = url(OphUrlProperties.ophProperties.url("organisaatio-service.soap")).POST <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend",
+    "clientSubSystemCode" -> "suoritusrekisteri.suoritusrekisteri.backend",
+    "CSRF" -> "suoritusrekisteri", "Cookie" -> "CSRF=suoritusrekisteri")
   var authorizer = OrganizationAuthorizer(Map())
 
   def addSelfToPaths(m: Map[String,Seq[String]], org:Org) = {

@@ -67,36 +67,37 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
 
     import org.json4s.jackson.Serialization._
 
-    private class JsonReq(request: Req) {
-      def attachJsonBody[A <: AnyRef : Manifest](body: Option[A]): Req = body match {
-        case Some(a) =>
-          (request << write[A](a)(jsonFormats)).setContentType("application/json", "UTF-8")
-        case None => request
+    private def addCookies(request: Req, cookies: Seq[String]): Req = {
+      if(cookies.isEmpty) {
+        request
+      } else {
+        request <:< Map("Cookie" -> cookies.mkString("; ")  )
       }
     }
 
-    private implicit def req2JsonReq(req:Req):JsonReq = new JsonReq(req)
-
-    private def withSessionAndBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(jSsessionId: String)(body: Option[A] = None): Future[B] = {
-      f(request.attachJsonBody(body) <:< Map("Cookie" -> s"${JSessionIdCookieParser.name}=$jSsessionId"))
-    }
-
-    private def withBody[A <: AnyRef: Manifest, B <: AnyRef: Manifest](request: Req)(f: (Req) => Future[B])(body: Option[A] = None): Future[B] = {
-      f(request.attachJsonBody(body))
-    }
-
     def request[A <: AnyRef: Manifest, B <: AnyRef: Manifest](url: String)(handler: AsyncHandler[B], body: Option[A] = None): dispatch.Future[B] = {
-      val request = dispatch.url(url) <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend")
+      val request = dispatch.url(url) <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend", "clientSubSystemCode" -> "suoritusrekisteri.suoritusrekisteri.backend")
+      val cookies = new scala.collection.mutable.ListBuffer[String]()
+
+      val requestWithPostHeaders = body match {
+        case Some(jsonBody) =>
+          cookies += "CSRF=suoritusrekisteri"
+          (request << write[A](jsonBody)(jsonFormats)).setContentType("application/json", "UTF-8") <:< Map("CSRF" -> "suoritusrekisteri")
+        case None => request
+      }
+
       (user, password) match{
         case (Some(un), Some(pw)) =>
           for (
             jsession <- jSessionId;
-            result <- withSessionAndBody[A, B](request)((req) => internalClient(req.toRequest, handler))(jsession.sessionId)(body)
+            result <- {
+              cookies += s"${JSessionIdCookieParser.name}=${jsession.sessionId}"
+              internalClient(addCookies(requestWithPostHeaders, cookies).toRequest, handler)
+            }
           ) yield result
-
         case _ =>
           for (
-            result <- withBody[A, B](request)((req) => internalClient(req.toRequest, handler))(body)
+            result <- internalClient(addCookies(requestWithPostHeaders, cookies).toRequest, handler)
           ) yield result
       }
     }
