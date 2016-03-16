@@ -133,7 +133,7 @@ object IlmoitetutArvosanatTrigger {
             myontaja = lahtokoulu.getOrElse(hakemus.oid),
             hakijaOid = personOid,
             valmistumisvuosi.toInt,
-            suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")
+            suoritusKieli = koulutustausta.lukion_kieli.getOrElse("FI")
           )
           Seq((tutkinto, arvosanat))
         } else Seq.empty

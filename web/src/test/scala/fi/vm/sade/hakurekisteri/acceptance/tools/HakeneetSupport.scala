@@ -67,6 +67,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           Koulutustausta(
             pohjakoulutus_muu_vuosi = None,
             perusopetuksen_kieli = None,
+            lukion_kieli = None,
             pohjakoulutus_yo_vuosi = None,
             pohjakoulutus_am_vuosi = None,
             pohjakoulutus_amt_vuosi = None,
@@ -157,6 +158,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           Koulutustausta(
             pohjakoulutus_muu_vuosi = None,
             perusopetuksen_kieli = None,
+            lukion_kieli = None,
             pohjakoulutus_yo_vuosi = None,
             pohjakoulutus_am_vuosi = None,
             pohjakoulutus_amt_vuosi = None,
@@ -247,6 +249,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           Koulutustausta(
             pohjakoulutus_muu_vuosi = None,
             perusopetuksen_kieli = None,
+            lukion_kieli = None,
             pohjakoulutus_yo_vuosi = None,
             pohjakoulutus_am_vuosi = None,
             pohjakoulutus_amt_vuosi = None,
