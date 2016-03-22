@@ -139,7 +139,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
     readObjectFromUrl(url1, acceptedResponseCode, maxRetries)
   }
 
-  def readObjectFromUrl[A <: AnyRef : Manifest](url: String, acceptedResponseCode: Int, maxRetries: Int): Future[A] = {
+  def readObjectFromUrl[A <: AnyRef : Manifest](url: String, acceptedResponseCode: Int, maxRetries: Int = 0): Future[A] = {
     val retryCount = new AtomicInteger(1)
     val result = tryClient[A](url)(acceptedResponseCode, maxRetries, retryCount)
     logLongQuery(result, url)

@@ -1,20 +1,20 @@
 package fi.vm.sade.hakurekisteri.kkhakija
 
-import java.util.concurrent.{Executors, TimeUnit}
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.{Executors, TimeUnit}
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.oppija.Hakukohteet
+import fi.vm.sade.hakurekisteri.web.kkhakija.Hakija
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods._
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.{FlatSpec, Matchers}
 
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Success, Try}
-import fi.vm.sade.hakurekisteri.web.kkhakija.Hakija
 
 class KkhakijaResourceLoadSpec extends FlatSpec with Matchers {
 
@@ -42,7 +42,7 @@ class KkhakijaResourceLoadSpec extends FlatSpec with Matchers {
     val batchStart = Platform.currentTime
     hakukohdeOids.foreach(h => {
       val start = Platform.currentTime
-      val res: Future[Seq[Hakija]] = oppijaClient.readObject[Seq[Hakija]](s"/rest/v1/kkhakijat?haku=$hakuOid&hakukohde=$h", 200)
+      val res: Future[Seq[Hakija]] = oppijaClient.readObjectFromUrl[Seq[Hakija]](s"/rest/v1/kkhakijat?haku=$hakuOid&hakukohde=$h", 200)
       res.onComplete((t: Try[Seq[Hakija]]) => {
         val end = Platform.currentTime
         val hakijas = t match {
