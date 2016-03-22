@@ -1,6 +1,8 @@
 "use strict";
 
 /**
+ * window.urls.debugLog().loadFromUrls("suoritusrekisteri-web-frontend-url_properties.json", "rest/v1/properties").success(function(){appInit();})
+ *
  * window.url("service.info", param1, param2, {key3: value})
  *
  * window.urls(baseUrl).url(key, param)
@@ -115,7 +117,11 @@
     }
     exportDest.urls.override = {}
     exportDest.urls.debug = false
-    
+    exportDest.urls.debugLog = function() {
+        exportDest.urls.debug = true;
+        return this;
+    }
+
     function debug() {
         var args = Array.prototype.slice.call(arguments)
         args.unshift("OphProperties")
