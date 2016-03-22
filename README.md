@@ -11,6 +11,10 @@ Setup:
 
 Mocha-testit käyttävät tällä hetkellä suurelta osin frontend-mockeja, joten ne eivät juurikaan testaa serverikoodia.
 
+Tarvittaessa voit päivittää front-riippuvuudet komennolla
+
+    bower update
+
 ## Kaikki testit
 
 Voit ajaa kaikki testit komentoriviltä komennolla `./sbt test it:test`. Tämä ajaa myös mocha-testit phantomjs:llä.
