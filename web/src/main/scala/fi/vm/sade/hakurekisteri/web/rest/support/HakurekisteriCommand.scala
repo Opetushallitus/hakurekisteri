@@ -101,8 +101,7 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
     case _ => Map[String, KierrosParams]()
   })
 
-  implicit val fileToOptionString: TypeConverter[FileItem, Option[String]] = safe(f => scala.io.Source.fromInputStream(f.getInputStream).getLines().mkString("\n").blankOption)
-
+  implicit val fileToOptionString: TypeConverter[FileItem, Option[String]] = cantConvert
 
   implicit def YksilollistaminenDefaultValue: DefaultValue[Yksilollistetty] = org.scalatra.DefaultValueMethods.default(Ei)
 
