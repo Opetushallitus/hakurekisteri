@@ -8,7 +8,7 @@ import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.SpecsLikeMockito
+import fi.vm.sade.hakurekisteri.{Oids, SpecsLikeMockito}
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 import fi.vm.sade.hakurekisteri.integration._
@@ -31,7 +31,9 @@ import scala.concurrent.duration._
 import scala.language.implicitConversions
 
 
-class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with AsyncAssertions with MockitoSugar with DispatchSupport with ActorSystemSupport with LocalhostProperties {
+class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with AsyncAssertions
+  with MockitoSugar with DispatchSupport with ActorSystemSupport with LocalhostProperties {
+
   implicit val formats = DefaultFormats
   implicit val timeout: Timeout = 5.second
   val hakuappConfig = ServiceConfig(serviceUrl = "http://localhost/haku-app")
@@ -358,6 +360,38 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
     ) should contain theSameElementsAs Seq( (ItseilmoitettuLukioTutkinto("foobarKoulu", "person1", new LocalDate().getYear, "FI"), Seq()) )
   }
 
+  it should "create kymppisuoritus with the year entered in the application" in {
+    val pkVuosi = 2009
+    val kymppiVuosi = 2010
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
+      Hakemus()
+        .setHakemusOid("hakemus1")
+        .setPersonOid("person1")
+        .setPerusopetuksenPaattotodistusvuosi(pkVuosi)
+        .setLisaopetusKymppi("true")
+        .setKymppiVuosi(kymppiVuosi)
+        .build
+    ) should contain theSameElementsAs Seq(
+      (ItseilmoitettuPeruskouluTutkinto("hakemus1", "person1", pkVuosi, "FI"), List()),
+      (ItseilmoitettuTutkinto(Oids.lisaopetusKomoOid, "hakemus1", "person1", kymppiVuosi, "FI"), List())
+    )
+  }
+
+  it should "create kymppisuoritus with perusopetus year if kymppi year not available" in {
+    val pkVuosi = 2009
+    IlmoitetutArvosanatTrigger.createSuorituksetJaArvosanatFromHakemus(
+      Hakemus()
+        .setHakemusOid("hakemus1")
+        .setPersonOid("person1")
+        .setPerusopetuksenPaattotodistusvuosi(pkVuosi)
+        .setLisaopetusKymppi("true")
+        .build
+    ) should contain theSameElementsAs Seq(
+      (ItseilmoitettuPeruskouluTutkinto("hakemus1", "person1", pkVuosi, "FI"), List()),
+      (ItseilmoitettuTutkinto(Oids.lisaopetusKomoOid, "hakemus1", "person1", pkVuosi, "FI"), List())
+    )
+  }
+
   trait CustomMatchers {
 
     class ArvosanatMatcher(expectedArvosanat: Seq[Arvosana]) extends Matcher[Seq[Arvosana]] {
@@ -393,10 +427,10 @@ class TestActor(handler: PartialFunction[Any, Unit]) extends Actor {
 object Triggered
 
 object Hakemus {
-  def apply(): HakemusBuilder = HakemusBuilder(Map.empty, null, None, None, None, None)
+  def apply(): HakemusBuilder = HakemusBuilder(Map.empty, null, None, None, None, None, None, None)
 }
 
-case class HakemusBuilder(osaaminen: Map[String, String], hakemusOid: String = null, personOid: Option[String], PK_PAATTOTODISTUSVUOSI: Option[String], lukioPaattotodistusVuosi: Option[String], lahtokoulu: Option[String]) {
+case class HakemusBuilder(osaaminen: Map[String, String], hakemusOid: String = null, personOid: Option[String], PK_PAATTOTODISTUSVUOSI: Option[String], LISAKOULUTUS_KYMPPI: Option[String], KYMPPI_PAATTOTODISTUSVUOSI: Option[String], lukioPaattotodistusVuosi: Option[String], lahtokoulu: Option[String]) {
 
   def setHakemusOid(hOid: String): HakemusBuilder =
     this.copy(hakemusOid = hOid)
@@ -418,6 +452,12 @@ case class HakemusBuilder(osaaminen: Map[String, String], hakemusOid: String = n
 
   def setLukionPaattotodistusvuosi(paattotodistusvuosi: Int): HakemusBuilder =
     this.copy(lukioPaattotodistusVuosi = Some(paattotodistusvuosi.toString))
+
+  def setLisaopetusKymppi(bool: String) =
+    this.copy(LISAKOULUTUS_KYMPPI = Some(bool))
+
+  def setKymppiVuosi(vuosi: Int) =
+    this.copy(KYMPPI_PAATTOTODISTUSVUOSI = Some(vuosi.toString))
 
   def putArvosana(aine: String, arvosana: String): HakemusBuilder =
     this.copy(osaaminen = osaaminen + (aine -> arvosana))
@@ -449,7 +489,8 @@ case class HakemusBuilder(osaaminen: Map[String, String], hakemusOid: String = n
       POHJAKOULUTUS = None,
       lukioPaattotodistusVuosi,
       PK_PAATTOTODISTUSVUOSI,
-      LISAKOULUTUS_KYMPPI = None,
+      KYMPPI_PAATTOTODISTUSVUOSI,
+      LISAKOULUTUS_KYMPPI,
       LISAKOULUTUS_VAMMAISTEN = None,
       LISAKOULUTUS_TALOUS = None,
       LISAKOULUTUS_AMMATTISTARTTI = None,

@@ -202,6 +202,7 @@ case class Koulutustausta(lahtokoulu:Option[String],
                           POHJAKOULUTUS: Option[String],
                           lukioPaattotodistusVuosi: Option[String],
                           PK_PAATTOTODISTUSVUOSI: Option[String],
+                          KYMPPI_PAATTOTODISTUSVUOSI: Option[String],
                           LISAKOULUTUS_KYMPPI: Option[String],
                           LISAKOULUTUS_VAMMAISTEN: Option[String],
                           LISAKOULUTUS_TALOUS: Option[String],
@@ -231,7 +232,8 @@ case class Koulutustausta(lahtokoulu:Option[String],
                           aiempitutkinto_vuosi: Option[String])
 
 object Koulutustausta{
-  def apply(): Koulutustausta = Koulutustausta(None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
+  def apply(): Koulutustausta = Koulutustausta(None, None, None, None, None, None, None, None, None, None, None, None,
+    None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
 }
 
 case class Lisatiedot(lupaJulkaisu: Option[String], lupaMarkkinointi: Option[String])

@@ -42,6 +42,7 @@ class HakijaSpec extends FlatSpec with Matchers {
         koulutustausta = Some(
           Koulutustausta(
             PK_PAATTOTODISTUSVUOSI = Some("2014"),
+            KYMPPI_PAATTOTODISTUSVUOSI = None,
             POHJAKOULUTUS = Some("1"),
             lahtokoulu = Some(OppilaitosX.oid),
             luokkataso = Some("9"),

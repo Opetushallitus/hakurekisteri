@@ -140,12 +140,13 @@ object IlmoitetutArvosanatTrigger {
       }).getOrElse(Seq.empty)
   }
 
-  def createPkLisapisteSuoritukset(hakemus: FullHakemus, personOid: String, answers: HakemusAnswers, koulutustausta: Koulutustausta): Seq[(Suoritus, Seq[Arvosana])] = {
+  def createPkLisapisteSuoritukset(hakemus: FullHakemus, personOid: String,
+                                   answers: HakemusAnswers, koulutustausta: Koulutustausta): Seq[(Suoritus, Seq[Arvosana])] = {
     (for (
       valmistumisvuosiStr <- koulutustausta.PK_PAATTOTODISTUSVUOSI;
       valmistumisvuosi <- valmistumisvuosiStr.blankOption
     ) yield {
-        val vuosi = valmistumisvuosi.toInt
+        val pkVuosi = valmistumisvuosi.toInt
         Seq(
           // AMMATTISTARTTI
           koulutustausta.LISAKOULUTUS_AMMATTISTARTTI.map(lk => {
@@ -154,7 +155,7 @@ object IlmoitetutArvosanatTrigger {
                 komoOid = Oids.ammattistarttiKomoOid,
                 hakemusOid = hakemus.oid,
                 hakijaOid = personOid,
-                vuosi,
+                pkVuosi,
                 suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
             } else {
               Seq.empty
@@ -167,7 +168,7 @@ object IlmoitetutArvosanatTrigger {
                 komoOid = Oids.lisaopetusTalousKomoOid,
                 hakemusOid = hakemus.oid,
                 hakijaOid = personOid,
-                vuosi,
+                pkVuosi,
                 suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
             } else {
               Seq.empty
@@ -180,7 +181,7 @@ object IlmoitetutArvosanatTrigger {
                 komoOid = Oids.lisaopetusKomoOid,
                 hakemusOid = hakemus.oid,
                 hakijaOid = personOid,
-                vuosi,
+                koulutustausta.KYMPPI_PAATTOTODISTUSVUOSI.flatMap(_.blankOption).map(_.toInt).getOrElse(pkVuosi),
                 suoritusKieli = koulutustausta.perusopetuksen_kieli.getOrElse("FI")))
             } else {
               Seq.empty
