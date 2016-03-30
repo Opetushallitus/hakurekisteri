@@ -52,7 +52,7 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusRekiste
     }
   }
 
-  get("/:hakuOid", operation(hakuQuery)) {
+  get("/haku/:hakuOid", operation(hakuQuery)) {
     try {
       val hakuOid = params("hakuOid")
       val rajapvm = ensikertalaisuudenRajapvm(params.get("ensikertalaisuudenRajapvm"))

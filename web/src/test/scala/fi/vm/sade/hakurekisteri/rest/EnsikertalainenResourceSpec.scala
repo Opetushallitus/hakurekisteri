@@ -84,7 +84,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
   }
 
   test("returns ensikertalaisuus for all hakijas in haku") {
-    get("/ensikertalainen/1.2.3") {
+    get("/ensikertalainen/haku/1.2.3") {
       val e = read[Seq[Ensikertalainen]](response.body)
       e.size should be (3)
     }
