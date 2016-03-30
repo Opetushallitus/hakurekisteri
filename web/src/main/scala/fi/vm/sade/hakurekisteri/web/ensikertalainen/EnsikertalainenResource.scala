@@ -16,7 +16,7 @@ import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.Try
 
@@ -47,6 +47,16 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef)
       }
     } catch {
       case t: NoSuchElementException => throw ParamMissingException("parameter henkilo missing")
+    }
+  }
+
+  post("/", operation(postQuery)) {
+    val personOids = parse(request.body).extract[Set[String]]
+    if (personOids.isEmpty) throw ParamMissingException("request body does not contain person oids")
+    val rajapvm = ensikertalaisuudenRajapvm(params.get("ensikertalaisuudenRajapvm"))
+    new AsyncResult() {
+      override implicit def timeout: Duration = 120.seconds
+      override val is: Future[_] = (ensikertalainenActor ? EnsikertalainenQuery(personOids, paivamaara = rajapvm))(120.seconds).mapTo[Seq[Ensikertalainen]]
     }
   }
 

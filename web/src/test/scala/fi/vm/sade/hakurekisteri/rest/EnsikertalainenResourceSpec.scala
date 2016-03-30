@@ -1,9 +1,9 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import akka.actor.{Actor, Props, ActorSystem}
+import akka.actor.{Actor, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{KomoResponse, GetKomoQuery}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor, KkVastaanotto}
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusHenkilotQuery, SuoritusQuery}
@@ -64,6 +64,13 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
       val e = read[Ensikertalainen](response.body)
       e.menettamisenPeruste.map(_.peruste) should be (Some("KkVastaanotto"))
       e.menettamisenPeruste.map(_.paivamaara.toString) should be (Some(vastaanottohetki.toString))
+    }
+  }
+
+  test("returns a sequence of ensikertalaisuus") {
+    post("/", """["foo", "bar", "foo"]""") {
+      val e = read[Seq[Ensikertalainen]](response.body)
+      e.size should be (2)
     }
   }
 

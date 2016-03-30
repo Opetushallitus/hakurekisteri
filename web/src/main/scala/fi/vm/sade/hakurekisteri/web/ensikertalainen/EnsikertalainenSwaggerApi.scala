@@ -31,7 +31,15 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
     .parameter(queryParam[String]("henkilo").description("hakijan oppijanumero").required)
     .parameter(queryParam[Option[String]]("ensikertalaisuudenRajapvm").description("ensikertalaisuus ennen tätä ajanhetkeä (ISO 8601 datetime, esim. 2015-09-14T17:51:31Z)").optional)
     .responseMessage(ModelResponseMessage(400, "parameter henkilo missing"))
-    .responseMessage(ModelResponseMessage(400, "henkilo does not have hetu; add hetu and try again"))
+    .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
+    .responseMessage(ModelResponseMessage(500, "backend service failed"))
+
+  val postQuery: OperationBuilder = apiOperation[Seq[Ensikertalainen]]("haeEnsikertalaisuudet")
+    .summary("tarkistaa ovatko hakijat ensikertalaisia")
+    .notes("Tarkistaa ovatko hakijat ensikertalaisia.")
+    .parameter(bodyParam[Seq[String]]("henkilot").description("hakijoidet oppijanumerot").required)
+    .parameter(queryParam[Option[String]]("ensikertalaisuudenRajapvm").description("ensikertalaisuus ennen tätä ajanhetkeä (ISO 8601 datetime, esim. 2015-09-14T17:51:31Z)").optional)
+    .responseMessage(ModelResponseMessage(400, "request body does not contain person oids"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "backend service failed"))
 
