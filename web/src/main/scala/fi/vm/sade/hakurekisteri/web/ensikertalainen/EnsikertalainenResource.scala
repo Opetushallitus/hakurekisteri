@@ -7,6 +7,7 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery}
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReport, Security, SecuritySupport}
@@ -22,7 +23,7 @@ import scala.util.Try
 
 case class ParamMissingException(message: String) extends IllegalArgumentException(message)
 
-class EnsikertalainenResource(ensikertalainenActor: ActorRef)
+class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusRekisteri: ActorRef)
                              (implicit val sw: Swagger, system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport with FutureSupport with SecuritySupport {
 
   override protected def applicationDescription: String = "Korkeakouluhakujen kiintiöiden ensikertalaisuuden kyselyrajapinta"
@@ -43,10 +44,30 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef)
 
       new AsyncResult() {
         override implicit def timeout: Duration = 60.seconds
-        override val is = (ensikertalainenActor ? EnsikertalainenQuery(Set(henkiloOid), paivamaara = rajapvm))(60.seconds).mapTo[Seq[Ensikertalainen]].map(_.head)
+        override val is =
+          (ensikertalainenActor ? EnsikertalainenQuery(Set(henkiloOid), paivamaara = rajapvm))(60.seconds).mapTo[Seq[Ensikertalainen]].map(_.head)
       }
     } catch {
       case t: NoSuchElementException => throw ParamMissingException("parameter henkilo missing")
+    }
+  }
+
+  get("/:hakuOid", operation(hakuQuery)) {
+    try {
+      val hakuOid = params("hakuOid")
+      val rajapvm = ensikertalaisuudenRajapvm(params.get("ensikertalaisuudenRajapvm"))
+
+      new AsyncResult() {
+        override implicit def timeout: Duration = 120.seconds
+        override val is = {
+          val henkiloOids = (hakemusRekisteri ? HakemusQuery(Some(hakuOid), None, None, None))(60.seconds)
+            .mapTo[Seq[FullHakemus]]
+            .map(_.flatMap(_.personOid).toSet)
+          henkiloOids.flatMap(persons => (ensikertalainenActor ? EnsikertalainenQuery(persons, paivamaara = rajapvm))(120.seconds).mapTo[Seq[Ensikertalainen]])
+        }
+      }
+    } catch {
+      case t: NoSuchElementException => throw ParamMissingException("parameter haku missing")
     }
   }
 
@@ -56,7 +77,8 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef)
     val rajapvm = ensikertalaisuudenRajapvm(params.get("ensikertalaisuudenRajapvm"))
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
-      override val is: Future[_] = (ensikertalainenActor ? EnsikertalainenQuery(personOids, paivamaara = rajapvm))(120.seconds).mapTo[Seq[Ensikertalainen]]
+      override val is =
+        (ensikertalainenActor ? EnsikertalainenQuery(personOids, paivamaara = rajapvm))(120.seconds).mapTo[Seq[Ensikertalainen]]
     }
   }
 

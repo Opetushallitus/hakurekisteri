@@ -34,6 +34,15 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "backend service failed"))
 
+  val hakuQuery: OperationBuilder = apiOperation[Seq[Ensikertalainen]]("haeEnsikertalaisuudetHaulle")
+    .summary("tarkistaa ovatko haun hakijat ensikertalaisia")
+    .notes("Tarkistaa ovatko haun hakijat ensikertalaisia.")
+    .parameter(pathParam[String]("hakuOid").description("haun oid").required)
+    .parameter(queryParam[Option[String]]("ensikertalaisuudenRajapvm").description("ensikertalaisuus ennen tätä ajanhetkeä (ISO 8601 datetime, esim. 2015-09-14T17:51:31Z)").optional)
+    .responseMessage(ModelResponseMessage(400, "parameter haku missing"))
+    .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
+    .responseMessage(ModelResponseMessage(500, "backend service failed"))
+
   val postQuery: OperationBuilder = apiOperation[Seq[Ensikertalainen]]("haeEnsikertalaisuudet")
     .summary("tarkistaa ovatko hakijat ensikertalaisia")
     .notes("Tarkistaa ovatko hakijat ensikertalaisia.")
