@@ -15,7 +15,7 @@ object HakurekisteriBuild extends Build {
 
   val Organization = "fi.vm.sade"
   val Name = "hakurekisteri"
-  val Version = "13.1-SNAPSHOT"
+  val Version = "yhdenpaikansaanto-SNAPSHOT"
   val ScalaVersion = "2.11.2"
   val ArtifactName = (s: ScalaVersion, m: ModuleID, a: Artifact) => s"${a.name}-${m.revision}.${a.extension}"
   val ScalatraVersion = "2.3.1"
@@ -152,6 +152,7 @@ object HakurekisteriBuild extends Build {
       scalaVersion          := ScalaVersion,
       artifactName          := ArtifactName,
       scalacOptions         := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8", "-Xfatal-warnings", "-Xmax-classfile-name", "78"),
+      updateOptions         := updateOptions.value.withCachedResolution(true),
       resolvers += Classpaths.typesafeReleases,
       resolvers += "oph-snapshots" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local",
       resolvers += "oph-releases" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local",
@@ -203,6 +204,7 @@ object HakurekisteriBuild extends Build {
         version := Version,
         scalaVersion := ScalaVersion,
         artifactName := ArtifactName,
+        updateOptions := updateOptions.value.withCachedResolution(true),
         resolvers += Classpaths.typesafeReleases,
         resolvers += "oph-snapshots" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local",
         resolvers += "oph-releases" at "https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local",

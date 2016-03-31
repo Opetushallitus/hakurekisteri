@@ -52,7 +52,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val valintaTulos: ActorRef = mockActor("valintaTulos", new DummyActor)
   override val valintarekisteri: ActorRef = mockActor("valintarekisteri", new Actor {
     override def receive: Receive = {
-      case ValintarekisteriQuery(_, _) => sender ! None
+      case ValintarekisteriQuery(_, _) => sender ! Seq()
       case a => println(s"DummyActor($self): received $a")
     }
   })

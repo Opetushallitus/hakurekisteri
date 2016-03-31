@@ -48,7 +48,7 @@ trait ArvosanaService extends InMemQueryingResourceService[Arvosana, UUID]  with
 
 case class EmptyLisatiedot() extends Query[Arvosana]
 
-class ArvosanaActor(val journal:Journal[Arvosana, UUID] = new InMemJournal[Arvosana, UUID]) extends ResourceActor[Arvosana, UUID] with ArvosanaRepository with ArvosanaService {
+class ArvosanaActor(val journal:Journal[Arvosana, UUID] = new InMemJournal[Arvosana, UUID]) extends ResourceActor[Arvosana, UUID] with ArvosanaService {
   override val logger = Logging(context.system, this)
 
   import akka.pattern.pipe

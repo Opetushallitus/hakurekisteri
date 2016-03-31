@@ -34,7 +34,8 @@ trait HakurekisteriJsonSupport {
     new SuoritusSerializer +
     new LasnaoloSerializer +
     new ImportBatchSerializer +
-    new MenettamisenPerusteSerializer
+    new MenettamisenPerusteSerializer +
+    new OppijaSerializer
 
 }
 

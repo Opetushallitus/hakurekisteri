@@ -71,6 +71,6 @@ trait OpiskeluoikeusService extends InMemQueryingResourceService[Opiskeluoikeus,
 
 }
 
-class OpiskeluoikeusActor(val journal:Journal[Opiskeluoikeus, UUID] = new InMemJournal[Opiskeluoikeus, UUID]) extends ResourceActor[Opiskeluoikeus, UUID] with OpiskeluoikeusRepository with OpiskeluoikeusService {
+class OpiskeluoikeusActor(val journal:Journal[Opiskeluoikeus, UUID] = new InMemJournal[Opiskeluoikeus, UUID]) extends ResourceActor[Opiskeluoikeus, UUID] with OpiskeluoikeusService {
   override val logger = Logging(context.system, this)
 }

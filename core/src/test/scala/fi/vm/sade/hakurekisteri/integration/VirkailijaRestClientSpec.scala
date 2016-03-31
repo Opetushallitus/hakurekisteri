@@ -1,13 +1,13 @@
 package fi.vm.sade.hakurekisteri.integration
 
 import akka.actor.ActorSystem
-import org.scalatest.{BeforeAndAfterEach, BeforeAndAfter, Matchers, FlatSpec}
+import com.ning.http.client._
+import org.mockito.Mockito._
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future, ExecutionContext}
-import com.ning.http.client._
-import org.scalatest.mock.MockitoSugar
-import org.mockito.Mockito._
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 
 class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with BeforeAndAfterEach with LocalhostProperties {
@@ -28,7 +28,7 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
   it should "serialize response into a case class" in {
     when(endPoint.request(forUrl("http://localhost/test/rest"))).thenReturn((200, List(), "{\"id\":\"abc\"}"))
 
-    val response =  client.client.request("http://localhost/test/rest")(JsonExtractor.handler[TestResponse](200))
+    val response =  client.Client.request("http://localhost/test/rest")(JsonExtractor.handler[TestResponse](200))
     val testResponse = Await.result(response, 10.seconds)
     testResponse.id should be("abc")
   }
@@ -80,8 +80,4 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
   }
 
   case class TestResponse(id: String)
-
-
-
-
 }

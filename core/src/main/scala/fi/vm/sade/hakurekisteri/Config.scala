@@ -159,7 +159,6 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val koodistoServiceUrlQa = s"https://$hostQa/koodisto-service"
   val parameterServiceUrlQa = s"https://$hostQa/ohjausparametrit-service"
   val valintaTulosServiceUrlQa = s"https://$hostQa/valinta-tulos-service"
-  val valintarekisteriServiceUrlQa = s"https://$hostQa/valintarekisteri"
 
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
   val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
@@ -177,7 +176,6 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val parameterServiceUrl = properties.getOrElse("cas.service.ohjausparametrit-service", parameterServiceUrlQa)
   val organisaatioServiceUrl = properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa)
   val valintaTulosServiceUrl = properties.getOrElse("cas.service.valintatulos-service", valintaTulosServiceUrlQa)
-  val valintarekisteriServiceUrl = properties.getOrElse("cas.service.valintarekisteri-service", valintarekisteriServiceUrlQa)
   val maxApplications = properties.getOrElse("suoritusrekisteri.hakijat.max.applications", "2000").toInt
   val virtaServiceUrl = properties.getOrElse("suoritusrekisteri.virta.service.url", virtaServiceUrlTest)
   val virtaJarjestelma = properties.getOrElse("suoritusrekisteri.virta.jarjestelma", virtaJarjestelmaTest)
@@ -197,7 +195,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val valintaTulosConfig = new ServiceConfig(serviceUrl = valintaTulosServiceUrl, properties = properties) {
     override val httpClientRequestTimeout: Int = 600000
   }
-  val valintarekisteriConfig = ServiceConfig(serviceUrl = valintarekisteriServiceUrl, properties = properties)
+  val valintarekisteriConfig = ServiceConfig(serviceUrl = valintaTulosServiceUrl, properties = properties)
 
   val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt
   val organisaatioCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.organisaatio", "12").toInt

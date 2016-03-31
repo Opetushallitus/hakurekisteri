@@ -51,7 +51,6 @@ cas.service.sijoittelu-service=https://${host.virkailija}/sijoittelu-service
 cas.service.suoritusrekisteri=https://${host.virkailija}/suoritusrekisteri
 cas.service.tarjonta-service=https://${host.virkailija}/tarjonta-service
 cas.service.valintatulos-service=https://${host.virkailija}/valinta-tulos-service
-cas.service.valintarekisteri-service=https://${host.virkailija}/valintarekisteri
 ldap.cache.size=10000
 ldap.data.dir=${user.home}/data
 ldap.filter.people=uid\=%u

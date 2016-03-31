@@ -256,6 +256,6 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
   }
 }
 
-class SuoritusActor(val journal:Journal[Suoritus, UUID] = new InMemJournal[Suoritus, UUID]) extends ResourceActor[Suoritus, UUID] with SuoritusRepository with SuoritusService {
+class SuoritusActor(val journal:Journal[Suoritus, UUID] = new InMemJournal[Suoritus, UUID]) extends ResourceActor[Suoritus, UUID] with SuoritusService {
   override val logger = Logging(context.system, this)
 }

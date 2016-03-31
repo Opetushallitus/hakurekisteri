@@ -13,7 +13,7 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenActor
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriActor
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActor}
 import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusActor
 import fi.vm.sade.hakurekisteri.oppija.Oppija
@@ -59,10 +59,10 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
   }
 
   test("OppijaResource should return 10001 oppijas with ensikertalainen false") {
-    waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None)))(oppijat => {
+    waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None), None))(oppijat => {
       val expectedSize: Int = 10001
       oppijat.length should be(expectedSize)
-      oppijat.foreach(o => o.ensikertalainen should be(Some(false)))
+      oppijat.foreach(o => o.ensikertalainen should be(Some(true)))
     })
   }
 
@@ -78,7 +78,7 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
     get("/1.2.246.562.24.00000000001?ensikertalaisuudenRajapvm=2014-10-01T16:00:00.000+03:00") {
       response.status should be(OK)
 
-      body should include("\"ensikertalainen\":false")
+      body should include("\"ensikertalainen\":true")
     }
   }
 
@@ -86,13 +86,13 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
     valintarekisteri.underlyingActor.requestCount = 0
     get("/?haku=1.2.246.562.6.00000000001") {
       get("/?haku=1.2.246.562.6.00000000001") {
-        val expectedSize: Int = 20002
-        valintarekisteri.underlyingActor.requestCount should be(expectedSize)
+        val expectedCount: Int = 2
+        valintarekisteri.underlyingActor.requestCount should be (expectedCount)
       }
     }
   }
 
-  test("OppijaResource should not tell ensikertalaisuus for oppija without hetu when EnsikertalaisuusActor returns true") {
+  test("OppijaResource should tell ensikertalaisuus true also for oppija without hetu") {
     waitFuture(resource.fetchOppijatFor(Seq(FullHakemus(
       oid = "1.2.246.562.11.00000000001",
       personOid = Some("1.2.246.562.24.00000000002"),
@@ -100,8 +100,8 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
       answers = Some(HakemusAnswers(Some(HakemusHenkilotiedot()))),
       state = Some("INCOMPLETE"),
       preferenceEligibilities = Seq()
-    ))))((s: Seq[Oppija]) => {
-      s.head.ensikertalainen should be(None)
+    )), None))((s: Seq[Oppija]) => {
+      s.head.ensikertalainen should be(Some(true))
     })
   }
 
@@ -210,10 +210,6 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   val endpoint = mock[Endpoint]
   when(endpoint.request(forPattern("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=.*"))).
     thenReturn((200, List(), "[]"))
-  when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/.*"))).
-    thenReturn((200, List(), """{"oid":"foo","paattyi":"2014-09-01T00:00:00Z"}"""))
-  when(endpoint.request(forPattern("http://localhost/valintarekisteri/ensikertalaisuus/1\\.2\\.246\\.562\\.24\\.00000000002\\?koulutuksenAlkamispvm=.+"))).
-    thenReturn((200, List(), """{"oid":"1.2.246.562.24.00000000002"}"""))
 
   val hakemukset: Seq[FullHakemus] = henkilot.map(henkilo => {
     FullHakemus(
@@ -241,10 +237,7 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   }))
 
   val valintarekisteri = TestActorRef(new TestingValintarekisteriActor(
-    new VirkailijaRestClient(
-      config = ServiceConfig(serviceUrl = "http://localhost/valintarekisteri"),
-      aClient = Some(new AsyncHttpClient(new CapturingProvider(endpoint)))
-    ),
+    new VirkailijaRestClient(config = ServiceConfig(serviceUrl = "http://localhost/valinta-tulos-service")),
     Config.mockConfig)
   )
 
@@ -264,8 +257,8 @@ class TestingValintarekisteriActor(restClient: VirkailijaRestClient, config: Con
 
   var requestCount: Long = 0
 
-  override def fetchEnsimmainenVastaanotto(henkiloOid: String, koulutuksenAlkamispvm: DateTime): Future[Option[DateTime]] = {
+  override def fetchEnsimmainenVastaanotto(henkiloOids: Set[String], koulutuksenAlkamiskausi: String): Future[Seq[EnsimmainenVastaanotto]] = {
     requestCount = requestCount + 1
-    super.fetchEnsimmainenVastaanotto(henkiloOid, koulutuksenAlkamispvm)
+    Future.successful(henkiloOids.map(EnsimmainenVastaanotto(_, None)).toSeq)
   }
 }

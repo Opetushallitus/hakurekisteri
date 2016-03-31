@@ -6,22 +6,17 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.ValintarekisteriQuery
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
-import fi.vm.sade.hakurekisteri.rest.support.Query
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus}
-import org.joda.time.{DateTimeZone, DateTime, LocalDate}
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritusHenkilotQuery, Suoritus, VirallinenSuoritus}
+import org.joda.time.{DateTime, LocalDate}
 
 import scala.compat.Platform
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
-import scalaz.Scalaz._
-import scalaz._
-import scalaz.concurrent.Task
-import scalaz.stream._
 
-case class EnsikertalainenQuery(henkiloOid: String,
+case class EnsikertalainenQuery(henkiloOids: Set[String],
                                 suoritukset: Option[Seq[Suoritus]] = None,
                                 opiskeluoikeudet: Option[Seq[Opiskeluoikeus]] = None,
                                 paivamaara: Option[DateTime] = None)
@@ -43,101 +38,96 @@ case class SuoritettuKkTutkinto(paivamaara: DateTime) extends MenettamisenPerust
   override val peruste: String = "SuoritettuKkTutkinto"
 }
 
-case class Ensikertalainen(ensikertalainen: Boolean, menettamisenPeruste: Option[MenettamisenPeruste])
+case class Ensikertalainen(henkiloOid: String, ensikertalainen: Boolean, menettamisenPeruste: Option[MenettamisenPeruste])
 
-case class HetuNotFoundException(message: String) extends Exception(message)
+class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorRef, tarjontaActor: ActorRef, config: Config)
+                          (implicit val ec: ExecutionContext) extends Actor with ActorLogging {
 
-class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorRef, tarjontaActor: ActorRef, config: Config)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
-
-  val syksy2014: DateTime = new DateTime(2014, 8, 1, 0, 0, 0, 0, DateTimeZone.forID("Europe/Helsinki"))
+  val syksy2014 = "2014S"
   val Oid = "(1\\.2\\.246\\.562\\.[0-9.]+)".r
   val KkKoulutusUri = "koulutus_[67][1-9][0-9]{4}".r
 
   implicit val defaultTimeout: Timeout = 2.minutes
 
-  implicit def future2Task[A](future: Future[A]): Task[A] = Task.async[A] {
-    register =>
-      future.onComplete {
-        case scala.util.Success(v) => register(v.right)
-        case scala.util.Failure(ex) => register(ex.left)
-      }
-  }
-
   log.info(s"started ensikertalaisuus actor: $self")
-
-  val queryEc = ec
 
   override def receive: Receive = {
     case q: EnsikertalainenQuery =>
-      val promise = Promise[Ensikertalainen]()
-
-      Future {
-
-        val henkiloOid = Process(q.henkiloOid).toSource
-
-        val henkilonSuoritukset =
-          channel.lift[Task, String, Seq[Suoritus]]((henkiloOid: String) => q.suoritukset.map(Task.now).getOrElse((suoritusActor ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]]))
-
-        val isKkTutkinto =
-          channel.lift[Task, VirallinenSuoritus, Boolean]((s: VirallinenSuoritus) => s.komo match {
-            case KkKoulutusUri() => Task.now(true)
-            case Oid(komo) =>
-              (tarjontaActor ? GetKomoQuery(komo)).mapTo[KomoResponse].flatMap(_.komo match {
-                case Some(k) => Future.successful(k.isKorkeakoulututkinto)
-                case None => Future.failed(new Exception(s"komo $komo not found"))
-              })
-            case _ => Task.now(false)
-          })
-
-        val kkVastaanotto =
-          channel.lift[Task, String, Option[DateTime]]((henkiloOid: String) => (valintarekisterActor ? ValintarekisteriQuery(henkiloOid, syksy2014)).mapTo[Option[DateTime]])
-
-        val kkTutkinnot = henkiloOid through henkilonSuoritukset pipe process1.unchunk collect {
-          case vs: VirallinenSuoritus => vs
-        } observeThrough isKkTutkinto collect {
-          case (VirallinenSuoritus(_, _, "VALMIS", valmistuminen, _, _, _, _, _, _), true) => valmistuminen.toDateTimeAtStartOfDay
-        } minimumBy (_.getMillis) pipe process1.awaitOption
-
-        val ensimmainenVastaanotto = henkiloOid through kkVastaanotto
-
-        val query = kkTutkinnot.flatMap {
-          case tutkintoDate@Some(_) => Process.emit((tutkintoDate, None)).toSource
-          case tutkintoDate@None => ensimmainenVastaanotto.map(vastaanottoDate => (tutkintoDate, vastaanottoDate))
-        }
-
-        query.runLastOr(None -> None).
-          map(ensikertalaisuusPaattely(q.paivamaara.getOrElse(new LocalDate().toDateTimeAtStartOfDay))).
-          timed(1.minutes.toMillis).
-          runAsync {
-            case -\/(failure) => promise.tryFailure(failure)
-            case \/-(ensikertalainen) => promise.trySuccess(ensikertalainen)
-          }
-
-      }(queryEc)
-
-      promise.future pipeTo sender
-
+      val ensikertalaisuudet: Future[Seq[Ensikertalainen]] = for {
+        valmistumishetket: Map[String, DateTime] <- valmistumiset(q)
+        vastaanottohetket: Map[String, DateTime] <- vastaanotot(q)(valmistumishetket.keySet)
+      } yield for (
+        henkilo <- q.henkiloOids.toSeq
+      ) yield ensikertalaisuus(
+        henkilo,
+        q.paivamaara.getOrElse(DateTime.now()),
+        valmistumishetket.get(henkilo),
+        vastaanottohetket.get(henkilo)
+      )
+      ensikertalaisuudet pipeTo sender
     case QueryCount =>
       sender ! QueriesRunning(Map[String, Int]())
   }
 
-  def ensikertalaisuusPaattely(leikkuripaiva: DateTime)(t: (Option[DateTime], Option[DateTime])) = t match {
-    case (Some(tutkintopaiva), _) if tutkintopaiva.isBefore(leikkuripaiva) => Ensikertalainen(ensikertalainen = false, Some(SuoritettuKkTutkinto(tutkintopaiva)))
-    case (_, Some(vastaanottopaiva)) if vastaanottopaiva.isBefore(leikkuripaiva) => Ensikertalainen(ensikertalainen = false, Some(KkVastaanotto(vastaanottopaiva)))
-    case default => Ensikertalainen(ensikertalainen = true, None)
+  private def vastaanotot(q: EnsikertalainenQuery)(valmistuneet: Set[String]): Future[Map[String, DateTime]] =
+    (q.henkiloOids.diff(valmistuneet) match {
+      case kysyttavat if kysyttavat.isEmpty => Future.successful(Seq[EnsimmainenVastaanotto]())
+      case kysyttavat => getKkVastaanotonHetket(kysyttavat)
+    }).map(_.collect {
+      case EnsimmainenVastaanotto(oid, Some(date)) => (oid, date)
+    }.toMap)
+
+  private def valmistumiset(q: EnsikertalainenQuery): Future[Map[String, DateTime]] = q.suoritukset
+    .map(Future.successful)
+    .getOrElse(suoritukset(q.henkiloOids))
+    .flatMap(kkSuoritukset)
+    .map(_.groupBy(_.henkiloOid))
+    .map(_.mapValues(aikaisinValmistuminen))
+    .map(_.collect {
+      case (key, Some(date)) => (key, date)
+    })
+
+  private def suoritukset(henkiloOids: Set[String]): Future[Seq[Suoritus]] =
+    (suoritusActor ? SuoritusHenkilotQuery(henkilot = henkiloOids)).mapTo[Seq[Suoritus]]
+
+  private def isKkTutkinto(suoritus: Suoritus): Future[Option[Suoritus]] = suoritus match {
+    case s: VirallinenSuoritus => s.komo match {
+      case KkKoulutusUri() => Future.successful(Some(suoritus))
+      case Oid(komo) =>
+        (tarjontaActor ? GetKomoQuery(komo)).mapTo[KomoResponse].flatMap(_.komo match {
+          case Some(k) if k.isKorkeakoulututkinto => Future.successful(Some(suoritus))
+          case Some(_) => Future.successful(None)
+          case None => Future.failed(new Exception(s"komo $komo not found"))
+        })
+      case _ => Future.successful(None)
+    }
+    case _ => Future.successful(None)
   }
 
+  private def kkSuoritukset(suoritukset: Seq[Suoritus]): Future[Seq[Suoritus]] =
+    Future.sequence(suoritukset.map(isKkTutkinto)).map(_.flatten)
 
-  class FetchResource[T, R](query: Query[T], wrapper: (Seq[T]) => R, receiver: ActorRef, resourceActor: ActorRef) extends Actor {
-    override def preStart(): Unit = {
-      resourceActor ! query
+  private def aikaisinValmistuminen(suoritukset: Seq[Suoritus]): Option[DateTime] = {
+    val valmistumishetket = suoritukset.collect {
+      case VirallinenSuoritus(_, _, "VALMIS", valmistuminen, _, _, _, _, _, _) => valmistuminen.toDateTimeAtStartOfDay
     }
+    if (valmistumishetket.isEmpty) None else Some(valmistumishetket.minBy(_.getMillis))
+  }
 
-    override def receive: Actor.Receive = {
-      case s: Seq[T] =>
-        receiver ! wrapper(s)
-        context.stop(self)
-    }
+  private def getKkVastaanotonHetket(henkiloOids: Set[String]): Future[Seq[EnsimmainenVastaanotto]] = {
+    (valintarekisterActor ? ValintarekisteriQuery(henkiloOids, syksy2014)).mapTo[Seq[EnsimmainenVastaanotto]]
+  }
+
+  def ensikertalaisuus(henkilo: String,
+                       leikkuripaiva: DateTime,
+                       valmistuminen: Option[DateTime],
+                       vastaanotto: Option[DateTime]): Ensikertalainen = (valmistuminen, vastaanotto) match {
+    case (Some(tutkintopaiva), _) if tutkintopaiva.isBefore(leikkuripaiva) =>
+      Ensikertalainen(henkilo, ensikertalainen = false, Some(SuoritettuKkTutkinto(tutkintopaiva)))
+    case (_, Some(vastaanottopaiva)) if vastaanottopaiva.isBefore(leikkuripaiva) =>
+      Ensikertalainen(henkilo, ensikertalainen = false, Some(KkVastaanotto(vastaanottopaiva)))
+    case _ =>
+      Ensikertalainen(henkilo, ensikertalainen = true, None)
   }
 
 }
