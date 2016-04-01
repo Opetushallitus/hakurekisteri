@@ -25,19 +25,19 @@ object Valintatila extends Enumeration {
 object Vastaanottotila extends Enumeration {
   type Vastaanottotila = Value
   val KESKEN = Value("KESKEN")
-  val VASTAANOTTANUT = Value("VASTAANOTTANUT")
+  val VASTAANOTTANUT = Value("VASTAANOTTANUT_SITOVASTI")
   val EI_VASTAANOTETTU_MAARA_AIKANA = Value("EI_VASTAANOTETTU_MAARA_AIKANA")
   val PERUNUT = Value("PERUNUT")
   val PERUUTETTU = Value("PERUUTETTU")
+  val OTTANUT_VASTAAN_TOISEN_PAIKAN = Value("OTTANUT_VASTAAN_TOISEN_PAIKAN")
   val EHDOLLISESTI_VASTAANOTTANUT = Value("EHDOLLISESTI_VASTAANOTTANUT")
-  val VASTAANOTTANUT_SITOVASTI = Value("VASTAANOTTANUT_SITOVASTI")
 
   def valueOption(t: String): Option[Vastaanottotila.Value] = {
     Try(withName(t)).toOption
   }
 
   def isVastaanottanut(t: Vastaanottotila): Boolean =
-    t == VASTAANOTTANUT || t == EHDOLLISESTI_VASTAANOTTANUT || t == VASTAANOTTANUT_SITOVASTI
+    t == VASTAANOTTANUT || t == EHDOLLISESTI_VASTAANOTTANUT
 }
 
 object Ilmoittautumistila extends Enumeration {
