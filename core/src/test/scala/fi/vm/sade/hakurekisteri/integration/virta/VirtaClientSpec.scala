@@ -28,6 +28,8 @@ object VirtaResults {
 
   val opiskeluoikeustyypit = scala.io.Source.fromURL(getClass.getResource("/test-response-opiskeluoikeustyypit.xml")).mkString
 
+  val testResponse106 = scala.io.Source.fromURL(getClass.getResource("/virta/test-response-106.xml")).mkString
+
 }
 
 
@@ -51,6 +53,7 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.3"))).thenReturn((200, List(), VirtaResults.testResponse))
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.9"))).thenReturn((200, List(), VirtaResults.opiskeluoikeustyypit))
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("111111-1975"))).thenReturn((200, List(), VirtaResults.testResponse))
+  when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.106"))).thenReturn((200, List(), VirtaResults.testResponse106))
 
   val virtaClient = new VirtaClient(aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint))))
 
@@ -168,4 +171,14 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
     virtaClient.parseLocalDateOption(None) should be (None)
   }
 
+  it should "work with version 1.06 schema" in {
+    virtaClient.setApiVersion(VirtaClient.version106)
+
+    val response: Future[Option[VirtaResult]] = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.106")
+
+    waitFuture(response) {(o: Option[VirtaResult]) => {
+      o.get.opiskeluoikeudet.size should be(5)
+      o.get.tutkinnot.size should be(1)
+    }}
+  }
 }
