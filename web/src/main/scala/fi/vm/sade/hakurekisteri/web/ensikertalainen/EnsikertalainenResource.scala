@@ -38,44 +38,39 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusRekiste
     contentType = formats("json")
   }
 
-  def ensikertalaisuudenRajapvm(d: Option[String]): Option[DateTime] = d.flatMap(date => Try(ISODateTimeFormat.dateTimeParser.parseDateTime(date)).toOption)
-
   get("/", operation(query)) {
     val t0 = Platform.currentTime
-    try {
-      val henkiloOid = params("henkilo")
-      val rajapvm = ensikertalaisuudenRajapvm(params.get("ensikertalaisuudenRajapvm"))
+    val henkiloOid = params("henkilo")
+    val hakuOid = params("haku")
 
-      new AsyncResult() {
-        override implicit def timeout: Duration = 60.seconds
-        private val q = (ensikertalainenActor ? EnsikertalainenQuery(Set(henkiloOid), paivamaara = rajapvm))(60.seconds).mapTo[Seq[Ensikertalainen]].map(_.head)
-        logQuery(Map("henkilo" -> henkiloOid, "ensikertalaisuudenRajapvm" -> rajapvm), t0, q)
-        override val is = q
-      }
-    } catch {
-      case t: NoSuchElementException => throw ParamMissingException("parameter henkilo missing")
+    new AsyncResult() {
+      override implicit def timeout: Duration = 60.seconds
+      private val q = (ensikertalainenActor ? EnsikertalainenQuery(
+        henkiloOids = Set(henkiloOid),
+        hakuOid = hakuOid
+      ))(60.seconds).mapTo[Seq[Ensikertalainen]].map(_.head)
+      logQuery(Map("henkilo" -> henkiloOid, "haku" -> hakuOid), t0, q)
+      override val is = q
     }
   }
 
-  get("/haku/:hakuOid", operation(hakuQuery)) {
+  get("/haku/:haku", operation(hakuQuery)) {
     val t0 = Platform.currentTime
-    try {
-      val hakuOid = params("hakuOid")
-      val rajapvm = ensikertalaisuudenRajapvm(params.get("ensikertalaisuudenRajapvm"))
+    val hakuOid = params("haku")
 
-      new AsyncResult() {
-        override implicit def timeout: Duration = 120.seconds
-        private val q = {
-          val henkiloOids = (hakemusRekisteri ? HakemusQuery(Some(hakuOid), None, None, None))(60.seconds)
-            .mapTo[Seq[FullHakemus]]
-            .map(_.flatMap(_.personOid).toSet)
-          henkiloOids.flatMap(persons => (ensikertalainenActor ? EnsikertalainenQuery(persons, paivamaara = rajapvm))(120.seconds).mapTo[Seq[Ensikertalainen]])
-        }
-        logQuery(Map("hakuOid" -> hakuOid, "ensikertalaisuudenRajapvm" -> rajapvm), t0, q)
-        override val is = q
+    new AsyncResult() {
+      override implicit def timeout: Duration = 120.seconds
+      private val q = {
+        val henkiloOids = (hakemusRekisteri ? HakemusQuery(Some(hakuOid), None, None, None))(60.seconds)
+          .mapTo[Seq[FullHakemus]]
+          .map(_.flatMap(_.personOid).toSet)
+        henkiloOids.flatMap(persons => (ensikertalainenActor ? EnsikertalainenQuery(
+          henkiloOids = persons,
+          hakuOid = hakuOid
+        ))(120.seconds).mapTo[Seq[Ensikertalainen]])
       }
-    } catch {
-      case t: NoSuchElementException => throw ParamMissingException("parameter haku missing")
+      logQuery(Map("haku" -> hakuOid), t0, q)
+      override val is = q
     }
   }
 
@@ -83,16 +78,21 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusRekiste
     val t0 = Platform.currentTime
     val personOids = parse(request.body).extract[Set[String]]
     if (personOids.isEmpty) throw ParamMissingException("request body does not contain person oids")
-    val rajapvm = ensikertalaisuudenRajapvm(params.get("ensikertalaisuudenRajapvm"))
+    val hakuOid = params("haku")
+
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
-      private val q = (ensikertalainenActor ? EnsikertalainenQuery(personOids, paivamaara = rajapvm))(120.seconds).mapTo[Seq[Ensikertalainen]]
-      logQuery(Map("body" -> personOids, "ensikertalaisuudenRajapvm" -> rajapvm), t0, q)
+      private val q = (ensikertalainenActor ? EnsikertalainenQuery(
+        henkiloOids = personOids,
+        hakuOid = hakuOid
+      ))(120.seconds).mapTo[Seq[Ensikertalainen]]
+      logQuery(Map("body" -> personOids, "haku" -> hakuOid), t0, q)
       override val is = q
     }
   }
 
   incident {
+    case t: NoSuchElementException => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: ParamMissingException => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: ExecutionException => (id) => InternalServerError(IncidentReport(id, "backend service failed"))
     case t: PreconditionFailedException => (id) => InternalServerError(IncidentReport(id, "backend service failed"))

@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.rest
 
 import java.util.UUID
 
+import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.testkit.TestActorRef
 import com.ning.http.client.AsyncHttpClient
@@ -9,9 +10,10 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana.ArvosanaActor
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
-import fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenActor
+import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, Testihaku}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
+import fi.vm.sade.hakurekisteri.integration.haku.GetHaku
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActor}
 import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
@@ -59,23 +61,15 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
   }
 
   test("OppijaResource should return 10001 oppijas with ensikertalainen false") {
-    waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None), None))(oppijat => {
+    waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None), Testihaku.oid))(oppijat => {
       val expectedSize: Int = 10001
       oppijat.length should be(expectedSize)
       oppijat.foreach(o => o.ensikertalainen should be(Some(true)))
     })
   }
 
-  test("OppijaResource should return oppija with ensikertalainen true when asked with ensikertalaisuus timestamp earlier than vastaanotto") {
-    get("/1.2.246.562.24.00000000001?ensikertalaisuudenRajapvm=2014-06-01T00:00:00.000Z") {
-      response.status should be(OK)
-
-      body should include("\"ensikertalainen\":true")
-    }
-  }
-
-  test("OppijaResource should return oppija with ensikertalainen false when asked with ensikertalaisuus timestamp after than vastaanotto") {
-    get("/1.2.246.562.24.00000000001?ensikertalaisuudenRajapvm=2014-10-01T16:00:00.000+03:00") {
+  test("OppijaResource should return oppija with ensikertalainen true") {
+    get("/1.2.246.562.24.00000000001?haku=1.2.3.4") {
       response.status should be(OK)
 
       body should include("\"ensikertalainen\":true")
@@ -100,13 +94,13 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
       answers = Some(HakemusAnswers(Some(HakemusHenkilotiedot()))),
       state = Some("INCOMPLETE"),
       preferenceEligibilities = Seq()
-    )), None))((s: Seq[Oppija]) => {
+    )), Testihaku.oid))((s: Seq[Oppija]) => {
       s.head.ensikertalainen should be(Some(true))
     })
   }
 
   test("OppijaResource should 200 when a list of person oids is sent as POST") {
-    post("/", """["1.2.246.562.24.00000000002"]""") {
+    post("/?haku=1.2.3.4", """["1.2.246.562.24.00000000002"]""") {
       response.status should be (OK)
     }
   }
@@ -114,14 +108,14 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
   test("OppijaResource should return 400 if too many person oids is sent as POST") {
     val json = decompose((1 to (resource.maxOppijatPostSize + 1)).map(i => s"1.2.246.562.24.$i"))
 
-    post("/", compact(json)) {
+    post("/?haku=1.2.3.4", compact(json)) {
       response.status should be (BAD_REQUEST)
       response.body should include("too many person oids")
     }
   }
 
   test("OppijaResource should return 400 if invalid person oids is sent as POST") {
-    post("/", """["foo","1.2.246.562.24.00000000002"]""") {
+    post("/?haku=1.2.3.4", """["foo","1.2.246.562.24.00000000002"]""") {
       response.status should be (BAD_REQUEST)
       response.body should include("person oid must start with 1.2.246.562.24.")
     }
@@ -130,14 +124,14 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
   test("OppijaResource should return 100 oppijas when 100 person oids is sent as POST") {
     val json = decompose(henkilot.take(100).map(i => s"1.2.246.562.24.$i"))
 
-    post("/", compact(json)) {
+    post("/?haku=1.2.3.4", compact(json)) {
       val oppijat = parse(response.body).extract[List[JObject]]
       oppijat.size should be (100)
     }
   }
 
   test("OppijaResource should return an empty oppija object if no matching oppija found when person oid is sent as POST") {
-    post("/", """["1.2.246.562.24.00000000010"]""") {
+    post("/?haku=1.2.3.4", """["1.2.246.562.24.00000000010"]""") {
       val oppijat = read[List[Oppija]](response.body)
 
       oppijat.size should be (1)
@@ -241,7 +235,11 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
     Config.mockConfig)
   )
 
-  val ensikertalaisuusActor = system.actorOf(Props(new EnsikertalainenActor(rekisterit.suoritusRekisteri, valintarekisteri, tarjontaActor, Config.mockConfig)))
+  val ensikertalaisuusActor = system.actorOf(Props(new EnsikertalainenActor(rekisterit.suoritusRekisteri, valintarekisteri, tarjontaActor, system.actorOf(Props(new Actor {
+    override def receive: Receive = {
+      case q: GetHaku => sender ! Testihaku
+    }
+  })), Config.mockConfig)))
 
   val resource = new OppijaResource(rekisterit, hakemusActor, ensikertalaisuusActor)
 

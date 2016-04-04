@@ -62,7 +62,8 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
             vuosi = 2014,
             koulutuksenAlkamiskausi = None,
             koulutuksenAlkamisvuosi = None,
-            kkHaku = false
+            kkHaku = false,
+            viimeinenHakuaikaPaattyy = Some(since.plusDays(i + 15).toDateTimeAtStartOfDay)
           )
         ).toSet)
 
@@ -118,7 +119,8 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
             vuosi = 2014,
             koulutuksenAlkamiskausi = None,
             koulutuksenAlkamisvuosi = None,
-            kkHaku = false
+            kkHaku = false,
+            viimeinenHakuaikaPaattyy = Some(since.plusDays(i + 15).toDateTimeAtStartOfDay)
           )
         ).toSet)
 

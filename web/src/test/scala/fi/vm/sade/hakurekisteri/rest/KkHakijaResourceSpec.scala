@@ -6,8 +6,8 @@ import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.hakija.{Puuttuu, Syksy, _}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{RefreshHakemukset, FullHakemus, HakemusActor}
-import fi.vm.sade.hakurekisteri.integration.haku.{HakuNotFoundException, GetHaku, Haku, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusActor, RefreshHakemukset}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohdeOid, HakukohteenKoulutukset, Hakukohteenkoulutus, RestHaku, RestHakuAika}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
@@ -19,15 +19,15 @@ import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Journal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritysTyyppiQuery, VirallinenSuoritus}
-import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaUtil, KkHakijaQuery, KkHakijaResource}
+import fi.vm.sade.hakurekisteri.web.kkhakija.{KkHakijaQuery, KkHakijaResource, KkHakijaUtil}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
-import org.joda.time.LocalDate
+import org.joda.time.{DateTime, LocalDate}
 import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.concurrent.{Future, Await}
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import org.mockito.Mockito._
 
@@ -106,7 +106,8 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
       vuosi = 2014,
       koulutuksenAlkamiskausi = Some("kausi_k#1"),
       koulutuksenAlkamisvuosi = Some(2015),
-      kkHaku = true
+      kkHaku = true,
+      viimeinenHakuaikaPaattyy = Some(new DateTime())
     )
     val sijoitteluTulos = new SijoitteluTulos {
       override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.EI_TEHTY)
@@ -128,7 +129,8 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
       vuosi = 2015,
       koulutuksenAlkamiskausi = Some("kausi_s#1"),
       koulutuksenAlkamisvuosi = Some(2015),
-      kkHaku = true
+      kkHaku = true,
+      viimeinenHakuaikaPaattyy = Some(new DateTime())
     )
     val sijoitteluTulos = new SijoitteluTulos {
       override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.LASNA_SYKSY)
@@ -204,7 +206,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
 
   import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 
-  val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L)), Map("fi" -> "testihaku"), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), "JULKAISTU")
+  val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L, Some(2L))), Map("fi" -> "testihaku"), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), "JULKAISTU")
   val koulutus1 = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"))
   val suoritus1 = VirallinenSuoritus(YTLXml.yotutkinto, YTLXml.YTL, "VALMIS", new LocalDate(), "1.2.3", Ei, "FI", None, true, "1")
 

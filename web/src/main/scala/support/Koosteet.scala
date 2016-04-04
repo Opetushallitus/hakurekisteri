@@ -27,5 +27,5 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
 
   val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemukset, haut), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
 
-  override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, integrations.valintarekisteri, integrations.tarjonta, config)), "ensikertalainen")
+  override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, integrations.valintarekisteri, integrations.tarjonta, haut, config)), "ensikertalainen")
 }

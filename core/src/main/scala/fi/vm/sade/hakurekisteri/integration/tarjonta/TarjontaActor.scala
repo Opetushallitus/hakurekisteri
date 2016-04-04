@@ -31,7 +31,7 @@ case class RestHaku(oid:Option[String],
                     kohdejoukkoUri: Option[String],
                     tila: String)
 
-case class RestHakuAika(alkuPvm:Long)
+case class RestHakuAika(alkuPvm: Long, loppuPvm: Option[Long])
 
 case class TarjontaResultResponse[T](result: T)
 

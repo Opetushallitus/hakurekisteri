@@ -5,10 +5,11 @@ import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusHenkilotQuery, Suoritus, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusHenkilotQuery, VirallinenSuoritus}
 import org.joda.time.{DateTime, LocalDate}
 
 import scala.compat.Platform
@@ -17,9 +18,9 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 case class EnsikertalainenQuery(henkiloOids: Set[String],
+                                hakuOid: String,
                                 suoritukset: Option[Seq[Suoritus]] = None,
-                                opiskeluoikeudet: Option[Seq[Opiskeluoikeus]] = None,
-                                paivamaara: Option[DateTime] = None)
+                                opiskeluoikeudet: Option[Seq[Opiskeluoikeus]] = None)
 
 object QueryCount
 
@@ -40,7 +41,7 @@ case class SuoritettuKkTutkinto(paivamaara: DateTime) extends MenettamisenPerust
 
 case class Ensikertalainen(henkiloOid: String, ensikertalainen: Boolean, menettamisenPeruste: Option[MenettamisenPeruste])
 
-class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorRef, tarjontaActor: ActorRef, config: Config)
+class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorRef, tarjontaActor: ActorRef, hakuActor: ActorRef, config: Config)
                           (implicit val ec: ExecutionContext) extends Actor with ActorLogging {
 
   val syksy2014 = "2014S"
@@ -54,13 +55,14 @@ class EnsikertalainenActor(suoritusActor: ActorRef, valintarekisterActor: ActorR
   override def receive: Receive = {
     case q: EnsikertalainenQuery =>
       val ensikertalaisuudet: Future[Seq[Ensikertalainen]] = for {
+        haku <- (hakuActor ? GetHaku(q.hakuOid)).mapTo[Haku]
         valmistumishetket: Map[String, DateTime] <- valmistumiset(q)
         vastaanottohetket: Map[String, DateTime] <- vastaanotot(q)(valmistumishetket.keySet)
       } yield for (
         henkilo <- q.henkiloOids.toSeq
       ) yield ensikertalaisuus(
         henkilo,
-        q.paivamaara.getOrElse(DateTime.now()),
+        haku.viimeinenHakuaikaPaattyy.getOrElse(throw new IllegalArgumentException(s"haku ${q.hakuOid} is missing hakuajan päätös")),
         valmistumishetket.get(henkilo),
         vastaanottohetket.get(henkilo)
       )

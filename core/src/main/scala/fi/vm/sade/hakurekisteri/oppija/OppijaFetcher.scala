@@ -27,23 +27,23 @@ trait OppijaFetcher {
   protected implicit def executor: ExecutionContext
   implicit val defaultTimeout: Timeout
 
-  def fetchOppijat(q: HakemusQuery, ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Seq[Oppija]] =
+  def fetchOppijat(q: HakemusQuery, hakuOid: String)(implicit user: User): Future[Seq[Oppija]] =
     for (
       hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
-      oppijat <- fetchOppijatFor(hakemukset, ensikertalaisuudenRajapvm)
+      oppijat <- fetchOppijatFor(hakemukset, hakuOid)
     ) yield oppijat
 
-  def fetchOppijatFor(hakemukset: Seq[FullHakemus], ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Seq[Oppija]] = {
+  def fetchOppijatFor(hakemukset: Seq[FullHakemus], hakuOid: String)(implicit user: User): Future[Seq[Oppija]] = {
     val persons = extractPersons(hakemukset)
-    fetchOppijat(persons, ensikertalaisuudenRajapvm)
+    fetchOppijat(persons, hakuOid)
   }
 
-  def fetchOppijat(persons: Set[String], ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Seq[Oppija]] = {
-    enrichWithEnsikertalaisuus(getRekisteriData(persons), ensikertalaisuudenRajapvm)
+  def fetchOppijat(persons: Set[String], hakuOid: String)(implicit user: User): Future[Seq[Oppija]] = {
+    enrichWithEnsikertalaisuus(getRekisteriData(persons), hakuOid)
   }
 
-  def fetchOppija(person: String, ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Oppija] = {
-    fetchOppijat(Set(person), ensikertalaisuudenRajapvm).map(_.head)
+  def fetchOppija(person: String, hakuOid: String)(implicit user: User): Future[Oppija] = {
+    fetchOppijat(Set(person), hakuOid).map(_.head)
   }
 
   private def extractPersons(hakemukset: Seq[FullHakemus]): Set[String] =
@@ -53,8 +53,8 @@ trait OppijaFetcher {
     ) yield hakemus.personOid.get).toSet
 
   private def enrichWithEnsikertalaisuus(rekisteriData: Future[Seq[Oppija]],
-                                         ensikertalaisuudenRajapvm: Option[DateTime])(implicit user: User): Future[Seq[Oppija]] = {
-    rekisteriData.flatMap(fetchEnsikertalaisuudet(ensikertalaisuudenRajapvm))
+                                         hakuOid: String)(implicit user: User): Future[Seq[Oppija]] = {
+    rekisteriData.flatMap(fetchEnsikertalaisuudet(hakuOid))
   }
 
   private def getRekisteriData(personOids: Set[String])(implicit user: User): Future[Seq[Oppija]] = {
@@ -87,14 +87,14 @@ trait OppijaFetcher {
     ) yield Todistus(suoritus, arvosanat)
   )
 
-  private def fetchEnsikertalaisuudet(ensikertalaisuudenRajapvm: Option[DateTime])
+  private def fetchEnsikertalaisuudet(hakuOid: String)
                                      (rekisteriData: Seq[Oppija]): Future[Seq[Oppija]] = {
     for (
       ensikertalaisuudet <- (ensikertalaisuus ? EnsikertalainenQuery(
-        rekisteriData.map(_.oppijanumero).toSet,
+        henkiloOids = rekisteriData.map(_.oppijanumero).toSet,
+        hakuOid = hakuOid,
         Some(rekisteriData.flatMap(_.suoritukset.map(_.suoritus))),
-        Some(rekisteriData.flatMap(_.opiskeluoikeudet)),
-        ensikertalaisuudenRajapvm
+        Some(rekisteriData.flatMap(_.opiskeluoikeudet))
       )).mapTo[Seq[Ensikertalainen]].map(_.groupBy(_.henkiloOid).mapValues(_.head))
     ) yield for (
       oppija <- rekisteriData
