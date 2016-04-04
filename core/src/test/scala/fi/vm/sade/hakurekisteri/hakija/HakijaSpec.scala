@@ -98,7 +98,9 @@ class HakijaSpec extends FlatSpec with Matchers {
         lisatiedot = Some(
           Lisatiedot(
             lupaMarkkinointi = Some("true"),
-            lupaJulkaisu = Some("true"))),
+            lupaJulkaisu = Some("true"),
+            kiinnostunutoppisopimuksesta = Some("true")
+          )),
         osaaminen = None)
     ),
     state = Some("ACTIVE"),

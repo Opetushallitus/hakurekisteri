@@ -346,7 +346,11 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
           kansalaisuus = kansalaisuus,
           asiointiKieli = h.asiointiKieli,
           eiSuomalaistaHetua = h.eiSuomalaistaHetua,
-          markkinointilupa = h.markkinointilupa
+          markkinointilupa = h.markkinointilupa,
+          kiinnostunutoppisopimuksesta = h.kiinnostunutoppisopimuksesta,
+          huoltajannimi = h.huoltajannimi,
+          huoltajanpuhelinnumero = h.huoltajanpuhelinnumero,
+          huoltajansahkoposti = h.huoltajansahkoposti
         ),
         suoritukset = hakija.suoritukset,
         opiskeluhistoria = hakija.opiskeluhistoria,

@@ -123,7 +123,9 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
         lisatiedot = Some(
           Lisatiedot(
             lupaMarkkinointi = Some("true"),
-            lupaJulkaisu = Some("true"))))),
+            lupaJulkaisu = Some("true"),
+            kiinnostunutoppisopimuksesta = Some("true")
+          )))),
     state = Some("ACTIVE"),
     preferenceEligibilities = Seq(PreferenceEligibility("1.11.1", "NOT_CHECKED", Some("UNKNOWN")), PreferenceEligibility("1.11.2", "NOT_CHECKED", Some("UNKNOWN")))
   )
@@ -215,7 +217,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
         lisatiedot = Some(
           Lisatiedot(
             lupaMarkkinointi = Some("true"),
-            lupaJulkaisu = Some("true"))))),
+            lupaJulkaisu = Some("true"),
+            kiinnostunutoppisopimuksesta = Some("true"))))),
     state = Some("INCOMPLETE"),
     preferenceEligibilities = Seq()
   )
@@ -307,7 +310,8 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
         lisatiedot = Some(
           Lisatiedot(
             lupaMarkkinointi = Some("true"),
-            lupaJulkaisu = Some("true"))))),
+            lupaJulkaisu = Some("true"),
+            kiinnostunutoppisopimuksesta = Some("true"))))),
     state = Some("INCOMPLETE"),
     preferenceEligibilities = Seq()
   )
