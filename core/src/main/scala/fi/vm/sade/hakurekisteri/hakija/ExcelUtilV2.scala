@@ -1,23 +1,24 @@
 package fi.vm.sade.hakurekisteri.hakija
 
-import fi.vm.sade.hakurekisteri.rest.support.{Cell, StringCell, Row, HakijatExcelWriter}
+import fi.vm.sade.hakurekisteri.rest.support.{Cell, HakijatExcelWriter, Row, StringCell}
 
 
-object ExcelUtil extends HakijatExcelWriter[XMLHakijat] {
-  
+object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
+
   private val headers = Seq(
     "Hetu", "Oppijanumero", "Sukunimi", "Etunimet", "Kutsumanimi", "Lahiosoite", "Postinumero", "Postitoimipaikka", "Maa",
-    "Kansalaisuus", "Matkapuhelin", "Muupuhelin", "Sahkoposti", "Kotikunta", "Sukupuoli", "Aidinkieli", "Koulutusmarkkinointilupa",
-    "Vuosi", "Kausi", "Hakemusnumero", "Lahtokoulu", "Lahtokoulunnimi", "Luokka", "Luokkataso", "Pohjakoulutus", 
-    "Todistusvuosi", "Julkaisulupa", "Yhteisetaineet", "Lukiontasapisteet", "Yleinenkoulumenestys", "Lisapistekoulutus", 
-    "Painotettavataineet", "Hakujno", "Oppilaitos", "Opetuspiste", "Opetuspisteennimi", "Koulutus", 
-    "Harkinnanvaraisuuden peruste", "Urheilijan ammatillinen koulutus", "Yhteispisteet", "Valinta", "Vastaanotto", 
+    "Kansalaisuus", "Matkapuhelin", "Muupuhelin", "Sahkoposti", "Kotikunta", "Sukupuoli", "Aidinkieli", "Huoltajan nimi",
+    "Huoltajan puhelinnumero", "Huoltajan sähköposti", "Koulutusmarkkinointilupa", "Kiinnostunut Oppisopimuksesta",
+    "Vuosi", "Kausi", "Hakemusnumero", "Lahtokoulu", "Lahtokoulunnimi", "Luokka", "Luokkataso", "Pohjakoulutus",
+    "Todistusvuosi", "Julkaisulupa", "Yhteisetaineet", "Lukiontasapisteet", "Yleinenkoulumenestys", "Lisapistekoulutus",
+    "Painotettavataineet", "Hakujno", "Oppilaitos", "Opetuspiste", "Opetuspisteennimi", "Koulutus",
+    "Harkinnanvaraisuuden peruste", "Urheilijan ammatillinen koulutus", "Yhteispisteet", "Valinta", "Vastaanotto",
     "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto"
   )
 
   override def getHeaders: Set[Row] = Set(Row(0, headers.zipWithIndex.toSet.map((header: (String, Int)) => StringCell(header._2, header._1))))
 
-  override def getRows(hakijat: XMLHakijat): Set[Row] = hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet.map(ht => {
+  override def getRows(hakijat: JSONHakijat): Set[Row] = hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet.map(ht => {
     val rivi = Seq(
       h.hetu,
       h.oppijanumero,
@@ -35,7 +36,11 @@ object ExcelUtil extends HakijatExcelWriter[XMLHakijat] {
       h.kotikunta.getOrElse(""),
       h.sukupuoli,
       h.aidinkieli,
+      h.huoltajannimi.getOrElse(""),
+      h.huoltajanpuhelinnumero.getOrElse(""),
+      h.huoltajansahkoposti.getOrElse(""),
       toBooleanX(h.koulutusmarkkinointilupa),
+      toBooleanX(h.kiinnostunutoppisopimuksesta),
       h.hakemus.vuosi,
       h.hakemus.kausi,
       h.hakemus.hakemusnumero,
