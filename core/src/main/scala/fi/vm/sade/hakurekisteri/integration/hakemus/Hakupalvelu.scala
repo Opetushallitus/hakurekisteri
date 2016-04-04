@@ -107,7 +107,11 @@ object AkkaHakupalvelu {
         sukupuoli = getHenkiloTietoOrBlank(_.sukupuoli),
         hetu = getHenkiloTietoOrBlank(_.Henkilotunnus),
         syntymaaika = getHenkiloTietoOrBlank(_.syntymaaika),
-        markkinointilupa = Some(getValue(_.lisatiedot,(l:Lisatiedot) => l.lupaMarkkinointi, "false").toBoolean)
+        markkinointilupa = Some(getValue(_.lisatiedot,(l:Lisatiedot) => l.lupaMarkkinointi, "false").toBoolean),
+        kiinnostunutoppisopimuksesta = Some(getValue(_.lisatiedot,(l:Lisatiedot) => l.kiinnostunutoppisopimuksesta.filter(_.trim.nonEmpty), "false").toBoolean),
+        huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
+        huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
+        huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti)
       ),
       getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli,hakemus.personOid),
       lahtokoulu match {
@@ -196,7 +200,11 @@ case class HakemusHenkilotiedot(Henkilotunnus: Option[String] = None,
                                 sukupuoli: Option[String] = None,
                                 syntymaaika: Option[String] = None,
                                 koulusivistyskieli: Option[String] = None,
-                                turvakielto: Option[String] = None)
+                                turvakielto: Option[String] = None,
+                                huoltajannimi: Option[String] = None,
+                                huoltajanpuhelinnumero: Option[String] = None,
+                                huoltajansahkoposti: Option[String] = None)
+
 
 case class Koulutustausta(lahtokoulu:Option[String],
                           POHJAKOULUTUS: Option[String],
@@ -238,7 +246,7 @@ object Koulutustausta{
     None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
 }
 
-case class Lisatiedot(lupaJulkaisu: Option[String], lupaMarkkinointi: Option[String])
+case class Lisatiedot(lupaJulkaisu: Option[String], lupaMarkkinointi: Option[String], kiinnostunutoppisopimuksesta: Option[String])
 
 case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot] = None, koulutustausta: Option[Koulutustausta] = None, lisatiedot: Option[Lisatiedot] = None, hakutoiveet: Option[Map[String, String]] = None, osaaminen: Option[Map[String, String]] = None)
 

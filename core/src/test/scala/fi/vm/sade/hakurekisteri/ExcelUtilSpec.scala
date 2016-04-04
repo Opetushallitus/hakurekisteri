@@ -64,7 +64,7 @@ class ExcelUtilSpec extends ScalatraFunSuite {
     )))
 
     val out: ByteArrayOutputStream = new ByteArrayOutputStream()
-    ExcelUtil.write(out, hakijat)
+    ExcelUtilV1.write(out, hakijat)
 
     val wb: Workbook = WorkbookFactory.create(new ByteArrayInputStream(out.toByteArray))
     import scala.collection.JavaConversions._

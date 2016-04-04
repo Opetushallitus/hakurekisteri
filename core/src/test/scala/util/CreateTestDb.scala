@@ -48,10 +48,8 @@ object CreateDevDb extends App {
   val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
   val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
 
-
-
   for (
-    henkilos <- henkiloClient.readObject[HenkiloSearchResponse]("authentication-service.henkilo", Map("ht" -> "OPPIJA", "index" -> 0, "count" -> 50, "no" -> true, "s" -> true, "p" -> false))(200);
+    henkilos <- henkiloClient.readObject[HenkiloSearchResponse]("authentication-service.henkilo.find", Map("ht" -> "OPPIJA", "index" -> 0, "count" -> 50, "no" -> true, "s" -> true, "p" -> false))(200);
     aineet <- findPakolliset
   ) {
     for (
