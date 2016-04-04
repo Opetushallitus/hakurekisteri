@@ -18,5 +18,9 @@ case class Henkilo(hetu: String,
                    kansalaisuus: String,
                    asiointiKieli: String,
                    eiSuomalaistaHetua: Boolean,
-                   markkinointilupa: Option[Boolean])
+                   markkinointilupa: Option[Boolean],
+                   kiinnostunutoppisopimuksesta: Option[Boolean],
+                   huoltajannimi: String,
+                   huoltajanpuhelinnumero: String,
+                   huoltajansahkoposti: String)
 
