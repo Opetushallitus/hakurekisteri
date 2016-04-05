@@ -1,12 +1,14 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import akka.actor.{Actor, ActorSystem, Props}
+import akka.actor.Actor.Receive
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor, Testihaku}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor, KkVastaanotto, Testihaku}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{Hakemus, HakemusQuery}
 import fi.vm.sade.hakurekisteri.integration.haku.GetHaku
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusHenkilotQuery
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.suoritus.SuoritusHenkilotQuery
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
@@ -27,10 +29,26 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
 
   val vastaanottohetki = new DateTime(2015, 1, 1, 0, 0, 0, 0)
 
+  private val hakemusActor: ActorRef = system.actorOf(Props(new Actor {
+    override def receive: Receive = {
+      case q: HakemusQuery if q.haku.isDefined => sender ! Seq(
+        Hakemus().setPersonOid("foo").build,
+        Hakemus().setPersonOid("bar").build,
+        Hakemus().setPersonOid("zap").build
+      )
+    }
+  }))
+
   addServlet(new EnsikertalainenResource(ensikertalainenActor = system.actorOf(Props(new EnsikertalainenActor(
     suoritusActor = system.actorOf(Props(new Actor {
       override def receive: Receive = {
         case q: SuoritusHenkilotQuery =>
+          sender ! Seq()
+      }
+    })),
+    opiskeluoikeusActor = system.actorOf(Props(new Actor {
+      override def receive: Receive = {
+        case q: OpiskeluoikeusHenkilotQuery =>
           sender ! Seq()
       }
     })),
@@ -51,16 +69,9 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
       override def receive: Receive = {
         case q: GetHaku => sender ! Testihaku
       }
-    }))
-  ))), hakemusRekisteri = system.actorOf(Props(new Actor {
-      override def receive: Actor.Receive = {
-        case q: HakemusQuery if q.haku.isDefined => sender ! Seq(
-          Hakemus().setPersonOid("foo").build,
-          Hakemus().setPersonOid("bar").build,
-          Hakemus().setPersonOid("zap").build
-        )
-      }
-    }))), "/ensikertalainen")
+    })),
+    hakemusActor = hakemusActor
+  ))), hakemusRekisteri = hakemusActor), "/ensikertalainen")
 
   test("returns 200 ok") {
     get("/ensikertalainen?henkilo=foo&haku=1.2.3.4") {
@@ -78,7 +89,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
     get("/ensikertalainen?henkilo=foo&haku=1.2.3.4") {
       val e = read[Ensikertalainen](response.body)
       e.menettamisenPeruste.map(_.peruste) should be (Some("KkVastaanotto"))
-      e.menettamisenPeruste.map(_.paivamaara.toString) should be (Some(vastaanottohetki.toString))
+      e.menettamisenPeruste.map(_.asInstanceOf[KkVastaanotto].paivamaara.toString) should be (Some(vastaanottohetki.toString))
     }
   }
 

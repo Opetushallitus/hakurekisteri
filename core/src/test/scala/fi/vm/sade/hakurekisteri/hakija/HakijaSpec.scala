@@ -72,7 +72,9 @@ class HakijaSpec extends FlatSpec with Matchers {
             pohjakoulutus_muu_vuosi = None,
             aiempitutkinto_korkeakoulu = None,
             aiempitutkinto_tutkinto = None,
-            aiempitutkinto_vuosi = None
+            aiempitutkinto_vuosi = None,
+            suoritusoikeus_tai_aiempi_tutkinto = None,
+            suoritusoikeus_tai_aiempi_tutkinto_vuosi = None
           )),
         hakutoiveet =  Some(Map(
           "preference2-Opetuspiste" -> "Ammattikoulu Lappi2",

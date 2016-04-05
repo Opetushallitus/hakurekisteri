@@ -235,11 +235,19 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
     Config.mockConfig)
   )
 
-  val ensikertalaisuusActor = system.actorOf(Props(new EnsikertalainenActor(rekisterit.suoritusRekisteri, valintarekisteri, tarjontaActor, system.actorOf(Props(new Actor {
-    override def receive: Receive = {
-      case q: GetHaku => sender ! Testihaku
-    }
-  })), Config.mockConfig)))
+  val ensikertalaisuusActor = system.actorOf(Props(new EnsikertalainenActor(
+    rekisterit.suoritusRekisteri,
+    rekisterit.opiskeluoikeusRekisteri,
+    valintarekisteri,
+    tarjontaActor,
+    system.actorOf(Props(new Actor {
+      override def receive: Receive = {
+        case q: GetHaku => sender ! Testihaku
+      }
+    })),
+    hakemusActor,
+    Config.mockConfig
+  )))
 
   val resource = new OppijaResource(rekisterit, hakemusActor, ensikertalaisuusActor)
 

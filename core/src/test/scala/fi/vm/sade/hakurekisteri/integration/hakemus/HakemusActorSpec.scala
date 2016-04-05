@@ -429,10 +429,24 @@ class TestActor(handler: PartialFunction[Any, Unit]) extends Actor {
 object Triggered
 
 object Hakemus {
-  def apply(): HakemusBuilder = HakemusBuilder(Map.empty, null, None, None, None, None, None, None)
+  def apply(): HakemusBuilder = HakemusBuilder(Map.empty, "", None, None, None, None, None, None, None, "")
 }
 
-case class HakemusBuilder(osaaminen: Map[String, String], hakemusOid: String = null, personOid: Option[String], PK_PAATTOTODISTUSVUOSI: Option[String], LISAKOULUTUS_KYMPPI: Option[String], KYMPPI_PAATTOTODISTUSVUOSI: Option[String], lukioPaattotodistusVuosi: Option[String], lahtokoulu: Option[String]) {
+case class HakemusBuilder(osaaminen: Map[String, String],
+                          hakemusOid: String = "",
+                          personOid: Option[String],
+                          PK_PAATTOTODISTUSVUOSI: Option[String],
+                          LISAKOULUTUS_KYMPPI: Option[String],
+                          KYMPPI_PAATTOTODISTUSVUOSI: Option[String],
+                          lukioPaattotodistusVuosi: Option[String],
+                          lahtokoulu: Option[String],
+                          suoritusoikeus_tai_aiempi_tutkinto_vuosi: Option[String],
+                          applicationSystemId: String) {
+  def setApplicationSystemId(oid: String): HakemusBuilder =
+    this.copy(applicationSystemId = oid)
+
+  def setSuorittanutSuomalaisenKkTutkinnon(vuosi: Int): HakemusBuilder =
+    this.copy(suoritusoikeus_tai_aiempi_tutkinto_vuosi = Some(vuosi.toString))
 
   def setHakemusOid(hOid: String): HakemusBuilder =
     this.copy(hakemusOid = hOid)
@@ -455,70 +469,47 @@ case class HakemusBuilder(osaaminen: Map[String, String], hakemusOid: String = n
   def setLukionPaattotodistusvuosi(paattotodistusvuosi: Int): HakemusBuilder =
     this.copy(lukioPaattotodistusVuosi = Some(paattotodistusvuosi.toString))
 
-  def setLisaopetusKymppi(bool: String) =
+  def setLisaopetusKymppi(bool: String): HakemusBuilder =
     this.copy(LISAKOULUTUS_KYMPPI = Some(bool))
 
-  def setKymppiVuosi(vuosi: Int) =
+  def setKymppiVuosi(vuosi: Int): HakemusBuilder =
     this.copy(KYMPPI_PAATTOTODISTUSVUOSI = Some(vuosi.toString))
 
   def putArvosana(aine: String, arvosana: String): HakemusBuilder =
     this.copy(osaaminen = osaaminen + (aine -> arvosana))
 
-  def build: FullHakemus = FullHakemus(hakemusOid, personOid, "hakuoid1", Some(HakemusAnswers(
-    Some(HakemusHenkilotiedot(Henkilotunnus = Some("110388-9241"),
-      aidinkieli = None,
-      lahiosoite = None,
-      Postinumero = None,
-      osoiteUlkomaa = None,
-      postinumeroUlkomaa = None,
-      kaupunkiUlkomaa = None,
-      asuinmaa = None,
-      matkapuhelinnumero1 = None,
-      matkapuhelinnumero2 = None,
-      Sähköposti = None,
-      kotikunta = None,
-      Sukunimi = None,
-      Etunimet = None,
-      Kutsumanimi = None,
-      kansalaisuus = None,
-      onkoSinullaSuomalainenHetu = None,
-      sukupuoli = None,
-      syntymaaika = None,
-      koulusivistyskieli = None,
-      turvakielto = None))
-    , Some(Koulutustausta(
-      lahtokoulu = lahtokoulu,
-      POHJAKOULUTUS = None,
-      lukioPaattotodistusVuosi,
-      PK_PAATTOTODISTUSVUOSI,
-      KYMPPI_PAATTOTODISTUSVUOSI,
-      LISAKOULUTUS_KYMPPI,
-      LISAKOULUTUS_VAMMAISTEN = None,
-      LISAKOULUTUS_TALOUS = None,
-      LISAKOULUTUS_AMMATTISTARTTI = None,
-      LISAKOULUTUS_KANSANOPISTO = None,
-      LISAKOULUTUS_MAAHANMUUTTO = None,
-      LISAKOULUTUS_MAAHANMUUTTO_LUKIO = None,
-      luokkataso = None,
-      lahtoluokka = None,
-      perusopetuksen_kieli = None,
-      lukion_kieli = None,
-      pohjakoulutus_yo = None,
-      pohjakoulutus_yo_vuosi = None,
-      pohjakoulutus_am = None,
-      pohjakoulutus_am_vuosi = None,
-      pohjakoulutus_amt = None,
-      pohjakoulutus_amt_vuosi = None,
-      pohjakoulutus_kk = None,
-      pohjakoulutus_kk_pvm = None,
-      pohjakoulutus_ulk = None,
-      pohjakoulutus_ulk_vuosi = None,
-      pohjakoulutus_avoin = None,
-      pohjakoulutus_muu = None,
-      pohjakoulutus_muu_vuosi = None,
-      aiempitutkinto_tutkinto = None,
-      aiempitutkinto_korkeakoulu = None,
-      aiempitutkinto_vuosi = None
+  def build: FullHakemus = FullHakemus(hakemusOid, personOid, applicationSystemId, Some(HakemusAnswers(
+    Some(HakemusHenkilotiedot(
+      Henkilotunnus = Some("110388-9241"),
+      aidinkieli = None, lahiosoite = None,
+      Postinumero = None, osoiteUlkomaa = None,
+      postinumeroUlkomaa = None, kaupunkiUlkomaa = None,
+      asuinmaa = None, matkapuhelinnumero1 = None,
+      matkapuhelinnumero2 = None, Sähköposti = None,
+      kotikunta = None, Sukunimi = None,
+      Etunimet = None, Kutsumanimi = None,
+      kansalaisuus = None, onkoSinullaSuomalainenHetu = None,
+      sukupuoli = None, syntymaaika = None,
+      koulusivistyskieli = None, turvakielto = None
+    )), Some(Koulutustausta(
+      lahtokoulu = lahtokoulu, POHJAKOULUTUS = None,
+      lukioPaattotodistusVuosi, PK_PAATTOTODISTUSVUOSI,
+      KYMPPI_PAATTOTODISTUSVUOSI, LISAKOULUTUS_KYMPPI,
+      LISAKOULUTUS_VAMMAISTEN = None, LISAKOULUTUS_TALOUS = None,
+      LISAKOULUTUS_AMMATTISTARTTI = None, LISAKOULUTUS_KANSANOPISTO = None,
+      LISAKOULUTUS_MAAHANMUUTTO = None, LISAKOULUTUS_MAAHANMUUTTO_LUKIO = None,
+      luokkataso = None, lahtoluokka = None,
+      perusopetuksen_kieli = None, lukion_kieli = None,
+      pohjakoulutus_yo = None, pohjakoulutus_yo_vuosi = None,
+      pohjakoulutus_am = None, pohjakoulutus_am_vuosi = None,
+      pohjakoulutus_amt = None, pohjakoulutus_amt_vuosi = None,
+      pohjakoulutus_kk = None, pohjakoulutus_kk_pvm = None,
+      pohjakoulutus_ulk = None, pohjakoulutus_ulk_vuosi = None,
+      pohjakoulutus_avoin = None, pohjakoulutus_muu = None,
+      pohjakoulutus_muu_vuosi = None, aiempitutkinto_tutkinto = None,
+      aiempitutkinto_korkeakoulu = None, aiempitutkinto_vuosi = None,
+      suoritusoikeus_tai_aiempi_tutkinto_vuosi = suoritusoikeus_tai_aiempi_tutkinto_vuosi,
+      suoritusoikeus_tai_aiempi_tutkinto = if (suoritusoikeus_tai_aiempi_tutkinto_vuosi.isDefined) Some("true") else None
     )), None, None, Some(osaaminen))), Some("ACTIVE"), Nil)
 
 }

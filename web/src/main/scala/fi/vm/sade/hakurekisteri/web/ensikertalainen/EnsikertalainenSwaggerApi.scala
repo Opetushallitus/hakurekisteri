@@ -10,7 +10,8 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
   override protected val applicationName = Some("rest/v1/ensikertalainen")
 
   val perusteFields = Seq(
-    ModelField("peruste", null, DataType.String, allowableValues = AllowableValuesList(List("KkVastaanotto", "SuoritettuKkTutkinto"))),
+    ModelField("peruste", null, DataType.String, allowableValues =
+      AllowableValuesList(List("KkVastaanotto", "SuoritettuKkTutkinto", "SuoritettuKkTutkintoHakemukselta", "OpiskeluoikeusAlkanut"))),
     ModelField("paivamaara", null, DataType.DateTime)
   )
 

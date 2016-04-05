@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.ensikertalainen
 
-import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.TestActorRef
@@ -8,11 +7,13 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, Hakemus, HakemusQuery}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.joda.time.{DateTime, DateTimeZone, LocalDate}
+import org.joda.time.{DateTime, LocalDate}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 import scala.concurrent.duration._
@@ -25,36 +26,112 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
 
   behavior of "EnsikertalainenActor"
 
-  it should "return true if no kk tutkinto and no vastaanotto found" in {
-    val (actor, _) = initEnsikertalainenActor(vastaanotot = Seq(EnsimmainenVastaanotto("1.2.246.562.24.1", None)))
+  private val henkiloOid: String = "1.2.246.562.24.1"
+  private val myontaja: String = "1.2.246.562.10.1"
+  private val koulutus_699999: String = "koulutus_699999"
 
-    waitFuture((actor ? EnsikertalainenQuery(henkiloOids = Set("1.2.246.562.24.1"), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]])(e => {
+  it should "return true if no kk tutkinto and no vastaanotto found" in {
+    val (actor, _) = initEnsikertalainenActor()
+
+    waitFuture((actor ? EnsikertalainenQuery(henkiloOids = Set(henkiloOid), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]])(e => {
       e.head.ensikertalainen should be(true)
     })
   }
 
   it should "return ensikertalainen false based on kk tutkinto" in {
-    val (actor, valintarek) = initEnsikertalainenActor(suoritukset = Seq(
-      VirallinenSuoritus("koulutus_699999", "1.2.246.562.10.1", "VALMIS", new LocalDate(2014, 1, 1), "1.2.246.562.24.1", yksilollistaminen = yksilollistaminen.Ei, "FI", None, vahv = true, "")
-    ), vastaanotot = Seq())
+    val date = new LocalDate()
+    val (actor, valintarek) = initEnsikertalainenActor(
+      suoritukset = Seq(
+        VirallinenSuoritus(koulutus_699999, myontaja, "VALMIS", date, henkiloOid, yksilollistaminen.Ei, "FI", None, vahv = true, "")
+      ),
+      opiskeluoikeudet = Seq(
+        Opiskeluoikeus(new LocalDate(), None, henkiloOid, koulutus_699999, myontaja, "")
+      ),
+      vastaanotot = Seq(EnsimmainenVastaanotto(henkiloOid, Some(new DateTime())))
+    )
 
-    waitFuture((actor ? EnsikertalainenQuery(henkiloOids = Set("1.2.246.562.24.1"), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]])((e: Seq[Ensikertalainen]) => {
+    waitFuture(
+      (actor ? EnsikertalainenQuery(henkiloOids = Set(henkiloOid), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]]
+    )((e: Seq[Ensikertalainen]) => {
       e.head.ensikertalainen should be (false)
-      e.head.menettamisenPeruste should be (Some(SuoritettuKkTutkinto(new DateTime(2014, 1, 1, 0, 0, 0, 0, DateTimeZone.forID("Europe/Helsinki")))))
+      e.head.menettamisenPeruste should be (Some(SuoritettuKkTutkinto(date.toDateTimeAtStartOfDay)))
       valintarek.underlyingActor.counter should be (0)
     })
   }
 
-  it should "return ensikertalainen false based on vastaanotto" in {
-    val (actor, _) = initEnsikertalainenActor(vastaanotot = Seq(EnsimmainenVastaanotto("1.2.246.562.24.1", Some(new DateTime(2015, 1, 1, 0, 0, 0, 0)))))
+  it should "return ensikertalainen false based on opiskeluoikeus" in {
+    val date = new LocalDate()
+    val (actor, valintarek) = initEnsikertalainenActor(
+      opiskeluoikeudet = Seq(
+        Opiskeluoikeus(date, Some(date.plusYears(1)), henkiloOid, koulutus_699999, myontaja, "")
+      ),
+      vastaanotot = Seq(EnsimmainenVastaanotto(henkiloOid, Some(date.toDateTimeAtStartOfDay)))
+    )
 
-    waitFuture((actor ? EnsikertalainenQuery(henkiloOids = Set("1.2.246.562.24.1"), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]])((e: Seq[Ensikertalainen]) => {
+    waitFuture(
+      (actor ? EnsikertalainenQuery(henkiloOids = Set(henkiloOid), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]]
+    )((e: Seq[Ensikertalainen]) => {
       e.head.ensikertalainen should be (false)
-      e.head.menettamisenPeruste should be (Some(KkVastaanotto(new DateTime(2015, 1, 1, 0, 0, 0, 0))))
+      e.head.menettamisenPeruste should be (Some(OpiskeluoikeusAlkanut(date.toDateTimeAtStartOfDay)))
+      valintarek.underlyingActor.counter should be (0)
     })
   }
 
-  def initEnsikertalainenActor(suoritukset: Seq[Suoritus] = Seq(), vastaanotot: Seq[EnsimmainenVastaanotto]) = {
+  it should "return ensikertalaisuus false based on hakemus" in {
+    val date = new LocalDate()
+    val vanhatutkinto = 1990
+    val (actor, valintarek) = initEnsikertalainenActor(
+      suoritukset = Seq(
+        VirallinenSuoritus(koulutus_699999, myontaja, "VALMIS", new LocalDate(), henkiloOid, yksilollistaminen.Ei, "FI", None, vahv = true, "")
+      ),
+      opiskeluoikeudet = Seq(
+        Opiskeluoikeus(date, None, henkiloOid, koulutus_699999, myontaja, "")
+      ),
+      hakemukset = Seq(Hakemus().setPersonOid(henkiloOid).setSuorittanutSuomalaisenKkTutkinnon(vanhatutkinto).build),
+      vastaanotot = Seq(EnsimmainenVastaanotto(henkiloOid, Some(date.toDateTimeAtCurrentTime)))
+    )
+
+    waitFuture(
+      (actor ? EnsikertalainenQuery(henkiloOids = Set(henkiloOid), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]]
+    )((e: Seq[Ensikertalainen]) => {
+      e.head.ensikertalainen should be (false)
+      e.head.menettamisenPeruste should be (Some(SuoritettuKkTutkintoHakemukselta(vanhatutkinto)))
+      valintarek.underlyingActor.counter should be (0)
+    })
+  }
+
+  it should "return ensikertalaisuus true based on hakemus" in {
+    val (actor, valintarek) = initEnsikertalainenActor(
+      hakemukset = Seq(Hakemus().setApplicationSystemId(Testihaku.oid).build)
+    )
+
+    waitFuture(
+      (actor ? EnsikertalainenQuery(henkiloOids = Set(henkiloOid), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]]
+    )((e: Seq[Ensikertalainen]) => {
+      e.head.ensikertalainen should be (true)
+      valintarek.underlyingActor.counter should be (1)
+    })
+  }
+
+  it should "return ensikertalainen false based on vastaanotto" in {
+    val date = new DateTime()
+    val (actor, valintarek) = initEnsikertalainenActor(
+      vastaanotot = Seq(EnsimmainenVastaanotto(henkiloOid, Some(date)))
+    )
+
+    waitFuture(
+      (actor ? EnsikertalainenQuery(henkiloOids = Set(henkiloOid), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]]
+    )((e: Seq[Ensikertalainen]) => {
+      e.head.ensikertalainen should be (false)
+      e.head.menettamisenPeruste should be (Some(KkVastaanotto(date)))
+      valintarek.underlyingActor.counter should be (1)
+    })
+  }
+
+  private def initEnsikertalainenActor(suoritukset: Seq[Suoritus] = Seq(),
+                                       opiskeluoikeudet: Seq[Opiskeluoikeus] = Seq(),
+                                       vastaanotot: Seq[EnsimmainenVastaanotto] = Seq(),
+                                       hakemukset: Seq[FullHakemus] = Seq()) = {
     val valintarekisteri = TestActorRef(new Actor {
       var counter = 0
       override def receive: Actor.Receive = {
@@ -70,6 +147,12 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
             sender ! suoritukset
         }
       })),
+      opiskeluoikeusActor = system.actorOf(Props(new Actor {
+        override def receive: Receive = {
+          case q: OpiskeluoikeusHenkilotQuery =>
+            sender ! opiskeluoikeudet
+        }
+      })),
       valintarekisterActor = valintarekisteri,
       tarjontaActor = system.actorOf(Props(new Actor {
         override def receive: Actor.Receive = {
@@ -81,11 +164,16 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
         override def receive: Receive = {
           case q: GetHaku => sender ! Testihaku
         }
+      })),
+      hakemusActor = system.actorOf(Props(new Actor {
+        override def receive: Receive = {
+          case q: HakemusQuery => sender ! hakemukset
+        }
       }))
     ))), valintarekisteri)
   }
 
-  override def afterAll() = {
+  override def afterAll() {
     system.shutdown()
     system.awaitTermination(15.seconds)
   }
@@ -95,11 +183,11 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
 object Testihaku extends Haku(
   nimi = Kieliversiot(Some("haku 1"), Some("haku 1"), Some("haku 1")),
   oid = "1.2.3.4",
-  aika = Ajanjakso(new LocalDate(2016, 3, 1), Some(new LocalDate(2016, 8, 1))),
+  aika = Ajanjakso(new LocalDate(), Some(new LocalDate().plusMonths(1))),
   kausi = "K",
-  vuosi = 2016,
+  vuosi = new LocalDate().getYear,
   koulutuksenAlkamiskausi = Some("S"),
-  koulutuksenAlkamisvuosi = Some(2016),
+  koulutuksenAlkamisvuosi = Some(new LocalDate().getYear),
   kkHaku = true,
-  viimeinenHakuaikaPaattyy = Some(new DateTime(2016, 3, 15, 15, 0, 0, 0, DateTimeZone.forID("Europe/Helsinki")))
+  viimeinenHakuaikaPaattyy = Some(new DateTime().plusDays(1))
 )

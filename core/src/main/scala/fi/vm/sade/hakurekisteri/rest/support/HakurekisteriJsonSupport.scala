@@ -1,8 +1,8 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatchSerializer
-import fi.vm.sade.hakurekisteri.ensikertalainen.{SuoritettuKkTutkinto, KkVastaanotto, MenettamisenPeruste}
-import org.joda.time.{DateTimeZone, DateTime}
+import fi.vm.sade.hakurekisteri.ensikertalainen._
+import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
 import org.json4s.JsonAST.{JField, JObject, JString}
 import org.json4s._
@@ -12,6 +12,8 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, Va
 import fi.vm.sade.hakurekisteri.batchimport.BatchState
 import org.json4s.ext.DateParser
 import java.util.{Date, TimeZone, UUID}
+
+import fi.vm.sade.hakurekisteri.rest.support.MenettamisenPerusteSerializer.paivamaara
 
 import scala.util.Try
 
@@ -101,16 +103,35 @@ class MenettamisenPerusteSerializer extends CustomSerializer[MenettamisenPeruste
   {
     case m: JObject  =>
       val JString(peruste) = m \ "peruste"
-      val JString(paivamaara) = m \ "paivamaara"
       peruste match {
-        case "KkVastaanotto" => KkVastaanotto(DateTime.parse(paivamaara))
-        case "SuoritettuKkTutkinto" => SuoritettuKkTutkinto(DateTime.parse(paivamaara))
+        case "KkVastaanotto" =>
+          KkVastaanotto(paivamaara(m))
+        case "SuoritettuKkTutkinto" =>
+          SuoritettuKkTutkinto(paivamaara(m))
+        case "OpiskeluoikeusAlkanut" =>
+          OpiskeluoikeusAlkanut(paivamaara(m))
+        case "SuoritettuKkTutkintoHakemukselta" =>
+          val JInt(vuosi) = m \ "vuosi"
+          SuoritettuKkTutkintoHakemukselta(vuosi.toInt)
         case s => throw new IllegalArgumentException(s"unknown MenettamisenPeruste $s")
       }
   },
   {
-    case m: MenettamisenPeruste =>
+    case m: KkVastaanotto =>
       JObject(JField("peruste", JString(m.peruste)) :: JField("paivamaara", JString(m.paivamaara.toString)) :: Nil)
+    case m: SuoritettuKkTutkinto =>
+      JObject(JField("peruste", JString(m.peruste)) :: JField("paivamaara", JString(m.paivamaara.toString)) :: Nil)
+    case m: OpiskeluoikeusAlkanut =>
+      JObject(JField("peruste", JString(m.peruste)) :: JField("paivamaara", JString(m.paivamaara.toString)) :: Nil)
+    case m: SuoritettuKkTutkintoHakemukselta =>
+      JObject(JField("peruste", JString(m.peruste)) :: JField("vuosi", JInt(m.vuosi)) :: Nil)
   }
   )
 )
+
+object MenettamisenPerusteSerializer {
+  def paivamaara(m: JObject): DateTime = {
+    val JString(paivamaara) = m \ "paivamaara"
+    DateTime.parse(paivamaara)
+  }
+}
