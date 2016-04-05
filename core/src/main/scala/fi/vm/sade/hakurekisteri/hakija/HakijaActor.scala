@@ -502,7 +502,8 @@ object XMLHakemus {
 case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
                      postinumero: String, postitoimipaikka: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String],
                      muupuhelin: Option[String], sahkoposti: Option[String], kotikunta: Option[String], sukupuoli: String,
-                     aidinkieli: String, koulutusmarkkinointilupa: Boolean, hakemus: XMLHakemus) {
+                     aidinkieli: String, koulutusmarkkinointilupa: Boolean, kiinnostunutoppisopimuksesta: Boolean, huoltajannimi: Option[String],
+                     huoltajanpuhelinnumero: Option[String], huoltajansahkoposti: Option[String], hakemus: XMLHakemus) {
   def toXml: Node = {
     <Hakija>
       <Hetu>{hetu}</Hetu>
@@ -521,7 +522,11 @@ case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etuni
       {if (kotikunta.isDefined) <Kotikunta>{kotikunta.get}</Kotikunta>}
       <Sukupuoli>{sukupuoli}</Sukupuoli>
       <Aidinkieli>{aidinkieli}</Aidinkieli>
+      <Huoltajannimi>{huoltajannimi.get}</Huoltajannimi>
+      <Huoltajanpuhelinnumero>{huoltajanpuhelinnumero.get}</Huoltajanpuhelinnumero>
+      <Huoltajansahkoposti>{huoltajansahkoposti.get}</Huoltajansahkoposti>
       <Koulutusmarkkinointilupa>{toBooleanX(koulutusmarkkinointilupa)}</Koulutusmarkkinointilupa>
+      <KiinnostunutOppisopimuksesta>{toBooleanX(kiinnostunutoppisopimuksesta)}</KiinnostunutOppisopimuksesta>
       {hakemus.toXml}
     </Hakija>
   }
@@ -562,6 +567,10 @@ object XMLHakija {
       sukupuoli = resolveSukupuoli(hakija),
       aidinkieli = hakija.henkilo.asiointiKieli,
       koulutusmarkkinointilupa = hakija.henkilo.markkinointilupa.getOrElse(false),
+      kiinnostunutoppisopimuksesta = hakija.henkilo.kiinnostunutoppisopimuksesta.getOrElse(false),
+      huoltajannimi = hakija.henkilo.huoltajannimi.blankOption,
+      huoltajanpuhelinnumero = hakija.henkilo.huoltajanpuhelinnumero.blankOption,
+      huoltajansahkoposti = hakija.henkilo.huoltajansahkoposti.blankOption,
       hakemus = hakemus
     )
 
