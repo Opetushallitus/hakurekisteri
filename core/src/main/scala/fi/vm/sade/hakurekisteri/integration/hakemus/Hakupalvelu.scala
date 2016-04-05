@@ -108,7 +108,7 @@ object AkkaHakupalvelu {
         hetu = getHenkiloTietoOrBlank(_.Henkilotunnus),
         syntymaaika = getHenkiloTietoOrBlank(_.syntymaaika),
         markkinointilupa = Some(getValue(_.lisatiedot,(l:Lisatiedot) => l.lupaMarkkinointi, "false").toBoolean),
-        kiinnostunutoppisopimuksesta = Some(getValue(_.lisatiedot,(l:Lisatiedot) => l.kiinnostunutoppisopimuksesta, "false").toBoolean),
+        kiinnostunutoppisopimuksesta = Some(getValue(_.lisatiedot,(l:Lisatiedot) => l.kiinnostunutoppisopimuksesta.filter(_.trim.nonEmpty), "false").toBoolean),
         huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
         huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
         huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti)
