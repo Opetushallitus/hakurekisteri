@@ -28,6 +28,10 @@ class ExcelUtilSpec extends ScalatraFunSuite {
       sukupuoli = "1",
       aidinkieli = "FI",
       koulutusmarkkinointilupa = false,
+      kiinnostunutoppisopimuksesta = false,
+      huoltajannimi = None,
+      huoltajanpuhelinnumero = None,
+      huoltajansahkoposti = None,
       XMLHakemus(
         vuosi = "2014",
         kausi = "S",
