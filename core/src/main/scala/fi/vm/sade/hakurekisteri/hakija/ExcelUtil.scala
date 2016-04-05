@@ -4,14 +4,15 @@ import fi.vm.sade.hakurekisteri.rest.support.{Cell, StringCell, Row, HakijatExce
 
 
 object ExcelUtil extends HakijatExcelWriter[XMLHakijat] {
-  
+
   private val headers = Seq(
     "Hetu", "Oppijanumero", "Sukunimi", "Etunimet", "Kutsumanimi", "Lahiosoite", "Postinumero", "Postitoimipaikka", "Maa",
-    "Kansalaisuus", "Matkapuhelin", "Muupuhelin", "Sahkoposti", "Kotikunta", "Sukupuoli", "Aidinkieli", "Koulutusmarkkinointilupa",
-    "Vuosi", "Kausi", "Hakemusnumero", "Lahtokoulu", "Lahtokoulunnimi", "Luokka", "Luokkataso", "Pohjakoulutus", 
-    "Todistusvuosi", "Julkaisulupa", "Yhteisetaineet", "Lukiontasapisteet", "Yleinenkoulumenestys", "Lisapistekoulutus", 
-    "Painotettavataineet", "Hakujno", "Oppilaitos", "Opetuspiste", "Opetuspisteennimi", "Koulutus", 
-    "Harkinnanvaraisuuden peruste", "Urheilijan ammatillinen koulutus", "Yhteispisteet", "Valinta", "Vastaanotto", 
+    "Kansalaisuus", "Matkapuhelin", "Muupuhelin", "Sahkoposti", "Kotikunta", "Sukupuoli", "Aidinkieli", "Huoltajan nimi",
+    "Huoltajan puhelinnumero", "Huoltajan sähköposti", "Koulutusmarkkinointilupa", "Kiinnostunut Oppisopimuksesta",
+    "Vuosi", "Kausi", "Hakemusnumero", "Lahtokoulu", "Lahtokoulunnimi", "Luokka", "Luokkataso", "Pohjakoulutus",
+    "Todistusvuosi", "Julkaisulupa", "Yhteisetaineet", "Lukiontasapisteet", "Yleinenkoulumenestys", "Lisapistekoulutus",
+    "Painotettavataineet", "Hakujno", "Oppilaitos", "Opetuspiste", "Opetuspisteennimi", "Koulutus",
+    "Harkinnanvaraisuuden peruste", "Urheilijan ammatillinen koulutus", "Yhteispisteet", "Valinta", "Vastaanotto",
     "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto"
   )
 
@@ -35,7 +36,11 @@ object ExcelUtil extends HakijatExcelWriter[XMLHakijat] {
       h.kotikunta.getOrElse(""),
       h.sukupuoli,
       h.aidinkieli,
+      h.huoltajannimi.getOrElse(""),
+      h.huoltajanpuhelinnumero.getOrElse(""),
+      h.huoltajansahkoposti.getOrElse(""),
       toBooleanX(h.koulutusmarkkinointilupa),
+      toBooleanX(h.kiinnostunutoppisopimuksesta),
       h.hakemus.vuosi,
       h.hakemus.kausi,
       h.hakemus.hakemusnumero,
