@@ -2,8 +2,8 @@ package fi.vm.sade.hakurekisteri.rest
 
 import java.util.UUID
 
-import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.pattern.pipe
 import akka.testkit.TestActorRef
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.Config
@@ -13,7 +13,7 @@ import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, Testihaku}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.integration.haku.GetHaku
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActor}
 import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
@@ -144,6 +144,12 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
     }
   }
 
+  test("OppijaResource should return 404 if haku not found") {
+    get("/?haku=notfound") {
+      response.status should be (404)
+    }
+  }
+
 }
 
 abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar with DispatchSupport with FutureWaiting {
@@ -242,6 +248,7 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
     tarjontaActor,
     system.actorOf(Props(new Actor {
       override def receive: Receive = {
+        case GetHaku("notfound") => Future.failed(HakuNotFoundException("haku not found")) pipeTo sender
         case q: GetHaku => sender ! Testihaku
       }
     })),

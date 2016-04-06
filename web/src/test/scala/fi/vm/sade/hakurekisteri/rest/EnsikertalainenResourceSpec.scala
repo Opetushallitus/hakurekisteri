@@ -1,11 +1,11 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor, KkVastaanotto, Testihaku}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{Hakemus, HakemusQuery}
-import fi.vm.sade.hakurekisteri.integration.haku.GetHaku
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusHenkilotQuery
@@ -17,7 +17,7 @@ import org.joda.time.DateTime
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import org.json4s.jackson.Serialization._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class EnsikertalainenResourceSpec extends ScalatraFunSuite {
 
@@ -67,6 +67,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
     config = Config.mockConfig,
     hakuActor = system.actorOf(Props(new Actor {
       override def receive: Receive = {
+        case q: GetHaku if q.oid == "notfound" => Future.failed(HakuNotFoundException(s"haku not found with oid ${q.oid}")) pipeTo sender
         case q: GetHaku => sender ! Testihaku
       }
     })),
@@ -104,6 +105,12 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
     get("/ensikertalainen/haku/1.2.3") {
       val e = read[Seq[Ensikertalainen]](response.body)
       e.size should be (3)
+    }
+  }
+
+  test("returns 404 if haku not found") {
+    get("/ensikertalainen/haku/notfound") {
+      response.status should be(404)
     }
   }
 

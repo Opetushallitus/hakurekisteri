@@ -32,6 +32,7 @@ trait OppijaSwaggerApi
     .parameter(queryParam[Option[String]]("hakukohde")
       .description("hakukohteen oid").optional)
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
+    .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "virta error"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
@@ -45,6 +46,7 @@ trait OppijaSwaggerApi
     .parameter(queryParam[String]("haku")
       .description("haun oid").required)
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
+    .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "virta error"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
@@ -58,6 +60,7 @@ trait OppijaSwaggerApi
     .parameter(queryParam[String]("haku")
       .description("haun oid").required)
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
+    .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "error in service"))
 

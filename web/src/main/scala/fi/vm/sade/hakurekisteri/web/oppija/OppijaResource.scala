@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
+import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.oppija.OppijaFetcher
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -107,6 +108,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
   }
 
   incident {
+    case t: HakuNotFoundException => (id) => NotFound(IncidentReport(id, t.getMessage))
     case t: NoSuchElementException => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
   }

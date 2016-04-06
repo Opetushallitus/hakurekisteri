@@ -8,6 +8,7 @@ import akka.pattern.ask
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery}
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
+import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReport, QueryLogging, Security, SecuritySupport}
@@ -92,6 +93,7 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusRekiste
   }
 
   incident {
+    case t: HakuNotFoundException => (id) => NotFound(IncidentReport(id, t.getMessage))
     case t: NoSuchElementException => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: ParamMissingException => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: ExecutionException => (id) => InternalServerError(IncidentReport(id, "backend service failed"))

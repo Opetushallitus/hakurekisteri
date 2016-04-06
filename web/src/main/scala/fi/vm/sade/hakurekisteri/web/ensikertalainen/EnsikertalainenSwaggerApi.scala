@@ -32,6 +32,7 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
     .parameter(queryParam[String]("henkilo").description("hakijan oppijanumero").required)
     .parameter(queryParam[String]("haku").description("haun oid").required)
     .responseMessage(ModelResponseMessage(400, "parameter henkilo or haku missing"))
+    .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "backend service failed"))
 
@@ -40,6 +41,7 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
     .notes("Tarkistaa ovatko haun hakijat ensikertalaisia.")
     .parameter(pathParam[String]("haku").description("haun oid").required)
     .responseMessage(ModelResponseMessage(400, "parameter haku missing"))
+    .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "backend service failed"))
 
@@ -49,6 +51,7 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
     .parameter(bodyParam[Seq[String]]("henkilot").description("hakijoidet oppijanumerot").required)
     .parameter(queryParam[String]("haku").description("haun oid").required)
     .responseMessage(ModelResponseMessage(400, "request body does not contain person oids"))
+    .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "backend service failed"))
 
