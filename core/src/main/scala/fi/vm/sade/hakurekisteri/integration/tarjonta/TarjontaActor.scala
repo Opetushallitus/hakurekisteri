@@ -1,15 +1,14 @@
 package fi.vm.sade.hakurekisteri.integration.tarjonta
 
-import java.net.URLEncoder
-
-import akka.actor.{ActorLogging, Actor}
-import fi.vm.sade.hakurekisteri.{Oids, Config}
+import akka.actor.{Actor, ActorLogging}
+import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.integration.{FutureCache, VirkailijaRestClient}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.tools.RicherString._
+import org.joda.time.LocalDate
 
 case class SearchKomoQuery(koulutus: String)
 
@@ -135,6 +134,19 @@ class MockTarjontaActor(config: Config) extends TarjontaActor(null, config) {
     case GetKomoQuery(oid) =>
       val response: KomoResponse = if (oid == Oids.yotutkintoKomoOid) KomoResponse(oid, Some(Komo(oid, Koulutuskoodi("301101"), "TUTKINTO", "LUKIOKOULUTUS"))) else KomoResponse(oid, None)
       sender ! response
+
+    case GetHautQuery =>
+      sender ! RestHakuResult(List(RestHaku(
+        oid = Some("1.2.3.4"),
+        hakuaikas = List(RestHakuAika(1, Some(new LocalDate().plusMonths(1).toDate.getTime))),
+        nimi = Map("kieli_fi" -> "haku 1", "kieli_sv" -> "haku 1", "kieli_en" -> "haku 1"),
+        hakukausiUri = "kausi_k#1",
+        hakukausiVuosi = new LocalDate().getYear,
+        koulutuksenAlkamiskausiUri = Some("kausi_s#1"),
+        koulutuksenAlkamisVuosi = Some(new LocalDate().getYear),
+        kohdejoukkoUri = Some("haunkohdejoukko_12#1"),
+        tila = "JULKAISTU"
+      )))
 
     case msg =>
       log.warning(s"not implemented receive(${msg})")
