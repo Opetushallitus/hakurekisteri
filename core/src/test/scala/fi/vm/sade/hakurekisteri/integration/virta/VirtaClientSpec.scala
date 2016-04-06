@@ -95,7 +95,7 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
     val response: Future[Option[VirtaResult]] = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.3")
 
     waitFuture(response) {o => {
-      o.get.opiskeluoikeudet.size should be(2)
+      o.get.opiskeluoikeudet.size should be(1)
       o.get.tutkinnot.size should be(1)
     }}
   }
@@ -132,11 +132,11 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
     }
   }
 
-  it should "parse only opiskeluoikeustyypit 1, 2, 3, 4, 5, 6 and 7" in {
+  it should "parse only opiskeluoikeustyypit 1, 2, 3, 4, 6 and 7" in {
     val response = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.9")
 
     waitFuture(response)((o: Option[VirtaResult]) => {
-      o.get.opiskeluoikeudet.size should be (2)
+      o.get.opiskeluoikeudet.size should be (1)
     })
   }
 

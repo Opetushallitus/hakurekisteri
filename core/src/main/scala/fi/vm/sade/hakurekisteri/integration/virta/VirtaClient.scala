@@ -37,7 +37,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   val logger = Logging.getLogger(system, this)
   val maxRetries = config.httpClientMaxRetries
 
-  val tallennettavatOpiskeluoikeustyypit = Seq("1", "2", "3", "4", "5", "6", "7")
+  val tallennettavatOpiskeluoikeustyypit = Seq("1", "2", "3", "4", "6", "7")
 
   def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
 

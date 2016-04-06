@@ -131,7 +131,7 @@ case class GetHaku(oid: String)
 
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
 
-case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int, koulutuksenAlkamiskausi: Option[String], koulutuksenAlkamisvuosi: Option[Int], kkHaku: Boolean)
+case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int, koulutuksenAlkamiskausi: Option[String], koulutuksenAlkamisvuosi: Option[Int], kkHaku: Boolean, viimeinenHakuaikaPaattyy: Option[DateTime])
 
 object Haku {
   def apply(haku: RestHaku)(loppu: ReadableInstant): Haku = {
@@ -143,8 +143,14 @@ object Haku {
       haku.hakukausiVuosi,
       haku.koulutuksenAlkamiskausiUri,
       haku.koulutuksenAlkamisVuosi,
-      kkHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_12"))
+      kkHaku = haku.kohdejoukkoUri.exists(_.startsWith("haunkohdejoukko_12")),
+      viimeinenHakuaikaPaattyy = findHakuajanPaatos(haku)
     )
+  }
+
+  def findHakuajanPaatos(haku: RestHaku): Option[DateTime] = {
+    val sortedHakuajat = haku.hakuaikas.sortBy(_.alkuPvm)
+    sortedHakuajat.lastOption.flatMap(_.loppuPvm.map(new DateTime(_)))
   }
 
   def findStart(haku: RestHaku): DateTime = {

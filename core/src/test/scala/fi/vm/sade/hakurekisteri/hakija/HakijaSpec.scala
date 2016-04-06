@@ -72,7 +72,9 @@ class HakijaSpec extends FlatSpec with Matchers {
             pohjakoulutus_muu_vuosi = None,
             aiempitutkinto_korkeakoulu = None,
             aiempitutkinto_tutkinto = None,
-            aiempitutkinto_vuosi = None
+            aiempitutkinto_vuosi = None,
+            suoritusoikeus_tai_aiempi_tutkinto = None,
+            suoritusoikeus_tai_aiempi_tutkinto_vuosi = None
           )),
         hakutoiveet =  Some(Map(
           "preference2-Opetuspiste" -> "Ammattikoulu Lappi2",
@@ -105,7 +107,7 @@ class HakijaSpec extends FlatSpec with Matchers {
     preferenceEligibilities = Seq()
   )
 
-  val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.1", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false)
+  val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.1", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false, None)
   val toive = AkkaHakupalvelu.getHakija(FullHakemus1, haku).hakemus.hakutoiveet.head
 
 

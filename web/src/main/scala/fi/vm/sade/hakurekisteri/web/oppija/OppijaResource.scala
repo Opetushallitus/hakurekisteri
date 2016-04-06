@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
+import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.oppija.OppijaFetcher
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -43,23 +44,15 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     }
   }
 
-  def ensikertalaisuudenRajapvm(d: Option[String]): Option[DateTime] =
-    d.flatMap(date => Try(ISODateTimeFormat.dateTimeParser.parseDateTime(date)).toOption)
-
   get("/", operation(query)) {
     val t0 = Platform.currentTime
     implicit val user = getUser
     val q = queryForParams(params)
-    val rajapvm = ensikertalaisuudenRajapvm(params.get("ensikertalaisuudenRajapvm"))
-
-    if (q.haku.isEmpty && q.hakukohde.isEmpty && q.organisaatio.isEmpty) {
-      throw new IllegalArgumentException("at least one of parameters (haku, hakukohde, organisaatio) must be given")
-    }
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
-      private val oppijatFuture = fetchOppijat(q, rajapvm)
+      private val oppijatFuture = fetchOppijat(q, q.haku.get)
 
       logQuery(q, t0, oppijatFuture)
 
@@ -70,7 +63,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
   import org.scalatra.util.RicherString._
 
   def queryForParams(params: Map[String,String]): HakemusQuery = HakemusQuery(
-    haku = params.get("haku").flatMap(_.blankOption),
+    haku = Some(params("haku")),
     organisaatio = params.get("organisaatio").flatMap(_.blankOption),
     None,
     hakukohde = params.get("hakukohde").flatMap(_.blankOption)
@@ -81,12 +74,12 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     val t0 = Platform.currentTime
     implicit val user = getUser
     val personOid = params("oid")
-    val rajapvm = ensikertalaisuudenRajapvm(params.get("ensikertalaisuudenRajapvm"))
+    val hakuOid = params("haku")
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
-      private val oppijaFuture = fetchOppija(personOid, rajapvm)
+      private val oppijaFuture = fetchOppija(personOid, hakuOid)
 
       logQuery(personOid, t0, oppijaFuture)
 
@@ -101,12 +94,12 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     val henkilot = parse(request.body).extract[Set[String]]
     if (henkilot.size > maxOppijatPostSize) throw new IllegalArgumentException("too many person oids")
     if (henkilot.exists(!_.startsWith("1.2.246.562.24."))) throw new IllegalArgumentException("person oid must start with 1.2.246.562.24.")
-    val rajapvm = ensikertalaisuudenRajapvm(params.get("ensikertalaisuudenRajapvm"))
+    val hakuOid = params("haku")
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
-      private val oppijat = fetchOppijat(henkilot, rajapvm)
+      private val oppijat = fetchOppijat(henkilot, hakuOid)
 
       logQuery(henkilot, t0, oppijat)
 
@@ -115,7 +108,8 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
   }
 
   incident {
-    case t: VirtaConnectionErrorException => (id) => InternalServerError(IncidentReport(id, "virta error"))
+    case t: HakuNotFoundException => (id) => NotFound(IncidentReport(id, t.getMessage))
+    case t: NoSuchElementException => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
   }
 }

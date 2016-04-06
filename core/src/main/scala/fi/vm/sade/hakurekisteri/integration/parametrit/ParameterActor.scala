@@ -80,7 +80,7 @@ class HttpParameterActor(restClient: VirkailijaRestClient) extends ParameterActo
 }
 
 class MockParameterActor extends ParameterActor {
-  override protected def getParams(hakuOid: String) = Future { new DateTime }
+  override protected def getParams(hakuOid: String) = Future { new DateTime().plusMonths(1) }
 
   override protected def isEnabledFromRest(key: String) = Future { true }
 }

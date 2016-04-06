@@ -10,7 +10,8 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
   override protected val applicationName = Some("rest/v1/ensikertalainen")
 
   val perusteFields = Seq(
-    ModelField("peruste", null, DataType.String, allowableValues = AllowableValuesList(List("KkVastaanotto", "SuoritettuKkTutkinto"))),
+    ModelField("peruste", null, DataType.String, allowableValues =
+      AllowableValuesList(List("KkVastaanotto", "SuoritettuKkTutkinto", "SuoritettuKkTutkintoHakemukselta", "OpiskeluoikeusAlkanut"))),
     ModelField("paivamaara", null, DataType.DateTime)
   )
 
@@ -29,17 +30,18 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
     .summary("tarkistaa onko hakija ensikertalainen")
     .notes("Tarkistaa onko hakija ensikertalainen.")
     .parameter(queryParam[String]("henkilo").description("hakijan oppijanumero").required)
-    .parameter(queryParam[Option[String]]("ensikertalaisuudenRajapvm").description("ensikertalaisuus ennen tätä ajanhetkeä (ISO 8601 datetime, esim. 2015-09-14T17:51:31Z)").optional)
-    .responseMessage(ModelResponseMessage(400, "parameter henkilo missing"))
+    .parameter(queryParam[String]("haku").description("haun oid").required)
+    .responseMessage(ModelResponseMessage(400, "parameter henkilo or haku missing"))
+    .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "backend service failed"))
 
   val hakuQuery: OperationBuilder = apiOperation[Seq[Ensikertalainen]]("haeEnsikertalaisuudetHaulle")
     .summary("tarkistaa ovatko haun hakijat ensikertalaisia")
     .notes("Tarkistaa ovatko haun hakijat ensikertalaisia.")
-    .parameter(pathParam[String]("hakuOid").description("haun oid").required)
-    .parameter(queryParam[Option[String]]("ensikertalaisuudenRajapvm").description("ensikertalaisuus ennen tätä ajanhetkeä (ISO 8601 datetime, esim. 2015-09-14T17:51:31Z)").optional)
+    .parameter(pathParam[String]("haku").description("haun oid").required)
     .responseMessage(ModelResponseMessage(400, "parameter haku missing"))
+    .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "backend service failed"))
 
@@ -47,8 +49,9 @@ trait EnsikertalainenSwaggerApi extends SwaggerSupport with IncidentReportSwagge
     .summary("tarkistaa ovatko hakijat ensikertalaisia")
     .notes("Tarkistaa ovatko hakijat ensikertalaisia.")
     .parameter(bodyParam[Seq[String]]("henkilot").description("hakijoidet oppijanumerot").required)
-    .parameter(queryParam[Option[String]]("ensikertalaisuudenRajapvm").description("ensikertalaisuus ennen tätä ajanhetkeä (ISO 8601 datetime, esim. 2015-09-14T17:51:31Z)").optional)
+    .parameter(queryParam[String]("haku").description("haun oid").required)
     .responseMessage(ModelResponseMessage(400, "request body does not contain person oids"))
+    .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "back-end service timed out"))
     .responseMessage(ModelResponseMessage(500, "backend service failed"))
 

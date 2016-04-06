@@ -24,7 +24,7 @@ class VirtaQueueSpec extends WordSpec with Matchers with FutureWaiting {
         QueryProsessed(q)
     }
     val hakuHandler: PartialFunction[Any, Any] = {
-      case q: GetHaku => Haku(Kieliversiot(Some("haku"), None, None), "1.2", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), true)
+      case q: GetHaku => Haku(Kieliversiot(Some("haku"), None, None), "1.2", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), true, None)
     }
 
     val virtaActor = TestActorRef[MockActor](Props(new MockActor(virtaHandler)))
