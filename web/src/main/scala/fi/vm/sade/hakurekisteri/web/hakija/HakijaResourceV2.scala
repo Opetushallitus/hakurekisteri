@@ -46,7 +46,7 @@ class HakijaResourceV2(hakijaActor: ActorRef)
     ExcelUtilV2.write(out, hakijat)
   }
 
-  get("/", operation(query)) {
+  get("/", operation(queryV2)) {
     val t0 = Platform.currentTime
     val q = HakijaQuery(params, currentUser, 2)
 
