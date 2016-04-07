@@ -28,10 +28,6 @@ class ExcelUtilSpec extends ScalatraFunSuite {
       sukupuoli = "1",
       aidinkieli = "FI",
       koulutusmarkkinointilupa = false,
-      kiinnostunutoppisopimuksesta = false,
-      huoltajannimi = None,
-      huoltajanpuhelinnumero = None,
-      huoltajansahkoposti = None,
       XMLHakemus(
         vuosi = "2014",
         kausi = "S",
@@ -68,7 +64,7 @@ class ExcelUtilSpec extends ScalatraFunSuite {
     )))
 
     val out: ByteArrayOutputStream = new ByteArrayOutputStream()
-    ExcelUtil.write(out, hakijat)
+    ExcelUtilV1.write(out, hakijat)
 
     val wb: Workbook = WorkbookFactory.create(new ByteArrayInputStream(out.toByteArray))
     import scala.collection.JavaConversions._
