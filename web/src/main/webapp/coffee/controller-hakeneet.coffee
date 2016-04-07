@@ -91,7 +91,7 @@ app.controller "HakeneetCtrl", [
           value: "Excel"
           text: "Excel"
         }
-      ]  if isKk()
+      ]  if isKk() || $scope.rajapinnanVersio is 2
 
       return [
         {
@@ -110,6 +110,17 @@ app.controller "HakeneetCtrl", [
 
     $scope.haut = []
     $scope.kaudet = []
+    $scope.rajapinnanVersiot = [
+      {
+        value: 1,
+        text: "1"
+      }
+      {
+        value: 2,
+        text: "2"
+      }
+    ]
+    $scope.rajapinnanVersio = 2
     $scope.hakuehdot = [
       {
         value: "Kaikki"
@@ -124,10 +135,13 @@ app.controller "HakeneetCtrl", [
         text: "Paikan vastaanottaneet"
       }
     ]
+    $scope.$watch("rajapinnanVersio", -> $scope.tiedostotyypit = tiedostotyypit())
     $scope.tiedostotyypit = tiedostotyypit()
     $scope.vainKkHaut = true if isKk()
 
     loadHakutiedot haut, $scope
+
+    isValidTiedostotyyppi = () -> R.contains($scope.tiedostotyyppi, R.pluck('value', $scope.tiedostotyypit))
 
     $scope.search = ->
       MessageService.clearMessages()
@@ -151,7 +165,7 @@ app.controller "HakeneetCtrl", [
 
           return
       else
-        if not $scope.haku or not $scope.organisaatio or not $scope.hakuehto or not $scope.tiedostotyyppi
+        if not $scope.haku or not $scope.organisaatio or not $scope.hakuehto or not $scope.tiedostotyyppi or not isValidTiedostotyyppi()
           unless $scope.haku
             MessageService.addMessage
               type: "danger"
@@ -168,8 +182,14 @@ app.controller "HakeneetCtrl", [
               description: "Valitse organisaatio ja yritä uudelleen."
               descriptionKey: "suoritusrekisteri.hakeneet.organisaatioeivalittuselite"
 
+          unless isValidTiedostotyyppi()
+            MessageService.addMessage
+              type: "danger"
+              message: "Tiedoston tyyppiä ei ole valittu"
+              messageKey: "suoritusrekisteri.tiedonsiirto.tyyppiaeiolevalittu"
+
           return
-      url = (if isKk() then "rest/v1/kkhakijat" else "rest/v1/hakijat")
+      url = (if isKk() then "rest/v1/kkhakijat" else "rest/v" + $scope.rajapinnanVersio + "/hakijat")
       data = (if isKk() then {
         oppijanumero: (if $scope.oppijanumero then $scope.oppijanumero else null)
         haku: (if $scope.haku then $scope.haku.oid else null)
