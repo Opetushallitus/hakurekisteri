@@ -22,7 +22,7 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       hakupalvelu has (FullHakemus1, FullHakemus2)
 
       When("rajaan muodostusta valitsemalla opetuspisteeseen X")
-      val hakijat: XMLHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, None)),
+      val hakijat: XMLHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, None, 1)),
         Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
 
       Then("saan siirtotiedoston, jossa on opetuspisteeseen X tai sen lapsiin hakeneet")
@@ -37,7 +37,7 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       hakupalvelu has (FullHakemus1, FullHakemus2)
 
       When("rajaan muodostusta valitsemalla 'Kaikki hakeneet'")
-      val hakijat: XMLHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, None)),
+      val hakijat: XMLHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, None, 1)),
         Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
 
       Then("saan siirtotiedoston, jossa on kaksi hakijaa")
@@ -49,7 +49,7 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       hakupalvelu has (FullHakemus1, FullHakemus2)
 
       When("rajaan muodostusta valitsemalla 'Hyväksytyt hakijat'")
-      val hakijat: XMLHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Hyvaksytyt, None)),
+      val hakijat: XMLHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Hyvaksytyt, None, 1)),
         Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
 
       Then("saan siirtotiedoston, jossa on vain hyväksytyt hakijat")
@@ -61,7 +61,7 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       hakupalvelu has (FullHakemus1, FullHakemus2)
 
       When("rajaan muodostusta valitsemalla 'Paikan vastaanottaneet'")
-      val hakijat: XMLHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Vastaanottaneet, None)),
+      val hakijat: XMLHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Vastaanottaneet, None, 1)),
         Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
 
       Then("saan siirtotiedoston, jossa on vain paikan vastaanottaneet hakijat")
@@ -73,7 +73,7 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
       hakupalvelu has FullHakemus1
 
       When("haen kaikki hakeneet")
-      val hakijat: XMLHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, None)),
+      val hakijat: XMLHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, None, 1)),
         Timeout(60 seconds).duration).asInstanceOf[XMLHakijat]
 
       Then("saan siirtotiedoston, jossa on vaaditut arvot")
