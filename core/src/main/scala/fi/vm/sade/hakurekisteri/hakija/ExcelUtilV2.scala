@@ -1,9 +1,9 @@
 package fi.vm.sade.hakurekisteri.hakija
 
-import fi.vm.sade.hakurekisteri.rest.support.{Cell, StringCell, Row, HakijatExcelWriter}
+import fi.vm.sade.hakurekisteri.rest.support.{Cell, HakijatExcelWriter, Row, StringCell}
 
 
-object ExcelUtil extends HakijatExcelWriter[XMLHakijat] {
+object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
 
   private val headers = Seq(
     "Hetu", "Oppijanumero", "Sukunimi", "Etunimet", "Kutsumanimi", "Lahiosoite", "Postinumero", "Postitoimipaikka", "Maa",
@@ -18,7 +18,7 @@ object ExcelUtil extends HakijatExcelWriter[XMLHakijat] {
 
   override def getHeaders: Set[Row] = Set(Row(0, headers.zipWithIndex.toSet.map((header: (String, Int)) => StringCell(header._2, header._1))))
 
-  override def getRows(hakijat: XMLHakijat): Set[Row] = hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet.map(ht => {
+  override def getRows(hakijat: JSONHakijat): Set[Row] = hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet.map(ht => {
     val rivi = Seq(
       h.hetu,
       h.oppijanumero,
