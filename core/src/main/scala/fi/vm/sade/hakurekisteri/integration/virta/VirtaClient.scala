@@ -17,12 +17,17 @@ import scala.xml.{Elem, Node, NodeSeq, XML}
 
 case class VirtaValidationError(m: String) extends Exception(m)
 
+object VirtaClient {
+  val version105 = "1.05"
+  val version106 = "1.06"
+}
+
 class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot",
                                                     jarjestelma = "",
                                                     tunnus = "",
                                                     avain = "salaisuus", Map.empty),
-                                                    aClient: Option[AsyncHttpClient] = None)
-                 (implicit val ec: ExecutionContext, system: ActorSystem) {
+                  aClient: Option[AsyncHttpClient] = None,
+                  var apiVersion: String = VirtaClient.version105)(implicit val ec: ExecutionContext, system: ActorSystem) {
 
   private val defaultClient = Http.configure(_
     .setConnectionTimeoutInMs(config.httpClientConnectionTimeout)
@@ -38,6 +43,13 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   val maxRetries = config.httpClientMaxRetries
 
   val tallennettavatOpiskeluoikeustyypit = Seq("1", "2", "3", "4", "6", "7")
+
+  logger.info(s"created Virta client for API version $apiVersion and serviceUrl ${config.serviceUrl}")
+
+  def setApiVersion(version: String): Unit = {
+    logger.info(s"set API version to $version, was previously $apiVersion")
+    apiVersion = version
+  }
 
   def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
 
@@ -128,18 +140,21 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     s.flatMap(_.blankOption).map(d => parseLocalDate(d))
   }
 
+  private def myontaja(oo: Node): NodeSeq = apiVersion match {
+    case VirtaClient.version105 => oo \ "Myontaja" \ "Koodi"
+    case VirtaClient.version106 => oo \ "Myontaja"
+    case default => throw new NotImplementedError(s"version $default not implemented")
+  }
+
   def getOpiskeluoikeudet(response: NodeSeq): Seq[VirtaOpiskeluoikeus] = {
     val opiskeluoikeudet: NodeSeq = response \ "Body" \ "OpiskelijanKaikkiTiedotResponse" \ "Virta" \ "Opiskelija" \ "Opiskeluoikeudet" \ "Opiskeluoikeus"
     opiskeluoikeudet.withFilter((oo: Node) => tallennettavatOpiskeluoikeustyypit.contains((oo \ "Tyyppi").text)).map((oo: Node) => {
       val avain = oo.map(_ \ "@avain")
-
       VirtaOpiskeluoikeus(
         alkuPvm = parseLocalDate((oo \ "AlkuPvm").head.text),
         loppuPvm = parseLocalDateOption((oo \ "LoppuPvm").headOption.map(_.text)),
-        myontaja = extractTextOption(oo \ "Myontaja" \ "Koodi", avain, required = true).get,
+        myontaja = extractTextOption(myontaja(oo), avain, required = true).get,
         koulutuskoodit = Try((oo \ "Jakso" \ "Koulutuskoodi").map(_.text)).get,
-        opintoala1995 = extractTextOption(oo \ "Opintoala1995", avain), // Universities use this
-        koulutusala2002 = extractTextOption(oo \ "Koulutusala2002", avain), // AMK
         kieli = resolveKieli(oo \ "Jakso" \ "Kieli")
       )
     })
@@ -149,13 +164,10 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     val opintosuoritukset: NodeSeq = response \ "Body" \ "OpiskelijanKaikkiTiedotResponse" \ "Virta" \ "Opiskelija" \ "Opintosuoritukset" \ "Opintosuoritus"
     opintosuoritukset.withFilter(filterTutkinto).map((os: Node) => {
       val avain = os.map(_ \ "@avain")
-
       VirtaTutkinto(
         suoritusPvm = parseLocalDate((os \ "SuoritusPvm").head.text),
         koulutuskoodi = extractTextOption(os \ "Koulutuskoodi", avain), // not available in every tutkinto
-        opintoala1995 = extractTextOption(os \ "Opintoala1995", avain), // Universities use this
-        koulutusala2002 = extractTextOption(os \ "Koulutusala2002", avain), // AMK
-        myontaja = extractTextOption(os \ "Myontaja" \ "Koodi", avain, required = true).get,
+        myontaja = extractTextOption(myontaja(os), avain, required = true).get,
         kieli = resolveKieli(os \ "Kieli")
       )
     })

@@ -2,7 +2,6 @@ package support
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.hakemus._
@@ -18,11 +17,7 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaActor, VirtaClient}
 import fi.vm.sade.hakurekisteri.integration.ytl.YtlActor
 import fi.vm.sade.hakurekisteri.rest.support.Registers
-import fi.vm.sade.hakurekisteri.suoritus.VapaamuotoinenKkTutkinto
 import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
-
-import scala.concurrent.{ExecutionContextExecutorService, ExecutionContext}
-import scala.util.Try
 
 trait Integrations {
   val virta: ActorRef
@@ -41,7 +36,7 @@ trait Integrations {
 object Integrations {
   def apply(rekisterit: Registers,
             system: ActorSystem,
-            config: Config) = config.mockMode match {
+            config: Config): Integrations = config.mockMode match {
     case true => new MockIntegrations(rekisterit, system, config)
     case _ => new BaseIntegrations(rekisterit, system, config)
   }
@@ -62,15 +57,21 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val parametrit: ActorRef = mockActor("parametrit", new MockParameterActor)
   override val henkilo: ActorRef = mockActor("henkilo", new MockHenkiloActor(config))
   override val tarjonta: ActorRef = mockActor("tarjonta", new MockTarjontaActor(config))
-  override val ytl: ActorRef = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, config.integrations.ytlConfig)), "ytl")
+  override val ytl: ActorRef = system.actorOf(Props(new YtlActor(
+    henkilo,
+    rekisterit.suoritusRekisteri,
+    rekisterit.arvosanaRekisteri,
+    hakemukset,
+    config.integrations.ytlConfig
+  )), "ytl")
   override val proxies = new MockProxies
 
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)
 }
 
 
-class BaseIntegrations(rekisterit: Registers, 
-                       system: ActorSystem, 
+class BaseIntegrations(rekisterit: Registers,
+                       system: ActorSystem,
                        config: Config) extends Integrations {
   val restEc = ExecutorUtil.createExecutor(10, "rest-client-pool")
   val vtsEc = ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool")
@@ -82,7 +83,6 @@ class BaseIntegrations(rekisterit: Registers,
     vtsEc.shutdown()
     vrEc.shutdown()
     virtaEc.shutdown()
-
     restEc.awaitTermination(3, TimeUnit.SECONDS)
     vtsEc.awaitTermination(3, TimeUnit.SECONDS)
     vrEc.awaitTermination(3, TimeUnit.SECONDS)
@@ -101,13 +101,26 @@ class BaseIntegrations(rekisterit: Registers,
   val tarjonta = system.actorOf(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
   val organisaatiot = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(henkiloClient, config)), "henkilo")
-  val hakemukset = system.actorOf(Props(new HakemusActor(hakemusClient, config.integrations.hakemusConfig.maxApplications)).withDispatcher("akka.hakurekisteri.query-prio-dispatcher"), "hakemus")
+  val hakemukset = system.actorOf(Props(new HakemusActor(
+    hakemusClient,
+    config.integrations.hakemusConfig.maxApplications
+  )).withDispatcher("akka.hakurekisteri.query-prio-dispatcher"), "hakemus")
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
   val valintaTulos = system.actorOf(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
   val valintarekisteri = system.actorOf(Props(new ValintarekisteriActor(valintarekisteriClient, config)), "valintarekisteri")
-  val ytl = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, config.integrations.ytlConfig)), "ytl")
-  val virta = system.actorOf(Props(new VirtaActor(new VirtaClient(config.integrations.virtaConfig)(virtaEc, system), organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
+  val ytl = system.actorOf(Props(new YtlActor(
+    henkilo,
+    rekisterit.suoritusRekisteri,
+    rekisterit.arvosanaRekisteri,
+    hakemukset,
+    config.integrations.ytlConfig
+  )), "ytl")
+  private val virtaClient = new VirtaClient(
+    config = config.integrations.virtaConfig,
+    apiVersion = config.properties.getOrElse("suoritusrekisteri.virta.apiversio", VirtaClient.version105)
+  )(virtaEc, system)
+  val virta = system.actorOf(Props(new VirtaActor(virtaClient, organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
   val proxies = new HttpProxies(henkiloClient, koodistoClient, organisaatioClient)
 
   hakemukset ! IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
