@@ -2,18 +2,17 @@ package fi.vm.sade.hakurekisteri.oppija
 
 import fi.vm.sade.hakurekisteri.rest.support.{Query, User, Registers}
 import akka.actor.ActorRef
-import org.joda.time.DateTime
 import scala.concurrent.{Future, ExecutionContext}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusHenkilotQuery, SuoritusQuery, Suoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{SuoritusHenkilotQuery, Suoritus}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenQuery, Ensikertalainen}
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.{OpiskeluoikeusHenkilotQuery, OpiskeluoikeusQuery, Opiskeluoikeus}
-import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaHenkilotQuery, OpiskelijaQuery, Opiskelija}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{OpiskeluoikeusHenkilotQuery, Opiskeluoikeus}
+import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaHenkilotQuery, Opiskelija}
 import akka.pattern.ask
 
 trait OppijaFetcher {
@@ -57,7 +56,7 @@ trait OppijaFetcher {
     rekisteriData.flatMap(fetchEnsikertalaisuudet(hakuOid))
   }
 
-  private def getRekisteriData(personOids: Set[String])(implicit user: User): Future[Seq[Oppija]] = {
+  def getRekisteriData(personOids: Set[String])(implicit user: User): Future[Seq[Oppija]] = {
     val oppijaData = for (
       suoritukset <- fetchSuoritukset(personOids);
       todistukset <- fetchTodistukset(suoritukset);

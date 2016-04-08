@@ -56,7 +56,7 @@ trait OppijaSwaggerApi
     .summary("näyttää oppijoiden tiedot oppijanumerolistan perusteella")
     .notes("Näyttää listauksen oppijoiden tiedoista lähetetyn oppijanumerolistan perusteella.")
     .parameter(bodyParam[String]("oppijanumerot")
-      .description(s"""lista oppijanumeroista (max $maxOppijatPostSize kpl), esim ["1.2.246.562.24.00000000001", "1.2.246.562.24.00000000002"]""").required)
+      .description(s"""lista oppijanumeroista (max ${OppijatPostSize.maxOppijatPostSize} kpl), esim ["1.2.246.562.24.00000000001", "1.2.246.562.24.00000000002"]""").required)
     .parameter(queryParam[String]("haku")
       .description("haun oid").required)
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))

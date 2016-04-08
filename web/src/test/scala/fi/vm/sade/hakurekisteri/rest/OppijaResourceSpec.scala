@@ -23,9 +23,9 @@ import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Register
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
-import fi.vm.sade.hakurekisteri.web.oppija.OppijaResource
+import fi.vm.sade.hakurekisteri.web.oppija.{OppijaResource, OppijatPostSize}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.LocalDate
 import org.json4s.Extraction.decompose
 import org.json4s.jackson.Serialization.read
 import org.json4s.JsonAST.JObject
@@ -106,7 +106,7 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
   }
 
   test("OppijaResource should return 400 if too many person oids is sent as POST") {
-    val json = decompose((1 to (resource.maxOppijatPostSize + 1)).map(i => s"1.2.246.562.24.$i"))
+    val json = decompose((1 to (OppijatPostSize.maxOppijatPostSize + 1)).map(i => s"1.2.246.562.24.$i"))
 
     post("/?haku=1.2.3.4", compact(json)) {
       response.status should be (BAD_REQUEST)

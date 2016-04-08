@@ -5,13 +5,10 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
 import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
-import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.oppija.OppijaFetcher
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support._
-import org.joda.time.DateTime
-import org.joda.time.format.ISODateTimeFormat
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
@@ -19,7 +16,10 @@ import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+
+object OppijatPostSize {
+  def maxOppijatPostSize: Int = 5000
+}
 
 class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, val ensikertalaisuus: ActorRef)
                     (implicit val system: ActorSystem, sw: Swagger, val security: Security)
@@ -31,7 +31,6 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 500.seconds
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
-  def maxOppijatPostSize: Int = 5000
 
   before() {
     contentType = formats("json")
@@ -92,7 +91,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     val t0 = Platform.currentTime
     implicit val user = getUser
     val henkilot = parse(request.body).extract[Set[String]]
-    if (henkilot.size > maxOppijatPostSize) throw new IllegalArgumentException("too many person oids")
+    if (henkilot.size > OppijatPostSize.maxOppijatPostSize) throw new IllegalArgumentException("too many person oids")
     if (henkilot.exists(!_.startsWith("1.2.246.562.24."))) throw new IllegalArgumentException("person oid must start with 1.2.246.562.24.")
     val hakuOid = params("haku")
 
