@@ -29,10 +29,6 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
                   aClient: Option[AsyncHttpClient] = None,
                   var apiVersion: String = VirtaClient.version105)(implicit val ec: ExecutionContext, system: ActorSystem) {
 
-  def setApiVersion(version: String): Unit = {
-    apiVersion = version
-  }
-
   private val defaultClient = Http.configure(_
     .setConnectionTimeoutInMs(config.httpClientConnectionTimeout)
     .setRequestTimeoutInMs(120000)
@@ -47,6 +43,13 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   val maxRetries = config.httpClientMaxRetries
 
   val tallennettavatOpiskeluoikeustyypit = Seq("1", "2", "3", "4", "6", "7")
+
+  logger.info(s"created Virta client for API version $apiVersion and serviceUrl ${config.serviceUrl}")
+
+  def setApiVersion(version: String): Unit = {
+    logger.info(s"set API version to $version, was previously $apiVersion")
+    apiVersion = version
+  }
 
   def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
 
