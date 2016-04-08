@@ -31,6 +31,7 @@ suoritusrekisteri.virta.service.url={{suoritusrekisteri_virta_service_url}}
 suoritusrekisteri.virta.jarjestelma={{suoritusrekisteri_virta_jarjestelma}}
 suoritusrekisteri.virta.tunnus={{suoritusrekisteri_virta_tunnus}}
 suoritusrekisteri.virta.avain={{suoritusrekisteri_virta_avain}}
+suoritusrekisteri.virta.apiversio={{suoritusrekisteri_virta_apiversio}}
 
 
 # Oletusarvoja
