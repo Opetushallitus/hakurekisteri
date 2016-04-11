@@ -54,7 +54,7 @@ class HakuRekisteriJetty(val port: Int = PortChecker.findFreeLocalPort, config: 
   context.setAttribute("hakurekisteri.config", config)
   context.setBaseResource(
     new ResourceCollection(Array(root + "/web/src/main/webapp", root + "/web/target/javascript", root + "/web/src/test/front-mock-files")))
-  context.setContextPath("/")
+  context.setContextPath(contextPath)
   context.setDescriptor(root + "/web/src/main/webapp/WEB-INF/web.xml")
   context.addEventListener(new ScalatraListener)
 
