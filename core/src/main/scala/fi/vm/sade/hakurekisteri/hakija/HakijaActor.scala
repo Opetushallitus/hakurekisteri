@@ -365,7 +365,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
           kiinnostunutoppisopimuksesta = h.kiinnostunutoppisopimuksesta,
           huoltajannimi = h.huoltajannimi,
           huoltajanpuhelinnumero = h.huoltajanpuhelinnumero,
-          huoltajansahkoposti = h.huoltajansahkoposti
+          huoltajansahkoposti = h.huoltajansahkoposti,
+          lisakysymykset = h.lisakysymykset
         ),
         suoritukset = hakija.suoritukset,
         opiskeluhistoria = hakija.opiskeluhistoria,
@@ -545,11 +546,10 @@ case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etuni
 }
 
 case class JSONHakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
-                     postinumero: String, postitoimipaikka: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String],
-                     muupuhelin: Option[String], sahkoposti: Option[String], kotikunta: Option[String], sukupuoli: String,
-                     aidinkieli: String, koulutusmarkkinointilupa: Boolean, kiinnostunutoppisopimuksesta: Boolean, huoltajannimi: Option[String],
-                     huoltajanpuhelinnumero: Option[String], huoltajansahkoposti: Option[String], hakemus: XMLHakemus)
-
+                      postinumero: String, postitoimipaikka: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String],
+                      muupuhelin: Option[String], sahkoposti: Option[String], kotikunta: Option[String], sukupuoli: String,
+                      aidinkieli: String, koulutusmarkkinointilupa: Boolean, kiinnostunutoppisopimuksesta: Boolean, huoltajannimi: Option[String],
+                      huoltajanpuhelinnumero: Option[String], huoltajansahkoposti: Option[String], hakemus: XMLHakemus, lisakysymykset: Seq[Lisakysymys])
 
 object XMLHakija {
   val mies = "\\d{6}[-A]\\d{2}[13579].".r
@@ -633,7 +633,8 @@ object JSONHakija {
       huoltajannimi = hakija.henkilo.huoltajannimi.blankOption,
       huoltajanpuhelinnumero = hakija.henkilo.huoltajanpuhelinnumero.blankOption,
       huoltajansahkoposti = hakija.henkilo.huoltajansahkoposti.blankOption,
-      hakemus = hakemus
+      hakemus = hakemus,
+      lisakysymykset = hakija.henkilo.lisakysymykset
     )
 
   def hetu(hetu: String, syntymaaika: String): String = hetu match {

@@ -10,7 +10,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto._
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Kevat, Lasna, Lasnaolo, Poissa, Puuttuu, Syksy}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakemusHenkilotiedot, HenkiloHakijaQuery, Koulutustausta, Lisatiedot, PreferenceEligibility, _}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakemusHenkilotiedot, HenkiloHakijaQuery, Koulutustausta, PreferenceEligibility, _}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, GetRinnasteinenKoodiArvoQuery, Koodi}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohdeOid, HakukohteenKoulutukset, Hakukohteenkoulutus, TarjontaException}
@@ -255,7 +255,7 @@ class KkHakijaResource(hakemukset: ActorRef,
             hakemus,
             q,
             hakutoiveet,
-            answers.lisatiedot.getOrElse(Lisatiedot(None, None, None)),
+            answers.lisatiedot.getOrElse(Map()),
             answers.koulutustausta.getOrElse(Koulutustausta()),
             jno,
             haku,
@@ -272,7 +272,7 @@ class KkHakijaResource(hakemukset: ActorRef,
   private def extractSingleHakemus(hakemus: FullHakemus,
                            q: KkHakijaQuery,
                            hakutoiveet: Map[String, String],
-                           lisatiedot: Lisatiedot,
+                           lisatiedot: Map[String, String],
                            koulutustausta: Koulutustausta,
                            jno: String,
                            haku: Haku,
@@ -300,7 +300,7 @@ class KkHakijaResource(hakemukset: ActorRef,
           vastaanottotieto = sijoitteluTulos.vastaanottotila(hakemusOid, hakukohdeOid),
           ilmoittautumiset = lasnaolot,
           pohjakoulutus = getPohjakoulutukset(koulutustausta),
-          julkaisulupa = lisatiedot.lupaJulkaisu.map(_ == "true"),
+          julkaisulupa = lisatiedot.get("lupaJulkaisu").map(_ == "true"),
           hKelpoisuus = hakukelpoisuus.status,
           hKelpoisuusLahde = hakukelpoisuus.source,
           hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
@@ -344,7 +344,7 @@ class KkHakijaResource(hakemukset: ActorRef,
         aidinkieli = henkilotiedot.aidinkieli.getOrElse("FI"),
         asiointikieli = getAsiointikieli(henkilotiedot.aidinkieli.getOrElse("FI")),
         koulusivistyskieli = henkilotiedot.koulusivistyskieli.getOrElse("FI"),
-        koulutusmarkkinointilupa = answers.lisatiedot.getOrElse(Lisatiedot(None, None, None)).lupaMarkkinointi.map(_ == "true"),
+        koulutusmarkkinointilupa = answers.lisatiedot.getOrElse(Map()).get("lupaMarkkinointi").map(_ == "true"),
         onYlioppilas = isYlioppilas(suoritukset),
         turvakielto = henkilotiedot.turvakielto.contains("true"),
         hakemukset = hakemukset
