@@ -199,15 +199,15 @@ object JsonExtractor extends HakurekisteriJsonSupport {
   def handler[T: Manifest](codes: Int*)(implicit system: ActorSystem) = {
     val f: (Res) => T = (resp: Res) => {
       import org.json4s.jackson.Serialization.read
-      val responseBody = resp.getResponseBody
       if (manifest[T] == manifest[String]) {
-        responseBody.asInstanceOf[T]
+        resp.getResponseBody.asInstanceOf[T]
       } else {
-        Try(read[T](responseBody)).recover {
+        val reader = new InputStreamReader(resp.getResponseBodyAsStream)
+        Try(read[T](reader)).recover {
           case t: Throwable =>
             val logger = Logging.getLogger(system, this)
-            val truncatedBody = responseBody.takeRight(20000)
-            logger.error(s"Error when parsing data from ${resp.getUri}, got: ... $truncatedBody")
+            logger.error(s"Error when parsing data from ${resp.getUri}: ${t.getMessage}")
+            reader.close()
             throw t
         }.get
       }
