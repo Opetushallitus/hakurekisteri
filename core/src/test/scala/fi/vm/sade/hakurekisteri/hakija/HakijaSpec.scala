@@ -103,9 +103,11 @@ class HakijaSpec extends FlatSpec with Matchers {
           "lupaMarkkinointi" -> "true",
           "lupaJulkaisu-id" -> "true",
           "kiinnostunutoppisopimuksesta" -> "true",
-          "54bf445ee4b021d892c6583d" -> "option_0"
-          // "54e30c41e4b08eed6d776189" -> "Tekstivastaus"
-          // "54c8e11ee4b03c06d74fc5cc-option_1" -> "true"
+          "54bf445ee4b021d892c6583d" -> "option_0",
+          "54e30c41e4b08eed6d776189" -> "Tekstivastaus",
+          "54c8e11ee4b03c06d74fc5cc-option_0" -> "",
+          "54c8e11ee4b03c06d74fc5cc-option_1" -> "true",
+          "54c8e11ee4b03c06d74fc5cc-option_2" -> "true"
         )),
         osaaminen = None)
     ),
@@ -153,6 +155,6 @@ class HakijaSpec extends FlatSpec with Matchers {
 
   it should "have lisakysymys fields" in {
     val hakija = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions)
-    hakija.henkilo.lisakysymykset.length should be (1)
+    hakija.henkilo.lisakysymykset.length should be(3)
   }
 }
