@@ -316,17 +316,27 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     case None => true
   }
 
-  def filterByQuery(q: HakijaQuery)(toiveet: Seq[Hakutoive]): Seq[Hakutoive] = q.hakuehto match {
-    case Hakuehto.Kaikki => toiveet
-    case Hakuehto.Hyvaksytyt => toiveet.collect {
-      case ht: Valittu if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
+  def matchesHakukohdeKoodi(h: Hakutoive, q: HakijaQuery) = q.hakukohdekoodi.isEmpty || h.hakukohde.hakukohdekoodi == q.hakukohdekoodi.get
+
+  def matchesOrganisation(h: Hakutoive, q: HakijaQuery) = q.organisaatio.isEmpty || h.organisaatioParendOidPath.contains(q.organisaatio.get)
+
+  def filterByQuery(q: HakijaQuery)(toiveet: Seq[Hakutoive]): Seq[Hakutoive] = {
+    val hakutoives: Seq[Hakutoive] = q.hakuehto match {
+      case Hakuehto.Kaikki => toiveet
+      case Hakuehto.Hyvaksytyt => toiveet.collect {
+        case ht: Valittu if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
+      }
+      case Hakuehto.Vastaanottaneet => toiveet.collect {
+        case ht: Vastaanottanut if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
+      }
+      case Hakuehto.Hylatyt => toiveet.collect {
+        case ht: Hylatty if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
+      }
     }
-    case Hakuehto.Vastaanottaneet => toiveet.collect {
-      case ht: Vastaanottanut if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
-    }
-    case Hakuehto.Hylatyt => toiveet.collect {
-      case ht: Hylatty if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
-    }
+    if (q.version == 2)
+      hakutoives.filter(h => matchesHakukohdeKoodi(h, q) && matchesOrganisation(h, q))
+    else
+      hakutoives
   }
 
   def filterHakutoiveetByQuery(q: HakijaQuery)(hakija: Hakija): Hakija = {
@@ -365,7 +375,8 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
           kiinnostunutoppisopimuksesta = h.kiinnostunutoppisopimuksesta,
           huoltajannimi = h.huoltajannimi,
           huoltajanpuhelinnumero = h.huoltajanpuhelinnumero,
-          huoltajansahkoposti = h.huoltajansahkoposti
+          huoltajansahkoposti = h.huoltajansahkoposti,
+          lisakysymykset = h.lisakysymykset
         ),
         suoritukset = hakija.suoritukset,
         opiskeluhistoria = hakija.opiskeluhistoria,
@@ -545,11 +556,10 @@ case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etuni
 }
 
 case class JSONHakija(hetu: String, oppijanumero: String, sukunimi: String, etunimet: String, kutsumanimi: Option[String], lahiosoite: String,
-                     postinumero: String, postitoimipaikka: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String],
-                     muupuhelin: Option[String], sahkoposti: Option[String], kotikunta: Option[String], sukupuoli: String,
-                     aidinkieli: String, koulutusmarkkinointilupa: Boolean, kiinnostunutoppisopimuksesta: Boolean, huoltajannimi: Option[String],
-                     huoltajanpuhelinnumero: Option[String], huoltajansahkoposti: Option[String], hakemus: XMLHakemus)
-
+                      postinumero: String, postitoimipaikka: String, maa: String, kansalaisuus: String, matkapuhelin: Option[String],
+                      muupuhelin: Option[String], sahkoposti: Option[String], kotikunta: Option[String], sukupuoli: String,
+                      aidinkieli: String, koulutusmarkkinointilupa: Boolean, kiinnostunutoppisopimuksesta: Boolean, huoltajannimi: Option[String],
+                      huoltajanpuhelinnumero: Option[String], huoltajansahkoposti: Option[String], hakemus: XMLHakemus, lisakysymykset: Seq[Lisakysymys])
 
 object XMLHakija {
   val mies = "\\d{6}[-A]\\d{2}[13579].".r
@@ -633,7 +643,8 @@ object JSONHakija {
       huoltajannimi = hakija.henkilo.huoltajannimi.blankOption,
       huoltajanpuhelinnumero = hakija.henkilo.huoltajanpuhelinnumero.blankOption,
       huoltajansahkoposti = hakija.henkilo.huoltajansahkoposti.blankOption,
-      hakemus = hakemus
+      hakemus = hakemus,
+      lisakysymykset = hakija.henkilo.lisakysymykset
     )
 
   def hetu(hetu: String, syntymaaika: String): String = hetu match {
