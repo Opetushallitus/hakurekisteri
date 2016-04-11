@@ -122,12 +122,10 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "preference1-discretionary-follow-up" -> "sosiaalisetsyyt",
           "preference1_urheilijan_ammatillisen_koulutuksen_lisakysymys" -> "true",
           "preference1_kaksoistutkinnon_lisakysymys" -> "true")),
-        lisatiedot = Some(
-          Lisatiedot(
-            lupaMarkkinointi = Some("true"),
-            lupaJulkaisu = Some("true"),
-            kiinnostunutoppisopimuksesta = Some("true")
-          )))),
+        lisatiedot = Some(Map(
+          "lupaMarkkinointi" -> "true",
+          "lupaJulkaisu-id" -> "true",
+          "kiinnostunutoppisopimuksesta" -> "true")))),
     state = Some("ACTIVE"),
     preferenceEligibilities = Seq(PreferenceEligibility("1.11.1", "NOT_CHECKED", Some("UNKNOWN")), PreferenceEligibility("1.11.2", "NOT_CHECKED", Some("UNKNOWN")))
   )
@@ -218,11 +216,10 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "preference1-discretionary-follow-up" -> "oppimisvaikudet",
           "preference1_urheilijan_ammatillisen_koulutuksen_lisakysymys" -> "true",
           "preference1_kaksoistutkinnon_lisakysymys" -> "true")),
-        lisatiedot = Some(
-          Lisatiedot(
-            lupaMarkkinointi = Some("true"),
-            lupaJulkaisu = Some("true"),
-            kiinnostunutoppisopimuksesta = Some("true"))))),
+        lisatiedot = Some(Map(
+          "lupaMarkkinointi" -> "true",
+          "lupaJulkaisu-id" -> "true",
+          "kiinnostunutoppisopimuksesta" -> "true")))),
     state = Some("INCOMPLETE"),
     preferenceEligibilities = Seq()
   )
@@ -253,6 +250,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             syntymaaika = Some("20.03.1994"),
             onkoSinullaSuomalainenHetu = Some("true"),
             koulusivistyskieli = Some("FI"),
+            huoltajannimi=Some("huoltajannimi"),
             turvakielto = None)),
         koulutustausta = Some(
           Koulutustausta(
@@ -313,11 +311,10 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "preference1-discretionary-follow-up" -> "oppimisvaikudet",
           "preference1_urheilijan_ammatillisen_koulutuksen_lisakysymys" -> "true",
           "preference1_kaksoistutkinnon_lisakysymys" -> "true")),
-        lisatiedot = Some(
-          Lisatiedot(
-            lupaMarkkinointi = Some("true"),
-            lupaJulkaisu = Some("true"),
-            kiinnostunutoppisopimuksesta = Some("true"))))),
+        lisatiedot = Some(Map(
+          "lupaMarkkinointi" -> "true",
+          "lupaJulkaisu-id" -> "true",
+          "kiinnostunutoppisopimuksesta" -> "true")))),
     state = Some("INCOMPLETE"),
     preferenceEligibilities = Seq()
   )
@@ -420,7 +417,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.2", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false, None)
 
     def hakijat: Seq[Hakija] = {
-      tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku))
+      tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku, Map(), Option.empty))
     }
 
     def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {

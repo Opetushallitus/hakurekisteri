@@ -91,6 +91,10 @@ trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel wi
 
   // V2 swagger
 
+  val hakijatFieldsV2 = Seq(
+    ModelField("hakijat", null, DataType.GenList(DataType("JSONHakija")))
+  )
+
   val hakijaFieldsV2 = Seq(
     ModelField("hetu", null, DataType.String),
     ModelField("oppijanumero", null, DataType.String),
@@ -112,19 +116,28 @@ trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel wi
     ModelField("huoltajannimi", null, DataType.String, required = false),
     ModelField("huoltajanpuhelinnumero", null, DataType.String, required = false),
     ModelField("huoltajansahkoposti", null, DataType.String, required = false),
-    ModelField("hakemus", null, DataType("XMLHakemus")))
+    ModelField("hakemus", null, DataType("XMLHakemus")),
+    ModelField("lisakysymykset", null, DataType("JSONLisakysymys")))
 
-
-  registerModel(Model("JSONHakija", "Hakija", hakijaFieldsV2.map{ t => (t.name, t) }.toMap))
-
-  val hakijatFieldsV2 = Seq(ModelField("hakijat", null, DataType.GenList(DataType("JSONHakija"))))
-
+  val lisakysymysVastausFields = Seq(
+    ModelField("vastausid", null, DataType.String),
+    ModelField("vastausteksti", null, DataType.String)
+  )
+  val lisakysymysFields = Seq(
+    ModelField("kysymysid", null, DataType.String),
+    ModelField("kysymystyyppi", null, DataType.String),
+    ModelField("kysymysteksti", null, DataType.String),
+    ModelField("vastaukset", null, DataType("JSONLisakysymysVastaus"))
+  )
   registerModel(Model("JSONHakijat", "Hakijat", hakijatFieldsV2.map{ t => (t.name, t) }.toMap))
+  registerModel(Model("JSONHakija", "Hakija", hakijaFieldsV2.map{ t => (t.name, t) }.toMap))
+  registerModel(Model("JSONLisakysymys", "Lisakysymys", lisakysymysFields.map{ t => (t.name, t) }.toMap))
+  registerModel(Model("JSONLisakysymysVastaus", "LisakysymysVastaus", lisakysymysVastausFields.map{ t => (t.name, t) }.toMap))
 
   val queryV2: OperationBuilder = apiOperation[JSONHakijat]("haeHakijat")
     .summary("näyttää kaikki hakijat")
     .notes("Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti.")
-    .parameter(queryParam[Option[String]]("haku").description("haun oid").optional)
+    .parameter(queryParam[Option[String]]("haku").description("haun oid").required)
     .parameter(queryParam[Option[String]]("organisaatio").description("koulutuksen tarjoajan tai sen yläorganisaation oid").optional)
     .parameter(queryParam[Option[String]]("hakukohdekoodi").description("hakukohdekoodi").optional)
     .parameter(queryParam[String]("hakuehto").description("hakuehto").allowableValues(Hakuehto.values.toList).required)
