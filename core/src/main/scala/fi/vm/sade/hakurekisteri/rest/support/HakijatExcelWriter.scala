@@ -97,12 +97,12 @@ trait HakijatExcelWriter[T] {
 
 
 
-  def getHeaders: Set[Row]
+  def getHeaders(hakijat: T): Set[Row]
 
   def getRows(hakijat: T): Set[Row]
 
   def write(out: OutputStream, hakijat: T): Unit = {
-    val sheet = Sheet("Hakijat", getHeaders ++ getRows(hakijat))
+    val sheet = Sheet("Hakijat", getHeaders(hakijat) ++ getRows(hakijat))
     val wb = new Workbook(Seq(sheet))
     wb.writeTo(out)
   }
