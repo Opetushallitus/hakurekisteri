@@ -175,7 +175,7 @@ import scala.concurrent.duration._
 case class RefreshingDone(startTime: Option[Long])
 
 class HakemusActor(hakemusClient: VirkailijaRestClient,
-                   maxApplications: Int = 2000,
+                   pageSize: Int = 2000,
                    nextPageDelay: Int = 10000,
                    override val journal: Journal[FullHakemus, String] = new HakemusJournal()
                    ) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
@@ -199,11 +199,6 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
   }
 
   object ResetCursor
-
-  private def pageSize: Int = initialLoadingDone match {
-    case true => maxApplications / 10
-    case false => maxApplications
-  }
 
   private def initialBlocking: Receive = {
     case q: Query[_] if !initialLoadingDone =>
