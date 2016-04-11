@@ -8,6 +8,8 @@ import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import org.joda.time.DateTime
 import org.scalatest.{Matchers, FlatSpec}
 
+import scala.concurrent.Future
+
 
 class HakijaSpec extends FlatSpec with Matchers {
 
@@ -97,12 +99,14 @@ class HakijaSpec extends FlatSpec with Matchers {
           "preference1-discretionary-follow-up" -> "sosiaalisetsyyt",
           "preference1_urheilijan_ammatillisen_koulutuksen_lisakysymys" -> "true",
           "preference1_kaksoistutkinnon_lisakysymys" -> "true")),
-        lisatiedot = Some(
-          Lisatiedot(
-            lupaMarkkinointi = Some("true"),
-            lupaJulkaisu = Some("true"),
-            kiinnostunutoppisopimuksesta = Some("true")
-          )),
+        lisatiedot = Some(Map(
+          "lupaMarkkinointi" -> "true",
+          "lupaJulkaisu-id" -> "true",
+          "kiinnostunutoppisopimuksesta" -> "true",
+          "54bf445ee4b021d892c6583d" -> "option_0"
+          // "54e30c41e4b08eed6d776189" -> "Tekstivastaus"
+          // "54c8e11ee4b03c06d74fc5cc-option_1" -> "true"
+        )),
         osaaminen = None)
     ),
     state = Some("ACTIVE"),
@@ -110,7 +114,22 @@ class HakijaSpec extends FlatSpec with Matchers {
   )
 
   val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.1", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false, None)
-  val toive = AkkaHakupalvelu.getHakija(FullHakemus1, haku).hakemus.hakutoiveet.head
+
+  val tq1 = ThemeQuestion(`type` = "ThemeRadioButtonQuestion", messageText = "Millä kielellä haluat saada valintakokeen?", options = Some(Map(
+    "option_0" -> "Suomi",
+    "option_1" -> "Ruotsi")))
+  val tq2 = ThemeQuestion(`type` = "ThemeCheckBoxQuestion", messageText = "Valintakokeet", options = Some(Map(
+    "option_2" -> "Matematiikka (DI), fysiikka ja kemia",
+    "option_0" -> "Matematiikka (DI) ja fysiikka",
+    "option_1" -> "Matematiikka (DI) ja kemia")))
+  val tq3 = ThemeQuestion(`type` = "ThemeTextQuestion", messageText = "Tanssin aiempi aktiivinen ja säännöllinen harrastaminen", Option.empty)
+
+  val themeQuestions: Future[Map[String, ThemeQuestion]] = Future.successful(Map(
+    "54bf445ee4b021d892c6583d" -> tq1,
+    "54c8e11ee4b03c06d74fc5cc" -> tq2,
+    "54e30c41e4b08eed6d776189" -> tq3))
+
+  val toive = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions).hakemus.hakutoiveet.head
 
 
   behavior of "Hakemuksen lasnaolotieto"
@@ -130,5 +149,10 @@ class HakijaSpec extends FlatSpec with Matchers {
     XMLHakutoive(Hakutoive(toive,
       Some(hyvaksytty),
       Some(vastaanottanut_lasna)), OppilaitosX, "koodi")
+  }
+
+  it should "have lisakysymys fields" in {
+    val hakija = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions)
+    hakija.henkilo.lisakysymykset.length should be (1)
   }
 }

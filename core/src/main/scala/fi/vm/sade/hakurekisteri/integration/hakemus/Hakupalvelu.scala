@@ -4,6 +4,7 @@ import akka.actor.ActorRef
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.hakija._
+import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
@@ -12,19 +13,30 @@ import fi.vm.sade.hakurekisteri.suoritus.{Komoto, Suoritus, VirallinenSuoritus, 
 import org.joda.time.{DateTime, LocalDate, MonthDay}
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Try
 
 trait Hakupalvelu {
   def getHakijat(q: HakijaQuery): Future[Seq[Hakija]]
 }
 
-class AkkaHakupalvelu(hakemusActor: ActorRef, hakuActor: ActorRef)(implicit val ec: ExecutionContext) extends Hakupalvelu {
+case class ThemeQuestion(`type`: String, messageText: String, options: Option[Map[String, String]])
+
+class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusActor: ActorRef, hakuActor: ActorRef)(implicit val ec: ExecutionContext) extends Hakupalvelu {
   val Pattern = "preference(\\d+).*".r
+
+  private def restRequest[A <: AnyRef](uri: String, args: AnyRef*)(implicit mf: Manifest[A]): Future[A] =
+    virkailijaClient.readObject[A](uri, args: _*)(200, 2)
+
+  def getLisakysymyksetForHaku(hakuOid: String): Future[Map[String, ThemeQuestion]] =
+    restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid)
+
 
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     import akka.pattern._
     implicit val timeout: Timeout = 120.seconds
+
+    val lisakysymykset = getLisakysymyksetForHaku(q.haku.get)
 
     (for (
       hakemukset <- (hakemusActor ? HakemusQuery(q)).mapTo[Seq[FullHakemus]]
@@ -32,36 +44,59 @@ class AkkaHakupalvelu(hakemusActor: ActorRef, hakuActor: ActorRef)(implicit val 
         hakemus <- hakemukset.filter(_.stateValid)
       ) yield for (
           haku <- (hakuActor ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
-        ) yield AkkaHakupalvelu.getHakija(hakemus, haku)).flatMap(Future.sequence(_))
+        ) yield AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset)).flatMap(Future.sequence(_))
   }
 }
 
 object AkkaHakupalvelu {
   val DEFAULT_POHJA_KOULUTUS: String = "1"
 
-  def getVuosi(vastaukset:Koulutustausta)(pohjakoulutus:String): Option[String] = pohjakoulutus match {
+  def getVuosi(vastaukset: Koulutustausta)(pohjakoulutus: String): Option[String] = pohjakoulutus match {
     case "9" => vastaukset.lukioPaattotodistusVuosi
     case "7" => Some((LocalDate.now.getYear + 1).toString)
     case _ => vastaukset.PK_PAATTOTODISTUSVUOSI
   }
 
-  def kaydytLisapisteKoulutukset(tausta: Koulutustausta) =
-    {
-      def checkKoulutus(lisakoulutus: Option[String]): Boolean = {
-        Try(lisakoulutus.getOrElse("false").toBoolean).getOrElse(false)
-      }
-      Map(
-        "LISAKOULUTUS_KYMPPI" -> tausta.LISAKOULUTUS_KYMPPI,
-        "LISAKOULUTUS_VAMMAISTEN" -> tausta.LISAKOULUTUS_VAMMAISTEN,
-        "LISAKOULUTUS_TALOUS" -> tausta.LISAKOULUTUS_TALOUS,
-        "LISAKOULUTUS_AMMATTISTARTTI" -> tausta.LISAKOULUTUS_AMMATTISTARTTI,
-        "LISAKOULUTUS_KANSANOPISTO" -> tausta.LISAKOULUTUS_KANSANOPISTO,
-        "LISAKOULUTUS_MAAHANMUUTTO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO,
-        "LISAKOULUTUS_MAAHANMUUTTO_LUKIO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO_LUKIO
-      ).mapValues(checkKoulutus).filter{case (_, done) => done}.keys
+  def kaydytLisapisteKoulutukset(tausta: Koulutustausta) = {
+    def checkKoulutus(lisakoulutus: Option[String]): Boolean = {
+      Try(lisakoulutus.getOrElse("false").toBoolean).getOrElse(false)
+    }
+    Map(
+      "LISAKOULUTUS_KYMPPI" -> tausta.LISAKOULUTUS_KYMPPI,
+      "LISAKOULUTUS_VAMMAISTEN" -> tausta.LISAKOULUTUS_VAMMAISTEN,
+      "LISAKOULUTUS_TALOUS" -> tausta.LISAKOULUTUS_TALOUS,
+      "LISAKOULUTUS_AMMATTISTARTTI" -> tausta.LISAKOULUTUS_AMMATTISTARTTI,
+      "LISAKOULUTUS_KANSANOPISTO" -> tausta.LISAKOULUTUS_KANSANOPISTO,
+      "LISAKOULUTUS_MAAHANMUUTTO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO,
+      "LISAKOULUTUS_MAAHANMUUTTO_LUKIO" -> tausta.LISAKOULUTUS_MAAHANMUUTTO_LUKIO
+    ).mapValues(checkKoulutus).filter { case (_, done) => done }.keys
+  }
+
+  def getLisakysymykset(hakemus: FullHakemus, lisakysymykset: Map[String, ThemeQuestion]): Seq[Lisakysymys] = {
+    def isLisakysymys(kysymysId: String): Boolean = lisakysymykset.contains(kysymysId) // TODO lisää checkboxit asdasda-option_1
+
+    def getLisakysymys(avain: String, arvo: String): Lisakysymys = {
+      val kysymys: ThemeQuestion = lisakysymykset.get(avain).get
+      Lisakysymys(
+        kysymysid = avain,
+        kysymystyyppi = kysymys.`type`,
+        kysymysteksti = kysymys.messageText,
+        vastaukset = getVastaukses(kysymys, arvo)
+      )
     }
 
-  def getHakija(hakemus: FullHakemus, haku: Haku): Hakija = {
+    def getVastaukses(tq: ThemeQuestion, vastaus: String): Seq[LisakysymysVastaus] = Seq(LisakysymysVastaus(
+      vastausid = vastaus,
+      vastausteksti = tq.options.get(vastaus) // TODO lisää checkboxit
+    ))
+
+    val answers: HakemusAnswers = hakemus.answers.getOrElse(HakemusAnswers())
+    val flatAnswers = answers.hakutoiveet.getOrElse(Map()) ++ answers.osaaminen.getOrElse(Map()) ++ answers.lisatiedot.getOrElse(Map())
+
+    flatAnswers.filterKeys(isLisakysymys).map { case (avain, arvo) => getLisakysymys(avain, arvo) }.toSeq
+  }
+
+  def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Future[Map[String, ThemeQuestion]]): Hakija = {
     val kesa = new MonthDay(6, 4)
     implicit val v = hakemus.answers
     val koulutustausta = for (a: HakemusAnswers <- v; k: Koulutustausta <- a.koulutustausta) yield k
@@ -75,7 +110,7 @@ object AkkaHakupalvelu {
     val julkaisulupa = (for(
       a <- v;
       lisatiedot <- a.lisatiedot;
-      julkaisu <- lisatiedot.lupaJulkaisu
+      julkaisu <- lisatiedot.get("lupaJulkaisu")
     ) yield julkaisu).getOrElse("false").toBoolean
 
     val lisapistekoulutus = for (
@@ -107,11 +142,12 @@ object AkkaHakupalvelu {
         sukupuoli = getHenkiloTietoOrBlank(_.sukupuoli),
         hetu = getHenkiloTietoOrBlank(_.Henkilotunnus),
         syntymaaika = getHenkiloTietoOrBlank(_.syntymaaika),
-        markkinointilupa = Some(getValue(_.lisatiedot,(l:Lisatiedot) => l.lupaMarkkinointi, "false").toBoolean),
-        kiinnostunutoppisopimuksesta = Some(getValue(_.lisatiedot,(l:Lisatiedot) => l.kiinnostunutoppisopimuksesta.filter(_.trim.nonEmpty), "false").toBoolean),
+        markkinointilupa = Some(getValue(_.lisatiedot,(l:Map[String, String]) => l.get("lupaMarkkinointi"), "false").toBoolean),
+        kiinnostunutoppisopimuksesta = Some(getValue(_.lisatiedot,(l:Map[String, String]) => l.get("kiinnostunutoppisopimuksesta").filter(_.trim.nonEmpty), "false").toBoolean),
         huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
         huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
-        huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti)
+        huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
+        lisakysymykset = getLisakysymykset(hakemus, Await.result(lisakysymykset,120.seconds))
       ),
       getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli,hakemus.personOid),
       lahtokoulu match {
@@ -246,24 +282,23 @@ object Koulutustausta{
     None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
 }
 
-case class Lisatiedot(lupaJulkaisu: Option[String], lupaMarkkinointi: Option[String], kiinnostunutoppisopimuksesta: Option[String])
-
-case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot] = None, koulutustausta: Option[Koulutustausta] = None, lisatiedot: Option[Lisatiedot] = None, hakutoiveet: Option[Map[String, String]] = None, osaaminen: Option[Map[String, String]] = None)
+case class HakemusAnswers(henkilotiedot: Option[HakemusHenkilotiedot] = None, koulutustausta: Option[Koulutustausta] = None, lisatiedot: Option[Map[String, String]] = None, hakutoiveet: Option[Map[String, String]] = None, osaaminen: Option[Map[String, String]] = None)
 
 case class PreferenceEligibility(aoId: String, status: String, source: Option[String])
 
 case class FullHakemus(oid: String, personOid: Option[String], applicationSystemId: String, answers: Option[HakemusAnswers], state: Option[String], preferenceEligibilities: Seq[PreferenceEligibility]) extends Resource[String, FullHakemus] with Identified[String] {
   val source = Oids.ophOrganisaatioOid
+
   override def identify(identity: String): FullHakemus with Identified[String] = this
 
   val id = oid
 
   def hetu =
-      for (
-        foundAnswers <- answers;
-        henkilo <- foundAnswers.henkilotiedot;
-        henkiloHetu <- henkilo.Henkilotunnus
-      ) yield henkiloHetu
+    for (
+      foundAnswers <- answers;
+      henkilo <- foundAnswers.henkilotiedot;
+      henkiloHetu <- henkilo.Henkilotunnus
+    ) yield henkiloHetu
 
   def stateValid: Boolean = state match {
     case Some(s) if Seq("ACTIVE", "INCOMPLETE").contains(s) => true
