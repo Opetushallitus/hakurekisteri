@@ -124,7 +124,7 @@ trait HakijaSwaggerApi extends SwaggerSupport with IncidentReportSwaggerModel wi
   val queryV2: OperationBuilder = apiOperation[JSONHakijat]("haeHakijat")
     .summary("näyttää kaikki hakijat")
     .notes("Näyttää listauksen hakeneista/valituista/paikan vastaanottaneista hakijoista parametrien mukaisesti.")
-    .parameter(queryParam[Option[String]]("haku").description("haun oid").optional)
+    .parameter(queryParam[Option[String]]("haku").description("haun oid").required)
     .parameter(queryParam[Option[String]]("organisaatio").description("koulutuksen tarjoajan tai sen yläorganisaation oid").optional)
     .parameter(queryParam[Option[String]]("hakukohdekoodi").description("hakukohdekoodi").optional)
     .parameter(queryParam[String]("hakuehto").description("hakuehto").allowableValues(Hakuehto.values.toList).required)

@@ -47,6 +47,8 @@ class HakijaResourceV2(hakijaActor: ActorRef)
   }
 
   get("/", operation(queryV2)) {
+    if(params.get("haku").getOrElse("").isEmpty)
+      throw new IllegalArgumentException(s"Haku can not be empty")
     val t0 = Platform.currentTime
     val q = HakijaQuery(params, currentUser, 2)
 
