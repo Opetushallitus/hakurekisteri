@@ -60,15 +60,15 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusRekiste
     val hakuOid = params("haku")
 
     new AsyncResult() {
-      override implicit def timeout: Duration = 120.seconds
+      override implicit def timeout: Duration = 5.minutes
       private val q = {
-        val henkiloOids = (hakemusRekisteri ? HakemusQuery(Some(hakuOid), None, None, None))(60.seconds)
+        val henkiloOids = (hakemusRekisteri ? HakemusQuery(Some(hakuOid), None, None, None))(2.minutes)
           .mapTo[Seq[FullHakemus]]
           .map(_.flatMap(_.personOid).toSet)
         henkiloOids.flatMap(persons => (ensikertalainenActor ? EnsikertalainenQuery(
           henkiloOids = persons,
           hakuOid = hakuOid
-        ))(120.seconds).mapTo[Seq[Ensikertalainen]])
+        ))(5.minutes).mapTo[Seq[Ensikertalainen]])
       }
       logQuery(Map("haku" -> hakuOid), t0, q)
       override val is = q
@@ -82,11 +82,11 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusRekiste
     val hakuOid = params("haku")
 
     new AsyncResult() {
-      override implicit def timeout: Duration = 120.seconds
+      override implicit def timeout: Duration = 5.minutes
       private val q = (ensikertalainenActor ? EnsikertalainenQuery(
         henkiloOids = personOids,
         hakuOid = hakuOid
-      ))(120.seconds).mapTo[Seq[Ensikertalainen]]
+      ))(5.minutes).mapTo[Seq[Ensikertalainen]]
       logQuery(Map("body" -> personOids, "haku" -> hakuOid), t0, q)
       override val is = q
     }

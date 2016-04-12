@@ -63,7 +63,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   val KkKoulutusUri = "koulutus_[67][1-9][0-9]{4}".r
   val koulutuksenAlkaminenSyksy2014 = new DateTime(2014, 8, 1, 0, 0, 0, 0, DateTimeZone.forID("Europe/Helsinki"))
 
-  implicit val defaultTimeout: Timeout = 2.minutes
+  implicit val defaultTimeout: Timeout = 5.minutes
 
   log.info(s"started ensikertalaisuus actor: $self")
 
