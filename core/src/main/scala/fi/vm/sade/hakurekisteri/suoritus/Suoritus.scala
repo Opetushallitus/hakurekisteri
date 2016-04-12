@@ -52,7 +52,7 @@ object VapaamuotoinenKkTutkinto {
 
 object DayFinder {
 
-  val basedate = LocalDate.now()
+  def basedate = LocalDate.now()
 
   import com.github.nscala_time.time.Imports._
 
