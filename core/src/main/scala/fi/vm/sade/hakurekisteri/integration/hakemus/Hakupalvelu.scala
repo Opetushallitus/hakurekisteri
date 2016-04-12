@@ -112,10 +112,13 @@ object AkkaHakupalvelu {
           vastausteksti = tq.options.get(vastaus)
         ))
         case "ThemeCheckBoxQuestion" =>
-          Seq(LisakysymysVastaus(
-            vastausid = vastausId,
-            vastausteksti = if (vastaus == "true") tq.options.get(vastausId.get) else ""
-          ))
+          if (vastaus != "true")
+            Seq()
+          else
+            Seq(LisakysymysVastaus(
+              vastausid = vastausId,
+              vastausteksti = tq.options.get(vastausId.get)
+            ))
         case _ => Seq(LisakysymysVastaus(
           vastausid = None,
           vastausteksti = vastaus
