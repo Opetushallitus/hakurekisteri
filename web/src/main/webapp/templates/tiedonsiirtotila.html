@@ -25,7 +25,9 @@
                     <tbody>
                     <tr ng-repeat-start="b in currentRows">
                         <td>
-                            <div>{{b.id}}</div>
+                            <div>
+                                <a href="rest/v1/siirto/{{b.batchType}}/{{b.id}}" target="_blank" title="Avaa tiedonsiirto uuteen ikkunaan">{{b.id}}</a>
+                            </div>
                             <div>{{b.externalId}}</div>
                         </td>
                         <td>{{b.batchType}}</td>
