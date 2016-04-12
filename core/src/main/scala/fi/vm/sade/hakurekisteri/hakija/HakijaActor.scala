@@ -330,8 +330,9 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
       }
     }
     if(q.version == 2 && q.organisaatio.nonEmpty)
-      hakutoives.filter(_.organisaatioParendOidPath.contains(q.organisaatio))
-    hakutoives
+      hakutoives.filter(_.organisaatioParendOidPath.contains(q.organisaatio.get))
+    else
+      hakutoives
   }
 
   def filterHakutoiveetByQuery(q: HakijaQuery)(hakija: Hakija): Hakija = {
