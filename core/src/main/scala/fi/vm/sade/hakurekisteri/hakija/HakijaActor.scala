@@ -316,17 +316,22 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     case None => true
   }
 
-  def filterByQuery(q: HakijaQuery)(toiveet: Seq[Hakutoive]): Seq[Hakutoive] = q.hakuehto match {
-    case Hakuehto.Kaikki => toiveet
-    case Hakuehto.Hyvaksytyt => toiveet.collect {
-      case ht: Valittu if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
+  def filterByQuery(q: HakijaQuery)(toiveet: Seq[Hakutoive]): Seq[Hakutoive] = {
+    val hakutoives: Seq[Hakutoive] = q.hakuehto match {
+      case Hakuehto.Kaikki => toiveet
+      case Hakuehto.Hyvaksytyt => toiveet.collect {
+        case ht: Valittu if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
+      }
+      case Hakuehto.Vastaanottaneet => toiveet.collect {
+        case ht: Vastaanottanut if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
+      }
+      case Hakuehto.Hylatyt => toiveet.collect {
+        case ht: Hylatty if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
+      }
     }
-    case Hakuehto.Vastaanottaneet => toiveet.collect {
-      case ht: Vastaanottanut if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
-    }
-    case Hakuehto.Hylatyt => toiveet.collect {
-      case ht: Hylatty if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
-    }
+    if(q.version == 2 && q.organisaatio.nonEmpty)
+      hakutoives.filter(_.organisaatioParendOidPath.contains(q.organisaatio))
+    hakutoives
   }
 
   def filterHakutoiveetByQuery(q: HakijaQuery)(hakija: Hakija): Hakija = {
