@@ -14,7 +14,7 @@ object KkExcelUtil extends HakijatExcelWriter[Seq[Hakija]] {
     "Hakukelpoisuuden lahde", "Hakukohteen koulutukset"
   )
 
-  override def getHeaders: Set[Row] = Set(Row(0, headers.zipWithIndex.toSet.map((h: (String, Int)) => StringCell(h._2, h._1))))
+  override def getHeaders(hakijat: Seq[Hakija]): Set[Row] = Set(Row(0, headers.zipWithIndex.toSet.map((h: (String, Int)) => StringCell(h._2, h._1))))
   
   override def getRows(hakijat: Seq[Hakija]): Set[Row] = hakijat.flatMap((hakija) => hakija.hakemukset.map(hakemus => {
     val rivi = Seq(
