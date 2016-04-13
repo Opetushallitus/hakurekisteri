@@ -250,6 +250,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             syntymaaika = Some("20.03.1994"),
             onkoSinullaSuomalainenHetu = Some("true"),
             koulusivistyskieli = Some("FI"),
+            huoltajannimi=Some("huoltajannimi"),
             turvakielto = None)),
         koulutustausta = Some(
           Koulutustausta(
@@ -416,7 +417,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.2", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false, None)
 
     def hakijat: Seq[Hakija] = {
-      tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku, Future.successful(Map())))
+      tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku, Map()))
     }
 
     def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {
