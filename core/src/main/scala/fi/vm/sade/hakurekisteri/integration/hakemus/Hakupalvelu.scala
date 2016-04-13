@@ -37,7 +37,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusActor: Acto
     import akka.pattern._
     implicit val timeout: Timeout = 120.seconds
 
-    val lisakysymykset = getLisakysymyksetForHaku(q.haku.get)
+    val lisakysymykset = Await.result(getLisakysymyksetForHaku(q.haku.get), 120.seconds)
 
     (for (
       hakemukset <- (hakemusActor ? HakemusQuery(q)).mapTo[Seq[FullHakemus]]
@@ -140,7 +140,7 @@ object AkkaHakupalvelu {
       .toSeq
   }
 
-  def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Future[Map[String, ThemeQuestion]]): Hakija = {
+  def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion]): Hakija = {
     val kesa = new MonthDay(6, 4)
     implicit val v = hakemus.answers
     val koulutustausta = for (a: HakemusAnswers <- v; k: Koulutustausta <- a.koulutustausta) yield k
@@ -191,7 +191,7 @@ object AkkaHakupalvelu {
         huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
         huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
         huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
-        lisakysymykset = getLisakysymykset(hakemus, Await.result(lisakysymykset, 120.seconds))
+        lisakysymykset = getLisakysymykset(hakemus, lisakysymykset)
       ),
       getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli, hakemus.personOid),
       lahtokoulu match {
