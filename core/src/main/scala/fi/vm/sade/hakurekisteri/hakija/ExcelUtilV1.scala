@@ -15,7 +15,7 @@ object ExcelUtilV1 extends HakijatExcelWriter[XMLHakijat] {
     "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto"
   )
 
-  override def getHeaders: Set[Row] = Set(Row(0, headers.zipWithIndex.toSet.map((header: (String, Int)) => StringCell(header._2, header._1))))
+  override def getHeaders(hakijat: XMLHakijat): Set[Row] = Set(Row(0, headers.zipWithIndex.toSet.map((header: (String, Int)) => StringCell(header._2, header._1))))
 
   override def getRows(hakijat: XMLHakijat): Set[Row] = hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet.map(ht => {
     val rivi = Seq(

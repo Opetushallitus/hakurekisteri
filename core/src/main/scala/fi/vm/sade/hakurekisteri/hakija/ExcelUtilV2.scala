@@ -16,10 +16,22 @@ object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
     "Lasnaolo", "Terveys", "Aiempiperuminen", "Kaksoistutkinto"
   )
 
-  override def getHeaders: Set[Row] = Set(Row(0, headers.zipWithIndex.toSet.map((header: (String, Int)) => StringCell(header._2, header._1))))
+  def getLisakysymysIdsAndQuestionsInOrder(hakijat: JSONHakijat) = {
+    val raw: Seq[(String, String)] = hakijat.hakijat.flatMap(_.lisakysymykset.map(lk => lk.kysymysid -> lk.kysymysteksti))
+      .distinct.sortBy(_._2)
+    raw.map(t => lisakysymysHeader(t._1, t._2))
+  }
+
+  case class lisakysymysHeader(id: String, header: String)
+
+  override def getHeaders(hakijat: JSONHakijat): Set[Row] = {
+    val lisakysymysQuestions = getLisakysymysIdsAndQuestionsInOrder(hakijat).map(_.header)
+    val headersWithLisakysymys = headers ++ lisakysymysQuestions
+    Set(Row(0, headersWithLisakysymys.zipWithIndex.toSet.map((header: (String, Int)) => StringCell(header._2, header._1))))
+  }
 
   override def getRows(hakijat: JSONHakijat): Set[Row] = hakijat.hakijat.flatMap((h) => h.hakemus.hakutoiveet.map(ht => {
-    val rivi = Seq(
+    val mainAnswers = Seq(
       h.hetu,
       h.oppijanumero,
       h.sukunimi,
@@ -69,7 +81,24 @@ object ExcelUtilV2 extends HakijatExcelWriter[JSONHakijat] {
       ht.lasnaolo.getOrElse(""),
       toBooleanX(ht.terveys),
       toBooleanX(ht.aiempiperuminen),
-      toBooleanX(ht.kaksoistutkinto)).zipWithIndex.toSet
+      toBooleanX(ht.kaksoistutkinto))
+
+
+    def getLisakysymysAnswer(lisakysymykset: Seq[Lisakysymys], id: String): String = {
+      val answers = for {
+        lk <- lisakysymykset.filter(_.kysymysid == id)
+      } yield for {
+        answer <- lk.vastaukset
+      } yield answer.vastausteksti
+      val list: Seq[String] = answers.flatten
+      list.mkString(", ")
+    }
+
+    val lisakysymysIds = getLisakysymysIdsAndQuestionsInOrder(hakijat)
+
+    val allAnswers = mainAnswers ++ lisakysymysIds.map(q => getLisakysymysAnswer(h.lisakysymykset, q.id))
+
+    val rivi = allAnswers.zipWithIndex.toSet
 
     for (sarake <- rivi) yield StringCell(sarake._2, sarake._1)
   })).zipWithIndex.toSet.map((rivi: (Set[Cell], Int)) => Row(rivi._2 + 1, rivi._1))
