@@ -317,7 +317,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
   }
 
   def filterByQuery(q: HakijaQuery)(toiveet: Seq[Hakutoive]): Seq[Hakutoive] = {
-    val hakutoives: Seq[Hakutoive] = q.hakuehto match {
+    var hakutoives: Seq[Hakutoive] = q.hakuehto match {
       case Hakuehto.Kaikki => toiveet
       case Hakuehto.Hyvaksytyt => toiveet.collect {
         case ht: Valittu if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
@@ -330,9 +330,10 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
       }
     }
     if(q.version == 2 && q.organisaatio.nonEmpty)
-      hakutoives.filter(_.organisaatioParendOidPath.contains(q.organisaatio.get))
-    else
-      hakutoives
+      hakutoives = hakutoives.filter(_.organisaatioParendOidPath.contains(q.organisaatio.get))
+    if(q.version == 2 && q.hakukohdekoodi.nonEmpty)
+      hakutoives = hakutoives.filter(_.hakukohde.hakukohdekoodi == q.hakukohdekoodi.get)
+    hakutoives
   }
 
   def filterHakutoiveetByQuery(q: HakijaQuery)(hakija: Hakija): Hakija = {
