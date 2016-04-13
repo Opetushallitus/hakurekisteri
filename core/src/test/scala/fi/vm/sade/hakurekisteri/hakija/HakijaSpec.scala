@@ -40,6 +40,7 @@ class HakijaSpec extends FlatSpec with Matchers {
             syntymaaika = Some("20.03.1994"),
             onkoSinullaSuomalainenHetu = Some("true"),
             koulusivistyskieli = Some("FI"),
+            huoltajannimi = Some("nimi"),
             turvakielto = None)),
         koulutustausta = Some(
           Koulutustausta(
@@ -124,10 +125,10 @@ class HakijaSpec extends FlatSpec with Matchers {
     "option_1" -> "Matematiikka (DI) ja kemia")))
   val tq3 = ThemeQuestion(`type` = "ThemeTextQuestion", messageText = "Tanssin aiempi aktiivinen ja säännöllinen harrastaminen", Option.empty)
 
-  val themeQuestions: Future[Map[String, ThemeQuestion]] = Future.successful(Map(
+  val themeQuestions: Map[String, ThemeQuestion] = Map(
     "54bf445ee4b021d892c6583d" -> tq1,
     "54c8e11ee4b03c06d74fc5cc" -> tq2,
-    "54e30c41e4b08eed6d776189" -> tq3))
+    "54e30c41e4b08eed6d776189" -> tq3)
 
   val toive = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions).hakemus.hakutoiveet.head
 
@@ -151,8 +152,10 @@ class HakijaSpec extends FlatSpec with Matchers {
       Some(vastaanottanut_lasna)), OppilaitosX, "koodi")
   }
 
-  it should "have lisakysymys fields" in {
+  it should "have v2 fields" in {
     val hakija = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions)
+    hakija.henkilo.huoltajannimi should be("nimi")
     hakija.henkilo.lisakysymykset.length should be(3)
+    hakija.henkilo.lisakysymykset.flatMap(_.vastaukset.map(_.vastausteksti)) should contain("Tekstivastaus")
   }
 }
