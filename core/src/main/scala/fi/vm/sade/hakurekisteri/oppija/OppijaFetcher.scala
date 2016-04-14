@@ -110,19 +110,7 @@ trait OppijaFetcher {
     splittedQuery[Suoritus with Identified[UUID], Suoritus](henkilot, rekisterit.suoritusRekisteri, (henkilot) => SuoritusHenkilotQuery(henkilot))
 
   private def splittedQuery[A, B](henkilot: Set[String], actor: ActorRef, q: (Set[String]) => Query[B])(implicit user: User): Future[Seq[A]] =
-    Future.sequence(grouped(henkilot, singleSplitQuerySize).map(henkiloSubset =>
+    Future.sequence(henkilot.grouped(singleSplitQuerySize).map(henkiloSubset =>
       (actor ? AuthorizedQuery(q(henkiloSubset), user)).mapTo[Seq[A]]
-    )).map(_.foldLeft[Seq[A]](Seq())(_ ++ _))
-
-  private def grouped[A](xs: Set[A], size: Int) = {
-    def grouped[B](xs: Set[B], size: Int, result: Set[Set[B]]): Set[Set[B]] = {
-      if(xs.isEmpty) {
-        result
-      } else {
-        val (slice, rest) = xs.splitAt(size)
-        grouped(rest, size, result + slice)
-      }
-    }
-    grouped(xs, size, Set[Set[A]]())
-  }
+    )).map(_.flatten.toSeq)
 }
