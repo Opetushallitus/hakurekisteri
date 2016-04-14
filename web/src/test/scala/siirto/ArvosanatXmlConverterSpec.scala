@@ -262,6 +262,10 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
     convertXls(lisaopetusExcel("valma")) should be (valid)
   }
 
+  it should "convert telma" in {
+    convertXls(lisaopetusExcel("telma")) should be (valid)
+  }
+
   it should "convert maahanmuuttajienammvalmistava" in {
     convertXls(lisaopetusExcel("maahanmuuttajienammvalmistava")) should be (valid)
 
