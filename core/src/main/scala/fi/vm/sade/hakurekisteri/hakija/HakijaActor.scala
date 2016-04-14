@@ -316,8 +316,12 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     case None => true
   }
 
+  def matchesHakukohdeKoodi(h: Hakutoive, q: HakijaQuery) = q.hakukohdekoodi.isEmpty || h.hakukohde.hakukohdekoodi == q.hakukohdekoodi.get
+
+  def matchesOrganisation(h: Hakutoive, q: HakijaQuery) = q.organisaatio.isEmpty || h.organisaatioParendOidPath.contains(q.organisaatio.get)
+
   def filterByQuery(q: HakijaQuery)(toiveet: Seq[Hakutoive]): Seq[Hakutoive] = {
-    var hakutoives: Seq[Hakutoive] = q.hakuehto match {
+    val hakutoives: Seq[Hakutoive] = q.hakuehto match {
       case Hakuehto.Kaikki => toiveet
       case Hakuehto.Hyvaksytyt => toiveet.collect {
         case ht: Valittu if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
@@ -329,11 +333,10 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
         case ht: Hylatty if matchOrganisaatio(q.organisaatio, ht.organisaatioParendOidPath) && matchHakukohdekoodi(q.hakukohdekoodi, ht.hakukohde.hakukohdekoodi) => ht
       }
     }
-    if(q.version == 2 && q.organisaatio.nonEmpty)
-      hakutoives = hakutoives.filter(_.organisaatioParendOidPath.contains(q.organisaatio.get))
-    if(q.version == 2 && q.hakukohdekoodi.nonEmpty)
-      hakutoives = hakutoives.filter(_.hakukohde.hakukohdekoodi == q.hakukohdekoodi.get)
-    hakutoives
+    if (q.version == 2)
+      hakutoives.filter(h => matchesHakukohdeKoodi(h, q) && matchesOrganisation(h, q))
+    else
+      hakutoives
   }
 
   def filterHakutoiveetByQuery(q: HakijaQuery)(hakija: Hakija): Hakija = {
