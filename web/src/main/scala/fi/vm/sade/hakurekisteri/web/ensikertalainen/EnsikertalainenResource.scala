@@ -60,7 +60,7 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusRekiste
     val hakuOid = params("haku")
 
     new AsyncResult() {
-      override implicit def timeout: Duration = 5.minutes
+      override implicit def timeout: Duration = 15.minutes
       private val q = {
         val henkiloOids = (hakemusRekisteri ? HakemusQuery(Some(hakuOid), None, None, None))(2.minutes)
           .mapTo[Seq[FullHakemus]]
@@ -68,7 +68,7 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusRekiste
         henkiloOids.flatMap(persons => (ensikertalainenActor ? EnsikertalainenQuery(
           henkiloOids = persons,
           hakuOid = hakuOid
-        ))(5.minutes).mapTo[Seq[Ensikertalainen]])
+        ))(15.minutes).mapTo[Seq[Ensikertalainen]])
       }
       logQuery(Map("haku" -> hakuOid), t0, q)
       override val is = q

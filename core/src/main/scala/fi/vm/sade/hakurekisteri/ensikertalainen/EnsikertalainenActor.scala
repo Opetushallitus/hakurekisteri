@@ -62,8 +62,9 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   val Oid = "(1\\.2\\.246\\.562\\.[0-9.]+)".r
   val KkKoulutusUri = "koulutus_[67][1-9][0-9]{4}".r
   val koulutuksenAlkaminenSyksy2014 = new DateTime(2014, 8, 1, 0, 0, 0, 0, DateTimeZone.forID("Europe/Helsinki"))
+  val resourceQuerySize = 5000
 
-  implicit val defaultTimeout: Timeout = 5.minutes
+  implicit val defaultTimeout: Timeout = 15.minutes
 
   log.info(s"started ensikertalaisuus actor: $self")
 
@@ -150,11 +151,17 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
     }
   }
 
-  private def opiskeluoikeudet(henkiloOids: Set[String]): Future[Seq[Opiskeluoikeus]] =
-    (opiskeluoikeusActor ? OpiskeluoikeusHenkilotQuery(henkilot = henkiloOids)).mapTo[Seq[Opiskeluoikeus]]
+  private def opiskeluoikeudet(henkiloOids: Set[String]): Future[Seq[Opiskeluoikeus]] = Future.sequence(
+    henkiloOids
+      .grouped(resourceQuerySize)
+      .map(oids => (opiskeluoikeusActor ? OpiskeluoikeusHenkilotQuery(henkilot = oids)).mapTo[Seq[Opiskeluoikeus]])
+  ).map(_.flatten.toSeq)
 
-  private def suoritukset(henkiloOids: Set[String]): Future[Seq[Suoritus]] =
-    (suoritusActor ? SuoritusHenkilotQuery(henkilot = henkiloOids)).mapTo[Seq[Suoritus]]
+  private def suoritukset(henkiloOids: Set[String]): Future[Seq[Suoritus]] = Future.sequence(
+    henkiloOids
+      .grouped(resourceQuerySize)
+      .map(oids => (suoritusActor ? SuoritusHenkilotQuery(henkilot = oids)).mapTo[Seq[Suoritus]])
+  ).map(_.flatten.toSeq)
 
   private def isKkTutkinto(suoritus: Suoritus): Future[Option[Suoritus]] = suoritus match {
     case s: VirallinenSuoritus => s.komo match {
