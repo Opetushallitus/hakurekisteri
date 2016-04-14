@@ -138,6 +138,25 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
     ) should abideSchemas
   }
 
+  it should "mark perusopetuksen, valman & telman kaynyt as valid" in {
+    siirto(
+      henkilo(
+        perusopetus,
+        valma,
+        telma
+      )
+    ) should abideSchemas
+  }
+
+  it should "mark lukion & valman kaynyt as invalid" in {
+    siirto(
+      henkilo(
+        lukio,
+        valma
+      )
+    ) should not (abideSchemas)
+  }
+
   it should "mark lukion kaynyt as valid" in {
     siirto(
       henkilo(
@@ -180,7 +199,6 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
 
   it should "mark perusopetus with date after saturday of week 22 as invalid" in {
     val dayAfter = DayFinder.saturdayOfWeek22(LocalDate.now().getYear).plusDays(1)
-    println("dayAfter " + dayAfter.toString)
     siirto(
       henkiloOidilla(
         perusopetus(DateTimeFormat.forPattern("dd.MM.yyyy").print(dayAfter))
