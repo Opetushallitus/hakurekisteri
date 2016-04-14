@@ -117,7 +117,7 @@ app.controller "HakeneetCtrl", [
       }
       {
         value: 2,
-        text: "2"
+        text: getOphMsg("suoritusrekisteri.tiedonsiirto.uusin")
       }
     ]
     $scope.rajapinnanVersio = 2
