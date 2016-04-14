@@ -287,6 +287,8 @@ class ArvosanatProcessing(organisaatioActor: ActorRef, henkiloActor: ActorRef, s
       "valmentava"                        -> Oids.valmentavaKomoOid,
       "maahanmuuttajienlukioonvalmistava" -> Oids.lukioonvalmistavaKomoOid,
       "maahanmuuttajienammvalmistava"     -> Oids.ammatilliseenvalmistavaKomoOid,
+      "valma"                             -> Oids.valmaKomoOid,
+      "telma"                             -> Oids.telmaKomoOid,
       "ulkomainen"                        -> Oids.ulkomainenkorvaavaKomoOid,
       "lukio"                             -> Oids.lukioKomoOid,
       "ammatillinen"                      -> Oids.ammatillinenKomoOid
