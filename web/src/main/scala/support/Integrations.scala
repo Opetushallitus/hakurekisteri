@@ -36,6 +36,7 @@ trait Integrations {
   val valintaTulos: ActorRef
   val valintarekisteri: ActorRef
   val proxies: Proxies
+  val hakemusClient: VirkailijaRestClient
 }
 
 object Integrations {
@@ -64,6 +65,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val tarjonta: ActorRef = mockActor("tarjonta", new MockTarjontaActor(config))
   override val ytl: ActorRef = system.actorOf(Props(new YtlActor(henkilo, rekisterit.suoritusRekisteri: ActorRef, rekisterit.arvosanaRekisteri: ActorRef, hakemukset, config.integrations.ytlConfig)), "ytl")
   override val proxies = new MockProxies
+  override val hakemusClient = null
 
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)
 }
@@ -93,7 +95,7 @@ class BaseIntegrations(rekisterit: Registers,
   private val organisaatioClient = new VirkailijaRestClient(config.integrations.organisaatioConfig, None)(restEc, system)
   private val koodistoClient = new VirkailijaRestClient(config.integrations.koodistoConfig, None)(restEc, system)
   private val henkiloClient = new VirkailijaRestClient(config.integrations.henkiloConfig, None)(restEc, system)
-  private val hakemusClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(restEc, system)
+  val hakemusClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf, None)(restEc, system)
   private val parametritClient = new VirkailijaRestClient(config.integrations.parameterConfig, None)(restEc, system)
   private val valintatulosClient = new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(vtsEc, system)
   private val valintarekisteriClient = new VirkailijaRestClient(config.integrations.valintarekisteriConfig, None)(vrEc, system)
