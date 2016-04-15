@@ -7,7 +7,6 @@ trait LocalhostProperties extends BeforeAndAfterEach {
   override def beforeEach() {
     super.beforeEach()
     OphUrlProperties.ophProperties.overrides.setProperty("baseUrl","http://localhost")
-    OphUrlProperties.ophProperties.reload()
   }
 
   override def afterEach() {
