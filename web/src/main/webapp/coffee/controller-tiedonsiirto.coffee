@@ -8,13 +8,7 @@ app.controller "TiedonsiirtoCtrl", [
     supportsFileApi = window.FileReader?
 
     fetchEnabledState = (type) ->
-      apiVersion =
-        if type is "perustiedot"
-          "v2"
-        else
-          "v1"
-
-      $http.get(window.url("suoritusrekisteri-web.siirtoIsOpen", apiVersion, type), {cache: true})
+      $http.get(window.url("suoritusrekisteri-web.siirtoIsOpen", "v2", type), {cache: true})
         .success (data) ->
           $scope[type + "Enabled"] = data.open
         .error ->
@@ -93,11 +87,7 @@ app.controller "TiedonsiirtoCtrl", [
       else
         form = jQuery("#uploadForm")
         if form.get(0)
-          url =
-            if $scope.tyyppi is "perustiedot"
-              'rest/v2/siirto/' + $scope.tyyppi
-            else
-              'rest/v1/siirto/' + $scope.tyyppi
+          url = 'rest/v2/siirto/' + $scope.tyyppi
 
           form.get(0).setAttribute('action', url)
         $scope.sending = true
