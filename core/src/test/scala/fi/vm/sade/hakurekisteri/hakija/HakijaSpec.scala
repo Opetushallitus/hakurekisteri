@@ -120,19 +120,20 @@ class HakijaSpec extends FlatSpec with Matchers {
 
   val tq1 = ThemeQuestion(`type` = "ThemeRadioButtonQuestion", messageText = "Millä kielellä haluat saada valintakokeen?", options = Some(Map(
     "option_0" -> "Suomi",
-    "option_1" -> "Ruotsi")))
+    "option_1" -> "Ruotsi")), applicationOptionOids=Seq("1.2.3.4"))
   val tq2 = ThemeQuestion(`type` = "ThemeCheckBoxQuestion", messageText = "Valintakokeet", options = Some(Map(
     "option_2" -> "Matematiikka (DI), fysiikka ja kemia",
     "option_0" -> "Matematiikka (DI) ja fysiikka",
-    "option_1" -> "Matematiikka (DI) ja kemia")))
-  val tq3 = ThemeQuestion(`type` = "ThemeTextQuestion", messageText = "Tanssin aiempi aktiivinen ja säännöllinen harrastaminen", Option.empty)
+    "option_1" -> "Matematiikka (DI) ja kemia")), applicationOptionOids=Seq("1.2.3.4"))
+  val tq3 = ThemeQuestion(`type` = "ThemeTextQuestion", messageText = "Tanssin aiempi aktiivinen ja säännöllinen harrastaminen", options=Option.empty,
+    applicationOptionOids=Set("1.2.3.4").toSeq)
 
   val themeQuestions: Map[String, ThemeQuestion] = Map(
     "54bf445ee4b021d892c6583d" -> tq1,
     "54c8e11ee4b03c06d74fc5cc" -> tq2,
     "54e30c41e4b08eed6d776189" -> tq3)
 
-  val toive = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions).hakemus.hakutoiveet.head
+  val toive = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option("1.2.3.4")).hakemus.hakutoiveet.head
 
 
   behavior of "Hakemuksen lasnaolotieto"
@@ -155,7 +156,7 @@ class HakijaSpec extends FlatSpec with Matchers {
   }
 
   it should "have v2 fields" in {
-    val hakija = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions)
+    val hakija = AkkaHakupalvelu.getHakija(FullHakemus1, haku, themeQuestions, Option.empty)
     hakija.henkilo.huoltajannimi should be("nimi")
     hakija.henkilo.lisakysymykset.length should be(3)
     hakija.henkilo.lisakysymykset.flatMap(_.vastaukset.map(_.vastausteksti)) should contain("Tekstivastaus")

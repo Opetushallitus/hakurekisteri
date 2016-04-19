@@ -6,6 +6,7 @@ import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
+import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloSearchResponse
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -21,23 +22,57 @@ trait Hakupalvelu {
   def getHakijat(q: HakijaQuery): Future[Seq[Hakija]]
 }
 
-case class ThemeQuestion(`type`: String, messageText: String, options: Option[Map[String, String]])
+case class ThemeQuestion(`type`: String, messageText: String, applicationOptionOids: Seq[String], options: Option[Map[String, String]])
 
-class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusActor: ActorRef, hakuActor: ActorRef)(implicit val ec: ExecutionContext) extends Hakupalvelu {
+case class HakukohdeResult(hakukohteenNimiUri: String)
+
+case class HakukohdeResultContainer(result: HakukohdeResult)
+
+case class HakukohdeSearchResult(oid: String)
+
+case class HakukohdeSearchResultTarjoaja(tulokset: Seq[HakukohdeSearchResult])
+
+case class HakukohdeSearchResultList(tulokset: Seq[HakukohdeSearchResultTarjoaja])
+
+case class HakukohdeSearchResultContainer(result: HakukohdeSearchResultList)
+
+class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusActor: ActorRef, hakuActor: ActorRef)(implicit val ec: ExecutionContext)
+  extends Hakupalvelu {
   val Pattern = "preference(\\d+).*".r
 
+  private val acceptedResponseCode: Int = 200
+
+  private val maxRetries: Int = 2
+
   private def restRequest[A <: AnyRef](uri: String, args: AnyRef*)(implicit mf: Manifest[A]): Future[A] =
-    virkailijaClient.readObject[A](uri, args: _*)(200, 2)
+    virkailijaClient.readObject[A](uri, args: _*)(acceptedResponseCode, maxRetries)
 
-  def getLisakysymyksetForHaku(hakuOid: String): Future[Map[String, ThemeQuestion]] =
-    restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid)
+  private def getLisakysymyksetForHaku(hakuOid: String): Map[String, ThemeQuestion] =
+    Await.result(restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid), 120.second)
 
+  private def getHakukohdeOid(organisaatio: String, hakukohdekoodi: String, haku: String): String = {
+    val rawSearchResult = Await.result(virkailijaClient.readObject[HakukohdeSearchResultContainer]("tarjonta-service.hakukohde.search", Map(
+      "organisationOid" -> organisaatio,
+      "hakuOid" -> haku
+    ))(acceptedResponseCode, maxRetries), 120.second)
+    val hakukohteenNimisUriToOids: Seq[(String, String)] = for {
+      tarjoaja <- rawSearchResult.result.tulokset
+      hakukohdeSearchRes <- tarjoaja.tulokset
+    } yield Await.result(restRequest[HakukohdeResultContainer]("tarjonta-service.hakukohde", hakukohdeSearchRes.oid), 120.seconds).result
+      .hakukohteenNimiUri -> hakukohdeSearchRes.oid
+    hakukohteenNimisUriToOids.find(nimiToOid => nimiToOid._1.contains(hakukohdekoodi)).getOrElse("", "")._2
+  }
 
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     import akka.pattern._
     implicit val timeout: Timeout = 120.seconds
 
-    val lisakysymykset = Await.result(getLisakysymyksetForHaku(q.haku.get), 120.seconds)
+    val lisakysymykset = getLisakysymyksetForHaku(q.haku.get)
+    val hakukohdeOid = if (q.organisaatio.getOrElse("").nonEmpty && q.hakukohdekoodi.getOrElse("").nonEmpty && q.haku.getOrElse("").nonEmpty) {
+      Option(getHakukohdeOid(q.organisaatio.getOrElse(""), q.hakukohdekoodi.getOrElse(""), q.haku.getOrElse("")))
+    } else {
+      Option.empty
+    }
 
     (for (
       hakemukset <- (hakemusActor ? HakemusQuery(q)).mapTo[Seq[FullHakemus]]
@@ -45,7 +80,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusActor: Acto
       hakemus <- hakemukset.filter(_.stateValid)
     ) yield for (
       haku <- (hakuActor ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
-    ) yield AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset)).flatMap(Future.sequence(_))
+    ) yield AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdeOid)).flatMap(Future.sequence(_))
   }
 }
 
@@ -58,7 +93,7 @@ object AkkaHakupalvelu {
     case _ => vastaukset.PK_PAATTOTODISTUSVUOSI
   }
 
-  def kaydytLisapisteKoulutukset(tausta: Koulutustausta) = {
+  def kaydytLisapisteKoulutukset(tausta: Koulutustausta): scala.Iterable[String] = {
     def checkKoulutus(lisakoulutus: Option[String]): Boolean = {
       Try(lisakoulutus.getOrElse("false").toBoolean).getOrElse(false)
     }
@@ -73,16 +108,18 @@ object AkkaHakupalvelu {
     ).mapValues(checkKoulutus).filter { case (_, done) => done }.keys
   }
 
-  def getLisakysymykset(hakemus: FullHakemus, lisakysymykset: Map[String, ThemeQuestion]): Seq[Lisakysymys] = {
+
+  def getLisakysymykset(hakemus: FullHakemus, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String]): Seq[Lisakysymys] = {
 
     case class CompositeId(questionId: String, answerId: Option[String])
 
     def extractCompositeIds(avain: String): CompositeId = {
       val parts = avain.split("-")
-      if (parts.size == 2)
+      if (parts.size == 2) {
         CompositeId(parts(0), Some(parts(1)))
-      else
+      } else {
         CompositeId(parts(0), None)
+      }
     }
 
     def mergeAnswers(questionId: String, questions: Iterable[Lisakysymys]): Lisakysymys = {
@@ -113,13 +150,15 @@ object AkkaHakupalvelu {
           vastausteksti = tq.options.get(vastaus)
         ))
         case "ThemeCheckBoxQuestion" =>
-          if (vastaus != "true")
+          if (vastaus != "true") {
             Seq()
-          else
+          }
+          else {
             Seq(LisakysymysVastaus(
               vastausid = vastausId,
               vastausteksti = tq.options.get(vastausId.get)
             ))
+          }
         case _ => Seq(LisakysymysVastaus(
           vastausid = None,
           vastausteksti = vastaus
@@ -127,20 +166,23 @@ object AkkaHakupalvelu {
       }
     }
 
-    def thatAreLisakysymys(kysymysId: String): Boolean = lisakysymykset.keys.exists(key => kysymysId.contains(key))
+    def thatAreLisakysymysInHakukohde(kysymysId: String): Boolean = {
+      lisakysymykset.keys.exists(key => kysymysId.contains(key) &&
+        (hakukohdeOid.isEmpty || lisakysymykset.get(key).get.applicationOptionOids.contains(hakukohdeOid.get)))
+    }
 
     val answers: HakemusAnswers = hakemus.answers.getOrElse(HakemusAnswers())
     val flatAnswers = answers.hakutoiveet.getOrElse(Map()) ++ answers.osaaminen.getOrElse(Map()) ++ answers.lisatiedot.getOrElse(Map())
 
     flatAnswers
-      .filterKeys(thatAreLisakysymys)
+      .filterKeys(thatAreLisakysymysInHakukohde)
       .map { case (avain, arvo) => extractLisakysymysFromAnswer(avain, arvo) }
       .groupBy(_.kysymysid)
       .map { case (questionId, answerList) => mergeAnswers(questionId, answerList)}
       .toSeq
   }
 
-  def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion]): Hakija = {
+  def getHakija(hakemus: FullHakemus, haku: Haku, lisakysymykset: Map[String, ThemeQuestion], hakukohdeOid: Option[String]): Hakija = {
     val kesa = new MonthDay(6, 4)
     implicit val v = hakemus.answers
     val koulutustausta = for (a: HakemusAnswers <- v; k: Koulutustausta <- a.koulutustausta) yield k
@@ -191,7 +233,7 @@ object AkkaHakupalvelu {
         huoltajannimi = getHenkiloTietoOrBlank(_.huoltajannimi),
         huoltajanpuhelinnumero = getHenkiloTietoOrBlank(_.huoltajanpuhelinnumero),
         huoltajansahkoposti = getHenkiloTietoOrBlank(_.huoltajansahkoposti),
-        lisakysymykset = getLisakysymykset(hakemus, lisakysymykset)
+        lisakysymykset = getLisakysymykset(hakemus, lisakysymykset, hakukohdeOid)
       ),
       getSuoritukset(pohjakoulutus, myontaja, valmistuminen, suorittaja, kieli, hakemus.personOid),
       lahtokoulu match {
