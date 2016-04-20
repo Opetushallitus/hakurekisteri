@@ -1,10 +1,12 @@
 package siirto
 
+import fi.vm.sade.hakurekisteri.suoritus.DayFinder
+
 import scalaz._
 import scala.xml.Elem
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.matchers.{MatchResult, Matcher}
-import generators.{DataGeneratorSupport, DataGen}
+import generators.{DataGen, DataGeneratorSupport}
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 
@@ -12,7 +14,7 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
 
   behavior of "Arvosana Xml Validation"
 
-  implicit val schemas = NonEmptyList(Arvosanat, ArvosanatKoodisto)
+  implicit val schemas = NonEmptyList(ArvosanatV2, ArvosanatKoodisto)
 
   it should "mark valid perusopetuksen todistus as valid" in {
     siirto(
@@ -120,6 +122,41 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
     ) should abideSchemas
   }
 
+  it should "mark valman kaynyt as valid" in {
+    siirto(
+      henkilo(
+        valma
+      )
+    ) should abideSchemas
+  }
+
+  it should "mark telman kaynyt as valid" in {
+    siirto(
+      henkilo(
+        telma
+      )
+    ) should abideSchemas
+  }
+
+  it should "mark perusopetuksen, valman & telman kaynyt as valid" in {
+    siirto(
+      henkilo(
+        perusopetus,
+        valma,
+        telma
+      )
+    ) should abideSchemas
+  }
+
+  it should "mark lukion & valman kaynyt as invalid" in {
+    siirto(
+      henkilo(
+        lukio,
+        valma
+      )
+    ) should not (abideSchemas)
+  }
+
   it should "mark lukion kaynyt as valid" in {
     siirto(
       henkilo(
@@ -160,35 +197,23 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
     ) should abideSchemas
   }
 
-  it should "mark perusopetus with date after 1.6.2015 as invalid" in {
+  it should "mark perusopetus with date after saturday of week 22 as invalid" in {
+    val dayAfter = DayFinder.saturdayOfWeek22(LocalDate.now().getYear).plusDays(1)
     siirto(
       henkiloOidilla(
-        perusopetus("2.6.2015")
+        perusopetus(DateTimeFormat.forPattern("dd.MM.yyyy").print(dayAfter))
       )
     ) should not (abideSchemas)
   }
 
-  it should "mark luokalle jaanyt with date before 1.8.2015 as invalid" in {
+  it should "mark luokalle jaanyt with date before 1.8. as invalid" in {
+    val day = LocalDate.now().withMonthOfYear(7).withDayOfMonth(15)
     siirto(
       henkiloOidilla(
-        jaaLuokalle("1.6.2015")
+        jaaLuokalle(DateTimeFormat.forPattern("dd.MM.yyyy").print(day))
       )
     ) should not (abideSchemas)
   }
-
-  /*it should "mark todistus with multiple entries as valid" in {
-    val todistus = siirto(
-      henkilo(perusopetus),
-      henkiloOidilla(jaaLuokalle),
-      henkilo(keskeyttanytPerusopetuksen),
-      henkilo(lisaopetus),
-      henkilo(lisaopetuksenKeskeyttanyt),
-      henkilo(ammattistartti),henkilo(ammattistartinKeskeyttanyt),henkilo(valmentava), henkilo(valmentavanKeskeyttanyt),henkilo(maahanmuuttajienLukioonValmistava),henkilo(maahanmuuttajienLukioonValmistavanKeskeyttanyt),henkilo(maahanmuuttajienAmmValmistava),henkilo(maahanmuuttajienLukioonValmistavanKeskeyttanyt),henkilo(lukio),henkilo(ammattikoulu),hetutonHenkilo(ulkomainenKorvaava)
-    ).generate
-    XML.save("arvosanat-example.xml", todistus)
-    validator.validate(todistus) should succeed
-  }*/
-
 
 
   val succeed =
@@ -300,13 +325,13 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
   ) yield perusopetusBase.copy(child = perusopetusBase.child ++ aineet)
 
 
-  def jaaLuokalleLisaTiedot(paiva: LocalDate = new LocalDate(2016, 6, 1)) =
+  def jaaLuokalleLisaTiedot(paiva: LocalDate = LocalDate.now().withMonthOfYear(5).withDayOfMonth(15).plusYears(1)) =
     DataGen.always(<perusopetus>
       <oletettuvalmistuminen>{paiva.toString("yyyy-MM-dd")}</oletettuvalmistuminen>
       <valmistuminensiirtyy>JAA LUOKALLE</valmistuminensiirtyy>
     </perusopetus>.child)
 
-  def jaaLuokalle: DataGen[Elem] = jaaLuokalle("1.6.2016")
+  def jaaLuokalle: DataGen[Elem] = jaaLuokalle(DateTimeFormat.forPattern("dd.MM.yyyy").print(DayFinder.saturdayOfWeek22(LocalDate.now().getYear + 1)))
 
   def jaaLuokalle(paiva:String): DataGen[Elem] = for(
     perusopetusBase <- suoritus("perusopetus");
@@ -431,6 +456,10 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
   val maahanmuuttajienLukioonValmistavanKeskeyttanyt = eiValmistuLisaopetuksesta(maahanmuuttajienLukioonValmistava)
 
   val maahanmuuttajienAmmValmistava = convertPerusopetus("maahanmuuttajienammvalmistava")
+
+  val valma = convertPerusopetus("valma")
+
+  val telma = convertPerusopetus("telma")
 
   val maahanmuuttajienAmmValmistavanKeskeyttanyt = eiValmistuLisaopetuksesta(maahanmuuttajienAmmValmistava)
 

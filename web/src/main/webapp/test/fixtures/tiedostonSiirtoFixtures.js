@@ -13,7 +13,7 @@ function tiedostonSiirtoFixtures() {
 
         arvosanatOpen: function (isOpen) {
             return function () {
-                mockHttpBackEnd().when('GET', /.*rest\/v1\/siirto\/arvosanat\/isopen$/).respond({"open": isOpen})
+                mockHttpBackEnd().when('GET', /.*rest\/v2\/siirto\/arvosanat\/isopen$/).respond({"open": isOpen})
             }
         }
     }

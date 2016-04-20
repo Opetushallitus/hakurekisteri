@@ -1,23 +1,30 @@
 package siirto
 
 import fi.vm.sade.hakurekisteri.rest.support.Workbook
+import fi.vm.sade.hakurekisteri.suoritus.DayFinder
 import fi.vm.sade.hakurekisteri.tools.{ExcelTools, XmlEquality}
 import org.apache.poi.ss.usermodel
+import org.joda.time.LocalDate
+import org.joda.time.format.DateTimeFormat
 import org.scalatest.{FlatSpec, Matchers}
 import org.xml.sax.SAXParseException
-import scala.xml.{XML, Elem}
+
+import scala.xml.{Elem, XML}
 import scalaz.ValidationNel
-import org.scalatest.matchers.{Matcher, BeMatcher, MatchResult}
+import org.scalatest.matchers.{BeMatcher, MatchResult, Matcher}
 
 class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality with ExcelTools {
   behavior of "ArvosanatXMLConverter"
 
+  def oletettuValmistuminen = DateTimeFormat.forPattern("yyyy-MM-dd").print(DayFinder.saturdayOfWeek22(LocalDate.now().getYear + 1))
+  def oletettuValmistuminenFinDate = DateTimeFormat.forPattern("dd.MM.yyyy").print(DayFinder.saturdayOfWeek22(LocalDate.now().getYear + 1))
+
   it should "convert an arvosanat row with hetu into valid xml (jää luokalle)" in {
     val wb = WorkbookData(
       "perusopetus" ->
-        """
-          |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|SYNTYMAAIKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|MYONTAJA|SUORITUSKIELI|VALMISTUMINEN|OLETETTUVALMISTUMINEN|VALMISTUMINENSIIRTYY
-          |111111-1975|            |               |           |Testi   |Test A  |Test       |05127   |FI           |             |31.05.2016           |JAA LUOKALLE
+        s"""
+          |HETU       |OPPIJANUMERO|HENKILOTUNNISTE|SYNTYMAAIKA|SUKUNIMI|ETUNIMET|KUTSUMANIMI|MYONTAJA|SUORITUSKIELI|VALMISTUMINEN|OLETETTUVALMISTUMINEN        |VALMISTUMINENSIIRTYY
+          |111111-1975|            |               |           |Testi   |Test A  |Test       |05127   |FI           |             |$oletettuValmistuminenFinDate|JAA LUOKALLE
         """
     ).toExcel
 
@@ -33,7 +40,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
             <perusopetus>
               <myontaja>05127</myontaja>
               <suorituskieli>FI</suorituskieli>
-              <oletettuvalmistuminen>2016-05-31</oletettuvalmistuminen>
+              <oletettuvalmistuminen>{oletettuValmistuminen}</oletettuvalmistuminen>
               <valmistuminensiirtyy>JAA LUOKALLE</valmistuminensiirtyy>
             </perusopetus>
           </todistukset>
@@ -251,10 +258,12 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
     convertXls(lisaopetusExcel("valmentava")) should be (valid)
   }
 
-  it should "convert maahanmuuttajienlukioonvalmistava" in {
-    // Cannot test, because worksheet name gets truncated at 31 chars.
+  it should "convert valma" in {
+    convertXls(lisaopetusExcel("valma")) should be (valid)
+  }
 
-    //verifyValidity(convertXls(lisaopetusExcel("maahanmuuttajienlukioonvalmistava")))
+  it should "convert telma" in {
+    convertXls(lisaopetusExcel("telma")) should be (valid)
   }
 
   it should "convert maahanmuuttajienammvalmistava" in {
@@ -297,7 +306,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
   def convertValidlyTo(expected:Elem): Matcher[usermodel.Workbook] = (equal(expected)(after being normalized) and be (valid)) compose (convertXls)
 
   val valid =  BeMatcher[Elem]{e =>
-    val validationResult: ValidationNel[(String, SAXParseException), Elem] = new ValidXml(Arvosanat, ArvosanatKoodisto).validate(e)
+    val validationResult: ValidationNel[(String, SAXParseException), Elem] = new ValidXml(ArvosanatV2, ArvosanatKoodisto).validate(e)
     MatchResult(
       validationResult == scalaz.Success(e),
       s"""elem is not valid""",

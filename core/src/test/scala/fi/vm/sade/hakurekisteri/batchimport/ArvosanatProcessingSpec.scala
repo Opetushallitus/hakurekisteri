@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
-import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana, ArvosanaActor, ArvosanaQuery}
 import fi.vm.sade.hakurekisteri.integration._
@@ -20,18 +19,23 @@ import fi.vm.sade.hakurekisteri.{Config, Oids}
 import generators.DataGen
 import org.joda.time.LocalDate
 import org.mockito.Mockito._
-import org.scalatest.concurrent.AsyncAssertions
+import org.scalatest.concurrent.{AsyncAssertions, PatienceConfiguration}
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.time.SpanSugar._
 import org.scalatest.{FlatSpec, Matchers}
 
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{Await, ExecutionContext}
 
-class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions with HakurekisteriJsonSupport with ActorSystemSupport with LocalhostProperties {
+class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions
+  with HakurekisteriJsonSupport with ActorSystemSupport with LocalhostProperties {
+
   behavior of "ArvosanaProcessing"
 
   import Fixtures._
+
+  private val awaitTimeout: FiniteDuration = Duration(1, TimeUnit.MINUTES)
+  private val waiterTimeout: PatienceConfiguration.Timeout = timeout(1.minute)
 
   it should "resolve data from henkilopalvelu, organisaatiopalvelu and suoritusrekisteri, and then import data into arvosanarekisteri" in {
     withSystem(
@@ -64,11 +68,11 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           }, batch),
           createKoodistoActor
         )
-        val status = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS)).status
+        val status = Await.result(arvosanatProcessing.process(batch), awaitTimeout).status
         status.messages shouldBe empty
-        suoritusWaiter.await(timeout(60.seconds), dismissals(1))
-        arvosanaWaiter.await(timeout(60.seconds), dismissals(23))
-        importBatchWaiter.await(timeout(60.seconds), dismissals(1))
+        suoritusWaiter.await(waiterTimeout, dismissals(1))
+        arvosanaWaiter.await(waiterTimeout, dismissals(23))
+        importBatchWaiter.await(waiterTimeout, dismissals(1))
       }
     )
   }
@@ -97,9 +101,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createImportBatchActor(system, {b => b}, batch),
           createKoodistoActor
         )
-        val status = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS)).status
+        val status = Await.result(arvosanatProcessing.process(batch), awaitTimeout).status
         status.messages shouldBe empty
-        suoritusWaiter.await(timeout(60.seconds), dismissals(1))
+        suoritusWaiter.await(waiterTimeout, dismissals(1))
       }
     )
   }
@@ -134,10 +138,10 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createKoodistoActor
         )
 
-        val status = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS)).status
+        val status = Await.result(arvosanatProcessing.process(batch), awaitTimeout).status
         status.messages shouldBe empty
-        suoritusWaiter.await(timeout(60.seconds), dismissals(1))
-        importBatchWaiter.await(timeout(60.seconds), dismissals(1))
+        suoritusWaiter.await(waiterTimeout, dismissals(1))
+        importBatchWaiter.await(waiterTimeout, dismissals(1))
       }
     )
   }
@@ -172,10 +176,10 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createKoodistoActor
         )
 
-        val status = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS)).status
+        val status = Await.result(arvosanatProcessing.process(batch), awaitTimeout).status
         status.messages shouldBe empty
-        importBatchWaiter.await(timeout(60.seconds), dismissals(1))
-        suoritusWaiter.await(timeout(60.seconds), dismissals(1))
+        importBatchWaiter.await(waiterTimeout, dismissals(1))
+        suoritusWaiter.await(waiterTimeout, dismissals(1))
       }
     )
   }
@@ -217,11 +221,11 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createKoodistoActor
         )
 
-        val status = Await.result(arvosanatProcessing.process(batch), Duration(30, TimeUnit.SECONDS)).status
+        val status = Await.result(arvosanatProcessing.process(batch), awaitTimeout).status
         status.messages shouldBe empty
-        importBatchWaiter.await(timeout(30.seconds), dismissals(1))
-        suoritusWaiter.await(timeout(30.seconds), dismissals(1))
-        arvosanaWaiter.await(timeout(30.seconds), dismissals(1))
+        importBatchWaiter.await(waiterTimeout, dismissals(1))
+        suoritusWaiter.await(waiterTimeout, dismissals(1))
+        arvosanaWaiter.await(waiterTimeout, dismissals(1))
       }
     )
   }
@@ -248,9 +252,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createKoodistoActor
         )
 
-        val saved = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS))
+        val saved = Await.result(arvosanatProcessing.process(batch), awaitTimeout)
         saved.status.messages("111111-111L").find(_.contains("SuoritusNotFoundException")) should not be None
-        importBatchWaiter.await(timeout(60.seconds), dismissals(1))
+        importBatchWaiter.await(waiterTimeout, dismissals(1))
       }
     )
   }
@@ -280,9 +284,9 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createKoodistoActor
         )
 
-        val saved = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS))
+        val saved = Await.result(arvosanatProcessing.process(batch), awaitTimeout)
         saved.status.messages("111111-111L").find(_.contains("MultipleSuoritusException")) should not be None
-        importBatchWaiter.await(timeout(60.seconds), dismissals(1))
+        importBatchWaiter.await(waiterTimeout, dismissals(1))
       }
     )
   }
@@ -308,11 +312,56 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createKoodistoActor
         )
 
-        val saved = Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS))
-
+        val saved = Await.result(arvosanatProcessing.process(batch), awaitTimeout)
         saved.status.messages("111111-111L").find(_.contains("test save exception")) should not be None
+        importBatchWaiter.await(waiterTimeout, dismissals(1))
+      }
+    )
+  }
 
-        importBatchWaiter.await(timeout(60.seconds), dismissals(1))
+  it should "create a valma suoritus" in {
+    withSystem(
+      implicit system => {
+        implicit val ec: ExecutionContext = system.dispatcher
+
+        val importBatchWaiter = new Waiter()
+        val suoritusWaiter = new Waiter()
+        val arvosanaWaiter = new Waiter()
+
+        var v = valmaSuoritus(new LocalDate(2016, 1, 1))
+        val batch = batchGeneratorValma.generate
+
+        val arvosanatProcessing = new ArvosanatProcessing(
+          createOrganisaatioActor,
+          createHenkiloActor,
+          system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](save = {
+            case s: VirallinenSuoritus =>
+              suoritusWaiter {
+                s.tila should be ("VALMIS")
+                s.komo should be (Oids.valmaKomoOid)
+                s.valmistuminen should be (new LocalDate(2016, 6, 4))
+              }
+              v = v.identify(s.id)
+              suoritusWaiter.dismiss()
+          }, query = {q => Seq(v)}))),
+          system.actorOf(Props(new MockedResourceActor[Arvosana, UUID](save = a => {
+            arvosanaWaiter {
+              a.suoritus should be (v.id)
+            }
+            arvosanaWaiter.dismiss()
+          }, query = {q => Seq()}))),
+          createImportBatchActor(system, (b: ImportBatch) => {
+            importBatchWaiter { b.state should be (BatchState.DONE) }
+            importBatchWaiter.dismiss()
+          }, batch),
+          createKoodistoActor
+        )
+
+        val status = Await.result(arvosanatProcessing.process(batch), awaitTimeout).status
+        status.messages shouldBe empty
+        importBatchWaiter.await(waiterTimeout, dismissals(1))
+        suoritusWaiter.await(waiterTimeout, dismissals(1))
+        arvosanaWaiter.await(waiterTimeout, dismissals(2))
       }
     )
   }
@@ -338,9 +387,8 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createKoodistoActor
         )
 
-        arvosanatProcessing.process(batch)
-
-        suoritusWaiter.await(timeout(60.seconds), dismissals(1))
+        Await.result(arvosanatProcessing.process(batch), awaitTimeout)
+        suoritusWaiter.await(waiterTimeout, dismissals(1))
       }
     )
   }
@@ -367,9 +415,10 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           createKoodistoActor
         )
 
-        Await.result(arvosanatProcessing.process(batch), Duration(60, TimeUnit.SECONDS))
+        Await.result(arvosanatProcessing.process(batch), awaitTimeout)
 
-        val savedArvosanat: Seq[Arvosana] = Await.result((arvosanaActor ? ArvosanaQuery(Some(s.id)))(Timeout(60, TimeUnit.SECONDS)).mapTo[Seq[Arvosana]], Duration(60, TimeUnit.SECONDS))
+        val savedArvosanat: Seq[Arvosana] =
+          Await.result((arvosanaActor ? ArvosanaQuery(Some(s.id)))(akka.util.Timeout(1, TimeUnit.MINUTES)).mapTo[Seq[Arvosana]], awaitTimeout)
 
         savedArvosanat should (
           contain (
@@ -442,22 +491,35 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     system.actorOf(Props(new MockedKoodistoActor()))
 
   private def perusopetusSuoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
-    VirallinenSuoritus(Oids.perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
+    VirallinenSuoritus(Oids.perusopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123",
+      yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
 
   private def lisaopetusSuoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
-    VirallinenSuoritus(Oids.lisaopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
+    VirallinenSuoritus(Oids.lisaopetusKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123",
+      yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
+
+  private def valmaSuoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
+    VirallinenSuoritus(Oids.valmaKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123",
+      yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
 
   private def lukioSuoritus(valmistuminen: LocalDate): VirallinenSuoritus with Identified[UUID] =
-    VirallinenSuoritus(Oids.lukioKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123", yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
+    VirallinenSuoritus(Oids.lukioKomoOid, "1.2.246.562.5.05127", "KESKEN", valmistuminen, "1.2.246.562.24.123",
+      yksilollistaminen.Ei, "FI", None, vahv = true, lahde).identify(UUID.randomUUID())
 
   private def createImportBatchActor(system: ActorSystem, batchSaveHandler: (ImportBatch) => Unit, batch: ImportBatch with Identified[UUID]): ActorRef =
     system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID](save = batchSaveHandler, query = {q => Seq(batch)})))
 
   private def createOrganisaatioActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
-    system.actorOf(Props(new HttpOrganisaatioActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider))), Config.mockConfig)))
+    system.actorOf(Props(new HttpOrganisaatioActor(
+      new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider))),
+      Config.mockConfig
+    )))
 
   private def createHenkiloActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
-    system.actorOf(Props(new HttpHenkiloActor(new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider))), Config.mockConfig)))
+    system.actorOf(Props(new HttpHenkiloActor(
+      new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider))),
+      Config.mockConfig
+    )))
 
   object Fixtures {
     val lahde = "testiarvosanatiedonsiirto"
@@ -536,6 +598,40 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
                   <yhteinen>5</yhteinen>
                 </GE>
               </perusopetus>
+            </todistukset>
+          </henkilo>
+        </henkilot>
+      </arvosanat>
+      override def generate: ImportBatch with Identified[UUID] =
+        ImportBatch(xml, Some("foo"), "arvosanat", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
+    }
+
+    val batchGeneratorValma = new DataGen[ImportBatch with Identified[UUID]] {
+      val xml = <arvosanat>
+        <eranTunniste>PKERA3_2015S_05127</eranTunniste>
+        <henkilot>
+          <henkilo>
+            <hetu>111111-111L</hetu>
+            <sukunimi>foo</sukunimi>
+            <etunimet>bar k</etunimet>
+            <kutsumanimi>bar</kutsumanimi>
+            <todistukset>
+              <valma>
+                <valmistuminen>2016-06-04</valmistuminen>
+                <myontaja>05127</myontaja>
+                <suorituskieli>FI</suorituskieli>
+                <AI>
+                  <yhteinen>5</yhteinen>
+                  <tyyppi>FI</tyyppi>
+                </AI>
+                <A1>
+                  <yhteinen>5</yhteinen>
+                  <valinnainen>6</valinnainen>
+                  <valinnainen>8</valinnainen>
+                  <valinnainen>10</valinnainen>
+                  <kieli>EN</kieli>
+                </A1>
+              </valma>
             </todistukset>
           </henkilo>
         </henkilot>
@@ -805,14 +901,18 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
         ImportBatch(xml, Some("foo3"), "arvosanat", lahde, BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
     }
 
-    def createEndpoint = {
+    private def createEndpoint = {
       val result = mock[Endpoint]
-      when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot"))).thenReturn((200, List(), "1.2.246.562.24.123"))
-      when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true"))).thenReturn((200, List(), "{\"numHits\":1,\"organisaatiot\":[{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}]}"))
-      when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/05127"))).thenReturn((200, List(), "{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}"))
+      when(result.request(forUrl("http://localhost/authentication-service/resources/s2s/tiedonsiirrot")))
+        .thenReturn((200, List(), "1.2.246.562.24.123"))
+      when(result.request(
+        forUrl("http://localhost/organisaatio-service/rest/organisaatio/v2/hierarkia/hae?aktiiviset=true&lakkautetut=false&suunnitellut=true")
+      )).thenReturn((200, List(), "{\"numHits\":1,\"organisaatiot\":[{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}]}"))
+      when(result.request(forUrl("http://localhost/organisaatio-service/rest/organisaatio/05127")))
+        .thenReturn((200, List(), "{\"oid\":\"1.2.246.562.5.05127\",\"nimi\":{},\"oppilaitosKoodi\":\"05127\"}"))
       result
     }
-    val endpoint = createEndpoint
+    private val endpoint = createEndpoint
     val asyncProvider = new CapturingProvider(endpoint)
   }
 }
@@ -822,7 +922,8 @@ class MockedKoodistoActor extends Actor {
     case q: GetKoodistoKoodiArvot => q.koodistoUri match {
       case "oppiaineetyleissivistava" => sender ! KoodistoKoodiArvot(
         koodistoUri = "oppiaineetyleissivistava",
-        arvot = Seq("AI", "A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33", "BI", "FI","FY", "GE", "HI", "KE", "KO", "KS", "KT", "KU", "LI", "MA", "MU", "PS", "TE", "YH")
+        arvot = Seq("AI", "A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33", "BI", "FI","FY", "GE",
+          "HI", "KE", "KO", "KS", "KT", "KU", "LI", "MA", "MU", "PS", "TE", "YH")
       )
     }
   }
