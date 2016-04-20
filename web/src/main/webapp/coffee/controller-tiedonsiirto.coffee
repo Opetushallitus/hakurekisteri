@@ -8,7 +8,7 @@ app.controller "TiedonsiirtoCtrl", [
     supportsFileApi = window.FileReader?
 
     fetchEnabledState = (type) ->
-      $http.get(window.url("suoritusrekisteri-web.siirtoIsOpen", "v2", type), {cache: true})
+      $http.get(window.url("suoritusrekisteri.siirtoIsOpen", "v2", type), {cache: true})
         .success (data) ->
           $scope[type + "Enabled"] = data.open
         .error ->

@@ -64,7 +64,7 @@ app.controller "EihakeneetCtrl", [
         opiskelijatConfig.params.kausi = kausi if kausi
         opiskelijatConfig.params.luokka = luokka  if luokka
 
-        $http.get(window.url("suoritusrekisteri-web.opiskelijat"), opiskelijatConfig)
+        $http.get(window.url("suoritusrekisteri.opiskelijat"), opiskelijatConfig)
           .success((opiskelijat) ->
             if opiskelijat
               luokanOpiskelijat = opiskelijat.filter((o) ->

@@ -26,7 +26,7 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
       aste: ->
         "toinenaste"
       haut: ($http, MessageService) ->
-        $http.get(window.url("suoritusrekisteri-web.haut"), { cache: true }).then(((response) -> response.data), ->
+        $http.get(window.url("suoritusrekisteri.haut"), { cache: true }).then(((response) -> response.data), ->
           MessageService.addMessage
             type: "danger"
             message: "Tietojen lataaminen näytölle epäonnistui."
@@ -54,7 +54,7 @@ app.config ($locationProvider, $routeProvider, $httpProvider) ->
       aste: ->
         "kk"
       haut: ($http, MessageService) ->
-        $http.get(window.url("suoritusrekisteri-web.haut"), { cache: true }).then(((response) -> response.data), ->
+        $http.get(window.url("suoritusrekisteri.haut"), { cache: true }).then(((response) -> response.data), ->
           MessageService.addMessage
             type: "danger"
             message: "Tietojen lataaminen näytölle epäonnistui."

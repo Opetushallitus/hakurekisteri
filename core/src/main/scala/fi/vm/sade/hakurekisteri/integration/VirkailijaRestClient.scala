@@ -2,8 +2,8 @@ package fi.vm.sade.hakurekisteri.integration
 
 import java.io.InputStreamReader
 import java.net.ConnectException
-import java.security.SecureRandom
 import java.nio.file.Paths
+import java.security.SecureRandom
 import java.util.UUID
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicInteger
@@ -19,7 +19,7 @@ import fi.vm.sade.scalaproperties.OphProperties
 
 import scala.compat.Platform
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContextExecutorService, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
@@ -40,7 +40,7 @@ case class ServiceConfig(casUrl: Option[String] = None,
                          properties: Map[String, String] = Map.empty) extends HttpConfig(properties)
 
 object OphUrlProperties {
-  val ophProperties = new OphProperties("/suoritusrekisteri-web-oph.properties").addOptionalFiles(Paths.get(sys.props.getOrElse("user.home", ""), "/oph-configuration/common.properties").toString)
+  val ophProperties = new OphProperties("/suoritusrekisteri-oph.properties").addOptionalFiles(Paths.get(sys.props.getOrElse("user.home", ""), "/oph-configuration/common.properties").toString)
 }
 
 class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {

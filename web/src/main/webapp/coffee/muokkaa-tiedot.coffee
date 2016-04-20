@@ -113,7 +113,7 @@ app.factory "MuokkaaTiedot", [
 
       fetchKomos = ->
         komosLoaded = $q.defer()
-        $http.get(window.url("suoritusrekisteri-web.komo"), { cache: true }).success((data) ->
+        $http.get(window.url("suoritusrekisteri.komo"), { cache: true }).success((data) ->
           $scope.ylioppilastutkintolautakunta = data.ylioppilastutkintolautakunta
           komosLoaded.resolve
             ulkomainen: data.ulkomainenkorvaavaKomoOid

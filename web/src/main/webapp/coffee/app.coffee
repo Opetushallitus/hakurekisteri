@@ -19,7 +19,7 @@ if (window.mocksOn)
 urls = window.urls({encode: false})
   
 app.factory "Opiskelijat", ($resource) ->
-  $resource urls.url("suoritusrekisteri-web.opiskelija", ":opiskelijaId"), { opiskelijaId: "@id" }, {
+  $resource urls.url("suoritusrekisteri.opiskelija", ":opiskelijaId"), { opiskelijaId: "@id" }, {
       query:
         method: "GET"
         isArray: true
@@ -37,7 +37,7 @@ app.factory "Opiskelijat", ($resource) ->
 
 
 app.factory "Suoritukset", ($resource) ->
-  $resource urls.url("suoritusrekisteri-web.suoritus",":suoritusId"), { suoritusId: "@id" }, {
+  $resource urls.url("suoritusrekisteri.suoritus",":suoritusId"), { suoritusId: "@id" }, {
     query:
       method: "GET"
       isArray: true
@@ -53,7 +53,7 @@ app.factory "Suoritukset", ($resource) ->
 
 
 app.factory "Opiskeluoikeudet", ($resource) ->
-  $resource urls.url("suoritusrekisteri-web.opiskeluoikeus",":opiskeluoikeusId"), { opiskeluoikeusId: "@id" }, {
+  $resource urls.url("suoritusrekisteri.opiskeluoikeus",":opiskeluoikeusId"), { opiskeluoikeusId: "@id" }, {
     query:
       method: "GET"
       isArray: true
@@ -70,7 +70,7 @@ app.factory "Opiskeluoikeudet", ($resource) ->
   }
 
 app.factory "Arvosanat", ($resource) ->
-  $resource urls.url("suoritusrekisteri-web.arvosana",":arvosanaId"), { arvosanaId: "@id" }, {
+  $resource urls.url("suoritusrekisteri.arvosana",":arvosanaId"), { arvosanaId: "@id" }, {
     query:
       method: "GET"
       isArray: true
@@ -87,7 +87,7 @@ app.factory "Arvosanat", ($resource) ->
   }
 
 app.factory "RekisteriTiedot", ($resource) ->
-  $resource urls.url("suoritusrekisteri-web.rekisteritieto"), { }, {
+  $resource urls.url("suoritusrekisteri.rekisteritieto"), { }, {
     query:
       method: "GET"
       isArray: true
