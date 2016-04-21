@@ -22,7 +22,8 @@ trait Hakupalvelu {
   def getHakijat(q: HakijaQuery): Future[Seq[Hakija]]
 }
 
-case class ThemeQuestion(`type`: String, messageText: String, applicationOptionOids: Seq[String], options: Option[Map[String, String]])
+case class ThemeQuestion(`type`: String, messageText: String, applicationOptionOids: Seq[String], options: Option[Map[String, String]],
+                         isHaunLisakysymys: Boolean = false)
 
 case class HakukohdeResult(hakukohteenNimiUri: String)
 
@@ -47,8 +48,21 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusActor: Acto
   private def restRequest[A <: AnyRef](uri: String, args: AnyRef*)(implicit mf: Manifest[A]): Future[A] =
     virkailijaClient.readObject[A](uri, args: _*)(acceptedResponseCode, maxRetries)
 
-  private def getLisakysymyksetForHaku(hakuOid: String): Map[String, ThemeQuestion] =
-    Await.result(restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid), 120.second)
+  private def getLisakysymyksetForHaku(hakuOid: Option[String]): Map[String, ThemeQuestion] = {
+    if(hakuOid.isEmpty) return Map()
+    val lisakysymykset: Map[String, ThemeQuestion] = Await.result(restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid.get), 120.second)
+    val hardCodedLisakysymys: Map[String, ThemeQuestion] = Map(
+      "hojks" -> ThemeQuestion(isHaunLisakysymys = true, `type` = "ThemeTextQuestion", messageText = "Onko sinulle laadittu peruskoulussa tai muita opintoja " +
+        "suorittaessasi HOJKS (Henkilökohtainen opetuksen järjestämistä koskeva suunnitelma)?", applicationOptionOids = Nil, options = None),
+      "koulutuskokeilu" ->
+        ThemeQuestion(isHaunLisakysymys = true, `type` = "ThemeRadioButtonQuestion", messageText = "Oletko ollut koulutuskokeilussa?", applicationOptionOids = Nil,
+          options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
+      "miksi_ammatilliseen" ->
+        ThemeQuestion(isHaunLisakysymys = true, `type` = "ThemeRadioButtonQuestion", messageText = "Miksi haet erityisoppilaitokseen?", applicationOptionOids = Nil,
+          options = Some(Map("true" -> "Kyllä", "false" -> "Ei")))
+    )
+    lisakysymykset ++ hardCodedLisakysymys
+  }
 
   private def getHakukohdeOid(organisaatio: String, hakukohdekoodi: String, haku: String): String = {
     val rawSearchResult = Await.result(virkailijaClient.readObject[HakukohdeSearchResultContainer]("tarjonta-service.hakukohde.search", Map(
@@ -67,7 +81,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusActor: Acto
     import akka.pattern._
     implicit val timeout: Timeout = 120.seconds
 
-    val lisakysymykset = getLisakysymyksetForHaku(q.haku.get)
+    val lisakysymykset = getLisakysymyksetForHaku(q.haku)
     val hakukohdeOid = if (q.organisaatio.getOrElse("").nonEmpty && q.hakukohdekoodi.getOrElse("").nonEmpty && q.haku.getOrElse("").nonEmpty) {
       Option(getHakukohdeOid(q.organisaatio.getOrElse(""), q.hakukohdekoodi.getOrElse(""), q.haku.getOrElse("")))
     } else {
@@ -168,7 +182,7 @@ object AkkaHakupalvelu {
 
     def thatAreLisakysymysInHakukohde(kysymysId: String): Boolean = {
       lisakysymykset.keys.exists(key => kysymysId.contains(key) &&
-        (hakukohdeOid.isEmpty || lisakysymykset.get(key).get.applicationOptionOids.contains(hakukohdeOid.get)))
+        (hakukohdeOid.isEmpty || lisakysymykset.get(key).get.isHaunLisakysymys || lisakysymykset.get(key).get.applicationOptionOids.contains(hakukohdeOid.get)))
     }
 
     val answers: HakemusAnswers = hakemus.answers.getOrElse(HakemusAnswers())
