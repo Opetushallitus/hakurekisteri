@@ -6,8 +6,9 @@
  * window.url("service.info", param1, param2, {key3: value})
  *
  * window.urls(baseUrl).url(key, param)
- * window.urls(baseUrl, {encode: false}).url(key, param)
- * window.urls({baseUrl: baseUrl, encode: false}).url(key, param)
+ * window.urls(baseUrl).noEncode().url(key, param)
+ * window.urls({baseUrl: baseUrl}).omitEmptyValuesFromQuerystring().url(key, param)
+ * window.urls().omitEmptyValuesFromQuerystring().url(key, param)
  *
  * Config lookup order: urls_config, window.urls.override, window.urls.properties, window.urls.defaults
  * Lookup key order:
@@ -20,10 +21,6 @@
  *   "service.order": "/rest/payment/$orderId"
  *   }
  *
- * window.urls.defaults = {
- *   encode: true
- * }
- *
  * window.urls.debug = true
  *
  */
@@ -31,6 +28,8 @@
 (function(exportDest) {
     exportDest.urls = function() {
         var urls_config = {}
+        var omitEmptyValuesFromQuerystring = false
+        var encode = true
 
         for (var i = 0; i < arguments.length;  i++) {
             var arg = arguments[i]
@@ -61,46 +60,66 @@
         }
 
         var enc = function(arg) {
-            arg = arg !== undefined ? arg : ""
-            if(resolveConfig("encode")) {
+            arg = [undefined, null].indexOf(arg) > -1 ? "" : arg
+            if(encode) {
                 arg = encodeURIComponent(arg)
             }
             return arg
         }
 
-        return {
-            url: function() {
+        var includeToQuerystring = function(v) {
+            if(omitEmptyValuesFromQuerystring) {
+                return [undefined, null, ""].indexOf(v) === -1
+            } else {
+                return [undefined].indexOf(v) === -1
+            }
+        }
+
+        var ret = {
+            omitEmptyValuesFromQuerystring: function () {
+                omitEmptyValuesFromQuerystring = true
+                return ret
+            },
+            noEncode: function() {
+                encode = false
+                return ret
+            },
+            url: function () {
                 var key = Array.prototype.shift.apply(arguments)
                 var args = Array.prototype.slice.call(arguments)
                 var queryString = "";
                 var tmpUrl;
-                if(!key) {
+                if (!key) {
                     throw new Error("first parameter 'key' not defined!");
                 }
                 var url = resolveConfig(key)
                 for (var i = args.length; i > 0; i--) {
-                    var arg = args[i-1];
-                    if(typeof arg === "object") {
-                        Object.keys(arg).forEach(function(k){
+                    var arg = args[i - 1];
+                    if (typeof arg === "object") {
+                        Object.keys(arg).forEach(function (k) {
                             var value = enc(arg[k])
                             tmpUrl = url.replace("$" + k, value)
-                            if(tmpUrl == url) {
-                                if(queryString.length > 0 ) {
-                                    queryString = queryString + "&"
-                                } else {
-                                    queryString = "?"
+                            if (tmpUrl == url) {
+                                if(includeToQuerystring(arg[k])) {
+                                    if (queryString.length > 0) {
+                                        queryString = queryString + "&"
+                                    } else {
+                                        queryString = "?"
+                                    }
+                                    queryString = queryString + enc(k) + "=" + value
                                 }
-                                queryString = queryString + enc(k) + "=" + value
                             }
                             url = tmpUrl
                         })
                     } else {
                         var value = enc(arg)
-                        url = url.replace("$"+i, value)
+                        url = url.replace("$" + i, value)
                     }
                 }
-                var baseUrl = resolveConfig(parseService(key)+".baseUrl", function(){return resolveConfig("baseUrl", null)})
-                if(baseUrl) {
+                var baseUrl = resolveConfig(parseService(key) + ".baseUrl", function () {
+                    return resolveConfig("baseUrl", null)
+                })
+                if (baseUrl) {
                     url = joinUrl(baseUrl, url)
                 }
                 url = url + queryString
@@ -108,13 +127,11 @@
                 return url
             }
         }
+        return ret
     }
 
     exportDest.urls.properties = {}
 
-    exportDest.urls.defaults = {
-        encode: true
-    }
     exportDest.urls.override = {}
     exportDest.urls.debug = false
     exportDest.urls.debugLog = function() {
