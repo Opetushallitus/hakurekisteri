@@ -131,7 +131,7 @@
     }
 
     exportDest.urls.properties = {}
-
+    exportDest.urls.defaults = {}
     exportDest.urls.override = {}
     exportDest.urls.debug = false
     exportDest.urls.debugLog = function() {
