@@ -508,7 +508,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(60, TimeUnit.SECONDS)
 
-  object hakupalvelu extends Hakupalvelu {
+  object Hakupalvelu extends Hakupalvelu {
     var tehdytHakemukset: Seq[FullHakemus] = Seq()
     var lisakysymykset: Map[String, ThemeQuestion] = Map()
 
@@ -636,7 +636,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object testHakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
-    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, organisaatioActor, koodistoActor, sijoittelu)))
+    val hakijaActor = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, sijoittelu)))
 
     def get(q: HakijaQuery) = {
       hakijaActor ? q
