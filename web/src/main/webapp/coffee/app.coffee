@@ -1,6 +1,6 @@
 "use strict"
 
-window.urls.loadFromUrls("suoritusrekisteri-web-frontend-url_properties.json", "rest/v1/properties").success ->
+window.urls.loadFromUrls("suoritusrekisteri-web-oph.json", "rest/v1/properties").success ->
   angular.element(document).ready ->
     angular.bootstrap(document, ['myApp'])
 
