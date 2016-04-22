@@ -52,15 +52,28 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusActor: Acto
     if(hakuOid.isEmpty) return Map()
     val lisakysymykset: Map[String, ThemeQuestion] = Await.result(restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid.get), 120.second)
     val hardCodedLisakysymys: Map[String, ThemeQuestion] = Map(
-      "hojks" -> ThemeQuestion(isHaunLisakysymys = true, `type` = "ThemeRadioButtonQuestion", messageText = "Onko sinulle laadittu peruskoulussa tai muita opintoja " +
-        "suorittaessasi HOJKS (Henkilökohtainen opetuksen järjestämistä koskeva suunnitelma)?", applicationOptionOids = Nil, options = Some(Map("true" ->
-        "Kyllä", "false" -> "Ei"))),
-      "koulutuskokeilu" ->
-        ThemeQuestion(isHaunLisakysymys = true, `type` = "ThemeRadioButtonQuestion", messageText = "Oletko ollut koulutuskokeilussa?", applicationOptionOids = Nil,
-          options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
-      "miksi_ammatilliseen" ->
-        ThemeQuestion(isHaunLisakysymys = true, `type` = "ThemeTextQuestion", messageText = "Miksi haet erityisoppilaitokseen?", applicationOptionOids = Nil,
-          options = None)
+
+      "hojks" -> ThemeQuestion(
+        isHaunLisakysymys = true,
+        `type` = "ThemeRadioButtonQuestion",
+        messageText = "Onko sinulle laadittu peruskoulussa tai muita opintoja suorittaessasi HOJKS (Henkilökohtainen opetuksen järjestämistä koskeva " +
+          "suunnitelma)?",
+        applicationOptionOids = Nil,
+        options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
+
+      "koulutuskokeilu" -> ThemeQuestion(
+        isHaunLisakysymys = true,
+        `type` = "ThemeRadioButtonQuestion",
+        messageText = "Oletko ollut koulutuskokeilussa?",
+        applicationOptionOids = Nil,
+        options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
+
+      "miksi_ammatilliseen" -> ThemeQuestion(
+        isHaunLisakysymys = true,
+        `type` = "ThemeTextQuestion",
+        messageText = "Miksi haet erityisoppilaitokseen?",
+        applicationOptionOids = Nil,
+        options = None)
     )
     lisakysymykset ++ hardCodedLisakysymys
   }

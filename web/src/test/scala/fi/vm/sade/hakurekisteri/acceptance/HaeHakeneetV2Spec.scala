@@ -21,7 +21,7 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
 
     scenario("Opetuspisteeseen X hakijat") {
       Given("N henkilöä täyttää hakemuksen; osa kohdistuu opetuspisteeseen X")
-      hakupalvelu has (FullHakemus1, FullHakemus2)
+      Hakupalvelu has (FullHakemus1, FullHakemus2)
 
       When("rajaan muodostusta valitsemalla opetuspisteeseen X")
       val hakijat: JSONHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, Some(OpetuspisteX.oid), None, Hakuehto.Kaikki, None, 2)),
@@ -36,7 +36,7 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
 
     scenario("Kaikki hakeneet") {
       Given("Kaikkiaan kaksi henkilöä täyttää hakemuksen")
-      hakupalvelu has (FullHakemus1, FullHakemus2)
+      Hakupalvelu has (FullHakemus1, FullHakemus2)
 
       When("rajaan muodostusta valitsemalla 'Kaikki hakeneet'")
       val hakijat: JSONHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Kaikki, None, 2)),
@@ -48,7 +48,7 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
 
     scenario("Hyväksytyt hakijat") {
       Given("N henkilöä täyttää hakemuksen")
-      hakupalvelu has (FullHakemus1, FullHakemus2)
+      Hakupalvelu has (FullHakemus1, FullHakemus2)
 
       When("rajaan muodostusta valitsemalla 'Hyväksytyt hakijat'")
       val hakijat: JSONHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Hyvaksytyt, None, 2)),
@@ -60,7 +60,7 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
 
     scenario("Paikan vastaanottaneet hakijat") {
       Given("N henkilöä täyttää hakemuksen")
-      hakupalvelu has (FullHakemus1, FullHakemus2)
+      Hakupalvelu has (FullHakemus1, FullHakemus2)
 
       When("rajaan muodostusta valitsemalla 'Paikan vastaanottaneet'")
       val hakijat: JSONHakijat = Await.result(testHakijaResource.get(HakijaQuery(None, None, None, Hakuehto.Vastaanottaneet, None, 2)),
@@ -72,7 +72,7 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
 
     scenario("Vapaaehtoiset uudet tiedot tulostuvat hakemukselle") {
       Given("Henkilö täyttää hakemuksen ja valitsee hakevansa urheilijan ammatilliseen koulutukseen harkinnanvaraisessa sekä valitsee terveys, oikeudenmenetys ja kaksoistutkinto -kysymyksiin kyllä")
-      hakupalvelu has FullHakemus1
+      Hakupalvelu has FullHakemus1
 
 
       When("haen kaikki hakeneet")
@@ -90,8 +90,8 @@ class HaeHakeneetV2Spec extends ScalatraFeatureSpec with GivenWhenThen with Hake
 
     scenario("Vain tietyn hakukohteen tiedot") {
       Given("N henkilöä täyttää hakemuksen; osa kohdistuu opetuspisteeseen X")
-      hakupalvelu has(FullHakemus1, FullHakemus2, FullHakemus4)
-      hakupalvelu withLisakysymykset lisakysymysMap
+      Hakupalvelu has(FullHakemus1, FullHakemus2, FullHakemus4)
+      Hakupalvelu withLisakysymykset lisakysymysMap
 
       When("rajaan muodostusta valitsemalla haun X, opetuspisteeseen X ja Koulutuskoodin X")
       val hakijat: JSONHakijat = Await.result(testHakijaResource.get(HakijaQuery(Some("1.1"), Some(OpetuspisteX.oid), Some("000"), Hakuehto.Kaikki, None, 2)),

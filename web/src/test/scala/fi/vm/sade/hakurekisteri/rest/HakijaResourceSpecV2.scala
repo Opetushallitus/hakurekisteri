@@ -12,7 +12,7 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 class HakijaResourceSpecV2 extends ScalatraFunSuite with HakeneetSupport with LocalhostProperties {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
-  val hakijat = system.actorOf(Props(new HakijaActor(hakupalvelu, organisaatioActor, koodistoActor, sijoittelu)))
+  val hakijat = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, sijoittelu)))
   addServlet(new HakijaResourceV2(hakijat), "/")
 
   test("XML is not supported anymore") {
@@ -28,21 +28,21 @@ class HakijaResourceSpecV2 extends ScalatraFunSuite with HakeneetSupport with Lo
   }
 
   test("JSON contains postoffice") {
-    hakupalvelu has FullHakemus1
+    Hakupalvelu has FullHakemus1
     get("/?haku=1&hakuehto=Kaikki&tyyppi=Json") {
       body should include("\"postitoimipaikka\":\"Posti_00100\"")
     }
   }
 
   test("JSON contains foreign postoffice") {
-    hakupalvelu has FullHakemus3
+    Hakupalvelu has FullHakemus3
     get("/?haku=1&hakuehto=Kaikki&tyyppi=Json") {
       body should include("\"postitoimipaikka\":\"Parc la Vuori\"")
     }
   }
 
   test("JSON contains foreign huoltajan nimi") {
-    hakupalvelu has FullHakemus3
+    Hakupalvelu has FullHakemus3
     get("/?haku=1&hakuehto=Kaikki&tyyppi=Json") {
       body should include("\"huoltajannimi\":\"huoltajannimi\"")
     }
