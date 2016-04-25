@@ -234,7 +234,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
       val cursor: String = hakuCursor.getOrElse(toCursor())
       reloading = true
       logger.info(s"fetching hakemukset since $cursor")
-      getHakemukset(HakijaQuery(haku = None, organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None), cursor).map(i => {
+      getHakemukset(HakijaQuery(haku = None, organisaatio = None, hakukohdekoodi = None, hakuehto = Hakuehto.Kaikki, user = None, version = 1), cursor).map(i => {
         logger.debug(s"found $i applications")
         RefreshingDone(Some(startTime))
       }).recover {

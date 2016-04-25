@@ -4,6 +4,7 @@ import akka.actor.{Props, ActorRef, ActorSystem}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.ensikertalainen.EnsikertalainenActor
 import fi.vm.sade.hakurekisteri.hakija.HakijaActor
+import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus.AkkaHakupalvelu
 import fi.vm.sade.hakurekisteri.integration.haku.HakuActor
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaQueue
@@ -25,7 +26,7 @@ class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: R
 
   val virtaQueue = system.actorOf(Props(new VirtaQueue(integrations.virta, integrations.hakemukset, haut)), "virta-queue")
 
-  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemukset, haut), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
+  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemusClient, integrations.hakemukset, haut), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
 
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, integrations.valintarekisteri, integrations.tarjonta, config)), "ensikertalainen")
 }
