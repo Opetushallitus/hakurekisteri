@@ -290,201 +290,217 @@
             }
 
             describe('Vahvistetut', function () {
-                it('Opiskelijan peruskoulun suoritukset, ainelista, arvosanat, luokkatiedot ja opintooikeudet näkyvät oikein', seqDone(
-                    wait.forAngular,
-                    function () {
-                        httpFixtures().organisaatioService.pikkaralaOid()
-                        httpFixtures().organisaatioService.pikkaralaKoodi()
-                        httpFixtures().henkiloPalveluService.aarne()
-                        httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
-                        httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                        httpFixtures().suorituksetLocal.aarnenSuoritus()
-                        httpFixtures().arvosanatLocal.aarnenArvosanat()
-                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
-                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot(getCurrentYear())
-                        httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeus()
-                        httpFixtures().komoLocal.komoTiedot()
-                        koodistoFixtures()
-                    },
-                    input(opiskelijatiedot.henkiloSearch, '123456-789'),
-                    click(opiskelijatiedot.searchButton),
-                    wait.forAngular,
-                    function () {
-                        expect(opiskelijatiedot.resultsTable().length).to.equal(1)
-                        expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
-                        expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
-                        expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
-                        expect(opiskelijatiedot.arvosanaValinnainenHeader().is(":visible")).to.equal(true)
-                        assertText(opiskelijatiedot.hetu, "123456-789")
-                        assertValue(opiskelijatiedot.suoritusMyontaja, "06345")
-                        assertValue(opiskelijatiedot.suoritusKoulutus, "1")
-                        assertValue(opiskelijatiedot.suoritusYksilollistetty, "0")
-                        assertValue(opiskelijatiedot.suoritusKieli, "156")
-                        assertValue(opiskelijatiedot.suoritusValmistuminen, "3.6.2015")
-                        assertValue(opiskelijatiedot.suoritusTila, "0")
-                        assertValue(opiskelijatiedot.luokkatietoOppilaitos, "06345")
-                        assertValue(opiskelijatiedot.luokkatietoLuokka, "10A")
-                        assertValue(opiskelijatiedot.luokkatietoLuokkaTaso, "3")
-                        assertValue(opiskelijatiedot.luokkatietoAlkuPaiva, "18.8.2014")
-                        assertValue(opiskelijatiedot.luokkatietoLoppuPaiva, "4.6.2015")
-                        assertText(opiskelijatiedot.opiskeluoikeusAlkuPaiva, "01.01.2000")
-                        assertText(opiskelijatiedot.opiskeluoikeusLoppuPaiva, "01.01.2014")
-                        assertText(opiskelijatiedot.opiskeluoikeusMyontaja, "06345 Pikkaralan ala-aste")
-                        assertText(opiskelijatiedot.opiskeluoikeusKoulutus, "Ensihoitaja (AMK)")
-                        assertArvosanat(37, 19, 14, 17, 1)
-                        assertArvosanaRivi("Äidinkieli ja kirjallisuus", "", "Kieli puuttuu!!", ["10"], [])
-                        assertArvosanaRivi("A1-kieli", "", "englanti", ["9"], [])
-                        assertArvosanaRivi("Matematiikka", "", "", ["6"], [])
-                        assertArvosanaRivi("Matematiikka", "04.06.2015", "", ["10"], ["9"])
-                    },
-                    saveDisabled()
-                ))
-                it('Opiskelijan lukion suoritukset, ainelista ja arvosanat näkyvät oikein', seqDone(
-                    wait.forAngular,
-                    function () {
-                        suoritus = {}
-                        suoritus = jQuery.extend(suoritus, restData.suoritusRekisteri.suoritukset.aarneLukio)
-                        suoritus.komo = restData.komo.lukioKomoOid
-                        httpFixtures().organisaatioService.pikkaralaOid()
-                        httpFixtures().organisaatioService.pikkaralaKoodi()
-                        httpFixtures().henkiloPalveluService.aarne()
-                        httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
-                        httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                        testFrame().httpBackend.when('GET', serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619")).respond([suoritus])
-                        httpFixtures().arvosanatLocal.aarnenLukioArvosanat()
-                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
-                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
-                        httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
-                        httpFixtures().komoLocal.komoTiedot()
-                        koodistoFixtures()
-                    },
-                    input(opiskelijatiedot.henkiloSearch, '123456-789'),
-                    click(opiskelijatiedot.searchButton),
-                    wait.forAngular,
-                    function () {
-                        expect(opiskelijatiedot.resultsTable().length).to.equal(1)
-                        expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
-                        expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
-                        expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
-                        expect(opiskelijatiedot.arvosanaValinnainenHeader().is(":visible")).to.equal(false)
-                        assertText(opiskelijatiedot.hetu, "123456-789")
-                        assertValue(opiskelijatiedot.suoritusMyontaja, "06345")
-                        assertValue(opiskelijatiedot.suoritusKoulutus, "9")
-                        assertValue(opiskelijatiedot.suoritusYksilollistetty, "0")
-                        assertValue(opiskelijatiedot.suoritusKieli, "156")
-                        assertValue(opiskelijatiedot.suoritusValmistuminen, "4.6.2015")
-                        assertValue(opiskelijatiedot.suoritusTila, "0")
-                        assertArvosanat(26, 20, 0, 16, 0)
-                        assertArvosanaRivi("Äidinkieli ja kirjallisuus", "", "Kieli puuttuu!!", ["10"], [])
-                        assertArvosanaRivi("A1-kieli", "", "englanti", ["9"], [])
-                        assertArvosanaRivi("Matematiikka", "", "", ["10"], [])
-                        assertArvosanaRivi("Psykologia", "", "", ['8'], [])
-                        assertArvosanaRivi("Filosofia", "", "", ['6'], [])
-                    },
-                    saveDisabled()
-                ))
-                it('Opiskelijan amk suoritus (komo = koulutus_*) näkyy oikein eikä arvosanoja näytetä', seqDone(
-                    wait.forAngular,
-                    function () {
-                        suoritus = {}
-                        suoritus = jQuery.extend(suoritus, restData.suoritusRekisteri.suoritukset.aarne)
-                        suoritus.komo = "koulutus_671116"
-                        httpFixtures().organisaatioService.pikkaralaOid()
-                        httpFixtures().organisaatioService.pikkaralaKoodi()
-                        httpFixtures().henkiloPalveluService.aarne()
-                        httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
-                        httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                        testFrame().httpBackend.when('GET', serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619")).respond([suoritus])
-                        httpFixtures().arvosanatLocal.aarnenArvosanat()
-                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
-                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
-                        httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
-                        httpFixtures().komoLocal.komoTiedot()
-                        koodistoFixtures()
-                    },
-                    input(opiskelijatiedot.henkiloSearch, '123456-789'),
-                    click(opiskelijatiedot.searchButton),
-                    wait.forAngular,
-                    function () {
-                        expect(opiskelijatiedot.resultsTable().length).to.equal(1)
-                        expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
-                        expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
-                        expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
-                        assertText(opiskelijatiedot.hetu, "123456-789")
-                        assertText(opiskelijatiedot.suoritusMyontaja, '06345 Pikkaralan ala-aste')
-                        assertText(opiskelijatiedot.suoritusKoulutus, "Ensihoitaja (AMK)")
-                        assertText(opiskelijatiedot.suoritusYksilollistetty, "Ei")
-                        assertText(opiskelijatiedot.suoritusKieli, "suomi")
-                        assertText(opiskelijatiedot.suoritusValmistuminen, "3.6.2015")
-                        assertText(opiskelijatiedot.suoritusTila, "Suoritus kesken")
-                        assertArvosanat(0, 0, 0, 0, 0)
-                    },
-                    saveDisabled()
-                ))
-                it('YTL:n lähettämää YO-suoritusta ja sen arvosanoja ei voi muokata. vanhempia arvosanoja muokata', seqDone(
-                    wait.forAngular,
-                    function () {
-                        httpFixtures().henkiloPalveluService.aarne()
-                        httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
-                        httpFixtures().henkiloPalveluService.aarneHenkiloListana()
-                        httpFixtures().get(serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619"), [restData.suoritusRekisteri.suoritukset.aarneYoYTL])
-                        httpFixtures().get(serviceUrls.arvosanat.suoritus(restData.suoritusRekisteri.suoritukset.aarneYoYTL.id), restData.suoritusRekisteri.arvosanat.aarneYoYTL)
-                        httpFixtures().get(serviceUrls.organisaatio(restData.organisaatioService.ytl.oid), restData.organisaatioService.ytl)
-                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
-                        httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
-                        httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
-                        httpFixtures().komoLocal.komoTiedot()
-                        koodistoFixtures()
-                    },
-                    input(opiskelijatiedot.henkiloSearch, '123456-789'),
-                    click(opiskelijatiedot.searchButton),
-                    wait.forAngular,
-                    function () {
-                        expect(opiskelijatiedot.resultsTable().length).to.equal(1)
-                        expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
-                        expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
-                        expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
-                        assertText(opiskelijatiedot.hetu, "123456-789")
-                        assertText(opiskelijatiedot.suoritusMyontaja, 'Ylioppilastutkintolautakunta')
-                        assertText(opiskelijatiedot.suoritusKoulutus, "Ylioppilastutkinto")
-                        assertText(opiskelijatiedot.suoritusYksilollistetty, "Ei")
-                        assertText(opiskelijatiedot.suoritusKieli, "suomi")
-                        assertText(opiskelijatiedot.suoritusValmistuminen, "1.6.2013")
-                        assertText(opiskelijatiedot.suoritusTila, "Suoritus valmis")
-                        expect(opiskelijatiedot.arvosanaAineRivi().length).to.equal(3)
-                        assertText(opiskelijatiedot.yoTxt, 'Ortodoksiuskonto',
-                            'Ainemuotoinen reaali',
-                            'C',
-                            '4',
-                            '01.06.2013',
-                            'pakollinen',
-                            'Matematiikka',
-                            'Pitkä oppimäärä (MA)',
-                            'C',
-                            '4',
-                            '02.06.2013')
-                        expect(opiskelijatiedot.yoArvosanaAddKoe().is(':visible')).to.equal(true)
-                        expect(opiskelijatiedot.suoritusPoista().is(':visible')).to.equal(false)
-                    },
-                    saveDisabled(),
-                    select(opiskelijatiedot.yoArvosanaArvosana, "1"),
-                    saveEnabled(),
-                    mockPostReturnData(click(opiskelijatiedot.saveButton), serviceUrls.arvosanat.arvosana(restData.suoritusRekisteri.arvosanat.aarneYo[0].id)),
-                    function (savedData) {
-                        expect(JSON.parse(savedData)).to.deep.equal({
-                                id: '3ba4b93c-87e8-4e6c-8b2d-704ae88a89af',
-                                suoritus: '64d26b8c-e2c8-4b13-9ac9-51c85e288bc0',
-                                arvio: {arvosana: 'M', asteikko: 'YO', pisteet: 4},
-                                aine: 'AINEREAALI',
-                                source: '1.2.246.562.24.72453542949',
-                                valinnainen: false,
-                                lisatieto: 'UO',
-                                myonnetty: '21.12.1988'
-                            }
-                        )
-                    },
-                    saveDisabled()
-                ))
+                describe('Opiskelijan peruskoulun suoritukset, ainelista, arvosanat, luokkatiedot ja opintooikeudet', function() {
+                    beforeEach(seqDone(
+                        wait.forAngular,
+                        function () {
+                            httpFixtures().organisaatioService.pikkaralaOid()
+                            httpFixtures().organisaatioService.pikkaralaKoodi()
+                            httpFixtures().henkiloPalveluService.aarne()
+                            httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
+                            httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                            httpFixtures().suorituksetLocal.aarnenSuoritus()
+                            httpFixtures().arvosanatLocal.aarnenArvosanat()
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot()
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot(getCurrentYear())
+                            httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeus()
+                            httpFixtures().komoLocal.komoTiedot()
+                            koodistoFixtures()
+                        },
+                        input(opiskelijatiedot.henkiloSearch, '123456-789'),
+                        click(opiskelijatiedot.searchButton),
+                        wait.forAngular
+                    ))
+                    it('näkyvät oikein',seqDone(
+                        function () {
+                            expect(opiskelijatiedot.resultsTable().length).to.equal(1)
+                            expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
+                            expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
+                            expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
+                            expect(opiskelijatiedot.arvosanaValinnainenHeader().is(":visible")).to.equal(true)
+                            assertText(opiskelijatiedot.hetu, "123456-789")
+                            assertValue(opiskelijatiedot.suoritusMyontaja, "06345")
+                            assertValue(opiskelijatiedot.suoritusKoulutus, "1")
+                            assertValue(opiskelijatiedot.suoritusYksilollistetty, "0")
+                            assertValue(opiskelijatiedot.suoritusKieli, "156")
+                            assertValue(opiskelijatiedot.suoritusValmistuminen, "3.6.2015")
+                            assertValue(opiskelijatiedot.suoritusTila, "0")
+                            assertValue(opiskelijatiedot.luokkatietoOppilaitos, "06345")
+                            assertValue(opiskelijatiedot.luokkatietoLuokka, "10A")
+                            assertValue(opiskelijatiedot.luokkatietoLuokkaTaso, "3")
+                            assertValue(opiskelijatiedot.luokkatietoAlkuPaiva, "18.8.2014")
+                            assertValue(opiskelijatiedot.luokkatietoLoppuPaiva, "4.6.2015")
+                            assertText(opiskelijatiedot.opiskeluoikeusAlkuPaiva, "01.01.2000")
+                            assertText(opiskelijatiedot.opiskeluoikeusLoppuPaiva, "01.01.2014")
+                            assertText(opiskelijatiedot.opiskeluoikeusMyontaja, "06345 Pikkaralan ala-aste")
+                            assertText(opiskelijatiedot.opiskeluoikeusKoulutus, "Ensihoitaja (AMK)")
+                            assertArvosanat(37, 19, 14, 17, 1)
+                            assertArvosanaRivi("Äidinkieli ja kirjallisuus", "", "Kieli puuttuu!!", ["10"], [])
+                            assertArvosanaRivi("A1-kieli", "", "englanti", ["9"], [])
+                            assertArvosanaRivi("Matematiikka", "", "", ["6"], [])
+                            assertArvosanaRivi("Matematiikka", "04.06.2015", "", ["10"], ["9"])
+                        },
+                        saveDisabled()
+                    ))
+                })
+                describe('Opiskelijan lukion suoritukset, ainelista ja arvosanat', function() {
+                    beforeEach(seqDone(
+                        wait.forAngular,
+                        function () {
+                            suoritus = {}
+                            suoritus = jQuery.extend(suoritus, restData.suoritusRekisteri.suoritukset.aarneLukio)
+                            suoritus.komo = restData.komo.lukioKomoOid
+                            httpFixtures().organisaatioService.pikkaralaOid()
+                            httpFixtures().organisaatioService.pikkaralaKoodi()
+                            httpFixtures().henkiloPalveluService.aarne()
+                            httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
+                            httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                            testFrame().httpBackend.when('GET', serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619")).respond([suoritus])
+                            httpFixtures().arvosanatLocal.aarnenLukioArvosanat()
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
+                            httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
+                            httpFixtures().komoLocal.komoTiedot()
+                            koodistoFixtures()
+                        },
+                        input(opiskelijatiedot.henkiloSearch, '123456-789'),
+                        click(opiskelijatiedot.searchButton),
+                        wait.forAngular
+                    ))
+                    it('näkyvät oikein',seqDone(
+                        function () {
+                            expect(opiskelijatiedot.resultsTable().length).to.equal(1)
+                            expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
+                            expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
+                            expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
+                            expect(opiskelijatiedot.arvosanaValinnainenHeader().is(":visible")).to.equal(false)
+                            assertText(opiskelijatiedot.hetu, "123456-789")
+                            assertValue(opiskelijatiedot.suoritusMyontaja, "06345")
+                            assertValue(opiskelijatiedot.suoritusKoulutus, "9")
+                            assertValue(opiskelijatiedot.suoritusYksilollistetty, "0")
+                            assertValue(opiskelijatiedot.suoritusKieli, "156")
+                            assertValue(opiskelijatiedot.suoritusValmistuminen, "4.6.2015")
+                            assertValue(opiskelijatiedot.suoritusTila, "0")
+                            assertArvosanat(26, 20, 0, 16, 0)
+                            assertArvosanaRivi("Äidinkieli ja kirjallisuus", "", "Kieli puuttuu!!", ["10"], [])
+                            assertArvosanaRivi("A1-kieli", "", "englanti", ["9"], [])
+                            assertArvosanaRivi("Matematiikka", "", "", ["10"], [])
+                            assertArvosanaRivi("Psykologia", "", "", ['8'], [])
+                            assertArvosanaRivi("Filosofia", "", "", ['6'], [])
+                        },
+                        saveDisabled()
+                    ))
+                })
+                describe('Opiskelijan amk suoritus: komo = koulutus_*', function() {
+                    beforeEach(seqDone(
+                        wait.forAngular,
+                        function () {
+                            suoritus = {}
+                            suoritus = jQuery.extend(suoritus, restData.suoritusRekisteri.suoritukset.aarne)
+                            suoritus.komo = "koulutus_671116"
+                            httpFixtures().organisaatioService.pikkaralaOid()
+                            httpFixtures().organisaatioService.pikkaralaKoodi()
+                            httpFixtures().henkiloPalveluService.aarne()
+                            httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
+                            httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                            testFrame().httpBackend.when('GET', serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619")).respond([suoritus])
+                            httpFixtures().arvosanatLocal.aarnenArvosanat()
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
+                            httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
+                            httpFixtures().komoLocal.komoTiedot()
+                            koodistoFixtures()
+                        },
+                        input(opiskelijatiedot.henkiloSearch, '123456-789'),
+                        click(opiskelijatiedot.searchButton),
+                        wait.forAngular
+                    ))
+                    it('näkyy oikein eikä arvosanoja näytetä', seqDone(
+                        function () {
+                              expect(opiskelijatiedot.resultsTable().length).to.equal(1)
+                              expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
+                              expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
+                              expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
+                              assertText(opiskelijatiedot.hetu, "123456-789")
+                              assertText(opiskelijatiedot.suoritusMyontaja, '06345 Pikkaralan ala-aste')
+                              assertText(opiskelijatiedot.suoritusKoulutus, "Ensihoitaja (AMK)")
+                              assertText(opiskelijatiedot.suoritusYksilollistetty, "Ei")
+                              assertText(opiskelijatiedot.suoritusKieli, "suomi")
+                              assertText(opiskelijatiedot.suoritusValmistuminen, "3.6.2015")
+                              assertText(opiskelijatiedot.suoritusTila, "Suoritus kesken")
+                              assertArvosanat(0, 0, 0, 0, 0)
+                          },
+                          saveDisabled()
+                    ))
+                })
+                describe('YTL:n lähettämää YO-suoritus ja arvosanat', function() {
+                    beforeEach(seqDone(
+                        wait.forAngular,
+                        function () {
+                            httpFixtures().henkiloPalveluService.aarne()
+                            httpFixtures().henkiloPalveluService.aarneHenkiloPalveluHetu()
+                            httpFixtures().henkiloPalveluService.aarneHenkiloListana()
+                            httpFixtures().get(serviceUrls.suoritukset.henkilo("1.2.246.562.24.71944845619"), [restData.suoritusRekisteri.suoritukset.aarneYoYTL])
+                            httpFixtures().get(serviceUrls.arvosanat.suoritus(restData.suoritusRekisteri.suoritukset.aarneYoYTL.id), restData.suoritusRekisteri.arvosanat.aarneYoYTL)
+                            httpFixtures().get(serviceUrls.organisaatio(restData.organisaatioService.ytl.oid), restData.organisaatioService.ytl)
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
+                            httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
+                            httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
+                            httpFixtures().komoLocal.komoTiedot()
+                            koodistoFixtures()
+                        },
+                        input(opiskelijatiedot.henkiloSearch, '123456-789'),
+                        click(opiskelijatiedot.searchButton),
+                        wait.forAngular
+                    ))
+                    it('YO-suoritusta ja sen arvosanoja ei voi muokata. Vanhempia arvosanoja voi muokata', seqDone(
+                        function () {
+                            expect(opiskelijatiedot.resultsTable().length).to.equal(1)
+                            expect(opiskelijatiedot.henkiloTiedot().is(':visible')).to.equal(true)
+                            expect(opiskelijatiedot.suoritusTiedot().is(':visible')).to.equal(true)
+                            expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
+                            assertText(opiskelijatiedot.hetu, "123456-789")
+                            assertText(opiskelijatiedot.suoritusMyontaja, 'Ylioppilastutkintolautakunta')
+                            assertText(opiskelijatiedot.suoritusKoulutus, "Ylioppilastutkinto")
+                            assertText(opiskelijatiedot.suoritusYksilollistetty, "Ei")
+                            assertText(opiskelijatiedot.suoritusKieli, "suomi")
+                            assertText(opiskelijatiedot.suoritusValmistuminen, "1.6.2013")
+                            assertText(opiskelijatiedot.suoritusTila, "Suoritus valmis")
+                            expect(opiskelijatiedot.arvosanaAineRivi().length).to.equal(3)
+                            assertText(opiskelijatiedot.yoTxt, 'Ortodoksiuskonto',
+                                'Ainemuotoinen reaali',
+                                'C',
+                                '4',
+                                '01.06.2013',
+                                'pakollinen',
+                                'Matematiikka',
+                                'Pitkä oppimäärä (MA)',
+                                'C',
+                                '4',
+                                '02.06.2013')
+                            expect(opiskelijatiedot.yoArvosanaAddKoe().is(':visible')).to.equal(true)
+                            expect(opiskelijatiedot.suoritusPoista().is(':visible')).to.equal(false)
+                        },
+                        saveDisabled(),
+                        select(opiskelijatiedot.yoArvosanaArvosana, "1"),
+                        saveEnabled(),
+                        mockPostReturnData(click(opiskelijatiedot.saveButton), serviceUrls.arvosanat.arvosana(restData.suoritusRekisteri.arvosanat.aarneYo[0].id)),
+                        function (savedData) {
+                            expect(JSON.parse(savedData)).to.deep.equal({
+                                  id: '3ba4b93c-87e8-4e6c-8b2d-704ae88a89af',
+                                  suoritus: '64d26b8c-e2c8-4b13-9ac9-51c85e288bc0',
+                                  arvio: {arvosana: 'M', asteikko: 'YO', pisteet: 4},
+                                  aine: 'AINEREAALI',
+                                  source: '1.2.246.562.24.72453542949',
+                                  valinnainen: false,
+                                  lisatieto: 'UO',
+                                  myonnetty: '21.12.1988'
+                                }
+                            )
+                        },
+                        saveDisabled()
+                    ))
+                })
             })
             describe("Vahvistamattomat hakemukselta tulleet suoritukset", function () {
                 it.skip('!! Hakemukselta tullut arvosana näkyy oikein', seqDone(
