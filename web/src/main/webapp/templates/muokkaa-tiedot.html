@@ -115,13 +115,13 @@
         </section>
     </div>
     <div ng-if="henkilo.vastaanotot">
-        <section ng-if="henkilo.vastaanotot.uudet && henkilo.vastaanotot.uudet.length > 0 " class="panel panel-default">
+        <section ng-if="henkilo.vastaanotot.opintopolku && henkilo.vastaanotot.opintopolku.length > 0 " class="panel panel-default">
             <header class="panel-heading">
-                <h2 oph-msg="suoritusrekisteri.muokkaa.vastaanotot.uudet"  class="panel-title">Korkeakouluopiskelupaikkojen uudet vastaanotot</h2>
+                <h2 oph-msg="suoritusrekisteri.muokkaa.vastaanotot.opintopolku"  class="panel-title">Korkeakouluopiskelupaikkojen vastaanotot Opintopolussa</h2>
             </header>
             <div class="panel-body">
                 <ul class="list-unstyled entrylist">
-                    <li ng-repeat="vastaanotto in henkilo.vastaanotot.uudet">
+                    <li ng-repeat="vastaanotto in henkilo.vastaanotot.opintopolku">
                         <div class="row">
                             <div class="col-sm-3"><strong
                                     oph-msg="suoritusrekisteri.muokkaa.vastaanotot.haku">Haku</strong>
@@ -134,7 +134,7 @@
                             </div>
                             <div class="col-sm-2"><strong
                                     oph-msg="suoritusrekisteri.muokkaa.vastaanotot.tila">Tila</strong>
-                                <div class="test-vastaanottoUusitila">{{vastaanotto.vastaanottotila}}</div>
+                                <div class="test-vastaanottoUusitila" oph-msg="suoritusrekisteri.muokkaa.vastaanotot.tila.{{vastaanotto.vastaanottoAction}}">{{vastaanotto.vastaanottoAction}}</div>
                             </div>
                             <div class="col-sm-2"><strong
                                     oph-msg="suoritusrekisteri.muokkaa.vastaanotot.paivamaara">Päivämäärä</strong>
@@ -148,7 +148,7 @@
         </section>
         <section ng-if="henkilo.vastaanotot.vanhat && henkilo.vastaanotot.vanhat.length > 0 " class="panel panel-default">
             <header class="panel-heading">
-                <h2 oph-msg="suoritusrekisteri.muokkaa.vastaanotot.vanhat"  class="panel-title">Korkeakouluopiskelupaikkojen vanhat vastaanotot</h2>
+                <h2 oph-msg="suoritusrekisteri.muokkaa.vastaanotot.vanhat"  class="panel-title">Korkeakouluopiskelupaikkojen vastaanotot vanhoissa järjestelmissä</h2>
             </header>
             <div class="panel-body">
                 <ul class="list-unstyled entrylist">

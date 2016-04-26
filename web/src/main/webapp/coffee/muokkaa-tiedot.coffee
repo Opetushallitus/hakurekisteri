@@ -16,7 +16,7 @@ app.factory "MuokkaaTiedot", [
           luokkatiedot: []
           opiskeluoikeudet: []
           vastaanotot: {
-            uudet: []
+            opintopolku: []
             vanhat: []
           }
           dataScopes: []
@@ -172,8 +172,8 @@ app.factory "MuokkaaTiedot", [
       fetchVastaanottotiedot = ->
         $http.get(window.url("valintarekisteri.vastaanottotiedot", henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((vastaanottotiedot) ->
           $scope.henkilo.vastaanotot = vastaanottotiedot
-          if $scope.henkilo.vastaanotot.uudet
-            $scope.henkilo.vastaanotot.uudet.forEach (vastaanotto) ->
+          if $scope.henkilo.vastaanotot.opintopolku
+            $scope.henkilo.vastaanotot.opintopolku.forEach (vastaanotto) ->
               vastaanotto.vastaanottoaika = $scope.formatDateString(vastaanotto.vastaanottoaika)
               return
           if $scope.henkilo.vastaanotot.vanhat
