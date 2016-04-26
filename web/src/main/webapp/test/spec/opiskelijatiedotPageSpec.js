@@ -53,6 +53,8 @@
 
         beforeEach(function (done) {
             addTestHook(lokalisointiFixtures)()
+            addTestHook(koodistoFixtures)()
+            addTestHook(vastaanottotiedotFixtures)()
             page.openPage(done)
         })
 
@@ -88,7 +90,6 @@
                     httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
-                    koodistoFixtures()
                 },
                 typeaheadInput(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
                 wait.forAngular,
@@ -130,7 +131,6 @@
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
                     httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
-                    koodistoFixtures()
                 },
                 input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                 click(opiskelijatiedot.searchButton),
@@ -153,7 +153,6 @@
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
                     httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
-                    koodistoFixtures()
                 },
                 input(opiskelijatiedot.henkiloSearch, '123456-789'),
                 click(opiskelijatiedot.searchButton),
@@ -208,7 +207,6 @@
                     httpFixtures().opiskeluOikeudetLocal.tyynenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
-                    koodistoFixtures()
                 },
                 typeaheadInput(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
                 wait.forAngular,
@@ -241,7 +239,6 @@
                     httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
                     httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
-                    koodistoFixtures()
                 },
                 input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                 wait.forAngular,
@@ -267,7 +264,6 @@
                     httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                     httpFixtures().komoLocal.komoTiedot()
                     httpFixtures().rekisteriTiedotLocal.rekisteriTiedot()
-                    koodistoFixtures()
                 },
                 typeaheadInput(opiskelijatiedot.organizationSearch, "Pik", opiskelijatiedot.typeaheadMenuChild(1)),
                 wait.forAngular,
@@ -305,7 +301,6 @@
                             httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedot(getCurrentYear())
                             httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeus()
                             httpFixtures().komoLocal.komoTiedot()
-                            koodistoFixtures()
                         },
                         input(opiskelijatiedot.henkiloSearch, '123456-789'),
                         click(opiskelijatiedot.searchButton),
@@ -361,7 +356,6 @@
                             httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
                             httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                             httpFixtures().komoLocal.komoTiedot()
-                            koodistoFixtures()
                         },
                         input(opiskelijatiedot.henkiloSearch, '123456-789'),
                         click(opiskelijatiedot.searchButton),
@@ -409,7 +403,6 @@
                             httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
                             httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                             httpFixtures().komoLocal.komoTiedot()
-                            koodistoFixtures()
                         },
                         input(opiskelijatiedot.henkiloSearch, '123456-789'),
                         click(opiskelijatiedot.searchButton),
@@ -447,7 +440,6 @@
                             httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
                             httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                             httpFixtures().komoLocal.komoTiedot()
-                            koodistoFixtures()
                         },
                         input(opiskelijatiedot.henkiloSearch, '123456-789'),
                         click(opiskelijatiedot.searchButton),
@@ -518,7 +510,6 @@
                         httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
                         httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                         httpFixtures().komoLocal.komoTiedot()
-                        koodistoFixtures()
                     },
                     input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                     click(opiskelijatiedot.searchButton),
@@ -539,7 +530,6 @@
                         httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
                         httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                         httpFixtures().komoLocal.komoTiedot()
-                        koodistoFixtures()
                     },
                     input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                     click(opiskelijatiedot.searchButton),
@@ -563,7 +553,6 @@
                         httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
                         httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                         httpFixtures().komoLocal.komoTiedot()
-                        koodistoFixtures()
 
                         httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
                         httpFixtures().organisaatioService.pikkoloKoodi()
@@ -601,7 +590,6 @@
                         httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
                         httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                         httpFixtures().komoLocal.komoTiedot()
-                        koodistoFixtures()
 
                         httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
                         httpFixtures().organisaatioService.pikkoloKoodi()
@@ -638,7 +626,6 @@
                         httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
                         httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                         httpFixtures().komoLocal.komoTiedot()
-                        koodistoFixtures()
 
                         httpFixtures().organisaatioService.pikkaralaPikkoloOrganisaatioLista()
                         httpFixtures().organisaatioService.pikkoloKoodi()
@@ -834,7 +821,6 @@
                             httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
                             httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                             httpFixtures().komoLocal.komoTiedot()
-                            koodistoFixtures()
                         },
                         input(opiskelijatiedot.henkiloSearch, '123456-789'),
                         click(opiskelijatiedot.searchButton),
@@ -892,7 +878,6 @@
                             httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty(getCurrentYear())
                             httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeudetEmpty()
                             httpFixtures().komoLocal.komoTiedot()
-                            koodistoFixtures()
                         },
                         input(opiskelijatiedot.henkiloSearch, '123456-789'),
                         click(opiskelijatiedot.searchButton),
@@ -948,7 +933,6 @@
                             httpFixtures().luokkaTiedotLocal.aarnenLuokkaTiedotEmpty()
                             httpFixtures().opiskeluOikeudetLocal.aarnenOpiskeluOikeus()
                             httpFixtures().komoLocal.komoTiedot()
-                            koodistoFixtures()
                         },
                         input(opiskelijatiedot.henkiloSearch, '123456-789'),
                         click(opiskelijatiedot.searchButton),
