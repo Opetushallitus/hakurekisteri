@@ -15,6 +15,10 @@ app.factory "MuokkaaTiedot", [
           suoritukset: []
           luokkatiedot: []
           opiskeluoikeudet: []
+          vastaanotot: {
+            uudet: []
+            vanhat: []
+          }
           dataScopes: []
         $scope.myRoles = []
         $scope.luokkatasot = []
@@ -43,6 +47,7 @@ app.factory "MuokkaaTiedot", [
         )
 
         fetchOpiskeluoikeudet()
+        fetchVastaanottotiedot()
         initDatepicker()
 
       loadMenuTexts = (komo) ->
@@ -164,6 +169,24 @@ app.factory "MuokkaaTiedot", [
             messageKey: "suoritusrekisteri.muokkaa.suoritustietojenhakeminen"
           }).$promise
 
+      fetchVastaanottotiedot = ->
+        $http.get(window.url("valintarekisteri.vastaanottotiedot", henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((vastaanottotiedot) ->
+          $scope.henkilo.vastaanotot = vastaanottotiedot
+          if $scope.henkilo.vastaanotot.uudet
+            $scope.henkilo.vastaanotot.uudet.forEach (vastaanotto) ->
+              vastaanotto.vastaanottoaika = $scope.formatDateString(vastaanotto.vastaanottoaika)
+              return
+          if $scope.henkilo.vastaanotot.vanhat
+            $scope.henkilo.vastaanotot.vanhat.forEach (vastaanotto) ->
+              vastaanotto.vastaanottoaika = $scope.formatDateString(vastaanotto.vastaanottoaika)
+              return
+          return
+        ).error ->
+          MessageService.addMessage
+            type: "danger"
+            message: "Vastaanottotietojen hakeminen ei onnistunut. Yritä uudelleen?"
+            messageKey: "suoritusrekisteri.muokkaa.vastaanottotietojenhakeminen"
+
       fetchOpiskeluoikeudet = ->
         Opiskeluoikeudet.query { henkilo: henkiloOid }, (opiskeluoikeudet) ->
           $scope.henkilo.opiskeluoikeudet = opiskeluoikeudet
@@ -238,6 +261,16 @@ app.factory "MuokkaaTiedot", [
 
       $scope.removeDataScope = (scope) ->
         deleteFromArray scope, $scope.henkilo.dataScopes
+
+      $scope.parseDate = (input) ->
+        if input instanceof Date
+          input
+        else
+          new Date(Date.parse(input))
+
+      $scope.formatDateString = (input) ->
+        date = $scope.parseDate(input)
+        ""+date.getDate()+"."+(date.getMonth()+1)+"."+date.getFullYear()
 
       saveData = ->
         promises = []

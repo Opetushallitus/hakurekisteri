@@ -114,6 +114,60 @@
             </div>
         </section>
     </div>
+    <div ng-if="henkilo.vastaanotot">
+        <section ng-if="henkilo.vastaanotot.uudet && henkilo.vastaanotot.uudet.length > 0 " class="panel panel-default">
+            <header class="panel-heading">
+                <h2 oph-msg="suoritusrekisteri.muokkaa.vastaanotot.uudet"  class="panel-title">Korkeakouluopiskelupaikkojen uudet vastaanotot</h2>
+            </header>
+            <div class="panel-body">
+                <ul class="list-unstyled entrylist">
+                    <li ng-repeat="vastaanotto in henkilo.vastaanotot.uudet">
+                        <div class="row">
+                            <div class="col-sm-3"><strong
+                                    oph-msg="suoritusrekisteri.muokkaa.vastaanotot.haku">Haku</strong>
+
+                                <a class="test-vastaanottoUusiHaku" href="/tarjonta-app/#/haku/{{vastaanotto.hakuOid}}">{{vastaanotto.hakuOid}}</a>
+                            </div>
+                            <div class="col-sm-3"><strong
+                                    oph-msg="suoritusrekisteri.muokkaa.vastaanotot.hakukohde">Hakukohde</strong>
+                                <a class="test-vastaanottoUusiHakukohde" href="/tarjonta-app/#/hakukohde/{{vastaanotto.hakukohdeOid}}">{{vastaanotto.hakukohdeOid}}</a>
+                            </div>
+                            <div class="col-sm-2"><strong
+                                    oph-msg="suoritusrekisteri.muokkaa.vastaanotot.tila">Tila</strong>
+                                <div class="test-vastaanottoUusitila">{{vastaanotto.vastaanottotila}}</div>
+                            </div>
+                            <div class="col-sm-2"><strong
+                                    oph-msg="suoritusrekisteri.muokkaa.vastaanotot.paivamaara">Päivämäärä</strong>
+                                <div class="test-vastaanottoUusiPaivamaara">{{vastaanotto.vastaanottoaika}}</div>
+
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+        <section ng-if="henkilo.vastaanotot.vanhat && henkilo.vastaanotot.vanhat.length > 0 " class="panel panel-default">
+            <header class="panel-heading">
+                <h2 oph-msg="suoritusrekisteri.muokkaa.vastaanotot.vanhat"  class="panel-title">Korkeakouluopiskelupaikkojen vanhat vastaanotot</h2>
+            </header>
+            <div class="panel-body">
+                <ul class="list-unstyled entrylist">
+                    <li ng-repeat="vastaanotto in henkilo.vastaanotot.vanhat">
+                        <div class="row">
+                            <div class="col-sm-5"><strong
+                                    oph-msg="suoritusrekisteri.muokkaa.vastaanotot.hakukohde">Hakukohde</strong>
+                                <div class="test-vastaanottoVanhaHakukohde">{{vastaanotto.hakukohde}}</div>
+                            </div>
+                            <div class="col-sm-5"><strong
+                                    oph-msg="suoritusrekisteri.muokkaa.vastaanotot.paivamaara">Päivämäärä</strong>
+                                <div class="test-vastaanottoVanhaPaivamaara">{{vastaanotto.vastaanottoaika}}</div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </div>
     <div id="save-button" class="row">
         <button type="submit" ng-disabled="disableSave" class="btn btn-primary test-saveButton">
             <span oph-msg="suoritusrekisteri.muokkaa.tallenna">Tallenna</span>

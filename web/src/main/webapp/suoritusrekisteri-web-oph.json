@@ -20,6 +20,7 @@
     "authentication-service.henkilo": "/authentication-service/resources/henkilo/$1",
     "authentication-service.henkiloSearch": "/authentication-service/resources/henkilo",
     "authentication-service.henkilotByHenkiloOidList": "/authentication-service/resources/henkilo/henkilotByHenkiloOidList",
+    "valintarekisteri.vastaanottotiedot": "/vastaanottotiedot/$1",
     "lokalisointi.category": "/lokalisointi/cxf/rest/v1/localisation?category=$1",
     "lokalisointi.add": "/lokalisointi/cxf/rest/v1/localisation",
     "lokalisointi.update": "/lokalisointi/cxf/rest/v1/localisation/$1",
