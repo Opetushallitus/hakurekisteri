@@ -17,6 +17,7 @@ object ProxyServlets {
     context.mount(new OrganizationProxyServlet(proxies.organization, system), "/organisaatio-service")
     context.mount(new AuthenticationProxyServlet(proxies.authentication, system), "/authentication-service")
     context.mount(new KoodistoProxyServlet(proxies.koodisto, system), "/koodisto-service")
+    context.mount(new VastaanottotiedotProxyServlet(proxies.vastaanottotiedot, system), "/vastaanottotiedot")
     context.mount(new LocalizationMockServlet(system), "/lokalisointi")
     context.mount(new CasMockServlet(system), "/cas")
   }
@@ -67,6 +68,14 @@ class KoodistoProxyServlet(proxy: KoodistoProxy, system: ActorSystem) extends OP
     new AsyncResult() {
       val path = multiParams("captures").head
       val is = proxy.koodi(path).map(compact(_))
+    }
+  }
+}
+
+class VastaanottotiedotProxyServlet(proxy: VastaanottotiedotProxy, system: ActorSystem) extends OPHProxyServlet(system) with HakurekisteriJsonSupport {
+  get("/:personOid") {
+    new AsyncResult() {
+      val is = proxy.historia(params("personOid"))
     }
   }
 }
