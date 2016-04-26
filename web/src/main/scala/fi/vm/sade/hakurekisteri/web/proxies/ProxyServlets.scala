@@ -13,13 +13,15 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.ExecutionContext
 
 object ProxyServlets {
-  def mount(proxies: Proxies, context: ServletContext)(implicit system: ActorSystem) {
-    context.mount(new OrganizationProxyServlet(proxies.organization, system), "/organisaatio-service")
-    context.mount(new AuthenticationProxyServlet(proxies.authentication, system), "/authentication-service")
-    context.mount(new KoodistoProxyServlet(proxies.koodisto, system), "/koodisto-service")
+  def mount(mockMode: Boolean, proxies: Proxies, context: ServletContext)(implicit system: ActorSystem) {
+    if(mockMode) {
+      context.mount(new OrganizationProxyServlet(proxies.organization, system), "/organisaatio-service")
+      context.mount(new AuthenticationProxyServlet(proxies.authentication, system), "/authentication-service")
+      context.mount(new KoodistoProxyServlet(proxies.koodisto, system), "/koodisto-service")
+      context.mount(new LocalizationMockServlet(system), "/lokalisointi")
+      context.mount(new CasMockServlet(system), "/cas")
+    }
     context.mount(new VastaanottotiedotProxyServlet(proxies.vastaanottotiedot, system), "/vastaanottotiedot")
-    context.mount(new LocalizationMockServlet(system), "/lokalisointi")
-    context.mount(new CasMockServlet(system), "/cas")
   }
 }
 

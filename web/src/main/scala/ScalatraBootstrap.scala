@@ -77,8 +77,8 @@ class ScalatraBootstrap extends LifeCycle {
 
     if(config.mockMode) {
       servlets ::= (("/spec", "spec") -> new SpecResource(integrations.ytl))
-      ProxyServlets.mount(integrations.proxies, context)
     }
+    ProxyServlets.mount(config.mockMode, integrations.proxies, context)
 
     mountServlets(context)(servlets:_*)
 
