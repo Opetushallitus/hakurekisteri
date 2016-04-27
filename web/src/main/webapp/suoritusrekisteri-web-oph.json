@@ -26,6 +26,8 @@
     "lokalisointi.update": "/lokalisointi/cxf/rest/v1/localisation/$1",
     "haku-app.listshort": "/haku-app/applications/listshort",
     "haku-app.virkailija.hakemus": "/haku-app/virkailija/hakemus/$1",
+    "tarjonta-service.hakuById": "/tarjonta-service/rest/v1/haku/$1",
     "tarjonta-service.hakukohde": "/tarjonta-service/rest/v1/hakukohde/search",
+    "tarjonta-service.hakukohdeById": "/tarjonta-service/rest/v1/hakukohde/$1",
     "cas.myroles": "/cas/myroles"
 }

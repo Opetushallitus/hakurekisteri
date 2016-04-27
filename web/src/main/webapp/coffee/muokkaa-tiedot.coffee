@@ -175,6 +175,12 @@ app.factory "MuokkaaTiedot", [
           if $scope.henkilo.vastaanotot.opintopolku
             $scope.henkilo.vastaanotot.opintopolku.forEach (vastaanotto) ->
               vastaanotto.vastaanottoaika = $scope.formatDateString(vastaanotto.vastaanottoaika)
+              getHakuNimi $http, vastaanotto.hakuOid, (hakuNimi) ->
+                vastaanotto.haku = hakuNimi
+                return
+              getHakukohdeNimi $http, vastaanotto.hakukohdeOid, (hakukohdeNimi) ->
+                vastaanotto.hakukohde = hakukohdeNimi
+                return
               return
           if $scope.henkilo.vastaanotot.vanhat
             $scope.henkilo.vastaanotot.vanhat.forEach (vastaanotto) ->

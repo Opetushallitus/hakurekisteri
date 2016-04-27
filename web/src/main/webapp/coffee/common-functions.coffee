@@ -17,6 +17,24 @@ getKoulutusNimi = ($http, koulutusUri, successCallback, errorCallback) ->
     successCallback "").error(errorCallback)
   return
 
+getHakuNimi = ($http, hakuOid, successCallback) ->
+  $http.get(window.url("tarjonta-service.hakuById", hakuOid),
+    cache: true
+  ).success((json) ->
+    if json.result && json.result.nimi
+      return successCallback(json.result.nimi.kieli_fi)
+    successCallback "")
+  return
+
+getHakukohdeNimi = ($http, hakukohdeOid, successCallback) ->
+  $http.get(window.url("tarjonta-service.hakukohdeById", hakukohdeOid),
+    cache: true
+  ).success((json) ->
+    if json.result && json.result.hakukohteenNimet
+      return successCallback(json.result.hakukohteenNimet.kieli_fi)
+    successCallback "")
+  return
+
 getOphMsg = (key, def) ->
   if window.globalGetOphMsg
     window.globalGetOphMsg key, def

@@ -125,20 +125,19 @@
                         <div class="row">
                             <div class="col-sm-3"><strong
                                     oph-msg="suoritusrekisteri.muokkaa.vastaanotot.haku">Haku</strong>
-
-                                <a class="test-vastaanottoUusiHaku" href="/tarjonta-app/#/haku/{{vastaanotto.hakuOid}}">{{vastaanotto.hakuOid}}</a>
+                                <div class="test-vastaanottoOpintopolkuHaku">{{vastaanotto.haku || vastaanotto.hakuOid}}</div>
                             </div>
                             <div class="col-sm-3"><strong
                                     oph-msg="suoritusrekisteri.muokkaa.vastaanotot.hakukohde">Hakukohde</strong>
-                                <a class="test-vastaanottoUusiHakukohde" href="/tarjonta-app/#/hakukohde/{{vastaanotto.hakukohdeOid}}">{{vastaanotto.hakukohdeOid}}</a>
+                                <div class="test-vastaanottoOpintopolkuHakukohde">{{vastaanotto.hakukohde || vastaanotto.hakukohdeOid}}</div>
                             </div>
                             <div class="col-sm-2"><strong
                                     oph-msg="suoritusrekisteri.muokkaa.vastaanotot.tila">Tila</strong>
-                                <div class="test-vastaanottoUusitila" oph-msg="suoritusrekisteri.muokkaa.vastaanotot.tila.{{vastaanotto.vastaanottoAction}}">{{vastaanotto.vastaanottoAction}}</div>
+                                <div class="test-vastaanottoOpintopolkuTila" oph-msg="suoritusrekisteri.muokkaa.vastaanotot.tila.{{vastaanotto.vastaanottoAction}}">{{vastaanotto.vastaanottoAction}}</div>
                             </div>
                             <div class="col-sm-2"><strong
                                     oph-msg="suoritusrekisteri.muokkaa.vastaanotot.paivamaara">Päivämäärä</strong>
-                                <div class="test-vastaanottoUusiPaivamaara">{{vastaanotto.vastaanottoaika}}</div>
+                                <div class="test-vastaanottoOpintopolkuPaivamaara">{{vastaanotto.vastaanottoaika}}</div>
 
                             </div>
                         </div>

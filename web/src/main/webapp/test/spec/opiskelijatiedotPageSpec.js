@@ -55,6 +55,7 @@
             addTestHook(lokalisointiFixtures)()
             addTestHook(koodistoFixtures)()
             addTestHook(vastaanottotiedotFixtures)()
+            addTestHook(tarjontaNimiFixtures().hakuJaHakukohde(true))()
             page.openPage(done)
         })
 
