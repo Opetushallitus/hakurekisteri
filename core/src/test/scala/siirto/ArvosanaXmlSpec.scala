@@ -29,7 +29,7 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
       henkilo(
         jaaLuokalle
       )
-    ) should abideSchemas
+    ) should not (abideSchemas)
   }
 
   it should "mark perusopetuksen keskettanyt as valid" in {

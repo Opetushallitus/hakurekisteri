@@ -19,7 +19,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
   def oletettuValmistuminen = DateTimeFormat.forPattern("yyyy-MM-dd").print(DayFinder.saturdayOfWeek22(LocalDate.now().getYear + 1))
   def oletettuValmistuminenFinDate = DateTimeFormat.forPattern("dd.MM.yyyy").print(DayFinder.saturdayOfWeek22(LocalDate.now().getYear + 1))
 
-  it should "convert an arvosanat row with hetu into valid xml (jää luokalle)" in {
+  it should "convert an arvosanat row with hetu into invalid xml (jää luokalle)" in {
     val wb = WorkbookData(
       "perusopetus" ->
         s"""
@@ -28,7 +28,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
         """
     ).toExcel
 
-    val valid = <arvosanat>
+    val invalid = <arvosanat>
       <eranTunniste>balaillaan</eranTunniste>
       <henkilot>
         <henkilo>
@@ -48,7 +48,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
       </henkilot>
     </arvosanat>
 
-    wb should convertValidlyTo(valid)
+    wb should not (convertValidlyTo(invalid))
   }
 
 
