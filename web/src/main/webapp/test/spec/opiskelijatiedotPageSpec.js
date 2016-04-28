@@ -11,9 +11,7 @@
 
     function assertArvosanat(aineRiviCount, aineCount, korotusDateCount, pakollisetCount, valinnaisetCount) {
         expect(opiskelijatiedot.arvosanaAineRivi().length).to.equal(aineRiviCount)
-        expect(jQuery.unique(jQuery.map(opiskelijatiedot.arvosanaAineNimi(), function (e) {
-            return jQuery(e).text()
-        })).length).to.equal(aineCount)
+        expect(jQuery.unique(textArray(opiskelijatiedot.arvosanaAineNimi)).length).to.equal(aineCount)
         expect(opiskelijatiedot.arvosanaMyonnetty().length).to.equal(korotusDateCount)
         expect(opiskelijatiedot.arvosanaPakollinenArvosana().length).to.equal(pakollisetCount)
         expect(opiskelijatiedot.arvosanaValinnainenArvosana().filter(nonEmpty).length).to.equal(valinnaisetCount)
