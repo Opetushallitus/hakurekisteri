@@ -19,6 +19,18 @@
         expect(opiskelijatiedot.arvosanaValinnainenArvosana().filter(nonEmpty).length).to.equal(valinnaisetCount)
     }
 
+    function assertOpintopolkuVastaanotot(haut, hakukohteet, tilat, paivamaarat) {
+        expect(textArray(opiskelijatiedot.vastaanottoOpintopolkuHaku)).to.deep.equal(haut)
+        expect(textArray(opiskelijatiedot.vastaanottoOpintopolkuHakukohde)).to.deep.equal(hakukohteet)
+        expect(textArray(opiskelijatiedot.vastaanottoOpintopolkuTila)).to.deep.equal(tilat)
+        expect(textArray(opiskelijatiedot.vastaanottoOpintopolkuPaivamaara)).to.deep.equal(paivamaarat)
+    }
+
+    function assertVanhatVastaanotot(hakukohteet, paivamaarat) {
+        expect(textArray(opiskelijatiedot.vastaanottoVanhaHakukohde)).to.deep.equal(hakukohteet)
+        expect(textArray(opiskelijatiedot.vastaanottoVanhaPaivamaara)).to.deep.equal(paivamaarat)
+    }
+
     function nonEmpty(i, e) {
         return jQuery(e).text().trim().length > 0
     }
@@ -55,7 +67,7 @@
             addTestHook(lokalisointiFixtures)()
             addTestHook(koodistoFixtures)()
             addTestHook(vastaanottotiedotFixtures)()
-            addTestHook(tarjontaNimiFixtures().hakuJaHakukohde(true))()
+            addTestHook(tarjontaNimiFixtures)()
             page.openPage(done)
         })
 
@@ -287,7 +299,7 @@
             }
 
             describe('Vahvistetut', function () {
-                describe('Opiskelijan peruskoulun suoritukset, ainelista, arvosanat, luokkatiedot ja opintooikeudet', function() {
+                describe('Opiskelijan peruskoulun suoritukset, ainelista, arvosanat, luokkatiedot, opintooikeudet ja vastaanotot', function() {
                     beforeEach(seqDone(
                         wait.forAngular,
                         function () {
@@ -335,6 +347,11 @@
                             assertArvosanaRivi("A1-kieli", "", "englanti", ["9"], [])
                             assertArvosanaRivi("Matematiikka", "", "", ["6"], [])
                             assertArvosanaRivi("Matematiikka", "04.06.2015", "", ["10"], ["9"])
+                            assertOpintopolkuVastaanotot(['Testihaku', '1.2.246.561.29.00000000002'],
+                                                         ['Testi hakukohde', '1.2.246.561.20.00000000002'],
+                                                         ['VastaanotaEhdollisesti', 'VastaanotaSitovasti'],
+                                                         ['1.7.2015', '1.7.2014'])
+                            assertVanhatVastaanotot(["Vanhan hakukohteen nimi:101"], ["19.6.2014"])
                         },
                         saveDisabled()
                     ))

@@ -28,6 +28,12 @@ function Button(el) {
     }
 }
 
+function textArray(selector) {
+    return jQuery.map(selector(), function (e) {
+        return jQuery(e).text()
+    })
+}
+
 function S(selector) {
     try {
         if (!testFrame() || !testFrame().jQuery) {
