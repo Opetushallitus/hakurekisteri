@@ -43,10 +43,10 @@ app.controller "MuokkaaSuoritus", [
         if(!updateOnly)
           MessageService.addMessage
             type: "danger"
-            messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja"
-            message: "Virhe tallennettaessa suoritustietoja."
-            descriptionKey: "suoritusrekisteri.muokkaa.yoarvosana.ohje"
-            description: "Alla voit lisätä ennen vuotta 1990 myönnettyjä YO-arvosanoja."
+            messageKey: "suoritusrekisteri.muokkaa.valmistuminen"
+            message: "Valmistumispäivä puuttuu tai se on virheellinen."
+            descriptionKey: "suoritusrekisteri.muokkaa.tarkistavalmistuminen"
+            description: "Tarkista valmistumispäivä ja yritä uudelleen."
           d.reject "validationerror"
       else
         $scope.suoritus.valmistuminen = $scope.info.valmistuminen
