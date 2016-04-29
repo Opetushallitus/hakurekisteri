@@ -122,10 +122,10 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "preference1-discretionary-follow-up" -> "sosiaalisetsyyt",
           "preference1_urheilijan_ammatillisen_koulutuksen_lisakysymys" -> "true",
           "preference1_kaksoistutkinnon_lisakysymys" -> "true")),
-        lisatiedot = Some(
-          Lisatiedot(
-            lupaMarkkinointi = Some("true"),
-            lupaJulkaisu = Some("true"))))),
+        lisatiedot = Some(Map(
+          "lupaMarkkinointi" -> "true",
+          "lupaJulkaisu-id" -> "true",
+          "kiinnostunutoppisopimuksesta" -> "true")))),
     state = Some("ACTIVE"),
     preferenceEligibilities = Seq(PreferenceEligibility("1.11.1", "NOT_CHECKED", Some("UNKNOWN")), PreferenceEligibility("1.11.2", "NOT_CHECKED", Some("UNKNOWN")))
   )
@@ -216,10 +216,10 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "preference1-discretionary-follow-up" -> "oppimisvaikudet",
           "preference1_urheilijan_ammatillisen_koulutuksen_lisakysymys" -> "true",
           "preference1_kaksoistutkinnon_lisakysymys" -> "true")),
-        lisatiedot = Some(
-          Lisatiedot(
-            lupaMarkkinointi = Some("true"),
-            lupaJulkaisu = Some("true"))))),
+        lisatiedot = Some(Map(
+          "lupaMarkkinointi" -> "true",
+          "lupaJulkaisu-id" -> "true",
+          "kiinnostunutoppisopimuksesta" -> "true")))),
     state = Some("INCOMPLETE"),
     preferenceEligibilities = Seq()
   )
@@ -250,6 +250,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
             syntymaaika = Some("20.03.1994"),
             onkoSinullaSuomalainenHetu = Some("true"),
             koulusivistyskieli = Some("FI"),
+            huoltajannimi=Some("huoltajannimi"),
             turvakielto = None)),
         koulutustausta = Some(
           Koulutustausta(
@@ -310,10 +311,114 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
           "preference1-discretionary-follow-up" -> "oppimisvaikudet",
           "preference1_urheilijan_ammatillisen_koulutuksen_lisakysymys" -> "true",
           "preference1_kaksoistutkinnon_lisakysymys" -> "true")),
-        lisatiedot = Some(
-          Lisatiedot(
-            lupaMarkkinointi = Some("true"),
-            lupaJulkaisu = Some("true"))))),
+        lisatiedot = Some(Map(
+          "lupaMarkkinointi" -> "true",
+          "lupaJulkaisu-id" -> "true",
+          "kiinnostunutoppisopimuksesta" -> "true")))),
+    state = Some("INCOMPLETE"),
+    preferenceEligibilities = Seq()
+  )
+
+  object FullHakemus4 extends FullHakemus("1.25.2", Some("1.24.2"), "1.2",
+    answers = Some(
+      HakemusAnswers(
+        osaaminen = None,
+        henkilotiedot = Some(
+          HakemusHenkilotiedot(
+            kansalaisuus =  Some("FIN"),
+            asuinmaa = Some("NAN"),
+            matkapuhelinnumero1 = Some("0401234567"),
+            matkapuhelinnumero2 = None,
+            Sukunimi = Some("Mäkinen"),
+            Henkilotunnus = Some("200394-9839"),
+            Postinumero = None,
+            Postitoimipaikka = None,
+            osoiteUlkomaa = Some("Passeig Calvel 45"),
+            postinumeroUlkomaa = Some("VUORI6"),
+            kaupunkiUlkomaa = Some("Parc la Vuori"),
+            lahiosoite = None,
+            sukupuoli = Some("1"),
+            Sähköposti = Some("mikko@testi.oph.fi"),
+            Kutsumanimi = Some("Mikko"),
+            Etunimet = Some("Mikko"),
+            kotikunta = None,
+            aidinkieli = Some("FI"),
+            syntymaaika = Some("20.03.1994"),
+            onkoSinullaSuomalainenHetu = Some("true"),
+            koulusivistyskieli = Some("FI"),
+            huoltajannimi=Some("huoltajannimi"),
+            turvakielto = None)),
+        koulutustausta = Some(
+          Koulutustausta(
+            pohjakoulutus_muu_vuosi = None,
+            perusopetuksen_kieli = None,
+            lukion_kieli = None,
+            pohjakoulutus_yo_vuosi = None,
+            pohjakoulutus_am_vuosi = None,
+            pohjakoulutus_amt_vuosi = None,
+            pohjakoulutus_kk_pvm = None,
+            pohjakoulutus_ulk_vuosi = None,
+            PK_PAATTOTODISTUSVUOSI = Some("2014"),
+            KYMPPI_PAATTOTODISTUSVUOSI = None,
+            POHJAKOULUTUS = Some("1"),
+            lahtokoulu = Some(OppilaitosY.oid),
+            luokkataso = Some("9"),
+            LISAKOULUTUS_KYMPPI = None,
+            LISAKOULUTUS_VAMMAISTEN = None,
+            LISAKOULUTUS_TALOUS = None,
+            LISAKOULUTUS_AMMATTISTARTTI = None,
+            LISAKOULUTUS_KANSANOPISTO = None,
+            LISAKOULUTUS_MAAHANMUUTTO = None,
+            LISAKOULUTUS_MAAHANMUUTTO_LUKIO = None,
+            lahtoluokka = Some("9A"),
+            lukioPaattotodistusVuosi = None,
+            pohjakoulutus_yo = None,
+            pohjakoulutus_am = Some("true"),
+            pohjakoulutus_amt = None,
+            pohjakoulutus_kk = None,
+            pohjakoulutus_avoin = None,
+            pohjakoulutus_ulk = None,
+            pohjakoulutus_muu = None,
+            aiempitutkinto_korkeakoulu = None,
+            aiempitutkinto_tutkinto = None,
+            aiempitutkinto_vuosi = None,
+            suoritusoikeus_tai_aiempi_tutkinto = None,
+            suoritusoikeus_tai_aiempi_tutkinto_vuosi = None
+          )),
+        hakutoiveet =  Some(Map(
+          "preference2-Opetuspiste" -> "Ammattikoulu Lappi2",
+          "preference2-Opetuspiste-id" -> "1.10.3",
+          "preference2-Opetuspiste-id-parents" -> "1.10.3,1.2.246.562.10.00000000001",
+          "preference2-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)4",
+          "preference2-Koulutus-id" -> "1.11.2",
+          "preference2-Koulutus-id-aoIdentifier" -> "000",
+          "preference2-Koulutus-id-educationcode" -> "koulutus_321204",
+          "preference2-Koulutus-id-lang" -> "FI",
+          "preference1-Opetuspiste" -> "Ammattikoulu Lappi",
+          "preference1-Opetuspiste-id" -> "1.10.3",
+          "preference1-Opetuspiste-id-parents" -> "1.10.3,1.2.246.562.10.00000000001",
+          "preference1-Koulutus" -> "Musiikin koulutusohjelma, pk (Musiikkialan perustutkinto)",
+          "preference1-Koulutus-id" -> "1.11.1",
+          "preference1-Koulutus-id-aoIdentifier" -> "460",
+          "preference1-Koulutus-id-educationcode" -> "koulutus_321204",
+          "preference1-Koulutus-id-lang" -> "FI",
+          "preference1-Koulutus-id-sora" -> "true",
+          "preference1_sora_terveys" -> "true",
+          "preference1_sora_oikeudenMenetys" -> "true",
+          "preference1-discretionary-follow-up" -> "sosiaalisetsyyt",
+          "preference1_urheilijan_ammatillisen_koulutuksen_lisakysymys" -> "true",
+          "preference1_kaksoistutkinnon_lisakysymys" -> "true",
+          "lisakysymys1" -> "option_0",
+          "lisakysymys2-option_0" -> "",
+          "lisakysymys2-option_1" -> "true",
+          "lisakysymys3" -> "Tekstikysymys")),
+        lisatiedot = Some(Map(
+          "lupaMarkkinointi" -> "true",
+          "lupaJulkaisu-id" -> "true",
+          "hojks" -> "true",
+          "koulutuskokeilu" -> "false",
+          "miksi_ammatilliseen" -> "Siksi ammatilliseen",
+          "kiinnostunutoppisopimuksesta" -> "true")))),
     state = Some("INCOMPLETE"),
     preferenceEligibilities = Seq()
   )
@@ -403,8 +508,9 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout = Timeout(60, TimeUnit.SECONDS)
 
-  object hakupalvelu extends Hakupalvelu {
+  object Hakupalvelu extends Hakupalvelu {
     var tehdytHakemukset: Seq[FullHakemus] = Seq()
+    var lisakysymykset: Map[String, ThemeQuestion] = Map()
 
     override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = q.organisaatio match {
       case Some(org) => {
@@ -416,7 +522,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
     val haku = Haku(Kieliversiot(Some("haku"), None, None), "1.2", Ajanjakso(new DateTime(), InFuture), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), false, None)
 
     def hakijat: Seq[Hakija] = {
-      tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku))
+      tehdytHakemukset.map(h => AkkaHakupalvelu.getHakija(h, haku, lisakysymykset, Option.empty))
     }
 
     def find(q: HakijaQuery): Future[Seq[ListHakemus]] = q.organisaatio match {
@@ -435,12 +541,16 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
       case default => Future(None)
     }
 
-    def is(token:Any) = token match {
+    def is(token:Any): Unit = token match {
       case notEmpty => has(FullHakemus1, FullHakemus2)
     }
 
-    def has(hakemukset: FullHakemus*) = {
+    def has(hakemukset: FullHakemus*): Unit = {
       tehdytHakemukset = hakemukset
+    }
+
+    def withLisakysymykset (lisakysymykset: Map[String, ThemeQuestion]): Unit = {
+      this.lisakysymykset = lisakysymykset
     }
   }
 
@@ -526,7 +636,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   object testHakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger
 
-    val hakijaActor = system.actorOf(Props(new HakijaActor(hakupalvelu, organisaatioActor, koodistoActor, sijoittelu)))
+    val hakijaActor = system.actorOf(Props(new HakijaActor(Hakupalvelu, organisaatioActor, koodistoActor, sijoittelu)))
 
     def get(q: HakijaQuery) = {
       hakijaActor ? q

@@ -18,5 +18,12 @@ case class Henkilo(hetu: String,
                    kansalaisuus: String,
                    asiointiKieli: String,
                    eiSuomalaistaHetua: Boolean,
-                   markkinointilupa: Option[Boolean])
+                   markkinointilupa: Option[Boolean],
+                   kiinnostunutoppisopimuksesta: Option[Boolean],
+                   huoltajannimi: String,
+                   huoltajanpuhelinnumero: String,
+                   huoltajansahkoposti: String,
+                   lisakysymykset: Seq[Lisakysymys])
 
+case class Lisakysymys(kysymysid: String, kysymystyyppi: String, kysymysteksti: String, vastaukset: Seq[LisakysymysVastaus])
+case class LisakysymysVastaus(vastausid: Option[String], vastausteksti: String)

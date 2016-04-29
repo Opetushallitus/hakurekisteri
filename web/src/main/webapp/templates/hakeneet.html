@@ -73,6 +73,17 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <label for="rajapinnanVersio"
+                           oph-msg="suoritusrekisteri.hakeneet.rajapinnanVersio"
+                           class="col-sm-2 control-label">Rajapinnan versio</label>
+
+                    <div class="col-sm-4">
+                        <select id="rajapinnanVersio"
+                                ng-model="rajapinnanVersio" ng-options="v.value as v.text for v in rajapinnanVersiot"
+                                class="form-control"></select>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label for="tiedostotyyppi" oph-msg="suoritusrekisteri.hakeneet.tyyppi"
                            class="col-sm-2 control-label">Tiedostotyyppi</label>
 
