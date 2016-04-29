@@ -50,7 +50,8 @@ app.controller "MuokkaaSuoritus", [
             description: "Tarkista valmistumispäivä ja yritä uudelleen."
           d.reject "validationerror"
       else
-        $scope.suoritus.valmistuminen = $scope.info.valmistuminen
+        if($scope.parseFinDate($scope.suoritus.valmistuminen).getTime() != $scope.info.valmistuminen.getTime())
+          $scope.suoritus.valmistuminen = $scope.info.valmistuminen
         d.resolve "pvm ok"
       [d.promise]
 
