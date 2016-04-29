@@ -35,7 +35,8 @@ app.controller "MuokkaaSuoritus", [
 
     $scope.validateData = (updateOnly) ->
       $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel($scope.info, $scope.suoritus, !updateOnly)
-      $scope.validateValmistuminen(updateOnly)
+      if $scope.info.editable
+        $scope.validateValmistuminen(updateOnly)
 
     $scope.validateValmistuminen = (updateOnly) ->
       d = $q.defer()
@@ -104,6 +105,13 @@ app.controller "MuokkaaSuoritus", [
       else if input
         parts = input.split('.')
         new Date(parts[2], parts[1]-1, parts[0])
+
+    $scope.showValmistuminenFormatted = ->
+      $scope.formatDateNoZeroPaddedNumbers($scope.info.valmistuminen)
+
+    $scope.formatDateNoZeroPaddedNumbers = (input) ->
+      date = $scope.parseFinDate(input)
+      ""+date.getDate()+"."+(date.getMonth()+1)+"."+date.getFullYear()
 
     modifiedCache = changeDetection($scope.suoritus)
     $scope.info = {}
