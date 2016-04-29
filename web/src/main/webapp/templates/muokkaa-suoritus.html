@@ -45,12 +45,12 @@
             oph-msg="suoritusrekisteri.muokkaa.valmistumispaiva">Valmistumispäivä</strong>
 
         <div ng-show="info.editable" class="input-group">
-            <input type="text" ng-disabled="info.delete || (suoritus.id && !isOPH())" ng-model="info.valmistuminen" max-date="info.maxDate"
+            <input type="text" ng-disabled="info.delete || (suoritus.id && ( !isOPH() && !isKK()))" ng-model="info.valmistuminen" max-date="info.maxDate"
                    title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)" datepicker-popup="{{format}}"
                    datepicker-options="dateOptions" datepicker-append-to-body="true" is-open="valmistuminenOpen"
                    ng-click="valmistuminenOpen = true" show-button-bar="false" customdateparser
                    class="form-control input-sm datepicker test-suoritusValmistuminen"/><span class="input-group-btn">
-        <button type="button" ng-disabled="info.delete || (suoritus.id && !isOPH())" ng-click="info.valmistuminen = null" class="btn btn-default btn-sm"><span
+        <button type="button" ng-disabled="info.delete || (suoritus.id && ( !isOPH() && !isKK()))" ng-click="info.valmistuminen = null" class="btn btn-default btn-sm"><span
                 class="glyphicon glyphicon-remove"></span></button></span>
         </div>
         <div ng-hide="info.editable" class="test-suoritusValmistuminen">{{info.valmistuminen}}</div>

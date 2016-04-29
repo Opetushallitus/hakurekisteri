@@ -201,6 +201,16 @@ app.factory "MuokkaaTiedot", [
       ).error ->
         $log.error "cannot connect to CAS"
 
+      $scope.isKK = () -> false
+      $http.get(window.url("cas.myroles"), {cache: true}).success((data) ->
+        $scope.myRoles = angular.fromJson(data)
+        if Array.isArray($scope.myRoles)
+          $scope.isKK = () ->
+            ( $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_CRUD") > -1 or $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE") > -1 ) and
+            ( $scope.myRoles.indexOf("APP_KKHAKUVIRKAILIJA_CRUD") > -1 or $scope.myRoles.indexOf("APP_KKHAKUVIRKAILIJA_READ_UPDATE") > -1 )
+      ).error ->
+        $log.error "cannot connect to CAS"
+
       $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel = (info, model, validateError) ->
         if model.vahvistettu and not info["delete"] and info.editable and not (model.komo and model.komo is $scope.komo.ylioppilastutkinto)
           d = $q.defer()
