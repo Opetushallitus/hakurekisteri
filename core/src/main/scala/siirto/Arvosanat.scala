@@ -1,6 +1,5 @@
 package siirto
 
-import fi.vm.sade.hakurekisteri.suoritus.DayFinder
 import fi.vm.sade.hakurekisteri.suoritus.DayFinder.saturdayOfWeek22
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
@@ -519,10 +518,6 @@ object ArvosanatV2 extends SchemaDefinition {
               <xs:element name="opetuspaattynyt" type="valmistuvanPaivaysType" maxOccurs="1" minOccurs="1"/>
               <xs:element name="eivalmistu" type="EiValmistuType" maxOccurs="1" minOccurs="1"/>
             </xs:sequence>
-            <xs:sequence>
-              <xs:element name="oletettuvalmistuminen" type="luokalleJaavanPaivaysType" maxOccurs="1" minOccurs="1"/>
-              <xs:element name="valmistuminensiirtyy" type="EiValmistuJaaLuokalleType"  maxOccurs="1" minOccurs="1"/>
-            </xs:sequence>
           </xs:choice>
         </xs:extension>
       </xs:complexContent>
@@ -630,12 +625,6 @@ object ArvosanatV2 extends SchemaDefinition {
       </xs:restriction>
     </xs:simpleType>
 
-    <xs:simpleType name="EiValmistuJaaLuokalleType">
-      <xs:restriction base="xs:string">
-        <xs:enumeration value="JAA LUOKALLE"/>
-      </xs:restriction>
-    </xs:simpleType>
-
     <xs:simpleType name="EiValmistuLisaType">
       <xs:restriction base="xs:string">
         <xs:enumeration value="SUORITUS HYLATTY"/>
@@ -680,12 +669,6 @@ object ArvosanatV2 extends SchemaDefinition {
     <xs:simpleType name="valmistuvanPaivaysType">
       <xs:restriction base="xs:date">
         <xs:maxInclusive value={DateTimeFormat.forPattern("yyyy-MM-dd").print(saturdayOfWeek22(LocalDate.now().getYear))}/>
-      </xs:restriction>
-    </xs:simpleType>
-
-    <xs:simpleType name="luokalleJaavanPaivaysType">
-      <xs:restriction base="xs:date">
-        <xs:minInclusive value={DateTimeFormat.forPattern("yyyy-MM-dd").print(LocalDate.now().withMonthOfYear(8).withDayOfMonth(1))}/>
       </xs:restriction>
     </xs:simpleType>
 

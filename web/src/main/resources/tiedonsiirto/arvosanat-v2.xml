@@ -140,19 +140,5 @@
                 </valma>
             </todistukset>
         </henkilo>
-        <henkilo>
-            <oppijanumero>1.2.246.562.24.esimerkki</oppijanumero>
-            <sukunimi>Oppijanumerollinen</sukunimi>
-            <etunimet>Juha Jaakko</etunimet>
-            <kutsumanimi>Jaakko</kutsumanimi>
-            <todistukset>
-                <perusopetus>
-                    <myontaja>05127</myontaja>
-                    <suorituskieli>FI</suorituskieli>
-                    <oletettuvalmistuminen>2017-06-01</oletettuvalmistuminen>
-                    <valmistuminensiirtyy>JAA LUOKALLE</valmistuminensiirtyy>
-                </perusopetus>
-            </todistukset>
-        </henkilo>
     </henkilot>
 </arvosanat>
