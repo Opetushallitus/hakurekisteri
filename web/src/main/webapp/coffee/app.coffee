@@ -178,7 +178,6 @@ app.directive 'datepickerPopup', ->
       $controller.$formatters.shift()
   }
 
-
 app.directive "tiedonsiirtomenu", ->
   return {
     controller: ($scope, $location) ->
