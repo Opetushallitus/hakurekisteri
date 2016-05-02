@@ -76,6 +76,14 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
     }
   }
 
+  test("OppijaResource should not return ensikertalaisuus when haku parameter is not given") {
+    get("/1.2.246.562.24.00000000001") {
+      response.status should be(OK)
+
+      body should not include("\"ensikertalainen\":")
+    }
+  }
+
   test("OppijaResource should not cache ensikertalaisuus") {
     valintarekisteri.underlyingActor.requestCount = 0
     get("/?haku=1.2.246.562.6.00000000001") {

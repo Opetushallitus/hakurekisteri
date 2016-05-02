@@ -73,7 +73,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     val t0 = Platform.currentTime
     implicit val user = getUser
     val personOid = params("oid")
-    val hakuOid = params("haku")
+    val hakuOid = params.get("haku")
 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
@@ -98,7 +98,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
-      private val oppijat = fetchOppijat(henkilot, hakuOid)
+      private val oppijat = fetchOppijat(henkilot, Some(hakuOid))
 
       logQuery(henkilot, t0, oppijat)
 

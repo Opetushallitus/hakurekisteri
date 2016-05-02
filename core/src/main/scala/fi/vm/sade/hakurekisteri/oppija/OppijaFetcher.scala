@@ -34,14 +34,14 @@ trait OppijaFetcher {
 
   def fetchOppijatFor(hakemukset: Seq[FullHakemus], hakuOid: String)(implicit user: User): Future[Seq[Oppija]] = {
     val persons = extractPersons(hakemukset)
-    fetchOppijat(persons, hakuOid)
+    fetchOppijat(persons, Some(hakuOid))
   }
 
-  def fetchOppijat(persons: Set[String], hakuOid: String)(implicit user: User): Future[Seq[Oppija]] = {
+  def fetchOppijat(persons: Set[String], hakuOid: Option[String])(implicit user: User): Future[Seq[Oppija]] = {
     enrichWithEnsikertalaisuus(getRekisteriData(persons), hakuOid)
   }
 
-  def fetchOppija(person: String, hakuOid: String)(implicit user: User): Future[Oppija] = {
+  def fetchOppija(person: String, hakuOid: Option[String])(implicit user: User): Future[Oppija] = {
     fetchOppijat(Set(person), hakuOid).map(_.head)
   }
 
@@ -52,8 +52,9 @@ trait OppijaFetcher {
     ) yield hakemus.personOid.get).toSet
 
   private def enrichWithEnsikertalaisuus(rekisteriData: Future[Seq[Oppija]],
-                                         hakuOid: String)(implicit user: User): Future[Seq[Oppija]] = {
-    rekisteriData.flatMap(fetchEnsikertalaisuudet(hakuOid))
+                                         hakuOid: Option[String])(implicit user: User): Future[Seq[Oppija]] = hakuOid match {
+    case Some(haku) => rekisteriData.flatMap(fetchEnsikertalaisuudet(haku))
+    case None => rekisteriData
   }
 
   def getRekisteriData(personOids: Set[String])(implicit user: User): Future[Seq[Oppija]] = {

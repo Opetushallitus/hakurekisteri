@@ -40,11 +40,11 @@ trait OppijaSwaggerApi
 
   val read = apiOperation[Oppija]("haeOppija")
     .summary("näyttää yhden oppijan tiedot")
-    .notes("Näyttää yhden oppijan tiedot oppijanumeron perusteella.")
+    .notes("Näyttää yhden oppijan tiedot oppijanumeron perusteella. Jos haun oidia ei anneta parametrinä, ensikertalaisuus-tietoa ei palauteta.")
     .parameter(pathParam[String]("oid")
       .description("oppijanumero").required)
     .parameter(queryParam[String]("haku")
-      .description("haun oid").required)
+      .description("haun oid").optional)
     .responseMessage(ModelResponseMessage(400, "[invalid parameter description]"))
     .responseMessage(ModelResponseMessage(404, "haku not found"))
     .responseMessage(ModelResponseMessage(500, "virta error"))
