@@ -21,11 +21,7 @@ class ValintarekisteriActor(restClient: VirkailijaRestClient, config: Config) ex
   }
 
   def fetchEnsimmainenVastaanotto(henkiloOids: Set[String], koulutuksenAlkamiskausi: String): Future[Seq[EnsimmainenVastaanotto]] = {
-    if (henkiloOids.size == 1) {
-      restClient.readObject[EnsimmainenVastaanotto]("valintarekisteri.single-ensikertalaisuus", henkiloOids.head, koulutuksenAlkamiskausi)(ok, maxRetries = 3).map(Seq(_))
-    } else {
-      restClient.postObject[Set[String], Seq[EnsimmainenVastaanotto]]("valintarekisteri.ensikertalaisuus", koulutuksenAlkamiskausi)(ok, henkiloOids)
-    }
+    restClient.postObject[Set[String], Seq[EnsimmainenVastaanotto]]("valintarekisteri.ensikertalaisuus", koulutuksenAlkamiskausi)(ok, henkiloOids)
   }
 }
 
