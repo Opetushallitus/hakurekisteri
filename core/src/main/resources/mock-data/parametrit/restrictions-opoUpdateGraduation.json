@@ -1,0 +1,21 @@
+{
+  "__modifiedBy__": "1.2.246.562.24.00000000001",
+  "__modified__": 1462258265587,
+  "opoUpdateGraduation": [
+    {
+      "dateEnd": 1,
+      "dateStart": 0
+    },
+    {
+      "dateEnd": 4133894400000,
+      "dateStart": 10
+    }
+  ],
+  "inactiveRestriction": [
+    {
+      "dateEnd": 1,
+      "dateStart": 0
+    }
+  ],
+  "target": "restrictedperiods"
+}
