@@ -123,7 +123,7 @@ class BaseIntegrations(rekisterit: Registers,
     apiVersion = config.properties.getOrElse("suoritusrekisteri.virta.apiversio", VirtaClient.version105)
   )(virtaEc, system)
   val virta = system.actorOf(Props(new VirtaActor(virtaClient, organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
-  val proxies = new HttpProxies(henkiloClient, koodistoClient, organisaatioClient)
+  val proxies = new HttpProxies(henkiloClient, koodistoClient, organisaatioClient, valintarekisteriClient)
 
   hakemukset ! IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
 

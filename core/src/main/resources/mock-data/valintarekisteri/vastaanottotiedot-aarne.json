@@ -1,0 +1,3 @@
+{"opintopolku":[{"personOid":"1.2.246.562.24.71944845619","hakuOid":"1.2.246.561.29.00000000001","hakukohdeOid":"1.2.246.561.20.00000000001","vastaanottoAction":"VastaanotaEhdollisesti","vastaanottoaika":"2015-07-01T13:00:10Z"},
+                {"personOid":"1.2.246.562.24.71944845619","hakuOid":"1.2.246.561.29.00000000002","hakukohdeOid":"1.2.246.561.20.00000000002","vastaanottoAction":"VastaanotaSitovasti","vastaanottoaika":"2014-07-01T13:00:10Z"}],
+ "vanhat":[{"personOid":"1.2.246.562.24.71944845619","hakukohde":"Vanhan hakukohteen nimi:101","vastaanottoaika":"2014-06-19T13:00:10Z"}]}

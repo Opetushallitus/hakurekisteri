@@ -7,6 +7,7 @@ trait Proxies {
   def koodisto: KoodistoProxy
   def authentication: AuthenticationProxy
   def organization: OrganizationProxy
+  def vastaanottotiedot: VastaanottotiedotProxy
 }
 
 trait KoodistoProxy {
@@ -22,4 +23,8 @@ trait AuthenticationProxy {
 trait OrganizationProxy {
   def search(query: AnyRef): Future[String]
   def get(oid: String): Future[String]
+}
+
+trait VastaanottotiedotProxy {
+  def historia(henkiloOid: String): Future[String]
 }

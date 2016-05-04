@@ -5,7 +5,7 @@ import fi.vm.sade.properties.UrlUtils
 import org.json4s._
 import scala.concurrent.Future
 
-class HttpProxies(authenticationClient: VirkailijaRestClient, koodistoClient: VirkailijaRestClient, organizationClient: VirkailijaRestClient) extends Proxies {
+class HttpProxies(authenticationClient: VirkailijaRestClient, koodistoClient: VirkailijaRestClient, organizationClient: VirkailijaRestClient, valintarekisteriClient: VirkailijaRestClient) extends Proxies {
   lazy val koodisto = new KoodistoProxy {
     def koodi(path: String): Future[JValue] = {
       val url = UrlUtils.joinUrl(OphUrlProperties.ophProperties.url("koodisto-service.restBase"), path)
@@ -31,6 +31,11 @@ class HttpProxies(authenticationClient: VirkailijaRestClient, koodistoClient: Vi
 
     def get(oid: String) = {
       organizationClient.readObject[String]("organisaatio-service.organisaatio", oid)(200, 1)
+    }
+  }
+  lazy val vastaanottotiedot = new VastaanottotiedotProxy {
+    override def historia(henkiloOid: String) = {
+      valintarekisteriClient.readObject[String]("valintarekisteri.vastaanottotiedot", henkiloOid)(200, 1)
     }
   }
 }

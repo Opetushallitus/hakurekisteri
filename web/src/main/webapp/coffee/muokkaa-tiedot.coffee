@@ -15,6 +15,10 @@ app.factory "MuokkaaTiedot", [
           suoritukset: []
           luokkatiedot: []
           opiskeluoikeudet: []
+          vastaanotot: {
+            opintopolku: []
+            vanhat: []
+          }
           dataScopes: []
         $scope.myRoles = []
         $scope.luokkatasot = []
@@ -43,6 +47,7 @@ app.factory "MuokkaaTiedot", [
         )
 
         fetchOpiskeluoikeudet()
+        fetchVastaanottotiedot()
         initDatepicker()
 
       loadMenuTexts = (komo) ->
@@ -163,6 +168,25 @@ app.factory "MuokkaaTiedot", [
             message: "Suoritustietojen hakeminen ei onnistunut. Yritä uudelleen?"
             messageKey: "suoritusrekisteri.muokkaa.suoritustietojenhakeminen"
           }).$promise
+
+      fetchVastaanottotiedot = ->
+        $http.get(window.url("valintarekisteri.vastaanottotiedot", henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((vastaanottotiedot) ->
+          $scope.henkilo.vastaanotot = vastaanottotiedot
+          if $scope.henkilo.vastaanotot.opintopolku
+            $scope.henkilo.vastaanotot.opintopolku.forEach (vastaanotto) ->
+              getHakuNimi $http, vastaanotto.hakuOid, (hakuNimi) ->
+                vastaanotto.haku = hakuNimi
+                return
+              getHakukohdeNimi $http, vastaanotto.hakukohdeOid, (hakukohdeNimi) ->
+                vastaanotto.hakukohde = hakukohdeNimi
+                return
+              return
+          return
+        ).error ->
+          MessageService.addMessage
+            type: "danger"
+            message: "Vastaanottotietojen hakeminen ei onnistunut. Yritä uudelleen?"
+            messageKey: "suoritusrekisteri.muokkaa.vastaanottotietojenhakeminen"
 
       fetchOpiskeluoikeudet = ->
         Opiskeluoikeudet.query { henkilo: henkiloOid }, (opiskeluoikeudet) ->
