@@ -46,7 +46,7 @@
 
         <div ng-show="info.editable" class="input-group">
             <input type="text"
-                   ng-disabled="info.delete || suoritus.id"
+                   ng-disabled="info.delete"
                    ng-model="info.valmistuminen"
                    max-date="info.maxDate"
                    title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)"
@@ -72,7 +72,7 @@
     <div class="form-group col-sm-4">
         <strong oph-msg="suoritusrekisteri.muokkaa.tila">Tila</strong>
         <select ng-show="info.editable"
-                ng-disabled="info.delete || suoritus.id"
+                ng-disabled="info.delete"
                 ng-model="suoritus.tila"
                 required="required"
                 ng-options="t.value as t.text for t in tilat"
