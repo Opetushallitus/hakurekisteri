@@ -174,17 +174,12 @@ app.factory "MuokkaaTiedot", [
           $scope.henkilo.vastaanotot = vastaanottotiedot
           if $scope.henkilo.vastaanotot.opintopolku
             $scope.henkilo.vastaanotot.opintopolku.forEach (vastaanotto) ->
-              vastaanotto.vastaanottoaika = $scope.formatDateString(vastaanotto.vastaanottoaika)
               getHakuNimi $http, vastaanotto.hakuOid, (hakuNimi) ->
                 vastaanotto.haku = hakuNimi
                 return
               getHakukohdeNimi $http, vastaanotto.hakukohdeOid, (hakukohdeNimi) ->
                 vastaanotto.hakukohde = hakukohdeNimi
                 return
-              return
-          if $scope.henkilo.vastaanotot.vanhat
-            $scope.henkilo.vastaanotot.vanhat.forEach (vastaanotto) ->
-              vastaanotto.vastaanottoaika = $scope.formatDateString(vastaanotto.vastaanottoaika)
               return
           return
         ).error ->
@@ -267,16 +262,6 @@ app.factory "MuokkaaTiedot", [
 
       $scope.removeDataScope = (scope) ->
         deleteFromArray scope, $scope.henkilo.dataScopes
-
-      $scope.parseDate = (input) ->
-        if input instanceof Date
-          input
-        else
-          new Date(Date.parse(input))
-
-      $scope.formatDateString = (input) ->
-        date = $scope.parseDate(input)
-        ""+date.getDate()+"."+(date.getMonth()+1)+"."+date.getFullYear()
 
       saveData = ->
         promises = []

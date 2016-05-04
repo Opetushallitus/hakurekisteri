@@ -137,7 +137,7 @@
                             </div>
                             <div class="col-sm-2"><strong
                                     oph-msg="suoritusrekisteri.muokkaa.vastaanotot.paivamaara">Päivämäärä</strong>
-                                <div class="test-vastaanottoOpintopolkuPaivamaara">{{vastaanotto.vastaanottoaika}}</div>
+                                <div class="test-vastaanottoOpintopolkuPaivamaara">{{vastaanotto.vastaanottoaika | date:'d.M.yyyy'}}</div>
 
                             </div>
                         </div>
@@ -159,7 +159,7 @@
                             </div>
                             <div class="col-sm-5"><strong
                                     oph-msg="suoritusrekisteri.muokkaa.vastaanotot.paivamaara">Päivämäärä</strong>
-                                <div class="test-vastaanottoVanhaPaivamaara">{{vastaanotto.vastaanottoaika}}</div>
+                                <div class="test-vastaanottoVanhaPaivamaara">{{vastaanotto.vastaanottoaika | date:'d.M.yyyy'}}</div>
                             </div>
                         </div>
                     </li>
