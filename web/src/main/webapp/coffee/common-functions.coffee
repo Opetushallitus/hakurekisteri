@@ -22,7 +22,7 @@ getHakuNimi = ($http, hakuOid, successCallback) ->
     cache: true
   ).success((json) ->
     if json.result && json.result.nimi
-      return successCallback(json.result.nimi.kieli_fi)
+      return successCallback(json.result.nimi.kieli_fi || json.result.nimi.kieli_sv || json.result.nimi.kieli_en)
     successCallback "")
   return
 
@@ -31,7 +31,7 @@ getHakukohdeNimi = ($http, hakukohdeOid, successCallback) ->
     cache: true
   ).success((json) ->
     if json.result && json.result.hakukohteenNimet
-      return successCallback(json.result.hakukohteenNimet.kieli_fi)
+      return successCallback(json.result.hakukohteenNimet.kieli_fi || json.result.hakukohteenNimet.kieli_sv || json.result.hakukohteenNimet.kieli_en)
     successCallback "")
   return
 
