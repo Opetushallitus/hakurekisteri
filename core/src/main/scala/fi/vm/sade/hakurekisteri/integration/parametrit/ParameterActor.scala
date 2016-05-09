@@ -108,15 +108,13 @@ class HttpParameterActor(restClient: VirkailijaRestClient) extends ParameterActo
   }
 }
 
-class MockParameterActor extends ParameterActor {
+class MockParameterActor(active: Boolean = false) extends ParameterActor {
   override protected def getParams(hakuOid: String) = Future { new DateTime().plusMonths(1) }
 
   override protected def isEnabledFromRest(key: String) = Future { true }
 
-  override protected def isRestrictionActive(restriction: String) = Future {
-    if (restriction.equals(ParameterActor.opoUpdateGraduation)) true
-    else false
-  }
+  override protected def isRestrictionActive(restriction: String) = Future.successful(active)
+  def getActive() = active
 }
 
 case class KierrosRequest(haku: String)
