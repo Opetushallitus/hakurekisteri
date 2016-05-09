@@ -152,6 +152,32 @@ app.directive "messages", ->
     templateUrl: "templates/messages.html"
   }
 
+app.directive 'customdateparser', ->
+  return {
+    restrict: 'A',
+    require: '?ngModel',
+    link: ($scope, $element, $attrs, $ngModel) ->
+      if $ngModel
+        $ngModel.$parsers.unshift (data) ->
+          if data instanceof Date
+            data
+          else
+            parts = data.split('.')
+            date = new Date(parts[2], parts[1]-1, parts[0])
+            if +parts[2] == date.getFullYear() && +parts[1]-1 == date.getMonth() && +parts[0] == date.getDate()
+              date
+            else
+              undefined
+  }
+
+app.directive 'datepickerPopup', ->
+  return {
+    restrict: 'EAC',
+    require: '?ngModel',
+    link: ($scope, $element, $attrs, $controller) ->
+      $controller.$formatters.shift()
+  }
+
 app.directive "tiedonsiirtomenu", ->
   return {
     controller: ($scope, $location) ->

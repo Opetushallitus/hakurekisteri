@@ -35,19 +35,36 @@ app.controller "MuokkaaSuoritus", [
 
     $scope.validateData = (updateOnly) ->
       $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel($scope.info, $scope.suoritus, !updateOnly)
+      if $scope.info.editable
+        $scope.validateValmistuminen(updateOnly)
 
-    yoSuoritusHasValidValmistuminen = (date) ->
-      $scope.parseFinDate(date).getTime() < $scope.parseFinDate("1.1.1990").getTime()
+    $scope.validateValmistuminen = (updateOnly) ->
+      d = $q.defer()
+      if not $scope.validateValmistumispaiva($scope.info.valmistuminen)
+        if(!updateOnly)
+          MessageService.addMessage
+            type: "danger"
+            messageKey: "suoritusrekisteri.muokkaa.valmistuminen"
+            message: "Valmistumispäivä puuttuu tai se on virheellinen."
+            descriptionKey: "suoritusrekisteri.muokkaa.tarkistavalmistuminen"
+            description: "Tarkista valmistumispäivä ja yritä uudelleen."
+          d.reject "validationerror"
+      else
+        if($scope.parseFinDate($scope.suoritus.valmistuminen).getTime() != $scope.info.valmistuminen.getTime())
+          $scope.suoritus.valmistuminen = $scope.info.valmistuminen
+        d.resolve "pvm ok"
+      [d.promise]
+
+    $scope.validateValmistumispaiva = (valmistumispvm) ->
+      if !valmistumispvm
+        false
+      else if $scope.suoritus.komo != $scope.komo.ylioppilastutkinto
+        true
+      else
+        valmistumispvm.getTime() < new Date(1990, 0, 1).getTime()
 
     $scope.hasChanged = ->
       $scope.validateData(true)
-      if $scope.info.valmistuminen
-        if $scope.suoritus.komo != $scope.komo.ylioppilastutkinto || yoSuoritusHasValidValmistuminen($scope.info.valmistuminen)
-          $scope.suoritus.valmistuminen = $scope.formatDateWithZeroPaddedNumbers($scope.info.valmistuminen)
-        else
-          # alert("YO-suorituksen päivämäärä pitää olla ennen 1.1.1990")
-          $scope.suoritus.valmistuminen = modifiedCache.original().valmistuminen
-          $scope.info.valmistuminen = $scope.formatDateNoZeroPaddedNumbers($scope.suoritus.valmistuminen)
       modifiedCache.hasChanged()
 
     $scope.saveData = ->
@@ -79,39 +96,27 @@ app.controller "MuokkaaSuoritus", [
       if confirm("Poista suoritus " + suoritus.valmistuminen + "?")
         if suoritus.id
           suoritus.$remove removeSuoritusScope, ->
-            MessageService.addMessage
-              type: "danger"
-              messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja"
-              message: "Virhe tallennettaessa suoritustietoja."
-              descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita"
-              description: "Yritä uudelleen."
+            $scope.suoritus.valmistuminen
         else
           removeSuoritusScope()
 
     $scope.parseFinDate = (input) ->
       if input instanceof Date
         input
-      else
+      else if input
         parts = input.split('.')
         new Date(parts[2], parts[1]-1, parts[0])
 
-    pad = (n) ->
-      if n<10
-        '0'+n
-      else
-        n
+    $scope.showValmistuminenFormatted = ->
+      $scope.formatDateNoZeroPaddedNumbers($scope.info.valmistuminen)
 
     $scope.formatDateNoZeroPaddedNumbers = (input) ->
       date = $scope.parseFinDate(input)
       ""+date.getDate()+"."+(date.getMonth()+1)+"."+date.getFullYear()
 
-    $scope.formatDateWithZeroPaddedNumbers = (date) ->
-      date = $scope.parseFinDate(date)
-      "" + pad(date.getDate()) + "." + pad(date.getMonth()+1) + "." + date.getFullYear()
-
     modifiedCache = changeDetection($scope.suoritus)
     $scope.info = {}
-    $scope.info.valmistuminen = $scope.formatDateNoZeroPaddedNumbers($scope.suoritus.valmistuminen)
+    $scope.info.valmistuminen = $scope.parseFinDate($scope.suoritus.valmistuminen)
     enrichSuoritus($scope.suoritus)
     $scope.checkYlioppilastutkinto($scope.suoritus)
     $scope.addDataScope($scope)

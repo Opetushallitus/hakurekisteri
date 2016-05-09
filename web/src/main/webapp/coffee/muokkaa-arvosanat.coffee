@@ -177,8 +177,8 @@ app.controller "MuokkaaArvosanat", [
     sortByAine = (arvosanataulukko) ->
       arvosanataulukko.sort (a, b) ->
         if a.aine is b.aine
-          am = a.myonnetty || suoritus.valmistuminen
-          bm = b.myonnetty || suoritus.valmistuminen
+          am = a.myonnetty || suoritusValmistuminen()
+          bm = b.myonnetty || suoritusValmistuminen()
           if am && bm
             aPvm = $scope.parseFinDate(am)
             bPvm = $scope.parseFinDate(bm)
@@ -221,15 +221,15 @@ app.controller "MuokkaaArvosanat", [
         for oppiaine in koodistoOppiaineLista
           aine = oppiaine.koodi.koodiArvo
           aineenArvosanat = arvosanat.filter (a) -> a.aine is aine
-          arvosanatByMyonnettyLisatieto = collectToMap(aineenArvosanat, ((a) -> "#{a.myonnetty || suoritus.valmistuminen};#{a.lisatieto}"))
+          arvosanatByMyonnettyLisatieto = collectToMap(aineenArvosanat, ((a) -> "#{a.myonnetty || suoritusValmistuminen()};#{a.lisatieto}"))
           rivit = []
           aineHasArvosanaRiviForSuoritusDate = false
           for key of arvosanatByMyonnettyLisatieto
             list = arvosanatByMyonnettyLisatieto[key]
             first = list[0]
             sortByValinnainenAndJarjestys(list)
-            dateForNewArvosanat = first.myonnetty || $scope.suoritus.valmistuminen
-            if dateForNewArvosanat == $scope.suoritus.valmistuminen
+            dateForNewArvosanat = first.myonnetty || suoritusValmistuminen()
+            if dateForNewArvosanat == suoritusValmistuminen()
               dateForNewArvosanat = null
               aineHasArvosanaRiviForSuoritusDate = true
             rivit.push makeAineRivi(aine, list, dateForNewArvosanat, first.lisatieto)
@@ -247,6 +247,21 @@ app.controller "MuokkaaArvosanat", [
       updateArvosanaTaulukko()
       $scope.$watch "suorituksenArvosanataulukko", $scope.enableSave, true
     )
+
+    suoritusValmistuminen = () ->
+      formatDateWithZeroPaddedNumbers($scope.suoritus.valmistuminen)
+
+    pad = (n) ->
+      if n<10
+        '0'+n
+      else
+        n
+
+    formatDateWithZeroPaddedNumbers = (date) ->
+      if date instanceof Date
+        ""+pad(date.getDate())+"."+pad(date.getMonth()+1)+"."+date.getFullYear()
+      else
+        date
 
     $scope.arvosanatCustomSort = (a) ->
       if(isNaN(a["value"]))
@@ -304,7 +319,7 @@ app.controller "MuokkaaArvosanat", [
 
     $scope.isKorotusDateInvalid = (date, mode) ->
       if date
-        valmistuminen = parseFinDate($scope.suoritus.valmistuminen)
+        valmistuminen = parseFinDate(suoritusValmistuminen())
         d = new Date(date.getTime())
         d.setMinutes(0)
         d.setHours(0)

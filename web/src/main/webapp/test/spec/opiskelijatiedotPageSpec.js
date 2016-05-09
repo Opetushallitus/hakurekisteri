@@ -589,8 +589,8 @@
                         click(opiskelijatiedot.searchButton),
                         wait.forAngular,
                         hidden(opiskelijatiedot.editArvosanat),
-                        disabled(opiskelijatiedot.suoritusValmistuminen),
-                        disabled(opiskelijatiedot.suoritusTila),
+                        //disabled(opiskelijatiedot.suoritusValmistuminen),
+                        //disabled(opiskelijatiedot.suoritusTila),
                         function() { httpFixtures().casRoles.robotti() }
                     ))
                 })
