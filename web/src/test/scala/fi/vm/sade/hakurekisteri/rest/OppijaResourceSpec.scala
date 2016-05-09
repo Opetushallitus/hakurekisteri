@@ -72,7 +72,8 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
     get("/1.2.246.562.24.00000000001?haku=1.2.3.4") {
       response.status should be(OK)
 
-      body should include("\"ensikertalainen\":true")
+      val oppija = read[Oppija](response.body)
+      oppija.ensikertalainen should be (Some(true))
     }
   }
 
@@ -80,7 +81,9 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
     get("/1.2.246.562.24.00000000001") {
       response.status should be(OK)
 
-      body should not include("\"ensikertalainen\":")
+      val oppija = read[Oppija](response.body)
+      oppija.oppijanumero should be("1.2.246.562.24.00000000001")
+      oppija.ensikertalainen should be (None)
     }
   }
 
@@ -133,14 +136,14 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
     val json = decompose(henkilot.take(100).map(i => s"1.2.246.562.24.$i"))
 
     post("/?haku=1.2.3.4", compact(json)) {
-      val oppijat = parse(response.body).extract[List[JObject]]
+      val oppijat = read[Seq[Oppija]](response.body)
       oppijat.size should be (100)
     }
   }
 
   test("OppijaResource should return an empty oppija object if no matching oppija found when person oid is sent as POST") {
     post("/?haku=1.2.3.4", """["1.2.246.562.24.00000000010"]""") {
-      val oppijat = read[List[Oppija]](response.body)
+      val oppijat = read[Seq[Oppija]](response.body)
 
       oppijat.size should be (1)
 

@@ -80,7 +80,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
 
       private val oppijaFuture = fetchOppija(personOid, hakuOid)
 
-      logQuery(personOid, t0, oppijaFuture)
+      logQuery(Map("oid" -> personOid, "haku" -> hakuOid), t0, oppijaFuture)
 
       override val is = oppijaFuture
     }
@@ -100,7 +100,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, 
 
       private val oppijat = fetchOppijat(henkilot, Some(hakuOid))
 
-      logQuery(henkilot, t0, oppijat)
+      logQuery(Map("henkilot" -> henkilot, "haku" -> hakuOid), t0, oppijat)
 
       override val is: Future[_] = oppijat
     }
