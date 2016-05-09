@@ -2,24 +2,33 @@ package fi.vm.sade.hakurekisteri.rest
 
 import java.util.UUID
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.Actor.Receive
+import akka.actor.{Actor, ActorSystem, Props}
+import akka.pattern.ask;
+import fi.vm.sade.hakurekisteri.KomoOids
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
+import fi.vm.sade.hakurekisteri.integration.parametrit.{ParameterActor, IsRestrictionActive}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.tools.Peruskoulu
 import fi.vm.sade.hakurekisteri.web.rest.support._
-import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwaggerApi}
+import fi.vm.sade.hakurekisteri.web.suoritus.{SuoritusResource, CreateSuoritusCommand, SuoritusSwaggerApi}
 import org.joda.time.LocalDate
 import org.json4s.jackson.Serialization._
+import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
+import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 
 class SuoritusServletSpec extends ScalatraFunSuite {
+  implicit val swagger: Swagger = new HakurekisteriSwagger
   val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now,"1.2.4")
-  implicit val system = ActorSystem()
+  implicit val system = ActorSystem("test-tuo-suoritus")
+  implicit val ec: ExecutionContext = system.dispatcher
+
   implicit val security = new TestSecurity
   implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]): InMemJournal[R, UUID] = {
     val journal = new InMemJournal[R, UUID]
@@ -28,9 +37,12 @@ class SuoritusServletSpec extends ScalatraFunSuite {
   }
   val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(Seq(suoritus))))
   val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
-  implicit val swagger = new HakurekisteriSwagger
-
-  addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](guardedSuoritusRekisteri, SuoritusQuery(_ )) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/*")
+  val mockParameterActor = system.actorOf(Props(new Actor {
+    override def receive: Actor.Receive = {
+      case IsRestrictionActive(_) => sender ! true
+    }
+  }))
+  addServlet(new SuoritusResource(guardedSuoritusRekisteri, mockParameterActor, SuoritusQuery(_)), "/*")
 
   test("get root should return 200") {
     get("/") {

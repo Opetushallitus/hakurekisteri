@@ -98,9 +98,9 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     }
   }
 
-  override def createEnabled = (parameterActor ? IsSendingEnabled(batchType)).mapTo[Boolean]
+  override def createEnabled(resource: ImportBatch) = (parameterActor ? IsSendingEnabled(batchType)).mapTo[Boolean]
 
-  override def updateEnabled = createEnabled
+  override def updateEnabled(resource: ImportBatch) = createEnabled(resource)
 
   override def notEnabled = TiedonsiirtoNotOpenException
 
@@ -135,7 +135,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   get("/isopen", operation(isopen)) {
     new AsyncResult() {
       override implicit def timeout: Duration = 120.seconds
-      override val is = createEnabled.map(TiedonsiirtoOpen)
+      override val is = createEnabled(null).map(TiedonsiirtoOpen)
     }
   }
 
