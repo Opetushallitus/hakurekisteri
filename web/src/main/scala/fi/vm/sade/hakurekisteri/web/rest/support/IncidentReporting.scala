@@ -2,11 +2,11 @@ package fi.vm.sade.hakurekisteri.web.rest.support
 
 import java.util.UUID
 
-import akka.pattern.AskTimeoutException
+import _root_.akka.pattern.AskTimeoutException
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemuksetNotYetLoadedException
 import org.joda.time.DateTime
 import org.joda.time.DateTime._
-import org.scalatra.{ServiceUnavailable, BadRequest, InternalServerError, ActionResult}
+import org.scalatra._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 
 
@@ -16,6 +16,9 @@ trait IncidentReporting { this: HakuJaValintarekisteriStack =>
 
   def incident(handler: PartialFunction[Throwable, (UUID) => ActionResult]): Unit = {
     error {
+      case t: NotFoundException =>
+        val resultGenerator = handler.applyOrElse[Throwable, (UUID) => ActionResult](t, (anything) => (id) => NotFound(IncidentReport(id, s"resource not found: ${t.resource}")))
+        processError(t, false) (resultGenerator)
       case t: AskTimeoutException =>
         val resultGenerator = handler.applyOrElse[Throwable, (UUID) => ActionResult](t, (anything) => (id) => InternalServerError(IncidentReport(id, "back-end service timed out")))
         processError(t) (resultGenerator)
@@ -31,9 +34,13 @@ trait IncidentReporting { this: HakuJaValintarekisteriStack =>
     }
   }
 
-  def processError(t: Throwable)(handler:(UUID) => ActionResult): ActionResult = {
+  def processError(t: Throwable, printStack: Boolean = true)(handler:(UUID) => ActionResult): ActionResult = {
     val incidentId = UUID.randomUUID()
-    logger.error(t, s"incident ${incidentId.toString}")
+    if (printStack) {
+      logger.error(t, s"incident ${incidentId.toString}")
+    } else {
+      logger.error(s"incident ${incidentId.toString}: ${t.toString}")
+    }
     handler(incidentId)
   }
 
