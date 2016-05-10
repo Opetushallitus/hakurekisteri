@@ -185,19 +185,21 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
   def updateResource(id: UUID, user: Option[User]): Object = {
     val myCommand: C = command[C]
 
-    val msg: Future[AuthorizedUpdate[A, UUID]] = readResource(id, user) match {
-      case ActionResult(ResponseStatus(200, _), r:A, _) =>
-        updateEnabled(r).flatMap(enabled =>
-        if (enabled) {
-          (myCommand >> (_.toValidatedResource(user.get.username))).flatMap(
-            _.fold(
-              errors => Future.failed(MalformedResourceException(errors)),
-              resource => Future.successful(AuthorizedUpdate[A, UUID](identifyResource(resource, id), user.get)))
-          )
-        }
-        else Future.failed(notEnabled))
-      case _ => Future.failed(NotFoundException(id.toString))
-    }
+    val msg = (actor ? id).mapTo[Option[A]].flatMap(a => a  match {
+      case Some(res) =>
+        updateEnabled(res).flatMap(enabled =>
+          if (enabled) {
+            (myCommand >> (_.toValidatedResource(user.get.username))).flatMap(
+              _.fold(
+                errors => Future.failed(MalformedResourceException(errors)),
+                resource => Future.successful(AuthorizedUpdate[A, UUID](identifyResource(resource, id), user.get)))
+            )
+          }
+          else Future.failed(notEnabled))
+      case None => {
+        Future.failed(NotFoundException(id.toString))
+      }
+    })
 
     new FutureActorResult[A with Identified[UUID]](msg, Ok(_))
   }
