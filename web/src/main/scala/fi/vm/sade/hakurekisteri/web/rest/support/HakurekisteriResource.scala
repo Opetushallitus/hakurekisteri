@@ -111,20 +111,14 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     }
   )
 
-  case class NotFoundException() extends Exception
-
-  notFound {
-    throw NotFoundException()
-  }
-
   incident {
-    case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
     case t: MalformedResourceException => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, "not authorized"))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
   }
 }
 
+case class NotFoundException(resource: String) extends Exception(resource)
 case class UserNotAuthorized(message: String) extends Exception(message)
 
 abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]]
@@ -190,13 +184,21 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
 
   def updateResource(id: UUID, user: Option[User]): Object = {
     val myCommand: C = command[C]
-    val msg: Future[AuthorizedUpdate[A, UUID]] = (myCommand >> (_.toValidatedResource(user.get.username))).flatMap(_.fold(
-        errors => Future.failed(MalformedResourceException(errors)),
-        (resource: A) => updateEnabled(resource).flatMap(enabled =>
-          if (enabled) Future.successful(AuthorizedUpdate[A, UUID](identifyResource(resource, id), user.get))
-          else Future.failed(TiedonsiirtoNotOpenException)
-      )
-    ))
+
+    val msg: Future[AuthorizedUpdate[A, UUID]] = readResource(id, user) match {
+      case ActionResult(ResponseStatus(200, _), r:A, _) =>
+        updateEnabled(r).flatMap(enabled =>
+        if (enabled) {
+          (myCommand >> (_.toValidatedResource(user.get.username))).flatMap(
+            _.fold(
+              errors => Future.failed(MalformedResourceException(errors)),
+              resource => Future.successful(AuthorizedUpdate[A, UUID](identifyResource(resource, id), user.get)))
+          )
+        }
+        else Future.failed(notEnabled))
+      case _ => Future.failed(NotFoundException(id.toString))
+    }
+
     new FutureActorResult[A with Identified[UUID]](msg, Ok(_))
   }
 
