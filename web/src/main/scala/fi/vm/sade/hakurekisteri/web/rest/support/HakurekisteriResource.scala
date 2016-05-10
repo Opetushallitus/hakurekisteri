@@ -148,8 +148,12 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
 
   class FutureActorResult[B: Manifest](message: Future[AnyRef], success: (B) => AnyRef) extends AsyncResult() {
     override implicit def timeout: Duration = timeOut.seconds
-    val is = message.flatMap(actor ? _).mapTo[B].
-      map(success)
+    val is = message.flatMap(actor ? _).flatMap{
+      case Some(res: B) => Future.successful(success(res))
+      case None => Future.failed(new NotFoundException(""))
+      case a => Future.successful(a)
+    }
+
   }
 
   class ActorResult[B: Manifest](message: AnyRef, success: (B) => AnyRef) extends FutureActorResult[B](Future.successful(message), success)
@@ -185,7 +189,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
   def updateResource(id: UUID, user: Option[User]): Object = {
     val myCommand: C = command[C]
 
-    val msg = (actor ? id).mapTo[Option[A]].flatMap(a => a  match {
+    val msg = (actor ? id).mapTo[Option[A]].flatMap((a: Option[A]) => a  match {
       case Some(res) =>
         updateEnabled(res).flatMap(enabled =>
           if (enabled) {
@@ -194,8 +198,9 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
                 errors => Future.failed(MalformedResourceException(errors)),
                 resource => Future.successful(AuthorizedUpdate[A, UUID](identifyResource(resource, id), user.get)))
             )
-          }
-          else Future.failed(notEnabled))
+          } else {
+            Future.failed(notEnabled)
+          })
       case None => {
         Future.failed(NotFoundException(id.toString))
       }
