@@ -151,7 +151,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
     val is = message.flatMap(actor ? _).flatMap{
       case Some(res: B) => Future.successful(success(res))
       case None => Future.failed(new NotFoundException(""))
-      case a => Future.successful(a)
+      case a : B => Future.successful(success(a))
     }
 
   }
