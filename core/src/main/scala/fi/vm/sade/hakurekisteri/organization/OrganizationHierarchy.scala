@@ -208,7 +208,7 @@ case class OrganizationAuthorizer(orgPaths: Map[String, Seq[String]]) {
   }
 
   private def komoAuthorization(user:User, action:String, komo:Option[String]): Boolean = {
-    komo.exists(user.allowByKomo(action, _))
+    komo.exists(user.allowByKomo(_, action))
   }
 
 }
