@@ -158,7 +158,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
 
   class ActorResult[B: Manifest](message: AnyRef, success: (B) => AnyRef) extends FutureActorResult[B](Future.successful(message), success)
 
-  def createEnabled(resource: A) = Future.successful(true)
+  def createEnabled(resource: A, user: Option[User]) = Future.successful(true)
 
   def notEnabled = new Exception("operation not enabled")
 
@@ -166,7 +166,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
     val msg: Future[AuthorizedCreate[A, UUID]] = (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(_.fold(
       errors => Future.failed(MalformedResourceException(errors)),
       (resource: A) =>
-        createEnabled(resource).flatMap(enabled =>
+        createEnabled(resource, user).flatMap(enabled =>
           if (enabled) Future.successful(AuthorizedCreate[A, UUID](resource, user.get))
           else Future.failed(TiedonsiirtoNotOpenException)
         )
@@ -184,14 +184,14 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
 
   def identifyResource(resource : A, id: UUID): A with Identified[UUID] = resource.identify(id)
 
-  def updateEnabled(resource: A) = Future.successful(true)
+  def updateEnabled(resource: A, user: Option[User]) = Future.successful(true)
 
   def updateResource(id: UUID, user: Option[User]): Object = {
     val myCommand: C = command[C]
 
     val msg = (actor ? id).mapTo[Option[A]].flatMap((a: Option[A]) => a  match {
       case Some(res) =>
-        updateEnabled(res).flatMap(enabled =>
+        updateEnabled(res, user).flatMap(enabled =>
           if (enabled) {
             (myCommand >> (_.toValidatedResource(user.get.username))).flatMap(
               _.fold(
