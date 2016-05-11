@@ -14,7 +14,7 @@ import scala.concurrent.Future
 class SuoritusResource
       (suoritusRekisteriActor: ActorRef, parameterActor: ActorRef, queryMapper: (Map[String, String]) => Query[Suoritus])
       (implicit sw: Swagger, s: Security, system: ActorSystem)
-  extends HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteriActor, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SecuritySupport {
+  extends HakurekisteriResource[Suoritus, CreateSuoritusCommand](suoritusRekisteriActor, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] {
 
   override def createEnabled(resource: Suoritus) = {
     val curUser = currentUser.get
