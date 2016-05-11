@@ -17,9 +17,10 @@ import org.joda.time.DateTime
 import scala.concurrent.duration._
 import scala.xml.Elem
 
-class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef, organizationFinder: (A) => Set[String], config: Config) extends FutureOrganizationHierarchy[A, I](filteredActor, ((item: A) => Future.successful(organizationFinder(item))), config)
+class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef, organizationFinder: (A) => (Set[String],Option[String]), config: Config)
+  extends FutureOrganizationHierarchy[A, I](filteredActor, ((item: A) => Future.successful(organizationFinder(item))), config)
 
-class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](filteredActor: ActorRef, organizationFinder: (A) => concurrent.Future[Set[String]], config: Config) extends Actor {
+class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](filteredActor: ActorRef, organizationFinder: (A) => concurrent.Future[(Set[String],Option[String])], config: Config) extends Actor {
   val authorizer = new OrganizationHierarchyAuthorization[A, I](organizationFinder, config.integrations.organisaatioConfig)
   val logger = Logging(context.system, this)
   private var scheduledTask: Cancellable = null
@@ -94,10 +95,10 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](f
   }
 }
 
-class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](organizationFinder: A => Future[Set[String]], httpConfig: HttpConfig) {
+class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](organizationFinder: A => Future[(Set[String], Option[String])], httpConfig: HttpConfig) {
   def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName
   lazy val resourceName = className[A]
-  val subjectFinder = (resource: A) => organizationFinder(resource).map(Subject(resourceName, _))
+  val subjectFinder = (resource: A) => organizationFinder(resource).map(o => Subject(resourceName, o._1, o._2))
   val svc = url(OphUrlProperties.ophProperties.url("organisaatio-service.soap")).POST <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend",
     "clientSubSystemCode" -> "suoritusrekisteri.suoritusrekisteri.backend",
     "CSRF" -> "suoritusrekisteri", "Cookie" -> "CSRF=suoritusrekisteri")
@@ -196,14 +197,19 @@ case class AuthorizedDelete[I](id: I, user: User)
 case class AuthorizedCreate[A <: Resource[I, A], I](q: A,  user: User)
 case class AuthorizedUpdate[A <: Resource[I, A] :Manifest, I : Manifest](q: A with Identified[I], user: User)
 
-case class Subject(resource: String, orgs: Set[String])
+case class Subject(resource: String, orgs: Set[String], komo: Option[String])
 
 case class OrganizationAuthorizer(orgPaths: Map[String, Seq[String]]) {
   def checkAccess(user: User, action: String, futTarget: concurrent.Future[Subject]) = futTarget.map {
     (target: Subject) =>
     val allowedOrgs = user.orgsFor(action, target.resource)
     val paths: Set[String] = target.orgs.flatMap((oid) => orgPaths.getOrElse(oid, Seq(Oids.ophOrganisaatioOid, oid)))
-    paths.exists { x => user.username == x || allowedOrgs.contains(x) }
+    paths.exists { x => user.username == x || allowedOrgs.contains(x) } || komoAuthorization(user, action, target.komo)
   }
+
+  private def komoAuthorization(user:User, action:String, komo:Option[String]): Boolean = {
+    komo.exists(user.allowByKomo(action, _))
+  }
+
 }
 case class Org(oid: String, parent: Option[String], lopetusPvm: Option[DateTime] )

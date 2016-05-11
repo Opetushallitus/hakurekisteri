@@ -68,6 +68,8 @@ trait User {
   def canRead(resource: String) = !orgsFor("READ", resource).isEmpty
 
   def isAdmin: Boolean = orgsFor("DELETE", "Arvosana").contains(Oids.ophOrganisaatioOid)
+
+  def allowByKomo(komo: String, action: String): Boolean = komo.startsWith("koulutus_") && "READ".equals(action)
 }
 
 trait Roles {

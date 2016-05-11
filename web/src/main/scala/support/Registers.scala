@@ -20,7 +20,7 @@ import org.apache.activemq.camel.component.ActiveMQComponent
 import org.joda.time.LocalDate
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 import scala.reflect.ClassTag
 
 class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
@@ -37,9 +37,14 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
   import scala.reflect.runtime.universe._
   implicit val ec:ExecutionContext = system.dispatcher
 
+  def authorizer[A <: Resource[I, A] : ClassTag: Manifest, I: Manifest](guarded: ActorRef, orgFinder: A => Option[String], komoFinder: A => Option[String]): ActorRef = {
+    val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
+    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (i: A) => (orgFinder(i).map(Set(_)).getOrElse(Set()), komoFinder(i)), config)), s"$resource-authorizer")
+  }
+
   def authorizer[A <: Resource[I, A] : ClassTag: Manifest, I: Manifest](guarded: ActorRef, orgFinder: A => Option[String]): ActorRef = {
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (i: A) => orgFinder(i).map(Set(_)).getOrElse(Set()), config)), s"$resource-authorizer")
+    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (i: A) => (orgFinder(i).map(Set(_)).getOrElse(Set()), None), config)), s"$resource-authorizer")
   }
 
   val suoritusOrgResolver: PartialFunction[Suoritus, String] = {
@@ -55,19 +60,32 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
     lahde: String) => myontaja
   }
 
+  val suoritusKomoResolver: PartialFunction[Suoritus, String] = {
+    case VirallinenSuoritus(komo: String,
+    myontaja: String,
+    tila: String,
+    valmistuminen: LocalDate,
+    henkilo: String,
+    yksilollistaminen,
+    suoritusKieli: String,
+    opiskeluoikeus: Option[UUID],
+    vahv: Boolean,
+    lahde: String) => komo
+  }
+
   val resolve = (arvosana:Arvosana) =>
     unauthorized.suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).
       mapTo[Option[Suoritus]].map(
-        _.map{
-          case (s: VirallinenSuoritus) => Set(s.myontaja, s.source, arvosana.source)
-          case (s: VapaamuotoinenSuoritus) => Set(s.source, arvosana.source)
-        }.getOrElse(Set()))
+      _.map {
+        case (s: VirallinenSuoritus) => Set(s.myontaja, s.source, arvosana.source)
+        case (s: VapaamuotoinenSuoritus) => Set(s.source, arvosana.source)
+      }.getOrElse(Set())).zip(Future(None))
 
-  override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusOrgResolver.lift)
-  override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija) => Some(opiskelija.oppilaitosOid))
-  override val opiskeluoikeusRekisteri = authorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus) => Some(opiskeluoikeus.myontaja))
+  override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusOrgResolver.lift, suoritusKomoResolver.lift)
+  override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija:Opiskelija) => Some(opiskelija.oppilaitosOid))
+  override val opiskeluoikeusRekisteri = authorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus:Opiskeluoikeus) => Some(opiskeluoikeus.myontaja), (opiskeluoikeus:Opiskeluoikeus) => Some(opiskeluoikeus.komo))
   override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](unauthorized.arvosanaRekisteri, resolve, config)), "arvosana-authorizer")
-  override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era) => Some(Oids.ophOrganisaatioOid))
+  override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era:ImportBatch) => Some(Oids.ophOrganisaatioOid))
 }
 
 class AuditedRegisters(amqUrl: String, amqQueue: String, authorizedRegisters: Registers, system: ActorSystem) extends Registers {
