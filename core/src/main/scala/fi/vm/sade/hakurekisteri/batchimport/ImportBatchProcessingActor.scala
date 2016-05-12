@@ -33,6 +33,8 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef,
   implicit val ec: ExecutionContext = context.dispatcher
   private val processStarter: Cancellable = context.system.scheduler.schedule(config.importBatchProcessingInitialDelay, 15.seconds, self, ProcessReadyBatches)
 
+  log.info(s"started $self")
+
   override def postStop(): Unit = {
     processStarter.cancel()
   }
@@ -66,6 +68,10 @@ class ImportBatchProcessingActor(importBatchActor: ActorRef,
         case t =>
           log.error(s"unknown batchType $t")
       }
+
+    case Failure(t) =>
+      log.error(t, s"got failure from ${sender()}")
+      fetching = false
   }
 
 }
@@ -110,6 +116,10 @@ class ArvosanatProcessingActor(importBatchActor: ActorRef,
       })
 
     case Stop =>
+      context.stop(self)
+
+    case Failure(t) =>
+      log.error(t, s"got failure from ${sender()}")
       context.stop(self)
   }
 }
@@ -327,7 +337,7 @@ class PerustiedotProcessingActor(importBatchActor: ActorRef,
         batchProcessed()
       }
 
-    case Failure(t: Throwable) =>
+    case Failure(t) =>
       batchFailed(t)
 
     case Stop =>
