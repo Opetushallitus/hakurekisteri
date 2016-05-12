@@ -46,9 +46,21 @@ class SecuritySupportSpec extends FlatSpec with Matchers with MockitoSugar {
     securitySession.withLoginBy(user having "READ".rights)
     {currentUser.canDelete("Suoritus") should be (false)}
 
+  it should "allow READ for kk-virkailija when komo has koulutus_ prefix" in
+    securitySession.withLoginBy(user having KkVirkailijaRights(Seq("READ")).rights)
+    {currentUser.allowByKomo("koulutus_", "READ") should be (true)}
 
+  it should "not allow READ for non-kk-virkailija when komo has koulutus_ prefix" in
+    securitySession.withLoginBy(user having "READ".rights)
+    {currentUser.allowByKomo("koulutus_", "READ") should be (false)}
 
+  it should "not allow READ for kk-virkailija when komo doesn't have koulutus_ prefix" in
+    securitySession.withLoginBy(user having KkVirkailijaRights(Seq("READ")).rights)
+    {currentUser.allowByKomo("goulutus_", "READ") should be (false)}
 
+  it should "not allow WRITE for kk-virkailija when komo doesn't have koulutus_ prefix" in
+    securitySession.withLoginBy(user having KkVirkailijaRights(Seq("READ")).rights)
+    {currentUser.allowByKomo("koulutus_", "WRITE") should be (false)}
 }
 
 
@@ -66,6 +78,10 @@ object SecurityUser {
 
   case class Rights(grantedRights: Seq[String]) {
     def rights: Set[DefinedRole] = grantedRights.map((right) => DefinedRole("SUORITUSREKISTERI", right, "1.2.246.562.10.00000000001")).toSet
+  }
+
+  case class KkVirkailijaRights(grantedRights: Seq[String]) {
+    def rights: Set[DefinedRole] = grantedRights.map((right) => DefinedRole("KKHAKUVIRKAILIJA", right, "1.2.246.562.10.91991131094")).toSet
   }
 
   implicit def tuple2Rigths(grantedRights: Product):Rights = Rights(grantedRights.productIterator.map(_.toString).toList)
