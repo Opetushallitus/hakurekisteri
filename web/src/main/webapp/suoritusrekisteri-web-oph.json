@@ -1,6 +1,7 @@
 {
     "suoritusrekisteri.opiskelija": "rest/v1/opiskelijat/$1",
     "suoritusrekisteri.suoritus": "rest/v1/suoritukset/$1",
+    "suoritusrekisteri.rajoitukset": "rest/v1/rajoitukset/$1",
     "suoritusrekisteri.opiskeluoikeus": "rest/v1/opiskeluoikeudet/$1",
     "suoritusrekisteri.arvosana": "rest/v1/arvosanat/$1",
     "suoritusrekisteri.rekisteritieto": "rest/v1/rekisteritiedot/light",

@@ -142,7 +142,7 @@ class SuoritusResourceWithOPOSpec extends ScalatraFunSuite with MockitoSugar wit
   test("update should fail when some restrictions are in effect") {
     val json = ("{\"henkiloOid\":\"1.2.246.562.24.71944845619\",\"source\":\"Test\",\"vahvistettu\":true,\"komo\":\"1.2.246.562.13.62959769647\",\"myontaja\":\"1.2.246.562.10.39644336305\",\"tila\":\"VALMIS\",\"valmistuminen\":\"2016-05-04T21:00:00.000Z\",\"yksilollistaminen\":\"Ei\",\"suoritusKieli\":\"FI\",\"id\":\"22d606f9-b150-44eb-9ad3-60c7a0bffdb8\"}")
     post("/foo", json) {
-      response.status should be(500)
+      response.status should be(404)
     }
   }
 }
