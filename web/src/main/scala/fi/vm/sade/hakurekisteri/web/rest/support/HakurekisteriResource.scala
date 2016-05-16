@@ -199,7 +199,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
                 resource => Future.successful(AuthorizedUpdate[A, UUID](identifyResource(resource, id), user.get)))
             )
           } else {
-            Future.failed(notEnabled)
+            Future.failed(TiedonsiirtoNotOpenException)
           })
       case None => {
         Future.failed(NotFoundException(id.toString))

@@ -74,13 +74,23 @@ app.controller "MuokkaaSuoritus", [
         suoritus.$save (->
           enrichSuoritus suoritus
           d.resolve "done"
-        ), ->
-          MessageService.addMessage
-            type: "danger"
-            messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja"
-            message: "Virhe tallennettaessa suoritustietoja."
-            descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita"
-            description: "Yritä uudelleen."
+        ), (res) ->
+          status = res.status
+
+          if status == 404
+            MessageService.addMessage
+              type: "danger"
+              messageKey: "suoritusrekisteri.muokkaa.virheestokausi"
+              message: "Suorituksien päivittäminen on estetty tällä hetkellä."
+              descriptionKey: "suoritusrekisteri.muokkaa.virheestokausi"
+              description: "Suorituksien päivittäminen on estetty tällä hetkellä."
+          else
+            MessageService.addMessage
+              type: "danger"
+              messageKey: "suoritusrekisteri.muokkaa.virhetallennettaessasuoritustietoja"
+              message: "Virhe tallennettaessa suoritustietoja."
+              descriptionKey: "suoritusrekisteri.muokkaa.virhesuoritusyrita"
+              description: "Yritä uudelleen."
           d.reject "error saving suoritus: " + suoritus
         d.promise.then ->
           modifiedCache.update()
