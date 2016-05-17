@@ -60,7 +60,7 @@
                    class="form-control input-sm datepicker test-suoritusValmistuminen"/>
             <span class="input-group-btn">
                 <button type="button"
-                    ng-disabled="info.delete"
+                    ng-disabled="info.delete || canEditSuoritus(suoritus)"
                     ng-click="info.valmistuminen = null"
                     class="btn btn-default btn-sm">
                     <span class="glyphicon glyphicon-remove"> </span>
