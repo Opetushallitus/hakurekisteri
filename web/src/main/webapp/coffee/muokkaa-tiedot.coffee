@@ -232,7 +232,7 @@ app.factory "MuokkaaTiedot", [
       ).error ->
         $log.error "cannot connect to CAS"
 
-      $scope.canEditSuoritus = (suoritus) ->
+      $scope.editSuoritusDisabled = (suoritus) ->
         return suoritus.komo != $scope.komo.ylioppilastutkinto && $scope.restrictionActiveSecondaryLevel && !$scope.isOPH()
 
       $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel = (info, model, validateError) ->
