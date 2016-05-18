@@ -576,6 +576,8 @@
                     }
 
                     it("Näkyy OPH käyttäjälle", seqDone(
+                        function() { httpFixtures().restrictionService.opoUpdateGraduation() },
+
                         aarnenPeruskouluDatat,
                         input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                         click(opiskelijatiedot.searchButton),
@@ -583,14 +585,17 @@
                         visible(opiskelijatiedot.editArvosanat)
                     ))
                     it("Ei näy lukiokäyttäjälle", seqDone(
-                        function() { httpFixtures().casRoles.empty() },
+                        function() {
+                            httpFixtures().casRoles.empty()
+                            httpFixtures().restrictionService.opoUpdateGraduation()
+                        },
                         aarnenPeruskouluDatat,
                         input(opiskelijatiedot.henkiloSearch, '1.2.246.562.24.71944845619'),
                         click(opiskelijatiedot.searchButton),
                         wait.forAngular,
-                        hidden(opiskelijatiedot.editArvosanat),
-                        //disabled(opiskelijatiedot.suoritusValmistuminen),
-                        //disabled(opiskelijatiedot.suoritusTila),
+                        disabled(opiskelijatiedot.editArvosanat),
+                        disabled(opiskelijatiedot.suoritusValmistuminen),
+                        disabled(opiskelijatiedot.suoritusTila),
                         function() { httpFixtures().casRoles.robotti() }
                     ))
                 })

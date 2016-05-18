@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.web.suoritus
 
+import org.scalatra.swagger.SwaggerSupportSyntax.OperationBuilder
 import org.scalatra.swagger._
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriResource, OldSwaggerSyntax}
 import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, Suoritus}
@@ -73,7 +74,5 @@ trait SuoritusSwaggerModel extends OldSwaggerSyntax {
   def vapaamuotoinenSuoritusModel = Model("VapaamuotoinenSuoritus", "VapaamuotoinenSuoritus", virallinenSuoritusFields.map(t => (t.name, t)).toMap, Some("Suoritus"))
 
 }
-
-
 
 

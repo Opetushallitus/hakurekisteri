@@ -4,6 +4,7 @@ import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEve
 import _root_.support._
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
+import fi.vm.sade.hakurekisteri.integration.parametrit.{ParameterActor, IsRestrictionActive}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.batchimport._
@@ -29,7 +30,8 @@ import fi.vm.sade.hakurekisteri.web.permission.PermissionResource
 import fi.vm.sade.hakurekisteri.web.proxies._
 import fi.vm.sade.hakurekisteri.web.rekisteritiedot.RekisteritiedotResource
 import fi.vm.sade.hakurekisteri.web.rest.support._
-import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwaggerApi}
+import fi.vm.sade.hakurekisteri.web.restrictions.RestrictionsResource
+import fi.vm.sade.hakurekisteri.web.suoritus.{SuoritusResource, CreateSuoritusCommand, SuoritusSwaggerApi}
 import gui.GuiServlet
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.json.JacksonJsonSupport
@@ -47,7 +49,7 @@ import org.springframework.web.filter.DelegatingFilterProxy
 import siirto._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor}
 
 class ScalatraBootstrap extends LifeCycle {
   implicit val swagger: Swagger = new HakurekisteriSwagger
@@ -109,7 +111,8 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SecuritySupport,
     ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
     ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SecuritySupport,
-    ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new HakurekisteriResource[Suoritus, CreateSuoritusCommand](authorizedRegisters.suoritusRekisteri, SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand] with SecuritySupport,
+    ("/rest/v1/suoritukset", "rest/v1/suoritukset") -> new SuoritusResource(authorizedRegisters.suoritusRekisteri, integrations.parametrit, SuoritusQuery(_)),
+    ("/rest/v1/rajoitukset", "rest/v1/rajoitukset") -> new RestrictionsResource(integrations.parametrit),
     ("/rest/v1/rekisteritiedot", "rest/v1/rekisteritiedot") -> new RekisteritiedotResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
     ("/rest/v1/tyhjalisatiedollisetarvosanat", "rest/v1/tyhjalisatiedollisetarvosanat") -> new EmptyLisatiedotResource(authorizedRegisters.arvosanaRekisteri),
     ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto, Arvosanat, ArvosanatKoodisto),

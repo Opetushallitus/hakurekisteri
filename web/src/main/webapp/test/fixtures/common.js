@@ -264,10 +264,18 @@ var restData = {
         "ammatillinenKomoOid": "TODO ammatillinen komo oid",
         "lukioonvalmistavaKomoOid": "1.2.246.562.5.2013112814572429142840",
         "ylioppilastutkintolautakunta": "1.2.246.562.10.43628088406"
+    },
+    rajoitukset: {
+        "opoUpdateGraduation": true
     }
 }
 
 var serviceUrls = {
+    rajoitukset: {
+        rajoite: function (rajoite) {
+            return new RegExp(".*rest/v1/rajoitukset/"+ rajoite + "$")
+        }
+    },
     suoritukset: {
         henkilo: function (oid) {
             return new RegExp(".*rest/v1/suoritukset\\?henkilo=" + oid + "$")
@@ -304,6 +312,12 @@ var httpFixtures = function () {
         empty: function () {
             testFrame().testCache.removeAll()
             testFrame().casRolesMock.respond([])
+        }
+    }
+
+    fixtures.restrictionService = {
+        opoUpdateGraduation: function() {
+            fixtures.get(/.*rest\/v1\/rajoitukset\/opoUpdateGraduation$/, true).passThrough()
         }
     }
 

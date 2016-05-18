@@ -18,7 +18,7 @@
         </div>
     </div>
     <div class="form-group col-sm-5"><strong oph-msg="suoritusrekisteri.muokkaa.koulutus">Koulutus</strong>
-        <select ng-show="info.editable" ng-disabled="info.delete" ng-model="suoritus.komo"
+        <select ng-show="info.editable" ng-disabled="info.delete || editSuoritusDisabled(suoritus)" ng-model="suoritus.komo"
                 ng-options="koulutus.value as koulutus.text for koulutus in koulutukset"
                 ng-change="checkYlioppilastutkinto(suoritus)" required="required"
                 class="form-control input-sm test-suoritusKoulutus"></select>
@@ -29,14 +29,14 @@
             oph-msg="suoritusrekisteri.muokkaa.yksilollistetty">Yksilöllistetty</strong>
         <select ng-show="info.editable" ng-model="suoritus.yksilollistaminen"
                 ng-options="yks.value as yks.text for yks in yksilollistamiset" required="required"
-                ng-disabled="info.delete || (suoritus.komo !== komo.peruskoulu && suoritus.komo !== komo.lisaopetus)"
+                ng-disabled="info.delete || (suoritus.komo !== komo.peruskoulu && suoritus.komo !== komo.lisaopetus) || editSuoritusDisabled(suoritus)"
                 class="form-control input-sm test-suoritusYksilollistetty"></select>
         <div ng-hide="info.editable" class="test-suoritusYksilollistetty">{{suoritus.yksilollistaminen}}</div>
     </div>
 </div>
 <div class="row">
     <div class="form-group col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.opetuskieli">Opetuskieli</strong>
-        <select ng-show="info.editable" ng-disabled="info.delete" ng-model="suoritus.suoritusKieli" required="required"
+        <select ng-show="info.editable" ng-disabled="info.delete || editSuoritusDisabled(suoritus)" ng-model="suoritus.suoritusKieli" required="required"
                 ng-options="k.value as k.text for k in kielet" class="form-control input-sm test-suoritusKieli"></select>
 
         <div ng-hide="info.editable" class="test-suoritusKieli">{{resolveValueFromOptionArray(suoritus.suoritusKieli, kielet)}}</div>
@@ -46,7 +46,7 @@
 
         <div ng-show="info.editable" class="input-group">
             <input type="text"
-                   ng-disabled="info.delete"
+                   ng-disabled="info.delete || editSuoritusDisabled(suoritus)"
                    ng-model="info.valmistuminen"
                    max-date="info.maxDate"
                    title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)"
@@ -60,7 +60,7 @@
                    class="form-control input-sm datepicker test-suoritusValmistuminen"/>
             <span class="input-group-btn">
                 <button type="button"
-                    ng-disabled="info.delete"
+                    ng-disabled="info.delete || editSuoritusDisabled(suoritus)"
                     ng-click="info.valmistuminen = null"
                     class="btn btn-default btn-sm">
                     <span class="glyphicon glyphicon-remove"> </span>
@@ -72,7 +72,7 @@
     <div class="form-group col-sm-4">
         <strong oph-msg="suoritusrekisteri.muokkaa.tila">Tila</strong>
         <select ng-show="info.editable"
-                ng-disabled="info.delete"
+                ng-disabled="info.delete || editSuoritusDisabled(suoritus)"
                 ng-model="suoritus.tila"
                 required="required"
                 ng-options="t.value as t.text for t in tilat"

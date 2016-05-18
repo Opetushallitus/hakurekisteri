@@ -37,6 +37,7 @@ app.factory "MuokkaaTiedot", [
         LokalisointiService.loadMessages ->
           messageLoaded.resolve()
         getMyRoles()
+        getRestrictions()
 
         fetchHenkilotiedot()
         fetchLuokkatiedot()
@@ -115,6 +116,12 @@ app.factory "MuokkaaTiedot", [
           $scope.myRoles = angular.fromJson(data)
         ).error ->
           $log.error "cannot connect CAS"
+
+      getRestrictions = ->
+        $http.get(window.url("suoritusrekisteri.rajoitukset", "opoUpdateGraduation"), { cache: true }).success((data) ->
+          $scope.restrictionActiveSecondaryLevel = data
+        ).error ->
+          $log.error "cannot connect ohjausparametrit"
 
       fetchKomos = ->
         komosLoaded = $q.defer()
@@ -224,6 +231,9 @@ app.factory "MuokkaaTiedot", [
               $scope.myRoles.indexOf("APP_SUORITUSREKISTERI_READ_UPDATE_1.2.246.562.10.00000000001") > -1
       ).error ->
         $log.error "cannot connect to CAS"
+
+      $scope.editSuoritusDisabled = (suoritus) ->
+        return suoritus.komo != $scope.komo.ylioppilastutkinto && $scope.restrictionActiveSecondaryLevel && !$scope.isOPH()
 
       $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel = (info, model, validateError) ->
         if model.vahvistettu and not info["delete"] and info.editable and not (model.komo and model.komo is $scope.komo.ylioppilastutkinto)

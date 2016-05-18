@@ -75,14 +75,14 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     }
   }
 
-  private def auditAddMuutokset(muutokset: Map[String, (String, String)])(builder: LogMessageBuilder): LogMessageBuilder = {
+  protected def auditAddMuutokset(muutokset: Map[String, (String, String)])(builder: LogMessageBuilder): LogMessageBuilder = {
     muutokset.foreach {
       case (kentta, (vanhaArvo, uusiArvo)) => builder.add(kentta, vanhaArvo, uusiArvo)
     }
     builder
   }
 
-  private def auditLog(username: String, operation: HakuRekisteriOperation, resourceName: String, resourceId: String, muutokset: Map[String, (String, String)] = Map()) =
+  protected def auditLog(username: String, operation: HakuRekisteriOperation, resourceName: String, resourceId: String, muutokset: Map[String, (String, String)] = Map()) =
     audit.log(auditAddMuutokset(muutokset)(LogMessage.builder())
       .id(username)
       .setOperaatio(operation)
@@ -111,23 +111,21 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
     }
   )
 
-  case class NotFoundException() extends Exception
-
-  notFound {
-    throw NotFoundException()
-  }
-
   incident {
-    case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
     case t: MalformedResourceException => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, "not authorized"))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
   }
 }
 
+case class NotFoundException(resource: String) extends Exception(resource)
 case class UserNotAuthorized(message: String) extends Exception(message)
 
-abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]](actor: ActorRef, qb: Map[String, String] => Query[A])(implicit val security: Security, sw: Swagger, system: ActorSystem, mf: Manifest[A], cf: Manifest[C]) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with HakurekisteriParsing[A] with QueryLogging with SecuritySupport {
+abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriCommand[A]]
+(actor: ActorRef, qb: Map[String, String] => Query[A])
+(implicit val security: Security, sw: Swagger, system: ActorSystem, mf: Manifest[A], cf: Manifest[C])
+  extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with SwaggerSupport with FutureSupport with HakurekisteriParsing[A]
+  with QueryLogging with SecuritySupport {
 
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
@@ -150,21 +148,25 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
 
   class FutureActorResult[B: Manifest](message: Future[AnyRef], success: (B) => AnyRef) extends AsyncResult() {
     override implicit def timeout: Duration = timeOut.seconds
-    val is = message.flatMap(actor ? _).mapTo[B].
-      map(success)
+    val is = message.flatMap(actor ? _).flatMap{
+      case Some(res: B) => Future.successful(success(res))
+      case None => Future.failed(new NotFoundException(""))
+      case a : B => Future.successful(success(a))
+    }
+
   }
 
   class ActorResult[B: Manifest](message: AnyRef, success: (B) => AnyRef) extends FutureActorResult[B](Future.successful(message), success)
 
-  def createEnabled = Future.successful(true)
+  def createEnabled(resource: A, user: Option[User]) = Future.successful(true)
 
   def notEnabled = new Exception("operation not enabled")
 
   def createResource(user: Option[User]) = {
     val msg: Future[AuthorizedCreate[A, UUID]] = (command[C] >> (_.toValidatedResource(user.get.username))).flatMap(_.fold(
       errors => Future.failed(MalformedResourceException(errors)),
-      resource =>
-        createEnabled.flatMap(enabled =>
+      (resource: A) =>
+        createEnabled(resource, user).flatMap(enabled =>
           if (enabled) Future.successful(AuthorizedCreate[A, UUID](resource, user.get))
           else Future.failed(TiedonsiirtoNotOpenException)
         )
@@ -182,20 +184,28 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
 
   def identifyResource(resource : A, id: UUID): A with Identified[UUID] = resource.identify(id)
 
-  def updateEnabled = Future.successful(true)
+  def updateEnabled(resource: A, user: Option[User]) = Future.successful(true)
 
   def updateResource(id: UUID, user: Option[User]): Object = {
     val myCommand: C = command[C]
-    val msg: Future[AuthorizedUpdate[A, UUID]] = updateEnabled.flatMap(enabled =>
-      if (enabled) {
-        (myCommand >> (_.toValidatedResource(user.get.username))).flatMap(
-          _.fold(
-            errors => Future.failed(MalformedResourceException(errors)),
-            resource => Future.successful(AuthorizedUpdate[A, UUID](identifyResource(resource, id), user.get)))
-        )
+
+    val msg = (actor ? id).mapTo[Option[A]].flatMap((a: Option[A]) => a  match {
+      case Some(res) =>
+        updateEnabled(res, user).flatMap(enabled =>
+          if (enabled) {
+            (myCommand >> (_.toValidatedResource(user.get.username))).flatMap(
+              _.fold(
+                errors => Future.failed(MalformedResourceException(errors)),
+                resource => Future.successful(AuthorizedUpdate[A, UUID](identifyResource(resource, id), user.get)))
+            )
+          } else {
+            Future.failed(TiedonsiirtoNotOpenException)
+          })
+      case None => {
+        Future.failed(NotFoundException(id.toString))
       }
-      else Future.failed(notEnabled)
-    )
+    })
+
     new FutureActorResult[A with Identified[UUID]](msg, Ok(_))
   }
 

@@ -25,7 +25,7 @@ class ParameterActorSpec extends ScalatraFunSuite with Matchers with AsyncAssert
 
     when(e.request(forUrl("http://localhost/ohjausparametrit-service/api/v1/rest/parametri/ALL"))).thenReturn((200, List(), ParameterResults.all))
     when(e.request(forUrl("http://localhost/ohjausparametrit-service/api/v1/rest/parametri/tiedonsiirtosendingperiods"))).thenReturn((200, List(), ParameterResults.tiedonsiirto))
-
+    when(e.request(forUrl("http://localhost/ohjausparametrit-service/api/v1/rest/parametri/restrictedperiods"))).thenReturn((200, List(), ParameterResults.restrictions))
     e
   }
 
@@ -113,6 +113,39 @@ class ParameterActorSpec extends ScalatraFunSuite with Matchers with AsyncAssert
     )
   }
 
+  test("ParameterActor should return true for restriction with active restriction period") {
+    withSystem(
+      implicit system => {
+        implicit val ec = system.dispatcher
+        val endPoint = createEndPoint
+        val parameterActor = system.actorOf(Props(new HttpParameterActor(new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
+
+        waitFuture((parameterActor ? IsRestrictionActive("opoUpdateGraduation")).mapTo[Boolean])(b => {
+          b should be (true)
+        })
+
+        verify(endPoint, times(1)).request(forUrl("http://localhost/ohjausparametrit-service/api/v1/rest/parametri/restrictedperiods"))
+      }
+    )
+  }
+
+  test("ParameterActor should return false for restriction with inactive restriction period") {
+    withSystem(
+      implicit system => {
+        implicit val ec = system.dispatcher
+        val endPoint = createEndPoint
+        val parameterActor = system.actorOf(Props(new HttpParameterActor(new VirkailijaRestClient(config = parameterConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))))))
+
+        waitFuture((parameterActor ? IsRestrictionActive("inactiveRestriction")).mapTo[Boolean])(b => {
+          b should be (false)
+        })
+
+        verify(endPoint, times(1)).request(forUrl("http://localhost/ohjausparametrit-service/api/v1/rest/parametri/restrictedperiods"))
+      }
+    )
+  }
+
+
   test("ParameterActor should cache tiedonsiirto period query results") {
     withSystem(
       implicit system => {
@@ -141,5 +174,6 @@ class ParameterActorSpec extends ScalatraFunSuite with Matchers with AsyncAssert
 
 object ParameterResults {
   val all = scala.io.Source.fromURL(getClass.getResource("/mock-data/parametrit/parametrit-all.json")).mkString
+  val restrictions = scala.io.Source.fromURL(getClass.getResource("/mock-data/parametrit/restrictions-opoUpdateGraduation.json")).mkString
   val tiedonsiirto = scala.io.Source.fromURL(getClass.getResource("/mock-data/parametrit/parametrit-tiedonsiirtosendingperiods.json")).mkString
 }
