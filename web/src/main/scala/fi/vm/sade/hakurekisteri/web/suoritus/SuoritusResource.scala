@@ -6,7 +6,7 @@ import fi.vm.sade.hakurekisteri.KomoOids
 import fi.vm.sade.hakurekisteri.integration.parametrit.{IsRestrictionActive, ParameterActor}
 import fi.vm.sade.hakurekisteri.rest.support.{User, Query}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus, VirallinenSuoritus}
-import fi.vm.sade.hakurekisteri.web.batchimport.TiedonsiirtoNotOpenException
+import fi.vm.sade.hakurekisteri.web.batchimport.ResourceNotEnabledException
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.scalatra.NotFound
 import org.scalatra.swagger.Swagger
@@ -34,8 +34,6 @@ class SuoritusResource
   override def updateEnabled(resource: Suoritus, user: Option[User]) = createEnabled(resource, user)
 
   incident {
-    case TiedonsiirtoNotOpenException => (id) => NotFound(IncidentReport(id, "tiedonsiirto not open at the moment"))
-    case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
+    case ResourceNotEnabledException => (id) => NotFound(IncidentReport(id, "Suorituksen muokkaaminen ei tällä hetkellä ole mahdollista"))
   }
-
 }

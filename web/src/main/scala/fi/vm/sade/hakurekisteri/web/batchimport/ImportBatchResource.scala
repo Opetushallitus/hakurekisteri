@@ -102,7 +102,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
 
   override def updateEnabled(resource: ImportBatch, user: Option[User]) = createEnabled(resource, user)
 
-  override def notEnabled = TiedonsiirtoNotOpenException
+  override def notEnabled = ResourceNotEnabledException
 
   get("/schema", operation(schemaOperation)) {
     MovedPermanently(request.getRequestURL.append("/").append(schema.schemaLocation).toString)
@@ -151,7 +151,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   }
 
   incident {
-    case TiedonsiirtoNotOpenException => (id) => NotFound(IncidentReport(id, "tiedonsiirto not open at the moment"))
+    case ResourceNotEnabledException => (id) => NotFound(IncidentReport(id, "tiedonsiirto not open at the moment"))
     case t: WrongBatchStateException => (id) => BadRequest(IncidentReport(id, "illegal state for reprocessing"))
     case BatchNotFoundException => (id) => NotFound(IncidentReport(id, "batch not found for reprocessing"))
     case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
@@ -306,4 +306,4 @@ object EmptyPart extends Part {
 
 case class TiedonsiirtoOpen(open: Boolean)
 
-object TiedonsiirtoNotOpenException extends Exception
+object ResourceNotEnabledException extends Exception

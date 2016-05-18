@@ -12,7 +12,7 @@ import fi.vm.sade.hakurekisteri.organization.{AuthorizedCreate, AuthorizedDelete
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.web.batchimport.TiedonsiirtoNotOpenException
+import fi.vm.sade.hakurekisteri.web.batchimport.ResourceNotEnabledException
 import org.scalatra._
 import org.scalatra.commands._
 import org.scalatra.json.{JacksonJsonSupport, JsonSupport}
@@ -168,7 +168,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
       (resource: A) =>
         createEnabled(resource, user).flatMap(enabled =>
           if (enabled) Future.successful(AuthorizedCreate[A, UUID](resource, user.get))
-          else Future.failed(TiedonsiirtoNotOpenException)
+          else Future.failed(ResourceNotEnabledException)
         )
     ))
     new FutureActorResult(msg, ResourceCreated(request.getRequestURL))
@@ -199,7 +199,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
                 resource => Future.successful(AuthorizedUpdate[A, UUID](identifyResource(resource, id), user.get)))
             )
           } else {
-            Future.failed(TiedonsiirtoNotOpenException)
+            Future.failed(ResourceNotEnabledException)
           })
       case None => {
         Future.failed(NotFoundException(id.toString))
