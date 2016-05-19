@@ -149,6 +149,33 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
     ilmoittautumiset should (contain(Lasna(Syksy(2015))) and contain(Poissa(Kevat(2016))))
   }
 
+  test("should convert ilmoittautumiset into sequence in syksy haku but koulutus start season in next year syksy") {
+    val haku = Haku(
+      nimi = Kieliversiot(fi = Some("joo"), sv = None, en = None),
+      oid = "1.2.3",
+      aika = Ajanjakso(alkuPaiva = new LocalDate(), loppuPaiva = None),
+      kausi = "kausi_s#1",
+      vuosi = 2015,
+      koulutuksenAlkamiskausi = Some("kausi_s#1"),
+      koulutuksenAlkamisvuosi = Some(2016),
+      kkHaku = true,
+      viimeinenHakuaikaPaattyy = Some(new DateTime())
+    )
+
+    val koulutusSyksy = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiS), Some(2016), None)
+    val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutusSyksy))
+
+    val sijoitteluTulos = new SijoitteluTulos {
+      override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI)
+      override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = Some(Vastaanottotila.KESKEN)
+      override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.KESKEN)
+      override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
+    }
+    val ilmoittautumiset = Await.result(KkHakijaUtil.getLasnaolot(sijoitteluTulos, "1.5.1", "", hakukohteenKoulutukset.koulutukset), 15.seconds)
+
+    ilmoittautumiset should (contain(Lasna(Syksy(2016))) and contain(Lasna(Kevat(2017))))
+  }
+
   test("should show turvakielto true from hakemus") {
     val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.1"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
 
