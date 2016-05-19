@@ -7,14 +7,14 @@ log4j.logger.javax={{env_loglevel}}
 log4j.logger.scala={{env_loglevel}}
 
 log4j.appender.STDOUT=org.apache.log4j.ConsoleAppender
-log4j.appender.STDOUT.layout=org.apache.log4j.EnhancedPatternLayout
+log4j.appender.STDOUT.layout=org.apache.log4j.PatternLayout
 log4j.appender.STDOUT.Threshold=ERROR
 
 log4j.appender.FILE.Threshold=INFO
 log4j.appender.FILE.File=${user.home}/tomcat/logs/oph-suoritusrekisteri.log
 log4j.appender.FILE=org.apache.log4j.RollingFileAppender
 log4j.appender.FILE.Append=true
-log4j.appender.FILE.layout=org.apache.log4j.EnhancedPatternLayout
+log4j.appender.FILE.layout=org.apache.log4j.PatternLayout
 log4j.appender.FILE.MaxFileSize=20MB
 log4j.appender.FILE.MaxBackupIndex=30
 
@@ -22,7 +22,7 @@ log4j.appender.VIRTA.Threshold=INFO
 log4j.appender.VIRTA.File=${user.home}/tomcat/logs/oph-virta.log
 log4j.appender.VIRTA=org.apache.log4j.RollingFileAppender
 log4j.appender.VIRTA.Append=true
-log4j.appender.VIRTA.layout=org.apache.log4j.EnhancedPatternLayout
+log4j.appender.VIRTA.layout=org.apache.log4j.PatternLayout
 log4j.appender.VIRTA.MaxFileSize={{suoritusrekisteri_virta_log_file_size}}
 log4j.appender.VIRTA.MaxBackupIndex={{suoritusrekisteri_virta_log_file_amount}}
 log4j.category.fi.vm.sade.hakurekisteri.integration.virta.VirtaActor=INFO, VIRTA
@@ -36,7 +36,7 @@ log4j.appender.P.Threshold=INFO
 log4j.appender.P.File=${user.home}/tomcat/logs/oph-suoritusrekisteri-problems.log
 log4j.appender.P=org.apache.log4j.RollingFileAppender
 log4j.appender.P.Append=true
-log4j.appender.P.layout=org.apache.log4j.EnhancedPatternLayout
+log4j.appender.P.layout=org.apache.log4j.PatternLayout
 log4j.appender.P.MaxFileSize=20MB
 log4j.appender.P.MaxBackupIndex=20
 log4j.category.fi.vm.sade.hakurekisteri.arvosana.PerusopetusSanityActor=INFO, P
@@ -44,10 +44,10 @@ log4j.additivity.fi.vm.sade.hakurekisteri.arvosana.PerusopetusSanityActor=false
 
 {# raw-endraw -välillä template engine ei tee mitään! #} 
 {% raw %}
-log4j.appender.STDOUT.layout.ConversionPattern=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX}{GMT} %-5p {%X{user}} [%t] %-5p %c: %m%n
-log4j.appender.FILE.layout.ConversionPattern=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX}{GMT} %-5p {%X{user}} [%t] %-5p %c: %m%n
-log4j.appender.VIRTA.layout.ConversionPattern=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX}{GMT} %-5p {%X{user}} [%t] %-5p %c: %m%n
-log4j.appender.P.layout.ConversionPattern=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX}{GMT} %-5p {%X{user}} [%t] %-5p %c: %m%n
+log4j.appender.STDOUT.layout.ConversionPattern=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5p {%X{user}} [%t] %-5p %c: %m%n
+log4j.appender.FILE.layout.ConversionPattern=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5p {%X{user}} [%t] %-5p %c: %m%n
+log4j.appender.VIRTA.layout.ConversionPattern=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5p {%X{user}} [%t] %-5p %c: %m%n
+log4j.appender.P.layout.ConversionPattern=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5p {%X{user}} [%t] %-5p %c: %m%n
 {% endraw %}
 
 # Audit logger configuration
