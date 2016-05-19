@@ -9,7 +9,7 @@ import fi.vm.sade.hakurekisteri.hakija.{Puuttuu, Syksy, _}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusActor, RefreshHakemukset}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.koodisto._
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohdeOid, HakukohteenKoulutukset, Hakukohteenkoulutus, RestHaku, RestHakuAika}
+import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
@@ -109,15 +109,18 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
       kkHaku = true,
       viimeinenHakuaikaPaattyy = Some(new DateTime())
     )
+
+    val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutus1))
+
     val sijoitteluTulos = new SijoitteluTulos {
-      override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.EI_TEHTY)
+      override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI)
       override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = Some(Vastaanottotila.KESKEN)
       override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.KESKEN)
       override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
     }
-    val ilmoittautumiset: Seq[Lasnaolo] = Await.result(KkHakijaUtil.getLasnaolot(sijoitteluTulos, "1.5.1", haku, "", koodistoMock), 15.seconds)
+    val ilmoittautumiset: Seq[Lasnaolo] = Await.result(KkHakijaUtil.getLasnaolot(sijoitteluTulos, "1.5.1", "", hakukohteenKoulutukset.koulutukset), 15.seconds)
 
-    ilmoittautumiset should (contain(Puuttuu(Syksy(2015))) and contain(Puuttuu(Kevat(2015))))
+    ilmoittautumiset should (contain(Lasna(Syksy(2015))) and contain(Lasna(Kevat(2015))))
   }
 
   test("should convert ilmoittautumiset into sequence in kevään haku") {
@@ -132,13 +135,16 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
       kkHaku = true,
       viimeinenHakuaikaPaattyy = Some(new DateTime())
     )
+
+    val hakukohteenKoulutukset: HakukohteenKoulutukset = HakukohteenKoulutukset("1.5.1", Some("joku tunniste"), Seq(koulutus2))
+
     val sijoitteluTulos = new SijoitteluTulos {
       override def ilmoittautumistila(hakemus: String, kohde: String): Option[Ilmoittautumistila] = Some(Ilmoittautumistila.LASNA_SYKSY)
       override def vastaanottotila(hakemus: String, kohde: String): Option[Vastaanottotila] = Some(Vastaanottotila.KESKEN)
       override def valintatila(hakemus: String, kohde: String): Option[Valintatila] = Some(Valintatila.KESKEN)
       override def pisteet(hakemus: String, kohde: String): Option[BigDecimal] = Some(BigDecimal(4.0))
     }
-    val ilmoittautumiset = Await.result(KkHakijaUtil.getLasnaolot(sijoitteluTulos, "1.5.1", haku, "", koodistoMock), 15.seconds)
+    val ilmoittautumiset = Await.result(KkHakijaUtil.getLasnaolot(sijoitteluTulos, "1.5.1", "", hakukohteenKoulutukset.koulutukset), 15.seconds)
 
     ilmoittautumiset should (contain(Lasna(Syksy(2015))) and contain(Poissa(Kevat(2016))))
   }
@@ -207,7 +213,10 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 
   val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L, Some(2L))), Map("fi" -> "testihaku"), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), "JULKAISTU")
-  val koulutus1 = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"))
+  val kausiKoodiK = TarjontaKoodi(Some("K"))
+  val kausiKoodiS = TarjontaKoodi(Some("S"))
+  val koulutus1 = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiK), Some(2015), None)
+  val koulutus2 = Hakukohteenkoulutus("1.5.6", "123457", Some("asdfASDF4"), Some(kausiKoodiS), Some(2015), None)
   val suoritus1 = VirallinenSuoritus(YTLXml.yotutkinto, YTLXml.YTL, "VALMIS", new LocalDate(), "1.2.3", Ei, "FI", None, true, "1")
 
   def seq2journal(s: Seq[FullHakemus]) = {

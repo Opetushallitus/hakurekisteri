@@ -13,7 +13,7 @@ import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Kevat, Lasna, Lasnaolo, Poissa
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakemusHenkilotiedot, HenkiloHakijaQuery, Koulutustausta, PreferenceEligibility, _}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, GetRinnasteinenKoodiArvoQuery, Koodi}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{HakukohdeOid, HakukohteenKoulutukset, Hakukohteenkoulutus, TarjontaException}
+import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila.Valintatila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila.Vastaanottotila
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, SijoitteluTulos, ValintaTulosQuery, Valintatila}
@@ -24,11 +24,11 @@ import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaUtil._
 import fi.vm.sade.hakurekisteri.web.rest.support.ApiFormat.ApiFormat
 import fi.vm.sade.hakurekisteri.web.rest.support.{ApiFormat, IncidentReport, _}
+import org.joda.time.DateTime
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra.util.RicherString._
-
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -107,8 +107,8 @@ class KkHakijaResource(hakemukset: ActorRef,
     extends HakuJaValintarekisteriStack with KkHakijaSwaggerApi with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport
     with SecuritySupport with ExcelSupport[Seq[Hakija]] with DownloadSupport with QueryLogging {
 
-  override protected def applicationDescription: String = "Korkeakouluhakijatietojen rajapinta"
-  override protected implicit def swagger: SwaggerEngine[_] = sw
+  protected def applicationDescription: String = "Korkeakouluhakijatietojen rajapinta"
+  protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
   implicit val defaultTimeout: Timeout = 120.seconds
 
@@ -284,7 +284,7 @@ class KkHakijaResource(hakemukset: ActorRef,
     for {
       hakukohteenkoulutukset: HakukohteenKoulutukset <- (tarjonta ? HakukohdeOid(hakukohdeOid)).mapTo[HakukohteenKoulutukset]
       kausi: String <- getKausi(haku.kausi, hakemusOid, koodisto)
-      lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, haku, hakemusOid, koodisto)
+      lasnaolot: Seq[Lasnaolo] <- getLasnaolot(sijoitteluTulos, hakukohdeOid, hakemusOid, hakukohteenkoulutukset.koulutukset)
     } yield {
       if (matchHakuehto(sijoitteluTulos, hakemusOid, hakukohdeOid)(q.hakuehto)) {
         Some(Hakemus(
@@ -467,35 +467,115 @@ object KkHakijaUtil {
       "ulk" -> k.pohjakoulutus_ulk,
       "avoin" -> k.pohjakoulutus_avoin,
       "muu" -> k.pohjakoulutus_muu
-    ).collect{ case (key , Some("true")) => key}.toSeq
+    ).collect{ case (key, Some("true")) => key }.toSeq
   }
 
   // TODO muuta kun valinta-tulos-service saa ilmoittautumiset sekvenssiksi
-  def getLasnaolot(t: SijoitteluTulos, hakukohde: String, haku: Haku, hakemusOid: String, koodisto: ActorRef)
-                  (implicit timeout: Timeout, ec: ExecutionContext): Future[Seq[Lasnaolo]] = {
-    getKausi(haku.kausi, hakemusOid, koodisto).map(k => {
-      val lukuvuosi = kausi2lukuvuosi(haku, k)
 
-      t.ilmoittautumistila(hakemusOid, hakukohde).map {
-        case Ilmoittautumistila.EI_TEHTY              => Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2)))
-        case Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI  => Seq(Lasna(Syksy(lukuvuosi._1)), Lasna(Kevat(lukuvuosi._2)))
-        case Ilmoittautumistila.POISSA_KOKO_LUKUVUOSI => Seq(Poissa(Syksy(lukuvuosi._1)), Poissa(Kevat(lukuvuosi._2)))
-        case Ilmoittautumistila.EI_ILMOITTAUTUNUT     => Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2)))
-        case Ilmoittautumistila.LASNA_SYKSY           => Seq(Lasna(Syksy(lukuvuosi._1)), Poissa(Kevat(lukuvuosi._2)))
-        case Ilmoittautumistila.POISSA_SYKSY          => Seq(Poissa(Syksy(lukuvuosi._1)), Lasna(Kevat(lukuvuosi._2)))
-        case Ilmoittautumistila.LASNA                 => Seq(Lasna(Kevat(lukuvuosi._2)))
-        case Ilmoittautumistila.POISSA                => Seq(Poissa(Kevat(lukuvuosi._2)))
-        case _                                        => Seq()
-      }.getOrElse(Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2))))
-    })
+  /**
+    * Return a Future of Sequence of Lasnaolos based on conversions from season/year information from Hakukohteenkoulutus
+    *
+    * Uses first of the Hakukohteenkoulutus that has valid data when determining start season/year of the Lasnaolo.
+    * Hakukohteenkoulutus might have the information in a Long date or separately as season and year.
+    * Prefer season and year, if they aren't present, try parsing first of the possible Long dates.
+    */
+  def getLasnaolot(t: SijoitteluTulos, hakukohde: String, hakemusOid: String, koulutukset: Seq[Hakukohteenkoulutus])
+                  (implicit timeout: Timeout, ec: ExecutionContext): Future[Seq[Lasnaolo]] = {
+
+    koulutukset.find(koulutusHasValidFieldsForParsing)
+               .map(parseKausiVuosiPair)
+               .map(kausiVuosiPairToLasnaoloSequenceFuture(_:(String, Int), t, hakemusOid, hakukohde))
+               .get
   }
 
-  def kausi2lukuvuosi(haku: Haku, k: String): (Int, Int) = {
-    k match {
-      case "S" => (haku.vuosi + 1, haku.vuosi + 1)
-      case "K" => (haku.vuosi, haku.vuosi + 1)
-      case _ => throw new scala.IllegalArgumentException(s"invalid kausi $k")
+  /**
+    * Use sijoittelunTulos and parsed kausiVuosiPair to determine Lasnaolos.
+    */
+  private def kausiVuosiPairToLasnaoloSequenceFuture(kvp: (String, Int),
+                                                     sijoittelunTulos:SijoitteluTulos,
+                                                     hakemusOid: String,
+                                                     hakukohde: String)
+                                                    (implicit timeout: Timeout, ec: ExecutionContext):Future[Seq[Lasnaolo]] = {
+
+    val lukuvuosi: (Int, Int) = kausiVuosiToLukuvuosiPair(kvp)
+
+    Future(sijoittelunTulos.ilmoittautumistila(hakemusOid, hakukohde).map {
+      case Ilmoittautumistila.EI_TEHTY              => Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2)))
+      case Ilmoittautumistila.LASNA_KOKO_LUKUVUOSI  => Seq(Lasna(Syksy(lukuvuosi._1)), Lasna(Kevat(lukuvuosi._2)))
+      case Ilmoittautumistila.POISSA_KOKO_LUKUVUOSI => Seq(Poissa(Syksy(lukuvuosi._1)), Poissa(Kevat(lukuvuosi._2)))
+      case Ilmoittautumistila.EI_ILMOITTAUTUNUT     => Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2)))
+      case Ilmoittautumistila.LASNA_SYKSY           => Seq(Lasna(Syksy(lukuvuosi._1)), Poissa(Kevat(lukuvuosi._2)))
+      case Ilmoittautumistila.POISSA_SYKSY          => Seq(Poissa(Syksy(lukuvuosi._1)), Lasna(Kevat(lukuvuosi._2)))
+      case Ilmoittautumistila.LASNA                 => Seq(Lasna(Kevat(lukuvuosi._2)))
+      case Ilmoittautumistila.POISSA                => Seq(Poissa(Kevat(lukuvuosi._2)))
+      case _                                        => Seq()
+    }.getOrElse(Seq(Puuttuu(Syksy(lukuvuosi._1)), Puuttuu(Kevat(lukuvuosi._2)))))
+
+  }
+
+  /**
+    * Returns a Pair(Season, Year) or throws an Exception
+    *
+    * Used for determining Lasnaolos.
+    */
+  private def parseKausiVuosiPair(k: Hakukohteenkoulutus): (String, Int) = {
+
+    val kausi: Option[TarjontaKoodi] = k.koulutuksenAlkamiskausi
+    val vuosi: Int                   = k.koulutuksenAlkamisvuosi.getOrElse(0)
+    val pvms:  Option[Set[Long]]     = k.koulutuksenAlkamisPvms
+
+    if (kausi.isDefined && kausi.get.arvo.nonEmpty && vuosi != 0) {
+      (kausi.get.arvo.get, vuosi)
+    } else {
+      datetimeLongToKausiVuosiPair(
+        pvms.getOrElse(Set()).collectFirst{case pvm: Long => pvm}
+            .getOrElse(throw new scala.IllegalArgumentException("Invalid Hakukohteenkoulutus data. Could not parse Lasnaolos."))
+      )
+    }
+
+  }
+
+  /**
+    * Returns true if Hakukohteenkoulutus has valid fields for parsing a start season/year
+    */
+  private def koulutusHasValidFieldsForParsing(k: Hakukohteenkoulutus): Boolean = {
+
+    if (k.koulutuksenAlkamiskausi.isDefined &&
+        k.koulutuksenAlkamiskausi.get.arvo.nonEmpty &&
+        k.koulutuksenAlkamisvuosi.getOrElse(0) != 0 ||
+        k.koulutuksenAlkamisPvms.isDefined &&
+        k.koulutuksenAlkamisPvms.get.nonEmpty) {
+      true
+    } else {
+      false
+    }
+
+  }
+
+  /**
+    * Return Pair of years for autumn and spring seasons from passed in
+    * Pair containing start season and year of the learning opportunity.
+    */
+  private def kausiVuosiToLukuvuosiPair(kv: (String, Int)): (Int, Int) = {
+    kv._1 match {
+      case "S" => (kv._2, kv._2 + 1)
+      case "K" => (kv._2, kv._2)
+      case _ => throw new scala.IllegalArgumentException("Invalid kausi " + kv._1)
     }
   }
 
+  /**
+    * Convert date in millis to a datetime and extract year/season
+    * information from it as a Pair.
+    */
+  private def datetimeLongToKausiVuosiPair(d: Long): (String, Int) = {
+    val date: DateTime = new DateTime(d)
+    val year: Int = date.getYear
+    val kausi: String = date.getMonthOfYear match {
+      case m if m > 0 && m < 7    => "K"
+      case m if m >= 7 && m <= 12 => "S"
+      case _ => throw new scala.IllegalArgumentException("Invalid date provided.")
+    }
+    (kausi, year)
+  }
 }
