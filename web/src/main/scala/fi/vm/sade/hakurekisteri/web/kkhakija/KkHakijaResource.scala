@@ -572,8 +572,8 @@ object KkHakijaUtil {
     val date: DateTime = new DateTime(d)
     val year: Int = date.getYear
     val kausi: String = date.getMonthOfYear match {
-      case m if m > 0 && m < 7    => "K"
-      case m if m >= 7 && m <= 12 => "S"
+      case m if m >= 1 && m <= 7  => "K"   // 1.1 - 31.7    Spring season
+      case m if m >= 8 && m <= 12 => "S"   // 1.8 - 31.12   Autumn season
       case _ => throw new scala.IllegalArgumentException("Invalid date provided.")
     }
     (kausi, year)
