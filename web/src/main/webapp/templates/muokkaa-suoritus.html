@@ -7,7 +7,7 @@
                typeahead-on-select="info.organisaatio = $item" typeahead-loading="myontajaLoading"
                typeahead-wait-ms="500" class="form-control input-sm {{myontajaLoading ? 'input-loading' : ''}} test-suoritusMyontaja"/>
         <div ng-show="!suoritus.vahvistettu">
-            <span>Hakijan ilmoittama</span>
+            <span oph-msg="suoritusrekisteri.hakijanIlmoittama">Hakijan ilmoittama</span>
             <span ng-show="info.organisaatio">({{(info.organisaatio.oppilaitosKoodi + ' ' + (info.organisaatio.nimi.fi || info.organisaatio.nimi.sv || info.organisaatio.nimi.en)) || suoritus.myontaja}})</span>
         </div>
         <div class="test-suoritusMyontaja" ng-hide="info.editable || suoritus.komo === komo.ylioppilastutkinto">{{(info.organisaatio.oppilaitosKoodi + ' ' + (info.organisaatio.nimi.fi ||
