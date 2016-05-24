@@ -1,8 +1,31 @@
 "use strict"
 
+injector = angular.injector(['ng']);
+$http = injector.get('$http');
+
 window.urls.loadFromUrls("suoritusrekisteri-web-oph.json", "rest/v1/properties").success ->
-  angular.element(document).ready ->
-    angular.bootstrap(document, ['myApp'])
+  $http.get(window.url("cas.myroles"),
+    cache: true
+  ).success (myroles) ->
+    setUserLang(myroles)
+    angular.element(document).ready ->
+      angular.bootstrap(document, ['myApp'])
+
+setUserLang = (myroles) ->
+  [lang] = myroles.filter (key) -> key.substring(0, 5) == 'LANG_'
+
+  if lang?
+    lang = lang.substring(5)
+  else
+    lang = (navigator.language or navigator.userLanguage).substr(0, 2)
+
+  lang = "fi" if not lang or [
+    "fi"
+    "sv"
+    "en"
+  ].indexOf(lang) is -1
+
+  window.userLang = lang.toLowerCase()
 
 app = angular.module "myApp", [
   "ngRoute"

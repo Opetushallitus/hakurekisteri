@@ -2,19 +2,7 @@ app.factory "LokalisointiService", [
   "$log"
   "$http"
   ($log, $http) ->
-    getLang = ->
-      lang = undefined
-      i = 0
-      while i < localisationMyroles.length
-        lang = localisationMyroles[i].substring(5).toLowerCase()  if localisationMyroles[i].indexOf("LANG_") is 0
-        i++
-      lang = (if lang then lang else (navigator.language or navigator.userLanguage).substr(0, 2).toLowerCase())
-      lang = "fi"  if not lang or [
-        "fi"
-        "sv"
-        "en"
-      ].indexOf(lang) is -1
-      lang
+    getLang = -> window.userLang
 
     addTranslation = (msgKey, lang, elemText, oldTranslation) ->
       allowEmptyTranslationUpdate = false
@@ -39,31 +27,24 @@ app.factory "LokalisointiService", [
       addTranslation msgKey, "en", elemText, oldTranslation
       return
 
-    localisationMyroles = []
     translations = inited: false
 
     service =
-      lang: "fi"
+      lang: getLang()
     service.loadMessages = (callback) ->
       $http.get(window.url("lokalisointi.category", msgCategory),
         cache: true
       ).success (data) ->
-        $http.get(window.url("cas.myroles"),
-          cache: true
-        ).success (myroles) ->
-          unless translations.inited
-            localisationMyroles = myroles
-            service.lang = getLang()
-            i = 0
+        unless translations.inited
+          i = 0
 
-            while i < data.length
-              t = data[i]
-              translations[t.key] = []  unless translations[t.key]
-              translations[t.key][t.locale] = t
-              i++
-            translations.inited = true
-          callback()  if callback
-          return
+          while i < data.length
+            t = data[i]
+            translations[t.key] = []  unless translations[t.key]
+            translations[t.key][t.locale] = t
+            i++
+          translations.inited = true
+        callback()  if callback
         return
       return
 
