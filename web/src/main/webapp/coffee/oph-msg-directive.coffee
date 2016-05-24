@@ -131,7 +131,9 @@ app.directive "ophMsg", [
 app.run [
   "$log"
   "LokalisointiService"
-  ($log, LokalisointiService) ->
+  "$rootScope"
+  ($log, LokalisointiService, $rootScope) ->
+    $rootScope.translate = LokalisointiService.getTranslation
     if window.globalInitOphMsg
       window.globalInitOphMsg ->
 ]
