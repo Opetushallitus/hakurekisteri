@@ -67,7 +67,7 @@ app.factory "LokalisointiService", [
         return
       return
 
-    service.getTranslation = (msgKey, lang, elemText) ->
+    service.getTranslation = (msgKey, lang = getLang(), elemText) ->
       if msgKey is "regexp"
         for key of translations
           translation = translations[key]
