@@ -19,9 +19,9 @@ app.controller "MuokkaaArvosanat", [
     $scope.aidinkieli = []
     $scope.info = { editable: false }
 
-    getKoodistoAsOptionArray $http, "arvosanat", "fi", $scope.arvosanat, "koodiArvo"
-    getKoodistoAsOptionArray $http, "kielivalikoima", "fi", $scope.kielet, "koodiArvo"
-    getKoodistoAsOptionArray $http, "aidinkielijakirjallisuus", "fi", $scope.aidinkieli, "koodiArvo"
+    getKoodistoAsOptionArray $http, "arvosanat", $scope.arvosanat, "koodiArvo"
+    getKoodistoAsOptionArray $http, "kielivalikoima", $scope.kielet, "koodiArvo"
+    getKoodistoAsOptionArray $http, "aidinkielijakirjallisuus", $scope.aidinkieli, "koodiArvo"
 
     arvosanaSort = {}
     arvosanaOrder = ["AI", "A1", "A12", "A2", "A22", "B1", "B2", "B22", "B23", "B3", "B32", "B33", "MA", "BI", "GE",

@@ -28,10 +28,10 @@ app.factory "MuokkaaTiedot", [
         $scope.disableSave = true
         $scope.komo = {}
 
-        getKoodistoAsOptionArray $http, "kieli", "fi", $scope.kielet, "koodiArvo"
-        getKoodistoAsOptionArray $http, "luokkataso", "fi", $scope.luokkatasot, "koodiArvo"
-        getKoodistoAsOptionArray $http, "yksilollistaminen", "fi", $scope.yksilollistamiset, "koodiArvo", true
-        getKoodistoAsOptionArray $http, "suorituksentila", "fi", $scope.tilat, "koodiArvo"
+        getKoodistoAsOptionArray $http, "kieli", $scope.kielet, "koodiArvo"
+        getKoodistoAsOptionArray $http, "luokkataso", $scope.luokkatasot, "koodiArvo"
+        getKoodistoAsOptionArray $http, "yksilollistaminen", $scope.yksilollistamiset, "koodiArvo", true
+        getKoodistoAsOptionArray $http, "suorituksentila", $scope.tilat, "koodiArvo"
 
         messageLoaded = $q.defer()
         LokalisointiService.loadMessages ->
