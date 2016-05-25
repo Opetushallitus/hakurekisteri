@@ -3,7 +3,8 @@ app.controller "MuokkaaLuokkatieto", [
   "$http"
   "$q"
   "MessageService"
-  ($scope, $http, $q, MessageService) ->
+  "LokalisointiService"
+  ($scope, $http, $q, MessageService, LokalisointiService) ->
     enrichLuokkatieto = (luokkatieto) ->
       if luokkatieto.oppilaitosOid
         getOrganisaatio $http, luokkatieto.oppilaitosOid, (organisaatio) ->
@@ -48,7 +49,7 @@ app.controller "MuokkaaLuokkatieto", [
       removeLuokkatietoScope = () ->
         $scope.removeDataScope($scope)
         deleteFromArray luokkatieto, $scope.henkilo.luokkatiedot
-      if confirm("Poista luokkatieto?")
+      if confirm(LokalisointiService.getTranslation('haluatkoPoistaaLuokkatiedon'))
         if luokkatieto.id
           luokkatieto.$remove removeLuokkatietoScope, ->
             MessageService.addMessage

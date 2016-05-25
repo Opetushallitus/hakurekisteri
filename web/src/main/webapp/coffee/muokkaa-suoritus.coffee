@@ -3,7 +3,8 @@ app.controller "MuokkaaSuoritus", [
   "$http"
   "$q"
   "MessageService"
-  ($scope, $http, $q, MessageService) ->
+  "LokalisointiService"
+  ($scope, $http, $q, MessageService, LokalisointiService) ->
     enrichSuoritus = (suoritus) ->
       $scope.info.showArvosanat = true
       $scope.info.editable = false
@@ -103,7 +104,7 @@ app.controller "MuokkaaSuoritus", [
       removeSuoritusScope = () ->
         $scope.removeDataScope($scope)
         deleteFromArray suoritus, $scope.henkilo.suoritukset
-      if confirm("Poista suoritus " + suoritus.valmistuminen + "?")
+      if confirm(LokalisointiService.getTranslation('poistaSuoritus') + " " + suoritus.valmistuminen + "?")
         if suoritus.id
           suoritus.$remove removeSuoritusScope, ->
             $scope.suoritus.valmistuminen

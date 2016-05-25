@@ -15524,5 +15524,61 @@
     "locale":"sv",
     "key":"yoTutkinto.aineTaso.KYPSYYS",
     "value":"Mognadsprov (ENDAST EN)"
+  },
+  {
+    "accesscount":0,
+    "force":false,
+    "id":14473,
+    "category":"suoritusrekisteri",
+    "accessed":1464170878652,
+    "created":1464170878652,
+    "createdBy":"1.2.246.562.24.83521147825",
+    "modified":1464170878652,
+    "modifiedBy":"1.2.246.562.24.83521147825",
+    "locale":"fi",
+    "key":"haluatkoPoistaaLuokkatiedon",
+    "value":"Poista luokkatieto?"
+  },
+  {
+    "accesscount":0,
+    "force":false,
+    "id":14474,
+    "category":"suoritusrekisteri",
+    "accessed":1464179417231,
+    "created":1464179417231,
+    "createdBy":"1.2.246.562.24.83521147825",
+    "modified":1464179417231,
+    "modifiedBy":"1.2.246.562.24.83521147825",
+    "locale":"sv",
+    "key":"haluatkoPoistaaLuokkatiedon",
+    "value":"Är du säker på att du vill radera klassuppgiften?"
+  },
+  {
+    "accesscount":0,
+    "force":false,
+    "id":14478,
+    "category":"suoritusrekisteri",
+    "accessed":1464181068279,
+    "created":1464181068279,
+    "createdBy":"1.2.246.562.24.83521147825",
+    "modified":1464181068279,
+    "modifiedBy":"1.2.246.562.24.83521147825",
+    "locale":"fi",
+    "key":"poistaSuoritus",
+    "value":"Poista suoritus"
+  },
+  {
+    "accesscount":0,
+    "force":false,
+    "id":14479,
+    "category":"suoritusrekisteri",
+    "accessed":1464181082084,
+    "created":1464181082084,
+    "createdBy":"1.2.246.562.24.83521147825",
+    "modified":1464181082084,
+    "modifiedBy":"1.2.246.562.24.83521147825",
+    "locale":"sv",
+    "key":"poistaSuoritus",
+    "value":"Radera prestation"
   }
 ]
