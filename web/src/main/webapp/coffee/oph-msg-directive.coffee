@@ -22,10 +22,10 @@ app.factory "LokalisointiService", [
       return
 
     addTranslations = (msgKey, elemText, oldTranslation) ->
-      addTranslation msgKey, "fi", elemText, oldTranslation
-      addTranslation msgKey, "sv", elemText, oldTranslation
-      addTranslation msgKey, "en", elemText, oldTranslation
-      return
+      if (elemText)
+        addTranslation msgKey, "fi", elemText, oldTranslation
+        addTranslation msgKey, "sv", elemText, oldTranslation
+        addTranslation msgKey, "en", elemText, oldTranslation
 
     translations = inited: false
 

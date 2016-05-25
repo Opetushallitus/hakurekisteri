@@ -16,13 +16,19 @@
                 <select ng-show="k.editable" ng-model="k.arvosana.lisatieto" required="required"
                         ng-options="a.value as a.text for a in aineet" ng-disabled="k.arvosana.delete"
                         class="form-control test-yoArvosanaAine"></select>
-                <span ng-hide="k.editable" class="test-yoTxt">{{resolveValueFromOptionArray(k.arvosana.lisatieto, aineet) || k.arvosana.lisatieto}}</span>
+                <span ng-hide="k.editable" class="test-yoTxt">
+                    {{translate('yoAine.' + k.arvosana.lisatieto) || k.arvosana.lisatieto}}
+                </span>
             </td>
             <td>
                 <select ng-show="k.editable" ng-model="k.arvosana.aine" required="required"
-                        ng-options="t.value as t.text for t in getTasot(k.arvosana.lisatieto)" ng-disabled="k.arvosana.delete"
+                        ng-options="t.value as translateTaso(k.arvosana, t.value)
+                                    for t in getTasot(k.arvosana.lisatieto)"
+                        ng-disabled="k.arvosana.delete"
                         class="form-control test-yoArvosanaTaso"></select>
-                <span ng-hide="k.editable" class="test-yoTxt">{{resolveValueFromOptionArray(k.arvosana.aine, getTasot(k.arvosana.lisatieto)) || k.arvosana.aine}}</span>
+                <span ng-hide="k.editable" class="test-yoTxt">
+                    {{ translateTaso(k.arvosana, k.arvosana.aine) }}
+                </span>
             </td>
             <td>
                 <select ng-show="k.editable" ng-model="k.arvosana.arvio.arvosana" required="required"
@@ -44,7 +50,8 @@
             <td>
                 <input ng-show="k.editable" type="checkbox" ng-model="k.arvosana.valinnainen" ng-disabled="k.arvosana.delete"
                        class="form-control" ng-true-value="false" ng-false-value="true"/>
-                <span ng-hide="k.editable || k.arvosana.valinnainen" class="test-yoTxt">pakollinen</span>
+                <span ng-hide="k.editable || k.arvosana.valinnainen" class="test-yoTxt"
+                      oph-msg="suoritusrekisteri.muokkaa.yoarvosanat.pakollinen">pakollinen</span>
             </td>
             <td>
                 <button ng-show="k.editable" type="button" ng-click="k.arvosana.delete = true" ng-disabled="k.arvosana.delete"
