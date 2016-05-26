@@ -15692,5 +15692,33 @@
     "locale":"sv",
     "key":"lisaaKorotus",
     "value":"Lägg till vitsordshöjning"
+  },
+  {
+    "accesscount":0,
+    "force":false,
+    "id":14488,
+    "category":"suoritusrekisteri",
+    "accessed":1464247484594,
+    "created":1464247484594,
+    "createdBy":"1.2.246.562.24.83521147825",
+    "modified":1464247484594,
+    "modifiedBy":"1.2.246.562.24.83521147825",
+    "locale":"fi",
+    "key":"oppilaitoksenNumeroTaiNimi",
+    "value":"Oppilaitoksen numero tai nimi"
+  },
+  {
+    "accesscount":0,
+    "force":false,
+    "id":14489,
+    "category":"suoritusrekisteri",
+    "accessed":1464247517891,
+    "created":1464247517891,
+    "createdBy":"1.2.246.562.24.83521147825",
+    "modified":1464247517891,
+    "modifiedBy":"1.2.246.562.24.83521147825",
+    "locale":"sv",
+    "key":"oppilaitoksenNumeroTaiNimi",
+    "value":"Skolans nummer eller namn"
   }
 ]
