@@ -34,6 +34,10 @@ app.controller "MuokkaaSuoritus", [
           return i.text
       value
 
+    $scope.getOrganisaatioNimi = (org) ->
+      if org
+        org.nimi[LokalisointiService.lang] or org.nimi.fi or org.nimi.sv or org.nimi.en
+
     $scope.validateData = (updateOnly) ->
       $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel($scope.info, $scope.suoritus, !updateOnly)
       if $scope.info.editable
