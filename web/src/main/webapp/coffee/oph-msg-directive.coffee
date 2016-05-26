@@ -2,19 +2,7 @@ app.factory "LokalisointiService", [
   "$log"
   "$http"
   ($log, $http) ->
-    getLang = ->
-      lang = undefined
-      i = 0
-      while i < localisationMyroles.length
-        lang = localisationMyroles[i].substring(5).toLowerCase()  if localisationMyroles[i].indexOf("LANG_") is 0
-        i++
-      lang = (if lang then lang else (navigator.language or navigator.userLanguage).substr(0, 2).toLowerCase())
-      lang = "fi"  if not lang or [
-        "fi"
-        "sv"
-        "en"
-      ].indexOf(lang) is -1
-      lang
+    getLang = -> window.userLang
 
     addTranslation = (msgKey, lang, elemText, oldTranslation) ->
       allowEmptyTranslationUpdate = false
@@ -34,40 +22,33 @@ app.factory "LokalisointiService", [
       return
 
     addTranslations = (msgKey, elemText, oldTranslation) ->
-      addTranslation msgKey, "fi", elemText, oldTranslation
-      addTranslation msgKey, "sv", elemText, oldTranslation
-      addTranslation msgKey, "en", elemText, oldTranslation
-      return
+      if (elemText)
+        addTranslation msgKey, "fi", elemText, oldTranslation
+        addTranslation msgKey, "sv", elemText, oldTranslation
+        addTranslation msgKey, "en", elemText, oldTranslation
 
-    localisationMyroles = []
     translations = inited: false
 
     service =
-      lang: "fi"
+      lang: getLang()
     service.loadMessages = (callback) ->
       $http.get(window.url("lokalisointi.category", msgCategory),
         cache: true
       ).success (data) ->
-        $http.get(window.url("cas.myroles"),
-          cache: true
-        ).success (myroles) ->
-          unless translations.inited
-            localisationMyroles = myroles
-            service.lang = getLang()
-            i = 0
+        unless translations.inited
+          i = 0
 
-            while i < data.length
-              t = data[i]
-              translations[t.key] = []  unless translations[t.key]
-              translations[t.key][t.locale] = t
-              i++
-            translations.inited = true
-          callback()  if callback
-          return
+          while i < data.length
+            t = data[i]
+            translations[t.key] = []  unless translations[t.key]
+            translations[t.key][t.locale] = t
+            i++
+          translations.inited = true
+        callback()  if callback
         return
       return
 
-    service.getTranslation = (msgKey, lang, elemText) ->
+    service.getTranslation = (msgKey, lang = getLang(), elemText) ->
       if msgKey is "regexp"
         for key of translations
           translation = translations[key]
@@ -119,10 +100,7 @@ app.directive "ophMsg", [
         attrs.$observe "ophMsg", (msgKey) ->
           $scope.msgKey = msgKey
           LokalisointiService.loadMessages ->
-            if $scope.msgKey.indexOf(msgCategory) is 0 or $scope.msgKey is "regexp"
-              element.text LokalisointiService.getTranslation($scope.msgKey, LokalisointiService.lang, element.text())
-            else
-              $log.warn "localisation directive, key doesn't start with the category!, cat: " + msgCategory + ", key: " + $scope.msgKey + ", element:"
+            element.text LokalisointiService.getTranslation($scope.msgKey, LokalisointiService.lang, element.text())
             return
           return
         return
@@ -131,7 +109,9 @@ app.directive "ophMsg", [
 app.run [
   "$log"
   "LokalisointiService"
-  ($log, LokalisointiService) ->
+  "$rootScope"
+  ($log, LokalisointiService, $rootScope) ->
+    $rootScope.translate = LokalisointiService.getTranslation
     if window.globalInitOphMsg
       window.globalInitOphMsg ->
 ]

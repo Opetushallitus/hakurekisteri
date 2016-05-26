@@ -6,8 +6,8 @@ app.controller "OrganisaatioCtrl", [
     $scope.organisaatiotyypit = []
     $scope.oppilaitostyypit = []
     $scope.loading = false
-    getKoodistoAsOptionArray $http, "organisaatiotyyppi", "fi", $scope.organisaatiotyypit, "nimi"
-    getKoodistoAsOptionArray $http, "oppilaitostyyppi", "fi", $scope.oppilaitostyypit
+    getKoodistoAsOptionArray $http, "organisaatiotyyppi", $scope.organisaatiotyypit, "nimi"
+    getKoodistoAsOptionArray $http, "oppilaitostyyppi", $scope.oppilaitostyypit
     $scope.myOrganisaatioOids = ["1.2.246.562.10.00000000001"]
     $http.get(window.url("cas.myroles"),
       cache: true

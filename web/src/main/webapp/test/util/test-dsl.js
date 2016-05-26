@@ -189,3 +189,12 @@ function select(fn, value) {
         input(fn, value));
 }
 
+function selectByLabel(fn, label) {
+    return seq(
+        visible(fn),
+        wait.until(function() {
+            var option = fn().find('option[label="' + label + '"]');
+            fn().val(option.attr('value')).change();
+            return option.length === 1;
+        }));
+}

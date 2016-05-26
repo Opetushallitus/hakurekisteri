@@ -1,4 +1,4 @@
-<h2 id="application-name">Suoritusrekisteri</h2>
+<h2 id="application-name" oph-msg="suoritusrekisteri.application.name">Suoritusrekisteri</h2>
 
 <script type="text/ng-template" id="organisaatioTemplate.html">
     <a>
@@ -12,14 +12,15 @@
         <form id="filterForm" ng-submit="search()" class="well form-horizontal sticky-scroller">
             <div class="form-group">
                 <div class="col-sm-12">
-                    <input id="henkiloTerm" ng-model="henkiloTerm" type="search" placeholder="Hetu, henkilönumero tai nimi"
+                    <input id="henkiloTerm" ng-model="henkiloTerm" type="search"
+                           placeholder="{{translate('suoritusrekisteri.hetuHenkilonumeroNimiPlaceholder')}}"
                            class="form-control"/>
                 </div>
             </div>
             <div class="form-group">
                 <div class="col-sm-12">
                     <input id="organisaatioTerm" autocomplete="off" ng-model="organisaatioTerm" type="search"
-                           placeholder="Oppilaitoksen numero tai nimi"
+                           placeholder="{{ translate('oppilaitoksenNumeroTaiNimi') }}"
                            typeahead="o as (o.nimi.fi ? o.nimi.fi : (o.nimi.sv ? o.nimi.sv : o.nimi.en)) for o in getOppilaitos($viewValue) | filter:$viewValue | limitTo:10"
                            typeahead-loading="loadingOppilaitos" typeahead-wait-ms="300"
                            typeahead-template-url="organisaatioTemplate.html" class="form-control"/>
@@ -45,13 +46,15 @@
             <div class="form-group">
                 <div class="col-sm-12">
                     <div ng-if="!loading && allRows.length > 0 && henkiloTerm.length == 0">
-                        <input id="result-filter" ng-model="filterParam" placeholder="Suodata tuloksia"
+                        <input id="result-filter" ng-model="filterParam"
+                               placeholder="{{translate('suoritusrekisteri.suodataTuloksia')}}"
                                ng-change="resultFilter(filterParam)" class="form-control"/>
 
                         <div class="checkbox" id="missingCheckbox">
                             <label for="missingToggleCheckbox">
                                 <input type="checkbox" id="missingToggleCheckbox" ng-model="showOnlyPuuttuvat"
-                                       ng-change="arvosanatPuuttuuFilter()"/>Näytä vain ne joiden tiedoissa puutteita *
+                                       ng-change="arvosanatPuuttuuFilter()"/>
+                                {{ translate('suoritusrekisteri.vainPuutteellistenTiedot') }}
                             </label>
                         </div>
                     </div>

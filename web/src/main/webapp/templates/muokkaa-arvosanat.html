@@ -1,6 +1,6 @@
 <form ng-submit="saveArvosanat()"></form>
 <button type="button" ng-click="showKorotus()" class="btn btn-default btn-xs test-showKorotus" ng-disabled="korotusRivi">
-    <span>Lisää korotus</span>
+    <span oph-msg="lisaaKorotus">Lisää korotus</span>
     <span class="glyphicon glyphicon-plus"></span>
 </button>
 
@@ -8,7 +8,7 @@
     <thead>
     <tr>
         <th oph-msg="suoritusrekisteri.muokkaa.arvosanat.oppiaine">Oppiaine</th>
-        <th>Päivämäärä</th>
+        <th oph-msg="paivamaara">Päivämäärä</th>
         <th oph-msg="suoritusrekisteri.muokkaa.arvosanat.lisatieto">Lisätieto (kieli)</th>
         <th oph-msg="suoritusrekisteri.muokkaa.arvosanat.arvosana">Arvosana</th>
         <th ng-show="korotusRivi.valinnaiset.length > 0" oph-msg="suoritusrekisteri.muokkaa.arvosanat.valinnainen" class="test-valinnaiset-header">1.&nbsp;valinnainen</th>
@@ -24,7 +24,8 @@
         </td>
         <td>
             <input type="text" ng-disabled="info.delete" ng-model="korotusRivi.myonnetty"
-                   title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)" datepicker-popup="{{format}}" date-disabled="isKorotusDateInvalid(date, mode)"
+                   title="{{ translate('syotaPaivamaaraMuodossa') }}"
+                   datepicker-popup="{{format}}" date-disabled="isKorotusDateInvalid(date, mode)"
                    datepicker-options="dateOptions" datepicker-append-to-body="true" is-open="korotusOpen"
                    ng-click="korotusOpen = true" show-button-bar="false"
                    class="form-control input-sm datepicker test-korotusPvm"/>
@@ -62,7 +63,7 @@
 
 <button type="button" ng-click="editArvosanat()" class="btn btn-default btn-xs test-editArvosanat"
         ng-disabled="info.editable || editSuoritusDisabled(suoritus)">
-    <span>Korjaa nykyisiä arvosanoja</span>
+    <span oph-msg="korjaaNykyisiaArvosanoja">Korjaa nykyisiä arvosanoja</span>
 </button>
 
 <table class="table table-condensed">

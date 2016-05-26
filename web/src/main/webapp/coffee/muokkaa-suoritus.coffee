@@ -3,7 +3,8 @@ app.controller "MuokkaaSuoritus", [
   "$http"
   "$q"
   "MessageService"
-  ($scope, $http, $q, MessageService) ->
+  "LokalisointiService"
+  ($scope, $http, $q, MessageService, LokalisointiService) ->
     enrichSuoritus = (suoritus) ->
       $scope.info.showArvosanat = true
       $scope.info.editable = false
@@ -32,6 +33,10 @@ app.controller "MuokkaaSuoritus", [
         if i.value == value
           return i.text
       value
+
+    $scope.getOrganisaatioNimi = (org) ->
+      if org
+        org.nimi[LokalisointiService.lang] or org.nimi.fi or org.nimi.sv or org.nimi.en
 
     $scope.validateData = (updateOnly) ->
       $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel($scope.info, $scope.suoritus, !updateOnly)
@@ -103,7 +108,7 @@ app.controller "MuokkaaSuoritus", [
       removeSuoritusScope = () ->
         $scope.removeDataScope($scope)
         deleteFromArray suoritus, $scope.henkilo.suoritukset
-      if confirm("Poista suoritus " + suoritus.valmistuminen + "?")
+      if confirm(LokalisointiService.getTranslation('poistaSuoritus') + " " + suoritus.valmistuminen + "?")
         if suoritus.id
           suoritus.$remove removeSuoritusScope, ->
             $scope.suoritus.valmistuminen

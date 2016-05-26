@@ -7,19 +7,23 @@
                typeahead-on-select="info.organisaatio = $item" typeahead-loading="myontajaLoading"
                typeahead-wait-ms="500" class="form-control input-sm {{myontajaLoading ? 'input-loading' : ''}} test-suoritusMyontaja"/>
         <div ng-show="!suoritus.vahvistettu">
-            <span>Hakijan ilmoittama</span>
+            <span oph-msg="suoritusrekisteri.hakijanIlmoittama">Hakijan ilmoittama</span>
             <span ng-show="info.organisaatio">({{(info.organisaatio.oppilaitosKoodi + ' ' + (info.organisaatio.nimi.fi || info.organisaatio.nimi.sv || info.organisaatio.nimi.en)) || suoritus.myontaja}})</span>
         </div>
-        <div class="test-suoritusMyontaja" ng-hide="info.editable || suoritus.komo === komo.ylioppilastutkinto">{{(info.organisaatio.oppilaitosKoodi + ' ' + (info.organisaatio.nimi.fi ||
-            info.organisaatio.nimi.sv || info.organisaatio.nimi.en)) || suoritus.myontaja}}
+        <div class="test-suoritusMyontaja" ng-hide="info.editable || suoritus.komo === komo.ylioppilastutkinto">
+            {{
+                getOrganisaatioNimi(info.organisaatio)
+                    ? info.organisaatio.oppilaitosKoodi + ' ' + getOrganisaatioNimi(info.organisaatio)
+                    : suoritus.myontaja
+            }}
         </div>
-        <div class="test-suoritusMyontaja" ng-show="suoritus.komo === komo.ylioppilastutkinto">{{(info.organisaatio.nimi.fi ||
-            info.organisaatio.nimi.sv || info.organisaatio.nimi.en) || suoritus.myontaja}}
+        <div class="test-suoritusMyontaja" ng-show="suoritus.komo === komo.ylioppilastutkinto">
+            {{ getOrganisaatioNimi(info.organisaatio) || suoritus.myontaja }}
         </div>
     </div>
     <div class="form-group col-sm-5"><strong oph-msg="suoritusrekisteri.muokkaa.koulutus">Koulutus</strong>
         <select ng-show="info.editable" ng-disabled="info.delete || editSuoritusDisabled(suoritus)" ng-model="suoritus.komo"
-                ng-options="koulutus.value as koulutus.text for koulutus in koulutukset"
+                ng-options="koulutus.value as koulutus.text for koulutus in koulutukset | orderBy: 'text'"
                 ng-change="checkYlioppilastutkinto(suoritus)" required="required"
                 class="form-control input-sm test-suoritusKoulutus"></select>
 
