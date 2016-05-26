@@ -28,6 +28,13 @@ app.controller "MuokkaaArvosanat", [
                      "FY", "KE", "TE", "KT", "HI", "YH", "MU", "KU", "KS", "LI", "KO", "PS", "FI"]
     arvosanaOrder.forEach (k, i) -> arvosanaSort[k] = i
 
+    resolveKoodistoNimi = (metadata) ->
+      [metadataInUserLang] = metadata.filter (meta) -> meta.kieli.toLowerCase() == window.userLang
+      if (metadataInUserLang)
+        metadataInUserLang.nimi
+      else
+        metadata[0].nimi
+
     updateOppiaineLista = ->
       d = $q.defer()
       $http.get(window.url("koodisto-service.koodisByKoodisto", "oppiaineetyleissivistava"), {cache: true}).success((koodit) ->
@@ -242,7 +249,7 @@ app.controller "MuokkaaArvosanat", [
       $scope.korotusAineet = sortByAine koodistoOppiaineLista.map (oppiaine) ->
         {
           aine: oppiaine.koodi.koodiArvo
-          text: oppiaine.koodi.metadata[0].nimi
+          text: resolveKoodistoNimi(oppiaine.koodi.metadata)
         }
       updateArvosanaTaulukko()
       $scope.$watch "suorituksenArvosanataulukko", $scope.enableSave, true
@@ -297,7 +304,7 @@ app.controller "MuokkaaArvosanat", [
     resolveAineNimi = (aine) ->
       for oppiaine in koodistoOppiaineLista
         if aine == oppiaine.koodi.koodiArvo
-          return oppiaine.koodi.metadata[0].nimi
+          return resolveKoodistoNimi(oppiaine.koodi.metadata)
       return aine
 
     hasValinnaisuus = (aine) ->
