@@ -42,7 +42,10 @@ case class TarjontaKoodi(arvo: Option[String])
 case class Koulutus(oid: String,
                     komoOid: String,
                     tunniste: Option[String],
-                    kandidaatinKoulutuskoodi: Option[TarjontaKoodi])
+                    kandidaatinKoulutuskoodi: Option[TarjontaKoodi],
+                    koulutuksenAlkamiskausi: Option[TarjontaKoodi],
+                    koulutuksenAlkamisvuosi: Option[Int],
+                    koulutuksenAlkamisPvms: Option[Set[Long]])
 
 case class HakukohdeOid(oid: String)
 
@@ -52,7 +55,10 @@ case class Hakukohde(oid: String,
 
 case class Hakukohteenkoulutus(komoOid: String,
                                tkKoulutuskoodi: String,
-                               kkKoulutusId: Option[String])
+                               kkKoulutusId: Option[String],
+                               koulutuksenAlkamiskausi: Option[TarjontaKoodi],
+                               koulutuksenAlkamisvuosi: Option[Int],
+                               koulutuksenAlkamisPvms: Option[Set[Long]])
 
 case class HakukohteenKoulutukset(hakukohdeOid: String,
                                   ulkoinenTunniste: Option[String],
@@ -105,8 +111,8 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config) extends Ac
           case None => throw KomoNotFoundException(s"komo not found with oid ${k.komoOid}")
           case Some(komo) =>
             val kkKoulutusId = k.tunniste.flatMap(_.blankOption)
-            val koulutukset = Seq(Hakukohteenkoulutus(komo.oid, komo.koulutuskoodi.arvo, kkKoulutusId))
-            k.kandidaatinKoulutuskoodi.flatMap(_.arvo.map(a => koulutukset :+ Hakukohteenkoulutus(komo.oid, a, kkKoulutusId))).getOrElse(koulutukset)
+            val koulutukset = Seq(Hakukohteenkoulutus(komo.oid, komo.koulutuskoodi.arvo, kkKoulutusId, k.koulutuksenAlkamiskausi, k.koulutuksenAlkamisvuosi, k.koulutuksenAlkamisPvms))
+            k.kandidaatinKoulutuskoodi.flatMap(_.arvo.map(a => koulutukset :+ Hakukohteenkoulutus(komo.oid, a, kkKoulutusId, k.koulutuksenAlkamiskausi, k.koulutuksenAlkamisvuosi, k.koulutuksenAlkamisPvms))).getOrElse(koulutukset)
         }
     }
   }
