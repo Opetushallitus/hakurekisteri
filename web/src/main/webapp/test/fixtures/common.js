@@ -256,6 +256,7 @@ var restData = {
         "yotutkintoKomoOid": "1.2.246.562.5.2013061010184237348007",
         "perusopetusKomoOid": "1.2.246.562.13.62959769647",
         "lisaopetusKomoOid": "1.2.246.562.5.2013112814572435044876",
+        "lisaopetusTalousKomoOid": "1.2.246.562.5.2013061010184614853416",
         "ammattistarttiKomoOid": "1.2.246.562.5.2013112814572438136372",
         "valmentavaKomoOid": "1.2.246.562.5.2013112814572435755085",
         "ammatilliseenvalmistavaKomoOid": "1.2.246.562.5.2013112814572441001730",
@@ -263,7 +264,10 @@ var restData = {
         "lukioKomoOid": "TODO lukio komo oid",
         "ammatillinenKomoOid": "TODO ammatillinen komo oid",
         "lukioonvalmistavaKomoOid": "1.2.246.562.5.2013112814572429142840",
-        "ylioppilastutkintolautakunta": "1.2.246.562.10.43628088406"
+        "ylioppilastutkintolautakunta": "1.2.246.562.10.43628088406",
+        "kansanopistoKomoOid": "kansanopisto",
+        "valmaKomoOid": "valma",
+        "telmaKomoOid": "telma"
     },
     rajoitukset: {
         "opoUpdateGraduation": true

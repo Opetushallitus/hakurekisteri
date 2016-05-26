@@ -231,6 +231,10 @@ function assertValue(selector, val) {
     expect(selector().val().trim()).to.equal(val, selector().selector)
 }
 
+function assertSelectedDropdownItem(selector, val) {
+    expect(selector().find(':selected').text()).to.equal(val, selector().selector)
+}
+
 function log(marker) {
     return function(arg) {
         console.log(marker, arg);

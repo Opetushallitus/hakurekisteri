@@ -326,7 +326,7 @@
                             expect(opiskelijatiedot.arvosanaValinnainenHeader().is(":visible")).to.equal(true)
                             assertText(opiskelijatiedot.hetu, "123456-789")
                             assertValue(opiskelijatiedot.suoritusMyontaja, "06345")
-                            assertValue(opiskelijatiedot.suoritusKoulutus, "1")
+                            assertSelectedDropdownItem(opiskelijatiedot.suoritusKoulutus, "Peruskoulu")
                             assertValue(opiskelijatiedot.suoritusYksilollistetty, "0")
                             assertValue(opiskelijatiedot.suoritusKieli, "156")
                             assertValue(opiskelijatiedot.suoritusValmistuminen, "3.6.2015")
@@ -386,7 +386,7 @@
                             expect(opiskelijatiedot.arvosanaValinnainenHeader().is(":visible")).to.equal(false)
                             assertText(opiskelijatiedot.hetu, "123456-789")
                             assertValue(opiskelijatiedot.suoritusMyontaja, "06345")
-                            assertValue(opiskelijatiedot.suoritusKoulutus, "9")
+                            assertSelectedDropdownItem(opiskelijatiedot.suoritusKoulutus, "TODO lukio komo oid")
                             assertValue(opiskelijatiedot.suoritusYksilollistetty, "0")
                             assertValue(opiskelijatiedot.suoritusKieli, "156")
                             assertValue(opiskelijatiedot.suoritusValmistuminen, "4.6.2015")
@@ -480,7 +480,7 @@
                                 'C',
                                 '4',
                                 '01.06.2013',
-                                'pakollinen',
+                                'Pakollinen',
                                 'Matematiikka',
                                 'Pitkä oppimäärä (MA)',
                                 'C',
@@ -660,9 +660,9 @@
                         wait.forAngular,
 
                         saveDisabled(),
-                        select(opiskelijatiedot.suoritusKoulutus, "2"),
+                        selectByLabel(opiskelijatiedot.suoritusKoulutus, "Valmentava"),
                         saveEnabled(),
-                        select(opiskelijatiedot.suoritusKoulutus, "1"),
+                        selectByLabel(opiskelijatiedot.suoritusKoulutus, "Peruskoulu"),
 
                         saveDisabled(),
                         select(opiskelijatiedot.suoritusYksilollistetty, "2"),
@@ -853,7 +853,7 @@
                             expect(opiskelijatiedot.luokkaTiedot().is(':visible')).to.equal(true)
                             assertText(opiskelijatiedot.hetu, "123456-789")
                             assertText(opiskelijatiedot.suoritusMyontaja, 'Ylioppilastutkintolautakunta')
-                            assertValue(opiskelijatiedot.suoritusKoulutus, "8")
+                            assertSelectedDropdownItem(opiskelijatiedot.suoritusKoulutus, "Ylioppilastutkinto")
                             assertValue(opiskelijatiedot.suoritusYksilollistetty, "0")
                             assertValue(opiskelijatiedot.suoritusKieli, "156")
                             assertValue(opiskelijatiedot.suoritusValmistuminen, "29.12.1989")
