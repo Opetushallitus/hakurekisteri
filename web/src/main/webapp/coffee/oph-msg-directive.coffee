@@ -100,10 +100,7 @@ app.directive "ophMsg", [
         attrs.$observe "ophMsg", (msgKey) ->
           $scope.msgKey = msgKey
           LokalisointiService.loadMessages ->
-            if $scope.msgKey.indexOf(msgCategory) is 0 or $scope.msgKey is "regexp"
-              element.text LokalisointiService.getTranslation($scope.msgKey, LokalisointiService.lang, element.text())
-            else
-              $log.warn "localisation directive, key doesn't start with the category!, cat: " + msgCategory + ", key: " + $scope.msgKey + ", element:"
+            element.text LokalisointiService.getTranslation($scope.msgKey, LokalisointiService.lang, element.text())
             return
           return
         return
