@@ -322,6 +322,13 @@ app.factory "MuokkaaTiedot", [
           valmistuminen: new Date()
         )
 
+      $scope.translateYksilollistaminen = (value) ->
+        [koodi] = $scope.yksilollistamiset.filter (k) -> k.value is value
+        if koodi
+          koodi.text
+        else
+          value
+
       $scope.isFromApplication = (oid) ->
         oid.indexOf("1.2.246.562.11") > -1
 

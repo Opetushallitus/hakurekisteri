@@ -35,7 +35,9 @@
                 ng-options="yks.value as yks.text for yks in yksilollistamiset" required="required"
                 ng-disabled="info.delete || (suoritus.komo !== komo.peruskoulu && suoritus.komo !== komo.lisaopetus) || editSuoritusDisabled(suoritus)"
                 class="form-control input-sm test-suoritusYksilollistetty"></select>
-        <div ng-hide="info.editable" class="test-suoritusYksilollistetty">{{suoritus.yksilollistaminen}}</div>
+        <div ng-hide="info.editable" class="test-suoritusYksilollistetty">
+            {{ translateYksilollistaminen(suoritus.yksilollistaminen) }}
+        </div>
     </div>
 </div>
 <div class="row">
