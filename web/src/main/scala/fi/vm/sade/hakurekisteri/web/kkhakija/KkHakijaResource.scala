@@ -304,6 +304,7 @@ class KkHakijaResource(hakemukset: ActorRef,
           hKelpoisuus = hakukelpoisuus.status,
           hKelpoisuusLahde = hakukelpoisuus.source,
           hakukohteenKoulutukset = hakukohteenkoulutukset.koulutukset
+            .map(koulutus => koulutus.copy(koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None, koulutuksenAlkamisPvms = None))
         ))
       } else {
         None
