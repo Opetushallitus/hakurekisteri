@@ -224,6 +224,15 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
     hakijat.head.postitoimipaikka should be ("Posti_00100")
   }
 
+  test("should not return koulutuksenAlkamiskausi, koulutuksenAlkamisvuosi, koulutuksenAlkamisPvms") {
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.1"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
+
+    val koulutus: Hakukohteenkoulutus = hakijat.head.hakemukset.head.hakukohteenKoulutukset.head
+    koulutus.koulutuksenAlkamiskausi should be (None)
+    koulutus.koulutuksenAlkamisvuosi should be (None)
+    koulutus.koulutuksenAlkamisPvms should be (None)
+  }
+
   test("should not return hakemus of expired haku") {
     val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.10"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
 
