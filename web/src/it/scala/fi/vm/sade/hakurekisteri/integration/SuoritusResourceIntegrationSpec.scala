@@ -29,8 +29,6 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedJettyBefo
   behavior of "SuoritusResource"
 
   it should "only return Suoritukset modified after muokattuJalkeen" in {
-    println(baseUrl + "/rest/v1/suoritukset")
-    Thread.sleep(10)
     val before = DateTime.now()
     val aarnenLukioId = postSuoritus(aarnenLukio)
     val after = DateTime.now()
