@@ -1,13 +1,13 @@
 package fi.vm.sade.hakurekisteri.integration
 
+import fi.vm.sade.hakurekisteri.CleanSharedJettyBeforeEach
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import fi.vm.sade.hakurekisteri.{CleanSharedJettyBeforeEach, SharedJetty}
 import org.joda.time.DateTime
 import org.json4s.JArray
 import org.json4s.JsonAST.JObject
-import org.scalatest._
 import org.json4s.jackson.JsonMethods._
+import org.scalatest._
 
 class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedJettyBeforeEach with Matchers with HakurekisteriJsonSupport {
   val lukioKomo = "1.2.246.562.5.2013061010184237348007"
@@ -29,6 +29,8 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedJettyBefo
   behavior of "SuoritusResource"
 
   it should "only return Suoritukset modified after muokattuJalkeen" in {
+    println(baseUrl + "/rest/v1/suoritukset")
+    Thread.sleep(10)
     val before = DateTime.now()
     val aarnenLukioId = postSuoritus(aarnenLukio)
     val after = DateTime.now()
