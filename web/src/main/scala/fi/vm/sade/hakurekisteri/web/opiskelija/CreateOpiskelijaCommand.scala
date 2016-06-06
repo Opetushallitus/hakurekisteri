@@ -13,7 +13,7 @@ class CreateOpiskelijaCommand extends HakurekisteriCommand[Opiskelija] {
   val luokka: Field[String]  = asType[String]("luokka").notBlank()
   val henkiloOid: Field[String]  = asType[String]("henkiloOid").notBlank()
   val alkuPaiva: Field[String] = asType[String]("alkuPaiva").notBlank().validate(jsonFormats.dateFormat.parse(_).isDefined)
-  val loppuPaiva: Field[String] = asType[String]("loppuPaiva").optional.validate(jsonFormats.dateFormat.parse(_).isDefined)
+  val loppuPaiva: Field[String] = asType[String]("loppuPaiva").optional("").validate(jsonFormats.dateFormat.parse(_).isDefined)
 
   override def toResource(user: String): Opiskelija = {
     Opiskelija(oppilaitosOid.value.get,

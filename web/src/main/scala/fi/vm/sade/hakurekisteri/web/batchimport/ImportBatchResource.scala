@@ -155,7 +155,7 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     case t: WrongBatchStateException => (id) => BadRequest(IncidentReport(id, "illegal state for reprocessing"))
     case BatchNotFoundException => (id) => NotFound(IncidentReport(id, "batch not found for reprocessing"))
     case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
-    case t: MalformedResourceException => (id) => BadRequest(IncidentReport(incidentId = id, message = t.getMessage, validationErrors = t.errors.map(_.args.map(_.toString)).list.reduce(_ ++ _).toSeq))
+    case t: MalformedResourceException => (id) => BadRequest(IncidentReport(incidentId = id, message = t.getMessage, validationErrors = t.errors.map(_.args.map(_.toString)).list.toList.reduce(_ ++ _)))
     case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, "not authorized"))
     case t: SizeConstraintExceededException => (id) => RequestEntityTooLarge(IncidentReport(id, s"Tiedosto on liian suuri (suurin sallittu koko $maxFileSize tavua)."))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
@@ -195,7 +195,11 @@ class ImportBatchResource(eraRekisteri: ActorRef,
   override protected def bindCommand[T <: CommandType](newCommand: T)(implicit request: HttpServletRequest, mf: Manifest[T]): T = {
     val command =
       if (multipart(request))
-        newCommand.bindTo[Map[String, FileItem], FileItem](fileParams, multiParams(request), request.headers)(files => new FileItemMapValueReader(files), default(EmptyFile), default(Map()), manifest[FileItem], implicitly[MultiParams => ValueReader[MultiParams, Seq[String]]])
+        newCommand.bindTo[Map[String, FileItem], FileItem](
+          fileParams,
+          multiParams(request),
+          request.headers
+        )(files => new FileItemMapValueReader(files), manifest[FileItem], implicitly[MultiParams => ValueReader[MultiParams, Seq[String]]])
       else newCommand.bindTo(params(request) + (dataField -> request.body), multiParams(request), request.headers)
 
     saveFiles(command.isValid).foreach(entry => {

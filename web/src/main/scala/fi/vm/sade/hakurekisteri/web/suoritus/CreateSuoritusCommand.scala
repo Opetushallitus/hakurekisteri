@@ -4,8 +4,9 @@ import org.scalatra.commands._
 import org.joda.time.LocalDate
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 import java.util.Locale
-import fi.vm.sade.hakurekisteri.web.rest.support.{LocalDateSupport, HakurekisteriCommand}
-import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, Suoritus}
+
+import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriCommand, LocalDateSupport}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 
 
 class CreateSuoritusCommand extends HakurekisteriCommand[Suoritus] with LocalDateSupport {
@@ -15,7 +16,7 @@ class CreateSuoritusCommand extends HakurekisteriCommand[Suoritus] with LocalDat
   val tila: Field[String] = asType[String]("tila").notBlank
   val valmistuminen: Field[LocalDate] = asType[LocalDate]("valmistuminen").required
   val henkiloOid: Field[String]  = asType[String]("henkiloOid").notBlank
-  val yks: Field[Yksilollistetty]  = asType[Yksilollistetty]("yksilollistaminen")
+  val yks: Field[Yksilollistetty]  = asType[Yksilollistetty]("yksilollistaminen").optional(yksilollistaminen.Ei)
   val languages = Seq(Locale.getISOLanguages:_*) ++ Seq(Locale.getISOLanguages:_*).map(_.toUpperCase)
   val suoritusKieli: Field[String] = asType[String]("suoritusKieli").required.allowableValues(languages:_*)
   val vahvistettu: Field[Boolean] = asType[Boolean]("vahvistettu")

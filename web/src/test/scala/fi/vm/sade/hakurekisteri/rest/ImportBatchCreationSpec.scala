@@ -99,7 +99,7 @@ class ImportBatchCreationSpec extends FlatSpec
 
   it should "return given validation error if a validation test fails" in {
     val validatedBatch = command.withSchema(testSchema).bindTo( Map("batch" -> invalidXml.toString)) >> (_.toValidatedResource("testuser"))
-    validatedBatch.failure.list.exists((e) => e.field == Some(FieldName("batch")) && e.args.collect{case e:org.xml.sax.SAXParseException => e}.exists(_.getMessage().contains("Cannot find the declaration of element 'satchdata'"))) should be (true)
+    validatedBatch.failure.list.toList.exists((e) => e.field == Some(FieldName("batch")) && e.args.collect{case e:org.xml.sax.SAXParseException => e}.exists(_.getMessage().contains("Cannot find the declaration of element 'satchdata'"))) should be (true)
   }
 }
 

@@ -18,8 +18,8 @@ object HakurekisteriBuild extends Build {
   val Version = "14.0-SNAPSHOT"
   val ScalaVersion = "2.11.2"
   val ArtifactName = (s: ScalaVersion, m: ModuleID, a: Artifact) => s"${a.name}-${m.revision}.${a.extension}"
-  val ScalatraVersion = "2.3.1"
-  val SpringVersion = "3.2.1.RELEASE"
+  val ScalatraVersion = "2.4.1"
+  val SpringVersion = "3.2.8.RELEASE"
 
   lazy val LoadSpecs = config("load") extend Test
   lazy val IntegrationTest = config("it") extend Test
@@ -66,20 +66,21 @@ object HakurekisteriBuild extends Build {
   )
 
   val dependencies = Seq(
-    "org.scalaz" %% "scalaz-core" % "7.0.6",
+    "org.scala-lang.modules" % "scala-xml_2.11" % "1.0.5",
+    "org.scalaz" %% "scalaz-core" % "7.2.3",
     "org.scalaz.stream" %% "scalaz-stream" % "0.7.2",
     "org.slf4j" % "slf4j-api" % "1.6.1",
-    "org.json4s" %% "json4s-ast" % "3.2.11",
-    "org.json4s" %% "json4s-core" % "3.2.11",
-    "org.json4s" %% "json4s-ext" % "3.2.11",
-    "org.json4s" %% "json4s-jackson" % "3.2.11",
+    "org.json4s" %% "json4s-ast" % "3.3.0",
+    "org.json4s" %% "json4s-core" % "3.3.0",
+    "org.json4s" %% "json4s-ext" % "3.3.0",
+    "org.json4s" %% "json4s-jackson" % "3.3.0",
     "com.github.nscala-time" %% "nscala-time" % "1.4.0",
     "com.typesafe.slick" %% "slick" % "2.1.0",
     "com.h2database" % "h2" % "1.3.176",
     "org.postgresql" % "postgresql" % "9.3-1100-jdbc4",
     "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
     "org.apache.poi" % "poi" % "3.10.1",
-    "org.apache.poi" % "poi-ooxml" % "3.10.1",
+    "org.apache.poi" % "poi-ooxml" % "3.10.1" exclude("xml-apis", "xml-apis"),
     "org.apache.activemq" % "activemq-all" % "5.9.1",
     "org.apache.camel" % "camel-jms" % "2.13.0",
     "fi.vm.sade.log" % "log-client" % "7.0",
