@@ -156,7 +156,6 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     case BatchNotFoundException => (id) => NotFound(IncidentReport(id, "batch not found for reprocessing"))
     case t: NotFoundException => (id) => NotFound(IncidentReport(id, "resource not found"))
     case t: MalformedResourceException => (id) => BadRequest(IncidentReport(incidentId = id, message = t.getMessage, validationErrors = t.errors.map(_.args.map(_.toString)).list.toList.reduce(_ ++ _)))
-    case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, "not authorized"))
     case t: SizeConstraintExceededException => (id) => RequestEntityTooLarge(IncidentReport(id, s"Tiedosto on liian suuri (suurin sallittu koko $maxFileSize tavua)."))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
     case t: AskTimeoutException => (id) => InternalServerError(IncidentReport(id, "Taustajärjestelmä ei vastaa. Yritä myöhemmin uudelleen."))

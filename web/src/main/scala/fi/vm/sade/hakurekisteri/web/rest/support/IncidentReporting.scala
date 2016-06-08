@@ -28,6 +28,9 @@ trait IncidentReporting { this: HakuJaValintarekisteriStack =>
       case t: HakemuksetNotYetLoadedException =>
         val resultGenerator = handler.applyOrElse[Throwable, (UUID) => ActionResult](t, (anything) => (id) => ServiceUnavailable(IncidentReport(id, "hakemukset not yet loaded"), Map("Retry-After" -> "30")))
         processError(t) (resultGenerator)
+      case t: UserNotAuthorized =>
+        val resultGenerator = handler.applyOrElse[Throwable, (UUID) => ActionResult](t, (anything) => (id) => Forbidden(IncidentReport(id, s"not authorized")))
+        processError(t, false) (resultGenerator)
       case t: Throwable =>
         val resultGenerator = handler.applyOrElse[Throwable, (UUID) => ActionResult](t, (anything) => (id) => InternalServerError(IncidentReport(id, "error in service")))
         processError(t) (resultGenerator)

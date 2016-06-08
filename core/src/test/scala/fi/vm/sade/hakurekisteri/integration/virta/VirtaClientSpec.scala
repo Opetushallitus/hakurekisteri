@@ -100,6 +100,7 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
     waitFuture(response) {o => {
       o.get.opiskeluoikeudet.size should be(1)
       o.get.tutkinnot.size should be(1)
+      o.get.suoritukset.size should be(7)
     }}
   }
 

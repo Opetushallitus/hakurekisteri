@@ -113,7 +113,6 @@ trait HakurekisteriCrudCommands[A <: Resource[UUID, A], C <: HakurekisteriComman
 
   incident {
     case t: MalformedResourceException => (id) => BadRequest(IncidentReport(id, t.getMessage))
-    case t: UserNotAuthorized => (id) => Forbidden(IncidentReport(id, "not authorized"))
     case t: IllegalArgumentException => (id) => BadRequest(IncidentReport(id, t.getMessage))
   }
 }
