@@ -50,6 +50,7 @@ object IlmoitetutArvosanatTrigger {
             case (suoritus: VirallinenSuoritus, arvosanat) =>
               if (!suoritukset.exists {
                 case s: VirallinenSuoritus if s.henkilo == suoritus.henkilo && s.komo == suoritus.komo && s.myontaja == suoritus.myontaja && s.vahvistettu == suoritus.vahvistettu => true
+                case _ => false
               }) {
                 for (
                   suoritus: Suoritus with Identified[UUID] <- saveSuoritus(suoritus)
