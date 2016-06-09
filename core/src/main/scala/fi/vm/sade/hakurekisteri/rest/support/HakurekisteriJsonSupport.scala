@@ -19,14 +19,7 @@ import scala.util.Try
 
 trait HakurekisteriJsonSupport {
 
-  protected implicit def jsonFormats = HakurekisteriJsonSupport.format
-
-}
-
-
-object HakurekisteriJsonSupport extends HakurekisteriJsonSupport  {
-
-  val format: Formats = HakurekisteriDefaultFormats.lossless.withBigDecimal +
+  protected implicit def jsonFormats: Formats = HakurekisteriDefaultFormats.lossless.withBigDecimal +
     new org.json4s.ext.EnumNameSerializer(yksilollistaminen) +
     new org.json4s.ext.EnumNameSerializer(Ilmoittautumistila) +
     new org.json4s.ext.EnumNameSerializer(Valintatila) +
@@ -45,6 +38,13 @@ object HakurekisteriJsonSupport extends HakurekisteriJsonSupport  {
     new ImportBatchSerializer +
     new MenettamisenPerusteSerializer +
     new OppijaSerializer
+
+}
+
+
+object HakurekisteriJsonSupport extends HakurekisteriJsonSupport  {
+
+  val format = jsonFormats
 
 }
 
