@@ -435,14 +435,14 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
       .putArvosana("PK_MA","8")
       .build
 
-    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri)
+    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri, logBypassed = true)
 
     suoritusQueryWaiter.await(waiterTimeout, dismissals(1))
     suoritusWaiter.await(waiterTimeout, dismissals(1))
     arvosanaWaiter.await(waiterTimeout, dismissals(1))
     bypassWaiter.await(waiterTimeout, dismissals(0))
 
-    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri)
+    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri, logBypassed = true)
 
     suoritusQueryWaiter.await(waiterTimeout, dismissals(1))
     bypassWaiter.await(waiterTimeout, dismissals(1))
