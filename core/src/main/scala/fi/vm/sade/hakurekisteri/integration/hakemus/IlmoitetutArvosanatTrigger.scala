@@ -42,8 +42,7 @@ object IlmoitetutArvosanatTrigger {
         case t: AskTimeoutException => fetchExistingSuoritukset(henkiloOid)
       }
     def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus]): Boolean = suoritukset.exists {
-      case s: VirallinenSuoritus =>
-        s.henkilo == suor.henkilo && s.komo == suor.komo && s.myontaja == suor.myontaja && s.vahvistettu == suor.vahvistettu
+      case s: VirallinenSuoritus => s.core == suor.core
       case _ => false
     }
     hakemus.personOid.foreach(henkiloOid => {
