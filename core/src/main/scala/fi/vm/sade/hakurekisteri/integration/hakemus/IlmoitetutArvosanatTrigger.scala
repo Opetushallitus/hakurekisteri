@@ -41,7 +41,7 @@ object IlmoitetutArvosanatTrigger {
       (suoritusRekisteri ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]].recoverWith {
         case t: AskTimeoutException => fetchExistingSuoritukset(henkiloOid)
       }
-    def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus]): Boolean = !suoritukset.exists {
+    def suoritusExists(suor: VirallinenSuoritus, suoritukset: Seq[Suoritus]): Boolean = suoritukset.exists {
       case s: VirallinenSuoritus =>
         s.henkilo == suor.henkilo && s.komo == suor.komo && s.myontaja == suor.myontaja && s.vahvistettu == suor.vahvistettu
       case _ => false
@@ -50,7 +50,7 @@ object IlmoitetutArvosanatTrigger {
       fetchExistingSuoritukset(henkiloOid).foreach(suoritukset => {
         createSuorituksetJaArvosanatFromHakemus(hakemus).foreach {
           case (suor: VirallinenSuoritus, arvosanat) =>
-            if (suoritusExists(suor, suoritukset)) {
+            if (!suoritusExists(suor, suoritukset)) {
               for (
                 suoritus: Suoritus with Identified[UUID] <- saveSuoritus(suor)
               ) arvosanat.foreach(arvosana =>
