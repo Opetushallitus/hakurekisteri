@@ -3,13 +3,14 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 import java.util.UUID
 
 import akka.actor.ActorRef
+import akka.event.Logging
 import akka.pattern.AskTimeoutException
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
-import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource}
+import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource, LogMessage}
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.joda.time.{LocalDate, DateTime}
+import org.joda.time.{DateTime, LocalDate}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,18 +38,40 @@ object IlmoitetutArvosanatTrigger {
         case t: AskTimeoutException => saveSuoritus(suor)
       }
 
-    createSuorituksetJaArvosanatFromHakemus(hakemus).foreach(suoritusJaArvosanat => {
-      for (
-        suoritus <- saveSuoritus(suoritusJaArvosanat._1)
-      ) {
-        suoritusJaArvosanat._2.foreach(
-          arvosana => {
-            val arvosanaForSuoritus1: Arvosana = arvosanaForSuoritus(arvosana, suoritus)
-            arvosanaRekisteri ! InsertResource[UUID, Arvosana](arvosanaForSuoritus1)
+    def fetchExistingSuoritukset(henkiloOid: String): Future[Seq[Suoritus]] =
+      (suoritusRekisteri ? SuoritusQuery(henkilo = Some(henkiloOid))).mapTo[Seq[Suoritus]]
+
+    val henkilonSuoritukset = for (henkiloOid <- hakemus.personOid) yield fetchExistingSuoritukset(henkiloOid)
+
+    henkilonSuoritukset match {
+      case Some(existing) =>
+        existing.foreach(suoritukset => {
+          createSuorituksetJaArvosanatFromHakemus(hakemus).foreach {
+            case (suoritus: VirallinenSuoritus, arvosanat) =>
+              if (!suoritukset.exists {
+                case s: VirallinenSuoritus if s.henkilo == suoritus.henkilo && s.komo == suoritus.komo && s.myontaja == suoritus.myontaja && s.vahvistettu == suoritus.vahvistettu => true
+              }) {
+                for (
+                  suoritus: Suoritus with Identified[UUID] <- saveSuoritus(suoritus)
+                ) {
+                  arvosanat.foreach(
+                    arvosana => {
+                      val arvosanaForSuoritus1: Arvosana = arvosanaForSuoritus(arvosana, suoritus)
+                      arvosanaRekisteri ! InsertResource[UUID, Arvosana](arvosanaForSuoritus1)
+                    }
+                  )
+                }
+              } else {
+                suoritusRekisteri ! LogMessage(s"suoritus already exists: $suoritus", Logging.DebugLevel)
+              }
+            case (_, _) =>
+              // VapaamuotoinenSuoritus will not be saved
           }
-        )
-      }
-    })
+        })
+      case None =>
+        // no personOid in application
+    }
+
   }
 
   def apply(suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef)(implicit ec: ExecutionContext): Trigger = {

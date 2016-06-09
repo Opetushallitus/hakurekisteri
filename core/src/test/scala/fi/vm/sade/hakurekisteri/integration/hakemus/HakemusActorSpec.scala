@@ -1,9 +1,10 @@
 package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.{Date, UUID}
 
 import akka.actor._
+import akka.event.Logging
 import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
@@ -13,7 +14,7 @@ import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.haku.{Haku, Kieliversiot}
-import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.storage.{Identified, InsertResource, LogMessage}
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.joda.time.{DateTime, LocalDate}
@@ -29,6 +30,7 @@ import org.scalatest.{FlatSpec, Matchers}
 import scala.collection.Seq
 import scala.concurrent.duration._
 import scala.language.implicitConversions
+import scala.language.reflectiveCalls
 
 
 class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with SpecsLikeMockito with AsyncAssertions
@@ -392,6 +394,60 @@ class HakemusActorSpec extends FlatSpec with Matchers with FutureWaiting with Sp
       (ItseilmoitettuPeruskouluTutkinto("hakemus1", "person1", pkVuosi, "FI"), List()),
       (ItseilmoitettuTutkinto(Oids.lisaopetusKomoOid, "hakemus1", "person1", pkVuosi, "FI"), List())
     )
+  }
+
+  it should "create suoritus and arvosanat only once" in {
+    val waiterTimeout = timeout(5.seconds)
+    val suoritusWaiter = new Waiter()
+    val suoritusQueryWaiter = new Waiter()
+    val bypassWaiter = new Waiter()
+    val arvosanaWaiter = new Waiter()
+    implicit val system = ActorSystem("only-once-system")
+    val suoritusRekisteri = TestActorRef(new Actor {
+      var suoritukset: Seq[Suoritus with Identified[UUID]] = Seq()
+      override def receive: Receive = {
+        case i: InsertResource[_, _] if i.resource.isInstanceOf[Suoritus] =>
+          val identified = i.resource.asInstanceOf[Suoritus].identify(UUID.randomUUID())
+          suoritukset = suoritukset :+ identified
+          sender ! identified
+          suoritusWaiter.dismiss()
+        case q@SuoritusQuery(Some(henkilo), _, _, _, _, _) =>
+          sender ! suoritukset.filter(_.henkiloOid == henkilo)
+          suoritusQueryWaiter.dismiss()
+        case LogMessage(_, Logging.DebugLevel) =>
+          bypassWaiter.dismiss()
+      }
+    })
+    val arvosanaRekisteri = TestActorRef(new Actor {
+      override def receive: Receive = {
+        case i: InsertResource[_, _] if i.resource.isInstanceOf[Arvosana] =>
+          val identified: Arvosana with Identified[UUID] = i.resource.asInstanceOf[Arvosana].identify(UUID.randomUUID())
+          sender ! identified
+          arvosanaWaiter.dismiss()
+      }
+    })
+
+    val hakemus = Hakemus()
+      .setHakemusOid("hakemus1")
+      .setPersonOid("person1")
+      .setLahtokoulu("foobarKoulu")
+      .setPerusopetuksenPaattotodistusvuosi(1988)
+      .putArvosana("PK_MA","8")
+      .build
+
+    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri)
+
+    suoritusQueryWaiter.await(waiterTimeout, dismissals(1))
+    suoritusWaiter.await(waiterTimeout, dismissals(1))
+    arvosanaWaiter.await(waiterTimeout, dismissals(1))
+    bypassWaiter.await(waiterTimeout, dismissals(0))
+
+    IlmoitetutArvosanatTrigger.muodostaSuorituksetJaArvosanat(hakemus, suoritusRekisteri, arvosanaRekisteri)
+
+    suoritusQueryWaiter.await(waiterTimeout, dismissals(1))
+    bypassWaiter.await(waiterTimeout, dismissals(1))
+
+    suoritusRekisteri.underlyingActor.suoritukset.size should be (1)
   }
 
   trait CustomMatchers {
