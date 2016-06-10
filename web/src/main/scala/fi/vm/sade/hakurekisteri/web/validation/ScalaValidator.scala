@@ -2,10 +2,11 @@ package fi.vm.sade.hakurekisteri.web.validation
 
 import scalaz._
 import collection.JavaConversions._
+import scala.util
 import scala.util.Try
-import scala.util.control.Exception._
 import scalaz.Success
 import scalaz.Failure
+import scalaz.Validation.FlatMap._
 
 
 trait Validatable[T]  {
@@ -13,11 +14,14 @@ trait Validatable[T]  {
 
 }
 
-case class SimpleValidatable[O,T <: AnyRef](converter: O => T) extends Validatable[O] with ValidationFunctions{
+case class SimpleValidatable[O,T <: AnyRef](converter: O => T) extends Validatable[O] {
 
-  override def validatableResource(v: O): ValidationNel[String, T] =
-    fromTryCatch{converter(v)}.leftMap(_.getLocalizedMessage).toValidationNel
-
+  override def validatableResource(v: O): ValidationNel[String, T] = {
+    Try(converter(v)) match {
+        case util.Success(x) => Validation.success(x).toValidationNel
+        case util.Failure(t) => Validation.failure(t.getLocalizedMessage).toValidationNel
+      }
+  }
 }
 
 trait ScalaValidator { this: validator.api.Validator =>
