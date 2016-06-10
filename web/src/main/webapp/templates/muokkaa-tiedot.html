@@ -44,51 +44,61 @@
                     <h2 oph-msg="suoritusrekisteri.muokkaa.virtatiedot" class="panel-title">Tiedot Virta-järjestelmästä</h2>
                 </header>
                 <div class="panel-body">
-                    <ul class="list-unstyled entrylist">
-                        <li ng-repeat="opiskeluoikeus in henkilo.virtatiedot.opiskeluoikeudet">
-                            <div class="row">
-                                <div class="col-sm-12"><strong oph-msg="suoritusrekisteri.muokkaa.opiskeluoikeus">Opiskeluoikeus</strong></div>
-                                <div class="col-sm-2"><strong oph-msg="suoritusrekisteri.muokkaa.alkupaiva">Alkupäivä</strong>
-                                    <div>{{opiskeluoikeus.alkuPvm | date:'dd.MM.yyyy'}}</div>
-                                </div>
-                                <div class="col-sm-2"><strong oph-msg="suoritusrekisteri.muokkaa.loppupaiva">Loppupäivä</strong>
-                                    <div>{{opiskeluoikeus.loppuPvm | date:'dd.MM.yyyy'}}</div>
-                                </div>
-                                <div class="col-sm-2"><strong oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</strong>
-                                    <div>{{opiskeluoikeus.myontaja}}</div>
-                                </div>
-                                <div class="col-sm-2"><strong oph-msg="suoritusrekisteri.muokkaa.koulutus">Koulutus</strong>
-                                    <div>{{opiskeluoikeus.koulutuskoodit}}</div>
-                                </div>
-                                <div class="col-sm-2"><strong oph-msg="suoritusrekisteri.muokkaa.kieli">Kieli</strong>
-                                    <div>{{opiskeluoikeus.kieli}}</div>
-                                </div>
-                            </div>
-                        </li>
-                        <li ng-repeat="suoritus in henkilo.virtatiedot.suoritukset">
-                            <div class="row">
-                                <div class="col-sm-12"><strong oph-msg="suoritusrekisteri.muokkaa.suoritus">Opintosuoritus</strong></div>
-                                <div class="col-sm-1"><strong oph-msg="suoritusrekisteri.muokkaa.laji">Laji</strong>
-                                    <div>{{suoritus.laji}}</div>
-                                </div>
-                                <div class="col-sm-2"><strong oph-msg="suoritusrekisteri.muokkaa.suoritusNimi">Nimi</strong>
-                                    <div>{{suoritus.nimi}}</div>
-                                </div>
-                                <div class="col-sm-2"><strong oph-msg="suoritusrekisteri.muokkaa.koulutus">Koulutus</strong>
-                                    <div>{{suoritus.koulutuskoodi}}</div>
-                                </div>
-                                <div class="col-sm-2"><strong oph-msg="suoritusrekisteri.muokkaa.arvosana">Arvosana</strong>
-                                    <div>{{suoritus.arvosana}}</div>
-                                </div>
-                                <div class="col-sm-2"><strong oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</strong>
-                                    <div>{{suoritus.myontaja}}</div>
-                                </div>
-                                <div class="col-sm-2"><strong oph-msg="suoritusrekisteri.muokkaa.suoritusPvm">Suorituspäivä</strong>
-                                    <div>{{suoritus.suoritusPvm | date:'dd.MM.yyyy'}}</div>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
+                    <div ng-if="henkilo.virtatiedot.opiskeluoikeudet.length === 0 && henkilo.virtatiedot.suoritukset.length === 0"
+                         oph-msg="suoritusrekisteri.muokkaa.eivirtatietoja" class="alert alert-info">Ei tietoja Virta-järjestelmässä</div>
+                    <table class="table" ng-if="henkilo.virtatiedot.opiskeluoikeudet.length > 0">
+                        <caption oph-msg="suoritusrekisteri.muokkaa.opiskeluoikeudet">Opiskeluoikeudet</caption>
+                        <thead>
+                            <tr>
+                                <th oph-msg="suoritusrekisteri.muokkaa.alkupaiva">Alkupäivä</th>
+                                <th oph-msg="suoritusrekisteri.muokkaa.loppupaiva">Loppupäivä</th>
+                                <th oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</th>
+                                <th oph-msg="suoritusrekisteri.muokkaa.koulutus">Koulutus</th>
+                                <th oph-msg="suoritusrekisteri.muokkaa.kieli">Kieli</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="opiskeluoikeus in henkilo.virtatiedot.opiskeluoikeudet">
+                                <td>{{opiskeluoikeus.alkuPvm}}</td>
+                                <td>{{opiskeluoikeus.loppuPvm}}</td>
+                                <td>{{(opiskeluoikeus.organisaatio.oppilaitosKoodi + ' ' +
+                                    (opiskeluoikeus.organisaatio.nimi.fi || opiskeluoikeus.organisaatio.nimi.sv ||
+                                    opiskeluoikeus.organisaatio.nimi.en)) || opiskeluoikeus.myontaja}}</td>
+                                <td>
+                                    <div ng-repeat="koulutus in opiskeluoikeus.koulutuskoodit">{{koulutus}}</div>
+                                </td>
+                                <td>{{opiskeluoikeus.kieli}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table" ng-if="henkilo.virtatiedot.suoritukset.length > 0">
+                        <caption oph-msg="suoritusrekisteri.muokkaa.opintosuoritukset">Opintosuoritukset</caption>
+                        <thead>
+                            <tr>
+                                <th oph-msg="suoritusrekisteri.muokkaa.laji">Laji</th>
+                                <th oph-msg="suoritusrekisteri.muokkaa.suoritusNimi">Nimi</th>
+                                <th oph-msg="suoritusrekisteri.muokkaa.arvosana">Arvosana</th>
+                                <th oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</th>
+                                <th oph-msg="suoritusrekisteri.muokkaa.suoritusPvm">Suorituspäivä</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="suoritus in henkilo.virtatiedot.suoritukset">
+                                <td>
+                                    <span ng-if="suoritus.laji === '1'" oph-msg="suoritusrekisteri.muokkaa.laji.tutkinto">Tutkinto</span>
+                                    <span ng-if="suoritus.laji === '2'" oph-msg="suoritusrekisteri.muokkaa.laji.muuopintosuoritus">Muu opintosuoritus</span>
+                                    <span ng-if="suoritus.laji === '3'" oph-msg="suoritusrekisteri.muokkaa.laji.eihuomioitava">Ei huomioitava</span>
+                                    <span ng-if="suoritus.laji === '4'" oph-msg="suoritusrekisteri.muokkaa.laji.sisainen">Oppilaitoksen sisäinen</span>
+                                </td>
+                                <td>{{suoritus.nimi}} <span ng-if="suoritus.koulutuskoodi">({{suoritus.koulutuskoodi}})</span></td>
+                                <td>{{suoritus.arvosana}}</td>
+                                <td>{{(suoritus.organisaatio.oppilaitosKoodi + ' ' +
+                                    (suoritus.organisaatio.nimi.fi || suoritus.organisaatio.nimi.sv ||
+                                    suoritus.organisaatio.nimi.en)) || suoritus.myontaja}}</td>
+                                <td>{{suoritus.suoritusPvm}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </section>
             <section ng-if="henkilo.opiskeluoikeudet && henkilo.opiskeluoikeudet.length > 0" class="panel panel-default">
@@ -201,7 +211,7 @@
                             </div>
                             <div class="col-sm-2"><strong
                                     oph-msg="suoritusrekisteri.muokkaa.vastaanotot.paivamaara">Päivämäärä</strong>
-                                <div class="test-vastaanottoOpintopolkuPaivamaara">{{vastaanotto.vastaanottoaika | date:'d.M.yyyy'}}</div>
+                                <div class="test-vastaanottoOpintopolkuPaivamaara">{{vastaanotto.vastaanottoaika | date:'dd.MM.yyyy'}}</div>
 
                             </div>
                         </div>
@@ -223,7 +233,7 @@
                             </div>
                             <div class="col-sm-5"><strong
                                     oph-msg="suoritusrekisteri.muokkaa.vastaanotot.paivamaara">Päivämäärä</strong>
-                                <div class="test-vastaanottoVanhaPaivamaara">{{vastaanotto.vastaanottoaika | date:'d.M.yyyy'}}</div>
+                                <div class="test-vastaanottoVanhaPaivamaara">{{vastaanotto.vastaanottoaika | date:'dd.MM.yyyy'}}</div>
                             </div>
                         </div>
                     </li>

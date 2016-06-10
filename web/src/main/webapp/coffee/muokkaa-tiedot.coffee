@@ -153,6 +153,27 @@ app.factory "MuokkaaTiedot", [
           $scope.henkilo.oidHenkilo
         VirtaSuoritukset.query { id: id }, ((virtatiedot) ->
           $scope.henkilo.virtatiedot = virtatiedot
+          $scope.henkilo.virtatiedot.opiskeluoikeudet.forEach (opiskeluoikeus) ->
+            if opiskeluoikeus.myontaja
+              getOrganisaatio $http, opiskeluoikeus.myontaja, (organisaatio) ->
+                opiskeluoikeus.oppilaitos = organisaatio.oppilaitosKoodi
+                opiskeluoikeus.organisaatio = organisaatio
+                return
+            if opiskeluoikeus.koulutus
+              opiskeluoikeus.koulutus.forEach (koulutus) ->
+                if koulutus.match(/^\d{6}$/)
+                  getKoulutusNimi $http, "koulutus_" + koulutus, (koulutusNimi) ->
+                    koulutus = koulutusNimi
+                    return
+            return
+            return
+          $scope.henkilo.virtatiedot.suoritukset.forEach (suoritus) ->
+            if suoritus.myontaja
+              getOrganisaatio $http, suoritus.myontaja, (organisaatio) ->
+                suoritus.oppilaitos = organisaatio.oppilaitosKoodi
+                suoritus.organisaatio = organisaatio
+                return
+            return
         )
 
       fetchHenkilotiedot = ->
