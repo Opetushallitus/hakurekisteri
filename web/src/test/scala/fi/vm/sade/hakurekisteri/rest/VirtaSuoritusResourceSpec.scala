@@ -1,12 +1,9 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import javax.servlet.http.HttpServletRequest
-
 import akka.actor.{ActorSystem, Props}
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, DispatchSupport, Endpoint, CapturingProvider}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaResults, VirtaClient, VirtaResourceActor}
-import fi.vm.sade.hakurekisteri.rest.support.User
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.mockito.Mockito
 import org.scalatest.mock.MockitoSugar
@@ -15,15 +12,6 @@ import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import fi.vm.sade.hakurekisteri.web.integration.virta.VirtaSuoritusResource
-
-class SuoritusResourceTestSecurity extends Security {
-  object TestUser extends User {
-    override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.39644336305")
-    override val username: String = "Test"
-  }
-
-  override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(TestUser)
-}
 
 class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport with MockitoSugar {
   implicit val system = ActorSystem()
@@ -35,7 +23,7 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
 
   val endPoint = mock[Endpoint]
 
-  when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.4"))).thenReturn((201, List(), VirtaResults.emptyResp))
+  when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.4"))).thenReturn((200, List(), VirtaResults.emptyResp))
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.2.5"))).thenReturn((500, List(), "Internal Server Error"))
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.3.0"))).thenReturn((200, List(), VirtaResults.multipleStudents))
   when(endPoint.request(forUrl("http://virtawstesti.csc.fi/luku/OpiskelijanTiedot").withBodyPart("1.5.0"))).thenReturn((500, List(), VirtaResults.fault))
