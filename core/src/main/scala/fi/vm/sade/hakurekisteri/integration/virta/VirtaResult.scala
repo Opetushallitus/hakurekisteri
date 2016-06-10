@@ -6,3 +6,7 @@ case class VirtaResult(
   tutkinnot: Seq[VirtaTutkinto],
   suoritukset: Seq[VirtaOpintosuoritus]
 )
+
+object VirtaResult {
+  def apply(oppijanumero: String): VirtaResult = VirtaResult(oppijanumero, Seq(), Seq(), Seq())
+}

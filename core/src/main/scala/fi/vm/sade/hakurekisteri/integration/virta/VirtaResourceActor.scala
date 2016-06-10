@@ -12,8 +12,7 @@ class VirtaResourceActor(virtaClient: VirtaClient) extends Actor with ActorLoggi
 
   def receive: Receive = {
     case q: VirtaQuery =>
-      val tiedot: Future[Option[VirtaResult]] = getOpiskelijanTiedot(q.oppijanumero, q.hetu)
-      tiedot pipeTo sender()
+      getOpiskelijanTiedot(q.oppijanumero, q.hetu) pipeTo sender
 
     case Failure(t: VirtaValidationError) =>
       log.warning(s"virta validation error: $t")
@@ -22,8 +21,8 @@ class VirtaResourceActor(virtaClient: VirtaClient) extends Actor with ActorLoggi
       log.error(t, "error occurred in virta query")
   }
 
-  def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String]): Future[Option[VirtaResult]] = {
-    virtaClient.getOpiskelijanTiedot(oppijanumero = oppijanumero, hetu = hetu)
+  def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String]): Future[VirtaResult] = {
+    virtaClient.getOpiskelijanTiedot(oppijanumero = oppijanumero, hetu = hetu).map(_.getOrElse(VirtaResult(oppijanumero)))
   }
 
 }
