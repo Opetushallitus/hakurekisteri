@@ -8,7 +8,8 @@ app.factory "MuokkaaTiedot", [
   "Opiskeluoikeudet"
   "LokalisointiService"
   "MessageService"
-  ($location, $http, $log, $q, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MessageService) ->
+  "VirtaSuoritukset"
+  ($location, $http, $log, $q, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MessageService, VirtaSuoritukset) ->
     muokkaaHenkilo: (henkiloOid, $scope) ->
       initializeHenkilotiedot = ->
         $scope.henkilo = # // main data object
@@ -145,6 +146,14 @@ app.factory "MuokkaaTiedot", [
         ).error(->komosLoaded.reject("cannot get komos"))
         return komosLoaded.promise
 
+      $scope.fetchVirtaTiedot = ->
+        id = if $scope.henkilo.hetu
+          $scope.henkilo.hetu
+        else
+          $scope.henkilo.oidHenkilo
+        VirtaSuoritukset.query { id: id }, ((virtatiedot) ->
+          $scope.henkilo.virtatiedot = virtatiedot
+        )
 
       fetchHenkilotiedot = ->
         $http.get(window.url("authentication-service.henkilo", henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->

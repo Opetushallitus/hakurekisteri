@@ -126,6 +126,15 @@ app.factory "RekisteriTiedot", ($resource) ->
       timeout: 15000
   }
 
+app.factory "VirtaSuoritukset", ($resource) ->
+  $resource plainUrls.url("suoritusrekisteri.virtasuoritukset", ":id"), { id: "@id" }, {
+    query:
+      method: "GET"
+      isArray: false
+      cache: true
+      timeout: 30000
+  }
+
 
 app.factory "MessageService", ->
   messages = []
