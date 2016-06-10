@@ -2,6 +2,7 @@ package support
 
 import java.util.concurrent.TimeUnit
 
+import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.hakemus._
@@ -9,15 +10,16 @@ import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor}
-import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{ValintarekisteriQuery, ValintarekisteriActor}
+import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{ValintarekisteriActor, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, TarjontaActor}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
-import fi.vm.sade.hakurekisteri.integration.virta.{VirtaResourceActor, VirtaActor, VirtaClient}
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaOpintosuoritus, _}
 import fi.vm.sade.hakurekisteri.integration.ytl.YtlActor
 import fi.vm.sade.hakurekisteri.rest.support.Registers
 import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
+import org.joda.time.LocalDate
 
 trait Integrations {
   val virta: ActorRef
@@ -46,7 +48,27 @@ object Integrations {
 
 class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Config) extends Integrations {
   override val virta: ActorRef = mockActor("virta", new DummyActor)
-  override val virtaResource: ActorRef = mockActor("virtaResource", new DummyActor)
+  override val virtaResource: ActorRef = mockActor("virtaResource", new Actor {
+    override def receive: Receive = {
+      case q: VirtaQuery =>
+        sender ! VirtaResult(
+          q.oppijanumero,
+          Seq(
+            VirtaOpiskeluoikeus(LocalDate.now().minusYears(5), Some(LocalDate.now().minusYears(1)), "01915", Seq("655301"), "FI"),
+            VirtaOpiskeluoikeus(LocalDate.now(), Some(LocalDate.now().plusYears(1)), "01915", Seq("751301"), "FI")
+          ),
+          Seq(),
+          Seq(
+            VirtaOpintosuoritus(LocalDate.now(), Some("Inssimatikka 1"), None, Some("5"), "01915", Some("2")),
+            VirtaOpintosuoritus(LocalDate.now(), Some("Inssimatikka 2"), None, Some("5"), "01915", Some("2")),
+            VirtaOpintosuoritus(LocalDate.now(), Some("Tietotekniikan kandi"), Some("655301"), Some("5"), "01915", Some("1")),
+            VirtaOpintosuoritus(LocalDate.now(), Some("Inssifyssa 1"), None, Some("4"), "01915", Some("2")),
+            VirtaOpintosuoritus(LocalDate.now(), Some("Inssifyssa 2"), None, Some("5"), "01915", Some("2")),
+            VirtaOpintosuoritus(LocalDate.now(), Some("Foobar kurssi"), None, Some("2"), "01915", Some("2"))
+          )
+        )
+    }
+  })
   override val valintaTulos: ActorRef = mockActor("valintaTulos", new DummyActor)
   override val valintarekisteri: ActorRef = mockActor("valintarekisteri", new Actor {
     override def receive: Receive = {
