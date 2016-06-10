@@ -48,27 +48,7 @@ object Integrations {
 
 class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Config) extends Integrations {
   override val virta: ActorRef = mockActor("virta", new DummyActor)
-  override val virtaResource: ActorRef = mockActor("virtaResource", new Actor {
-    override def receive: Receive = {
-      case q: VirtaQuery =>
-        sender ! VirtaResult(
-          q.oppijanumero,
-          Seq(
-            VirtaOpiskeluoikeus(LocalDate.now().minusYears(5), Some(LocalDate.now().minusYears(1)), "01915", Seq("655301"), "FI"),
-            VirtaOpiskeluoikeus(LocalDate.now(), Some(LocalDate.now().plusYears(1)), "01915", Seq("751301"), "FI")
-          ),
-          Seq(),
-          Seq(
-            VirtaOpintosuoritus(LocalDate.now(), Some("Inssimatikka 1"), None, Some("5"), "01915", Some("2")),
-            VirtaOpintosuoritus(LocalDate.now(), Some("Inssimatikka 2"), None, Some("5"), "01915", Some("2")),
-            VirtaOpintosuoritus(LocalDate.now(), Some("Tietotekniikan kandi"), Some("655301"), Some("5"), "01915", Some("1")),
-            VirtaOpintosuoritus(LocalDate.now(), Some("Inssifyssa 1"), None, Some("4"), "01915", Some("2")),
-            VirtaOpintosuoritus(LocalDate.now(), Some("Inssifyssa 2"), None, Some("5"), "01915", Some("2")),
-            VirtaOpintosuoritus(LocalDate.now(), Some("Foobar kurssi"), None, Some("2"), "01915", Some("2"))
-          )
-        )
-    }
-  })
+  override val virtaResource: ActorRef = mockActor("virtaResource", new MockVirtaResourceActor)
   override val valintaTulos: ActorRef = mockActor("valintaTulos", new DummyActor)
   override val valintarekisteri: ActorRef = mockActor("valintarekisteri", new Actor {
     override def receive: Receive = {

@@ -9,10 +9,12 @@ object OrganisaatioMock {
   }
 
   def findByOid(tunniste: String): String = {
-    if (tunniste.equals("06345") || tunniste.equals("1.2.246.562.10.39644336305")) {
+    if (tunniste == "06345" || tunniste == "1.2.246.562.10.39644336305") {
       getResourceJson("/mock-data/organisaatio/organisaatio-pikkarala.json")
-    } else if (tunniste.equals("05127") || tunniste.equals("1.2.246.562.10.16546622305")) {
+    } else if (tunniste == "05127" || tunniste == "1.2.246.562.10.16546622305") {
       getResourceJson("/mock-data/organisaatio/organisaatio-pikkola.json")
+    } else if (tunniste == "01915" || tunniste == "1.2.246.562.10.259480292910") {
+      getResourceJson("/mock-data/organisaatio/organisaatio-tampere.json")
     } else {
       getResourceJson("/mock-data/organisaatio/organisaatio-foobar.json")
     }
