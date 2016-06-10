@@ -17,7 +17,8 @@ import scala.util.matching.Regex
 
 class VirtaSuoritusResource(val virtaActor: ActorRef)
                            (implicit val system: ActorSystem, sw: Swagger, val security: Security)
-  extends HakuJaValintarekisteriStack  with HakurekisteriJsonSupport with VirtaSuoritusSwaggerApi with JacksonJsonSupport with SecuritySupport with FutureSupport {
+  extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with VirtaSuoritusSwaggerApi with JacksonJsonSupport
+    with SecuritySupport with FutureSupport {
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
   override protected implicit def swagger: SwaggerEngine[_] = sw
   override protected implicit def executor: ExecutionContext = system.dispatcher
@@ -36,10 +37,14 @@ class VirtaSuoritusResource(val virtaActor: ActorRef)
   }
 
   get("/:id", operation(query)) {
-    if (!hasAccess) throw UserNotAuthorized("not authorized")
-    else new AsyncResult() {
-      override implicit def timeout: Duration = 120.seconds
-      override val is = (virtaActor ? VirtaQuery(oppijanumero=params("id"), hetu=parsePIN(params("id"))))(120.seconds)
+    if (!hasAccess) {
+      throw UserNotAuthorized("not authorized")
+    } else {
+      val id = params("id")
+      new AsyncResult() {
+        override implicit def timeout: Duration = 30.seconds
+        override val is = (virtaActor ? VirtaQuery(oppijanumero = id, hetu = parsePIN(id)))(30.seconds)
+      }
     }
   }
 
