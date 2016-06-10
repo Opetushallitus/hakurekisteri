@@ -85,10 +85,13 @@
                         <tbody>
                             <tr ng-repeat="suoritus in henkilo.virtatiedot.suoritukset">
                                 <td>
-                                    <span ng-if="suoritus.laji === '1'" oph-msg="suoritusrekisteri.muokkaa.laji.tutkinto">Tutkinto</span>
-                                    <span ng-if="suoritus.laji === '2'" oph-msg="suoritusrekisteri.muokkaa.laji.muuopintosuoritus">Muu opintosuoritus</span>
-                                    <span ng-if="suoritus.laji === '3'" oph-msg="suoritusrekisteri.muokkaa.laji.eihuomioitava">Ei huomioitava</span>
-                                    <span ng-if="suoritus.laji === '4'" oph-msg="suoritusrekisteri.muokkaa.laji.sisainen">Oppilaitoksen sisäinen</span>
+                                    <span ng-switch="suoritus.laji">
+                                        <span ng-switch-when="1" oph-msg="suoritusrekisteri.muokkaa.laji.tutkinto">Tutkinto</span>
+                                        <span ng-switch-when="2" oph-msg="suoritusrekisteri.muokkaa.laji.muuopintosuoritus">Muu opintosuoritus</span>
+                                        <span ng-switch-when="3" oph-msg="suoritusrekisteri.muokkaa.laji.eihuomioitava">Ei huomioitava</span>
+                                        <span ng-switch-when="4" oph-msg="suoritusrekisteri.muokkaa.laji.sisainen">Oppilaitoksen sisäinen</span>
+                                        <span ng-switch-default>{{suoritus.laji}}</span>
+                                    </span>
                                 </td>
                                 <td>{{suoritus.nimi}} <span ng-if="suoritus.koulutuskoodi">({{suoritus.koulutuskoodi}})</span></td>
                                 <td>{{suoritus.arvosana}}</td>
