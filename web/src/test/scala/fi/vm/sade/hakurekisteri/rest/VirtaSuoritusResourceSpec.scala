@@ -1,16 +1,18 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.Actor.Receive
+import akka.actor.{Actor, ActorSystem, Props}
+import akka.testkit.TestActorRef
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, DispatchSupport, Endpoint, CapturingProvider}
-import fi.vm.sade.hakurekisteri.integration.virta.{VirtaResults, VirtaClient, VirtaResourceActor}
+import fi.vm.sade.hakurekisteri.integration.hakemus.HasPermission
+import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HetuQuery}
+import fi.vm.sade.hakurekisteri.integration.{CapturingProvider, DispatchSupport, Endpoint, ExecutorUtil}
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaClient, VirtaResourceActor, VirtaResults}
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.mockito.Mockito
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
-
 import org.scalatra.test.scalatest.ScalatraFunSuite
-
 import fi.vm.sade.hakurekisteri.web.integration.virta.VirtaSuoritusResource
 
 class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport with MockitoSugar {
@@ -35,9 +37,29 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
   val virtaClient = new VirtaClient(aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint))))
   val virtaSuoritusActor = system.actorOf(Props(new VirtaResourceActor(virtaClient)))
 
+  val permissionChecker = TestActorRef(new Actor {
+    override def receive: Receive = {
+      case d: HasPermission => sender ! true
+    }
+  })
+
+  val henkiloActor = TestActorRef(new Actor {
+    override def receive: Receive = {
+      case HetuQuery(hetu) => sender ! Henkilo(
+        "1.2.3",
+        Some("111111-1975"),
+        "OPPIJA",
+        None,
+        None,
+        None,
+        None,
+        None
+      )
+    }
+  })
 
 
-  addServlet(new VirtaSuoritusResource(virtaSuoritusActor), "/*")
+  addServlet(new VirtaSuoritusResource(virtaSuoritusActor, permissionChecker, henkiloActor), "/*")
 
 
   test("should return required fields from Virta response") {

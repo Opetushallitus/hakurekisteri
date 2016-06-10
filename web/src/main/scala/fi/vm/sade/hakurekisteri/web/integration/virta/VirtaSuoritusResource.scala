@@ -3,19 +3,22 @@ package fi.vm.sade.hakurekisteri.web.integration.virta
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.{AskTimeoutException, ask}
-import fi.vm.sade.hakurekisteri.integration.virta.VirtaQuery
+import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.integration.hakemus.HasPermission
+import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HetuQuery}
+import fi.vm.sade.hakurekisteri.integration.virta.{VirtaQuery, VirtaResult}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReport, Security, SecuritySupport, UserNotAuthorized}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
-import org.scalatra.{FutureSupport, AsyncResult, InternalServerError}
+import org.scalatra.{AsyncResult, FutureSupport, InternalServerError}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.matching.Regex
 
-class VirtaSuoritusResource(val virtaActor: ActorRef)
+class VirtaSuoritusResource(virtaActor: ActorRef, hakuAppPermissionChecker: ActorRef, henkiloActor: ActorRef)
                            (implicit val system: ActorSystem, sw: Swagger, val security: Security)
   extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with VirtaSuoritusSwaggerApi with JacksonJsonSupport
     with SecuritySupport with FutureSupport {
@@ -24,9 +27,15 @@ class VirtaSuoritusResource(val virtaActor: ActorRef)
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override protected def applicationDescription: String = "Henkilön suoritusten haun rajapinta Virta-palvelusta"
   val hetuPattern: Regex = "[0-9]{6}[A+-][0-9]{3}[0-9A-FHJ-NPR-Y]$".r
+  implicit val defaultTimeout: Timeout = 30.seconds
 
   // XXX: Replace with proper permission checks
-  def hasAccess: Boolean = true // currentUser.exists(_.isAdmin)
+  def hasAccess(personOid: String): Future[Boolean] =
+    if (currentUser.exists(_.isAdmin)) {
+      Future.successful(true)
+    } else {
+      (hakuAppPermissionChecker ? HasPermission(currentUser.get, personOid)).mapTo[Boolean]
+    }
 
   before() {
     contentType = formats("json")
@@ -36,15 +45,20 @@ class VirtaSuoritusResource(val virtaActor: ActorRef)
     hetuPattern.findFirstIn(id)
   }
 
-  get("/:id", operation(query)) {
-    if (!hasAccess) {
-      throw UserNotAuthorized("not authorized")
-    } else {
-      val id = params("id")
-      new AsyncResult() {
-        override implicit def timeout: Duration = 30.seconds
-        override val is = (virtaActor ? VirtaQuery(oppijanumero = id, hetu = parsePIN(id)))(30.seconds)
-      }
+  get("/:hetu", operation(query)) {
+    val hetu = params("hetu")
+    new AsyncResult() {
+      override implicit def timeout: Duration = 30.seconds
+      override val is =
+        (henkiloActor ? HetuQuery(hetu)).mapTo[Henkilo].flatMap(henkilo => {
+          hasAccess(henkilo.oidHenkilo).flatMap(access => {
+            if (access) {
+              virtaActor ? VirtaQuery(oppijanumero = henkilo.oidHenkilo, hetu = Some(hetu))
+            } else {
+              Future.successful(VirtaResult(hetu))
+            }
+          })
+        })
     }
   }
 

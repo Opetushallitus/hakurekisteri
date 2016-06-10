@@ -22,6 +22,7 @@ import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
 import org.joda.time.LocalDate
 
 trait Integrations {
+  val hakuAppPermissionChecker: ActorRef
   val virta: ActorRef
   val virtaResource: ActorRef
   val henkilo: ActorRef
@@ -73,6 +74,12 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   override val hakemusClient = null
 
   private def mockActor(name: String, actor: => Actor) = system.actorOf(Props(actor), name)
+
+  override val hakuAppPermissionChecker: ActorRef = system.actorOf(Props(new Actor {
+    override def receive: Receive = {
+      case a: HasPermission => sender ! true
+    }
+  }))
 }
 
 
@@ -105,6 +112,9 @@ class BaseIntegrations(rekisterit: Registers,
   private val parametritClient = new VirkailijaRestClient(config.integrations.parameterConfig, None)(restEc, system)
   private val valintatulosClient = new VirkailijaRestClient(config.integrations.valintaTulosConfig, None)(vtsEc, system)
   private val valintarekisteriClient = new VirkailijaRestClient(config.integrations.valintarekisteriConfig, None)(vrEc, system)
+  private val hakuAppPermissionCheckerClient = new VirkailijaRestClient(config.integrations.hakemusConfig.serviceConf.copy(
+    casUrl = None, user = None, password = None
+  ), None)(restEc, system)
 
   val tarjonta = system.actorOf(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
   val organisaatiot = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
@@ -138,4 +148,5 @@ class BaseIntegrations(rekisterit: Registers,
 
   hakemukset ! IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
 
+  override val hakuAppPermissionChecker: ActorRef = system.actorOf(Props(new HakuAppPermissionCheckerActor(hakuAppPermissionCheckerClient, organisaatiot)))
 }
