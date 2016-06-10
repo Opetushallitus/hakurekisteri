@@ -6,13 +6,14 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import com.ning.http.client._
 import dispatch.Http
+import fi.vm.sade.hakurekisteri.tools.SafeXML
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 
 import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
-import scala.xml.{Elem, Node, NodeSeq, XML}
+import scala.xml.{Elem, Node, NodeSeq}
 
 
 case class VirtaValidationError(m: String) extends Exception(m)
@@ -70,7 +71,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   }
 
   def parseFault(response: String): Unit = {
-    Try(XML.loadString(response)) match {
+    Try(SafeXML.loadString(response)) match {
       case Success(xml) =>
         val fault: NodeSeq = xml \ "Body" \ "Fault"
         if (fault.nonEmpty) {
@@ -98,7 +99,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
       override def onCompleted(response: Response): Option[VirtaResult] = {
 
         if (response.getStatusCode == 200) {
-          val responseEnvelope: Elem = XML.loadString(response.getResponseBody)
+          val responseEnvelope: Elem = SafeXML.loadString(response.getResponseBody)
 
           val opiskeluoikeudet = getOpiskeluoikeudet(responseEnvelope)
           val tutkinnot = getTutkinnot(responseEnvelope)

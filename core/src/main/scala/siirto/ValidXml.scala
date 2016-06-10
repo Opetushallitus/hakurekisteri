@@ -3,11 +3,11 @@ package siirto
 import java.io.{Reader, _}
 import java.net.URL
 import javax.xml.XMLConstants
-import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.Source
 import javax.xml.transform.sax.SAXSource
 import javax.xml.validation.SchemaFactory
 
+import fi.vm.sade.hakurekisteri.tools.SafeXML
 import org.w3c.dom.ls.{LSInput, LSResourceResolver}
 import org.xml.sax.{ErrorHandler, SAXParseException}
 
@@ -15,7 +15,8 @@ import scala.collection.mutable
 import scala.xml.Source._
 import scala.xml._
 import scala.xml.parsing.{FactoryAdapter, NoBindingFactoryAdapter}
-import scalaz._, Scalaz._
+import scalaz.Scalaz._
+import scalaz._
 
 
 
@@ -56,7 +57,7 @@ object NoSchemaValidator extends XMLValidator[ValidationNel[(String, SAXParseExc
 
   /* Override this to use a different SAXParser. */
   override def parser: SAXParser =  {
-    val f = SAXParserFactory.newInstance()
+    val f = SafeXML.safeSAXParserFactory
     f.setNamespaceAware(false)
     f.newSAXParser()
   }
@@ -130,7 +131,7 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
         override def getCharacterStream: Reader = null
 
         def loadRemote(systemId: String): Elem = {
-          XML.load(schemaUrl(systemId))
+          SafeXML.load(schemaUrl(systemId))
         }
       }
 
@@ -174,7 +175,7 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
   }
 
   override def parser = {
-    val f: SAXParserFactory = SAXParserFactory.newInstance()
+    val f = SafeXML.safeSAXParserFactory
     f.setNamespaceAware(true)
     f.setValidating(false)
     f.setSchema(schema)
@@ -205,7 +206,8 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
 
     val exceptions = new mutable.Stack[(String, SAXParseException)]
 
-    import scalaz._, Scalaz._
+    import scalaz._
+    import Scalaz._
 
 
     def validatedResult[R](f:FactoryAdapter => R): ValidationNel[(String, SAXParseException), R] = {
