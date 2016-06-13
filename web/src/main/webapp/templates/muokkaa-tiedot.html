@@ -65,7 +65,7 @@
                                     (opiskeluoikeus.organisaatio.nimi.fi || opiskeluoikeus.organisaatio.nimi.sv ||
                                     opiskeluoikeus.organisaatio.nimi.en)) || opiskeluoikeus.myontaja}}</td>
                                 <td>
-                                    <div ng-repeat="koulutus in opiskeluoikeus.koulutuskoodit">{{koulutus}}</div>
+                                    <div ng-repeat="koulutus in opiskeluoikeus.koulutuskoodit">{{koulutus.koulutuskoodi}} {{koulutus.nimi}}</div>
                                 </td>
                                 <td>{{opiskeluoikeus.kieli}}</td>
                             </tr>

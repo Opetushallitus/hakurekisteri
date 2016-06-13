@@ -160,11 +160,13 @@ app.factory "MuokkaaTiedot", [
                 opiskeluoikeus.organisaatio = organisaatio
                 return
             if opiskeluoikeus.koulutuskoodit
-              opiskeluoikeus.koulutuskoodit.forEach (koulutus) ->
+              opiskeluoikeus.koulutuskoodit = opiskeluoikeus.koulutuskoodit.map (koulutus) ->
+                obj = koulutuskoodi: koulutus
                 if koulutus.match(/^\d{6}$/)
                   getKoulutusNimi $http, "koulutus_" + koulutus, (koulutusNimi) ->
-                    koulutus = koulutusNimi
+                    obj.nimi = koulutusNimi
                     return
+                return obj
             return
             return
           $scope.henkilo.virtatiedot.suoritukset.forEach (suoritus) ->
