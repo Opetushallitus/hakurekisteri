@@ -187,23 +187,39 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     val opintosuoritukset: NodeSeq = getOpintosuorituksetNodeSeq(response)
     opintosuoritukset.map((os: Node) => {
       val avain = os.map(_ \ "@avain")
+      val (arvosana, asteikko) = parseArvosana(os \ "Arvosana", avain)
       VirtaOpintosuoritus(
         suoritusPvm = parseLocalDate((os \ "SuoritusPvm").head.text),
         nimi = extractTextOption(os \ "Nimi", avain),
         koulutuskoodi = extractTextOption(os \ "Koulutuskoodi", avain),
-        arvosana = parseArvosana(os \ "Arvosana", avain),
+        arvosana = arvosana,
+        asteikko = asteikko,
         myontaja = extractTextOption(myontaja(os), avain, required = true).get,
         laji = extractTextOption(os \ "Laji", avain)
       )
     })
   }
 
-  // TODO parse asteikko together with arvosana
-  def parseArvosana(arvosanaNode: NodeSeq, avain: Seq[NodeSeq]): Option[String] = {
-    if ((arvosanaNode \ "Muu").length > 0) {
-      extractTextOption(arvosanaNode \ "Muu" \ "Koodi", avain).map(_.trim)
-    } else {
-      extractTextOption(arvosanaNode, avain).map(_.trim)
+  def parseArvosana(arvosanaNode: NodeSeq, avain: Seq[NodeSeq]): (Option[String], Option[String]) = {
+    try {
+      if ((arvosanaNode \ "Muu").length > 0) {
+        val asteikko: NodeSeq = arvosanaNode \ "Muu" \ "Asteikko"
+        val asteikonNimi = (arvosanaNode \ "Muu" \ "Asteikko" \ "Nimi").headOption.map(_.text)
+        val koodi = (arvosanaNode \ "Muu" \ "Koodi").head.text
+        val koodiArvo = (asteikko \ "AsteikkoArvosana").collect {
+          case n: Elem => n
+        }.find(_.attribute("avain").exists(_.text == koodi)).map(a => (a \ "Koodi").text)
+        (koodiArvo, asteikonNimi)
+      } else {
+        val asteikkoelementti = arvosanaNode.headOption.flatMap(_.child.collect {
+          case e: Elem => e
+        }.headOption)
+        (asteikkoelementti.map(_.text), asteikkoelementti.map(_.label))
+      }
+    } catch {
+      case e: Exception =>
+        logger.error(e, s"error parsing arvosana & asteikko from $arvosanaNode with avain $avain")
+        (None, None)
     }
   }
 

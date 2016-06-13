@@ -7,6 +7,7 @@ case class VirtaOpintosuoritus (
   nimi: Option[String],
   koulutuskoodi: Option[String],
   arvosana: Option[String],
+  asteikko: Option[String],
   myontaja: String,
   laji: Option[String]
 )

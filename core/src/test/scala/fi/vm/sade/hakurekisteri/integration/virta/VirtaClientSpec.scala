@@ -189,7 +189,7 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
     val response: Future[Option[VirtaResult]] = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.106")
 
     waitFuture(response) {(o: Option[VirtaResult]) => {
-      o.map(_.suoritukset).exists(_.exists(_.arvosana.contains("ast2arv2"))) should be(true)
+      o.map(_.suoritukset).exists(_.exists(s => s.arvosana == Some("4") && s.asteikko == Some("Meidän oma asteikko yhdestä neljään"))) should be(true)
     }}
   }
 }
