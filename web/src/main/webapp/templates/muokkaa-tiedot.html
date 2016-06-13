@@ -46,67 +46,79 @@
                 <div class="panel-body">
                     <div ng-if="henkilo.virtatiedot.opiskeluoikeudet.length === 0 && henkilo.virtatiedot.suoritukset.length === 0"
                          oph-msg="suoritusrekisteri.muokkaa.eivirtatietoja" class="alert alert-info">Ei tietoja Virta-järjestelmässä</div>
-                    <table class="table" ng-if="henkilo.virtatiedot.opiskeluoikeudet.length > 0">
-                        <caption oph-msg="suoritusrekisteri.muokkaa.opiskeluoikeudet">Opiskeluoikeudet</caption>
-                        <thead>
-                            <tr>
-                                <th oph-msg="suoritusrekisteri.muokkaa.alkupaiva">Alkupäivä</th>
-                                <th oph-msg="suoritusrekisteri.muokkaa.loppupaiva">Loppupäivä</th>
-                                <th oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</th>
-                                <th oph-msg="suoritusrekisteri.muokkaa.koulutus">Koulutus</th>
-                                <th oph-msg="suoritusrekisteri.muokkaa.kieli">Kieli</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr ng-repeat="opiskeluoikeus in henkilo.virtatiedot.opiskeluoikeudet">
-                                <td>{{opiskeluoikeus.alkuPvm}}</td>
-                                <td>{{opiskeluoikeus.loppuPvm}}</td>
-                                <td>{{(opiskeluoikeus.organisaatio.oppilaitosKoodi + ' ' +
-                                    (opiskeluoikeus.organisaatio.nimi.fi || opiskeluoikeus.organisaatio.nimi.sv ||
-                                    opiskeluoikeus.organisaatio.nimi.en)) || opiskeluoikeus.myontaja}}</td>
-                                <td>
-                                    <div ng-repeat="koulutus in opiskeluoikeus.koulutuskoodit">{{koulutus.koulutuskoodi}} {{koulutus.nimi}}</div>
-                                </td>
-                                <td>{{opiskeluoikeus.kieli}}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <table class="table" ng-if="henkilo.virtatiedot.suoritukset.length > 0">
-                        <caption oph-msg="suoritusrekisteri.muokkaa.opintosuoritukset">Opintosuoritukset</caption>
-                        <thead>
-                            <tr>
-                                <th oph-msg="suoritusrekisteri.muokkaa.laji">Laji</th>
-                                <th oph-msg="suoritusrekisteri.muokkaa.suoritusNimi">Nimi</th>
-                                <th oph-msg="suoritusrekisteri.muokkaa.arvosana">Arvosana</th>
-                                <th oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</th>
-                                <th oph-msg="suoritusrekisteri.muokkaa.suoritusPvm">Suorituspäivä</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr ng-repeat="suoritus in henkilo.virtatiedot.suoritukset">
-                                <td>
-                                    <span ng-switch="suoritus.laji">
-                                        <span ng-switch-when="1" oph-msg="suoritusrekisteri.muokkaa.laji.tutkinto">Tutkinto</span>
-                                        <span ng-switch-when="2" oph-msg="suoritusrekisteri.muokkaa.laji.muuopintosuoritus">Muu opintosuoritus</span>
-                                        <span ng-switch-when="3" oph-msg="suoritusrekisteri.muokkaa.laji.eihuomioitava">Ei huomioitava</span>
-                                        <span ng-switch-when="4" oph-msg="suoritusrekisteri.muokkaa.laji.sisainen">Oppilaitoksen sisäinen</span>
-                                        <span ng-switch-default>{{suoritus.laji}}</span>
-                                    </span>
-                                </td>
-                                <td>{{suoritus.nimi}}<span ng-if="suoritus.koulutuskoodi"> ({{suoritus.koulutuskoodi}})</span></td>
-                                <td>{{suoritus.arvosana}}<span ng-if="suoritus.asteikko"> ({{suoritus.asteikko}})</span></td>
-                                <td>{{(suoritus.organisaatio.oppilaitosKoodi + ' ' +
-                                    (suoritus.organisaatio.nimi.fi || suoritus.organisaatio.nimi.sv ||
-                                    suoritus.organisaatio.nimi.en)) || suoritus.myontaja}}</td>
-                                <td>{{suoritus.suoritusPvm}}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div ng-if="henkilo.virtatiedot.opiskeluoikeudet.length > 0">
+                        <a class="btn btn-default btn-xs pull-right">
+                            <span oph-msg="suoritusrekisteri.muokkaa.kopioi">Vie leikepöydälle</span>
+                            <span class="glyphicon glyphicon-export"></span>
+                        </a>
+                        <h3 oph-msg="suoritusrekisteri.muokkaa.opiskeluoikeudet">Opiskeluoikeudet</h3>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th oph-msg="suoritusrekisteri.muokkaa.alkupaiva">Alkupäivä</th>
+                                    <th oph-msg="suoritusrekisteri.muokkaa.loppupaiva">Loppupäivä</th>
+                                    <th oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</th>
+                                    <th oph-msg="suoritusrekisteri.muokkaa.koulutus">Koulutus</th>
+                                    <th oph-msg="suoritusrekisteri.muokkaa.kieli">Kieli</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="opiskeluoikeus in henkilo.virtatiedot.opiskeluoikeudet">
+                                    <td>{{opiskeluoikeus.alkuPvm}}</td>
+                                    <td>{{opiskeluoikeus.loppuPvm}}</td>
+                                    <td>{{(opiskeluoikeus.organisaatio.oppilaitosKoodi + ' ' +
+                                        (opiskeluoikeus.organisaatio.nimi.fi || opiskeluoikeus.organisaatio.nimi.sv ||
+                                        opiskeluoikeus.organisaatio.nimi.en)) || opiskeluoikeus.myontaja}}</td>
+                                    <td>
+                                        <div ng-repeat="koulutus in opiskeluoikeus.koulutuskoodit">{{koulutus.koulutuskoodi}} {{koulutus.nimi}}</div>
+                                    </td>
+                                    <td>{{opiskeluoikeus.kieli}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div ng-if="henkilo.virtatiedot.suoritukset.length > 0">
+                        <a class="btn btn-default btn-xs pull-right" prevent-default>
+                            <span oph-msg="suoritusrekisteri.muokkaa.kopioi">Vie leikepöydälle</span>
+                            <span class="glyphicon glyphicon-export"></span>
+                        </a>
+                        <h3 oph-msg="suoritusrekisteri.muokkaa.opintosuoritukset">Opintosuoritukset</h3>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th oph-msg="suoritusrekisteri.muokkaa.laji">Laji</th>
+                                    <th oph-msg="suoritusrekisteri.muokkaa.suoritusNimi">Nimi</th>
+                                    <th oph-msg="suoritusrekisteri.muokkaa.arvosana">Arvosana</th>
+                                    <th oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</th>
+                                    <th oph-msg="suoritusrekisteri.muokkaa.suoritusPvm">Suorituspäivä</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="suoritus in henkilo.virtatiedot.suoritukset">
+                                    <td>
+                                        <span ng-switch="suoritus.laji">
+                                            <span ng-switch-when="1" oph-msg="suoritusrekisteri.muokkaa.laji.tutkinto">Tutkinto</span>
+                                            <span ng-switch-when="2" oph-msg="suoritusrekisteri.muokkaa.laji.muuopintosuoritus">Muu opintosuoritus</span>
+                                            <span ng-switch-when="3" oph-msg="suoritusrekisteri.muokkaa.laji.eihuomioitava">Ei huomioitava</span>
+                                            <span ng-switch-when="4" oph-msg="suoritusrekisteri.muokkaa.laji.sisainen">Oppilaitoksen sisäinen</span>
+                                            <span ng-switch-default>{{suoritus.laji}}</span>
+                                        </span>
+                                    </td>
+                                    <td>{{suoritus.nimi}} <span ng-if="suoritus.koulutuskoodi">({{suoritus.koulutuskoodi}})</span></td>
+                                    <td>{{suoritus.arvosana}}</td>
+                                    <td>{{(suoritus.organisaatio.oppilaitosKoodi + ' ' +
+                                        (suoritus.organisaatio.nimi.fi || suoritus.organisaatio.nimi.sv ||
+                                        suoritus.organisaatio.nimi.en)) || suoritus.myontaja}}</td>
+                                    <td>{{suoritus.suoritusPvm}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
             <section ng-if="henkilo.opiskeluoikeudet && henkilo.opiskeluoikeudet.length > 0" class="panel panel-default">
                 <header class="panel-heading">
-                    <h2 oph-msg="suoritusrekisteri.muokkaa.opiskeluoikeudet"  class="panel-title">Opiskeluoikeudet</h2>
+                    <h2 oph-msg="suoritusrekisteri.muokkaa.opiskeluoikeudet" class="panel-title">Opiskeluoikeudet</h2>
                 </header>
                 <div class="panel-body">
                     <ul class="list-unstyled entrylist">
