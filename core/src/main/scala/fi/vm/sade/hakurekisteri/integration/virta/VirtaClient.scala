@@ -191,11 +191,20 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
         suoritusPvm = parseLocalDate((os \ "SuoritusPvm").head.text),
         nimi = extractTextOption(os \ "Nimi", avain),
         koulutuskoodi = extractTextOption(os \ "Koulutuskoodi", avain),
-        arvosana = extractTextOption(os \ "Arvosana", avain),
+        arvosana = parseArvosana(os \ "Arvosana", avain),
         myontaja = extractTextOption(myontaja(os), avain, required = true).get,
         laji = extractTextOption(os \ "Laji", avain)
       )
     })
+  }
+
+  // TODO parse asteikko together with arvosana
+  def parseArvosana(arvosanaNode: NodeSeq, avain: Seq[NodeSeq]): Option[String] = {
+    if ((arvosanaNode \ "Muu").length > 0) {
+      extractTextOption(arvosanaNode \ "Muu" \ "Koodi", avain).map(_.trim)
+    } else {
+      extractTextOption(arvosanaNode, avain).map(_.trim)
+    }
   }
 
   def extractTextOption(n: NodeSeq, avain: Seq[NodeSeq], required: Boolean = false): Option[String] = {
