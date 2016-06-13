@@ -110,7 +110,7 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusRekisteri: A
           todistus <- oppija.suoritukset
         ) yield {
           valid.validateData(todistus).leftMap{(errors) =>
-            InvalidTodistus(todistus, errors.list.toList)
+            InvalidTodistus(todistus, errors.list)
           }.fold(identity,identity)
         }
       logQuery(q, t0, tiedotFuture)

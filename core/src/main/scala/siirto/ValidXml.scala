@@ -170,7 +170,7 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
     validator.validate(source)
 
 
-    exceptions.toList.toNel.map(_.failure).getOrElse(<result/>.successNel)
+    exceptions.toList.toNel.map(_.fail).getOrElse(<result/>.successNel)
   }
 
   override def parser = {
@@ -209,7 +209,7 @@ class ValidXml(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) extends 
 
 
     def validatedResult[R](f:FactoryAdapter => R): ValidationNel[(String, SAXParseException), R] = {
-      exceptions.toList.toNel.map(_.failure).getOrElse(f(this).successNel)
+      exceptions.toList.toNel.map(_.fail).getOrElse(f(this).successNel)
     }
 
     override def fatalError(e: SAXParseException): Unit = {exceptions.push("fatal" -> e)}
