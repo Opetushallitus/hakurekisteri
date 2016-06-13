@@ -159,8 +159,8 @@ app.factory "MuokkaaTiedot", [
                 opiskeluoikeus.oppilaitos = organisaatio.oppilaitosKoodi
                 opiskeluoikeus.organisaatio = organisaatio
                 return
-            if opiskeluoikeus.koulutus
-              opiskeluoikeus.koulutus.forEach (koulutus) ->
+            if opiskeluoikeus.koulutuskoodit
+              opiskeluoikeus.koulutuskoodit.forEach (koulutus) ->
                 if koulutus.match(/^\d{6}$/)
                   getKoulutusNimi $http, "koulutus_" + koulutus, (koulutusNimi) ->
                     koulutus = koulutusNimi
