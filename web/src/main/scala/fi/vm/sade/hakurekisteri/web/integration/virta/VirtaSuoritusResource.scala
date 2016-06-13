@@ -7,9 +7,9 @@ import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.HasPermission
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HetuQuery}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaQuery, VirtaResult}
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
-import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReport, Security, SecuritySupport, UserNotAuthorized}
+import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReport, Security, SecuritySupport}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra.{AsyncResult, FutureSupport, InternalServerError}
@@ -30,11 +30,11 @@ class VirtaSuoritusResource(virtaActor: ActorRef, hakuAppPermissionChecker: Acto
   implicit val defaultTimeout: Timeout = 30.seconds
 
   // XXX: Replace with proper permission checks
-  def hasAccess(personOid: String): Future[Boolean] =
-    if (currentUser.exists(_.isAdmin)) {
+  def hasAccess(personOid: String, user: Option[User]): Future[Boolean] =
+    if (user.exists(_.isAdmin)) {
       Future.successful(true)
     } else {
-      (hakuAppPermissionChecker ? HasPermission(currentUser.get, personOid)).mapTo[Boolean]
+      (hakuAppPermissionChecker ? HasPermission(user.get, personOid)).mapTo[Boolean]
     }
 
   before() {
@@ -47,11 +47,12 @@ class VirtaSuoritusResource(virtaActor: ActorRef, hakuAppPermissionChecker: Acto
 
   get("/:hetu", operation(query)) {
     val hetu = params("hetu")
+    val user = currentUser
     new AsyncResult() {
       override implicit def timeout: Duration = 30.seconds
       override val is =
         (henkiloActor ? HetuQuery(hetu)).mapTo[Henkilo].flatMap(henkilo => {
-          hasAccess(henkilo.oidHenkilo).flatMap(access => {
+          hasAccess(henkilo.oidHenkilo, user).flatMap(access => {
             if (access) {
               virtaActor ? VirtaQuery(oppijanumero = henkilo.oidHenkilo, hetu = Some(hetu))
             } else {
