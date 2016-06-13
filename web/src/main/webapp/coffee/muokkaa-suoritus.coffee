@@ -35,7 +35,7 @@ app.controller "MuokkaaSuoritus", [
       value
 
     $scope.getOrganisaatioNimi = (org) ->
-      if org
+      if org and org.nimi
         org.nimi[LokalisointiService.lang] or org.nimi.fi or org.nimi.sv or org.nimi.en
 
     $scope.validateData = (updateOnly) ->

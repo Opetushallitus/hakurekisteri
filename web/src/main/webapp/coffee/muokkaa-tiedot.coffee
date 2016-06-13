@@ -3,13 +3,14 @@ app.factory "MuokkaaTiedot", [
   "$http"
   "$log"
   "$q"
+  "clipboard"
   "Opiskelijat"
   "Suoritukset"
   "Opiskeluoikeudet"
   "LokalisointiService"
   "MessageService"
   "VirtaSuoritukset"
-  ($location, $http, $log, $q, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MessageService, VirtaSuoritukset) ->
+  ($location, $http, $log, $q, clipboard, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MessageService, VirtaSuoritukset) ->
     muokkaaHenkilo: (henkiloOid, $scope) ->
       initializeHenkilotiedot = ->
         $scope.henkilo = # // main data object
@@ -27,6 +28,8 @@ app.factory "MuokkaaTiedot", [
         $scope.tilat = []
         $scope.kielet = []
         $scope.disableSave = true
+        $scope.clipboardSupported = clipboard.supported
+        $scope.copyToClipboard = getCopyToClipboardFn(clipboard)
         $scope.komo = {}
 
         getKoodistoAsOptionArray $http, "kieli", $scope.kielet, "koodiArvo"
@@ -168,7 +171,6 @@ app.factory "MuokkaaTiedot", [
                     return
                 return obj
             return
-            return
           $scope.henkilo.virtatiedot.suoritukset.forEach (suoritus) ->
             if suoritus.myontaja
               getOrganisaatio $http, suoritus.myontaja, (organisaatio) ->
@@ -177,6 +179,33 @@ app.factory "MuokkaaTiedot", [
                 return
             return
         )
+
+      $scope.formatMyontaja = (organisaatio, myontaja) ->
+        if not organisaatio
+          return
+        (organisaatio.oppilaitosKoodi + ' ' +
+           (organisaatio.nimi.fi || organisaatio.nimi.sv || organisaatio.nimi.en)) || myontaja
+
+      $scope.formatLaji = (laji) ->
+        formated = switch laji
+          when "1" then "Tutkinto"
+          when "2" then "Muu opintosuoritus"
+          when "3" then "Ei huomioitava"
+          when "4" then "Oppilaitoksen sisäinen"
+          else laji
+        formated
+
+      $scope.convertOpiskeluOikeudet = (opiskeluoikeudet) ->
+        copiedText = ""
+        opiskeluoikeudet.forEach (opiskeluoikeus) ->
+          copiedText = copiedText + opiskeluoikeus.alkuPvm + "\t" + opiskeluoikeus.loppuPvm + "\t" + $scope.formatMyontaja(opiskeluoikeus.organisaatio, opiskeluoikeus.myontaja) + "\t" + opiskeluoikeus.koulutuskoodit + "\t" + opiskeluoikeus.kieli + "\n"
+        copiedText
+
+      $scope.convertOpintosuoritukset = (suoritukset) ->
+        copiedText = ""
+        suoritukset.forEach (suoritus) ->
+          copiedText = copiedText + $scope.formatLaji(suoritus.laji) + "\t" + suoritus.nimi + "\t" + suoritus.arvosana + "\t" + $scope.formatMyontaja(suoritus.organisaatio, suoritus.myontaja) + "\t" + suoritus.suoritusPvm + "\n"
+        copiedText
 
       fetchHenkilotiedot = ->
         $http.get(window.url("authentication-service.henkilo", henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->

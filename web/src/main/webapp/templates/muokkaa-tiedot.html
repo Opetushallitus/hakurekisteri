@@ -47,7 +47,7 @@
                     <div ng-if="henkilo.virtatiedot.opiskeluoikeudet.length === 0 && henkilo.virtatiedot.suoritukset.length === 0"
                          oph-msg="suoritusrekisteri.muokkaa.eivirtatietoja" class="alert alert-info">Ei tietoja Virta-järjestelmässä</div>
                     <div ng-if="henkilo.virtatiedot.opiskeluoikeudet.length > 0">
-                        <a class="btn btn-default btn-xs pull-right">
+                        <a ng-show="clipboardSupported" ng-click="copyToClipboard(convertOpiskeluOikeudet(henkilo.virtatiedot.opiskeluoikeudet))" class="btn btn-default btn-xs pull-right">
                             <span oph-msg="suoritusrekisteri.muokkaa.kopioi">Vie leikepöydälle</span>
                             <span class="glyphicon glyphicon-export"></span>
                         </a>
@@ -66,9 +66,7 @@
                                 <tr ng-repeat="opiskeluoikeus in henkilo.virtatiedot.opiskeluoikeudet">
                                     <td>{{opiskeluoikeus.alkuPvm}}</td>
                                     <td>{{opiskeluoikeus.loppuPvm}}</td>
-                                    <td>{{(opiskeluoikeus.organisaatio.oppilaitosKoodi + ' ' +
-                                        (opiskeluoikeus.organisaatio.nimi.fi || opiskeluoikeus.organisaatio.nimi.sv ||
-                                        opiskeluoikeus.organisaatio.nimi.en)) || opiskeluoikeus.myontaja}}</td>
+                                    <td>{{formatMyontaja(opiskeluoikeus.organisaatio, opiskeluoikeus.myontaja)}}</td>
                                     <td>
                                         <div ng-repeat="koulutus in opiskeluoikeus.koulutuskoodit">{{koulutus.koulutuskoodi}} {{koulutus.nimi}}</div>
                                     </td>
@@ -78,7 +76,7 @@
                         </table>
                     </div>
                     <div ng-if="henkilo.virtatiedot.suoritukset.length > 0">
-                        <a class="btn btn-default btn-xs pull-right" prevent-default>
+                        <a ng-show="clipboardSupported" ng-click="copyToClipboard(convertOpintosuoritukset(henkilo.virtatiedot.suoritukset))" class="btn btn-default btn-xs pull-right">
                             <span oph-msg="suoritusrekisteri.muokkaa.kopioi">Vie leikepöydälle</span>
                             <span class="glyphicon glyphicon-export"></span>
                         </a>
@@ -106,9 +104,7 @@
                                     </td>
                                     <td>{{suoritus.nimi}} <span ng-if="suoritus.koulutuskoodi">({{suoritus.koulutuskoodi}})</span></td>
                                     <td>{{suoritus.arvosana}}</td>
-                                    <td>{{(suoritus.organisaatio.oppilaitosKoodi + ' ' +
-                                        (suoritus.organisaatio.nimi.fi || suoritus.organisaatio.nimi.sv ||
-                                        suoritus.organisaatio.nimi.en)) || suoritus.myontaja}}</td>
+                                    <td>{{formatMyontaja(suoritus.organisaatio, suoritus.myontaja)}}</td>
                                     <td>{{suoritus.suoritusPvm}}</td>
                                 </tr>
                             </tbody>

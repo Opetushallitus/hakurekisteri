@@ -34,6 +34,7 @@ app = angular.module "myApp", [
   "ngUpload"
   "ngSanitize"
   "ngCookies"
+  "angular-clipboard"
 ]
 
 if (window.mocksOn)

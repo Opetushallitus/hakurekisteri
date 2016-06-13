@@ -213,6 +213,8 @@ lastIndex = (arr, fn) ->
     i = i + 1
   index
 
+getCopyToClipboardFn = (clipboard) -> (text) -> clipboard.copyText(text)
+
 (->
   ensureConsoleMethods()
 )()
