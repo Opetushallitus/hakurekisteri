@@ -164,7 +164,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
         alkuPvm = parseLocalDate((oo \ "AlkuPvm").head.text),
         loppuPvm = parseLocalDateOption((oo \ "LoppuPvm").headOption.map(_.text)),
         myontaja = extractTextOption(myontaja(oo), avain, required = true).get,
-        koulutuskoodit = Try((oo \ "Jakso" \ "Koulutuskoodi").map(_.text)).get,
+        koulutuskoodit = Try((oo \ "Jakso" \ "Koulutuskoodi").map(_.text).toSet.toSeq).get,
         kieli = resolveKieli(oo \ "Jakso" \ "Kieli")
       )
     })
