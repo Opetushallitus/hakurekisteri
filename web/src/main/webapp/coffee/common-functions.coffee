@@ -14,7 +14,9 @@ getKoulutusNimi = ($http, koulutusUri, successCallback, errorCallback) ->
         meta = koodi.metadata[i]
         return successCallback(meta.nimi)  if meta.kieli is "FI"
         i++
-    successCallback koulutusUri).error(errorCallback)
+    successCallback koulutusUri).error((error) ->
+      if errorCallback
+        errorCallback(error))
   return
 
 getHakuNimi = ($http, hakuOid, successCallback) ->

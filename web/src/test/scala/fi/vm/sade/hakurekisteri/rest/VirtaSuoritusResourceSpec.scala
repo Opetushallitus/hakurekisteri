@@ -46,7 +46,7 @@ class VirtaSuoritusResourceSpec extends ScalatraFunSuite with DispatchSupport wi
   val henkiloActor = TestActorRef(new Actor {
     override def receive: Receive = {
       case HetuQuery(hetu) => sender ! Henkilo(
-        "1.2.3",
+        "1.2.4",
         Some("111111-1975"),
         "OPPIJA",
         None,
