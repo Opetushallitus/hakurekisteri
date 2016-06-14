@@ -27,7 +27,7 @@
                         <span oph-msg="suoritusrekisteri.muokkaa.henkilotietoja">Muokkaa henkilötietoja</span>
                         <span class="glyphicon glyphicon-edit"></span>
                     </a>
-                    <button class="btn btn-default btn-xs" ng-click="fetchVirtaTiedot()" ng-disabled="henkilo.virtatiedot">
+                    <button class="btn btn-default btn-xs" ng-click="fetchVirtaTiedot()" ng-disabled="!henkilo.hetu || henkilo.virtatiedot">
                         <span oph-msg="suoritusrekisteri.muokkaa.naytavirtatiedot">Näytä tiedot Virta-järjestelmästä</span>
                         <span class="glyphicon glyphicon-list"></span>
                     </button>
