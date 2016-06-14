@@ -102,8 +102,8 @@
                                             <span ng-switch-default>{{suoritus.laji}}</span>
                                         </span>
                                     </td>
-                                    <td>{{suoritus.nimi}} <span ng-if="suoritus.koulutuskoodi">({{suoritus.koulutuskoodi}})</span></td>
-                                    <td>{{suoritus.arvosana}}</td>
+                                    <td>{{suoritus.nimi}}<span ng-if="suoritus.koulutuskoodi"> ({{suoritus.koulutuskoodi}})</span></td>
+                                    <td>{{suoritus.arvosana}}<span ng-if="suoritus.asteikko"> ({{suoritus.asteikko}})</span></td>
                                     <td>{{formatMyontaja(suoritus.organisaatio, suoritus.myontaja)}}</td>
                                     <td>{{suoritus.suoritusPvm}}</td>
                                 </tr>
