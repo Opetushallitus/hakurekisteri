@@ -182,13 +182,13 @@ app.factory "MuokkaaTiedot", [
 
       $scope.formatMyontaja = (organisaatio, myontaja) ->
         if not organisaatio
-          return
+          ""
         (organisaatio.oppilaitosKoodi + ' ' +
            (organisaatio.nimi.fi || organisaatio.nimi.sv || organisaatio.nimi.en)) || myontaja
 
       $scope.formatLaji = (laji) ->
         if not laji
-          return
+          ""
         formated = switch laji
           when "1" then "Tutkinto"
           when "2" then "Muu opintosuoritus"
