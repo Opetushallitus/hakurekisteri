@@ -1,8 +1,6 @@
 package siirto
 
-import fi.vm.sade.hakurekisteri.tools.SafeXML
-
-import scala.xml.Elem
+import scala.xml.{XML, Elem}
 
 
 object Perustiedot extends SchemaDefinition {
@@ -281,7 +279,7 @@ abstract class IncludeSchema(namespace: String, remoteschemas: String*) extends 
 }
 
 trait RemoteSchema extends SchemaDefinition {
-  lazy val schema: Elem  = SafeXML.load(schemaLocation)
+  lazy val schema: Elem  = XML.load(schemaLocation)
 }
 
 trait SchemaWithRemotes extends SchemaDefinition  {

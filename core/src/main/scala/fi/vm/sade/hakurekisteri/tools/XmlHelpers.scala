@@ -1,55 +1,11 @@
 package fi.vm.sade.hakurekisteri.tools
 
 
-import java.io.{InputStream, Reader}
-import java.net.URL
-import javax.xml.parsers.SAXParserFactory
-
-import com.sun.org.apache.xml.internal.serialize.{OutputFormat, XMLSerializer}
+import com.sun.org.apache.xml.internal.serialize.{XMLSerializer, OutputFormat}
 
 import scala.language.implicitConversions
 import scala.xml._
 
-// Protect from XXE
-// https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Processing
-// https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Prevention_Cheat_Sheet
-object SafeXML {
-
-  def safeXML = {
-    val spf: SAXParserFactory = safeSAXParserFactory
-    XML.withSAXParser(spf.newSAXParser())
-  }
-
-  def safeSAXParserFactory: SAXParserFactory = {
-    val spf = SAXParserFactory.newInstance()
-    spf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
-    spf.setFeature("http://xml.org/sax/features/external-general-entities", false)
-    spf.setFeature("http://xml.org/sax/features/external-parameter-entities", false)
-    spf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
-    spf.setXIncludeAware(false)
-    spf
-  }
-
-  def loadString(s: String) = {
-    safeXML.loadString(s)
-  }
-
-  def load(sysID: String) = {
-    safeXML.load(sysID)
-  }
-
-  def load(is: InputStream) = {
-    safeXML.load(is)
-  }
-
-  def load(reader: Reader) = {
-    safeXML.load(reader)
-  }
-
-  def load(url: URL) = {
-    safeXML.load(url)
-  }
-}
 
 object XmlHelpers {
   def docBuilder =

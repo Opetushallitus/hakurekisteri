@@ -7,7 +7,6 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository._
-import fi.vm.sade.hakurekisteri.tools.SafeXML
 import org.json4s.JsonAST.JValue
 
 import scala.compat.Platform
@@ -19,7 +18,7 @@ import scala.slick.jdbc.JdbcType
 import scala.slick.jdbc.meta.MTable
 import scala.slick.lifted
 import scala.slick.lifted.{TableQuery, _}
-import scala.xml.Elem
+import scala.xml.{Elem, XML}
 
 
 object HakurekisteriDriver extends JdbcDriver {
@@ -65,7 +64,7 @@ object HakurekisteriDriver extends JdbcDriver {
     class ElemType(implicit tmd: JdbcType[String], override val classTag: ClassTag[Elem]) extends HakurekisteriDriver.MappedJdbcType[Elem, String] with BaseTypedType[Elem] {
       override def newSqlType: Option[Int] = Option(java.sql.Types.CLOB)
       override def sqlTypeName: String = "TEXT"
-      override def comap(xml: String): Elem = SafeXML.loadString(xml)
+      override def comap(xml: String): Elem = XML.loadString(xml)
       override def map(data: Elem): String = data.toString()
     }
 

@@ -1,19 +1,26 @@
 package siirto
 
+import java.io.{ByteArrayInputStream, StringReader}
 import java.util.UUID
+import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.dom.DOMSource
-import javax.xml.transform.sax.{SAXResult, SAXSource}
+import javax.xml.transform.sax.{SAXSource, SAXResult}
 
-import fi.vm.sade.hakurekisteri.tools.SafeXML
-import fi.vm.sade.hakurekisteri.tools.XmlHelpers._
-import org.scalatest.{BeforeAndAfter, Matchers, fixture}
+import org.dom4j.Document
+import org.dom4j.io.{SAXReader, DocumentSource, DOMReader}
+import org.scalatest.{BeforeAndAfter, Matchers, FlatSpec}
 
 import scala.annotation.tailrec
 import scala.compat.Platform
 import scala.util.Random
-import scala.xml.Source._
 import scala.xml.parsing.NoBindingFactoryAdapter
-import scala.xml.{Elem, Node}
+import scala.xml.{Node, Elem, XML}
+
+import scala.xml.Source._
+
+import fi.vm.sade.hakurekisteri.tools.XmlHelpers._
+
+import org.scalatest.fixture
 /**
  * Created by verneri on 13.11.14.
  */
@@ -42,7 +49,7 @@ class ValidationLoadSpec extends fixture.FlatSpec with Matchers with BeforeAndAf
     val (validator, xml) = input
     for (
       file <- xml
-    ) validator.validate(new DOMSource(SafeXML.loadString(file).toJdkDoc.getDocumentElement))
+    ) validator.validate(new DOMSource(XML.loadString(file).toJdkDoc.getDocumentElement))
 
 
   }
@@ -52,7 +59,7 @@ class ValidationLoadSpec extends fixture.FlatSpec with Matchers with BeforeAndAf
     for (
       file <- xml
     ) {
-      val validation = validator.validate(new SAXSource(fromString(SafeXML.loadString(file).toString)))
+      val validation = validator.validate(new SAXSource(fromString(XML.loadString(file).toString)))
       validation.valueOr{
         errors =>
           val (level, ex) = errors.head
