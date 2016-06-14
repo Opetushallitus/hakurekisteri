@@ -183,8 +183,8 @@ app.factory "MuokkaaTiedot", [
       $scope.formatMyontaja = (organisaatio, myontaja) ->
         if not organisaatio
           ""
-        (organisaatio.oppilaitosKoodi + ' ' +
-           (organisaatio.nimi.fi || organisaatio.nimi.sv || organisaatio.nimi.en)) || myontaja
+        else
+          (organisaatio.oppilaitosKoodi + ' ' + (organisaatio.nimi.fi || organisaatio.nimi.sv || organisaatio.nimi.en)) || myontaja
 
       $scope.formatLaji = (laji) ->
         if not laji
