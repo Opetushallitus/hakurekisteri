@@ -1,0 +1,314 @@
+{
+  "oid": "1.2.246.562.10.259480292910",
+  "nimi": {
+    "fi": "Tampereen teknillinen yliopisto",
+    "en": "Tampere University of Technology"
+  },
+  "yhteystiedot": [
+    {
+      "kieli": "kieli_fi#1",
+      "yhteystietoOid": "14240859020070.3576022623231577",
+      "id": "1415615",
+      "email": "opiskelijavalinta@tut.fi"
+    },
+    {
+      "osavaltio": null,
+      "lng": null,
+      "osoiteTyyppi": "ulkomainen_posti",
+      "coordinateType": null,
+      "kieli": "kieli_en#1",
+      "postinumeroUri": null,
+      "yhteystietoOid": "1.2.246.562.5.53813498065",
+      "lap": null,
+      "id": "1415616",
+      "maaUri": null,
+      "postitoimipaikka": null,
+      "osoite": "P.O. BOX 527\nFI-33101 TAMPERE, FINLAND",
+      "ytjPaivitysPvm": null,
+      "extraRivi": null
+    },
+    {
+      "osavaltio": null,
+      "lng": null,
+      "osoiteTyyppi": "kaynti",
+      "coordinateType": null,
+      "kieli": "kieli_fi#1",
+      "postinumeroUri": "posti_33720",
+      "yhteystietoOid": "1.2.246.562.5.58025257039",
+      "lap": null,
+      "id": "1415617",
+      "maaUri": null,
+      "postitoimipaikka": "TAMPERE",
+      "osoite": "Korkeakoulunkatu 1 (Hervanta)",
+      "ytjPaivitysPvm": null,
+      "extraRivi": null
+    },
+    {
+      "osavaltio": null,
+      "lng": null,
+      "osoiteTyyppi": "posti",
+      "coordinateType": null,
+      "kieli": "kieli_fi#1",
+      "postinumeroUri": "posti_33101",
+      "yhteystietoOid": "1.2.246.562.5.65549932229",
+      "lap": null,
+      "id": "1415618",
+      "maaUri": null,
+      "postitoimipaikka": "TAMPERE",
+      "osoite": "PL 527",
+      "ytjPaivitysPvm": null,
+      "extraRivi": null
+    },
+    {
+      "kieli": "kieli_fi#1",
+      "www": "http://www.tut.fi",
+      "yhteystietoOid": "1.2.246.562.5.76998012355",
+      "id": "1415619"
+    },
+    {
+      "kieli": "kieli_fi#1",
+      "numero": "+358 50 300 0442",
+      "tyyppi": "puhelin",
+      "yhteystietoOid": "1.2.246.562.5.30584257056",
+      "id": "1415620"
+    },
+    {
+      "osavaltio": null,
+      "lng": null,
+      "osoiteTyyppi": "ulkomainen_kaynti",
+      "coordinateType": null,
+      "kieli": "kieli_en#1",
+      "postinumeroUri": null,
+      "yhteystietoOid": "1.2.246.562.5.53113510818",
+      "lap": null,
+      "id": "1415621",
+      "maaUri": null,
+      "postitoimipaikka": null,
+      "osoite": "Korkeakoulunkatu 1\nFI-33720 Tampere, Finland",
+      "ytjPaivitysPvm": null,
+      "extraRivi": null
+    },
+    {
+      "kieli": "kieli_en#1",
+      "yhteystietoOid": "14430871617690.4671540909249372",
+      "id": "1415622",
+      "email": "admissions@tut.fi"
+    },
+    {
+      "kieli": "kieli_en#1",
+      "www": "http://www.tut.fi/en",
+      "yhteystietoOid": "14430871617690.9691643809210493",
+      "id": "1415623"
+    }
+  ],
+  "metadata": {
+    "nimi": {},
+    "hakutoimistonNimi": {
+      "kieli_en#1": "TUT Admissions Office",
+      "kieli_fi#1": "Tampereen teknillinen yliopisto, Hakijapalvelut"
+    },
+    "yhteystiedot": [
+      {
+        "osavaltio": null,
+        "lng": null,
+        "osoiteTyyppi": "posti",
+        "coordinateType": null,
+        "kieli": "kieli_fi#1",
+        "postinumeroUri": "posti_33101",
+        "yhteystietoOid": "1.2.246.562.5.36910944957",
+        "lap": null,
+        "id": "1415604",
+        "maaUri": null,
+        "postitoimipaikka": "TAMPERE",
+        "osoite": "PL 527",
+        "ytjPaivitysPvm": null,
+        "extraRivi": null
+      },
+      {
+        "kieli": "kieli_fi#1",
+        "yhteystietoOid": "14158755354020.9576330773693609",
+        "id": "1415605",
+        "email": "opiskelijavalinta@tut.fi"
+      },
+      {
+        "kieli": "kieli_fi#1",
+        "www": "http://www.tut.fi/fi/tule-opiskelemaan",
+        "yhteystietoOid": "14158755354020.15748127207967344",
+        "id": "1415606"
+      },
+      {
+        "kieli": "kieli_fi#1",
+        "numero": "+358 50 300 0442",
+        "tyyppi": "puhelin",
+        "yhteystietoOid": "1.2.246.562.5.17079840568",
+        "id": "1415607"
+      },
+      {
+        "osavaltio": null,
+        "lng": null,
+        "osoiteTyyppi": "ulkomainen_posti",
+        "coordinateType": null,
+        "kieli": "kieli_en#1",
+        "postinumeroUri": null,
+        "yhteystietoOid": "1.2.246.562.5.26653387158",
+        "lap": null,
+        "id": "1415608",
+        "maaUri": null,
+        "postitoimipaikka": null,
+        "osoite": "P.O. BOX 527\nFI-33101 TAMPERE, FINLAND",
+        "ytjPaivitysPvm": null,
+        "extraRivi": null
+      },
+      {
+        "kieli": "kieli_en#1",
+        "yhteystietoOid": "14158755354020.7364408416224131",
+        "id": "1415609",
+        "email": "admissions@tut.fi"
+      },
+      {
+        "kieli": "kieli_en#1",
+        "www": "http://www.tut.fi/en/admissions",
+        "yhteystietoOid": "14158755354020.5275030336394928",
+        "id": "1415610"
+      },
+      {
+        "osavaltio": null,
+        "lng": null,
+        "osoiteTyyppi": "ulkomainen_kaynti",
+        "coordinateType": null,
+        "kieli": "kieli_en#1",
+        "postinumeroUri": null,
+        "yhteystietoOid": "1.2.246.562.5.71445086079",
+        "lap": null,
+        "id": "1415611",
+        "maaUri": null,
+        "postitoimipaikka": null,
+        "osoite": "Korkeakoulunkatu 1\nFI-33720 Tampere, Finland",
+        "ytjPaivitysPvm": null,
+        "extraRivi": null
+      },
+      {
+        "kieli": "kieli_en#1",
+        "numero": "+358 50 300 0442",
+        "tyyppi": "puhelin",
+        "yhteystietoOid": "1.2.246.562.5.56197910446",
+        "id": "1415612"
+      }
+    ],
+    "hakutoimistoEctsNimi": {},
+    "hakutoimistoEctsEmail": {},
+    "hakutoimistoEctsPuhelin": {},
+    "hakutoimistoEctsTehtavanimike": {},
+    "luontiPvm": 1410339286308,
+    "muokkausPvm": 1410339286308,
+    "data": {
+      "KANSAINVALISET_KOULUTUSOHJELMAT": {},
+      "YLEISKUVAUS": {
+        "kieli_en#1": "<p><strong>Tampere University of Technology (TUT)</strong> offers applicants 13 broad subject areas that cut across conventional disciplinary boundaries and offers eight degree programmes that are conducted entirely in English. The extensive curriculum allows students to combine studies in the traditional fields of engineering with the latest trends in science. New technology holds promise for addressing many of today’s global challenges and promoting global well-being. The University’s commitment to people and the environment is reflected in all our degree programmes.</p> <p>The degrees conferred by the University include Master of Science in Technology/Architecture, Doctor of Science in Technology and Doctor of Philosophy. Our competent graduates go on to pursue careers in industry, business and other sectors of society. The University has consistently enjoyed excellent graduate employment records. An overwhelming 97 per cent of our newly graduated students report high levels of satisfaction with their degree programmes.  </p> <p>Faculty members employ a wide range of teaching methods, and theoretical studies are combined with practical assignments. Students attend lectures and tutorials, complete individual and group assignments, work in laboratories, and broaden their perspectives through guest lectures and company visits. As they make progress towards their degree, students have the opportunity to take part in research projects and develop, among others, biofuels, solar cells, tissue engineering applications and smart technologies.</p> <p>The University’s compact campus is abuzz with activity and home to numerous student guilds and clubs, two gyms, group exercise facilities and an indoor court. The new Campus Arena taking shape in the middle of the campus will be completed in 2015 and serve as a nerve centre for academic learning, research and university-industry collaboration. With close to 2,000 international students and scholars, TUT has a strong international dimension.</p> <p>Tampere University of Technology is one of two Finnish universities that operate in the form of a foundation. The foundation model promotes the development of education and research and provides a competitive edge in the increasingly competitive international academic landscape.</p> <p>TUT coordinates the University Consortium of Pori located on the west coast of Finland.</p> <p> </p> <p> </p>",
+        "kieli_fi#1": "<p><strong>Tampereen teknillisen yliopiston</strong> 13 hakukohdetta mahdollistavat laaja-alaisen poikkiteknisen ja monitieteisen koulutuksen. Laajan opetustarjonnan ansioista opintoihin voi yhdistää perinteisiä teknisiä aloja sekä tieteen uusimpia suuntauksia. Tekniikan keskeinen rooli globaalien haasteiden ratkaisemisessa ja inhimillisen hyvinvoinnin turvaamisessa näkyy kaikilla TTY:n koulutusaloilla.</p> <p>Yliopistosta valmistuu diplomi-insinöörejä ja arkkitehteja sekä tekniikan ja filosofian tohtoreita. Valmistuneiden erinomainen työllistyminen kertoo siitä, että koulutusta arvostetaan niin teollisuudessa ja elinkeinoelämässä kuin yhteiskunnan muillakin osa-alueilla. TTY:n vastavalmistuneista osaajista 97 prosenttia on tyytyväisiä omaan tutkintoonsa.</p> <p>Opiskelu TTY:llä on monipuolista ja vaihtelevaa, käytännön harjoitukset täydentävät teoriakokonaisuuksia. Teekkarit opiskelevat luennoilla, harjoituksissa, ryhmissä, harjoitustöissä, laboratorioharjoituksissa, vierailuluennoilla ja yritysvierailuilla. Opiskelijat voivat opintojensa edetessä päästä mukaan projekteihin kehittämään esimerkiksi biopolttoaineita, aurinkokennoja, kudosteknologiaa tai älylaitteita. Kaikki opiskelijat saavat myös valmiudet yrittäjyyteen.</p> <p>Yhtenäiseltä kampukselta löytyy tilat killoille ja ammattiainekerhoille, kaksi kuntosalia sekä omat salit ryhmäliikuntaan ja palloiluun. Kampuksen kuhinaa ja kohtaamisia lisää entisestään alueen sydämeen vuonna 2015 valmistuva Kampusareena, joka tuo tutkimuksen, opiskelun, palvelut ja yritystoiminnan aivan uudella tavalla toistensa vaikutuspiiriin. TTY:n kampuksella opiskelun ohessa myös kansainvälistyy. Hervannassa opiskelee ja työskentelee lähes kaksituhatta ulkomaalaista osaajaa.</p> <p>TTY on toinen säätiömuodon valinneista suomalaisista yliopistoista. Säätiöyliopistomuoto tukee tutkimuksen ja koulutuksen kehittämistä ja antaa hyvät lähtökohdat menestyä kiristyvässä kansainvälisessä kilpailussa.</p> <p>TTY koordinoin Porin yliopistokeskusta. TTY:n Porin laitoksella voi opiskella johtamisen ja tietotekniikan DI-tutkinto-ohjelmassa.</p> <p> </p>"
+      },
+      "KIELIOPINNOT": {},
+      "TERVEYDENHUOLTOPALVELUT": {},
+      "TEHTAVANIMIKE": {},
+      "SAHKOPOSTIOSOITE": {},
+      "RAHOITUS": {},
+      "AIEMMIN_HANKITTU_OSAAMINEN": {},
+      "sosiaalinenmedia_7#1": {},
+      "sosiaalinenmedia_5#1": {
+        "kieli_en#1": "http://instagram.com/tampereenteekkari",
+        "kieli_fi#1": "http://www.youtube.com/wwwtutfi"
+      },
+      "sosiaalinenmedia_6#1": {
+        "kieli_fi#1": "https://www.instagram.com/tampereenteekkari/"
+      },
+      "OPISKELIJALIIKKUVUUS": {},
+      "VAKUUTUKSET": {},
+      "OPISKELIJA_JARJESTOT": {},
+      "VALINTAMENETTELY": {},
+      "sosiaalinenmedia_3#1": {
+        "kieli_en#1": "http://www.linkedin.com/company/tampere-university-of-technology",
+        "kieli_fi#1": "http://www.linkedin.com/company/tampere-university-of-technology"
+      },
+      "sosiaalinenmedia_4#1": {
+        "kieli_en#1": "https://twitter.com/TampereUniTech",
+        "kieli_fi#1": "https://twitter.com/TampereUniTech"
+      },
+      "sosiaalinenmedia_1#1": {
+        "kieli_en#1": "https://www.facebook.com/tampereenteknillinenyliopisto",
+        "kieli_fi#1": "https://www.facebook.com/tampereenteknillinenyliopisto"
+      },
+      "VASTUUHENKILOT": {},
+      "KUSTANNUKSET": {},
+      "OPPIMISYMPARISTO": {},
+      "sosiaalinenmedia_2#1": {},
+      "PUHELINNUMERO": {},
+      "NIMI": {},
+      "OPISKELIJALIIKUNTA": {},
+      "VUOSIKELLO": {},
+      "OPISKELIJARUOKAILU": {},
+      "VAPAA_AIKA": {},
+      "ESTEETOMYYS": {},
+      "TIETOA_ASUMISESTA": {},
+      "TYOHARJOITTELU": {}
+    }
+  },
+  "tyypit": [
+    "Oppilaitos"
+  ],
+  "parentOid": "1.2.246.562.10.85736673931",
+  "parentOidPath": "|1.2.246.562.10.00000000001|1.2.246.562.10.85736673931|",
+  "vuosiluokat": [],
+  "alkuPvm": "1993-01-01",
+  "postiosoite": {
+    "osavaltio": null,
+    "lng": null,
+    "postinumeroUri": "posti_33101",
+    "osoiteTyyppi": "posti",
+    "coordinateType": null,
+    "yhteystietoOid": "1.2.246.562.5.65549932229",
+    "lap": null,
+    "maaUri": null,
+    "postitoimipaikka": "TAMPERE",
+    "osoite": "PL 527",
+    "ytjPaivitysPvm": null,
+    "extraRivi": null
+  },
+  "oppilaitosKoodi": "01915",
+  "kuvaus2": {},
+  "kieletUris": [
+    "oppilaitoksenopetuskieli_1#1"
+  ],
+  "oppilaitosTyyppiUri": "oppilaitostyyppi_42#1",
+  "yhteystietoArvos": [],
+  "nimet": [
+    {
+      "nimi": {
+        "fi": "Tampereen teknillinen yliopisto",
+        "en": "Tampere University of Technology"
+      },
+      "alkuPvm": "1993-01-01",
+      "version": 1
+    }
+  ],
+  "ryhmatyypit": [],
+  "kayttoryhmat": [],
+  "kayntiosoite": {
+    "osavaltio": null,
+    "lng": null,
+    "postinumeroUri": "posti_33720",
+    "osoiteTyyppi": "kaynti",
+    "coordinateType": null,
+    "yhteystietoOid": "1.2.246.562.5.58025257039",
+    "lap": null,
+    "maaUri": null,
+    "postitoimipaikka": "TAMPERE",
+    "osoite": "Korkeakoulunkatu 1 (Hervanta)",
+    "ytjPaivitysPvm": null,
+    "extraRivi": null
+  },
+  "kotipaikkaUri": "kunta_837",
+  "maaUri": "maatjavaltiot1_fin",
+  "toimipistekoodi": "01915",
+  "version": 75,
+  "status": "AKTIIVINEN"
+}

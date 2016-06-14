@@ -100,6 +100,7 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
     waitFuture(response) {o => {
       o.get.opiskeluoikeudet.size should be(1)
       o.get.tutkinnot.size should be(1)
+      o.get.suoritukset.size should be(7)
     }}
   }
 
@@ -179,6 +180,16 @@ class VirtaClientSpec extends FlatSpec with Matchers with AsyncAssertions with M
     waitFuture(response) {(o: Option[VirtaResult]) => {
       o.get.opiskeluoikeudet.size should be(5)
       o.get.tutkinnot.size should be(1)
+    }}
+  }
+
+  it should "parse arvosana with asteikko Muu correctly" in {
+    virtaClient.setApiVersion(VirtaClient.version106)
+
+    val response: Future[Option[VirtaResult]] = virtaClient.getOpiskelijanTiedot(oppijanumero = "1.2.106")
+
+    waitFuture(response) {(o: Option[VirtaResult]) => {
+      o.map(_.suoritukset).exists(_.exists(s => s.arvosana == Some("4") && s.asteikko == Some("Meidän oma asteikko yhdestä neljään"))) should be(true)
     }}
   }
 }

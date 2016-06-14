@@ -97,7 +97,7 @@ class MockHenkiloActor(config: Config) extends HenkiloActor(config) {
       val json = parse(HenkiloMock.getHenkiloByOid("1.2.246.562.24.71944845619"))
       sender ! json.extract[Henkilo]
 
-    case HetuQuery(Hetu(hetu)) =>
+    case HetuQuery(hetu) =>
       val json = parse(HenkiloMock.getHenkiloByOid("1.2.246.562.24.71944845619"))
       sender ! json.extract[Henkilo]
 

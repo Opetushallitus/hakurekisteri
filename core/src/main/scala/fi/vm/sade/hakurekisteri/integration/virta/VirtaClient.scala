@@ -44,6 +44,21 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
 
   val tallennettavatOpiskeluoikeustyypit = Seq("1", "2", "3", "4", "6", "7")
 
+  def getSoapOperationEnvelope(oppijanumero: String, hetu: Option[String] = None): Elem =
+    <OpiskelijanKaikkiTiedotRequest xmlns="http://tietovaranto.csc.fi/luku">
+      <Kutsuja>
+        <jarjestelma>{config.jarjestelma}</jarjestelma>
+        <tunnus>{config.tunnus}</tunnus>
+        <avain>{config.avain}</avain>
+      </Kutsuja>
+      <Hakuehdot>
+        {
+          if (hetu.isDefined) <henkilotunnus>{hetu.get}</henkilotunnus>
+          else <kansallinenOppijanumero>{oppijanumero}</kansallinenOppijanumero>
+        }
+      </Hakuehdot>
+    </OpiskelijanKaikkiTiedotRequest>
+
   logger.info(s"created Virta client for API version $apiVersion and serviceUrl ${config.serviceUrl}")
 
   def setApiVersion(version: String): Unit = {
@@ -52,21 +67,8 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   }
 
   def getOpiskelijanTiedot(oppijanumero: String, hetu: Option[String] = None): Future[Option[VirtaResult]] = {
-
-    val operation =
-<OpiskelijanKaikkiTiedotRequest xmlns="http://tietovaranto.csc.fi/luku">
-  <Kutsuja>
-    <jarjestelma>{config.jarjestelma}</jarjestelma>
-    <tunnus>{config.tunnus}</tunnus>
-    <avain>{config.avain}</avain>
-  </Kutsuja>
-  <Hakuehdot>
-    {if (hetu.isDefined) <henkilotunnus>{hetu.get}</henkilotunnus> else <kansallinenOppijanumero>{oppijanumero}</kansallinenOppijanumero>}
-  </Hakuehdot>
-</OpiskelijanKaikkiTiedotRequest>
-
     val retryCount = new AtomicInteger(1)
-    tryPost(config.serviceUrl, wrapSoapEnvelope(operation), oppijanumero, hetu, retryCount)
+    tryPost(config.serviceUrl, wrapSoapEnvelope(getSoapOperationEnvelope(oppijanumero, hetu)), oppijanumero, retryCount)
   }
 
   def parseFault(response: String): Unit = {
@@ -88,7 +90,6 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
   def tryPost(requestUrl: String,
               requestEnvelope: String,
               oppijanumero: String,
-              hetu: Option[String],
               retryCount: AtomicInteger): Future[Option[VirtaResult]] = {
     val t0 = Platform.currentTime
 
@@ -102,10 +103,15 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
 
           val opiskeluoikeudet = getOpiskeluoikeudet(responseEnvelope)
           val tutkinnot = getTutkinnot(responseEnvelope)
+          val suoritukset = getOpintosuoritukset(responseEnvelope)
 
-          (opiskeluoikeudet, tutkinnot) match {
-            case (Seq(), Seq()) => None
-            case _ => Some(VirtaResult(oppijanumero = oppijanumero, opiskeluoikeudet = opiskeluoikeudet, tutkinnot = tutkinnot))
+          (opiskeluoikeudet, tutkinnot, suoritukset) match {
+            case (Seq(), Seq(), Seq()) => None
+            case _ => Some(VirtaResult(
+              oppijanumero = oppijanumero,
+              opiskeluoikeudet = opiskeluoikeudet,
+              tutkinnot = tutkinnot,
+              suoritukset = suoritukset))
           }
         } else {
           val bodyString = response.getResponseBody
@@ -146,6 +152,10 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
     case default => throw new NotImplementedError(s"version $default not implemented")
   }
 
+  private def getOpintosuorituksetNodeSeq(nodeSeq: NodeSeq): NodeSeq = {
+    nodeSeq \ "Body" \ "OpiskelijanKaikkiTiedotResponse" \ "Virta" \ "Opiskelija" \ "Opintosuoritukset" \ "Opintosuoritus"
+  }
+
   def getOpiskeluoikeudet(response: NodeSeq): Seq[VirtaOpiskeluoikeus] = {
     val opiskeluoikeudet: NodeSeq = response \ "Body" \ "OpiskelijanKaikkiTiedotResponse" \ "Virta" \ "Opiskelija" \ "Opiskeluoikeudet" \ "Opiskeluoikeus"
     opiskeluoikeudet.withFilter((oo: Node) => tallennettavatOpiskeluoikeustyypit.contains((oo \ "Tyyppi").text)).map((oo: Node) => {
@@ -154,14 +164,14 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
         alkuPvm = parseLocalDate((oo \ "AlkuPvm").head.text),
         loppuPvm = parseLocalDateOption((oo \ "LoppuPvm").headOption.map(_.text)),
         myontaja = extractTextOption(myontaja(oo), avain, required = true).get,
-        koulutuskoodit = Try((oo \ "Jakso" \ "Koulutuskoodi").map(_.text)).get,
+        koulutuskoodit = Try((oo \ "Jakso" \ "Koulutuskoodi").map(_.text).toSet.toSeq).get,
         kieli = resolveKieli(oo \ "Jakso" \ "Kieli")
       )
     })
   }
 
   def getTutkinnot(response: NodeSeq): Seq[VirtaTutkinto] = {
-    val opintosuoritukset: NodeSeq = response \ "Body" \ "OpiskelijanKaikkiTiedotResponse" \ "Virta" \ "Opiskelija" \ "Opintosuoritukset" \ "Opintosuoritus"
+    val opintosuoritukset: NodeSeq = getOpintosuorituksetNodeSeq(response)
     opintosuoritukset.withFilter(filterTutkinto).map((os: Node) => {
       val avain = os.map(_ \ "@avain")
       VirtaTutkinto(
@@ -171,6 +181,46 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
         kieli = resolveKieli(os \ "Kieli")
       )
     })
+  }
+
+  def getOpintosuoritukset(response: NodeSeq): Seq[VirtaOpintosuoritus] = {
+    val opintosuoritukset: NodeSeq = getOpintosuorituksetNodeSeq(response)
+    opintosuoritukset.map((os: Node) => {
+      val avain = os.map(_ \ "@avain")
+      val (arvosana, asteikko) = parseArvosana(os \ "Arvosana", avain)
+      VirtaOpintosuoritus(
+        suoritusPvm = parseLocalDate((os \ "SuoritusPvm").head.text),
+        nimi = extractTextOption(os \ "Nimi", avain),
+        koulutuskoodi = extractTextOption(os \ "Koulutuskoodi", avain),
+        arvosana = arvosana,
+        asteikko = asteikko,
+        myontaja = extractTextOption(myontaja(os), avain, required = true).get,
+        laji = extractTextOption(os \ "Laji", avain)
+      )
+    })
+  }
+
+  def parseArvosana(arvosanaNode: NodeSeq, avain: Seq[NodeSeq]): (Option[String], Option[String]) = {
+    try {
+      if ((arvosanaNode \ "Muu").length > 0) {
+        val asteikko: NodeSeq = arvosanaNode \ "Muu" \ "Asteikko"
+        val asteikonNimi = (arvosanaNode \ "Muu" \ "Asteikko" \ "Nimi").headOption.map(_.text)
+        val koodi = (arvosanaNode \ "Muu" \ "Koodi").head.text
+        val koodiArvo = (asteikko \ "AsteikkoArvosana").collect {
+          case n: Elem => n
+        }.find(_.attribute("avain").exists(_.text == koodi)).map(a => (a \ "Koodi").text)
+        (koodiArvo, asteikonNimi)
+      } else {
+        val asteikkoelementti = arvosanaNode.headOption.flatMap(_.child.collect {
+          case e: Elem => e
+        }.headOption)
+        (asteikkoelementti.map(_.text), asteikkoelementti.map(_.label))
+      }
+    } catch {
+      case e: Exception =>
+        logger.error(e, s"error parsing arvosana & asteikko from $arvosanaNode with avain $avain")
+        (None, None)
+    }
   }
 
   def extractTextOption(n: NodeSeq, avain: Seq[NodeSeq], required: Boolean = false): Option[String] = {

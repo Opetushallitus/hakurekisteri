@@ -3,12 +3,14 @@ app.factory "MuokkaaTiedot", [
   "$http"
   "$log"
   "$q"
+  "clipboard"
   "Opiskelijat"
   "Suoritukset"
   "Opiskeluoikeudet"
   "LokalisointiService"
   "MessageService"
-  ($location, $http, $log, $q, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MessageService) ->
+  "VirtaSuoritukset"
+  ($location, $http, $log, $q, clipboard, Opiskelijat, Suoritukset, Opiskeluoikeudet, LokalisointiService, MessageService, VirtaSuoritukset) ->
     muokkaaHenkilo: (henkiloOid, $scope) ->
       initializeHenkilotiedot = ->
         $scope.henkilo = # // main data object
@@ -26,6 +28,8 @@ app.factory "MuokkaaTiedot", [
         $scope.tilat = []
         $scope.kielet = []
         $scope.disableSave = true
+        $scope.clipboardSupported = clipboard.supported
+        $scope.copyToClipboard = getCopyToClipboardFn(clipboard)
         $scope.komo = {}
 
         getKoodistoAsOptionArray $http, "kieli", $scope.kielet, "koodiArvo"
@@ -145,6 +149,69 @@ app.factory "MuokkaaTiedot", [
         ).error(->komosLoaded.reject("cannot get komos"))
         return komosLoaded.promise
 
+      $scope.fetchVirtaTiedot = ->
+        id = if $scope.henkilo.hetu
+          $scope.henkilo.hetu
+        else
+          $scope.henkilo.oidHenkilo
+        VirtaSuoritukset.query { id: id }, ((virtatiedot) ->
+          $scope.henkilo.virtatiedot = virtatiedot
+          $scope.henkilo.virtatiedot.opiskeluoikeudet.forEach (opiskeluoikeus) ->
+            if opiskeluoikeus.myontaja
+              getOrganisaatio $http, opiskeluoikeus.myontaja, (organisaatio) ->
+                opiskeluoikeus.oppilaitos = organisaatio.oppilaitosKoodi
+                opiskeluoikeus.organisaatio = organisaatio
+                return
+            if opiskeluoikeus.koulutuskoodit
+              opiskeluoikeus.koulutuskoodit = opiskeluoikeus.koulutuskoodit.map (koulutus) ->
+                obj = koulutuskoodi: koulutus
+                if koulutus.match(/^\d{6}$/)
+                  getKoulutusNimi $http, "koulutus_" + koulutus, (koulutusNimi) ->
+                    obj.nimi = koulutusNimi
+                    return
+                return obj
+            return
+          $scope.henkilo.virtatiedot.suoritukset.forEach (suoritus) ->
+            if suoritus.myontaja
+              getOrganisaatio $http, suoritus.myontaja, (organisaatio) ->
+                suoritus.oppilaitos = organisaatio.oppilaitosKoodi
+                suoritus.organisaatio = organisaatio
+                return
+            return
+        )
+
+      $scope.formatMyontaja = (organisaatio, myontaja) ->
+        if not organisaatio
+          return
+        (organisaatio.oppilaitosKoodi + ' ' +
+           (organisaatio.nimi.fi || organisaatio.nimi.sv || organisaatio.nimi.en)) || myontaja
+
+      $scope.formatLaji = (laji) ->
+        if not laji
+          return
+        formated = switch laji
+          when "1" then "Tutkinto"
+          when "2" then "Muu opintosuoritus"
+          when "3" then "Ei huomioitava"
+          when "4" then "Oppilaitoksen sisäinen"
+          else laji
+        formated
+
+      $scope.formatArvosana = (arvosana, asteikko) ->
+        if asteikko
+          "#{arvosana} (#{asteikko})"
+        else
+          "#{arvosana}"
+
+      $scope.formatKoulutukset = (koulutuskoodit) ->
+        ("#{koulutus.koulutuskoodi} #{koulutus.nimi or ""}" for koulutus in koulutuskoodit).toString()
+
+
+      $scope.convertOpiskeluOikeudet = (opiskeluoikeudet) ->
+        ("#{opiskeluoikeus.alkuPvm or ""}\t#{opiskeluoikeus.loppuPvm or ""}\t#{$scope.formatMyontaja(opiskeluoikeus.organisaatio, opiskeluoikeus.myontaja)}\t#{$scope.formatKoulutukset(opiskeluoikeus.koulutuskoodit)}\t#{opiskeluoikeus.kieli or ""}\n" for opiskeluoikeus in opiskeluoikeudet).join("")
+
+      $scope.convertOpintosuoritukset = (suoritukset) ->
+        ("#{$scope.formatLaji(suoritus.laji)}\t#{suoritus.nimi or ""}\t#{$scope.formatArvosana(suoritus.arvosana, suoritus.asteikko)}\t#{$scope.formatMyontaja(suoritus.organisaatio, suoritus.myontaja)}\t#{suoritus.suoritusPvm or ""}\n" for suoritus in suoritukset).join("")
 
       fetchHenkilotiedot = ->
         $http.get(window.url("authentication-service.henkilo", henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((henkilo) ->

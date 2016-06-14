@@ -34,6 +34,7 @@ app = angular.module "myApp", [
   "ngUpload"
   "ngSanitize"
   "ngCookies"
+  "angular-clipboard"
 ]
 
 if (window.mocksOn)
@@ -124,6 +125,15 @@ app.factory "RekisteriTiedot", ($resource) ->
     remove:
       method: "DELETE"
       timeout: 15000
+  }
+
+app.factory "VirtaSuoritukset", ($resource) ->
+  $resource plainUrls.url("suoritusrekisteri.virtasuoritukset", ":id"), { id: "@id" }, {
+    query:
+      method: "GET"
+      isArray: false
+      cache: true
+      timeout: 30000
   }
 
 

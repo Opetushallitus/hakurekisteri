@@ -42,6 +42,17 @@ class VirtaActorSpec extends FlatSpec with Matchers with FutureWaiting with Spec
               myontaja = "01901",
               kieli = "FI"
             )
+          ),
+          suoritukset = Seq(
+            VirtaOpintosuoritus(
+              suoritusPvm = new LocalDate().minusYears(2),
+              nimi = Some("foo"),
+              koulutuskoodi = Some("725111"),
+              arvosana = Some("5"),
+              asteikko = Some("Viisiportainen"),
+              myontaja = "01901",
+              laji = Some("2")
+            )
           )
         )
       )

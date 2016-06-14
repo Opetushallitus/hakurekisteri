@@ -5,6 +5,7 @@
     "suoritusrekisteri.opiskeluoikeus": "rest/v1/opiskeluoikeudet/$1",
     "suoritusrekisteri.arvosana": "rest/v1/arvosanat/$1",
     "suoritusrekisteri.rekisteritieto": "rest/v1/rekisteritiedot/light",
+    "suoritusrekisteri.virtasuoritukset": "rest/v1/virta/henkilot/$1",
     "suoritusrekisteri.haut": "rest/v1/haut",
     "suoritusrekisteri.opiskelijat": "rest/v1/opiskelijat",
     "suoritusrekisteri.siirtoIsOpen": "rest/$1/siirto/$2/isopen",
