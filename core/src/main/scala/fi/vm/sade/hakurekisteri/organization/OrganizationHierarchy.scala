@@ -11,6 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.{HttpConfig, OphUrlProperties}
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Resource, User}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
+import fi.vm.sade.hakurekisteri.tools.SafeXML
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.DateTime
 
@@ -132,7 +133,7 @@ class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](orga
       </soapenv:Body>
     </soapenv:Envelope>.toString)
 
-    result.map((response) => scala.xml.XML.load(new java.io.InputStreamReader(response.getResponseBodyAsStream, "UTF-8")))
+    result.map((response) => SafeXML.load(new java.io.InputStreamReader(response.getResponseBodyAsStream, "UTF-8")))
   }
 
   def possibleEdges(soapFuture: concurrent.Future[Elem]):concurrent.Future[Seq[(Option[String], Option[String])]] = {

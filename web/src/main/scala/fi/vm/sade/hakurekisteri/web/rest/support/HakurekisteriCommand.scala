@@ -6,6 +6,7 @@ import fi.vm.sade.hakurekisteri.integration.parametrit.KierrosParams
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Workbook}
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
+import fi.vm.sade.hakurekisteri.tools.SafeXML
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.json4s.JsonAST.{JInt, JString, JValue}
 import org.json4s._
@@ -24,7 +25,7 @@ import scala.concurrent.Future
 import scala.language.implicitConversions
 import scala.util.Try
 import scala.util.control.Exception._
-import scala.xml.{Elem, XML}
+import scala.xml.Elem
 import scalaz.Scalaz._
 import scalaz._
 
@@ -53,11 +54,11 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
 
   implicit val defaultElem: DefaultValue[Elem] = DefaultValues.ElemDefaultValue
 
-  implicit val stringtoXml: TypeConverter[String, Elem] = safe((s: String) => XML.loadString(s))
+  implicit val stringtoXml: TypeConverter[String, Elem] = safe((s: String) => SafeXML.loadString(s))
 
   implicit val jsontoXml: TypeConverter[JValue, Elem] = safe((jvalue: JValue) => {
     val JString(data) = jvalue
-    XML.loadString(data)
+    SafeXML.loadString(data)
   })
 
 
@@ -69,7 +70,7 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
     def xml(f: FileItem): Boolean = f.getContentType.exists(t => t == "text/xml" || t == "application/xml") || f.extension.contains("xml")
 
     if (xml(f)) {
-      XML.load(f.getInputStream)
+      SafeXML.load(f.getInputStream)
     }
     else {
       excelConverter.convert(f)

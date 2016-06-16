@@ -2,16 +2,16 @@ package siirto
 
 import fi.vm.sade.hakurekisteri.rest.support.Workbook
 import fi.vm.sade.hakurekisteri.suoritus.DayFinder
-import fi.vm.sade.hakurekisteri.tools.{ExcelTools, XmlEquality}
+import fi.vm.sade.hakurekisteri.tools.{ExcelTools, SafeXML, XmlEquality}
 import org.apache.poi.ss.usermodel
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
+import org.scalatest.matchers.{BeMatcher, MatchResult, Matcher}
 import org.scalatest.{FlatSpec, Matchers}
 import org.xml.sax.SAXParseException
 
-import scala.xml.{Elem, XML}
+import scala.xml.Elem
 import scalaz.ValidationNel
-import org.scalatest.matchers.{BeMatcher, MatchResult, Matcher}
 
 class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality with ExcelTools {
   behavior of "ArvosanatXMLConverter"
@@ -283,7 +283,7 @@ class ArvosanatXmlConverterSpec extends FlatSpec with Matchers with XmlEquality 
   ).toExcel
 
   it should "convert arvosanat.xls into valid xml" in {
-    XML.load(getClass.getResource("/arvosanat-test.xml")) should be (valid) // sanity check
+    SafeXML.load(getClass.getResource("/arvosanat-test.xml")) should be (valid) // sanity check
     val doc: Elem = ArvosanatXmlConverter.convert(getClass.getResourceAsStream("/arvosanat-test.xls"), "arvosanat.xml")
 
     doc should be (valid)
