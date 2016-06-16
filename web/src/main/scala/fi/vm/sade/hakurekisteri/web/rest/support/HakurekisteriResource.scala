@@ -8,7 +8,7 @@ import _root_.akka.pattern.ask
 import _root_.akka.util.Timeout
 import fi.vm.sade.auditlog.hakurekisteri.LogMessage.LogMessageBuilder
 import fi.vm.sade.auditlog.hakurekisteri.{HakuRekisteriOperation, LogMessage}
-import fi.vm.sade.hakurekisteri.organization.{AuthorizedCreate, AuthorizedDelete, AuthorizedQuery, AuthorizedRead, AuthorizedUpdate}
+import fi.vm.sade.hakurekisteri.organization._
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -133,7 +133,7 @@ abstract class HakurekisteriResource[A <: Resource[UUID, A], C <: HakurekisteriC
       val messages: NonEmptyList[String] = for (
         error <- errors
       ) yield s"${error.field.map{case FieldName(field) => s"problem with $field: "}.getOrElse("problem: ")} ${error.message}"
-      messages.list.mkString(", ")
+      messages.list.toList.mkString(", ")
     }
   }
 

@@ -228,7 +228,7 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
   def abide(schemaDoc: SchemaDefinition, imports: SchemaDefinition*) = Matcher { (left: Elem) =>
     val validator = new ValidXml(schemaDoc, imports:_*)
     val validation: scalaz.ValidationNel[(String, _root_.scala.xml.SAXParseException), Elem] = validator.validate(left)
-    val messages = validation.swap.toOption.map(_.list).getOrElse(List()).mkString(", ")
+    val messages = validation.swap.toOption.map(_.list.toList).getOrElse(List()).mkString(", ")
     MatchResult(
       {
         validation.isSuccess
@@ -238,7 +238,9 @@ class ArvosanaXmlSpec extends FlatSpec with Matchers with DataGeneratorSupport {
     )
   }
 
-  def abideSchemas(implicit schemas: NonEmptyList[SchemaDefinition]) = abide(schemas.head, schemas.tail:_*)
+  def abideSchemas(implicit schemas: NonEmptyList[SchemaDefinition]) = {
+    abide(schemas.head, schemas.tail.toList:_*)
+  }
 
 
   def suoritus(name:String): DataGen[Elem] = DataGen.always(

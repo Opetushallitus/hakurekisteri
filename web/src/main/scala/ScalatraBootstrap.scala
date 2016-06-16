@@ -4,7 +4,6 @@ import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEve
 import _root_.support._
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
-import fi.vm.sade.hakurekisteri.integration.parametrit.{ParameterActor, IsRestrictionActive}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.batchimport._
@@ -17,7 +16,7 @@ import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.arvosana.{ArvosanaSwaggerApi, CreateArvosanaCommand, EmptyLisatiedotResource}
 import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchResource
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
-import fi.vm.sade.hakurekisteri.web.hakija.{HakijaResourceV2, HakijaResource}
+import fi.vm.sade.hakurekisteri.web.hakija.{HakijaResource, HakijaResourceV2}
 import fi.vm.sade.hakurekisteri.web.haku.HakuResource
 import fi.vm.sade.hakurekisteri.web.healthcheck.HealthcheckResource
 import fi.vm.sade.hakurekisteri.web.integration.virta.{VirtaSuoritusResource, VirtaResource}
@@ -31,7 +30,7 @@ import fi.vm.sade.hakurekisteri.web.proxies._
 import fi.vm.sade.hakurekisteri.web.rekisteritiedot.RekisteritiedotResource
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import fi.vm.sade.hakurekisteri.web.restrictions.RestrictionsResource
-import fi.vm.sade.hakurekisteri.web.suoritus.{SuoritusResource, CreateSuoritusCommand, SuoritusSwaggerApi}
+import fi.vm.sade.hakurekisteri.web.suoritus.SuoritusResource
 import gui.GuiServlet
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.json.JacksonJsonSupport
@@ -49,7 +48,7 @@ import org.springframework.web.filter.DelegatingFilterProxy
 import siirto._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContextExecutor}
+import scala.concurrent.ExecutionContextExecutor
 
 class ScalatraBootstrap extends LifeCycle {
   implicit val swagger: Swagger = new HakurekisteriSwagger
@@ -71,8 +70,9 @@ class ScalatraBootstrap extends LifeCycle {
 
     val importBatchProcessing = initBatchProcessing(config, authorizedRegisters, integrations)
 
+    context.setInitParameter(org.scalatra.EnvironmentKey, "production")
     if("DEVELOPMENT" != OphUrlProperties.ophProperties.getProperty("common.corsfilter.mode")) {
-      context.initParameters("org.scalatra.cors.enable") = "false"
+      context.initParameters(org.scalatra.CorsSupport.EnableKey) = "false"
     }
 
     var servlets = initServlets(config, registers, authorizedRegisters, integrations, koosteet)
