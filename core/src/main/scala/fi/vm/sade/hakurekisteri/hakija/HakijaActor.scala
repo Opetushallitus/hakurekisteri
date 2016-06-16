@@ -551,6 +551,8 @@ case class XMLHakija(hetu: String, oppijanumero: String, sukunimi: String, etuni
       {if (kotikunta.isDefined) <Kotikunta>{kotikunta.get}</Kotikunta>}
       <Sukupuoli>{sukupuoli}</Sukupuoli>
       <Aidinkieli>{aidinkieli}</Aidinkieli>
+      <Koulutusmarkkinointilupa>{toBooleanX(koulutusmarkkinointilupa)}</Koulutusmarkkinointilupa>
+      {hakemus.toXml}
     </Hakija>
   }
 }
