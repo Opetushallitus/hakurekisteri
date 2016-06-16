@@ -16,7 +16,6 @@ import org.scalatra.servlet.FileItem
 import org.scalatra.util.ValueReader
 import org.scalatra.util.conversion.TypeConverter
 import org.scalatra.validation.{FieldName, UnknownError, ValidationError}
-import org.scalatra.{DefaultValue, DefaultValues}
 import org.xml.sax.SAXParseException
 import siirto.ArvosanatXmlConverter._
 import siirto.XMLValidator
@@ -28,6 +27,7 @@ import scala.util.control.Exception._
 import scala.xml.Elem
 import scalaz.Scalaz._
 import scalaz._
+import scalaz.Validation.FlatMap._
 
 object NoXmlConverterSpecifiedException extends Exception(s"no xml converter specified")
 
@@ -43,16 +43,12 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
   }: PartialFunction[ValueReader[_, _], TypeConverter[I, _]]) orElse super.typeConverterBuilder(tc)
 
 
-  implicit def OptionIntDefaultValue: DefaultValue[Option[Int]] = org.scalatra.DefaultValueMethods.default(None)
-
   import org.json4s.jackson.JsonMethods.parse
   import org.scalatra.util.RicherString._
 
   implicit val stringtoJValue: TypeConverter[String, JValue] = safe((s: String) => parse(s))
 
   implicit val jsontoJValue: TypeConverter[JValue, JValue] = safe((jvalue: JValue) => jvalue)
-
-  implicit val defaultElem: DefaultValue[Elem] = DefaultValues.ElemDefaultValue
 
   implicit val stringtoXml: TypeConverter[String, Elem] = safe((s: String) => SafeXML.loadString(s))
 
@@ -104,8 +100,6 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
 
   implicit val fileToOptionString: TypeConverter[FileItem, Option[String]] = cantConvert
 
-  implicit def YksilollistaminenDefaultValue: DefaultValue[Yksilollistetty] = org.scalatra.DefaultValueMethods.default(Ei)
-
   implicit val stringToYksilollistaminen: TypeConverter[String, Yksilollistetty] = safeOption(_.blankOption.map (yksilollistaminen.withName))
   implicit val jsonToYksilollistaminen: TypeConverter[JValue, Yksilollistetty] = safeOption(_.extractOpt[Yksilollistetty])
 
@@ -115,7 +109,7 @@ trait HakurekisteriCommand[R] extends Command with HakurekisteriTypeConverterFac
 
   def toResource(user: String): R
 
-  def errorFail(ex: Throwable) = ValidationError(ex.getMessage, UnknownError).failNel
+  def errorFail(ex: Throwable) = ValidationError(ex.getMessage, UnknownError).failureNel
 
   def extraValidation(res: R): ValidationNel[ValidationError, R] = res.successNel
 

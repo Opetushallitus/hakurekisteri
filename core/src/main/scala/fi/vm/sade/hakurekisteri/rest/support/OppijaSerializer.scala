@@ -34,7 +34,7 @@ class OppijaSerializer extends CustomSerializer[Oppija](ser = (formats) => (
         ("opiskelu" -> decompose(oppija.opiskelu)(formats)) ~
         ("suoritukset" -> decompose(oppija.suoritukset)(formats)) ~
         ("opiskeluoikeudet" -> decompose(oppija.opiskeluoikeudet)(formats)) ~
-        ("ensikertalainen" -> oppija.ensikertalainen.map(JBool))
+        ("ensikertalainen" -> oppija.ensikertalainen.map(JBool(_)))
   }
   )
 )
