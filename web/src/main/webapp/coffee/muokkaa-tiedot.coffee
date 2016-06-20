@@ -179,6 +179,7 @@ app.factory "MuokkaaTiedot", [
                 return
             return
         )
+        window.scrollTo(0, document.getElementById('application-name').getBoundingClientRect().height)
 
       $scope.formatMyontaja = (organisaatio, myontaja) ->
         if not organisaatio
@@ -369,8 +370,7 @@ app.factory "MuokkaaTiedot", [
               message: "Tietojen tallentaminen ei onnistunut. Yritä uudelleen."
         ), (errors) ->
           $log.error "validation errors: " + errors
-        window.scrollTo(0,
-        document.getElementById('application-name').getBoundingClientRect().height)
+        window.scrollTo(0, document.getElementById('application-name').getBoundingClientRect().height)
 
       $scope.enableSave = () ->
         $scope.disableSave = true
