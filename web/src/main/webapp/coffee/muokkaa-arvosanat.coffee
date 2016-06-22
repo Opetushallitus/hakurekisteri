@@ -281,9 +281,7 @@ app.controller "MuokkaaArvosanat", [
       updateArvosanaTaulukko()
 
     $scope.showKorotus = () ->
-      suoritusAika = new Date(parseFinDate(suoritusValmistuminen()))
-      suoritusAika.setDate(suoritusAika.getDate() + 1)
-      $scope.korotusRivi = makeAineRivi("AI", [], $scope.formatDateNoZeroPaddedNumbers(suoritusAika), null)
+      $scope.korotusRivi = makeAineRivi("AI", [], $scope.formatDateNoZeroPaddedNumbers(new Date()), null)
       updateKorotus()
       $scope.$watch "korotusRivi", updateKorotus, true
 
