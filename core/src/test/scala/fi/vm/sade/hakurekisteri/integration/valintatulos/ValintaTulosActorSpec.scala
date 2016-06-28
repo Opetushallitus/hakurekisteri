@@ -43,9 +43,9 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
 
         Thread.sleep(3000)
 
-        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
+        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None, None)
 
-        waitFuture((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.90697286251", None)).mapTo[SijoitteluTulos])(t => {
+        waitFuture((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.90697286251", None, None)).mapTo[SijoitteluTulos])(t => {
           t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
         })
 

@@ -13,6 +13,7 @@ import fi.vm.sade.hakurekisteri.integration.{PreconditionFailedException, Virkai
 import scala.concurrent.{ExecutionContext, Future}
 
 case class ValintaTulosQuery(hakuOid: String,
+                             hakukohdeOid: Option[String],
                              hakemusOid: Option[String],
                              cachedOk: Boolean = true)
 
@@ -27,10 +28,12 @@ class ValintaTulosActor(client: VirkailijaRestClient, config: Config) extends Ac
   }
 
   private def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
-    if (q.hakemusOid.isEmpty) {
+    if (q.hakemusOid.isEmpty && q.hakukohdeOid.isEmpty) {
       callBackendWithHakuOid(q.hakuOid)
-    } else {
+    } else if (q.hakukohdeOid.isEmpty) {
       callBackendWithHakemusOid(q.hakuOid, q.hakemusOid)
+    } else {
+      callBackendWithHakukohdeOid(q.hakuOid, q.hakukohdeOid)
     }
   }
 
@@ -43,7 +46,7 @@ class ValintaTulosActor(client: VirkailijaRestClient, config: Config) extends Ac
       }.
       map(valintaTulokset2SijoitteluTulos)
 
-  private def callBackendWithHakukohdeOid(hakuOid: String, hakukohdeOid: String): Future[SijoitteluTulos] = client.
+  private def callBackendWithHakukohdeOid(hakuOid: String, hakukohdeOid: Option[String]): Future[SijoitteluTulos] = client.
       readObject[Seq[ValintaTulos]]("valinta-tulos-service.hakukohde", hakuOid, hakukohdeOid)(200).
       recoverWith {
         case t: ExecutionException if t.getCause != null && is404(t.getCause) =>

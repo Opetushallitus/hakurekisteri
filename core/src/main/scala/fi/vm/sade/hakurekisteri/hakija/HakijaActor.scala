@@ -31,7 +31,9 @@ import java.text.SimpleDateFormat
 
 import fi.vm.sade.hakurekisteri.tools.RicherString
 
-import scala.collection.immutable.Iterable
+import scalacache._
+import scalacache.guava.GuavaCache
+import memoization._
 
 
 case class Hakukohde(koulutukset: Set[Komoto], hakukohdekoodi: String, oid: String)
@@ -312,18 +314,9 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     yhteispisteet(tulos.pisteet)(tila(tulos.valintatila, tulos.vastaanottotila)(hakija, hakukohdeOid))
   }
 
-  def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = {
-    def cache = scala.collection.mutable.Map[(String, String), Future[SijoitteluTulos]]()
-
-    def memoize(hakuOid: String, hakukohdeOid: String): Future[SijoitteluTulos] = {
-      if (! cache.contains((hakuOid, hakukohdeOid))) {
-        cache((hakuOid, hakukohdeOid)) = (valintaTulosActor ? ValintaTulosQuery(hakuOid, None)).mapTo[SijoitteluTulos]
-      }
-      cache((hakuOid, hakukohdeOid))
-    }
-
-    Future.sequence(hakijat.flatMap(x => x.hakemus.hakutoiveet.map(y => memoize(x.hakemus.hakuOid, y.hakukohde.oid).map(updateYhteispisteet(_)(x, y.hakukohde.oid)))))
-  }
+  def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.sequence(hakijat.flatMap(x => x.hakemus.hakutoiveet.map(y => memoize {
+    (valintaTulosActor ? ValintaTulosQuery(x.hakemus.hakuOid, None, Option(y.hakukohde.oid))).mapTo[SijoitteluTulos]
+  }.map(updateYhteispisteet(_)(x, y.hakukohde.oid)))))
 
 
 

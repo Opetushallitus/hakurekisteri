@@ -84,6 +84,7 @@ object HakurekisteriBuild extends Build {
     "org.apache.camel" % "camel-jms" % "2.13.0",
     "fi.vm.sade.log" % "log-client" % "7.0",
     "fi.vm.sade" % "auditlogger" % "5.0.0-SNAPSHOT",
+    "com.github.cb372" %% "scalacache-guava" % "0.6.3",
     "fr.janalyse" %% "janalyse-ssh" % "0.9.14",
     "fi.vm.sade" %% "scala-utils" % "0.1.0-SNAPSHOT",
     "fi.vm.sade" %% "scala-properties" % "0.0.1-SNAPSHOT"
