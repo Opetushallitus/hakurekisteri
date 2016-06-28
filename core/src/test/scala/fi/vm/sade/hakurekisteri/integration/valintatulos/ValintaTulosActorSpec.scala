@@ -32,7 +32,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
     e
   }
 
-  test("ValintaTulosActor should fire only one request to the backend even when asked multiple times") {
+  test("ValintaTulosActor should fire") {
     withSystem(
       implicit system => {
         implicit val ec = system.dispatcher
@@ -44,108 +44,12 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
         Thread.sleep(3000)
 
         valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
-        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
-        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
-        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
 
         waitFuture((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.90697286251", None)).mapTo[SijoitteluTulos])(t => {
           t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
         })
 
-        verify(endPoint).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
-      }
-    )
-  }
-
-  test("ValintaTulosActor should update cache periodically") {
-    withSystem(
-      implicit system => {
-        implicit val ec = system.dispatcher
-        val endPoint = createEndPoint
-        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
-          config = Config.mockConfig,
-          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
-          refetchTime = Some(1000),
-          cacheTime = Some(2000)
-        )))
-
-        valintaTulosActor ! UpdateValintatulos("1.2.246.562.29.90697286251")
-
-        Thread.sleep(1500)
-
-        verify(endPoint, atLeastOnce()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
-      }
-    )
-  }
-
-  test("ValintaTulosActor should use cached result also during refetch") {
-    withSystem(
-      implicit system => {
-        implicit val ec = system.dispatcher
-        val endPoint = createEndPoint
-        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
-          config = Config.mockConfig,
-          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
-          refetchTime = Some(500),
-          cacheTime = Some(1000)
-        )))
-
-        valintaTulosActor ! UpdateValintatulos("1.2.246.562.29.90697286251")
-
-        Thread.sleep(550)
-
-        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
-        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
-        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
-        valintaTulosActor ! ValintaTulosQuery("1.2.246.562.29.90697286251", None)
-
-        waitFuture((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.90697286251", None)).mapTo[SijoitteluTulos])(t => {
-          t.valintatila("1.2.246.562.11.00000000576", "1.2.246.562.20.25463238029").get.toString should be (Valintatila.KESKEN.toString)
-        })
-
-        verify(endPoint, atLeastOnce()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
-      }
-    )
-  }
-
-  test("ValintaTulosActor should refetch if request fails") {
-    withSystem(
-      implicit system => {
-        implicit val ec = system.dispatcher
-        val endPoint = createEndPoint
-        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
-          config = Config.mockConfig,
-          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
-          refetchTime = Some(500),
-          cacheTime = Some(1000),
-          retryTime = Some(100)
-        )))
-
-        valintaTulosActor ! UpdateValintatulos("1.2.246.562.29.broken")
-
-        Thread.sleep(200)
-
-        verify(endPoint, atLeastOnce()).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.broken"))
-      }
-    )
-  }
-
-  test("ValintaTulosActor should block queries if initial loading is still on-going") {
-    withSystem(
-      implicit system => {
-        implicit val ec = system.dispatcher
-        val endPoint = createEndPoint
-        val valintaTulosActor = system.actorOf(Props(new ValintaTulosActor(
-          config = Config.mockConfig,
-          client = new VirkailijaRestClient(config = vtsConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))),
-          refetchTime = Some(500),
-          cacheTime = Some(1000),
-          retryTime = Some(100)
-        )))
-
-        valintaTulosActor ! BatchUpdateValintatulos((1 to 10).map(i => UpdateValintatulos(s"1.2.246.562.29.$i")).toSet)
-
-        expectFailure[HakemuksetNotYetLoadedException]((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.1", None, cachedOk = true)).mapTo[SijoitteluTulos])
+        verify(endPoint, times(2)).request(forUrl("http://localhost/valinta-tulos-service/haku/1.2.246.562.29.90697286251"))
       }
     )
   }
