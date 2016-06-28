@@ -178,7 +178,8 @@ case class Hakija(henkilo: Henkilo, suoritukset: Seq[Suoritus], opiskeluhistoria
 
 class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodistoActor: ActorRef, valintaTulosActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
-  implicit val defaultTimeout: Timeout = 120.seconds
+  implicit val defaultTimeout: Timeout = 5.seconds
+  implicit val scalaCache = ScalaCache(GuavaCache())
   val tuntematonOppilaitos = "00000"
 
   def receive = {
