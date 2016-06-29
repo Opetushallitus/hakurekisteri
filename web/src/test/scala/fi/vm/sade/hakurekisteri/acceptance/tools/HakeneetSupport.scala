@@ -627,9 +627,9 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   )
 
   val sijoitteluClient = mock[VirkailijaRestClient]
-  sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", "1.1")(200) returns valintatulokset
-  sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", "1.2")(200) returns valintatulokset
-  sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", "1.3")(200) returns valintatulokset
+  sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.hakukohde", "1.1", "1.11.1")(200) returns valintatulokset
+  sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.hakukohde", "1.2", "1.11.2")(200) returns valintatulokset
+  sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.hakukohde", "1.3", "1.11.5")(200) returns valintatulokset
 
   val sijoittelu = system.actorOf(Props(new ValintaTulosActor(sijoitteluClient, config)))
 

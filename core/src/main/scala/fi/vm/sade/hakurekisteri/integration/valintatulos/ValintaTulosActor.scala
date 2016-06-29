@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.valintatulos
 
 import java.util.concurrent.ExecutionException
 
-import akka.actor.{Actor, ActorLogging, Cancellable}
+import akka.actor.{Actor, ActorLogging}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
@@ -24,47 +24,51 @@ class ValintaTulosActor(client: VirkailijaRestClient, config: Config) extends Ac
 
   override def receive: Receive = {
     case q: ValintaTulosQuery =>
-      getSijoittelu(q) pipeTo sender
+      haeSijoittelu(q) pipeTo sender
   }
 
-  private def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
+  private def haeSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
     if (q.hakemusOid.isEmpty && q.hakukohdeOid.isEmpty) {
-      callBackendWithHakuOid(q.hakuOid)
-    } else if (q.hakukohdeOid.isEmpty) {
-      callBackendWithHakemusOid(q.hakuOid, q.hakemusOid)
+      kutsuHakuOIDilla(q.hakuOid)
+    } else if (q.hakemusOid.isDefined) {
+      kutsuHakemusOIDilla(q.hakuOid, q.hakemusOid.get)
     } else {
-      callBackendWithHakukohdeOid(q.hakuOid, q.hakukohdeOid)
+      kutsuHakukohdeOIDilla(q.hakuOid, q.hakukohdeOid.get)
     }
   }
 
-  private def callBackendWithHakuOid(hakuOid: String): Future[SijoitteluTulos] = client.
+  private def kutsuHakuOIDilla(hakuOid: String): Future[SijoitteluTulos] = client.
       readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", hakuOid)(200).
       recoverWith {
-        case t: ExecutionException if t.getCause != null && is404(t.getCause) =>
+        case t: ExecutionException if t.getCause != null && onko404(t.getCause) =>
           log.warning(s"valinta tulos not found with haku $hakuOid: $t")
           Future.successful(Seq[ValintaTulos]())
       }.
       map(valintaTulokset2SijoitteluTulos)
 
-  private def callBackendWithHakukohdeOid(hakuOid: String, hakukohdeOid: Option[String]): Future[SijoitteluTulos] = client.
+  private def kutsuHakukohdeOIDilla(hakuOid: String, hakukohdeOid: String): Future[SijoitteluTulos] = client.
       readObject[Seq[ValintaTulos]]("valinta-tulos-service.hakukohde", hakuOid, hakukohdeOid)(200).
       recoverWith {
-        case t: ExecutionException if t.getCause != null && is404(t.getCause) =>
+        case t: ExecutionException if t.getCause != null && onko404(t.getCause) =>
           log.warning(s"valinta tulos not found with haku $hakuOid and hakukohde $hakukohdeOid: $t")
           Future.successful(Seq[ValintaTulos]())
       }.
       map(valintaTulokset2SijoitteluTulos)
 
-  private def callBackendWithHakemusOid(hakuOid: String, hakemusOid: Option[String]): Future[SijoitteluTulos] = client.
-    readObject[ValintaTulos]("valinta-tulos-service.hakemus", hakuOid, hakemusOid)(200, maxRetries).
-    recoverWith {
-      case t: ExecutionException if t.getCause != null && is404(t.getCause) =>
-        log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
-        Future.successful(ValintaTulos(hakemusOid.get, Seq()))
-    }.
-    map(t => valintaTulokset2SijoitteluTulos(t))
+  private def kutsuHakemusOIDilla(hakuOid: String, hakemusOid: String): Future[SijoitteluTulos] = {
+    client.
+      readObject[ValintaTulos]("valinta-tulos-service.hakemus", hakuOid, hakemusOid)(200, maxRetries).
+      recoverWith {
+        case t: ExecutionException if t.getCause != null && onko404(t.getCause) =>
+          log.warning(s"valinta tulos not found with haku $hakuOid and hakemus $hakemusOid: $t")
+          Future.successful(ValintaTulos(hakemusOid, Seq()))
+      }.
+      map(t => {
+        valintaTulokset2SijoitteluTulos(t)
+      })
+  }
 
-  private def is404(t: Throwable): Boolean = t match {
+  private def onko404(t: Throwable): Boolean = t match {
     case PreconditionFailedException(_, 404) => true
     case _ => false
   }
