@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration
 
 import java.util.UUID
 
-import fi.vm.sade.hakurekisteri.CleanSharedJetty
+import fi.vm.sade.hakurekisteri.CleanSharedTestJettyBeforeEach
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvosana}
 import fi.vm.sade.hakurekisteri.oppija.Todistus
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-class YtlIntegrationSpec extends FlatSpec with Matchers with CleanSharedJetty {
+class YtlIntegrationSpec extends FlatSpec with Matchers with CleanSharedTestJettyBeforeEach {
   val expectedSuoritus = VirallinenSuoritus(
     henkilo = "1.2.246.562.24.71944845619",
     lahde = "1.2.246.562.10.43628088406",

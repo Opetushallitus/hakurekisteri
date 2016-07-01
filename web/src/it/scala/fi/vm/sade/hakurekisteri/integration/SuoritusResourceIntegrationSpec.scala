@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration
 
-import fi.vm.sade.hakurekisteri.CleanSharedJettyBeforeEach
+import fi.vm.sade.hakurekisteri.CleanSharedTestJettyBeforeEach
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import org.joda.time.DateTime
@@ -9,7 +9,7 @@ import org.json4s.JsonAST.JObject
 import org.json4s.jackson.JsonMethods._
 import org.scalatest._
 
-class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedJettyBeforeEach with Matchers with HakurekisteriJsonSupport {
+class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJettyBeforeEach with Matchers with HakurekisteriJsonSupport {
   val lukioKomo = "1.2.246.562.5.2013061010184237348007"
   val peruskouluKomo = "1.2.246.562.13.62959769647"
   val aarnenLukio = SuoritusMock.getSuoritusByHenkiloKomoTila("1.2.246.562.24.71944845619", lukioKomo, "KESKEN")

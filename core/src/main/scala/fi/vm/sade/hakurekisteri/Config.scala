@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri
 import java.io.InputStream
 import java.nio.file.{Files, Path, Paths}
 
+import com.typesafe.config.ConfigFactory
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
@@ -95,26 +96,37 @@ class MockConfig extends Config {
   def mockMode = true
   val h2DatabaseUrl = "jdbc:h2:file:data/integration-test"
   override val importBatchProcessingInitialDelay = 1.seconds
+  override val profile = "it"
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "web/src/test/resources/oph-configuration")
 }
 
 abstract class Config {
+  import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple.Database
+
   def mockMode: Boolean
 
   val h2DatabaseUrl: String
+
+  val profile = sys.props.getOrElse("hakurekisteri.profile", "default")
+
+  lazy val database: Database = {
+    import collection.JavaConverters._
+    profile match {
+      case "it" | "dev" => Database.forURL(h2DatabaseUrl, driver = "org.h2.Driver")
+      case "default" => Database.forConfig("suoritusrekisteri.db", ConfigFactory.parseMap(properties.asJava))
+      case _ => throw new RuntimeException("Unsupported hakurekisteri.profile value " + profile)
+    }
+  }
 
   val log = LoggerFactory.getLogger(getClass)
   def ophConfDir: Path
 
   val propertyLocations = Seq("common.properties")
 
-  val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
-
   val importBatchProcessingInitialDelay = 20.minutes
 
   // by default the service urls point to QA
   val hostQa = "testi.virkailija.opintopolku.fi"
-
 
   lazy val resources = propertyLocations.map(ophConfDir.resolve(_))
 
