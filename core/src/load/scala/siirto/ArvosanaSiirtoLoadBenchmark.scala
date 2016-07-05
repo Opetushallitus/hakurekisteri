@@ -1,7 +1,5 @@
 package siirto
 
-package siirto
-
 import java.io.{IOException, ObjectInputStream, ObjectOutputStream}
 import java.util.UUID
 
