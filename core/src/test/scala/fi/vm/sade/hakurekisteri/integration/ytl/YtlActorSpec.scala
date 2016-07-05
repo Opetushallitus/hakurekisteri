@@ -28,12 +28,14 @@ class YtlActorSpec extends ScalatraFunSuite {
   implicit val timeout: Timeout = 60.seconds
   implicit val database = Database.forURL("jdbc:h2:file:data/ytl-integration-test", driver = "org.h2.Driver")
 
+  val POOL_SIZE = 5
+
   val config = new MockConfig
   val henkiloActor = system.actorOf(Props(new MockHenkiloActor(config)))
   val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
   val suoritusActor = system.actorOf(Props(new SuoritusActor(journal = suoritusJournal)), "suoritukset")
   val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
-  val arvosanaActor = system.actorOf(Props(new ArvosanaActor(journal = arvosanaJournal)), "arvosanat")
+  val arvosanaActor = system.actorOf(Props(new ArvosanaJDBCActor(journal = arvosanaJournal, poolSize = POOL_SIZE)), "arvosanat")
   val hakemusActor = system.actorOf(Props(new DummyActor()))
   val actor = system.actorOf(Props(new YtlActor(henkiloActor, suoritusActor, arvosanaActor, hakemusActor, Some(YTLConfig("", "", "", "", "", List(), "")))), "ytl")
 

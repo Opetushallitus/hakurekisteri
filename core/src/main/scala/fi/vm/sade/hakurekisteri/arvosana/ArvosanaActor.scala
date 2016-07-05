@@ -5,8 +5,9 @@ import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCS
 import fi.vm.sade.hakurekisteri.storage._
 import fi.vm.sade.hakurekisteri.storage.repository._
 import java.util.UUID
+import java.util.concurrent.Executors
 
-import org.joda.time.LocalDate
+import akka.dispatch.ExecutionContexts
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -84,7 +85,7 @@ class ArvosanaJDBCActor(val journal: JDBCJournal[Arvosana, UUID, ArvosanaTable],
     t.myonnetty.getOrElse("") === i.myonnetty.map(_.toString("yyyy-MM-dd")).getOrElse("") &&
     t.jarjestys.getOrElse(0) === i.jarjestys.getOrElse(0)
 
-  override val dbExecutor: ExecutionContext = context.dispatcher
+  override val dbExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
 
   override val dbQuery: PartialFunction[Query[Arvosana], lifted.Query[ArvosanaTable, Delta[Arvosana, UUID], Seq]] = {
     case EmptyLisatiedot() => all.filter(t => t.lisatieto.isEmpty || t.lisatieto === "").take(30000)

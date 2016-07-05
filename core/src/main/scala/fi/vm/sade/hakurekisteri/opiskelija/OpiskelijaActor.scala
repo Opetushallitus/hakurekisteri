@@ -3,15 +3,18 @@ package fi.vm.sade.hakurekisteri.opiskelija
 import akka.event.Logging
 import com.github.nscala_time.time.Imports._
 import fi.vm.sade.hakurekisteri.rest.support.Kausi._
-import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCService, Query}
+import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCService}
 import fi.vm.sade.hakurekisteri.storage._
 import fi.vm.sade.hakurekisteri.storage.repository._
-import java.util.UUID
 
+import java.util.UUID
+import java.util.concurrent.Executors
+
+import akka.dispatch.ExecutionContexts
 import fi.vm.sade.hakurekisteri.rest.support
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.slick.lifted.{Column, Query}
+import scala.slick.lifted.Column
 
 
 trait OpiskelijaRepository extends JournaledRepository[Opiskelija, UUID] {
@@ -172,14 +175,14 @@ import scala.slick.lifted
 class OpiskelijaJDBCActor(val journal: JDBCJournal[Opiskelija, UUID, OpiskelijaTable], poolSize: Int)
   extends ResourceActor[Opiskelija, UUID] with JDBCRepository[Opiskelija, UUID, OpiskelijaTable] with JDBCService[Opiskelija, UUID, OpiskelijaTable] {
 
-  override def deduplicationQuery(i: Opiskelija)(t: OpiskelijaTable): lifted.Column[Boolean] =
-    t.oppilaitosOid === i.oppilaitosOid && t.luokkataso === i.luokkataso && t.henkiloOid === i.henkiloOid
-
-  override val dbExecutor: ExecutionContext = context.dispatcher
+  override val dbExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
   override val dbQuery: PartialFunction[support.Query[Opiskelija], lifted.Query[OpiskelijaTable, Delta[Opiskelija, UUID], Seq]] = {
     case OpiskelijaQuery(henkilo, kausi, vuosi, paiva, oppilaitosOid, luokka) =>
       all.filter(t => matchHenkilo(henkilo)(t) && matchOppilaitosOid(oppilaitosOid)(t) && matchLuokka(luokka)(t))
   }
+
+  override def deduplicationQuery(i: Opiskelija)(t: OpiskelijaTable): lifted.Column[Boolean] =
+    t.oppilaitosOid === i.oppilaitosOid && t.luokkataso === i.luokkataso && t.henkiloOid === i.henkiloOid
 
   private def matchHenkilo(henkilo: Option[String])(t: OpiskelijaTable): Column[Boolean] = henkilo match {
     case Some(h) => t.henkiloOid === h
@@ -196,6 +199,6 @@ class OpiskelijaJDBCActor(val journal: JDBCJournal[Opiskelija, UUID, OpiskelijaT
     case None => true
   }
 
-  // TODO implement the remaining matchers
+  // TODO implement the remaining matchers: kausi, vuosi, paiva
 
 }

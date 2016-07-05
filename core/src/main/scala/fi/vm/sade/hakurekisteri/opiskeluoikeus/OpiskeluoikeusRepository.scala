@@ -1,13 +1,16 @@
 package fi.vm.sade.hakurekisteri.opiskeluoikeus
 
 import java.util.UUID
+import java.util.concurrent.Executors
 
+import akka.dispatch.ExecutionContexts
 import akka.event.Logging
-import fi.vm.sade.hakurekisteri.rest.support.Query
-import fi.vm.sade.hakurekisteri.storage.{InMemQueryingResourceService, Identified, ResourceActor}
-import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Journal, JournaledRepository}
+import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCService}
+import fi.vm.sade.hakurekisteri.storage.{Identified, InMemQueryingResourceService, ResourceActor}
+import fi.vm.sade.hakurekisteri.storage.repository.{Delta, InMemJournal, Journal, JournaledRepository}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
+import scala.slick.lifted.{Column, Query}
 
 trait OpiskeluoikeusRepository extends JournaledRepository[Opiskeluoikeus, UUID] {
 
@@ -43,16 +46,16 @@ trait OpiskeluoikeusService extends InMemQueryingResourceService[Opiskeluoikeus,
     case None => true
   }
 
-  override val emptyQuery: PartialFunction[Query[Opiskeluoikeus], Boolean] = {
+  override val emptyQuery: PartialFunction[fi.vm.sade.hakurekisteri.rest.support.Query[Opiskeluoikeus], Boolean] = {
     case OpiskeluoikeusQuery(None, None) => true
   }
 
-  override val matcher: PartialFunction[Query[Opiskeluoikeus], (Opiskeluoikeus with Identified[UUID]) => Boolean] = {
+  override val matcher: PartialFunction[fi.vm.sade.hakurekisteri.rest.support.Query[Opiskeluoikeus], (Opiskeluoikeus with Identified[UUID]) => Boolean] = {
     case OpiskeluoikeusQuery(henkilo, myontaja) => (o: Opiskeluoikeus with Identified[UUID]) =>
       checkHenkilo(henkilo)(o) && checkMyontaja(myontaja)(o)
   }
 
-  override val optimize: PartialFunction[Query[Opiskeluoikeus], Future[Seq[Opiskeluoikeus with Identified[UUID]]]] = {
+  override val optimize: PartialFunction[fi.vm.sade.hakurekisteri.rest.support.Query[Opiskeluoikeus], Future[Seq[Opiskeluoikeus with Identified[UUID]]]] = {
     case OpiskeluoikeusQuery(Some(henkilo), None) =>
       Future { henkiloIndex.getOrElse(henkilo, Seq()) }
 
@@ -73,4 +76,33 @@ trait OpiskeluoikeusService extends InMemQueryingResourceService[Opiskeluoikeus,
 
 class OpiskeluoikeusActor(val journal:Journal[Opiskeluoikeus, UUID] = new InMemJournal[Opiskeluoikeus, UUID]) extends ResourceActor[Opiskeluoikeus, UUID] with OpiskeluoikeusService {
   override val logger = Logging(context.system, this)
+}
+
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
+
+class OpiskeluoikeusJDBCActor(val journal:JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable], poolSize: Int)
+  extends ResourceActor[Opiskeluoikeus, UUID] with JDBCRepository[Opiskeluoikeus, UUID, OpiskeluoikeusTable] with JDBCService[Opiskeluoikeus, UUID, OpiskeluoikeusTable] {
+
+  override val dbExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
+  override val dbQuery: PartialFunction[fi.vm.sade.hakurekisteri.rest.support.Query[Opiskeluoikeus], Query[OpiskeluoikeusTable, Delta[Opiskeluoikeus, UUID], Seq]] = {
+    case OpiskeluoikeusQuery(henkilo: Option[String], myontaja: Option[String]) =>
+      all.filter(t => matchHenkilo(henkilo)(t) && matchMyontaja(myontaja)(t))
+  }
+
+  override def deduplicationQuery(i: Opiskeluoikeus)(t: OpiskeluoikeusTable): Column[Boolean] = {
+    t.alkuPaiva === i.aika.alku.getMillis && t.komo === i.komo && t.myontaja === i.myontaja && t.henkiloOid === i.henkiloOid &&
+    t.loppuPaiva.get === i.aika.loppuOption.get.getMillis
+  }
+
+
+  private def matchHenkilo(henkilo: Option[String])(t: OpiskeluoikeusTable): Column[Boolean] = henkilo match {
+    case Some(l) => t.henkiloOid === l
+    case None => true
+  }
+
+  private def matchMyontaja(myontaja: Option[String])(t: OpiskeluoikeusTable): Column[Boolean] = myontaja match {
+    case Some(l) => t.myontaja === l
+    case None => true
+  }
+
 }
