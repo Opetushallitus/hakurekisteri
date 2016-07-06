@@ -1,5 +1,8 @@
 clean:
-	./sbt clean
+	mvn clean
 
-source-to-image: clean
-	./sbt buildversion compile package
+jar:
+	mvn clean package
+
+test:
+	mvn clean test

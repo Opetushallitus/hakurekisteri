@@ -17,7 +17,7 @@ Tarvittaessa voit päivittää front-riippuvuudet komennolla
 
 ## Kaikki testit
 
-Voit ajaa kaikki testit komentoriviltä komennolla `./sbt test it:test`. Tämä ajaa myös mocha-testit phantomjs:llä.
+Voit ajaa kaikki testit komentoriviltä komennolla `make clean test`
 
 ## Build & Run ##
 

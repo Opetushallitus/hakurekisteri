@@ -52,13 +52,12 @@ class SureTestJetty(val port: Int = PortChecker.findFreeLocalPort, config: Confi
   val context = new WebAppContext()
 
   context.setAttribute("hakurekisteri.config", config)
+  // load files from main/src/webapp and /src/test/resources/front-mock-files for autoloading changes. scripts.js is loaded from target/classes/webapp/compiled/scripts.js
   context.setBaseResource(
-    new ResourceCollection(Array(root + "/src/main/webapp", root + "/web/target/javascript", root + "/src/test/resources/front-mock-files")))
+    new ResourceCollection(Array(root + "/src/main/resources/webapp", root + "/target/classes/webapp", root + "/src/test/resources/front-mock-files")))
   context.setContextPath(contextPath)
   context.setInitParameter(org.scalatra.EnvironmentKey, "production")
   context.setInitParameter(org.scalatra.CorsSupport.EnableKey, "false")
-  context.setDescriptor(root + "/src/main/webapp/WEB-INF/web.xml")
-  context.addEventListener(new ScalatraListener)
 
   server.setHandler(context)
 
