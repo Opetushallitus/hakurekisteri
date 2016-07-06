@@ -335,6 +335,18 @@
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
                 <version>3.2.1</version>
+                <configuration>
+                    <args>
+                        <arg>-unchecked</arg>
+                        <arg>-deprecation</arg>
+                        <arg>-feature</arg>
+                        <arg>-encoding</arg>
+                        <arg>utf8</arg>
+                        <arg>-Xfatal-warnings</arg>
+                        <arg>-Xmax-classfile-name</arg>
+                        <arg>100</arg>
+                    </args>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
