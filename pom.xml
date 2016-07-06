@@ -6,7 +6,7 @@
     <artifactId>suoritusrekisteri</artifactId>
     <packaging>jar</packaging>
     <description>suoritusrekisteri</description>
-    <version>0.1-SNAPSHOT</version>
+    <version>14.0-SNAPSHOT</version>
     <name>suoritusrekisteri</name>
     <organization>
         <name>suoritusrekisteri</name>
@@ -407,11 +407,12 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>${project.basedir}/set_buildversion_properties.sh</executable>
+                            <executable>${project.basedir}/create_buildversion_txt.sh</executable>
                             <arguments>
                                 <argument>
-                                    ${project.build.outputDirectory}/oph-configuration/valinta-tulos-henkiloviite-synchronizer.properties.template
+                                    ${project.build.outputDirectory}/webapp/buildversion.txt
                                 </argument>
+                                <argument>${project.artifactId}</argument>
                                 <argument>${project.version}</argument>
                             </arguments>
                         </configuration>
