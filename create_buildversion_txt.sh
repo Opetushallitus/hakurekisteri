@@ -16,7 +16,6 @@ TIMESTAMP=$(date)
 
 set_property() {
     ENTRY=`printf "$1=%s\n" "$2"`
-    echo "POW $DEST"
     echo "$ENTRY" >> "${DEST}"
 }
 
