@@ -346,6 +346,17 @@
                         <arg>-Xmax-classfile-name</arg>
                         <arg>100</arg>
                     </args>
+                    <launchers>
+                        <launcher>
+                            <id>createDevDb</id>
+                            <mainClass>util.CreateDevDb</mainClass>
+                        </launcher>
+                        <launcher>
+                            <id>generateSchema</id>
+                            <mainClass>fi.vm.sade.hakurekisteri.storage.SchemaGenerator</mainClass>
+                        </launcher>
+                        <!-- you could define other launcher -->
+                    </launchers>
                 </configuration>
                 <executions>
                     <execution>
@@ -438,10 +449,24 @@
                         <configuration>
                             <executable>npm</executable>
                             <arguments>
-                                <argument>run
-                                </argument>
+                                <argument>run</argument>
                                 <argument>build</argument>
                                 <argument>-s</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generateDbDiagram</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${project.basedir}/sbin/generateDbDiagram.sh</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <arguments>
+                                <argument>${project.build.outputDirectory}/sql2diagram</argument>
+                                <argument>suoritusrekisteri-${project.version}</argument>
                             </arguments>
                         </configuration>
                     </execution>

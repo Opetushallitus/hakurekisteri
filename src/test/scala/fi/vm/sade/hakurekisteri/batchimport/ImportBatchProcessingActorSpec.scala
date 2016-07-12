@@ -130,7 +130,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     val organisaatioClient = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(httpProvider)))
     val organisaatioActor = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, Config.mockConfig)))
     val koodistoActor = system.actorOf(Props(new MockedKoodistoActor()))
-    val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana, UUID](save = {r => r}, query = { (q) => Seq() })))
+    val arvosanarekisteri = system.actorOf(Props(new MockedResourceActor[Arvosana, UUID](save = {r => }, query = { (q) => Seq() })))
 
     system.actorOf(Props(new ImportBatchProcessingActor(importBatchActor, henkiloActor, suoritusrekisteri, opiskelijarekisteri, organisaatioActor, arvosanarekisteri, koodistoActor, Config.mockConfig)))
   }
