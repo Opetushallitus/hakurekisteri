@@ -17,7 +17,7 @@ Tarvittaessa voit päivittää front-riippuvuudet komennolla
 
 ## Kaikki testit
 
-Voit ajaa kaikki testit komentoriviltä komennolla `make clean test`
+Voit ajaa kaikki testit komentoriviltä komennolla `make test`
 
 ## Build & Run ##
 
@@ -25,7 +25,7 @@ Näin voit ajaa sovellusta paikallisesti tuotannonkaltaisena setuppina, käyttä
 
 1. Ihan ensin tarvitset devaukseen soveltuvan `~/oph-configuration`-hakemiston. Kysy devaajilta apua!
 
-2. Luo paikallinen h2-tietokanta: `./sbt createDevDb`. Tämä kopioi datat luokka-ympäristöstä tietokantaan `data/development.h2.db`.
+2. Luo paikallinen h2-tietokanta: `make createDevDb`. Tämä kopioi datat luokka-ympäristöstä tietokantaan `data/development.h2.db`.
 
 3. Käynnistä paikallinen serveri: `./sbt ~container:start` (vaatii oph-configuration kansion). Vaihtoehtoisesti aja IDEA:ssa luokka `HakuRekisteriJetty` (ei vaadi oph-configuration kansiota).
 

@@ -98,7 +98,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
               suoritusWaiter.dismiss()
           }, query = { q => Seq(s) }))),
           system.actorOf(Props(new MockedResourceActor[Arvosana, UUID](save = {a => }, query = {q => Seq()}))),
-          createImportBatchActor(system, {b => b}, batch),
+          createImportBatchActor(system, {b => }, batch),
           createKoodistoActor
         )
         val status = Await.result(arvosanatProcessing.process(batch), awaitTimeout).status
@@ -411,7 +411,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             s = s.identify(ss.id)
           }, query = {q => Seq(s)}))),
           arvosanaActor,
-          createImportBatchActor(system, {r => r}, batch),
+          createImportBatchActor(system, {r => }, batch),
           createKoodistoActor
         )
 
