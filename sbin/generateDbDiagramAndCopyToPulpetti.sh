@@ -3,6 +3,9 @@
 echo "creating directory $1"
 mkdir -p $1
 
+echo "generating schema file"
+make generateSchema
+
 echo "generating diagrams to $1"
 /usr/sbin/sql2diagram db/schema.ddl $1/$2
 

@@ -462,7 +462,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>${project.basedir}/sbin/generateDbDiagram.sh</executable>
+                            <executable>${project.basedir}/sbin/generateDbDiagramAndCopyToPulpetti.sh</executable>
                             <workingDirectory>${project.basedir}</workingDirectory>
                             <arguments>
                                 <argument>${project.build.outputDirectory}/sql2diagram</argument>
