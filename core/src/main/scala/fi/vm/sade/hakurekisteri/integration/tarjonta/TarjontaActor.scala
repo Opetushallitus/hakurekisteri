@@ -28,7 +28,10 @@ case class RestHaku(oid:Option[String],
                     koulutuksenAlkamiskausiUri: Option[String],
                     koulutuksenAlkamisVuosi: Option[Int],
                     kohdejoukkoUri: Option[String],
-                    tila: String)
+                    kohdejoukonTarkenne: Option[String],
+                    tila: String) {
+  def isJatkotutkintohaku = kohdejoukonTarkenne.exists(_.startsWith("haunkohdejoukontarkenne_3#"))
+}
 
 case class RestHakuAika(alkuPvm: Long, loppuPvm: Option[Long])
 
@@ -95,7 +98,11 @@ class TarjontaActor(restClient: VirkailijaRestClient, config: Config) extends Ac
     }
   }
 
-  def getHaut: Future[RestHakuResult] = restClient.readObject[RestHakuResult]("tarjonta-service.haku.findAll")(200).map(res => res.copy(res.result.filter(_.tila == "JULKAISTU"))).recover {
+  def includeHaku(haku: RestHaku): Boolean = {
+    haku.tila == "JULKAISTU" || (haku.tila == "VALMIS" && haku.isJatkotutkintohaku)
+  }
+
+  def getHaut: Future[RestHakuResult] = restClient.readObject[RestHakuResult]("tarjonta-service.haku.findAll")(200).map(res => res.copy(res.result.filter(includeHaku))).recover {
     case t: Throwable =>
       log.error(t, "error retrieving all hakus")
       throw GetHautQueryFailedException("error retrieving all hakus", t)
@@ -151,6 +158,7 @@ class MockTarjontaActor(config: Config) extends TarjontaActor(null, config) {
         koulutuksenAlkamiskausiUri = Some("kausi_s#1"),
         koulutuksenAlkamisVuosi = Some(new LocalDate().getYear),
         kohdejoukkoUri = Some("haunkohdejoukko_12#1"),
+        None,
         tila = "JULKAISTU"
       )))
 

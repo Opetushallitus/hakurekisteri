@@ -248,7 +248,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
 
   import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen._
 
-  val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L, Some(2L))), Map("fi" -> "testihaku"), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), "JULKAISTU")
+  val haku1 = RestHaku(Some("1.2"), List(RestHakuAika(1L, Some(2L))), Map("fi" -> "testihaku"), "kausi_s#1", 2014, Some("kausi_k#1"), Some(2015), Some("haunkohdejoukko_12#1"), None, "JULKAISTU")
   val kausiKoodiK = TarjontaKoodi(Some("K"))
   val kausiKoodiS = TarjontaKoodi(Some("S"))
   val koulutus1 = Hakukohteenkoulutus("1.5.6", "123456", Some("AABB5tga"), Some(kausiKoodiK), Some(2015), None)
