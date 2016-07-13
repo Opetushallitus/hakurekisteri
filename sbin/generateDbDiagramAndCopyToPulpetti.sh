@@ -1,16 +1,20 @@
 #!/bin/bash
+set -e
 
-echo "creating directory $1"
-mkdir -p $1
+OUTPUTDIR=target/sql2diagram
+DDL=db/schema.ddl
 
-echo "generating schema file"
+echo "creating directory $OUTPUTDIR"
+mkdir -p $OUTPUTDIR
+
+echo "generating schema file $DDL"
 make generateSchema
 
-echo "generating diagrams to $1"
-/usr/sbin/sql2diagram db/schema.ddl $1/$2
+echo "generating diagrams to $OUTPUTDIR"
+/usr/sbin/sql2diagram $DDL $OUTPUTDIR/suoritusrekisteri-$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v INFO)
 
-echo "uploading diagrams from $1 to bamboo@pulpetti:/var/www/html/db/"
-scp $1/* bamboo@pulpetti:/var/www/html/db/
+echo "uploading diagrams from $OUTPUTDIR to bamboo@pulpetti:/var/www/html/db/"
+scp $OUTPUTDIR/* bamboo@pulpetti:/var/www/html/db/
 
 echo "done."
 exit 0

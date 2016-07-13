@@ -354,6 +354,9 @@
                         <launcher>
                             <id>generateSchema</id>
                             <mainClass>fi.vm.sade.hakurekisteri.storage.SchemaGenerator</mainClass>
+                            <args>
+                                <arg>arg1</arg>
+                            </args>
                         </launcher>
                         <!-- you could define other launcher -->
                     </launchers>
@@ -452,21 +455,6 @@
                                 <argument>run</argument>
                                 <argument>build</argument>
                                 <argument>-s</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>generateDbDiagram</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>${project.basedir}/sbin/generateDbDiagramAndCopyToPulpetti.sh</executable>
-                            <workingDirectory>${project.basedir}</workingDirectory>
-                            <arguments>
-                                <argument>${project.build.outputDirectory}/sql2diagram</argument>
-                                <argument>suoritusrekisteri-${project.version}</argument>
                             </arguments>
                         </configuration>
                     </execution>
