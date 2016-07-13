@@ -11,6 +11,8 @@ SERVICE=$1
 BRANCH=$(git rev-parse --abbrev-ref HEAD | sed 's+/+-+g')
 ZIP=${PWD}/target/${SERVICE}_${BRANCH}_$(date +%Y%m%d%H%M%S).zip
 
+echo "Building $ZIP"
+
 cd ./target
 JAR=( ./*jar-with-dependencies.jar )
 [ ${#JAR[@]} -lt 1 ] && { printf "No runnable jar found\n"; exit 1; }
