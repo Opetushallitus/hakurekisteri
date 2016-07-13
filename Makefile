@@ -12,6 +12,3 @@ createDevDb:
 
 generateSchema:
 	mvn scala:run -Dlauncher=generateSchema
-
-generateDbDiagram:
-	sbin/generateDbDiagram.sh target/sql2diagram suoritusrekisteri-$ver
