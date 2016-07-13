@@ -88,7 +88,7 @@ class LocalizationMockServlet(system: ActorSystem) extends OPHProxyServlet(syste
   }
 
   post("/cxf/rest/v1/localisation") {
-    Created
+    Created("{}")
   }
 }
 

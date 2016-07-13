@@ -404,7 +404,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>fi.vm.sade.valintatulosservice.HenkiloviiteSynchronizerApp</mainClass>
+                            <mainClass>fi.vm.sade.hakurekisteri.SureStandaloneJetty</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -433,7 +433,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>${project.basedir}/create_buildversion_txt.sh</executable>
+                            <executable>${project.basedir}/sbin/create_buildversion_txt.sh</executable>
                             <arguments>
                                 <argument>
                                     ${project.build.outputDirectory}/webapp/buildversion.txt
@@ -456,17 +456,6 @@
                                 <argument>build</argument>
                                 <argument>-s</argument>
                             </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>deploy zip</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>${project.basedir}/build_deploy_zip.sh</executable>
-                            <workingDirectory>${project.basedir}</workingDirectory>
                         </configuration>
                     </execution>
                 </executions>
