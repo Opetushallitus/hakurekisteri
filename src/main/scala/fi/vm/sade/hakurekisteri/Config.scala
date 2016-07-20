@@ -3,15 +3,19 @@ package fi.vm.sade.hakurekisteri
 import java.io.InputStream
 import java.nio.file.{Files, Path, Paths}
 
+import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig}
 import fi.vm.sade.hakurekisteri.tools.RicherString
+import fi.vm.sade.hakurekisteri.web.rest.support.Security
 import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
+import support.Integrations
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 import scala.util.{Success, Try}
 
@@ -100,6 +104,8 @@ class MockConfig extends Config {
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
 }
 
+class ProductionServerConfig(val integrations: Integrations, val system: ActorSystem, val security: Security, val ec: ExecutionContextExecutor)
+
 abstract class Config {
   import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple.Database
 
@@ -167,6 +173,9 @@ abstract class Config {
     else
       resolve(converted.mapValues((s) => "€\\{(.*?)\\}".r replaceAllIn (s, m => {converted.getOrElse(m.group(1), "€{" + m.group(1) + "}") })))
   }
+
+  // nasty hack for exposing production server internals to SuoritusrekisteriMocksBootstrap
+  var productionServerConfig: ProductionServerConfig = null
 }
 
 class IntegrationConfig(hostQa: String, properties: Map[String, String]) {

@@ -18,7 +18,7 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
   val tyynenPeruskoulu = SuoritusMock.getSuoritusByHenkiloKomoTila("1.2.246.562.24.98743797763", peruskouluKomo, "KESKEN")
 
   def postSuoritus(suoritus: String): String =
-    post("/rest/v1/suoritukset", suoritus, Map("Content-Type" -> "application/json; charset=UTF-8")) {
+    post("/suoritusrekisteri/rest/v1/suoritukset", suoritus, Map("Content-Type" -> "application/json; charset=UTF-8")) {
       response.status should be(201)
       parse(body).extract[JObject].values("id").asInstanceOf[String]
     }
@@ -32,12 +32,12 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
     val before = DateTime.now()
     val aarnenLukioId = postSuoritus(aarnenLukio)
     val after = DateTime.now()
-    get("/rest/v1/suoritukset", ("muokattuJalkeen", before.toString)) {
+    get("/suoritusrekisteri/rest/v1/suoritukset", ("muokattuJalkeen", before.toString)) {
       response.status should be(200)
       parse(response.body).extract[JArray].arr.length should be(1)
       responseIds(response.body) should contain(aarnenLukioId)
     }
-    get("/rest/v1/suoritukset", ("muokattuJalkeen", after.toString)) {
+    get("/suoritusrekisteri/rest/v1/suoritukset", ("muokattuJalkeen", after.toString)) {
       response.status should be(200)
       parse(response.body).extract[JArray].arr shouldBe empty
     }
@@ -49,19 +49,19 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
     val afterAarne = DateTime.now()
     val tyynenLukioId = postSuoritus(tyynenLukio)
     val after = DateTime.now()
-    get("/rest/v1/suoritukset", ("muokattuJalkeen", before.toString)) {
+    get("/suoritusrekisteri/rest/v1/suoritukset", ("muokattuJalkeen", before.toString)) {
       response.status should be(200)
       parse(response.body).extract[JArray].arr.length should be(2)
       val ids = responseIds(response.body)
       ids should contain(aarnenLukioId)
       ids should contain(tyynenLukioId)
     }
-    get("/rest/v1/suoritukset", ("muokattuJalkeen", afterAarne.toString)) {
+    get("/suoritusrekisteri/rest/v1/suoritukset", ("muokattuJalkeen", afterAarne.toString)) {
       response.status should be(200)
       parse(response.body).extract[JArray].arr.length should be(1)
       responseIds(response.body) should contain(tyynenLukioId)
     }
-    get("/rest/v1/suoritukset", ("muokattuJalkeen", after.toString)) {
+    get("/suoritusrekisteri/rest/v1/suoritukset", ("muokattuJalkeen", after.toString)) {
       response.status should be(200)
       parse(response.body).extract[JArray].arr shouldBe empty
     }
@@ -71,13 +71,13 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
     val aarnenLukioId = postSuoritus(aarnenLukio)
     val tyynenLukioId = postSuoritus(tyynenLukio)
     val tyynenPeruskouluId = postSuoritus(tyynenPeruskoulu)
-    get("/rest/v1/suoritukset", ("komo", lukioKomo)) {
+    get("/suoritusrekisteri/rest/v1/suoritukset", ("komo", lukioKomo)) {
       parse(response.body).extract[JArray].arr.length should be(2)
       val ids = responseIds(response.body)
       ids should contain(aarnenLukioId)
       ids should contain(tyynenLukioId)
     }
-    get("/rest/v1/suoritukset", ("komo", peruskouluKomo)) {
+    get("/suoritusrekisteri/rest/v1/suoritukset", ("komo", peruskouluKomo)) {
       response.status should be(200)
       parse(response.body).extract[JArray].arr.length should be(1)
       responseIds(response.body) should contain(tyynenPeruskouluId)
@@ -91,24 +91,24 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
     val tyynenPeruskouluId = postSuoritus(tyynenPeruskoulu)
     val afterTyyne = DateTime.now()
     val aarnenLukioValmistuminenId = postSuoritus(aarnenLukioValmistuminen)
-    get("/rest/v1/suoritukset", ("komo", lukioKomo), ("muokattuJalkeen", afterAarne.toString)) {
+    get("/suoritusrekisteri/rest/v1/suoritukset", ("komo", lukioKomo), ("muokattuJalkeen", afterAarne.toString)) {
       response.status should be(200)
       parse(response.body).extract[JArray].arr.length should be(2)
       val ids = responseIds(response.body)
       ids should contain(tyynenLukioId)
       ids should contain(aarnenLukioValmistuminenId)
     }
-    get("/rest/v1/suoritukset", ("komo", lukioKomo), ("muokattuJalkeen", afterTyyne.toString)) {
+    get("/suoritusrekisteri/rest/v1/suoritukset", ("komo", lukioKomo), ("muokattuJalkeen", afterTyyne.toString)) {
       response.status should be(200)
       parse(response.body).extract[JArray].arr.length should be(1)
       responseIds(response.body) should contain(aarnenLukioValmistuminenId)
     }
-    get("/rest/v1/suoritukset", ("komo", peruskouluKomo), ("muokattuJalkeen", afterAarne.toString)) {
+    get("/suoritusrekisteri/rest/v1/suoritukset", ("komo", peruskouluKomo), ("muokattuJalkeen", afterAarne.toString)) {
       response.status should be(200)
       parse(response.body).extract[JArray].arr.length should be(1)
       responseIds(response.body) should contain(tyynenPeruskouluId)
     }
-    get("/rest/v1/suoritukset", ("komo", peruskouluKomo), ("muokattuJalkeen", afterTyyne.toString)) {
+    get("/suoritusrekisteri/rest/v1/suoritukset", ("komo", peruskouluKomo), ("muokattuJalkeen", afterTyyne.toString)) {
       response.status should be(200)
       parse(response.body).extract[JArray].arr shouldBe empty
     }

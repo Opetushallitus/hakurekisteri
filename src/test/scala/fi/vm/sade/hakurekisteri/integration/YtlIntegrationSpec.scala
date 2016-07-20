@@ -54,14 +54,14 @@ class YtlIntegrationSpec extends FlatSpec with Matchers with CleanSharedTestJett
       var result: Option[Seq[Todistus]] = None
       while (result.isEmpty) {
         Thread.sleep(500)
-        get("/rest/v1/oppijat/1.2.246.562.24.71944845619?haku=1.2.3.4") {
+        get("/suoritusrekisteri/rest/v1/oppijat/1.2.246.562.24.71944845619?haku=1.2.3.4") {
           if (response.status == 200) {
             val json = JsonMethods.parse(body)
             if((json \\ "arvosanat").children.nonEmpty) {
               result = (json \\ "suoritukset").extractOpt[Seq[Todistus]]
             }
           } else {
-            println(s"error from /rest/v1/oppijat/1.2.246.562.24.71944845619 ${response.status}: ${response.statusLine}")
+            println(s"error from /suoritusrekisteri/rest/v1/oppijat/1.2.246.562.24.71944845619 ${response.status}: ${response.statusLine}")
           }
         }
       }

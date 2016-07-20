@@ -1,8 +1,5 @@
 function TiedonsiirtoPage() {
-    function isLocalhost() {
-        return location.host.indexOf('localhost') > -1
-    }
-    var tiedonsiirtoPage = openPage((isLocalhost() ? '' : '/suoritusrekisteri') + "/#/tiedonsiirto/lahetys", function() {
+    var tiedonsiirtoPage = openPage("/suoritusrekisteri/#/tiedonsiirto/lahetys", function() {
         return S("#uploadForm").length === 1
     });
 

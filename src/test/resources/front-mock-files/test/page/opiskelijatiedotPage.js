@@ -1,9 +1,5 @@
 function opiskelijatiedotPage() {
-    function isLocalhost() {
-        return location.host.indexOf('localhost') > -1
-    }
-
-    var opiskelijatiedotPage = openPage((isLocalhost() ? '' : '/suoritusrekisteri') + "/#/opiskelijat", function () {
+    var opiskelijatiedotPage = openPage("/suoritusrekisteri/#/opiskelijat", function () {
         return S("#filterForm").length === 1
     })
 

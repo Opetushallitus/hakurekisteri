@@ -4,9 +4,6 @@ import org.json4s._
 import scala.concurrent.Future
 
 trait Proxies {
-  def koodisto: KoodistoProxy
-  def authentication: AuthenticationProxy
-  def organization: OrganizationProxy
   def vastaanottotiedot: VastaanottotiedotProxy
 }
 

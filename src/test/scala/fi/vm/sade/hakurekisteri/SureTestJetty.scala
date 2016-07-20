@@ -5,11 +5,11 @@ import java.nio.charset.Charset
 import fi.vm.sade.utils.Timer
 import fi.vm.sade.utils.tcp.PortChecker
 import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.server.handler.ContextHandlerCollection
 import org.eclipse.jetty.util.resource.ResourceCollection
 import org.eclipse.jetty.webapp.WebAppContext
 import org.h2.tools.RunScript
 import org.scalatest.{BeforeAndAfterEach, Suite}
-import org.scalatra.servlet.ScalatraListener
 import org.scalatra.test.HttpComponentsClient
 
 object SureTestJetty extends App {
@@ -47,19 +47,26 @@ object SharedTestJetty {
 
 class SureTestJetty(val port: Int = PortChecker.findFreeLocalPort, config: Config = Config.globalConfig) {
   val root = ProjectRootFinder.findProjectRoot()
-  val contextPath = "/"
+
+  val suoritusrekisteriApp = new WebAppContext()
+  suoritusrekisteriApp.setAttribute("hakurekisteri.config", config)
+  suoritusrekisteriApp.setBaseResource(new ResourceCollection(Array(root + "/src/main/resources/webapp", root + "/target/classes/webapp")))
+  suoritusrekisteriApp.setContextPath("/suoritusrekisteri")
+  suoritusrekisteriApp.setInitParameter(org.scalatra.EnvironmentKey, "production")
+  suoritusrekisteriApp.setInitParameter(org.scalatra.CorsSupport.EnableKey, "false")
+
+  val mockApp = new WebAppContext()
+  mockApp.setAttribute("hakurekisteri.config", config)
+  mockApp.setBaseResource(new ResourceCollection(Array(root + "/src/test/resources/front-mock-files")))
+  mockApp.setContextPath("/")
+  mockApp.setInitParameter(org.scalatra.servlet.ScalatraListener.LifeCycleKey, "SuoritusrekisteriMocksBootstrap")
+  mockApp.setInitParameter(org.scalatra.EnvironmentKey, "production")
+  mockApp.setInitParameter(org.scalatra.CorsSupport.EnableKey, "false")
+
   val server = new Server(port)
-  val context = new WebAppContext()
-
-  context.setAttribute("hakurekisteri.config", config)
-  // load files from main/src/webapp and /src/test/resources/front-mock-files for autoloading changes. scripts.js is loaded from target/classes/webapp/compiled/scripts.js
-  context.setBaseResource(
-    new ResourceCollection(Array(root + "/src/main/resources/webapp", root + "/target/classes/webapp", root + "/src/test/resources/front-mock-files")))
-  context.setContextPath(contextPath)
-  context.setInitParameter(org.scalatra.EnvironmentKey, "production")
-  context.setInitParameter(org.scalatra.CorsSupport.EnableKey, "false")
-
-  server.setHandler(context)
+  val contexts = new ContextHandlerCollection()
+  contexts.setHandlers(Array(suoritusrekisteriApp, mockApp))
+  server.setHandler(contexts)
 
   def start: Server = {
     server.start

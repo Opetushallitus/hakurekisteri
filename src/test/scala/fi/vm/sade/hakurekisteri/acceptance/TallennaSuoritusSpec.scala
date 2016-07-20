@@ -11,12 +11,7 @@ import fi.vm.sade.hakurekisteri.tools.Peruskoulu
 
 class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with HakurekisteriContainer with HakurekisteriSupport {
 
-  info("Koulun virkailijana")
-  info("tallennan kouluni oppilaiden tutkintosuoritukset")
-  info("jotta niitä voi hyödyntää haussa")
-  info("ja valinnassa")
-
-
+  info("Koulun virkailijana tallennan kouluni oppilaiden tutkintosuoritukset jotta niitä voi hyödyntää haussa ja valinnassa")
 
   feature("Suorituksen tallentaminen") {
     scenario("Esitäytetyn lomakkeen lähettäminen tuottaa suorituksen") {
