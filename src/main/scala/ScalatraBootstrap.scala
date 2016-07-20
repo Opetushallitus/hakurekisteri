@@ -4,7 +4,7 @@ import javax.servlet.{DispatcherType, Servlet, ServletContext, ServletContextEve
 import _root_.support._
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Config, ProductionServerConfig}
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.healthcheck.HealthcheckActor
@@ -19,7 +19,7 @@ import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
 import fi.vm.sade.hakurekisteri.web.hakija.{HakijaResource, HakijaResourceV2}
 import fi.vm.sade.hakurekisteri.web.haku.HakuResource
 import fi.vm.sade.hakurekisteri.web.healthcheck.HealthcheckResource
-import fi.vm.sade.hakurekisteri.web.integration.virta.{VirtaSuoritusResource, VirtaResource}
+import fi.vm.sade.hakurekisteri.web.integration.virta.{VirtaResource, VirtaSuoritusResource}
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaResource
 import fi.vm.sade.hakurekisteri.web.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi}
@@ -32,7 +32,8 @@ import fi.vm.sade.hakurekisteri.web.rest.support._
 import fi.vm.sade.hakurekisteri.web.restrictions.RestrictionsResource
 import fi.vm.sade.hakurekisteri.web.suoritus.SuoritusResource
 import gui.GuiServlet
-import org.json4s.{DefaultFormats, Formats}
+import org.json4s.jackson.JsonMethods._
+import org.json4s.{Extraction, _}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.Swagger
 import org.scalatra.{Handler, LifeCycle, ScalatraServlet}
@@ -48,7 +49,7 @@ import org.springframework.web.filter.DelegatingFilterProxy
 import siirto._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 class ScalatraBootstrap extends LifeCycle {
   implicit val swagger: Swagger = new HakurekisteriSwagger
@@ -66,6 +67,8 @@ class ScalatraBootstrap extends LifeCycle {
 
     val integrations = Integrations(registers, system, config)
 
+    config.productionServerConfig = new ProductionServerConfig(integrations, system, security, ec)
+
     val koosteet = new BaseKoosteet(system, integrations, registers, config)
 
     val importBatchProcessing = initBatchProcessing(config, authorizedRegisters, integrations)
@@ -75,16 +78,9 @@ class ScalatraBootstrap extends LifeCycle {
       context.initParameters(org.scalatra.CorsSupport.EnableKey) = "false"
     }
 
-    var servlets = initServlets(config, registers, authorizedRegisters, integrations, koosteet)
-
-    if(config.mockMode) {
-      servlets ::= (("/spec", "spec") -> new SpecResource(integrations.ytl))
-    }
-    ProxyServlets.mount(config.mockMode, integrations.proxies, context)
+    val servlets = initServlets(config, registers, authorizedRegisters, integrations, koosteet)
 
     mountServlets(context)(servlets:_*)
-
-    context mount (new ValidatorJavascriptServlet, "/hakurekisteri-validator")
   }
 
   //noinspection ScalaStyle
@@ -118,7 +114,9 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v1/tyhjalisatiedollisetarvosanat", "rest/v1/tyhjalisatiedollisetarvosanat") -> new EmptyLisatiedotResource(authorizedRegisters.arvosanaRekisteri),
     ("/schemas", "schema") -> new SchemaServlet(Perustiedot, PerustiedotKoodisto, Arvosanat, ArvosanatKoodisto),
     ("/virta", "virta") -> new VirtaResource(koosteet.virtaQueue), // Continuous Virta queue processing
-    ("/ytl", "ytl") -> new YtlResource(integrations.ytl)
+    ("/ytl", "ytl") -> new YtlResource(integrations.ytl),
+    ("/vastaanottotiedot", "vastaanottotiedot") -> new VastaanottotiedotProxyServlet(integrations.proxies.vastaanottotiedot, system),
+    ("/hakurekisteri-validator", "hakurekister-validator") -> new ValidatorJavascriptServlet
   )
 
   private def initBatchProcessing(config: Config, authorizedRegisters: AuthorizedRegisters, integrations: Integrations): ActorRef =

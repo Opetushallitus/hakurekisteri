@@ -144,7 +144,7 @@ class BaseIntegrations(rekisterit: Registers,
   )(virtaResourceEc, system)
   val virta = system.actorOf(Props(new VirtaActor(virtaClient, organisaatiot, rekisterit.suoritusRekisteri, rekisterit.opiskeluoikeusRekisteri)), "virta")
   val virtaResource = system.actorOf(Props(new VirtaResourceActor(virtaResourceClient)), "virtaResource")
-  val proxies = new HttpProxies(henkiloClient, koodistoClient, organisaatioClient, valintarekisteriClient)
+  val proxies = new HttpProxies(valintarekisteriClient)
 
   hakemukset ! IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
 

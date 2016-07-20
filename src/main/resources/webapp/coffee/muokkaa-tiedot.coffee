@@ -245,7 +245,7 @@ app.factory "MuokkaaTiedot", [
           }).$promise
 
       fetchVastaanottotiedot = ->
-        $http.get(window.url("valintarekisteri.vastaanottotiedot", henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((vastaanottotiedot) ->
+        $http.get(window.url("suoritusrekisteri.vastaanottotiedot", henkiloOid), { cache: false, headers: { 'External-Permission-Service': 'SURE' } }).success((vastaanottotiedot) ->
           $scope.henkilo.vastaanotot = vastaanottotiedot
           if $scope.henkilo.vastaanotot.opintopolku
             $scope.henkilo.vastaanotot.opintopolku.forEach (vastaanotto) ->
