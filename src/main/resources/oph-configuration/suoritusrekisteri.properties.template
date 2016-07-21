@@ -6,6 +6,7 @@
 #
 
 # Aseta vähintään nämä ympäristökohtaiset arvot
+suoritusrekisteri.port={{palvelu_portti}}
 activemq.brokerurl={{activemq_brokerurl}}
 activemq.jmxurl={{activemq_jmxurl}}
 auth.mode={{auth_mode}}
