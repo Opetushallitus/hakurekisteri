@@ -143,13 +143,11 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-webapp</artifactId>
             <version>9.2.1.v20140609</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-plus</artifactId>
             <version>9.2.1.v20140609</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
