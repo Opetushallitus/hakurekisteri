@@ -21,6 +21,8 @@ DEPLOY_USER=bamboo
 DEPLOY_HOST=liikuntasali.hard.ware.fi
 DEPLOY_DIR=/data00/releases/${SERVICE}/${BRANCH}/
 
+ssh -i "${KEY_FILE}" "${DEPLOY_USER}@${DEPLOY_HOST}" "mkdir -p ${DEPLOY_DIR}"
+
 scp -C -i "${KEY_FILE}" "${ZIP_PATH}" "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_DIR}"
 
 DEPLOY_CMD="ssh deploy@deploy.oph.ware.fi \"/home/deploy/deploy-jar.sh \"${SERVICE}\" \"${BRANCH}\" \"${DEPLOY_ENVIRONMENT}\" true \"${ZIP}\"\""
