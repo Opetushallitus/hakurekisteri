@@ -1,14 +1,11 @@
 clean:
 	mvn clean
 
-jar:
+package:
 	mvn clean package
 
 test:
 	mvn clean test
-
-zip: jar
-	sbin/build_deploy_zip.sh suoritusrekisteri
 
 createDevDb:
 	mvn scala:run -Dlauncher=createDevDb

@@ -456,6 +456,19 @@
                             </arguments>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>zip</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>sbin/build_deploy_zip.sh</executable>
+                            <arguments>
+                                <argument>${project.name}</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
