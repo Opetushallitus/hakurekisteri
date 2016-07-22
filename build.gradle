@@ -11,27 +11,27 @@ repositories {
 
 String zipFileName = ""
 
-// Create release zip (wars and configs)
-task(zipIt, type: Zip) {
-    doFirst {
-        // Renames abc-x.y-SOMETHING.war to suoritusrekisteri.war
-        fileTree(from: '.', include: '**/target/**/*.war').files.each { warFile ->
-            String replaced = warFile.path.replaceFirst('-web-[a-zA-Z0-9.]+-SNAPSHOT\\.war','.war')
-            replaced = replaced.replace("hakurekisteri.war", "suoritusrekisteri.war")
-            warFile.renameTo(file(replaced))
-        }
-    }
-
-    zipFileName = serviceName + "_" + branchName + "_" + new Date().format("yyyyMMddHHmmss") + ".zip"
-
-    destinationDir new File(buildDir, "distributions")
-	archiveName zipFileName
-	from 'src/main/resources'
-	from 'target/scala-2.10'
-}
+//// Create release zip (wars and configs)
+//task(zipIt, type: Zip) {
+//    doFirst {
+//        // Renames abc-x.y-SOMETHING.war to suoritusrekisteri.war
+//        fileTree(from: '.', include: '**/target/**/*.war').files.each { warFile ->
+//            String replaced = warFile.path.replaceFirst('-web-[a-zA-Z0-9.]+-SNAPSHOT\\.war','.war')
+//            replaced = replaced.replace("hakurekisteri.war", "suoritusrekisteri.war")
+//            warFile.renameTo(file(replaced))
+//        }
+//    }
+//
+//    zipFileName = serviceName + "_" + branchName + "_" + new Date().format("yyyyMMddHHmmss") + ".zip"
+//
+//    destinationDir new File(buildDir, "distributions")
+//	archiveName zipFileName
+//	from 'src/main/resources'
+//	from 'target/scala-2.10'
+//}
 
 // Task for copying the .zip file to
-task(scp, dependsOn: zipIt) << {
+task(scp) << {
 
     // Redefine scp
     ant.taskdef(name: 'scp', classname: 'org.apache.tools.ant.taskdefs.optional.ssh.Scp',
@@ -43,7 +43,7 @@ task(scp, dependsOn: zipIt) << {
         trust: true,
         keyfile: keyFile,
     ) {
-        fileset(dir: 'build/distributions/') {
+        fileset(dir: 'target/') {
             include(name: '*.zip')
         }
     }
