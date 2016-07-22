@@ -352,9 +352,6 @@
                         <launcher>
                             <id>generateSchema</id>
                             <mainClass>fi.vm.sade.hakurekisteri.storage.SchemaGenerator</mainClass>
-                            <args>
-                                <arg>arg1</arg>
-                            </args>
                         </launcher>
                         <!-- you could define other launcher -->
                     </launchers>
