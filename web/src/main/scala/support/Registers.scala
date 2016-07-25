@@ -7,27 +7,27 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.camel.CamelExtension
 import akka.routing.BroadcastGroup
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.{Oids, Config}
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaActor}
+import fi.vm.sade.hakurekisteri.{Config, Oids}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor, ArvosanaTable}
 import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchActor, ImportBatchTable}
 import fi.vm.sade.hakurekisteri.integration.audit.AuditUri
-import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaActor}
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusActor}
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaActor, OpiskelijaJDBCActor, OpiskelijaTable}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusActor, OpiskeluoikeusJDBCActor, OpiskeluoikeusTable}
 import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, OrganizationHierarchy}
 import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, Registers, Resource}
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusActor, VapaamuotoinenSuoritus, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus._
 import org.apache.activemq.camel.component.ActiveMQComponent
 import org.joda.time.LocalDate
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
-  override val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(journals.suoritusJournal)), "suoritukset")
-  override val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(journals.opiskelijaJournal)), "opiskelijat")
-  override val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusActor(journals.opiskeluoikeusJournal)), "opiskeluoikeudet")
-  override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(journals.arvosanaJournal)), "arvosanat")
+  override val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(journals.suoritusJournal.asInstanceOf[JDBCJournal[Suoritus, UUID, SuoritusTable]], 5)), "suoritukset")
+  override val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaJDBCActor(journals.opiskelijaJournal.asInstanceOf[JDBCJournal[Opiskelija, UUID, OpiskelijaTable]], 5)), "opiskelijat")
+  override val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusJDBCActor(journals.opiskeluoikeusJournal.asInstanceOf[JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable]], 5)), "opiskeluoikeudet")
+  override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(journals.arvosanaJournal.asInstanceOf[JDBCJournal[Arvosana, UUID, ArvosanaTable]], 5)), "arvosanat")
   override val eraRekisteri: ActorRef = system.actorOf(Props(new ImportBatchActor(journals.eraJournal.asInstanceOf[JDBCJournal[ImportBatch, UUID, ImportBatchTable]], 5)), "erat")
 }
 

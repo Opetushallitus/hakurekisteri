@@ -8,7 +8,7 @@ import akka.testkit.TestActorRef
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
-import fi.vm.sade.hakurekisteri.arvosana.ArvosanaActor
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaActor, ArvosanaJDBCActor, ArvosanaTable}
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, Testihaku}
 import fi.vm.sade.hakurekisteri.integration._
@@ -19,9 +19,9 @@ import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaan
 import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusActor
 import fi.vm.sade.hakurekisteri.oppija.Oppija
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Registers, User}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal, Registers, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
 import fi.vm.sade.hakurekisteri.web.oppija.{OppijaResource, OppijatPostSize}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
@@ -32,6 +32,7 @@ import org.json4s.JsonAST.JObject
 import org.json4s.jackson.JsonMethods._
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
+import org.scalatest.prop.Tables
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
@@ -39,6 +40,7 @@ import scala.compat.Platform
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.implicitConversions
+import scala.slick.lifted.TableQuery
 import scala.util.Random
 
 class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
@@ -163,11 +165,14 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
 
 }
 
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
+
 abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar with DispatchSupport with FutureWaiting {
   implicit val system = ActorSystem("oppija-resource-test-system")
   implicit val security = new TestSecurity
   implicit val user: User = security.TestUser
   implicit val swagger: Swagger = new HakurekisteriSwagger
+  implicit val db = Database.forURL("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
   val henkilot: Set[String] = {
     var oids: Set[String] = Set("1.2.246.562.24.00000000001")
@@ -204,8 +209,15 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
     journal
   }
 
+  def arvosanaSeq2Journal(s: Seq[Arvosana]): JDBCJournal[Arvosana, UUID, ArvosanaTable] = {
+    val journal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
+    s.foreach((resource: Arvosana) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
+    journal
+  }
+
   val rekisterit = new Registers {
     private val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
+    //private val arvosanat = system.actorOf(Props(new ArvosanaJDBCActor(journal = arvosanaSeq2Journal(List[Arvosana]()), poolSize = 5)))
     private val arvosanat = system.actorOf(Props(new ArvosanaActor()))
     private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusActor()))
     private val opiskelijat = system.actorOf(Props(new OpiskelijaActor()))

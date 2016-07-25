@@ -2,21 +2,22 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.util.UUID
 
-import akka.actor.{ActorSystem, ActorRef, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
-import fi.vm.sade.hakurekisteri.{OrganisaatioOids, KomoOids, MockConfig}
-import fi.vm.sade.hakurekisteri.arvosana.{ArvosanaQuery, Arvosana, ArvosanaActor}
-import fi.vm.sade.hakurekisteri.integration.{DummyActor, ActorSystemSupport}
+import fi.vm.sade.hakurekisteri.{KomoOids, MockConfig, OrganisaatioOids}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaActor, ArvosanaQuery}
+import fi.vm.sade.hakurekisteri.integration.{ActorSystemSupport, DummyActor}
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
-import fi.vm.sade.hakurekisteri.storage.repository.{Updated, InMemJournal}
+import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
+import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus._
 import org.joda.time.LocalDate
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.concurrent.{Await, Future, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 

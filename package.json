@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "npm install -s && bower install && coffee --join web/target/javascript/compiled/scripts.js --compile web/src/main/webapp/coffee/*.coffee",
+    "build": "npm install -s && bower --allow-root install && coffee --join web/target/javascript/compiled/scripts.js --compile web/src/main/webapp/coffee/*.coffee",
     "watch": "npm install -s && bower install && coffee --watch --join  web/target/javascript/compiled/scripts.js --compile web/src/main/webapp/coffee/*.coffee"
   },
   "name": "hakurekisteri",

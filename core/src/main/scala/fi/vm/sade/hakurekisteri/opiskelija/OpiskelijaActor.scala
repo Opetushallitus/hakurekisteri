@@ -3,11 +3,18 @@ package fi.vm.sade.hakurekisteri.opiskelija
 import akka.event.Logging
 import com.github.nscala_time.time.Imports._
 import fi.vm.sade.hakurekisteri.rest.support.Kausi._
-import fi.vm.sade.hakurekisteri.rest.support.Query
+import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCService}
 import fi.vm.sade.hakurekisteri.storage._
 import fi.vm.sade.hakurekisteri.storage.repository._
+
 import java.util.UUID
-import scala.concurrent.Future
+import java.util.concurrent.Executors
+
+import akka.dispatch.ExecutionContexts
+import fi.vm.sade.hakurekisteri.rest.support
+
+import scala.concurrent.{ExecutionContext, Future}
+import scala.slick.lifted.Column
 
 
 trait OpiskelijaRepository extends JournaledRepository[Opiskelija, UUID] {
@@ -53,11 +60,11 @@ trait OpiskelijaRepository extends JournaledRepository[Opiskelija, UUID] {
 
 trait OpiskelijaService extends InMemQueryingResourceService[Opiskelija, UUID] with OpiskelijaRepository {
 
-  override val emptyQuery: PartialFunction[Query[Opiskelija], Boolean] = {
+  override val emptyQuery: PartialFunction[support.Query[Opiskelija], Boolean] = {
     case OpiskelijaQuery(None, None, None, None, None, None) => true
   }
 
-  override val matcher: PartialFunction[Query[Opiskelija], (Opiskelija with Identified[UUID]) => Boolean] = {
+  override val matcher: PartialFunction[support.Query[Opiskelija], (Opiskelija with Identified[UUID]) => Boolean] = {
     case OpiskelijaQuery(henkilo, kausi, vuosi, paiva, oppilaitosOid, luokka) =>
       (o: Opiskelija with Identified[UUID]) => checkHenkilo(henkilo)(o) &&
                                          checkVuosiAndKausi(vuosi, kausi)(o) &&
@@ -66,7 +73,7 @@ trait OpiskelijaService extends InMemQueryingResourceService[Opiskelija, UUID] w
                                          checkLuokka(luokka)(o)
   }
 
-  override val optimize: PartialFunction[Query[Opiskelija], Future[Seq[Opiskelija with Identified[UUID]]]] = {
+  override val optimize: PartialFunction[support.Query[Opiskelija], Future[Seq[Opiskelija with Identified[UUID]]]] = {
     case OpiskelijaQuery(Some(henkilo), None, None, None, None, None) =>
       Future { henkiloIndex.getOrElse(henkilo, Seq()) }
 
@@ -160,4 +167,38 @@ trait OpiskelijaService extends InMemQueryingResourceService[Opiskelija, UUID] w
 
 class OpiskelijaActor(val journal:Journal[Opiskelija, UUID] = new InMemJournal[Opiskelija, UUID]) extends ResourceActor[Opiskelija, UUID] with OpiskelijaService {
   override val logger = Logging(context.system, this)
+}
+
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
+import scala.slick.lifted
+
+class OpiskelijaJDBCActor(val journal: JDBCJournal[Opiskelija, UUID, OpiskelijaTable], poolSize: Int)
+  extends ResourceActor[Opiskelija, UUID] with JDBCRepository[Opiskelija, UUID, OpiskelijaTable] with JDBCService[Opiskelija, UUID, OpiskelijaTable] {
+
+  override val dbExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
+  override val dbQuery: PartialFunction[support.Query[Opiskelija], lifted.Query[OpiskelijaTable, Delta[Opiskelija, UUID], Seq]] = {
+    case OpiskelijaQuery(henkilo, kausi, vuosi, paiva, oppilaitosOid, luokka) =>
+      all.filter(t => matchHenkilo(henkilo)(t) && matchOppilaitosOid(oppilaitosOid)(t) && matchLuokka(luokka)(t))
+  }
+
+  override def deduplicationQuery(i: Opiskelija)(t: OpiskelijaTable): lifted.Column[Boolean] =
+    t.oppilaitosOid === i.oppilaitosOid && t.luokkataso === i.luokkataso && t.henkiloOid === i.henkiloOid
+
+  private def matchHenkilo(henkilo: Option[String])(t: OpiskelijaTable): Column[Boolean] = henkilo match {
+    case Some(h) => t.henkiloOid === h
+    case None => true
+  }
+
+  private def matchOppilaitosOid(oppilaitosOid: Option[String])(t: OpiskelijaTable): Column[Boolean] = oppilaitosOid match {
+    case Some(o) => t.oppilaitosOid === o
+    case None => true
+  }
+
+  private def matchLuokka(luokka: Option[String])(t: OpiskelijaTable): Column[Boolean] = luokka match {
+    case Some(l) => t.luokka === l
+    case None => true
+  }
+
+  // TODO implement the remaining matchers: kausi, vuosi, paiva
+
 }

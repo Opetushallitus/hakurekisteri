@@ -233,8 +233,8 @@ class KkHakijaResource(hakemukset: ActorRef,
 
   private def getHakemukset(haku: Haku, hakemus: FullHakemus, q: KkHakijaQuery, kokoHaunTulos: Option[SijoitteluTulos]): Future[Seq[Hakemus]] = {
     val valintaTulosQuery = q.oppijanumero match {
-      case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemus.oid), cachedOk = false)
-      case None => ValintaTulosQuery(hakemus.applicationSystemId, None)
+      case Some(o) => ValintaTulosQuery(hakemus.applicationSystemId, Some(hakemus.oid), None, cachedOk = false)
+      case None => ValintaTulosQuery(hakemus.applicationSystemId, None, None)
     }
 
     kokoHaunTulos.map(Future.successful)
@@ -357,7 +357,7 @@ class KkHakijaResource(hakemukset: ActorRef,
         (haut ? GetHaku(hakuOid)).mapTo[Haku].flatMap(haku =>
           if (haku.kkHaku) {
             if (q.oppijanumero.isEmpty) {
-              getValintaTulos(ValintaTulosQuery(hakuOid, None)).flatMap(kokoHaunTulos =>
+              getValintaTulos(ValintaTulosQuery(hakuOid, None, None)).flatMap(kokoHaunTulos =>
                 Future.sequence(h.map(getKkHakija(haku, q, Some(kokoHaunTulos))).flatten).map(_.filter(_.hakemukset.nonEmpty))
               )
             } else {

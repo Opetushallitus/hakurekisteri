@@ -1,16 +1,23 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
 import akka.event.Logging
-import fi.vm.sade.hakurekisteri.rest.support.{Query, Kausi}
+import fi.vm.sade.hakurekisteri.rest.support.{Kausi, _}
 import Kausi._
-import fi.vm.sade.hakurekisteri.storage._
+import fi.vm.sade.hakurekisteri.storage.{Identified, _}
 import com.github.nscala_time.time.Imports._
 import fi.vm.sade.hakurekisteri.storage.repository._
-import scala.concurrent.Future
+
+import scala.concurrent.{ExecutionContext, Future}
 import java.util.UUID
+import java.util.concurrent.Executors
+
+import akka.dispatch.ExecutionContexts
+
 import scala.util.Try
 import org.joda.time.ReadableInstant
+
 import scala.language.implicitConversions
+import scala.slick.lifted.{Column, Query}
 
 
 trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
@@ -106,11 +113,11 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
 
 trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with SuoritusRepository {
 
-  override val emptyQuery: PartialFunction[Query[Suoritus], Boolean] = {
+  override val emptyQuery: PartialFunction[fi.vm.sade.hakurekisteri.rest.support.Query[Suoritus], Boolean] = {
     case SuoritusQuery(None, None, None, None, None, None) => true
   }
 
-  override val optimize: PartialFunction[Query[Suoritus], Future[Seq[Suoritus with Identified[UUID]]]] = {
+  override val optimize: PartialFunction[fi.vm.sade.hakurekisteri.rest.support.Query[Suoritus], Future[Seq[Suoritus with Identified[UUID]]]] = {
     case SuoritusQuery(Some(henkilo), None, Some(vuosi), None, None, None) =>
       Future {
         tiedonSiirtoIndex.get(henkilo).flatMap(_.get(vuosi)).getOrElse(Seq())
@@ -179,7 +186,7 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
     tiedonSiirtoIndex.get(henkilo).map(_.values.reduce(_ ++ _)).getOrElse(Seq())
   }
 
-  val matcher: PartialFunction[Query[Suoritus], (Suoritus with Identified[UUID]) => Boolean] = {
+  val matcher: PartialFunction[fi.vm.sade.hakurekisteri.rest.support.Query[Suoritus], (Suoritus with Identified[UUID]) => Boolean] = {
     case SuoritusQuery(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen) => (s: Suoritus with Identified[UUID]) =>
       checkHenkilo(henkilo)(s) && checkVuosi(vuosi)(s) && checkKausi(kausi)(s) && checkMyontaja(myontaja)(s) && checkKomoOption(komo)(s)
 
@@ -256,6 +263,69 @@ trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with 
   }
 }
 
-class SuoritusActor(val journal:Journal[Suoritus, UUID] = new InMemJournal[Suoritus, UUID]) extends ResourceActor[Suoritus, UUID] with SuoritusService {
+class SuoritusActor(val journal: Journal[Suoritus, UUID] = new InMemJournal[Suoritus, UUID]) extends ResourceActor[Suoritus, UUID] with SuoritusService {
   override val logger = Logging(context.system, this)
+}
+
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
+
+class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable], poolSize: Int) extends ResourceActor[Suoritus, UUID]
+  with JDBCRepository[Suoritus, UUID, SuoritusTable] with JDBCService[Suoritus, UUID, SuoritusTable] {
+
+  override val dbExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
+  override val dbQuery: PartialFunction[fi.vm.sade.hakurekisteri.rest.support.Query[Suoritus], Query[SuoritusTable, Delta[Suoritus, UUID], Seq]] = {
+    case SuoritusQuery(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen) =>
+      all.filter(t => matchHenkilo(henkilo)(t))
+    case SuoritysTyyppiQuery(henkilo, komo) =>
+      all.filter(t => matchHenkilo(Some(henkilo))(t) && matchKomo(Some(komo))(t))
+  }
+
+  override def deduplicationQuery(i: Suoritus)(t: SuoritusTable): Column[Boolean] = t.henkiloOid === i.henkiloOid && t.vahvistettu.get === i.vahvistettu && t.myontaja === i.source
+
+  private def matchHenkilo(henkilo: Option[String])(t: SuoritusTable): Column[Boolean] = henkilo match {
+    case Some(l) => t.henkiloOid === l
+    case None => true
+  }
+
+  private def matchKomo(komo: Option[String])(t: SuoritusTable): Column[Boolean] = komo match {
+    case Some(l) => t.komo.get === l
+    case None => true
+  }
+
+  def matchKausi(kausi: Option[Kausi])(suoritus: Suoritus):Boolean = (suoritus,kausi) match {
+    case (s: VirallinenSuoritus, Some(Kevät)) => duringFirstHalf(s.valmistuminen)
+    case (s: VirallinenSuoritus, Some(Syksy)) => !duringFirstHalf(s.valmistuminen)
+    case (s: VirallinenSuoritus, Some(_)) => true
+    case (s: VapaamuotoinenSuoritus, Some(_)) => false
+    case (_, None) => true
+  }
+
+  implicit def local2IntervalDate(date: LocalDate): IntervalDate = IntervalDate(date)
+
+  def duringFirstHalf(date: LocalDate):Boolean = {
+    date isBetween newYear(date.getYear) and startOfAutumn(date.getYear)
+  }
+
+  def duringYear(year: String)(date: LocalDate): Boolean = {
+    Try(
+      date isBetween newYear(year.toInt) and newYear(year.toInt + 1)
+    ).getOrElse(false)
+  }
+
+  case class IntervalStart(start: ReadableInstant, contained: LocalDate){
+    def and(end: ReadableInstant) = start to end contains contained.toDateTimeAtStartOfDay
+  }
+
+  case class IntervalDate(date: LocalDate) {
+    def isBetween(start: ReadableInstant) = IntervalStart(start, date)
+  }
+
+  def startOfAutumn(year: Int): DateTime = {
+    new MonthDay(8, 1).toLocalDate(year).toDateTimeAtStartOfDay
+  }
+
+  def newYear(year: Int): DateTime = {
+    new MonthDay(1, 1).toLocalDate(year).toDateTimeAtStartOfDay
+  }
+
 }
