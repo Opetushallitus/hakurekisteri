@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri
 
 import java.io.InputStream
 import java.nio.file.{Files, Path, Paths}
+import java.util.Properties
 
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
@@ -119,7 +120,11 @@ abstract class Config {
     import collection.JavaConverters._
     profile match {
       case "it" | "dev" => Database.forURL(h2DatabaseUrl, driver = "org.h2.Driver")
-      case "default" => Database.forConfig("suoritusrekisteri.db", ConfigFactory.parseMap(properties.asJava))
+      case "default" => {
+        val javaProperties = new Properties
+        javaProperties.putAll(properties.asJava)
+        Database.forConfig("suoritusrekisteri.db", ConfigFactory.parseProperties(javaProperties))
+      }
       case _ => throw new RuntimeException("Unsupported hakurekisteri.profile value " + profile)
     }
   }
