@@ -16,7 +16,7 @@ import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.DateTime
 
 import scala.concurrent.duration._
-import scala.xml.{Elem, XML}
+import scala.xml.Elem
 
 class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef, organizationFinder: (A) => (Set[String],Option[String]), config: Config)
   extends FutureOrganizationHierarchy[A, I](filteredActor, ((item: A) => Future.successful(organizationFinder(item))), config)
@@ -133,7 +133,7 @@ class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](orga
       </soapenv:Body>
     </soapenv:Envelope>.toString)
 
-    result.map((response) => XML.load(new java.io.InputStreamReader(response.getResponseBodyAsStream, "UTF-8")))
+    result.map((response) => SafeXML.load(new java.io.InputStreamReader(response.getResponseBodyAsStream, "UTF-8")))
   }
 
   def possibleEdges(soapFuture: concurrent.Future[Elem]):concurrent.Future[Seq[(Option[String], Option[String])]] = {
