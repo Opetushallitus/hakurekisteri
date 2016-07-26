@@ -145,7 +145,7 @@
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
+            <artifactId>jetty-webapp</artifactId>
             <version>9.3.7.v20160115</version>
         </dependency>
         <dependency>

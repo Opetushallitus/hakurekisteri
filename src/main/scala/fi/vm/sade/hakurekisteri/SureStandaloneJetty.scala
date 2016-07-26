@@ -4,15 +4,15 @@ import ch.qos.logback.access.jetty.RequestLogImpl
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
 import fi.vm.sade.properties.OphProperties
 import org.eclipse.jetty.server.{RequestLog, Server}
-import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.util.resource.Resource
+import org.eclipse.jetty.webapp.WebAppContext
 
 object SureStandaloneJetty extends App {
   new SureStandaloneJetty().start
 }
 
 class SureStandaloneJetty(config: Config = Config.globalConfig) {
-  private val suoritusrekisteriApp = new ServletContextHandler()
+  private val suoritusrekisteriApp = new WebAppContext()
   suoritusrekisteriApp.setAttribute("hakurekisteri.config", config)
   suoritusrekisteriApp.setBaseResource(Resource.newClassPathResource("/webapp"))
   suoritusrekisteriApp.setContextPath("/")
