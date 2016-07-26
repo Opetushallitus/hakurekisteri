@@ -73,7 +73,7 @@ class ScalatraBootstrap extends LifeCycle {
     val importBatchProcessing = initBatchProcessing(config, authorizedRegisters, integrations)
 
     context.setInitParameter(org.scalatra.EnvironmentKey, "production")
-    if("DEVELOPMENT" != OphUrlProperties.ophProperties.getProperty("common.corsfilter.mode")) {
+    if("DEVELOPMENT" != OphUrlProperties.getProperty("common.corsfilter.mode")) {
       context.initParameters(org.scalatra.CorsSupport.EnableKey) = "false"
     }
 
@@ -228,6 +228,6 @@ class FrontPropertiesServlet(implicit val system: ActorSystem) extends HakuJaVal
 
   get("/") {
     contentType = "application/json"
-    OphUrlProperties.ophProperties.frontProperties.asScala
+    OphUrlProperties.frontProperties.asScala
   }
 }

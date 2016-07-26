@@ -11,7 +11,7 @@ trait HakuJaValintarekisteriStack extends ScalatraServlet with IncidentReporting
   val logger: LoggingAdapter
   val audit = new Audit("hakurekisteri", ApplicationType.VIRKAILIJA)
 
-  if("DEVELOPMENT" == OphUrlProperties.ophProperties.getProperty("common.corsfilter.mode")) {
+  if("DEVELOPMENT" == OphUrlProperties.getProperty("common.corsfilter.mode")) {
     options("/*") {
       response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
     }

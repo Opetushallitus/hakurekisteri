@@ -100,7 +100,7 @@ class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](orga
   def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName
   lazy val resourceName = className[A]
   val subjectFinder = (resource: A) => organizationFinder(resource).map(o => Subject(resourceName, o._1, o._2))
-  val svc = url(OphUrlProperties.ophProperties.url("organisaatio-service.soap")).POST <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend",
+  val svc = url(OphUrlProperties.url("organisaatio-service.soap")).POST <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend",
     "clientSubSystemCode" -> "suoritusrekisteri.suoritusrekisteri.backend",
     "CSRF" -> "suoritusrekisteri", "Cookie" -> "CSRF=suoritusrekisteri")
   var authorizer = OrganizationAuthorizer(Map())

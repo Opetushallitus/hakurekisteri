@@ -39,13 +39,11 @@ case class ServiceConfig(casUrl: Option[String] = None,
                          password: Option[String] = None,
                          properties: Map[String, String] = Map.empty) extends HttpConfig(properties)
 
-object OphUrlProperties {
-  val ophProperties = new OphProperties("/suoritusrekisteri-oph.properties").addOptionalFiles(Paths.get(sys.props.getOrElse("user.home", ""), "/oph-configuration/common.properties").toString)
+object OphUrlProperties extends OphProperties("/suoritusrekisteri-oph.properties") {
+  addOptionalFiles(Paths.get(sys.props.getOrElse("user.home", ""), "/oph-configuration/common.properties").toString)
 }
 
 class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClient] = None)(implicit val ec: ExecutionContext, val system: ActorSystem) extends HakurekisteriJsonSupport {
-  val ophProperties = OphUrlProperties.ophProperties
-
   private implicit val defaultTimeout: Timeout = 60.seconds
 
   private val serviceUrl: String = config.serviceUrl
@@ -136,7 +134,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   }
 
   def readObject[A <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, maxRetries: Int = 0): Future[A] = {
-    val url1: String = ophProperties.url(uriKey, args:_*)
+    val url1: String = OphUrlProperties.url(uriKey, args:_*)
     readObjectFromUrl(url1, acceptedResponseCode, maxRetries)
   }
 
@@ -148,7 +146,7 @@ class VirkailijaRestClient(config: ServiceConfig, aClient: Option[AsyncHttpClien
   }
 
   def postObject[A <: AnyRef: Manifest, B <: AnyRef: Manifest](uriKey: String, args: AnyRef*)(acceptedResponseCode: Int = 200, resource: A): Future[B] = {
-    val url = ophProperties.url(uriKey, args:_*)
+    val url = OphUrlProperties.url(uriKey, args:_*)
     val result = Client.request[A, B](url)(JsonExtractor.handler[B](acceptedResponseCode), Some(resource))
     logLongQuery(result, url)
     result

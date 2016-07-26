@@ -6,11 +6,11 @@ trait LocalhostProperties extends BeforeAndAfterEach {
   this : LocalhostProperties with org.scalatest.Suite =>
   override def beforeEach() {
     super.beforeEach()
-    OphUrlProperties.ophProperties.overrides.setProperty("baseUrl","http://localhost")
+    OphUrlProperties.overrides.setProperty("baseUrl","http://localhost")
   }
 
   override def afterEach() {
     super.afterEach()
-    OphUrlProperties.ophProperties.overrides.clear()
+    OphUrlProperties.overrides.clear()
   }
 }
