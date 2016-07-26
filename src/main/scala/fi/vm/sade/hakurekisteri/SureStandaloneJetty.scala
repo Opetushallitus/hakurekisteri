@@ -26,11 +26,19 @@ class SureStandaloneJetty(config: Config = Config.globalConfig) {
 
   private def requestLog(properties: OphProperties): RequestLog = {
     val requestLog = new RequestLogImpl
-    requestLog.setFileName(properties.getOrElse("logback.access", "src/main/resources/logback-access.xml"))
+    val logbackAccess = properties.getOrElse("logback.access", null)
+    if(logbackAccess != null) {
+      requestLog.setFileName(logbackAccess)
+    } else {
+      println("SureStandaloneJetty: Jetty access log is printed to console, use -Dlogback.access to set configuration file")
+      requestLog.setResource("/logback-access.xml")
+    }
+    requestLog.start()
     requestLog
   }
 
   def start: Server = {
+    println("SureStandaloneJetty: starting server at http://localhost:"+port)
     server.start
     server
   }
