@@ -39,7 +39,7 @@ app.controller "MuokkaaLuokkatieto", [
               message: "Virhe tallennettaessa luokkatietoja."
               descriptionKey: "suoritusrekisteri.muokkaa.virheluokkayrita"
               description: "Yritä uudelleen."
-            d.reject "error saving luokkatieto: " + luokkatieto
+            d.reject "error saving luokkatieto: " + JSON.stringify luokkatieto
         d.promise.then () ->
           modifiedCache.update()
         [d.promise]
