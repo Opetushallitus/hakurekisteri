@@ -16,7 +16,7 @@ class VirkailijaRestClientSpec extends FlatSpec with Matchers with MockitoSugar 
   val endPoint = mock[Endpoint]
 
   override def beforeEach() {
-    OphUrlProperties.ophProperties.overrides.setProperty("test.rest","/test/rest")
+    OphUrlProperties.overrides.setProperty("test.rest","/test/rest")
     super.beforeEach()
     reset(endPoint)
   }

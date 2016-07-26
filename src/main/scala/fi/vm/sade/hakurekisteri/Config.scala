@@ -156,7 +156,7 @@ abstract class Config {
 
   val integrations = new IntegrationConfig(hostQa, properties)
 
-  OphUrlProperties.ophProperties.defaults.put("baseUrl", properties.getOrElse("host.ilb", "https://" + hostQa))
+  OphUrlProperties.defaults.put("baseUrl", properties.getOrElse("host.ilb", "https://" + hostQa))
 
   val ensikertalainenCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.ensikertalainen", "6").toInt
 
