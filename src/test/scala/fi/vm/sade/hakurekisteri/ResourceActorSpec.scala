@@ -14,6 +14,7 @@ import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.scalatest.Matchers
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
@@ -39,8 +40,7 @@ class ResourceActorSpec extends ScalatraFunSuite with Matchers with FutureWaitin
   }
 
   override def stop(): Unit = {
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
     super.stop()
   }
 

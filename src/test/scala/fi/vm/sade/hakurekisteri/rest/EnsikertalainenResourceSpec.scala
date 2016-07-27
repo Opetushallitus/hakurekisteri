@@ -19,7 +19,7 @@ import org.mockito.{Matchers, Mockito}
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
 
@@ -129,8 +129,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
 
   override def stop(): Unit = {
     import scala.concurrent.duration._
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
     super.stop()
   }
 

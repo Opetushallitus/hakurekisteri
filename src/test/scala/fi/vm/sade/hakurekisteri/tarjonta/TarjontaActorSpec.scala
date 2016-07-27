@@ -1,18 +1,14 @@
 package fi.vm.sade.hakurekisteri.tarjonta
 
-import java.util.UUID
-
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.testkit.TestActorRef
 import fi.vm.sade.hakurekisteri.MockConfig
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaActor}
-import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, RestHaku, RestHakuAika, TarjontaActor}
-import fi.vm.sade.hakurekisteri.storage.DeleteResource
-import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
+import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, RestHaku, RestHakuAika}
 import org.joda.time.LocalDate
 import org.scalatest.Matchers
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 class TarjontaActorSpec extends ScalatraFunSuite with Matchers {
@@ -53,8 +49,7 @@ class TarjontaActorSpec extends ScalatraFunSuite with Matchers {
   }
 
   override def stop(): Unit = {
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
     super.stop()
   }
 }

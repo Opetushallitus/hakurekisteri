@@ -108,7 +108,7 @@ class MockConfig extends Config {
 class ProductionServerConfig(val integrations: Integrations, val system: ActorSystem, val security: Security, val ec: ExecutionContextExecutor)
 
 abstract class Config {
-  import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple.Database
+  import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api.Database
 
   def mockMode: Boolean
 
@@ -133,7 +133,7 @@ abstract class Config {
   def ophConfDir: Path
 
   val propertyLocations = Seq("common.properties")
-
+  val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
   val importBatchProcessingInitialDelay = 20.minutes
 
   // by default the service urls point to QA

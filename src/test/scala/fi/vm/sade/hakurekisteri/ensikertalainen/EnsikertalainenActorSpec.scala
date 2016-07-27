@@ -19,7 +19,7 @@ import org.mockito.Mockito.when
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.language.reflectiveCalls
 
@@ -180,8 +180,7 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
   }
 
   override def afterAll() {
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
   }
 
 }

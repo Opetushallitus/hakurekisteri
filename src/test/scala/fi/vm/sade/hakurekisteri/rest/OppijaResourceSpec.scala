@@ -35,8 +35,8 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 import scala.language.implicitConversions
 import scala.util.Random
 
@@ -274,8 +274,7 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   addServlet(resource, "/*")
 
   override def stop(): Unit = {
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
   }
 }
 

@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.integration
 
 import akka.actor.ActorSystem
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Random
 
@@ -11,7 +12,6 @@ trait ActorSystemSupport {
 
     f(system)
 
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
   }
 }

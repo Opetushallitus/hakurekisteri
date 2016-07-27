@@ -17,7 +17,7 @@ import fi.vm.sade.hakurekisteri.integration.virta.{VirtaHealth, VirtaStatus}
 import fi.vm.sade.hakurekisteri.integration.ytl.{Report, YtlReport}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaActor}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusActor}
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
@@ -114,6 +114,9 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
   override def stop(): Unit = {
     RunScript.execute("jdbc:h2:file:test", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
     super.stop()
+    import scala.concurrent.duration._
+    Await.result(system.terminate(), 15.seconds)
+    database.close()
   }
 
   def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]) = {
