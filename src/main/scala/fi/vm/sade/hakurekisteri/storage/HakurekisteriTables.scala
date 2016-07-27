@@ -6,7 +6,7 @@ import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaTable
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusTable
 import fi.vm.sade.hakurekisteri.suoritus.SuoritusTable
 
-import scala.slick.lifted.TableQuery
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 
 object HakurekisteriTables {
   val suoritusTable = TableQuery[SuoritusTable]

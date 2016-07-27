@@ -1,33 +1,41 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import org.joda.time.{LocalDate, DateTime}
-import HakurekisteriDriver.simple._
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
+import java.util.UUID
+
+import fi.vm.sade.hakurekisteri.batchimport.BatchState._
+import fi.vm.sade.hakurekisteri.batchimport.{BatchState, ImportStatus}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
-import org.json4s.JValue
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
+import fi.vm.sade.hakurekisteri.tools.SafeXML
+import org.joda.time.{DateTime, LocalDate}
+import org.json4s.Extraction._
+import org.json4s.Formats
+import org.json4s.JsonAST.JValue
 import org.json4s.JsonDSL._
+import org.json4s.jackson.JsonMethods._
 
-trait HakurekisteriColumns extends HakurekisteriJsonSupport {
-  implicit val datetimeLong = MappedColumnType.base[DateTime, Long](
-    _.getMillis ,
-    new DateTime(_)
-  )
+import scala.xml.Elem
 
-  implicit val localDateString = MappedColumnType.base[LocalDate, String](
-    _.toString ,
-    LocalDate.parse
-  )
 
-  implicit val yksilollistaminenString = MappedColumnType.base[Yksilollistetty, String](
-    _.toString,
-    yksilollistaminen.withName
-  )
+trait HakurekisteriColumns {
 
-  implicit val jsonMap = MappedColumnType.base[Map[String, String], JValue](
-    map => map2jvalue(map),
-    _.extractOpt[Map[String, String]].getOrElse(Map())
-  )
+  implicit val formats: Formats = HakurekisteriJsonSupport.format
+
+  implicit def datetimeLong = MappedColumnType.base[DateTime, Long](_.getMillis, new DateTime(_))
+
+  implicit def localDateString = MappedColumnType.base[LocalDate, String](_.toString, LocalDate.parse)
+
+  implicit def yksilollistaminenString = MappedColumnType.base[Yksilollistetty, String](_.toString, yksilollistaminen.withName)
+
+  implicit def jsonMap = MappedColumnType.base[Map[String, String], String](data => compact(decompose(data)), extract[Map[String, String]](_))
+
+  implicit def batchStateColumnType = MappedColumnType.base[BatchState, String](_.toString, BatchState.withName)
+
+  implicit def importstatusType = MappedColumnType.base[ImportStatus, String](data => compact(decompose(data)), extract[ImportStatus](_))
+
+  implicit def jvalueType = MappedColumnType.base[JValue, String](data => compact(render(data)), parse(_))
+
+  implicit def elemType = MappedColumnType.base[Elem, String](_.toString, SafeXML.loadString)
 
 }
-
-object HakurekisteriColumns extends HakurekisteriColumns

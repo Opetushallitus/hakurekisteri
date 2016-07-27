@@ -100,8 +100,7 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting {
   }
 
   override def stop(): Unit = {
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
     super.stop()
   }
 
