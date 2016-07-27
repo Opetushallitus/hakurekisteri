@@ -184,10 +184,10 @@ trait FileBindingImplicits extends JsonBindingImplicits {
     override def apply(s: S): Option[T] = None
   }
 
-  implicit val fileToString: TypeConverter[FileItem, String] = safe(f => scala.io.Source.fromInputStream(f.getInputStream).getLines().mkString("\n"))
+  implicit lazy val fileToString: TypeConverter[FileItem, String] = safe(f => scala.io.Source.fromInputStream(f.getInputStream).getLines().mkString("\n"))
 
 
-  implicit val fileToBoolean: TypeConverter[FileItem, Boolean] = cantConvert
+  implicit lazy val fileToBoolean: TypeConverter[FileItem, Boolean] = cantConvert
 
 
 

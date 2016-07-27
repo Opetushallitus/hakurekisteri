@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.{ConfigurationSupport, FakeAuth
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, SendingPeriod, TiedonsiirtoSendingPeriods}
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
 import fi.vm.sade.hakurekisteri.web.batchimport.{ImportBatchResource, TiedonsiirtoOpen}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
@@ -19,7 +19,7 @@ import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import siirto.{PerustiedotXmlConverter, SchemaDefinition}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.xml.Elem
 
@@ -53,8 +53,7 @@ class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with Dis
   val parameterActor = system.actorOf(Props(new HttpParameterActor(client)))
 
   override def stop(): Unit = {
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
     super.stop()
   }
 

@@ -108,14 +108,6 @@ class ImportBatchResource(eraRekisteri: ActorRef,
     MovedPermanently(request.getRequestURL.append("/").append(schema.schemaLocation).toString)
   }
 
-  get("/mybatches", operation(mybatches)) {
-    val user = getUser
-    new AsyncResult() {
-      override implicit def timeout: Duration = 60.seconds
-      override val is = eraRekisteri.?(BatchesBySource(user.username))(60.seconds)
-    }
-  }
-
   get("/withoutdata", operation(withoutdata)) {
     val user = getUser
     if (!user.orgsFor("READ", "ImportBatch").contains(Oids.ophOrganisaatioOid)) throw UserNotAuthorized("access not allowed")
@@ -275,10 +267,6 @@ trait ImportBatchSwaggerApi extends SwaggerSupport with OldSwaggerSyntax {
   val isopen: OperationBuilder = apiOperation[TiedonsiirtoOpen]("onkoAvoinna")
     .summary("näyttää onko tiedonsiirto avoinna")
     .notes("Näyttää onko tiedonsiirto avoinna.")
-
-  val mybatches: OperationBuilder = apiOperation[Seq[ImportBatch]]("omatSiirrot")
-    .summary("näyttää omat siirrot")
-    .notes("Näyttää omat siirrot.")
 
   val withoutdata: OperationBuilder = apiOperation[Seq[ImportBatch]]("withoutdata")
     .summary("näyttää siirrot ilman tiedostoja")

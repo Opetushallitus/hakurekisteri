@@ -1,11 +1,12 @@
 package fi.vm.sade.hakurekisteri.arvosana
 
 import akka.event.Logging
-import fi.vm.sade.hakurekisteri.rest.support.Query
+import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCService, Query}
 import fi.vm.sade.hakurekisteri.storage._
 import fi.vm.sade.hakurekisteri.storage.repository._
 import java.util.UUID
-import scala.concurrent.Future
+
+import scala.concurrent.{ExecutionContext, Future}
 
 
 trait ArvosanaRepository extends JournaledRepository[Arvosana, UUID] {
@@ -66,4 +67,27 @@ class ArvosanaActor(val journal:Journal[Arvosana, UUID] = new InMemJournal[Arvos
       } pipeTo sender
   }
   override def receive: Receive = illegalQuery orElse emptyLisatieto orElse super.receive
+}
+
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import slick.lifted
+
+class ArvosanaJDBCActor(val journal: JDBCJournal[Arvosana, UUID, ArvosanaTable], poolSize: Int)
+  extends ResourceActor[Arvosana, UUID] with JDBCRepository[Arvosana, UUID, ArvosanaTable] with JDBCService[Arvosana, UUID, ArvosanaTable] {
+
+  override def deduplicationQuery(i: Arvosana)(t: ArvosanaTable): Rep[Boolean] = t.suoritus === i.suoritus &&
+    t.aine === i.aine &&
+    t.lisatieto.getOrElse("") === i.lisatieto.getOrElse("") &&
+    t.valinnainen === i.valinnainen &&
+    t.myonnetty.getOrElse("") === i.myonnetty.map(_.toString("yyyy-MM-dd")).getOrElse("") &&
+    t.jarjestys.getOrElse(0) === i.jarjestys.getOrElse(0)
+
+  override val dbExecutor: ExecutionContext = context.dispatcher
+
+  override val dbQuery: PartialFunction[Query[Arvosana], lifted.Query[ArvosanaTable, Delta[Arvosana, UUID], Seq]] = {
+    case EmptyLisatiedot() => all.filter(t => t.lisatieto.isEmpty || t.lisatieto === "").take(30000)
+    case ArvosanaQuery(Some(suoritus)) => all.filter(t => t.suoritus === suoritus)
+    case ArvosanaQuery(None) => all
+  }
+
 }

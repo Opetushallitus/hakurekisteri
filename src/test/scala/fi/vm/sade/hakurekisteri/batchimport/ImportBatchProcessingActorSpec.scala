@@ -4,7 +4,7 @@ import java.util.UUID
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.{KomoOids, Config}
+import fi.vm.sade.hakurekisteri.{Config, KomoOids}
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.{CreateHenkilo, HttpHenkiloActor}
@@ -20,7 +20,7 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 
 class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with AsyncAssertions with HakurekisteriJsonSupport with LocalhostProperties {
@@ -171,8 +171,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
     opiskelijaWaiter.await(timeout(30.seconds), dismissals(1))
     luokkatasoValmaWaiter.await(timeout(30.seconds), dismissals(1))
 
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
   }
 
   it should "report error for failed henkilo save" in {
@@ -193,8 +192,7 @@ class ImportBatchProcessingActorSpec extends FlatSpec with Matchers with Mockito
 
     batchWaiter.await(timeout(30.seconds), dismissals(1))
 
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
   }
 
 }

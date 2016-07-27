@@ -1,75 +1,75 @@
 package fi.vm.sade.hakurekisteri.db
 
 import org.joda.time.DateTime
-import org.scalatest.{Matchers, FlatSpec}
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver
-import HakurekisteriDriver.simple._
-import scala.slick.jdbc.meta.MTable
-import fi.vm.sade.hakurekisteri.batchimport.{ImportStatus, BatchState, ImportBatch, ImportBatchTable}
-import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import org.scalatest.{FlatSpec, Matchers}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import slick.jdbc.meta.MTable
+import fi.vm.sade.hakurekisteri.batchimport.{BatchState, ImportBatch, ImportBatchTable, ImportStatus}
+import fi.vm.sade.hakurekisteri.storage.repository.{Delta, Updated}
 import java.util.UUID
 
-class TableSpec extends FlatSpec with Matchers {
+import akka.actor.ActorSystem
 
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
+import scala.language.existentials
+
+class TableSpec extends FlatSpec with Matchers {
+  implicit val system = ActorSystem("test-jdbc")
+  implicit val ec: ExecutionContext = system.dispatcher
   behavior of "ImportBatchTable"
 
   val table = TableQuery[ImportBatchTable]
 
-  it should "be able create itself" in {
-    val db = Database.forURL("jdbc:h2:mem:test", driver = "org.h2.Driver")
+  println(table.baseTableRow.tableName)
 
-    val tables = db withSession {
-      implicit session =>
-        table.ddl.create
-        MTable.getTables(table.baseTableRow.tableName).list
-    }
+  it should "be able create itself" in {
+    val db = getDb
+
+    val tables = Await.result(db.run(
+      table.schema.create andThen MTable.getTables(table.baseTableRow.tableName)
+    ), 10.seconds)
+
+    db.close()
 
     tables.size should be(1)
   }
 
+  def getDb: Database = {
+    Database.forURL("jdbc:h2:mem:test;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
+  }
+
   it should "be able to store updates" in {
+    val db = getDb
     val xml = <batchdata>data</batchdata>
     val batch = ImportBatch(xml, Some("externalId"), "test", "test", BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
 
-    val result = withDb {
-      implicit session =>
-        table += Updated(batch)
-    }
+    val result = Await.result(db.run(
+      table += Updated(batch)
+    ), 10.seconds)
+
+    db.close()
 
     result should be(1)
   }
 
   it should "be able to retrieve updates" in {
+    val db = getDb
     val xml = <batchdata>data</batchdata>
-    val batch = ImportBatch(xml, Some("externalId"), "test", "test", BatchState.READY, ImportStatus(new DateTime(), Some(new DateTime()), Map("foo" -> Set("foo exception")), Some(1), Some(0), Some(1))).identify(UUID.randomUUID())
+    val randomUUID: UUID = UUID.randomUUID()
+    val batch = ImportBatch(xml, Some("externalId"), "test", "test", BatchState.READY, ImportStatus(new DateTime(), Some(new DateTime()), Map("foo" -> Set("foo exception")), Some(1), Some(0), Some(1))).identify(randomUUID)
     val table = TableQuery[ImportBatchTable]
 
-    val result = withDb {
-      implicit session =>
-        table += Updated(batch)
-        val results = for (
-          result <- table
-          if result.resourceId === batch.id
 
-        ) yield result
+    val q = table.filter(_.externalId === batch.externalId)
+    val action = (table += Updated(batch)) andThen q.result
 
-        val Updated(current) = results.list.head
-        current
-    }
+    val result = db.run(action)
 
-    result should be(batch)
+
+    val results: Seq[Delta[ImportBatch, UUID]] = Await.result(result, 120.seconds)
+    db.close()
   }
 
-  def withDb[R](action: Session => R): R = {
-    val db = Database.forURL("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
-    db withSession {
-      implicit session =>
-        if (MTable.getTables(table.baseTableRow.tableName).list.isEmpty) {
-          table.ddl.create
-        }
-
-        action(session)
-    }
-  }
 }
