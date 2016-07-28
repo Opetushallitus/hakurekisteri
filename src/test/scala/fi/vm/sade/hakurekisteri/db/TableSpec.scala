@@ -36,7 +36,7 @@ class TableSpec extends FlatSpec with Matchers {
   }
 
   def getDb: Database = {
-    Database.forURL("jdbc:h2:mem:test;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
+    Database.forURL("jdbc:h2:mem:test;DATABASE_TO_UPPER=false", driver = "org.h2.Driver")
   }
 
   it should "be able to store updates" in {
@@ -45,7 +45,7 @@ class TableSpec extends FlatSpec with Matchers {
     val batch = ImportBatch(xml, Some("externalId"), "test", "test", BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
 
     val result = Await.result(db.run(
-      table += Updated(batch)
+      table.schema.create andThen (table += Updated(batch))
     ), 10.seconds)
 
     db.close()
@@ -56,18 +56,18 @@ class TableSpec extends FlatSpec with Matchers {
   it should "be able to retrieve updates" in {
     val db = getDb
     val xml = <batchdata>data</batchdata>
-    val randomUUID: UUID = UUID.randomUUID()
-    val batch = ImportBatch(xml, Some("externalId"), "test", "test", BatchState.READY, ImportStatus(new DateTime(), Some(new DateTime()), Map("foo" -> Set("foo exception")), Some(1), Some(0), Some(1))).identify(randomUUID)
-    val table = TableQuery[ImportBatchTable]
+    val batch = ImportBatch(xml, Some("externalIdToo"), "test", "test", BatchState.READY, ImportStatus(new DateTime(), Some(new DateTime()), Map("foo" -> Set("foo exception")), Some(1), Some(0), Some(1))).identify(UUID.randomUUID())
 
+    val q = table.filter(_.resourceId === batch.id)
+    val action = table.schema.create andThen (table += Updated(batch)) andThen q.result
 
-    val q = table.filter(_.externalId === batch.externalId)
-    val action = (table += Updated(batch)) andThen q.result
-
-    val result = db.run(action)
-
-
-    val results: Seq[Delta[ImportBatch, UUID]] = Await.result(result, 120.seconds)
+    println(batch.newId, batch.id, batch.externalId)
+    val results: Seq[Delta[ImportBatch, UUID]] = Await.result(db.run(action), 10.seconds)
+    println("Results: " + results.size)
+    val q2 = table.schema.create andThen (table += Updated(batch)) andThen table.map(x=>x.resourceId).result
+    val q2r = Await.result(db.run(q2), 120.seconds)
+    println(q2r)
+    results.head should be(batch)
     db.close()
   }
 
