@@ -45,7 +45,7 @@ suoritusrekisteri.db.timeout=20 seconds
 
 # Oletusarvoja
 activemq.queue.name.log=Sade.Log
-cas.callback.suoritusrekisteri=http://${server.name}:8309/suoritusrekisteri
+cas.callback.suoritusrekisteri=http://${server.name}:8318/suoritusrekisteri
 cas.group-role-attribute=cn
 cas.group-search-base=ou\=groups
 cas.group-search-filter=(uniqueMember\={0})
