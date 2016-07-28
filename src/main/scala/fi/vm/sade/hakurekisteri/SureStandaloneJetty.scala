@@ -15,7 +15,7 @@ class SureStandaloneJetty(config: Config = Config.globalConfig) {
   private val suoritusrekisteriApp = new WebAppContext()
   suoritusrekisteriApp.setAttribute("hakurekisteri.config", config)
   suoritusrekisteriApp.setBaseResource(Resource.newClassPathResource("/webapp"))
-  suoritusrekisteriApp.setContextPath("/suoritusrekisteri")
+  suoritusrekisteriApp.setContextPath("/")
   suoritusrekisteriApp.setInitParameter(org.scalatra.EnvironmentKey, "production")
   suoritusrekisteriApp.setInitParameter(org.scalatra.CorsSupport.EnableKey, "false")
 
