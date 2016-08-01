@@ -86,3 +86,5 @@ db/schema.ddl
 # excel temp files
 *.xls#
 .jvmopts
+
+web/src/main/
