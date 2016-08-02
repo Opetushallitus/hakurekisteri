@@ -62,8 +62,6 @@
     <!-- own config for single logout, because: xTODO: singleLogoutFilter aiheuttaa POSTeissa formin tyhjenemisen, consuumaa formin mystisesti, ilmeni haku-projektin yhteydessa -->
     <http entry-point-ref="casEntryPoint" use-expressions="true" request-matcher="regex" pattern="/j_spring_cas_security_check.*">
         <intercept-url pattern="/**" access="${spring_security_default_access}"/>
-        <!-- tata ei tarvita, kun logout tehdaan suoraan casin kautta, ja singleLogoutFilter on paalla -->
-        <!--<custom-filter ref="requestSingleLogoutFilter" before="LOGOUT_FILTER" />-->
         <custom-filter ref="singleLogoutFilter" before="CAS_FILTER" />
         <custom-filter ref="casFilter" position="CAS_FILTER"/>
         <logout logout-success-url="/user/logout"/> <!-- huom! vain haku tarvitsee tata? -->
@@ -97,11 +95,6 @@
         <logout logout-success-url="/user/logout"/> <!-- huom! vain haku tarvitsee tata? -->
     </http>
 
-    <!-- note: -->
-    <!-- tata ei tarvita, kun logout tehdaan suoraan casin kautta, ja singleLogoutFilter on paalla -->
-    <!--<custom-filter ref="requestSingleLogoutFilter" before="LOGOUT_FILTER" />-->
-    <!--<custom-filter ref="singleLogoutFilter" before="CAS_FILTER" />-->
-
     <!--  ===== end of mappings ===== -->
 
     <beans:bean id="casFilter" class="fi.vm.sade.security.CustomCasAuthenticationFilter">
@@ -113,16 +106,6 @@
 
     <!-- This filter handles a Single Logout Request from the CAS Server -->
     <beans:bean id="singleLogoutFilter" class="org.jasig.cas.client.session.SingleSignOutFilter"/>
-    <!-- This filter redirects to the CAS Server to signal Single Logout should be performed -->
-    <!-- tata ei oikeasti tarvita, koska logout tehdaan aina kutsumalla suoraan /cas/logout :ia
-    <beans:bean id="requestSingleLogoutFilter" class="org.springframework.security.web.authentication.logout.LogoutFilter">
-        <beans:constructor-arg value="${web.url.cas}/logout"/>
-        <beans:constructor-arg>
-            <beans:bean class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler"/>
-        </beans:constructor-arg>
-        <beans:property name="filterProcessesUrl" value="/j_spring_cas_security_logout"/>
-    </beans:bean>
-    -->
 
     <!-- enable proxy authentication (in front proxy) -->
     <!--
