@@ -75,7 +75,7 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-cas</artifactId>
-            <version>4.1.1.RELEASE</version>
+            <version>3.2.8.RELEASE</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -136,6 +136,10 @@
                 <exclusion>
                     <groupId>net.sf.ehcache</groupId>
                     <artifactId>ehcache</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jasig.cas</groupId>
+                    <artifactId>cas-client-core</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
