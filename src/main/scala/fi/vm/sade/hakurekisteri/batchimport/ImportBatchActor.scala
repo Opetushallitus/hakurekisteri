@@ -78,10 +78,8 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
       throw new IllegalStateException(s"cannot read deleted delta into a row, id: $id")
   }
 
-  def allWithoutData: Seq[ImportBatch with Identified[UUID]] = {
-    Await.result(journal.db.run((for (
-      i <- all
-    ) yield i).result), 1.minute).map(importBatchWithoutData(_))
+  def allWithoutData: Future[Seq[ImportBatch with Identified[UUID]]] = {
+    journal.db.run(all.sortBy(_.status).result.map(_.map(importBatchWithoutData)))
   }
 
   override implicit val executionContext: ExecutionContext = context.dispatcher
@@ -92,9 +90,8 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
     t.source === i.source && t.batchType === i.batchType && t.externalId.getOrElse("") === i.externalId.getOrElse("")
 
   override def receive: Receive = super.receive.orElse {
-    case AllBatchStatuses => {
-      sender ! allWithoutData
-    }
+    case AllBatchStatuses =>
+      allWithoutData.pipeTo(sender)
 
     case Reprocess(id) =>
       val parent = self
