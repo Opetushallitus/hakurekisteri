@@ -5,9 +5,10 @@ import java.util.UUID
 import akka.actor.Props
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.arvosana._
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor, ArvosanaQuery, ArvosanaTable}
+import fi.vm.sade.hakurekisteri.integration.ActorSystemSupport
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusServiceMock
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
-import fi.vm.sade.hakurekisteri.integration.{ActorSystemSupport, DummyActor}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -54,13 +55,13 @@ class YtlActorUpdateSuoritusSpec extends ScalatraFunSuite with ActorSystemSuppor
         val suoritusActor = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)), "suoritukset")
         val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
         val arvosanaActor = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)), "arvosanat")
-        val hakemusActor = system.actorOf(Props(new DummyActor()))
+        val hakemusService = new HakemusServiceMock
 
         val ytlActor = system.actorOf(Props(new YtlActor(
           henkiloActor = henkiloActor,
           suoritusRekisteri = suoritusActor,
           arvosanaRekisteri = arvosanaActor,
-          hakemukset = hakemusActor,
+          hakemusService = hakemusService,
           config = Some(YTLConfig("", "", "", "", "", List(), ""))
         )))
 

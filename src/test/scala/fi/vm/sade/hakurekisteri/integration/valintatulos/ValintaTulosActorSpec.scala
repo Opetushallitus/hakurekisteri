@@ -8,7 +8,6 @@ import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.{Config, MockConfig}
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemuksetNotYetLoadedException
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
@@ -146,7 +145,7 @@ class ValintaTulosActorSpec extends ScalatraFunSuite with FutureWaiting with Dis
 
         valintaTulosActor ! BatchUpdateValintatulos((1 to 10).map(i => UpdateValintatulos(s"1.2.246.562.29.$i")).toSet)
 
-        expectFailure[HakemuksetNotYetLoadedException]((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.1", None, cachedOk = true)).mapTo[SijoitteluTulos])
+        expectFailure[InitialLoadingNotDone]((valintaTulosActor ? ValintaTulosQuery("1.2.246.562.29.1", None, cachedOk = true)).mapTo[SijoitteluTulos])
       }
     )
   }

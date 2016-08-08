@@ -13,4 +13,7 @@ trait LocalhostProperties extends BeforeAndAfterEach {
     super.afterEach()
     OphUrlProperties.overrides.clear()
   }
+
+  val jsonDir = "src/test/scala/fi/vm/sade/hakurekisteri/integration/hakemus/json/"
+  def getJson(testCase: String) : String = scala.io.Source.fromFile(jsonDir + testCase + ".json").mkString
 }

@@ -68,13 +68,6 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
     val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 1)))
     val guardedEraRekisteri = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
 
-    val hakemukset = system.actorOf(Props(new Actor {
-      override def receive: Actor.Receive = {
-        case h: HakemusQuery => val identify: FullHakemus with Identified[String] = hakemus.identify
-          sender ! Seq(identify)
-      }
-    }))
-
     val ensikertalainen = system.actorOf(Props(new Actor {
       override def receive: Actor.Receive = {
         case QueryCount => sender ! QueriesRunning(Map("status" -> 1))
@@ -93,7 +86,7 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
       }
     }))
 
-    val healthcheck = system.actorOf(Props(new HealthcheckActor(guardedArvosanaRekisteri, guardedOpiskelijaRekisteri, guardedOpiskeluoikeusRekisteri, guardedSuoritusRekisteri, guardedEraRekisteri, ytl, hakemukset, ensikertalainen, virtaQueue, config)))
+    val healthcheck = system.actorOf(Props(new HealthcheckActor(guardedArvosanaRekisteri, guardedOpiskelijaRekisteri, guardedOpiskeluoikeusRekisteri, guardedSuoritusRekisteri, guardedEraRekisteri, ytl, ensikertalainen, virtaQueue, config)))
 
     addServlet(new HealthcheckResource(healthcheck), "/*")
 
@@ -112,7 +105,6 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
       parse(body) \\ "opiskeluoikeudet" \ "count" should equal(JInt(42))
       parse(body) \\ "suoritukset" \ "count" should equal(JInt(42))
       parse(body) \\ "erat" \ "count" should equal(JInt(42))
-      parse(body) \\ "hakemukset" \ "count" should equal(JInt(1))
       response.getHeader("Expires") should not be null
     }
 

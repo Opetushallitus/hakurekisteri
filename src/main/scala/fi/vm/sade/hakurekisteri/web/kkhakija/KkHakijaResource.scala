@@ -10,7 +10,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto._
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Kevat, Lasna, Lasnaolo, Poissa, Puuttuu, Syksy}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakemusHenkilotiedot, HenkiloHakijaQuery, Koulutustausta, PreferenceEligibility, _}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakemusHenkilotiedot, Koulutustausta, PreferenceEligibility, _}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, GetRinnasteinenKoodiArvoQuery, Koodi}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
@@ -29,6 +29,7 @@ import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra.util.RicherString._
+
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -98,7 +99,7 @@ case class Hakija(hetu: String,
 
 object KkHakijaParamMissingException extends Exception
 
-class KkHakijaResource(hakemukset: ActorRef,
+class KkHakijaResource(hakemusService: HakemusService,
                        tarjonta: ActorRef,
                        haut: ActorRef,
                        koodisto: ActorRef,
@@ -158,15 +159,20 @@ class KkHakijaResource(hakemukset: ActorRef,
   }
 
   def getKkHakijat(q: KkHakijaQuery): Future[Seq[Hakija]] = {
-    val hakemusQuery: Query[FullHakemus] with Product with Serializable = q.oppijanumero match {
-      case Some(o) => HenkiloHakijaQuery(o)
-      case None => HakemusQuery(q.haku, q.organisaatio, None, q.hakukohde)
+    def matchHakemusToQuery(hakemus: FullHakemus) : Boolean = {
+      hakemus.personOid.isDefined && hakemus.stateValid &&
+        q.oppijanumero.forall(hakemus.personOid.contains(_)) &&
+        q.haku.forall(_ == hakemus.applicationSystemId)
     }
 
-    for {
-      fullHakemukset: Seq[FullHakemus] <- (hakemukset ? hakemusQuery).mapTo[Seq[FullHakemus]]
-      hakijat <- fullHakemukset2hakijat(fullHakemukset.filter(h => h.personOid.isDefined && h.stateValid))(q)
-    } yield hakijat
+    for (
+      hakemukset <- q match {
+        case KkHakijaQuery(Some(oppijanumero), _, _, _, _, _) => hakemusService.hakemuksetForPerson(oppijanumero)
+        case KkHakijaQuery(None, _, _, Some(hakukohde), _, _) => hakemusService.hakemuksetForHakukohde(hakukohde, q.organisaatio)
+        case _ => Future.failed(KkHakijaParamMissingException)
+      };
+      hakijat <- fullHakemukset2hakijat(hakemukset.filter(matchHakemusToQuery))(q)
+    ) yield hakijat
   }
 
   private def getHakukelpoisuus(hakukohdeOid: String, kelpoisuudet: Seq[PreferenceEligibility]): PreferenceEligibility = {
