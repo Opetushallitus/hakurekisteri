@@ -12,6 +12,7 @@ import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig}
 import fi.vm.sade.hakurekisteri.tools.RicherString
 import fi.vm.sade.hakurekisteri.web.rest.support.Security
+import fi.vm.sade.utils.tcp.PortFromSystemPropertyOrFindFree
 import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
 import support.Integrations
@@ -92,14 +93,17 @@ object Oids {
 
 class DefaultConfig extends Config {
   def mockMode = false
-  val h2DatabaseUrl= "jdbc:h2:file:data/development"
+  val databaseUrl= "jdbc:h2:file:./data/development"
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
 }
 
 class MockConfig extends Config {
   def mockMode = true
-  val h2DatabaseUrl = "jdbc:h2:file:data/integration-test"
+  val postgresPortChooser = new PortFromSystemPropertyOrFindFree("suoritusrekisteri.it.postgres.port")
+
+  val databaseUrl = s"jdbc:postgresql://localhost:${postgresPortChooser.chosenPort}/suoritusrekisteri"
+
   override val importBatchProcessingInitialDelay = 1.seconds
   override val profile = "it"
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
@@ -112,14 +116,14 @@ abstract class Config {
 
   def mockMode: Boolean
 
-  val h2DatabaseUrl: String
+  val databaseUrl: String
 
   val profile = sys.props.getOrElse("hakurekisteri.profile", "default")
 
   lazy val database: Database = {
     import collection.JavaConverters._
     profile match {
-      case "it" | "dev" => Database.forURL(h2DatabaseUrl, driver = "org.h2.Driver")
+      case "it" | "dev" => Database.forURL(databaseUrl, user="postgres", driver = "org.postgresql.Driver")
       case "default" => {
         val javaProperties = new Properties
         javaProperties.putAll(properties.asJava)

@@ -2,8 +2,9 @@ package fi.vm.sade.hakurekisteri
 
 import java.nio.charset.Charset
 
+import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.utils.Timer
-import fi.vm.sade.utils.tcp.PortChecker
+import fi.vm.sade.utils.tcp.{PortChecker}
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ContextHandlerCollection
 import org.eclipse.jetty.util.resource.ResourceCollection
@@ -23,11 +24,12 @@ object SureTestJettyWithMocks extends App {
 object SharedTestJetty {
   private val config = Config.mockConfig
   private lazy val jetty = new SureTestJetty(config = config)
+  private val itPostgres = new ItPostgres(config.postgresPortChooser)
 
   private def start = {
     Timer.timed("Jetty start") {
       if (!jetty.server.isRunning) {
-        RunScript.execute(config.h2DatabaseUrl, "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
+        itPostgres.start()
       }
       jetty.start
     }
@@ -36,6 +38,7 @@ object SharedTestJetty {
   def restart:Unit = {
     if (jetty.server.isRunning) {
       Timer.timed("Jetty stop") {
+        itPostgres.reset()
         jetty.server.stop
       }
     }
@@ -78,6 +81,7 @@ trait CleanSharedTestJettyBeforeEach extends BeforeAndAfterEach with HttpCompone
   this: Suite =>
   val port = SharedTestJetty.port
   val baseUrl = s"http://localhost:$port"
+  System.setProperty("valintatulos.it.postgres.port", "55432")
 
   override def beforeEach(): Unit = {
     SharedTestJetty.restart

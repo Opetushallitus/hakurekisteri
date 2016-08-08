@@ -13,6 +13,9 @@ import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.storage.repository.Journal
 import fi.vm.sade.hakurekisteri.storage.HakurekisteriTables._
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusTable}
+import fi.vm.sade.hakurekisteri.tools.ItPostgres
+import fi.vm.sade.utils.tcp.PortFromSystemPropertyOrFindFree
+import org.h2.engine.SysProperties
 import org.slf4j.LoggerFactory
 
 import scala.util.Try
@@ -29,8 +32,8 @@ class DbJournals(config: Config)(implicit val system: ActorSystem) extends Journ
   lazy val log = LoggerFactory.getLogger(getClass)
 
   private def useDevelopmentH2 = {
-    log.info("Use develompent h2: " + config.h2DatabaseUrl)
-    Database.forURL(config.h2DatabaseUrl, driver = "org.h2.Driver")
+    log.info("Use development DB: " + config.databaseUrl)
+    Database.forURL(config.databaseUrl, user= "postgres", driver = "org.postgresql.Driver")
   }
 
   implicit val database = Try(Database.forName(config.jndiName)).recover {

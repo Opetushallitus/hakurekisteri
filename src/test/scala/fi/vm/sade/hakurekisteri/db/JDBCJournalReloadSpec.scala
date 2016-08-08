@@ -22,10 +22,10 @@ import scala.concurrent.duration._
 
 class JDBCJournalReloadSpec extends ScalatraFunSuite {
   val logger = LoggerFactory.getLogger(getClass)
-  implicit val database = Database.forURL("jdbc:h2:file:test", driver = "org.h2.Driver")
+  implicit val database = Database.forURL("jdbc:h2:~/db.file:test", driver = "org.h2.Driver")
 
   override def stop(): Unit = {
-    RunScript.execute("jdbc:h2:file:test", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
+    RunScript.execute("jdbc:h2:~/db.file:test", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
     super.stop()
   }
 

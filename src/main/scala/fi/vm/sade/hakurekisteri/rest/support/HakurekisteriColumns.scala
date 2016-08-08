@@ -32,7 +32,12 @@ trait HakurekisteriColumns {
 
   implicit def batchStateColumnType = MappedColumnType.base[BatchState, String](_.toString, BatchState.withName)
 
-  implicit def importstatusType = MappedColumnType.base[ImportStatus, String](data => compact(decompose(data)), extract[ImportStatus](_))
+  implicit def importstatusType = MappedColumnType.base[ImportStatus, String](data => compact(decompose(data)), (x: String) =>
+    extract[ImportStatus](parse(x)))
+
+  implicit def uuidType = MappedColumnType.base[UUID, String](_.toString, x => {
+    UUID.fromString(x)
+  })
 
   implicit def jvalueType = MappedColumnType.base[JValue, String](data => compact(render(data)), parse(_))
 

@@ -9,10 +9,13 @@ import javax.servlet.http.{HttpServletRequest, Part}
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.{AskTimeoutException, ask}
-import fi.vm.sade.hakurekisteri.{Oids, Config}
+import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.batchimport.{BatchesBySource, ImportBatch, ImportStatus, Reprocess, WrongBatchStateException, _}
 import fi.vm.sade.hakurekisteri.integration.parametrit.IsSendingEnabled
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, Valintatila, Vastaanottotila}
 import fi.vm.sade.hakurekisteri.rest.support._
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import org.json4s.Extraction
 import org.scalatra._
@@ -24,6 +27,7 @@ import org.scalatra.util.ValueReader
 import org.xml.sax.SAXParseException
 import siirto.{SchemaDefinition, ValidXml, XMLValidator}
 
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.util.Try
 import scala.xml.Elem
