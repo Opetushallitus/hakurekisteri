@@ -4,7 +4,7 @@ import java.nio.charset.Charset
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{Props, ActorSystem}
+import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
@@ -13,19 +13,21 @@ import org.h2.tools.RunScript
 import org.joda.time.LocalDate
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import org.h2.engine.SysProperties
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ExecutionContext, Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 
 
 class JDBCJournalReloadSpec extends ScalatraFunSuite {
   val logger = LoggerFactory.getLogger(getClass)
-  implicit val database = Database.forURL("jdbc:h2:~/db.file:test", driver = "org.h2.Driver")
+  SysProperties.serializeJavaObject = false
+  implicit val database = Database.forURL("jdbc:h2:./db.file:test;MV_STORE=FALSE;MODE=PostgreSQL", driver = "org.h2.Driver")
 
   override def stop(): Unit = {
-    RunScript.execute("jdbc:h2:~/db.file:test", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
+    RunScript.execute("jdbc:h2:./db.file:test", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
     super.stop()
   }
 
@@ -59,7 +61,7 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
     val suoritukset = Await.result(suoritusFuture, Duration(30, TimeUnit.SECONDS))
 
     Await.result(system.terminate(), 15.seconds)
-    database.close()
+    //database.close()
     suoritukset
   }
 
