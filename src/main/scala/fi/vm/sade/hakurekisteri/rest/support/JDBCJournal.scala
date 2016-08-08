@@ -22,9 +22,9 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table:
 
   Await.result(db.run(MTable.getTables(tableName).flatMap((t: Vector[MTable]) => {
     if (t.isEmpty) {
-      DBIO.seq(schemaActionExtensionMethods(tableQueryToTableQueryExtensionMethods(table).schema).create)
+      schemaActionExtensionMethods(tableQueryToTableQueryExtensionMethods(table).schema).create
     } else {
-      DBIO.seq()
+      DBIO.successful(())
     }
   })), queryTimeout)
 
@@ -32,9 +32,7 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table:
   log.info(s"started ${getClass.getSimpleName} with table $tableName")
 
   override def addModification(o: Delta[R, I]): Unit = {
-    Await.result(db.run(DBIO.seq(
-      table += o
-    )), queryTimeout)
+    Await.result(db.run(table += o), queryTimeout)
   }
 
   override def journal(latestQuery: Option[Long]): Seq[Delta[R, I]] = latestQuery match {
