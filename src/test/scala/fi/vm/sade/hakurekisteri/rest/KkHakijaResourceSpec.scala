@@ -1,7 +1,9 @@
 package fi.vm.sade.hakurekisteri.rest
 
 import akka.actor.{Actor, Props}
+import akka.event.Logging
 import akka.pattern.pipe
+import akka.testkit.TestActorRef
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
@@ -42,7 +44,8 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   val asyncProvider = new CapturingProvider(endPoint)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   val hakemusJournal: Journal[FullHakemus, String] = seq2journal(Seq(FullHakemus1, FullHakemus2, SynteettinenHakemus, VanhentuneenHaunHakemus))
-  val hakemusMock = system.actorOf(Props(new HakemusActor(hakemusClient = client, journal = hakemusJournal)))
+  val hakemusMock = TestActorRef(new HakemusActor(hakemusClient = client, journal = hakemusJournal))
+  hakemusMock.underlyingActor.initialLoadingDone = true
   val tarjontaMock = system.actorOf(Props(new MockedTarjontaActor()))
   val hakuMock = system.actorOf(Props(new MockedHakuActor()))
   val suoritusMock = system.actorOf(Props(new MockedSuoritusActor()))
@@ -178,7 +181,6 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
 
   test("should show turvakielto true from hakemus") {
     val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.24.1"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
-
     hakijat.head.turvakielto should be (true)
   }
 

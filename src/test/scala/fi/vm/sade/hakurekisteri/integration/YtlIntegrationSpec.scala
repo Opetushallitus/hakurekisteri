@@ -57,6 +57,8 @@ class YtlIntegrationSpec extends FlatSpec with Matchers with CleanSharedTestJett
         get("/suoritusrekisteri/rest/v1/oppijat/1.2.246.562.24.71944845619?haku=1.2.3.4") {
           if (response.status == 200) {
             val json = JsonMethods.parse(body)
+
+
             if((json \\ "arvosanat").children.nonEmpty) {
               result = (json \\ "suoritukset").extractOpt[Seq[Todistus]]
             }

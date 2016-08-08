@@ -1,15 +1,20 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
-import akka.event.Logging
-import fi.vm.sade.hakurekisteri.rest.support.{Query, Kausi}
+import akka.event.{Logging, LoggingAdapter}
+import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Query}
 import Kausi._
 import fi.vm.sade.hakurekisteri.storage._
 import com.github.nscala_time.time.Imports._
 import fi.vm.sade.hakurekisteri.storage.repository._
+
 import scala.concurrent.Future
 import java.util.UUID
+
+import akka.actor.ActorLogging
+
 import scala.util.Try
 import org.joda.time.ReadableInstant
+
 import scala.language.implicitConversions
 
 
@@ -105,7 +110,6 @@ trait SuoritusRepository extends JournaledRepository[Suoritus, UUID] {
 }
 
 trait SuoritusService extends InMemQueryingResourceService[Suoritus, UUID] with SuoritusRepository {
-
   override val emptyQuery: PartialFunction[Query[Suoritus], Boolean] = {
     case SuoritusQuery(None, None, None, None, None, None) => true
   }

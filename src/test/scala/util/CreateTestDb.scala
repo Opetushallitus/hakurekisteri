@@ -34,7 +34,7 @@ object CreateDevDb extends App {
 
 
 
-  implicit val db = Database.forURL(Config.globalConfig.h2DatabaseUrl, driver = "org.h2.Driver")
+  implicit val db = Database.forURL(Config.globalConfig.databaseUrl, driver = "org.h2.Driver")
 
   implicit val system = ActorSystem("db-import")
 

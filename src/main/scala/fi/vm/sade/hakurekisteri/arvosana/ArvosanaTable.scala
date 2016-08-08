@@ -8,16 +8,16 @@ import HakurekisteriDriver.api._
 
 
 class ArvosanaTable(tag: Tag) extends JournalTable[Arvosana, UUID, (UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String, Map[String,String], Option[Int])](tag, "arvosana") {
-  def suoritus = column[UUID]("suoritus")
-  def arvosana = column[String]("arvosana")
-  def asteikko = column[String]("asteikko")
-  def aine = column[String]("aine")
-  def lisatieto = column[Option[String]]("lisatieto")
-  def valinnainen = column[Boolean]("valinnainen")
-  def pisteet = column[Option[Int]]("pisteet")
-  def myonnetty = column[Option[String]]("myonnetty")
-  def lahdeArvot = column[Map[String,String]]("lahde_arvot", O.SqlType("TEXT"))
-  def jarjestys = column[Option[Int]]("jarjestys")
+  def suoritus:   Rep[UUID] = column[UUID]("suoritus")
+  def arvosana:   Rep[String] = column[String]("arvosana")
+  def asteikko:   Rep[String] = column[String]("asteikko")
+  def aine:       Rep[String] = column[String]("aine")
+  def lisatieto:  Rep[Option[String]] = column[Option[String]]("lisatieto")
+  def valinnainen: Rep[Boolean] = column[Boolean]("valinnainen")
+  def pisteet:    Rep[Option[Int]] = column[Option[Int]]("pisteet")
+  def myonnetty:  Rep[Option[String]] = column[Option[String]]("myonnetty")
+  def lahdeArvot: Rep[Map[String, String]] = column[Map[String,String]]("lahde_arvot", O.SqlType("TEXT"))
+  def jarjestys:  Rep[Option[Int]] = column[Option[Int]]("jarjestys")
 
   override def resourceShape = (suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, pisteet, myonnetty, source, lahdeArvot, jarjestys).shaped
 
