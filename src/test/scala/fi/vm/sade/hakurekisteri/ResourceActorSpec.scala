@@ -6,13 +6,16 @@ import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaActor}
-import fi.vm.sade.hakurekisteri.rest.support.Resource
+import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, Resource}
 import fi.vm.sade.hakurekisteri.storage.repository.Repository
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusActor, SuoritusTable}
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.scalatest.Matchers
 import org.scalatra.test.scalatest.ScalatraFunSuite
+import slick.lifted.TableQuery
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -29,9 +32,12 @@ class ResourceActorSpec extends ScalatraFunSuite with Matchers with FutureWaitin
     resourceActor.underlyingActor.store.values should contain (resource)
   }
 
-  test("ResourceActor should not fail when receiving an unknown message") {
+  test("ResourceActor fails when receiving an unknown message") {
     val resourceActor = TestActorRef[TestActor]
-    resourceActor ! "foo"
+    val future = resourceActor ? "foo"
+    intercept[Exception] {
+      Await.result(future.mapTo[String], 1.seconds)
+    }
   }
   
   test("ResourceActor should not crash when journal operation fails") {

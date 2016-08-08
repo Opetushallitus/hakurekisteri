@@ -56,7 +56,7 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
   val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(seq2journal(Seq(suoritus)))))
   val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
-  implicit val database = Database.forURL("jdbc:h2:file:data/healthchecktest", driver = "org.h2.Driver")
+  implicit val database = Database.forURL("jdbc:h2:file:./data/healthchecktest", driver = "org.h2.Driver")
   val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
   val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 1)))
   val guardedEraRekisteri = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
@@ -112,7 +112,7 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
   }
 
   override def stop(): Unit = {
-    RunScript.execute("jdbc:h2:file:test", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
+    RunScript.execute("jdbc:h2:./data/healthchecktest", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
     super.stop()
     import scala.concurrent.duration._
     Await.result(system.terminate(), 15.seconds)
