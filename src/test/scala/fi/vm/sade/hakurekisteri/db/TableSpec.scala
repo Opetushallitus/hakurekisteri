@@ -28,7 +28,6 @@ class TableSpec extends FlatSpec with Matchers {
 
   def getDb: Database = {
     Database.forURL("jdbc:h2:mem:test;MODE=PostgreSQL", driver = "org.h2.Driver")
-    //Database.forURL("jdbc:h2:~/db.file:test;MV_STORE=FALSE;MODE=PostgreSQL", driver = "org.h2.Driver")
   }
 
   it should "be able create itself" in {
