@@ -70,7 +70,7 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
     }
 
     dbQuery.lift(q).map(q => {
-      journal.db.run(q.result).mapTo[Seq[R with Identified[I]]]
+      journal.db.run(q.result).map(_.collect { case Updated(res) => res })(dbExecutor)
     }).getOrElse(Future.successful(Seq()))
   }
 
