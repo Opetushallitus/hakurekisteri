@@ -215,6 +215,11 @@
             <version>3.3.0</version>
         </dependency>
         <dependency>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-scalap_2.11</artifactId>
+            <version>3.3.0</version>
+        </dependency>
+        <dependency>
             <groupId>com.github.nscala-time</groupId>
             <artifactId>nscala-time_2.11</artifactId>
             <version>1.4.0</version>
