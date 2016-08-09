@@ -33,7 +33,7 @@ class DbJournals(config: Config)(implicit val system: ActorSystem) extends Journ
 
   private def useDevelopmentH2 = {
     log.info("Use development DB: " + config.databaseUrl)
-    Database.forURL(config.databaseUrl, user= "postgres", driver = "org.postgresql.Driver")
+    Database.forURL(config.databaseUrl, user=config.postgresUser, password=config.postgresPassword, driver = "org.postgresql.Driver")
   }
 
   implicit val database = Try(Database.forName(config.jndiName)).recover {
