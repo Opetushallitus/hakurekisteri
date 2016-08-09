@@ -95,7 +95,7 @@ object Oids {
 class DefaultConfig extends Config {
   def mockMode = false
   log.info("Using default config")
-  val databaseUrl = sys.props.getOrElse("suoritusrekisteri.db.url", throw new RuntimeException("configuration key missing: suoritusreksiteri.db.url"))
+  val databaseUrl = properties.getOrElse("suoritusrekisteri.db.url", throw new RuntimeException("configuration key missing: suoritusreksiteri.db.url"))
 
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
@@ -116,7 +116,7 @@ class MockConfig extends Config {
 class MockDevConfig extends Config {
   def mockMode = true
   log.info("Using mock dev config")
-  val databaseUrl = sys.props.getOrElse("suoritusrekisteri.db.url", "jdbc:postgresql://localhost:5432/suoritusrekisteri")
+  val databaseUrl = properties.getOrElse("suoritusrekisteri.db.url", "jdbc:postgresql://localhost:5432/suoritusrekisteri")
 
   override val importBatchProcessingInitialDelay = 1.seconds
   override val profile = "dev"
