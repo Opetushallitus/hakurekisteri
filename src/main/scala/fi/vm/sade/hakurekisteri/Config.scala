@@ -94,6 +94,7 @@ object Oids {
 
 class DefaultConfig extends Config {
   def mockMode = false
+  log.info("Using default config")
   val databaseUrl = sys.props.getOrElse("suoritusrekisteri.db.url", "jdbc:postgresql://localhost:5432/suoritusrekisteri")
 
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
@@ -102,6 +103,7 @@ class DefaultConfig extends Config {
 
 class MockConfig extends Config {
   def mockMode = true
+  log.info("Using mock config")
   val postgresPortChooser = new PortFromSystemPropertyOrFindFree("suoritusrekisteri.it.postgres.port")
 
   val databaseUrl = s"jdbc:postgresql://localhost:${postgresPortChooser.chosenPort}/suoritusrekisteri"
@@ -113,6 +115,7 @@ class MockConfig extends Config {
 
 class MockDevConfig extends Config {
   def mockMode = true
+  log.info("Using mock dev config")
   val databaseUrl = sys.props.getOrElse("suoritusrekisteri.db.url", "jdbc:postgresql://localhost:5432/suoritusrekisteri")
 
   override val importBatchProcessingInitialDelay = 1.seconds
@@ -135,6 +138,7 @@ abstract class Config {
 
   lazy val database: Database = {
     import collection.JavaConverters._
+    log.info("Profile: " + profile)
     profile match {
       case "it" | "dev" => Database.forURL(databaseUrl, user=postgresUser, password=postgresPassword, driver = "org.postgresql.Driver")
       case "default" => {
