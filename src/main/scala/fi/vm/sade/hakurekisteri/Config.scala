@@ -28,6 +28,7 @@ object Config {
   }
   lazy val globalConfig = fromString(sys.props.getOrElse("hakurekisteri.profile", "default"))
   lazy val mockConfig = new MockConfig
+  lazy val mockDevConfig = new MockDevConfig
 }
 
 object OrganisaatioOids {
@@ -93,7 +94,8 @@ object Oids {
 
 class DefaultConfig extends Config {
   def mockMode = false
-  val databaseUrl= "jdbc:h2:file:./data/development"
+  val databaseUrl = sys.props.getOrElse("suoritusrekisteri.db.url", "jdbc:postgresql://localhost:5432/suoritusrekisteri")
+
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
 }
@@ -109,6 +111,15 @@ class MockConfig extends Config {
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
 }
 
+class MockDevConfig extends Config {
+  def mockMode = true
+  val databaseUrl = sys.props.getOrElse("suoritusrekisteri.db.url", "jdbc:postgresql://localhost:5432/suoritusrekisteri")
+
+  override val importBatchProcessingInitialDelay = 1.seconds
+  override val profile = "dev"
+  lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
+}
+
 class ProductionServerConfig(val integrations: Integrations, val system: ActorSystem, val security: Security, val ec: ExecutionContextExecutor)
 
 abstract class Config {
@@ -117,13 +128,15 @@ abstract class Config {
   def mockMode: Boolean
 
   val databaseUrl: String
+  val postgresUser = sys.props.getOrElse("suoritusrekisteri.db.user", "postgres")
+  val postgresPassword = sys.props.getOrElse("suoritusrekisteri.db.password", "postgres")
 
   val profile = sys.props.getOrElse("hakurekisteri.profile", "default")
 
   lazy val database: Database = {
     import collection.JavaConverters._
     profile match {
-      case "it" | "dev" => Database.forURL(databaseUrl, user="postgres", driver = "org.postgresql.Driver")
+      case "it" | "dev" => Database.forURL(databaseUrl, user=postgresUser, password=postgresPassword, driver = "org.postgresql.Driver")
       case "default" => {
         val javaProperties = new Properties
         javaProperties.putAll(properties.asJava)
