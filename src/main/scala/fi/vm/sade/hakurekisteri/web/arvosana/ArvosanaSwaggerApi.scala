@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.web.arvosana
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvosana}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriResource, OldSwaggerSyntax}
 import org.scalatra.swagger._
-
 trait ArvosanaSwaggerApi extends OldSwaggerSyntax with ArvosanaSwaggerModel { this: HakurekisteriResource[Arvosana, CreateArvosanaCommand] =>
 
   protected val applicationDescription = "Arvosanatietojen rajapinta"

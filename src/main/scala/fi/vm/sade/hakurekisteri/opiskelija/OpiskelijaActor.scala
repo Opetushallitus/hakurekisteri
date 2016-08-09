@@ -175,6 +175,7 @@ class OpiskelijaJDBCActor(val journal: JDBCJournal[Opiskelija, UUID, OpiskelijaT
     t.oppilaitosOid === i.oppilaitosOid && t.luokkataso === i.luokkataso && t.henkiloOid === i.henkiloOid
 
   override val dbExecutor: ExecutionContext = context.dispatcher
+
   override val dbQuery: PartialFunction[support.Query[Opiskelija], lifted.Query[OpiskelijaTable, Delta[Opiskelija, UUID], Seq]] = {
     case OpiskelijaQuery(henkilo, kausi, vuosi, paiva, oppilaitosOid, luokka) =>
       all.filter(t => matchHenkilo(henkilo)(t) && matchOppilaitosOid(oppilaitosOid)(t) && matchLuokka(luokka)(t))
