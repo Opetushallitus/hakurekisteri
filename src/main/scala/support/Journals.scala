@@ -3,7 +3,6 @@ package support
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaTable}
 import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchTable}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaTable}
@@ -13,12 +12,8 @@ import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.storage.repository.Journal
 import fi.vm.sade.hakurekisteri.storage.HakurekisteriTables._
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusTable}
-import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import fi.vm.sade.utils.tcp.PortFromSystemPropertyOrFindFree
-import org.h2.engine.SysProperties
-import org.slf4j.LoggerFactory
 
-import scala.util.Try
+import org.slf4j.LoggerFactory
 
 trait Journals {
   val suoritusJournal: Journal[Suoritus, UUID]
@@ -28,20 +23,10 @@ trait Journals {
   val eraJournal: Journal[ImportBatch, UUID]
 }
 
-class DbJournals(config: Config)(implicit val system: ActorSystem) extends Journals {
+class DbJournals(db: Database)(implicit val system: ActorSystem) extends Journals {
   lazy val log = LoggerFactory.getLogger(getClass)
 
-  private def useDevelopmentH2 = {
-    log.info("Use development DB: " + config.databaseUrl)
-    Database.forURL(config.databaseUrl, user=config.postgresUser, password=config.postgresPassword, driver = "org.postgresql.Driver")
-  }
-
-  implicit val database = Try(Database.forName(config.jndiName)).recover {
-    case _: javax.naming.NameNotFoundException => useDevelopmentH2
-    case _: javax.naming.NoInitialContextException => useDevelopmentH2
-  }.get
-
-  system.registerOnTermination(database.close())
+  implicit val database = db
 
   override val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](suoritusTable)
   override val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](opiskelijaTable)
