@@ -95,7 +95,7 @@ object Oids {
 class DefaultConfig extends Config {
   def mockMode = false
   log.info("Using default config")
-  val databaseUrl = sys.props.getOrElse("suoritusrekisteri.db.url", "jdbc:postgresql://localhost:5432/suoritusrekisteri")
+  val databaseUrl = sys.props.getOrElse("suoritusrekisteri.db.url", throw new RuntimeException("configuration key missing: suoritusreksiteri.db.url"))
 
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
@@ -136,25 +136,12 @@ abstract class Config {
 
   val profile = sys.props.getOrElse("hakurekisteri.profile", "default")
 
-  lazy val database: Database = {
-    import collection.JavaConverters._
-    log.info("Profile: " + profile)
-    profile match {
-      case "it" | "dev" => Database.forURL(databaseUrl, user=postgresUser, password=postgresPassword, driver = "org.postgresql.Driver")
-      case "default" => {
-        val javaProperties = new Properties
-        javaProperties.putAll(properties.asJava)
-        Database.forConfig("suoritusrekisteri.db", ConfigFactory.parseProperties(javaProperties))
-      }
-      case _ => throw new RuntimeException("Unsupported hakurekisteri.profile value " + profile)
-    }
-  }
+
 
   val log = LoggerFactory.getLogger(getClass)
   def ophConfDir: Path
 
   val propertyLocations = Seq("common.properties")
-  val jndiName = "java:comp/env/jdbc/suoritusrekisteri"
   val importBatchProcessingInitialDelay = 20.minutes
 
   // by default the service urls point to QA
