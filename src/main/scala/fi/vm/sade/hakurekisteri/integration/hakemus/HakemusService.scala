@@ -23,8 +23,9 @@ class RemoteHakemusService(restClient: VirkailijaRestClient) extends HakemusServ
     hakemuksetByPersonOid.getOrElse(personOid, Seq[FullHakemus]())
   }
 
-  override def hakemuksetByHakukohde(hakukohdeOid: String) = {
-    Seq[FullHakemus]()
+  override def hakemuksetByHakukohde(hakukohdeOid: String): Seq[FullHakemus] = {
+    val future = restClient.postObject[Set[String], Seq[FullHakemus]]("haku-app.byapplicationoption")(200, Set(hakukohdeOid))
+    Await.result(future, 10.seconds)
   }
 
   override def hakemuksetByHaku(hakuOid: String) = {
