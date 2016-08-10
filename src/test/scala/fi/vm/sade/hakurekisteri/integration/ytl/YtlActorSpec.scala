@@ -35,7 +35,7 @@ class YtlActorSpec extends ScalatraFunSuite {
   val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
   val suoritusActor = TestActorRef(Props(new SuoritusActor), "suoritukset")
   val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
-  val arvosanaActor = system.actorOf(Props(new ArvosanaActor(journal = arvosanaJournal)), "arvosanat")
+  val arvosanaActor = system.actorOf(Props(classOf[ArvosanaJDBCActor], arvosanaJournal, 5), "arvosanat")
   val hakemusServiceMock = new HakemusServiceMock
   val actor = system.actorOf(Props(new YtlActor(henkiloActor, suoritusActor, arvosanaActor, hakemusServiceMock, Some(YTLConfig("", "", "", "", "", List(), "")))), "ytl")
 

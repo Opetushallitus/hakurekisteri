@@ -17,10 +17,10 @@ import org.slf4j.LoggerFactory
 
 trait Journals {
   val suoritusJournal: Journal[Suoritus, UUID]
-  val opiskelijaJournal: Journal[Opiskelija, UUID]
+  val opiskelijaJournal: JDBCJournal[Opiskelija, UUID, OpiskelijaTable]
   val opiskeluoikeusJournal: Journal[Opiskeluoikeus, UUID]
-  val arvosanaJournal: Journal[Arvosana, UUID]
-  val eraJournal: Journal[ImportBatch, UUID]
+  val arvosanaJournal: JDBCJournal[Arvosana, UUID, ArvosanaTable]
+  val eraJournal: JDBCJournal[ImportBatch, UUID, ImportBatchTable]
 }
 
 class DbJournals(db: Database)(implicit val system: ActorSystem) extends Journals {
