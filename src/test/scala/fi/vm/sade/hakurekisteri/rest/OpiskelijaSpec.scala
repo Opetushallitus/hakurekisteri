@@ -4,14 +4,17 @@ import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
-import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaActor, OpiskelijaQuery}
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaQuery, OpiskelijaTable}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
+import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.web.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriCrudCommands, HakurekisteriResource, HakurekisteriSwagger, TestSecurity}
+import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.joda.time.DateTime
 import org.json4s.jackson.Serialization._
 import org.scalatra.test.scalatest.ScalatraFunSuite
+import slick.lifted.TableQuery
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -24,12 +27,12 @@ class OpiskelijaSpec extends ScalatraFunSuite {
 
   implicit val system = ActorSystem()
   implicit val security = new TestSecurity
-  implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]): InMemJournal[R, UUID] = {
-    val journal = new InMemJournal[R, UUID]
-    s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
-    journal
-  }
-  val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(Seq(opiskelija))))
+  val portChooser = new ChooseFreePort
+  val itDb = new ItPostgres(portChooser)
+  itDb.start()
+  implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
+  val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
+  val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1)))
   val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(opiskelijaRekisteri)))
   implicit val swagger = new HakurekisteriSwagger
 
@@ -52,5 +55,7 @@ class OpiskelijaSpec extends ScalatraFunSuite {
 
   override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)
+    database.close()
+    itDb.stop()
   }
 }

@@ -1,38 +1,36 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
-import org.scalatra.test.{EmbeddedJettyContainer, HttpComponentsClient}
-
-import javax.servlet.http.HttpServletRequest
-import akka.actor._
-
-import org.json4s.jackson.JsonMethods._
-import org.json4s.jackson.Serialization._
-import java.util.{UUID, Date}
 import java.text.SimpleDateFormat
-import org.scalatest.matchers._
-import org.scalatest.{Outcome, Suite}
-import scala.xml.{Elem, Node, NodeSeq}
+import java.util.concurrent.TimeUnit
+import java.util.{Date, UUID}
+
+import akka.actor._
+import com.github.nscala_time.time.Imports._
+import com.github.nscala_time.time.TypeImports.LocalDate
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support._
-import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
+import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import fi.vm.sade.hakurekisteri.suoritus._
+import fi.vm.sade.hakurekisteri.tools.{ItPostgres, Peruskoulu}
+import fi.vm.sade.hakurekisteri.web.opiskelija.{CreateOpiskelijaCommand, OpiskelijaSwaggerApi}
+import fi.vm.sade.hakurekisteri.web.rest.support._
+import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwaggerApi}
+import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-
-import com.github.nscala_time.time.Imports._
-import fi.vm.sade.hakurekisteri.storage.repository.{Journal, InMemJournal, Updated}
-import fi.vm.sade.hakurekisteri.rest.support.User
-import com.github.nscala_time.time.TypeImports.LocalDate
+import org.json4s.jackson.JsonMethods._
+import org.json4s.jackson.Serialization._
+import org.scalatest.matchers._
 import org.scalatest.words.EmptyWord
-import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
-import scala.Some
-import fi.vm.sade.hakurekisteri.suoritus.Komoto
-import fi.vm.sade.hakurekisteri.suoritus.VirallinenSuoritus
+import org.scalatest.{Outcome, Suite}
+import org.scalatra.test.{EmbeddedJettyContainer, HttpComponentsClient}
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
-import fi.vm.sade.hakurekisteri.web.opiskelija.{OpiskelijaSwaggerApi, CreateOpiskelijaCommand}
-import fi.vm.sade.hakurekisteri.web.suoritus.{CreateSuoritusCommand, SuoritusSwaggerApi}
-import fi.vm.sade.hakurekisteri.web.rest.support._
-import fi.vm.sade.hakurekisteri.tools.Peruskoulu
+import scala.xml.{Elem, Node, NodeSeq}
 
 
 object kausi extends Enumeration {
@@ -42,7 +40,7 @@ object kausi extends Enumeration {
   val Syksy = Syksyllä
 }
 
-import kausi._
+import fi.vm.sade.hakurekisteri.acceptance.tools.kausi._
 
 
 
@@ -50,6 +48,10 @@ trait HakurekisteriContainer extends EmbeddedJettyContainer {
   implicit val swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
   implicit val system: ActorSystem
+  val portChooser = new ChooseFreePort()
+  val itDb = new ItPostgres(portChooser)
+  itDb.start()
+  implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
 
   val guardedSuoritusRekisteri: ActorRef
   val guardedOpiskelijaRekisteri: ActorRef
@@ -60,35 +62,40 @@ trait HakurekisteriContainer extends EmbeddedJettyContainer {
     addServlet(new HakurekisteriResource[Suoritus, CreateSuoritusCommand](guardedSuoritusRekisteri, fi.vm.sade.hakurekisteri.suoritus.SuoritusQuery(_)) with SuoritusSwaggerApi with HakurekisteriCrudCommands[Suoritus, CreateSuoritusCommand], "/rest/v1/suoritukset")
     addServlet(new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](guardedOpiskelijaRekisteri, fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand], "/rest/v1/opiskelijat")
   }
+
+  override def stop(): Unit = {
+    super.stop()
+    database.close()
+    itDb.stop()
+  }
 }
 
 trait HakurekisteriSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport { this: HakurekisteriContainer =>
 
   implicit val system: ActorSystem = ActorSystem()
 
-  class SuoritusReloader(implicit cj: ClassTag[Journal[Suoritus, UUID]] ) extends Actor {
+  class SuoritusReloader(implicit cj: ClassTag[JDBCJournal[Suoritus, UUID, SuoritusTable]] ) extends Actor {
 
 
     var underlying: ActorRef = context.actorOf(Props(new SuoritusActor()))
 
     override def receive: Actor.Receive = {
-      case jo: Journal[_, _] if cj.runtimeClass.isInstance(jo) =>
-        val j = cj.runtimeClass.cast(jo).asInstanceOf[Journal[Suoritus, UUID]]
+      case jo: JDBCJournal[_, _, _] if cj.runtimeClass.isInstance(jo) =>
+        val j = cj.runtimeClass.cast(jo).asInstanceOf[JDBCJournal[Suoritus, UUID, SuoritusTable]]
         context.stop(underlying)
         underlying = context.actorOf(Props(new SuoritusActor(j)))
       case m => underlying.forward(m)
-
     }
   }
 
   val suoritusRekisteri = system.actorOf(Props(new SuoritusReloader))
 
-
-  def swap(newJournal: Journal[Suoritus,UUID]) {
+  def swap(newJournal: JDBCJournal[Suoritus, UUID, SuoritusTable]) {
     suoritusRekisteri ! newJournal
   }
 
-  val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor()))
+  val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
+  val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1)))
 
   val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
@@ -106,7 +113,8 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
     def init() {
       if (!initialized) {
-        val journal = new InMemJournal[Suoritus, UUID]
+        val journal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+        Await.result(database.run(sqlu"""delete from suoritus"""), Duration(10, TimeUnit.SECONDS))
         tehdytSuoritukset.foreach((resource: Suoritus) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
         swap(journal)
         initialized = true

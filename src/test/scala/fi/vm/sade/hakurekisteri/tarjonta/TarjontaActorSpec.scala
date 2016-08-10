@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestActorRef
 import fi.vm.sade.hakurekisteri.MockConfig
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaActor}
+import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, RestHaku, RestHakuAika, TarjontaActor}
 import fi.vm.sade.hakurekisteri.storage.DeleteResource
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
