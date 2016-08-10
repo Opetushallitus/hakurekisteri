@@ -1,15 +1,13 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import fi.vm.sade.hakurekisteri.storage.repository._
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, _}
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService}
-import fi.vm.sade.hakurekisteri.storage.repository.Deleted
-
-import scala.concurrent.{Await, ExecutionContext, Future}
-import HakurekisteriDriver.api._
 import slick.ast.BaseTypedType
 import slick.lifted
 
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 
 trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Repository[R,I]  {
@@ -69,10 +67,10 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
       throw new NotImplementedError("muokattuJalkeen not implemented in JDBCService")
     }
 
-    dbQuery.lift(q).map(q => {
-      journal.db.run(q.result).map(_.collect { case Updated(res) => res })(dbExecutor)
+    dbQuery.lift(q).map(query => {
+      journal.db.run(query.result).map(_.collect { case Updated(res) => res })(dbExecutor)
     }).getOrElse(Future.successful(Seq()))
   }
 
-  val dbQuery: PartialFunction[Query[R], lifted.Query[T, Delta[R,I], Seq]]
+  val dbQuery: PartialFunction[Query[R], lifted.Query[T, Delta[R, I], Seq]]
 }
