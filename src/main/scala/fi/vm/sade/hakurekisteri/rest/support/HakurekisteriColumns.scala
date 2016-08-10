@@ -28,7 +28,7 @@ trait HakurekisteriColumns {
 
   implicit def yksilollistaminenString = MappedColumnType.base[Yksilollistetty, String](_.toString, yksilollistaminen.withName)
 
-  implicit def jsonMap = MappedColumnType.base[Map[String, String], String](data => compact(decompose(data)), extract[Map[String, String]](_))
+  implicit def jsonMap = MappedColumnType.base[Map[String, String], String](data => compact(decompose(data)), x => extract[Map[String, String]](parse(x)))
 
   implicit def batchStateColumnType = MappedColumnType.base[BatchState, String](_.toString, BatchState.withName)
 
