@@ -26,9 +26,14 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
 
-    hakemusService.hakemuksetByPerson("1.2.246.562.24.81468276424") should be (2)
+    hakemusService.hakemuksetByPerson("1.2.246.562.24.81468276424").size should be (2)
   }
 
+  it should "return applications by application option oid" in {
+    when(endPoint.request(forPattern(".*applications/byApplicationOption.*")))
+      .thenReturn((200, List(), getJson("byApplicationOption")))
 
+    hakemusService.hakemuksetByHakukohde("1.2.246.562.20.649956391810").size should be (6)
+  }
 
 }
