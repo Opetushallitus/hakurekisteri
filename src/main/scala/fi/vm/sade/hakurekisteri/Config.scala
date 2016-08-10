@@ -95,7 +95,7 @@ object Oids {
 class DefaultConfig extends Config {
   def mockMode = false
   log.info("Using default config")
-  override val databaseUrl = properties.getOrElse("suoritusrekisteri.db.url", throw new RuntimeException("configuration key missing: suoritusreksiteri.db.url"))
+  override val databaseUrl = getPropertyOrCrash("suoritusrekisteri.db.url", "configuration key missing: suoritusreksiteri.db.url")
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
@@ -129,7 +129,6 @@ class MockDevConfig extends Config {
 class ProductionServerConfig(val integrations: Integrations, val system: ActorSystem, val security: Security, val ec: ExecutionContextExecutor)
 
 abstract class Config {
-  import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api.Database
 
   def mockMode: Boolean
 
@@ -178,6 +177,10 @@ abstract class Config {
     val rawMap = resources.map((reader) => {val prop = new java.util.Properties; prop.load(reader); Map(prop.toList: _*)}).foldLeft(Map[String, String]())(_ ++ _)
 
     resolve(rawMap)
+  }
+
+  def getPropertyOrCrash(property: String, errorMsg: String) = {
+    properties.getOrElse(property, throw new RuntimeException(errorMsg))
   }
 
   def resolve(source: Map[String, String]): Map[String, String] = {
