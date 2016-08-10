@@ -95,8 +95,9 @@ object Oids {
 class DefaultConfig extends Config {
   def mockMode = false
   log.info("Using default config")
-  val databaseUrl = properties.getOrElse("suoritusrekisteri.db.url", throw new RuntimeException("configuration key missing: suoritusreksiteri.db.url"))
-
+  override val databaseUrl = properties.getOrElse("suoritusrekisteri.db.url", throw new RuntimeException("configuration key missing: suoritusreksiteri.db.url"))
+  override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
+  override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
 }
@@ -106,8 +107,9 @@ class MockConfig extends Config {
   log.info("Using mock config")
   val postgresPortChooser = new PortFromSystemPropertyOrFindFree("suoritusrekisteri.it.postgres.port")
 
-  val databaseUrl = s"jdbc:postgresql://localhost:${postgresPortChooser.chosenPort}/suoritusrekisteri"
-
+  override val databaseUrl = s"jdbc:postgresql://localhost:${postgresPortChooser.chosenPort}/suoritusrekisteri"
+  override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
+  override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   override val importBatchProcessingInitialDelay = 1.seconds
   override val profile = "it"
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
@@ -116,8 +118,9 @@ class MockConfig extends Config {
 class MockDevConfig extends Config {
   def mockMode = true
   log.info("Using mock dev config")
-  val databaseUrl = properties.getOrElse("suoritusrekisteri.db.url", "jdbc:postgresql://localhost:5432/suoritusrekisteri")
-
+  override val databaseUrl = properties.getOrElse("suoritusrekisteri.db.url", "jdbc:postgresql://localhost:5432/suoritusrekisteri")
+  override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
+  override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   override val importBatchProcessingInitialDelay = 1.seconds
   override val profile = "dev"
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
@@ -131,8 +134,8 @@ abstract class Config {
   def mockMode: Boolean
 
   val databaseUrl: String
-  val postgresUser = sys.props.getOrElse("suoritusrekisteri.db.user", "postgres")
-  val postgresPassword = sys.props.getOrElse("suoritusrekisteri.db.password", "postgres")
+  val postgresUser: String
+  val postgresPassword: String
 
   val profile = sys.props.getOrElse("hakurekisteri.profile", "default")
 
