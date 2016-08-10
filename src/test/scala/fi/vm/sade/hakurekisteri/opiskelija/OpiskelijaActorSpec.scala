@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.opiskelija
 
-import java.nio.charset.Charset
 import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
@@ -12,7 +11,6 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.h2.engine.SysProperties
-import org.h2.tools.RunScript
 import org.joda.time.DateTime
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
@@ -99,8 +97,8 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
   }
 
   override def stop(): Unit = {
-    RunScript.execute("jdbc:h2:file:./data/opiskelijatest", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
     Await.result(system.terminate(), 15.seconds)
+    database.close()
     itDb.stop()
     super.stop()
   }

@@ -45,13 +45,13 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
 
   implicit val batchStateColumnType = MappedColumnType.base[BatchState, String]({ c => c.toString }, { s => BatchState.withName(s)})
 
-  override val dbQuery: PartialFunction[support.Query[ImportBatch], lifted.Query[ImportBatchTable, Delta[ImportBatch, UUID], Seq]]  = {
+  override val dbQuery: PartialFunction[support.Query[ImportBatch], Either[Throwable, lifted.Query[ImportBatchTable, Delta[ImportBatch, UUID], Seq]]]  = {
     case ImportBatchQuery(None, None, None, maxCount) =>
       val q = all
-      maxCount.map(count => q.take(count)).getOrElse(q)
+      Right(maxCount.map(count => q.take(count)).getOrElse(q))
     case ImportBatchQuery(externalId, state, batchType, maxCount) =>
       val q = all.filter(i => matchExternalId(externalId)(i) && matchState(state)(i) && matchBatchType(batchType)(i))
-      maxCount.map(count => q.take(count)).getOrElse(q)
+      Right(maxCount.map(count => q.take(count)).getOrElse(q))
   }
 
   def matchExternalId(externalId: Option[String])(i: ImportBatchTable): Rep[Option[Boolean]] = externalId match {

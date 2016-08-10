@@ -8,7 +8,7 @@ import akka.testkit.TestActorRef
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
-import fi.vm.sade.hakurekisteri.arvosana.ArvosanaActor
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor, ArvosanaTable}
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, Testihaku}
 import fi.vm.sade.hakurekisteri.integration._
@@ -16,15 +16,18 @@ import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActor}
-import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusActor
 import fi.vm.sade.hakurekisteri.oppija.Oppija
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Registers, User}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal, Registers, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
+import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.web.oppija.{OppijaResource, OppijatPostSize}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
+import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.joda.time.LocalDate
 import org.json4s.Extraction.decompose
 import org.json4s.jackson.JsonMethods._
@@ -35,8 +38,8 @@ import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.compat.Platform
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 import scala.language.implicitConversions
 import scala.util.Random
 
@@ -203,11 +206,19 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
     journal
   }
 
+  val portChooser = new ChooseFreePort
+  val itDb = new ItPostgres(portChooser)
+  itDb.start()
+  implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
+
+  val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
+  val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
+
   val rekisterit = new Registers {
     private val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
-    private val arvosanat = system.actorOf(Props(new ArvosanaActor()))
+    private val arvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
     private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusActor()))
-    private val opiskelijat = system.actorOf(Props(new OpiskelijaActor()))
+    private val opiskelijat = system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1)))
     private val suoritukset = system.actorOf(Props(new SuoritusActor(suorituksetSeq)))
 
     override val eraRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(erat)))

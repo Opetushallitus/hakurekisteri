@@ -5,10 +5,13 @@ import java.util.UUID
 import akka.actor.{ActorSystem, Props}
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana._
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
+import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.web.arvosana.EmptyLisatiedotResource
 import fi.vm.sade.hakurekisteri.web.rest.support._
+import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.Await
@@ -17,16 +20,17 @@ import scala.language.implicitConversions
 
 class ArvosanaEmptyLisatietoSpec extends ScalatraFunSuite {
   implicit val system = ActorSystem()
+  val portChooser = new ChooseFreePort
+  val itDb = new ItPostgres(portChooser)
+  itDb.start()
+  implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
   implicit val security = new TestSecurity
-  def arvosanajournal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]]: InMemJournal[Arvosana, UUID] = {
-    val journal = new InMemJournal[Arvosana, UUID]
-    (0 until 10).foreach( (i) => {
-      journal.addModification(Updated(Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", if(i%2==0) None else Some(""), valinnainen = false, None, "Test", Map()).identify(UUID.randomUUID())))
-    })
-    journal
-  }
 
-  val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(arvosanajournal)))
+  val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
+  (0 until 10).foreach( (i) => {
+    arvosanaJournal.addModification(Updated(Arvosana(UUID.randomUUID(), Arvio410("10"), "AI", if(i%2==0) None else Some(""), valinnainen = false, None, "Test", Map()).identify(UUID.randomUUID())))
+  })
+  val arvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
   val guardedArvosanaRekisteri = system.actorOf(Props(new FakeAuthorizer(arvosanaRekisteri)))
   implicit val swagger = new HakurekisteriSwagger
 
@@ -43,5 +47,7 @@ class ArvosanaEmptyLisatietoSpec extends ScalatraFunSuite {
 
   override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)
+    database.close()
+    itDb.stop()
   }
 }
