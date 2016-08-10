@@ -10,16 +10,14 @@ import com.ning.http.client.{AsyncHandler, AsyncHttpClient, Request}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.batchimport.BatchState._
 import fi.vm.sade.hakurekisteri.batchimport.{BatchState, ImportBatch, ImportStatus, PerustiedotProcessingActor}
-import fi.vm.sade.hakurekisteri.integration.{EndpointRequest, ServiceConfig, _}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{HttpHenkiloActor, SaveHenkilo, SavedHenkilo}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, Organisaatio, _}
-import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
+import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, _}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.SuoritusActor
-import fi.vm.sade.hakurekisteri.tools.SafeXML
-import generators.DataGen
+import fi.vm.sade.hakurekisteri.tools.{ItPostgres, SafeXML}
 import org.json4s.JsonAST.JString
-import org.scalameter.api._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -108,6 +106,7 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.OfflineReport {
   trait Registers extends Serializable {
 
 
+    var dbHolder: Option[(ItPostgres, Database)] = None
     var systemHolder: Option[ActorSystem] = None
     var importBatchActorHolder: Option[ActorRef] = None
     var suoritusrekisteriHolder: Option[ActorRef] = None
@@ -121,12 +120,20 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.OfflineReport {
       if (systemHolder.isDefined) {
         system.shutdown()
       }
+      if (itDbHolder.isDefined) {
+        val (itDb, database) = db
+        database.close()
+        itDb.stop()
+      }
+      val portChooser = new ChooseFreePort
+      dbHolder = Some((new ItPostgres(portChooser), Database.forUrl(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")))
       systemHolder = Some(ActorSystem(s"perf-test-${UUID.randomUUID()}"))
       startActors(b: SerializableBatch)
     }
 
     def startActors(b: SerializableBatch):Unit
 
+    def db = dbHolder.get
     def system = systemHolder.get
     def importBatchActor = importBatchActorHolder.get
     def suoritusrekisteri = suoritusrekisteriHolder.get
@@ -150,9 +157,11 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.OfflineReport {
 
       val registers = new Registers{
         override def startActors(b: SerializableBatch) {
+          implicit val database = db._2
           importBatchActorHolder = Some(system.actorOf(Props[BatchActor]))
           suoritusrekisteriHolder = Some(system.actorOf(Props(new SuoritusActor())))
-          opiskelijarekisteriHolder = Some(system.actorOf(Props(new OpiskelijaActor())))
+          val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
+          opiskelijarekisteriHolder = Some(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 5))))
           henkiloActorHolder = Some(system.actorOf(Props[TestHenkiloActor]))
           organisaatioActorHolder = Some(system.actorOf(Props[TestOrganisaatioActor]))
         }
@@ -177,9 +186,11 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.OfflineReport {
 
       val registers = new Registers{
         override def startActors(b: SerializableBatch) {
+          implicit val database = db._2
           importBatchActorHolder = Some(system.actorOf(Props[BatchActor]))
           suoritusrekisteriHolder = Some(system.actorOf(Props(new SuoritusActor())))
-          opiskelijarekisteriHolder = Some(system.actorOf(Props(new OpiskelijaActor())))
+          val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
+          opiskelijarekisteriHolder = Some(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 5))))
 
           val henkilot: Map[String, String] = (b.batch.data \\ "hetu").map((e: Node) => e.text).toSet[String].toList.zipWithIndex.toMap.mapValues(i => s"1.2.246.562.24.$i")
 

@@ -6,6 +6,7 @@ import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService}
 import slick.ast.BaseTypedType
 import slick.lifted
 
+import scala.concurrent
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
@@ -67,10 +68,11 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
       throw new NotImplementedError("muokattuJalkeen not implemented in JDBCService")
     }
 
-    dbQuery.lift(q).map(query => {
-      journal.db.run(query.result).map(_.collect { case Updated(res) => res })(dbExecutor)
-    }).getOrElse(Future.successful(Seq()))
+    dbQuery.lift(q).map{
+      case Right(query) => journal.db.run(query.result).map(_.collect { case Updated(res) => res })(dbExecutor)
+      case Left(t) => Future.failed(t)
+    }.getOrElse(Future.successful(Seq()))
   }
 
-  val dbQuery: PartialFunction[Query[R], lifted.Query[T, Delta[R, I], Seq]]
+  val dbQuery: PartialFunction[Query[R], Either[Throwable, lifted.Query[T, Delta[R, I], Seq]]]
 }

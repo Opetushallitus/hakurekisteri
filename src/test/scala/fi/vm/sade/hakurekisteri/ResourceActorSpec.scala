@@ -6,13 +6,14 @@ import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor, ArvosanaTable}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaActor}
 import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, Resource}
 import fi.vm.sade.hakurekisteri.storage.repository.Repository
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusActor, SuoritusTable}
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
+import fi.vm.sade.hakurekisteri.tools.ItPostgres
+import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.scalatest.Matchers
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import slick.lifted.TableQuery
@@ -24,6 +25,13 @@ import scala.concurrent.duration._
 class ResourceActorSpec extends ScalatraFunSuite with Matchers with FutureWaiting {
   implicit val system = ActorSystem("test-system")
   implicit val timeout: Timeout = 5.seconds
+
+  val portChooser = new ChooseFreePort
+  val itDb = new ItPostgres(portChooser)
+  itDb.start()
+  implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
+
+  val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
 
   test("ResourceActor should save resource when receiving it") {
     val resourceActor = TestActorRef[TestActor]
@@ -41,12 +49,14 @@ class ResourceActorSpec extends ScalatraFunSuite with Matchers with FutureWaitin
   }
   
   test("ResourceActor should not crash when journal operation fails") {
-    val arvosanaActor = TestActorRef(Props(new ArvosanaActor() with CrashingRepository[Arvosana, UUID]))
+    val arvosanaActor = TestActorRef(Props(new ArvosanaJDBCActor(arvosanaJournal, 1) with CrashingRepository[Arvosana, UUID]))
     expectFailure[Exception](arvosanaActor ? DeleteResource(UUID.randomUUID(), "testUser"))
   }
 
   override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)
+    database.close()
+    itDb.stop()
     super.stop()
   }
 

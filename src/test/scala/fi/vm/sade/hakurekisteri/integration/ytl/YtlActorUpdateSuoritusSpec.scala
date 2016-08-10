@@ -5,15 +5,19 @@ import java.util.UUID
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaActor, ArvosanaQuery}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery, _}
 import fi.vm.sade.hakurekisteri.integration.ActorSystemSupport
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusServiceMock
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
+import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.{KomoOids, MockConfig, OrganisaatioOids}
+import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.joda.time.LocalDate
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
@@ -27,6 +31,10 @@ class YtlActorUpdateSuoritusSpec extends ScalatraFunSuite with ActorSystemSuppor
     withSystem({
       implicit system => {
         implicit val ec: ExecutionContext = system.dispatcher
+        val portChooser = new ChooseFreePort
+        val itDb = new ItPostgres(portChooser)
+        itDb.start()
+        implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
 
         suoritusJournal has vanhaValmisYoSuoritus
 
@@ -40,6 +48,8 @@ class YtlActorUpdateSuoritusSpec extends ScalatraFunSuite with ActorSystemSuppor
           s.tila should be ("VALMIS")
           s.valmistuminen should be (new LocalDate(1989, 6, 1))
         })
+        database.close()
+        itDb.stop()
       }
     })
   }
@@ -99,14 +109,14 @@ trait YtlTestDsl {
     def has(suoritus: Suoritus): Unit = addModification(Updated(suoritus.identify))
   }
 
-  def createYtlActor(implicit system: ActorSystem) = {
+  def createYtlActor(implicit system: ActorSystem, db: Database) = {
     val config = new MockConfig
 
     val henkiloActor = system.actorOf(Props(new MockHenkiloActor(config)))
 
     suoritusActor = Some(system.actorOf(Props(new SuoritusActor(journal = suoritusJournal)), "suoritukset"))
-    val arvosanaJournal: InMemJournal[Arvosana, UUID] = Seq()
-    arvosanaActor = Some(system.actorOf(Props(new ArvosanaActor(journal = arvosanaJournal)), "arvosanat"))
+    val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
+    arvosanaActor = Some(system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)), "arvosanat"))
     val hakemusService = new HakemusServiceMock
 
     system.actorOf(Props(new YtlActor(

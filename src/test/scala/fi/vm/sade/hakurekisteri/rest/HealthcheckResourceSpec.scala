@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import java.nio.charset.Charset
 import java.util.UUID
 
 import akka.actor.{Actor, ActorSystem, Props}
@@ -8,23 +7,23 @@ import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
-import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana, ArvosanaActor}
+import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
 import fi.vm.sade.hakurekisteri.healthcheck.{HealthcheckActor, Status}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaHealth, VirtaStatus}
 import fi.vm.sade.hakurekisteri.integration.ytl.{Report, YtlReport}
-import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaActor}
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusActor}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
 import fi.vm.sade.hakurekisteri.suoritus._
-import fi.vm.sade.hakurekisteri.tools.Peruskoulu
+import fi.vm.sade.hakurekisteri.tools.{ItPostgres, Peruskoulu}
 import fi.vm.sade.hakurekisteri.web.healthcheck.HealthcheckResource
-import org.h2.tools.RunScript
+import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.joda.time.{DateTime, LocalDate}
 import org.json4s.JsonAST.JInt
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -44,19 +43,27 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
   implicit val system = ActorSystem()
   implicit val ec: ExecutionContext = system.dispatcher
 
-  val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(seq2journal(Seq(arvosana)))))
-  val guardedArvosanaRekisteri = system.actorOf(Props(new FakeAuthorizer(arvosanaRekisteri)))
-
-  val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(seq2journal(Seq(opiskelija)))))
-  val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(opiskelijaRekisteri)))
-
   val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusActor(seq2journal(Seq(opiskeluoikeus)))))
   val guardedOpiskeluoikeusRekisteri = system.actorOf(Props(new FakeAuthorizer(opiskeluoikeusRekisteri)))
 
   val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(seq2journal(Seq(suoritus)))))
   val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
-  implicit val database = Database.forURL("jdbc:h2:file:./data/healthchecktest", driver = "org.h2.Driver")
+  val portChooser = new ChooseFreePort
+  val itDb = new ItPostgres(portChooser)
+  itDb.start()
+  implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
+
+  val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
+  arvosanaJournal.addModification(Updated(arvosana.identify))
+  val arvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
+  val guardedArvosanaRekisteri = system.actorOf(Props(new FakeAuthorizer(arvosanaRekisteri)))
+
+  val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
+  opiskelijaJournal.addModification(Updated(opiskelija.identify))
+  val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1)))
+  val guardedOpiskelijaRekisteri = system.actorOf(Props(new FakeAuthorizer(opiskelijaRekisteri)))
+
   val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
   val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 1)))
   val guardedEraRekisteri = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
@@ -112,11 +119,11 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
   }
 
   override def stop(): Unit = {
-    RunScript.execute("jdbc:h2:./data/healthchecktest", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
-    super.stop()
     import scala.concurrent.duration._
     Await.result(system.terminate(), 15.seconds)
     database.close()
+    itDb.stop()
+    super.stop()
   }
 
   def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]) = {

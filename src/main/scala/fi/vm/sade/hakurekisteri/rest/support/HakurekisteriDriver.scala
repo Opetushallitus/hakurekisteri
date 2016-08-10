@@ -4,7 +4,7 @@ import java.sql.{PreparedStatement, ResultSet}
 import java.util.UUID
 
 import slick.ast.FieldSymbol
-import slick.driver.{H2Driver, PostgresDriver}
+import slick.driver.PostgresDriver
 
 object HakurekisteriDriver extends PostgresDriver {
 
