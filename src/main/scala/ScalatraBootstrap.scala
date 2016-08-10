@@ -8,6 +8,7 @@ import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.healthcheck.HealthcheckActor
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
+import fi.vm.sade.hakurekisteri.integration.hakemus.RemoteHakemusService
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -102,7 +103,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(koosteet.haut),
     ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),
     ("/rest/v2/hakijat", "rest/v2/hakijat") -> new HakijaResourceV2(koosteet.hakijat),
-    ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(integrations.hakemukset, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),
+    ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(integrations.hakemusService, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),
     ("/rest/v1/opiskelijat", "rest/v1/opiskelijat") -> new HakurekisteriResource[Opiskelija, CreateOpiskelijaCommand](authorizedRegisters.opiskelijaRekisteri, OpiskelijaQuery(_)) with OpiskelijaSwaggerApi with HakurekisteriCrudCommands[Opiskelija, CreateOpiskelijaCommand] with SecuritySupport,
     ("/rest/v1/oppijat", "rest/v1/oppijat") -> new OppijaResource(authorizedRegisters, integrations.hakemukset, koosteet.ensikertalainen),
     ("/rest/v1/opiskeluoikeudet", "rest/v1/opiskeluoikeudet") -> new HakurekisteriResource[Opiskeluoikeus, CreateOpiskeluoikeusCommand](authorizedRegisters.opiskeluoikeusRekisteri, OpiskeluoikeusQuery(_)) with OpiskeluoikeusSwaggerApi with HakurekisteriCrudCommands[Opiskeluoikeus, CreateOpiskeluoikeusCommand] with SecuritySupport,
