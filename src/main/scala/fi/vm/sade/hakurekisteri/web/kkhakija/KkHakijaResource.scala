@@ -98,7 +98,7 @@ case class Hakija(hetu: String,
 
 object KkHakijaParamMissingException extends Exception
 
-class KkHakijaResource(hakemukset: ActorRef,
+class KkHakijaResource(hakemusService: HakemusService,
                        tarjonta: ActorRef,
                        haut: ActorRef,
                        koodisto: ActorRef,
@@ -158,15 +158,30 @@ class KkHakijaResource(hakemukset: ActorRef,
   }
 
   def getKkHakijat(q: KkHakijaQuery): Future[Seq[Hakija]] = {
-    val hakemusQuery: Query[FullHakemus] with Product with Serializable = q.oppijanumero match {
-      case Some(o) => HenkiloHakijaQuery(o)
-      case None => HakemusQuery(q.haku, q.organisaatio, None, q.hakukohde)
+
+    val hakemukset = q match {
+      case KkHakijaQuery(Some(oppijanumero), _, _ , _, _, _) => hakemusService.hakemuksetByPerson(oppijanumero)
+      case KkHakijaQuery(None, _, _, Some(hakukohde), _ ,_) => hakemusService.hakemuksetByHakukohde(hakukohde)
+      case _ => throw KkHakijaParamMissingException
     }
 
-    for {
-      fullHakemukset: Seq[FullHakemus] <- (hakemukset ? hakemusQuery).mapTo[Seq[FullHakemus]]
-      hakijat <- fullHakemukset2hakijat(fullHakemukset.filter(h => h.personOid.isDefined && h.stateValid))(q)
-    } yield hakijat
+    def matchHakemusToQuery(hakemus: FullHakemus) : Boolean = {
+      if (hakemus.personOid.isEmpty || !hakemus.stateValid) {
+        return false
+      }
+
+      if (q.oppijanumero.isDefined && q.oppijanumero != hakemus.personOid) {
+        return false
+      }
+
+      if (q.haku.isDefined && !q.haku.contains(hakemus.applicationSystemId)) {
+        return false
+      }
+
+      true
+    }
+
+    fullHakemukset2hakijat(hakemukset.filter(matchHakemusToQuery))(q)
   }
 
   private def getHakukelpoisuus(hakukohdeOid: String, kelpoisuudet: Seq[PreferenceEligibility]): PreferenceEligibility = {

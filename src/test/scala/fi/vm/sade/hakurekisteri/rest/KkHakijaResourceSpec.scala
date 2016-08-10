@@ -7,7 +7,7 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.HakeneetSupport
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.hakija.{Syksy, _}
 import fi.vm.sade.hakurekisteri.integration._
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusActor, RefreshHakemukset}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{MockHakemusService, FullHakemus, HakemusActor, RefreshHakemukset}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
@@ -43,13 +43,14 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   val hakemusJournal: Journal[FullHakemus, String] = seq2journal(Seq(FullHakemus1, FullHakemus2, SynteettinenHakemus, VanhentuneenHaunHakemus))
   val hakemusMock = system.actorOf(Props(new HakemusActor(hakemusClient = client, journal = hakemusJournal)))
+  val hakemusServiceMock = new MockHakemusService
   val tarjontaMock = system.actorOf(Props(new MockedTarjontaActor()))
   val hakuMock = system.actorOf(Props(new MockedHakuActor()))
   val suoritusMock = system.actorOf(Props(new MockedSuoritusActor()))
   val valintaTulosMock = system.actorOf(Props(new MockedValintaTulosActor()))
   val koodistoMock = system.actorOf(Props(new MockedKoodistoActor()))
 
-  val resource = new KkHakijaResource(hakemusMock, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock)
+  val resource = new KkHakijaResource(hakemusServiceMock, tarjontaMock, hakuMock, koodistoMock, suoritusMock, valintaTulosMock)
   addServlet(resource, "/")
 
 
@@ -75,7 +76,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
 
   test("should not return results if user not in hakukohde organization hierarchy") {
     val hakijat = Await.result(
-      resource.getKkHakijat(KkHakijaQuery(None, None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.1")))), 15.seconds
+      resource.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.1")))), 15.seconds
     )
 
     hakijat.size should be (0)

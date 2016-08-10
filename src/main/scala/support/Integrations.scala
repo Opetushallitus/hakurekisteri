@@ -28,6 +28,7 @@ trait Integrations {
   val henkilo: ActorRef
   val organisaatiot: ActorRef
   val hakemukset: ActorRef
+  val hakemusService: HakemusService
   val tarjonta: ActorRef
   val koodisto: ActorRef
   val ytl: ActorRef
@@ -58,6 +59,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     }
   })
   override val hakemukset: ActorRef = mockActor("hakemukset", new MockHakemusActor)
+  override val hakemusService = new MockHakemusService
   override val koodisto: ActorRef = mockActor("koodisto", new DummyActor)
   override val organisaatiot: ActorRef = mockActor("organisaatiot", new MockOrganisaatioActor(config))
   override val parametrit: ActorRef = mockActor("parametrit", new MockParameterActor)
@@ -123,6 +125,7 @@ class BaseIntegrations(rekisterit: Registers,
     hakemusClient,
     config.integrations.hakemusConfig.maxApplications
   )).withDispatcher("akka.hakurekisteri.query-prio-dispatcher"), "hakemus")
+  val hakemusService = new RemoteHakemusService(hakemusClient)
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
   val valintaTulos = system.actorOf(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
