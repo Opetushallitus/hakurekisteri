@@ -23,7 +23,7 @@ import scala.compat.Platform
 import scala.concurrent.Future
 import scala.util.Try
 
-trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
+trait HakemusServiceOld extends InMemQueryingResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
   var hakukohdeIndex: Map[String, Seq[FullHakemus with Identified[String]]] = Option(hakukohdeIndex).getOrElse(Map())
   var hakijaIndex: Map[String, Seq[FullHakemus with Identified[String]]] = Option(hakijaIndex).getOrElse(Map())
   var hakuIndex: Map[String, Seq[FullHakemus with Identified[String]]] = Option(hakuIndex).getOrElse(Map())
@@ -178,7 +178,7 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
                    pageSize: Int = 2000,
                    nextPageDelay: Int = 10000,
                    override val journal: Journal[FullHakemus, String] = new HakemusJournal()
-                   ) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
+                   ) extends ResourceActor[FullHakemus, String] with HakemusServiceOld with HakurekisteriJsonSupport {
   var healthCheck: Option[ActorRef] = None
   override val logger = Logging(context.system, this)
   var hakijaTrigger: Seq[ActorRef] = Seq()
