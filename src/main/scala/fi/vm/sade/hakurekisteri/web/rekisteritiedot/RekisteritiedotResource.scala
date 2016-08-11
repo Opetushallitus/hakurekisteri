@@ -7,7 +7,7 @@ import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
-import fi.vm.sade.hakurekisteri.integration.hakemus.HenkiloHakijaQuery
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, HenkiloHakijaQuery}
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusQuery}
@@ -29,7 +29,7 @@ import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class RekisteritiedotResource(val rekisterit: Registers, val hakemusRekisteri: ActorRef, val ensikertalaisuus: ActorRef)
+class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: HakemusService, val ensikertalaisuus: ActorRef)
                              (implicit val system: ActorSystem, sw: Swagger, val security: Security)
   extends HakuJaValintarekisteriStack with TiedotFetcher with OppijaFetcher with RekisteritiedotSwaggerApi with HakurekisteriJsonSupport
     with JacksonJsonSupport with FutureSupport with SecuritySupport with QueryLogging {

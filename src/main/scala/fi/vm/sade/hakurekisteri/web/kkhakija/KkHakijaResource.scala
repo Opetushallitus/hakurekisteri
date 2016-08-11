@@ -160,8 +160,8 @@ class KkHakijaResource(hakemusService: HakemusService,
   def getKkHakijat(q: KkHakijaQuery): Future[Seq[Hakija]] = {
 
     val hakemukset = q match {
-      case KkHakijaQuery(Some(oppijanumero), _, _ , _, _, _) => hakemusService.hakemuksetByPerson(oppijanumero)
-      case KkHakijaQuery(None, _, _, Some(hakukohde), _ ,_) => hakemusService.hakemuksetByHakukohde(hakukohde)
+      case KkHakijaQuery(Some(oppijanumero), _, _ , _, _, _) => hakemusService.hakemuksetForPerson(oppijanumero)
+      case KkHakijaQuery(None, _, _, Some(hakukohde), _ ,_) => hakemusService.hakemuksetForHakukohde(hakukohde)
       case _ => throw KkHakijaParamMissingException
     }
 
