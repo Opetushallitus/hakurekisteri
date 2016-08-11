@@ -1,6 +1,6 @@
 [
   {
-    "applicationSystemId":"1.2.246.562.29.75961523455",
+    "applicationSystemId":"1.1",
     "answers":{
       "henkilotiedot":{
         "onkosinullakaksoiskansallisuus":"false",
@@ -110,7 +110,7 @@
         "preference5-Koulutus-id-attachmentgroups":"",
         "preference2-Koulutus-id-vocational":"",
         "preferencesVisible":"6",
-        "preference1-Koulutus-id":"1.2.246.562.20.649956391810",
+        "preference1-Koulutus-id":"1.11.2",
         "preference3-Koulutus-id-attachments":"",
         "preference3-Koulutus-id-sora":"",
         "preference3-Koulutus-requiredBaseEducations":"",
@@ -152,10 +152,10 @@
 
       }
     },
-    "oid":"1.2.246.562.11.00004615970",
+    "oid":"1.25.1",
     "state":"ACTIVE",
-    "personOid":"1.2.246.562.24.41084357165",
-    "studentOid":"1.2.246.562.24.41084357165",
+    "personOid":"1.24.1",
+    "studentOid":"1.24.1",
     "received":1450418385729,
     "preferenceEligibilities":[
       {

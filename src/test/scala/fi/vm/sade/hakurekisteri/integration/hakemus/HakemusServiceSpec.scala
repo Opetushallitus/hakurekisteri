@@ -18,9 +18,6 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
   val asyncProvider = new CapturingProvider(endPoint)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   val hakemusService = new RemoteHakemusService(client)
-  val jsonDir = "src/test/scala/fi/vm/sade/hakurekisteri/integration/hakemus/json/"
-
-  def getJson(testCase: String) : String = scala.io.Source.fromFile(jsonDir + testCase + ".json").mkString
 
   it should "return applications by person oid" in {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
