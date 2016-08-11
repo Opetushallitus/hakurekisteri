@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
 trait Journals {
   val suoritusJournal: Journal[Suoritus, UUID]
   val opiskelijaJournal: JDBCJournal[Opiskelija, UUID, OpiskelijaTable]
-  val opiskeluoikeusJournal: Journal[Opiskeluoikeus, UUID]
+  val opiskeluoikeusJournal: JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable]
   val arvosanaJournal: JDBCJournal[Arvosana, UUID, ArvosanaTable]
   val eraJournal: JDBCJournal[ImportBatch, UUID, ImportBatchTable]
 }

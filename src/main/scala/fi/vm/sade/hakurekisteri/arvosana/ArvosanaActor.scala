@@ -4,16 +4,15 @@ import java.util.UUID
 import java.util.concurrent.Executors
 
 import akka.dispatch.ExecutionContexts
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCService, Query}
 import fi.vm.sade.hakurekisteri.storage._
 import fi.vm.sade.hakurekisteri.storage.repository._
+import slick.lifted
 
 import scala.concurrent.ExecutionContext
 
 case class EmptyLisatiedot() extends Query[Arvosana]
-
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-import slick.lifted
 
 class ArvosanaJDBCActor(val journal: JDBCJournal[Arvosana, UUID, ArvosanaTable], poolSize: Int)
   extends ResourceActor[Arvosana, UUID] with JDBCRepository[Arvosana, UUID, ArvosanaTable] with JDBCService[Arvosana, UUID, ArvosanaTable] {

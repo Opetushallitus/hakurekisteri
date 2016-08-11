@@ -17,7 +17,7 @@ import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActor}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusActor
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusJDBCActor, OpiskeluoikeusTable}
 import fi.vm.sade.hakurekisteri.oppija.Oppija
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal, Registers, User}
@@ -212,12 +212,13 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
 
   val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
+  val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable])
   val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
 
   val rekisterit = new Registers {
     private val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
     private val arvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
-    private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusActor()))
+    private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusJDBCActor(opiskeluoikeusJournal, 1)))
     private val opiskelijat = system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1)))
     private val suoritukset = system.actorOf(Props(new SuoritusActor(suorituksetSeq)))
 
