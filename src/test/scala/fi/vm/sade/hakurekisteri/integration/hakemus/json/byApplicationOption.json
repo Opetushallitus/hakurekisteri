@@ -1,1 +1,1576 @@
-[{"applicationSystemId":"1.2.246.562.29.75961523455","answers":{"henkilotiedot":{"onkosinullakaksoiskansallisuus":"false","kansalaisuus":"FIN","koulusivistyskieli":"FI","asuinmaa":"FIN","matkapuhelinnumero1":"050 53044561","Sukunimi":"Oja-Testi","Henkilotunnus":"130275-9533","Henkilotunnus_digest":"9402adbda501017b94c5324754876a02aef696a60d42846842b505b435b2856f","Postinumero":"00560","lahiosoite":"Katinhännänraitti 53","sukupuoli":"1","turvakielto":"false","Kutsumanimi":"Iikka","Sähköposti":"hakija-25075156@oph.fi","Etunimet":"Iikka Testi","personOid":"1.2.246.562.24.41084357165","kotikunta":"091","onkoSinullaSuomalainenHetu":"false","aidinkieli":"FI","syntymaaika":"13.02.1975","Henkilotunnus_plain":"130275-9533","SUKUPUOLI":"1","passinnumero":"","kansallinenIdTunnus":""},"lisatiedot":{"lupaJulkaisu":"true","asiointikieli":"suomi","lupaSms":"true","lupaMarkkinointi":"true"},"hakutoiveet":{"preference4-Koulutus-id-aoIdentifier":"","preference3-Koulutus-id-ao-groups":"","preference1-Koulutus-id-ao-groups":"","preference4-Koulutus-id-educationcode":"","preference1-Opetuspiste":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","preference4-Opetuspiste-id":"","preference3-Koulutus-id-athlete":"","preference4-Koulutus-requiredBaseEducations":"","preference5-Opetuspiste-id":"","preference2-Koulutus-id-attachmentgroups":"","preference4-Koulutus-id-athlete":"","preference2-Koulutus-id-aoIdentifier":"","preference2-Koulutus-id-attachments":"","preference3-Opetuspiste-id":"","preference4-Koulutus-id-attachmentgroups":"","preference6-Koulutus-id-lang":"","preference6-Koulutus-id-vocational":"","preference2-Koulutus-id-ao-groups":"","preference1-Koulutus-educationDegree":"koulutusasteoph2002_72","preference6-Koulutus-id-educationcode":"","preference5-Koulutus-educationDegree":"","preference6-Koulutus-id-ao-groups":"","preference2-Koulutus-id-sora":"","preference4-Koulutus-id-vocational":"","preference3-Koulutus-id":"","preference1-yoLiite":"true","preference1-Opetuspiste-id":"1.2.246.562.10.2014040310315946122056","preference5-Koulutus-id-lang":"","preference1-Koulutus-id-sora":"false","preference2-Koulutus-educationDegree":"","preference6-Koulutus-requiredBaseEducations":"","preference5-Koulutus-id-sora":"","preference1-Koulutus-id-aoIdentifier":"","preference1-Koulutus-id-educationcode":"koulutus_742702","preference6-Koulutus-id-kaksoistutkinto":"","preference5-Koulutus-id-ao-groups":"","preference3-Koulutus-id-attachmentgroups":"","preference6-Koulutus-id-sora":"","preference5-Koulutus-id-athlete":"","preference2-Koulutus-id":"","preference5-Koulutus-id-attachments":"","preference3-Koulutus-id-vocational":"","preference1-Koulutus-id-vocational":"false","preference2-Koulutus-requiredBaseEducations":"","preference6-Koulutus-id-athlete":"","preference4-Koulutus-educationDegree":"","preference1-Koulutus-id-athlete":"false","preference4-Koulutus-id-kaksoistutkinto":"","preference6-Koulutus-educationDegree":"","preference6-Koulutus-id-attachments":"","preference5-Koulutus-id-kaksoistutkinto":"","preference6-Koulutus-id-aoIdentifier":"","preference6-Koulutus-id-attachmentgroups":"","preference5-Koulutus-id":"","preference2-Opetuspiste":"","preference2-Koulutus-id-athlete":"","preference1-Koulutus-id-attachments":"true","preference3-Koulutus-educationDegree":"","preference2-Koulutus-id-kaksoistutkinto":"","preference5-Opetuspiste":"","preference3-Koulutus-id-kaksoistutkinto":"","preference5-Koulutus-id-educationcode":"","preference1-Koulutus-id-attachmentgroups":"","preference4-Koulutus-id-sora":"","preference5-Koulutus-id-vocational":"","preference5-Koulutus-requiredBaseEducations":"","preference3-Koulutus-id-lang":"","preference1-Koulutus-requiredBaseEducations":"","preference2-Opetuspiste-id":"","preference3-Opetuspiste":"","preference4-Koulutus-id-lang":"","preference6-Koulutus-id":"","preference5-Koulutus-id-attachmentgroups":"","preference2-Koulutus-id-vocational":"","preferencesVisible":"6","preference1-Koulutus-id":"1.2.246.562.20.649956391810","preference3-Koulutus-id-attachments":"","preference3-Koulutus-id-sora":"","preference3-Koulutus-requiredBaseEducations":"","preference4-Koulutus-id":"","preference2-Koulutus-id-lang":"","preference4-Koulutus-id-attachments":"","preference4-Opetuspiste":"","preference3-Koulutus-id-educationcode":"","preference1-Koulutus":"Maisterihaku, Biokemia, filosofian maisteri (2 v)","preference1-Koulutus-id-kaksoistutkinto":"false","preference3-Koulutus-id-aoIdentifier":"","preference5-Koulutus-id-aoIdentifier":"","preference1-Koulutus-id-lang":"FI","preference4-Koulutus-id-ao-groups":"","preference6-Opetuspiste":"","preference2-Koulutus-id-educationcode":"","preference6-Opetuspiste-id":"","preference1-Opetuspiste-id-parents":"1.2.246.562.10.00000000001,1.2.246.562.10.2014040310315946122056,1.2.246.562.10.38417217288,1.2.246.562.10.80754632463"},"koulutustausta":{"pohjakoulutus_am_laajuus_yksikko":"1","pohjakoulutus_kk_pvm":"30.10.2015","pohjakoulutus_kk_taso":"1","pohjakoulutus_kk_nimike":"Laboratorioanalyytikko","pohjakoulutus_am_oppilaitos":"1.2.246.562.10.30120139081","pohjakoulutus_am_nimike":"351652","pohjakoulutus_am_nayttotutkintona":"false","pohjakoulutus_am_vuosi":"2010","pohjakoulutus_kk_oppilaitos":"Metropolia","pohjakoulutus_yo_vuosi":"2001","pohjakoulutus_yo_tutkinto":"fi","pohjakoulutus_yo":"true","suoritusoikeus_tai_aiempi_tutkinto":"false","pohjakoulutus_am_laajuus":"120","pohjakoulutus_kk":"true","pohjakoulutus_am":"true"},"osaaminen":{}},"oid":"1.2.246.562.11.00004615970","state":"ACTIVE","personOid":"1.2.246.562.24.41084357165","studentOid":"1.2.246.562.24.41084357165","received":1450418385729,"preferenceEligibilities":[{"aoId":"1.2.246.562.20.649956391810","status":"ELIGIBLE","source":"UNKNOWN"}],"attachmentRequests":[{"id":"form.valmis.todistus.kk_applicationOption_1.2.246.562.20.649956391810","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Todistuskopio korkeakoulututkinnosta","sv":"Betygskopia av din högskoleexamen","en":"Copy of your higher education degree certificate"}},"description":{"translations":{"fi":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","sv":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","en":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta"}},"deliveryNote":{"translations":{"fi":"Tarkista palautuspäivämäärä suoraan korkeakoulusta.","sv":"Kontrollera inlämningsdatum direkt från högskolan.","en":"Check the delivery deadline from the higher education institution."}},"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"ARRIVED"},{"id":"d2b58e6a-5c64-4a78-9683-7e6eaf53990a","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Kopio tutkintotodistuksesta - biokemia maisterihaku","sv":"Kopio tutkintotodistuksesta - biokemia maisterihaku","en":"Kopio tutkintotodistuksesta - biokemia maisterihaku"}},"description":{"translations":{"fi":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>","sv":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>","en":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>"}},"deadline":1454072400000,"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"ARRIVED"},{"id":"e38c26f5-33ee-4f80-af7a-2fed3df4c637","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Motivaatiokirje - biokemia maisterihaku","sv":"Motivaatiokirje - biokemia maisterihaku","en":"Motivaatiokirje - biokemia maisterihaku"}},"description":{"translations":{"fi":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>","sv":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>","en":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>"}},"deadline":1454072400000,"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"ARRIVED"}]},{"applicationSystemId":"1.2.246.562.29.75961523455","answers":{"henkilotiedot":{"onkosinullakaksoiskansallisuus":"false","kansalaisuus":"FIN","koulusivistyskieli":"FI","asuinmaa":"FIN","matkapuhelinnumero1":"050 28575891","Sukunimi":"Salo-Testi","Henkilotunnus":"020369-932K","Henkilotunnus_digest":"5557a0a5c115b502056cfdc1a42b7bbc3c86bab6cc25cca27405c34337670454","Postinumero":"90830","lahiosoite":"Ketunperänpolku 711","sukupuoli":"2","turvakielto":"false","Kutsumanimi":"Erika","Sähköposti":"hakija-42290634@oph.fi","Etunimet":"Erika Testi","personOid":"1.2.246.562.24.14052711618","kotikunta":"564","onkoSinullaSuomalainenHetu":"false","aidinkieli":"FI","syntymaaika":"02.03.1969","Henkilotunnus_plain":"020369-932K","SUKUPUOLI":"2","passinnumero":"","kansallinenIdTunnus":""},"lisatiedot":{"lupaSahkoisesti":"true","lupaJulkaisu":"true","asiointikieli":"suomi","lupaSms":"true"},"hakutoiveet":{"preference4-Koulutus-id-aoIdentifier":"","preference3-Koulutus-id-ao-groups":"","preference1-Koulutus-id-ao-groups":"","preference4-Koulutus-id-educationcode":"","preference1-Opetuspiste":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","preference4-Opetuspiste-id":"","preference3-Koulutus-id-athlete":"","preference4-Koulutus-requiredBaseEducations":"","preference5-Opetuspiste-id":"","preference2-Koulutus-id-attachmentgroups":"","preference4-Koulutus-id-athlete":"","preference2-Koulutus-id-aoIdentifier":"","preference2-Koulutus-id-attachments":"","preference3-Opetuspiste-id":"","preference4-Koulutus-id-attachmentgroups":"","preference6-Koulutus-id-lang":"","preference6-Koulutus-id-vocational":"","preference2-Koulutus-id-ao-groups":"","preference1-Koulutus-educationDegree":"koulutusasteoph2002_72","preference6-Koulutus-id-educationcode":"","preference5-Koulutus-educationDegree":"","preference6-Koulutus-id-ao-groups":"","preference2-Koulutus-id-sora":"","preference4-Koulutus-id-vocational":"","preference3-Koulutus-id":"","preference1-yoLiite":"true","preference1-Opetuspiste-id":"1.2.246.562.10.2014040310315946122056","preference5-Koulutus-id-lang":"","preference1-Koulutus-id-sora":"false","preference2-Koulutus-educationDegree":"","preference6-Koulutus-requiredBaseEducations":"","preference5-Koulutus-id-sora":"","preference1-Koulutus-id-aoIdentifier":"","preference1-Koulutus-id-educationcode":"koulutus_742702","preference6-Koulutus-id-kaksoistutkinto":"","preference5-Koulutus-id-ao-groups":"","preference3-Koulutus-id-attachmentgroups":"","preference6-Koulutus-id-sora":"","preference5-Koulutus-id-athlete":"","preference2-Koulutus-id":"","preference5-Koulutus-id-attachments":"","preference3-Koulutus-id-vocational":"","preference1-Koulutus-id-vocational":"false","preference2-Koulutus-requiredBaseEducations":"","preference6-Koulutus-id-athlete":"","preference4-Koulutus-educationDegree":"","preference1-Koulutus-id-athlete":"false","preference4-Koulutus-id-kaksoistutkinto":"","preference6-Koulutus-educationDegree":"","preference6-Koulutus-id-attachments":"","preference5-Koulutus-id-kaksoistutkinto":"","preference6-Koulutus-id-aoIdentifier":"","preference6-Koulutus-id-attachmentgroups":"","preference5-Koulutus-id":"","preference2-Opetuspiste":"","preference2-Koulutus-id-athlete":"","preference1-Koulutus-id-attachments":"true","preference3-Koulutus-educationDegree":"","preference2-Koulutus-id-kaksoistutkinto":"","preference5-Opetuspiste":"","preference3-Koulutus-id-kaksoistutkinto":"","preference5-Koulutus-id-educationcode":"","preference1-Koulutus-id-attachmentgroups":"","preference4-Koulutus-id-sora":"","preference5-Koulutus-id-vocational":"","preference5-Koulutus-requiredBaseEducations":"","preference3-Koulutus-id-lang":"","preference1-Koulutus-requiredBaseEducations":"","preference2-Opetuspiste-id":"","preference3-Opetuspiste":"","preference4-Koulutus-id-lang":"","preference6-Koulutus-id":"","preference5-Koulutus-id-attachmentgroups":"","preference2-Koulutus-id-vocational":"","preferencesVisible":"6","preference1-Koulutus-id":"1.2.246.562.20.649956391810","preference3-Koulutus-id-attachments":"","preference3-Koulutus-id-sora":"","preference3-Koulutus-requiredBaseEducations":"","preference4-Koulutus-id":"","preference2-Koulutus-id-lang":"","preference4-Koulutus-id-attachments":"","preference4-Opetuspiste":"","preference3-Koulutus-id-educationcode":"","preference1-Koulutus":"Maisterihaku, Biokemia, filosofian maisteri (2 v)","preference1-Koulutus-id-kaksoistutkinto":"false","preference3-Koulutus-id-aoIdentifier":"","preference5-Koulutus-id-aoIdentifier":"","preference1-Koulutus-id-lang":"FI","preference4-Koulutus-id-ao-groups":"","preference6-Opetuspiste":"","preference2-Koulutus-id-educationcode":"","preference6-Opetuspiste-id":"","preference1-Opetuspiste-id-parents":"1.2.246.562.10.00000000001,1.2.246.562.10.2014040310315946122056,1.2.246.562.10.38417217288,1.2.246.562.10.80754632463"},"koulutustausta":{"pohjakoulutus_yo_tutkinto":"fi","pohjakoulutus_yo_vuosi":"2012","pohjakoulutus_yo":"true","pohjakoulutus_kk_pvm":"20.5.2016","pohjakoulutus_kk_taso":"2","suoritusoikeus_tai_aiempi_tutkinto":"false","pohjakoulutus_kk":"true","pohjakoulutus_kk_nimike":"Luonnontieteen kandidaatti","pohjakoulutus_kk_oppilaitos":"Oulun yliopisto"},"osaaminen":{}},"oid":"1.2.246.562.11.00004616759","state":"ACTIVE","personOid":"1.2.246.562.24.14052711618","studentOid":"1.2.246.562.24.14052711618","received":1450629533262,"preferenceEligibilities":[{"aoId":"1.2.246.562.20.649956391810","status":"ELIGIBLE","source":"UNKNOWN"}],"attachmentRequests":[{"id":"form.valmis.todistus.kk_applicationOption_1.2.246.562.20.649956391810","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"NOT_CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Todistuskopio korkeakoulututkinnosta","sv":"Betygskopia av din högskoleexamen","en":"Copy of your higher education degree certificate"}},"description":{"translations":{"fi":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","sv":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","en":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta"}},"deliveryNote":{"translations":{"fi":"Tarkista palautuspäivämäärä suoraan korkeakoulusta.","sv":"Kontrollera inlämningsdatum direkt från högskolan.","en":"Check the delivery deadline from the higher education institution."}},"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"NOT_RECEIVED"},{"id":"ac4fa39f-9042-40d8-b2d9-e60a94fa09dd","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"NOT_CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Kopio tutkintotodistuksesta - biokemia maisterihaku","sv":"Kopio tutkintotodistuksesta - biokemia maisterihaku","en":"Kopio tutkintotodistuksesta - biokemia maisterihaku"}},"description":{"translations":{"fi":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>","sv":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>","en":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>"}},"deadline":1454072400000,"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"NOT_RECEIVED"},{"id":"058448e5-ea55-45e0-9535-7f1f9391eec7","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Motivaatiokirje - biokemia maisterihaku","sv":"Motivaatiokirje - biokemia maisterihaku","en":"Motivaatiokirje - biokemia maisterihaku"}},"description":{"translations":{"fi":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>","sv":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>","en":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>"}},"deadline":1454072400000,"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"ARRIVED"}]},{"applicationSystemId":"1.2.246.562.29.75961523455","answers":{"henkilotiedot":{"onkosinullakaksoiskansallisuus":"false","kansalaisuus":"FIN","koulusivistyskieli":"FI","asuinmaa":"FIN","matkapuhelinnumero1":"050 97823501","Sukunimi":"Paasonen-Testi","Henkilotunnus":"140352-979E","Henkilotunnus_digest":"e6f2b491a1d3552a3972c21b631813a9433fac5f49b445d05733a7293025e0e8","Postinumero":"90500","lahiosoite":"Verhonkulmala 906","sukupuoli":"1","turvakielto":"false","Kutsumanimi":"Tuure","Sähköposti":"hakija-29539869@oph.fi","Etunimet":"Tuure Testi","personOid":"1.2.246.562.24.91305591197","kotikunta":"564","onkoSinullaSuomalainenHetu":"false","aidinkieli":"FI","syntymaaika":"14.03.1952","Henkilotunnus_plain":"140352-979E","SUKUPUOLI":"1","passinnumero":"","kansallinenIdTunnus":""},"lisatiedot":{"lupaSahkoisesti":"true","lupaJulkaisu":"true","asiointikieli":"suomi","lupaSms":"true"},"hakutoiveet":{"preference4-Koulutus-id-aoIdentifier":"","preference3-Koulutus-id-ao-groups":"","preference1-Koulutus-id-ao-groups":"","preference4-Koulutus-id-educationcode":"","preference1-Opetuspiste":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","preference4-Opetuspiste-id":"","preference3-Koulutus-id-athlete":"","preference4-Koulutus-requiredBaseEducations":"","preference5-Opetuspiste-id":"","preference2-Koulutus-id-attachmentgroups":"","preference4-Koulutus-id-athlete":"","preference2-Koulutus-id-aoIdentifier":"","preference2-Koulutus-id-attachments":"","preference3-Opetuspiste-id":"","preference2-Koulutus":" ","preference4-Koulutus-id-attachmentgroups":"","preference6-Koulutus-id-lang":"","preference6-Koulutus-id-vocational":"","preference2-Koulutus-id-ao-groups":"","preference1-Koulutus-educationDegree":"koulutusasteoph2002_72","preference6-Koulutus-id-educationcode":"","preference5-Koulutus-educationDegree":"","preference6-Koulutus-id-ao-groups":"","preference2-Koulutus-id-sora":"false","preference4-Koulutus-id-vocational":"","preference3-Koulutus-id":"","preference1-yoLiite":"true","preference1-Opetuspiste-id":"1.2.246.562.10.2014040310315946122056","preference5-Koulutus-id-lang":"","preference1-Koulutus-id-sora":"false","preference2-Koulutus-educationDegree":"","preference6-Koulutus-requiredBaseEducations":"","preference5-Koulutus-id-sora":"","preference1-Koulutus-id-aoIdentifier":"","preference1-Koulutus-id-educationcode":"koulutus_742702","preference6-Koulutus-id-kaksoistutkinto":"","preference5-Koulutus-id-ao-groups":"","preference3-Koulutus-id-attachmentgroups":"","preference6-Koulutus-id-sora":"","preference5-Koulutus-id-athlete":"","preference2-Koulutus-id":"","preference5-Koulutus-id-attachments":"","preference3-Koulutus-id-vocational":"","preference1-Koulutus-id-vocational":"false","preference2-Koulutus-requiredBaseEducations":"","preference6-Koulutus-id-athlete":"","preference4-Koulutus-educationDegree":"","preference1-Koulutus-id-athlete":"false","preference4-Koulutus-id-kaksoistutkinto":"","preference6-Koulutus-educationDegree":"","preference6-Koulutus-id-attachments":"","preference5-Koulutus-id-kaksoistutkinto":"","preference6-Koulutus-id-aoIdentifier":"","preference6-Koulutus-id-attachmentgroups":"","preference5-Koulutus-id":"","preference2-Opetuspiste":"","preference2-Koulutus-id-athlete":"false","preference1-Koulutus-id-attachments":"true","preference3-Koulutus-educationDegree":"","preference2-Koulutus-id-kaksoistutkinto":"false","preference5-Opetuspiste":"","preference3-Koulutus-id-kaksoistutkinto":"","preference5-Koulutus-id-educationcode":"","preference1-Koulutus-id-attachmentgroups":"","preference4-Koulutus-id-sora":"","preference5-Koulutus-id-vocational":"","preference5-Koulutus-requiredBaseEducations":"","preference3-Koulutus-id-lang":"","preference1-Koulutus-requiredBaseEducations":"pohjakoulutusvaatimuskorkeakoulut_103,pohjakoulutusvaatimuskorkeakoulut_101,pohjakoulutusvaatimuskorkeakoulut_102","preference2-Opetuspiste-id":"","preference3-Opetuspiste":"","preference4-Koulutus-id-lang":"","preference6-Koulutus-id":"","preference5-Koulutus-id-attachmentgroups":"","preference2-Koulutus-id-vocational":"false","preferencesVisible":"6","preference1-Koulutus-id":"1.2.246.562.20.649956391810","preference3-Koulutus-id-attachments":"","preference3-Koulutus-id-sora":"","preference3-Koulutus-requiredBaseEducations":"","preference4-Koulutus-id":"","preference2-Koulutus-id-lang":"","preference4-Koulutus-id-attachments":"","preference4-Opetuspiste":"","preference3-Koulutus-id-educationcode":"","preference1-Koulutus":"Maisterihaku, Biokemia, filosofian maisteri (2 v)","preference1-Koulutus-id-kaksoistutkinto":"false","preference3-Koulutus-id-aoIdentifier":"","preference5-Koulutus-id-aoIdentifier":"","preference1-Koulutus-id-lang":"FI","preference4-Koulutus-id-ao-groups":"","preference6-Opetuspiste":"","preference2-Koulutus-id-educationcode":"false","preference6-Opetuspiste-id":"","preference1-Opetuspiste-id-parents":"1.2.246.562.10.00000000001,1.2.246.562.10.2014040310315946122056,1.2.246.562.10.38417217288,1.2.246.562.10.80754632463"},"koulutustausta":{"pohjakoulutus_yo_tutkinto":"fi","pohjakoulutus_yo_vuosi":"2005","pohjakoulutus_yo":"true","pohjakoulutus_kk_pvm":"18.12.2010","pohjakoulutus_kk_taso":"1","suoritusoikeus_tai_aiempi_tutkinto":"false","pohjakoulutus_kk":"true","pohjakoulutus_kk_nimike":"optometristi (AMK)","pohjakoulutus_kk_oppilaitos":"Oulun seudun ammattikorkeakoulu"},"osaaminen":{}},"oid":"1.2.246.562.11.00004742429","state":"ACTIVE","personOid":"1.2.246.562.24.91305591197","studentOid":"1.2.246.562.24.91305591197","received":1453235043711,"preferenceEligibilities":[{"aoId":"1.2.246.562.20.649956391810","status":"NOT_CHECKED","source":"UNKNOWN"}],"attachmentRequests":[{"id":"form.valmis.todistus.kk_applicationOption_1.2.246.562.20.649956391810","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Todistuskopio korkeakoulututkinnosta","sv":"Betygskopia av din högskoleexamen","en":"Copy of your higher education degree certificate"}},"description":{"translations":{"fi":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","sv":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","en":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta"}},"deliveryNote":{"translations":{"fi":"Tarkista palautuspäivämäärä suoraan korkeakoulusta.","sv":"Kontrollera inlämningsdatum direkt från högskolan.","en":"Check the delivery deadline from the higher education institution."}},"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"ARRIVED"},{"id":"630a0ac9-57a8-4768-9034-8851c6cef9d4","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Kopio tutkintotodistuksesta - biokemia maisterihaku","sv":"Kopio tutkintotodistuksesta - biokemia maisterihaku","en":"Kopio tutkintotodistuksesta - biokemia maisterihaku"}},"description":{"translations":{"fi":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>","sv":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>","en":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>"}},"deadline":1454072400000,"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"ARRIVED"},{"id":"a9ef6cef-a366-4d71-95d1-9c3022633f3c","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Motivaatiokirje - biokemia maisterihaku","sv":"Motivaatiokirje - biokemia maisterihaku","en":"Motivaatiokirje - biokemia maisterihaku"}},"description":{"translations":{"fi":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>","sv":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>","en":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>"}},"deadline":1454072400000,"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"ARRIVED"}]},{"applicationSystemId":"1.2.246.562.29.75961523455","answers":{"henkilotiedot":{"onkosinullakaksoiskansallisuus":"false","kansalaisuus":"FIN","koulusivistyskieli":"FI","asuinmaa":"FIN","matkapuhelinnumero1":"050 74023201","Sukunimi":"Keinänen-Testi","Henkilotunnus":"250564-999W","Henkilotunnus_digest":"e101abb29388d28ca5106ec40f56ebd4c0fb413a19d2811141415018df2655d1","Postinumero":"06530","lahiosoite":"Kumiakatu 229","sukupuoli":"1","turvakielto":"false","Kutsumanimi":"Kenny","Sähköposti":"hakija-61535930@oph.fi","Etunimet":"Kenny Testi","personOid":"1.2.246.562.24.98912191608","kotikunta":"638","onkoSinullaSuomalainenHetu":"false","aidinkieli":"FI","syntymaaika":"25.05.1964","Henkilotunnus_plain":"250564-999W","SUKUPUOLI":"1","passinnumero":"","kansallinenIdTunnus":""},"lisatiedot":{"lupaJulkaisu":"true","asiointikieli":"suomi","lupaSms":"true","lupaMarkkinointi":"true"},"hakutoiveet":{"preference4-Koulutus-id-aoIdentifier":"","preference3-Koulutus-id-ao-groups":"","preference1-Koulutus-id-ao-groups":"","preference4-Koulutus-id-educationcode":"","preference1-Opetuspiste":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","preference4-Opetuspiste-id":"","preference3-Koulutus-id-athlete":"","preference4-Koulutus-requiredBaseEducations":"","preference5-Opetuspiste-id":"","preference2-Koulutus-id-attachmentgroups":"","preference4-Koulutus-id-athlete":"","preference2-Koulutus-id-aoIdentifier":"","preference2-Koulutus-id-attachments":"","preference3-Opetuspiste-id":"","preference2-Koulutus":" ","preference4-Koulutus-id-attachmentgroups":"","preference6-Koulutus-id-lang":"","preference6-Koulutus-id-vocational":"","preference2-Koulutus-id-ao-groups":"","preference1-Koulutus-educationDegree":"koulutusasteoph2002_72","preference6-Koulutus-id-educationcode":"","preference5-Koulutus-educationDegree":"","preference6-Koulutus-id-ao-groups":"","preference2-Koulutus-id-sora":"","preference4-Koulutus-id-vocational":"","preference3-Koulutus-id":"","preference1-yoLiite":"true","preference1-Opetuspiste-id":"1.2.246.562.10.2014040310315946122056","preference5-Koulutus-id-lang":"","preference1-Koulutus-id-sora":"false","preference2-Koulutus-educationDegree":"","preference6-Koulutus-requiredBaseEducations":"","preference5-Koulutus-id-sora":"","preference1-Koulutus-id-aoIdentifier":"","preference1-Koulutus-id-educationcode":"koulutus_742702","preference6-Koulutus-id-kaksoistutkinto":"","preference5-Koulutus-id-ao-groups":"","preference3-Koulutus-id-attachmentgroups":"","preference6-Koulutus-id-sora":"","preference5-Koulutus-id-athlete":"","preference2-Koulutus-id":"","preference5-Koulutus-id-attachments":"","preference3-Koulutus-id-vocational":"","preference1-Koulutus-id-vocational":"false","preference2-Koulutus-requiredBaseEducations":"","preference6-Koulutus-id-athlete":"","preference4-Koulutus-educationDegree":"","preference1-Koulutus-id-athlete":"false","preference4-Koulutus-id-kaksoistutkinto":"","preference6-Koulutus-educationDegree":"","preference6-Koulutus-id-attachments":"","preference5-Koulutus-id-kaksoistutkinto":"","preference6-Koulutus-id-aoIdentifier":"","preference6-Koulutus-id-attachmentgroups":"","preference5-Koulutus-id":"","preference2-Opetuspiste":"","preference2-Koulutus-id-athlete":"","preference1-Koulutus-id-attachments":"true","preference3-Koulutus-educationDegree":"","preference2-Koulutus-id-kaksoistutkinto":"","preference5-Opetuspiste":"","preference3-Koulutus-id-kaksoistutkinto":"","preference5-Koulutus-id-educationcode":"","preference1-Koulutus-id-attachmentgroups":"","preference4-Koulutus-id-sora":"","preference5-Koulutus-id-vocational":"","preference5-Koulutus-requiredBaseEducations":"","preference3-Koulutus-id-lang":"","preference1-Koulutus-requiredBaseEducations":"pohjakoulutusvaatimuskorkeakoulut_103,pohjakoulutusvaatimuskorkeakoulut_101,pohjakoulutusvaatimuskorkeakoulut_102","preference2-Opetuspiste-id":"","preference3-Opetuspiste":"","preference4-Koulutus-id-lang":"","preference6-Koulutus-id":"","preference5-Koulutus-id-attachmentgroups":"","preference2-Koulutus-id-vocational":"","preferencesVisible":"6","preference1-Koulutus-id":"1.2.246.562.20.649956391810","preference3-Koulutus-id-attachments":"","preference3-Koulutus-id-sora":"","preference3-Koulutus-requiredBaseEducations":"","preference4-Koulutus-id":"","preference2-Koulutus-id-lang":"","preference4-Koulutus-id-attachments":"","preference4-Opetuspiste":"","preference3-Koulutus-id-educationcode":"","preference1-Koulutus":"Maisterihaku, Biokemia, filosofian maisteri (2 v)","preference1-Koulutus-id-kaksoistutkinto":"false","preference3-Koulutus-id-aoIdentifier":"","preference5-Koulutus-id-aoIdentifier":"","preference1-Koulutus-id-lang":"FI","preference4-Koulutus-id-ao-groups":"","preference6-Opetuspiste":"","preference2-Koulutus-id-educationcode":"","preference6-Opetuspiste-id":"","preference1-Opetuspiste-id-parents":"1.2.246.562.10.00000000001,1.2.246.562.10.2014040310315946122056,1.2.246.562.10.38417217288,1.2.246.562.10.80754632463"},"koulutustausta":{"pohjakoulutus_yo_tutkinto":"fi","pohjakoulutus_yo_vuosi":"2010","pohjakoulutus_yo":"true","pohjakoulutus_kk_pvm":"18.12.2015","pohjakoulutus_kk_taso":"1","suoritusoikeus_tai_aiempi_tutkinto":"false","pohjakoulutus_kk":"true","pohjakoulutus_kk_nimike":"Bioanalytiikan koulutusohjelma","pohjakoulutus_kk_oppilaitos":"Metropolia Ammattikorkeakoulu"},"osaaminen":{}},"oid":"1.2.246.562.11.00004806792","state":"ACTIVE","personOid":"1.2.246.562.24.98912191608","studentOid":"1.2.246.562.24.98912191608","received":1453714131603,"preferenceEligibilities":[{"aoId":"1.2.246.562.20.649956391810","status":"ELIGIBLE","source":"UNKNOWN"}],"attachmentRequests":[{"id":"form.valmis.todistus.kk_applicationOption_1.2.246.562.20.649956391810","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Todistuskopio korkeakoulututkinnosta","sv":"Betygskopia av din högskoleexamen","en":"Copy of your higher education degree certificate"}},"description":{"translations":{"fi":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","sv":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","en":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta"}},"deliveryNote":{"translations":{"fi":"Tarkista palautuspäivämäärä suoraan korkeakoulusta.","sv":"Kontrollera inlämningsdatum direkt från högskolan.","en":"Check the delivery deadline from the higher education institution."}},"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"ARRIVED"},{"id":"b15b41b0-6620-483e-bda8-7ce67596b62a","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Kopio tutkintotodistuksesta - biokemia maisterihaku","sv":"Kopio tutkintotodistuksesta - biokemia maisterihaku","en":"Kopio tutkintotodistuksesta - biokemia maisterihaku"}},"description":{"translations":{"fi":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>","sv":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>","en":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>"}},"deadline":1454072400000,"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"ARRIVED"},{"id":"3cada8fb-0dff-44e7-a167-167b7e5cd4e9","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Motivaatiokirje - biokemia maisterihaku","sv":"Motivaatiokirje - biokemia maisterihaku","en":"Motivaatiokirje - biokemia maisterihaku"}},"description":{"translations":{"fi":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>","sv":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>","en":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>"}},"deadline":1454072400000,"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"ARRIVED"}]},{"applicationSystemId":"1.2.246.562.29.75961523455","answers":{"henkilotiedot":{"onkosinullakaksoiskansallisuus":"false","kansalaisuus":"FIN","koulusivistyskieli":"FI","asuinmaa":"FIN","matkapuhelinnumero1":"050 31253831","Sukunimi":"Siren-Testi","Henkilotunnus":"190852-9979","Henkilotunnus_digest":"326a38a396aadc6adfc8a69f05a09ddbee5518491b1082009ee14d701718f1c8","Postinumero":"90420","lahiosoite":"Halivaarankatu 420","sukupuoli":"1","turvakielto":"false","Kutsumanimi":"Ron","Sähköposti":"hakija-28816236@oph.fi","Etunimet":"Ron Testi","personOid":"1.2.246.562.24.67459498235","kotikunta":"564","onkoSinullaSuomalainenHetu":"false","aidinkieli":"FI","syntymaaika":"19.08.1952","Henkilotunnus_plain":"190852-9979","SUKUPUOLI":"1","passinnumero":"","kansallinenIdTunnus":""},"lisatiedot":{"lupaSahkoisesti":"true","asiointikieli":"suomi","lupaSms":"true"},"hakutoiveet":{"preference4-Koulutus-id-aoIdentifier":"","preference3-Koulutus-id-ao-groups":"","preference1-Koulutus-id-ao-groups":"","preference4-Koulutus-id-educationcode":"","preference1-Opetuspiste":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","preference4-Opetuspiste-id":"","preference3-Koulutus-id-athlete":"","preference4-Koulutus-requiredBaseEducations":"","preference5-Opetuspiste-id":"","preference2-Koulutus-id-attachmentgroups":"","preference4-Koulutus-id-athlete":"","preference2-Koulutus-id-aoIdentifier":"","preference2-Koulutus-id-attachments":"","preference3-Opetuspiste-id":"","preference4-Koulutus-id-attachmentgroups":"","preference6-Koulutus-id-lang":"","preference6-Koulutus-id-vocational":"","preference2-Koulutus-id-ao-groups":"","preference1-Koulutus-educationDegree":"koulutusasteoph2002_72","preference6-Koulutus-id-educationcode":"","preference5-Koulutus-educationDegree":"","preference6-Koulutus-id-ao-groups":"","preference2-Koulutus-id-sora":"","preference4-Koulutus-id-vocational":"","preference3-Koulutus-id":"","preference1-yoLiite":"true","preference1-Opetuspiste-id":"1.2.246.562.10.2014040310315946122056","preference5-Koulutus-id-lang":"","preference1-Koulutus-id-sora":"false","preference2-Koulutus-educationDegree":"","preference6-Koulutus-requiredBaseEducations":"","preference5-Koulutus-id-sora":"","preference1-Koulutus-id-aoIdentifier":"","preference1-Koulutus-id-educationcode":"koulutus_742702","preference6-Koulutus-id-kaksoistutkinto":"","preference5-Koulutus-id-ao-groups":"","preference3-Koulutus-id-attachmentgroups":"","preference6-Koulutus-id-sora":"","preference5-Koulutus-id-athlete":"","preference2-Koulutus-id":"","preference5-Koulutus-id-attachments":"","preference3-Koulutus-id-vocational":"","preference1-Koulutus-id-vocational":"false","preference2-Koulutus-requiredBaseEducations":"","preference6-Koulutus-id-athlete":"","preference4-Koulutus-educationDegree":"","preference1-Koulutus-id-athlete":"false","preference4-Koulutus-id-kaksoistutkinto":"","preference6-Koulutus-educationDegree":"","preference6-Koulutus-id-attachments":"","preference5-Koulutus-id-kaksoistutkinto":"","preference6-Koulutus-id-aoIdentifier":"","preference6-Koulutus-id-attachmentgroups":"","preference5-Koulutus-id":"","preference2-Opetuspiste":"","preference2-Koulutus-id-athlete":"","preference1-Koulutus-id-attachments":"true","preference3-Koulutus-educationDegree":"","preference2-Koulutus-id-kaksoistutkinto":"","preference5-Opetuspiste":"","preference3-Koulutus-id-kaksoistutkinto":"","preference5-Koulutus-id-educationcode":"","preference1-Koulutus-id-attachmentgroups":"","preference4-Koulutus-id-sora":"","preference5-Koulutus-id-vocational":"","preference5-Koulutus-requiredBaseEducations":"","preference3-Koulutus-id-lang":"","preference1-Koulutus-requiredBaseEducations":"pohjakoulutusvaatimuskorkeakoulut_103,pohjakoulutusvaatimuskorkeakoulut_101,pohjakoulutusvaatimuskorkeakoulut_102","preference2-Opetuspiste-id":"","preference3-Opetuspiste":"","preference4-Koulutus-id-lang":"","preference6-Koulutus-id":"","preference5-Koulutus-id-attachmentgroups":"","preference2-Koulutus-id-vocational":"","preferencesVisible":"6","preference1-Koulutus-id":"1.2.246.562.20.649956391810","preference3-Koulutus-id-attachments":"","preference3-Koulutus-id-sora":"","preference3-Koulutus-requiredBaseEducations":"","preference4-Koulutus-id":"","preference2-Koulutus-id-lang":"","preference4-Koulutus-id-attachments":"","preference4-Opetuspiste":"","preference3-Koulutus-id-educationcode":"","preference1-Koulutus":"Maisterihaku, Biokemia, filosofian maisteri (2 v)","preference1-Koulutus-id-kaksoistutkinto":"false","preference3-Koulutus-id-aoIdentifier":"","preference5-Koulutus-id-aoIdentifier":"","preference1-Koulutus-id-lang":"FI","preference4-Koulutus-id-ao-groups":"","preference6-Opetuspiste":"","preference2-Koulutus-id-educationcode":"","preference6-Opetuspiste-id":"","preference1-Opetuspiste-id-parents":"1.2.246.562.10.00000000001,1.2.246.562.10.2014040310315946122056,1.2.246.562.10.38417217288,1.2.246.562.10.80754632463"},"koulutustausta":{"pohjakoulutus_kk_taso":"1","pohjakoulutus_kk_pvm":"18.12.2008","pohjakoulutus_muu":"true","pohjakoulutus_kk_nimike":"Bioanalyytikko","pohjakoulutus_muu_vuosi":"2016","pohjakoulutus_kk_oppilaitos":"Oulun seudun ammattikorkeakoulu","pohjakoulutus_yo_vuosi":"2003","pohjakoulutus_yo_tutkinto":"fi","pohjakoulutus_muu_kuvaus":"Terveyden biotieteiden maisterivaiheen (FM) opiskelija (Turun yliopisto). Pääaine lääkekehitystiede. Arvioitu valmistumisajankohta keväällä 2016.","pohjakoulutus_yo":"true","pohjakoulutus_kk":"true","suoritusoikeus_tai_aiempi_tutkinto":"false"},"osaaminen":{}},"oid":"1.2.246.562.11.00004880857","state":"ACTIVE","personOid":"1.2.246.562.24.67459498235","studentOid":"1.2.246.562.24.67459498235","received":1453975516798,"preferenceEligibilities":[{"aoId":"1.2.246.562.20.649956391810","status":"ELIGIBLE","source":"UNKNOWN"}],"attachmentRequests":[{"id":"form.valmis.todistus.kk_applicationOption_1.2.246.562.20.649956391810","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"NOT_CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Todistuskopio korkeakoulututkinnosta","sv":"Betygskopia av din högskoleexamen","en":"Copy of your higher education degree certificate"}},"description":{"translations":{"fi":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","sv":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","en":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta"}},"deliveryNote":{"translations":{"fi":"Tarkista palautuspäivämäärä suoraan korkeakoulusta.","sv":"Kontrollera inlämningsdatum direkt från högskolan.","en":"Check the delivery deadline from the higher education institution."}},"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"NOT_RECEIVED"},{"id":"952e5fee-8004-4ba9-bacc-496137afa89d","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"NOT_CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Kopio tutkintotodistuksesta - biokemia maisterihaku","sv":"Kopio tutkintotodistuksesta - biokemia maisterihaku","en":"Kopio tutkintotodistuksesta - biokemia maisterihaku"}},"description":{"translations":{"fi":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>","sv":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>","en":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>"}},"deadline":1454072400000,"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"NOT_RECEIVED"},{"id":"4d527474-0b81-4bc6-a067-c0004feef7a7","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Motivaatiokirje - biokemia maisterihaku","sv":"Motivaatiokirje - biokemia maisterihaku","en":"Motivaatiokirje - biokemia maisterihaku"}},"description":{"translations":{"fi":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>","sv":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>","en":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>"}},"deadline":1454072400000,"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"ARRIVED"}]},{"applicationSystemId":"1.2.246.562.29.75961523455","answers":{"henkilotiedot":{"onkosinullakaksoiskansallisuus":"false","koulusivistyskieli":"FI","kansalaisuus":"FIN","asuinmaa":"FIN","Sukunimi":"Seppälä-Testi","matkapuhelinnumero1":"050 40988651","Henkilotunnus":"281282-9651","Henkilotunnus_digest":"570ef634fd4c54c31a9938435f36963a241583e88b48ea4dafe3cf483cd7131b","Postinumero":"92400","sukupuoli":"1","lahiosoite":"Äteritsiputeritsipuolilautatsijänkä 895","turvakielto":"false","Sähköposti":"hakija-45978611@oph.fi","Kutsumanimi":"Jose","Etunimet":"Jose Testi","personOid":"1.2.246.562.24.43232634133","onkoSinullaSuomalainenHetu":"false","kotikunta":"748","aidinkieli":"FI","syntymaaika":"28.12.1982","Henkilotunnus_plain":"281282-9651","SUKUPUOLI":"1","passinnumero":"","kansallinenIdTunnus":""},"lisatiedot":{"lupaSahkoisesti":"true","lupaJulkaisu":"true","asiointikieli":"suomi","lupaSms":"true","lupaMarkkinointi":"true"},"hakutoiveet":{"preference4-Koulutus-id-aoIdentifier":"","preference1-Koulutus-id-ao-groups":"","preference4-Opetuspiste-id":"","preference3-Koulutus-id-athlete":"false","preference4-Koulutus-requiredBaseEducations":"","preference2-Koulutus-id-attachmentgroups":"","preference4-Koulutus-id-athlete":"","preference3-Opetuspiste-id":"","preference4-Koulutus-id-attachmentgroups":"","preference2-Koulutus-id-ao-groups":"","preference1-Koulutus-educationDegree":"koulutusasteoph2002_72","preference6-Koulutus-id-ao-groups":"","preference1-Koulutus-id-sora":"false","preference2-Koulutus-educationDegree":"koulutusasteoph2002_72","preference5-Koulutus-id-sora":"","preference1-Koulutus-id-aoIdentifier":"","preference5-Koulutus-id-ao-groups":"","preference3-Koulutus-id-attachmentgroups":"","preference1-Koulutus-id-vocational":"false","preference2-Koulutus-requiredBaseEducations":"pohjakoulutusvaatimuskorkeakoulut_103,pohjakoulutusvaatimuskorkeakoulut_101,pohjakoulutusvaatimuskorkeakoulut_102","preference4-Koulutus-id-kaksoistutkinto":"","preference6-Koulutus-educationDegree":"","preference5-Koulutus-id-kaksoistutkinto":"","preference6-Koulutus-id-attachmentgroups":"","preference2-Opetuspiste":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta","preference2-Koulutus-id-athlete":"false","preference2-Koulutus-id-kaksoistutkinto":"false","preference5-Opetuspiste":"","preference3-Koulutus-id-kaksoistutkinto":"false","preference3-Koulutus-id-lang":"","preference2-Opetuspiste-id":"1.2.246.562.10.2014040310315946122056","preference3-Opetuspiste":"","preference6-Koulutus-id":"","preferencesVisible":"6","preference1-Koulutus-id":"1.2.246.562.20.79671958068","preference3-Koulutus-id-sora":"false","preference3-Koulutus-requiredBaseEducations":"","preference2-Koulutus-id-lang":"FI","preference4-Koulutus-id-attachments":"","preference1-Koulutus-id-kaksoistutkinto":"false","preference5-Koulutus-id-aoIdentifier":"","preference1-Koulutus-id-lang":"FI","preference4-Koulutus-id-ao-groups":"","preference6-Opetuspiste":"","preference3-Koulutus-id-ao-groups":"","preference4-Koulutus-id-educationcode":"","preference1-Opetuspiste":"Oulun yliopisto, Luonnontieteellinen tiedekunta","preference5-Opetuspiste-id":"","preference2-Koulutus-id-aoIdentifier":"","preference2-Koulutus-id-attachments":"true","preference2-Koulutus":"Maisterihaku, Biokemia, filosofian maisteri (2 v)","preference6-Koulutus-id-lang":"","preference6-Koulutus-id-vocational":"","preference6-Koulutus-id-educationcode":"","preference5-Koulutus-educationDegree":"","preference2-Koulutus-id-sora":"false","preference4-Koulutus-id-vocational":"","preference3-Koulutus-id":"","preference1-yoLiite":"true","preference1-Opetuspiste-id":"1.2.246.562.10.95926279142","preference5-Koulutus-id-lang":"","preference6-Koulutus-requiredBaseEducations":"","preference1-Koulutus-id-educationcode":"koulutus_742701","preference6-Koulutus-id-kaksoistutkinto":"","preference6-Koulutus-id-sora":"","preference5-Koulutus-id-athlete":"","preference2-Koulutus-id":"1.2.246.562.20.649956391810","preference5-Koulutus-id-attachments":"","preference3-Koulutus-id-vocational":"false","preference6-Koulutus-id-athlete":"","preference4-Koulutus-educationDegree":"","preference1-Koulutus-id-athlete":"false","preference6-Koulutus-id-attachments":"","preference6-Koulutus-id-aoIdentifier":"","preference5-Koulutus-id":"","preference1-Koulutus-id-attachments":"true","preference3-Koulutus-educationDegree":"","preference5-Koulutus-id-educationcode":"","preference1-Koulutus-id-attachmentgroups":"","preference4-Koulutus-id-sora":"","preference5-Koulutus-id-vocational":"","preference5-Koulutus-requiredBaseEducations":"","preference1-Koulutus-requiredBaseEducations":"pohjakoulutusvaatimuskorkeakoulut_101,pohjakoulutusvaatimuskorkeakoulut_102,pohjakoulutusvaatimuskorkeakoulut_116","preference4-Koulutus-id-lang":"","preference5-Koulutus-id-attachmentgroups":"","preference2-Koulutus-id-vocational":"false","preference3-Koulutus-id-attachments":"","preference4-Koulutus-id":"","preference4-Opetuspiste":"","preference3-Koulutus-id-educationcode":"false","preference1-Koulutus":"Maisterihaku, Biologia, filosofian maisteri (2 v)","preference2-yoLiite":"true","preference3-Koulutus":" ","preference3-Koulutus-id-aoIdentifier":"","preference2-Koulutus-id-educationcode":"koulutus_742702","preference6-Opetuspiste-id":"","preference2-Opetuspiste-id-parents":"1.2.246.562.10.00000000001,1.2.246.562.10.2014040310315946122056,1.2.246.562.10.38417217288,1.2.246.562.10.80754632463","preference1-Opetuspiste-id-parents":"1.2.246.562.10.00000000001,1.2.246.562.10.95926279142,1.2.246.562.10.38417217288,1.2.246.562.10.80754632463"},"koulutustausta":{"pohjakoulutus_yo_vuosi":"2001","pohjakoulutus_yo_tutkinto":"fi","pohjakoulutus_yo":"true","pohjakoulutus_kk_taso":"1","pohjakoulutus_kk_pvm":"21.12.2005","pohjakoulutus_kk":"true","suoritusoikeus_tai_aiempi_tutkinto":"false","pohjakoulutus_kk_nimike":"laboratorioanalyytikko","pohjakoulutus_kk_oppilaitos":"Oulun seudun ammattikorkeakoulu"},"osaaminen":{}},"oid":"1.2.246.562.11.00004881131","state":"ACTIVE","personOid":"1.2.246.562.24.43232634133","studentOid":"1.2.246.562.24.43232634133","received":1453997101522,"preferenceEligibilities":[{"aoId":"1.2.246.562.20.79671958068","status":"ELIGIBLE","source":"AUTHENTICATED_COPY"},{"aoId":"1.2.246.562.20.649956391810","status":"NOT_CHECKED","source":"UNKNOWN"}],"attachmentRequests":[{"id":"form.valmis.todistus.kk_applicationOption_1.2.246.562.20.79671958068","preferenceAoId":"1.2.246.562.20.79671958068","processingStatus":"CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Todistuskopio korkeakoulututkinnosta","sv":"Betygskopia av din högskoleexamen","en":"Copy of your higher education degree certificate"}},"description":{"translations":{"fi":"Oulun yliopisto, Luonnontieteellinen tiedekunta","sv":"Oulun yliopisto, Luonnontieteellinen tiedekunta","en":"Oulun yliopisto, Luonnontieteellinen tiedekunta"}},"deliveryNote":{"translations":{"fi":"Tarkista palautuspäivämäärä suoraan korkeakoulusta.","sv":"Kontrollera inlämningsdatum direkt från högskolan.","en":"Check the delivery deadline from the higher education institution."}},"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"ARRIVED"},{"id":"156ff900-3a1f-42a1-936c-54c2b51410b7","preferenceAoId":"1.2.246.562.20.79671958068","processingStatus":"NOT_CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Todistusjäljennökset","sv":"Todistusjäljennökset","en":"Todistusjäljennökset"}},"description":{"translations":{"fi":"<p>Jos olet valmistunut ennen hakuajan päättymistä, sinun tulee toimittaa tutkintotodistuksesi ja opintosuoritusotteesi hakuajan päättymiseen mennessä. Jos valmistut hakuajan päättymisen jälkeen, noudata seuraavaa aikataulua kopioiden toimittamisessa:</p> <ul> <li>   Keväällä 2016 valmistuvat suomalaisen amk -tutkinnon suorittavat – ma 13.6.2016 mennessä</li> <li>   Keväällä/kesällä 2016 valmistuvat ulkomailla suoritettavat tutkinnot sekä suomalaiset yliopistolliset kandidaatin tutkinnot – pe 29.7.2016 mennessä</li> </ul> <p><strong>Liitteiden on oltava perillä klo 15.00 mennessä.</strong></p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja. Liitteet voi oikeaksi todistaa kaksi henkilöä allekirjoituksellaan ja nimenselvennöksellään. Allekirjoituksellaan henkilöt todistavat kopion olevan muuntelematon jäljennös alkuperäisestä todistuksesta. Henkilöiden tulee nähdä alkuperäinen todistus ja sen kopio rinnakkain. Jos todistusjäljennös on monisivuinen, tulee jokainen sivu olla oikeaksi todistettu. Huomaathan, että Oulun yliopiston Hakijapalvelut ei oikeaksi todista muista oppilaitoksista annettuja todistuksia.</p>","sv":"<p>Jos olet valmistunut ennen hakuajan päättymistä, sinun tulee toimittaa tutkintotodistuksesi ja opintosuoritusotteesi hakuajan päättymiseen mennessä. Jos valmistut hakuajan päättymisen jälkeen, noudata seuraavaa aikataulua kopioiden toimittamisessa:</p> <ul> <li>   Keväällä 2016 valmistuvat suomalaisen amk -tutkinnon suorittavat – ma 13.6.2016 mennessä</li> <li>   Keväällä/kesällä 2016 valmistuvat ulkomailla suoritettavat tutkinnot sekä suomalaiset yliopistolliset kandidaatin tutkinnot – pe 29.7.2016 mennessä</li> </ul> <p><strong>Liitteiden on oltava perillä klo 15.00 mennessä.</strong></p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja. Liitteet voi oikeaksi todistaa kaksi henkilöä allekirjoituksellaan ja nimenselvennöksellään. Allekirjoituksellaan henkilöt todistavat kopion olevan muuntelematon jäljennös alkuperäisestä todistuksesta. Henkilöiden tulee nähdä alkuperäinen todistus ja sen kopio rinnakkain. Jos todistusjäljennös on monisivuinen, tulee jokainen sivu olla oikeaksi todistettu. Huomaathan, että Oulun yliopiston Hakijapalvelut ei oikeaksi todista muista oppilaitoksista annettuja todistuksia.</p>","en":"<p>Jos olet valmistunut ennen hakuajan päättymistä, sinun tulee toimittaa tutkintotodistuksesi ja opintosuoritusotteesi hakuajan päättymiseen mennessä. Jos valmistut hakuajan päättymisen jälkeen, noudata seuraavaa aikataulua kopioiden toimittamisessa:</p> <ul> <li>   Keväällä 2016 valmistuvat suomalaisen amk -tutkinnon suorittavat – ma 13.6.2016 mennessä</li> <li>   Keväällä/kesällä 2016 valmistuvat ulkomailla suoritettavat tutkinnot sekä suomalaiset yliopistolliset kandidaatin tutkinnot – pe 29.7.2016 mennessä</li> </ul> <p><strong>Liitteiden on oltava perillä klo 15.00 mennessä.</strong></p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja. Liitteet voi oikeaksi todistaa kaksi henkilöä allekirjoituksellaan ja nimenselvennöksellään. Allekirjoituksellaan henkilöt todistavat kopion olevan muuntelematon jäljennös alkuperäisestä todistuksesta. Henkilöiden tulee nähdä alkuperäinen todistus ja sen kopio rinnakkain. Jos todistusjäljennös on monisivuinen, tulee jokainen sivu olla oikeaksi todistettu. Huomaathan, että Oulun yliopiston Hakijapalvelut ei oikeaksi todista muista oppilaitoksista annettuja todistuksia.</p>"}},"deadline":1454072459967,"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"NOT_RECEIVED"},{"id":"8784ca4b-770b-44aa-b93d-bd2378bfe67c","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"NOT_CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Kopio tutkintotodistuksesta - biokemia maisterihaku","sv":"Kopio tutkintotodistuksesta - biokemia maisterihaku","en":"Kopio tutkintotodistuksesta - biokemia maisterihaku"}},"description":{"translations":{"fi":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>","sv":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>","en":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>"}},"deadline":1454072400000,"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"ARRIVED"},{"id":"61111969-eb3c-4231-83a0-0144cab189cc","preferenceAoId":"1.2.246.562.20.649956391810","processingStatus":"NOT_CHECKED","applicationAttachment":{"name":{"translations":{"fi":"Motivaatiokirje - biokemia maisterihaku","sv":"Motivaatiokirje - biokemia maisterihaku","en":"Motivaatiokirje - biokemia maisterihaku"}},"description":{"translations":{"fi":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>","sv":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>","en":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>"}},"deadline":1454072400000,"address":{"recipient":"Hakijapalvelut","streetAddress":"PL 8100","postalCode":"90014","postOffice":"OULUN YLIOPISTO"}},"receptionStatus":"ARRIVED"}]}]
+[
+  {
+    "applicationSystemId":"1.2.246.562.29.75961523455",
+    "answers":{
+      "henkilotiedot":{
+        "onkosinullakaksoiskansallisuus":"false",
+        "kansalaisuus":"FIN",
+        "koulusivistyskieli":"FI",
+        "asuinmaa":"FIN",
+        "matkapuhelinnumero1":"050 53044561",
+        "Sukunimi":"Oja-Testi",
+        "Henkilotunnus":"130275-9533",
+        "Henkilotunnus_digest":"9402adbda501017b94c5324754876a02aef696a60d42846842b505b435b2856f",
+        "Postinumero":"00560",
+        "lahiosoite":"Katinhännänraitti 53",
+        "sukupuoli":"1",
+        "turvakielto":"false",
+        "Kutsumanimi":"Iikka",
+        "Sähköposti":"hakija-25075156@oph.fi",
+        "Etunimet":"Iikka Testi",
+        "personOid":"1.2.246.562.24.41084357165",
+        "kotikunta":"091",
+        "onkoSinullaSuomalainenHetu":"false",
+        "aidinkieli":"FI",
+        "syntymaaika":"13.02.1975",
+        "Henkilotunnus_plain":"130275-9533",
+        "SUKUPUOLI":"1",
+        "passinnumero":"",
+        "kansallinenIdTunnus":""
+      },
+      "lisatiedot":{
+        "lupaJulkaisu":"true",
+        "asiointikieli":"suomi",
+        "lupaSms":"true",
+        "lupaMarkkinointi":"true"
+      },
+      "hakutoiveet":{
+        "preference4-Koulutus-id-aoIdentifier":"",
+        "preference3-Koulutus-id-ao-groups":"",
+        "preference1-Koulutus-id-ao-groups":"",
+        "preference4-Koulutus-id-educationcode":"",
+        "preference1-Opetuspiste":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+        "preference4-Opetuspiste-id":"",
+        "preference3-Koulutus-id-athlete":"",
+        "preference4-Koulutus-requiredBaseEducations":"",
+        "preference5-Opetuspiste-id":"",
+        "preference2-Koulutus-id-attachmentgroups":"",
+        "preference4-Koulutus-id-athlete":"",
+        "preference2-Koulutus-id-aoIdentifier":"",
+        "preference2-Koulutus-id-attachments":"",
+        "preference3-Opetuspiste-id":"",
+        "preference4-Koulutus-id-attachmentgroups":"",
+        "preference6-Koulutus-id-lang":"",
+        "preference6-Koulutus-id-vocational":"",
+        "preference2-Koulutus-id-ao-groups":"",
+        "preference1-Koulutus-educationDegree":"koulutusasteoph2002_72",
+        "preference6-Koulutus-id-educationcode":"",
+        "preference5-Koulutus-educationDegree":"",
+        "preference6-Koulutus-id-ao-groups":"",
+        "preference2-Koulutus-id-sora":"",
+        "preference4-Koulutus-id-vocational":"",
+        "preference3-Koulutus-id":"",
+        "preference1-yoLiite":"true",
+        "preference1-Opetuspiste-id":"1.2.246.562.10.2014040310315946122056",
+        "preference5-Koulutus-id-lang":"",
+        "preference1-Koulutus-id-sora":"false",
+        "preference2-Koulutus-educationDegree":"",
+        "preference6-Koulutus-requiredBaseEducations":"",
+        "preference5-Koulutus-id-sora":"",
+        "preference1-Koulutus-id-aoIdentifier":"",
+        "preference1-Koulutus-id-educationcode":"koulutus_742702",
+        "preference6-Koulutus-id-kaksoistutkinto":"",
+        "preference5-Koulutus-id-ao-groups":"",
+        "preference3-Koulutus-id-attachmentgroups":"",
+        "preference6-Koulutus-id-sora":"",
+        "preference5-Koulutus-id-athlete":"",
+        "preference2-Koulutus-id":"",
+        "preference5-Koulutus-id-attachments":"",
+        "preference3-Koulutus-id-vocational":"",
+        "preference1-Koulutus-id-vocational":"false",
+        "preference2-Koulutus-requiredBaseEducations":"",
+        "preference6-Koulutus-id-athlete":"",
+        "preference4-Koulutus-educationDegree":"",
+        "preference1-Koulutus-id-athlete":"false",
+        "preference4-Koulutus-id-kaksoistutkinto":"",
+        "preference6-Koulutus-educationDegree":"",
+        "preference6-Koulutus-id-attachments":"",
+        "preference5-Koulutus-id-kaksoistutkinto":"",
+        "preference6-Koulutus-id-aoIdentifier":"",
+        "preference6-Koulutus-id-attachmentgroups":"",
+        "preference5-Koulutus-id":"",
+        "preference2-Opetuspiste":"",
+        "preference2-Koulutus-id-athlete":"",
+        "preference1-Koulutus-id-attachments":"true",
+        "preference3-Koulutus-educationDegree":"",
+        "preference2-Koulutus-id-kaksoistutkinto":"",
+        "preference5-Opetuspiste":"",
+        "preference3-Koulutus-id-kaksoistutkinto":"",
+        "preference5-Koulutus-id-educationcode":"",
+        "preference1-Koulutus-id-attachmentgroups":"",
+        "preference4-Koulutus-id-sora":"",
+        "preference5-Koulutus-id-vocational":"",
+        "preference5-Koulutus-requiredBaseEducations":"",
+        "preference3-Koulutus-id-lang":"",
+        "preference1-Koulutus-requiredBaseEducations":"",
+        "preference2-Opetuspiste-id":"",
+        "preference3-Opetuspiste":"",
+        "preference4-Koulutus-id-lang":"",
+        "preference6-Koulutus-id":"",
+        "preference5-Koulutus-id-attachmentgroups":"",
+        "preference2-Koulutus-id-vocational":"",
+        "preferencesVisible":"6",
+        "preference1-Koulutus-id":"1.2.246.562.20.649956391810",
+        "preference3-Koulutus-id-attachments":"",
+        "preference3-Koulutus-id-sora":"",
+        "preference3-Koulutus-requiredBaseEducations":"",
+        "preference4-Koulutus-id":"",
+        "preference2-Koulutus-id-lang":"",
+        "preference4-Koulutus-id-attachments":"",
+        "preference4-Opetuspiste":"",
+        "preference3-Koulutus-id-educationcode":"",
+        "preference1-Koulutus":"Maisterihaku, Biokemia, filosofian maisteri (2 v)",
+        "preference1-Koulutus-id-kaksoistutkinto":"false",
+        "preference3-Koulutus-id-aoIdentifier":"",
+        "preference5-Koulutus-id-aoIdentifier":"",
+        "preference1-Koulutus-id-lang":"FI",
+        "preference4-Koulutus-id-ao-groups":"",
+        "preference6-Opetuspiste":"",
+        "preference2-Koulutus-id-educationcode":"",
+        "preference6-Opetuspiste-id":"",
+        "preference1-Opetuspiste-id-parents":"1.2.246.562.10.00000000001,1.2.246.562.10.2014040310315946122056,1.2.246.562.10.38417217288,1.2.246.562.10.80754632463"
+      },
+      "koulutustausta":{
+        "pohjakoulutus_am_laajuus_yksikko":"1",
+        "pohjakoulutus_kk_pvm":"30.10.2015",
+        "pohjakoulutus_kk_taso":"1",
+        "pohjakoulutus_kk_nimike":"Laboratorioanalyytikko",
+        "pohjakoulutus_am_oppilaitos":"1.2.246.562.10.30120139081",
+        "pohjakoulutus_am_nimike":"351652",
+        "pohjakoulutus_am_nayttotutkintona":"false",
+        "pohjakoulutus_am_vuosi":"2010",
+        "pohjakoulutus_kk_oppilaitos":"Metropolia",
+        "pohjakoulutus_yo_vuosi":"2001",
+        "pohjakoulutus_yo_tutkinto":"fi",
+        "pohjakoulutus_yo":"true",
+        "suoritusoikeus_tai_aiempi_tutkinto":"false",
+        "pohjakoulutus_am_laajuus":"120",
+        "pohjakoulutus_kk":"true",
+        "pohjakoulutus_am":"true"
+      },
+      "osaaminen":{
+
+      }
+    },
+    "oid":"1.2.246.562.11.00004615970",
+    "state":"ACTIVE",
+    "personOid":"1.2.246.562.24.41084357165",
+    "studentOid":"1.2.246.562.24.41084357165",
+    "received":1450418385729,
+    "preferenceEligibilities":[
+      {
+        "aoId":"1.2.246.562.20.649956391810",
+        "status":"ELIGIBLE",
+        "source":"UNKNOWN"
+      }
+    ],
+    "attachmentRequests":[
+      {
+        "id":"form.valmis.todistus.kk_applicationOption_1.2.246.562.20.649956391810",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Todistuskopio korkeakoulututkinnosta",
+              "sv":"Betygskopia av din högskoleexamen",
+              "en":"Copy of your higher education degree certificate"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+              "sv":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+              "en":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta"
+            }
+          },
+          "deliveryNote":{
+            "translations":{
+              "fi":"Tarkista palautuspäivämäärä suoraan korkeakoulusta.",
+              "sv":"Kontrollera inlämningsdatum direkt från högskolan.",
+              "en":"Check the delivery deadline from the higher education institution."
+            }
+          },
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"ARRIVED"
+      },
+      {
+        "id":"d2b58e6a-5c64-4a78-9683-7e6eaf53990a",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Kopio tutkintotodistuksesta - biokemia maisterihaku",
+              "sv":"Kopio tutkintotodistuksesta - biokemia maisterihaku",
+              "en":"Kopio tutkintotodistuksesta - biokemia maisterihaku"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>",
+              "sv":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>",
+              "en":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>"
+            }
+          },
+          "deadline":1454072400000,
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"ARRIVED"
+      },
+      {
+        "id":"e38c26f5-33ee-4f80-af7a-2fed3df4c637",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Motivaatiokirje - biokemia maisterihaku",
+              "sv":"Motivaatiokirje - biokemia maisterihaku",
+              "en":"Motivaatiokirje - biokemia maisterihaku"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>",
+              "sv":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>",
+              "en":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>"
+            }
+          },
+          "deadline":1454072400000,
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"ARRIVED"
+      }
+    ]
+  },
+  {
+    "applicationSystemId":"1.2.246.562.29.75961523455",
+    "answers":{
+      "henkilotiedot":{
+        "onkosinullakaksoiskansallisuus":"false",
+        "kansalaisuus":"FIN",
+        "koulusivistyskieli":"FI",
+        "asuinmaa":"FIN",
+        "matkapuhelinnumero1":"050 28575891",
+        "Sukunimi":"Salo-Testi",
+        "Henkilotunnus":"020369-932K",
+        "Henkilotunnus_digest":"5557a0a5c115b502056cfdc1a42b7bbc3c86bab6cc25cca27405c34337670454",
+        "Postinumero":"90830",
+        "lahiosoite":"Ketunperänpolku 711",
+        "sukupuoli":"2",
+        "turvakielto":"false",
+        "Kutsumanimi":"Erika",
+        "Sähköposti":"hakija-42290634@oph.fi",
+        "Etunimet":"Erika Testi",
+        "personOid":"1.2.246.562.24.14052711618",
+        "kotikunta":"564",
+        "onkoSinullaSuomalainenHetu":"false",
+        "aidinkieli":"FI",
+        "syntymaaika":"02.03.1969",
+        "Henkilotunnus_plain":"020369-932K",
+        "SUKUPUOLI":"2",
+        "passinnumero":"",
+        "kansallinenIdTunnus":""
+      },
+      "lisatiedot":{
+        "lupaSahkoisesti":"true",
+        "lupaJulkaisu":"true",
+        "asiointikieli":"suomi",
+        "lupaSms":"true"
+      },
+      "hakutoiveet":{
+        "preference4-Koulutus-id-aoIdentifier":"",
+        "preference3-Koulutus-id-ao-groups":"",
+        "preference1-Koulutus-id-ao-groups":"",
+        "preference4-Koulutus-id-educationcode":"",
+        "preference1-Opetuspiste":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+        "preference4-Opetuspiste-id":"",
+        "preference3-Koulutus-id-athlete":"",
+        "preference4-Koulutus-requiredBaseEducations":"",
+        "preference5-Opetuspiste-id":"",
+        "preference2-Koulutus-id-attachmentgroups":"",
+        "preference4-Koulutus-id-athlete":"",
+        "preference2-Koulutus-id-aoIdentifier":"",
+        "preference2-Koulutus-id-attachments":"",
+        "preference3-Opetuspiste-id":"",
+        "preference4-Koulutus-id-attachmentgroups":"",
+        "preference6-Koulutus-id-lang":"",
+        "preference6-Koulutus-id-vocational":"",
+        "preference2-Koulutus-id-ao-groups":"",
+        "preference1-Koulutus-educationDegree":"koulutusasteoph2002_72",
+        "preference6-Koulutus-id-educationcode":"",
+        "preference5-Koulutus-educationDegree":"",
+        "preference6-Koulutus-id-ao-groups":"",
+        "preference2-Koulutus-id-sora":"",
+        "preference4-Koulutus-id-vocational":"",
+        "preference3-Koulutus-id":"",
+        "preference1-yoLiite":"true",
+        "preference1-Opetuspiste-id":"1.2.246.562.10.2014040310315946122056",
+        "preference5-Koulutus-id-lang":"",
+        "preference1-Koulutus-id-sora":"false",
+        "preference2-Koulutus-educationDegree":"",
+        "preference6-Koulutus-requiredBaseEducations":"",
+        "preference5-Koulutus-id-sora":"",
+        "preference1-Koulutus-id-aoIdentifier":"",
+        "preference1-Koulutus-id-educationcode":"koulutus_742702",
+        "preference6-Koulutus-id-kaksoistutkinto":"",
+        "preference5-Koulutus-id-ao-groups":"",
+        "preference3-Koulutus-id-attachmentgroups":"",
+        "preference6-Koulutus-id-sora":"",
+        "preference5-Koulutus-id-athlete":"",
+        "preference2-Koulutus-id":"",
+        "preference5-Koulutus-id-attachments":"",
+        "preference3-Koulutus-id-vocational":"",
+        "preference1-Koulutus-id-vocational":"false",
+        "preference2-Koulutus-requiredBaseEducations":"",
+        "preference6-Koulutus-id-athlete":"",
+        "preference4-Koulutus-educationDegree":"",
+        "preference1-Koulutus-id-athlete":"false",
+        "preference4-Koulutus-id-kaksoistutkinto":"",
+        "preference6-Koulutus-educationDegree":"",
+        "preference6-Koulutus-id-attachments":"",
+        "preference5-Koulutus-id-kaksoistutkinto":"",
+        "preference6-Koulutus-id-aoIdentifier":"",
+        "preference6-Koulutus-id-attachmentgroups":"",
+        "preference5-Koulutus-id":"",
+        "preference2-Opetuspiste":"",
+        "preference2-Koulutus-id-athlete":"",
+        "preference1-Koulutus-id-attachments":"true",
+        "preference3-Koulutus-educationDegree":"",
+        "preference2-Koulutus-id-kaksoistutkinto":"",
+        "preference5-Opetuspiste":"",
+        "preference3-Koulutus-id-kaksoistutkinto":"",
+        "preference5-Koulutus-id-educationcode":"",
+        "preference1-Koulutus-id-attachmentgroups":"",
+        "preference4-Koulutus-id-sora":"",
+        "preference5-Koulutus-id-vocational":"",
+        "preference5-Koulutus-requiredBaseEducations":"",
+        "preference3-Koulutus-id-lang":"",
+        "preference1-Koulutus-requiredBaseEducations":"",
+        "preference2-Opetuspiste-id":"",
+        "preference3-Opetuspiste":"",
+        "preference4-Koulutus-id-lang":"",
+        "preference6-Koulutus-id":"",
+        "preference5-Koulutus-id-attachmentgroups":"",
+        "preference2-Koulutus-id-vocational":"",
+        "preferencesVisible":"6",
+        "preference1-Koulutus-id":"1.2.246.562.20.649956391810",
+        "preference3-Koulutus-id-attachments":"",
+        "preference3-Koulutus-id-sora":"",
+        "preference3-Koulutus-requiredBaseEducations":"",
+        "preference4-Koulutus-id":"",
+        "preference2-Koulutus-id-lang":"",
+        "preference4-Koulutus-id-attachments":"",
+        "preference4-Opetuspiste":"",
+        "preference3-Koulutus-id-educationcode":"",
+        "preference1-Koulutus":"Maisterihaku, Biokemia, filosofian maisteri (2 v)",
+        "preference1-Koulutus-id-kaksoistutkinto":"false",
+        "preference3-Koulutus-id-aoIdentifier":"",
+        "preference5-Koulutus-id-aoIdentifier":"",
+        "preference1-Koulutus-id-lang":"FI",
+        "preference4-Koulutus-id-ao-groups":"",
+        "preference6-Opetuspiste":"",
+        "preference2-Koulutus-id-educationcode":"",
+        "preference6-Opetuspiste-id":"",
+        "preference1-Opetuspiste-id-parents":"1.2.246.562.10.00000000001,1.2.246.562.10.2014040310315946122056,1.2.246.562.10.38417217288,1.2.246.562.10.80754632463"
+      },
+      "koulutustausta":{
+        "pohjakoulutus_yo_tutkinto":"fi",
+        "pohjakoulutus_yo_vuosi":"2012",
+        "pohjakoulutus_yo":"true",
+        "pohjakoulutus_kk_pvm":"20.5.2016",
+        "pohjakoulutus_kk_taso":"2",
+        "suoritusoikeus_tai_aiempi_tutkinto":"false",
+        "pohjakoulutus_kk":"true",
+        "pohjakoulutus_kk_nimike":"Luonnontieteen kandidaatti",
+        "pohjakoulutus_kk_oppilaitos":"Oulun yliopisto"
+      },
+      "osaaminen":{
+
+      }
+    },
+    "oid":"1.2.246.562.11.00004616759",
+    "state":"ACTIVE",
+    "personOid":"1.2.246.562.24.14052711618",
+    "studentOid":"1.2.246.562.24.14052711618",
+    "received":1450629533262,
+    "preferenceEligibilities":[
+      {
+        "aoId":"1.2.246.562.20.649956391810",
+        "status":"ELIGIBLE",
+        "source":"UNKNOWN"
+      }
+    ],
+    "attachmentRequests":[
+      {
+        "id":"form.valmis.todistus.kk_applicationOption_1.2.246.562.20.649956391810",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"NOT_CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Todistuskopio korkeakoulututkinnosta",
+              "sv":"Betygskopia av din högskoleexamen",
+              "en":"Copy of your higher education degree certificate"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+              "sv":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+              "en":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta"
+            }
+          },
+          "deliveryNote":{
+            "translations":{
+              "fi":"Tarkista palautuspäivämäärä suoraan korkeakoulusta.",
+              "sv":"Kontrollera inlämningsdatum direkt från högskolan.",
+              "en":"Check the delivery deadline from the higher education institution."
+            }
+          },
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"NOT_RECEIVED"
+      },
+      {
+        "id":"ac4fa39f-9042-40d8-b2d9-e60a94fa09dd",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"NOT_CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Kopio tutkintotodistuksesta - biokemia maisterihaku",
+              "sv":"Kopio tutkintotodistuksesta - biokemia maisterihaku",
+              "en":"Kopio tutkintotodistuksesta - biokemia maisterihaku"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>",
+              "sv":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>",
+              "en":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>"
+            }
+          },
+          "deadline":1454072400000,
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"NOT_RECEIVED"
+      },
+      {
+        "id":"058448e5-ea55-45e0-9535-7f1f9391eec7",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Motivaatiokirje - biokemia maisterihaku",
+              "sv":"Motivaatiokirje - biokemia maisterihaku",
+              "en":"Motivaatiokirje - biokemia maisterihaku"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>",
+              "sv":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>",
+              "en":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>"
+            }
+          },
+          "deadline":1454072400000,
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"ARRIVED"
+      }
+    ]
+  },
+  {
+    "applicationSystemId":"1.2.246.562.29.75961523455",
+    "answers":{
+      "henkilotiedot":{
+        "onkosinullakaksoiskansallisuus":"false",
+        "kansalaisuus":"FIN",
+        "koulusivistyskieli":"FI",
+        "asuinmaa":"FIN",
+        "matkapuhelinnumero1":"050 97823501",
+        "Sukunimi":"Paasonen-Testi",
+        "Henkilotunnus":"140352-979E",
+        "Henkilotunnus_digest":"e6f2b491a1d3552a3972c21b631813a9433fac5f49b445d05733a7293025e0e8",
+        "Postinumero":"90500",
+        "lahiosoite":"Verhonkulmala 906",
+        "sukupuoli":"1",
+        "turvakielto":"false",
+        "Kutsumanimi":"Tuure",
+        "Sähköposti":"hakija-29539869@oph.fi",
+        "Etunimet":"Tuure Testi",
+        "personOid":"1.2.246.562.24.91305591197",
+        "kotikunta":"564",
+        "onkoSinullaSuomalainenHetu":"false",
+        "aidinkieli":"FI",
+        "syntymaaika":"14.03.1952",
+        "Henkilotunnus_plain":"140352-979E",
+        "SUKUPUOLI":"1",
+        "passinnumero":"",
+        "kansallinenIdTunnus":""
+      },
+      "lisatiedot":{
+        "lupaSahkoisesti":"true",
+        "lupaJulkaisu":"true",
+        "asiointikieli":"suomi",
+        "lupaSms":"true"
+      },
+      "hakutoiveet":{
+        "preference4-Koulutus-id-aoIdentifier":"",
+        "preference3-Koulutus-id-ao-groups":"",
+        "preference1-Koulutus-id-ao-groups":"",
+        "preference4-Koulutus-id-educationcode":"",
+        "preference1-Opetuspiste":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+        "preference4-Opetuspiste-id":"",
+        "preference3-Koulutus-id-athlete":"",
+        "preference4-Koulutus-requiredBaseEducations":"",
+        "preference5-Opetuspiste-id":"",
+        "preference2-Koulutus-id-attachmentgroups":"",
+        "preference4-Koulutus-id-athlete":"",
+        "preference2-Koulutus-id-aoIdentifier":"",
+        "preference2-Koulutus-id-attachments":"",
+        "preference3-Opetuspiste-id":"",
+        "preference2-Koulutus":" ",
+        "preference4-Koulutus-id-attachmentgroups":"",
+        "preference6-Koulutus-id-lang":"",
+        "preference6-Koulutus-id-vocational":"",
+        "preference2-Koulutus-id-ao-groups":"",
+        "preference1-Koulutus-educationDegree":"koulutusasteoph2002_72",
+        "preference6-Koulutus-id-educationcode":"",
+        "preference5-Koulutus-educationDegree":"",
+        "preference6-Koulutus-id-ao-groups":"",
+        "preference2-Koulutus-id-sora":"false",
+        "preference4-Koulutus-id-vocational":"",
+        "preference3-Koulutus-id":"",
+        "preference1-yoLiite":"true",
+        "preference1-Opetuspiste-id":"1.2.246.562.10.2014040310315946122056",
+        "preference5-Koulutus-id-lang":"",
+        "preference1-Koulutus-id-sora":"false",
+        "preference2-Koulutus-educationDegree":"",
+        "preference6-Koulutus-requiredBaseEducations":"",
+        "preference5-Koulutus-id-sora":"",
+        "preference1-Koulutus-id-aoIdentifier":"",
+        "preference1-Koulutus-id-educationcode":"koulutus_742702",
+        "preference6-Koulutus-id-kaksoistutkinto":"",
+        "preference5-Koulutus-id-ao-groups":"",
+        "preference3-Koulutus-id-attachmentgroups":"",
+        "preference6-Koulutus-id-sora":"",
+        "preference5-Koulutus-id-athlete":"",
+        "preference2-Koulutus-id":"",
+        "preference5-Koulutus-id-attachments":"",
+        "preference3-Koulutus-id-vocational":"",
+        "preference1-Koulutus-id-vocational":"false",
+        "preference2-Koulutus-requiredBaseEducations":"",
+        "preference6-Koulutus-id-athlete":"",
+        "preference4-Koulutus-educationDegree":"",
+        "preference1-Koulutus-id-athlete":"false",
+        "preference4-Koulutus-id-kaksoistutkinto":"",
+        "preference6-Koulutus-educationDegree":"",
+        "preference6-Koulutus-id-attachments":"",
+        "preference5-Koulutus-id-kaksoistutkinto":"",
+        "preference6-Koulutus-id-aoIdentifier":"",
+        "preference6-Koulutus-id-attachmentgroups":"",
+        "preference5-Koulutus-id":"",
+        "preference2-Opetuspiste":"",
+        "preference2-Koulutus-id-athlete":"false",
+        "preference1-Koulutus-id-attachments":"true",
+        "preference3-Koulutus-educationDegree":"",
+        "preference2-Koulutus-id-kaksoistutkinto":"false",
+        "preference5-Opetuspiste":"",
+        "preference3-Koulutus-id-kaksoistutkinto":"",
+        "preference5-Koulutus-id-educationcode":"",
+        "preference1-Koulutus-id-attachmentgroups":"",
+        "preference4-Koulutus-id-sora":"",
+        "preference5-Koulutus-id-vocational":"",
+        "preference5-Koulutus-requiredBaseEducations":"",
+        "preference3-Koulutus-id-lang":"",
+        "preference1-Koulutus-requiredBaseEducations":"pohjakoulutusvaatimuskorkeakoulut_103,pohjakoulutusvaatimuskorkeakoulut_101,pohjakoulutusvaatimuskorkeakoulut_102",
+        "preference2-Opetuspiste-id":"",
+        "preference3-Opetuspiste":"",
+        "preference4-Koulutus-id-lang":"",
+        "preference6-Koulutus-id":"",
+        "preference5-Koulutus-id-attachmentgroups":"",
+        "preference2-Koulutus-id-vocational":"false",
+        "preferencesVisible":"6",
+        "preference1-Koulutus-id":"1.2.246.562.20.649956391810",
+        "preference3-Koulutus-id-attachments":"",
+        "preference3-Koulutus-id-sora":"",
+        "preference3-Koulutus-requiredBaseEducations":"",
+        "preference4-Koulutus-id":"",
+        "preference2-Koulutus-id-lang":"",
+        "preference4-Koulutus-id-attachments":"",
+        "preference4-Opetuspiste":"",
+        "preference3-Koulutus-id-educationcode":"",
+        "preference1-Koulutus":"Maisterihaku, Biokemia, filosofian maisteri (2 v)",
+        "preference1-Koulutus-id-kaksoistutkinto":"false",
+        "preference3-Koulutus-id-aoIdentifier":"",
+        "preference5-Koulutus-id-aoIdentifier":"",
+        "preference1-Koulutus-id-lang":"FI",
+        "preference4-Koulutus-id-ao-groups":"",
+        "preference6-Opetuspiste":"",
+        "preference2-Koulutus-id-educationcode":"false",
+        "preference6-Opetuspiste-id":"",
+        "preference1-Opetuspiste-id-parents":"1.2.246.562.10.00000000001,1.2.246.562.10.2014040310315946122056,1.2.246.562.10.38417217288,1.2.246.562.10.80754632463"
+      },
+      "koulutustausta":{
+        "pohjakoulutus_yo_tutkinto":"fi",
+        "pohjakoulutus_yo_vuosi":"2005",
+        "pohjakoulutus_yo":"true",
+        "pohjakoulutus_kk_pvm":"18.12.2010",
+        "pohjakoulutus_kk_taso":"1",
+        "suoritusoikeus_tai_aiempi_tutkinto":"false",
+        "pohjakoulutus_kk":"true",
+        "pohjakoulutus_kk_nimike":"optometristi (AMK)",
+        "pohjakoulutus_kk_oppilaitos":"Oulun seudun ammattikorkeakoulu"
+      },
+      "osaaminen":{
+
+      }
+    },
+    "oid":"1.2.246.562.11.00004742429",
+    "state":"ACTIVE",
+    "personOid":"1.2.246.562.24.91305591197",
+    "studentOid":"1.2.246.562.24.91305591197",
+    "received":1453235043711,
+    "preferenceEligibilities":[
+      {
+        "aoId":"1.2.246.562.20.649956391810",
+        "status":"NOT_CHECKED",
+        "source":"UNKNOWN"
+      }
+    ],
+    "attachmentRequests":[
+      {
+        "id":"form.valmis.todistus.kk_applicationOption_1.2.246.562.20.649956391810",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Todistuskopio korkeakoulututkinnosta",
+              "sv":"Betygskopia av din högskoleexamen",
+              "en":"Copy of your higher education degree certificate"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+              "sv":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+              "en":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta"
+            }
+          },
+          "deliveryNote":{
+            "translations":{
+              "fi":"Tarkista palautuspäivämäärä suoraan korkeakoulusta.",
+              "sv":"Kontrollera inlämningsdatum direkt från högskolan.",
+              "en":"Check the delivery deadline from the higher education institution."
+            }
+          },
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"ARRIVED"
+      },
+      {
+        "id":"630a0ac9-57a8-4768-9034-8851c6cef9d4",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Kopio tutkintotodistuksesta - biokemia maisterihaku",
+              "sv":"Kopio tutkintotodistuksesta - biokemia maisterihaku",
+              "en":"Kopio tutkintotodistuksesta - biokemia maisterihaku"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>",
+              "sv":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>",
+              "en":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>"
+            }
+          },
+          "deadline":1454072400000,
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"ARRIVED"
+      },
+      {
+        "id":"a9ef6cef-a366-4d71-95d1-9c3022633f3c",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Motivaatiokirje - biokemia maisterihaku",
+              "sv":"Motivaatiokirje - biokemia maisterihaku",
+              "en":"Motivaatiokirje - biokemia maisterihaku"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>",
+              "sv":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>",
+              "en":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>"
+            }
+          },
+          "deadline":1454072400000,
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"ARRIVED"
+      }
+    ]
+  },
+  {
+    "applicationSystemId":"1.2.246.562.29.75961523455",
+    "answers":{
+      "henkilotiedot":{
+        "onkosinullakaksoiskansallisuus":"false",
+        "kansalaisuus":"FIN",
+        "koulusivistyskieli":"FI",
+        "asuinmaa":"FIN",
+        "matkapuhelinnumero1":"050 74023201",
+        "Sukunimi":"Keinänen-Testi",
+        "Henkilotunnus":"250564-999W",
+        "Henkilotunnus_digest":"e101abb29388d28ca5106ec40f56ebd4c0fb413a19d2811141415018df2655d1",
+        "Postinumero":"06530",
+        "lahiosoite":"Kumiakatu 229",
+        "sukupuoli":"1",
+        "turvakielto":"false",
+        "Kutsumanimi":"Kenny",
+        "Sähköposti":"hakija-61535930@oph.fi",
+        "Etunimet":"Kenny Testi",
+        "personOid":"1.2.246.562.24.98912191608",
+        "kotikunta":"638",
+        "onkoSinullaSuomalainenHetu":"false",
+        "aidinkieli":"FI",
+        "syntymaaika":"25.05.1964",
+        "Henkilotunnus_plain":"250564-999W",
+        "SUKUPUOLI":"1",
+        "passinnumero":"",
+        "kansallinenIdTunnus":""
+      },
+      "lisatiedot":{
+        "lupaJulkaisu":"true",
+        "asiointikieli":"suomi",
+        "lupaSms":"true",
+        "lupaMarkkinointi":"true"
+      },
+      "hakutoiveet":{
+        "preference4-Koulutus-id-aoIdentifier":"",
+        "preference3-Koulutus-id-ao-groups":"",
+        "preference1-Koulutus-id-ao-groups":"",
+        "preference4-Koulutus-id-educationcode":"",
+        "preference1-Opetuspiste":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+        "preference4-Opetuspiste-id":"",
+        "preference3-Koulutus-id-athlete":"",
+        "preference4-Koulutus-requiredBaseEducations":"",
+        "preference5-Opetuspiste-id":"",
+        "preference2-Koulutus-id-attachmentgroups":"",
+        "preference4-Koulutus-id-athlete":"",
+        "preference2-Koulutus-id-aoIdentifier":"",
+        "preference2-Koulutus-id-attachments":"",
+        "preference3-Opetuspiste-id":"",
+        "preference2-Koulutus":" ",
+        "preference4-Koulutus-id-attachmentgroups":"",
+        "preference6-Koulutus-id-lang":"",
+        "preference6-Koulutus-id-vocational":"",
+        "preference2-Koulutus-id-ao-groups":"",
+        "preference1-Koulutus-educationDegree":"koulutusasteoph2002_72",
+        "preference6-Koulutus-id-educationcode":"",
+        "preference5-Koulutus-educationDegree":"",
+        "preference6-Koulutus-id-ao-groups":"",
+        "preference2-Koulutus-id-sora":"",
+        "preference4-Koulutus-id-vocational":"",
+        "preference3-Koulutus-id":"",
+        "preference1-yoLiite":"true",
+        "preference1-Opetuspiste-id":"1.2.246.562.10.2014040310315946122056",
+        "preference5-Koulutus-id-lang":"",
+        "preference1-Koulutus-id-sora":"false",
+        "preference2-Koulutus-educationDegree":"",
+        "preference6-Koulutus-requiredBaseEducations":"",
+        "preference5-Koulutus-id-sora":"",
+        "preference1-Koulutus-id-aoIdentifier":"",
+        "preference1-Koulutus-id-educationcode":"koulutus_742702",
+        "preference6-Koulutus-id-kaksoistutkinto":"",
+        "preference5-Koulutus-id-ao-groups":"",
+        "preference3-Koulutus-id-attachmentgroups":"",
+        "preference6-Koulutus-id-sora":"",
+        "preference5-Koulutus-id-athlete":"",
+        "preference2-Koulutus-id":"",
+        "preference5-Koulutus-id-attachments":"",
+        "preference3-Koulutus-id-vocational":"",
+        "preference1-Koulutus-id-vocational":"false",
+        "preference2-Koulutus-requiredBaseEducations":"",
+        "preference6-Koulutus-id-athlete":"",
+        "preference4-Koulutus-educationDegree":"",
+        "preference1-Koulutus-id-athlete":"false",
+        "preference4-Koulutus-id-kaksoistutkinto":"",
+        "preference6-Koulutus-educationDegree":"",
+        "preference6-Koulutus-id-attachments":"",
+        "preference5-Koulutus-id-kaksoistutkinto":"",
+        "preference6-Koulutus-id-aoIdentifier":"",
+        "preference6-Koulutus-id-attachmentgroups":"",
+        "preference5-Koulutus-id":"",
+        "preference2-Opetuspiste":"",
+        "preference2-Koulutus-id-athlete":"",
+        "preference1-Koulutus-id-attachments":"true",
+        "preference3-Koulutus-educationDegree":"",
+        "preference2-Koulutus-id-kaksoistutkinto":"",
+        "preference5-Opetuspiste":"",
+        "preference3-Koulutus-id-kaksoistutkinto":"",
+        "preference5-Koulutus-id-educationcode":"",
+        "preference1-Koulutus-id-attachmentgroups":"",
+        "preference4-Koulutus-id-sora":"",
+        "preference5-Koulutus-id-vocational":"",
+        "preference5-Koulutus-requiredBaseEducations":"",
+        "preference3-Koulutus-id-lang":"",
+        "preference1-Koulutus-requiredBaseEducations":"pohjakoulutusvaatimuskorkeakoulut_103,pohjakoulutusvaatimuskorkeakoulut_101,pohjakoulutusvaatimuskorkeakoulut_102",
+        "preference2-Opetuspiste-id":"",
+        "preference3-Opetuspiste":"",
+        "preference4-Koulutus-id-lang":"",
+        "preference6-Koulutus-id":"",
+        "preference5-Koulutus-id-attachmentgroups":"",
+        "preference2-Koulutus-id-vocational":"",
+        "preferencesVisible":"6",
+        "preference1-Koulutus-id":"1.2.246.562.20.649956391810",
+        "preference3-Koulutus-id-attachments":"",
+        "preference3-Koulutus-id-sora":"",
+        "preference3-Koulutus-requiredBaseEducations":"",
+        "preference4-Koulutus-id":"",
+        "preference2-Koulutus-id-lang":"",
+        "preference4-Koulutus-id-attachments":"",
+        "preference4-Opetuspiste":"",
+        "preference3-Koulutus-id-educationcode":"",
+        "preference1-Koulutus":"Maisterihaku, Biokemia, filosofian maisteri (2 v)",
+        "preference1-Koulutus-id-kaksoistutkinto":"false",
+        "preference3-Koulutus-id-aoIdentifier":"",
+        "preference5-Koulutus-id-aoIdentifier":"",
+        "preference1-Koulutus-id-lang":"FI",
+        "preference4-Koulutus-id-ao-groups":"",
+        "preference6-Opetuspiste":"",
+        "preference2-Koulutus-id-educationcode":"",
+        "preference6-Opetuspiste-id":"",
+        "preference1-Opetuspiste-id-parents":"1.2.246.562.10.00000000001,1.2.246.562.10.2014040310315946122056,1.2.246.562.10.38417217288,1.2.246.562.10.80754632463"
+      },
+      "koulutustausta":{
+        "pohjakoulutus_yo_tutkinto":"fi",
+        "pohjakoulutus_yo_vuosi":"2010",
+        "pohjakoulutus_yo":"true",
+        "pohjakoulutus_kk_pvm":"18.12.2015",
+        "pohjakoulutus_kk_taso":"1",
+        "suoritusoikeus_tai_aiempi_tutkinto":"false",
+        "pohjakoulutus_kk":"true",
+        "pohjakoulutus_kk_nimike":"Bioanalytiikan koulutusohjelma",
+        "pohjakoulutus_kk_oppilaitos":"Metropolia Ammattikorkeakoulu"
+      },
+      "osaaminen":{
+
+      }
+    },
+    "oid":"1.2.246.562.11.00004806792",
+    "state":"ACTIVE",
+    "personOid":"1.2.246.562.24.98912191608",
+    "studentOid":"1.2.246.562.24.98912191608",
+    "received":1453714131603,
+    "preferenceEligibilities":[
+      {
+        "aoId":"1.2.246.562.20.649956391810",
+        "status":"ELIGIBLE",
+        "source":"UNKNOWN"
+      }
+    ],
+    "attachmentRequests":[
+      {
+        "id":"form.valmis.todistus.kk_applicationOption_1.2.246.562.20.649956391810",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Todistuskopio korkeakoulututkinnosta",
+              "sv":"Betygskopia av din högskoleexamen",
+              "en":"Copy of your higher education degree certificate"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+              "sv":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+              "en":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta"
+            }
+          },
+          "deliveryNote":{
+            "translations":{
+              "fi":"Tarkista palautuspäivämäärä suoraan korkeakoulusta.",
+              "sv":"Kontrollera inlämningsdatum direkt från högskolan.",
+              "en":"Check the delivery deadline from the higher education institution."
+            }
+          },
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"ARRIVED"
+      },
+      {
+        "id":"b15b41b0-6620-483e-bda8-7ce67596b62a",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Kopio tutkintotodistuksesta - biokemia maisterihaku",
+              "sv":"Kopio tutkintotodistuksesta - biokemia maisterihaku",
+              "en":"Kopio tutkintotodistuksesta - biokemia maisterihaku"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>",
+              "sv":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>",
+              "en":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>"
+            }
+          },
+          "deadline":1454072400000,
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"ARRIVED"
+      },
+      {
+        "id":"3cada8fb-0dff-44e7-a167-167b7e5cd4e9",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Motivaatiokirje - biokemia maisterihaku",
+              "sv":"Motivaatiokirje - biokemia maisterihaku",
+              "en":"Motivaatiokirje - biokemia maisterihaku"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>",
+              "sv":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>",
+              "en":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>"
+            }
+          },
+          "deadline":1454072400000,
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"ARRIVED"
+      }
+    ]
+  },
+  {
+    "applicationSystemId":"1.2.246.562.29.75961523455",
+    "answers":{
+      "henkilotiedot":{
+        "onkosinullakaksoiskansallisuus":"false",
+        "kansalaisuus":"FIN",
+        "koulusivistyskieli":"FI",
+        "asuinmaa":"FIN",
+        "matkapuhelinnumero1":"050 31253831",
+        "Sukunimi":"Siren-Testi",
+        "Henkilotunnus":"190852-9979",
+        "Henkilotunnus_digest":"326a38a396aadc6adfc8a69f05a09ddbee5518491b1082009ee14d701718f1c8",
+        "Postinumero":"90420",
+        "lahiosoite":"Halivaarankatu 420",
+        "sukupuoli":"1",
+        "turvakielto":"false",
+        "Kutsumanimi":"Ron",
+        "Sähköposti":"hakija-28816236@oph.fi",
+        "Etunimet":"Ron Testi",
+        "personOid":"1.2.246.562.24.67459498235",
+        "kotikunta":"564",
+        "onkoSinullaSuomalainenHetu":"false",
+        "aidinkieli":"FI",
+        "syntymaaika":"19.08.1952",
+        "Henkilotunnus_plain":"190852-9979",
+        "SUKUPUOLI":"1",
+        "passinnumero":"",
+        "kansallinenIdTunnus":""
+      },
+      "lisatiedot":{
+        "lupaSahkoisesti":"true",
+        "asiointikieli":"suomi",
+        "lupaSms":"true"
+      },
+      "hakutoiveet":{
+        "preference4-Koulutus-id-aoIdentifier":"",
+        "preference3-Koulutus-id-ao-groups":"",
+        "preference1-Koulutus-id-ao-groups":"",
+        "preference4-Koulutus-id-educationcode":"",
+        "preference1-Opetuspiste":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+        "preference4-Opetuspiste-id":"",
+        "preference3-Koulutus-id-athlete":"",
+        "preference4-Koulutus-requiredBaseEducations":"",
+        "preference5-Opetuspiste-id":"",
+        "preference2-Koulutus-id-attachmentgroups":"",
+        "preference4-Koulutus-id-athlete":"",
+        "preference2-Koulutus-id-aoIdentifier":"",
+        "preference2-Koulutus-id-attachments":"",
+        "preference3-Opetuspiste-id":"",
+        "preference4-Koulutus-id-attachmentgroups":"",
+        "preference6-Koulutus-id-lang":"",
+        "preference6-Koulutus-id-vocational":"",
+        "preference2-Koulutus-id-ao-groups":"",
+        "preference1-Koulutus-educationDegree":"koulutusasteoph2002_72",
+        "preference6-Koulutus-id-educationcode":"",
+        "preference5-Koulutus-educationDegree":"",
+        "preference6-Koulutus-id-ao-groups":"",
+        "preference2-Koulutus-id-sora":"",
+        "preference4-Koulutus-id-vocational":"",
+        "preference3-Koulutus-id":"",
+        "preference1-yoLiite":"true",
+        "preference1-Opetuspiste-id":"1.2.246.562.10.2014040310315946122056",
+        "preference5-Koulutus-id-lang":"",
+        "preference1-Koulutus-id-sora":"false",
+        "preference2-Koulutus-educationDegree":"",
+        "preference6-Koulutus-requiredBaseEducations":"",
+        "preference5-Koulutus-id-sora":"",
+        "preference1-Koulutus-id-aoIdentifier":"",
+        "preference1-Koulutus-id-educationcode":"koulutus_742702",
+        "preference6-Koulutus-id-kaksoistutkinto":"",
+        "preference5-Koulutus-id-ao-groups":"",
+        "preference3-Koulutus-id-attachmentgroups":"",
+        "preference6-Koulutus-id-sora":"",
+        "preference5-Koulutus-id-athlete":"",
+        "preference2-Koulutus-id":"",
+        "preference5-Koulutus-id-attachments":"",
+        "preference3-Koulutus-id-vocational":"",
+        "preference1-Koulutus-id-vocational":"false",
+        "preference2-Koulutus-requiredBaseEducations":"",
+        "preference6-Koulutus-id-athlete":"",
+        "preference4-Koulutus-educationDegree":"",
+        "preference1-Koulutus-id-athlete":"false",
+        "preference4-Koulutus-id-kaksoistutkinto":"",
+        "preference6-Koulutus-educationDegree":"",
+        "preference6-Koulutus-id-attachments":"",
+        "preference5-Koulutus-id-kaksoistutkinto":"",
+        "preference6-Koulutus-id-aoIdentifier":"",
+        "preference6-Koulutus-id-attachmentgroups":"",
+        "preference5-Koulutus-id":"",
+        "preference2-Opetuspiste":"",
+        "preference2-Koulutus-id-athlete":"",
+        "preference1-Koulutus-id-attachments":"true",
+        "preference3-Koulutus-educationDegree":"",
+        "preference2-Koulutus-id-kaksoistutkinto":"",
+        "preference5-Opetuspiste":"",
+        "preference3-Koulutus-id-kaksoistutkinto":"",
+        "preference5-Koulutus-id-educationcode":"",
+        "preference1-Koulutus-id-attachmentgroups":"",
+        "preference4-Koulutus-id-sora":"",
+        "preference5-Koulutus-id-vocational":"",
+        "preference5-Koulutus-requiredBaseEducations":"",
+        "preference3-Koulutus-id-lang":"",
+        "preference1-Koulutus-requiredBaseEducations":"pohjakoulutusvaatimuskorkeakoulut_103,pohjakoulutusvaatimuskorkeakoulut_101,pohjakoulutusvaatimuskorkeakoulut_102",
+        "preference2-Opetuspiste-id":"",
+        "preference3-Opetuspiste":"",
+        "preference4-Koulutus-id-lang":"",
+        "preference6-Koulutus-id":"",
+        "preference5-Koulutus-id-attachmentgroups":"",
+        "preference2-Koulutus-id-vocational":"",
+        "preferencesVisible":"6",
+        "preference1-Koulutus-id":"1.2.246.562.20.649956391810",
+        "preference3-Koulutus-id-attachments":"",
+        "preference3-Koulutus-id-sora":"",
+        "preference3-Koulutus-requiredBaseEducations":"",
+        "preference4-Koulutus-id":"",
+        "preference2-Koulutus-id-lang":"",
+        "preference4-Koulutus-id-attachments":"",
+        "preference4-Opetuspiste":"",
+        "preference3-Koulutus-id-educationcode":"",
+        "preference1-Koulutus":"Maisterihaku, Biokemia, filosofian maisteri (2 v)",
+        "preference1-Koulutus-id-kaksoistutkinto":"false",
+        "preference3-Koulutus-id-aoIdentifier":"",
+        "preference5-Koulutus-id-aoIdentifier":"",
+        "preference1-Koulutus-id-lang":"FI",
+        "preference4-Koulutus-id-ao-groups":"",
+        "preference6-Opetuspiste":"",
+        "preference2-Koulutus-id-educationcode":"",
+        "preference6-Opetuspiste-id":"",
+        "preference1-Opetuspiste-id-parents":"1.2.246.562.10.00000000001,1.2.246.562.10.2014040310315946122056,1.2.246.562.10.38417217288,1.2.246.562.10.80754632463"
+      },
+      "koulutustausta":{
+        "pohjakoulutus_kk_taso":"1",
+        "pohjakoulutus_kk_pvm":"18.12.2008",
+        "pohjakoulutus_muu":"true",
+        "pohjakoulutus_kk_nimike":"Bioanalyytikko",
+        "pohjakoulutus_muu_vuosi":"2016",
+        "pohjakoulutus_kk_oppilaitos":"Oulun seudun ammattikorkeakoulu",
+        "pohjakoulutus_yo_vuosi":"2003",
+        "pohjakoulutus_yo_tutkinto":"fi",
+        "pohjakoulutus_muu_kuvaus":"Terveyden biotieteiden maisterivaiheen (FM) opiskelija (Turun yliopisto). Pääaine lääkekehitystiede. Arvioitu valmistumisajankohta keväällä 2016.",
+        "pohjakoulutus_yo":"true",
+        "pohjakoulutus_kk":"true",
+        "suoritusoikeus_tai_aiempi_tutkinto":"false"
+      },
+      "osaaminen":{
+
+      }
+    },
+    "oid":"1.2.246.562.11.00004880857",
+    "state":"ACTIVE",
+    "personOid":"1.2.246.562.24.67459498235",
+    "studentOid":"1.2.246.562.24.67459498235",
+    "received":1453975516798,
+    "preferenceEligibilities":[
+      {
+        "aoId":"1.2.246.562.20.649956391810",
+        "status":"ELIGIBLE",
+        "source":"UNKNOWN"
+      }
+    ],
+    "attachmentRequests":[
+      {
+        "id":"form.valmis.todistus.kk_applicationOption_1.2.246.562.20.649956391810",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"NOT_CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Todistuskopio korkeakoulututkinnosta",
+              "sv":"Betygskopia av din högskoleexamen",
+              "en":"Copy of your higher education degree certificate"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+              "sv":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+              "en":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta"
+            }
+          },
+          "deliveryNote":{
+            "translations":{
+              "fi":"Tarkista palautuspäivämäärä suoraan korkeakoulusta.",
+              "sv":"Kontrollera inlämningsdatum direkt från högskolan.",
+              "en":"Check the delivery deadline from the higher education institution."
+            }
+          },
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"NOT_RECEIVED"
+      },
+      {
+        "id":"952e5fee-8004-4ba9-bacc-496137afa89d",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"NOT_CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Kopio tutkintotodistuksesta - biokemia maisterihaku",
+              "sv":"Kopio tutkintotodistuksesta - biokemia maisterihaku",
+              "en":"Kopio tutkintotodistuksesta - biokemia maisterihaku"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>",
+              "sv":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>",
+              "en":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>"
+            }
+          },
+          "deadline":1454072400000,
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"NOT_RECEIVED"
+      },
+      {
+        "id":"4d527474-0b81-4bc6-a067-c0004feef7a7",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Motivaatiokirje - biokemia maisterihaku",
+              "sv":"Motivaatiokirje - biokemia maisterihaku",
+              "en":"Motivaatiokirje - biokemia maisterihaku"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>",
+              "sv":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>",
+              "en":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>"
+            }
+          },
+          "deadline":1454072400000,
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"ARRIVED"
+      }
+    ]
+  },
+  {
+    "applicationSystemId":"1.2.246.562.29.75961523455",
+    "answers":{
+      "henkilotiedot":{
+        "onkosinullakaksoiskansallisuus":"false",
+        "koulusivistyskieli":"FI",
+        "kansalaisuus":"FIN",
+        "asuinmaa":"FIN",
+        "Sukunimi":"Seppälä-Testi",
+        "matkapuhelinnumero1":"050 40988651",
+        "Henkilotunnus":"281282-9651",
+        "Henkilotunnus_digest":"570ef634fd4c54c31a9938435f36963a241583e88b48ea4dafe3cf483cd7131b",
+        "Postinumero":"92400",
+        "sukupuoli":"1",
+        "lahiosoite":"Äteritsiputeritsipuolilautatsijänkä 895",
+        "turvakielto":"false",
+        "Sähköposti":"hakija-45978611@oph.fi",
+        "Kutsumanimi":"Jose",
+        "Etunimet":"Jose Testi",
+        "personOid":"1.2.246.562.24.43232634133",
+        "onkoSinullaSuomalainenHetu":"false",
+        "kotikunta":"748",
+        "aidinkieli":"FI",
+        "syntymaaika":"28.12.1982",
+        "Henkilotunnus_plain":"281282-9651",
+        "SUKUPUOLI":"1",
+        "passinnumero":"",
+        "kansallinenIdTunnus":""
+      },
+      "lisatiedot":{
+        "lupaSahkoisesti":"true",
+        "lupaJulkaisu":"true",
+        "asiointikieli":"suomi",
+        "lupaSms":"true",
+        "lupaMarkkinointi":"true"
+      },
+      "hakutoiveet":{
+        "preference4-Koulutus-id-aoIdentifier":"",
+        "preference1-Koulutus-id-ao-groups":"",
+        "preference4-Opetuspiste-id":"",
+        "preference3-Koulutus-id-athlete":"false",
+        "preference4-Koulutus-requiredBaseEducations":"",
+        "preference2-Koulutus-id-attachmentgroups":"",
+        "preference4-Koulutus-id-athlete":"",
+        "preference3-Opetuspiste-id":"",
+        "preference4-Koulutus-id-attachmentgroups":"",
+        "preference2-Koulutus-id-ao-groups":"",
+        "preference1-Koulutus-educationDegree":"koulutusasteoph2002_72",
+        "preference6-Koulutus-id-ao-groups":"",
+        "preference1-Koulutus-id-sora":"false",
+        "preference2-Koulutus-educationDegree":"koulutusasteoph2002_72",
+        "preference5-Koulutus-id-sora":"",
+        "preference1-Koulutus-id-aoIdentifier":"",
+        "preference5-Koulutus-id-ao-groups":"",
+        "preference3-Koulutus-id-attachmentgroups":"",
+        "preference1-Koulutus-id-vocational":"false",
+        "preference2-Koulutus-requiredBaseEducations":"pohjakoulutusvaatimuskorkeakoulut_103,pohjakoulutusvaatimuskorkeakoulut_101,pohjakoulutusvaatimuskorkeakoulut_102",
+        "preference4-Koulutus-id-kaksoistutkinto":"",
+        "preference6-Koulutus-educationDegree":"",
+        "preference5-Koulutus-id-kaksoistutkinto":"",
+        "preference6-Koulutus-id-attachmentgroups":"",
+        "preference2-Opetuspiste":"Oulun yliopisto, Biokemian ja molekyylilääketieteen tiedekunta",
+        "preference2-Koulutus-id-athlete":"false",
+        "preference2-Koulutus-id-kaksoistutkinto":"false",
+        "preference5-Opetuspiste":"",
+        "preference3-Koulutus-id-kaksoistutkinto":"false",
+        "preference3-Koulutus-id-lang":"",
+        "preference2-Opetuspiste-id":"1.2.246.562.10.2014040310315946122056",
+        "preference3-Opetuspiste":"",
+        "preference6-Koulutus-id":"",
+        "preferencesVisible":"6",
+        "preference1-Koulutus-id":"1.2.246.562.20.79671958068",
+        "preference3-Koulutus-id-sora":"false",
+        "preference3-Koulutus-requiredBaseEducations":"",
+        "preference2-Koulutus-id-lang":"FI",
+        "preference4-Koulutus-id-attachments":"",
+        "preference1-Koulutus-id-kaksoistutkinto":"false",
+        "preference5-Koulutus-id-aoIdentifier":"",
+        "preference1-Koulutus-id-lang":"FI",
+        "preference4-Koulutus-id-ao-groups":"",
+        "preference6-Opetuspiste":"",
+        "preference3-Koulutus-id-ao-groups":"",
+        "preference4-Koulutus-id-educationcode":"",
+        "preference1-Opetuspiste":"Oulun yliopisto, Luonnontieteellinen tiedekunta",
+        "preference5-Opetuspiste-id":"",
+        "preference2-Koulutus-id-aoIdentifier":"",
+        "preference2-Koulutus-id-attachments":"true",
+        "preference2-Koulutus":"Maisterihaku, Biokemia, filosofian maisteri (2 v)",
+        "preference6-Koulutus-id-lang":"",
+        "preference6-Koulutus-id-vocational":"",
+        "preference6-Koulutus-id-educationcode":"",
+        "preference5-Koulutus-educationDegree":"",
+        "preference2-Koulutus-id-sora":"false",
+        "preference4-Koulutus-id-vocational":"",
+        "preference3-Koulutus-id":"",
+        "preference1-yoLiite":"true",
+        "preference1-Opetuspiste-id":"1.2.246.562.10.95926279142",
+        "preference5-Koulutus-id-lang":"",
+        "preference6-Koulutus-requiredBaseEducations":"",
+        "preference1-Koulutus-id-educationcode":"koulutus_742701",
+        "preference6-Koulutus-id-kaksoistutkinto":"",
+        "preference6-Koulutus-id-sora":"",
+        "preference5-Koulutus-id-athlete":"",
+        "preference2-Koulutus-id":"1.2.246.562.20.649956391810",
+        "preference5-Koulutus-id-attachments":"",
+        "preference3-Koulutus-id-vocational":"false",
+        "preference6-Koulutus-id-athlete":"",
+        "preference4-Koulutus-educationDegree":"",
+        "preference1-Koulutus-id-athlete":"false",
+        "preference6-Koulutus-id-attachments":"",
+        "preference6-Koulutus-id-aoIdentifier":"",
+        "preference5-Koulutus-id":"",
+        "preference1-Koulutus-id-attachments":"true",
+        "preference3-Koulutus-educationDegree":"",
+        "preference5-Koulutus-id-educationcode":"",
+        "preference1-Koulutus-id-attachmentgroups":"",
+        "preference4-Koulutus-id-sora":"",
+        "preference5-Koulutus-id-vocational":"",
+        "preference5-Koulutus-requiredBaseEducations":"",
+        "preference1-Koulutus-requiredBaseEducations":"pohjakoulutusvaatimuskorkeakoulut_101,pohjakoulutusvaatimuskorkeakoulut_102,pohjakoulutusvaatimuskorkeakoulut_116",
+        "preference4-Koulutus-id-lang":"",
+        "preference5-Koulutus-id-attachmentgroups":"",
+        "preference2-Koulutus-id-vocational":"false",
+        "preference3-Koulutus-id-attachments":"",
+        "preference4-Koulutus-id":"",
+        "preference4-Opetuspiste":"",
+        "preference3-Koulutus-id-educationcode":"false",
+        "preference1-Koulutus":"Maisterihaku, Biologia, filosofian maisteri (2 v)",
+        "preference2-yoLiite":"true",
+        "preference3-Koulutus":" ",
+        "preference3-Koulutus-id-aoIdentifier":"",
+        "preference2-Koulutus-id-educationcode":"koulutus_742702",
+        "preference6-Opetuspiste-id":"",
+        "preference2-Opetuspiste-id-parents":"1.2.246.562.10.00000000001,1.2.246.562.10.2014040310315946122056,1.2.246.562.10.38417217288,1.2.246.562.10.80754632463",
+        "preference1-Opetuspiste-id-parents":"1.2.246.562.10.00000000001,1.2.246.562.10.95926279142,1.2.246.562.10.38417217288,1.2.246.562.10.80754632463"
+      },
+      "koulutustausta":{
+        "pohjakoulutus_yo_vuosi":"2001",
+        "pohjakoulutus_yo_tutkinto":"fi",
+        "pohjakoulutus_yo":"true",
+        "pohjakoulutus_kk_taso":"1",
+        "pohjakoulutus_kk_pvm":"21.12.2005",
+        "pohjakoulutus_kk":"true",
+        "suoritusoikeus_tai_aiempi_tutkinto":"false",
+        "pohjakoulutus_kk_nimike":"laboratorioanalyytikko",
+        "pohjakoulutus_kk_oppilaitos":"Oulun seudun ammattikorkeakoulu"
+      },
+      "osaaminen":{
+
+      }
+    },
+    "oid":"1.2.246.562.11.00004881131",
+    "state":"ACTIVE",
+    "personOid":"1.2.246.562.24.43232634133",
+    "studentOid":"1.2.246.562.24.43232634133",
+    "received":1453997101522,
+    "preferenceEligibilities":[
+      {
+        "aoId":"1.2.246.562.20.79671958068",
+        "status":"ELIGIBLE",
+        "source":"AUTHENTICATED_COPY"
+      },
+      {
+        "aoId":"1.2.246.562.20.649956391810",
+        "status":"NOT_CHECKED",
+        "source":"UNKNOWN"
+      }
+    ],
+    "attachmentRequests":[
+      {
+        "id":"form.valmis.todistus.kk_applicationOption_1.2.246.562.20.79671958068",
+        "preferenceAoId":"1.2.246.562.20.79671958068",
+        "processingStatus":"CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Todistuskopio korkeakoulututkinnosta",
+              "sv":"Betygskopia av din högskoleexamen",
+              "en":"Copy of your higher education degree certificate"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"Oulun yliopisto, Luonnontieteellinen tiedekunta",
+              "sv":"Oulun yliopisto, Luonnontieteellinen tiedekunta",
+              "en":"Oulun yliopisto, Luonnontieteellinen tiedekunta"
+            }
+          },
+          "deliveryNote":{
+            "translations":{
+              "fi":"Tarkista palautuspäivämäärä suoraan korkeakoulusta.",
+              "sv":"Kontrollera inlämningsdatum direkt från högskolan.",
+              "en":"Check the delivery deadline from the higher education institution."
+            }
+          },
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"ARRIVED"
+      },
+      {
+        "id":"156ff900-3a1f-42a1-936c-54c2b51410b7",
+        "preferenceAoId":"1.2.246.562.20.79671958068",
+        "processingStatus":"NOT_CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Todistusjäljennökset",
+              "sv":"Todistusjäljennökset",
+              "en":"Todistusjäljennökset"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"<p>Jos olet valmistunut ennen hakuajan päättymistä, sinun tulee toimittaa tutkintotodistuksesi ja opintosuoritusotteesi hakuajan päättymiseen mennessä. Jos valmistut hakuajan päättymisen jälkeen, noudata seuraavaa aikataulua kopioiden toimittamisessa:</p> <ul> <li>   Keväällä 2016 valmistuvat suomalaisen amk -tutkinnon suorittavat – ma 13.6.2016 mennessä</li> <li>   Keväällä/kesällä 2016 valmistuvat ulkomailla suoritettavat tutkinnot sekä suomalaiset yliopistolliset kandidaatin tutkinnot – pe 29.7.2016 mennessä</li> </ul> <p><strong>Liitteiden on oltava perillä klo 15.00 mennessä.</strong></p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja. Liitteet voi oikeaksi todistaa kaksi henkilöä allekirjoituksellaan ja nimenselvennöksellään. Allekirjoituksellaan henkilöt todistavat kopion olevan muuntelematon jäljennös alkuperäisestä todistuksesta. Henkilöiden tulee nähdä alkuperäinen todistus ja sen kopio rinnakkain. Jos todistusjäljennös on monisivuinen, tulee jokainen sivu olla oikeaksi todistettu. Huomaathan, että Oulun yliopiston Hakijapalvelut ei oikeaksi todista muista oppilaitoksista annettuja todistuksia.</p>",
+              "sv":"<p>Jos olet valmistunut ennen hakuajan päättymistä, sinun tulee toimittaa tutkintotodistuksesi ja opintosuoritusotteesi hakuajan päättymiseen mennessä. Jos valmistut hakuajan päättymisen jälkeen, noudata seuraavaa aikataulua kopioiden toimittamisessa:</p> <ul> <li>   Keväällä 2016 valmistuvat suomalaisen amk -tutkinnon suorittavat – ma 13.6.2016 mennessä</li> <li>   Keväällä/kesällä 2016 valmistuvat ulkomailla suoritettavat tutkinnot sekä suomalaiset yliopistolliset kandidaatin tutkinnot – pe 29.7.2016 mennessä</li> </ul> <p><strong>Liitteiden on oltava perillä klo 15.00 mennessä.</strong></p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja. Liitteet voi oikeaksi todistaa kaksi henkilöä allekirjoituksellaan ja nimenselvennöksellään. Allekirjoituksellaan henkilöt todistavat kopion olevan muuntelematon jäljennös alkuperäisestä todistuksesta. Henkilöiden tulee nähdä alkuperäinen todistus ja sen kopio rinnakkain. Jos todistusjäljennös on monisivuinen, tulee jokainen sivu olla oikeaksi todistettu. Huomaathan, että Oulun yliopiston Hakijapalvelut ei oikeaksi todista muista oppilaitoksista annettuja todistuksia.</p>",
+              "en":"<p>Jos olet valmistunut ennen hakuajan päättymistä, sinun tulee toimittaa tutkintotodistuksesi ja opintosuoritusotteesi hakuajan päättymiseen mennessä. Jos valmistut hakuajan päättymisen jälkeen, noudata seuraavaa aikataulua kopioiden toimittamisessa:</p> <ul> <li>   Keväällä 2016 valmistuvat suomalaisen amk -tutkinnon suorittavat – ma 13.6.2016 mennessä</li> <li>   Keväällä/kesällä 2016 valmistuvat ulkomailla suoritettavat tutkinnot sekä suomalaiset yliopistolliset kandidaatin tutkinnot – pe 29.7.2016 mennessä</li> </ul> <p><strong>Liitteiden on oltava perillä klo 15.00 mennessä.</strong></p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja. Liitteet voi oikeaksi todistaa kaksi henkilöä allekirjoituksellaan ja nimenselvennöksellään. Allekirjoituksellaan henkilöt todistavat kopion olevan muuntelematon jäljennös alkuperäisestä todistuksesta. Henkilöiden tulee nähdä alkuperäinen todistus ja sen kopio rinnakkain. Jos todistusjäljennös on monisivuinen, tulee jokainen sivu olla oikeaksi todistettu. Huomaathan, että Oulun yliopiston Hakijapalvelut ei oikeaksi todista muista oppilaitoksista annettuja todistuksia.</p>"
+            }
+          },
+          "deadline":1454072459967,
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"NOT_RECEIVED"
+      },
+      {
+        "id":"8784ca4b-770b-44aa-b93d-bd2378bfe67c",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"NOT_CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Kopio tutkintotodistuksesta - biokemia maisterihaku",
+              "sv":"Kopio tutkintotodistuksesta - biokemia maisterihaku",
+              "en":"Kopio tutkintotodistuksesta - biokemia maisterihaku"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>",
+              "sv":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>",
+              "en":"<p>Hakemuksen liitteeksi tulee toimittaa täydellinen kopio hakukelpoisuuden tuottavan soveltuvan AMK -tutkinnon tai soveltuvan kandidaatin tutkinnon tutkintotodistuksesta mahdollisine liitteineen.</p> <p>Mikäli tutkinto on suoritettu ennen hakuajan päättymistä, tulee kopio tutkintotodistuksesta palauttaa <b>hakuajan päättymiseen 29.1.2016 mennessä</b>. Hakuajan päättymisen jälkeen keväällä 2016 valmistuvien AMK-tutkinnon suorittaneiden tulee toimittaa kopio tutkintotodistuksesta <b>13.6.2016 klo 15.00</b> mennessä.</p> <p>Hakijoiden, joiden hakuperusteena oleva tutkinto ei ole valmis hakuajan päättymiseen mennessä, tulee toimittaa hakemuksen liitteenä oppilaitoksen antama <b>opintosuoritusote, josta ilmenevät kaikki tutkintoon suoritetut opinnot, selvitys vielä puuttuvista opinnoista ja arvio valmistumispäivästä</b>. Keväällä tai kesällä suoritettavien yliopistollisten kandidaatin tutkinnon tutkintotodistuskopio tulee toimittaa <b>29.7.2016 klo 15.00</b> mennessä. Valinta on ehdollinen, kunnes tutkintotodistus on toimitettu.</p> <p>Hakemuksen liitteet toimitetaan <strong>29.1.2016 mennessä</strong> <b>Oulun yliopiston hakijapalveluihin</b> osoitteella<br />Oulun yliopisto/opiskelijakeskus<br />Hakijapalvelut<br />PL 8100, 90014 Oulun yliopisto<br /> </p> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p> <p>Oulun yliopistoon toimitettavien liitteiden tulee olla oikeaksi todistettuja.</p>"
+            }
+          },
+          "deadline":1454072400000,
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"ARRIVED"
+      },
+      {
+        "id":"61111969-eb3c-4231-83a0-0144cab189cc",
+        "preferenceAoId":"1.2.246.562.20.649956391810",
+        "processingStatus":"NOT_CHECKED",
+        "applicationAttachment":{
+          "name":{
+            "translations":{
+              "fi":"Motivaatiokirje - biokemia maisterihaku",
+              "sv":"Motivaatiokirje - biokemia maisterihaku",
+              "en":"Motivaatiokirje - biokemia maisterihaku"
+            }
+          },
+          "description":{
+            "translations":{
+              "fi":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>",
+              "sv":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>",
+              "en":"<p>Hakemuksen liitteeksi tulee toimittaa vapaamuotoinen motivaatiokirje, jossa hakija kuvaa mm. seuraavia asioita:</p> <ul> <li>miksi hakee biokemian tutkinto-ohjelmaan</li> <li>miten aikaisemmat opinnot tukevat menestyksellistä opiskelua maisteriohjelmassa</li> <li>miten suoritettava tutkinto täydentää osaamista sekä tukee tulevaisuuden tavoitteita.</li> </ul> <p>Muista merkitä liitteisiin nimesi, henkilötunnuksesi sekä koulutukset, johon haet. Mikäli haluat kuittauksen liitteiden saapumisesta perille, niin lisää liitteeseen myös sähköpostiosoitteesi.</p>"
+            }
+          },
+          "deadline":1454072400000,
+          "address":{
+            "recipient":"Hakijapalvelut",
+            "streetAddress":"PL 8100",
+            "postalCode":"90014",
+            "postOffice":"OULUN YLIOPISTO"
+          }
+        },
+        "receptionStatus":"ARRIVED"
+      }
+    ]
+  }
+]
