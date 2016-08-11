@@ -4,7 +4,7 @@ import fi.vm.sade.hakurekisteri.rest.support.{Query, User, Registers}
 import akka.actor.ActorRef
 import scala.concurrent.{Future, ExecutionContext}
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, FullHakemus, HakemusQuery}
 import fi.vm.sade.hakurekisteri.suoritus.{SuoritusHenkilotQuery, Suoritus}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
@@ -18,7 +18,7 @@ import akka.pattern.ask
 trait OppijaFetcher {
 
   val rekisterit: Registers
-  val hakemusRekisteri: ActorRef
+  val hakemusService: HakemusService
   val ensikertalaisuus: ActorRef
 
   val singleSplitQuerySize = 5000
@@ -26,14 +26,11 @@ trait OppijaFetcher {
   protected implicit def executor: ExecutionContext
   implicit val defaultTimeout: Timeout
 
-  def fetchOppijat(q: HakemusQuery, hakuOid: String)(implicit user: User): Future[Seq[Oppija]] =
+  def fetchOppijat(q: HakemusQuery, hakuOid: String)(implicit user: User): Future[Seq[Oppija]] = {
+    val personOids = hakemusService.personOidsForHaku(hakuOid)
     for (
-      hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
-      oppijat <- fetchOppijatFor(hakemukset, hakuOid)
+      oppijat <- fetchOppijat(personOids, Some(hakuOid))(user)
     ) yield oppijat
-
-  def fetchOppijatFor(hakemukset: Seq[FullHakemus], hakuOid: String)(implicit user: User): Future[Seq[Oppija]] = {
-    fetchOppijat(extractPersons(hakemukset), Some(hakuOid))(user)
   }
 
   def fetchOppijat(persons: Set[String], hakuOid: Option[String])(implicit user: User): Future[Seq[Oppija]] = {
@@ -43,12 +40,6 @@ trait OppijaFetcher {
   def fetchOppija(person: String, hakuOid: Option[String])(implicit user: User): Future[Oppija] = {
     fetchOppijat(Set(person), hakuOid)(user).map(_.head)
   }
-
-  private def extractPersons(hakemukset: Seq[FullHakemus]): Set[String] =
-    (for (
-      hakemus <- hakemukset
-      if hakemus.personOid.isDefined && hakemus.stateValid
-    ) yield hakemus.personOid.get).toSet
 
   private def enrichWithEnsikertalaisuus(rekisteriData: Future[Seq[Oppija]],
                                          hakuOid: Option[String]): Future[Seq[Oppija]] = hakuOid match {

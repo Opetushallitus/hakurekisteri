@@ -7,6 +7,7 @@ import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
+import fi.vm.sade.hakurekisteri.integration.hakemus.MockHakemusService
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.oppija.{Oppija, Todistus}
@@ -74,7 +75,7 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting {
     }
   }))
 
-  val resource = new RekisteritiedotResource(rekisterit, notImplementedActor, notImplementedActor)
+  val resource = new RekisteritiedotResource(rekisterit, new MockHakemusService(), notImplementedActor)
 
   addServlet(resource, "/*")
 
