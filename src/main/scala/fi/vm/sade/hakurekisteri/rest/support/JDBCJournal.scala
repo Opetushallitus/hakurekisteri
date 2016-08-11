@@ -18,7 +18,7 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table:
   implicit val ec: ExecutionContext = system.dispatcher
   val log = Logging.getLogger(system, this)
   lazy val tableName = table.baseTableRow.tableName
-  val queryTimeout: Duration = 1.minute
+  val queryTimeout: Duration = 5.minute
 
   Await.result(db.run(MTable.getTables(tableName).flatMap((t: Vector[MTable]) => {
     if (t.isEmpty) {
