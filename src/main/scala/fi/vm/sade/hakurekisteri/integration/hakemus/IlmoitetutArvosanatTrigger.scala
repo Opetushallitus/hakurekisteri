@@ -4,8 +4,7 @@ import java.util.UUID
 
 import akka.actor.ActorRef
 import akka.event.Logging
-import akka.pattern.ask
-import akka.pattern.AskTimeoutException
+import akka.pattern.{AskTimeoutException, ask}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri._
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana}
