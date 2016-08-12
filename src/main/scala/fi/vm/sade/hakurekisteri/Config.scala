@@ -96,6 +96,7 @@ class DefaultConfig extends Config {
   def mockMode = false
   log.info("Using default config")
   override val databaseUrl = getPropertyOrCrash("suoritusrekisteri.db.url", "configuration key missing: suoritusreksiteri.db.url")
+  println("Database URL: " + databaseUrl)
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
@@ -106,8 +107,8 @@ class MockConfig extends Config {
   def mockMode = true
   log.info("Using mock config")
   val postgresPortChooser = new PortFromSystemPropertyOrFindFree("suoritusrekisteri.it.postgres.port")
-
   override val databaseUrl = s"jdbc:postgresql://localhost:${postgresPortChooser.chosenPort}/suoritusrekisteri"
+  println("Database URL: " + databaseUrl)
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   override val importBatchProcessingInitialDelay = 1.seconds
@@ -119,6 +120,7 @@ class MockDevConfig extends Config {
   def mockMode = true
   log.info("Using mock dev config")
   override val databaseUrl = properties.getOrElse("suoritusrekisteri.db.url", "jdbc:postgresql://localhost:5432/suoritusrekisteri")
+  println("Database URL: " + databaseUrl)
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   override val importBatchProcessingInitialDelay = 1.seconds
