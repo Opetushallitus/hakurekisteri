@@ -43,6 +43,7 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
     }
   }
 
+
   it should "handle Suoritukset by multiple persons correctly when queried with muokattuJalkeen" in {
     val before = DateTime.now()
     val aarnenLukioId = postSuoritus(aarnenLukio)

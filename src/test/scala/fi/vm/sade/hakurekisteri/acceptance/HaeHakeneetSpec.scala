@@ -87,8 +87,7 @@ class HaeHakeneetSpec extends ScalatraFeatureSpec with GivenWhenThen with Hakene
 
   override def stop(): Unit = {
     import scala.concurrent.duration._
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
     super.stop()
   }
 }

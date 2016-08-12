@@ -6,7 +6,7 @@ import java.util.UUID
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.storage.Identified
 import org.h2.tools.RunScript
@@ -21,7 +21,7 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
   implicit val system = ActorSystem("opiskelija-test-system")
   implicit val ec = system.dispatcher
   implicit val timeout: Timeout = 15.seconds
-  implicit val database = Database.forURL("jdbc:h2:file:data/opiskelijatest", driver = "org.h2.Driver")
+  implicit val database = Database.forURL("jdbc:h2:file:./data/opiskelijatest", driver = "org.h2.Driver")
 
   val o1 = Opiskelija("foo", "9", "9A", "bar", new DateTime(), Some(new DateTime().plus(30000)), "test")
   val o2 = Opiskelija("foo", "9", "9B", "bar2", new DateTime(), Some(new DateTime().plus(30000)), "test")
@@ -43,9 +43,8 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
   }
 
   override def stop(): Unit = {
-    RunScript.execute("jdbc:h2:file:data/opiskelijatest", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    RunScript.execute("jdbc:h2:file:./data/opiskelijatest", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
+    Await.result(system.terminate(), 15.seconds)
     super.stop()
   }
 

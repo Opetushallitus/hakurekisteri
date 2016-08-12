@@ -48,7 +48,7 @@ import org.springframework.web.filter.DelegatingFilterProxy
 import siirto._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 class ScalatraBootstrap extends LifeCycle {
   implicit val swagger: Swagger = new HakurekisteriSwagger
@@ -60,7 +60,9 @@ class ScalatraBootstrap extends LifeCycle {
     val config = WebAppConfig.getConfig(context)
     implicit val security = Security(config)
 
-    val journals = new DbJournals(config)
+    val db = new SuoritusrekisteriDB(config).start()
+    val journals = new DbJournals(db)
+
     val registers = new BareRegisters(system, journals)
     val authorizedRegisters = new AuthorizedRegisters(registers, system, config)
 
@@ -152,8 +154,7 @@ class ScalatraBootstrap extends LifeCycle {
   override def destroy(context: ServletContext) {
     import scala.concurrent.duration._
 
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
 
     OPHSecurity.destroy(context)
   }

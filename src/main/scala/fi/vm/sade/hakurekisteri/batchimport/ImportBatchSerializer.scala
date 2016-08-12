@@ -32,6 +32,7 @@ class ImportBatchSerializer extends CustomSerializer[ImportBatch] (format => (
       id.map(i => batch.identify(i)).getOrElse(batch)
   },
   {
+
     case ib: ImportBatch with Identified[UUID @unchecked] =>
       implicit val formats = HakurekisteriJsonSupport.format
       val s: JObject = Extraction.decompose(ib.status) match {
@@ -40,25 +41,13 @@ class ImportBatchSerializer extends CustomSerializer[ImportBatch] (format => (
       }
 
       val result =  ("id" -> ib.id.toString) ~
-                    ("data" -> toJson(ib.data)) ~
-                    ("batchType" -> ib.batchType) ~
-                    ("source" -> ib.source) ~
-                    ("state" -> ib.state.toString) ~
-                    ("status" -> s)
+        ("data" -> toJson(ib.data)) ~
+        ("batchType" -> ib.batchType) ~
+        ("source" -> ib.source) ~
+        ("state" -> ib.state.toString) ~
+        ("status" -> s)
 
       ib.externalId.map(id => result ~ ("externalId" -> id)).getOrElse(result)
   }
   )
 )
-
-import BatchState.BatchState
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
-
-object ImportBatchImplicits extends HakurekisteriJsonSupport {
-  implicit val batchStateColumnType = MappedColumnType.base[BatchState, String]({ c => c.toString }, { s => BatchState.withName(s)})
-
-  implicit val importstatusType =  MappedColumnType.base[ImportStatus, JValue](
-    status => Extraction.decompose(status),
-    _.extract[ImportStatus]
-  )
-}

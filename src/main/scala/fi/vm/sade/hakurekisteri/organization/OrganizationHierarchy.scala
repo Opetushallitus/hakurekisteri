@@ -9,6 +9,7 @@ import dispatch.Defaults._
 import dispatch._
 import fi.vm.sade.hakurekisteri.integration.{HttpConfig, OphUrlProperties}
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Resource, User}
+import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import fi.vm.sade.hakurekisteri.tools.SafeXML

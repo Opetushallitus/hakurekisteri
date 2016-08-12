@@ -5,6 +5,7 @@ import java.util.UUID
 import java.util.concurrent.{Executors, TimeUnit}
 
 import akka.actor._
+import akka.event.Logging
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import com.jcraft.jsch.{ChannelSftp, SftpException}
@@ -14,7 +15,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HetuQuery}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.Aine
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import fr.janalyse.ssh.{SSH, SSHFtp, SSHOptions, SSHPassword}
 import org.joda.time._
 
@@ -722,9 +723,9 @@ class YoSuoritusUpdateActor(yoSuoritus: VirallinenSuoritus, suoritusRekisteri: A
   override def receive: Actor.Receive = {
     case s: Seq[_] =>
       fetch.foreach(_.cancel())
-      if (s.isEmpty)
+      if (s.isEmpty) {
         suoritusRekisteri ! yoSuoritus
-      else {
+      } else {
         val suoritukset = ennenVuotta1990Valmistuneet(s)
         if (suoritukset.nonEmpty) {
           context.parent ! suoritukset.head

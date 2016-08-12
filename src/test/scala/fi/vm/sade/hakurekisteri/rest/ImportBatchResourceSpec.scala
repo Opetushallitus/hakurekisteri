@@ -6,14 +6,18 @@ import java.util.UUID
 import akka.actor.{ActorSystem, Props}
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.{ConfigurationSupport, FakeAuthorizer}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvosana}
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.parametrit._
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, Valintatila, Vastaanottotila}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
 import fi.vm.sade.hakurekisteri.web.batchimport.{ImportBatchResource, TiedonsiirtoOpen}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
+import org.h2.engine.SysProperties
 import org.h2.tools.RunScript
 import org.json4s.Extraction
 import org.json4s.jackson.JsonMethods._
@@ -26,7 +30,7 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 import siirto.{PerustiedotXmlConverter, SchemaDefinition}
 
 import scala.compat.Platform
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.xml.Elem
 
@@ -36,8 +40,9 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
   implicit val system = ActorSystem("test-import-batch")
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val security = new TestSecurity
+  SysProperties.serializeJavaObject = false
 
-  implicit val database = Database.forURL("jdbc:h2:file:data/importbatchtest", driver = "org.h2.Driver")
+  implicit val database = Database.forURL("jdbc:h2:file:./data/importbatchtest;MV_STORE=FALSE;MODE=PostgreSQL", driver="org.h2.Driver")
   val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
   val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5)))
   val authorized = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
@@ -62,9 +67,9 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
   val parameterActor = system.actorOf(Props(new MockParameterActor()))
 
   override def stop(): Unit = {
-    RunScript.execute("jdbc:h2:file:data/importbatchtest", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    RunScript.execute("jdbc:h2:file:./data/importbatchtest", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
+    Await.result(system.terminate(), 15.seconds)
+    database.close()
     super.stop()
   }
 
@@ -137,7 +142,6 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
   test("get withoutdata should contain the posted batch") {
     post("/batch", "<batch><identifier>foo5</identifier><data>foo</data></batch>") {
       import org.json4s.jackson.Serialization.read
-
       val batch = read[ImportBatch with Identified[UUID]](response.body)
 
       get("/batch/withoutdata") {

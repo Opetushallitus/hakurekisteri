@@ -16,7 +16,7 @@ import org.json4s.jackson.Serialization._
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 
@@ -62,7 +62,6 @@ class SuoritusServletSpec extends ScalatraFunSuite {
   }
 
   override def stop(): Unit = {
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
   }
 }

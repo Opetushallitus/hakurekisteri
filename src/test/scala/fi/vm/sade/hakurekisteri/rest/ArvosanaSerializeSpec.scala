@@ -14,6 +14,7 @@ import org.joda.time.LocalDate
 import org.json4s.jackson.Serialization._
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 
@@ -104,7 +105,6 @@ class ArvosanaSerializeSpec extends ScalatraFunSuite {
   }
 
   override def stop(): Unit = {
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
   }
 }

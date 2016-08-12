@@ -16,7 +16,7 @@ import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with BeforeAndAfterAll {
 
@@ -154,8 +154,7 @@ class PermissionResourceSpec extends ScalatraFunSuite with MockitoSugar with Bef
   }
 
   override def afterAll() = {
-    system.shutdown()
-    system.awaitTermination(10.seconds)
+    Await.result(system.terminate(), 15.seconds)
   }
 
 }

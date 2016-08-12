@@ -1,13 +1,13 @@
 package fi.vm.sade.hakurekisteri.storage
 
 import akka.actor.Status.Failure
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging, Status}
 import akka.event.Logging
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Resource}
 import fi.vm.sade.hakurekisteri.storage.repository.Repository
-
-import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 import scala.util.Try
 
 object GetCount

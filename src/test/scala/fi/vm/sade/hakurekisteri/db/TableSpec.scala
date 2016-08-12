@@ -1,75 +1,74 @@
 package fi.vm.sade.hakurekisteri.db
 
-import org.joda.time.DateTime
-import org.scalatest.{Matchers, FlatSpec}
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver
-import HakurekisteriDriver.simple._
-import scala.slick.jdbc.meta.MTable
-import fi.vm.sade.hakurekisteri.batchimport.{ImportStatus, BatchState, ImportBatch, ImportBatchTable}
-import fi.vm.sade.hakurekisteri.storage.repository.Updated
 import java.util.UUID
 
-class TableSpec extends FlatSpec with Matchers {
+import akka.actor.ActorSystem
+import fi.vm.sade.hakurekisteri.batchimport.{BatchState, ImportBatch, ImportBatchTable, ImportStatus}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.storage.repository.{Delta, Updated}
+import org.h2.engine.SysProperties
+import org.joda.time.DateTime
+import org.scalatest.{FlatSpec, Matchers}
+import slick.jdbc.meta.MTable
 
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
+import scala.language.existentials
+
+class TableSpec extends FlatSpec with Matchers {
+  implicit val system = ActorSystem("test-jdbc")
+  implicit val ec: ExecutionContext = system.dispatcher
+  SysProperties.serializeJavaObject = false
   behavior of "ImportBatchTable"
 
   val table = TableQuery[ImportBatchTable]
 
-  it should "be able create itself" in {
-    val db = Database.forURL("jdbc:h2:mem:test", driver = "org.h2.Driver")
+  println(table.baseTableRow.tableName)
 
-    val tables = db withSession {
-      implicit session =>
-        table.ddl.create
-        MTable.getTables(table.baseTableRow.tableName).list
-    }
+  def getDb: Database = {
+    Database.forURL("jdbc:h2:mem:test;MODE=PostgreSQL", driver = "org.h2.Driver")
+  }
+
+  it should "be able create itself" in {
+    val db = getDb
+    val tables: Vector[MTable] = Await.result(db.run(
+      table.schema.create andThen MTable.getTables(table.baseTableRow.tableName)
+    ), 10.seconds)
+
+    db.close()
 
     tables.size should be(1)
   }
 
   it should "be able to store updates" in {
+    val db = getDb
     val xml = <batchdata>data</batchdata>
     val batch = ImportBatch(xml, Some("externalId"), "test", "test", BatchState.READY, ImportStatus()).identify(UUID.randomUUID())
 
-    val result = withDb {
-      implicit session =>
-        table += Updated(batch)
-    }
+    val result = Await.result(db.run(
+      table.schema.create andThen (table += Updated(batch))
+    ), 10.seconds)
+
+    db.close()
 
     result should be(1)
   }
 
+
   it should "be able to retrieve updates" in {
+    val db = getDb
     val xml = <batchdata>data</batchdata>
-    val batch = ImportBatch(xml, Some("externalId"), "test", "test", BatchState.READY, ImportStatus(new DateTime(), Some(new DateTime()), Map("foo" -> Set("foo exception")), Some(1), Some(0), Some(1))).identify(UUID.randomUUID())
-    val table = TableQuery[ImportBatchTable]
+    val batch: ImportBatch with Identified[UUID] = ImportBatch(xml, Some("externalIdToo"), "test", "test", BatchState.READY, ImportStatus(new DateTime(), Some(new DateTime()), Map("foo" -> Set("foo exception")), Some(1), Some(0), Some(1))).identify(UUID.randomUUID())
+    val q = table.filter(_.resourceId === batch.id)
 
-    val result = withDb {
-      implicit session =>
-        table += Updated(batch)
-        val results = for (
-          result <- table
-          if result.resourceId === batch.id
-
-        ) yield result
-
-        val Updated(current) = results.list.head
-        current
-    }
-
-    result should be(batch)
+    val action =  table.schema.create andThen (table += Updated(batch)) andThen q.result
+    val results: Seq[Delta[ImportBatch, UUID]] = Await.result(db.run(action), 60.seconds)
+    results.size should be(1)
+    val Updated(current) = results.head
+    current should be(batch)
+    db.close()
   }
 
-  def withDb[R](action: Session => R): R = {
-    val db = Database.forURL("jdbc:h2:mem:test", driver = "org.h2.Driver")
 
-    db withSession {
-      implicit session =>
-        if (MTable.getTables(table.baseTableRow.tableName).list.isEmpty) {
-          table.ddl.create
-        }
-
-        action(session)
-    }
-  }
 }
