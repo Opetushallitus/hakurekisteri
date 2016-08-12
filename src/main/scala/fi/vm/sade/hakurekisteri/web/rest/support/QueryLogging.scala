@@ -13,7 +13,15 @@ trait QueryLogging { this: HakuJaValintarekisteriStack =>
   }
 
   def logQuery(q: Any, t0: Long, f: Future[_])(implicit ec: ExecutionContext): Unit = {
-    f.onComplete(t => logger.info(s"query $q took ${Platform.currentTime - t0} ms, result ${result(t)}"))
+    f.onComplete(t => {
+      val requestLength = Platform.currentTime - t0
+      val message = s"query $q took $requestLength ms, result ${result(t)}"
+      requestLength match {
+        case reallySlow if requestLength > 10000  => logger.warning(message)
+        case slow if requestLength > 1000 => logger.info(message)
+        case normal => logger.debug(message)
+      }
+    })
   }
 
 }
