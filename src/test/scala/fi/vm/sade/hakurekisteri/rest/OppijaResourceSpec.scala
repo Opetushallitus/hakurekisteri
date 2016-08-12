@@ -49,7 +49,7 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
 
   test("OppijaResource should return 200") {
     when(hakemusServiceMock.personOidsForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(Set[String]()))
-    when(hakemusServiceMock.hakemuksetForHaku(anyString())).thenReturn(Future.successful(Seq[FullHakemus]()))
+    when(hakemusServiceMock.hakemuksetForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(Seq[FullHakemus]()))
 
     get("/?haku=1") {
       response.status should be(OK)

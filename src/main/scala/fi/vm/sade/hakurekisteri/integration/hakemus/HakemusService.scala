@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Future, _}
+import scala.concurrent.Future
 
 class HakemusService(restClient: VirkailijaRestClient) {
 
@@ -13,8 +13,8 @@ class HakemusService(restClient: VirkailijaRestClient) {
     ) yield hakemukset.getOrElse(personOid, Seq[FullHakemus]())
   }
 
-  def hakemuksetForHakukohde(hakukohdeOid: String): Future[Seq[FullHakemus]] = {
-    restClient.postObject[Set[String], Seq[FullHakemus]]("haku-app.byapplicationoption")(200, Set(hakukohdeOid))
+  def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
+    restClient.postObject[Set[String], Seq[FullHakemus]]("haku-app.byapplicationoption", organisaatio)(200, Set(hakukohdeOid))
   }
 
   def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]] = {
@@ -25,8 +25,8 @@ class HakemusService(restClient: VirkailijaRestClient) {
     restClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationsystem", organisaatio)(200, Set(hakukohdeOid))
   }
 
-  def hakemuksetForHaku(hakuOid: String): Future[Seq[FullHakemus]] = {
-    restClient.postObject[Set[String], Seq[FullHakemus]]("haku-app.personoidsbyapplicationsystem")(200, Set(hakuOid))
+  def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
+    restClient.postObject[Set[String], Seq[FullHakemus]]("haku-app.personoidsbyapplicationsystem", organisaatio)(200, Set(hakuOid))
   }
 
 }
@@ -34,11 +34,11 @@ class HakemusService(restClient: VirkailijaRestClient) {
 class HakemusServiceMock extends HakemusService(null) {
   override def hakemuksetForPerson(personOid: String) = Future.successful(Seq[FullHakemus]())
 
-  override def hakemuksetForHakukohde(hakukohdeOid: String) = Future.successful(Seq[FullHakemus]())
+  override def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]) = Future.successful(Seq[FullHakemus]())
 
   override def personOidsForHaku(hakuOid: String, organisaatio: Option[String]) = Future.successful(Set[String]())
 
   override def personOidsForHakukohde(hakukohdeOid: String, organisaatio: Option[String]) = Future.successful(Set[String]())
 
-  override def hakemuksetForHaku(hakuOid: String) = Future.successful(Seq[FullHakemus]())
+  override def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]) = Future.successful(Seq[FullHakemus]())
 }

@@ -24,7 +24,6 @@ trait Integrations {
   val virtaResource: ActorRef
   val henkilo: ActorRef
   val organisaatiot: ActorRef
-  val hakemukset: ActorRef
   val hakemusService: HakemusService
   val tarjonta: ActorRef
   val koodisto: ActorRef
@@ -55,7 +54,6 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       case a => println(s"DummyActor($self): received $a")
     }
   })
-  override val hakemukset: ActorRef = mockActor("hakemukset", new MockHakemusActor)
   override val hakemusService = new HakemusServiceMock
   override val koodisto: ActorRef = mockActor("koodisto", new DummyActor)
   override val organisaatiot: ActorRef = mockActor("organisaatiot", new MockOrganisaatioActor(config))
@@ -66,7 +64,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     henkilo,
     rekisterit.suoritusRekisteri,
     rekisterit.arvosanaRekisteri,
-    hakemukset,
+    hakemusService,
     config.integrations.ytlConfig
   )), "ytl")
   override val proxies = new MockProxies
@@ -118,10 +116,6 @@ class BaseIntegrations(rekisterit: Registers,
   val tarjonta = system.actorOf(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
   val organisaatiot = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(henkiloClient, config)), "henkilo")
-  val hakemukset = system.actorOf(Props(new HakemusActor(
-    hakemusClient,
-    config.integrations.hakemusConfig.maxApplications
-  )).withDispatcher("akka.hakurekisteri.query-prio-dispatcher"), "hakemus")
   val hakemusService = new HakemusService(hakemusClient)
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
@@ -131,7 +125,7 @@ class BaseIntegrations(rekisterit: Registers,
     henkilo,
     rekisterit.suoritusRekisteri,
     rekisterit.arvosanaRekisteri,
-    hakemukset,
+    hakemusService,
     config.integrations.ytlConfig
   )), "ytl")
   private val virtaClient = new VirtaClient(
@@ -146,7 +140,9 @@ class BaseIntegrations(rekisterit: Registers,
   val virtaResource = system.actorOf(Props(new VirtaResourceActor(virtaResourceClient)), "virtaResource")
   val proxies = new HttpProxies(valintarekisteriClient)
 
+  /* TODO: HakemusService
   hakemukset ! IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
+  */
 
   override val hakuAppPermissionChecker: ActorRef = system.actorOf(Props(new HakuAppPermissionCheckerActor(hakuAppPermissionCheckerClient, organisaatiot)))
 }

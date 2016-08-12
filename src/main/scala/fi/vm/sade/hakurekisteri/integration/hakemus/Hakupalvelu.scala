@@ -37,7 +37,7 @@ case class HakukohdeSearchResultList(tulokset: Seq[HakukohdeSearchResultTarjoaja
 
 case class HakukohdeSearchResultContainer(result: HakukohdeSearchResultList)
 
-class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusActor: ActorRef, hakuActor: ActorRef)(implicit val ec: ExecutionContext)
+class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: HakemusService, hakuActor: ActorRef)(implicit val ec: ExecutionContext)
   extends Hakupalvelu {
   val Pattern = "preference(\\d+).*".r
 
@@ -102,8 +102,13 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusActor: Acto
       Option.empty
     }
 
+    def fetchHakemukset = hakukohdeOid match {
+      case Some(oid) => hakemusService.hakemuksetForHakukohde(oid, q.organisaatio)
+      case _ => hakemusService.hakemuksetForHaku(q.haku.get, q.organisaatio)
+    }
+
     (for (
-      hakemukset <- (hakemusActor ? HakemusQuery(q)).mapTo[Seq[FullHakemus]]
+      hakemukset <- fetchHakemukset
     ) yield for (
       hakemus <- hakemukset.filter(_.stateValid)
     ) yield for (

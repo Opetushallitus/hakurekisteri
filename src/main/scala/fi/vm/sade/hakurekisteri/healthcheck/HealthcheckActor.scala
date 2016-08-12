@@ -7,13 +7,11 @@ import akka.actor._
 import akka.pattern.{AskTimeoutException, ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.ensikertalainen.{QueriesRunning, QueryCount}
-import fi.vm.sade.hakurekisteri.hakija.Hakemus
 import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusQuery
 import fi.vm.sade.hakurekisteri.integration.virta.{VirtaHealth, VirtaStatus}
 import fi.vm.sade.hakurekisteri.integration.ytl.{Batch, Report, YtlReport}
 import fi.vm.sade.hakurekisteri.rest.support._
-import fi.vm.sade.hakurekisteri.storage.{GetCount, Identified}
+import fi.vm.sade.hakurekisteri.storage.GetCount
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.DateTime
 
@@ -32,7 +30,6 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
                        suoritusRekisteri: ActorRef,
                        eraRekisteri: ActorRef,
                        ytl: ActorRef,
-                       hakemukset: ActorRef,
                        ensikertalainenActor: ActorRef,
                        virtaQueue: ActorRef,
                        config: Config)(implicit system: ActorSystem) extends Actor with ActorLogging {
@@ -54,7 +51,6 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   context.system.scheduler.schedule(5.minutes, 5.minutes, self, SelfCheck())
 
   override def preStart(): Unit = {
-    hakemukset ! Health(self)
     super.preStart()
   }
 
@@ -88,7 +84,6 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       opiskeluoikeusCount <- getOpiskeluoikeusCount
       suoritusCount <- getSuoritusCount
       eraCount <- getEraCount
-      hakemusCount <- getHakemusCount
       ytlReport <- getYtlReport
       ensikertalaiset <- getEnsikertalainenReport
       virtaStatus <- getVirtaStatus
@@ -100,7 +95,6 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
         opiskelijat = opiskelijaCount,
         opiskeluoikeudet = opiskeluoikeusCount,
         suoritukset = suoritusCount,
-        hakemukset = hakemusCount,
         erat = eraCount,
         foundHakemukset = foundHakemukset,
         ensikertalaiset,
@@ -171,15 +165,6 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       case e: Throwable => log.error(e,"error getting opiskeluoikeus count"); ItemCount(Status.FAILURE, 0)
     }
   }
-
-  def getHakemusCount: Future[ItemCount] = {
-    val hakemusFuture = (hakemukset ? HakemusQuery(None, None, None))
-      .mapTo[Seq[Hakemus with Identified[String]]]
-    hakemusFuture.map((s) => { new ItemCount(Status.OK, s.length.toLong) }).recover {
-      case e: AskTimeoutException => new ItemCount(Status.TIMEOUT, 0)
-      case e: Throwable => log.error(e,"error getting hakemus count"); new ItemCount(Status.FAILURE, 0)
-    }
-  }
 }
 
 object Status extends Enumeration {
@@ -208,7 +193,6 @@ case class Resources(arvosanat: ItemCount,
                      opiskelijat: ItemCount,
                      opiskeluoikeudet: ItemCount,
                      suoritukset: ItemCount,
-                     hakemukset: ItemCount,
                      erat: ItemCount,
                      foundHakemukset: Map[String, RefreshingState],
                      ensikertalainenQueries: QueryReport,
@@ -217,7 +201,7 @@ case class Resources(arvosanat: ItemCount,
 
 case class Healhcheck(start: Long, user: String, contextPath: String, checks: Checks, info: String, end: Long = Platform.currentTime) {
 
-  val status = resolveStatus(checks.resources.arvosanat.status, checks.resources.opiskelijat.status, checks.resources.opiskeluoikeudet.status, checks.resources.suoritukset.status, checks.resources.hakemukset.status, checks.resources.ytl.status)
+  val status = resolveStatus(checks.resources.arvosanat.status, checks.resources.opiskelijat.status, checks.resources.opiskeluoikeudet.status, checks.resources.suoritukset.status, checks.resources.ytl.status)
 
   def resolveStatus(statuses: Status*) = {
     if (statuses.contains(Status.TIMEOUT)) Status.TIMEOUT

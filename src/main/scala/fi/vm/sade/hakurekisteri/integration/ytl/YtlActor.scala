@@ -10,11 +10,11 @@ import akka.util.Timeout
 import com.jcraft.jsch.{ChannelSftp, SftpException}
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{ArvioOsakoe, ArvioYo, Arvosana, _}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusService}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HetuQuery}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.Aine
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusQuery, Suoritus, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusQuery, VirallinenSuoritus, yksilollistaminen}
 import fr.janalyse.ssh.{SSH, SSHFtp, SSHOptions, SSHPassword}
 import org.joda.time._
 
@@ -30,7 +30,7 @@ case class YtlReport(waitingforAnswers: Seq[Batch[KokelasRequest]], nextSend: Op
 
 object Report
 
-class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemukset: ActorRef, config: Option[YTLConfig]) extends Actor with ActorLogging {
+class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemusService: HakemusService, config: Option[YTLConfig]) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
 
   var haut = Set[String]()
@@ -64,7 +64,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     implicit val to: Timeout = 300.seconds
     val haetaan: Set[Future[Seq[FullHakemus]]] = for (
       haku <- haut
-    ) yield (hakemukset ? HakemusQuery(Some(haku), None, None)).mapTo[Seq[FullHakemus]].
+    ) yield hakemusService.hakemuksetForHaku(haku, None).
         recoverWith{case t: Throwable => Future.failed(new HakuException(s"failed to find applications for applicationID $haku", haku, t))}
 
     Future.sequence(haetaan).map(
