@@ -17,7 +17,7 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
   val endPoint = mock[Endpoint]
   val asyncProvider = new CapturingProvider(endPoint)
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/haku-app"), aClient = Some(new AsyncHttpClient(asyncProvider)))
-  val hakemusService = new RemoteHakemusService(client)
+  val hakemusService = new HakemusService(client)
 
   it should "return applications by person oid" in {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))

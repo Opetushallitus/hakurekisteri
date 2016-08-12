@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor, KkVastaanotto, Testihaku}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{MockHakemusService, Hakemus, HakemusQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, Hakemus, HakemusQuery, HakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
@@ -15,11 +15,13 @@ import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.joda.time.DateTime
 import org.json4s.jackson.Serialization._
+import org.mockito.{Matchers, Mockito}
+import org.scalatest.mock.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class EnsikertalainenResourceSpec extends ScalatraFunSuite {
+class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
 
   implicit val system = ActorSystem("ensikertalainen-resource-test-system")
   implicit val ec: ExecutionContext = system.dispatcher
@@ -28,6 +30,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
   implicit val formats = HakurekisteriJsonSupport.format
 
   val vastaanottohetki = new DateTime(2015, 1, 1, 0, 0, 0, 0)
+  val hakemusServiceMock = mock[HakemusService]
 
   private val hakemusActor: ActorRef = system.actorOf(Props(new Actor {
     override def receive: Receive = {
@@ -38,6 +41,8 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
       )
     }
   }))
+
+
 
   addServlet(new EnsikertalainenResource(ensikertalainenActor = system.actorOf(Props(new EnsikertalainenActor(
     suoritusActor = system.actorOf(Props(new Actor {
@@ -71,7 +76,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
         case q: GetHaku => sender ! Testihaku
       }
     })),
-    hakemusService = new MockHakemusService()
+    hakemusService = hakemusServiceMock
   ))), hakemusRekisteri = hakemusActor), "/ensikertalainen")
 
   test("returns 200 ok") {
@@ -112,6 +117,11 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
     get("/ensikertalainen/haku/notfound") {
       response.status should be(404)
     }
+  }
+
+  protected override def beforeAll() = {
+    Mockito.when(hakemusServiceMock.hakemuksetForHaku(Matchers.anyString())).thenReturn(Future.successful(Seq[FullHakemus]()))
+    super.beforeAll()
   }
 
   override def stop(): Unit = {

@@ -7,7 +7,7 @@ import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
-import fi.vm.sade.hakurekisteri.integration.hakemus.MockHakemusService
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusService
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.oppija.{Oppija, Todistus}
@@ -19,13 +19,14 @@ import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecu
 import org.apache.commons.lang.NotImplementedException
 import org.joda.time.{DateTime, LocalDate}
 import org.json4s.jackson.Serialization._
+import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting {
+class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting with MockitoSugar {
   implicit val system = ActorSystem("rekisteritiedot-resource-test-system")
   implicit val security = new TestSecurity
   implicit val user: User = security.TestUser
@@ -75,7 +76,7 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting {
     }
   }))
 
-  val resource = new RekisteritiedotResource(rekisterit, new MockHakemusService(), notImplementedActor)
+  val resource = new RekisteritiedotResource(rekisterit, mock[HakemusService], notImplementedActor)
 
   addServlet(resource, "/*")
 

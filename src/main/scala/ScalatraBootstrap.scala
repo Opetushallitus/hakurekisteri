@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.healthcheck.HealthcheckActor
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
-import fi.vm.sade.hakurekisteri.integration.hakemus.RemoteHakemusService
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusService
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
 import fi.vm.sade.hakurekisteri.suoritus._
