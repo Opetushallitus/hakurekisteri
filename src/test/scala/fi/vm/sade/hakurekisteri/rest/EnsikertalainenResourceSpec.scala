@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor, KkVastaanotto, Testihaku}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{Hakemus, HakemusQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{MockHakemusService, Hakemus, HakemusQuery}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
@@ -71,7 +71,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
         case q: GetHaku => sender ! Testihaku
       }
     })),
-    hakemusActor = hakemusActor
+    hakemusService = new MockHakemusService()
   ))), hakemusRekisteri = hakemusActor), "/ensikertalainen")
 
   test("returns 200 ok") {

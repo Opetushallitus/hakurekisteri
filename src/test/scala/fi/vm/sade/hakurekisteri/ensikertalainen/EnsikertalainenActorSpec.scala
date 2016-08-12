@@ -4,22 +4,26 @@ import akka.actor.{Actor, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, Hakemus, HakemusQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
 import fi.vm.sade.hakurekisteri.suoritus._
+import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.joda.time.{DateTime, LocalDate}
+import org.mockito.Matchers.anyString
+import org.mockito.Mockito.when
+import org.scalatest.mock.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.reflectiveCalls
 
-class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting with BeforeAndAfterAll {
+class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting with BeforeAndAfterAll with MockitoSugar {
 
   implicit val system = ActorSystem("ensikertalainen-test-system")
   implicit val timeout: Timeout = 10.seconds
@@ -132,6 +136,12 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
                                        opiskeluoikeudet: Seq[Opiskeluoikeus] = Seq(),
                                        vastaanotot: Seq[EnsimmainenVastaanotto] = Seq(),
                                        hakemukset: Seq[FullHakemus] = Seq()) = {
+    val hakemusServiceMock = mock[HakemusService]
+
+    when(hakemusServiceMock.hakemuksetForHaku(anyString())).thenReturn(
+      Future.successful(hakemukset)
+    )
+
     val valintarekisteri = TestActorRef(new Actor {
       var counter = 0
       override def receive: Actor.Receive = {
@@ -165,11 +175,7 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
           case q: GetHaku => sender ! Testihaku
         }
       })),
-      hakemusActor = system.actorOf(Props(new Actor {
-        override def receive: Receive = {
-          case q: HakemusQuery => sender ! hakemukset
-        }
-      }))
+      hakemusService = hakemusServiceMock
     ))), valintarekisteri)
   }
 
