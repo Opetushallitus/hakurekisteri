@@ -6,7 +6,7 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusActor, HakemusService, FullHakemus, HakemusQuery}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
@@ -55,7 +55,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
                            valintarekisterActor: ActorRef,
                            tarjontaActor: ActorRef,
                            hakuActor: ActorRef,
-                           hakemusActor: ActorRef,
+                           hakemusService: HakemusService,
                            config: Config)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
 
   val syksy2014 = "2014S"
@@ -103,7 +103,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   }
 
   private def tutkinnotHakemuksilta(q: EnsikertalainenQuery): Future[Map[String, Option[Int]]] = {
-    (hakemusActor ? HakemusQuery(haku = Some(q.hakuOid), None, None, None)).mapTo[Seq[FullHakemus]].map(_
+    hakemusService.hakemuksetForHaku(q.hakuOid).map(_
       .filter(_.personOid.isDefined)
       .groupBy(_.personOid.get)
       .mapValues(_

@@ -1,19 +1,21 @@
 package fi.vm.sade.hakurekisteri.oppija
 
-import fi.vm.sade.hakurekisteri.rest.support.{Query, User, Registers}
-import akka.actor.ActorRef
-import scala.concurrent.{Future, ExecutionContext}
-import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, FullHakemus, HakemusQuery}
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusHenkilotQuery, Suoritus}
-import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
-import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenQuery, Ensikertalainen}
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.{OpiskeluoikeusHenkilotQuery, Opiskeluoikeus}
-import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaHenkilotQuery, Opiskelija}
+
+import akka.actor.ActorRef
 import akka.pattern.ask
+import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, HakemusService}
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
+import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
+import fi.vm.sade.hakurekisteri.rest.support.{Query, Registers, User}
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusHenkilotQuery}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 trait OppijaFetcher {
 
@@ -27,8 +29,13 @@ trait OppijaFetcher {
   implicit val defaultTimeout: Timeout
 
   def fetchOppijat(q: HakemusQuery, hakuOid: String)(implicit user: User): Future[Seq[Oppija]] = {
-    val personOids = hakemusService.personOidsForHaku(hakuOid)
+    def fetchPersonOids = q.hakukohde match {
+      case Some(hakukohdeOid) => hakemusService.personOidsForHakukohde(hakukohdeOid, q.organisaatio)
+      case _ => hakemusService.personOidsForHaku(hakuOid, q.organisaatio)
+    }
+
     for (
+      personOids <- fetchPersonOids;
       oppijat <- fetchOppijat(personOids, Some(hakuOid))(user)
     ) yield oppijat
   }
