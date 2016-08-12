@@ -1,12 +1,10 @@
 package fi.vm.sade.hakurekisteri.integration.valintatulos
 
-import java.net.URLEncoder
 import java.util.concurrent.ExecutionException
 
 import akka.actor.{Actor, ActorLogging, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemuksetNotYetLoadedException
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
@@ -14,6 +12,8 @@ import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedExce
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
+
+case class InitialLoadingNotDone() extends Exception("Initial loading noy yet done")
 
 case class ValintaTulosQuery(hakuOid: String,
                              hakemusOid: Option[String],
@@ -97,7 +97,7 @@ class ValintaTulosActor(client: VirkailijaRestClient,
 
   private def getSijoittelu(q: ValintaTulosQuery): Future[SijoitteluTulos] = {
     if (!initialLoadingDone) {
-      Future.failed(HakemuksetNotYetLoadedException())
+      Future.failed(InitialLoadingNotDone())
     } else {
       if (q.cachedOk && cache.contains(q.hakuOid))
         cache.get(q.hakuOid)

@@ -3,11 +3,10 @@ package fi.vm.sade.hakurekisteri.web.rest.support
 import java.util.UUID
 
 import _root_.akka.pattern.AskTimeoutException
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemuksetNotYetLoadedException
+import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import org.joda.time.DateTime
 import org.joda.time.DateTime._
 import org.scalatra._
-import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 
 
 case class IncidentReport(incidentId: UUID, message: String, timestamp: DateTime = now(), validationErrors: Seq[String] = Seq())
@@ -24,9 +23,6 @@ trait IncidentReporting { this: HakuJaValintarekisteriStack =>
         processError(t) (resultGenerator)
       case t: IllegalArgumentException =>
         val resultGenerator = handler.applyOrElse[Throwable, (UUID) => ActionResult](t, (anything) => (id) => BadRequest(IncidentReport(id, t.getMessage)))
-        processError(t) (resultGenerator)
-      case t: HakemuksetNotYetLoadedException =>
-        val resultGenerator = handler.applyOrElse[Throwable, (UUID) => ActionResult](t, (anything) => (id) => ServiceUnavailable(IncidentReport(id, "hakemukset not yet loaded"), Map("Retry-After" -> "30")))
         processError(t) (resultGenerator)
       case t: UserNotAuthorized =>
         val resultGenerator = handler.applyOrElse[Throwable, (UUID) => ActionResult](t, (anything) => (id) => Forbidden(IncidentReport(id, s"not authorized")))

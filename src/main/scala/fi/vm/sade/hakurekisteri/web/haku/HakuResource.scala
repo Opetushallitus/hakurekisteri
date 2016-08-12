@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.web.haku
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.AskTimeoutException
-import fi.vm.sade.hakurekisteri.integration.hakemus.RefreshHakemukset
 import fi.vm.sade.hakurekisteri.integration.haku.HakuRequest
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -31,17 +30,6 @@ class HakuResource(hakuActor: ActorRef)(implicit system: ActorSystem, sw: Swagge
       override implicit def timeout: Duration = 60.seconds
       val is = (hakuActor ? HakuRequest)(30.seconds)
     }
-  }
-
-
-  get("/refresh/hakemukset") {
-    currentUser.collect {
-      case p if p.isAdmin =>
-        logger.warning(s"user ${p.username} triggered hakemus refresh")
-        hakuActor ! RefreshHakemukset
-        Some(Accepted())
-    }.getOrElse(Unauthorized())
-
   }
 
   incident {
