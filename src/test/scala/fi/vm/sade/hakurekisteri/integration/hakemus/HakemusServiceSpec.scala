@@ -3,12 +3,13 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 import akka.actor.ActorSystem
 import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.integration._
+import scala.concurrent.duration._
 import org.mockito.Mockito._
 import org.scalatest._
 import org.scalatest.mock.MockitoSugar
 
 import scala.compat.Platform
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
 
 class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with DispatchSupport with LocalhostProperties {
 
@@ -23,14 +24,14 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
 
-    hakemusService.hakemuksetForPerson("1.2.246.562.24.81468276424").size should be (2)
+    Await.result(hakemusService.hakemuksetForPerson("1.2.246.562.24.81468276424"), 10.seconds).size should be (2)
   }
 
   it should "return applications by application option oid" in {
     when(endPoint.request(forPattern(".*applications/byApplicationOption.*")))
       .thenReturn((200, List(), getJson("byApplicationOption")))
 
-    hakemusService.hakemuksetForHakukohde("1.2.246.562.20.649956391810").size should be (6)
+    Await.result(hakemusService.hakemuksetForHakukohde("1.2.246.562.20.649956391810"), 10.seconds).size should be (6)
   }
 
 }

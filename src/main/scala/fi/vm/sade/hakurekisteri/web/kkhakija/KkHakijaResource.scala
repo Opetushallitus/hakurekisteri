@@ -10,7 +10,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.hakija.Hakuehto._
 import fi.vm.sade.hakurekisteri.hakija.{Hakuehto, Kevat, Lasna, Lasnaolo, Poissa, Puuttuu, Syksy}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakemusHenkilotiedot, HenkiloHakijaQuery, Koulutustausta, PreferenceEligibility, _}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakemusHenkilotiedot, Koulutustausta, PreferenceEligibility, _}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodi, GetRinnasteinenKoodiArvoQuery, Koodi}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
@@ -29,6 +29,7 @@ import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 import org.scalatra.util.RicherString._
+
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -159,7 +160,7 @@ class KkHakijaResource(hakemusService: HakemusService,
 
   def getKkHakijat(q: KkHakijaQuery): Future[Seq[Hakija]] = {
 
-    val hakemukset = q match {
+    def fetchHakemukset = q match {
       case KkHakijaQuery(Some(oppijanumero), _, _ , _, _, _) => hakemusService.hakemuksetForPerson(oppijanumero)
       case KkHakijaQuery(None, _, _, Some(hakukohde), _ ,_) => hakemusService.hakemuksetForHakukohde(hakukohde)
       case _ => throw KkHakijaParamMissingException
@@ -181,7 +182,10 @@ class KkHakijaResource(hakemusService: HakemusService,
       true
     }
 
-    fullHakemukset2hakijat(hakemukset.filter(matchHakemusToQuery))(q)
+    for (
+      hakemukset <- fetchHakemukset;
+      hakijat <- fullHakemukset2hakijat(hakemukset.filter(matchHakemusToQuery))(q)
+    ) yield hakijat
   }
 
   private def getHakukelpoisuus(hakukohdeOid: String, kelpoisuudet: Seq[PreferenceEligibility]): PreferenceEligibility = {
