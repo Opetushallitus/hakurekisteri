@@ -22,7 +22,7 @@ class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
   override val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(journals.suoritusJournal)), "suoritukset")
   override val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaActor(journals.opiskelijaJournal)), "opiskelijat")
   override val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusActor(journals.opiskeluoikeusJournal)), "opiskeluoikeudet")
-  override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaActor(journals.arvosanaJournal)), "arvosanat")
+  override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(journals.arvosanaJournal, 5)), "arvosanat")
   override val eraRekisteri: ActorRef = system.actorOf(Props(new ImportBatchActor(journals.eraJournal.asInstanceOf[JDBCJournal[ImportBatch, UUID, ImportBatchTable]], 5)), "erat")
 }
 

@@ -19,7 +19,7 @@ trait Journals {
   val suoritusJournal: Journal[Suoritus, UUID]
   val opiskelijaJournal: Journal[Opiskelija, UUID]
   val opiskeluoikeusJournal: Journal[Opiskeluoikeus, UUID]
-  val arvosanaJournal: Journal[Arvosana, UUID]
+  val arvosanaJournal: JDBCJournal[Arvosana, UUID, ArvosanaTable]
   val eraJournal: Journal[ImportBatch, UUID]
 }
 

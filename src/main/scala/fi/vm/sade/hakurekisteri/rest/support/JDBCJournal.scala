@@ -36,7 +36,14 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table:
   }
 
   override def journal(latestQuery: Option[Long]): Seq[Delta[R, I]] = latestQuery match {
-    case None => Await.result(db.run(latestResources.result), queryTimeout)
+    case None => {
+      println(db)
+      val t0 = System.nanoTime()
+      val result = Await.result(db.run(latestResources.result), queryTimeout)
+      val t1 = System.nanoTime()
+      println("Elapsed time: " + (t1 - t0) + "ns" + ": "+latestResources.result.statements.reduce(_ ++ _))
+      result
+    }
     case Some(lat) => Await.result(db.run(latestResources.filter(_.inserted >= lat).result), queryTimeout)
   }
 
