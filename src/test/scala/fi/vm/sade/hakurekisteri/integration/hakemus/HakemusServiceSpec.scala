@@ -31,7 +31,7 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     when(endPoint.request(forPattern(".*applications/byApplicationOption.*")))
       .thenReturn((200, List(), getJson("byApplicationOption")))
 
-    Await.result(hakemusService.hakemuksetForHakukohde("1.2.246.562.20.649956391810"), 10.seconds).size should be (6)
+    Await.result(hakemusService.hakemuksetForHakukohde("1.2.246.562.20.649956391810", None), 10.seconds).size should be (6)
   }
 
 }

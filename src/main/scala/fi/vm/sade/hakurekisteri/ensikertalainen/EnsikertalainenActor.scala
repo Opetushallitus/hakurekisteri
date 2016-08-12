@@ -6,7 +6,7 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusActor, HakemusService, FullHakemus, HakemusQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusService
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
@@ -103,7 +103,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   }
 
   private def tutkinnotHakemuksilta(q: EnsikertalainenQuery): Future[Map[String, Option[Int]]] = {
-    hakemusService.hakemuksetForHaku(q.hakuOid).map(_
+    hakemusService.hakemuksetForHaku(q.hakuOid, None).map(_
       .filter(_.personOid.isDefined)
       .groupBy(_.personOid.get)
       .mapValues(_

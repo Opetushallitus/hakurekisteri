@@ -162,7 +162,7 @@ class KkHakijaResource(hakemusService: HakemusService,
 
     def fetchHakemukset = q match {
       case KkHakijaQuery(Some(oppijanumero), _, _ , _, _, _) => hakemusService.hakemuksetForPerson(oppijanumero)
-      case KkHakijaQuery(None, _, _, Some(hakukohde), _ ,_) => hakemusService.hakemuksetForHakukohde(hakukohde)
+      case KkHakijaQuery(None, _, _, Some(hakukohde), _ ,_) => hakemusService.hakemuksetForHakukohde(hakukohde, q.organisaatio)
       case _ => throw KkHakijaParamMissingException
     }
 

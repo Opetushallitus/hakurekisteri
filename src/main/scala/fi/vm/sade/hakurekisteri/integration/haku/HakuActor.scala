@@ -1,11 +1,10 @@
 package fi.vm.sade.hakurekisteri.integration.haku
 
 import akka.actor.Status.Failure
-import akka.actor.{Cancellable, Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{RefreshHakemukset, AktiivisetHaut}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{BatchUpdateValintatulos, UpdateValintatulos}
@@ -18,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 
-class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, valintaTulos: ActorRef, ytl: ActorRef, config: Config) extends Actor with ActorLogging {
+class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef, ytl: ActorRef, config: Config) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
 
   var activeHakus: Seq[Haku] = Seq()
@@ -29,7 +28,6 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
   val update = context.system.scheduler.schedule(1.second, hakuRefreshTime, self, Update)
   var retryUpdate: Option[Cancellable] = None
-  var hakemusUpdate: Option[Cancellable] = None
   var vtsUpdate: Option[Cancellable] = None
 
   import FutureList._
@@ -54,8 +52,6 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
     case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
 
-    case RefreshHakemukset => hakemukset forward RefreshHakemukset
-
     case sq: Seq[_] =>
       val s = sq.collect{ case h: Haku => h}
       activeHakus = s.filter(_.aika.isCurrently)
@@ -65,18 +61,12 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
         starting = false
         vtsUpdate.foreach(_.cancel())
         vtsUpdate = Some(context.system.scheduler.schedule(1.second, valintatulosRefreshTimeHours, self, RefreshSijoittelu))
-        hakemusUpdate.foreach(_.cancel())
-        hakemusUpdate = Some(context.system.scheduler.schedule(1.second, hakemusRefreshTime, self, ReloadHakemukset))
         log.info(s"started VTS & hakemus schedulers, starting: $starting")
       }
 
     case RefreshSijoittelu =>
       log.info(s"refreshing sijoittelu from ${sender()}")
       refreshKeepAlives()
-
-    case ReloadHakemukset =>
-      log.info(s"loading hakemukset from ${sender()}")
-      hakemukset ! AktiivisetHaut(activeHakus.toSet)
 
     case Failure(t: GetHautQueryFailedException) =>
       log.error(s"${t.getMessage}, retrying in a minute")
@@ -112,7 +102,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 
   override def postStop(): Unit = {
     update.cancel()
-    Seq(retryUpdate, hakemusUpdate, vtsUpdate).foreach(_.foreach(_.cancel()))
+    Seq(retryUpdate, vtsUpdate).foreach(_.foreach(_.cancel()))
     super.postStop()
   }
 }
@@ -120,8 +110,6 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
 object Update
 
 object HakuRequest
-
-object ReloadHakemukset
 
 object RefreshSijoittelu
 

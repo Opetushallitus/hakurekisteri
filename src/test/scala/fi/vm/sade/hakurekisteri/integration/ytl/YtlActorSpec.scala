@@ -8,7 +8,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.arvosana._
-import fi.vm.sade.hakurekisteri.integration.DummyActor
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusServiceMock
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
@@ -34,8 +34,8 @@ class YtlActorSpec extends ScalatraFunSuite {
   val suoritusActor = system.actorOf(Props(new SuoritusActor(journal = suoritusJournal)), "suoritukset")
   val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
   val arvosanaActor = system.actorOf(Props(new ArvosanaActor(journal = arvosanaJournal)), "arvosanat")
-  val hakemusActor = system.actorOf(Props(new DummyActor()))
-  val actor = system.actorOf(Props(new YtlActor(henkiloActor, suoritusActor, arvosanaActor, hakemusActor, Some(YTLConfig("", "", "", "", "", List(), "")))), "ytl")
+  val hakemusServiceMock = new HakemusServiceMock
+  val actor = system.actorOf(Props(new YtlActor(henkiloActor, suoritusActor, arvosanaActor, hakemusServiceMock, Some(YTLConfig("", "", "", "", "", List(), "")))), "ytl")
 
   private def waitForSuoritus(henkilo: String): Future[Suoritus with Identified[UUID]] = {
     Future {

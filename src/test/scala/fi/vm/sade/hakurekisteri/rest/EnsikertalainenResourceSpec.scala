@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor, KkVastaanotto, Testihaku}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, Hakemus, HakemusQuery, HakemusService}
+import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
@@ -42,8 +42,6 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
     }
   }))
 
-
-
   addServlet(new EnsikertalainenResource(ensikertalainenActor = system.actorOf(Props(new EnsikertalainenActor(
     suoritusActor = system.actorOf(Props(new Actor {
       override def receive: Receive = {
@@ -77,7 +75,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
       }
     })),
     hakemusService = hakemusServiceMock
-  ))), hakemusRekisteri = hakemusActor), "/ensikertalainen")
+  ))), hakemusService = hakemusServiceMock), "/ensikertalainen")
 
   test("returns 200 ok") {
     get("/ensikertalainen?henkilo=foo&haku=1.2.3.4") {
@@ -107,6 +105,8 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
   }
 
   test("returns ensikertalaisuus for all hakijas in haku") {
+    Mockito.when(hakemusServiceMock.personOidsForHaku(Matchers.anyString(), Matchers.any[Option[String]]))
+      .thenReturn(Future.successful(Set("1", "2", "3")))
     get("/ensikertalainen/haku/1.2.3") {
       val e = read[Seq[Ensikertalainen]](response.body)
       e.size should be (3)
@@ -114,13 +114,16 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
   }
 
   test("returns 404 if haku not found") {
+    Mockito.when(hakemusServiceMock.personOidsForHaku(Matchers.anyString(), Matchers.any[Option[String]]))
+      .thenReturn(Future.successful(Set[String]()))
     get("/ensikertalainen/haku/notfound") {
       response.status should be(404)
     }
   }
 
   protected override def beforeAll() = {
-    Mockito.when(hakemusServiceMock.hakemuksetForHaku(Matchers.anyString())).thenReturn(Future.successful(Seq[FullHakemus]()))
+    Mockito.when(hakemusServiceMock.hakemuksetForHaku(Matchers.anyString(), Matchers.any[Option[String]]))
+      .thenReturn(Future.successful(Seq[FullHakemus]()))
     super.beforeAll()
   }
 

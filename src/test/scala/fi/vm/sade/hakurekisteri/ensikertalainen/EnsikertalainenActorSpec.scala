@@ -14,7 +14,8 @@ import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHe
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import org.joda.time.{DateTime, LocalDate}
-import org.mockito.Matchers.anyString
+import org.mockito.Matchers.{anyString, any}
+import org.mockito.Mockito
 import org.mockito.Mockito.when
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
@@ -138,7 +139,7 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
                                        hakemukset: Seq[FullHakemus] = Seq()) = {
     val hakemusServiceMock = mock[HakemusService]
 
-    when(hakemusServiceMock.hakemuksetForHaku(anyString())).thenReturn(
+    when(hakemusServiceMock.hakemuksetForHaku(anyString(), any[Option[String]])).thenReturn(
       Future.successful(hakemukset)
     )
 

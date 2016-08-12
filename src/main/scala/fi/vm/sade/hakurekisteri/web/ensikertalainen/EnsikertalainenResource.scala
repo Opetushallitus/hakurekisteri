@@ -7,25 +7,22 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery}
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusService
 import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support.{IncidentReport, QueryLogging, Security, SecuritySupport}
-import org.joda.time.DateTime
-import org.joda.time.format.ISODateTimeFormat
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
 import scala.compat.Platform
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.util.Try
 
 case class ParamMissingException(message: String) extends IllegalArgumentException(message)
 
-class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusRekisteri: ActorRef)
+class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService: HakemusService)
                              (implicit val sw: Swagger, system: ActorSystem, val security: Security)
   extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport
     with FutureSupport with SecuritySupport with QueryLogging {
@@ -62,9 +59,7 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusRekiste
     new AsyncResult() {
       override implicit def timeout: Duration = 15.minutes
       private val q = {
-        val henkiloOids = (hakemusRekisteri ? HakemusQuery(Some(hakuOid), None, None, None))(2.minutes)
-          .mapTo[Seq[FullHakemus]]
-          .map(_.flatMap(_.personOid).toSet)
+        val henkiloOids = hakemusService.personOidsForHaku(hakuOid, None)
         henkiloOids.flatMap(persons => (ensikertalainenActor ? EnsikertalainenQuery(
           henkiloOids = persons,
           hakuOid = hakuOid

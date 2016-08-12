@@ -22,11 +22,11 @@ trait Koosteet {
 class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: Registers, config: Config) extends Koosteet {
   implicit val ec: ExecutionContext = system.dispatcher
 
-  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.hakemukset, integrations.valintaTulos, integrations.ytl, config)), "haut")
+  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.valintaTulos, integrations.ytl, config)), "haut")
 
-  val virtaQueue = system.actorOf(Props(new VirtaQueue(integrations.virta, integrations.hakemukset, haut)), "virta-queue")
+  val virtaQueue = system.actorOf(Props(new VirtaQueue(integrations.virta, integrations.hakemusService, haut)), "virta-queue")
 
-  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemusClient, integrations.hakemukset, haut), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
+  val hakijat = system.actorOf(Props(new HakijaActor(new AkkaHakupalvelu(integrations.hakemusClient, integrations.hakemusService, haut), integrations.organisaatiot, integrations.koodisto, integrations.valintaTulos)), "hakijat")
 
   override val ensikertalainen: ActorRef = system.actorOf(Props(new EnsikertalainenActor(registers.suoritusRekisteri, registers.opiskeluoikeusRekisteri, integrations.valintarekisteri, integrations.tarjonta, haut, integrations.hakemusService, config)), "ensikertalainen")
 }
