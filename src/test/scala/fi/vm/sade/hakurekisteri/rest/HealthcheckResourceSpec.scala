@@ -52,7 +52,9 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
   val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusJDBCActor(opiskeluoikeusJournal, 1)))
   val guardedOpiskeluoikeusRekisteri = system.actorOf(Props(new FakeAuthorizer(opiskeluoikeusRekisteri)))
 
-  val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(seq2journal(Seq(suoritus)))))
+  val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+  suoritusJournal.addModification(Updated(suoritus.identify))
+  val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
   val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
   val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])

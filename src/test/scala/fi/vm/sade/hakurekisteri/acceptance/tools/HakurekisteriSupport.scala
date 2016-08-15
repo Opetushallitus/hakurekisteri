@@ -74,25 +74,8 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
   implicit val system: ActorSystem = ActorSystem()
 
-  class SuoritusReloader(implicit cj: ClassTag[JDBCJournal[Suoritus, UUID, SuoritusTable]] ) extends Actor {
-
-
-    var underlying: ActorRef = context.actorOf(Props(new SuoritusActor()))
-
-    override def receive: Actor.Receive = {
-      case jo: JDBCJournal[_, _, _] if cj.runtimeClass.isInstance(jo) =>
-        val j = cj.runtimeClass.cast(jo).asInstanceOf[JDBCJournal[Suoritus, UUID, SuoritusTable]]
-        context.stop(underlying)
-        underlying = context.actorOf(Props(new SuoritusActor(j)))
-      case m => underlying.forward(m)
-    }
-  }
-
-  val suoritusRekisteri = system.actorOf(Props(new SuoritusReloader))
-
-  def swap(newJournal: JDBCJournal[Suoritus, UUID, SuoritusTable]) {
-    suoritusRekisteri ! newJournal
-  }
+  val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+  val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
 
   val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
   val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1)))
@@ -113,10 +96,8 @@ trait HakurekisteriSupport extends Suite with HttpComponentsClient with Hakureki
 
     def init() {
       if (!initialized) {
-        val journal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
         Await.result(database.run(sqlu"""delete from suoritus"""), Duration(10, TimeUnit.SECONDS))
-        tehdytSuoritukset.foreach((resource: Suoritus) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
-        swap(journal)
+        tehdytSuoritukset.foreach((resource: Suoritus) => suoritusJournal.addModification(Updated(resource.identify(UUID.randomUUID()))))
         initialized = true
       }
     }

@@ -22,7 +22,7 @@ import fi.vm.sade.hakurekisteri.oppija.Oppija
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal, Registers, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.web.oppija.{OppijaResource, OppijatPostSize}
@@ -194,12 +194,6 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
     )
   ).toSeq
 
-  implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s: Seq[R]): InMemJournal[R, UUID] = {
-    val journal = new InMemJournal[R, UUID]
-    s.foreach((resource: R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
-    journal
-  }
-
   implicit def seq2journalString[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[String, R]](s: Seq[R]): InMemJournal[R, String] = {
     val journal = new InMemJournal[R, String]
     s.foreach((resource: R) => journal.addModification(Updated(resource.identify(UUID.randomUUID().toString))))
@@ -211,6 +205,8 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
   itDb.start()
   implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
 
+  val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+  suorituksetSeq.foreach(s => suoritusJournal.addModification(Updated(s.identify)))
   val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
   val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable])
   val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
@@ -220,7 +216,7 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
     private val arvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
     private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusJDBCActor(opiskeluoikeusJournal, 1)))
     private val opiskelijat = system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1)))
-    private val suoritukset = system.actorOf(Props(new SuoritusActor(suorituksetSeq)))
+    private val suoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
 
     override val eraRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(erat)))
     override val arvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(arvosanat)))
@@ -284,6 +280,9 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
 
   override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)
+    database.close()
+    itDb.stop()
+    super.stop()
   }
 }
 

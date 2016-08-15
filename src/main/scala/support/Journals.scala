@@ -9,14 +9,12 @@ import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaTable}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusTable}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
-import fi.vm.sade.hakurekisteri.storage.repository.Journal
 import fi.vm.sade.hakurekisteri.storage.HakurekisteriTables._
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusTable}
-
 import org.slf4j.LoggerFactory
 
 trait Journals {
-  val suoritusJournal: Journal[Suoritus, UUID]
+  val suoritusJournal: JDBCJournal[Suoritus, UUID, SuoritusTable]
   val opiskelijaJournal: JDBCJournal[Opiskelija, UUID, OpiskelijaTable]
   val opiskeluoikeusJournal: JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable]
   val arvosanaJournal: JDBCJournal[Arvosana, UUID, ArvosanaTable]
