@@ -41,19 +41,19 @@ class HakemusService(restClient: VirkailijaRestClient) {
   }
 
   def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
-    restClient.postObject[Set[String], Seq[FullHakemus]]("haku-app.byapplicationoption", organisaatio)(200, Set(hakukohdeOid))
+    restClient.postObject[Set[String], Seq[FullHakemus]]("haku-app.byapplicationoption", organisaatio.orNull)(200, Set(hakukohdeOid))
   }
 
   def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
-    restClient.postObject[Set[String], Seq[FullHakemus]]("haku-app.byapplicationsystem", organisaatio)(200, Set(hakuOid))
+    restClient.postObject[Set[String], Seq[FullHakemus]]("haku-app.byapplicationsystem", organisaatio.orNull)(200, Set(hakuOid))
   }
 
   def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]] = {
-    restClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationsystem", organisaatio)(200, Set(hakuOid))
+    restClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationsystem", organisaatio.orNull)(200, Set(hakuOid))
   }
 
   def personOidsForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Set[String]] = {
-    restClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationoption", organisaatio)(200, Set(hakukohdeOid))
+    restClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationoption", organisaatio.orNull)(200, Set(hakukohdeOid))
   }
 
 }
