@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import java.nio.charset.Charset
 import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
@@ -15,8 +14,8 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.h2.engine.SysProperties
-import org.h2.tools.RunScript
+import fi.vm.sade.hakurekisteri.tools.ItPostgres
+import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.concurrent.duration._
@@ -27,13 +26,15 @@ class YtlActorSpec extends ScalatraFunSuite {
   implicit val system = ActorSystem("ytl-integration-test-system")
   implicit val ec = system.dispatcher
   implicit val timeout: Timeout = 120.seconds
-  SysProperties.serializeJavaObject = false
-  implicit val database = Database.forURL("jdbc:h2:file:./data/ytl-integration-test;MV_STORE=FALSE;MODE=PostgreSQL", driver = "org.h2.Driver")
+  val portChooser = new ChooseFreePort()
+  val itDb = new ItPostgres(portChooser)
+  itDb.start()
+  implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
 
   val config = new MockConfig
   val henkiloActor = system.actorOf(Props(classOf[MockHenkiloActor], config))
   val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
-  val suoritusActor = TestActorRef(Props(new SuoritusActor), "suoritukset")
+  val suoritusActor = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 5)), "suoritukset")
   val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
   val arvosanaActor = system.actorOf(Props(classOf[ArvosanaJDBCActor], arvosanaJournal, 5), "arvosanat")
   val hakemusActor = system.actorOf(Props(classOf[DummyActor]))
@@ -92,9 +93,9 @@ class YtlActorSpec extends ScalatraFunSuite {
   }
 
   override def stop(): Unit = {
-    RunScript.execute("jdbc:h2:file:./data/ytl-integration-test", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
     Await.result(system.terminate(), 15.seconds)
     database.close()
+    itDb.stop()
     super.stop()
   }
 

@@ -9,12 +9,14 @@ import com.ning.http.client.AsyncHttpClient
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.parametrit._
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, User}
-import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, SuoritusQuery}
-import fi.vm.sade.hakurekisteri.tools.Peruskoulu
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal, User}
+import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import fi.vm.sade.hakurekisteri.suoritus._
+import fi.vm.sade.hakurekisteri.tools.{ItPostgres, Peruskoulu}
 import fi.vm.sade.hakurekisteri.web.rest.support._
 import fi.vm.sade.hakurekisteri.web.suoritus.SuoritusResource
+import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.joda.time.LocalDate
 import org.json4s.jackson.Serialization._
 import org.mockito.Mockito._
@@ -23,8 +25,8 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
 import scala.compat.Platform
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 import scala.language.implicitConversions
 
 class SuoritusResourceTestSecurity extends Security {
@@ -39,18 +41,14 @@ class SuoritusResourceTestSecurity extends Security {
 class SuoritusResourceWithOPHSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport with AsyncAssertions {
   implicit val system = ActorSystem("test-suoritus-resource")
   implicit val ec: ExecutionContext = system.dispatcher
-  implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]): InMemJournal[R, UUID] = {
-    val journal = new InMemJournal[R, UUID]
-    s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
-    journal
-  }
+  val portChooser = new ChooseFreePort()
+  val itDb = new ItPostgres(portChooser)
+  itDb.start()
+  implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
   implicit val swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
 
-
   val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now,"1.2.4")
-
-
 
   def createEndpointMock(periodEnd: Long) = {
     val result = mock[Endpoint]
@@ -69,13 +67,17 @@ class SuoritusResourceWithOPHSpec extends ScalatraFunSuite with MockitoSugar wit
   val asyncProviderNoRestrictions = new CapturingProvider(createEndpointMock(Platform.currentTime + (300 * 60 * 1000)))
   val asyncProviderRestrictionActive = new CapturingProvider(createEndpointMock(0L))
   val parameterActor = system.actorOf(Props(new MockParameterActor()))
-  val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(Seq(suoritus))))
+  val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+  suoritusJournal.addModification(Updated(suoritus.identify))
+  val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
   val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
 
 
   override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)
+    database.close()
+    itDb.stop()
     super.stop()
   }
 
@@ -102,22 +104,25 @@ class SuoritusResourceWithOPHSpec extends ScalatraFunSuite with MockitoSugar wit
 class SuoritusResourceWithOPOSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport with AsyncAssertions {
   implicit val system = ActorSystem("test-suoritus-resource")
   implicit val ec: ExecutionContext = system.dispatcher
-  implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]): InMemJournal[R, UUID] = {
-    val journal = new InMemJournal[R, UUID]
-    s.foreach((resource:R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
-    journal
-  }
+  val portChooser = new ChooseFreePort()
+  val itDb = new ItPostgres(portChooser)
+  itDb.start()
+  implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
   implicit val swagger = new HakurekisteriSwagger
   implicit val security = new SuoritusResourceTestSecurity
 
   val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now,"1.2.4")
 
-  val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(Seq(suoritus))))
+  val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+  suoritusJournal.addModification(Updated(suoritus.identify))
+  val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
   val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
 
   override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)
+    database.close()
+    itDb.stop()
     super.stop()
   }
 

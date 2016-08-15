@@ -15,7 +15,7 @@ import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, Oppilaitos
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, _}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.SuoritusActor
+import fi.vm.sade.hakurekisteri.suoritus.SuoritusJDBCActor
 import fi.vm.sade.hakurekisteri.tools.{ItPostgres, SafeXML}
 import org.json4s.JsonAST.JString
 
@@ -159,7 +159,8 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.OfflineReport {
         override def startActors(b: SerializableBatch) {
           implicit val database = db._2
           importBatchActorHolder = Some(system.actorOf(Props[BatchActor]))
-          suoritusrekisteriHolder = Some(system.actorOf(Props(new SuoritusActor())))
+          val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+          suoritusrekisteriHolder = Some(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 5))))
           val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
           opiskelijarekisteriHolder = Some(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 5))))
           henkiloActorHolder = Some(system.actorOf(Props[TestHenkiloActor]))
@@ -188,7 +189,8 @@ object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.OfflineReport {
         override def startActors(b: SerializableBatch) {
           implicit val database = db._2
           importBatchActorHolder = Some(system.actorOf(Props[BatchActor]))
-          suoritusrekisteriHolder = Some(system.actorOf(Props(new SuoritusActor())))
+          val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+          suoritusrekisteriHolder = Some(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 5))))
           val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
           opiskelijarekisteriHolder = Some(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 5))))
 

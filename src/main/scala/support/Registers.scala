@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusJDBCActor}
 import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, OrganizationHierarchy}
 import fi.vm.sade.hakurekisteri.rest.support.{Registers, Resource}
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusActor, VapaamuotoinenSuoritus, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.LocalDate
 
@@ -19,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 class BareRegisters(system: ActorSystem, journals: Journals) extends Registers {
-  override val suoritusRekisteri = system.actorOf(Props(new SuoritusActor(journals.suoritusJournal)), "suoritukset")
+  override val suoritusRekisteri = system.actorOf(Props(new SuoritusJDBCActor(journals.suoritusJournal, 5)), "suoritukset")
   override val opiskelijaRekisteri = system.actorOf(Props(new OpiskelijaJDBCActor(journals.opiskelijaJournal, 5)), "opiskelijat")
   override val opiskeluoikeusRekisteri = system.actorOf(Props(new OpiskeluoikeusJDBCActor(journals.opiskeluoikeusJournal, 5)), "opiskeluoikeudet")
   override val arvosanaRekisteri = system.actorOf(Props(new ArvosanaJDBCActor(journals.arvosanaJournal, 5)), "arvosanat")

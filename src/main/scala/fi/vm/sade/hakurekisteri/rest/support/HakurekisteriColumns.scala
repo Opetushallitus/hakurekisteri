@@ -12,7 +12,6 @@ import org.joda.time.{DateTime, LocalDate}
 import org.json4s.Extraction._
 import org.json4s.Formats
 import org.json4s.JsonAST.JValue
-import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 
 import scala.xml.Elem
