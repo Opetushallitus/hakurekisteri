@@ -1,33 +1,34 @@
 package fi.vm.sade.hakurekisteri.db
 
-import java.nio.charset.Charset
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.suoritus._
-import org.h2.tools.RunScript
+import fi.vm.sade.hakurekisteri.tools.ItPostgres
+import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.joda.time.LocalDate
 import org.scalatra.test.scalatest.ScalatraFunSuite
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-import org.h2.engine.SysProperties
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, _}
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration._
 
 
 class JDBCJournalReloadSpec extends ScalatraFunSuite {
   val logger = LoggerFactory.getLogger(getClass)
-  SysProperties.serializeJavaObject = false
-  implicit val database = Database.forURL("jdbc:h2:./db.file:test;MV_STORE=FALSE;MODE=PostgreSQL", driver = "org.h2.Driver")
+  val portChooser = new ChooseFreePort()
+  val itDb = new ItPostgres(portChooser)
+  itDb.start()
+  implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
 
   override def stop(): Unit = {
-    RunScript.execute("jdbc:h2:./db.file:test", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
+    database.close()
+    itDb.stop()
     super.stop()
   }
 
@@ -36,7 +37,7 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
     implicit val ec: ExecutionContext = system.dispatcher
 
     val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
-    val suoritusrekisteri = system.actorOf(Props(new SuoritusActor(suoritusJournal)))
+    val suoritusrekisteri = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
 
     implicit val timeout: Timeout = 30.seconds
     val now = new LocalDate()
@@ -69,11 +70,10 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
     val amount = 5
     val henkilot = Stream.continually(java.util.UUID.randomUUID).take(amount)
 
+    createSystemAndInsertAndShutdown(henkilot)
     val suoritukset = createSystemAndInsertAndShutdown(henkilot)
 
-    val suoritukset2 = createSystemAndInsertAndShutdown(henkilot)
-
-    suoritukset2.size should be (henkilot.length)
+    suoritukset.size should be (henkilot.length)
   }
 
 }

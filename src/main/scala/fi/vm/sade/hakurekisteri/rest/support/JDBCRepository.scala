@@ -64,10 +64,6 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
   val dbExecutor:ExecutionContext
 
   override def findBy(q: Query[R]): Future[Seq[R with Identified[I]]] = {
-    if (q.muokattuJalkeen.isDefined) {
-      throw new NotImplementedError("muokattuJalkeen not implemented in JDBCService")
-    }
-
     dbQuery.lift(q).map{
       case Right(query) => journal.db.run(query.result).map(_.collect { case Updated(res) => res })(dbExecutor)
       case Left(t) => Future.failed(t)

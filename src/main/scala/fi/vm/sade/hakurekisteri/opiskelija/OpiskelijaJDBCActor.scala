@@ -7,12 +7,11 @@ import akka.dispatch.ExecutionContexts
 import com.github.nscala_time.time.Imports._
 import fi.vm.sade.hakurekisteri.rest.support
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.{startOfAutumn, startOfYear, yearOf}
 import fi.vm.sade.hakurekisteri.rest.support.Kausi._
 import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, JDBCRepository, JDBCService}
 import fi.vm.sade.hakurekisteri.storage._
 import fi.vm.sade.hakurekisteri.storage.repository._
-import slick.ast.Node
-import slick.driver.JdbcStatementBuilderComponent
 import slick.lifted
 
 import scala.concurrent.ExecutionContext
@@ -61,34 +60,10 @@ class OpiskelijaJDBCActor(val journal: JDBCJournal[Opiskelija, UUID, OpiskelijaT
       case (Some(v), Some(Kevät)) => (end.isEmpty || (startOfYear(v) <= end).asColumnOf[Boolean]) && start < startOfAutumn(v)
       case (Some(v), Some(Syksy)) => (end.isEmpty || (startOfAutumn(v) <= end).asColumnOf[Boolean]) && start < startOfYear((v.toInt + 1).toString)
       case (Some(v), None) => (end.isEmpty || (startOfYear(v) <= end).asColumnOf[Boolean]) && start < startOfYear((v.toInt + 1).toString)
-      case (None, Some(Kevät)) => end.isEmpty || (start < startOfAutumn(yearOfNullable(end))).asColumnOf[Boolean]
+      case (None, Some(Kevät)) => end.isEmpty || (start < startOfAutumn(yearOf(end))).asColumnOf[Boolean]
       case (None, Some(Syksy)) => end.isEmpty || (startOfAutumn(yearOf(start)) <= end).asColumnOf[Boolean]
       case (None, None) => true
       case (_, Some(k)) => throw new IllegalArgumentException(s"Not a kausi $k")
     }
   }
-
-  private val startOfYear = SimpleExpression.unary[String, DateTime] {
-    case (year, qb) =>
-      qb.sqlBuilder += "extract(epoch from to_timestamp("
-      qb.expr(year)
-      qb.sqlBuilder += " || '-01-01', 'YYYY-MM-DD')) * 1000"
-  }
-
-  private val startOfAutumn = SimpleExpression.unary[String, DateTime] {
-    case (year, qb) =>
-      qb.sqlBuilder += "extract(epoch from to_timestamp("
-      qb.expr(year)
-      qb.sqlBuilder += " || '-08-01', 'YYYY-MM-DD')) * 1000"
-  }
-
-  private def yearOfExpr(millis: Node, qb: JdbcStatementBuilderComponent#QueryBuilder): Unit = {
-    qb.sqlBuilder += "extract(year from to_timestamp("
-    qb.expr(millis)
-    qb.sqlBuilder += " / 1000))"
-  }
-
-  private val yearOf = SimpleExpression.unary[DateTime, String](yearOfExpr)
-
-  private val yearOfNullable = SimpleExpression.unary[Option[DateTime], String](yearOfExpr)
 }
