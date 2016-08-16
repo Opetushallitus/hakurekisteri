@@ -64,9 +64,9 @@ trait HakurekisteriContainer extends EmbeddedJettyContainer {
   }
 
   override def stop(): Unit = {
+    super.stop()
     database.close()
     itDb.stop()
-    super.stop()
   }
 }
 

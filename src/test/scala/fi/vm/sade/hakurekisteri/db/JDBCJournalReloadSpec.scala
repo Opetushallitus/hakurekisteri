@@ -26,10 +26,10 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
   itDb.start()
   implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
 
-  override def afterAll(): Unit = {
+  override def stop(): Unit = {
     database.close()
     itDb.stop()
-    super.afterAll()
+    super.stop()
   }
 
   def createSystemAndInsertAndShutdown(henkilot: Stream[UUID]) = {

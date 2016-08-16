@@ -92,11 +92,11 @@ class YtlActorSpec extends ScalatraFunSuite {
     Await.result(suoritusActor ? DeleteResource(arvosanat.head.suoritus, "test"), 60.seconds)
   }
 
-  override def afterAll(): Unit = {
+  override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)
     database.close()
     itDb.stop()
-    super.afterAll()
+    super.stop()
   }
 
 }

@@ -74,11 +74,11 @@ class SuoritusResourceWithOPHSpec extends ScalatraFunSuite with MockitoSugar wit
 
 
 
-  override def afterAll(): Unit = {
+  override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)
     database.close()
     itDb.stop()
-    super.afterAll()
+    super.stop()
   }
 
   private val servletWithOPHRight = new SuoritusResource(guardedSuoritusRekisteri, parameterActor, SuoritusQuery(_))
@@ -119,11 +119,11 @@ class SuoritusResourceWithOPOSpec extends ScalatraFunSuite with MockitoSugar wit
   val guardedSuoritusRekisteri = system.actorOf(Props(new FakeAuthorizer(suoritusRekisteri)))
 
 
-  override def afterAll(): Unit = {
+  override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)
     database.close()
     itDb.stop()
-    super.afterAll()
+    super.stop()
   }
 
   val x = TestActorRef(new MockParameterActor(true))
