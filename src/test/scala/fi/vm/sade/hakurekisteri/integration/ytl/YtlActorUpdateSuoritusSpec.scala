@@ -87,9 +87,9 @@ class YtlActorUpdateSuoritusSpec extends ScalatraFunSuite with ActorSystemSuppor
     })
   }
 
-  override def stop(): Unit = {
+  override def afterAll(): Unit = {
     database.close()
     itDb.stop()
-    super.stop()
+    super.afterAll()
   }
 }

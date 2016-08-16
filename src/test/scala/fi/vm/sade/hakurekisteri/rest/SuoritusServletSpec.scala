@@ -64,10 +64,10 @@ class SuoritusServletSpec extends ScalatraFunSuite {
     }
   }
 
-  override def stop(): Unit = {
+  override def afterAll(): Unit = {
     Await.result(system.terminate(), 15.seconds)
     database.close()
     itDb.stop()
-    super.stop()
+    super.afterAll()
   }
 }

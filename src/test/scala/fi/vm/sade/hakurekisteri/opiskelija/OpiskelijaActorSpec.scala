@@ -96,11 +96,11 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
     r should be(Seq(o5))
   }
 
-  override def stop(): Unit = {
+  override def afterAll(): Unit = {
     Await.result(system.terminate(), 15.seconds)
     database.close()
     itDb.stop()
-    super.stop()
+    super.afterAll()
   }
 
 }
