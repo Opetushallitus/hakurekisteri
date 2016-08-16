@@ -140,9 +140,11 @@ class BaseIntegrations(rekisterit: Registers,
   val virtaResource = system.actorOf(Props(new VirtaResourceActor(virtaResourceClient)), "virtaResource")
   val proxies = new HttpProxies(valintarekisteriClient)
 
-  /* TODO: HakemusService
-  hakemukset ! IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
-  */
+  val arvosanaTrigger: Trigger = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
+  hakemusService.addTrigger(arvosanaTrigger)
+
+  implicit val scheduler = system.scheduler
+  hakemusService.processModifiedHakemukset()
 
   override val hakuAppPermissionChecker: ActorRef = system.actorOf(Props(new HakuAppPermissionCheckerActor(hakuAppPermissionCheckerClient, organisaatiot)))
 }

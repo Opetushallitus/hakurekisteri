@@ -1,17 +1,19 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
-import fi.vm.sade.hakurekisteri.healthcheck.Status
-import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusService
+import akka.actor.{Cancellable, ActorLogging, Actor, ActorRef}
+import akka.pattern.ask
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import org.joda.time.DateTime
 
-import scala.collection.mutable
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.collection.mutable
 import scala.concurrent.duration._
-
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, Trigger}
+import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
+import fi.vm.sade.hakurekisteri.healthcheck.Status
+import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
 
 case class VirtaQuery(oppijanumero: String, hetu: Option[String])
 case class KomoNotFoundException(message: String) extends Exception(message)
@@ -82,14 +84,13 @@ class VirtaQueue(virtaActor: ActorRef, hakemusService: HakemusService, hakuActor
   }
 
   override def preStart(): Unit = {
-    /* TODO: HakemusService
-    hakemusActor ! Trigger((oid, hetu, hakuOid) =>
+    val trigger: Trigger = Trigger((oid, hetu, hakuOid) =>
       if (!isYsiHetu(hetu))
         (hakuActor ? GetHaku(hakuOid))(1.hour).mapTo[Haku].map(haku => haku.kkHaku).recoverWith {
           case t: HakuNotFoundException => Future.successful(true)
         }.map(isKkHaku => if (isKkHaku) self ! VirtaQuery(oid, Some(hetu)))
     )
-    */
+    hakemusService.addTrigger(trigger)
     super.preStart()
   }
 
