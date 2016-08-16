@@ -121,12 +121,12 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
     }
   }
 
-  override def afterAll(): Unit = {
+  override def stop(): Unit = {
     import scala.concurrent.duration._
     Await.result(system.terminate(), 15.seconds)
     database.close()
     itDb.stop()
-    super.afterAll()
+    super.stop()
   }
 
   def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s:Seq[R]) = {
