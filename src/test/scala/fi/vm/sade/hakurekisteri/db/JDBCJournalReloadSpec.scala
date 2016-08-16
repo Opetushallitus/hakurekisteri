@@ -10,7 +10,6 @@ import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.joda.time.LocalDate
 import org.scalatra.test.scalatest.ScalatraFunSuite
 import org.slf4j.LoggerFactory
@@ -21,18 +20,8 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 
 class JDBCJournalReloadSpec extends ScalatraFunSuite {
   val logger = LoggerFactory.getLogger(getClass)
-  val portChooser = new ChooseFreePort()
-  val itDb = new ItPostgres(portChooser)
-  itDb.start()
-  implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
 
-  override def stop(): Unit = {
-    database.close()
-    itDb.stop()
-    super.stop()
-  }
-
-  def createSystemAndInsertAndShutdown(henkilot: Stream[UUID]) = {
+  def createSystemAndInsertAndShutdown(henkilot: Stream[UUID])(implicit db: Database) = {
     implicit val system = ActorSystem("test-jdbc")
     implicit val ec: ExecutionContext = system.dispatcher
 
@@ -62,7 +51,6 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
     val suoritukset = Await.result(suoritusFuture, Duration(30, TimeUnit.SECONDS))
 
     Await.result(system.terminate(), 15.seconds)
-    //database.close()
     suoritukset
   }
 
@@ -70,8 +58,11 @@ class JDBCJournalReloadSpec extends ScalatraFunSuite {
     val amount = 5
     val henkilot = Stream.continually(java.util.UUID.randomUUID).take(amount)
 
+    implicit val database = Database.forURL(ItPostgres.getEndpointURL())
+    ItPostgres.reset()
     createSystemAndInsertAndShutdown(henkilot)
     val suoritukset = createSystemAndInsertAndShutdown(henkilot)
+    database.close()
 
     suoritukset.size should be (henkilot.length)
   }

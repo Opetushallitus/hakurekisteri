@@ -1,77 +1,36 @@
 package fi.vm.sade.hakurekisteri
 
-import java.util.UUID
-
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor, ArvosanaTable}
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-import fi.vm.sade.hakurekisteri.rest.support.{JDBCJournal, Resource}
-import fi.vm.sade.hakurekisteri.storage.repository.Repository
-import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
-import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.scalatest.Matchers
 import org.scalatra.test.scalatest.ScalatraFunSuite
-import slick.lifted.TableQuery
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
 class ResourceActorSpec extends ScalatraFunSuite with Matchers with FutureWaiting {
-  implicit val system = ActorSystem("test-system")
   implicit val timeout: Timeout = 5.seconds
 
-  val portChooser = new ChooseFreePort
-  val itDb = new ItPostgres(portChooser)
-  itDb.start()
-  implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
-
-  val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
-
   test("ResourceActor should save resource when receiving it") {
+    implicit val system = ActorSystem("test-system")
     val resourceActor = TestActorRef[TestActor]
     val resource = new TestResource("foo")
     resourceActor ! resource
     resourceActor.underlyingActor.store.values should contain (resource)
+    Await.result(system.terminate(), 15.seconds)
   }
 
   test("ResourceActor fails when receiving an unknown message") {
+    implicit val system = ActorSystem("test-system")
     val resourceActor = TestActorRef[TestActor]
     val future = resourceActor ? "foo"
     intercept[Exception] {
       Await.result(future.mapTo[String], 1.seconds)
     }
-  }
-  
-  test("ResourceActor should not crash when journal operation fails") {
-    val arvosanaActor = TestActorRef(Props(new ArvosanaJDBCActor(arvosanaJournal, 1) with CrashingRepository[Arvosana, UUID]))
-    expectFailure[Exception](arvosanaActor ? DeleteResource(UUID.randomUUID(), "testUser"))
-  }
-
-  override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)
-    database.close()
-    itDb.stop()
-    super.stop()
   }
-
-  trait CrashingRepository[T <: Resource[I, T], I] extends Repository[T, I] {
-    override def save(t: T): T with Identified[I] = ???
-    override def count: Int = ???
-    override def insert(t: T): T with Identified[I] = ???
-    override def get(id: I): Option[T with Identified[I]] = ???
-    override def cursor(t: T): Option[(Long, String)] = ???
-    override def delete(id: I, source: String): Unit = throw new Exception("failing delete exception")
-    override def listAll(): Seq[T with Identified[I]] = ???
-  }
-
 }
-
-
-
-

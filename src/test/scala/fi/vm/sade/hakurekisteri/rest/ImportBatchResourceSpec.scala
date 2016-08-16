@@ -5,7 +5,8 @@ import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.acceptance.tools.{ConfigurationSupport, FakeAuthorizer}
+import fi.vm.sade.hakurekisteri.MockConfig
+import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvosana}
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration._
@@ -35,7 +36,7 @@ import scala.concurrent.duration._
 import scala.xml.Elem
 
 
-class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport with ConfigurationSupport {
+class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("test-import-batch")
   implicit val ec: ExecutionContext = system.dispatcher
@@ -90,7 +91,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
       </xs:schema>
   }
 
-  addServlet(new ImportBatchResource(authorized, parameterActor, config, (foo) => ImportBatchQuery(None, None, None))("identifier", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, TestSchema), "/batch")
+  addServlet(new ImportBatchResource(authorized, parameterActor, new MockConfig, (foo) => ImportBatchQuery(None, None, None))("identifier", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, TestSchema), "/batch")
 
   test("post should return 201 created") {
     post("/batch", "<batch><identifier>foo</identifier><data>foo</data></batch>") {

@@ -1,15 +1,13 @@
 package fi.vm.sade.hakurekisteri.acceptance
 
-import org.joda.time.LocalDate
-import org.scalatra.test.scalatest.ScalatraFeatureSpec
-import org.scalatest.GivenWhenThen
-
-import fi.vm.sade.hakurekisteri.acceptance.tools.{HakurekisteriContainer,  HakurekisteriSupport}
+import fi.vm.sade.hakurekisteri.acceptance.tools.HakurekisteriContainer
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.tools.Peruskoulu
+import org.joda.time.LocalDate
+import org.scalatest.GivenWhenThen
 
-class TallennaSuoritusSpec extends ScalatraFeatureSpec with GivenWhenThen with HakurekisteriContainer with HakurekisteriSupport {
+class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {
 
   info("Koulun virkailijana tallennan kouluni oppilaiden tutkintosuoritukset jotta niitä voi hyödyntää haussa ja valinnassa")
 

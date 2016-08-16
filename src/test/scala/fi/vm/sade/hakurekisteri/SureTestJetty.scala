@@ -1,15 +1,12 @@
 package fi.vm.sade.hakurekisteri
 
-import java.nio.charset.Charset
-
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.utils.Timer
-import fi.vm.sade.utils.tcp.{PortChecker}
+import fi.vm.sade.utils.tcp.PortChecker
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ContextHandlerCollection
 import org.eclipse.jetty.util.resource.ResourceCollection
 import org.eclipse.jetty.webapp.WebAppContext
-import org.h2.tools.RunScript
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatra.test.HttpComponentsClient
 
@@ -22,14 +19,14 @@ object SureTestJettyWithMocks extends App {
 }
 
 object SharedTestJetty {
-  private val config = Config.mockConfig
+  System.setProperty("suoritusrekisteri.it.postgres.port", ItPostgres.port.toString)
+  private val config = new MockConfig
   private lazy val jetty = new SureTestJetty(config = config)
-  private val itPostgres = new ItPostgres(config.postgresPortChooser)
 
   private def start = {
     Timer.timed("Jetty start") {
       if (!jetty.server.isRunning) {
-        itPostgres.start()
+        ItPostgres.start()
       }
       jetty.start
     }
@@ -38,8 +35,8 @@ object SharedTestJetty {
   def restart:Unit = {
     if (jetty.server.isRunning) {
       Timer.timed("Jetty stop") {
-        itPostgres.reset()
         jetty.server.stop
+        ItPostgres.reset()
       }
     }
     start
@@ -81,7 +78,6 @@ trait CleanSharedTestJettyBeforeEach extends BeforeAndAfterEach with HttpCompone
   this: Suite =>
   val port = SharedTestJetty.port
   val baseUrl = s"http://localhost:$port"
-  System.setProperty("valintatulos.it.postgres.port", "55432")
 
   override def beforeEach(): Unit = {
     SharedTestJetty.restart

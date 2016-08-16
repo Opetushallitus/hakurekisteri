@@ -2,11 +2,11 @@ package fi.vm.sade.hakurekisteri.integration.organisaatio
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ActorRef, Props, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Config, MockConfig}
 import fi.vm.sade.hakurekisteri.integration._
 import org.mockito.Mockito._
 import org.scalatest.Matchers
@@ -14,6 +14,7 @@ import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.time.{Millis, Span}
 import org.scalatra.test.scalatest.ScalatraFunSuite
+
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 
@@ -134,7 +135,7 @@ class OrganisaatioActorSpec extends ScalatraFunSuite with Matchers with AsyncAss
 
   def initOrganisaatioActor(ttl: Option[FiniteDuration] = None)(implicit system: ActorSystem, ec: ExecutionContext): (Endpoint, ActorRef) = {
     val endPoint = createEndPoint
-    val organisaatioActor = system.actorOf(Props(new HttpOrganisaatioActor(new VirkailijaRestClient(config = organisaatioConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))), Config.mockConfig, initDuringStartup = false, ttl)))
+    val organisaatioActor = system.actorOf(Props(new HttpOrganisaatioActor(new VirkailijaRestClient(config = organisaatioConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endPoint)))), new MockConfig, initDuringStartup = false, ttl)))
 
     Await.result((organisaatioActor ? RefreshOrganisaatioCache).mapTo[Boolean], Duration(10, TimeUnit.SECONDS))
 

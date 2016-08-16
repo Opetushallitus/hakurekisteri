@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.rest
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.pipe
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor, KkVastaanotto, Testihaku}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{Hakemus, HakemusQuery}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
@@ -64,7 +64,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite {
         case q: GetKomoQuery => sender ! KomoResponse(q.oid, None)
       }
     })),
-    config = Config.mockConfig,
+    config = new MockConfig,
     hakuActor = system.actorOf(Props(new Actor {
       override def receive: Receive = {
         case q: GetHaku if q.oid == "notfound" => Future.failed(HakuNotFoundException(s"haku not found with oid ${q.oid}")) pipeTo sender
