@@ -10,12 +10,15 @@ import fi.vm.sade.hakurekisteri.storage._
 import fi.vm.sade.hakurekisteri.storage.repository._
 import slick.lifted
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.duration._
 
 case class EmptyLisatiedot() extends Query[Arvosana]
 
 class ArvosanaJDBCActor(val journal: JDBCJournal[Arvosana, UUID, ArvosanaTable], poolSize: Int)
   extends ResourceActor[Arvosana, UUID] with JDBCRepository[Arvosana, UUID, ArvosanaTable] with JDBCService[Arvosana, UUID, ArvosanaTable] {
+
+  override def count: Int = Await.result(journal.db.run(sqlu"select count(distinct resource_id) from arvosana where not deleted"), 5.minutes)
 
   override def deduplicationQuery(i: Arvosana)(t: ArvosanaTable): Rep[Boolean] = t.suoritus === i.suoritus &&
     t.aine === i.aine &&
