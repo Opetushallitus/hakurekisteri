@@ -1,33 +1,34 @@
 package fi.vm.sade.hakurekisteri.acceptance.tools
 
-import fi.vm.sade.hakurekisteri.{Config, SpecsLikeMockito}
-import fi.vm.sade.hakurekisteri.dates.{InFuture, Ajanjakso}
+import fi.vm.sade.hakurekisteri.{Config, MockConfig, SpecsLikeMockito}
+import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.integration.haku.{Kieliversiot, Haku}
+import fi.vm.sade.hakurekisteri.integration.haku.{Haku, Kieliversiot}
 import fi.vm.sade.hakurekisteri.integration.koodisto._
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import org.joda.time.DateTime
 import org.scalatra.swagger.Swagger
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import akka.actor.{Props, Actor, ActorSystem}
+import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
+
 import org.scalatest.Suite
 import org.scalatra.test.HttpComponentsClient
+
 import scala.compat.Platform
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.Organisaatio
 import fi.vm.sade.hakurekisteri.integration.hakemus.ListHakemus
 import fi.vm.sade.hakurekisteri.hakija.Hakija
 import fi.vm.sade.hakurekisteri.rest.support.User
+
 import scala.language.implicitConversions
 import fi.vm.sade.hakurekisteri.web.rest.support.HakurekisteriSwagger
 
 trait HakeneetSupport extends Suite with HttpComponentsClient with HakurekisteriJsonSupport with SpecsLikeMockito {
-  val config = Config.mockConfig
-
   object OppilaitosX extends Organisaatio("1.10.1", Map("fi" -> "Oppilaitos X"), None, Some("00001"), None, Seq())
   object OppilaitosY extends Organisaatio("1.10.2", Map("fi" -> "Oppilaitos Y"), None, Some("00002"), None, Seq())
   object OppilaitosZ extends Organisaatio("1.10.6", Map("fi" -> "Oppilaitos Z"), None, Some("00003"), None, Seq())
@@ -631,7 +632,7 @@ trait HakeneetSupport extends Suite with HttpComponentsClient with Hakurekisteri
   sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", "1.2")(200) returns valintatulokset
   sijoitteluClient.readObject[Seq[ValintaTulos]]("valinta-tulos-service.haku", "1.3")(200) returns valintatulokset
 
-  val sijoittelu = system.actorOf(Props(new ValintaTulosActor(sijoitteluClient, config, initOnStartup = true)))
+  val sijoittelu = system.actorOf(Props(new ValintaTulosActor(sijoitteluClient, new MockConfig, initOnStartup = true)))
 
   object testHakijaResource {
     implicit val swagger: Swagger = new HakurekisteriSwagger

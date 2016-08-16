@@ -4,15 +4,17 @@ import java.io.File
 import java.nio.file.Files
 
 import fi.vm.sade.utils.slf4j.Logging
-import fi.vm.sade.utils.tcp.PortChooser
+import fi.vm.sade.utils.tcp.{ChooseFreePort, PortChooser}
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 
 import scala.sys.process.stringToProcess
 
-class ItPostgres(portChooser: PortChooser) extends Logging {
+object ItPostgres extends Logging {
+
+  val portChooser = new ChooseFreePort()
   val port = portChooser.chosenPort
-  val dataDirName = s"suoritusrekisteri-it-db/$port"
+  val dataDirName = s"suoritusrekisteri-it-db/db-instance/"
   val dbName = "suoritusrekisteri"
   val startStopRetries = 100
   val startStopRetryIntervalMillis = 100
@@ -63,7 +65,7 @@ class ItPostgres(portChooser: PortChooser) extends Logging {
         println(s"PostgreSQL pid $pid is found in pid file, not touching the database.")
       }
       case None => {
-        println(s"PostgreSQL pid file cannot be read, starting:")
+        println(s"PostgreSQL pid file cannot be read, starting in port $port:")
         s"postgres --config_file=postgresql/postgresql.conf -d 0 -D $dataDirPath -p $port".run()
         if (!tryTimes(startStopRetries, startStopRetryIntervalMillis)(isAcceptingConnections)) {
           throw new RuntimeException(s"postgres not accepting connections in port $port after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
@@ -101,5 +103,10 @@ class ItPostgres(portChooser: PortChooser) extends Logging {
       println(s"Nuking PostgreSQL data directory $dataDirPath")
       FileUtils.forceDelete(dataDirFile)
     }
+  }
+
+  def getEndpointURL(): String = {
+    start()
+    s"jdbc:postgresql://localhost:${port}/suoritusrekisteri"
   }
 }

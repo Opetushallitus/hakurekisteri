@@ -1,3 +1,5 @@
-drop schema public cascade;
-create schema public;
-GRANT ALL ON SCHEMA public TO postgres;
+delete from arvosana;
+delete from suoritus;
+delete from opiskelija;
+delete from import_batch;
+delete from opiskeluoikeus;
