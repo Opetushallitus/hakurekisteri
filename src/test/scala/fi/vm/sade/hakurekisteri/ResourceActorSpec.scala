@@ -53,11 +53,11 @@ class ResourceActorSpec extends ScalatraFunSuite with Matchers with FutureWaitin
     expectFailure[Exception](arvosanaActor ? DeleteResource(UUID.randomUUID(), "testUser"))
   }
 
-  override def afterAll(): Unit = {
+  override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)
     database.close()
     itDb.stop()
-    super.afterAll()
+    super.stop()
   }
 
   trait CrashingRepository[T <: Resource[I, T], I] extends Repository[T, I] {

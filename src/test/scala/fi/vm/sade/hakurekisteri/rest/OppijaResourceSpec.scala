@@ -278,11 +278,11 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
 
   addServlet(resource, "/*")
 
-  override def afterAll(): Unit = {
+  override def stop(): Unit = {
     Await.result(system.terminate(), 15.seconds)
     database.close()
     itDb.stop()
-    super.afterAll()
+    super.stop()
   }
 }
 
