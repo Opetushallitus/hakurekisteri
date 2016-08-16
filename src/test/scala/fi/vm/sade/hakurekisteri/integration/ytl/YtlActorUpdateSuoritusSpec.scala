@@ -16,7 +16,6 @@ import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.{KomoOids, MockConfig, OrganisaatioOids}
-import fi.vm.sade.utils.tcp.ChooseFreePort
 import org.joda.time.LocalDate
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
@@ -39,16 +38,14 @@ class YtlActorUpdateSuoritusSpec extends ScalatraFunSuite with ActorSystemSuppor
     lahde = "testivirkailija"
   )
 
-  val portChooser = new ChooseFreePort
-  val itDb = new ItPostgres(portChooser)
-  itDb.start()
-  implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
 
   test("YtlActor should not overwrite an existing old suoritus in tila VALMIS with a new suoritus in tila KESKEN from YTL") {
     withSystem({
       implicit system => {
         implicit val ec: ExecutionContext = system.dispatcher
         implicit val timeout: Timeout = 60.seconds
+        implicit val database = Database.forURL(ItPostgres.getEndpointURL())
+
         val config = new MockConfig
 
         val henkiloActor = system.actorOf(Props(new MockHenkiloActor(config)))
@@ -82,13 +79,9 @@ class YtlActorUpdateSuoritusSpec extends ScalatraFunSuite with ActorSystemSuppor
           Thread.sleep(100)
         }
         arvosanat.get.nonEmpty should be(true)
+
+        database.close()
       }
     })
-  }
-
-  override def stop(): Unit = {
-    database.close()
-    itDb.stop()
-    super.stop()
   }
 }

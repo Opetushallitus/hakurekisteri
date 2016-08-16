@@ -2,17 +2,14 @@ package fi.vm.sade.hakurekisteri
 
 import java.io.InputStream
 import java.nio.file.{Files, Path, Paths}
-import java.util.Properties
 
 import akka.actor.ActorSystem
-import com.typesafe.config.ConfigFactory
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
 import fi.vm.sade.hakurekisteri.integration.{OphUrlProperties, ServiceConfig}
 import fi.vm.sade.hakurekisteri.tools.RicherString
 import fi.vm.sade.hakurekisteri.web.rest.support.Security
-import fi.vm.sade.utils.tcp.PortFromSystemPropertyOrFindFree
 import org.joda.time.LocalTime
 import org.slf4j.LoggerFactory
 import support.Integrations
@@ -23,11 +20,9 @@ import scala.util.{Success, Try}
 
 object Config {
   def fromString(profile: String) = profile match {
-    case "it" => mockConfig
     case "default" => new DefaultConfig
   }
   lazy val globalConfig = fromString(sys.props.getOrElse("hakurekisteri.profile", "default"))
-  lazy val mockConfig = new MockConfig
   lazy val mockDevConfig = new MockDevConfig
 }
 
@@ -100,19 +95,6 @@ class DefaultConfig extends Config {
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
-}
-
-class MockConfig extends Config {
-  def mockMode = true
-  log.info("Using mock config")
-  val postgresPortChooser = new PortFromSystemPropertyOrFindFree("suoritusrekisteri.it.postgres.port")
-
-  override val databaseUrl = s"jdbc:postgresql://localhost:${postgresPortChooser.chosenPort}/suoritusrekisteri"
-  override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
-  override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
-  override val importBatchProcessingInitialDelay = 1.seconds
-  override val profile = "it"
-  lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
 }
 
 class MockDevConfig extends Config {

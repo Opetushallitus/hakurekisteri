@@ -5,7 +5,7 @@ import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.test.tools.FutureWaiting
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.{Config, MockConfig}
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, Hakemus, HakemusQuery}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, Kieliversiot}
@@ -160,7 +160,7 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
           case q: GetKomoQuery => sender ! KomoResponse(q.oid, None)
         }
       })),
-      config = Config.mockConfig,
+      config = new MockConfig,
       hakuActor = system.actorOf(Props(new Actor {
         override def receive: Receive = {
           case q: GetHaku => sender ! Testihaku

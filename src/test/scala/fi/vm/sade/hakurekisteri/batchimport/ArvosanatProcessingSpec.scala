@@ -17,7 +17,7 @@ import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.{FailingResourceActor, MockedResourceActor}
 import fi.vm.sade.hakurekisteri.tools.ItPostgres
-import fi.vm.sade.hakurekisteri.{Config, Oids}
+import fi.vm.sade.hakurekisteri.{Config, MockConfig, Oids}
 import fi.vm.sade.utils.tcp.ChooseFreePort
 import generators.DataGen
 import org.joda.time.LocalDate
@@ -400,10 +400,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     withSystem(
       implicit system => {
         implicit val ec: ExecutionContext = system.dispatcher
-        val portChooser = new ChooseFreePort
-        val itDb = new ItPostgres(portChooser)
-        itDb.start()
-        implicit val database = Database.forURL(s"jdbc:postgresql://localhost:${portChooser.chosenPort}/suoritusrekisteri")
+        implicit val database = Database.forURL(ItPostgres.getEndpointURL())
 
         val batch = batchGenerator.generate
 
@@ -492,7 +489,6 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
           )
         )
         database.close()
-        itDb.stop()
       }
     )
   }
@@ -522,13 +518,13 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
   private def createOrganisaatioActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
     system.actorOf(Props(new HttpOrganisaatioActor(
       new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider))),
-      Config.mockConfig
+      new MockConfig
     )))
 
   private def createHenkiloActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
     system.actorOf(Props(new HttpHenkiloActor(
       new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider))),
-      Config.mockConfig
+      new MockConfig
     )))
 
   object Fixtures {
