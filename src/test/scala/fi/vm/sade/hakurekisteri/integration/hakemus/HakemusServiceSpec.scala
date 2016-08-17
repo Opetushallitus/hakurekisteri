@@ -27,6 +27,21 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     Await.result(hakemusService.hakemuksetForPerson("1.2.246.562.24.81468276424"), 10.seconds).size should be (2)
   }
 
+  it should "return applications when searching with both persons and application system" in {
+    when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
+      .thenReturn((200, List(), getJson("applicationsByPersonOidsAndHaku")))
+
+    val persons = Set("1.2.246.562.24.62737906266", "1.2.246.562.24.99844104050")
+    val applicationSystem = "1.2.246.562.29.90697286251"
+    val res = Await.result(hakemusService.hakemuksetForPersonsInHaku(persons, applicationSystem), 10.seconds)
+    res.size should be(2)
+
+    res.foreach(application => {
+      application.applicationSystemId should be(applicationSystem)
+      persons.contains(application.personOid.get) should be(true)
+    })
+  }
+
   it should "return applications by application option oid" in {
     when(endPoint.request(forPattern(".*applications/byApplicationOption.*")))
       .thenReturn((200, List(), getJson("byApplicationOption")))

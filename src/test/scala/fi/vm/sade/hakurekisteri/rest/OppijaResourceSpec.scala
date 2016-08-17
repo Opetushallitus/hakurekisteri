@@ -49,7 +49,7 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
 
   test("OppijaResource should return 200") {
     when(hakemusServiceMock.personOidsForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(Set[String]()))
-    when(hakemusServiceMock.hakemuksetForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(Seq[FullHakemus]()))
+    when(hakemusServiceMock.hakemuksetForPersonsInHaku(any[Set[String]], anyString())).thenReturn(Future.successful(Seq[FullHakemus]()))
 
     get("/?haku=1") {
       response.status should be(OK)
@@ -64,6 +64,8 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
 
   test("OppijaResource should return 10001 oppijas with ensikertalainen false") {
     when(hakemusServiceMock.personOidsForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(henkilot))
+    when(hakemusServiceMock.hakemuksetForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(Seq[FullHakemus]()))
+
     waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None), Testihaku.oid))(oppijat => {
       val expectedSize: Int = 10001
       oppijat.length should be(expectedSize)
@@ -130,6 +132,7 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
   }
 
   test("OppijaResource should return 100 oppijas when 100 person oids is sent as POST") {
+    when(hakemusServiceMock.hakemuksetForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(Seq[FullHakemus]()))
     val json = decompose(henkilot.take(100).map(i => s"1.2.246.562.24.$i"))
 
     post("/?haku=1.2.3.4", compact(json)) {

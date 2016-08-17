@@ -48,6 +48,12 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
     ) yield hakemukset.getOrElse(personOid, Seq[FullHakemus]())
   }
 
+  def hakemuksetForPersonsInHaku(personOids: Set[String], hakuOid: String): Future[Seq[FullHakemus]] = {
+    for (
+      hakemuksetByPerson <- restClient.postObject[Set[String], Map[String, Seq[FullHakemus]]]("haku-app.bypersonoid")(200, personOids)
+    ) yield hakemuksetByPerson.values.flatten.filter(_.applicationSystemId == hakuOid).toSeq
+  }
+
   def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
     restClient.postObject[Set[String], Seq[FullHakemus]]("haku-app.byapplicationoption", organisaatio.orNull)(200, Set(hakukohdeOid))
   }
@@ -122,4 +128,6 @@ class HakemusServiceMock extends HakemusService(null) {
   override def personOidsForHakukohde(hakukohdeOid: String, organisaatio: Option[String]) = Future.successful(Set[String]())
 
   override def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]) = Future.successful(Seq[FullHakemus]())
+
+  override def hakemuksetForPersonsInHaku(personOids: Set[String], hakuOid: String) = Future.successful(Seq[FullHakemus]())
 }

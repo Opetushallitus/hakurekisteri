@@ -103,7 +103,16 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   }
 
   private def tutkinnotHakemuksilta(q: EnsikertalainenQuery): Future[Map[String, Option[Int]]] = {
-    hakemusService.hakemuksetForHaku(q.hakuOid, None).map(_
+    def fetchHakemukset = {
+      val sizeLimitForFetchingByPersons = 100
+
+      if (q.henkiloOids.size <= sizeLimitForFetchingByPersons)
+        hakemusService.hakemuksetForPersonsInHaku(q.henkiloOids, q.hakuOid)
+      else
+        hakemusService.hakemuksetForHaku(q.hakuOid, None)
+    }
+
+    fetchHakemukset.map(_
       .filter(_.personOid.isDefined)
       .groupBy(_.personOid.get)
       .mapValues(_
