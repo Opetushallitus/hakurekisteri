@@ -39,7 +39,6 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
   val resources = Set("Arvosana", "Suoritus", "Opiskeluoikeus", "Opiskelija", "ImportBatch")
 
   val healthCheckUser = BasicUser("healthcheck", resources.map(ReadRole( _, Oids.ophOrganisaatioOid)))
-  var foundHakemukset:Map[String, RefreshingState] = Map()
 
   var selfChecks: Map[UUID, Long] = Map()
 
@@ -65,13 +64,6 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
       if (!(roundTrip.getOrElse(0L) < 30000)) log.warning(s"Healthcheck is too slow. Measured roundtrip over 30s: ${roundTrip}ms")
       selfChecks = selfChecks - id
 
-    case Hakemukset(oid, count) =>
-      val curState = foundHakemukset.get(oid).map{
-        case RefreshingState(max, latest) if  max.amount <= count.amount => RefreshingState(count, count)
-        case RefreshingState(max, latest) => RefreshingState(max, count)
-      }.getOrElse(RefreshingState(count, count))
-      foundHakemukset = foundHakemukset + (oid -> curState)
-
     case "healthcheck" =>
       checkState pipeTo sender
   }
@@ -96,7 +88,6 @@ class HealthcheckActor(arvosanaRekisteri: ActorRef,
         opiskeluoikeudet = opiskeluoikeusCount,
         suoritukset = suoritusCount,
         erat = eraCount,
-        foundHakemukset = foundHakemukset,
         ensikertalaiset,
         ytl = ytlReport,
         virta = virtaStatus
@@ -194,7 +185,6 @@ case class Resources(arvosanat: ItemCount,
                      opiskeluoikeudet: ItemCount,
                      suoritukset: ItemCount,
                      erat: ItemCount,
-                     foundHakemukset: Map[String, RefreshingState],
                      ensikertalainenQueries: QueryReport,
                      ytl: YtlStatus,
                      virta: VirtaStatus)
@@ -210,9 +200,6 @@ case class Healhcheck(start: Long, user: String, contextPath: String, checks: Ch
   }
 
 }
-
-case class Hakemukset(oid: String, count: RefreshingResource)
-
 case class Health(actor: ActorRef)
 
 case class BatchReport(id: UUID, count: Int)
