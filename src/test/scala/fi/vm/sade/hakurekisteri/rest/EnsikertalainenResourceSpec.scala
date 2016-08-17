@@ -122,7 +122,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
   }
 
   protected override def beforeAll() = {
-    Mockito.when(hakemusServiceMock.hakemuksetForHaku(Matchers.anyString(), Matchers.any[Option[String]]))
+    Mockito.when(hakemusServiceMock.hakemuksetForPersonsInHaku(Matchers.any[Set[String]], Matchers.anyString()))
       .thenReturn(Future.successful(Seq[FullHakemus]()))
     super.beforeAll()
   }
