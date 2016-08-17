@@ -48,14 +48,18 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
 
 
     var triggerCounter = 0
-    hakemusService.addTrigger(Trigger(f = (hakemus: FullHakemus) => {
+    val trigger = Trigger(f = (hakemus: FullHakemus) => {
       triggerCounter += 1
-    }))
+    })
+
+    hakemusService.addTrigger(trigger)
+    hakemusService.addTrigger(trigger)
+
     hakemusService.processModifiedHakemukset(refreshFrequency = 1.millisecond)
 
-    Thread.sleep(100)
+    Thread.sleep(1000)
 
-    triggerCounter should be (20)
+    triggerCounter should be (40)
   }
 
 }
