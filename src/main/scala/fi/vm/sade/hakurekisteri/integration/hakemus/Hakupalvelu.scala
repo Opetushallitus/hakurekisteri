@@ -40,6 +40,30 @@ case class HakukohdeSearchResultContainer(result: HakukohdeSearchResultList)
 class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: HakemusService, hakuActor: ActorRef)(implicit val ec: ExecutionContext)
   extends Hakupalvelu {
   val Pattern = "preference(\\d+).*".r
+  val hardCodedLisakysymys: Map[String, ThemeQuestion] = Map(
+
+    "hojks" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeRadioButtonQuestion",
+      messageText = "Onko sinulle laadittu peruskoulussa tai muita opintoja suorittaessasi HOJKS (Henkilökohtainen opetuksen järjestämistä koskeva " +
+        "suunnitelma)?",
+      applicationOptionOids = Nil,
+      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
+
+    "koulutuskokeilu" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeRadioButtonQuestion",
+      messageText = "Oletko ollut koulutuskokeilussa?",
+      applicationOptionOids = Nil,
+      options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
+
+    "miksi_ammatilliseen" -> ThemeQuestion(
+      isHaunLisakysymys = true,
+      `type` = "ThemeTextQuestion",
+      messageText = "Miksi haet erityisoppilaitokseen?",
+      applicationOptionOids = Nil,
+      options = None)
+  )
 
   private val acceptedResponseCode: Int = 200
 
@@ -48,34 +72,9 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: Ha
   private def restRequest[A <: AnyRef](uri: String, args: AnyRef*)(implicit mf: Manifest[A]): Future[A] =
     virkailijaClient.readObject[A](uri, args: _*)(acceptedResponseCode, maxRetries)
 
-  private def getLisakysymyksetForHaku(hakuOid: Option[String]): Map[String, ThemeQuestion] = {
-    if(hakuOid.isEmpty) return Map()
-    val lisakysymykset: Map[String, ThemeQuestion] = Await.result(restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid.get), 120.second)
-    val hardCodedLisakysymys: Map[String, ThemeQuestion] = Map(
-
-      "hojks" -> ThemeQuestion(
-        isHaunLisakysymys = true,
-        `type` = "ThemeRadioButtonQuestion",
-        messageText = "Onko sinulle laadittu peruskoulussa tai muita opintoja suorittaessasi HOJKS (Henkilökohtainen opetuksen järjestämistä koskeva " +
-          "suunnitelma)?",
-        applicationOptionOids = Nil,
-        options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
-
-      "koulutuskokeilu" -> ThemeQuestion(
-        isHaunLisakysymys = true,
-        `type` = "ThemeRadioButtonQuestion",
-        messageText = "Oletko ollut koulutuskokeilussa?",
-        applicationOptionOids = Nil,
-        options = Some(Map("true" -> "Kyllä", "false" -> "Ei"))),
-
-      "miksi_ammatilliseen" -> ThemeQuestion(
-        isHaunLisakysymys = true,
-        `type` = "ThemeTextQuestion",
-        messageText = "Miksi haet erityisoppilaitokseen?",
-        applicationOptionOids = Nil,
-        options = None)
-    )
-    lisakysymykset ++ hardCodedLisakysymys
+  private def getLisakysymyksetForHaku(hakuOid: Option[String]): Future[Map[String, ThemeQuestion]] = {
+    hakuOid.fold(Future.successful(Map.empty[String, ThemeQuestion]))(oid =>
+      restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", oid).map(_ ++ hardCodedLisakysymys))
   }
 
   private def getHakukohdeOid(organisaatio: String, hakukohdekoodi: String, haku: String): String = {
@@ -95,7 +94,6 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: Ha
     import akka.pattern._
     implicit val timeout: Timeout = 120.seconds
 
-    val lisakysymykset = getLisakysymyksetForHaku(q.haku)
     val hakukohdeOid = if (q.organisaatio.getOrElse("").nonEmpty && q.hakukohdekoodi.getOrElse("").nonEmpty && q.haku.getOrElse("").nonEmpty) {
       Option(getHakukohdeOid(q.organisaatio.getOrElse(""), q.hakukohdekoodi.getOrElse(""), q.haku.getOrElse("")))
     } else {
@@ -107,9 +105,10 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: Ha
       case _ => hakemusService.hakemuksetForHaku(q.haku.get, q.organisaatio)
     }
 
-    (for (
+    (for {
       hakemukset <- fetchHakemukset
-    ) yield for (
+      lisakysymykset <- getLisakysymyksetForHaku(q.haku)
+    } yield for (
       hakemus <- hakemukset.filter(_.stateValid)
     ) yield for (
       haku <- (hakuActor ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
