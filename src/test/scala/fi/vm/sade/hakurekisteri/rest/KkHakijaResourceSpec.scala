@@ -56,7 +56,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
 
 
   test("should return 200 OK") {
-    when(endPoint.request(forPattern(".*applications/byApplicationOption.*"))).thenReturn((200, List(), "[]"))
+    when(endPoint.request(forPattern(".*listfull.*"))).thenReturn((200, List(), "[]"))
     Thread.sleep(2000)
 
     get("/?hakukohde=1.11.1") {
@@ -82,7 +82,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   }
 
   test("should return five hakijas") {
-    when(endPoint.request(forPattern(".*applications/byApplicationOption.*")))
+    when(endPoint.request(forPattern(".*listfull.*")))
       .thenReturn((200, List(), getJson("byApplicationOption")))
 
     val hakijat = Await.result(
@@ -93,7 +93,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
   }
 
   test("should return one hyvaksytty hakija") {
-    when(endPoint.request(forPattern(".*applications/byApplicationOption.*")))
+    when(endPoint.request(forPattern(".*listfull.*")))
       .thenReturn((200, List(), getJson("byApplicationOption")))
 
     val hakijat = Await.result(

@@ -43,10 +43,21 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
   }
 
   it should "return applications by application option oid" in {
-    when(endPoint.request(forPattern(".*applications/byApplicationOption.*")))
+    when(endPoint.request(forPattern(".*listfull.*")))
       .thenReturn((200, List(), getJson("byApplicationOption")))
 
     Await.result(hakemusService.hakemuksetForHakukohde("1.2.246.562.20.649956391810", None), 10.seconds).size should be (6)
+  }
+
+  it should "support haku-app pagination" in {
+    when(endPoint.request(forPattern(".*listfull.*start=0.*")))
+      .thenReturn((200, List(), getJson("listfull-0")))
+    when(endPoint.request(forPattern(".*listfull.*start=10.*")))
+      .thenReturn((200, List(), getJson("listfull-1")))
+    when(endPoint.request(forPattern(".*listfull.*start=20.*")))
+      .thenReturn((200, List(), "[]"))
+
+    Await.result(hakemusService.hakemuksetForHakukohde("1.2.246.562.20.649956391810", None), 10.seconds).size should be (20)
   }
 
   it should "execute trigger function for modified applications" in {

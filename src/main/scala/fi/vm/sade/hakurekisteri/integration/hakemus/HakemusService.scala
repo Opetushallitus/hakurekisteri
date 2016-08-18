@@ -40,6 +40,9 @@ object Trigger {
 
 class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
 
+  case class SearchParams(aoOids: String = null, asId: String = null, organizationFilter: String = null,
+                          updatedAfter: String = null, start: Int = 0, rows: Int = pageSize)
+
   var triggers: Seq[Trigger] = Seq()
 
   def hakemuksetForPerson(personOid: String): Future[Seq[FullHakemus]] = {
@@ -55,11 +58,11 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
   }
 
   def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
-    restClient.postObject[Set[String], Seq[FullHakemus]]("haku-app.byapplicationoption", organisaatio.orNull)(200, Set(hakukohdeOid))
+    fetchHakemukset(params = SearchParams(aoOids = hakukohdeOid, organizationFilter = organisaatio.orNull)).future
   }
 
   def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
-    restClient.postObject[Set[String], Seq[FullHakemus]]("haku-app.byapplicationsystem", organisaatio.orNull)(200, Set(hakuOid))
+    fetchHakemukset(params = SearchParams(asId = hakuOid, organizationFilter = organisaatio.orNull)).future
   }
 
   def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]] = {
@@ -82,7 +85,7 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
   def processModifiedHakemukset(modifiedAfter: Date = new Date(Platform.currentTime - twoDaysAgo),
                                 refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
     scheduler.scheduleOnce(refreshFrequency)({
-      fetchHakemukset(modifiedAfter = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter)).future.onSuccess {
+      fetchHakemukset(params = SearchParams(updatedAfter = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter))).future.onSuccess {
         case hakemukset: Seq[FullHakemus] =>
           triggerHakemukset(hakemukset)
           processModifiedHakemukset(modifiedAfter = new Date(Platform.currentTime - (5 * 60 * 1000)), refreshFrequency)
@@ -90,16 +93,9 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
     })
   }
 
-  private def getQueryParams(page: Int, modifiedAfter: String) = {
-    Map(
-      "updatedAfter" -> modifiedAfter,
-      "start" -> page * pageSize,
-      "rows" -> pageSize
-    )
-  }
-
-  private def fetchHakemukset(page: Int = 0, modifiedAfter: String): Promise[Seq[FullHakemus]] = {
-    val futureHakemukset: Future[List[FullHakemus]] = restClient.readObject[List[FullHakemus]]("haku-app.listfull", getQueryParams(page, modifiedAfter))(acceptedResponseCode = 200, maxRetries = 2)
+  private def fetchHakemukset(page: Int = 0, params: SearchParams): Promise[Seq[FullHakemus]] = {
+    val futureHakemukset: Future[List[FullHakemus]] = restClient.readObject[List[FullHakemus]]("haku-app.listfull",
+      params.copy(start = page * pageSize))(acceptedResponseCode = 200, maxRetries = 2)
 
     val promise = Promise[Seq[FullHakemus]]()
 
@@ -107,7 +103,7 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
       if (hakemukset.length < pageSize) {
         promise.success(hakemukset)
       } else {
-        fetchHakemukset(page + 1, modifiedAfter).future.onSuccess {
+        fetchHakemukset(page + 1, params).future.onSuccess {
           case nextPageHakemukset: Seq[FullHakemus] => promise.success(hakemukset ++ nextPageHakemukset)
         }
       }
