@@ -6,7 +6,6 @@ import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.hakija._
 import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
-import fi.vm.sade.hakurekisteri.integration.henkilo.HenkiloSearchResponse
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.rest.support.{Kausi, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -15,7 +14,7 @@ import org.joda.time.{DateTime, LocalDate, MonthDay}
 
 import scala.collection.immutable.Iterable
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 trait Hakupalvelu {
@@ -72,47 +71,67 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: Ha
   private def restRequest[A <: AnyRef](uri: String, args: AnyRef*)(implicit mf: Manifest[A]): Future[A] =
     virkailijaClient.readObject[A](uri, args: _*)(acceptedResponseCode, maxRetries)
 
-  private def getLisakysymyksetForHaku(hakuOid: Option[String]): Future[Map[String, ThemeQuestion]] = {
-    hakuOid.fold(Future.successful(Map.empty[String, ThemeQuestion]))(oid =>
-      restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", oid).map(_ ++ hardCodedLisakysymys))
+  private def getLisakysymyksetForHaku(hakuOid: String): Future[Map[String, ThemeQuestion]] = {
+    restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid).map(_ ++ hardCodedLisakysymys)
   }
 
-  private def getHakukohdeOid(organisaatio: String, hakukohdekoodi: String, haku: String): String = {
-    val rawSearchResult = Await.result(virkailijaClient.readObject[HakukohdeSearchResultContainer]("tarjonta-service.hakukohde.search", Map(
-      "organisationOid" -> organisaatio,
-      "hakuOid" -> haku
-    ))(acceptedResponseCode, maxRetries), 120.second)
-    val hakukohteenNimisUriToOids: Seq[(String, String)] = for {
-      tarjoaja <- rawSearchResult.result.tulokset
-      hakukohdeSearchRes <- tarjoaja.tulokset
-    } yield Await.result(restRequest[HakukohdeResultContainer]("tarjonta-service.hakukohde", hakukohdeSearchRes.oid), 120.seconds).result
-      .hakukohteenNimiUri -> hakukohdeSearchRes.oid
-    hakukohteenNimisUriToOids.find(nimiToOid => nimiToOid._1.contains(hakukohdekoodi)).getOrElse("", "")._2
+  private def hakukohdeOids(organisaatio: Option[String], hakuOid: Option[String]): Future[Seq[String]] = {
+    val q = (organisaatio.map("organisationOid" -> _) ++ hakuOid.map("hakuOid" -> _)).toMap
+    restRequest[HakukohdeSearchResultContainer]("tarjonta-service.hakukohde.search", q)
+      .map(_.result.tulokset.flatMap(tarjoaja => tarjoaja.tulokset.map(hakukohde => hakukohde.oid)))
+  }
+
+  private def hakukohdeNimiUri(hakukohdeOid: String): Future[String] = {
+    restRequest[HakukohdeResultContainer]("tarjonta-service.hakukohde", hakukohdeOid)
+      .map(r => r.result.hakukohteenNimiUri)
+  }
+
+  private def hakukohdeOids(organisaatio: Option[String],
+                            hakuOid: Option[String],
+                            hakukohdekoodi: Option[String]): Future[Seq[String]] = hakukohdekoodi match {
+    case Some(koodi) =>
+      for {
+        hakukohdeOids <- hakukohdeOids(organisaatio, hakuOid)
+        nimiAndOids <- Future.sequence(hakukohdeOids.map(oid => hakukohdeNimiUri(oid).map((_, oid))))
+      } yield nimiAndOids.collect {
+        case (nimi, oid) if nimi.contains(hakukohdekoodi) => oid
+      }
+    case None =>
+      hakukohdeOids(organisaatio, hakuOid)
   }
 
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {
     import akka.pattern._
     implicit val timeout: Timeout = 120.seconds
 
-    val hakukohdeOid = if (q.organisaatio.getOrElse("").nonEmpty && q.hakukohdekoodi.getOrElse("").nonEmpty && q.haku.getOrElse("").nonEmpty) {
-      Option(getHakukohdeOid(q.organisaatio.getOrElse(""), q.hakukohdekoodi.getOrElse(""), q.haku.getOrElse("")))
-    } else {
-      Option.empty
+    def hakuAndLisakysymykset(hakuOid: String): Future[(Haku, Map[String, ThemeQuestion])] = {
+      val hakuF = (hakuActor ? GetHaku(hakuOid)).mapTo[Haku]
+      val lisakysymyksetF = getLisakysymyksetForHaku(hakuOid)
+      for (haku <- hakuF; lisakysymykset <- lisakysymyksetF) yield (haku, lisakysymykset)
     }
 
-    def fetchHakemukset = hakukohdeOid match {
-      case Some(oid) => hakemusService.hakemuksetForHakukohde(oid, q.organisaatio)
-      case _ => hakemusService.hakemuksetForHaku(q.haku.get, q.organisaatio)
+    q match {
+      case HakijaQuery(Some(hakuOid), organisaatio, None, _, _, _) =>
+        for {
+          (haku, lisakysymykset) <- hakuAndLisakysymykset(hakuOid)
+          hakemukset <- hakemusService.hakemuksetForHaku(hakuOid, organisaatio)
+        } yield hakemukset.filter(_.stateValid)
+          .map(hakemus => AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, None))
+      case HakijaQuery(hakuOid, organisaatio, hakukohdekoodi, _, _, _) =>
+        for {
+          hakukohdeOids <- hakukohdeOids(organisaatio, hakuOid, hakukohdekoodi)
+          hakukohteittain <- Future.sequence(hakukohdeOids.map(hakemusService.hakemuksetForHakukohde(_, organisaatio)))
+          hauittain = hakukohdeOids.zip(hakukohteittain).groupBy(_._2.headOption.map(_.applicationSystemId))
+          hakijat <- Future.sequence(for {
+            (hakuOid, hakukohteet) <- hauittain if hakuOid.isDefined
+            f = hakuAndLisakysymykset(hakuOid.get)
+            (hakukohdeOid, hakemukset) <- hakukohteet
+            hakemus <- hakemukset if hakemus.stateValid
+          } yield for {
+            (haku, lisakysymykset) <- f
+          } yield AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdekoodi.map(_ => hakukohdeOid)))
+        } yield hakijat.toSeq
     }
-
-    (for {
-      hakemukset <- fetchHakemukset
-      lisakysymykset <- getLisakysymyksetForHaku(q.haku)
-    } yield for (
-      hakemus <- hakemukset.filter(_.stateValid)
-    ) yield for (
-      haku <- (hakuActor ? GetHaku(hakemus.applicationSystemId)).mapTo[Haku]
-    ) yield AkkaHakupalvelu.getHakija(hakemus, haku, lisakysymykset, hakukohdeOid)).flatMap(Future.sequence(_))
   }
 }
 
