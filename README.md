@@ -17,35 +17,29 @@ Tarvittaessa voit päivittää front-riippuvuudet komennolla
 
 ## Kaikki testit
 
-Voit ajaa kaikki testit komentoriviltä komennolla `make test`
+Voit ajaa kaikki testit komentoriviltä komennolla `mvn clean test`
 
 ## Build & Run ##
 
 Näin voit ajaa sovellusta paikallisesti tuotannonkaltaisena setuppina, käyttäen paikallista h2-kantaa.
 
-1. Ihan ensin tarvitset devaukseen soveltuvan `~/oph-configuration`-hakemiston. Kysy devaajilta apua!
+1. Ihan ensin tarvitset devaukseen soveltuvan `~/oph-configuration`-hakemiston, kopioi luokalta tai pyydä kaverilta.
 
-2. Luo paikallinen h2-tietokanta: `make createDevDb`. Tämä kopioi datat luokka-ympäristöstä tietokantaan `data/development.h2.db`.
-
-3. Käynnistä paikallinen serveri: `./sbt ~container:start` (vaatii oph-configuration kansion). Vaihtoehtoisesti aja IDEA:ssa luokka `HakuRekisteriJetty` (ei vaadi oph-configuration kansiota).
+2. Käynnistä paikallinen serveri ajamalla IDEA:ssa luokka `SureTestJetty`.
 
 Sovellus on saatavilla osoitteessa http://localhost:8080/
 
 Muutama huomio:
 
 - Katso tunnus ja salasana `~/oph-configuration/security-context-backend.xml`:stä, käyttäjällä pitää olla ainakin `ROLE_APP_SUORITUSREKISTERI` rooli
-- Käy kirjautumassa sisään osoittessa https://itest-virkailija.oph.ware.fi, jotta autentikaatio muihin palveluihin toimii
 
 API-dokumentaatio löytyy http://localhost:8080/swagger/index.html
 
 ## Kehitystietokannat
 
-Sovellusta paikallisesti ajettaessa se käyttää paikallista H2-tietokantaa.
+Sovellusta paikallisesti ajettaessa se käyttää paikallista Postgres-tietokantaa. 
 
-- `data/development.h2.db` jos ajetaan "default"-profiililla
-- `data/integration-test.h2.db` jos ajetan "it"-profiililla. Tätä käytetään integraatiotesteissä, ja kanta tyhjennetään testiajojen aluksi.
-
-Kantoja pääsee tutkimaan kätevästi esim. IDEA:n Database-näkymässä.
+Käynnistä sellainen esim. Dockerilla: `docker run -p 5432:5432 postgres`
 
 ## Arvosanavalidaattori
 
