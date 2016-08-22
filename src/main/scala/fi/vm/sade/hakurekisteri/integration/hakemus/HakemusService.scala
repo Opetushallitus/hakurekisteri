@@ -84,10 +84,11 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
   def processModifiedHakemukset(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(2)),
                                 refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
     scheduler.scheduleOnce(refreshFrequency)({
+      val lastChecked = new Date()
       fetchHakemukset(params = SearchParams(updatedAfter = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter))).onSuccess {
         case hakemukset: Seq[FullHakemus] =>
           triggerHakemukset(hakemukset)
-          processModifiedHakemukset(modifiedAfter = new Date(Platform.currentTime - TimeUnit.MINUTES.toMillis(5)), refreshFrequency)
+          processModifiedHakemukset(lastChecked, refreshFrequency)
       }
     })
   }
