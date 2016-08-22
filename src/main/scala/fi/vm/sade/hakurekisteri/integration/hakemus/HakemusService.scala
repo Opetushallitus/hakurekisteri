@@ -2,6 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 import akka.actor.Scheduler
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
@@ -10,8 +11,8 @@ import fi.vm.sade.hakurekisteri.rest.support.Query
 
 import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{Future, Promise}
 
 case class HakemusConfig(serviceConf: ServiceConfig, maxApplications: Int)
 
@@ -80,15 +81,13 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
       triggers.foreach(trigger => trigger.f(hakemus))
     )
 
-  private val twoDaysAgo = 1000 * 60 * 60 * 24 * 2
-
-  def processModifiedHakemukset(modifiedAfter: Date = new Date(Platform.currentTime - twoDaysAgo),
+  def processModifiedHakemukset(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(2)),
                                 refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
     scheduler.scheduleOnce(refreshFrequency)({
       fetchHakemukset(params = SearchParams(updatedAfter = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter))).onSuccess {
         case hakemukset: Seq[FullHakemus] =>
           triggerHakemukset(hakemukset)
-          processModifiedHakemukset(modifiedAfter = new Date(Platform.currentTime - (5 * 60 * 1000)), refreshFrequency)
+          processModifiedHakemukset(modifiedAfter = new Date(Platform.currentTime - TimeUnit.MINUTES.toMillis(5)), refreshFrequency)
       }
     })
   }
