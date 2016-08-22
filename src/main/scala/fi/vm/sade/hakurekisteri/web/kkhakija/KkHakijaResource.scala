@@ -159,31 +159,18 @@ class KkHakijaResource(hakemusService: HakemusService,
   }
 
   def getKkHakijat(q: KkHakijaQuery): Future[Seq[Hakija]] = {
-
-    def fetchHakemukset = q match {
-      case KkHakijaQuery(Some(oppijanumero), _, _ , _, _, _) => hakemusService.hakemuksetForPerson(oppijanumero)
-      case KkHakijaQuery(None, _, _, Some(hakukohde), _ ,_) => hakemusService.hakemuksetForHakukohde(hakukohde, q.organisaatio)
-      case _ => throw KkHakijaParamMissingException
-    }
-
     def matchHakemusToQuery(hakemus: FullHakemus) : Boolean = {
-      if (hakemus.personOid.isEmpty || !hakemus.stateValid) {
-        return false
-      }
-
-      if (q.oppijanumero.isDefined && q.oppijanumero != hakemus.personOid) {
-        return false
-      }
-
-      if (q.haku.isDefined && !q.haku.contains(hakemus.applicationSystemId)) {
-        return false
-      }
-
-      true
+      hakemus.personOid.isDefined && hakemus.stateValid &&
+        q.oppijanumero.forall(hakemus.personOid.contains(_)) &&
+        q.haku.forall(_ == hakemus.applicationSystemId)
     }
 
     for (
-      hakemukset <- fetchHakemukset;
+      hakemukset <- q match {
+        case KkHakijaQuery(Some(oppijanumero), _, _, _, _, _) => hakemusService.hakemuksetForPerson(oppijanumero)
+        case KkHakijaQuery(None, _, _, Some(hakukohde), _, _) => hakemusService.hakemuksetForHakukohde(hakukohde, q.organisaatio)
+        case _ => Future.failed(KkHakijaParamMissingException)
+      };
       hakijat <- fullHakemukset2hakijat(hakemukset.filter(matchHakemusToQuery))(q)
     ) yield hakijat
   }
