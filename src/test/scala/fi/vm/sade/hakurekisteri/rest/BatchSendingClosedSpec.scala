@@ -11,10 +11,12 @@ import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, SendingPeriod, TiedonsiirtoSendingPeriods}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
+import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.web.batchimport.{ImportBatchResource, TiedonsiirtoOpen}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
 import org.json4s.jackson.Serialization._
 import org.mockito.Mockito._
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -24,16 +26,31 @@ import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.xml.Elem
 
-class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport with LocalhostProperties {
+class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport with LocalhostProperties with BeforeAndAfterAll {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("failing-import-batch")
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val security = new TestSecurity
 
-  implicit val database = Database.forURL("jdbc:h2:mem:importbatchtest2;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
-  val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
-  val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5)))
-  val authorized = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
+  implicit var database: Database = _
+
+
+  override def beforeAll(): Unit = {
+    database = Database.forURL(ItPostgres.getEndpointURL())
+    val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
+    val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5)))
+    val authorized = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
+    addServlet(new ImportBatchResource(authorized, parameterActor, new MockConfig, (foo) => ImportBatchQuery(None, None, None))("identifier", "perustiedot", "data", PerustiedotXmlConverter, TestSchema), "/batch")
+    super.beforeAll()
+  }
+
+  override def afterAll(): Unit = {
+    try super.afterAll()
+    finally {
+      Await.result(system.terminate(), 15.seconds)
+      database.close()
+    }
+  }
 
   def createEndpointMock = {
     val result = mock[Endpoint]
@@ -75,7 +92,6 @@ class BatchSendingClosedSpec extends ScalatraFunSuite with MockitoSugar with Dis
       </xs:schema>
   }
 
-  addServlet(new ImportBatchResource(authorized, parameterActor, new MockConfig, (foo) => ImportBatchQuery(None, None, None))("identifier", "perustiedot", "data", PerustiedotXmlConverter, TestSchema), "/batch")
 
 
   test("create should return 404 not found") {
