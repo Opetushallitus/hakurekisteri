@@ -60,7 +60,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, hakemukset: ActorRef, 
       val s = sq.collect{ case h: Haku => h}
       activeHakus = s.filter(_.aika.isCurrently)
       ytl ! HakuList(activeHakus.filter(_.kkHaku).map(_.oid).toSet)
-      log.info(s"current hakus [${activeHakus.map(h => h.oid).mkString(", ")}]")
+      log.info(s"size of active application system set: [${activeHakus.size}]")
       if (starting) {
         starting = false
         vtsUpdate.foreach(_.cancel())
