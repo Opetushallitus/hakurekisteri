@@ -107,11 +107,11 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
     get("/") {
       status should equal(200)
       body should include("\"status\":\"OK\"")
-      parse(body) \\ "arvosanat" \ "count" should equal(JInt(1))
-      parse(body) \\ "opiskelijat" \ "count" should equal(JInt(1))
-      parse(body) \\ "opiskeluoikeudet" \ "count" should equal(JInt(1))
-      parse(body) \\ "suoritukset" \ "count" should equal(JInt(1))
-      parse(body) \\ "erat" \ "count" should equal(JInt(1))
+      parse(body) \\ "arvosanat" \ "count" should equal(JInt(42))
+      parse(body) \\ "opiskelijat" \ "count" should equal(JInt(42))
+      parse(body) \\ "opiskeluoikeudet" \ "count" should equal(JInt(42))
+      parse(body) \\ "suoritukset" \ "count" should equal(JInt(42))
+      parse(body) \\ "erat" \ "count" should equal(JInt(42))
       parse(body) \\ "hakemukset" \ "count" should equal(JInt(1))
       response.getHeader("Expires") should not be null
     }
