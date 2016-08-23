@@ -1,12 +1,13 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
+import akka.actor.ActorLogging
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, _}
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService}
 import slick.ast.BaseTypedType
 import slick.lifted
 
-import scala.concurrent
+import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
@@ -60,12 +61,22 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
   }
 }
 
-trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends ResourceService[R,I] { this: JDBCRepository[R,I,T] =>
+trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends ResourceService[R,I] { this: JDBCRepository[R,I,T] with ActorLogging =>
   val dbExecutor:ExecutionContext
+  val slowQuery: Long = 100
 
   override def findBy(q: Query[R]): Future[Seq[R with Identified[I]]] = {
     dbQuery.lift(q).map{
-      case Right(query) => journal.db.run(query.result).map(_.collect { case Updated(res) => res })(dbExecutor)
+      case Right(query) =>
+        val start = Platform.currentTime
+        val f = journal.db.run(query.result).map(_.collect { case Updated(res) => res })(dbExecutor)
+        f.onComplete(_ => {
+          val runtime = Platform.currentTime - start
+          if (runtime > slowQuery) {
+            log.info(s"Query $query took $runtime ms")
+          }
+        })(dbExecutor)
+        f
       case Left(t) => Future.failed(t)
     }.getOrElse(Future.successful(Seq()))
   }
