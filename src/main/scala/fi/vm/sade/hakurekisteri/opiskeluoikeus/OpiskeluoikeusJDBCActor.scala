@@ -21,8 +21,8 @@ class OpiskeluoikeusJDBCActor(val journal: JDBCJournal[Opiskeluoikeus, UUID, Opi
   override val dbExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
 
   override val dbQuery: PartialFunction[Query[Opiskeluoikeus], Either[Throwable, lifted.Query[OpiskeluoikeusTable, Delta[Opiskeluoikeus, UUID], Seq]]] = {
-    case OpiskeluoikeusQuery(henkilo, myontaja) => Right(all.filter(t =>
-      henkilo.fold[Rep[Boolean]](true)(t.henkiloOid === _) && myontaja.fold[Rep[Boolean]](true)(t.myontaja === _)))
-    case OpiskeluoikeusHenkilotQuery(henkilot) => Right(all.filter(t => t.henkiloOid.inSet(henkilot)))
+    case OpiskeluoikeusQuery(henkilo, myontaja) => Right(latest(journal.table.filter(t =>
+      henkilo.fold[Rep[Boolean]](true)(t.henkiloOid === _) && myontaja.fold[Rep[Boolean]](true)(t.myontaja === _))))
+    case OpiskeluoikeusHenkilotQuery(henkilot) => Right(latest(journal.table.filter(t => t.henkiloOid.inSet(henkilot))))
   }
 }

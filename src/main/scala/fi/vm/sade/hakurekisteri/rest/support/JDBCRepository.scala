@@ -43,9 +43,19 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
 
   def deduplicationQuery(i: R)(t: T): lifted.Rep[Boolean]
 
-  def deduplicate(i: R): Option[R with Identified[I]] = Await.result(journal.db.run(all.filter(deduplicationQuery(i)).result), 30.seconds).collect {
+  def deduplicate(i: R): Option[R with Identified[I]] = Await.result(journal.db.run(latest(journal.table.filter(deduplicationQuery(i))).result), 30.seconds).collect {
     case Updated(res) => res
   }.headOption
+
+  def latest(q: lifted.Query[T, Delta[R, I], Seq]): lifted.Query[T, Delta[R, I], Seq] = {
+    for {
+      row <- q
+      latest <- q.groupBy(_.resourceId).map {
+        case (id, deltas) => (id, deltas.map(_.inserted).max)
+      }
+      if latest._1 === row.resourceId && latest._2.isDefined && latest._2 === row.inserted && !row.deleted
+    } yield row
+  }
 
   override def save(t: R): R with Identified[I] = {
     deduplicate(t) match {
