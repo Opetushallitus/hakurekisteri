@@ -38,7 +38,6 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
     val opiskeluoikeus = Opiskeluoikeus(LocalDate.now(), None, "1.2.4", "1.2.5", "1.2.3", source = "Test")
     val suoritus = Peruskoulu("1.2.3", "KESKEN", LocalDate.now, "1.2.4")
     val importBatch = ImportBatch(<empty/>, None, "test", "foo", BatchState.DONE, ImportStatus())
-    val hakemus = FullHakemus("1.2.5", Some("1.2.4"), "1.2.5", None, state = Some("ACTIVE"), Seq())
 
     implicit val system = ActorSystem()
     implicit val ec: ExecutionContext = system.dispatcher
@@ -100,11 +99,11 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
     get("/") {
       status should equal(200)
       body should include("\"status\":\"OK\"")
-      parse(body) \\ "arvosanat" \ "count" should equal(JInt(1))
-      parse(body) \\ "opiskelijat" \ "count" should equal(JInt(1))
-      parse(body) \\ "opiskeluoikeudet" \ "count" should equal(JInt(1))
-      parse(body) \\ "suoritukset" \ "count" should equal(JInt(1))
-      parse(body) \\ "erat" \ "count" should equal(JInt(1))
+      parse(body) \\ "arvosanat" \ "count" should equal(JInt(42))
+      parse(body) \\ "opiskelijat" \ "count" should equal(JInt(42))
+      parse(body) \\ "opiskeluoikeudet" \ "count" should equal(JInt(42))
+      parse(body) \\ "suoritukset" \ "count" should equal(JInt(42))
+      parse(body) \\ "erat" \ "count" should equal(JInt(42))
       response.getHeader("Expires") should not be null
     }
 
