@@ -26,11 +26,11 @@ class OpiskelijaJDBCActor(val journal: JDBCJournal[Opiskelija, UUID, OpiskelijaT
 
   override val dbQuery: PartialFunction[support.Query[Opiskelija], Either[Throwable, lifted.Query[OpiskelijaTable, Delta[Opiskelija, UUID], Seq]]] = {
     case OpiskelijaQuery(henkilo, kausi, vuosi, paiva, oppilaitosOid, luokka) =>
-      Right(all.filter(t => matchHenkilo(henkilo)(t) &&
+      Right(latest(journal.table.filter(t => matchHenkilo(henkilo)(t) &&
         matchOppilaitosOid(oppilaitosOid)(t) &&
         matchPaiva(paiva)(t) &&
         matchVuosiAndKausi(vuosi, kausi)(t) &&
-        matchLuokka(luokka)(t)))
+        matchLuokka(luokka)(t))))
   }
 
   private def matchHenkilo(henkilo: Option[String])(t: OpiskelijaTable): Rep[Boolean] = henkilo match {

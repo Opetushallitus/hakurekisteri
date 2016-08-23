@@ -28,6 +28,7 @@ class YtlActorSpec extends ScalatraFunSuite {
   def withActors(test: (ActorRef, ActorRef, ActorRef) => Any) {
     implicit val system = ActorSystem("ytl-integration-test-system")
     implicit val database = Database.forURL(ItPostgres.getEndpointURL())
+    ItPostgres.reset()
 
     val config = new MockConfig
     val henkiloActor = system.actorOf(Props(classOf[MockHenkiloActor], config))

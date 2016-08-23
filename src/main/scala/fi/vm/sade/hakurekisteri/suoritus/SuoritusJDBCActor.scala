@@ -31,11 +31,11 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
 
   override val dbQuery: PartialFunction[Query[Suoritus], Either[Throwable, lifted.Query[SuoritusTable, Delta[Suoritus, UUID], Seq]]] = {
     case SuoritusQuery(henkilo, kausi, vuosi, myontaja, komo, muokattuJalkeen) =>
-      Right(all.filter(t => matchHenkilo(henkilo)(t) && matchKausi(kausi)(t) && matchVuosi(vuosi)(t) &&
-        matchMyontaja(myontaja)(t) && matchKomo(komo)(t) && matchMuokattuJalkeen(muokattuJalkeen)(t)))
-    case SuoritusHenkilotQuery(henkilot) => Right(all.filter(_.henkiloOid.inSet(henkilot)))
-    case SuoritysTyyppiQuery(henkilo, komo) => Right(all.filter(t => matchHenkilo(Some(henkilo))(t) && matchKomo(Some(komo))(t)))
-    case AllForMatchinHenkiloSuoritusQuery(vuosi, myontaja) => Right(all.filter(t => matchVuosi(vuosi)(t) && matchMyontaja(myontaja)(t)))
+      Right(latest(journal.table.filter(t => matchHenkilo(henkilo)(t) && matchKausi(kausi)(t) && matchVuosi(vuosi)(t) &&
+        matchMyontaja(myontaja)(t) && matchKomo(komo)(t) && matchMuokattuJalkeen(muokattuJalkeen)(t))))
+    case SuoritusHenkilotQuery(henkilot) => Right(latest(journal.table.filter(_.henkiloOid.inSet(henkilot))))
+    case SuoritysTyyppiQuery(henkilo, komo) => Right(latest(journal.table.filter(t => matchHenkilo(Some(henkilo))(t) && matchKomo(Some(komo))(t))))
+    case AllForMatchinHenkiloSuoritusQuery(vuosi, myontaja) => Right(latest(journal.table.filter(t => matchVuosi(vuosi)(t) && matchMyontaja(myontaja)(t))))
   }
 
   private def matchHenkilo(henkilo: Option[String])(s: SuoritusTable): Rep[Boolean] =

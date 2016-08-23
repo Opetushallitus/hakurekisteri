@@ -50,7 +50,7 @@ class ImportBatchActor(val journal: JDBCJournal[ImportBatch, UUID, ImportBatchTa
       val q = all
       Right(maxCount.map(count => q.take(count)).getOrElse(q))
     case ImportBatchQuery(externalId, state, batchType, maxCount) =>
-      val q = all.filter(i => matchExternalId(externalId)(i) && matchState(state)(i) && matchBatchType(batchType)(i))
+      val q = latest(journal.table.filter(i => matchExternalId(externalId)(i) && matchState(state)(i) && matchBatchType(batchType)(i)))
       Right(maxCount.map(count => q.take(count)).getOrElse(q))
   }
 
