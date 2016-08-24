@@ -16,12 +16,11 @@ import scala.concurrent.duration._
 
 case class HakemusConfig(serviceConf: ServiceConfig, maxApplications: Int)
 
-case class HakemusQuery(haku: Option[String], organisaatio: Option[String], hakukohdekoodi: Option[String], hakukohde: Option[String] = None) extends Query[FullHakemus]
+case class HakemusQuery(haku: Option[String], organisaatio: Option[String] = None, hakukohdekoodi: Option[String] = None, hakukohde: Option[String] = None) extends Query[FullHakemus]
 
 case class HenkiloHakijaQuery(henkilo: String) extends Query[FullHakemus]
 
 object HakemusQuery {
-
   def apply(hq: HakijaQuery): HakemusQuery = HakemusQuery(hq.haku, hq.organisaatio, hq.hakukohdekoodi)
 }
 

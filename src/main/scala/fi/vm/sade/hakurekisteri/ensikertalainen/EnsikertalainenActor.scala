@@ -21,6 +21,7 @@ import scala.language.implicitConversions
 
 case class EnsikertalainenQuery(henkiloOids: Set[String],
                                 hakuOid: String,
+                                hakukohdeOid: Option[String] = None,
                                 suoritukset: Option[Seq[Suoritus]] = None,
                                 opiskeluoikeudet: Option[Seq[Opiskeluoikeus]] = None)
 
@@ -108,6 +109,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
 
       if (q.henkiloOids.size <= sizeLimitForFetchingByPersons)
         hakemusService.hakemuksetForPersonsInHaku(q.henkiloOids, q.hakuOid)
+      else if (q.hakukohdeOid.isDefined)
+        hakemusService.hakemuksetForHakukohde(q.hakukohdeOid.get, None)
       else
         hakemusService.hakemuksetForHaku(q.hakuOid, None)
     }

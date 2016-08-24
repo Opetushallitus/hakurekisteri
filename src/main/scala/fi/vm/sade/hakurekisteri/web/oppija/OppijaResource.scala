@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.web.oppija
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, HakemusQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, HakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
 import fi.vm.sade.hakurekisteri.oppija.OppijaFetcher
 import fi.vm.sade.hakurekisteri.rest.support._
@@ -51,7 +51,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: HakemusServi
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
-      private val oppijatFuture = fetchOppijat(q, q.haku.get)
+      private val oppijatFuture = fetchOppijat(q)
 
       logQuery(q, t0, oppijatFuture)
 
@@ -98,7 +98,7 @@ class OppijaResource(val rekisterit: Registers, val hakemusService: HakemusServi
     new AsyncResult() {
       override implicit def timeout: Duration = 500.seconds
 
-      private val oppijat = fetchOppijat(henkilot, Some(hakuOid))
+      private val oppijat = fetchOppijat(henkilot, HakemusQuery(haku = Some(hakuOid)))
 
       logQuery(Map("henkilot" -> henkilot, "haku" -> hakuOid), t0, oppijat)
 

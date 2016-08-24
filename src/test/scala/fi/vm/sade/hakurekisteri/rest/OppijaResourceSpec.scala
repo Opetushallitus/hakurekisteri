@@ -66,7 +66,7 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
     when(hakemusServiceMock.personOidsForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(henkilot))
     when(hakemusServiceMock.hakemuksetForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(Seq[FullHakemus]()))
 
-    waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None), Testihaku.oid))(oppijat => {
+    waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None)))(oppijat => {
       val expectedSize: Int = 10001
       oppijat.length should be(expectedSize)
       oppijat.foreach(o => o.ensikertalainen should be(Some(true)))
@@ -104,7 +104,7 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
   }
 
   test("OppijaResource should tell ensikertalaisuus true also for oppija without hetu") {
-    waitFuture(resource.fetchOppijat(Set("1.2.246.562.24.00000000002"), Some(Testihaku.oid))(user))((s: Seq[Oppija]) => {
+    waitFuture(resource.fetchOppijat(Set("1.2.246.562.24.00000000002"), HakemusQuery(haku = Some(Testihaku.oid)))(user))((s: Seq[Oppija]) => {
       s.head.ensikertalainen should be(Some(true))
     })
   }
