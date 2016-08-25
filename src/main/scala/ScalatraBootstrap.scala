@@ -6,9 +6,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.batchimport._
-import fi.vm.sade.hakurekisteri.healthcheck.HealthcheckActor
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusService
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -18,7 +16,6 @@ import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchResource
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
 import fi.vm.sade.hakurekisteri.web.hakija.{HakijaResource, HakijaResourceV2}
 import fi.vm.sade.hakurekisteri.web.haku.HakuResource
-import fi.vm.sade.hakurekisteri.web.healthcheck.HealthcheckResource
 import fi.vm.sade.hakurekisteri.web.integration.virta.{VirtaResource, VirtaSuoritusResource}
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaResource
@@ -93,7 +90,6 @@ class ScalatraBootstrap extends LifeCycle {
                            koosteet: BaseKoosteet)(implicit security: Security): List[((String, String), ScalatraServlet)] = List(
     ("/rest/v1/komo", "komo") -> new GuiServlet,
     ("/rest/v1/properties", "properties") -> new FrontPropertiesServlet,
-    ("/healthcheck", "healthcheck") -> new HealthcheckResource(initHealthcheck(config, authorizedRegisters, integrations, koosteet)),
     ("/permission/checkpermission", "permission/checkpermission") -> new PermissionResource(registers.suoritusRekisteri, registers.opiskelijaRekisteri),
     ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SecuritySupport,
     ("/rest/v2/siirto/arvosanat", "rest/v2/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, ArvosanatV2, ArvosanatKoodisto) with SecuritySupport,
@@ -132,19 +128,6 @@ class ScalatraBootstrap extends LifeCycle {
       integrations.koodisto,
       config
     )), "importBatchProcessing")
-
-  private def initHealthcheck(config: Config, authorizedRegisters: AuthorizedRegisters, integrations: Integrations, koosteet: BaseKoosteet): ActorRef =
-    system.actorOf(Props(new HealthcheckActor(
-      authorizedRegisters.arvosanaRekisteri,
-      authorizedRegisters.opiskelijaRekisteri,
-      authorizedRegisters.opiskeluoikeusRekisteri,
-      authorizedRegisters.suoritusRekisteri,
-      authorizedRegisters.eraRekisteri,
-      integrations.ytl,
-      koosteet.ensikertalainen,
-      koosteet.virtaQueue,
-      config
-    )), "healthcheck")
 
   def mountServlets(context: ServletContext)(servlets: ((String, String), Servlet with Handler)*) {
     implicit val sc = context

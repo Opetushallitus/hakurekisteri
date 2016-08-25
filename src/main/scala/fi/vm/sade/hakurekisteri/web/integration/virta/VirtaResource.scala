@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.web.integration.virta
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.AskTimeoutException
-import fi.vm.sade.hakurekisteri.healthcheck.Status
 import fi.vm.sade.hakurekisteri.integration.virta.{RescheduleVirtaProcessing, VirtaStatus, _}
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -12,6 +11,12 @@ import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 
 import scala.concurrent.{ExecutionContext, Future}
+
+
+object Status extends Enumeration {
+  type Status = Value
+  val OK, TIMEOUT, FAILURE = Value
+}
 
 class VirtaResource(virtaQueue: ActorRef) (implicit system: ActorSystem, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport {
 
