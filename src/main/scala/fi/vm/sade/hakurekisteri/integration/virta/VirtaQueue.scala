@@ -12,8 +12,9 @@ import scala.collection.mutable
 import scala.concurrent.duration._
 import fi.vm.sade.hakurekisteri.integration.hakemus.Trigger
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
-import fi.vm.sade.hakurekisteri.healthcheck.Status
-import fi.vm.sade.hakurekisteri.healthcheck.Status.Status
+import fi.vm.sade.hakurekisteri.web.integration.virta.Status
+import fi.vm.sade.hakurekisteri.web.integration.virta.Status.Status
+
 
 
 case class VirtaQuery(oppijanumero: String, hetu: Option[String])

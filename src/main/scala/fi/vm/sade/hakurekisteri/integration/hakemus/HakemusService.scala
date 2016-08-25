@@ -3,25 +3,20 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.concurrent.TimeUnit
 
-import akka.actor.{Cancellable, Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef, Cancellable, Props}
 import akka.event.Logging
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.hakija.{HakijaQuery, Hakuehto}
-import fi.vm.sade.hakurekisteri.healthcheck.{Hakemukset, Health, RefreshingResource}
 import fi.vm.sade.hakurekisteri.integration.haku.Haku
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Query}
 import fi.vm.sade.hakurekisteri.storage.repository._
 import fi.vm.sade.hakurekisteri.storage.{Identified, InMemQueryingResourceService, ResourceActor}
-import fi.vm.sade.hakurekisteri.tools.DurationHelper
 import fi.vm.sade.hakurekisteri.tools.DurationHelper.atTime
-import org.joda.time.{LocalDateTime, LocalTime}
 
 import scala.compat.Platform
 import scala.concurrent.Future
-import scala.util.Try
 
 trait HakemusService extends InMemQueryingResourceService[FullHakemus, String] with JournaledRepository[FullHakemus, String] {
   var hakukohdeIndex: Map[String, Seq[FullHakemus with Identified[String]]] = Option(hakukohdeIndex).getOrElse(Map())
@@ -179,7 +174,6 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
                    nextPageDelay: Int = 10000,
                    override val journal: Journal[FullHakemus, String] = new HakemusJournal()
                    ) extends ResourceActor[FullHakemus, String] with HakemusService with HakurekisteriJsonSupport {
-  var healthCheck: Option[ActorRef] = None
   override val logger = Logging(context.system, this)
   var hakijaTrigger: Seq[ActorRef] = Seq()
   var reloading = false
@@ -251,9 +245,6 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
         retryRefresh = Some(context.system.scheduler.scheduleOnce(1.minute, self, RefreshHakemukset))
       }
 
-
-    case Health(actor) => healthCheck = Some(actor)
-
     case Trigger(trig) => hakijaTrigger = context.actorOf(Props(new HakijaTrigger(trig))) +: hakijaTrigger
   }
 
@@ -272,13 +263,9 @@ class HakemusActor(hakemusClient: VirkailijaRestClient,
     def getAll(cur: Int)(pageResult: List[FullHakemus]): Future[Option[Int]] = pageResult match {
       case hakemukset if hakemukset.isEmpty => Future.successful(None)
       case hakemukset if hakemukset.length < pageSize =>
-        for (actor <- healthCheck)
-          actor ! Hakemukset(q.haku.getOrElse("all"), RefreshingResource(cur + hakemukset.length))
         save(hakemukset, hakuOidit)
         Future.successful(Some(cur + hakemukset.length))
       case hakemukset =>
-        for (actor <- healthCheck)
-          actor ! Hakemukset(q.haku.getOrElse("all"), RefreshingResource(cur + hakemukset.length, reloading = true))
         save(hakemukset, hakuOidit)
         throttle.
           flatMap(loadNextPage(cur, hakemukset))
