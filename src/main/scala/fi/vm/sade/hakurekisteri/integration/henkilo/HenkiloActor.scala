@@ -1,6 +1,5 @@
 package fi.vm.sade.hakurekisteri.integration.henkilo
 
-import java.net.URLEncoder
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.pipe
@@ -10,7 +9,7 @@ import fi.vm.sade.hakurekisteri.integration.mocks.HenkiloMock
 import fi.vm.sade.hakurekisteri.integration.organisaatio.OrganisaatioResponse
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, _}
-
+import scala.concurrent.duration._
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 import fi.vm.sade.hakurekisteri.integration.henkilo.HetuUtil.Hetu
@@ -28,6 +27,7 @@ abstract class HenkiloActor(config: Config) extends Actor with ActorLogging {
 class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) extends HenkiloActor(config) {
   private val maxRetries = config.integrations.henkiloConfig.httpClientMaxRetries
   private var savingHenkilo = false
+  private var lastUnhandledSaveNext = 0L
   private val saveQueue: mutable.Map[SaveHenkilo, ActorRef] = new mutable.LinkedHashMap[SaveHenkilo, ActorRef]()
 
   override def createOrganisaatioHenkilo(oidHenkilo: String, organisaatioHenkilo: OrganisaatioHenkilo) = {
@@ -74,6 +74,13 @@ class HttpHenkiloActor(virkailijaClient: VirkailijaRestClient, config: Config) e
       }.flatMap(u => virkailijaClient.postObject[CreateHenkilo, String]("authentication-service.s2s.tiedonsiirrot")(200, save.henkilo).map(saved => SavedHenkilo(saved, save.tunniste)).recoverWith {
         case t: Throwable => Future.successful(HenkiloSaveFailed(save.tunniste, t))
       }).pipeTo(self)(actor)
+
+    case SaveNext if !(!savingHenkilo && saveQueue.nonEmpty) =>
+      val currentTs = java.lang.System.currentTimeMillis()
+      if ((currentTs - lastUnhandledSaveNext) > 10.seconds.toMillis) {
+        lastUnhandledSaveNext = currentTs
+        log.debug(s"Received SaveNext while save in progress (savingHenkilo = ${savingHenkilo}) or save queue is empty (saveQueue.isEmpty = ${saveQueue.nonEmpty}). [Logging this message disabled for 10 seconds ]")
+      }
 
     case s: SavedHenkilo =>
       savingHenkilo = false
