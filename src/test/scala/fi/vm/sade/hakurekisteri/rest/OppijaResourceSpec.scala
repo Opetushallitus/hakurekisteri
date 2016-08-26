@@ -29,12 +29,12 @@ import org.joda.time.LocalDate
 import org.json4s.Extraction.decompose
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization.read
+import org.mockito.Matchers.{any, anyString}
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.compat.Platform
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.implicitConversions
@@ -48,6 +48,9 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
   private val BAD_REQUEST: Int = 400
 
   test("OppijaResource should return 200") {
+    when(hakemusServiceMock.personOidsForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(Set[String]()))
+    when(hakemusServiceMock.hakemuksetForPersonsInHaku(any[Set[String]], anyString())).thenReturn(Future.successful(Seq[FullHakemus]()))
+
     get("/?haku=1") {
       response.status should be(OK)
     }
@@ -60,7 +63,10 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
   }
 
   test("OppijaResource should return 10001 oppijas with ensikertalainen false") {
-    waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None), Testihaku.oid))(oppijat => {
+    when(hakemusServiceMock.personOidsForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(henkilot))
+    when(hakemusServiceMock.hakemuksetForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(Seq[FullHakemus]()))
+
+    waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None)))(oppijat => {
       val expectedSize: Int = 10001
       oppijat.length should be(expectedSize)
       oppijat.foreach(o => o.ensikertalainen should be(Some(true)))
@@ -87,6 +93,7 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
   }
 
   test("OppijaResource should not cache ensikertalaisuus") {
+    when(hakemusServiceMock.personOidsForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(Set("1")))
     valintarekisteri.underlyingActor.requestCount = 0
     get("/?haku=1.2.246.562.6.00000000001") {
       get("/?haku=1.2.246.562.6.00000000001") {
@@ -97,14 +104,7 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
   }
 
   test("OppijaResource should tell ensikertalaisuus true also for oppija without hetu") {
-    waitFuture(resource.fetchOppijatFor(Seq(FullHakemus(
-      oid = "1.2.246.562.11.00000000001",
-      personOid = Some("1.2.246.562.24.00000000002"),
-      applicationSystemId = "1.2.246.562.6.00000000001",
-      answers = Some(HakemusAnswers(Some(HakemusHenkilotiedot()))),
-      state = Some("INCOMPLETE"),
-      preferenceEligibilities = Seq()
-    )), Testihaku.oid))((s: Seq[Oppija]) => {
+    waitFuture(resource.fetchOppijat(Set("1.2.246.562.24.00000000002"), HakemusQuery(haku = Some(Testihaku.oid)))(user))((s: Seq[Oppija]) => {
       s.head.ensikertalainen should be(Some(true))
     })
   }
@@ -132,6 +132,7 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
   }
 
   test("OppijaResource should return 100 oppijas when 100 person oids is sent as POST") {
+    when(hakemusServiceMock.hakemuksetForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(Seq[FullHakemus]()))
     val json = decompose(henkilot.take(100).map(i => s"1.2.246.562.24.$i"))
 
     post("/?haku=1.2.3.4", compact(json)) {
@@ -160,6 +161,11 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
     }
   }
 
+  protected override def beforeAll() = {
+    reset(endpoint)
+    reset(hakemusServiceMock)
+    super.beforeAll()
+  }
 }
 
 abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar with DispatchSupport with FutureWaiting {
@@ -232,12 +238,7 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
     )
   }).toSeq
 
-  val hakemusActor = system.actorOf(Props(new HakemusActor(
-    hakemusClient = new VirkailijaRestClient(config = hakuappConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endpoint)))),
-    journal = hakemukset
-  )))
-
-  hakemusActor ! RefreshingDone(Some(Platform.currentTime))
+  val hakemusClient = new VirkailijaRestClient(config = hakuappConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endpoint))))
 
   val tarjontaActor = system.actorOf(Props(new Actor {
     override def receive: Receive = {
@@ -251,6 +252,8 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
     Config.mockConfig)
   )
 
+  val hakemusServiceMock = mock[HakemusService]
+
   val ensikertalaisuusActor = system.actorOf(Props(new EnsikertalainenActor(
     rekisterit.suoritusRekisteri,
     rekisterit.opiskeluoikeusRekisteri,
@@ -262,11 +265,11 @@ abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar wi
         case q: GetHaku => sender ! Testihaku
       }
     })),
-    hakemusActor,
+    hakemusServiceMock,
     Config.mockConfig
   )))
 
-  val resource = new OppijaResource(rekisterit, hakemusActor, ensikertalaisuusActor)
+  val resource = new OppijaResource(rekisterit, hakemusServiceMock, ensikertalaisuusActor)
 
   addServlet(resource, "/*")
 

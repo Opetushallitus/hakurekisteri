@@ -86,7 +86,7 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
     }
   }))
 
-  val healthcheck = system.actorOf(Props(new HealthcheckActor(guardedArvosanaRekisteri, guardedOpiskelijaRekisteri, guardedOpiskeluoikeusRekisteri, guardedSuoritusRekisteri, guardedEraRekisteri, ytl, hakemukset, ensikertalainen, virtaQueue, config)))
+  val healthcheck = system.actorOf(Props(new HealthcheckActor(guardedArvosanaRekisteri, guardedOpiskelijaRekisteri, guardedOpiskeluoikeusRekisteri, guardedSuoritusRekisteri, guardedEraRekisteri, ytl, ensikertalainen, virtaQueue, config)))
 
   addServlet(new HealthcheckResource(healthcheck), "/*")
 
@@ -107,7 +107,6 @@ class HealthcheckResourceSpec extends ScalatraFunSuite {
       parse(body) \\ "opiskeluoikeudet" \ "count" should equal(JInt(1))
       parse(body) \\ "suoritukset" \ "count" should equal(JInt(1))
       parse(body) \\ "erat" \ "count" should equal(JInt(1))
-      parse(body) \\ "hakemukset" \ "count" should equal(JInt(1))
       response.getHeader("Expires") should not be null
     }
   }

@@ -6,7 +6,7 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusService
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
@@ -21,6 +21,7 @@ import scala.language.implicitConversions
 
 case class EnsikertalainenQuery(henkiloOids: Set[String],
                                 hakuOid: String,
+                                hakukohdeOid: Option[String] = None,
                                 suoritukset: Option[Seq[Suoritus]] = None,
                                 opiskeluoikeudet: Option[Seq[Opiskeluoikeus]] = None)
 
@@ -55,7 +56,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
                            valintarekisterActor: ActorRef,
                            tarjontaActor: ActorRef,
                            hakuActor: ActorRef,
-                           hakemusActor: ActorRef,
+                           hakemusService: HakemusService,
                            config: Config)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
 
   val syksy2014 = "2014S"
@@ -103,7 +104,18 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   }
 
   private def tutkinnotHakemuksilta(q: EnsikertalainenQuery): Future[Map[String, Option[Int]]] = {
-    (hakemusActor ? HakemusQuery(haku = Some(q.hakuOid), None, None, None)).mapTo[Seq[FullHakemus]].map(_
+    def fetchHakemukset = {
+      val sizeLimitForFetchingByPersons = 100
+
+      if (q.henkiloOids.size <= sizeLimitForFetchingByPersons)
+        hakemusService.hakemuksetForPersonsInHaku(q.henkiloOids, q.hakuOid)
+      else if (q.hakukohdeOid.isDefined)
+        hakemusService.hakemuksetForHakukohde(q.hakukohdeOid.get, None)
+      else
+        hakemusService.hakemuksetForHaku(q.hakuOid, None)
+    }
+
+    fetchHakemukset.map(_
       .filter(_.personOid.isDefined)
       .groupBy(_.personOid.get)
       .mapValues(_

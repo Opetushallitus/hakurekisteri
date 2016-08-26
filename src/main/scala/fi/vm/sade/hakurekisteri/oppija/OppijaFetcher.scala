@@ -1,24 +1,26 @@
 package fi.vm.sade.hakurekisteri.oppija
 
-import fi.vm.sade.hakurekisteri.rest.support.{Query, User, Registers}
-import akka.actor.ActorRef
-import scala.concurrent.{Future, ExecutionContext}
-import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusQuery}
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusHenkilotQuery, Suoritus}
-import fi.vm.sade.hakurekisteri.storage.Identified
 import java.util.UUID
-import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
-import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenQuery, Ensikertalainen}
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.{OpiskeluoikeusHenkilotQuery, Opiskeluoikeus}
-import fi.vm.sade.hakurekisteri.opiskelija.{OpiskelijaHenkilotQuery, Opiskelija}
+
+import akka.actor.ActorRef
 import akka.pattern.ask
+import akka.util.Timeout
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, HakemusService}
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
+import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
+import fi.vm.sade.hakurekisteri.rest.support.{Query, Registers, User}
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusHenkilotQuery}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 trait OppijaFetcher {
 
   val rekisterit: Registers
-  val hakemusRekisteri: ActorRef
+  val hakemusService: HakemusService
   val ensikertalaisuus: ActorRef
 
   val singleSplitQuerySize = 5000
@@ -26,33 +28,29 @@ trait OppijaFetcher {
   protected implicit def executor: ExecutionContext
   implicit val defaultTimeout: Timeout
 
-  def fetchOppijat(q: HakemusQuery, hakuOid: String)(implicit user: User): Future[Seq[Oppija]] =
-    for (
-      hakemukset <- (hakemusRekisteri ? q).mapTo[Seq[FullHakemus]];
-      oppijat <- fetchOppijatFor(hakemukset, hakuOid)
-    ) yield oppijat
+  def fetchOppijat(q: HakemusQuery)(implicit user: User): Future[Seq[Oppija]] = {
+    def fetchPersonOids = q.hakukohde match {
+      case Some(hakukohdeOid) => hakemusService.personOidsForHakukohde(hakukohdeOid, q.organisaatio)
+      case _ => hakemusService.personOidsForHaku(q.haku.get, q.organisaatio)
+    }
 
-  def fetchOppijatFor(hakemukset: Seq[FullHakemus], hakuOid: String)(implicit user: User): Future[Seq[Oppija]] = {
-    fetchOppijat(extractPersons(hakemukset), Some(hakuOid))(user)
+    for (
+      personOids <- fetchPersonOids;
+      oppijat <- fetchOppijat(personOids, q)(user)
+    ) yield oppijat
   }
 
-  def fetchOppijat(persons: Set[String], hakuOid: Option[String])(implicit user: User): Future[Seq[Oppija]] = {
-    enrichWithEnsikertalaisuus(getRekisteriData(persons)(user), hakuOid)
+  def fetchOppijat(persons: Set[String], q: HakemusQuery)(implicit user: User): Future[Seq[Oppija]] = {
+    enrichWithEnsikertalaisuus(getRekisteriData(persons)(user), q)
   }
 
   def fetchOppija(person: String, hakuOid: Option[String])(implicit user: User): Future[Oppija] = {
-    fetchOppijat(Set(person), hakuOid)(user).map(_.head)
+    fetchOppijat(Set(person), HakemusQuery(haku = hakuOid))(user).map(_.head)
   }
 
-  private def extractPersons(hakemukset: Seq[FullHakemus]): Set[String] =
-    (for (
-      hakemus <- hakemukset
-      if hakemus.personOid.isDefined && hakemus.stateValid
-    ) yield hakemus.personOid.get).toSet
-
   private def enrichWithEnsikertalaisuus(rekisteriData: Future[Seq[Oppija]],
-                                         hakuOid: Option[String]): Future[Seq[Oppija]] = hakuOid match {
-    case Some(haku) => rekisteriData.flatMap(fetchEnsikertalaisuudet(haku))
+                                         q: HakemusQuery): Future[Seq[Oppija]] = q.haku match {
+    case Some(haku) => rekisteriData.flatMap(fetchEnsikertalaisuudet(q))
     case None => rekisteriData
   }
 
@@ -86,12 +84,13 @@ trait OppijaFetcher {
     ) yield Todistus(suoritus, arvosanat)
   )
 
-  private def fetchEnsikertalaisuudet(hakuOid: String)
+  private def fetchEnsikertalaisuudet(q: HakemusQuery)
                                      (rekisteriData: Seq[Oppija]): Future[Seq[Oppija]] = {
     for (
       ensikertalaisuudet <- (ensikertalaisuus ? EnsikertalainenQuery(
         henkiloOids = rekisteriData.map(_.oppijanumero).toSet,
-        hakuOid = hakuOid,
+        hakuOid = q.haku.get,
+        hakukohdeOid = q.hakukohde,
         Some(rekisteriData.flatMap(_.suoritukset.map(_.suoritus))),
         Some(rekisteriData.flatMap(_.opiskeluoikeudet))
       )).mapTo[Seq[Ensikertalainen]].map(_.groupBy(_.henkiloOid).mapValues(_.head))
