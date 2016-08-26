@@ -6,9 +6,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
 import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.batchimport._
-import fi.vm.sade.hakurekisteri.healthcheck.HealthcheckActor
 import fi.vm.sade.hakurekisteri.integration.OphUrlProperties
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusService
 import fi.vm.sade.hakurekisteri.opiskelija._
 import fi.vm.sade.hakurekisteri.opiskeluoikeus._
 import fi.vm.sade.hakurekisteri.suoritus._
@@ -18,7 +16,6 @@ import fi.vm.sade.hakurekisteri.web.batchimport.ImportBatchResource
 import fi.vm.sade.hakurekisteri.web.ensikertalainen.EnsikertalainenResource
 import fi.vm.sade.hakurekisteri.web.hakija.{HakijaResource, HakijaResourceV2}
 import fi.vm.sade.hakurekisteri.web.haku.HakuResource
-import fi.vm.sade.hakurekisteri.web.healthcheck.HealthcheckResource
 import fi.vm.sade.hakurekisteri.web.integration.virta.{VirtaResource, VirtaSuoritusResource}
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.kkhakija.KkHakijaResource
@@ -49,7 +46,7 @@ import org.springframework.web.filter.DelegatingFilterProxy
 import siirto._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 class ScalatraBootstrap extends LifeCycle {
   implicit val swagger: Swagger = new HakurekisteriSwagger
@@ -61,7 +58,9 @@ class ScalatraBootstrap extends LifeCycle {
     val config = WebAppConfig.getConfig(context)
     implicit val security = Security(config)
 
-    val journals = new DbJournals(config)
+    val db = new SuoritusrekisteriDB(config).start()
+    val journals = new DbJournals(db)
+
     val registers = new BareRegisters(system, journals)
     val authorizedRegisters = new AuthorizedRegisters(registers, system, config)
 
@@ -91,7 +90,6 @@ class ScalatraBootstrap extends LifeCycle {
                            koosteet: BaseKoosteet)(implicit security: Security): List[((String, String), ScalatraServlet)] = List(
     ("/rest/v1/komo", "komo") -> new GuiServlet,
     ("/rest/v1/properties", "properties") -> new FrontPropertiesServlet,
-    ("/healthcheck", "healthcheck") -> new HealthcheckResource(initHealthcheck(config, authorizedRegisters, integrations, koosteet)),
     ("/permission/checkpermission", "permission/checkpermission") -> new PermissionResource(registers.suoritusRekisteri, registers.opiskelijaRekisteri),
     ("/rest/v1/siirto/arvosanat", "rest/v1/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, Arvosanat, ArvosanatKoodisto) with SecuritySupport,
     ("/rest/v2/siirto/arvosanat", "rest/v2/siirto/arvosanat") -> new ImportBatchResource(authorizedRegisters.eraRekisteri, integrations.parametrit, config, (foo) => ImportBatchQuery(None, None, None))("eranTunniste", ImportBatch.batchTypeArvosanat, "data", ArvosanatXmlConverter, ArvosanatV2, ArvosanatKoodisto) with SecuritySupport,
@@ -131,19 +129,6 @@ class ScalatraBootstrap extends LifeCycle {
       config
     )), "importBatchProcessing")
 
-  private def initHealthcheck(config: Config, authorizedRegisters: AuthorizedRegisters, integrations: Integrations, koosteet: BaseKoosteet): ActorRef =
-    system.actorOf(Props(new HealthcheckActor(
-      authorizedRegisters.arvosanaRekisteri,
-      authorizedRegisters.opiskelijaRekisteri,
-      authorizedRegisters.opiskeluoikeusRekisteri,
-      authorizedRegisters.suoritusRekisteri,
-      authorizedRegisters.eraRekisteri,
-      integrations.ytl,
-      koosteet.ensikertalainen,
-      koosteet.virtaQueue,
-      config
-    )), "healthcheck")
-
   def mountServlets(context: ServletContext)(servlets: ((String, String), Servlet with Handler)*) {
     implicit val sc = context
     for (((path, name), servlet) <- servlets) context.mount(handler = servlet, urlPattern = path, name = name, loadOnStartup = 1)
@@ -152,8 +137,7 @@ class ScalatraBootstrap extends LifeCycle {
   override def destroy(context: ServletContext) {
     import scala.concurrent.duration._
 
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
 
     OPHSecurity.destroy(context)
   }

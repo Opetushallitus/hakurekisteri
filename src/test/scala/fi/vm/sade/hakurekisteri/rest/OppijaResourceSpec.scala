@@ -5,10 +5,8 @@ import java.util.UUID
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.pipe
 import akka.testkit.TestActorRef
-import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
-import fi.vm.sade.hakurekisteri.arvosana.ArvosanaActor
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor, ArvosanaTable}
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatch
 import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, Testihaku}
 import fi.vm.sade.hakurekisteri.integration._
@@ -16,15 +14,18 @@ import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActor}
-import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaActor
-import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusActor
+import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
+import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusJDBCActor, OpiskeluoikeusTable}
 import fi.vm.sade.hakurekisteri.oppija.Oppija
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Registers, User}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal, Registers, User}
 import fi.vm.sade.hakurekisteri.storage.repository.{InMemJournal, Updated}
-import fi.vm.sade.hakurekisteri.suoritus.{SuoritusActor, VirallinenSuoritus, yksilollistaminen}
+import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
+import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.web.oppija.{OppijaResource, OppijatPostSize}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
+import fi.vm.sade.hakurekisteri.{Config, MockConfig}
 import org.joda.time.LocalDate
 import org.json4s.Extraction.decompose
 import org.json4s.jackson.JsonMethods._
@@ -35,12 +36,120 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 import scala.language.implicitConversions
 import scala.util.Random
 
-class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
+class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with FutureWaiting with LocalhostProperties {
+
+  implicit var system: ActorSystem = _
+  implicit var database: Database = _
+  implicit val security = new TestSecurity
+  implicit val user: User = security.TestUser
+  implicit val swagger: Swagger = new HakurekisteriSwagger
+
+  val henkilot: Set[String] = {
+    var oids: Set[String] = Set("1.2.246.562.24.00000000001")
+    while (oids.size < 10001) {
+      oids = oids + s"1.2.246.562.24.${new Random().nextInt(99999999).toString.padTo(11, '0')}"
+    }
+    oids
+  }
+
+  val suorituksetSeq = henkilot.map(henkilo =>
+    VirallinenSuoritus(
+      "1.2.246.562.5.00000000001",
+      "1.2.246.562.10.00000000001",
+      "VALMIS",
+      new LocalDate(2001, 1, 1),
+      henkilo,
+      yksilollistaminen.Ei,
+      "FI",
+      None,
+      vahv = true,
+      ""
+    )
+  ).toSeq
+
+  val hakemukset: Seq[FullHakemus] = henkilot.map(henkilo => {
+    FullHakemus(
+      oid = UUID.randomUUID().toString,
+      personOid = Some(henkilo),
+      applicationSystemId = "1.2.246.562.6.00000000001",
+      answers = Some(HakemusAnswers(Some(HakemusHenkilotiedot(Henkilotunnus = Some(henkilo))))),
+      state = Some("INCOMPLETE"),
+      preferenceEligibilities = Seq()
+    )
+  }).toSeq
+
+  var valintarekisteri: TestActorRef[TestingValintarekisteriActor] = _
+  var resource: OppijaResource = _
+  val hakemusServiceMock = mock[HakemusService]
+
+  override def beforeAll(): Unit = {
+    val config = new MockConfig
+    system = ActorSystem("oppija-resource-test-system")
+    database = Database.forURL(ItPostgres.getEndpointURL())
+    valintarekisteri = TestActorRef(new TestingValintarekisteriActor(
+      new VirkailijaRestClient(config = ServiceConfig(serviceUrl = "http://localhost/valinta-tulos-service")),
+      config)
+    )
+    val rekisterit = new Registers {
+      private val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
+      suorituksetSeq.foreach(s => suoritusJournal.addModification(Updated(s.identify)))
+      private val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
+      private val opiskeluoikeusJournal = new JDBCJournal[Opiskeluoikeus, UUID, OpiskeluoikeusTable](TableQuery[OpiskeluoikeusTable])
+      private val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
+      private val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
+      private val arvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
+      private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusJDBCActor(opiskeluoikeusJournal, 1)))
+      private val opiskelijat = system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1)))
+      private val suoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
+
+      override val eraRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(erat)))
+      override val arvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(arvosanat)))
+      override val opiskeluoikeusRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(opiskeluoikeudet)))
+      override val opiskelijaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(opiskelijat)))
+      override val suoritusRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(suoritukset)))
+    }
+    val tarjontaActor = system.actorOf(Props(new Actor {
+      override def receive: Receive = {
+        case GetKomoQuery(oid) => sender ! KomoResponse(oid, Some(Komo(oid, Koulutuskoodi("123456"), "TUTKINTO_OHJELMA", "LUKIOKOULUTUS")))
+        case a => sender ! a
+      }
+    }))
+    val hakuappConfig = ServiceConfig(serviceUrl = "http://localhost/haku-app")
+    val endpoint = mock[Endpoint]
+    when(endpoint.request(forPattern("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=.*"))).
+      thenReturn((200, List(), "[]"))
+    val ensikertalaisuusActor = system.actorOf(Props(new EnsikertalainenActor(
+      rekisterit.suoritusRekisteri,
+      rekisterit.opiskeluoikeusRekisteri,
+      valintarekisteri,
+      tarjontaActor,
+      system.actorOf(Props(new Actor {
+        override def receive: Receive = {
+          case GetHaku("notfound") => Future.failed(HakuNotFoundException("haku not found")) pipeTo sender
+          case q: GetHaku => sender ! Testihaku
+        }
+      })),
+      hakemusServiceMock,
+      config
+    )))
+    resource = new OppijaResource(rekisterit, hakemusServiceMock, ensikertalaisuusActor)
+    addServlet(resource, "/*")
+    ItPostgres.reset()
+    super.beforeAll()
+  }
+
+  override def afterAll(): Unit = {
+    try super.afterAll()
+    finally {
+      Await.result(system.terminate(), 15.seconds)
+      database.close()
+    }
+  }
 
   implicit val formats = HakurekisteriJsonSupport.format
 
@@ -161,121 +270,10 @@ class OppijaResourceSpec extends OppijaResourceSetup with LocalhostProperties{
     }
   }
 
-  protected override def beforeAll() = {
-    reset(endpoint)
-    reset(hakemusServiceMock)
-    super.beforeAll()
-  }
-}
-
-abstract class OppijaResourceSetup extends ScalatraFunSuite with MockitoSugar with DispatchSupport with FutureWaiting {
-  implicit val system = ActorSystem("oppija-resource-test-system")
-  implicit val security = new TestSecurity
-  implicit val user: User = security.TestUser
-  implicit val swagger: Swagger = new HakurekisteriSwagger
-
-  val henkilot: Set[String] = {
-    var oids: Set[String] = Set("1.2.246.562.24.00000000001")
-    while (oids.size < 10001) {
-      oids = oids + s"1.2.246.562.24.${new Random().nextInt(99999999).toString.padTo(11, '0')}"
-    }
-    oids
-  }
-
-  val suorituksetSeq = henkilot.map(henkilo =>
-    VirallinenSuoritus(
-      "1.2.246.562.5.00000000001",
-      "1.2.246.562.10.00000000001",
-      "VALMIS",
-      new LocalDate(2001, 1, 1),
-      henkilo,
-      yksilollistaminen.Ei,
-      "FI",
-      None,
-      vahv = true,
-      ""
-    )
-  ).toSeq
-
-  implicit def seq2journal[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[UUID, R]](s: Seq[R]): InMemJournal[R, UUID] = {
-    val journal = new InMemJournal[R, UUID]
-    s.foreach((resource: R) => journal.addModification(Updated(resource.identify(UUID.randomUUID()))))
-    journal
-  }
-
   implicit def seq2journalString[R <: fi.vm.sade.hakurekisteri.rest.support.Resource[String, R]](s: Seq[R]): InMemJournal[R, String] = {
     val journal = new InMemJournal[R, String]
     s.foreach((resource: R) => journal.addModification(Updated(resource.identify(UUID.randomUUID().toString))))
     journal
-  }
-
-  val rekisterit = new Registers {
-    private val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
-    private val arvosanat = system.actorOf(Props(new ArvosanaActor()))
-    private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusActor()))
-    private val opiskelijat = system.actorOf(Props(new OpiskelijaActor()))
-    private val suoritukset = system.actorOf(Props(new SuoritusActor(suorituksetSeq)))
-
-    override val eraRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(erat)))
-    override val arvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(arvosanat)))
-    override val opiskeluoikeusRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(opiskeluoikeudet)))
-    override val opiskelijaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(opiskelijat)))
-    override val suoritusRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(suoritukset)))
-  }
-  val hakuappConfig = ServiceConfig(serviceUrl = "http://localhost/haku-app")
-  val endpoint = mock[Endpoint]
-  when(endpoint.request(forPattern("http://localhost/haku-app/applications/listfull?start=0&rows=2000&asId=.*"))).
-    thenReturn((200, List(), "[]"))
-
-  val hakemukset: Seq[FullHakemus] = henkilot.map(henkilo => {
-    FullHakemus(
-      oid = UUID.randomUUID().toString,
-      personOid = Some(henkilo),
-      applicationSystemId = "1.2.246.562.6.00000000001",
-      answers = Some(HakemusAnswers(Some(HakemusHenkilotiedot(Henkilotunnus = Some(henkilo))))),
-      state = Some("INCOMPLETE"),
-      preferenceEligibilities = Seq()
-    )
-  }).toSeq
-
-  val hakemusClient = new VirkailijaRestClient(config = hakuappConfig, aClient = Some(new AsyncHttpClient(new CapturingProvider(endpoint))))
-
-  val tarjontaActor = system.actorOf(Props(new Actor {
-    override def receive: Receive = {
-      case GetKomoQuery(oid) => sender ! KomoResponse(oid, Some(Komo(oid, Koulutuskoodi("123456"), "TUTKINTO_OHJELMA", "LUKIOKOULUTUS")))
-      case a => sender ! a
-    }
-  }))
-
-  val valintarekisteri = TestActorRef(new TestingValintarekisteriActor(
-    new VirkailijaRestClient(config = ServiceConfig(serviceUrl = "http://localhost/valinta-tulos-service")),
-    Config.mockConfig)
-  )
-
-  val hakemusServiceMock = mock[HakemusService]
-
-  val ensikertalaisuusActor = system.actorOf(Props(new EnsikertalainenActor(
-    rekisterit.suoritusRekisteri,
-    rekisterit.opiskeluoikeusRekisteri,
-    valintarekisteri,
-    tarjontaActor,
-    system.actorOf(Props(new Actor {
-      override def receive: Receive = {
-        case GetHaku("notfound") => Future.failed(HakuNotFoundException("haku not found")) pipeTo sender
-        case q: GetHaku => sender ! Testihaku
-      }
-    })),
-    hakemusServiceMock,
-    Config.mockConfig
-  )))
-
-  val resource = new OppijaResource(rekisterit, hakemusServiceMock, ensikertalaisuusActor)
-
-  addServlet(resource, "/*")
-
-  override def stop(): Unit = {
-    system.shutdown()
-    system.awaitTermination(15.seconds)
   }
 }
 

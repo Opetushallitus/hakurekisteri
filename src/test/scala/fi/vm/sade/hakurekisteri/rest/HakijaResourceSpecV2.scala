@@ -9,6 +9,8 @@ import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecu
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
+import scala.concurrent.Await
+
 class HakijaResourceSpecV2 extends ScalatraFunSuite with HakeneetSupport with LocalhostProperties {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
@@ -58,8 +60,7 @@ class HakijaResourceSpecV2 extends ScalatraFunSuite with HakeneetSupport with Lo
 
   override def stop(): Unit = {
     import scala.concurrent.duration._
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
     super.stop()
   }
 

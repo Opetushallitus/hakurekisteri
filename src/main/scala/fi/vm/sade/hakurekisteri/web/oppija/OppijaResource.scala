@@ -5,7 +5,7 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, HakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
-import fi.vm.sade.hakurekisteri.oppija.OppijaFetcher
+import fi.vm.sade.hakurekisteri.oppija.{Oppija, OppijaFetcher}
 import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 import fi.vm.sade.hakurekisteri.web.rest.support._
@@ -15,7 +15,7 @@ import org.scalatra.swagger.{Swagger, SwaggerEngine}
 
 import scala.compat.Platform
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 object OppijatPostSize {
   def maxOppijatPostSize: Int = 5000

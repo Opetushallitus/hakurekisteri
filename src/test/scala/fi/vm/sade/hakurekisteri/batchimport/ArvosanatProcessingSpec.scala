@@ -6,16 +6,19 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.arvosana.{Arvio410, Arvosana, ArvosanaActor, ArvosanaQuery}
+import fi.vm.sade.hakurekisteri.arvosana._
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor
 import fi.vm.sade.hakurekisteri.integration.koodisto.{GetKoodistoKoodiArvot, KoodistoKoodiArvot}
 import fi.vm.sade.hakurekisteri.integration.organisaatio.HttpOrganisaatioActor
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.{FailingResourceActor, MockedResourceActor}
-import fi.vm.sade.hakurekisteri.{Config, Oids}
+import fi.vm.sade.hakurekisteri.tools.ItPostgres
+import fi.vm.sade.hakurekisteri.{Config, MockConfig, Oids}
+import fi.vm.sade.utils.tcp.ChooseFreePort
 import generators.DataGen
 import org.joda.time.LocalDate
 import org.mockito.Mockito._
@@ -397,12 +400,14 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
     withSystem(
       implicit system => {
         implicit val ec: ExecutionContext = system.dispatcher
+        implicit val database = Database.forURL(ItPostgres.getEndpointURL())
 
         val batch = batchGenerator.generate
 
         var s = perusopetusSuoritus(new LocalDate(2001, 1, 1))
 
-        val arvosanaActor = system.actorOf(Props(new ArvosanaActor()))
+        val arvosanaJournal = new JDBCJournal[Arvosana, UUID, ArvosanaTable](TableQuery[ArvosanaTable])
+        val arvosanaActor = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
 
         val arvosanatProcessing = new ArvosanatProcessing(
           createOrganisaatioActor,
@@ -483,6 +488,7 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
             )
           )
         )
+        database.close()
       }
     )
   }
@@ -512,13 +518,13 @@ class ArvosanatProcessingSpec extends FlatSpec with Matchers with MockitoSugar w
   private def createOrganisaatioActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
     system.actorOf(Props(new HttpOrganisaatioActor(
       new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/organisaatio-service"), Some(new AsyncHttpClient(asyncProvider))),
-      Config.mockConfig
+      new MockConfig
     )))
 
   private def createHenkiloActor(implicit system: ActorSystem, ec: ExecutionContext): ActorRef =
     system.actorOf(Props(new HttpHenkiloActor(
       new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/authentication-service"), Some(new AsyncHttpClient(asyncProvider))),
-      Config.mockConfig
+      new MockConfig
     )))
 
   object Fixtures {

@@ -1,10 +1,12 @@
 package fi.vm.sade.hakurekisteri.suoritus
 
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import org.joda.time.LocalDate
 import java.util.UUID
+
 import fi.vm.sade.hakurekisteri.rest.support.JournalTable
 import java.sql.SQLDataException
+
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
 
 
@@ -16,9 +18,6 @@ import SuoritusRowTypes._
 
 
 class SuoritusTable(tag: Tag) extends JournalTable[Suoritus, UUID, SuoritusRow](tag, "suoritus") {
-
-
-
   def myontaja = column[String]("myontaja")
   def henkiloOid = column[String]("henkilo_oid")
   def vahvistettu = column[Option[Boolean]]("vahvistettu")
@@ -46,9 +45,9 @@ class SuoritusTable(tag: Tag) extends JournalTable[Suoritus, UUID, SuoritusRow](
 
   }
 
-  override val deletedValues =(lahde: String) =>  ("", "", Some(true), None, None, None, None, None, None, None, None, None, lahde)
+  override val deletedValues = (lahde: String) =>  ("", "", Some(true), None, None, None, None, None, None, None, None, None, lahde)
 
-  override val resource: (SuoritusRow) => Suoritus = {
+  override val resource: SuoritusRow => Suoritus = {
     case (myontaja, henkiloOid, vahvistettu, Some(komo), Some(tila), Some(valmistuminen), Some(yks), Some(suoritusKieli), _, _, _, _,  source) =>
       VirallinenSuoritus(komo, myontaja, tila, valmistuminen, henkiloOid, yks, suoritusKieli, vahv = vahvistettu.getOrElse(true), lahde = source)
     case (myontaja, henkiloOid, vahvistettu, _, _, _, _, _, Some(kuvaus), Some(vuosi), Some(tyyppi), Some(index), source)  =>
@@ -56,9 +55,7 @@ class SuoritusTable(tag: Tag) extends JournalTable[Suoritus, UUID, SuoritusRow](
     case row => throw new InvalidSuoritusDataException(row)
   }
 
-
   case class InvalidSuoritusDataException(row: SuoritusRow) extends SQLDataException(s"invalid data in database ${row.toString()}")
 
-  override val extractSource: (SuoritusRowTypes.SuoritusRow) => String = _._13
+  override val extractSource: SuoritusRow => String = _._13
 }
-

@@ -1,23 +1,23 @@
 package fi.vm.sade.hakurekisteri.arvosana
 
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriDriver, JournalTable}
-import HakurekisteriDriver.simple._
 import java.util.UUID
+
 import org.joda.time.LocalDate
-import scala.util.Try
+import HakurekisteriDriver.api._
 
 
 class ArvosanaTable(tag: Tag) extends JournalTable[Arvosana, UUID, (UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String, Map[String,String], Option[Int])](tag, "arvosana") {
-  def suoritus = column[UUID]("suoritus")
-  def arvosana = column[String]("arvosana")
-  def asteikko = column[String]("asteikko")
-  def aine = column[String]("aine")
-  def lisatieto = column[Option[String]]("lisatieto")
-  def valinnainen = column[Boolean]("valinnainen")
-  def pisteet = column[Option[Int]]("pisteet")
-  def myonnetty = column[Option[String]]("myonnetty")
-  def lahdeArvot = column[Map[String,String]]("lahde_arvot")
-  def jarjestys = column[Option[Int]]("jarjestys")
+  def suoritus:   Rep[UUID] = column[UUID]("suoritus")
+  def arvosana:   Rep[String] = column[String]("arvosana")
+  def asteikko:   Rep[String] = column[String]("asteikko")
+  def aine:       Rep[String] = column[String]("aine")
+  def lisatieto:  Rep[Option[String]] = column[Option[String]]("lisatieto")
+  def valinnainen: Rep[Boolean] = column[Boolean]("valinnainen")
+  def pisteet:    Rep[Option[Int]] = column[Option[Int]]("pisteet")
+  def myonnetty:  Rep[Option[String]] = column[Option[String]]("myonnetty")
+  def lahdeArvot: Rep[Map[String, String]] = column[Map[String,String]]("lahde_arvot", O.SqlType("TEXT"))
+  def jarjestys:  Rep[Option[Int]] = column[Option[Int]]("jarjestys")
 
   override def resourceShape = (suoritus, arvosana, asteikko, aine, lisatieto, valinnainen, pisteet, myonnetty, source, lahdeArvot, jarjestys).shaped
 
@@ -32,7 +32,7 @@ class ArvosanaTable(tag: Tag) extends JournalTable[Arvosana, UUID, (UUID, String
       Some(a.suoritus, pisteet.toString, Arvio.ASTEIKKO_OSAKOE, a.aine, a.lisatieto, a.valinnainen, None, a.myonnetty.map(_.toString), a.source, a.lahdeArvot, a.jarjestys)
   }
 
-  override val deletedValues: (String) => (UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String, Map[String,String], Option[Int]) =
+  override val deletedValues: String => (UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String, Map[String,String], Option[Int]) =
     (lahde: String) => (UUID.fromString("de1e7edd-e1e7-edde-1e7e-dde1e7ed1111"), "","", "", None, false, None, None, lahde, Map(), None)
   override val resource: ((UUID, String, String, String, Option[String], Boolean, Option[Int], Option[String], String, Map[String,String], Option[Int])) => Arvosana =
     (arvosanaResource _).tupled

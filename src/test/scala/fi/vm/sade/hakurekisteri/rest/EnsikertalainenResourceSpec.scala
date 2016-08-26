@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.rest
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.pipe
-import fi.vm.sade.hakurekisteri.Config
+import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor, KkVastaanotto, Testihaku}
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
@@ -19,7 +19,7 @@ import org.mockito.{Matchers, Mockito}
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
 
@@ -67,7 +67,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
         case q: GetKomoQuery => sender ! KomoResponse(q.oid, None)
       }
     })),
-    config = Config.mockConfig,
+    config = new MockConfig,
     hakuActor = system.actorOf(Props(new Actor {
       override def receive: Receive = {
         case q: GetHaku if q.oid == "notfound" => Future.failed(HakuNotFoundException(s"haku not found with oid ${q.oid}")) pipeTo sender
@@ -129,8 +129,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
 
   override def stop(): Unit = {
     import scala.concurrent.duration._
-    system.shutdown()
-    system.awaitTermination(15.seconds)
+    Await.result(system.terminate(), 15.seconds)
     super.stop()
   }
 

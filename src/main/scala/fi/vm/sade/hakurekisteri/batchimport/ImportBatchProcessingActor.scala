@@ -4,19 +4,21 @@ import java.util.UUID
 
 import akka.actor.Status.Failure
 import akka.actor._
-import fi.vm.sade.hakurekisteri.{Oids, Config}
+import fi.vm.sade.hakurekisteri.{Config, Oids}
 import fi.vm.sade.hakurekisteri.batchimport.BatchState.BatchState
 import fi.vm.sade.hakurekisteri.integration.henkilo._
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{OppilaitosResponse, Oppilaitos, Organisaatio}
+import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, Organisaatio}
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.{yksilollistaminen, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.storage.repository.Updated
+import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen}
 import org.joda.time.{DateTime, LocalDate}
 
 import scala.compat.Platform
 import scala.concurrent.duration._
 import scala.xml.Node
 import fi.vm.sade.hakurekisteri.tools.RicherString
+
 import scala.concurrent.ExecutionContext
 
 object ProcessReadyBatches

@@ -1,24 +1,25 @@
 package fi.vm.sade.hakurekisteri.rest
 
-import java.nio.charset.Charset
 import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
 import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.acceptance.tools.{ConfigurationSupport, FakeAuthorizer}
+import fi.vm.sade.hakurekisteri.MockConfig
+import fi.vm.sade.hakurekisteri.acceptance.tools.FakeAuthorizer
 import fi.vm.sade.hakurekisteri.batchimport._
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.parametrit._
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple._
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, JDBCJournal}
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.rest.support._
 import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.tools.ItPostgres
 import fi.vm.sade.hakurekisteri.web.batchimport.{ImportBatchResource, TiedonsiirtoOpen}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, TestSecurity}
-import org.h2.tools.RunScript
 import org.json4s.Extraction
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization._
 import org.mockito.Mockito._
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.Uploadable
@@ -26,21 +27,36 @@ import org.scalatra.test.scalatest.ScalatraFunSuite
 import siirto.{PerustiedotXmlConverter, SchemaDefinition}
 
 import scala.compat.Platform
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.xml.Elem
 
 
-class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport with ConfigurationSupport {
+class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport with BeforeAndAfterAll {
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val system = ActorSystem("test-import-batch")
   implicit val ec: ExecutionContext = system.dispatcher
   implicit val security = new TestSecurity
 
-  implicit val database = Database.forURL("jdbc:h2:file:data/importbatchtest", driver = "org.h2.Driver")
-  val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
-  val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5)))
-  val authorized = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
+  implicit var database: Database = _
+
+
+  override def beforeAll(): Unit = {
+    database = Database.forURL(ItPostgres.getEndpointURL())
+    val eraJournal = new JDBCJournal[ImportBatch, UUID, ImportBatchTable](TableQuery[ImportBatchTable])
+    val eraRekisteri = system.actorOf(Props(new ImportBatchActor(eraJournal, 5)))
+    val authorized = system.actorOf(Props(new FakeAuthorizer(eraRekisteri)))
+    addServlet(new ImportBatchResource(authorized, parameterActor, new MockConfig, (foo) => ImportBatchQuery(None, None, None))("identifier", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, TestSchema), "/batch")
+    super.beforeAll()
+  }
+
+  override def afterAll(): Unit = {
+    try super.afterAll()
+    finally {
+      Await.result(system.terminate(), 15.seconds)
+      database.close()
+    }
+  }
 
   def createEndpointMock = {
     val result = mock[Endpoint]
@@ -61,13 +77,6 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
   val client = new VirkailijaRestClient(ServiceConfig(serviceUrl = "http://localhost/ohjausparametrit-service"), aClient = Some(new AsyncHttpClient(asyncProvider)))
   val parameterActor = system.actorOf(Props(new MockParameterActor()))
 
-  override def stop(): Unit = {
-    RunScript.execute("jdbc:h2:file:data/importbatchtest", "", "", "classpath:clear-h2.sql", Charset.forName("UTF-8"), false)
-    system.shutdown()
-    system.awaitTermination(15.seconds)
-    super.stop()
-  }
-
   object TestSchema extends SchemaDefinition {
     override val schemaLocation: String = "test.xsd"
     override val schema: Elem =
@@ -85,7 +94,7 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
       </xs:schema>
   }
 
-  addServlet(new ImportBatchResource(authorized, parameterActor, config, (foo) => ImportBatchQuery(None, None, None))("identifier", ImportBatch.batchTypePerustiedot, "data", PerustiedotXmlConverter, TestSchema), "/batch")
+
 
   test("post should return 201 created") {
     post("/batch", "<batch><identifier>foo</identifier><data>foo</data></batch>") {
@@ -137,7 +146,6 @@ class ImportBatchResourceSpec extends ScalatraFunSuite with MockitoSugar with Di
   test("get withoutdata should contain the posted batch") {
     post("/batch", "<batch><identifier>foo5</identifier><data>foo</data></batch>") {
       import org.json4s.jackson.Serialization.read
-
       val batch = read[ImportBatch with Identified[UUID]](response.body)
 
       get("/batch/withoutdata") {

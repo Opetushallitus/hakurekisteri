@@ -2,10 +2,8 @@ package fi.vm.sade.hakurekisteri
 
 import java.io.InputStream
 import java.nio.file.{Files, Path, Paths}
-import java.util.Properties
 
 import akka.actor.ActorSystem
-import com.typesafe.config.ConfigFactory
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusConfig
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConfig
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLConfig
@@ -22,11 +20,10 @@ import scala.util.{Success, Try}
 
 object Config {
   def fromString(profile: String) = profile match {
-    case "it" => mockConfig
     case "default" => new DefaultConfig
   }
   lazy val globalConfig = fromString(sys.props.getOrElse("hakurekisteri.profile", "default"))
-  lazy val mockConfig = new MockConfig
+  lazy val mockDevConfig = new MockDevConfig
 }
 
 object OrganisaatioOids {
@@ -92,48 +89,43 @@ object Oids {
 
 class DefaultConfig extends Config {
   def mockMode = false
-  val h2DatabaseUrl= "jdbc:h2:file:data/development"
+  log.info("Using default config")
+  override val databaseUrl = getPropertyOrCrash("suoritusrekisteri.db.url", "configuration key missing: suoritusreksiteri.db.url")
+  override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
+  override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   private lazy val homeDir = sys.props.getOrElse("user.home", "")
   lazy val ophConfDir: Path = Paths.get(homeDir, "/oph-configuration/")
 }
 
-class MockConfig extends Config {
+class MockDevConfig extends Config {
   def mockMode = true
-  val h2DatabaseUrl = "jdbc:h2:file:data/integration-test"
+  log.info("Using mock dev config")
+  override val databaseUrl = properties.getOrElse("suoritusrekisteri.db.url", "jdbc:postgresql://localhost:5432/suoritusrekisteri")
+  override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
+  override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   override val importBatchProcessingInitialDelay = 1.seconds
-  override val profile = "it"
+  override val profile = "dev"
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
 }
 
 class ProductionServerConfig(val integrations: Integrations, val system: ActorSystem, val security: Security, val ec: ExecutionContextExecutor)
 
 abstract class Config {
-  import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.simple.Database
 
   def mockMode: Boolean
 
-  val h2DatabaseUrl: String
+  val databaseUrl: String
+  val postgresUser: String
+  val postgresPassword: String
 
   val profile = sys.props.getOrElse("hakurekisteri.profile", "default")
 
-  lazy val database: Database = {
-    import collection.JavaConverters._
-    profile match {
-      case "it" | "dev" => Database.forURL(h2DatabaseUrl, driver = "org.h2.Driver")
-      case "default" => {
-        val javaProperties = new Properties
-        javaProperties.putAll(properties.asJava)
-        Database.forConfig("suoritusrekisteri.db", ConfigFactory.parseProperties(javaProperties))
-      }
-      case _ => throw new RuntimeException("Unsupported hakurekisteri.profile value " + profile)
-    }
-  }
+
 
   val log = LoggerFactory.getLogger(getClass)
   def ophConfDir: Path
 
   val propertyLocations = Seq("common.properties")
-
   val importBatchProcessingInitialDelay = 20.minutes
 
   // by default the service urls point to QA
@@ -167,6 +159,10 @@ abstract class Config {
     val rawMap = resources.map((reader) => {val prop = new java.util.Properties; prop.load(reader); Map(prop.toList: _*)}).foldLeft(Map[String, String]())(_ ++ _)
 
     resolve(rawMap)
+  }
+
+  def getPropertyOrCrash(property: String, errorMsg: String) = {
+    properties.getOrElse(property, throw new RuntimeException(errorMsg))
   }
 
   def resolve(source: Map[String, String]): Map[String, String] = {

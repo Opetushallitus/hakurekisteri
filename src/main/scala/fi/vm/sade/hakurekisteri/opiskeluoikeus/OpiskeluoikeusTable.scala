@@ -3,11 +3,9 @@ package fi.vm.sade.hakurekisteri.opiskeluoikeus
 import java.util.UUID
 
 import org.joda.time.DateTime
-
-import scala.slick.lifted
-import scala.slick.lifted.ShapedValue
-import fi.vm.sade.hakurekisteri.rest.support.{JournalTable, HakurekisteriDriver}
-import HakurekisteriDriver.simple._
+import slick.lifted.ShapedValue
+import fi.vm.sade.hakurekisteri.rest.support.JournalTable
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 
 object OpiskeluoikeusRow {
   type OpiskeluoikeusType = (Long, Option[Long], String, String, String, String)
@@ -16,14 +14,14 @@ object OpiskeluoikeusRow {
 import OpiskeluoikeusRow._
 
 class OpiskeluoikeusTable(tag: Tag) extends JournalTable[Opiskeluoikeus, UUID, OpiskeluoikeusType](tag, "opiskeluoikeus") {
-  def alkuPaiva = column[Long]("alku_paiva")
-  def loppuPaiva = column[Option[Long]]("loppu_paiva")
-  def henkiloOid = column[String]("henkilo_oid")
-  def komo = column[String]("komo")
-  def myontaja = column[String]("myontaja")
+  def alkuPaiva: Rep[Long] = column[Long]("alku_paiva")
+  def loppuPaiva: Rep[Option[Long]] = column[Option[Long]]("loppu_paiva")
+  def henkiloOid: Rep[String] = column[String]("henkilo_oid")
+  def komo: Rep[String] = column[String]("komo")
+  def myontaja: Rep[String] = column[String]("myontaja")
 
 
-  override def resourceShape: ShapedValue[(lifted.Column[Long], lifted.Column[Option[Long]], lifted.Column[String], lifted.Column[String], lifted.Column[String], lifted.Column[String]), OpiskeluoikeusType] = (alkuPaiva, loppuPaiva, henkiloOid, komo, myontaja, source).shaped
+  override def resourceShape = (alkuPaiva, loppuPaiva, henkiloOid, komo, myontaja, source).shaped
 
   override def row(oo: Opiskeluoikeus): Option[OpiskeluoikeusType] = Some(
     oo.aika.alku.getMillis,
@@ -32,9 +30,9 @@ class OpiskeluoikeusTable(tag: Tag) extends JournalTable[Opiskeluoikeus, UUID, O
     oo.komo,
     oo.myontaja,
     oo.source
-    )
+  )
 
-  override val deletedValues: (String) => OpiskeluoikeusType = (lahde) => (
+  override val deletedValues: String => OpiskeluoikeusType = (lahde) => (
     0L,
     None,
     "",
@@ -42,9 +40,9 @@ class OpiskeluoikeusTable(tag: Tag) extends JournalTable[Opiskeluoikeus, UUID, O
     "",
     lahde
     )
-  override val resource: (OpiskeluoikeusType) => Opiskeluoikeus = {
+  override val resource: OpiskeluoikeusType => Opiskeluoikeus = {
     case  (alkuPaiva: Long, loppuPaiva: Option[Long], henkiloOid: String, komo: String, myontaja: String, source) =>
       Opiskeluoikeus(new DateTime(alkuPaiva), loppuPaiva.map(new DateTime(_)), henkiloOid, komo, myontaja, source)
   }
-  override val extractSource: (OpiskeluoikeusRow.OpiskeluoikeusType) => String = _._6
+  override val extractSource: OpiskeluoikeusType => String = _._6
 }

@@ -1,14 +1,15 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import fi.vm.sade.hakurekisteri.storage.repository._
-import fi.vm.sade.hakurekisteri.storage.{ResourceService, Identified}
-import HakurekisteriDriver.simple._
-import fi.vm.sade.hakurekisteri.storage.repository.Deleted
-import scala.concurrent.{ExecutionContext, Future}
-import scala.slick.ast.BaseTypedType
-import scala.slick.lifted
-import fi.vm.sade.hakurekisteri.batchimport.{ImportBatchTable, ImportBatch}
-import java.util.UUID
+import akka.actor.ActorLogging
+import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, _}
+import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService}
+import slick.ast.BaseTypedType
+import slick.lifted
+
+import scala.compat.Platform
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 
 trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Repository[R,I]  {
@@ -23,38 +24,38 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
 
   val all = journal.latestResources.filter(_.deleted === false)
 
-  def latest(id: I) = all.filter((item) => columnExtensionMethods(item.resourceId) === id)
+  def latest(id: I): lifted.Query[T, Delta[R, I], Seq] = all.filter((item) => item.resourceId === id)
 
-  override def get(id: I): Option[R with Identified[I]] = journal.db withSession(
-    implicit session =>
-      latest(id).firstOption.collect{ case Updated(res) => res }
-  )
+  override def get(id: I): Option[R with Identified[I]] = Await.result(journal.db.run(latest(id).result.headOption), 10.seconds).collect {
+    case Updated(res) => res
+  }
 
-  override def listAll(): Seq[R with Identified[I]] = journal.db withSession(
-    implicit session =>
-      all.list.collect{ case Updated(res) => res }
-  )
+  override def listAll(): Seq[R with Identified[I]] = Await.result(journal.db.run(all.result), 1.minute).collect {
+    case Updated(res) => res
+  }
 
-  override def count: Int = journal.db withSession(
-    implicit session =>
-      all.length.run
-  )
+  override def count: Int = 42 // Await.result(journal.db.run(all.length.result), 10.minute)
 
   def doSave(t: R with Identified[I]): R with Identified[I] = {
     journal.addModification(Updated[R, I](t))
     t
   }
 
-  def deduplicationQuery(i: R)(t: T): lifted.Column[Boolean]
+  def deduplicationQuery(i: R)(t: T): lifted.Rep[Boolean]
 
-  def deduplicate(i: R): Option[R with Identified[I]] = journal.db withSession(
-    implicit session =>
-    {
-      all.filter(deduplicationQuery(i)).list.collect {
-        case Updated(res) => res
-      }.headOption
-    }
-    )
+  def deduplicate(i: R): Option[R with Identified[I]] = Await.result(journal.db.run(latest(journal.table.filter(deduplicationQuery(i))).result), 30.seconds).collect {
+    case Updated(res) => res
+  }.headOption
+
+  def latest(q: lifted.Query[T, Delta[R, I], Seq]): lifted.Query[T, Delta[R, I], Seq] = {
+    for {
+      row <- q
+      latest <- q.groupBy(_.resourceId).map {
+        case (id, deltas) => (id, deltas.map(_.inserted).max)
+      }
+      if latest._1 === row.resourceId && latest._2.isDefined && latest._2 === row.inserted && !row.deleted
+    } yield row
+  }
 
   override def save(t: R): R with Identified[I] = {
     deduplicate(t) match {
@@ -70,22 +71,25 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
   }
 }
 
-trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends ResourceService[R,I] { this: JDBCRepository[R,I,T] =>
+trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends ResourceService[R,I] { this: JDBCRepository[R,I,T] with ActorLogging =>
   val dbExecutor:ExecutionContext
+  val slowQuery: Long = 100
 
   override def findBy(q: Query[R]): Future[Seq[R with Identified[I]]] = {
-    if (q.muokattuJalkeen.isDefined) {
-      throw new NotImplementedError("muokattuJalkeen not implemented in JDBCService")
-    }
-    Future {
-      journal.db withSession {
-        implicit session =>
-          dbQuery.lift(q).map(_.list.collect{ case Updated(res) => res}).getOrElse(Seq())
-      }
-
-    }(dbExecutor)
+    dbQuery.lift(q).map{
+      case Right(query) =>
+        val start = Platform.currentTime
+        val f = journal.db.run(query.result).map(_.collect { case Updated(res) => res })(dbExecutor)
+        f.onComplete(_ => {
+          val runtime = Platform.currentTime - start
+          if (runtime > slowQuery) {
+            log.info(s"Query $query took $runtime ms")
+          }
+        })(dbExecutor)
+        f
+      case Left(t) => Future.failed(t)
+    }.getOrElse(Future.successful(Seq()))
   }
 
-
-  val dbQuery: PartialFunction[Query[R], lifted.Query[T, Delta[R,I], Seq]]
+  val dbQuery: PartialFunction[Query[R], Either[Throwable, lifted.Query[T, Delta[R, I], Seq]]]
 }
