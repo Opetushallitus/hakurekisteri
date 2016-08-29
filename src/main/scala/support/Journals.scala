@@ -3,6 +3,7 @@ package support
 import java.util.UUID
 
 import akka.actor.ActorSystem
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaTable}
 import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchTable}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaTable}
@@ -21,10 +22,12 @@ trait Journals {
   val eraJournal: JDBCJournal[ImportBatch, UUID, ImportBatchTable]
 }
 
-class DbJournals(db: Database)(implicit val system: ActorSystem) extends Journals {
+class DbJournals(config: Config)(implicit val system: ActorSystem) extends Journals {
   lazy val log = LoggerFactory.getLogger(getClass)
 
-  implicit val database = db
+  log.info(s"Opening database connections to ${config.databaseUrl} with user ${config.postgresUser}")
+  implicit val database = Database.forURL(config.databaseUrl, user=config.postgresUser, password=config.postgresPassword)
+  system.registerOnTermination(database.close())
 
   override val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](suoritusTable)
   override val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](opiskelijaTable)

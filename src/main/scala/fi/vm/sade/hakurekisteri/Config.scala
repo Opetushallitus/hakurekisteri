@@ -104,7 +104,6 @@ class MockDevConfig extends Config {
   override val postgresUser = properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   override val importBatchProcessingInitialDelay = 1.seconds
-  override val profile = "dev"
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
 }
 
@@ -117,10 +116,6 @@ abstract class Config {
   val databaseUrl: String
   val postgresUser: String
   val postgresPassword: String
-
-  val profile = sys.props.getOrElse("hakurekisteri.profile", "default")
-
-
 
   val log = LoggerFactory.getLogger(getClass)
   def ophConfDir: Path
@@ -149,8 +144,6 @@ abstract class Config {
   val integrations = new IntegrationConfig(hostQa, properties)
 
   OphUrlProperties.defaults.put("baseUrl", properties.getOrElse("host.ilb", "https://" + hostQa))
-
-  val ensikertalainenCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.ensikertalainen", "6").toInt
 
   val tiedonsiirtoStorageDir = properties.getOrElse("suoritusrekisteri.tiedonsiirto.storage.dir", System.getProperty("java.io.tmpdir"))
 

@@ -58,8 +58,7 @@ class ScalatraBootstrap extends LifeCycle {
     val config = WebAppConfig.getConfig(context)
     implicit val security = Security(config)
 
-    val db = new SuoritusrekisteriDB(config).start()
-    val journals = new DbJournals(db)
+    val journals = new DbJournals(config)
 
     val registers = new BareRegisters(system, journals)
     val authorizedRegisters = new AuthorizedRegisters(registers, system, config)

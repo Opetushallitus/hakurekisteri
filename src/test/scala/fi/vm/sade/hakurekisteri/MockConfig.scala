@@ -14,6 +14,5 @@ class MockConfig extends Config {
   override val postgresUser = null //properties.getOrElse("suoritusrekisteri.db.user", "postgres")
   override val postgresPassword = null //properties.getOrElse("suoritusrekisteri.db.password", "postgres")
   override val importBatchProcessingInitialDelay = 1.seconds
-  override val profile = "it"
   lazy val ophConfDir = Paths.get(ProjectRootFinder.findProjectRoot().getAbsolutePath, "src/test/resources/oph-configuration")
 }
