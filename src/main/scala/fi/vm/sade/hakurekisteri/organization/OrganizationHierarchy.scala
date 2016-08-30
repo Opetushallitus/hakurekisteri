@@ -147,10 +147,10 @@ class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](orga
   }
 
   def collectChildrenOids(parent: OrganisaatioPerustieto): List[(String, Set[String])] = {
-    if (parent.children.isEmpty) List((parent.oid, Set(parent.oid)))
+    if (parent.children.isEmpty) List((parent.oid, parent.parentOidPath.split("/").toSet))
     else {
       val leaves: List[(String, Set[String])] = parent.children.flatMap(child => collectChildrenOids(child))
-      val newS: (String, Set[String]) = (parent.oid, leaves.map(leaf => leaf._2).reduce(_ ++ _) + parent.oid)
+      val newS: (String, Set[String]) = (parent.oid, parent.parentOidPath.split("/").toSet)
       newS :: leaves
     }
   }
@@ -231,10 +231,11 @@ case class OrganisaatioHakutulos(numHits: Integer, organisaatiot: List[Organisaa
 
 case class OrganizationAuthorizer(orgPaths: Map[String, Set[String]]) {
   def checkAccess(user: User, action: String, futTarget: concurrent.Future[Subject]) = futTarget.map {
-    (target: Subject) =>
-    val allowedOrgs = user.orgsFor(action, target.resource)
-    val paths: Set[String] = target.orgs.flatMap((oid) => orgPaths.getOrElse(oid, Seq(Oids.ophOrganisaatioOid, oid)))
-    paths.exists { x => user.username == x || allowedOrgs.contains(x) } || komoAuthorization(user, action, target.komo)
+    (target: Subject) => {
+      val allowedOrgs = user.orgsFor(action, target.resource)
+      val paths: Set[String] = target.orgs.flatMap((oid) => orgPaths.getOrElse(oid, Seq(Oids.ophOrganisaatioOid, oid)))
+      paths.exists { x => user.username == x || allowedOrgs.contains(x) } || komoAuthorization(user, action, target.komo)
+    }
   }
 
   private def komoAuthorization(user:User, action:String, komo:Option[String]): Boolean = {
