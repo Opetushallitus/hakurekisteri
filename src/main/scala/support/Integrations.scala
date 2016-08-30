@@ -123,13 +123,13 @@ class BaseIntegrations(rekisterit: Registers,
       randomFactor = 0.2
     )), name)
 
-  val tarjonta = getSupervisedActorFor(Props(classOf[TarjontaActor], tarjontaClient, config), "tarjonta")
-  val organisaatiot = getSupervisedActorFor(Props(classOf[HttpOrganisaatioActor], organisaatioClient, config), "organisaatio")
+  val tarjonta = getSupervisedActorFor(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
+  val organisaatiot = getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(henkiloClient, config)), "henkilo")
   val hakemusService = new HakemusService(hakemusClient)
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
-  val valintaTulos = getSupervisedActorFor(Props(classOf[ValintaTulosActor], valintatulosClient, config), "valintaTulos")
+  val valintaTulos = getSupervisedActorFor(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
   val valintarekisteri = system.actorOf(Props(new ValintarekisteriActor(valintarekisteriClient, config)), "valintarekisteri")
   val ytl = system.actorOf(Props(new YtlActor(
     henkilo,
