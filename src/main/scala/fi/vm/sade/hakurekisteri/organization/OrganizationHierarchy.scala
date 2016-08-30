@@ -4,22 +4,18 @@ import java.util.UUID
 
 import akka.actor.{Actor, ActorRef, Cancellable}
 import akka.event.Logging
-import com.ning.http.client.Response
 import dispatch.Defaults._
 import dispatch._
 import fi.vm.sade.hakurekisteri.integration.{HttpConfig, OphUrlProperties, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Resource, User}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
-import fi.vm.sade.hakurekisteri.tools.RicherString._
-import fi.vm.sade.hakurekisteri.tools.SafeXML
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.DateTime
 
 import scala.concurrent.duration._
-import scala.xml.Elem
 
 class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef, organizationFinder: (A) => (Set[String],Option[String]), config: Config, organisaatioClient: VirkailijaRestClient)
-  extends FutureOrganizationHierarchy[A, I](filteredActor, ((item: A) => Future.successful(organizationFinder(item))), config, organisaatioClient = organisaatioClient)
+  extends FutureOrganizationHierarchy[A, I](filteredActor, (item: A) => Future.successful(organizationFinder(item)), config, organisaatioClient = organisaatioClient)
 
 class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](filteredActor: ActorRef, organizationFinder: (A) => concurrent.Future[(Set[String],Option[String])], config: Config, organisaatioClient: VirkailijaRestClient) extends Actor {
   val authorizer = new OrganizationHierarchyAuthorization[A, I](organizationFinder, config.integrations.organisaatioConfig, organisaatioClient)
@@ -118,32 +114,10 @@ class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](orga
     m ++ addedParents
   }
 
-  def createAuthorizer: Future[OrganizationAuthorizer] =  fetchOrganizationHierarchy map OrganizationAuthorizer
-
-  def readXml: Future[Elem] = {
-    val http = Http.configure(_
-      .setConnectionTimeoutInMs(httpConfig.httpClientConnectionTimeout)
-      .setRequestTimeoutInMs(httpConfig.httpClientRequestTimeout)
-      .setIdleConnectionTimeoutInMs(httpConfig.httpClientRequestTimeout)
-      .setFollowRedirects(true)
-      .setMaxRequestRetry(2))
-    
-    val result: Future[Response] = http(svc << <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:typ="http://model.api.organisaatio.sade.vm.fi/types">
-      <soapenv:Header/> <soapenv:Body>
-        <typ:getOrganizationStructure></typ:getOrganizationStructure>
-      </soapenv:Body>
-    </soapenv:Envelope>.toString)
-
-    result.map((response) => SafeXML.load(new java.io.InputStreamReader(response.getResponseBodyAsStream, "UTF-8")))
-  }
+  def createAuthorizer: Future[OrganizationAuthorizer] = fetchOrganizationHierarchy map OrganizationAuthorizer
 
   def readJSON: Future[OrganisaatioHakutulos] = {
     organisaatioClient.readObject[OrganisaatioHakutulos]("organisaatio-service.hierarkia.hae.aktiiviset")(200, httpConfig.httpClientMaxRetries)
-  }
-
-  def possibleEdges(soapFuture: concurrent.Future[Elem]):concurrent.Future[Seq[(Option[String], Option[String])]] = {
-    val orgTagsFuture = soapFuture map (_ \ "Body" \ "getOrganizationStructureResponse" \ "organizationStructure")
-    orgTagsFuture map (_.map((org) => ((org \ "@parentOid").text.blankOption, (org \ "@oid").text.blankOption)))
   }
 
   def collectChildrenOids(parent: OrganisaatioPerustieto): List[(String, Set[String])] = {
@@ -163,53 +137,6 @@ class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](orga
     hakutulos.map((x: OrganisaatioHakutulos) => x.organisaatiot.flatMap((org: OrganisaatioPerustieto) => collectChildrenOids(org))).map(_.toMap)
   }
 
-  def findEdges(soapFuture: concurrent.Future[Elem]): concurrent.Future[Seq[(String,String)]] = {
-    val rawList = possibleEdges(soapFuture)
-    rawList.map (_.collect { case (Some(parent:String), Some(child:String)) => (parent,child)} )
-  }
-
-  def childOrgs(edges: Seq[(String, String)]): Set[String] = {
-    edges.map(_._2).toSet
-  }
-
-  def parentOrgs(edges: Seq[(String, String)]): Set[String] = {
-    edges.map(_._1).toSet
-  }
-
-  def leafOrgs(edges: Seq[(String,String)]): Set[String]= {
-    childOrgs(edges) -- parentOrgs(edges)
-  }
-
-  def splitWith[T](s:Seq[T], p:T => Boolean ): (Seq[T], Seq[T]) = {
-    ((Seq[T](), Seq[T]()) /: s) ((a, item) => if (p(item)) (item +: a._1, a._2) else (a._1, item +: a._2))
-  }
-
-  def findNonLeavesAndLeavesLeafEdges(edges: Seq[(String,String)]): (Seq[(String, String)], Seq[(String, String)]) = {
-    val leaves = leafOrgs(edges)
-    splitWith(edges:Seq[(String,String)], (edge:(String,String)) => leaves.contains(edge._2))
-  }
-
-  def findPaths(parentEdges: Seq[(String,String)], leafEdges: Seq[(String,String)], accumulator:Map[String, Seq[String]]): Map[String, Seq[String]] = {
-    val leafMap: Map[String, String] = leafEdges.map((edge) => edge._2 -> edge._1).toMap
-    val needAddition: Map[String, Seq[String]] = accumulator.map((kv) => {
-      val addedPathKeys = kv._2.collect(leafMap)
-      val newPath = addedPathKeys ++ kv._2
-      kv._1 -> newPath
-    }) ++ leafMap.map((kv: (String, String)) => kv._1 -> Seq(kv._2, kv._1))
-    val  (newLeaves, newOthers)  = findNonLeavesAndLeavesLeafEdges(parentEdges)
-    if (parentEdges.nonEmpty) findPaths(newOthers, newLeaves, needAddition)
-    else needAddition ++ leafMap.values.map((v) => v -> Seq(v))
-  }
-
-  def edgeBuild(edges:Seq[(String,String)]) = {
-    findPaths(edges, Seq(), Map())
-  }
-
-  def edgeFetch: concurrent.Future[Map[String, Seq[String]]] = {
-    val edgeFuture = findEdges(readXml)
-    edgeFuture map edgeBuild
-  }
-
   def isAuthorized(user:User, action: String)(item: A): concurrent.Future[Boolean] = authorizer.checkAccess(user, action,  subjectFinder(item))
 }
 
@@ -221,7 +148,6 @@ case class AuthorizedCreate[A <: Resource[I, A], I](q: A,  user: User)
 case class AuthorizedUpdate[A <: Resource[I, A] :Manifest, I : Manifest](q: A with Identified[I], user: User)
 
 case class Subject(resource: String, orgs: Set[String], komo: Option[String])
-// Organisaatiopalvelun REST-vastaukset
 case class OrganisaatioPerustieto(oid: String, alkuPvm: String, lakkautusPvm: Option[Long], parentOid: String, parentOidPath: String,
                                   ytunnus: Option[String], oppilaitosKoodi: Option[String], oppilaitostyyppi: Option[String], toimipistekoodi: Option[String],
                                   `match`: Boolean, kieletUris: List[String], kotipaikkaUri: String,
