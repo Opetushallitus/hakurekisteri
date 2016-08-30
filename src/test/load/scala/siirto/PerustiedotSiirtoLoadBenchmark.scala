@@ -1,36 +1,4 @@
-package siirto
-
-package siirto
-
-import java.io.{IOException, ObjectInputStream, ObjectOutputStream}
-import java.util.UUID
-
-import akka.actor.Status.Failure
-import akka.actor._
-import akka.util.Timeout
-import com.ning.http.client.AsyncHttpClient
-import fi.vm.sade.hakurekisteri.Config
-import fi.vm.sade.hakurekisteri.batchimport.BatchState._
-import fi.vm.sade.hakurekisteri.batchimport.{BatchState, ImportBatch, ImportStatus, PerustiedotProcessingActor}
-import fi.vm.sade.hakurekisteri.integration.henkilo.{SaveHenkilo, SavedHenkilo, _}
-import fi.vm.sade.hakurekisteri.integration.organisaatio.{Oppilaitos, OppilaitosResponse, Organisaatio, _}
-import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, _}
-import fi.vm.sade.hakurekisteri.opiskelija.OpiskelijaTable
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
-import fi.vm.sade.hakurekisteri.rest.support.JDBCJournal
-import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.suoritus.SuoritusJDBCActor
-import fi.vm.sade.hakurekisteri.tools.{ItPostgres, SafeXML}
-import fi.vm.sade.utils.tcp.ChooseFreePort
-import org.json4s.JsonAST.JString
-import slick.lifted.TableQuery
-
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
-import scala.xml.Node
-
-
-object ArvosanaSiirtoLoadBenchmark extends PerformanceTest.Quickbenchmark {
+object PerustiedotSiirtoLoadBenchmark extends PerformanceTest.OfflineReport {
 
   val lahde = "testitiedonsiirto"
 
@@ -99,7 +67,7 @@ object ArvosanaSiirtoLoadBenchmark extends PerformanceTest.Quickbenchmark {
       <henkilot>
         {henkilot}
       </henkilot>
-    </perustiedot>
+      </perustiedot>
 
   def importBatchGen(size:Int) = for (
     data <- batchDataGen(size);
@@ -165,7 +133,7 @@ object ArvosanaSiirtoLoadBenchmark extends PerformanceTest.Quickbenchmark {
         override def startActors(b: SerializableBatch) {
           implicit val database = db._2
           importBatchActorHolder = Some(system.actorOf(Props[BatchActor]))
-          val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuorituTable](TableQuery[SuoritusTable])
+          val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
           suoritusrekisteriHolder = Some(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 5))))
           val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
           opiskelijarekisteriHolder = Some(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 5))))
@@ -196,7 +164,7 @@ object ArvosanaSiirtoLoadBenchmark extends PerformanceTest.Quickbenchmark {
           implicit val database = db._2
           importBatchActorHolder = Some(system.actorOf(Props[BatchActor]))
           val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](TableQuery[SuoritusTable])
-          suoritusrekisteriHolder = Some(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal ,5))))
+          suoritusrekisteriHolder = Some(system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 5))))
           val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
           opiskelijarekisteriHolder = Some(system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 5))))
 
@@ -263,7 +231,7 @@ object ArvosanaSiirtoLoadBenchmark extends PerformanceTest.Quickbenchmark {
 
 
 
-  def processSingleBatch(registers: Registers, b: SerializableBatch): Any = {
+  def processSingleBatch(registers: PerustiedotSiirtoLoadBenchmark.Registers, b: PerustiedotSiirtoLoadBenchmark.SerializableBatch): Any = {
     val doneFut = registers.importBatchActor ? AlertEnd(b.batch.externalId.get)
     registers.system.actorOf(PerustiedotImportProps(registers, b.batch))
     Await.result(doneFut, Duration.Inf)
@@ -291,18 +259,9 @@ object ArvosanaSiirtoLoadBenchmark extends PerformanceTest.Quickbenchmark {
     implicit val ec:ExecutionContext = context.dispatcher
 
     override def receive: Actor.Receive = {
-
       case SaveHenkilo(_, tunniste) =>
         log.debug(s"saving $tunniste")
         sender ! SavedHenkilo("1.2.3.4.5", tunniste)
-
-      case HenkiloQuery(Some(oid), _ , tunniste) =>
-        log.debug(s"checking $oid")
-        sender ! FoundHenkilos(Seq(Henkilo(oid, None, "", None, None, None, None, None)), tunniste)
-
-      case HenkiloQuery(None, _ , tunniste) =>
-        log.debug(s"checking $tunniste")
-        sender ! FoundHenkilos(Seq(Henkilo("1.2.3.4.5", None, "", None, None, None, None, None)), tunniste)
     }
   }
 
@@ -330,7 +289,7 @@ object ArvosanaSiirtoLoadBenchmark extends PerformanceTest.Quickbenchmark {
     private def readObject(in: ObjectInputStream): Unit = {
       val obj: AnyRef = in.readObject()
       obj match {
-        case (xml: String, externalId: Option[_], batchType:String ,source: String, state: BatchState, status: ImportStatus, id:UUID) =>
+        case (xml:String, externalId: Option[_], batchType:String ,source: String, state: BatchState, status: ImportStatus, id:UUID) =>
           batch = ImportBatch(SafeXML.loadString(xml), externalId.map(_.asInstanceOf[String]), batchType, source, state, status).identify(id)
         case _ => sys.error("wrong object type")
       }
@@ -339,9 +298,13 @@ object ArvosanaSiirtoLoadBenchmark extends PerformanceTest.Quickbenchmark {
     override def toString: String = batch.toString
   }
 
+  class DelayingProvider( endpoint: Endpoint, delay: FiniteDuration)(implicit val ec: ExecutionContext, scheduler: Scheduler) extends CapturingProvider(endpoint) {
+    override def executeScala[T](request: Request, handler: AsyncHandler[T]): Future[T] = {
+      import akka.pattern.after
+      after(delay, scheduler)(super.executeScala(request, handler))
 
+
+    }
+  }
 
 }
-
-
-
