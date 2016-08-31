@@ -4,7 +4,7 @@ import fi.vm.sade.hakurekisteri.acceptance.tools.HakurekisteriContainer
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
 import fi.vm.sade.hakurekisteri.tools.Peruskoulu
-import org.joda.time.LocalDate
+import org.joda.time.{DateTime, DateTimeZone, LocalDate}
 import org.scalatest.GivenWhenThen
 
 class TallennaSuoritusSpec extends HakurekisteriContainer with GivenWhenThen {

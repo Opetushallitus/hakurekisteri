@@ -1,21 +1,18 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
-import java.time.ZoneId
-
-import fi.vm.sade.hakurekisteri.batchimport.ImportBatchSerializer
-import fi.vm.sade.hakurekisteri.ensikertalainen._
-import org.joda.time.{DateTime, DateTimeZone}
-import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
-import org.json4s.JsonAST.{JField, JObject, JString}
-import org.json4s._
-import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
-import fi.vm.sade.hakurekisteri.storage.Identified
-import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, Valintatila, Vastaanottotila}
-import fi.vm.sade.hakurekisteri.batchimport.BatchState
-import org.json4s.ext.DateParser
 import java.util.{Date, TimeZone, UUID}
 
+import fi.vm.sade.hakurekisteri.batchimport.{BatchState, ImportBatchSerializer}
+import fi.vm.sade.hakurekisteri.ensikertalainen._
+import fi.vm.sade.hakurekisteri.integration.valintatulos.{Ilmoittautumistila, Valintatila, Vastaanottotila}
 import fi.vm.sade.hakurekisteri.rest.support.MenettamisenPerusteSerializer.paivamaara
+import fi.vm.sade.hakurekisteri.storage.Identified
+import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen
+import org.joda.time.format.{DateTimeFormat, ISODateTimeFormat}
+import org.joda.time.{DateTime, DateTimeZone}
+import org.json4s.JsonAST.{JField, JObject, JString}
+import org.json4s._
+import org.json4s.ext.DateTimeSerializer
 
 import scala.util.Try
 
@@ -37,7 +34,7 @@ object HakurekisteriJsonSupport extends HakurekisteriJsonSupport  {
     FieldSerializer[Identified[UUID]]() +
     new UUIDSerializer +
     new IdentitySerializer +
-    HakurekisteriDateTimeSerializer +
+    DateTimeSerializer +
     new LocalDateSerializer() +
     new ArvioSerializer +
     new ArvosanaSerializer +
@@ -86,22 +83,10 @@ object HakurekisteriDefaultFormats extends DefaultFormats {
         Try(DateTimeFormat.forPattern(pattern).parseDateTime(s).toDate).toOption
       }
 
-      override def timezone: TimeZone = UTC
+      override def timezone: TimeZone = TimeZone.getDefault
     }
   }
 }
-
-case object HakurekisteriDateTimeSerializer extends CustomSerializer[DateTime](format => (
-  {
-    case JString(s) => new DateTime(DateParser.parse(s, format))
-    case JNull => null
-  },
-  {
-    case d: DateTime =>
-      JString(format.dateFormat.format(d.toDate))
-  }
-  )
-)
 
 class MenettamisenPerusteSerializer extends CustomSerializer[MenettamisenPeruste](format => (
   {
