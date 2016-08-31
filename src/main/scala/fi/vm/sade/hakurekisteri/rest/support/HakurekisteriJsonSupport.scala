@@ -1,5 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
+import java.time.ZoneId
+
 import fi.vm.sade.hakurekisteri.batchimport.ImportBatchSerializer
 import fi.vm.sade.hakurekisteri.ensikertalainen._
 import org.joda.time.{DateTime, DateTimeZone}
@@ -83,6 +85,8 @@ object HakurekisteriDefaultFormats extends DefaultFormats {
         }
         Try(DateTimeFormat.forPattern(pattern).parseDateTime(s).toDate).toOption
       }
+
+      override def timezone: TimeZone = UTC
     }
   }
 }
