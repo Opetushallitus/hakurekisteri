@@ -61,6 +61,13 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
       e.head.menettamisenPeruste should be (Some(SuoritettuKkTutkinto(date.toDateTimeAtStartOfDay)))
       valintarek.underlyingActor.counter should be (0)
     })
+    waitFuture(
+      (actor ? EnsikertalainenQuery(henkiloOids = Set(henkiloOid, "dummyoid"), hakuOid = Testihaku.oid)).mapTo[Seq[Ensikertalainen]]
+    )((e: Seq[Ensikertalainen]) => {
+      e.head.ensikertalainen should be (false)
+      e.head.menettamisenPeruste should be (Some(SuoritettuKkTutkinto(date.toDateTimeAtStartOfDay)))
+      valintarek.underlyingActor.counter should be (1)
+    })
   }
 
   it should "return ensikertalainen false based on opiskeluoikeus" in {
@@ -141,6 +148,9 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
     when(hakemusServiceMock.hakemuksetForPersonsInHaku(any[Set[String]], anyString())).thenReturn(
       Future.successful(hakemukset)
     )
+    when(hakemusServiceMock.suoritusoikeudenTaiAiemmanTutkinnonVuosi(anyString(), any[Option[String]])).thenReturn(
+      Future.successful(hakemukset)
+    )
 
     val valintarekisteri = TestActorRef(new Actor {
       var counter = 0
@@ -176,7 +186,9 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
         }
       })),
       hakemusService = hakemusServiceMock
-    ))), valintarekisteri)
+    ) {
+      override val sizeLimitForFetchingByPersons: Int = 1
+    })), valintarekisteri)
   }
 
   override def afterAll() {

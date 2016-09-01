@@ -38,6 +38,18 @@ object Trigger {
   })
 }
 
+case class SuoritusvuosiSearchDto(aoOids: List[String] = List(), asIds: List[String] = List()) {
+  val searchTerms = ""
+  val states = List[String]()
+  val keys = List(
+    "oid",
+    "personOid",
+    "applicationSystemId",
+    "answers.koulutustausta.suoritusoikeus_tai_aiempi_tutkinto",
+    "suoritusoikeus_tai_aiempi_tutkinto_vuosi"
+  )
+}
+
 class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
 
   case class SearchParams(aoOids: String = null, asId: String = null, organizationFilter: String = null,
@@ -63,6 +75,11 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
 
   def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]] = {
     fetchHakemukset(params = SearchParams(asId = hakuOid, organizationFilter = organisaatio.orNull))
+  }
+
+  def suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid: String, hakukohdeOid: Option[String]): Future[Seq[FullHakemus]] = {
+    restClient.postObject[SuoritusvuosiSearchDto, List[FullHakemus]]("haku-app.listfull")(acceptedResponseCode = 200,
+      SuoritusvuosiSearchDto(asIds = List(hakuOid), aoOids = hakukohdeOid.toList))
   }
 
   def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]] = {
@@ -113,6 +130,8 @@ class HakemusServiceMock extends HakemusService(null) {
   override def personOidsForHakukohde(hakukohdeOid: String, organisaatio: Option[String]) = Future.successful(Set[String]())
 
   override def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]) = Future.successful(Seq[FullHakemus]())
+
+  override def suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid: String, hakukohdeOid: Option[String]): Future[Seq[FullHakemus]] = Future.successful(Seq[FullHakemus]())
 
   override def hakemuksetForPersonsInHaku(personOids: Set[String], hakuOid: String) = Future.successful(Seq[FullHakemus]())
 }

@@ -6,7 +6,7 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusService
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
@@ -63,6 +63,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   val Oid = "(1\\.2\\.246\\.562\\.[0-9.]+)".r
   val KkKoulutusUri = "koulutus_[67][1-9][0-9]{4}".r
   val koulutuksenAlkaminenSyksy2014 = new DateTime(2014, 8, 1, 0, 0, 0, 0, DateTimeZone.forID("Europe/Helsinki"))
+  val sizeLimitForFetchingByPersons = 100
   val resourceQuerySize = 5000
 
   implicit val defaultTimeout: Timeout = 15.minutes
@@ -105,26 +106,17 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
 
   private def tutkinnotHakemuksilta(q: EnsikertalainenQuery): Future[Map[String, Option[Int]]] = {
     def fetchHakemukset = {
-      val sizeLimitForFetchingByPersons = 100
-
       if (q.henkiloOids.size <= sizeLimitForFetchingByPersons)
         hakemusService.hakemuksetForPersonsInHaku(q.henkiloOids, q.hakuOid)
-      else if (q.hakukohdeOid.isDefined)
-        hakemusService.hakemuksetForHakukohde(q.hakukohdeOid.get, None)
       else
-        hakemusService.hakemuksetForHaku(q.hakuOid, None)
+        hakemusService.suoritusoikeudenTaiAiemmanTutkinnonVuosi(q.hakuOid, q.hakukohdeOid)
     }
 
-    fetchHakemukset.map(_
-      .filter(_.personOid.isDefined)
-      .groupBy(_.personOid.get)
-      .mapValues(_
-        .filter(_.answers.exists(_.koulutustausta.exists(_.suoritusoikeus_tai_aiempi_tutkinto.contains("true"))))
-        .flatMap(_.answers.flatMap(_.koulutustausta.flatMap(_.suoritusoikeus_tai_aiempi_tutkinto_vuosi.map(_.toInt))))
-        .sorted
-        .headOption
-      )
-    )
+    fetchHakemukset.map(_.collect({
+      case FullHakemus(_, Some(personOid), _, Some(HakemusAnswers(_, Some(koulutustausta), _, _, _)), _, _)
+        if koulutustausta.suoritusoikeus_tai_aiempi_tutkinto.contains("true") =>
+        (personOid, koulutustausta.suoritusoikeus_tai_aiempi_tutkinto_vuosi.map(_.toInt))
+    }).toMap)
   }
 
   private def vastaanotot(q: EnsikertalainenQuery)(joSelvitetyt: Set[String]): Future[Map[String, DateTime]] =
