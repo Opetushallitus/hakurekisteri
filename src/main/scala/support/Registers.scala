@@ -7,6 +7,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor}
 import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchActor}
+import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusJDBCActor}
 import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, OrganizationHierarchy}
@@ -32,14 +33,17 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
   import scala.reflect.runtime.universe._
   implicit val ec:ExecutionContext = system.dispatcher
 
+  val orgRestExecutor = ExecutorUtil.createExecutor(5, "authorizer-organization-rest-client-pool")
+  val organisaatioClient: VirkailijaRestClient = new VirkailijaRestClient(config.integrations.organisaatioConfig, None)(orgRestExecutor, system)
+
   def authorizer[A <: Resource[I, A] : ClassTag: Manifest, I: Manifest](guarded: ActorRef, orgFinder: A => Option[String], komoFinder: A => Option[String]): ActorRef = {
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (i: A) => (orgFinder(i).map(Set(_)).getOrElse(Set()), komoFinder(i)), config)), s"$resource-authorizer")
+    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (i: A) => (orgFinder(i).map(Set(_)).getOrElse(Set()), komoFinder(i)), config, organisaatioClient)), s"$resource-authorizer")
   }
 
   def authorizer[A <: Resource[I, A] : ClassTag: Manifest, I: Manifest](guarded: ActorRef, orgFinder: A => Option[String]): ActorRef = {
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (i: A) => (orgFinder(i).map(Set(_)).getOrElse(Set()), None), config)), s"$resource-authorizer")
+    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (i: A) => (orgFinder(i).map(Set(_)).getOrElse(Set()), None), config, organisaatioClient)), s"$resource-authorizer")
   }
 
   val suoritusOrgResolver: PartialFunction[Suoritus, String] = {
@@ -79,6 +83,6 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
   override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusOrgResolver.lift, suoritusKomoResolver.lift)
   override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija:Opiskelija) => Some(opiskelija.oppilaitosOid))
   override val opiskeluoikeusRekisteri = authorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus:Opiskeluoikeus) => Some(opiskeluoikeus.myontaja), (opiskeluoikeus:Opiskeluoikeus) => Some(opiskeluoikeus.komo))
-  override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](unauthorized.arvosanaRekisteri, resolve, config)), "arvosana-authorizer")
+  override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](unauthorized.arvosanaRekisteri, resolve, config, organisaatioClient)), "arvosana-authorizer")
   override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era:ImportBatch) => Some(Oids.ophOrganisaatioOid))
 }

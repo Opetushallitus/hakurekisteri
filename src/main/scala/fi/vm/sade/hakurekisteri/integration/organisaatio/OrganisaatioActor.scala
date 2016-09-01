@@ -1,10 +1,9 @@
 package fi.vm.sade.hakurekisteri.integration.organisaatio
 
-import java.net.URLEncoder
 import java.util.concurrent.ExecutionException
 
 import akka.actor.Status.Failure
-import akka.actor.{Cancellable, Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.mocks.OrganisaatioMock

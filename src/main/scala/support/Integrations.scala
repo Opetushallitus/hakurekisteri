@@ -1,8 +1,9 @@
 package support
 
 import java.util.concurrent.TimeUnit
-
+import scala.concurrent.duration._
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.pattern.{Backoff, BackoffSupervisor}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
@@ -113,13 +114,22 @@ class BaseIntegrations(rekisterit: Registers,
     casUrl = None, user = None, password = None
   ), None)(restEc, system)
 
-  val tarjonta = system.actorOf(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
-  val organisaatiot = system.actorOf(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
+  def getSupervisedActorFor(props: Props, name: String) = system.actorOf(BackoffSupervisor.props(
+    Backoff.onStop(
+      props,
+      childName = name,
+      minBackoff = 3.seconds,
+      maxBackoff = 30.seconds,
+      randomFactor = 0.2
+    )), name)
+
+  val tarjonta = getSupervisedActorFor(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
+  val organisaatiot = getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(henkiloClient, config)), "henkilo")
   val hakemusService = new HakemusService(hakemusClient)
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
-  val valintaTulos = system.actorOf(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
+  val valintaTulos = getSupervisedActorFor(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
   val valintarekisteri = system.actorOf(Props(new ValintarekisteriActor(valintarekisteriClient, config)), "valintarekisteri")
   val ytl = system.actorOf(Props(new YtlActor(
     henkilo,
