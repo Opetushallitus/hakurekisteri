@@ -2,11 +2,11 @@ package fi.vm.sade.hakurekisteri.organization
 
 import java.util.UUID
 
-import akka.actor.{Actor, ActorRef, Cancellable}
+import akka.actor.{Actor, ActorRef, Cancellable, Status}
 import akka.event.Logging
 import dispatch.Defaults._
 import dispatch._
-import fi.vm.sade.hakurekisteri.integration.{HttpConfig, OphUrlProperties, VirkailijaRestClient}
+import fi.vm.sade.hakurekisteri.integration.VirkailijaRestClient
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Resource, User}
 import fi.vm.sade.hakurekisteri.storage.{DeleteResource, Identified}
 import fi.vm.sade.hakurekisteri.{Config, Oids}
@@ -18,41 +18,38 @@ class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filtered
   extends FutureOrganizationHierarchy[A, I](filteredActor, (item: A) => Future.successful(organizationFinder(item)), config, organisaatioClient = organisaatioClient)
 
 class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](filteredActor: ActorRef, organizationFinder: (A) => concurrent.Future[(Set[String],Option[String])], config: Config, organisaatioClient: VirkailijaRestClient) extends Actor {
-  val authorizer = new OrganizationHierarchyAuthorization[A, I](organizationFinder, config.integrations.organisaatioConfig, organisaatioClient)
-
   val logger = Logging(context.system, this)
-  private var scheduledTask: Cancellable = null
+  implicit val timeout: akka.util.Timeout = 300.seconds
+  private var authorizer: OrganizationAuthorizer = OrganizationAuthorizer(Map())
+  private var organizationCacheUpdater: Cancellable = _
 
-  class Update
-  object update extends Update
+  case object Update
 
   override def preStart() {
-    scheduledTask = context.system.scheduler.schedule(
+    organizationCacheUpdater = context.system.scheduler.schedule(
       0.seconds, config.integrations.organisaatioCacheHours.hours,
-      self, update)
+      self, Update)
   }
 
   override def postStop() {
-    scheduledTask.cancel()
+    organizationCacheUpdater.cancel()
   }
-
-  implicit val timeout: akka.util.Timeout = 300.seconds
-
-  def futfilt(s: Seq[A], authorizer: A => concurrent.Future[Boolean]) = {
-    Future.traverse(s)((item) => authorizer(item).map((_ , item))).map(_.filter(_._1).map(_._2))
-  }
-
-  val log = Logging(context.system, this)
 
   import akka.pattern.{ask, pipe}
   override def receive: Receive = {
-    case a:Update => fetch()
+    case Update =>
+      organisaatioClient.readObject[OrganisaatioHakutulos]("organisaatio-service.hierarkia.hae.aktiiviset")(200, config.integrations.organisaatioConfig.httpClientMaxRetries)
+        .map(FutureOrganizationHierarchy.parseOrganizationHierarchy) pipeTo self
 
-    case a:OrganizationAuthorizer =>
-      logger.info("org paths loaded"); authorizer.authorizer = a
+    case a: OrganizationAuthorizer =>
+      logger.info("organization paths loaded")
+      authorizer = a
+
+    case Status.Failure(t) =>
+      logger.error(t, "failed to load organization paths")
 
     case AuthorizedQuery(q, user) =>
-      (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(futfilt(_, authorizer.isAuthorized(user, "READ"))) pipeTo sender
+      (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(futfilt(_, isAuthorized(user, "READ"))) pipeTo sender
 
     case AuthorizedRead(id, user) =>
       (filteredActor ? id).mapTo[Option[A with Identified[UUID]]].flatMap(checkRights(user, "READ")) pipeTo sender
@@ -79,65 +76,32 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](f
       filteredActor forward message
   }
 
-  def checkRights(user: User, action:String) = (item:Option[A]) => item match {
+  def checkRights(user: User, action:String)(item:Option[A]) = item match {
     case None => Future.successful(None)
-    case Some(resource) => authorizer.isAuthorized(user, action)(resource).map((authorized) => if (authorized) Some(resource) else None)
+    case Some(resource) => isAuthorized(user, action)(resource).map(authorized => if (authorized) Some(resource) else None)
   }
 
-  def fetch() {
-    val orgAuth: Future[OrganizationAuthorizer] = authorizer.createAuthorizer
-    orgAuth pipeTo self
-    orgAuth.onFailure {
-      case e: Exception => logger.error(e, "failed loading organizations")
-    }
+  private def subjectFinder(resource: A)(implicit m: Manifest[A]): Future[Subject] =
+    organizationFinder(resource).map(o => Subject(m.runtimeClass.getSimpleName, o._1, o._2))
+
+  private def isAuthorized(user:User, action: String)(item: A): concurrent.Future[Boolean] =
+    authorizer.checkAccess(user, action,  subjectFinder(item))
+
+  private def futfilt(s: Seq[A], authorizer: A => concurrent.Future[Boolean]) = {
+    Future.traverse(s)((item) => authorizer(item).map((_ , item))).map(_.filter(_._1).map(_._2))
   }
 }
 
-class OrganizationHierarchyAuthorization[A <: Resource[I, A] : Manifest, I](organizationFinder: A => Future[(Set[String], Option[String])], httpConfig: HttpConfig, organisaatioClient: VirkailijaRestClient) {
-  def className[C](implicit m: Manifest[C]) = m.runtimeClass.getSimpleName
-  lazy val resourceName = className[A]
-  val subjectFinder = (resource: A) => organizationFinder(resource).map(o => Subject(resourceName, o._1, o._2))
-  val svc = url(OphUrlProperties.url("organisaatio-service.soap")).POST <:< Map("Caller-Id" -> "suoritusrekisteri.suoritusrekisteri.backend",
-    "clientSubSystemCode" -> "suoritusrekisteri.suoritusrekisteri.backend",
-    "CSRF" -> "suoritusrekisteri", "Cookie" -> "CSRF=suoritusrekisteri")
-  var authorizer = OrganizationAuthorizer(Map())
+object FutureOrganizationHierarchy {
+  private def parentOids(org: OrganisaatioPerustieto): (String, Set[String]) =
+    (org.oid, org.parentOidPath.split("/").toSet)
 
-  def addSelfToPaths(m: Map[String,Seq[String]], org:Org) = {
-    m + (org.oid -> Seq(org.oid))
+  private def flattenAndInverseHierarchy(org: OrganisaatioPerustieto): Map[String, Set[String]] =
+    org.children.map(flattenAndInverseHierarchy).fold(Map())(_ ++ _) + parentOids(org)
+
+  def parseOrganizationHierarchy(hakutulos: OrganisaatioHakutulos): OrganizationAuthorizer = {
+    OrganizationAuthorizer(hakutulos.organisaatiot.map(flattenAndInverseHierarchy).fold(Map())(_ ++ _))
   }
-
-  def addParentToPaths(m:Map[String,Seq[String]], org:Org) = {
-    val addedParents = org.parent match {
-      case None => Map[String,Seq[String]]()
-      case Some(parent) => m.filter((t) => t._2.head.equals(org.oid)).map((t) => t._1 -> (parent +: t._2))
-    }
-    m ++ addedParents
-  }
-
-  def createAuthorizer: Future[OrganizationAuthorizer] = fetchOrganizationHierarchy map OrganizationAuthorizer
-
-  def readJSON: Future[OrganisaatioHakutulos] = {
-    organisaatioClient.readObject[OrganisaatioHakutulos]("organisaatio-service.hierarkia.hae.aktiiviset")(200, httpConfig.httpClientMaxRetries)
-  }
-
-  def collectChildrenOids(parent: OrganisaatioPerustieto): List[(String, Set[String])] = {
-    if (parent.children.isEmpty) List((parent.oid, parent.parentOidPath.split("/").toSet))
-    else {
-      val leaves: List[(String, Set[String])] = parent.children.flatMap(child => collectChildrenOids(child))
-      val newS: (String, Set[String]) = (parent.oid, parent.parentOidPath.split("/").toSet)
-      newS :: leaves
-    }
-  }
-
-  def fetchOrganizationHierarchy: concurrent.Future[Map[String, Set[String]]] = {
-    parseOrganizationHierarchy(readJSON)
-  }
-
-  def parseOrganizationHierarchy(hakutulos: Future[OrganisaatioHakutulos]): concurrent.Future[Map[String, Set[String]]] = {
-    hakutulos.map((x: OrganisaatioHakutulos) => x.organisaatiot.flatMap((org: OrganisaatioPerustieto) => collectChildrenOids(org))).map(_.toMap)
-  }
-
-  def isAuthorized(user:User, action: String)(item: A): concurrent.Future[Boolean] = authorizer.checkAccess(user, action,  subjectFinder(item))
 }
 
 case class AuthorizedQuery[A](q: Query[A],  user: User)
@@ -155,12 +119,12 @@ case class OrganisaatioPerustieto(oid: String, alkuPvm: String, lakkautusPvm: Op
                                   virastoTunnus: Option[String], organisaatiotyypit: List[String])
 case class OrganisaatioHakutulos(numHits: Integer, organisaatiot: List[OrganisaatioPerustieto])
 
-case class OrganizationAuthorizer(orgPaths: Map[String, Set[String]]) {
+case class OrganizationAuthorizer(ancestors: Map[String, Set[String]]) {
   def checkAccess(user: User, action: String, futTarget: concurrent.Future[Subject]) = futTarget.map {
     (target: Subject) => {
       val allowedOrgs = user.orgsFor(action, target.resource)
-      val paths: Set[String] = target.orgs.flatMap((oid) => orgPaths.getOrElse(oid, Seq(Oids.ophOrganisaatioOid, oid)))
-      paths.exists { x => user.username == x || allowedOrgs.contains(x) } || komoAuthorization(user, action, target.komo)
+      val targetAncestors = target.orgs.flatMap(oid => ancestors.getOrElse(oid, Set(Oids.ophOrganisaatioOid, oid)))
+      targetAncestors.exists { x => user.username == x || allowedOrgs.contains(x) } || komoAuthorization(user, action, target.komo)
     }
   }
 
