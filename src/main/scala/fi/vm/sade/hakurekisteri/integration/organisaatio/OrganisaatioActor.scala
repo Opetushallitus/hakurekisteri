@@ -1,10 +1,9 @@
 package fi.vm.sade.hakurekisteri.integration.organisaatio
 
-import java.net.URLEncoder
 import java.util.concurrent.ExecutionException
 
 import akka.actor.Status.Failure
-import akka.actor.{Cancellable, Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.pipe
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.mocks.OrganisaatioMock
@@ -33,16 +32,7 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   log.info(s"timeToLive: $timeToLive, reloadInterval: $reloadInterval")
 
   private val cache: FutureCache[String, Organisaatio] = new FutureCache[String, Organisaatio](timeToLive.toMillis)
-  private var orgHierarchyCache: Map[String, Set[String]] = Map()
   private var oppilaitoskoodiIndex: Map[String, String] = Map()
-
-  private def collectChildrenOids(parent: Organisaatio): List[(String, Set[String])] = {
-    val l: List[(String, Set[String])] = parent.children.flatMap(x => {
-      if (x.children.isEmpty) List((parent.oid, Set(parent.oid)))
-      else collectChildrenOids(x)
-    }).toList
-    (parent.oid, l.flatMap(x => x._2).toSet) :: l
-  }
 
   private def saveOrganisaatiot(s: Seq[Organisaatio]): Unit = {
     s.foreach(org => {
@@ -109,16 +99,12 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
   }
   
   case class CacheOrganisaatiot(o: Seq[Organisaatio])
-  case class OrganizationHierarchy(oid: String)
 
   override def receive: Receive = {
     case RefreshOrganisaatioCache => fetchAll(sender())
 
     case CacheOrganisaatiot(o) =>
       saveOrganisaatiot(o)
-      o.flatMap(org => {
-        collectChildrenOids(org)
-      }).foreach(parentToChildren => orgHierarchyCache + (parentToChildren._1 -> parentToChildren._2))
       log.info(s"${o.size} saved to cache: ${cache.size}, oppilaitoskoodiIndex: ${oppilaitoskoodiIndex.size}")
       if (sender() != ActorRef.noSender)
         sender ! true
@@ -139,8 +125,6 @@ class HttpOrganisaatioActor(organisaatioClient: VirkailijaRestClient,
         case Some(oppilaitos) => Future.successful(OppilaitosResponse(koodi, oppilaitos))
         case None => Future.failed(OppilaitosNotFoundException(koodi))
       } pipeTo sender
-    case OrganizationHierarchy(oid: String) =>
-      sender ! orgHierarchyCache.get(oid).getOrElse(Set())
   }
 }
 
