@@ -1,0 +1,54 @@
+[
+   {
+      "_id": {
+         "inc": 1590671793,
+         "timeSecond": 1465392093,
+         "machine": -458168971,
+         "timestamp": 1465392093,
+         "time": 1465392093000,
+         "date": 1465392093000,
+         "new": false
+      },
+      "answers": {
+         "henkilotiedot": {
+            "Henkilotunnus": "080696-9469"
+         }
+      },
+      "personOid": "1.2.246.562.24.49257863365",
+      "oid": "1.2",
+      "applicationSystemId": "1.2.3"
+   },
+   {
+      "_id": {
+         "inc": 1590671793,
+         "timeSecond": 1465392093,
+         "machine": -458168971,
+         "timestamp": 1465392093,
+         "time": 1465392093000,
+         "date": 1465392093000,
+         "new": false
+      },
+      "answers": {
+         "henkilotiedot": {
+            "Henkilotunnus": "080696-9211"
+         }
+      },
+      "personOid": "1.2.246.562.24.49257863366",
+      "oid": "1.2.6",
+      "applicationSystemId": "1.2.3"
+   },
+   {
+      "_id": {
+         "inc": 1590671793,
+         "timeSecond": 1465392093,
+         "machine": -458168971,
+         "timestamp": 1465392093,
+         "time": 1465392093000,
+         "date": 1465392093000,
+         "new": false
+      },
+      "answers": {},
+      "oid": "1.2",
+      "applicationSystemId": "1.2.3"
+   }
+]
