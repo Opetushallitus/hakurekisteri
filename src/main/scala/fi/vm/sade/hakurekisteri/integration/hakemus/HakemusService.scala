@@ -45,13 +45,17 @@ case class ListFullSearchDto(searchTerms: String = "",
                              keys: List[String])
 
 object ListFullSearchDto {
-  def suoritusvuosi(aoOids: List[String], asIds: List[String]) =
-    ListFullSearchDto(aoOids = aoOids, asIds = asIds, keys = List(
-      "oid",
-      "personOid",
-      "applicationSystemId",
+  val commonKeys = List("oid", "applicationSystemId", "personOid")
+
+  def suoritusvuosi(hakukohdeOid: Option[String], hakuOid: String) =
+    ListFullSearchDto(aoOids = hakukohdeOid.toList, asIds = List(hakuOid), keys = commonKeys ++ List(
       "answers.koulutustausta.suoritusoikeus_tai_aiempi_tutkinto",
       "answers.koulutustausta.suoritusoikeus_tai_aiempi_tutkinto_vuosi"
+    ))
+
+  def hetuPersonOid(hakuOid: String) =
+    ListFullSearchDto(asIds = List(hakuOid), keys = commonKeys ++ List(
+      "answers.henkilotiedot.Henkilotunnus"
     ))
 }
 
@@ -84,7 +88,7 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
 
   def suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid: String, hakukohdeOid: Option[String]): Future[Seq[FullHakemus]] = {
     restClient.postObject[ListFullSearchDto, List[FullHakemus]]("haku-app.listfull")(acceptedResponseCode = 200,
-      ListFullSearchDto.suoritusvuosi(hakukohdeOid.toList, List(hakuOid)))
+      ListFullSearchDto.suoritusvuosi(hakukohdeOid, hakuOid))
   }
 
   def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]] = {
@@ -95,12 +99,15 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
     restClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationoption", organisaatio.orNull)(200, Set(hakukohdeOid))
   }
 
-  def addTrigger(trigger: Trigger) = triggers = triggers :+ trigger
+  def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[FullHakemus]] =
+    restClient.postObject[ListFullSearchDto, List[FullHakemus]]("haku-app.listfull")(acceptedResponseCode = 200,
+      ListFullSearchDto.hetuPersonOid(hakuOid)).flatMap { hakemukset =>
+        Future {
+          hakemukset.filter(hakemus => hakemus.personOid.isDefined && hakemus.hetu.isDefined)
+        }
+      }
 
-  private def triggerHakemukset(hakemukset: Seq[FullHakemus]) =
-    hakemukset.foreach(hakemus =>
-      triggers.foreach(trigger => trigger.f(hakemus))
-    )
+  def addTrigger(trigger: Trigger) = triggers = triggers :+ trigger
 
   def processModifiedHakemukset(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(2)),
                                 refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
@@ -113,6 +120,11 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
       }
     })
   }
+
+  private def triggerHakemukset(hakemukset: Seq[FullHakemus]) =
+    hakemukset.foreach(hakemus =>
+      triggers.foreach(trigger => trigger.f(hakemus))
+    )
 
   private def fetchHakemukset(page: Int = 0, params: SearchParams): Future[Seq[FullHakemus]] = {
     restClient.readObject[List[FullHakemus]]("haku-app.listfull", params.copy(start = page * pageSize))(acceptedResponseCode = 200, maxRetries = 2)
