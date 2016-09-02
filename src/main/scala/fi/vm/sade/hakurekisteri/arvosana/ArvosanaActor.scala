@@ -17,9 +17,6 @@ case class EmptyLisatiedot() extends Query[Arvosana]
 class ArvosanaJDBCActor(val journal: JDBCJournal[Arvosana, UUID, ArvosanaTable], poolSize: Int)
   extends ResourceActor[Arvosana, UUID] with JDBCRepository[Arvosana, UUID, ArvosanaTable] with JDBCService[Arvosana, UUID, ArvosanaTable] {
 
-  val q = journal.db.run(sql"select count(distinct resource_id) from arvosana".as[Int])
-  override def count: Int = 42 //Await.result(q, 60.minutes).head
-
   override def deduplicationQuery(i: Arvosana)(t: ArvosanaTable): Rep[Boolean] = t.suoritus === i.suoritus &&
     t.aine === i.aine &&
     t.lisatieto.getOrElse("") === i.lisatieto.getOrElse("") &&
