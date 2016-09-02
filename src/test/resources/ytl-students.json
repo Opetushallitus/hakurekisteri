@@ -1,0 +1,92 @@
+{
+  "students": [
+    {
+      "ssn": "200495-9177",
+      "unexpectedfield": 1234,
+      "lastname": "Testinen",
+      "firstnames": "Jussi Johannes",
+      "graduationPeriod": "2015K",
+      "graduationDate": "2016-06-04",
+      "graduationSchoolOphOid": "1.2.33.44444",
+      "graduationSchoolYtlNumber": "1234",
+      "language": "fi",
+      "exams": [
+        {
+          "examId": "A",
+          "examRole": 11,
+          "period": "2015K",
+          "grade": "M",
+          "points": 65,
+          "sections": [
+            {
+              "sectionId": "T002",
+              "sectionPoints": 10
+            },
+            {
+              "sectionId": "T001",
+              "sectionPoints": 35
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ssn": "200495-9177",
+      "unexpectedfield": 1234,
+      "firstnames": "With Missing Lastname",
+      "graduationPeriod": "2015K",
+      "graduationDate": "2016-06-04",
+      "graduationSchoolOphOid": "1.2.33.44444",
+      "graduationSchoolYtlNumber": "1234",
+      "language": "fi",
+      "exams": [
+        {
+          "examId": "A",
+          "examRole": 11,
+          "period": "2015K",
+          "grade": "M",
+          "points": 65,
+          "sections": [
+            {
+              "sectionId": "T002",
+              "sectionPoints": 10
+            },
+            {
+              "sectionId": "T001",
+              "sectionPoints": 35
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ssn": "200495-9177",
+      "lastname": "Testinen",
+      "firstnames": "Simo Johannes",
+      "graduationPeriod": "Y2K",
+      "graduationDate": "2016-06-04",
+      "graduationSchoolOphOid": "1.2.33.44444",
+      "graduationSchoolYtlNumber": "1234",
+      "language": "fi",
+      "exams": [
+        {
+          "examId": "A",
+          "examRole": 11,
+          "period": "2015K",
+          "grade": "M",
+          "points": 65,
+          "sections": [
+            {
+              "sectionId": "T002",
+              "sectionPoints": 10
+            },
+            {
+              "sectionId": "T001",
+              "sectionPoints": 35
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
