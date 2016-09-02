@@ -32,16 +32,6 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
   val vastaanottohetki = new DateTime(2015, 1, 1, 0, 0, 0, 0)
   val hakemusServiceMock = mock[HakemusService]
 
-  private val hakemusActor: ActorRef = system.actorOf(Props(new Actor {
-    override def receive: Receive = {
-      case q: HakemusQuery if q.haku.isDefined => sender ! Seq(
-        Hakemus().setPersonOid("foo").build,
-        Hakemus().setPersonOid("bar").build,
-        Hakemus().setPersonOid("zap").build
-      )
-    }
-  }))
-
   addServlet(new EnsikertalainenResource(ensikertalainenActor = system.actorOf(Props(new EnsikertalainenActor(
     suoritusActor = system.actorOf(Props(new Actor {
       override def receive: Receive = {
@@ -105,8 +95,12 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
   }
 
   test("returns ensikertalaisuus for all hakijas in haku") {
-    Mockito.when(hakemusServiceMock.personOidsForHaku(Matchers.anyString(), Matchers.any[Option[String]]))
-      .thenReturn(Future.successful(Set("1", "2", "3")))
+    Mockito.when(hakemusServiceMock.suoritusoikeudenTaiAiemmanTutkinnonVuosi(Matchers.anyString, Matchers.any[Option[String]]))
+      .thenReturn(Future.successful(Seq[FullHakemus](
+        FullHakemus("1", Some("1"), "1.2.3", None, None, Seq()),
+        FullHakemus("2", Some("2"), "1.2.3", None, None, Seq()),
+        FullHakemus("3", Some("3"), "1.2.3", None, None, Seq())
+      )))
     get("/ensikertalainen/haku/1.2.3") {
       val e = read[Seq[Ensikertalainen]](response.body)
       e.size should be (3)
@@ -114,8 +108,8 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
   }
 
   test("returns 404 if haku not found") {
-    Mockito.when(hakemusServiceMock.personOidsForHaku(Matchers.anyString(), Matchers.any[Option[String]]))
-      .thenReturn(Future.successful(Set[String]()))
+    Mockito.when(hakemusServiceMock.suoritusoikeudenTaiAiemmanTutkinnonVuosi(Matchers.anyString, Matchers.any[Option[String]]))
+      .thenReturn(Future.successful(Seq[FullHakemus]()))
     get("/ensikertalainen/haku/notfound") {
       response.status should be(404)
     }

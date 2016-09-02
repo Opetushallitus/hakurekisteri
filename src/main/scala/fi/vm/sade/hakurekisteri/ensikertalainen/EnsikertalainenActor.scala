@@ -25,6 +25,8 @@ case class EnsikertalainenQuery(henkiloOids: Set[String],
                                 suoritukset: Option[Seq[Suoritus]] = None,
                                 opiskeluoikeudet: Option[Seq[Opiskeluoikeus]] = None)
 
+case class HaunEnsikertalaisetQuery(hakuOid: String)
+
 object QueryCount
 
 case class QueriesRunning(count: Map[String, Int], timestamp: Long = Platform.currentTime)
@@ -73,8 +75,37 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   override def receive: Receive = {
     case q: EnsikertalainenQuery =>
       laskeEnsikertalaisuudet(q) pipeTo sender
+    case HaunEnsikertalaisetQuery(hakuOid) =>
+      haunEnsikertalaiset(hakuOid) pipeTo sender
     case QueryCount =>
       sender ! QueriesRunning(Map[String, Int]())
+  }
+
+  private def haunEnsikertalaiset(hakuOid: String): Future[Seq[Ensikertalainen]] = for {
+    haku <- (hakuActor ? GetHaku(hakuOid)).mapTo[Haku]
+    tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(hakuOid)
+    valmistumishetket <- valmistumiset(tutkintovuodetHakemuksilta.keySet, Seq())
+    opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
+      tutkintovuodetHakemuksilta.keySet.diff(valmistumishetket.keySet),
+      Seq()
+    )
+    vastaanottohetket <- vastaanotot(
+      tutkintovuodetHakemuksilta.keySet
+        .diff(valmistumishetket.keySet)
+        .diff(opiskeluoikeuksienAlkamiset.keySet)
+    )
+  } yield {
+    tutkintovuodetHakemuksilta.map {
+      case (henkiloOid, tutkintovuosi) =>
+        ensikertalaisuus(
+          henkiloOid,
+          haku.viimeinenHakuaikaPaattyy.getOrElse(throw new IllegalArgumentException(s"haku $hakuOid is missing hakuajan päätös")),
+          valmistumishetket.get(henkiloOid),
+          opiskeluoikeuksienAlkamiset.get(henkiloOid),
+          vastaanottohetket.get(henkiloOid),
+          tutkintovuosi
+        )
+    }.toSeq
   }
 
   private def laskeEnsikertalaisuudet(q: EnsikertalainenQuery): Future[Seq[Ensikertalainen]] = for {
@@ -110,6 +141,16 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
         tutkintovuodetHakemuksilta.get(henkilo)
       )
     })
+  }
+
+  private def tutkinnotHakemuksilta(hakuOid: String): Future[Map[String, Option[Int]]] = {
+    hakemusService.suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid, None).map(_.collect {
+      case FullHakemus(_, Some(personOid), _, Some(HakemusAnswers(_, Some(koulutustausta), _, _, _)), _, _)
+        if koulutustausta.suoritusoikeus_tai_aiempi_tutkinto.contains("true") =>
+        (personOid, Some(koulutustausta.suoritusoikeus_tai_aiempi_tutkinto_vuosi.get.toInt))
+      case FullHakemus(_, Some(personOid), _, _, _, _) =>
+        (personOid, None)
+    }.toMap)
   }
 
   private def tutkinnotHakemuksilta(henkiloOids: Set[String],

@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutionException
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
-import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery}
+import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery, HaunEnsikertalaisetQuery}
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
 import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusService
 import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
@@ -58,15 +58,8 @@ class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService
 
     new AsyncResult() {
       override implicit def timeout: Duration = 15.minutes
-      private val q = {
-        val henkiloOids = hakemusService.personOidsForHaku(hakuOid, None)
-        henkiloOids.flatMap(persons => (ensikertalainenActor ? EnsikertalainenQuery(
-          henkiloOids = persons,
-          hakuOid = hakuOid
-        ))(15.minutes).mapTo[Seq[Ensikertalainen]])
-      }
-      logQuery(Map("haku" -> hakuOid), t0, q)
-      override val is = q
+      override val is = (ensikertalainenActor ? HaunEnsikertalaisetQuery(hakuOid))(15.minutes).mapTo[Seq[Ensikertalainen]]
+      logQuery(Map("haku" -> hakuOid), t0, is)
     }
   }
 
