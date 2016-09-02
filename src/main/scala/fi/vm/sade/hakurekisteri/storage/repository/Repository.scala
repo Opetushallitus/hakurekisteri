@@ -13,8 +13,6 @@ trait Repository[T, I] {
 
   def listAll():Seq[T with Identified[I]]
 
-  def count: Int
-
   def get(id: I): Option[T with Identified[I]]
 
   def cursor(t:T): Any
@@ -95,8 +93,6 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
   def index(old: Option[T with Identified[I]], oid: Option[T with Identified[I]]) {}
 
   def listAll(): Seq[T with Identified[I]] = store.values.toSeq
-
-  def count: Int = store.values.size
 
   def get(id:I): Option[T with Identified[I]] = store.get(id)
 

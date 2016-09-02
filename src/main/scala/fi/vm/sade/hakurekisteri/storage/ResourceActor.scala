@@ -10,8 +10,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.Try
 
-object GetCount
-
 abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] extends Actor with ActorLogging { this: Repository[T, I] with ResourceService[T, I] =>
   implicit val executionContext: ExecutionContext = context.dispatcher
 
@@ -26,9 +24,6 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
   }
 
   def receive: Receive = {
-    case GetCount =>
-      sender ! operationOrFailure(() => count)
-
     case q: Query[T] =>
       findBy(q) pipeTo sender
 

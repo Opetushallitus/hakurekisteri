@@ -34,8 +34,6 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
     case Updated(res) => res
   }
 
-  override def count: Int = 42 // Await.result(journal.db.run(all.length.result), 10.minute)
-
   def doSave(t: R with Identified[I]): R with Identified[I] = {
     journal.addModification(Updated[R, I](t))
     t
