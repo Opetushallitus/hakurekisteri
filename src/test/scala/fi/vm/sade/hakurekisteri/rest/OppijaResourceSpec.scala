@@ -173,7 +173,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
 
   test("OppijaResource should return 10001 oppijas with ensikertalainen false") {
     when(hakemusServiceMock.personOidsForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(henkilot))
-    when(hakemusServiceMock.hakemuksetForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(Seq[FullHakemus]()))
+    when(hakemusServiceMock.suoritusoikeudenTaiAiemmanTutkinnonVuosi(anyString(), any[Option[String]])).thenReturn(Future.successful(Seq[FullHakemus]()))
 
     waitFuture(resource.fetchOppijat(HakemusQuery(Some("1.2.246.562.6.00000000001"), None, None)))(oppijat => {
       val expectedSize: Int = 10001
@@ -241,7 +241,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
   }
 
   test("OppijaResource should return 100 oppijas when 100 person oids is sent as POST") {
-    when(hakemusServiceMock.hakemuksetForHaku(anyString(), any[Option[String]])).thenReturn(Future.successful(Seq[FullHakemus]()))
+    when(hakemusServiceMock.suoritusoikeudenTaiAiemmanTutkinnonVuosi(anyString, any[Option[String]])).thenReturn(Future.successful(Seq[FullHakemus]()))
     val json = decompose(henkilot.take(100).map(i => s"1.2.246.562.24.$i"))
 
     post("/?haku=1.2.3.4", compact(json)) {
