@@ -77,83 +77,89 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
       sender ! QueriesRunning(Map[String, Int]())
   }
 
-  def loytyyTutkintovuosiHakemukselta(tutkintovuodetHakemuksilta: Map[String, Option[Int]]): Set[String] =
-    tutkintovuodetHakemuksilta.filter(_._2.isDefined).keySet
-
   private def laskeEnsikertalaisuudet(q: EnsikertalainenQuery): Future[Seq[Ensikertalainen]] = for {
     haku <- (hakuActor ? GetHaku(q.hakuOid)).mapTo[Haku]
-    tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(q)
-    valmistumishetket <- valmistumiset(q)(loytyyTutkintovuosiHakemukselta(tutkintovuodetHakemuksilta))
-    opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(q)(
-      loytyyTutkintovuosiHakemukselta(tutkintovuodetHakemuksilta) ++ valmistumishetket.keySet
+    tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(q.henkiloOids, q.hakuOid, q.hakukohdeOid)
+    valmistumishetket <- valmistumiset(
+      q.henkiloOids
+        .diff(tutkintovuodetHakemuksilta.keySet)
+        .diff(q.suoritukset.getOrElse(Seq()).map(_.henkiloOid).toSet),
+      q.suoritukset.getOrElse(Seq())
     )
-    vastaanottohetket <- vastaanotot(q)(
-      loytyyTutkintovuosiHakemukselta(tutkintovuodetHakemuksilta) ++ valmistumishetket.keySet ++ opiskeluoikeuksienAlkamiset.keySet
+    opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
+      q.henkiloOids
+        .diff(tutkintovuodetHakemuksilta.keySet)
+        .diff(valmistumishetket.keySet)
+        .diff(q.opiskeluoikeudet.getOrElse(Seq()).map(_.henkiloOid).toSet),
+      q.opiskeluoikeudet.getOrElse(Seq())
+    )
+    vastaanottohetket <- vastaanotot(
+      q.henkiloOids
+        .diff(tutkintovuodetHakemuksilta.keySet)
+        .diff(valmistumishetket.keySet)
+        .diff(opiskeluoikeuksienAlkamiset.keySet)
     )
   } yield {
     q.henkiloOids.toSeq.map(henkilo => {
-      val vuosi = tutkintovuodetHakemuksilta.getOrElse(henkilo, None)
       ensikertalaisuus(
         henkilo,
         haku.viimeinenHakuaikaPaattyy.getOrElse(throw new IllegalArgumentException(s"haku ${q.hakuOid} is missing hakuajan päätös")),
         valmistumishetket.get(henkilo),
         opiskeluoikeuksienAlkamiset.get(henkilo),
         vastaanottohetket.get(henkilo),
-        vuosi
+        tutkintovuodetHakemuksilta.get(henkilo)
       )
     })
   }
 
-  private def tutkinnotHakemuksilta(q: EnsikertalainenQuery): Future[Map[String, Option[Int]]] = {
+  private def tutkinnotHakemuksilta(henkiloOids: Set[String],
+                                    hakuOid: String,
+                                    hakukohdeOid: Option[String]): Future[Map[String, Int]] = {
     def fetchHakemukset = {
-      if (q.henkiloOids.size <= sizeLimitForFetchingByPersons)
-        hakemusService.hakemuksetForPersonsInHaku(q.henkiloOids, q.hakuOid)
+      if (henkiloOids.size <= sizeLimitForFetchingByPersons)
+        hakemusService.hakemuksetForPersonsInHaku(henkiloOids, hakuOid)
       else
-        hakemusService.suoritusoikeudenTaiAiemmanTutkinnonVuosi(q.hakuOid, q.hakukohdeOid)
+        hakemusService.suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid, hakukohdeOid)
     }
 
     fetchHakemukset.map(_.collect({
       case FullHakemus(_, Some(personOid), _, Some(HakemusAnswers(_, Some(koulutustausta), _, _, _)), _, _)
         if koulutustausta.suoritusoikeus_tai_aiempi_tutkinto.contains("true") =>
-        (personOid, koulutustausta.suoritusoikeus_tai_aiempi_tutkinto_vuosi.map(_.toInt))
+        (personOid, koulutustausta.suoritusoikeus_tai_aiempi_tutkinto_vuosi.get.toInt)
     }).toMap)
   }
 
-  private def vastaanotot(q: EnsikertalainenQuery)(joSelvitetyt: Set[String]): Future[Map[String, DateTime]] =
-    (q.henkiloOids.diff(joSelvitetyt) match {
-      case kysyttavat if kysyttavat.isEmpty => Future.successful(Seq[EnsimmainenVastaanotto]())
-      case kysyttavat => getKkVastaanotonHetket(kysyttavat)
-    }).map(_.collect {
-      case EnsimmainenVastaanotto(oid, Some(date)) => (oid, date)
-    }.toMap)
-
-  private def valmistumiset(q: EnsikertalainenQuery)(joSelvitetyt: Set[String]): Future[Map[String, DateTime]] =
-    q.henkiloOids.diff(joSelvitetyt) match {
-      case kysyttavat if kysyttavat.isEmpty => Future.successful(Map[String, DateTime]())
-      case kysyttavat => q.suoritukset
-        .map(Future.successful)
-        .getOrElse(suoritukset(kysyttavat))
-        .flatMap(kkSuoritukset)
-        .map(_.groupBy(_.henkiloOid))
-        .map(_.mapValues(aikaisinValmistuminen))
+  private def vastaanotot(henkiloOids: Set[String]): Future[Map[String, DateTime]] =
+    if (henkiloOids.isEmpty) {
+      Future.successful(Map())
+    } else {
+      (valintarekisterActor ? ValintarekisteriQuery(henkiloOids, syksy2014)).mapTo[Seq[EnsimmainenVastaanotto]]
         .map(_.collect {
-          case (key, Some(date)) => (key, date)
-        })
+          case EnsimmainenVastaanotto(oid, Some(date)) => (oid, date)
+        }.toMap)
     }
 
-  private def opiskeluoikeudetAlkaneet(q: EnsikertalainenQuery)(joSelvitetyt: Set[String]): Future[Map[String, DateTime]] = {
-    q.henkiloOids.diff(joSelvitetyt) match {
-      case kysyttavat if kysyttavat.isEmpty => Future.successful(Map[String, DateTime]())
-      case kysyttavat => q.opiskeluoikeudet
-          .map(Future.successful)
-          .getOrElse(opiskeluoikeudet(kysyttavat))
-          .map(_.groupBy(_.henkiloOid))
-          .map(_.mapValues(aikaisinMerkitsevaOpiskeluoikeus))
-          .map(_.collect {
-            case (key, Some(date)) => (key, date)
-          })
-    }
-  }
+  private def valmistumiset(henkiloOids: Set[String],
+                            prefetchedSuoritukset: Seq[Suoritus]): Future[Map[String, DateTime]] =
+    suoritukset(henkiloOids).map(_ ++ prefetchedSuoritukset)
+      .flatMap(kkSuoritukset)
+      .map(_.groupBy(_.henkiloOid)
+        .mapValues(aikaisinValmistuminen)
+        .collect {
+          case (henkiloOid, Some(date)) => (henkiloOid, date)
+        }
+      )
+
+  private def opiskeluoikeudetAlkaneet(henkiloOids: Set[String],
+                                       prefetchedOpiskeluoikeudet: Seq[Opiskeluoikeus]): Future[Map[String, DateTime]] =
+    opiskeluoikeudet(henkiloOids).map(fetchedOpiskeluoikeudet => {
+      (fetchedOpiskeluoikeudet ++ prefetchedOpiskeluoikeudet)
+        .groupBy(_.henkiloOid)
+        .mapValues(aikaisinMerkitsevaOpiskeluoikeus)
+        .collect {
+          case (henkiloOid, Some(date)) => (henkiloOid, date)
+        }
+    })
 
   private def opiskeluoikeudet(henkiloOids: Set[String]): Future[Seq[Opiskeluoikeus]] = Future.sequence(
     henkiloOids
@@ -199,10 +205,6 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
         alku.asInstanceOf[DateTime]
     }
     if (alkamiset.isEmpty) None else Some(alkamiset.minBy(_.getMillis))
-  }
-
-  private def getKkVastaanotonHetket(henkiloOids: Set[String]): Future[Seq[EnsimmainenVastaanotto]] = {
-    (valintarekisterActor ? ValintarekisteriQuery(henkiloOids, syksy2014)).mapTo[Seq[EnsimmainenVastaanotto]]
   }
 
   def ensikertalaisuus(henkilo: String,
