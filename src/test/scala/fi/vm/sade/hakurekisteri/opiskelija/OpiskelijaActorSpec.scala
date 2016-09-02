@@ -70,7 +70,9 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
   test("OpiskelijaActor should filter by luokka") {
     withActor { actor =>
       Await.result(Future.sequence(List(o1, o2, o3).map(actor ? _)), 15.seconds)
-      Await.result(actor ? OpiskelijaQuery(luokka = Some("9B")), 15.seconds) should be(Seq(o2, o3))
+      val r = Await.result((actor ? OpiskelijaQuery(luokka = Some("9B"))).mapTo[Seq[Opiskelija with Identified[UUID]]], 15.seconds)
+      r should contain(o2)
+      r should contain(o3)
     }
   }
 
