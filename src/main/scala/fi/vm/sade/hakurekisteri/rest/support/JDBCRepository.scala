@@ -50,7 +50,7 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
   def latest(q: lifted.Query[T, Delta[R, I], Seq]): lifted.Query[T, Delta[R, I], Seq] = {
     for {
       row <- q
-      latest <- q.groupBy(_.resourceId).map {
+      latest <- journal.table.groupBy(_.resourceId).map {
         case (id, deltas) => (id, deltas.map(_.inserted).max)
       }
       if latest._1 === row.resourceId && latest._2.isDefined && latest._2 === row.inserted && !row.deleted
