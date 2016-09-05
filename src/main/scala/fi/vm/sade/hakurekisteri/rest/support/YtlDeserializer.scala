@@ -1,9 +1,10 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
 import java.text.SimpleDateFormat
+import java.util.Date
 
-import fi.vm.sade.hakurekisteri.integration.ytl.{Student, YtlStudents}
-import org.json4s.JsonAST.{JArray, JObject, JString}
+import fi.vm.sade.hakurekisteri.integration.ytl._
+import org.json4s.JsonAST.{JField, JArray, JObject, JString}
 import org.json4s.{CustomSerializer, DefaultFormats, MappingException}
 
 import scala.util.{Failure, Success, Try}
@@ -17,6 +18,25 @@ class KausiDeserializer extends CustomSerializer[fi.vm.sade.hakurekisteri.integr
       throw new UnsupportedOperationException("Serialization is unsupported")
   }
 ))
+
+class StatusDeserializer extends CustomSerializer[Status](format => ({
+  case JObject(fields) if(fields.exists {
+    case ("finished",value: JString)=> true
+    case _ => false
+    }) => Finished()
+  case JObject(fields) if(fields.exists {
+    case ("failure",value: JString)=> true
+    case _ => false
+  }) => Failed()
+
+  case JObject(e) => {
+    println(e)
+    println(e.getClass)
+    InProgress()
+  }
+}, {
+case x: Status => throw new UnsupportedOperationException("Serialization is unsupported")
+}))
 
 class StudentDeserializer extends CustomSerializer[YtlStudents](format => ({
   case JObject(List(("students", JArray(o)))) => {
