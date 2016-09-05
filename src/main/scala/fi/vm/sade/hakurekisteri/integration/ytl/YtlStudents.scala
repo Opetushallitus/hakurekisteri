@@ -5,14 +5,14 @@ import java.util.Date
 
 case class YtlStudents(students: List[Either[Throwable, Student]])
 
-case class Student(ssn: String, lastname: String, firstnames: String, graduationPeriod: Kausi,
-                   graduationDate: Date,
-                   graduationSchoolOphOid: String,
-                   graduationSchoolYtlNumber: String,
-                   language: String,
+case class Student(ssn: String, lastname: String, firstnames: String, graduationPeriod: Option[Kausi],
+                   graduationDate: Option[Date],
+                   graduationSchoolOphOid: Option[String],
+                   graduationSchoolYtlNumber: Option[String],
+                   language: Option[String],
                    exams: Seq[Exam])
 
-case class Exam(examId: String,examRole: Int, period: Kausi, grade: String, points: Int, sections: Seq[Section])
+case class Exam(examId: String,examRole: String, period: Kausi, grade: String, points: Int, sections: Seq[Section])
 
 case class Section(sectionId: String, sectionPoints: Int)
 
