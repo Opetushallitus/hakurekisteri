@@ -4,7 +4,11 @@ import java.util.Date
 
 case class Operation(operationUuid: String)
 
-case class Status(created: Date, name: String, finished: Option[Date], failure: Option[String], status: Option[Date])
+trait Status {}
+
+case class InProgress() extends Status
+case class Finished() extends Status
+case class Failed() extends Status
 
 case class YtlStudents(students: List[Either[Throwable, Student]])
 
