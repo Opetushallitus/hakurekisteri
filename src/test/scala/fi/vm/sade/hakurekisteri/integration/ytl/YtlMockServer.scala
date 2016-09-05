@@ -1,7 +1,9 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
+import java.util.UUID
 import javax.servlet.http.{HttpServletResponse, HttpServletRequest, HttpServlet}
 
+import org.apache.commons.io.IOUtils
 import org.eclipse.jetty.security.authentication.BasicAuthenticator
 import org.eclipse.jetty.security.{ConstraintSecurityHandler, ConstraintMapping, HashLoginService}
 import org.eclipse.jetty.server.Server
@@ -9,40 +11,73 @@ import org.eclipse.jetty.servlet.{ServletHolder, ServletContextHandler}
 import org.eclipse.jetty.util.security.{Constraint, Credential}
 import org.scalatest.{Outcome, Suite, SuiteMixin}
 
+import scala.collection.mutable
+
 trait YtlMockFixture extends SuiteMixin {
   this: Suite =>
   private val ytlMockServer = new YtlMockServer
 
-  def url = s"http://localhost:${ytlMockServer.port}"
+  def statusUrl = "http://localhost:"+ytlMockServer.port+"/api/oph-transfer/status/$1"
+  def bulkUrl = "http://localhost:"+ytlMockServer.port+"/api/oph-transfer/bulk"
+  def downloadUrl = "http://localhost:"+ytlMockServer.port+"/api/oph-transfer/bulk/$1"
+  def fetchOneUrl = "http://localhost:"+ytlMockServer.port+"/api/oph-transfer/student/$1"
   def username = ytlMockServer.username
   def password = ytlMockServer.password
+  ytlMockServer.start()
 
   abstract override def withFixture(test: NoArgTest) = {
     var outcome: Outcome = null
     val statementBody = () => outcome = super.withFixture(test)
-    ytlMockServer.start()
     statementBody()
-    ytlMockServer.stop()
-    /*
-    temporaryFolder(
-      new Statement() {
-        override def evaluate(): Unit = statementBody()
-      },
-      Description.createSuiteDescription("JUnit rule wrapper")
-    ).evaluate()
-    */
     outcome
   }
 }
 
 
 class YtlMockServlet extends HttpServlet {
+  val fakeProsesses: mutable.Map[String,Integer] = mutable.Map()
 
+  override protected def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
+    val fetchBulk = "/api/oph-transfer/bulk"
+    val uri = req.getRequestURI
+    uri match {
+      case x if x == fetchBulk =>
+        val uuid = UUID.randomUUID().toString
+        fakeProsesses.put(uuid, 0)
+        val json = s"""{"operationUuid": "$uuid"}"""
+        resp.getWriter().print(s"$json\n")
+      case _ => resp.sendError(500)
+    }
+  }
   override protected def doGet(req: HttpServletRequest, resp: HttpServletResponse) {
-    val path = req.getContextPath
-    val json = scala.io.Source.fromFile(getClass.getResource("/ytl-student.json").getFile).getLines.mkString
+    val uri = req.getRequestURI
+    val fetchOne = "/api/oph-transfer/student/(.*)".r
+    val pollBulk = "/api/oph-transfer/status/(.*)".r
+    val downloadBulk = "/api/oph-transfer/bulk/(.*)".r
 
-    resp.getWriter().print(s"$json\n");
+    uri match {
+      case fetchOne(hetu) =>
+        val json = scala.io.Source.fromFile(getClass.getResource("/ytl-student.json").getFile).getLines.mkString
+        resp.getWriter().print(s"$json\n")
+      case pollBulk(uuid) =>
+        val json = """{
+        "created": "2016-09-05T12:44:12.707557+03:00",
+        "name": "oph-transfer-generation",
+        "finished": "2016-09-05T12:44:12.844439+03:00",
+        "failure": null,
+        "status": null}""";
+        resp.getWriter().print(s"$json\n")
+      case downloadBulk(uuid) => {
+        val source = getClass.getResource("/student-results.zip").openStream()
+        val writer = resp.getOutputStream
+        IOUtils.copy(source, writer)
+        IOUtils.closeQuietly(source)
+        IOUtils.closeQuietly(writer)
+      }
+      case _ => {
+        resp.sendError(500)
+      }
+    }
   }
 }
 
