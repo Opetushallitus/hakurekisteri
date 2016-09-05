@@ -2,6 +2,9 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.util.Date
 
+case class Operation(operationUuid: String)
+
+case class Status(created: Date, name: String, finished: Option[Date], failure: Option[String], status: Option[Date])
 
 case class YtlStudents(students: List[Either[Throwable, Student]])
 
