@@ -3,8 +3,8 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 import java.io.{InputStream}
 import java.text.SimpleDateFormat
 import java.util.zip.{ZipInputStream}
-import java.{io}
-import fi.vm.sade.hakurekisteri.rest.support.{KausiDeserializer, StudentDeserializer}
+import java.io
+import fi.vm.sade.hakurekisteri.rest.support.{StatusDeserializer, KausiDeserializer, StudentDeserializer}
 import fi.vm.sade.javautils.httpclient._
 import fi.vm.sade.properties.OphProperties
 import org.apache.commons.io.IOUtils
@@ -43,61 +43,73 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem) {
 
   val client = buildClient()
 
-  def zipToStudents(stream: InputStream): Unit = {
+  def zipToStudents(stream: InputStream): Stream[List[Student]] = {
     val zip = new ZipInputStream(stream)
     Stream.continually(Try(zip.getNextEntry()).getOrElse(null))
       .takeWhile(_ != null)
-      .foreach( e => {
+      .map(e => {
         Try(parse(zip).extract[List[Student]]) match {
-          case Success(students) =>
+          case Success(students) => students
           case Failure(e) => throw e
         }
       })
   }
 
-  def fetch(hetus: List[String]): Either[Throwable, List[Student]] = {
-    val writer: OphRequestPostWriter = new OphRequestPostWriter() {
-      override def writeTo(writer: io.Writer): Unit = writer.write(write(hetus))
-    }
-
-    val operation = client.post("ytl.http.host.bulk")
-        .header(HttpHeaders.AUTHORIZATION,preemptiveBasicAuthentication)
-        .dataWriter("application/json", "UTF-8", writer)
-      .expectStatus(200).execute((r:OphHttpResponse) => parse(r.asText()).extract[Operation])
-
-    val uuid = operation.operationUuid
-
-    val status = client.get("ytl.http.host.status", uuid).expectStatus(200).execute((r:OphHttpResponse) => {
-      implicit val formats = new DefaultFormats {
-        override def dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-      }
-      parse(r.asText()).extract[Status]
-    })
-
-    if(status.finished.isDefined) {
-      val download = client.get("ytl.http.host.download", uuid).expectStatus(200).execute((r:OphHttpResponse) => {
-        val output = fileSystem.write(uuid)
-        val input = r.asInputStream()
-        IOUtils.copyLarge(input,output)
-        IOUtils.closeQuietly(input)
-        IOUtils.closeQuietly(output)
-      })
-      val file = zipToStudents(fileSystem.read(uuid))
-
-    } else if(status.failure.isDefined) {
-      Left(new RuntimeException(s"Fetching YTL data with hetu's failed: ${status.failure.get}"))
-    }
-
-    status.finished match {
-      case Some(date) =>
-        Right(List())
-      case _ => null
-    }
-  }
-
   def fetchOne(hetu: String): Student =
     client.get("ytl.http.host.fetchone", hetu).expectStatus(200).execute((r:OphHttpResponse) => parse(r.asText()).extract[Student])
 
+  def fetch(hetus: List[String]): Either[Throwable, Stream[List[Student]]] = {
+    for {
+      operation <- fetchOperation(hetus).right
+      ok <- fetchStatus(operation.operationUuid).right
+      zip <- downloadZip(operation.operationUuid).right
+    } yield zipToStudents(zip)
+  }
+
+  def fetchStatus(uuid: String): Either[Throwable,Status] = {
+    Try(client.get("ytl.http.host.status", uuid).expectStatus(200).execute((r: OphHttpResponse) => {
+      implicit val formats = new DefaultFormats {
+        override def dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+      } + new StatusDeserializer
+      parse(r.asText()).extract[Status]
+    })) match {
+      case Success(e: InProgress) => {
+        Thread.sleep(1000)
+        println(e)
+        fetchStatus(uuid)
+      }
+      case Success(e: Finished) => Right(e)
+      case Success(e: Failed) => Left(new RuntimeException(s"Polling YTL service returned failed status ${e}"))
+      case Failure(e) => Left(e)
+      case status => Left(new RuntimeException(s"Unknown status ${status}"))
+    }
+  }
+
+  def downloadZip(uuid: String): Either[Throwable, InputStream] = {
+    Try(client.get("ytl.http.host.download", uuid).expectStatus(200).execute((r:OphHttpResponse) => {
+      val output = fileSystem.write(uuid)
+      val input = r.asInputStream()
+      IOUtils.copyLarge(input,output)
+      IOUtils.closeQuietly(input)
+      IOUtils.closeQuietly(output)
+      fileSystem.read(uuid)
+    })) match {
+      case Success(e) => Right(e)
+      case Failure(e) => Left(e)
+    }
+  }
+
+  def fetchOperation(hetus: List[String]): Either[Throwable, Operation] = {
+    Try(client.post("ytl.http.host.bulk")
+      .header(HttpHeaders.AUTHORIZATION, preemptiveBasicAuthentication)
+      .dataWriter("application/json", "UTF-8", new OphRequestPostWriter() {
+        override def writeTo(writer: io.Writer): Unit = writer.write(write(hetus))
+      })
+      .expectStatus(200).execute((r: OphHttpResponse) => parse(r.asText()).extract[Operation])) match {
+      case Success(e) => Right(e)
+      case Failure(e) => Left(e)
+    }
+  }
 
   implicit def function0ToRunnable[U](f:(OphHttpResponse) => U): OphHttpResponseHandler[U] =
     new OphHttpResponseHandler[U]{

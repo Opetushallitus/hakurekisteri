@@ -21,17 +21,17 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
     "ok" should equal ("ok")
   }
 
-
   test("Fetch one with basic auth") {
 
     val student = ytlHttpFetch.fetchOne("050996-9574")
     student.lastname should equal ("Vasala")
     student.firstnames should equal ("Sampsa")
   }
+
   test("Fetch many as zip") {
     val students = ytlHttpFetch.fetch(List("050996-9574"))
 
-    students should equal (Right(List()))
+    students.right.get.head.size should equal (7)
   }
 
 }
