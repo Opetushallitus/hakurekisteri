@@ -16,9 +16,17 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
 
   val journal: JDBCJournal[R,I,T]
 
+  implicit val dbExecutor: ExecutionContext
   implicit val idType: BaseTypedType[I] = journal.idType
 
-  override def delete(id: I, source: String): Unit = journal.addModification(Deleted[R,I](id, source))
+  override def delete(id: I, source: String): Unit =
+    journal.runAsSerialized(10, 5.milliseconds, s"Deleting $id", DBIO.seq(
+      latest(id).map(_.current).update(false),
+      journal.table += Deleted(id, source)
+    )) match {
+      case Right(_) => ()
+      case Left(e) => throw e
+    }
 
   override def cursor(t: R): Any = ???
 
@@ -34,43 +42,35 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
     case Updated(res) => res
   }
 
-  def doSave(t: R with Identified[I]): R with Identified[I] = {
-    journal.addModification(Updated[R, I](t))
-    t
-  }
-
   def deduplicationQuery(i: R)(t: T): lifted.Rep[Boolean]
 
-  def deduplicate(i: R): Option[R with Identified[I]] = Await.result(journal.db.run(latest(journal.table.filter(deduplicationQuery(i))).result), 30.seconds).collect {
+  private def deduplicate(i: R): DBIO[Option[R with Identified[I]]] = all.filter(deduplicationQuery(i)).result.map(_.collect {
     case Updated(res) => res
-  }.headOption
+  }.headOption)
 
-  def latest(q: lifted.Query[T, Delta[R, I], Seq]): lifted.Query[T, Delta[R, I], Seq] = {
-    for {
-      row <- q
-      latest <- journal.table.groupBy(_.resourceId).map {
-        case (id, deltas) => (id, deltas.map(_.inserted).max)
-      }
-      if latest._1 === row.resourceId && latest._2.isDefined && latest._2 === row.inserted && !row.deleted
-    } yield row
-  }
+  override def save(t: R): R with Identified[I] =
+    journal.runAsSerialized(10, 5.milliseconds, s"Saving $t", for {
+      identified <- deduplicate(t).map(_.fold(t.identify)(duplicate => t.identify(duplicate.id)))
+      _ <- all.filter(deduplicationQuery(t)).map(_.current).update(false)
+      _ <- journal.table += Updated(identified)
+    } yield identified) match {
+      case Right(r) => r
+      case Left(e) => throw e
+    }
 
-  override def save(t: R): R with Identified[I] = {
-    deduplicate(t) match {
-      case Some(i) => doSave(t.identify(i.id))
-      case None => doSave(t.identify)
+  override def insert(t: R): R with Identified[I] =
+    journal.runAsSerialized(10, 5.milliseconds, s"Inserting $t",
+      deduplicate(t).flatMap(_.fold({
+        val identified = t.identify
+        (journal.table += Updated(identified)).andThen(DBIO.successful(identified))
+      })(DBIO.successful))
+    ) match {
+      case Right(r) => r
+      case Left(e) => throw e
     }
-  }
-  override def insert(t: R): R with Identified[I] = {
-    deduplicate(t) match {
-      case Some(i) => i
-      case None => doSave(t.identify)
-    }
-  }
 }
 
 trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends ResourceService[R,I] { this: JDBCRepository[R,I,T] with ActorLogging =>
-  val dbExecutor:ExecutionContext
   val slowQuery: Long = 100
 
   override def findBy(q: Query[R]): Future[Seq[R with Identified[I]]] = {
