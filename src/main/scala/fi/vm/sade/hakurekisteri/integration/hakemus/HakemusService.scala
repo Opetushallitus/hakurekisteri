@@ -38,16 +38,21 @@ object Trigger {
   })
 }
 
-case class SuoritusvuosiSearchDto(aoOids: List[String] = List(), asIds: List[String] = List()) {
-  val searchTerms = ""
-  val states = List[String]()
-  val keys = List(
-    "oid",
-    "personOid",
-    "applicationSystemId",
-    "answers.koulutustausta.suoritusoikeus_tai_aiempi_tutkinto",
-    "suoritusoikeus_tai_aiempi_tutkinto_vuosi"
-  )
+case class ListFullSearchDto(searchTerms: String = "",
+                             states: List[String] = List(),
+                             aoOids: List[String] = List(),
+                             asIds: List[String] = List(),
+                             keys: List[String])
+
+object ListFullSearchDto {
+  def suoritusvuosi(aoOids: List[String], asIds: List[String]) =
+    ListFullSearchDto(aoOids = aoOids, asIds = asIds, keys = List(
+      "oid",
+      "personOid",
+      "applicationSystemId",
+      "answers.koulutustausta.suoritusoikeus_tai_aiempi_tutkinto",
+      "answers.koulutustausta.suoritusoikeus_tai_aiempi_tutkinto_vuosi"
+    ))
 }
 
 class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
@@ -78,8 +83,8 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
   }
 
   def suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid: String, hakukohdeOid: Option[String]): Future[Seq[FullHakemus]] = {
-    restClient.postObject[SuoritusvuosiSearchDto, List[FullHakemus]]("haku-app.listfull")(acceptedResponseCode = 200,
-      SuoritusvuosiSearchDto(asIds = List(hakuOid), aoOids = hakukohdeOid.toList))
+    restClient.postObject[ListFullSearchDto, List[FullHakemus]]("haku-app.listfull")(acceptedResponseCode = 200,
+      ListFullSearchDto.suoritusvuosi(hakukohdeOid.toList, List(hakuOid)))
   }
 
   def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]] = {
