@@ -61,7 +61,7 @@ class YtlMockServer {
 
   def start(): Unit = {
     val context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-    //context.setSecurityHandler(basicAuth(username, password, "Private!"));
+    context.setSecurityHandler(basicAuth(username, password, "Private!"));
     context.setContextPath("/");
     server.setHandler(context);
     context.addServlet(new ServletHolder(new YtlMockServlet()),"/*");
