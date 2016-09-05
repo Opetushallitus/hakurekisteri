@@ -19,14 +19,7 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
   implicit val dbExecutor: ExecutionContext
   implicit val idType: BaseTypedType[I] = journal.idType
 
-  override def delete(id: I, source: String): Unit =
-    journal.runAsSerialized(10, 5.milliseconds, s"Deleting $id", DBIO.seq(
-      latest(id).map(_.current).update(false),
-      journal.table += Deleted(id, source)
-    )) match {
-      case Right(_) => ()
-      case Left(e) => throw e
-    }
+  override def delete(id: I, source: String): Unit = journal.addModification(Deleted(id, source))
 
   override def cursor(t: R): Any = ???
 
@@ -49,21 +42,18 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
   }.headOption)
 
   override def save(t: R): R with Identified[I] =
-    journal.runAsSerialized(10, 5.milliseconds, s"Saving $t", for {
-      identified <- deduplicate(t).map(_.fold(t.identify)(duplicate => t.identify(duplicate.id)))
-      _ <- all.filter(deduplicationQuery(t)).map(_.current).update(false)
-      _ <- journal.table += Updated(identified)
-    } yield identified) match {
+    journal.runAsSerialized(10, 5.milliseconds, s"Saving $t",
+      deduplicate(t)
+        .map(_.fold(t.identify)(duplicate => t.identify(duplicate.id)))
+        .flatMap(journal.addUpdate)
+    ) match {
       case Right(r) => r
       case Left(e) => throw e
     }
 
   override def insert(t: R): R with Identified[I] =
     journal.runAsSerialized(10, 5.milliseconds, s"Inserting $t",
-      deduplicate(t).flatMap(_.fold({
-        val identified = t.identify
-        (journal.table += Updated(identified)).andThen(DBIO.successful(identified))
-      })(DBIO.successful))
+      deduplicate(t).flatMap(_.fold(journal.addUpdate(t.identify))(DBIO.successful))
     ) match {
       case Right(r) => r
       case Left(e) => throw e

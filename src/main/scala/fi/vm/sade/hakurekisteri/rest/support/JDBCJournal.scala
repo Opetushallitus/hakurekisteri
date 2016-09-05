@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 import akka.actor.ActorSystem
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository._
 import org.postgresql.util.PSQLException
 import slick.ast.BaseTypedType
@@ -34,13 +35,25 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table:
 
   log.info(s"started ${getClass.getSimpleName} with table $tableName")
 
-  override def addModification(o: Delta[R, I]): Unit = {
-    Await.result(db.run(table += o), queryTimeout)
-  }
+  override def addModification(o: Delta[R, I]): Unit =
+    runAsSerialized(10, 5.milliseconds, s"Storing $o", addModificationAction(o)).left.foreach(throw _)
+
+  def addUpdate(r: R with Identified[I]): DBIO[R with Identified[I]] =
+    addModificationAction(Updated(r)).andThen(DBIO.successful(r))
+
+  def addModificationAction(o: Delta[R, I]): DBIO[Delta[R, I]] =
+    DBIO.seq(
+      latestResources.filter(_.resourceId === o.id).map(_.current).update(false),
+      table += o
+    ).andThen(DBIO.successful(o))
 
   override def journal(latestQuery: Option[Long]): Seq[Delta[R, I]] = latestQuery match {
     case None => Await.result(db.run(latestResources.result), queryTimeout)
     case Some(lat) => Await.result(db.run(latestResources.filter(_.inserted >= lat).result), queryTimeout)
+  }
+
+  val latestResources = {
+    table.filter(_.current)
   }
 
   def runAsSerialized[A](retries: Int, wait: Duration, description: String, action: DBIO[A]): Either[Throwable, A] = {
@@ -58,9 +71,5 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table:
         }
       case NonFatal(e) => Left(e)
     }
-  }
-
-  val latestResources = {
-    table.filter(_.current)
   }
 }
