@@ -11,6 +11,8 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
   test("Fetch with basic auth") {
     val v = new OphProperties()
     v.addDefault("ytl.http.host", url)
+    v.addDefault("ytl.http.username", username)
+    v.addDefault("ytl.http.password", password)
     val ytlHttpFetch = new YtlHttpFetch(v)
     val student = ytlHttpFetch.fetchOne("050996-9574")
     student.lastname should equal ("Vasala")
