@@ -2,7 +2,6 @@ package fi.vm.sade.hakurekisteri.integration.hakemus
 
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.concurrent.TimeUnit
 
 import akka.actor.Scheduler
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
@@ -109,7 +108,7 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
 
   def addTrigger(trigger: Trigger) = triggers = triggers :+ trigger
 
-  def processModifiedHakemukset(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(2)),
+  def processModifiedHakemukset(modifiedAfter: Date = new Date(Platform.currentTime - 2.days.toMillis),
                                 refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
     scheduler.scheduleOnce(refreshFrequency)({
       val lastChecked = new Date()
