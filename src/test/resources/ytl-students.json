@@ -17,16 +17,7 @@
           "period": "2015K",
           "grade": "M",
           "points": 65,
-          "sections": [
-            {
-              "sectionId": "T002",
-              "sectionPoints": 10
-            },
-            {
-              "sectionId": "T001",
-              "sectionPoints": 35
-            }
-          ]
+          "sections": null
         }
       ]
     },
