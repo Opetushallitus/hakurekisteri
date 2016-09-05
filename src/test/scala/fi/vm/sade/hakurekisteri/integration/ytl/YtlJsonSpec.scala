@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.text.SimpleDateFormat
 
-import fi.vm.sade.hakurekisteri.rest.support.StudentDeserializer
+import fi.vm.sade.hakurekisteri.rest.support.{KausiDeserializer, StudentDeserializer}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization
@@ -22,6 +22,8 @@ class YtlJsonSpec extends ScalatraFunSuite {
     validStudents.size should equal (1)
     validStudents.head.graduationDate should equal(dateFormat.parse("2016-06-04"))
     validStudents.head.graduationPeriod should equal (Kevat(2015))
+    validStudents.head.exams.size should equal (1)
+    validStudents.head.exams.head.sections.isEmpty should equal (true)
   }
 
 }
