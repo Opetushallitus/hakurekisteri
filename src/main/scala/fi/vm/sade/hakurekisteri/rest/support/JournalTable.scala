@@ -15,7 +15,7 @@ abstract class JournalTable[R <: Resource[I, R], I, ResourceRow](tag: Tag, name:
   def source = column[String]("source")
   def inserted = column[Long]("inserted")
   def deleted = column[Boolean]("deleted")
-  def current = column[Boolean]("current", O.Default(true))
+  def current = column[Boolean]("current", O.Default(false))
   def pk = primaryKey(s"pk_$name", (resourceId, inserted))
 
   type JournalRow = (I, Long, Boolean, Boolean)
