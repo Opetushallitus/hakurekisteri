@@ -17,6 +17,16 @@
             <artifactId>httpclient</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.spire-math</groupId>
+            <artifactId>jawn-parser_2.11</artifactId>
+            <version>0.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.spire-math</groupId>
+            <artifactId>jawn-ast_2.11</artifactId>
+            <version>0.9.0</version>
+        </dependency>
         <!--
         <dependency>
             <groupId>org.mock-server</groupId>
