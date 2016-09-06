@@ -29,11 +29,7 @@ class StatusDeserializer extends CustomSerializer[Status](format => ({
     case _ => false
   }) => Failed()
 
-  case JObject(e) => {
-    println(e)
-    println(e.getClass)
-    InProgress()
-  }
+  case JObject(e) => InProgress()
 }, {
 case x: Status => throw new UnsupportedOperationException("Serialization is unsupported")
 }))
