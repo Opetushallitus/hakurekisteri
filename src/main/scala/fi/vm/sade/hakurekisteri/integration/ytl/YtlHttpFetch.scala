@@ -1,12 +1,15 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import java.io.{InputStream}
+import java.io.{InputStreamReader, BufferedReader, InputStream}
 import java.text.SimpleDateFormat
 import java.util.zip.{ZipInputStream}
 import java.io
+import com.google.common.io.ByteStreams
 import fi.vm.sade.hakurekisteri.rest.support.{StatusDeserializer, KausiDeserializer, StudentDeserializer}
 import fi.vm.sade.javautils.httpclient._
 import fi.vm.sade.properties.OphProperties
+import jawn.{ast, Parser, AsyncParser}
+import jawn.ast.JParser
 import org.apache.commons.io.IOUtils
 import org.apache.http.HttpHeaders
 import org.apache.http.auth.{UsernamePasswordCredentials, AuthScope}
@@ -19,10 +22,13 @@ import org.json4s.jackson.Serialization.{write}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization
+import org.slf4j.LoggerFactory
 
 import scala.util.{Failure, Success, Try}
 
 class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem) {
+  val logger = LoggerFactory.getLogger(this.getClass)
+
   import scala.language.implicitConversions
   implicit val formats = Serialization.formats(NoTypeHints) + new KausiDeserializer + new StudentDeserializer
   val username = config.getProperty("ytl.http.username")
@@ -43,14 +49,28 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem) {
 
   val client = buildClient()
 
-  def zipToStudents(stream: InputStream): Stream[List[Student]] = {
+  private def jvalueToStudent(jvalue: ast.JValue): Student =
+    // this is slow
+    parse(jvalue.render()).extract[Student]
+
+  def zipToStudents(stream: InputStream): Stream[Student] = {
     val zip = new ZipInputStream(stream)
+
     Stream.continually(Try(zip.getNextEntry()).getOrElse(null))
       .takeWhile(_ != null)
-      .map(e => {
-        Try(parse(zip).extract[List[Student]]) match {
-          case Success(students) => students
-          case Failure(e) => throw e
+      .flatten(e => {
+        val p = JParser.async(mode = AsyncParser.UnwrapArray)
+        p.absorb(ByteStreams.toByteArray(zip)) match {
+          case Right(js) =>
+            js.flatten(value => Try(jvalueToStudent(value))match {
+              case Success(student) => Some(student)
+              case Failure(e) =>
+                logger.error(s"Unable to parse student from YTL data! ${e.getMessage} and json was ${value.render()}")
+                None
+            })
+          case Left(e) =>
+            logger.error(s"Reading file inside YTL zip failed with message ${e.getMessage}")
+            throw e
         }
       })
   }
@@ -58,7 +78,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem) {
   def fetchOne(hetu: String): Student =
     client.get("ytl.http.host.fetchone", hetu).expectStatus(200).execute((r:OphHttpResponse) => parse(r.asText()).extract[Student])
 
-  def fetch(hetus: List[String]): Either[Throwable, Stream[List[Student]]] = {
+  def fetch(hetus: List[String]): Either[Throwable, Stream[Student]] = {
     for {
       operation <- fetchOperation(hetus).right
       ok <- fetchStatus(operation.operationUuid).right
