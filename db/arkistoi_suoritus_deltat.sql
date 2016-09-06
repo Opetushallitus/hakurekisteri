@@ -21,11 +21,24 @@ DECLARE
 BEGIN
   FOR delta IN
     SELECT resource_id, inserted FROM suoritus
-    EXCEPT
-    SELECT resource_id, inserted FROM v_suoritus
     LIMIT amount
   LOOP
-    INSERT INTO a_suoritus SELECT * FROM suoritus WHERE resource_id = delta.resource_id AND inserted = delta.inserted;
+    INSERT INTO a_suoritus SELECT resource_id,
+                             komo,
+                             myontaja,
+                             tila,
+                             valmistuminen,
+                             henkilo_oid,
+                             yksilollistaminen,
+                             suoritus_kieli,
+                             inserted,
+                             deleted,
+                             source,
+                             kuvaus,
+                             vuosi,
+                             tyyppi,
+                             index,
+                             vahvistettu FROM suoritus WHERE resource_id = delta.resource_id AND inserted = delta.inserted;
     DELETE FROM suoritus WHERE resource_id = delta.resource_id AND inserted = delta.inserted;
     _count := _count + 1;
     RAISE NOTICE '%: archived delta: %, %', _count, delta.resource_id, delta.inserted;
