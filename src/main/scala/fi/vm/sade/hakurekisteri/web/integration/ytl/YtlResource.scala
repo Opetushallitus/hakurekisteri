@@ -19,12 +19,23 @@ class YtlResource(ytl:ActorRef)(implicit val system: ActorSystem, val security: 
     contentType = formats("json")
   }
 
+  def shouldBeAdmin = if (!currentUser.exists(_.isAdmin)) throw UserNotAuthorized("not authorized")
+
   get("/request") {
-    if (!currentUser.exists(_.isAdmin)) throw UserNotAuthorized("not authorized")
-    else {
-      ytl ! Send
-      Accepted()
-    }
+    shouldBeAdmin
+    ytl ! Send
+    Accepted()
+  }
+  get("/http_request") {
+    shouldBeAdmin
+    logger.info("Fetching YTL data for everybody")
+    Accepted()
+  }
+  get("/http_request/:hetu") {
+    shouldBeAdmin
+    val hetu = params("hetu")
+    logger.info("Fetching YTL data for henkilotunnus")
+    Accepted()
   }
 
 }
