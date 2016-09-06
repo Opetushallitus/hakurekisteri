@@ -1,6 +1,8 @@
 package support
 
 import java.util.concurrent.TimeUnit
+import fi.vm.sade.properties.OphProperties
+
 import scala.concurrent.duration._
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.{Backoff, BackoffSupervisor}
@@ -14,7 +16,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, Tarjont
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{ValintarekisteriActor, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
 import fi.vm.sade.hakurekisteri.integration.virta._
-import fi.vm.sade.hakurekisteri.integration.ytl.YtlActor
+import fi.vm.sade.hakurekisteri.integration.ytl.{YtlFileSystem, YtlHttpFetch, YtlActor}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient, _}
 import fi.vm.sade.hakurekisteri.rest.support.Registers
 import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
@@ -29,6 +31,7 @@ trait Integrations {
   val tarjonta: ActorRef
   val koodisto: ActorRef
   val ytl: ActorRef
+  val ytlHttp: YtlHttpFetch
   val parametrit: ActorRef
   val valintaTulos: ActorRef
   val valintarekisteri: ActorRef
@@ -68,6 +71,9 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     hakemusService,
     config.integrations.ytlConfig
   )), "ytl")
+  val ytlConfig = new OphProperties()
+  override val ytlHttp = new YtlHttpFetch(ytlConfig, new YtlFileSystem(ytlConfig))
+
   override val proxies = new MockProxies
   override val hakemusClient = null
 
@@ -138,6 +144,8 @@ class BaseIntegrations(rekisterit: Registers,
     hakemusService,
     config.integrations.ytlConfig
   )), "ytl")
+  val ytlConfig = new OphProperties()
+  override val ytlHttp = new YtlHttpFetch(ytlConfig, new YtlFileSystem(ytlConfig))
   private val virtaClient = new VirtaClient(
     config = config.integrations.virtaConfig,
     apiVersion = config.properties.getOrElse("suoritusrekisteri.virta.apiversio", VirtaClient.version105)
