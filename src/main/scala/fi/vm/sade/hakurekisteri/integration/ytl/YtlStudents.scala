@@ -12,12 +12,13 @@ case class Failed() extends Status
 
 case class YtlStudents(students: List[Either[Throwable, Student]])
 
-case class Student(ssn: String, lastname: String, firstnames: String, graduationPeriod: Option[Kausi],
-                   graduationDate: Option[Date],
-                   graduationSchoolOphOid: Option[String],
-                   graduationSchoolYtlNumber: Option[String],
-                   language: Option[String],
-                   exams: Seq[Exam])
+case class Student(ssn: String, lastname: String, firstnames: String,
+                   graduationPeriod: Option[Kausi] = None,
+                   graduationDate: Option[Date] = None,
+                   graduationSchoolOphOid: Option[String] = None,
+                   graduationSchoolYtlNumber: Option[String] = None,
+                   language: Option[String] = None,
+                   exams: Seq[Exam] = Nil)
 
 case class Exam(examId: String,examRole: String, period: Kausi, grade: String, points: Int, sections: Seq[Section])
 
