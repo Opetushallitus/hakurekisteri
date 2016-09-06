@@ -47,6 +47,6 @@ class YtlFileSystem(config: OphProperties) {
   }
 
 
-  def now() = new SimpleDateFormat("dd-MM-yyyy_HH-mm").format(new java.util.Date())
+  private def now() = new SimpleDateFormat("dd-MM-yyyy_HH-mm").format(new java.util.Date())
 
 }
