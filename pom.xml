@@ -525,7 +525,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.1</version>
+            <version>4.5.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-logging</groupId>
@@ -536,7 +536,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient-cache</artifactId>
-            <version>4.5.1</version>
+            <version>4.5.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-logging</groupId>
@@ -1167,6 +1167,12 @@
             <groupId>fi.vm.sade</groupId>
             <artifactId>scala-properties_2.11</artifactId>
             <version>0.0.1-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>fi.vm.sade.java-utils</groupId>
+                    <artifactId>java-properties</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
@@ -1227,6 +1233,10 @@
                 <exclusion>
                     <groupId>org.clapper</groupId>
                     <artifactId>grizzled-slf4j_2.11</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
