@@ -13,7 +13,12 @@ class YtlFileSystem(config: OphProperties) {
 
   private val directoryPath: Option[String] =
     Some(config.getOrElse("ytl.http.download.directory", ""))
-      .filter(!_.isEmpty)
+      .filter { p =>
+        if(p.isEmpty) {
+          logger.warn("Using OS temporary directory for YTL files since 'ytl.http.download.directory' configuration is missing!")
+          false
+        } else { true }
+      }
 
   private val directory: File =
     directoryPath match {
@@ -33,6 +38,9 @@ class YtlFileSystem(config: OphProperties) {
   }
 
   def write(uuid: String): FileOutputStream = {
+    if(directoryPath.isEmpty) {
+
+    }
     val file = Paths.get(directory.getPath(), s"${now()}_${uuid}_student-results.zip").toFile
     logger.info(s"Saving file ${file}")
     new FileOutputStream(file)

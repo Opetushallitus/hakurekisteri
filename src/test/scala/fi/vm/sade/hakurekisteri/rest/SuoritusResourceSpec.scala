@@ -38,6 +38,15 @@ class SuoritusResourceTestSecurity extends Security {
   override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(TestUser)
 }
 
+class SuoritusResourceAdminTestSecurity extends Security {
+  object AdminTestUser extends User {
+    override def orgsFor(action: String, resource: String): Set[String] = Set("1.2.246.562.10.00000000001")
+    override val username: String = "Test"
+  }
+
+  override def currentUser(implicit request: HttpServletRequest): Option[fi.vm.sade.hakurekisteri.rest.support.User] = Some(AdminTestUser)
+}
+
 class SuoritusResourceWithOPHSpec extends ScalatraFunSuite with MockitoSugar with DispatchSupport with HakurekisteriJsonSupport with AsyncAssertions {
   implicit var system: ActorSystem = _
   implicit var database: Database = _
