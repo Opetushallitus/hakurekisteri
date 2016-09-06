@@ -17,8 +17,8 @@ trait QueryLogging { this: HakuJaValintarekisteriStack =>
       val requestLength = Platform.currentTime - t0
       val message = s"query $q took $requestLength ms, result ${result(t)}"
       requestLength match {
-        case reallySlow if requestLength > 10000  => logger.warning(message)
-        case slow if requestLength > 1000 => logger.info(message)
+        case reallySlow if requestLength > 1000  => logger.warning(message)
+        case slow if requestLength > 100 => logger.info(message)
         case normal => logger.debug(message)
       }
     })
