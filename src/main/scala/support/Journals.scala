@@ -1,8 +1,9 @@
 package support
 
-import java.util.UUID
+import java.util.{Properties, UUID}
 
 import akka.actor.ActorSystem
+import com.typesafe.config.ConfigFactory
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaTable}
 import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchTable}
@@ -26,7 +27,16 @@ class DbJournals(config: Config)(implicit val system: ActorSystem) extends Journ
   lazy val log = LoggerFactory.getLogger(getClass)
 
   log.info(s"Opening database connections to ${config.databaseUrl} with user ${config.postgresUser}")
-  implicit val database = Database.forURL(config.databaseUrl, user=config.postgresUser, password=config.postgresPassword)
+  val configForDb = {
+    import collection.JavaConverters._
+    val javaProperties = new Properties()
+    javaProperties.putAll(config.properties.asJava)
+    javaProperties.put("suoritusrekisteri.db.url", config.databaseUrl)
+    if(config.postgresUser != null) javaProperties.put("suoritusrekisteri.db.user", config.postgresUser)
+    if(config.postgresPassword != null) javaProperties.put("suoritusrekisteri.db.password", config.postgresPassword)
+    ConfigFactory.parseProperties(javaProperties)
+  }
+  implicit val database = Database.forConfig("suoritusrekisteri.db", configForDb)
   system.registerOnTermination(database.close())
 
   override val suoritusJournal = new JDBCJournal[Suoritus, UUID, SuoritusTable](suoritusTable)
