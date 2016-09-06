@@ -26,6 +26,7 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
   val o5 = Opiskelija("oppilaitos2", "9", "9B", "henkilo5", new DateTime(2000, 6, 1, 0, 0), None, "test")
   val o6 = Opiskelija("oppilaitos2", "9", "9B", "henkilo6", new DateTime(2001, 6, 1, 0, 0), Some(new DateTime(2001, 9, 1, 0, 0)), "test")
   val o7 = Opiskelija("oppilaitos2", "9", "9B", "henkilo7", new DateTime(2001, 6, 1, 0, 0), Some(new DateTime(2001, 7, 1, 0, 0)), "test")
+  val o7modified = Opiskelija("oppilaitos2", "9", "9C", "henkilo7", new DateTime(2001, 6, 1, 0, 0), Some(new DateTime(2001, 7, 1, 0, 0)), "test")
 
   def withActor(test: ActorRef => Any) {
     implicit val system = ActorSystem("opiskelija-test-system")
@@ -110,6 +111,16 @@ class OpiskelijaActorSpec extends ScalatraFunSuite {
       Await.result(Future.sequence(List(o1, o2, o3, o4, o5, o6).map(actor ? _)), 15.seconds)
       val r = Await.result((actor ? OpiskelijaQuery(paiva = Some(new DateTime(2000, 10, 1, 0, 0)))).mapTo[Seq[Opiskelija with Identified[UUID]]], 15.seconds)
       r should be(Seq(o5))
+    }
+  }
+
+  test("OpiskelijaActor should not return overriden records") {
+    withActor { actor =>
+      Await.result(Future.sequence(List(o7, o7modified).map(actor ? _)), 15.seconds)
+      val r = Await.result((actor ? OpiskelijaQuery(luokka = Some("9C"))).mapTo[Seq[Opiskelija with Identified[UUID]]], 15.seconds)
+      val rr = Await.result((actor ? OpiskelijaQuery(luokka = Some("9B"))).mapTo[Seq[Opiskelija with Identified[UUID]]], 15.seconds)
+      r should be(Seq(o7modified))
+      rr should not contain(o7)
     }
   }
 }
