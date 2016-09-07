@@ -4,6 +4,7 @@ import java.time.ZoneId
 import java.util.Date
 
 import fi.vm.sade.hakurekisteri.Oids
+import fi.vm.sade.hakurekisteri.arvosana.{ArvioOsakoe, ArvioYo}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.YoTutkinto
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
 import org.joda.time.{MonthDay, LocalDate}
@@ -74,9 +75,9 @@ case class Student(ssn: String, lastname: String, firstnames: String,
                    language: Option[String] = None,
                    exams: Seq[Exam])
 
-case class Exam(examId: String,examRole: String, period: Kausi, grade: String, points: Int, sections: Seq[Section])
+case class Exam(examId: String,examRole: String, period: Kausi, grade: String, points: Option[Int], sections: Seq[Section])
 
-case class Section(sectionId: String, sectionPoints: Int)
+case class Section(sectionId: String, sectionPoints: String)
 
 trait Kausi {
   def toLocalDate : LocalDate
@@ -103,7 +104,11 @@ object StudentToKokelas {
 
   def convert(oid: String, s: Student): Kokelas = {
     val suoritus: VirallinenSuoritus = toYoTutkinto(oid, s)
-    Kokelas(oid,suoritus,None,Seq(),Seq())
+    val yoKokeet = s.exams.map(exam => YoKoe(ArvioYo(exam.grade, exam.points), exam.examId, exam.examRole, exam.period.toLocalDate))
+    val osakokeet = s.exams.flatMap(exam => exam.sections.map(section => {
+      Osakoe(ArvioOsakoe(section.sectionPoints),exam.examId, section.sectionId, exam.examRole, exam.period.toLocalDate)
+    }))
+    Kokelas(oid,suoritus,None,yoKokeet,osakokeet)
   }
 
   def toYoTutkinto(oid: String, s: Student): VirallinenSuoritus = {
