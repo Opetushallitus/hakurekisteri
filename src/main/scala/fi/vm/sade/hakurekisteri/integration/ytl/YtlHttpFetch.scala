@@ -5,7 +5,6 @@ import java.text.SimpleDateFormat
 import java.util.zip.{ZipInputStream}
 import java.io
 import com.google.common.io.ByteStreams
-import fi.vm.sade.hakurekisteri.rest.support.{StatusDeserializer, KausiDeserializer, StudentDeserializer}
 import fi.vm.sade.javautils.httpclient._
 import fi.vm.sade.properties.OphProperties
 import jawn.{ast, Parser, AsyncParser}
@@ -30,7 +29,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem) {
   val logger = LoggerFactory.getLogger(this.getClass)
 
   import scala.language.implicitConversions
-  implicit val formats = Serialization.formats(NoTypeHints) + new KausiDeserializer + new StudentDeserializer
+  implicit val formats = Student.formatsStudent
   val username = config.getProperty("ytl.http.username")
   val password = config.getProperty("ytl.http.password")
   val credentials = new UsernamePasswordCredentials(username, password)
@@ -87,10 +86,10 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem) {
   }
 
   def fetchStatus(uuid: String): Either[Throwable,Status] = {
+    implicit val formats = new DefaultFormats {
+      override def dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+    } + StatusDeserializer
     Try(client.get("ytl.http.host.status", uuid).expectStatus(200).execute((r: OphHttpResponse) => {
-      implicit val formats = new DefaultFormats {
-        override def dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-      } + new StatusDeserializer
       parse(r.asText()).extract[Status]
     })) match {
       case Success(e: InProgress) => {
