@@ -620,10 +620,11 @@ object YTLXml {
   val syksy = "(\\d{4})S".r
   val suoritettu = "suor".r
   val kevaanAlku = new MonthDay(6, 1)
+  val syys = new MonthDay(12, 21)
 
   def parseKausi(kausi: String) = kausi match {
     case kevat(vuosi) => Some(kevaanAlku.toLocalDate(vuosi.toInt))
-    case syksy(vuosi) => Some(new MonthDay(12, 21).toLocalDate(vuosi.toInt))
+    case syksy(vuosi) => Some(syys.toLocalDate(vuosi.toInt))
     case _ => None
   }
 
