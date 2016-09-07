@@ -16,8 +16,6 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with Mockito
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val adminSecurity: Security = new SuoritusResourceAdminTestSecurity
 
-  import Mockito._
-
   addServlet(new YtlResource(null), "/*")
 
   val endPoint = mock[Endpoint]
@@ -25,15 +23,9 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with Mockito
   test("should launch YTL fetch") {
     get("/http_request") {
       status should be (202)
-      //body should be ("{\"oppijanumero\":\"1.2.4\",\"opiskeluoikeudet\":[],\"tutkinnot\":[],\"suoritukset\":[]}")
     }
     get("/http_request/050996-9574") {
       status should be (202)
-      //body should be ("{\"oppijanumero\":\"1.2.4\",\"opiskeluoikeudet\":[],\"tutkinnot\":[],\"suoritukset\":[]}")
-    }
-    get("/http_request/") {
-      status should be (202)
-      //body should be ("{\"oppijanumero\":\"1.2.4\",\"opiskeluoikeudet\":[],\"tutkinnot\":[],\"suoritukset\":[]}")
     }
   }
 }
