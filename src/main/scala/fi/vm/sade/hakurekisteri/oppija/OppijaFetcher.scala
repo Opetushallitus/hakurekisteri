@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery, ArvosanatQuery}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, HakemusService}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
@@ -76,13 +76,12 @@ trait OppijaFetcher {
     }
   }
 
-  private def fetchTodistukset(suoritukset: Seq[Suoritus with Identified[UUID]])(implicit user: User): Future[Seq[Todistus]] = Future.sequence(
+  private def fetchTodistukset(suoritukset: Seq[Suoritus with Identified[UUID]])(implicit user: User): Future[Seq[Todistus]] =
     for (
-      suoritus <- suoritukset
-    ) yield for (
-      arvosanat <- (rekisterit.arvosanaRekisteri ? AuthorizedQuery(ArvosanaQuery(suoritus = Some(suoritus.id)), user)).mapTo[Seq[Arvosana]]
-    ) yield Todistus(suoritus, arvosanat)
-  )
+      arvosanat <- (rekisterit.arvosanaRekisteri ? AuthorizedQuery(ArvosanatQuery(suoritukset.map(_.id).toSet), user))
+        .mapTo[Seq[Arvosana]]
+        .map(_.groupBy(_.suoritus))
+    ) yield suoritukset.map(suoritus => Todistus(suoritus, arvosanat.getOrElse(suoritus.id, Seq())))
 
   private def fetchEnsikertalaisuudet(q: HakemusQuery)
                                      (rekisteriData: Seq[Oppija]): Future[Seq[Oppija]] = {

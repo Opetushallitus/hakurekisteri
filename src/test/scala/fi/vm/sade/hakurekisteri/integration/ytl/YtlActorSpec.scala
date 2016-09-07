@@ -60,7 +60,7 @@ class YtlActorSpec extends ScalatraFunSuite {
   private def waitForArvosanat(arvosanaActor: ActorRef, suoritusActor: ActorRef, len: Int = 27): Future[Seq[Arvosana with Identified[UUID]]] = {
     Future {
       val suoritus = Await.result(waitForSuoritus(suoritusActor, "1.2.246.562.24.71944845619"), 60.seconds)
-      val arvosanatQ = ArvosanaQuery(Some(suoritus.id))
+      val arvosanatQ = ArvosanaQuery(suoritus.id)
       var results: Seq[Arvosana with Identified[UUID]] = List()
       while(results.length < len) {
         Thread.sleep(100)

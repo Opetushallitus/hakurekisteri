@@ -6,7 +6,7 @@ import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Oids
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery, ArvosanatQuery}
 import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, HenkiloHakijaQuery}
 import fi.vm.sade.hakurekisteri.integration.virta.VirtaConnectionErrorException
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaQuery}
@@ -199,12 +199,12 @@ trait TiedotFetcher {
 
   import akka.pattern.ask
 
-  def fetchTodistukset(suoritukset: Seq[Suoritus with Identified[UUID]])(implicit user: User):Future[Seq[Todistus]] = Future.sequence(
+  def fetchTodistukset(suoritukset: Seq[Suoritus with Identified[UUID]])(implicit user: User):Future[Seq[Todistus]] =
     for (
-      suoritus <- suoritukset
-    ) yield for (
-      arvosanat <- (rekisterit.arvosanaRekisteri ? AuthorizedQuery(ArvosanaQuery(suoritus = Some(suoritus.id)), user)).mapTo[Seq[Arvosana]]
-    ) yield Todistus(suoritus, arvosanat))
+      arvosanat <- (rekisterit.arvosanaRekisteri ? AuthorizedQuery(ArvosanatQuery(suoritukset.map(_.id).toSet), user))
+        .mapTo[Seq[Arvosana]]
+        .map(_.groupBy(_.suoritus))
+    ) yield suoritukset.map(suoritus => Todistus(suoritus, arvosanat.getOrElse(suoritus.id, Seq())))
 
   def fetchOpiskeluoikeudet(henkiloOid: String)(implicit user: User): Future[Seq[Opiskeluoikeus]] = {
     (rekisterit.opiskeluoikeusRekisteri ? AuthorizedQuery(OpiskeluoikeusQuery(henkilo = Some(henkiloOid)), user)).mapTo[Seq[Opiskeluoikeus]]

@@ -75,7 +75,7 @@ class YtlActorUpdateSuoritusSpec extends ScalatraFunSuite with ActorSystemSuppor
 
         var arvosanat: Option[Seq[Arvosana with Identified[UUID]]] = None
         for (_ <- 1.to(10)) {
-          arvosanat = Some(Await.result((arvosanaActor ? ArvosanaQuery(Some(suoritus.id)))
+          arvosanat = Some(Await.result((arvosanaActor ? ArvosanaQuery(suoritus.id))
             .mapTo[Seq[Arvosana with Identified[UUID]]], 60.seconds))
           Thread.sleep(100)
         }
