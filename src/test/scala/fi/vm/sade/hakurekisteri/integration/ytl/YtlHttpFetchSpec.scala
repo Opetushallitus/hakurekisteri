@@ -3,7 +3,6 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 import java.util.UUID
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
-import fi.vm.sade.hakurekisteri.rest.support.{StudentDeserializer, KausiDeserializer}
 import fi.vm.sade.scalaproperties.OphProperties
 import org.apache.commons.io.IOUtils
 import org.json4s.NoTypeHints
@@ -61,7 +60,7 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
     val entry = new ZipEntry("verylarge.json")
     zout.putNextEntry(entry)
     import org.json4s.jackson.Serialization.{write}
-    implicit val formats = Serialization.formats(NoTypeHints) + new KausiDeserializer
+    implicit val formats = Serialization.formats(NoTypeHints) + KausiDeserializer
     zout.write("[")
     val last = 100000
     for (a <- 1 to last) {
