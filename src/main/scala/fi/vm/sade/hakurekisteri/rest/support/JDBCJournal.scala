@@ -3,13 +3,17 @@ package fi.vm.sade.hakurekisteri.rest.support
 import akka.actor.ActorSystem
 import akka.event.Logging
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
+import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.storage.repository._
+import org.postgresql.util.PSQLException
 import slick.ast.BaseTypedType
+import slick.jdbc.TransactionIsolation
 import slick.jdbc.meta.MTable
 import slick.lifted
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
+import scala.util.control.NonFatal
 
 class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table: lifted.TableQuery[T])
                                                                      (implicit val db: Database, val idType: BaseTypedType[I], implicit val system: ActorSystem)
@@ -31,29 +35,41 @@ class JDBCJournal[R <: Resource[I, R], I, T <: JournalTable[R, I, _]](val table:
 
   log.info(s"started ${getClass.getSimpleName} with table $tableName")
 
-  override def addModification(o: Delta[R, I]): Unit = {
-    Await.result(db.run(table += o), queryTimeout)
-  }
+  override def addModification(o: Delta[R, I]): Unit =
+    runAsSerialized(10, 5.milliseconds, s"Storing $o", addModificationAction(o)).left.foreach(throw _)
+
+  def addUpdate(r: R with Identified[I]): DBIO[R with Identified[I]] =
+    addModificationAction(Updated(r)).andThen(DBIO.successful(r))
+
+  def addModificationAction(o: Delta[R, I]): DBIO[Delta[R, I]] =
+    DBIO.seq(
+      latestResources.filter(_.resourceId === o.id).map(_.current).update(false),
+      table += o
+    ).andThen(DBIO.successful(o))
 
   override def journal(latestQuery: Option[Long]): Seq[Delta[R, I]] = latestQuery match {
     case None => Await.result(db.run(latestResources.result), queryTimeout)
     case Some(lat) => Await.result(db.run(latestResources.filter(_.inserted >= lat).result), queryTimeout)
   }
 
-  val resourcesWithVersions = table.groupBy[lifted.Rep[I], I, lifted.Rep[I], T](_.resourceId)
-
-  val latest = for {
-    (id: lifted.Rep[I], resource: lifted.Query[T, T#TableElementType, Seq]) <- resourcesWithVersions
-  } yield (id, resource.map(_.inserted).max)
-
-  val result: lifted.Query[T, Delta[R, I], Seq] = for (
-    delta <- table;
-    (id, timestamp) <- latest
-    if delta.resourceId === id && delta.inserted === timestamp
-
-  ) yield delta
-
   val latestResources = {
-    result.sortBy(_.inserted.asc)
+    table.filter(_.current)
+  }
+
+  def runAsSerialized[A](retries: Int, wait: Duration, description: String, action: DBIO[A]): Either[Throwable, A] = {
+    val SERIALIZATION_VIOLATION = "40001"
+    try {
+      Right(Await.result(db.run(action.transactionally.withTransactionIsolation(TransactionIsolation.Serializable)), queryTimeout))
+    } catch {
+      case e: PSQLException if e.getSQLState == SERIALIZATION_VIOLATION =>
+        if (retries > 0) {
+          log.warning(s"$description failed because of an concurrent action, retrying after $wait ms")
+          Thread.sleep(wait.toMillis)
+          runAsSerialized(retries - 1, wait + wait, description, action)
+        } else {
+          Left(new RuntimeException(s"$description failed because of an concurrent action.", e))
+        }
+      case NonFatal(e) => Left(e)
+    }
   }
 }

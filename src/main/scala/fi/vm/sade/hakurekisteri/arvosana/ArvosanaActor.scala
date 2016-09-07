@@ -27,8 +27,8 @@ class ArvosanaJDBCActor(val journal: JDBCJournal[Arvosana, UUID, ArvosanaTable],
   override val dbExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
 
   override val dbQuery: PartialFunction[Query[Arvosana], Either[Throwable, lifted.Query[ArvosanaTable, Delta[Arvosana, UUID], Seq]]] = {
-    case EmptyLisatiedot() => Right(latest(journal.table.filter(t => t.lisatieto.isDefined && t.lisatieto === "").take(30000)))
-    case ArvosanaQuery(Some(suoritus)) => Right(latest(journal.table.filter(t => t.suoritus === suoritus)))
+    case EmptyLisatiedot() => Right(all.filter(t => t.lisatieto.isDefined && t.lisatieto === "").take(30000))
+    case ArvosanaQuery(Some(suoritus)) => Right(all.filter(t => t.suoritus === suoritus))
     case ArvosanaQuery(None) => Left(new IllegalArgumentException("empty query not supported for arvosana"))
   }
 }
