@@ -39,6 +39,8 @@ class YtlJsonSpec extends ScalatraFunSuite {
 
     kokelasFromJson.yo should equal (kokelas.yo)
     kokelasFromJson.lukio should equal (kokelas.lukio)
+    kokelasFromJson.yoTodistus should equal (kokelas.yoTodistus)
+    kokelasFromJson.osakokeet should equal (kokelas.osakokeet)
   }
 
   private def fetchKokelasFromXml(xml: Elem, oidFinder: String => Future[String]): Kokelas = {
@@ -103,8 +105,8 @@ val ylioppilaatXml = <YLIOPPILAAT><YLIOPPILAS>
       |          "examRole": 11,
       |          "period": "2015K",
       |          "grade": "M",
-      |          "points": 65,
-      |          "sections": null
+      |          "points": 80,
+      |          "sections": [{"sectionId":"T002","sectionPoints":10},{"sectionId":"T001","sectionPoints":35}]
       |        }
       |      ]
       |    }
