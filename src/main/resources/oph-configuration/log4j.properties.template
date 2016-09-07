@@ -1,0 +1,67 @@
+# Logger
+log4j.rootLogger=INFO, FILE
+log4j.logger.org={{env_loglevel}}
+log4j.logger.com={{env_loglevel}}
+log4j.logger.java={{env_loglevel}}
+log4j.logger.javax={{env_loglevel}}
+log4j.logger.scala={{env_loglevel}}
+
+log4j.appender.FILE.Threshold=INFO
+log4j.appender.FILE.File=${user.home}/logs/oph-suoritusrekisteri.log
+log4j.appender.FILE=org.apache.log4j.RollingFileAppender
+log4j.appender.FILE.Append=true
+log4j.appender.FILE.layout=org.apache.log4j.PatternLayout
+log4j.appender.FILE.MaxFileSize=20MB
+log4j.appender.FILE.MaxBackupIndex=30
+
+log4j.appender.VIRTA.Threshold=INFO
+log4j.appender.VIRTA.File=${user.home}/logs/oph-virta.log
+log4j.appender.VIRTA=org.apache.log4j.RollingFileAppender
+log4j.appender.VIRTA.Append=true
+log4j.appender.VIRTA.layout=org.apache.log4j.PatternLayout
+log4j.appender.VIRTA.MaxFileSize={{suoritusrekisteri_virta_log_file_size}}
+log4j.appender.VIRTA.MaxBackupIndex={{suoritusrekisteri_virta_log_file_amount}}
+log4j.category.fi.vm.sade.hakurekisteri.integration.virta.VirtaActor=INFO, VIRTA
+log4j.category.fi.vm.sade.hakurekisteri.integration.virta.VirtaClient=INFO, VIRTA
+log4j.category.fi.vm.sade.hakurekisteri.integration.virta.VirtaQueue=INFO, VIRTA
+log4j.additivity.fi.vm.sade.hakurekisteri.integration.virta.VirtaActor=false
+log4j.additivity.fi.vm.sade.hakurekisteri.integration.virta.VirtaClient=false
+log4j.additivity.fi.vm.sade.hakurekisteri.integration.virta.VirtaQueue=false
+
+log4j.appender.P.Threshold=INFO
+log4j.appender.P.File=${user.home}/logs/oph-suoritusrekisteri-problems.log
+log4j.appender.P=org.apache.log4j.RollingFileAppender
+log4j.appender.P.Append=true
+log4j.appender.P.layout=org.apache.log4j.PatternLayout
+log4j.appender.P.MaxFileSize=20MB
+log4j.appender.P.MaxBackupIndex=20
+log4j.category.fi.vm.sade.hakurekisteri.arvosana.PerusopetusSanityActor=INFO, P
+log4j.additivity.fi.vm.sade.hakurekisteri.arvosana.PerusopetusSanityActor=false
+
+{# raw-endraw -välillä template engine ei tee mitään! #} 
+{% raw %}
+log4j.appender.FILE.layout.ConversionPattern=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5p {%X{user}} [%t] %-5p %c: %m%n
+log4j.appender.VIRTA.layout.ConversionPattern=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5p {%X{user}} [%t] %-5p %c: %m%n
+log4j.appender.P.layout.ConversionPattern=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5p {%X{user}} [%t] %-5p %c: %m%n
+{% endraw %}
+
+# Audit logger configuration
+log4j.logger.fi.vm.sade.auditlog.Audit=INFO, audit
+log4j.appender.audit=org.apache.log4j.FileAppender
+log4j.appender.audit.immediateFlush=true
+log4j.appender.audit.File=${user.home}/logs/auditlog_hakurekisteri.log
+log4j.appender.audit.Append=true
+log4j.appender.audit.layout=org.apache.log4j.PatternLayout
+log4j.appender.audit.layout.ConversionPattern=%m%n
+log4j.appender.audit.encoding=UTF-8
+
+# By default hide these spammers by default
+log4j.logger.org.apache.cxf=ERROR
+log4j.logger.org.springframework=ERROR
+log4j.logger.org.vaadin=ERROR
+log4j.logger.javax.sql=ERROR
+log4j.logger.org.apache.activemq=INFO
+log4j.logger.org.apache.activemq.spring={{env_loglevel}}
+# cas session + singlelogout tracing
+log4j.logger.org.jasig.cas.client.session=INFO
+log4j.logger.fi.vm.sade.hakurekisteri.integration.ytl=DEBUG

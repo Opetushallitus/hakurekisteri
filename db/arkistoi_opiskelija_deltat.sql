@@ -20,12 +20,19 @@ DECLARE
   delta record;
 BEGIN
   FOR delta IN
-    SELECT resource_id, inserted FROM opiskelija
-    EXCEPT
-    SELECT resource_id, inserted FROM v_opiskelija
+    SELECT resource_id, inserted FROM opiskelija where not current
     LIMIT amount
   LOOP
-    INSERT INTO a_opiskelija SELECT * FROM opiskelija WHERE resource_id = delta.resource_id AND inserted = delta.inserted;
+    INSERT INTO a_opiskelija SELECT resource_id,
+                               oppilaitos_oid,
+                               luokkataso,
+                               luokka,
+                               henkilo_oid,
+                               alku_paiva,
+                               loppu_paiva,
+                               inserted,
+                               deleted,
+                               sources FROM opiskelija WHERE resource_id = delta.resource_id AND inserted = delta.inserted;
     DELETE FROM opiskelija WHERE resource_id = delta.resource_id AND inserted = delta.inserted;
     _count := _count + 1;
     RAISE NOTICE '%: archived delta: %, %', _count, delta.resource_id, delta.inserted;

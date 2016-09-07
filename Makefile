@@ -1,5 +1,14 @@
 clean:
-	./sbt clean
+	mvn clean
 
-source-to-image: clean
-	./sbt buildversion compile package
+package:
+	mvn clean package
+
+test:
+	mvn clean test
+
+createDevDb:
+	mvn scala:run -Dlauncher=createDevDb
+
+generateSchema:
+	mvn scala:run -Dlauncher=generateSchema
