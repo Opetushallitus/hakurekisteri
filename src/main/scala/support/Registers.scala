@@ -38,12 +38,12 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
 
   def authorizer[A <: Resource[I, A] : ClassTag: Manifest, I: Manifest](guarded: ActorRef, orgFinder: A => Option[String], komoFinder: A => Option[String]): ActorRef = {
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (i: A) => (orgFinder(i).map(Set(_)).getOrElse(Set()), komoFinder(i)), config, organisaatioClient)), s"$resource-authorizer")
+    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (is: Seq[A]) => is.map(i => (i, orgFinder(i).map(Set(_)).getOrElse(Set()), komoFinder(i))), config, organisaatioClient)), s"$resource-authorizer")
   }
 
   def authorizer[A <: Resource[I, A] : ClassTag: Manifest, I: Manifest](guarded: ActorRef, orgFinder: A => Option[String]): ActorRef = {
     val resource = typeOf[A].typeSymbol.name.toString.toLowerCase
-    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (i: A) => (orgFinder(i).map(Set(_)).getOrElse(Set()), None), config, organisaatioClient)), s"$resource-authorizer")
+    system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (is: Seq[A]) => is.map(i => (i, orgFinder(i).map(Set(_)).getOrElse(Set()), None)), config, organisaatioClient)), s"$resource-authorizer")
   }
 
   val suoritusOrgResolver: PartialFunction[Suoritus, String] = {
@@ -72,17 +72,19 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
     lahde: String) => komo
   }
 
-  val resolve = (arvosana:Arvosana) =>
-    unauthorized.suoritusRekisteri.?(arvosana.suoritus)(Timeout(300, TimeUnit.SECONDS)).
-      mapTo[Option[Suoritus]].map(
-      _.map {
-        case (s: VirallinenSuoritus) => Set(s.myontaja, s.source, arvosana.source)
-        case (s: VapaamuotoinenSuoritus) => Set(s.source, arvosana.source)
-      }.getOrElse(Set())).zip(Future(None))
+  val resolve = (arvosanat: Seq[Arvosana]) =>
+    Future.sequence(arvosanat.map(arvosana =>
+      unauthorized.suoritusRekisteri.?(arvosanat)(Timeout(300, TimeUnit.SECONDS)).
+        mapTo[Option[Suoritus]].map(
+        _.map {
+          case (s: VirallinenSuoritus) => Set(s.myontaja, s.source, arvosana.source)
+          case (s: VapaamuotoinenSuoritus) => Set(s.source, arvosana.source)
+        }.getOrElse(Set())).map(x => (arvosana, x, None))
+    ).toSeq)
 
   override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusOrgResolver.lift, suoritusKomoResolver.lift)
   override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija:Opiskelija) => Some(opiskelija.oppilaitosOid))
   override val opiskeluoikeusRekisteri = authorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus:Opiskeluoikeus) => Some(opiskeluoikeus.myontaja), (opiskeluoikeus:Opiskeluoikeus) => Some(opiskeluoikeus.komo))
-  override val arvosanaRekisteri =  system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](unauthorized.arvosanaRekisteri, resolve, config, organisaatioClient)), "arvosana-authorizer")
+  override val arvosanaRekisteri = system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](unauthorized.arvosanaRekisteri, resolve, config, organisaatioClient)), "arvosana-authorizer")
   override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era:ImportBatch) => Some(Oids.ophOrganisaatioOid))
 }

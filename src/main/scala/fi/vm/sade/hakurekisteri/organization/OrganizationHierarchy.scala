@@ -14,10 +14,13 @@ import org.joda.time.DateTime
 
 import scala.concurrent.duration._
 
-class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef, organizationFinder: (A) => (Set[String],Option[String]), config: Config, organisaatioClient: VirkailijaRestClient)
-  extends FutureOrganizationHierarchy[A, I](filteredActor, (item: A) => Future.successful(organizationFinder(item)), config, organisaatioClient = organisaatioClient)
+class OrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest](filteredActor: ActorRef, organizationFinder: (Seq[A]) => Seq[(A, Set[String], Option[String])], config: Config, organisaatioClient: VirkailijaRestClient)
+  extends FutureOrganizationHierarchy[A, I](filteredActor, (items: Seq[A]) => Future.successful(organizationFinder(items)), config, organisaatioClient = organisaatioClient)
 
-class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](filteredActor: ActorRef, organizationFinder: (A) => concurrent.Future[(Set[String],Option[String])], config: Config, organisaatioClient: VirkailijaRestClient) extends Actor {
+class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
+(filteredActor: ActorRef,
+ organizationFinder: (Seq[A]) => concurrent.Future[Seq[(A, Set[String], Option[String])]],
+ config: Config, organisaatioClient: VirkailijaRestClient) extends Actor {
   val logger = Logging(context.system, this)
   implicit val timeout: akka.util.Timeout = 300.seconds
   private var authorizer: OrganizationAuthorizer = OrganizationAuthorizer(Map())
@@ -49,7 +52,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](f
       logger.error(t, "failed to load organization paths")
 
     case AuthorizedQuery(q, user) =>
-      (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(futfilt(_, isAuthorized(user, "READ"))) pipeTo sender
+      (filteredActor ? q).mapTo[Seq[A with Identified[UUID]]].flatMap(authorizedResources(_, user, "READ")) pipeTo sender
 
     case AuthorizedRead(id, user) =>
       (filteredActor ? id).mapTo[Option[A with Identified[UUID]]].flatMap(checkRights(user, "READ")) pipeTo sender
@@ -78,17 +81,21 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest ](f
 
   def checkRights(user: User, action:String)(item:Option[A]) = item match {
     case None => Future.successful(None)
-    case Some(resource) => isAuthorized(user, action)(resource).map(authorized => if (authorized) Some(resource) else None)
+    case Some(resource) => isAuthorized(user, action, resource).map(authorized => if (authorized) Some(resource) else None)
   }
 
-  private def subjectFinder(resource: A)(implicit m: Manifest[A]): Future[Subject] =
-    organizationFinder(resource).map(o => Subject(m.runtimeClass.getSimpleName, o._1, o._2))
+  private def subjectFinder(resources: Seq[A])(implicit m: Manifest[A]): Future[Seq[(A, Subject)]] =
+    organizationFinder(resources).map(_.map(o => (o._1, Subject(m.runtimeClass.getSimpleName, o._2, o._3))))
 
-  private def isAuthorized(user:User, action: String)(item: A): concurrent.Future[Boolean] =
-    authorizer.checkAccess(user, action,  subjectFinder(item))
+  private def isAuthorized(user:User, action: String, item: A): concurrent.Future[Boolean] =
+    subjectFinder(Seq(item)).map {
+      case (_, subject) :: _ => authorizer.checkAccess(user, action, subject)
+    }
 
-  private def futfilt(s: Seq[A], authorizer: A => concurrent.Future[Boolean]) = {
-    Future.traverse(s)((item) => authorizer(item).map((_ , item))).map(_.filter(_._1).map(_._2))
+  private def authorizedResources(resources: Seq[A], user: User, action: String): Future[Seq[A]] = {
+    subjectFinder(resources).map(_.collect {
+      case (item, subject) if authorizer.checkAccess(user, action, subject) => item
+    })
   }
 }
 
@@ -120,12 +127,10 @@ case class OrganisaatioPerustieto(oid: String, alkuPvm: String, lakkautusPvm: Op
 case class OrganisaatioHakutulos(numHits: Integer, organisaatiot: List[OrganisaatioPerustieto])
 
 case class OrganizationAuthorizer(ancestors: Map[String, Set[String]]) {
-  def checkAccess(user: User, action: String, futTarget: concurrent.Future[Subject]) = futTarget.map {
-    (target: Subject) => {
-      val allowedOrgs = user.orgsFor(action, target.resource)
-      val targetAncestors = target.orgs.flatMap(oid => ancestors.getOrElse(oid, Set(Oids.ophOrganisaatioOid, oid)))
-      targetAncestors.exists { x => user.username == x || allowedOrgs.contains(x) } || komoAuthorization(user, action, target.komo)
-    }
+  def checkAccess(user: User, action: String, target: Subject): Boolean = {
+    val allowedOrgs = user.orgsFor(action, target.resource)
+    val targetAncestors = target.orgs.flatMap(oid => ancestors.getOrElse(oid, Set(Oids.ophOrganisaatioOid, oid)))
+    targetAncestors.exists { x => user.username == x || allowedOrgs.contains(x) } || komoAuthorization(user, action, target.komo)
   }
 
   private def komoAuthorization(user:User, action:String, komo:Option[String]): Boolean = {
