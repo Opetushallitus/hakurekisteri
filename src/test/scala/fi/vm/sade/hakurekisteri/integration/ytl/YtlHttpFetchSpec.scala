@@ -47,12 +47,11 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
     System.gc()
     val usedMemoryBefore = runtime.totalMemory() - runtime.freeMemory()
     val all = ytlHttpFetch.zipToStudents(fileSystem.read(uuid))
-    val first = all.head
+    val first = all.next
     System.gc()
     val usedMemoryAfter = runtime.totalMemory() - runtime.freeMemory()
     println("Memory increased:" + (usedMemoryAfter - usedMemoryBefore))
   }
-
 
   def createVeryLargeZip(uuid: String): Unit = {
     val output = fileSystem.write(uuid)

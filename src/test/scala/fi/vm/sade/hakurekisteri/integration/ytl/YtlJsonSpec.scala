@@ -18,6 +18,17 @@ import scala.xml.Elem
 class YtlJsonSpec extends ScalatraFunSuite {
   implicit val formats = Student.formatsStudent
 
+
+  test("Parse async YTL json") {
+    val (a,b) = ylioppilaatJson.splitAt(ylioppilaatJson.length/2)
+
+    val studentStream = Student.parseAsync.apply(Stream(a.getBytes,b.getBytes).toIterator).toStream
+    val firstChunk = studentStream.head
+    firstChunk.size should equal(0)
+    val secondChunk = studentStream.tail.head
+    secondChunk.size should equal(1)
+  }
+
   test("Parse YTL json") {
     val json = scala.io.Source.fromFile(getClass.getResource("/ytl-students.json").getFile).getLines.mkString
     val ytlstudents = parse(json).extract[List[Student]]
@@ -41,6 +52,7 @@ class YtlJsonSpec extends ScalatraFunSuite {
     kokelasFromJson.lukio should equal (kokelas.lukio)
     kokelasFromJson.yoTodistus should equal (kokelas.yoTodistus)
     kokelasFromJson.osakokeet should equal (kokelas.osakokeet)
+    kokelasFromJson should equal (kokelas)
   }
 
   private def fetchKokelasFromXml(xml: Elem, oidFinder: String => Future[String]): Kokelas = {
