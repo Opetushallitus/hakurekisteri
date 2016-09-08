@@ -12,6 +12,7 @@ import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusJDBCActor}
 import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, OrganizationHierarchy}
 import fi.vm.sade.hakurekisteri.rest.support.{Registers, Resource}
+import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus._
 import fi.vm.sade.hakurekisteri.{Config, Oids}
 import org.joda.time.LocalDate
@@ -73,14 +74,14 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
   }
 
   val resolve = (arvosanat: Seq[Arvosana]) =>
-    Future.sequence(arvosanat.map(arvosana =>
-      unauthorized.suoritusRekisteri.?(arvosanat)(Timeout(300, TimeUnit.SECONDS)).
-        mapTo[Option[Suoritus]].map(
-        _.map {
-          case (s: VirallinenSuoritus) => Set(s.myontaja, s.source, arvosana.source)
-          case (s: VapaamuotoinenSuoritus) => Set(s.source, arvosana.source)
-        }.getOrElse(Set())).map(x => (arvosana, x, None))
-    ).toSeq)
+      unauthorized.suoritusRekisteri.?(arvosanat.map(_.suoritus))(Timeout(300, TimeUnit.SECONDS)).
+        mapTo[Seq[Suoritus with Identified[UUID]]].map(suoritukset => {
+        val suoritusAuthInfo = suoritukset.map {
+          case (s: VirallinenSuoritus) => (s.id, Set(s.myontaja, s.source))
+          case (s: VapaamuotoinenSuoritus) => (s.id, Set(s.source))
+        }.toMap
+        arvosanat.map(x => (x, suoritusAuthInfo(x.suoritus), None))
+      })
 
   override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusOrgResolver.lift, suoritusKomoResolver.lift)
   override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija:Opiskelija) => Some(opiskelija.oppilaitosOid))

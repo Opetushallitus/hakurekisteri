@@ -15,6 +15,8 @@ trait Repository[T, I] {
 
   def get(id: I): Option[T with Identified[I]]
 
+  def getAll(ids: Seq[I]): Seq[T with Identified[I]]
+
   def cursor(t:T): Any
 
   def delete(id: I, source: String)
@@ -95,6 +97,8 @@ trait InMemRepository[T <: Resource[I, T], I] extends Repository[T, I] {
   def listAll(): Seq[T with Identified[I]] = store.values.toSeq
 
   def get(id:I): Option[T with Identified[I]] = store.get(id)
+
+  def getAll(ids: Seq[I]): Seq[T with Identified[I]] = ids.map(id => store.get(id)).flatten
 
   override def delete(id:I,source :String): Unit = {
     if (store.contains(id)) {

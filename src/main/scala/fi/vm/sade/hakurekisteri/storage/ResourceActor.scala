@@ -39,6 +39,9 @@ abstract class ResourceActor[T <: Resource[I, T] : Manifest, I : Manifest] exten
         id
       })
 
+    case ids: Seq[_] if ids.isInstanceOf[Seq[I]] =>
+      sender ! operationOrFailure(() => getAll(ids.asInstanceOf[Seq[I]]))
+
     case InsertResource(resource: T) =>
       sender ! operationOrFailure(() => insert(resource))
 
