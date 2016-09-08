@@ -48,36 +48,26 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem) {
 
   val client = buildClient()
 
-  private def jvalueToStudent(jvalue: ast.JValue): Student =
-    // this is slow
-    parse(jvalue.render()).extract[Student]
-
-  def zipToStudents(stream: InputStream): Stream[Student] = {
+  def zipToStudents(stream: InputStream): Iterator[Student] = {
     val zip = new ZipInputStream(stream)
 
     Stream.continually(Try(zip.getNextEntry()).getOrElse(null))
       .takeWhile(_ != null)
-      .flatten(e => {
-        val p = JParser.async(mode = AsyncParser.UnwrapArray)
-        p.absorb(ByteStreams.toByteArray(zip)) match {
-          case Right(js) =>
-            js.flatten(value => Try(jvalueToStudent(value))match {
-              case Success(student) => Some(student)
-              case Failure(e) =>
-                logger.error(s"Unable to parse student from YTL data! ${e.getMessage} and json was ${value.render()}")
-                None
-            })
-          case Left(e) =>
-            logger.error(s"Reading file inside YTL zip failed with message ${e.getMessage}")
-            throw e
-        }
-      })
+      .map(e => {
+        val oneBigByteString = ByteStreams.toByteArray(zip)
+        Student.parseAsync.apply(Iterator(oneBigByteString)).flatten.map {
+          case Success(student) => Some(student)
+          case Failure(e) =>
+            logger.error(s"Unable to parse student from YTL data! ${e.getMessage}")
+            None
+        }.flatten
+      }).toIterator.flatten
   }
 
   def fetchOne(hetu: String): Student =
     client.get("ytl.http.host.fetchone", hetu).expectStatus(200).execute((r:OphHttpResponse) => parse(r.asText()).extract[Student])
 
-  def fetch(hetus: List[String]): Either[Throwable, Stream[Student]] = {
+  def fetch(hetus: List[String]): Either[Throwable, Iterator[Student]] = {
     for {
       operation <- fetchOperation(hetus).right
       ok <- fetchStatus(operation.operationUuid).right
