@@ -60,8 +60,9 @@ trait OppijaFetcher {
   }
 
   def getRekisteriData(personOids: Set[String])(implicit user: User): Future[Seq[Oppija]] = {
+    val logId = UUID.randomUUID()
     def timed[A](msg: String, f: Future[A]): Future[A] =
-      DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(msg, f)
+      DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(s"$logId: $msg", f)
 
     val todistuksetF = timed("Suoritukset for rekisteritiedot", fetchSuoritukset(personOids))
       .flatMap(suoritukset => timed("Todistukset for rekisteritiedot", fetchTodistukset(suoritukset)))
