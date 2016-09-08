@@ -1,8 +1,10 @@
 package fi.vm.sade.hakurekisteri.oppija
 
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorRef
+import akka.event.LoggingAdapter
 import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery, ArvosanatQuery}
@@ -14,11 +16,14 @@ import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
 import fi.vm.sade.hakurekisteri.rest.support.{Query, Registers, User}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusHenkilotQuery}
+import fi.vm.sade.hakurekisteri.tools.DurationHelper
 
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
 trait OppijaFetcher {
 
+  val logger: LoggingAdapter
   val rekisterit: Registers
   val hakemusService: HakemusService
   val ensikertalaisuus: ActorRef
@@ -55,11 +60,14 @@ trait OppijaFetcher {
   }
 
   def getRekisteriData(personOids: Set[String])(implicit user: User): Future[Seq[Oppija]] = {
+    def timed[A](msg: String, f: Future[A]): Future[A] =
+      DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(msg, f)
+
     val oppijaData = for (
-      suoritukset <- fetchSuoritukset(personOids);
-      todistukset <- fetchTodistukset(suoritukset);
-      opiskeluoikeudet <- fetchOpiskeluoikeudet(personOids);
-      opiskelijat <- fetchOpiskelu(personOids)
+      suoritukset <- timed("Suoritukset for rekisteritiedot", fetchSuoritukset(personOids));
+      todistukset <- timed("Todistukset for rekisteritiedot", fetchTodistukset(suoritukset));
+      opiskeluoikeudet <- timed("Opiskeluoikeudet for rekisteritiedot", fetchOpiskeluoikeudet(personOids));
+      opiskelijat <- timed("Opiskelijat for rekisteritiedot", fetchOpiskelu(personOids))
     ) yield (opiskelijat.groupBy(_.henkiloOid), opiskeluoikeudet.groupBy(_.henkiloOid), todistukset.groupBy(_.suoritus.henkiloOid))
 
     oppijaData.map {
