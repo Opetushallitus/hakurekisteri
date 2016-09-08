@@ -63,25 +63,27 @@ trait OppijaFetcher {
     def timed[A](msg: String, f: Future[A]): Future[A] =
       DurationHelper.timed[A](logger, Duration(100, TimeUnit.MILLISECONDS))(msg, f)
 
-    val oppijaData = for (
-      suoritukset <- timed("Suoritukset for rekisteritiedot", fetchSuoritukset(personOids));
-      todistukset <- timed("Todistukset for rekisteritiedot", fetchTodistukset(suoritukset));
-      opiskeluoikeudet <- timed("Opiskeluoikeudet for rekisteritiedot", fetchOpiskeluoikeudet(personOids));
-      opiskelijat <- timed("Opiskelijat for rekisteritiedot", fetchOpiskelu(personOids))
-    ) yield (opiskelijat.groupBy(_.henkiloOid), opiskeluoikeudet.groupBy(_.henkiloOid), todistukset.groupBy(_.suoritus.henkiloOid))
+    val todistuksetF = timed("Suoritukset for rekisteritiedot", fetchSuoritukset(personOids))
+      .flatMap(suoritukset => timed("Todistukset for rekisteritiedot", fetchTodistukset(suoritukset)))
+      .map(_.groupBy(_.suoritus.henkiloOid))
+    val opiskeluoikeudetF = timed("Opiskeluoikeudet for rekisteritiedot", fetchOpiskeluoikeudet(personOids))
+      .map(_.groupBy(_.henkiloOid))
+    val opiskelijatF = timed("Opiskelijat for rekisteritiedot", fetchOpiskelu(personOids))
+      .map(_.groupBy(_.henkiloOid))
 
-    oppijaData.map {
-      case (opiskelijat, opiskeluoikeudet, todistukset) =>
-        personOids.map((oid: String) => {
-          Oppija(
-            oppijanumero = oid,
-            opiskelu = opiskelijat.getOrElse(oid, Seq()),
-            opiskeluoikeudet = opiskeluoikeudet.getOrElse(oid, Seq()),
-            suoritukset = todistukset.getOrElse(oid, Seq()),
-            ensikertalainen = None
-          )
-        }).toSeq
-    }
+    for {
+      todistukset <- todistuksetF
+      opiskeluoikeudet <- opiskeluoikeudetF
+      opiskelijat <- opiskelijatF
+    } yield personOids.map(oid =>
+      Oppija(
+        oppijanumero = oid,
+        opiskelu = opiskelijat.getOrElse(oid, Seq()),
+        opiskeluoikeudet = opiskeluoikeudet.getOrElse(oid, Seq()),
+        suoritukset = todistukset.getOrElse(oid, Seq()),
+        ensikertalainen = None
+      )
+    ).toSeq
   }
 
   private def fetchTodistukset(suoritukset: Seq[Suoritus with Identified[UUID]])(implicit user: User): Future[Seq[Todistus]] =
