@@ -210,7 +210,7 @@
       "answers":{
         "henkilotiedot":{
           "onkosinullakaksoiskansallisuus":"true",
-          "koulusivistyskieli":"EN",
+          "koulusivistyskieli":"",
           "kansalaisuus":"FIN",
           "asuinmaa":"FIN",
           "Sukunimi":"Aalto-Testi",
@@ -227,7 +227,7 @@
           "Etunimet":"Aapeli Testi",
           "kotikunta":"049",
           "onkoSinullaSuomalainenHetu":"false",
-          "aidinkieli":"FI",
+          "aidinkieli":"",
           "syntymaaika":"26.01.1975",
           "Henkilotunnus_plain":"260175-975C",
           "SUKUPUOLI":"1",
