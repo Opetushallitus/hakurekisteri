@@ -7,15 +7,17 @@ import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{ArvioOsakoe, ArvioYo}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.YoTutkinto
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
+import jawn._
+import jawn.ast.{JValue, JParser}
 import org.joda.time.{MonthDay, LocalDate}
 import org.joda.time.format.DateTimeFormat
+import org.json4s.jackson.JsonMethods._
 import org.json4s.{ExtractableJsonAstNode, CustomSerializer}
 import org.json4s.JsonAST.{JObject, JString}
 import org.json4s.jackson.Serialization
 
 import scala.util.matching.Regex
 import scala.util.{Success, Failure, Try}
-
 case class Operation(operationUuid: String)
 
 trait Status {}
@@ -24,22 +26,38 @@ case class InProgress() extends Status
 case class Finished() extends Status
 case class Failed() extends Status
 
-case class YtlStudents(students: List[Either[Throwable, Student]])
-
 object Student {
+
   private val dtf = DateTimeFormat.forPattern("yyyy-MM-dd")
-  case object DateSerializer extends CustomSerializer[LocalDate](format => (
-    {
-      case JString(s) => dtf.parseLocalDate(s)
-    },
-    {
-      case d: Date => throw new UnsupportedOperationException("Serialization is unsupported")
-    }
+
+  case object DateSerializer extends CustomSerializer[LocalDate](format => ( {
+    case JString(s) => dtf.parseLocalDate(s)
+  }, {
+    case d: Date => throw new UnsupportedOperationException("Serialization is unsupported")
+  }
     )
   )
 
   val formatsStudent = Serialization.formats(org.json4s.NoTypeHints) + KausiDeserializer + DateSerializer
 
+
+  private def jvalueToStudent(jvalue: ast.JValue): Student = {
+    implicit val formats = formatsStudent
+  // this is slow
+  parse(jvalue.render()).extract[Student]
+}
+
+  def parseAsync(): Iterator[Array[Byte]] => Iterator[Seq[Try[Student]]] = {
+    val p: AsyncParser[JValue] = JParser.async(mode = AsyncParser.UnwrapArray)
+    def parser(chunks: Iterator[Array[Byte]]): Iterator[Seq[Try[Student]]] = {
+      chunks.map(chunk => p.absorb(chunk) match {
+        case Right(js :Seq[JValue]) =>
+          js.map(v => Try(jvalueToStudent(v)))
+        case Left(e) => throw e // malformed json
+      })
+    }
+    parser
+  }
 }
 
 case object KausiDeserializer extends CustomSerializer[fi.vm.sade.hakurekisteri.integration.ytl.Kausi](format => ({
