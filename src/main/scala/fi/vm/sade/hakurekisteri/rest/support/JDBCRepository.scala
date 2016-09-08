@@ -71,7 +71,11 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
         f.onComplete(_ => {
           val runtime = Platform.currentTime - start
           if (runtime > slowQuery) {
-            log.info(s"Query ${query.result.statements.mkString(" ").take(500) + "...(truncated)"} took $runtime ms")
+            var queryStr = query.result.statements.mkString(" ")
+            if(queryStr.length > 500) {
+              queryStr = queryStr.take(500) + "...(truncated from " + queryStr.length + " chars)"
+            }
+            log.info(s"Query $queryStr took $runtime ms")
           }
         })(dbExecutor)
         f
