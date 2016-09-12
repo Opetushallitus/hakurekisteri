@@ -1,23 +1,20 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import java.time.ZoneId
 import java.util.Date
 
-import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{ArvioOsakoe, ArvioYo}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.YoTutkinto
-import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus}
 import jawn._
 import jawn.ast.{JValue, JParser}
-import org.joda.time.{MonthDay, LocalDate}
+import org.joda.time.{LocalDate}
 import org.joda.time.format.DateTimeFormat
 import org.json4s.jackson.JsonMethods._
-import org.json4s.{ExtractableJsonAstNode, CustomSerializer}
+import org.json4s.{CustomSerializer}
 import org.json4s.JsonAST.{JObject, JString}
 import org.json4s.jackson.Serialization
 
-import scala.util.matching.Regex
-import scala.util.{Success, Failure, Try}
+import scala.util.{Try}
 case class Operation(operationUuid: String)
 
 trait Status {}
@@ -47,16 +44,16 @@ object Student {
   parse(jvalue.render()).extract[Student]
 }
 
-  def parseAsync(): Iterator[Array[Byte]] => Iterator[Seq[Try[Student]]] = {
+  case class StudentAsyncParser() {
     val p: AsyncParser[JValue] = JParser.async(mode = AsyncParser.UnwrapArray)
-    def parser(chunks: Iterator[Array[Byte]]): Iterator[Seq[Try[Student]]] = {
-      chunks.map(chunk => p.absorb(chunk) match {
-        case Right(js :Seq[JValue]) =>
-          js.map(v => Try(jvalueToStudent(v)))
-        case Left(e) => throw e // malformed json
-      })
+
+    def feedChunk(c: Array[Byte]): Seq[Try[Student]] = {
+      p.absorb(c) match {
+        case Right(js: Seq[JValue]) => js.map(v => Try(jvalueToStudent(v)))
+        case Left(e) => throw e
+      }
     }
-    parser
+
   }
 }
 
@@ -71,14 +68,14 @@ case object KausiDeserializer extends CustomSerializer[fi.vm.sade.hakurekisteri.
   ))
 
 case object StatusDeserializer extends CustomSerializer[Status](format => ({
-  case JObject(fields) if(fields.exists {
-    case ("finished",value: JString)=> true
+  case JObject(fields) if fields.exists {
+    case ("finished", value: JString) => true
     case _ => false
-  }) => Finished()
-  case JObject(fields) if(fields.exists {
-    case ("failure",value: JString)=> true
+  } => Finished()
+  case JObject(fields) if fields.exists {
+    case ("failure", value: JString) => true
     case _ => false
-  }) => Failed()
+  } => Failed()
 
   case JObject(e) => InProgress()
 }, {
