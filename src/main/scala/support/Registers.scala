@@ -74,7 +74,7 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
   }
 
   val resolve = (arvosanat: Seq[Arvosana]) =>
-      unauthorized.suoritusRekisteri.?(arvosanat.map(_.suoritus))(Timeout(300, TimeUnit.SECONDS)).
+      unauthorized.suoritusRekisteri.?(arvosanat.map(_.suoritus))(Timeout(900, TimeUnit.SECONDS)).
         mapTo[Seq[Suoritus with Identified[UUID]]].map(suoritukset => {
         val suoritusAuthInfo = suoritukset.map(s => (s.id, s.asInstanceOf[Suoritus])).map {
           case (id, s: VirallinenSuoritus) => (id, Set(s.myontaja, s.source))

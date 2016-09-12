@@ -76,7 +76,7 @@ class RekisteritiedotResource(val rekisterit: Registers, val hakemusService: Hak
     if (henkilot.exists(!_.startsWith("1.2.246.562.24."))) throw new IllegalArgumentException("person oid must start with 1.2.246.562.24.")
 
     new AsyncResult() {
-      override implicit def timeout: Duration = 500.seconds
+      override implicit def timeout: Duration = 1000.seconds
 
       private val tiedotFuture = getRekisteriData(henkilot)
 
