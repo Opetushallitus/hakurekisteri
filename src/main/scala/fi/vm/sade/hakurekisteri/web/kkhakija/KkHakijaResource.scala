@@ -326,10 +326,10 @@ class KkHakijaResource(hakemusService: HakemusService,
       henkiloOid <- hakemus.personOid
     } yield for {
       hakemukset <- getHakemukset(haku, hakemus, q, kokoHaunTulos)
-      maa <- getMaakoodi(henkilotiedot.asuinmaa.getOrElse("FIN"), koodisto)
+      maa <- getMaakoodi(henkilotiedot.asuinmaa.getOrElse(""), koodisto)
       toimipaikka <- getToimipaikka(maa, henkilotiedot.Postinumero, henkilotiedot.kaupunkiUlkomaa, koodisto)
       suoritukset <- (suoritukset ? SuoritysTyyppiQuery(henkilo = henkiloOid, komo = YTLXml.yotutkinto)).mapTo[Seq[VirallinenSuoritus]]
-      kansalaisuus <- getMaakoodi(henkilotiedot.kansalaisuus.getOrElse("FIN"), koodisto)
+      kansalaisuus <- getMaakoodi(henkilotiedot.kansalaisuus.getOrElse(""), koodisto)
     } yield Hakija(
         hetu = getHetu(henkilotiedot.Henkilotunnus, henkilotiedot.syntymaaika, hakemus.oid),
         oppijanumero = hakemus.personOid.getOrElse(""),
@@ -346,7 +346,7 @@ class KkHakijaResource(hakemusService: HakemusService,
         matkapuhelin = henkilotiedot.matkapuhelinnumero1.flatMap(_.blankOption),
         puhelin = henkilotiedot.matkapuhelinnumero2.flatMap(_.blankOption),
         sahkoposti = henkilotiedot.Sähköposti.flatMap(_.blankOption),
-        kotikunta = henkilotiedot.kotikunta.flatMap(_.blankOption).getOrElse("200"),
+        kotikunta = henkilotiedot.kotikunta.flatMap(_.blankOption).getOrElse(""),
         sukupuoli = henkilotiedot.sukupuoli.getOrElse(""),
         aidinkieli = henkilotiedot.aidinkieli.getOrElse(""),
         asiointikieli = getAsiointikieli(henkilotiedot.aidinkieli.getOrElse("")),
