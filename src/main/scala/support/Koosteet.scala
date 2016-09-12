@@ -22,7 +22,7 @@ trait Koosteet {
 class BaseKoosteet(system: ActorSystem, integrations: Integrations, registers: Registers, config: Config) extends Koosteet {
   implicit val ec: ExecutionContext = system.dispatcher
 
-  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.valintaTulos, integrations.ytl, config)), "haut")
+  val haut = system.actorOf(Props(new HakuActor(integrations.tarjonta, integrations.parametrit, integrations.valintaTulos, integrations.ytl, integrations.ytlIntegration, config)), "haut")
 
   val virtaQueue = system.actorOf(Props(new VirtaQueue(integrations.virta, integrations.hakemusService, haut)), "virta-queue")
 
