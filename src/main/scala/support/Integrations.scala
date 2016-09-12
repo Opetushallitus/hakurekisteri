@@ -16,7 +16,7 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, Tarjont
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{ValintarekisteriActor, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
 import fi.vm.sade.hakurekisteri.integration.virta._
-import fi.vm.sade.hakurekisteri.integration.ytl.{YtlFileSystem, YtlHttpFetch, YtlActor}
+import fi.vm.sade.hakurekisteri.integration.ytl.{YtlIntegration, YtlFileSystem, YtlHttpFetch, YtlActor}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient, _}
 import fi.vm.sade.hakurekisteri.rest.support.Registers
 import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
@@ -31,6 +31,7 @@ trait Integrations {
   val tarjonta: ActorRef
   val koodisto: ActorRef
   val ytl: ActorRef
+  val ytlIntegration: YtlIntegration
   val ytlHttp: YtlHttpFetch
   val parametrit: ActorRef
   val valintaTulos: ActorRef
@@ -73,6 +74,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   )), "ytl")
   val ytlConfig = new OphProperties()
   override val ytlHttp = new YtlHttpFetch(ytlConfig, new YtlFileSystem(ytlConfig))
+  override val ytlIntegration = new YtlIntegration(ytlHttp, hakemusService, rekisterit.suoritusRekisteri)
 
   override val proxies = new MockProxies
   override val hakemusClient = null
@@ -146,6 +148,7 @@ class BaseIntegrations(rekisterit: Registers,
   )), "ytl")
   val ytlConfig = new OphProperties()
   override val ytlHttp = new YtlHttpFetch(ytlConfig, new YtlFileSystem(ytlConfig))
+  val ytlIntegration = new YtlIntegration(ytlHttp, hakemusService, rekisterit.suoritusRekisteri)
   private val virtaClient = new VirtaClient(
     config = config.integrations.virtaConfig,
     apiVersion = config.properties.getOrElse("suoritusrekisteri.virta.apiversio", VirtaClient.version105)
