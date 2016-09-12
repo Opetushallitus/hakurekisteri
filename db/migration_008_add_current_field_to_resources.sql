@@ -10,7 +10,7 @@ create unique index arvosana_new_resource_id_inserted_idx on arvosana_new (resou
 create index arvosana_new_suoritus_idx on arvosana_new (suoritus, deleted);
 
 alter table arvosana rename to arvosana_old;
-alter table arvosana_new to arvosana;
+alter table arvosana_new rename to arvosana;
 
 update arvosana set current = TRUE from (select resource_id, max(inserted) as max_inserted from arvosana group by resource_id) x2 where arvosana.resource_id = x2.resource_id and inserted = x2.max_inserted;
 update import_batch set current = TRUE from (select resource_id, max(inserted) as max_inserted from import_batch group by resource_id) x2 where import_batch.resource_id = x2.resource_id and inserted = x2.max_inserted;
