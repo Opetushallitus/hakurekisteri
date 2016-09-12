@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.zip.{ZipInputStream}
 import java.io
 import com.google.common.io.ByteStreams
+import fi.vm.sade.hakurekisteri.integration.ytl.Student.StudentAsyncParser
 import fi.vm.sade.javautils.httpclient._
 import fi.vm.sade.properties.OphProperties
 import jawn.{ast, Parser, AsyncParser}
@@ -51,17 +52,20 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem) {
   def zipToStudents(stream: InputStream): Iterator[Student] = {
     val zip = new ZipInputStream(stream)
 
+
     Stream.continually(Try(zip.getNextEntry()).getOrElse(null))
       .takeWhile(_ != null)
+      .toIterator
       .map(e => {
+        val parser = StudentAsyncParser()
         val oneBigByteString = ByteStreams.toByteArray(zip)
-        Student.parseAsync.apply(Iterator(oneBigByteString)).flatten.map {
+        parser.feedChunk(oneBigByteString).flatMap {
           case Success(student) => Some(student)
           case Failure(e) =>
             logger.error(s"Unable to parse student from YTL data! ${e.getMessage}")
             None
-        }.flatten
-      }).toIterator.flatten
+        }
+      }).flatten
   }
 
   def fetchOne(hetu: String): Student =
