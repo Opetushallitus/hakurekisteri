@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat
 
 import akka.actor.ActorSystem
 import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
+import fi.vm.sade.hakurekisteri.integration.ytl.Student.StudentAsyncParser
 import org.joda.time.format.DateTimeFormat
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -21,12 +22,9 @@ class YtlJsonSpec extends ScalatraFunSuite {
 
   test("Parse async YTL json") {
     val (a,b) = ylioppilaatJson.splitAt(ylioppilaatJson.length/2)
-
-    val studentStream = Student.parseAsync.apply(Stream(a.getBytes,b.getBytes).toIterator).toStream
-    val firstChunk = studentStream.head
-    firstChunk.size should equal(0)
-    val secondChunk = studentStream.tail.head
-    secondChunk.size should equal(1)
+    val async = StudentAsyncParser()
+    async.feedChunk(a).size should equal(0)
+    async.feedChunk(b).size should equal(1)
   }
 
   test("Parse YTL json") {
