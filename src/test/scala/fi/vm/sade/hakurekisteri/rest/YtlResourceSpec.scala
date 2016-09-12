@@ -1,11 +1,9 @@
 package fi.vm.sade.hakurekisteri.rest
 
 import akka.actor.ActorSystem
-import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, Endpoint, DispatchSupport}
-import fi.vm.sade.hakurekisteri.web.integration.virta.VirtaSuoritusResource
+import fi.vm.sade.hakurekisteri.integration.{DispatchSupport, Endpoint, ExecutorUtil}
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
-import fi.vm.sade.hakurekisteri.web.rest.support.{Security, HakurekisteriSwagger}
-import org.mockito.Mockito
+import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, Security}
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
@@ -16,7 +14,7 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with Mockito
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val adminSecurity: Security = new SuoritusResourceAdminTestSecurity
 
-  addServlet(new YtlResource(null), "/*")
+  addServlet(new YtlResource(null, null), "/*")
 
   val endPoint = mock[Endpoint]
 
