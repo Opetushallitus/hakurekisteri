@@ -56,7 +56,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem) {
     Stream.continually(Try(zip.getNextEntry()).getOrElse(null))
       .takeWhile(_ != null)
       .toIterator
-      .map(e => {
+      .flatMap(e => {
         val parser = StudentAsyncParser()
         val oneBigByteString = ByteStreams.toByteArray(zip)
         parser.feedChunk(oneBigByteString).flatMap {
@@ -65,7 +65,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem) {
             logger.error(s"Unable to parse student from YTL data! ${e.getMessage}")
             None
         }
-      }).flatten
+      })
   }
 
   def fetchOne(hetu: String): Student =
