@@ -21,24 +21,22 @@ class YtlIntegration(ytlHttpClient: YtlHttpFetch,
 
   def setAktiivisetHaut(hakuOids: Set[String]) = activeHakuOids = hakuOids
 
+  def sync(personOid: String) = {
+    hakemusService.hakemuksetForPerson(personOid).onComplete {
+      case Success(hakemukset) => {
+        handleHakemukset(hakemukset.toSet)
+      }
+      case Failure(e) => throw e
+    }
+  }
+
   def syncAll = {
     val hakemusFutures: Set[Future[Seq[FullHakemus]]] = activeHakuOids
       .map(hakuOid => hakemusService.hetuAndPersonOidForHaku(hakuOid))
 
     Future.sequence(hakemusFutures).onComplete {
       case Success(hakemukset) =>
-        val hetuToPersonOid: Map[String, String] = hakemukset.flatten.map(hakemus => hakemus.hetu.get -> hakemus.personOid.get).toMap
-
-        ytlHttpClient.fetch(hetuToPersonOid.keys.toList) match {
-          case Left(e: Throwable) =>
-            logger.error(s"failed to fetch YTL data: ${e.getMessage}")
-            throw e
-          case Right((zip, students)) =>
-            YtlDiff.writeKokelaatAsJson(students.map { student =>
-              StudentToKokelas.convert(hetuToPersonOid.get(student.ssn).get, student)
-            }, "ytl-v2-kokelaat.json")
-            IOUtils.closeQuietly(zip)
-        }
+        handleHakemukset(hakemukset.flatten)
 
       case Failure(e: Throwable) =>
         logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
@@ -47,4 +45,18 @@ class YtlIntegration(ytlHttpClient: YtlHttpFetch,
 
   }
 
+  private def handleHakemukset(hakemukset: Set[FullHakemus]): Unit = {
+    val hetuToPersonOid: Map[String, String] = hakemukset.map(hakemus => hakemus.hetu.get -> hakemus.personOid.get).toMap
+
+    ytlHttpClient.fetch(hetuToPersonOid.keys.toList) match {
+      case Left(e: Throwable) =>
+        logger.error(s"failed to fetch YTL data: ${e.getMessage}")
+        throw e
+      case Right((zip, students)) =>
+        YtlDiff.writeKokelaatAsJson(students.map { student =>
+          StudentToKokelas.convert(hetuToPersonOid.get(student.ssn).get, student)
+        }, "ytl-v2-kokelaat.json")
+        IOUtils.closeQuietly(zip)
+    }
+  }
 }
