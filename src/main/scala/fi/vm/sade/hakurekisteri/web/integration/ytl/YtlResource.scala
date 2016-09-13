@@ -32,10 +32,11 @@ class YtlResource(ytl:ActorRef, ytlIntegration: YtlIntegration)(implicit val sys
     ytlIntegration.syncAll
     Accepted("YTL sync started")
   }
-  get("/http_request/:hetu") {
+  get("/http_request/:personOid") {
     shouldBeAdmin
-    val hetu = params("hetu")
-    logger.info("Fetching YTL data for henkilotunnus")
+    val personOid = params("personOid")
+    logger.info("Fetching YTL data for person OID")
+    ytlIntegration.sync(personOid)
     Accepted()
   }
 
