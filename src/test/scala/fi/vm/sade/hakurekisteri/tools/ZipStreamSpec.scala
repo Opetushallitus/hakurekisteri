@@ -47,23 +47,6 @@ class ZipStreamSpec extends ScalatraFunSuite {
     result.head.get.lastname should equal ("\u0628")
   }
 
-  test("async parser shouldn't store parsed json. memory usage should decrease") {
-    val input = inifiniteStudentJsonStream
-
-    val asyncParser = StudentAsyncParser()
-    val memDiffMedians = (1 to 5).map(_ =>
-        (1 to 5).map(_ =>
-          memoryUsageBeforeAfter { () =>
-            asyncParser.feedChunk(readFromStream(1 * (1024 * 1024), input)).size should be >= 1216
-          }
-        ).toList.sortWith(_ > _)(2)).toList
-
-    val firstHalfMemoryUsageMedians = memDiffMedians.view(0,2).sum
-    val secondHalfMemoryUsageMedians = memDiffMedians.view(3,5).sum
-
-    firstHalfMemoryUsageMedians should be >= (secondHalfMemoryUsageMedians)
-  }
-
   private def inifiniteStudentJsonStream: InputStream = new SequenceInputStream(
       new ByteArrayInputStream("["),
       new InfiniteInputStream(studentJson + ","))
