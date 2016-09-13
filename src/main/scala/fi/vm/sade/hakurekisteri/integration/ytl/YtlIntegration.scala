@@ -23,14 +23,18 @@ class YtlIntegration(ytlHttpClient: YtlHttpFetch,
 
   def sync(personOid: String) = {
     hakemusService.hakemuksetForPerson(personOid).onComplete {
-      case Success(hakemukset) => {
-        handleHakemukset(hakemukset.toSet)
-      }
-      case Failure(e) => throw e
+      case Success(hakemukset) =>
+        val hakemus = hakemukset.head
+        val student: Student = ytlHttpClient.fetchOne(hakemus.hetu.get)
+        val kokelas = StudentToKokelas.convert(hakemus.personOid.get, student)
+        YtlDiff.writeKokelaatAsJson(List(kokelas).iterator, "ytl-v2-single-kokelas.json")
+      case Failure(e) =>
+        logger.error(s"failed to fetch one hakemus from hakemus service: ${e.getMessage}")
+        throw e
     }
   }
 
-  def syncAll = {
+  def syncAll() = {
     val hakemusFutures: Set[Future[Seq[FullHakemus]]] = activeHakuOids
       .map(hakuOid => hakemusService.hetuAndPersonOidForHaku(hakuOid))
 
