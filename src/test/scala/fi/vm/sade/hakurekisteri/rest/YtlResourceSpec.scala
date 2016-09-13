@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest
 
 import akka.actor.ActorSystem
+import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusServiceMock
 import fi.vm.sade.hakurekisteri.integration.ytl.{YtlMockFixture, YtlHttpFetch, YtlFileSystem, YtlIntegration}
 import fi.vm.sade.hakurekisteri.integration.{DispatchSupport, Endpoint, ExecutorUtil}
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
@@ -18,7 +19,7 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with Mockito
 
   val fileSystem = new YtlFileSystem(ytlProperties)
   val ytlHttpFetch = new YtlHttpFetch(ytlProperties,fileSystem)
-  val ytlIntegration = new YtlIntegration(ytlHttpFetch, null, null)
+  val ytlIntegration = new YtlIntegration(ytlHttpFetch, new HakemusServiceMock, null)
 
   addServlet(new YtlResource(null, ytlIntegration), "/*")
 
