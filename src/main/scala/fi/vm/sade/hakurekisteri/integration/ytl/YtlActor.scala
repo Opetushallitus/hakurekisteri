@@ -301,7 +301,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
         val missing = batch.items.map(_.oid).toSet -- found
         for (problem <- missing) log.warning(s"Missing result from YTL for oid $problem in batch ${batch.id}")
         log.info(s"process returned ${found.size} results of ${batch.items.size} requested, started saving")
-        YtlDiff.writeKokelaatAsJson(parsed, "ytl-v1-kokelaat.json")
+        YtlDiff.writeKokelaatAsJson(parsed.flatten.toIterator, "ytl-v1-kokelaat.json")
 
       case Failure(t) if requested.isDefined => log.error(t, s"failure in fetching results for ${requested.get.id}")
 
