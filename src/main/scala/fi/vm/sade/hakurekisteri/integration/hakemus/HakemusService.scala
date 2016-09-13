@@ -40,6 +40,8 @@ object Trigger {
   })
 }
 
+case class HetuPersonOid(hetu: String, personOid: String)
+
 case class ListFullSearchDto(searchTerms: String = "",
                              states: List[String] = List(),
                              aoOids: List[String] = List(),
@@ -114,11 +116,13 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000)(imp
     restClient.postObject[Set[String], Set[String]]("haku-app.personoidsbyapplicationoption", organisaatio.orNull)(200, Set(hakukohdeOid))
   }
 
-  def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[FullHakemus]] =
+  def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]] =
     restClient.postObject[ListFullSearchDto, List[FullHakemus]]("haku-app.listfull")(acceptedResponseCode = 200,
       ListFullSearchDto.hetuPersonOid(hakuOid)).flatMap { hakemukset =>
         Future {
-          hakemukset.filter(hakemus => hakemus.personOid.isDefined && hakemus.hetu.isDefined)
+          hakemukset
+            .filter(hakemus => hakemus.hetu.isDefined && hakemus.personOid.isDefined)
+            .map(hakemus => HetuPersonOid(hakemus.hetu.get, hakemus.personOid.get))
         }
       }
 
