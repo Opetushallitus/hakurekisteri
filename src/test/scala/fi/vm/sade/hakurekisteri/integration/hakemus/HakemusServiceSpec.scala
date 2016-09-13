@@ -92,7 +92,7 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     when(endPoint.request(forPattern(".*listfull.*")))
       .thenReturn((200, List(), getJson("hetuAndPersonOid")))
 
-    val result: Seq[FullHakemus] = Await.result(hakemusService.hetuAndPersonOidForHaku("testHaku"), 10.seconds)
+    val result: Seq[HetuPersonOid] = Await.result(hakemusService.hetuAndPersonOidForHaku("testHaku"), 10.seconds)
     result.length should be (2)
   }
 
