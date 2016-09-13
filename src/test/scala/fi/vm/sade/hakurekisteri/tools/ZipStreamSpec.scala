@@ -73,7 +73,6 @@ class ZipStreamSpec extends ScalatraFunSuite {
     ByteStreams.read(s, b, 0, b.length)
     b
   }
-    //new Array[Byte](len).map(_ => s.read().toByte)
 
   private def memoryUsageBeforeAfter(callback: () => Unit): Long = {
     val runtime = Runtime.getRuntime()

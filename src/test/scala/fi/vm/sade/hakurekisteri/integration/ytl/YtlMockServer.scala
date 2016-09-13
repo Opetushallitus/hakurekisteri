@@ -3,6 +3,8 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 import java.util.UUID
 import javax.servlet.http.{HttpServletResponse, HttpServletRequest, HttpServlet}
 
+import fi.vm.sade.scalaproperties.OphProperties
+import fi.vm.sade.utils.tcp.PortChecker
 import org.apache.commons.io.IOUtils
 import org.eclipse.jetty.security.authentication.BasicAuthenticator
 import org.eclipse.jetty.security.{ConstraintSecurityHandler, ConstraintMapping, HashLoginService}
@@ -23,6 +25,13 @@ trait YtlMockFixture extends SuiteMixin {
   def fetchOneUrl = "http://localhost:"+ytlMockServer.port+"/api/oph-transfer/student/$1"
   def username = ytlMockServer.username
   def password = ytlMockServer.password
+  def ytlProperties = new OphProperties()
+    .addDefault("ytl.http.host.bulk", bulkUrl)
+    .addDefault("ytl.http.host.download", downloadUrl)
+    .addDefault("ytl.http.host.fetchone", fetchOneUrl)
+    .addDefault("ytl.http.host.status", statusUrl)
+    .addDefault("ytl.http.username", username)
+    .addDefault("ytl.http.password", password)
   ytlMockServer.start()
 
   abstract override def withFixture(test: NoArgTest) = {
@@ -84,9 +93,7 @@ class YtlMockServlet extends HttpServlet {
 
 class YtlMockServer {
 
-  def freePort() = {
-    5000
-  }
+  def freePort() = PortChecker.findFreeLocalPort
   val port = freePort()
   val username = "ytluser"
   val password = "ytlpassword"
