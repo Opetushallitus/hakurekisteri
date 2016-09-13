@@ -87,3 +87,11 @@ suoritusrekisteri.refresh.time.hours.haku=6
 suoritusrekisteri.refresh.time.hours.valintatulos=2
 user.home.conf=${user.home}/oph-configuration
 web.url.cas=https\://${host.cas}/cas
+
+# YTL HTTP API
+ytl.http.host.bulk=${suoritusrekisteri_ytl_http_host}/api/oph-transfer/bulk
+ytl.http.host.download=${suoritusrekisteri_ytl_http_host}/api/oph-transfer/bulk/$1
+ytl.http.host.fetchone=${suoritusrekisteri_ytl_http_host}/api/oph-transfer/student/$1
+ytl.http.host.status=${suoritusrekisteri_ytl_http_host}/api/oph-transfer/status/$1
+ytl.http.username=${suoritusrekisteri_ytl_http_username}
+ytl.http.password=${suoritusrekisteri_ytl_http_password}
