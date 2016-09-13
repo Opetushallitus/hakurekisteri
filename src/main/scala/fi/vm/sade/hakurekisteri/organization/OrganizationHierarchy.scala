@@ -22,7 +22,7 @@ class FutureOrganizationHierarchy[A <: Resource[I, A] :Manifest, I: Manifest]
  organizationFinder: (Seq[A]) => concurrent.Future[Seq[(A, Set[String], Option[String])]],
  config: Config, organisaatioClient: VirkailijaRestClient) extends Actor {
   val logger = Logging(context.system, this)
-  implicit val timeout: akka.util.Timeout = 300.seconds
+  implicit val timeout: akka.util.Timeout = 450.seconds
   private var authorizer: OrganizationAuthorizer = OrganizationAuthorizer(Map())
   private var organizationCacheUpdater: Cancellable = _
 
