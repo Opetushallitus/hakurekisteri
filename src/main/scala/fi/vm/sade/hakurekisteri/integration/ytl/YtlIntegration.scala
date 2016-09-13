@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 import java.util.concurrent.Executors
 
 import akka.actor.ActorRef
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusService}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, HetuPersonOid}
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 
@@ -35,12 +35,12 @@ class YtlIntegration(ytlHttpClient: YtlHttpFetch,
   }
 
   def syncAll() = {
-    val hakemusFutures: Set[Future[Seq[FullHakemus]]] = activeHakuOids
+    val hakemusFutures: Set[Future[Seq[HetuPersonOid]]] = activeHakuOids
       .map(hakuOid => hakemusService.hetuAndPersonOidForHaku(hakuOid))
 
     Future.sequence(hakemusFutures).onComplete {
-      case Success(hakemukset) =>
-        handleHakemukset(hakemukset.flatten)
+      case Success(persons) =>
+        handleHakemukset(persons.flatten)
 
       case Failure(e: Throwable) =>
         logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
@@ -49,8 +49,8 @@ class YtlIntegration(ytlHttpClient: YtlHttpFetch,
 
   }
 
-  private def handleHakemukset(hakemukset: Set[FullHakemus]): Unit = {
-    val hetuToPersonOid: Map[String, String] = hakemukset.map(hakemus => hakemus.hetu.get -> hakemus.personOid.get).toMap
+  private def handleHakemukset(persons: Set[HetuPersonOid]): Unit = {
+    val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
 
     ytlHttpClient.fetch(hetuToPersonOid.keys.toList) match {
       case Left(e: Throwable) =>
