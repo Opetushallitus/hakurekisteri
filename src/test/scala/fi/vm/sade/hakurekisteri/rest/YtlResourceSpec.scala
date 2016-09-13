@@ -1,22 +1,26 @@
 package fi.vm.sade.hakurekisteri.rest
 
 import akka.actor.ActorSystem
-import fi.vm.sade.hakurekisteri.integration.ytl.{YtlFileSystem, YtlHttpFetch, YtlIntegration}
-import fi.vm.sade.hakurekisteri.integration.{DispatchSupport, Endpoint, ExecutorUtil, OphUrlProperties}
+import fi.vm.sade.hakurekisteri.integration.ytl.{YtlMockFixture, YtlHttpFetch, YtlFileSystem, YtlIntegration}
+import fi.vm.sade.hakurekisteri.integration.{DispatchSupport, Endpoint, ExecutorUtil}
 import fi.vm.sade.hakurekisteri.web.integration.ytl.YtlResource
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriSwagger, Security}
+import fi.vm.sade.scalaproperties.OphProperties
 import org.scalatest.mock.MockitoSugar
 import org.scalatra.swagger.Swagger
 import org.scalatra.test.scalatest.ScalatraFunSuite
 
-class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with MockitoSugar {
+class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with MockitoSugar with YtlMockFixture {
   implicit val system = ActorSystem()
   implicit val clientEc = ExecutorUtil.createExecutor(1, "ytl-resource-test-pool")
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val adminSecurity: Security = new SuoritusResourceAdminTestSecurity
 
-  val fetch = new YtlHttpFetch(OphUrlProperties, new YtlFileSystem(OphUrlProperties))
-  addServlet(new YtlResource(null, new YtlIntegration(fetch, null, null)), "/*")
+  val fileSystem = new YtlFileSystem(ytlProperties)
+  val ytlHttpFetch = new YtlHttpFetch(ytlProperties,fileSystem)
+  val ytlIntegration = new YtlIntegration(ytlHttpFetch, null, null)
+
+  addServlet(new YtlResource(null, ytlIntegration), "/*")
 
   val endPoint = mock[Endpoint]
 

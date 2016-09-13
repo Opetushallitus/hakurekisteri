@@ -1,30 +1,38 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.util.UUID
-import java.util.zip.{ZipEntry, ZipOutputStream}
+import java.util.zip.{ZipInputStream, ZipEntry, ZipOutputStream}
 
+import fi.vm.sade.hakurekisteri.tools.{ProgressInputStream, Zip}
 import fi.vm.sade.scalaproperties.OphProperties
 import org.apache.commons.io.IOUtils
 import org.json4s.NoTypeHints
 import org.json4s.jackson.Serialization
 import org.scalatra.test.scalatest.ScalatraFunSuite
+import org.slf4j.LoggerFactory
 
 
 class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
-  val config = new OphProperties()
-    .addDefault("ytl.http.host.bulk", bulkUrl)
-    .addDefault("ytl.http.host.download", downloadUrl)
-    .addDefault("ytl.http.host.fetchone", fetchOneUrl)
-    .addDefault("ytl.http.host.status", statusUrl)
-    .addDefault("ytl.http.username", username)
-    .addDefault("ytl.http.password", password)
+  private val logger = LoggerFactory.getLogger(getClass)
+  val config = ytlProperties.addDefault("ytl.http.buffersize", "128")
   val fileSystem = new YtlFileSystem(config)
   val ytlHttpFetch = new YtlHttpFetch(config,fileSystem)
 
   test("zip to students") {
+    var bytesRead = 0
+    val p = Zip.toInputStreams(new ZipInputStream(getClass.getResource("/student-results.zip").openStream())).map(ProgressInputStream(bytesRead += _))
 
-    ytlHttpFetch.zipToStudents(getClass.getResource("/student-results.zip").openStream())
-    "ok" should equal ("ok")
+    val students = ytlHttpFetch.zipToStudents(p)
+    bytesRead should equal (0)
+    var lastReadBytes = 0
+    Iterator.continually(students.next)
+      .takeWhile(_ => students.hasNext)
+      .foreach(student => {
+        bytesRead should be > lastReadBytes
+        logger.info(s"Bytes read from ${lastReadBytes} -> $bytesRead while getting ${student.firstnames}")
+        lastReadBytes = bytesRead
+      })
+
   }
 
   test("Fetch one with basic auth") {
@@ -37,7 +45,8 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
   test("Fetch many as zip") {
     val students = ytlHttpFetch.fetch(List("050996-9574"))
 
-    students.right.get.size should equal (7)
+    val (zip, stream) = students.right.get
+    stream.size should equal (7)
   }
 
   test("Memory usage when streaming") {
@@ -46,7 +55,7 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
     val runtime = Runtime.getRuntime()
     System.gc()
     val usedMemoryBefore = runtime.totalMemory() - runtime.freeMemory()
-    val all = ytlHttpFetch.zipToStudents(fileSystem.read(uuid))
+    val all = ytlHttpFetch.zipToStudents(new ZipInputStream(fileSystem.read(uuid)))
     val first = all.next
     System.gc()
     val usedMemoryAfter = runtime.totalMemory() - runtime.freeMemory()
