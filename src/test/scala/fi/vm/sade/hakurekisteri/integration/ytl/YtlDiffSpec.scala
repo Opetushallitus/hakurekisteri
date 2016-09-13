@@ -12,11 +12,11 @@ class YtlDiffSpec extends ScalatraFunSuite {
 
   test("YtlActor should write JSON for diff purposes") {
     val filename = "ytl-diff-kokelaat.json"
-    val kokelaat = Seq(Some(testKokelas("oid1")), Some(testKokelas("oid2")))
+    val kokelaat = Iterator(testKokelas("oid1"), testKokelas("oid2"))
     YtlDiff.writeKokelaatAsJson(kokelaat, filename)
 
     val expected =
-      """[ {
+      """[{
         |  "oid" : "oid1",
         |  "yo" : {
         |    "komo" : "yo1",
@@ -30,7 +30,7 @@ class YtlDiffSpec extends ScalatraFunSuite {
         |  },
         |  "yoTodistus" : [ ],
         |  "osakokeet" : [ ]
-        |}, {
+        |},{
         |  "oid" : "oid2",
         |  "yo" : {
         |    "komo" : "yo1",
@@ -44,7 +44,7 @@ class YtlDiffSpec extends ScalatraFunSuite {
         |  },
         |  "yoTodistus" : [ ],
         |  "osakokeet" : [ ]
-        |} ]""".stripMargin
+        |}]""".stripMargin
 
     val actual = scala.io.Source.fromFile(filename).mkString
     new File(filename).delete()
