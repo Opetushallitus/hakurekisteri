@@ -50,6 +50,22 @@ object VapaamuotoinenKkTutkinto {
 
 }
 
+object AmmatillisenKielikoeSuoritus {
+  val tyyppi = "ammatillisenKielikoe"
+}
+
+case class AmmatillisenKielikoeSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi: Int, lahde: String) extends Suoritus (henkilo, false, lahde) {
+
+  private[AmmatillisenKielikoeSuoritus] case class VapaaSisalto(henkilo: String, tyyppi: String)
+
+  override val core = VapaaSisalto(henkilo, AmmatillisenKielikoeSuoritus.tyyppi)
+
+  override def identify(identity: UUID): AmmatillisenKielikoeSuoritus with Identified[UUID] = new AmmatillisenKielikoeSuoritus(henkiloOid, kuvaus, myontaja, vuosi, source) with Identified[UUID] {
+    val id: UUID = identity
+  }
+}
+
+
 object DayFinder {
 
   def basedate = LocalDate.now()

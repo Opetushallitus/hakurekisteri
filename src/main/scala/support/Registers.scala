@@ -81,6 +81,7 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
         val suoritusAuthInfo = suoritukset.map(s => (s.id, s.asInstanceOf[Suoritus])).map {
           case (id, s: VirallinenSuoritus) => (id, Set(s.myontaja, s.source))
           case (id, s: VapaamuotoinenSuoritus) => (id, Set(s.source))
+          case (id, s: AmmatillisenKielikoeSuoritus) => (id, Set(s.myontaja, s.source))
         }.toMap
         arvosanat.map(x => (x, suoritusAuthInfo(x.suoritus), None))
       })
