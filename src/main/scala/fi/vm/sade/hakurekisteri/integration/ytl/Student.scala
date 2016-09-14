@@ -129,7 +129,9 @@ object StudentToKokelas {
   def toYoTutkinto(oid: String, s: Student): VirallinenSuoritus = {
     val valmistuminen: LocalDate = s.graduationPeriod.map(_.toLocalDate).getOrElse(YTLXml.parseKausi(YTLXml.nextKausi).get)
     val valmis = s.graduationPeriod.isDefined
-    val suoritus = YoTutkinto(suorittaja = oid, valmistuminen = valmistuminen, kieli = s.language.get, valmis = valmis)
+    val suoritus = YoTutkinto(suorittaja = oid, valmistuminen = valmistuminen,
+      // TODO: This should fail if language not set
+      kieli = s.language.getOrElse("fi"), valmis = valmis)
     suoritus
   }
 }
