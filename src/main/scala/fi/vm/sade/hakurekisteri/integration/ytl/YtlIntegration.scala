@@ -1,5 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
+import java.io.File
 import java.util.concurrent.Executors
 
 import akka.actor.ActorRef
@@ -19,6 +20,7 @@ class YtlIntegration(config: OphProperties,
   private val logger = LoggerFactory.getLogger(getClass)
   val kokelaatDownloadDirectory = config.getOrElse("ytl.kokelaat.download.directory", Option(System.getProperty("user.home"))
     .getOrElse(throw new RuntimeException("Either set 'ytl.kokelaat.download.directory' variable or 'user.home' env.var.")))
+  val kokelaatDownloadPath = new File(kokelaatDownloadDirectory, "ytl-v2-kokelaat.json)").getAbsolutePath
   var activeHakuOids = Set[String]()
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
 
@@ -34,7 +36,7 @@ class YtlIntegration(config: OphProperties,
         val hakemus = hakemukset.head
         val student: Student = ytlHttpClient.fetchOne(hakemus.hetu.get)
         val kokelas = StudentToKokelas.convert(hakemus.personOid.get, student)
-        YtlDiff.writeKokelaatAsJson(List(kokelas).iterator, "ytl-v2-single-kokelas.json")
+        YtlDiff.writeKokelaatAsJson(List(kokelas).iterator, kokelaatDownloadPath)
       case Failure(e) =>
         logger.error(s"failed to fetch one hakemus from hakemus service: ${e.getMessage}")
         throw e
@@ -66,7 +68,7 @@ class YtlIntegration(config: OphProperties,
       case Right((zip, students)) =>
         YtlDiff.writeKokelaatAsJson(students.map { student =>
           StudentToKokelas.convert(hetuToPersonOid.get(student.ssn).get, student)
-        }, "ytl-v2-kokelaat.json")
+        }, kokelaatDownloadPath)
         IOUtils.closeQuietly(zip)
     }
   }
