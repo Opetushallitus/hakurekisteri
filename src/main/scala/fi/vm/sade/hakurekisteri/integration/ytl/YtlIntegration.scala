@@ -4,6 +4,7 @@ import java.util.concurrent.Executors
 
 import akka.actor.ActorRef
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusService, HetuPersonOid}
+import fi.vm.sade.properties.OphProperties
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 
@@ -11,11 +12,13 @@ import scala.collection.Set
 import scala.concurrent._
 import scala.util.{Failure, Success}
 
-class YtlIntegration(ytlHttpClient: YtlHttpFetch,
+class YtlIntegration(config: OphProperties,
+                     ytlHttpClient: YtlHttpFetch,
                      hakemusService: HakemusService,
                      suoritusRekisteri: ActorRef) {
   private val logger = LoggerFactory.getLogger(getClass)
-
+  val kokelaatDownloadDirectory = config.getOrElse("ytl.kokelaat.download.directory", Option(System.getProperty("user.home"))
+    .getOrElse(throw new RuntimeException("Either set 'ytl.kokelaat.download.directory' variable or 'user.home' env.var.")))
   var activeHakuOids = Set[String]()
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
 
