@@ -33,7 +33,7 @@ class ZipStreamSpec extends ScalatraFunSuite {
       """
         |[
         |{
-        |"ssn": "s", "lastname": "\u0628", "firstnames": "f"
+        |"ssn": "s", "lastname": "\u0628", "firstnames": "f", "language": "fi"
         |}
         |]
       """.stripMargin
