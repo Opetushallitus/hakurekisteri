@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 import java.util.concurrent.Executors
 
 import akka.actor.ActorRef
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, HetuPersonOid}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusService, HetuPersonOid}
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 
@@ -23,10 +23,12 @@ class YtlIntegration(ytlHttpClient: YtlHttpFetch,
 
   def sync(personOid: String) = {
     hakemusService.hakemuksetForPerson(personOid).onComplete {
-      case Success(x) if(x.isEmpty) =>
+      case Success(hakemukset) =>
+        if(hakemukset.isEmpty) {
         logger.error(s"failed to fetch one hakemus from hakemus service with person OID ${personOid}")
         throw new RuntimeException(s"Hakemus not found with person OID ${personOid}!")
-      case Success(hakemus :: _) =>
+        }
+        val hakemus = hakemukset.head
         val student: Student = ytlHttpClient.fetchOne(hakemus.hetu.get)
         val kokelas = StudentToKokelas.convert(hakemus.personOid.get, student)
         YtlDiff.writeKokelaatAsJson(List(kokelas).iterator, "ytl-v2-single-kokelas.json")
