@@ -5,6 +5,7 @@
   "graduationDate": null,
   "graduationPeriod": null,
   "hasCompletedMandatoryExams": false,
+  "language": "fi",
   "exams": [
     {
       "period": "2013K",

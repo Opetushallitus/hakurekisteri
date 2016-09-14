@@ -46,7 +46,7 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
     val students = ytlHttpFetch.fetch(List("050996-9574"))
 
     val (zip, stream) = students.right.get
-    stream.size should equal (7)
+    stream.size should equal (5)
   }
 
   test("Memory usage when streaming") {
