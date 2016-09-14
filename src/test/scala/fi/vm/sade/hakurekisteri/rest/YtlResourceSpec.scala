@@ -17,9 +17,10 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with Mockito
   implicit val swagger: Swagger = new HakurekisteriSwagger
   implicit val adminSecurity: Security = new SuoritusResourceAdminTestSecurity
 
+  val config = ytlProperties.addDefault("ytl.kokelaat.download.directory",com.google.common.io.Files.createTempDir().getAbsolutePath)
   val fileSystem = new YtlFileSystem(ytlProperties)
   val ytlHttpFetch = new YtlHttpFetch(ytlProperties,fileSystem)
-  val ytlIntegration = new YtlIntegration(ytlHttpFetch, new HakemusServiceMock, null)
+  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, new HakemusServiceMock, null)
 
   addServlet(new YtlResource(null, ytlIntegration), "/*")
 
