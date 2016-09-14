@@ -87,7 +87,7 @@ case class Student(ssn: String, lastname: String, firstnames: String,
                    graduationDate: Option[LocalDate] = None,
                    graduationSchoolOphOid: Option[String] = None,
                    graduationSchoolYtlNumber: Option[String] = None,
-                   language: Option[String] = None,
+                   language: String,
                    exams: Seq[Exam])
 
 case class Exam(examId: String,examRole: String, period: Kausi, grade: String, points: Option[Int], sections: Seq[Section])
@@ -130,8 +130,7 @@ object StudentToKokelas {
     val valmistuminen: LocalDate = s.graduationPeriod.map(_.toLocalDate).getOrElse(YTLXml.parseKausi(YTLXml.nextKausi).get)
     val valmis = s.graduationPeriod.isDefined
     val suoritus = YoTutkinto(suorittaja = oid, valmistuminen = valmistuminen,
-      // TODO: This should fail if language not set
-      kieli = s.language.getOrElse("fi"), valmis = valmis)
+      kieli = s.language, valmis = valmis)
     suoritus
   }
 }
