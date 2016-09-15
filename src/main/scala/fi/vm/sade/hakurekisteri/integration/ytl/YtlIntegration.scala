@@ -27,14 +27,18 @@ class YtlIntegration(config: OphProperties,
   def setAktiivisetHaut(hakuOids: Set[String]) = activeHakuOids = hakuOids
 
   def sync(hakemus: FullHakemus) = {
-    hakemus.hetu match {
-      case Some(hetu) =>
-        logger.info(s"Syncronizing hakemus ${hakemus.oid} with YTL")
-        val student: Student = ytlHttpClient.fetchOne(hetu)
-        val kokelas = StudentToKokelas.convert(hakemus.personOid.get, student)
-        YtlDiff.writeKokelaatAsJson(List(kokelas).iterator, kokelaatDownloadPath)
-      case None =>
-        logger.debug(s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!")
+    if(activeHakuOids.contains(hakemus.applicationSystemId)) {
+      hakemus.hetu match {
+        case Some(hetu) =>
+          logger.info(s"Syncronizing hakemus ${hakemus.oid} with YTL")
+          val student: Student = ytlHttpClient.fetchOne(hetu)
+          val kokelas = StudentToKokelas.convert(hakemus.personOid.get, student)
+          YtlDiff.writeKokelaatAsJson(List(kokelas).iterator, kokelaatDownloadPath)
+        case None =>
+          logger.debug(s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!")
+      }
+    } else {
+      logger.debug(s"Skipping YTL update as hakemus (${hakemus.oid}) is not in active haku (not active ${hakemus.applicationSystemId})!")
     }
   }
 
