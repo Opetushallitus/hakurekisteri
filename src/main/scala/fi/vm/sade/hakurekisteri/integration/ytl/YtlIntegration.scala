@@ -30,8 +30,8 @@ class YtlIntegration(config: OphProperties,
     hakemusService.hakemuksetForPerson(personOid).onComplete {
       case Success(hakemukset) =>
         if(hakemukset.isEmpty) {
-        logger.error(s"failed to fetch one hakemus from hakemus service with person OID ${personOid}")
-        throw new RuntimeException(s"Hakemus not found with person OID ${personOid}!")
+          logger.error(s"failed to fetch one hakemus from hakemus service with person OID $personOid")
+          throw new RuntimeException(s"Hakemus not found with person OID $personOid!")
         }
         val hakemus = hakemukset.head
         val student: Student = ytlHttpClient.fetchOne(hakemus.hetu.get)
