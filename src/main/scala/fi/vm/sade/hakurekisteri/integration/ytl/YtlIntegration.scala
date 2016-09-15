@@ -16,12 +16,12 @@ import scala.util.{Failure, Success}
 
 class YtlIntegration(config: OphProperties,
                      ytlHttpClient: YtlHttpFetch,
+                     ytlFileSystem: YtlFileSystem,
                      hakemusService: HakemusService,
                      suoritusRekisteri: ActorRef) {
   private val logger = LoggerFactory.getLogger(getClass)
-  val kokelaatDownloadDirectory = config.getOrElse("ytl.kokelaat.download.directory", Option(System.getProperty("user.home"))
-    .getOrElse(throw new RuntimeException("Either set 'ytl.kokelaat.download.directory' variable or 'user.home' env.var.")))
-  val kokelaatDownloadPath = new File(kokelaatDownloadDirectory, "ytl-v2-kokelaat.json)").getAbsolutePath
+  val kokelaatDownloadDirectory = ytlFileSystem.directoryPath
+  val kokelaatDownloadPath = new File(kokelaatDownloadDirectory, "ytl-v2-kokelaat.json").getAbsolutePath
   var activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
 
