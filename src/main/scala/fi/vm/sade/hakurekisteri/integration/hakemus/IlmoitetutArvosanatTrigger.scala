@@ -15,9 +15,6 @@ import org.joda.time.{DateTime, LocalDate}
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-/**
- * @author Jussi Jartamo
- */
 object IlmoitetutArvosanatTrigger {
 
   import scala.language.implicitConversions
@@ -208,35 +205,29 @@ object IlmoitetutArvosanatTrigger {
 
 case class RicherOsaaminen(osaaminen: Map[String, String]) {
   val groupByKomoAndGroupByAine = osaaminen.filterKeys(_.contains("_")).filterKeys(!_.last.equals('_'))
-    //
     .groupBy({case (key,value) => key.split("_").head})
-    // Map(LK -> Map(AI -> 8, AI_OPPIAINE -> FI))
     .map({case (key,value) => (key, value.map({case (k,v) => (k.split(key + "_")(1),v) }) )})
-    // Map(LK -> Map(AI -> Map( -> 8, OPPIAINE -> FI)))
     .map({
-      case (key,value) => (key, ((value.groupBy({case (k,v) => k.split("_").head}))
+      case (key,value) => (key, value.groupBy({ case (k, v) => k.split("_").head })
         .mapValues(vals => vals.map({
-        case (kxx,vxx) => (stringAfterFirstUnderscore(kxx),vxx)
-      }).filter(v => {
-        if(v._1.equals("")) {
-          !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
-        } else if(v._1.equals("VAL1")) {
-          !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
-        } else if(v._1.equals("VAL2")) {
-          !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
-        } else if(v._1.equals("VAL3")) {
-          !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
-        } else {
-          true
-        }
-        //== "" &&  && isAllDigits(v._2.get("VAL1")) && isAllDigits(v._2.get("VAL2")) && isAllDigits(v._2.get("VAL3"))
-      }))
+          case (kxx, vxx) => (stringAfterFirstUnderscore(kxx), vxx)
+        }).filter(v => {
+          if (v._1.equals("")) {
+            !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
+          } else if (v._1.equals("VAL1")) {
+            !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
+          } else if (v._1.equals("VAL2")) {
+            !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
+          } else if (v._1.equals("VAL3")) {
+            !v._2.isEmpty() && (isAllDigits(v._2) || "S".equals(v._2))
+          } else {
+            true
+          }
+        }))
         .filter(v => {
-        v._2.contains("") || v._2.contains("VAL1") || v._2.contains("VAL2") || v._2.contains("VAL3")
-      })
-        ))
+          v._2.contains("") || v._2.contains("VAL1") || v._2.contains("VAL2") || v._2.contains("VAL3")
+        }))
   })
-  // Filtterointi
   .filter(w => !w._2.isEmpty);
 
   private def stringAfterFirstUnderscore(source: String): String = if (!source.contains("_")) "" else source.substring(source.indexOf("_") + 1)
@@ -252,36 +243,21 @@ case class RicherOsaaminen(osaaminen: Map[String, String]) {
 
 }
 
-
 case class RicherKoulutustausta(koulutustausta: Map[String, String]) {
 
-
   def yotutkintoVuosi: Option[Int] = {
-    // pohjakoulutus_yo_vuosi
-    // pohjakoulutus_yo_kansainvalinen_suomessa_vuosi
-    // pohjakoulutus_yo_ulkomainen_vuosi
-    // pohjakoulutus_yo_ammatillinen_vuosi
-
     koulutustausta.get("pohjakoulutus_yo_vuosi").map(_.toInt)
   }
   def perusopetusVuosi: Option[Int] = {
-    // "PK_PAATTOTODISTUSVUOSI" : "2011",
-    // "POHJAKOULUTUS" : "1",
-    // "perusopetuksen_kieli" : "XX"
-
     koulutustausta.get("PK_PAATTOTODISTUSVUOSI").map(_.toInt)
   }
   def lisaopetusVuosi: Option[Int] = {
-    // "LISAKOULUTUS_KYMPPI" : "true",
     None
   }
   def lisaopetusTalousVuosi: Option[Int] = {
-    // "LISAKOULUTUS_TALOUS" : "true",
     None
   }
   def ammattistarttiVuosi: Option[Int] = {
-    // "LISAKOULUTUS_AMMATTISTARTTI" : "true",
-
     None
   }
   def valmentavaVuosi: Option[Int] = {
@@ -293,58 +269,17 @@ case class RicherKoulutustausta(koulutustausta: Map[String, String]) {
     None
   }
   def ulkomainenkorvaavaVuosi: Option[Int] = {
-    // pohjakoulutus_ulk_vuosi
     None
   }
   def lukioVuosi: Option[Int] = {
-    // lukioPaattotodistusVuosi
 
     koulutustausta.get("lukioPaattotodistusVuosi").map(_.toInt)
   }
   def ammatillinenVuosi: Option[Int] = {
-    // pohjakoulutus_am_vuosi
-    // "ammatillinenTutkintoSuoritettu" : "false",
-    // "KOULUTUSPAIKKA_AMMATILLISEEN_TUTKINTOON" : "false", ???
     koulutustausta.get("pohjakoulutus_am_vuosi").map(_.toInt)
   }
   def lukioonvalmistavaVuosi: Option[Int] = {
 
     None
   }
-
-  // "LISAKOULUTUS_TALOUS" : "true",
-  // "LISAKOULUTUS_AMMATTISTARTTI" : "true",
-  // "PK_PAATTOTODISTUSVUOSI" : "2011",
-  // "ammatillinenTutkintoSuoritettu" : "false",
-  // "KOULUTUSPAIKKA_AMMATILLISEEN_TUTKINTOON" : "false",
-  // "LISAKOULUTUS_KYMPPI" : "true",
-  // "POHJAKOULUTUS" : "1",
-  // "perusopetuksen_kieli" : "XX"
-
-
-  // GITHUB KoulutustaustaPhase.java
-  // amk_ope_tutkinto_vuosi
-  // pohjakoulutus_muu_vuosi
-  // pohjakoulutus_ulk_vuosi
-  // pohjakoulutus_amt_vuosi
-  // pohjakoulutus_am_vuosi
-  // pohjakoulutus_yo_vuosi
-  // pohjakoulutus_yo_kansainvalinen_suomessa_vuosi
-  // pohjakoulutus_yo_ulkomainen_vuosi
-  // pohjakoulutus_yo_ammatillinen_vuosi
-
-  // JOKERIT
-  // PK_PAATTOTODISTUSVUOSI
-  // lukioPaattotodistusVuosi
-  // pohjakoulutus_kk_pvm
-  // aiempitutkinto_vuosi
-
-  // Lisäarvot
-  // LISAKOULUTUS_VAMMAISTEN
-  // LISAKOULUTUS_TALOUS
-  // LISAKOULUTUS_KYMPPI = true
-  // LISAKOULUTUS_AMMATTISTARTTI
-  // LISAKOULUTUS_KANSANOPISTO
-  // LISAKOULUTUS_MAAHANMUUTTO
-  // LISAKOULUTUS_MAAHANMUUTTO_LUKIO
 }
