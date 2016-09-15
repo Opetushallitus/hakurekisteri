@@ -47,8 +47,6 @@ class YtlDiffSpec extends ScalatraFunSuite {
         |}]""".stripMargin
 
     val actual = scala.io.Source.fromFile(filename).mkString
-    new File(filename).delete()
-
     actual should be(expected)
   }
 

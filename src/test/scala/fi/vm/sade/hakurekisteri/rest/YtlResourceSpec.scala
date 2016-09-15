@@ -20,7 +20,7 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with Mockito
   val config = ytlProperties.addDefault("ytl.kokelaat.download.directory",com.google.common.io.Files.createTempDir().getAbsolutePath)
   val fileSystem = new YtlFileSystem(ytlProperties)
   val ytlHttpFetch = new YtlHttpFetch(ytlProperties,fileSystem)
-  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, new HakemusServiceMock, null)
+  val ytlIntegration = new YtlIntegration(ytlProperties, ytlHttpFetch, fileSystem, new HakemusServiceMock, null)
 
   addServlet(new YtlResource(null, ytlIntegration), "/*")
 
