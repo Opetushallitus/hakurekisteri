@@ -218,13 +218,13 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
     hakijat.head.hakemukset(1).hKelpoisuus should be ("NOT_CHECKED")
   }
 
-  test("should return kotikunta 200 if it is not defined in hakemus") {
+  test("should return kotikunta empty if it is not defined in hakemus") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
 
     val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
 
-    hakijat.head.kotikunta should be ("200")
+    hakijat.head.kotikunta should be ("")
   }
 
   test("should return kotikunta from hakemus") {
@@ -264,6 +264,17 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
     val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
 
     hakijat.size should be (2)
+  }
+
+  test("should not have FI as default aidinkieli, asiointikieli or koulusivistyskieli") {
+    when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
+      .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
+
+    hakijat.last.aidinkieli should be ("")
+    hakijat.last.asiointikieli should be ("9") // Default is not empty!
+    hakijat.last.koulusivistyskieli should be ("")
   }
 
 
