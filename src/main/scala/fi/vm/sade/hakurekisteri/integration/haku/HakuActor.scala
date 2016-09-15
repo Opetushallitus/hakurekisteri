@@ -57,7 +57,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef
       activeHakus = s.filter(_.aika.isCurrently)
       val ytlHakus: Set[String] = activeHakus.filter(_.kkHaku).map(_.oid).toSet
       ytl ! HakuList(ytlHakus)
-      ytlIntegration.setAktiivisetHaut(ytlHakus)
+      ytlIntegration.setAktiivisetKKHaut(ytlHakus)
       log.info(s"size of active application system set: [${activeHakus.size}]")
       if (starting) {
         starting = false
