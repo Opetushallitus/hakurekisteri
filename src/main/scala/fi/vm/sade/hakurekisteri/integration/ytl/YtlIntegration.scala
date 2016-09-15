@@ -26,6 +26,13 @@ class YtlIntegration(config: OphProperties,
 
   def setAktiivisetHaut(hakuOids: Set[String]) = activeHakuOids = hakuOids
 
+  def sync(hakemus: FullHakemus) = {
+    logger.info(s"Syncronizing hakemus ${hakemus.oid} with YTL")
+    val student: Student = ytlHttpClient.fetchOne(hakemus.hetu.get)
+    val kokelas = StudentToKokelas.convert(hakemus.personOid.get, student)
+    YtlDiff.writeKokelaatAsJson(List(kokelas).iterator, kokelaatDownloadPath)
+  }
+
   def sync(personOid: String) = {
     hakemusService.hakemuksetForPerson(personOid).onComplete {
       case Success(hakemukset) =>
@@ -34,9 +41,7 @@ class YtlIntegration(config: OphProperties,
           throw new RuntimeException(s"Hakemus not found with person OID $personOid!")
         }
         val hakemus = hakemukset.head
-        val student: Student = ytlHttpClient.fetchOne(hakemus.hetu.get)
-        val kokelas = StudentToKokelas.convert(hakemus.personOid.get, student)
-        YtlDiff.writeKokelaatAsJson(List(kokelas).iterator, kokelaatDownloadPath)
+        sync(hakemus)
       case Failure(e) =>
         logger.error(s"failed to fetch one hakemus from hakemus service: ${e.getMessage}")
         throw e
