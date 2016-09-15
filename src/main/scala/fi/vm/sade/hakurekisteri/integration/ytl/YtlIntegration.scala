@@ -1,8 +1,8 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.io.File
+import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
-import java.util.concurrent.{CopyOnWriteArraySet, Executors}
 
 import akka.actor.ActorRef
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusService, HetuPersonOid}
@@ -18,7 +18,7 @@ class YtlIntegration(config: OphProperties,
                      ytlHttpClient: YtlHttpFetch,
                      ytlFileSystem: YtlFileSystem,
                      hakemusService: HakemusService,
-                     suoritusRekisteri: ActorRef) {
+                     ytlActor: ActorRef) {
   private val logger = LoggerFactory.getLogger(getClass)
   val kokelaatDownloadDirectory = ytlFileSystem.directoryPath
   val kokelaatDownloadPath = new File(kokelaatDownloadDirectory, "ytl-v2-kokelaat.json").getAbsolutePath
@@ -86,5 +86,9 @@ class YtlIntegration(config: OphProperties,
         }, kokelaatDownloadPath)
         IOUtils.closeQuietly(zip)
     }
+  }
+
+  private def persistKokelas(kokelas: Kokelas): Unit = {
+    ytlActor ! kokelas
   }
 }
