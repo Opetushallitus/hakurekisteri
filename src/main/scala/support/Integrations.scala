@@ -160,7 +160,9 @@ class BaseIntegrations(rekisterit: Registers,
   val proxies = new HttpProxies(valintarekisteriClient)
 
   val arvosanaTrigger: Trigger = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
+  val ytlTrigger: Trigger = Trigger { ytlIntegration.sync(_) }
   hakemusService.addTrigger(arvosanaTrigger)
+  hakemusService.addTrigger(ytlTrigger)
 
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset()
