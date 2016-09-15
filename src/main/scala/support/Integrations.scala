@@ -72,8 +72,9 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
     hakemusService,
     config.integrations.ytlConfig
   )), "ytl")
-  override val ytlHttp = new YtlHttpFetch(OphUrlProperties, new YtlFileSystem(OphUrlProperties))
-  override val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, hakemusService, rekisterit.suoritusRekisteri)
+  val ytlFileSystem = new YtlFileSystem(OphUrlProperties)
+  override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
+  override val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, ytlFileSystem, hakemusService, rekisterit.suoritusRekisteri)
 
   override val proxies = new MockProxies
   override val hakemusClient = null
@@ -145,8 +146,9 @@ class BaseIntegrations(rekisterit: Registers,
     hakemusService,
     config.integrations.ytlConfig
   )), "ytl")
-  override val ytlHttp = new YtlHttpFetch(OphUrlProperties, new YtlFileSystem(OphUrlProperties))
-  val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, hakemusService, rekisterit.suoritusRekisteri)
+  val ytlFileSystem = new YtlFileSystem(OphUrlProperties)
+  override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
+  val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, ytlFileSystem, hakemusService, rekisterit.suoritusRekisteri)
   private val virtaClient = new VirtaClient(
     config = config.integrations.virtaConfig,
     apiVersion = config.properties.getOrElse("suoritusrekisteri.virta.apiversio", VirtaClient.version105)
