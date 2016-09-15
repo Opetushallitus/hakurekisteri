@@ -1,9 +1,7 @@
 package support
 
 import java.util.concurrent.TimeUnit
-import fi.vm.sade.properties.OphProperties
 
-import scala.concurrent.duration._
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.{Backoff, BackoffSupervisor}
 import fi.vm.sade.hakurekisteri.Config
@@ -16,10 +14,12 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, Tarjont
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{ValintarekisteriActor, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
 import fi.vm.sade.hakurekisteri.integration.virta._
-import fi.vm.sade.hakurekisteri.integration.ytl.{YtlIntegration, YtlFileSystem, YtlHttpFetch, YtlActor}
+import fi.vm.sade.hakurekisteri.integration.ytl.{YtlActor, YtlFileSystem, YtlHttpFetch, YtlIntegration}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient, _}
 import fi.vm.sade.hakurekisteri.rest.support.Registers
 import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
+
+import scala.concurrent.duration._
 
 trait Integrations {
   val hakuAppPermissionChecker: ActorRef
@@ -74,7 +74,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
   )), "ytl")
   val ytlFileSystem = new YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
-  override val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, ytlFileSystem, hakemusService, rekisterit.suoritusRekisteri)
+  override val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, ytlFileSystem, hakemusService, ytl)
 
   override val proxies = new MockProxies
   override val hakemusClient = null
@@ -148,7 +148,7 @@ class BaseIntegrations(rekisterit: Registers,
   )), "ytl")
   val ytlFileSystem = new YtlFileSystem(OphUrlProperties)
   override val ytlHttp = new YtlHttpFetch(OphUrlProperties, ytlFileSystem)
-  val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, ytlFileSystem, hakemusService, rekisterit.suoritusRekisteri)
+  val ytlIntegration = new YtlIntegration(OphUrlProperties, ytlHttp, ytlFileSystem, hakemusService, ytl)
   private val virtaClient = new VirtaClient(
     config = config.integrations.virtaConfig,
     apiVersion = config.properties.getOrElse("suoritusrekisteri.virta.apiversio", VirtaClient.version105)
