@@ -1,7 +1,8 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.io.File
-import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.{CopyOnWriteArraySet, Executors}
 
 import akka.actor.ActorRef
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusService, HetuPersonOid}
@@ -21,13 +22,13 @@ class YtlIntegration(config: OphProperties,
   val kokelaatDownloadDirectory = config.getOrElse("ytl.kokelaat.download.directory", Option(System.getProperty("user.home"))
     .getOrElse(throw new RuntimeException("Either set 'ytl.kokelaat.download.directory' variable or 'user.home' env.var.")))
   val kokelaatDownloadPath = new File(kokelaatDownloadDirectory, "ytl-v2-kokelaat.json)").getAbsolutePath
-  var activeKKHakuOids = Set[String]()
+  var activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
 
-  def setAktiivisetKKHaut(hakuOids: Set[String]) = activeKKHakuOids = hakuOids
+  def setAktiivisetKKHaut(hakuOids: Set[String]) = activeKKHakuOids.set(hakuOids)
 
   def sync(hakemus: FullHakemus): Unit = {
-    if(activeKKHakuOids.contains(hakemus.applicationSystemId)) {
+    if(activeKKHakuOids.get().contains(hakemus.applicationSystemId)) {
       hakemus.hetu match {
         case Some(hetu) =>
           logger.info(s"Syncronizing hakemus ${hakemus.oid} with YTL")
@@ -58,7 +59,7 @@ class YtlIntegration(config: OphProperties,
   }
 
   def syncAll() = {
-    val hakemusFutures: Set[Future[Seq[HetuPersonOid]]] = activeKKHakuOids
+    val hakemusFutures: Set[Future[Seq[HetuPersonOid]]] = activeKKHakuOids.get()
       .map(hakuOid => hakemusService.hetuAndPersonOidForHaku(hakuOid))
 
     Future.sequence(hakemusFutures).onComplete {
