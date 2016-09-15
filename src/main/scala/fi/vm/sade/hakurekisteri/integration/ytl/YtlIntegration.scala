@@ -27,10 +27,15 @@ class YtlIntegration(config: OphProperties,
   def setAktiivisetHaut(hakuOids: Set[String]) = activeHakuOids = hakuOids
 
   def sync(hakemus: FullHakemus) = {
-    logger.info(s"Syncronizing hakemus ${hakemus.oid} with YTL")
-    val student: Student = ytlHttpClient.fetchOne(hakemus.hetu.get)
-    val kokelas = StudentToKokelas.convert(hakemus.personOid.get, student)
-    YtlDiff.writeKokelaatAsJson(List(kokelas).iterator, kokelaatDownloadPath)
+    hakemus.hetu match {
+      case Some(hetu) =>
+        logger.info(s"Syncronizing hakemus ${hakemus.oid} with YTL")
+        val student: Student = ytlHttpClient.fetchOne(hetu)
+        val kokelas = StudentToKokelas.convert(hakemus.personOid.get, student)
+        YtlDiff.writeKokelaatAsJson(List(kokelas).iterator, kokelaatDownloadPath)
+      case None =>
+        logger.debug(s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!")
+    }
   }
 
   def sync(personOid: String) = {
