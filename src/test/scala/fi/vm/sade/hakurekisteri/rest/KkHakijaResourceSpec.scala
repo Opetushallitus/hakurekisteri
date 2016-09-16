@@ -224,7 +224,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
 
     val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
 
-    hakijat.head.kotikunta should be ("")
+    hakijat.head.kotikunta should be ("99")
   }
 
   test("should return kotikunta from hakemus") {
@@ -275,6 +275,17 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
     hakijat.last.aidinkieli should be ("")
     hakijat.last.asiointikieli should be ("9") // Default is not empty!
     hakijat.last.koulusivistyskieli should be ("")
+  }
+
+  test("should return default kansalaisuus, asuinmaa, kotikunta") {
+    when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
+      .thenReturn((200, List(), getJson("applicationsByPersonOid")))
+
+    val hakijat = Await.result(resource.getKkHakijat(KkHakijaQuery(Some("1.2.246.562.24.81468276424"), None, None, None, Hakuehto.Kaikki, Some(testUser("test", "1.2.246.562.10.00000000001")))), 15.seconds)
+
+    hakijat.last.kansalaisuus should be ("99")
+    hakijat.last.maa should be ("99")
+    hakijat.head.kotikunta should be ("99")
   }
 
 

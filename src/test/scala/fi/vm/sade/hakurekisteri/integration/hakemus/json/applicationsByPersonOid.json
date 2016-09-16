@@ -211,8 +211,8 @@
         "henkilotiedot":{
           "onkosinullakaksoiskansallisuus":"true",
           "koulusivistyskieli":"",
-          "kansalaisuus":"FIN",
-          "asuinmaa":"FIN",
+          "kansalaisuus":"",
+          "asuinmaa":"",
           "Sukunimi":"Aalto-Testi",
           "matkapuhelinnumero1":"050 94787511",
           "Henkilotunnus":"260175-975C",
