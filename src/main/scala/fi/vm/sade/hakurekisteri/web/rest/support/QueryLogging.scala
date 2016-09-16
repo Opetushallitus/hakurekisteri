@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.web.rest.support
 import scala.compat.Platform
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Try, Failure, Success}
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
 
 trait QueryLogging { this: HakuJaValintarekisteriStack =>
@@ -23,8 +24,8 @@ trait QueryLogging { this: HakuJaValintarekisteriStack =>
 
       val message = s"Query $queryStr took $requestLength ms, result ${result(t)}"
       requestLength match {
-        case reallySlow if requestLength > 1000  => logger.warning(message)
-        case slow if requestLength > 100 => logger.info(message)
+        case reallySlow if requestLength > Config.reallySlowQuery  => logger.warning(message)
+        case slow if requestLength > Config.slowQuery => logger.info(message)
         case normal => logger.debug(message)
       }
     })

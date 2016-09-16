@@ -24,6 +24,8 @@ object Config {
   }
   lazy val globalConfig = fromString(sys.props.getOrElse("hakurekisteri.profile", "default"))
   lazy val mockDevConfig = new MockDevConfig
+  val slowQuery: Long = 200
+  val reallySlowQuery: Long = 10000
 }
 
 object OrganisaatioOids {

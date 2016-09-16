@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
 import akka.actor.ActorLogging
+import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriDriver.api._
 import fi.vm.sade.hakurekisteri.storage.repository.{Deleted, _}
 import fi.vm.sade.hakurekisteri.storage.{Identified, ResourceService}
@@ -65,7 +66,6 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
 }
 
 trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends ResourceService[R,I] { this: JDBCRepository[R,I,T] with ActorLogging =>
-  val slowQuery: Long = 100
 
   override def findBy(q: Query[R]): Future[Seq[R with Identified[I]]] = {
     dbQuery.lift(q).map{
@@ -74,12 +74,16 @@ trait JDBCService[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends Re
         val f = journal.db.run(query.result).map(_.collect { case Updated(res) => res })(dbExecutor)
         f.onComplete(_ => {
           val runtime = Platform.currentTime - start
-          if (runtime > slowQuery) {
+          if (runtime > Config.slowQuery) {
             var queryStr = query.result.statements.mkString(" ")
             if(queryStr.length > 500) {
               queryStr = queryStr.take(500) + "...(truncated from " + queryStr.length + " chars)"
             }
-            log.info(s"Query $queryStr took $runtime ms")
+            if(runtime > Config.reallySlowQuery) {
+              log.info(s"Query $queryStr took $runtime ms")
+            } else {
+              log.warning(s"Query $queryStr took $runtime ms")
+            }
           }
         })(dbExecutor)
         f
