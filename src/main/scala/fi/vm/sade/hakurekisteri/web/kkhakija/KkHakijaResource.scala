@@ -346,7 +346,7 @@ class KkHakijaResource(hakemusService: HakemusService,
         matkapuhelin = henkilotiedot.matkapuhelinnumero1.flatMap(_.blankOption),
         puhelin = henkilotiedot.matkapuhelinnumero2.flatMap(_.blankOption),
         sahkoposti = henkilotiedot.Sähköposti.flatMap(_.blankOption),
-        kotikunta = henkilotiedot.kotikunta.flatMap(_.blankOption).getOrElse(""),
+        kotikunta = henkilotiedot.kotikunta.flatMap(_.blankOption).getOrElse("99"),
         sukupuoli = henkilotiedot.sukupuoli.getOrElse(""),
         aidinkieli = henkilotiedot.aidinkieli.getOrElse(""),
         asiointikieli = getAsiointikieli(henkilotiedot.aidinkieli.getOrElse("")),
@@ -433,6 +433,7 @@ object KkHakijaUtil {
 
   def getMaakoodi(koodiArvo: String, koodisto: ActorRef)(implicit timeout: Timeout): Future[String] = koodiArvo.toLowerCase match {
     case "fin" => Future.successful("246")
+    case "" => Future.successful("99")
 
     case arvo =>
       (koodisto ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2")).mapTo[String]
