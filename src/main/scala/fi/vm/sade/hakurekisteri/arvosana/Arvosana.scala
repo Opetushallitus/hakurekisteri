@@ -70,6 +70,10 @@ case class ArvioYo(arvosana: String, pisteet: Option[Int]) extends Arvio {
 case class ArvioOsakoe(arvosana: String) extends Arvio {
 }
 
+object ArvioHyvaksytty {
+  def apply(arvosana: Boolean): ArvioHyvaksytty = ArvioHyvaksytty(arvosana.toString)
+}
+
 case class ArvioHyvaksytty(arvosana: String) extends Arvio {
   val allowable = Set[String]("true", "false", "")
 
