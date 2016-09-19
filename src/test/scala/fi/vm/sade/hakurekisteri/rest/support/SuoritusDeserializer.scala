@@ -3,7 +3,7 @@ package fi.vm.sade.hakurekisteri.rest.support
 import java.util.UUID
 
 import fi.vm.sade.hakurekisteri.suoritus.yksilollistaminen.Yksilollistetty
-import fi.vm.sade.hakurekisteri.suoritus.{AmmatillisenKielikoeSuoritus, Suoritus, VapaamuotoinenSuoritus, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VapaamuotoinenSuoritus, VirallinenSuoritus}
 import org.joda.time.LocalDate
 import org.json4s.JsonAST.{JInt, JString, _}
 import org.json4s.{CustomSerializer, Formats}
@@ -20,6 +20,8 @@ class SuoritusDeserializer extends CustomSerializer[Suoritus]((format: Formats) 
         case JNothing =>  rawSuoritus
         case jv: JValue =>  rawSuoritus.identify(jv.extract[UUID])
       }
+
+
   }, {
     implicit val form = format
     new SuoritusSerializer().serialize
@@ -34,7 +36,10 @@ object SuoritusDeserializer {
     val JString(lahde) = suoritus \ "source"
     suoritus \ "kuvaus" match {
       case JString(kuvaus) =>
-        extractSuoritusWithKuvaus(suoritus, henkilo, myontaja, lahde, kuvaus)
+        val JInt(vuosi) = suoritus \ "vuosi"
+        val JString(tyyppi) = suoritus \ "tyyppi"
+        val JInt(index) = suoritus \ "index"
+        VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi.toInt: Int, tyyppi: String, index.toInt: Int, lahde: String)
       case JNothing =>
         val JString(komo) = suoritus \ "komo"
         val JString(tila) = suoritus \ "tila"
@@ -60,17 +65,6 @@ object SuoritusDeserializer {
           vahv: Boolean,
           lahde: String)
       case _ => throw new IllegalArgumentException("unable to extract Suoritus kuvaus is of wrong type")
-    }
-  }
-
-  private def extractSuoritusWithKuvaus(suoritus: JValue, henkilo: String, myontaja: String, lahde: String, kuvaus: String): Suoritus = {
-    val JInt(vuosi) = suoritus \ "vuosi"
-    val JString(tyyppi) = suoritus \ "tyyppi"
-    tyyppi match {
-      case AmmatillisenKielikoeSuoritus.tyyppi => AmmatillisenKielikoeSuoritus(henkilo, kuvaus, myontaja, vuosi.toInt, lahde)
-      case x =>
-        val JInt(index) = suoritus \ "index"
-        VapaamuotoinenSuoritus(henkilo: String, kuvaus: String, myontaja: String, vuosi.toInt: Int, tyyppi: String, index.toInt: Int, lahde: String)
     }
   }
 }
