@@ -25,8 +25,6 @@ class SuoritusJDBCActor(val journal: JDBCJournal[Suoritus, UUID, SuoritusTable],
       t.henkiloOid === henkilo && (t.tyyppi === tyyppi).asColumnOf[Boolean] && (t.index === index).asColumnOf[Boolean]
     case VirallinenSuoritus(komo, myontaja, _, _, henkilo, _, _, _, vahv, _) =>
       (t.komo === komo).asColumnOf[Boolean] && t.myontaja === myontaja && t.henkiloOid === henkilo && (t.vahvistettu === vahv).asColumnOf[Boolean]
-    case AmmatillisenKielikoeSuoritus(henkilo, kuvaus, myontaja, vuosi, lahde) =>
-      (t.henkiloOid === henkilo && t.kuvaus === kuvaus && t.myontaja === myontaja && t.vuosi === vuosi && t.source === lahde).asColumnOf[Boolean]
   }
 
   override val dbExecutor: ExecutionContext = ExecutionContexts.fromExecutor(Executors.newFixedThreadPool(poolSize))
