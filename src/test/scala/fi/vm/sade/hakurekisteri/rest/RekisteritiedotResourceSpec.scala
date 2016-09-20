@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusService
 import fi.vm.sade.hakurekisteri.opiskelija.Opiskelija
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.oppija.{Oppija, Todistus}
-import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Registers, User}
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, Registers, SuoritusDeserializer, User}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus, yksilollistaminen}
 import fi.vm.sade.hakurekisteri.test.tools.{FutureWaiting, MockedResourceActor}
 import fi.vm.sade.hakurekisteri.web.rekisteritiedot.{RekisteriQuery, RekisteritiedotResource}
@@ -31,7 +31,7 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting wi
   implicit val security = new TestSecurity
   implicit val user: User = security.TestUser
   implicit val swagger: Swagger = new HakurekisteriSwagger
-  implicit val formats = HakurekisteriJsonSupport.format
+  implicit val formats = HakurekisteriJsonSupport.format ++ List(new SuoritusDeserializer)
 
   val suoritus = VirallinenSuoritus(
     komo = "pk",

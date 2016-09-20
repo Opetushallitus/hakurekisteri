@@ -5,7 +5,7 @@ import java.util.UUID
 import fi.vm.sade.hakurekisteri.CleanSharedTestJettyBeforeEach
 import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvosana}
 import fi.vm.sade.hakurekisteri.oppija.Todistus
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, SuoritusDeserializer}
 import fi.vm.sade.hakurekisteri.suoritus.{VirallinenSuoritus, yksilollistaminen}
 import org.joda.time.LocalDate
 import org.json4s.jackson.JsonMethods
@@ -48,7 +48,7 @@ class YtlIntegrationSpec extends FlatSpec with Matchers with CleanSharedTestJett
   )
 
   private def waitForArvosanat(): Future[Seq[Todistus]] = {
-    implicit val formats = HakurekisteriJsonSupport.format
+    implicit val formats = HakurekisteriJsonSupport.format ++ List(new SuoritusDeserializer)
 
     Future {
       var result: Option[Seq[Todistus]] = None

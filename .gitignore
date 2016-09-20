@@ -88,4 +88,4 @@ db/schema.ddl
 .jvmopts
 
 suoritusrekisteri-it-db
-src/main/webapp
+src/main/webapp/

@@ -42,6 +42,7 @@ object kausi extends Enumeration {
 import fi.vm.sade.hakurekisteri.acceptance.tools.kausi._
 
 trait HakurekisteriContainer extends ScalatraFeatureSpec with BeforeAndAfterEach with HakurekisteriJsonSupport with HttpComponentsClient {
+  override protected implicit def jsonFormats = super.jsonFormats ++ List(new SuoritusDeserializer)
   implicit val swagger = new HakurekisteriSwagger
   implicit val security = new TestSecurity
   implicit var system: ActorSystem = _
