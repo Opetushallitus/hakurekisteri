@@ -218,7 +218,7 @@ class KkHakijaResourceSpec extends ScalatraFunSuite with HakeneetSupport with Mo
     hakijat.head.hakemukset(1).hKelpoisuus should be ("NOT_CHECKED")
   }
 
-  test("should return kotikunta empty if it is not defined in hakemus") {
+  test("should return kotikunta default if it is not defined in hakemus") {
     when(endPoint.request(forPattern(".*applications/byPersonOid.*")))
       .thenReturn((200, List(), getJson("applicationsByPersonOid")))
 
