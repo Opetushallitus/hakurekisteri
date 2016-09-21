@@ -25,9 +25,10 @@ import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization
 import org.slf4j.LoggerFactory
 
+import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
-class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem) {
+class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: ApacheOphHttpClient.ApacheHttpClientBuilder = ApacheOphHttpClient.createCustomBuilder()) {
   val logger = LoggerFactory.getLogger(this.getClass)
   import scala.language.implicitConversions
   implicit val formats = Student.formatsStudent
@@ -37,8 +38,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem) {
   val credentials = new UsernamePasswordCredentials(username, password)
   val preemptiveBasicAuthentication = new BasicScheme().authenticate(credentials, new HttpPost(), null).getValue
 
-  private def buildClient() = {
-    val a = ApacheOphHttpClient.createCustomBuilder()
+  private def buildClient(a: ApacheOphHttpClient.ApacheHttpClientBuilder) = {
     val provider = new BasicCredentialsProvider()
     val scope = new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT, AuthScope.ANY_REALM)
     provider.setCredentials(scope, credentials)
@@ -48,7 +48,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem) {
     client
   }
 
-  val client = buildClient()
+  val client = buildClient(builder)
 
   def zipToStudents(z: ZipInputStream): Iterator[Student] = {
     zipToStudents(Zip.toInputStreams(z))
@@ -94,7 +94,8 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem) {
     }
   }
 
-  def fetchStatus(uuid: String): Either[Throwable,Status] = {
+  @tailrec
+  private def fetchStatus(uuid: String): Either[Throwable,Status] = {
     implicit val formats = new DefaultFormats {
       override def dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
     } + StatusDeserializer
