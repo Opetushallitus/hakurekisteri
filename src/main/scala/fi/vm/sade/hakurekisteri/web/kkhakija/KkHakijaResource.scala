@@ -326,10 +326,10 @@ class KkHakijaResource(hakemusService: HakemusService,
       henkiloOid <- hakemus.personOid
     } yield for {
       hakemukset <- getHakemukset(haku, hakemus, q, kokoHaunTulos)
-      maa <- getMaakoodi(henkilotiedot.asuinmaa.getOrElse("FIN"), koodisto)
+      maa <- getMaakoodi(henkilotiedot.asuinmaa.getOrElse(""), koodisto)
       toimipaikka <- getToimipaikka(maa, henkilotiedot.Postinumero, henkilotiedot.kaupunkiUlkomaa, koodisto)
       suoritukset <- (suoritukset ? SuoritysTyyppiQuery(henkilo = henkiloOid, komo = YTLXml.yotutkinto)).mapTo[Seq[VirallinenSuoritus]]
-      kansalaisuus <- getMaakoodi(henkilotiedot.kansalaisuus.getOrElse("FIN"), koodisto)
+      kansalaisuus <- getMaakoodi(henkilotiedot.kansalaisuus.getOrElse(""), koodisto)
     } yield Hakija(
         hetu = getHetu(henkilotiedot.Henkilotunnus, henkilotiedot.syntymaaika, hakemus.oid),
         oppijanumero = hakemus.personOid.getOrElse(""),
@@ -346,11 +346,11 @@ class KkHakijaResource(hakemusService: HakemusService,
         matkapuhelin = henkilotiedot.matkapuhelinnumero1.flatMap(_.blankOption),
         puhelin = henkilotiedot.matkapuhelinnumero2.flatMap(_.blankOption),
         sahkoposti = henkilotiedot.Sähköposti.flatMap(_.blankOption),
-        kotikunta = henkilotiedot.kotikunta.flatMap(_.blankOption).getOrElse("200"),
+        kotikunta = henkilotiedot.kotikunta.flatMap(_.blankOption).getOrElse("999"),
         sukupuoli = henkilotiedot.sukupuoli.getOrElse(""),
-        aidinkieli = henkilotiedot.aidinkieli.getOrElse("FI"),
-        asiointikieli = getAsiointikieli(henkilotiedot.aidinkieli.getOrElse("FI")),
-        koulusivistyskieli = henkilotiedot.koulusivistyskieli.getOrElse("FI"),
+        aidinkieli = henkilotiedot.aidinkieli.flatMap(_.blankOption).getOrElse("99"),
+        asiointikieli = getAsiointikieli(henkilotiedot.aidinkieli.flatMap(_.blankOption).getOrElse("99")),
+        koulusivistyskieli = henkilotiedot.koulusivistyskieli.flatMap(_.blankOption).getOrElse("99"),
         koulutusmarkkinointilupa = answers.lisatiedot.getOrElse(Map()).get("lupaMarkkinointi").map(_ == "true"),
         onYlioppilas = isYlioppilas(suoritukset),
         turvakielto = henkilotiedot.turvakielto.contains("true"),
@@ -416,7 +416,7 @@ object KkHakijaUtil {
     case "FI" => "1"
     case "SV" => "2"
     case "EN" => "3"
-    case _ => "9"
+    case _ => "99"
   }
 
   def getPostitoimipaikka(koodi: Option[Koodi]): String = koodi match {
@@ -433,6 +433,7 @@ object KkHakijaUtil {
 
   def getMaakoodi(koodiArvo: String, koodisto: ActorRef)(implicit timeout: Timeout): Future[String] = koodiArvo.toLowerCase match {
     case "fin" => Future.successful("246")
+    case "" => Future.successful("999")
 
     case arvo =>
       (koodisto ? GetRinnasteinenKoodiArvoQuery("maatjavaltiot1_" + arvo, "maatjavaltiot2")).mapTo[String]
