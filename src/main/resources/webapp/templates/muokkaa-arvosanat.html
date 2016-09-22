@@ -38,9 +38,11 @@
                     ng-options="k.value as k.text for k in kielet"
                     class="form-control input-sm"></select>
         </td>
-        <td><span ng-repeat="pakollinen in korotusRivi.pakolliset">
-      <select ng-model="pakollinen.arvio.arvosana" required="required"
-              ng-options="a.value as a.text for a in arvosanat" class="form-control test-arvosanaSelect"></select></span>
+        <td>
+            <span ng-repeat="pakollinen in korotusRivi.pakolliset">
+                <select ng-model="pakollinen.arvio.arvosana" required="required"
+                        ng-options="a.value as a.text for a in arvosanat" class="form-control test-arvosanaSelect"></select>
+            </span>
         </td>
         <td style="white-space: nowrap;">
             <select ng-show="korotusRivi.valinnaiset[0]" ng-model="korotusRivi.valinnaiset[0].arvio.arvosana"
@@ -61,7 +63,8 @@
     </tbody>
 </table>
 
-<button type="button" ng-click="editArvosanat()" class="btn btn-default btn-xs test-editArvosanat"
+<button type="button" ng-click="editArvosanat()"
+        class="btn btn-default btn-xs test-editArvosanat"
         ng-disabled="info.editable || editSuoritusDisabled(suoritus)">
     <span oph-msg="korjaaNykyisiaArvosanoja">Korjaa nykyisiä arvosanoja</span>
 </button>
@@ -72,26 +75,37 @@
         <th oph-msg="suoritusrekisteri.muokkaa.arvosanat.oppiaine">Oppiaine</th>
         <th oph-msg="suoritusrekisteri.muokkaa.arvosanat.lisatieto">Lisätieto (kieli)</th>
         <th oph-msg="suoritusrekisteri.muokkaa.arvosanat.arvosana">Arvosana</th>
-        <th ng-show="maxValinnainenCount > 0" oph-msg="suoritusrekisteri.muokkaa.arvosanat.valinnainen" class="test-valinnaiset-header">1.&nbsp;valinnainen</th>
-        <th ng-show="maxValinnainenCount > 1" oph-msg="suoritusrekisteri.muokkaa.arvosanat.toinenvalinnainen" class="test-valinnaiset-header">2.&nbsp;valinnainen</th>
-        <th ng-show="maxValinnainenCount > 2" oph-msg="suoritusrekisteri.muokkaa.arvosanat.toinenvalinnainen" class="test-valinnaiset-header">3.&nbsp;valinnainen</th>
+        <th ng-show="maxValinnainenCount > 0"
+            oph-msg="suoritusrekisteri.muokkaa.arvosanat.valinnainen" class="test-valinnaiset-header">1.&nbsp;valinnainen</th>
+        <th ng-show="maxValinnainenCount > 1"
+            oph-msg="suoritusrekisteri.muokkaa.arvosanat.toinenvalinnainen" class="test-valinnaiset-header">2.&nbsp;valinnainen</th>
+        <th ng-show="maxValinnainenCount > 2"
+            oph-msg="suoritusrekisteri.muokkaa.arvosanat.toinenvalinnainen" class="test-valinnaiset-header">3.&nbsp;valinnainen</th>
     </tr>
     </thead>
     <tbody>
     <tr ng-repeat="aineRivi in suorituksenArvosanataulukko" class="{{aineRivi.rowClass}} test-aineRivi">
-        <td class="test-arvosanaAine"><span class="test-aineNimi">{{aineRivi.aineNimi || aineRivi.aine}}</span>
-            <span class="test-arvosanaMyonnetty" ng-show="aineRivi.myonnetty">({{aineRivi.myonnetty}})</span></td>
+        <td class="test-arvosanaAine">
+            <span class="test-aineNimi">{{aineRivi.aineNimi || aineRivi.aine}}</span>
+            <span class="test-arvosanaMyonnetty" ng-show="aineRivi.myonnetty">({{aineRivi.myonnetty}})</span>
+        </td>
         <td ng-show="info.editable">
-            <select ng-show="aineRivi.aine == 'AI'" ng-model="aineRivi.lisatieto"
+            <select ng-show="aineRivi.aine == 'AI'"
+                    ng-model="aineRivi.lisatieto"
                     ng-options="k.value as k.text for k in aidinkieli"
                     class="form-control input-sm smallInline"></select>
-            <select ng-show="aineRivi.hasKielisyys" ng-model="aineRivi.lisatieto"
-                    ng-options="k.value as k.text for k in kielet" class="form-control input-sm smallInline"></select>
+            <select ng-show="aineRivi.hasKielisyys"
+                    ng-model="aineRivi.lisatieto"
+                    ng-options="k.value as k.text for k in kielet"
+                    class="form-control input-sm smallInline"></select>
         </td>
-        <td ng-show="info.editable"><span ng-repeat="pakollinen in aineRivi.pakolliset">
-          <select ng-model="pakollinen.arvio.arvosana" required="required"
-                  ng-options="a.value as a.text for a in arvosanat | orderBy: arvosanatCustomSort"
-                  class="form-control smallInline test-arvosanaSelect"></select></span></td>
+        <td ng-show="info.editable">
+            <span ng-repeat="pakollinen in aineRivi.pakolliset">
+                <select ng-model="pakollinen.arvio.arvosana" required="required"
+                        ng-options="a.value as a.text for a in arvosanat | orderBy: arvosanatCustomSort"
+                        class="form-control smallInline test-arvosanaSelect"></select>
+            </span>
+        </td>
         <td ng-show="info.editable" style="white-space: nowrap;">
             <select ng-show="aineRivi.valinnaiset[0]" ng-model="aineRivi.valinnaiset[0].arvio.arvosana"
                     required="required" ng-options="a.value as a.text for a in arvosanat | orderBy: arvosanatCustomSort"
@@ -107,9 +121,13 @@
                     required="required" ng-options="a.value as a.text for a in arvosanat | orderBy: arvosanatCustomSort"
                     class="form-control smallInline test-arvosanaSelect"></select>
         </td>
-        <td ng-hide="info.editable"><span ng-show="aineRivi.hasArvosana && (aineRivi.hasKielisyys || aineRivi.aine == 'AI')" class="test-arvosanaLisatieto">{{aineRivi.lisatietoText || "Kieli puuttuu!!"}}</span>
+        <td ng-hide="info.editable">
+            <span ng-show="aineRivi.hasArvosana && (aineRivi.hasKielisyys || aineRivi.aine == 'AI')"
+                  class="test-arvosanaLisatieto">{{aineRivi.lisatietoText || "Kieli puuttuu!!"}}</span>
         </td>
-        <td ng-hide="info.editable"><span ng-repeat="pakollinen in aineRivi.pakolliset" class="test-arvosanaPakollinenArvosana">{{pakollinen.arvio.arvosana}}</span>
+        <td ng-hide="info.editable">
+            <span ng-repeat="pakollinen in aineRivi.pakolliset"
+                  class="test-arvosanaPakollinenArvosana">{{pakollinen.arvio.arvosana}}</span>
         </td>
         <td ng-hide="info.editable" class="test-arvosanaValinnainenArvosana" style="white-space: nowrap;">{{aineRivi.valinnaiset[0].arvio.arvosana}}</td>
         <td ng-hide="info.editable" class="test-arvosanaValinnainenArvosana" style="white-space: nowrap;">{{aineRivi.valinnaiset[1].arvio.arvosana}}</td>
