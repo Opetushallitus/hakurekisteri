@@ -4,6 +4,11 @@ clean:
 package:
 	mvn clean package
 
+source-to-image:
+	mvn clean compile
+	npm run build
+	mvn package -DskipTests=true -DtestFailureIgnore=true
+
 test:
 	mvn clean test
 
