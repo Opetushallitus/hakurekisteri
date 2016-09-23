@@ -228,7 +228,7 @@ app.controller "MuokkaaArvosanat", [
         for oppiaine in koodistoOppiaineLista
           aine = oppiaine.koodi.koodiArvo
           aineenArvosanat = arvosanat.filter (a) -> a.aine is aine
-          arvosanatByMyonnettyLisatieto = collectToMap(aineenArvosanat, ((a) -> "#{a.myonnetty || suoritusValmistuminen()};#{a.lisatieto}"))
+          arvosanatByMyonnettyLisatieto = collectToMap(aineenArvosanat, ((a) -> "#{a.myonnetty};#{suoritusValmistuminen()};#{a.lisatieto}"))
           rivit = []
           aineHasArvosanaRiviForSuoritusDate = false
           for key of arvosanatByMyonnettyLisatieto
