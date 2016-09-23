@@ -37,9 +37,7 @@ API-dokumentaatio löytyy http://localhost:8080/swagger/index.html
 
 ## Kehitystietokannat
 
-Sovellusta paikallisesti ajettaessa se käyttää paikallista Postgres-tietokantaa. 
-
-Käynnistä sellainen esim. Dockerilla: `docker run -p 5432:5432 postgres`
+Testeissä ja SureTestJettyä paikallisesti ajettaessa sovellus käyttää sisäistä Postgres-kantaa (ItPostgres.scala).
 
 ## Arvosanavalidaattori
 
