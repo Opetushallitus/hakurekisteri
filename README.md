@@ -36,8 +36,11 @@ Muutama huomio:
 API-dokumentaatio löytyy http://localhost:8080/swagger/index.html
 
 ## Kehitystietokannat
+Sovellusta paikallisesti ajettaessa se käyttää properties-tiedostossa määriteltyä Postgres endpointtia (suoritusrekisteri.db.url).
 
-Testeissä ja SureTestJettyä paikallisesti ajettaessa sovellus käyttää sisäistä Postgres-kantaa (ItPostgres.scala).
+Paikallisesti ajettaessa käynnistä Postgres-palvelinprosessi esim. Dockerilla: `docker run -p 5432:5432 postgres`
+
+Testeissä sovellus käyttää sisäistä Postgres-kantaa (ItPostgres.scala).
 
 ## Arvosanavalidaattori
 
