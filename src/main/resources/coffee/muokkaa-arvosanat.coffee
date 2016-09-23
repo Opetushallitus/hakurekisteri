@@ -228,7 +228,7 @@ app.controller "MuokkaaArvosanat", [
         for oppiaine in koodistoOppiaineLista
           aine = oppiaine.koodi.koodiArvo
           aineenArvosanat = arvosanat.filter (a) -> a.aine is aine
-          arvosanatByMyonnettyLisatieto = collectToMap(aineenArvosanat, ((a) -> "#{a.myonnetty};#{suoritusValmistuminen()};#{a.lisatieto}"))
+          arvosanatByMyonnettyLisatieto = collectToMap(aineenArvosanat, ((a) -> "#{a.myonnetty || suoritusValmistuminen()};#{a.lisatieto}"))
           rivit = []
           aineHasArvosanaRiviForSuoritusDate = false
           for key of arvosanatByMyonnettyLisatieto
@@ -239,7 +239,7 @@ app.controller "MuokkaaArvosanat", [
             if dateForNewArvosanat == suoritusValmistuminen()
               dateForNewArvosanat = null
               aineHasArvosanaRiviForSuoritusDate = true
-            rivit.push makeAineRivi(aine, list, dateForNewArvosanat || first.myonnetty, first.lisatieto)
+            rivit.push makeAineRivi(aine, list, dateForNewArvosanat, first.lisatieto)
           if !aineHasArvosanaRiviForSuoritusDate
             taulukko.splice 0,0, makeAineRivi(aine, [], null, null)
           taulukko = taulukko.concat(rivit)
