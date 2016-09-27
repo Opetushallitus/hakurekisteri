@@ -103,15 +103,19 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
       private val opiskelijaJournal = new JDBCJournal[Opiskelija, UUID, OpiskelijaTable](TableQuery[OpiskelijaTable])
       private val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
       private val arvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
+      private val ytlArvosanat = system.actorOf(Props(new ArvosanaJDBCActor(arvosanaJournal, 1)))
       private val opiskeluoikeudet = system.actorOf(Props(new OpiskeluoikeusJDBCActor(opiskeluoikeusJournal, 1)))
       private val opiskelijat = system.actorOf(Props(new OpiskelijaJDBCActor(opiskelijaJournal, 1)))
       private val suoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
+      private val ytlSuoritukset = system.actorOf(Props(new SuoritusJDBCActor(suoritusJournal, 1)))
 
       override val eraRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(erat)))
       override val arvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(arvosanat)))
+      override val ytlArvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(ytlArvosanat)))
       override val opiskeluoikeusRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(opiskeluoikeudet)))
       override val opiskelijaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(opiskelijat)))
       override val suoritusRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(suoritukset)))
+      override val ytlSuoritusRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(ytlSuoritukset)))
     }
     val tarjontaActor = system.actorOf(Props(new Actor {
       override def receive: Receive = {

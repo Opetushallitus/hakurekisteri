@@ -57,15 +57,19 @@ class RekisteritiedotResourceSpec extends ScalatraFunSuite with FutureWaiting wi
   val rekisterit = new Registers {
     val erat = system.actorOf(Props(new MockedResourceActor[ImportBatch, UUID]()))
     val arvosanat = system.actorOf(Props(new MockedResourceActor[Arvosana, UUID]()))
+    val ytlArvosanat = system.actorOf(Props(new MockedResourceActor[Arvosana, UUID]()))
     val opiskeluoikeudet = system.actorOf(Props(new MockedResourceActor[Opiskeluoikeus, UUID]()))
     val opiskelijat = system.actorOf(Props(new MockedResourceActor[Opiskelija, UUID](query = q => Seq(opiskelija))))
     val suoritukset = system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](query = q => Seq(suoritus))))
+    val ytlSuoritukset = system.actorOf(Props(new MockedResourceActor[Suoritus, UUID](query = q => Seq(suoritus))))
 
     override val eraRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(erat)))
     override val arvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(arvosanat)))
+    override val ytlArvosanaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(ytlArvosanat)))
     override val opiskeluoikeusRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(opiskeluoikeudet)))
     override val opiskelijaRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(opiskelijat)))
     override val suoritusRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(suoritukset)))
+    override val ytlSuoritusRekisteri: ActorRef = system.actorOf(Props(new FakeAuthorizer(ytlSuoritukset)))
   }
 
   val notImplementedActor = system.actorOf(Props(new Actor {
