@@ -146,7 +146,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   private def tutkinnotHakemuksilta(hakuOid: String): Future[Map[String, Option[Int]]] = {
     hakemusService.suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid, None).map(_.collect {
       case FullHakemus(_, Some(personOid), _, Some(HakemusAnswers(_, Some(koulutustausta), _, _, _)), _, _)
-        if koulutustausta.suoritusoikeus_tai_aiempi_tutkinto.contains("true") =>
+        if koulutustausta.suoritusoikeus_tai_aiempi_tutkinto.contains("true") &&
+          koulutustausta.suoritusoikeus_tai_aiempi_tutkinto_vuosi.isDefined =>
         (personOid, Some(koulutustausta.suoritusoikeus_tai_aiempi_tutkinto_vuosi.get.toInt))
       case FullHakemus(_, Some(personOid), _, _, _, _) =>
         (personOid, None)
