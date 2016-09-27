@@ -83,6 +83,7 @@
                                     <th oph-msg="suoritusrekisteri.muokkaa.laji">Laji</th>
                                     <th oph-msg="suoritusrekisteri.muokkaa.suoritusNimi">Nimi</th>
                                     <th oph-msg="suoritusrekisteri.muokkaa.arvosana">Arvosana</th>
+                                    <th oph-msg="suoritusrekisteri.muokkaa.opintopisteet">Laajuus</th>
                                     <th oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</th>
                                     <th oph-msg="suoritusrekisteri.muokkaa.suoritusPvm">Suorituspäivä</th>
                                 </tr>
@@ -100,6 +101,7 @@
                                     </td>
                                     <td>{{suoritus.nimi}}<span ng-if="suoritus.koulutuskoodi"> ({{suoritus.koulutuskoodi}})</span></td>
                                     <td>{{formatArvosana(suoritus.arvosana, suoritus.asteikko)}}</td>
+                                    <td>{{suoritus.laajuus}}</td>
                                     <td>{{formatMyontaja(suoritus.organisaatio, suoritus.myontaja)}}</td>
                                     <td>{{suoritus.suoritusPvm}}</td>
                                 </tr>
