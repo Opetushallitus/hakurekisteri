@@ -193,6 +193,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
         suoritusPvm = parseLocalDate((os \ "SuoritusPvm").head.text),
         nimi = extractTextOption(os \ "Nimi", avain),
         koulutuskoodi = extractTextOption(os \ "Koulutuskoodi", avain),
+        laajuus = extractTextOption(os \ "Laajuus" \ "Opintopiste", avain),
         arvosana = arvosana,
         asteikko = asteikko,
         myontaja = extractTextOption(myontaja(os), avain, required = true).get,
