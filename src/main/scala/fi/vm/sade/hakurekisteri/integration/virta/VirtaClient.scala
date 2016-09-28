@@ -193,7 +193,7 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
         suoritusPvm = parseLocalDate((os \ "SuoritusPvm").head.text),
         nimi = extractTextOption(os \ "Nimi", avain),
         koulutuskoodi = extractTextOption(os \ "Koulutuskoodi", avain),
-        laajuus = extractTextOption(os \ "Laajuus" \ "Opintopiste", avain),
+        laajuus = extractDoubleOption(os \ "Laajuus" \ "Opintopiste", avain),
         arvosana = arvosana,
         asteikko = asteikko,
         myontaja = extractTextOption(myontaja(os), avain, required = true).get,
@@ -227,6 +227,10 @@ class VirtaClient(config: VirtaConfig = VirtaConfig(serviceUrl = "http://virtaws
 
   def extractTextOption(n: NodeSeq, avain: Seq[NodeSeq], required: Boolean = false): Option[String] = {
     Try(Some(n.head.text)).orElse{ if (required) Failure(InvalidVirtaResponseException(s"element $n is missing from avain $avain")) else Success(None) }.get
+  }
+
+  def extractDoubleOption(n: NodeSeq, avain: Seq[NodeSeq], required: Boolean = false): Option[Double] = {
+    Try(Some(n.head.text.toDouble)).orElse{ if (required) Failure(InvalidVirtaResponseException(s"element $n is missing from avain $avain")) else Success(None) }.get
   }
 
   def resolveKieli(n: NodeSeq): String = {
