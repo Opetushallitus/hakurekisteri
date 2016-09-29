@@ -48,9 +48,11 @@ trait JDBCRepository[R <: Resource[I, R], I, T <: JournalTable[R, I, _]] extends
 
   override def save(t: R): R with Identified[I] =
     journal.runAsSerialized(10, 5.milliseconds, s"Saving $t",
-      deduplicate(t)
-        .map(_.fold(t.identify)(duplicate => t.identify(duplicate.id)))
-        .flatMap(journal.addUpdate)
+      deduplicate(t).flatMap {
+        case Some(old) if old == t => DBIO.successful(old)
+        case Some(old) => journal.addUpdate(t.identify(old.id))
+        case None => journal.addUpdate(t.identify)
+      }
     ) match {
       case Right(r) => r
       case Left(e) => throw e
