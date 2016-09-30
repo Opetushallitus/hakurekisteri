@@ -1,0 +1,37 @@
+<div class="row test-suoritus">
+    <div class="form-group col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.myontaja">Myöntäjä</strong>
+        <div class="test-suoritusMyontaja">
+            {{
+            getOrganisaatioNimi(info.organisaatio)
+            ? info.organisaatio.oppilaitosKoodi + ' ' + getOrganisaatioNimi(info.organisaatio)
+            : suoritus.myontaja
+            }}
+        </div>
+    </div>
+    <div class="form-group col-sm-5"><strong oph-msg="suoritusrekisteri.muokkaa.suoritus">Suoritus</strong>
+        <div class="test-suoritusKoulutus">{{ammatillinenKielikoeText}}</div>
+    </div>
+</div>
+<div class="row">
+    <div class="form-group col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.kieli">Kieli</strong>
+        <div class="test-suoritusKieli">{{resolveValueFromOptionArray(suoritus.suoritusKieli, kielet)}}</div>
+    </div>
+    <div class="form-group col-sm-5">
+        <strong oph-msg="suoritusrekisteri.muokkaa.valmistumispaiva">Valmistumispäivä</strong>
+        <div class="test-suoritusValmistuminen">{{showValmistuminenFormatted()}}</div>
+    </div>
+    <div class="form-group col-sm-4">
+        <strong oph-msg="suoritusrekisteri.muokkaa.tulos">Tulos</strong>
+        <div ng-if="info.kielikoeTulos" class="test-suoritusTila" oph-msg="suoritusrekisteri.muokkaa.hyvaksytty">Hyväksytty</div>
+        <div ng-if="!info.kielikoeTulos" class="test-suoritusTila" oph-msg="suoritusrekisteri.muokkaa.hylatty">Hylätty</div>
+    </div>
+</div>
+<div class="row" ng-if="info.showArvosanat">
+    <div class="form-group col-sm-12">
+        <div class="pull-right">
+            <button ng-show="isOPH() && info.editable" type="button" ng-click="poistaSuoritus()" class="btn btn-default arvosana-button test-suoritusPoista">
+                <span oph-msg="suoritusrekisteri.muokkaa.poistasuoritus">Poista</span>
+                <span class="glyphicon glyphicon-remove"></span></button>
+        </div>
+    </div>
+</div>

@@ -170,7 +170,8 @@
                                     Suoritus ei ole vahvistettu
                                 </span>
                             </div>
-                            <div ng-include="'templates/muokkaa-suoritus.html'" ng-controller="MuokkaaSuoritus"></div>
+                            <div ng-if="!isAmmatillinenKielikoe(suoritus.komo)" ng-include="'templates/muokkaa-suoritus.html'" ng-controller="MuokkaaSuoritus"></div>
+                            <div ng-if="isAmmatillinenKielikoe(suoritus.komo)" ng-include="'templates/kielikoesuoritus.html'" ng-controller="MuokkaaSuoritus"></div>
                         </li>
                         <li>
                             <button type="button" ng-click="addSuoritus()" class="btn btn-default btn-xs test-suoritusLisaa">
