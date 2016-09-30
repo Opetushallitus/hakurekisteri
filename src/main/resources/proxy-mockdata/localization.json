@@ -15720,5 +15720,47 @@
     "locale":"sv",
     "key":"oppilaitoksenNumeroTaiNimi",
     "value":"Skolans nummer eller namn"
+  },
+  {
+    "accesscount": 0,
+    "id": 99888,
+    "category": "suoritusrekisteri",
+    "accessed": 1400235811992,
+    "created": 1400235811992,
+    "createdBy": "1.2.246.562.24.69423911513",
+    "modified": 1400242926880,
+    "modifiedBy": "1.2.246.562.24.00000000001",
+    "force": false,
+    "key": "suoritusrekisteri.komo.ammatillisenKielikoe",
+    "locale": "fi",
+    "value": "Ammatillisen koulutuksen kielikoe"
+  },
+  {
+    "accesscount": 0,
+    "id": 998893,
+    "category": "suoritusrekisteri",
+    "accessed": 1399282648684,
+    "created": 1399282648684,
+    "createdBy": "1.2.246.562.24.00000000001",
+    "modified": 1399368409633,
+    "modifiedBy": "1.2.246.562.24.00000000001",
+    "force": false,
+    "key": "suoritusrekisteri.muokkaa.kieli",
+    "locale": "fi",
+    "value": "Kieli"
+  },
+  {
+    "accesscount": 0,
+    "id": 9988933,
+    "category": "suoritusrekisteri",
+    "accessed": 1399282648684,
+    "created": 1399282648684,
+    "createdBy": "1.2.246.562.24.00000000001",
+    "modified": 1399368409633,
+    "modifiedBy": "1.2.246.562.24.00000000001",
+    "force": false,
+    "key": "suoritusrekisteri.muokkaa.hyvaksytty",
+    "locale": "fi",
+    "value": "Hyväksytty"
   }
 ]
