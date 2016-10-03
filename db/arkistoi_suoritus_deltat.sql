@@ -20,7 +20,7 @@ DECLARE
   delta record;
 BEGIN
   FOR delta IN
-    SELECT resource_id, inserted FROM suoritus
+    SELECT resource_id, inserted FROM suoritus WHERE NOT current
     LIMIT amount
   LOOP
     INSERT INTO a_suoritus SELECT resource_id,
