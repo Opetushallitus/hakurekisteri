@@ -22,7 +22,7 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
     var bytesRead = 0
     val p = Zip.toInputStreams(new ZipInputStream(getClass.getResource("/student-results.zip").openStream())).map(ProgressInputStream(bytesRead += _))
 
-    val students = ytlHttpFetch.zipToStudents(p)
+    val students = ytlHttpFetch.zipToStudents(p).map(_._2)
     bytesRead should equal (0)
     var lastReadBytes = 0
     Iterator.continually(students.next)
