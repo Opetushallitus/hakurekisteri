@@ -29,7 +29,7 @@ import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
 class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: ApacheOphHttpClient.ApacheHttpClientBuilder = ApacheOphHttpClient.createCustomBuilder()) {
-  val logger = LoggerFactory.getLogger(this.getClass)
+  val log = LoggerFactory.getLogger(this.getClass)
   import scala.language.implicitConversions
   implicit val formats = Student.formatsStudent
   val username = config.getProperty("ytl.http.username")
@@ -50,11 +50,11 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
 
   val client = buildClient(builder)
 
-  def zipToStudents(z: ZipInputStream): Iterator[Student] = {
+  def zipToStudents(z: ZipInputStream): Iterator[(String,Student)] = {
     zipToStudents(Zip.toInputStreams(z))
   }
 
-  def zipToStudents(streams: Iterator[InputStream]): Iterator[Student] = streams.flatMap(
+  def zipToStudents(streams: Iterator[InputStream]): Iterator[(String, Student)] = streams.flatMap(
     input => {
       val parser = StudentAsyncParser()
       val data = new Array[Byte](bufferSize)
@@ -71,11 +71,11 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
     }
   )
 
-  private def safeParseStudentsFromBytes(parser: StudentAsyncParser, data: Array[Byte]): Seq[Student] = {
+  private def safeParseStudentsFromBytes(parser: StudentAsyncParser, data: Array[Byte]): Seq[(String,Student)] = {
     parser.feedChunk(data).flatMap {
-      case Success(student) => Some(student)
-      case Failure(e) =>
-        logger.error(s"Unable to parse student from YTL data! ${e.getMessage}")
+      case (json, Success(student)) => Some(json, student)
+      case (json, Failure(e)) =>
+        log.error(s"Unable to parse student from YTL data! ${e.getMessage}")
         None
     }
   }
@@ -83,19 +83,20 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
   def fetchOne(hetu: String): Student =
     client.get("ytl.http.host.fetchone", hetu).expectStatus(200).execute((r:OphHttpResponse) => parse(r.asText()).extract[Student])
 
-  def fetch(hetus: List[String]): Either[Throwable, (ZipInputStream, Iterator[Student])] = {
+  def fetch(hetus: Seq[String]): Either[Throwable, (ZipInputStream, Iterator[Student])] = {
     for {
       operation <- fetchOperation(hetus).right
       ok <- fetchStatus(operation.operationUuid).right
       zip <- downloadZip(operation.operationUuid).right
     } yield {
       val z = new ZipInputStream(zip)
-      (z, zipToStudents(z))
+      (z, zipToStudents(z).map(_._2))
     }
   }
 
   @tailrec
   private def fetchStatus(uuid: String): Either[Throwable,Status] = {
+    log.debug(s"Fetching with opertationUuid $uuid")
     implicit val formats = new DefaultFormats {
       override def dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
     } + StatusDeserializer
@@ -104,7 +105,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
     })) match {
       case Success(e: InProgress) => {
         Thread.sleep(1000)
-        println(e)
+        log.debug(e.toString)
         fetchStatus(uuid)
       }
       case Success(e: Finished) => Right(e)
@@ -128,19 +129,22 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
     }
   }
 
-  def fetchOperation(hetus: List[String]): Either[Throwable, Operation] = {
+  def fetchOperation(hetus: Seq[String]): Either[Throwable, Operation] = {
     Try(client.post("ytl.http.host.bulk")
       .header(HttpHeaders.AUTHORIZATION, preemptiveBasicAuthentication)
       .dataWriter("application/json", "UTF-8", new OphRequestPostWriter() {
         override def writeTo(writer: io.Writer): Unit = writer.write(write(hetus))
       })
       .expectStatus(200).execute((r: OphHttpResponse) => parse(r.asText()).extract[Operation])) match {
-      case Success(e) => Right(e)
+      case Success(e) => {
+        log.info(s"Got operation uuid ${e.operationUuid}")
+        Right(e)
+      }
       case Failure(e) => Left(e)
     }
   }
 
-  implicit def function0ToRunnable[U](f:(OphHttpResponse) => U): OphHttpResponseHandler[U] =
+  private implicit def function0ToRunnable[U](f:(OphHttpResponse) => U): OphHttpResponseHandler[U] =
     new OphHttpResponseHandler[U]{
       override def handleResponse(ophHttpResponse: OphHttpResponse): U = f(ophHttpResponse)
     }

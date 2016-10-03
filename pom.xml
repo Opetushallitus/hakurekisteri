@@ -27,6 +27,12 @@
             <artifactId>jawn-ast_2.11</artifactId>
             <version>0.9.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.12</version>
+            <scope>test</scope>
+        </dependency>
         <!--
         <dependency>
             <groupId>org.mock-server</groupId>
