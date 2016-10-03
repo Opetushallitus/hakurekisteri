@@ -1,6 +1,7 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
-import java.io.File
+import java.io.{FileOutputStream, File}
+import java.text.SimpleDateFormat
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
 
@@ -27,14 +28,22 @@ class YtlIntegration(config: OphProperties,
 
   def setAktiivisetKKHaut(hakuOids: Set[String]) = activeKKHakuOids.set(hakuOids)
 
+  private def writeToFile(prefix: String, postfix: String, bytes: Array[Byte]) {
+    val timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new java.util.Date())
+    val file = s"${prefix}_${timestamp}_$postfix";
+    val output= new FileOutputStream(new File(kokelaatDownloadDirectory,file))
+    IOUtils.write(bytes, output)
+    IOUtils.closeQuietly(output)
+  }
+
   def sync(hakemus: FullHakemus): Unit = {
     if(activeKKHakuOids.get().contains(hakemus.applicationSystemId)) {
       hakemus.hetu match {
         case Some(hetu) =>
           logger.info(s"Syncronizing hakemus ${hakemus.oid} with YTL")
-          val student: Student = ytlHttpClient.fetchOne(hetu)
-          val kokelas = StudentToKokelas.convert(hakemus.personOid.get, student)
-          YtlDiff.writeKokelaatAsJson(List(kokelas).iterator, kokelaatDownloadPath)
+          val (json, student) = ytlHttpClient.fetchOne(hetu)
+          // TODO persist students
+          writeToFile(hetu,".json", json.getBytes)
         case None =>
           logger.debug(s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!")
       }
@@ -81,9 +90,7 @@ class YtlIntegration(config: OphProperties,
         logger.error(s"failed to fetch YTL data: ${e.getMessage}")
         throw e
       case Right((zip, students)) =>
-        YtlDiff.writeKokelaatAsJson(students.map { student =>
-          StudentToKokelas.convert(hetuToPersonOid.get(student.ssn).get, student)
-        }, kokelaatDownloadPath)
+        // TODO persist students
         IOUtils.closeQuietly(zip)
     }
   }

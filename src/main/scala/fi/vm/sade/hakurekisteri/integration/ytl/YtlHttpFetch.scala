@@ -80,8 +80,11 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
     }
   }
 
-  def fetchOne(hetu: String): Student =
-    client.get("ytl.http.host.fetchone", hetu).expectStatus(200).execute((r:OphHttpResponse) => parse(r.asText()).extract[Student])
+  def fetchOne(hetu: String): (String, Student) =
+    client.get("ytl.http.host.fetchone", hetu).expectStatus(200).execute((r:OphHttpResponse) => {
+      val json = r.asText()
+      (json, parse(json).extract[Student])
+    })
 
   def fetch(hetus: Seq[String]): Either[Throwable, (ZipInputStream, Iterator[Student])] = {
     for {
