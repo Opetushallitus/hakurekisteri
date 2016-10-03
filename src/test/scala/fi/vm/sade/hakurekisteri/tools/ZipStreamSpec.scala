@@ -44,7 +44,7 @@ class ZipStreamSpec extends ScalatraFunSuite {
     asyncParser.feedChunk(s1)
     val result = asyncParser.feedChunk(s2)
 
-    result.head.get.lastname should equal ("\u0628")
+    result.map(_._2).head.get.lastname should equal ("\u0628")
   }
 
   private def inifiniteStudentJsonStream: InputStream = new SequenceInputStream(

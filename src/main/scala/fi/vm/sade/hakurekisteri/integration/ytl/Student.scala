@@ -38,18 +38,18 @@ object Student {
   val formatsStudent = Serialization.formats(org.json4s.NoTypeHints) + KausiDeserializer + DateSerializer
 
 
-  private def jvalueToStudent(jvalue: ast.JValue): Student = {
+  private def jvalueToStudent(jvalue: String): Student = {
     implicit val formats = formatsStudent
   // this is slow
-  parse(jvalue.render()).extract[Student]
+  parse(jvalue).extract[Student]
 }
 
   case class StudentAsyncParser() {
     val p: AsyncParser[JValue] = JParser.async(mode = AsyncParser.UnwrapArray)
 
-    def feedChunk(c: Array[Byte]): Seq[Try[Student]] = {
+    def feedChunk(c: Array[Byte]): Seq[(String,Try[Student])] = {
       p.absorb(c) match {
-        case Right(js: Seq[JValue]) => js.map(v => Try(jvalueToStudent(v)))
+        case Right(js: Seq[JValue]) => js.map(_.render()).map(v => (v,Try(jvalueToStudent(v))))
         case Left(e) => throw e
       }
     }
@@ -119,18 +119,18 @@ object StudentToKokelas {
 
   def convert(oid: String, s: Student): Kokelas = {
     val suoritus: VirallinenSuoritus = toYoTutkinto(oid, s)
-    val yoKokeet = s.exams.map(exam => YoKoe(ArvioYo(exam.grade, exam.points), exam.examId, exam.examRole, exam.period.toLocalDate))
+    val yoTodistus = s.exams.map(exam => YoKoe(ArvioYo(exam.grade, exam.points), exam.examId, exam.examRole, exam.period.toLocalDate))
     val osakokeet = s.exams.flatMap(exam => exam.sections.map(section => {
       Osakoe(ArvioOsakoe(section.sectionPoints),exam.examId, section.sectionId, exam.examRole, exam.period.toLocalDate)
     }))
-    Kokelas(oid,suoritus,None,yoKokeet,osakokeet)
+    Kokelas(oid,suoritus,None,yoTodistus,osakokeet)
   }
 
   def toYoTutkinto(oid: String, s: Student): VirallinenSuoritus = {
     val valmistuminen: LocalDate = s.graduationPeriod.map(_.toLocalDate).getOrElse(YTLXml.parseKausi(YTLXml.nextKausi).get)
     val valmis = s.graduationPeriod.isDefined
     val suoritus = YoTutkinto(suorittaja = oid, valmistuminen = valmistuminen,
-      kieli = s.language, valmis = valmis)
+      kieli = s.language.toUpperCase, valmis = valmis)
     suoritus
   }
 }
