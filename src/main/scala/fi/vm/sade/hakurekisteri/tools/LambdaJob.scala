@@ -12,11 +12,10 @@ case class LambdaRunnable(l: LamdaFunction)
 object LambdaJob {
   type LamdaFunction = () => Unit
 
-  def scheduleLambdaJob(s: Scheduler, t: Trigger, l: LamdaFunction) {
+  def lambdaJob(l: LamdaFunction): JobDetail = {
     val dataMap = new JobDataMap()
     dataMap.put(classOf[LambdaJob].getSimpleName, LambdaRunnable(l))
-    val job = newJob(classOf[LambdaJob]).setJobData(dataMap).build()
-    s.scheduleJob(job, t);
+    newJob(classOf[LambdaJob]).setJobData(dataMap).build()
   }
 }
 
