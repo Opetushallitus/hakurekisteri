@@ -14,10 +14,12 @@ import fi.vm.sade.hakurekisteri.integration.tarjonta.{MockTarjontaActor, Tarjont
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{ValintarekisteriActor, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.integration.valintatulos.ValintaTulosActor
 import fi.vm.sade.hakurekisteri.integration.virta._
-import fi.vm.sade.hakurekisteri.integration.ytl.{YtlActor, YtlFileSystem, YtlHttpFetch, YtlIntegration}
+import fi.vm.sade.hakurekisteri.integration.ytl._
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient, _}
 import fi.vm.sade.hakurekisteri.rest.support.Registers
+import fi.vm.sade.hakurekisteri.tools.LambdaJob.scheduleLambdaJob
 import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
+import org.quartz.impl.StdSchedulerFactory;
 
 import scala.concurrent.duration._
 
@@ -168,6 +170,12 @@ class BaseIntegrations(rekisterit: Registers,
 
   implicit val scheduler = system.scheduler
   hakemusService.processModifiedHakemukset()
+
+  val quartzScheduler = StdSchedulerFactory.getDefaultScheduler()
+  quartzScheduler.start()
+
+  val dailyAtHourAndMinute = HourAndMinute(OphUrlProperties.getProperty("ytl.http.syncAllDailyAtHourAndMinute"))
+  scheduleLambdaJob(quartzScheduler, dailyAtHourAndMinute.asTrigger, () => ytlIntegration.syncAll())
 
   override val hakuAppPermissionChecker: ActorRef = system.actorOf(Props(new HakuAppPermissionCheckerActor(hakuAppPermissionCheckerClient, organisaatiot)))
 }
