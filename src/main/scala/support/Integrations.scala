@@ -17,7 +17,7 @@ import fi.vm.sade.hakurekisteri.integration.virta._
 import fi.vm.sade.hakurekisteri.integration.ytl._
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient, _}
 import fi.vm.sade.hakurekisteri.rest.support.Registers
-import fi.vm.sade.hakurekisteri.tools.LambdaJob.scheduleLambdaJob
+import fi.vm.sade.hakurekisteri.tools.LambdaJob.lambdaJob
 import fi.vm.sade.hakurekisteri.web.proxies.{HttpProxies, MockProxies, Proxies}
 import org.quartz.impl.StdSchedulerFactory;
 
@@ -175,7 +175,7 @@ class BaseIntegrations(rekisterit: Registers,
   quartzScheduler.start()
 
   val dailyAtHourAndMinute = HourAndMinute(OphUrlProperties.getProperty("ytl.http.syncAllDailyAtHourAndMinute"))
-  scheduleLambdaJob(quartzScheduler, dailyAtHourAndMinute.asTrigger, () => ytlIntegration.syncAll())
 
+  quartzScheduler.scheduleJob(lambdaJob(() => ytlIntegration.syncAll()), dailyAtHourAndMinute.asTrigger);
   override val hakuAppPermissionChecker: ActorRef = system.actorOf(Props(new HakuAppPermissionCheckerActor(hakuAppPermissionCheckerClient, organisaatiot)))
 }
