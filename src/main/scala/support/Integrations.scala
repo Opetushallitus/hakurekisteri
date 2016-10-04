@@ -184,8 +184,8 @@ class BaseIntegrations(rekisterit: Registers,
   quartzScheduler.start()
 
   val syncAllCronExpression = OphUrlProperties.getProperty("ytl.http.syncAllCronJob")
-
-  quartzScheduler.scheduleJob(lambdaJob(rerunPolicy(syncAllCronExpression, ytlIntegration)),
+  val rerunSync = rerunPolicy(syncAllCronExpression, ytlIntegration)
+  quartzScheduler.scheduleJob(lambdaJob(rerunSync),
     newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
   override val hakuAppPermissionChecker: ActorRef = system.actorOf(Props(new HakuAppPermissionCheckerActor(hakuAppPermissionCheckerClient, organisaatiot)))
 }
