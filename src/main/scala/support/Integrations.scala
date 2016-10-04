@@ -27,6 +27,7 @@ import org.quartz.CronScheduleBuilder._
 import org.quartz.TriggerBuilder._
 import org.quartz.impl.StdSchedulerFactory
 import org.slf4j.LoggerFactory
+import support.YtlRerunPolicy.rerunPolicy
 ;
 
 import scala.concurrent.duration._
@@ -102,7 +103,6 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 class BaseIntegrations(rekisterit: Registers,
                        system: ActorSystem,
                        config: Config) extends Integrations {
-  private val logger = LoggerFactory.getLogger(classOf[BaseIntegrations])
   val restEc = ExecutorUtil.createExecutor(10, "rest-client-pool")
   val vtsEc = ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool")
   val vrEc = ExecutorUtil.createExecutor(10, "valintarekisteri-client-pool")
@@ -184,24 +184,8 @@ class BaseIntegrations(rekisterit: Registers,
   quartzScheduler.start()
 
   val syncAllCronExpression = OphUrlProperties.getProperty("ytl.http.syncAllCronJob")
-  def nextTimestamp(d: Date) = new SimpleDateFormat("dd.MM.yyyy hh:mm").format(new CronExpression(syncAllCronExpression).getNextValidTimeAfter(d))
-  logger.info(s"First YTL fetch at '${nextTimestamp(new Date())}'")
 
-  quartzScheduler.scheduleJob(lambdaJob(() => {
-    val fetchStatus = ytlIntegration.getLastFetchStatus
-    val isRunning = fetchStatus.exists(_.inProgress)
-    if(isRunning) {
-      logger.info(s"Scheduled to make YTL fetch but fetch is already running!")
-    } else {
-      val isYesterday = fetchStatus.exists(status => !DateUtils.isSameDay(status.start, new Date()))
-      val isSucceeded = fetchStatus.flatMap(_.succeeded).getOrElse(false)
-      if((isSucceeded && isYesterday) || (!isSucceeded)) {
-        logger.info(s"Starting new YTL fetch because: last run was yesterday=$isYesterday and that run succeeded=$isSucceeded")
-        ytlIntegration.syncAll()
-      } else {
-        logger.info(s"Scheduled to make YTL fetch but not running because: last run was yesterday=$isYesterday and that run succeeded=$isSucceeded")
-      }
-    }
-  }), newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
+  quartzScheduler.scheduleJob(lambdaJob(rerunPolicy(syncAllCronExpression, ytlIntegration)),
+    newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
   override val hakuAppPermissionChecker: ActorRef = system.actorOf(Props(new HakuAppPermissionCheckerActor(hakuAppPermissionCheckerClient, organisaatiot)))
 }
