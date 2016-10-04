@@ -1,7 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.ytl
 
 import org.quartz.CronScheduleBuilder._
-import org.quartz.Trigger
 import org.quartz.TriggerBuilder._
 
 case class HourAndMinute(hour: Int, minute: Int) {
