@@ -89,9 +89,12 @@ class YtlIntegration(config: OphProperties,
   def syncAll() = {
     val fetchStatus = newFetchStatus
     val currentStatus = atomicUpdateFetchStatus(currentStatus => {
-      currentStatus.inProgress match {
-        case true => currentStatus
-        case false => fetchStatus
+      Option(currentStatus) match {
+        case Some(status) => status.inProgress match {
+          case true => currentStatus
+          case false => fetchStatus
+        }
+        case _ => fetchStatus
       }
     })
     val isAlreadyRunningAtomic = currentStatus != fetchStatus
