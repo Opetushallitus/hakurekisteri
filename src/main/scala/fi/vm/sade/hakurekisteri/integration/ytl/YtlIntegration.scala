@@ -2,6 +2,8 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 
 import java.io.{FileOutputStream, File}
 import java.text.SimpleDateFormat
+import java.util.function.UnaryOperator
+import java.util.{UUID, Date}
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
 
@@ -15,6 +17,10 @@ import scala.collection.Set
 import scala.concurrent._
 import scala.util.{Failure, Success}
 
+case class LastFetchStatus(uuid: String, start: Date, end: Option[Date], succeeded: Option[Boolean]) {
+  def inProgress = end.isEmpty
+}
+
 class YtlIntegration(config: OphProperties,
                      ytlHttpClient: YtlHttpFetch,
                      ytlFileSystem: YtlFileSystem,
@@ -23,7 +29,9 @@ class YtlIntegration(config: OphProperties,
   private val logger = LoggerFactory.getLogger(getClass)
   val kokelaatDownloadDirectory = ytlFileSystem.directoryPath
   val kokelaatDownloadPath = new File(kokelaatDownloadDirectory, "ytl-v2-kokelaat.json").getAbsolutePath
-  var activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
+  val activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
+  val lastFetchStatus = new AtomicReference[LastFetchStatus]();
+  def newFetchStatus = LastFetchStatus(UUID.randomUUID().toString, new Date(), None, None)
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
 
   def setAktiivisetKKHaut(hakuOids: Set[String]) = activeKKHakuOids.set(hakuOids)
@@ -67,18 +75,44 @@ class YtlIntegration(config: OphProperties,
     }
   }
 
+  private def atomicUpdateFetchStatus(updator: LastFetchStatus => LastFetchStatus): LastFetchStatus = {
+    lastFetchStatus.updateAndGet(
+      new UnaryOperator[LastFetchStatus]{
+        override def apply(t: LastFetchStatus): LastFetchStatus = updator.apply(t)
+      }
+    )
+  }
+  def isSyncAllRunning = Option(lastFetchStatus.get()).map(_.end.isEmpty).getOrElse(false)
+
   def syncAll() = {
-    val hakemusFutures: Set[Future[Seq[HetuPersonOid]]] = activeKKHakuOids.get()
-      .map(hakuOid => hakemusService.hetuAndPersonOidForHaku(hakuOid))
+    val fetchStatus = newFetchStatus
+    val currentStatus = atomicUpdateFetchStatus(currentStatus => {
+      currentStatus.inProgress match {
+        case true => currentStatus
+        case false => fetchStatus
+      }
+    })
+    val isAlreadyRunningAtomic = currentStatus != fetchStatus
+    if(isAlreadyRunningAtomic) {
+      val message = s"syncAll is already running! $currentStatus"
+      logger.error(message)
+      throw new RuntimeException(message)
+    } else {
+      logger.info(s"Starting sync all!")
+      val hakemusFutures: Set[Future[Seq[HetuPersonOid]]] = activeKKHakuOids.get()
+        .map(hakuOid => hakemusService.hetuAndPersonOidForHaku(hakuOid))
 
-    Future.sequence(hakemusFutures).onComplete {
-      case Success(persons) =>
-        handleHakemukset(persons.flatten)
+      Future.sequence(hakemusFutures).onComplete {
+        case Success(persons) =>
+          handleHakemukset(persons.flatten)
 
-      case Failure(e: Throwable) =>
-        logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
-        throw e
+        case Failure(e: Throwable) =>
+          logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
+          atomicUpdateFetchStatus(l => l.copy(succeeded=Some(false), end = Some(new Date())))
+          throw e
+      }
     }
+
 
   }
 
@@ -88,10 +122,17 @@ class YtlIntegration(config: OphProperties,
     ytlHttpClient.fetch(hetuToPersonOid.keys.toList) match {
       case Left(e: Throwable) =>
         logger.error(s"failed to fetch YTL data: ${e.getMessage}")
+        atomicUpdateFetchStatus(l => l.copy(succeeded=Some(false), end = Some(new Date())))
         throw e
       case Right((zip, students)) =>
+        try {
+
         // TODO persist students
         IOUtils.closeQuietly(zip)
+        } finally {
+          logger.info(s"Successfully finished sync all!")
+          atomicUpdateFetchStatus(l => l.copy(succeeded=Some(true), end = Some(new Date())))
+        }
     }
   }
 
