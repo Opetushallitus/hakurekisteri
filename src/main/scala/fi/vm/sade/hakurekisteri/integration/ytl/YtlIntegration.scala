@@ -11,6 +11,7 @@ import akka.actor.ActorRef
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusService, HetuPersonOid}
 import fi.vm.sade.properties.OphProperties
 import org.apache.commons.io.IOUtils
+import org.apache.commons.lang.time.DateUtils
 import org.slf4j.LoggerFactory
 
 import scala.collection.Set
@@ -30,8 +31,8 @@ class YtlIntegration(config: OphProperties,
   val kokelaatDownloadDirectory = ytlFileSystem.directoryPath
   val kokelaatDownloadPath = new File(kokelaatDownloadDirectory, "ytl-v2-kokelaat.json").getAbsolutePath
   val activeKKHakuOids = new AtomicReference[Set[String]](Set.empty)
-  val lastFetchStatus = new AtomicReference[LastFetchStatus]();
-  def newFetchStatus = LastFetchStatus(UUID.randomUUID().toString, new Date(), None, None)
+  private val lastFetchStatus = new AtomicReference[LastFetchStatus]();
+  private def newFetchStatus = LastFetchStatus(UUID.randomUUID().toString, new Date(), None, None)
   implicit val ec = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
 
   def setAktiivisetKKHaut(hakuOids: Set[String]) = activeKKHakuOids.set(hakuOids)
@@ -82,7 +83,8 @@ class YtlIntegration(config: OphProperties,
       }
     )
   }
-  def isSyncAllRunning = Option(lastFetchStatus.get()).map(_.end.isEmpty).getOrElse(false)
+
+  def getLastFetchStatus: Option[LastFetchStatus] = Option(lastFetchStatus.get())
 
   def syncAll() = {
     val fetchStatus = newFetchStatus
