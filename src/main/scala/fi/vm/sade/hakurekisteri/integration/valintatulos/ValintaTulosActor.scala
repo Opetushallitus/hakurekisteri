@@ -13,7 +13,7 @@ import fi.vm.sade.hakurekisteri.integration.{FutureCache, PreconditionFailedExce
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
-case class InitialLoadingNotDone() extends Exception("Initial loading noy yet done")
+case class InitialLoadingNotDone() extends Exception("Initial loading not yet done")
 
 case class ValintaTulosQuery(hakuOid: String,
                              hakemusOid: Option[String],
