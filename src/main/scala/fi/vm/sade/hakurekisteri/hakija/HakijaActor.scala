@@ -432,16 +432,28 @@ object XMLHakutoive {
     ht.yhteispisteet, valinta.lift(ht), vastaanotto.lift(ht), lasnaolo.lift(ht),
     ht.terveys, ht.aiempiperuminen, ht.kaksoistutkinto)
 
-  def lasnaolo: PartialFunction[Hakutoive, String]  = {
-    case v: Vastaanottanut if v.ilmoittautumistila.contains(EI_TEHTY) => "1"
-    case v: Vastaanottanut if v.ilmoittautumistila.contains(LASNA_KOKO_LUKUVUOSI) => "2"
-    case v: Vastaanottanut if v.ilmoittautumistila.contains(POISSA_KOKO_LUKUVUOSI) => "3"
-    case v: Vastaanottanut if v.ilmoittautumistila.contains(EI_ILMOITTAUTUNUT) => "4"
-    case v: Vastaanottanut if v.ilmoittautumistila.contains(LASNA_SYKSY) => "5"
-    case v: Vastaanottanut if v.ilmoittautumistila.contains(POISSA_SYKSY) => "6"
-    case v: Vastaanottanut if v.ilmoittautumistila.contains(LASNA) => "7"
-    case v: Vastaanottanut if v.ilmoittautumistila.contains(POISSA) => "8"
-    case _ => ""
+  def ilmoittautumistilaToLasnaolo(ilmoittaumistila: Ilmoittautumistila): String = {
+    ilmoittaumistila match {
+      case EI_TEHTY => "1"
+      case LASNA_KOKO_LUKUVUOSI => "2"
+      case POISSA_KOKO_LUKUVUOSI => "3"
+      case EI_ILMOITTAUTUNUT => "4"
+      case LASNA_SYKSY => "5"
+      case POISSA_SYKSY => "6"
+      case LASNA => "7"
+      case POISSA => "8"
+    }
+  }
+
+  def lasnaolo(ht: Hakutoive): Option[String] = {
+    ht match {
+      case v: Vastaanottanut =>
+        v.ilmoittautumistila match {
+          case Some(ilmo) => Some(ilmoittautumistilaToLasnaolo(ilmo))
+          case _ => None
+        }
+      case _ => None
+    }
   }
 
   def valinta: PartialFunction[Hakutoive, String] = {
