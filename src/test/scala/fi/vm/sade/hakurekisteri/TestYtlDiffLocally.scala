@@ -10,7 +10,10 @@ import fi.vm.sade.hakurekisteri.integration.ytl._
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.io.IOUtils
+import org.joda.time.LocalDate
+import org.joda.time.LocalDate.Property
 import org.joda.time.format.DateTimeFormat
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration._
 
@@ -37,7 +40,7 @@ object TestYtlDiffLocally extends App {
     Iterator.continually(t.getNextEntry).takeWhile(_ != null)
   }
 
-  val input = new FileInputStream(new File(path, file))
+  val input = new FileInputStream(new File(file))
   val tar = new TarArchiveInputStream(input)
 
   def iterate(): Iterator[List[(String, String)]] = {
@@ -48,7 +51,7 @@ object TestYtlDiffLocally extends App {
     }
   }
 
-  def findSsn(): List[(String, String)]  = {
+  def findSsn(s: String = ssn): List[(String, String)]  = {
     iterateTar(tar).find(_.getName.contains(ssn)) match {
       case Some(archive) =>
         val tar2 = new TarArchiveInputStream(new ByteArrayInputStream(ByteStreams.toByteArray(tar)))
@@ -82,7 +85,7 @@ object TestYtlDiffLocally extends App {
     k.yoTodistus.flatMap {
       case y: YoKoe => Some(y)
       case _ => None
-    }
+    }.sortBy(a => (a.aine.aine, a.koetunnus))
   }
   def osakokeet(k: Kokelas): Seq[Osakoe with ArvioArvosana] = {
 
@@ -107,12 +110,14 @@ object TestYtlDiffLocally extends App {
   }
   trait ArvioArvosana {
     def arvionArvosana: String
+
+    override def toString(): String = super.toString + s" + Arvosana($arvionArvosana)"
   }
 
   //
   val limit = DateFormat.fmt.parseLocalDate("2007-01-01")
 
-  def toKokelaat(studentJson: String, xmlKokelas: String): (Kokelas,Kokelas, String) = {
+  def toKokelaat(studentJson: String, xmlKokelas: String): (Kokelas,Option[Kokelas], String) = {
     def fileToStringFromSsn(ssn: String) = IOUtils.toString(new FileInputStream(new File(ssn + ".json")))
     def parse(s: String) = {
       implicit val formats = Student.formatsStudent
@@ -121,74 +126,58 @@ object TestYtlDiffLocally extends App {
     }
     val student = parse(studentJson)
     val kokelasFromJson = StudentToKokelas.convert(student.ssn, student)
-    val kokelasFromXml = xmlToKokelas(xmlKokelas).get
+    val kokelasFromXml = xmlToKokelas(xmlKokelas)
     (kokelasFromJson, kokelasFromXml, student.ssn)
   }
 
-  case class Loytyy(aineLoytyy: ArrayBuffer[String] = ArrayBuffer[String](),
-                    aineLoytyyMyonnettySamaanAikaan: ArrayBuffer[String] = ArrayBuffer[String](),
-                    aineJaKoetunnusLoytyy: ArrayBuffer[String] = ArrayBuffer[String](),
-                    aineJaKoetunnusJaAineyhdistelmarooliLoytyy: ArrayBuffer[String] = ArrayBuffer[String](),
-                    aineJaKoetunnusJaAineyhdistelmarooliJaArvosanaLoytyy: ArrayBuffer[String] = ArrayBuffer[String]()) {
-    override def toString = {
-      s"(aineLoytyy: ${aineLoytyy.size}, aineLoytyyMyonnettySamaanAikaan: ${aineLoytyyMyonnettySamaanAikaan.size}, aineJaKoetunnusLoytyy: ${aineJaKoetunnusJaAineyhdistelmarooliLoytyy.size}, aineJaKoetunnusJaAineyhdistelmarooliJaArvosanaLoytyy: ${aineJaKoetunnusJaAineyhdistelmarooliJaArvosanaLoytyy.size})"
-    }
+  trait Eroavaisuus {}
+  case class Impro(kausi: Kausi, ssn: String) extends Eroavaisuus;
+  case class Uniikki(kausi: Kausi, ssn: String) extends Eroavaisuus;
+  case class Korotus(kausi: Kausi, ssn: String) extends Eroavaisuus;
+
+  val eroavaisuudetToXml: ArrayBuffer[Eroavaisuus] = ArrayBuffer[Eroavaisuus]()
+  val collectSsn = ArrayBuffer[String]()
+  val missing = ArrayBuffer[String]()
+  def analysoi(osa1: Seq[Osakoe with ArvioArvosana], osa2: Seq[Osakoe with ArvioArvosana]) = {
+    def tunnukset(y:Osakoe) = (y.koetunnus, y.osakoetunnus, y.aineyhdistelmarooli)
+    val taysinUniikit = osa1.filter(o => !osa2.map(tunnukset).contains(tunnukset(o)))
+    val eiImproja = taysinUniikit.filter(filterOsakoeImprobatur).sortBy(o => (o.koetunnus,o.osakoetunnus))
+    val vainImprot = taysinUniikit.filter(!eiImproja.contains(_)).sortBy(o => (o.koetunnus,o.osakoetunnus))
+    val korotukset = osa1.filter(!eiImproja.contains(_)).filter(o => !osa2.contains(o)).sortBy(o => (o.koetunnus,o.osakoetunnus))
+    (vainImprot, eiImproja, korotukset)
   }
-  case class OsakoeVsYoTodistus(osakoe: Loytyy = Loytyy(), yotodistus: Loytyy = Loytyy())
-  case class JsonVsXmlLoytyy(json: OsakoeVsYoTodistus = OsakoeVsYoTodistus(), xml: OsakoeVsYoTodistus = OsakoeVsYoTodistus())
-
-  val jsonVsXmlLoytyy = JsonVsXmlLoytyy()
-
+  def analysoiYot(y1: Seq[YoKoe], y2: Seq[YoKoe]) = {
+    def tunnukset(y:YoKoe) = (y.aine.aine, y.aine.lisatiedot, y.koetunnus, y.aineyhdistelmarooli)
+    y1.filter(y => !y2.map(tunnukset).contains(tunnukset(y)))
+  }
   //Iterator(findSsn())
   //iterate()
-  iterate().foreach{
-    case List((jsonFile, studentJson), (httpFile, httpKokelas), (xmlFile, xmlKokelas), (xmlJson,xmlJsonKokelas)) =>
-      val (kJson, kXml, ssn) = toKokelaat(studentJson, xmlKokelas)
+  Iterator(findSsn()).foreach{
+    case List((jsonFile, studentJson), (xmlFile, xmlKokelas)) =>
+      val (kJson, kXmlOpt, ssn) = toKokelaat(studentJson, xmlKokelas)
+      kXmlOpt match {
+        case Some(kXml) =>
 
-      val osakokeetJson = osakokeet(kJson).filter(_.myonnetty.isAfter(limit)).filter(filterOsakoeImprobatur)
-      val yoTodistusJson = yoTodistukset(kJson).filter(_.myonnetty.isAfter(limit)).filter(filterImprobatur)
-      val yoTodistusXml = yoTodistukset(kXml).filter(_.myonnetty.isAfter(limit))
-      val osakokeetXml = osakokeet(kXml).filter(_.myonnetty.isAfter(limit))
-      val uniqueOsakoeJsonFunc = uniqueOsakoeLeft(osakokeetJson, osakokeetXml)_
-      val uniqueOsakoeXmlFunc = uniqueOsakoeLeft(osakokeetXml, osakokeetJson)_
-      val uniqueYoTodJsonFunc = uniqueLeft(yoTodistusJson, yoTodistusXml)_
-      val uniqueYoTodXmlFunc = uniqueLeft(yoTodistusXml, yoTodistusJson)_
+          val uniikit = analysoiYot(yoTodistukset(kXml), yoTodistukset(kJson))
+          //val (improt1, uniikit1, korotukset1) = analysoi(osakokeet(kJson), osakokeet(kXml))
+          //val (improt1, uniikit1, korotukset1) = analysoi(osakokeet(kXml), osakokeet(kJson))
+          /*
+          def toKausi(l:LocalDate) = if(l.getMonthOfYear != 1) Syksy(l.getYear) else Kevat(l.getYear)
+          val kaikki = Seq(improt1.map(o => Impro(toKausi(o.myonnetty),ssn)) ++ uniikit1.map(o => Uniikki(toKausi(o.myonnetty),ssn)) ++ korotukset1.map(o => Korotus(toKausi(o.myonnetty),ssn))).flatten
+          val erot = uniikit1.filter(_.myonnetty.isAfter(limit)).map(o => Uniikki(toKausi(o.myonnetty),ssn))
+          */
+          if(!uniikit.isEmpty) {
+            val yoJson = yoTodistukset(kJson)
+            val yoXml = yoTodistukset(kXml)
+            //eroavaisuudetToXml ++= Seq(erot.head)
+            collectSsn += ssn
+          } else {
 
-      def aineLoytyy(y:Osakoe) = (y.aine.aine, y.aine.lisatiedot)
-      def aineLoytyyMyonnettySamaanAikaan(y:Osakoe) = (y.aine.aine, y.aine.lisatiedot,y.myonnetty)
-      def aineJaKoetunnusLoytyy(y:Osakoe) = (y.aine.aine, y.aine.lisatiedot,y.koetunnus)
-      def aineJaKoetunnusJaAineyhdistelmarooliLoytyy(y:Osakoe) = (y.aine.aine, y.aine.lisatiedot,y.koetunnus,y.aineyhdistelmarooli)
-      def aineJaKoetunnusJaAineyhdistelmarooliJaArvosanaLoytyy(y:Osakoe) = (y.aine.aine, y.aine.lisatiedot,y.koetunnus,y.aineyhdistelmarooli,y.arvio.arvosana)
+          }
+        case None =>
+          missing += ssn
+      }
 
-      def aineLoytyyYo(y:YoKoe) = (y.aine.aine, y.aine.lisatiedot)
-      def aineLoytyyMyonnettySamaanAikaanYo(y:YoKoe) = (y.aine.aine, y.aine.lisatiedot,y.myonnetty)
-      def aineJaKoetunnusLoytyyYo(y:YoKoe) = (y.aine.aine, y.aine.lisatiedot,y.koetunnus)
-      def aineJaKoetunnusJaAineyhdistelmarooliLoytyyYo(y:YoKoe) = (y.aine.aine, y.aine.lisatiedot,y.koetunnus,y.aineyhdistelmarooli)
-      def aineJaKoetunnusJaAineyhdistelmarooliJaArvosanaJaPisteetLoytyyYo(y:YoKoe) = (y.aine.aine, y.aine.lisatiedot,y.koetunnus,y.aineyhdistelmarooli,y.arvio.arvosana,y.arvio.pisteet)
-
-      if(!uniqueOsakoeJsonFunc(aineLoytyy).isEmpty) jsonVsXmlLoytyy.json.osakoe.aineLoytyy.+=(ssn)
-      if(!uniqueOsakoeJsonFunc(aineLoytyyMyonnettySamaanAikaan).isEmpty) jsonVsXmlLoytyy.json.osakoe.aineLoytyyMyonnettySamaanAikaan.+=(ssn)
-      if(!uniqueOsakoeJsonFunc(aineJaKoetunnusLoytyy).isEmpty) jsonVsXmlLoytyy.json.osakoe.aineJaKoetunnusLoytyy.+=(ssn)
-      if(!uniqueOsakoeJsonFunc(aineJaKoetunnusJaAineyhdistelmarooliLoytyy).isEmpty) jsonVsXmlLoytyy.json.osakoe.aineJaKoetunnusJaAineyhdistelmarooliLoytyy.+=(ssn)
-      if(!uniqueOsakoeJsonFunc(aineJaKoetunnusJaAineyhdistelmarooliJaArvosanaLoytyy).isEmpty) jsonVsXmlLoytyy.json.osakoe.aineJaKoetunnusJaAineyhdistelmarooliJaArvosanaLoytyy.+=(ssn)
-
-      if(!uniqueYoTodJsonFunc(aineLoytyyYo).isEmpty) jsonVsXmlLoytyy.json.yotodistus.aineLoytyy.+=(ssn)
-      if(!uniqueYoTodJsonFunc(aineLoytyyMyonnettySamaanAikaanYo).isEmpty) jsonVsXmlLoytyy.json.yotodistus.aineLoytyyMyonnettySamaanAikaan.+=(ssn)
-      if(!uniqueYoTodJsonFunc(aineJaKoetunnusLoytyyYo).isEmpty) jsonVsXmlLoytyy.json.yotodistus.aineJaKoetunnusLoytyy.+=(ssn)
-      if(!uniqueYoTodJsonFunc(aineJaKoetunnusJaAineyhdistelmarooliLoytyyYo).isEmpty) jsonVsXmlLoytyy.json.yotodistus.aineJaKoetunnusJaAineyhdistelmarooliLoytyy.+=(ssn)
-      if(!uniqueYoTodJsonFunc(aineJaKoetunnusJaAineyhdistelmarooliJaArvosanaJaPisteetLoytyyYo).isEmpty) jsonVsXmlLoytyy.json.yotodistus.aineJaKoetunnusJaAineyhdistelmarooliJaArvosanaLoytyy.+=(ssn)
-
-      if(!uniqueOsakoeXmlFunc(aineLoytyy).isEmpty) jsonVsXmlLoytyy.xml.osakoe.aineLoytyy.+=(ssn)
-      if(!uniqueOsakoeXmlFunc(aineLoytyyMyonnettySamaanAikaan).isEmpty) jsonVsXmlLoytyy.xml.osakoe.aineLoytyyMyonnettySamaanAikaan.+=(ssn)
-      if(!uniqueOsakoeXmlFunc(aineJaKoetunnusLoytyy).isEmpty) jsonVsXmlLoytyy.xml.osakoe.aineJaKoetunnusLoytyy.+=(ssn)
-      if(!uniqueOsakoeXmlFunc(aineJaKoetunnusJaAineyhdistelmarooliLoytyy).isEmpty) jsonVsXmlLoytyy.xml.osakoe.aineJaKoetunnusJaAineyhdistelmarooliLoytyy.+=(ssn)
-      if(!uniqueOsakoeXmlFunc(aineJaKoetunnusJaAineyhdistelmarooliJaArvosanaLoytyy).isEmpty) jsonVsXmlLoytyy.xml.osakoe.aineJaKoetunnusJaAineyhdistelmarooliJaArvosanaLoytyy.+=(ssn)
-
-      if(!uniqueYoTodXmlFunc(aineLoytyyYo).isEmpty) jsonVsXmlLoytyy.xml.yotodistus.aineLoytyy.+=(ssn)
-      if(!uniqueYoTodXmlFunc(aineLoytyyMyonnettySamaanAikaanYo).isEmpty) jsonVsXmlLoytyy.xml.yotodistus.aineLoytyyMyonnettySamaanAikaan.+=(ssn)
-      if(!uniqueYoTodXmlFunc(aineJaKoetunnusLoytyyYo).isEmpty) jsonVsXmlLoytyy.xml.yotodistus.aineJaKoetunnusLoytyy.+=(ssn)
-      if(!uniqueYoTodXmlFunc(aineJaKoetunnusJaAineyhdistelmarooliLoytyyYo).isEmpty) jsonVsXmlLoytyy.xml.yotodistus.aineJaKoetunnusJaAineyhdistelmarooliLoytyy.+=(ssn)
-      if(!uniqueYoTodXmlFunc(aineJaKoetunnusJaAineyhdistelmarooliJaArvosanaJaPisteetLoytyyYo).isEmpty) jsonVsXmlLoytyy.xml.yotodistus.aineJaKoetunnusJaAineyhdistelmarooliJaArvosanaLoytyy.+=(ssn)
   }
 
   def writeSsnsToFile(file: String, ssnBuffer: ArrayBuffer[String]): Unit = {
@@ -201,6 +190,20 @@ object TestYtlDiffLocally extends App {
     })
     IOUtils.closeQuietly(fw)
   }
+  println(collectSsn.size)
+  writeSsnsToFile("osakokeetPuuttuu.txt", collectSsn)
+/*
+  val v: mutable.Map[Int, Int] = mutable.Map()
 
-  println(jsonVsXmlLoytyy.toString)
+  eroavaisuudetToXml foreach {
+    case u: Uniikki =>
+      val year: Int = u.kausi.toLocalDate.getYear
+      v.put(year, v.get(year).getOrElse(0) + 1)
+    case _ =>
+  }
+
+  println(s"Missing ssn's ${missing.size}")
+  println(v)
+  */
+  //println(jsonVsXmlLoytyy.toString)
 }
