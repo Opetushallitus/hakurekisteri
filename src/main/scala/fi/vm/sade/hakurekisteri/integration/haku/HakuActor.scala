@@ -34,7 +34,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef
 
   def getHaku(q: GetHaku): Future[Haku] = Future {
     activeHakus.find(_.oid == q.oid) match {
-      case None => throw HakuNotFoundException(s"haku not found with oid ${q.oid}")
+      case None => throw HakuNotFoundException(s"no active haku found with oid ${q.oid}")
       case Some(h) => h
     }
   }
