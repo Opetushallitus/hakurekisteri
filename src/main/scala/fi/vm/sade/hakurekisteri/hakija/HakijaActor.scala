@@ -3,6 +3,8 @@ package fi.vm.sade.hakurekisteri.hakija
 import akka.actor.{ActorLogging, ActorRef, Actor}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.integration.hakemus.Hakupalvelu
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila.Ilmoittautumistila
+import fi.vm.sade.hakurekisteri.integration.valintatulos.Ilmoittautumistila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Valintatila._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.Vastaanottotila._
@@ -60,26 +62,17 @@ sealed trait Valittu
 sealed trait IlmoitusLahetetty extends Valittu
 
 sealed trait VastaanottanutPaikan extends IlmoitusLahetetty {
-  val lasna: Seq[Lasnaolo]
+
 }
 
 object Hakutoive{
-  import fi.vm.sade.hakurekisteri.rest.support.Kausi
-
-  private def resolveLasnaolot(lasna: Boolean)(ht: Hakutoive): Seq[Lasnaolo] = ht.hakukohde.koulutukset.map((komoto) => (lasna, komoto.alkamisvuosi, komoto.alkamiskausi)).flatMap {
-    case (true, Some(vuosi), Some(Kausi.Syksy)) => Try(Lasna(Syksy(vuosi.toInt))).toOption
-    case (false, Some(vuosi), Some(Kausi.Syksy)) => Try(Poissa(Syksy(vuosi.toInt))).toOption
-    case (true, Some(vuosi), Some(Kausi.Kevät)) => Try(Lasna(Kevat(vuosi.toInt))).toOption
-    case (false, Some(vuosi), Some(Kausi.Kevät)) => Try(Poissa(Kevat(vuosi.toInt))).toOption
-    case _ => None
-  }.toSeq
 
   import Valintatila.isHyvaksytty
   import Vastaanottotila.isVastaanottanut
 
-  def apply(ht: Hakutoive, valinta: Option[Valintatila], vastaanotto: Option[Vastaanottotila]) = (valinta, vastaanotto) match {
+  def apply(ht: Hakutoive, valinta: Option[Valintatila], vastaanotto: Option[Vastaanottotila], ilmoittautumistila: Option[Ilmoittautumistila]) = (valinta, vastaanotto) match {
     case (Some(v), Some(Vastaanottotila.KESKEN)) if isHyvaksytty(v) => Hyvaksytty(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath)
-    case (Some(v), Some(vt)) if isHyvaksytty(v) && isVastaanottanut(vt) => Vastaanottanut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath)
+    case (Some(v), Some(vt)) if isHyvaksytty(v) && isVastaanottanut(vt) => Vastaanottanut(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath, ilmoittautumistila)
     case (Some(v), Some(Vastaanottotila.EI_VASTAANOTETTU_MAARA_AIKANA)) if isHyvaksytty(v) => EiVastaanotettu(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath)
     case (Some(v), Some(Vastaanottotila.PERUNUT)) if isHyvaksytty(v) => PerunutValinnan(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath)
     case (Some(v), Some(Vastaanottotila.PERUUTETTU)) if isHyvaksytty(v) => PeruutettuValinta(ht.jno, ht.hakukohde, ht.kaksoistutkinto, ht.urheilijanammatillinenkoulutus, ht.harkinnanvaraisuusperuste, ht.aiempiperuminen, ht.terveys, ht.yhteispisteet, ht.organisaatioParendOidPath)
@@ -128,7 +121,7 @@ case class EiVastaanotettu(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Optio
 
 case class Vastaanottanut(jno: Int,hakukohde: Hakukohde, kaksoistutkinto: Option[Boolean], urheilijanammatillinenkoulutus: Option[Boolean],
                       harkinnanvaraisuusperuste: Option[String], aiempiperuminen: Option[Boolean], terveys: Option[Boolean],
-                      yhteispisteet: Option[BigDecimal], organisaatioParendOidPath: String, lasna: Seq[Lasnaolo] = Seq()) extends Hakutoive with VastaanottanutPaikan {
+                      yhteispisteet: Option[BigDecimal], organisaatioParendOidPath: String, ilmoittautumistila: Option[Ilmoittautumistila]) extends Hakutoive with VastaanottanutPaikan {
   override def withPisteet(pisteet:Option[BigDecimal]) = this.copy(yhteispisteet = pisteet)
 }
 
@@ -279,7 +272,7 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     hakijat.map(hakija2JSONHakija).join
 
   def matchSijoitteluAndHakemus(hakijas: Seq[Hakija])(tulos: SijoitteluTulos): Seq[Hakija] =
-    hakijas.map(tila(tulos.valintatila, tulos.vastaanottotila)).map(yhteispisteet(tulos.pisteet))
+    hakijas.map(tila(tulos.valintatila, tulos.vastaanottotila, tulos.ilmoittautumistila)).map(yhteispisteet(tulos.pisteet))
 
   def yhteispisteet(pisteet: (String, String) => Option[BigDecimal])(h:Hakija) : Hakija = {
     val toiveet = h.hakemus.hakutoiveet.map((ht) => {
@@ -290,12 +283,12 @@ class HakijaActor(hakupalvelu: Hakupalvelu, organisaatioActor: ActorRef, koodist
     h.copy(hakemus = h.hakemus.copy(hakutoiveet = toiveet))
   }
 
-  def tila(valinta: (String, String) => Option[Valintatila], vastaanotto: (String, String) => Option[Vastaanottotila])(h:Hakija): Hakija = {
+  def tila(valinta: (String, String) => Option[Valintatila], vastaanotto: (String, String) => Option[Vastaanottotila], ilmoittautumistila: (String,String) => Option[Ilmoittautumistila])(h:Hakija): Hakija = {
     val hakemusnumero: String = h.hakemus.hakemusnumero
     h.copy(hakemus =
       h.hakemus.copy(hakutoiveet =
         for (ht <- h.hakemus.hakutoiveet)
-          yield Hakutoive(ht, valinta(hakemusnumero, ht.hakukohde.oid), vastaanotto(hakemusnumero, ht.hakukohde.oid))))
+          yield Hakutoive(ht, valinta(hakemusnumero, ht.hakukohde.oid), vastaanotto(hakemusnumero, ht.hakukohde.oid), ilmoittautumistila(hakemusnumero, ht.hakukohde.oid))))
   }
 
   def combine2sijoittelunTulos(user: Option[User])(hakijat: Seq[Hakija]): Future[Seq[Hakija]] = Future.fold(
@@ -436,8 +429,32 @@ case class XMLHakutoive(hakujno: Short, oppilaitos: String, opetuspiste: Option[
 object XMLHakutoive {
   def apply(ht: Hakutoive, o: Organisaatio, k: String): XMLHakutoive = XMLHakutoive(ht.jno.toShort, k, o.toimipistekoodi, o.nimi.get("fi").orElse(o.nimi.get("sv").orElse(o.nimi.get("en"))),
     ht.hakukohde.hakukohdekoodi, ht.harkinnanvaraisuusperuste, ht.urheilijanammatillinenkoulutus,
-    ht.yhteispisteet, valinta.lift(ht), vastaanotto.lift(ht), None,
+    ht.yhteispisteet, valinta.lift(ht), vastaanotto.lift(ht), lasnaolo(ht),
     ht.terveys, ht.aiempiperuminen, ht.kaksoistutkinto)
+
+  def ilmoittautumistilaToLasnaolo(ilmoittaumistila: Ilmoittautumistila): String = {
+    ilmoittaumistila match {
+      case EI_TEHTY => "1"
+      case LASNA_KOKO_LUKUVUOSI => "2"
+      case POISSA_KOKO_LUKUVUOSI => "3"
+      case EI_ILMOITTAUTUNUT => "4"
+      case LASNA_SYKSY => "5"
+      case POISSA_SYKSY => "6"
+      case LASNA => "7"
+      case POISSA => "8"
+    }
+  }
+
+  def lasnaolo(ht: Hakutoive): Option[String] = {
+    ht match {
+      case v: Vastaanottanut =>
+        v.ilmoittautumistila match {
+          case Some(ilmo) => Some(ilmoittautumistilaToLasnaolo(ilmo))
+          case _ => None
+        }
+      case _ => None
+    }
+  }
 
   def valinta: PartialFunction[Hakutoive, String] = {
     case v: Valittu     => "1"

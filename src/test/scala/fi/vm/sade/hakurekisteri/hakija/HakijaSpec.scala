@@ -152,7 +152,7 @@ class HakijaSpec extends FlatSpec with Matchers {
   def xmlHTFor(hyvaksytty: Valintatila.Value, vastaanottanut_lasna: Vastaanottotila.Value): XMLHakutoive = {
     XMLHakutoive(Hakutoive(toive,
       Some(hyvaksytty),
-      Some(vastaanottanut_lasna)), OppilaitosX, "koodi")
+      Some(vastaanottanut_lasna), None), OppilaitosX, "koodi")
   }
 
   it should "have v2 fields" in {
