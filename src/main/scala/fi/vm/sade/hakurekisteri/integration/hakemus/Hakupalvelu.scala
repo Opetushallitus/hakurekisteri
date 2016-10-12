@@ -94,7 +94,7 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: Ha
         hakukohdeOids <- hakukohdeOids(organisaatio, hakuOid)
         nimiAndOids <- Future.sequence(hakukohdeOids.map(oid => hakukohdeNimiUri(oid).map((_, oid))))
       } yield nimiAndOids.collect {
-        case (nimi, oid) if nimi.contains(hakukohdekoodi) => oid
+        case (nimi, oid) if nimi.contains(koodi) => oid
       }
     case None =>
       hakukohdeOids(organisaatio, hakuOid)
