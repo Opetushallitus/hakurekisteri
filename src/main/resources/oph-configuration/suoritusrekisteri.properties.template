@@ -97,4 +97,4 @@ ytl.http.host.fetchone={{suoritusrekisteri_ytl_http_host}}/api/oph-transfer/stud
 ytl.http.host.status={{suoritusrekisteri_ytl_http_host}}/api/oph-transfer/status/$1
 ytl.http.username={{suoritusrekisteri_ytl_http_username}}
 ytl.http.password={{suoritusrekisteri_ytl_http_password}}
-ytl.http.syncAllCronJob=0 0/30 01-04 * * ?
+ytl.http.syncAllCronJob=0 0/30 03-04 * * ?
