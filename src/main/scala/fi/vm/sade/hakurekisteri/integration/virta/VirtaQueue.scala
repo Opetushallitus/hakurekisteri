@@ -1,6 +1,6 @@
 package fi.vm.sade.hakurekisteri.integration.virta
 
-import akka.actor.{Cancellable, ActorLogging, Actor, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.pattern.ask
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.Opiskeluoikeus
 import fi.vm.sade.hakurekisteri.suoritus.Suoritus
@@ -10,7 +10,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.collection.mutable
 import scala.concurrent.duration._
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, Trigger}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, IHakemusService, Trigger}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, HakuNotFoundException}
 import fi.vm.sade.hakurekisteri.web.integration.virta.Status
 import fi.vm.sade.hakurekisteri.web.integration.virta.Status.Status
@@ -32,7 +32,7 @@ object VirtaHealth
 object CancelSchedule
 
 
-class VirtaQueue(virtaActor: ActorRef, hakemusService: HakemusService, hakuActor: ActorRef) extends Actor with ActorLogging {
+class VirtaQueue(virtaActor: ActorRef, hakemusService: IHakemusService, hakuActor: ActorRef) extends Actor with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   val virtaQueue: mutable.Set[VirtaQuery] = mutable.LinkedHashSet()

@@ -25,7 +25,7 @@ trait Integrations {
   val virtaResource: ActorRef
   val henkilo: ActorRef
   val organisaatiot: ActorRef
-  val hakemusService: HakemusService
+  val hakemusService: IHakemusService
   val tarjonta: ActorRef
   val koodisto: ActorRef
   val ytl: ActorRef
@@ -126,7 +126,7 @@ class BaseIntegrations(rekisterit: Registers,
   val tarjonta = getSupervisedActorFor(Props(new TarjontaActor(tarjontaClient, config)), "tarjonta")
   val organisaatiot = getSupervisedActorFor(Props(new HttpOrganisaatioActor(organisaatioClient, config)), "organisaatio")
   val henkilo = system.actorOf(Props(new fi.vm.sade.hakurekisteri.integration.henkilo.HttpHenkiloActor(henkiloClient, config)), "henkilo")
-  val hakemusService = new HakemusService(hakemusClient)
+  val hakemusService = new HakemusService(hakemusClient)(system)
   val koodisto = system.actorOf(Props(new KoodistoActor(koodistoClient, config)), "koodisto")
   val parametrit = system.actorOf(Props(new HttpParameterActor(parametritClient)), "parametrit")
   val valintaTulos = getSupervisedActorFor(Props(new ValintaTulosActor(valintatulosClient, config)), "valintaTulos")
