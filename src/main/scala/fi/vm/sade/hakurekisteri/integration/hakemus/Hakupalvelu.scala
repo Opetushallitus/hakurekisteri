@@ -36,7 +36,7 @@ case class HakukohdeSearchResultList(tulokset: Seq[HakukohdeSearchResultTarjoaja
 
 case class HakukohdeSearchResultContainer(result: HakukohdeSearchResultList)
 
-class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: HakemusService, hakuActor: ActorRef)(implicit val ec: ExecutionContext)
+class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IHakemusService, hakuActor: ActorRef)(implicit val ec: ExecutionContext)
   extends Hakupalvelu {
   val Pattern = "preference(\\d+).*".r
   val hardCodedLisakysymys: Map[String, ThemeQuestion] = Map(

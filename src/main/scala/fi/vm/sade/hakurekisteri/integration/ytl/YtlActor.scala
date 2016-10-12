@@ -11,7 +11,7 @@ import akka.util.Timeout
 import com.jcraft.jsch.{ChannelSftp, SftpException}
 import fi.vm.sade.hakurekisteri.Oids
 import fi.vm.sade.hakurekisteri.arvosana.{ArvioOsakoe, ArvioYo, Arvosana, _}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusService}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusService, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.henkilo.{Henkilo, HetuQuery}
 import fi.vm.sade.hakurekisteri.integration.ytl.YTLXml.Aine
 import fi.vm.sade.hakurekisteri.storage.Identified
@@ -31,7 +31,7 @@ case class YtlReport(waitingforAnswers: Seq[Batch[KokelasRequest]], nextSend: Op
 
 object Report
 
-class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemusService: HakemusService, config: Option[YTLConfig]) extends Actor with ActorLogging {
+class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaRekisteri: ActorRef, hakemusService: IHakemusService, config: Option[YTLConfig]) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
 
   var haut = Set[String]()

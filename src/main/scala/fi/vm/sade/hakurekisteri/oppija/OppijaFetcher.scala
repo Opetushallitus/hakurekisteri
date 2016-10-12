@@ -9,7 +9,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaQuery, ArvosanatQuery}
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery}
-import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, HakemusService}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusQuery, HakemusService, IHakemusService}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaHenkilotQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
 import fi.vm.sade.hakurekisteri.organization.AuthorizedQuery
@@ -25,7 +25,7 @@ trait OppijaFetcher {
 
   val logger: LoggingAdapter
   val rekisterit: Registers
-  val hakemusService: HakemusService
+  val hakemusService: IHakemusService
   val ensikertalaisuus: ActorRef
 
   val singleSplitQuerySize = 5000

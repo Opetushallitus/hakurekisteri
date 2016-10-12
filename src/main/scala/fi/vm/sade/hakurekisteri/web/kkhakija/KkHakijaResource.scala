@@ -99,7 +99,7 @@ case class Hakija(hetu: String,
 
 object KkHakijaParamMissingException extends Exception
 
-class KkHakijaResource(hakemusService: HakemusService,
+class KkHakijaResource(hakemusService: IHakemusService,
                        tarjonta: ActorRef,
                        haut: ActorRef,
                        koodisto: ActorRef,

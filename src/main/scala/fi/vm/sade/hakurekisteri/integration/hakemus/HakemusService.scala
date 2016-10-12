@@ -4,7 +4,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
-import akka.actor.Scheduler
+import akka.actor.{ActorSystem, Scheduler}
+import akka.event.Logging
 import fi.vm.sade.hakurekisteri.hakija.HakijaQuery
 import fi.vm.sade.hakurekisteri.integration.{ServiceConfig, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.rest.support.Query
@@ -13,6 +14,7 @@ import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 case class HakemusConfig(serviceConf: ServiceConfig, maxApplications: Int)
 
@@ -55,11 +57,23 @@ object ListFullSearchDto {
     ))
 }
 
-class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
+trait IHakemusService {
+  def hakemuksetForPerson(personOid: String): Future[Seq[FullHakemus]]
+  def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]]
+  def personOidsForHaku(hakuOid: String, organisaatio: Option[String]): Future[Set[String]]
+  def personOidsForHakukohde(hakukohdeOid: String, organisaatio: Option[String]): Future[Set[String]]
+  def hakemuksetForHaku(hakuOid: String, organisaatio: Option[String]): Future[Seq[FullHakemus]]
+  def suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid: String, hakukohdeOid: Option[String]): Future[Seq[FullHakemus]]
+  def hakemuksetForPersonsInHaku(personOids: Set[String], hakuOid: String): Future[Seq[FullHakemus]]
+  def addTrigger(trigger: Trigger): Unit
+}
+
+class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000)(implicit val system: ActorSystem) extends IHakemusService {
 
   case class SearchParams(aoOids: String = null, asId: String = null, organizationFilter: String = null,
                           updatedAfter: String = null, start: Int = 0, rows: Int = pageSize)
 
+  private val logger = Logging.getLogger(system, this)
   var triggers: Seq[Trigger] = Seq()
 
   def hakemuksetForPerson(personOid: String): Future[Seq[FullHakemus]] = {
@@ -106,10 +120,15 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
                                 refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
     scheduler.scheduleOnce(refreshFrequency)({
       val lastChecked = new Date()
-      fetchHakemukset(params = SearchParams(updatedAfter = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter))).onSuccess {
-        case hakemukset: Seq[FullHakemus] =>
+      fetchHakemukset(
+        params = SearchParams(updatedAfter = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter))
+      ).onComplete {
+        case Success(hakemukset) =>
           triggerHakemukset(hakemukset)
           processModifiedHakemukset(lastChecked, refreshFrequency)
+        case Failure(t) =>
+          logger.error(t, "Fetching modified hakemukset failed, retrying")
+          processModifiedHakemukset(modifiedAfter, refreshFrequency)
       }
     })
   }
@@ -125,7 +144,7 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000) {
   }
 }
 
-class HakemusServiceMock extends HakemusService(null) {
+class HakemusServiceMock extends IHakemusService {
   override def hakemuksetForPerson(personOid: String) = Future.successful(Seq[FullHakemus]())
 
   override def hakemuksetForHakukohde(hakukohdeOid: String, organisaatio: Option[String]) = Future.successful(Seq[FullHakemus]())
@@ -139,4 +158,6 @@ class HakemusServiceMock extends HakemusService(null) {
   override def suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid: String, hakukohdeOid: Option[String]): Future[Seq[FullHakemus]] = Future.successful(Seq[FullHakemus]())
 
   override def hakemuksetForPersonsInHaku(personOids: Set[String], hakuOid: String) = Future.successful(Seq[FullHakemus]())
+
+  override def addTrigger(trigger: Trigger): Unit = ()
 }
