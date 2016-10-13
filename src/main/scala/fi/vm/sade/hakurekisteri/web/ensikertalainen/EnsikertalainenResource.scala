@@ -7,7 +7,7 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.pattern.ask
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenQuery, HaunEnsikertalaisetQuery}
 import fi.vm.sade.hakurekisteri.integration.PreconditionFailedException
-import fi.vm.sade.hakurekisteri.integration.hakemus.HakemusService
+import fi.vm.sade.hakurekisteri.integration.hakemus.{HakemusService, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.HakuNotFoundException
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -22,7 +22,7 @@ import scala.concurrent.duration._
 
 case class ParamMissingException(message: String) extends IllegalArgumentException(message)
 
-class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService: HakemusService)
+class EnsikertalainenResource(ensikertalainenActor: ActorRef, val hakemusService: IHakemusService)
                              (implicit val sw: Swagger, system: ActorSystem, val security: Security)
   extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with EnsikertalainenSwaggerApi with JacksonJsonSupport
     with FutureSupport with SecuritySupport with QueryLogging {

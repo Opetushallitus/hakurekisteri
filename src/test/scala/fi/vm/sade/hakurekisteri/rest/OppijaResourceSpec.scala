@@ -85,7 +85,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
 
   var valintarekisteri: TestActorRef[TestingValintarekisteriActor] = _
   var resource: OppijaResource = _
-  val hakemusServiceMock = mock[HakemusService]
+  val hakemusServiceMock = mock[IHakemusService]
 
   override def beforeAll(): Unit = {
     val config = new MockConfig

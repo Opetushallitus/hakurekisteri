@@ -97,7 +97,7 @@ class ScalatraBootstrap extends LifeCycle {
     ("/rest/v1/api-docs/*", "rest/v1/api-docs/*") -> new ResourcesApp,
     ("/rest/v1/arvosanat", "rest/v1/arvosanat") -> new HakurekisteriResource[Arvosana, CreateArvosanaCommand](authorizedRegisters.arvosanaRekisteri, ArvosanaQuery(_)) with ArvosanaSwaggerApi with HakurekisteriCrudCommands[Arvosana, CreateArvosanaCommand] with SecuritySupport,
     ("/rest/v1/ensikertalainen", "rest/v1/ensikertalainen") -> new EnsikertalainenResource(koosteet.ensikertalainen, integrations.hakemusService),
-    ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(koosteet.haut),
+    ("/rest/v1/haut", "rest/v1/haut") -> new HakuResource(koosteet.haut, integrations.hakemusService),
     ("/rest/v1/hakijat", "rest/v1/hakijat") -> new HakijaResource(koosteet.hakijat),
     ("/rest/v2/hakijat", "rest/v2/hakijat") -> new HakijaResourceV2(koosteet.hakijat),
     ("/rest/v1/kkhakijat", "rest/v1/kkhakijat") -> new KkHakijaResource(integrations.hakemusService, integrations.tarjonta, koosteet.haut, integrations.koodisto, registers.suoritusRekisteri, integrations.valintaTulos),

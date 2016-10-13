@@ -30,7 +30,7 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
   implicit val formats = HakurekisteriJsonSupport.format
 
   val vastaanottohetki = new DateTime(2015, 1, 1, 0, 0, 0, 0)
-  val hakemusServiceMock = mock[HakemusService]
+  val hakemusServiceMock = mock[IHakemusService]
 
   addServlet(new EnsikertalainenResource(ensikertalainenActor = system.actorOf(Props(new EnsikertalainenActor(
     suoritusActor = system.actorOf(Props(new Actor {

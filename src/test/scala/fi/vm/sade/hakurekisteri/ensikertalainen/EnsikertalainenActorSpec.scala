@@ -143,7 +143,7 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
                                        opiskeluoikeudet: Seq[Opiskeluoikeus] = Seq(),
                                        vastaanotot: Seq[EnsimmainenVastaanotto] = Seq(),
                                        hakemukset: Seq[FullHakemus] = Seq()) = {
-    val hakemusServiceMock = mock[HakemusService]
+    val hakemusServiceMock = mock[IHakemusService]
 
     when(hakemusServiceMock.hakemuksetForPersonsInHaku(any[Set[String]], anyString())).thenReturn(
       Future.successful(hakemukset)
