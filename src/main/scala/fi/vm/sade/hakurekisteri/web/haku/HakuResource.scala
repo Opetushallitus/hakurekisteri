@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.web.haku
 import _root_.akka.actor.{ActorRef, ActorSystem}
 import _root_.akka.event.{Logging, LoggingAdapter}
 import _root_.akka.pattern.AskTimeoutException
+import fi.vm.sade.hakurekisteri.integration.hakemus.IHakemusService
 import fi.vm.sade.hakurekisteri.integration.haku.HakuRequest
 import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
 import fi.vm.sade.hakurekisteri.web.HakuJaValintarekisteriStack
@@ -11,10 +12,10 @@ import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.Swagger
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 
-class HakuResource(hakuActor: ActorRef)(implicit system: ActorSystem, sw: Swagger, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport  {
+class HakuResource(hakuActor: ActorRef, hakemusService: IHakemusService)(implicit system: ActorSystem, sw: Swagger, val security: Security) extends HakuJaValintarekisteriStack with HakurekisteriJsonSupport with JacksonJsonSupport with FutureSupport with SecuritySupport  {
   override protected implicit def executor: ExecutionContext = system.dispatcher
   override val logger: LoggingAdapter = Logging.getLogger(system, this)
 
@@ -30,6 +31,10 @@ class HakuResource(hakuActor: ActorRef)(implicit system: ActorSystem, sw: Swagge
       override implicit def timeout: Duration = 60.seconds
       val is = (hakuActor ? HakuRequest)(30.seconds)
     }
+  }
+
+  post("/:hakuOid/hakemukset") {
+    hakemusService.reprocessHaunHakemukset(params("hakuOid"))
   }
 
   incident {

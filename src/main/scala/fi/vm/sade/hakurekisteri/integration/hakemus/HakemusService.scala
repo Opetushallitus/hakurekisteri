@@ -66,6 +66,7 @@ trait IHakemusService {
   def suoritusoikeudenTaiAiemmanTutkinnonVuosi(hakuOid: String, hakukohdeOid: Option[String]): Future[Seq[FullHakemus]]
   def hakemuksetForPersonsInHaku(personOids: Set[String], hakuOid: String): Future[Seq[FullHakemus]]
   def addTrigger(trigger: Trigger): Unit
+  def reprocessHaunHakemukset(hakuOid: String): Unit
 }
 
 class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000)(implicit val system: ActorSystem) extends IHakemusService {
@@ -116,6 +117,17 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000)(imp
       triggers.foreach(trigger => trigger.f(hakemus))
     )
 
+  def reprocessHaunHakemukset(hakuOid: String): Unit = {
+    hakemuksetForHaku(hakuOid, None).onComplete {
+      case Success(hakemukset) =>
+        logger.info(s"Reprocessing ${hakemukset.size} hakemus of haku $hakuOid")
+        triggerHakemukset(hakemukset)
+        logger.info(s"Reprocessed ${hakemukset.size} hakemus of haku $hakuOid")
+      case Failure(t) =>
+        logger.error(t, s"Failed to reprocess hakemukset of haku $hakuOid")
+    }
+  }
+
   def processModifiedHakemukset(modifiedAfter: Date = new Date(Platform.currentTime - TimeUnit.DAYS.toMillis(2)),
                                 refreshFrequency: FiniteDuration = 1.minute)(implicit scheduler: Scheduler): Unit = {
     scheduler.scheduleOnce(refreshFrequency)({
@@ -160,4 +172,6 @@ class HakemusServiceMock extends IHakemusService {
   override def hakemuksetForPersonsInHaku(personOids: Set[String], hakuOid: String) = Future.successful(Seq[FullHakemus]())
 
   override def addTrigger(trigger: Trigger): Unit = ()
+
+  override def reprocessHaunHakemukset(hakuOid: String): Unit = ()
 }
