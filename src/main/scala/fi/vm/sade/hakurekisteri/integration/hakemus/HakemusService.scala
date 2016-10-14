@@ -73,6 +73,7 @@ trait IHakemusService {
   def hakemuksetForPersonsInHaku(personOids: Set[String], hakuOid: String): Future[Seq[FullHakemus]]
   def addTrigger(trigger: Trigger): Unit
   def reprocessHaunHakemukset(hakuOid: String): Unit
+  def hetuAndPersonOidForHaku(hakuOid: String): Future[Seq[HetuPersonOid]]
 }
 
 class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000)(implicit val system: ActorSystem) extends IHakemusService {
@@ -190,4 +191,6 @@ class HakemusServiceMock extends IHakemusService {
   override def addTrigger(trigger: Trigger): Unit = ()
 
   override def reprocessHaunHakemukset(hakuOid: String): Unit = ()
+
+  override def hetuAndPersonOidForHaku(hakuOid: String) = Future.successful(Seq[HetuPersonOid]())
 }

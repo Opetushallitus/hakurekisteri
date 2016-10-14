@@ -8,7 +8,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
 
 import akka.actor.ActorRef
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusService, HetuPersonOid}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{IHakemusService, FullHakemus, HakemusService, HetuPersonOid}
 import fi.vm.sade.properties.OphProperties
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang.time.DateUtils
@@ -25,7 +25,7 @@ case class LastFetchStatus(uuid: String, start: Date, end: Option[Date], succeed
 class YtlIntegration(config: OphProperties,
                      ytlHttpClient: YtlHttpFetch,
                      ytlFileSystem: YtlFileSystem,
-                     hakemusService: HakemusService,
+                     hakemusService: IHakemusService,
                      ytlActor: ActorRef) {
   private val logger = LoggerFactory.getLogger(getClass)
   val kokelaatDownloadDirectory = ytlFileSystem.directoryPath
