@@ -21,7 +21,7 @@ class ValintarekisteriActor(restClient: VirkailijaRestClient, config: Config) ex
   }
 
   def fetchEnsimmainenVastaanotto(henkiloOids: Set[String], koulutuksenAlkamiskausi: String): Future[Seq[EnsimmainenVastaanotto]] = {
-    restClient.postObject[Set[String], Seq[EnsimmainenVastaanotto]]("valintarekisteri.ensikertalaisuus", koulutuksenAlkamiskausi)(ok, henkiloOids)
+    restClient.postObject[Set[String], Seq[EnsimmainenVastaanotto]]("valinta-tulos-service.ensikertalaisuus", koulutuksenAlkamiskausi)(ok, henkiloOids)
   }
 }
 
