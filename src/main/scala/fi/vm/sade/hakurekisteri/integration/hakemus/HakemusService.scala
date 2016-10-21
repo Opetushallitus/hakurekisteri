@@ -14,7 +14,7 @@ import scala.compat.Platform
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.util.{Try, Failure, Success}
 
 case class HakemusConfig(serviceConf: ServiceConfig, maxApplications: Int)
 
@@ -148,7 +148,10 @@ class HakemusService(restClient: VirkailijaRestClient, pageSize: Int = 2000)(imp
         params = SearchParams(updatedAfter = new SimpleDateFormat("yyyyMMddHHmm").format(modifiedAfter))
       ).onComplete {
         case Success(hakemukset) =>
-          triggerHakemukset(hakemukset)
+          Try(triggerHakemukset(hakemukset)) match {
+            case Failure(e) => logger.error(e, "Exception in trigger!")
+            case _ => 
+          }
           processModifiedHakemukset(lastChecked, refreshFrequency)
         case Failure(t) =>
           logger.error(t, "Fetching modified hakemukset failed, retrying")
