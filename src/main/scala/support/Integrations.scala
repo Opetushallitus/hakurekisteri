@@ -31,6 +31,7 @@ import support.YtlRerunPolicy.rerunPolicy
 ;
 
 import scala.concurrent.duration._
+import scala.util.{Success, Failure, Try}
 
 trait Integrations {
   val hakuAppPermissionChecker: ActorRef
@@ -103,6 +104,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
 class BaseIntegrations(rekisterit: Registers,
                        system: ActorSystem,
                        config: Config) extends Integrations {
+  private val logger = LoggerFactory.getLogger(getClass)
   val restEc = ExecutorUtil.createExecutor(10, "rest-client-pool")
   val vtsEc = ExecutorUtil.createExecutor(5, "valinta-tulos-client-pool")
   val vrEc = ExecutorUtil.createExecutor(10, "valintarekisteri-client-pool")
@@ -173,7 +175,12 @@ class BaseIntegrations(rekisterit: Registers,
   val proxies = new HttpProxies(valintarekisteriClient)
 
   val arvosanaTrigger: Trigger = IlmoitetutArvosanatTrigger(rekisterit.suoritusRekisteri, rekisterit.arvosanaRekisteri)(system.dispatcher)
-  val ytlTrigger: Trigger = Trigger { ytlIntegration.sync(_) }
+  val ytlTrigger: Trigger = Trigger { hakemus => Try(ytlIntegration.sync(hakemus)) match {
+      case Failure(e) =>
+        logger.error(s"YTL sync failed for hakemus with OID ${hakemus.oid}", e)
+      case _ => // pass
+    }
+  }
   hakemusService.addTrigger(arvosanaTrigger)
   hakemusService.addTrigger(ytlTrigger)
 
