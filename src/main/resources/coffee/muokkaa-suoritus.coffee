@@ -4,8 +4,7 @@ app.controller "MuokkaaSuoritus", [
   "$q"
   "MessageService"
   "LokalisointiService"
-  "Arvosanat"
-  ($scope, $http, $q, MessageService, LokalisointiService, Arvosanat) ->
+  ($scope, $http, $q, MessageService, LokalisointiService) ->
     enrichSuoritus = (suoritus) ->
       $scope.info.showArvosanat = true
       $scope.info.editable = false
@@ -20,9 +19,6 @@ app.controller "MuokkaaSuoritus", [
           $scope.info.koulutus = koulutusNimi
       else if $scope.suoritus.source != $scope.ylioppilastutkintolautakunta
         $scope.info.editable = true
-
-      if $scope.isAmmatillinenKielikoe() && !$scope.info.kielikoeTulos
-        $scope.getAmmatillinenKielikoeTulos()
 
     $scope.checkYlioppilastutkinto = (suoritus) ->
       $scope.info.maxDate = null
@@ -133,18 +129,6 @@ app.controller "MuokkaaSuoritus", [
       date = $scope.parseFinDate(input)
       if date
         ""+date.getDate()+"."+(date.getMonth()+1)+"."+date.getFullYear()
-
-    $scope.isAmmatillinenKielikoe = () ->
-      "ammatillisenKielikoe" == $scope.suoritus.komo
-
-    $scope.getAmmatillinenKielikoeTulos = () ->
-      Arvosanat.query {suoritus: $scope.suoritus.id}, ((arvosanatData) ->
-          $scope.info.kielikoeTulos = arvosanatData.filter((a) -> "true" == a.arvio.arvosana.toLowerCase()).length > 0
-        ), ->
-        MessageService.addMessage
-          type: "danger"
-          messageKey: "suoritusrekisteri.muokkaa.arvosanat.arvosanapalveluongelma"
-          message: "Arvosanapalveluun ei juuri nyt saada yhteyttä. Yritä myöhemmin uudelleen."
 
     modifiedCache = changeDetection($scope.suoritus)
     $scope.info = {}
