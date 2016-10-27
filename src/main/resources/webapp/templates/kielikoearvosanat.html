@@ -1,0 +1,17 @@
+<div>
+    <div class="form-group col-sm-3"><strong oph-msg="suoritusrekisteri.muokkaa.kieli">Kieli</strong></div>
+    <div class="form-group col-sm-5"><strong oph-msg="suoritusrekisteri.muokkaa.valmistumispaiva">Valmistumispäivä</strong></div>
+    <div class="form-group col-sm-4"><strong oph-msg="suoritusrekisteri.muokkaa.tulos">Tulos</strong></div>
+</div>
+<div ng-repeat="arvosana in arvosanat">
+    <div class="form-group col-sm-3">
+        <div class="test-suoritusKieli">{{resolveValueFromOptionArray(arvosana.lisatieto, kielet)}}</div>
+    </div>
+    <div class="form-group col-sm-5">
+        <div class="test-suoritusValmistuminen">{{formatDateNoZeroPaddedNumbers(arvosana.myonnetty)}}</div>
+    </div>
+    <div class="form-group col-sm-4">
+        <div ng-if="arvosana.arvio.arvosana" class="test-suoritusTila" oph-msg="suoritusrekisteri.muokkaa.hyvaksytty">Hyväksytty</div>
+        <div ng-if="!arvosana.arvio.arvosana" class="test-suoritusTila" oph-msg="suoritusrekisteri.muokkaa.hylatty">Hylätty</div>
+    </div>
+</div>
