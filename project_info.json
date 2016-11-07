@@ -5,10 +5,5 @@
 
   "velka": "js-riipuvuudet git-repossa (packages.json käyttöön)",
 
-  "csrf": "web: ok, backend: ?",
-
-  "projects": [
-    {"name": "suoritusrekisteri-web", "uses": "suoritusrekisteri-rest"},
-    {"name": "suoritusrekisteri-rest", "uses": "cas activemq ldap ytl virta haku tarjonta-rest organisaatio-rest organisaatio-soap koodisto-rest henkilo-rest ohjausparametrit valinta-tulos-service"}
-  ]
+  "csrf": "web: ok, backend: ?"
 }
