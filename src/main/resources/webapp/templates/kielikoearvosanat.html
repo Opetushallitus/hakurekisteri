@@ -8,7 +8,19 @@
         <div class="test-suoritusKieli">{{resolveValueFromOptionArray(arvosana.lisatieto, kielet)}}</div>
     </div>
     <div class="form-group col-sm-5">
-        <div class="test-suoritusValmistuminen">{{formatDateNoZeroPaddedNumbers(arvosana.myonnetty)}}</div>
+        <input type="text"
+               ng-disabled="info.delete || editSuoritusDisabled(suoritus)"
+               ng-model="arvosana.myonnetty"
+               ng-change="markModified(arvosana)"
+               title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)"
+               datepicker-popup="mediumDate"
+               datepicker-options="{startingDay: 1, dayFormat: 'd', formatMonth: 'MMMM', formatYear: 'yyyy'}"
+               datepicker-append-to-body="true"
+               is-open="valmistuminenOpen"
+               ng-click="valmistuminenOpen = true"
+               show-button-bar="false"
+               customdateparser
+               class="form-control input-sm datepicker test-suoritusValmistuminen"/>
     </div>
     <div class="form-group col-sm-4">
         <div ng-if="arvosana.arvio.arvosana" class="test-suoritusTila" oph-msg="suoritusrekisteri.muokkaa.hyvaksytty">Hyväksytty</div>
