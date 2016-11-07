@@ -54,7 +54,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef
 
     case sq: Seq[_] =>
       val s = sq.collect{ case h: Haku => h}
-      activeHakus = s.filter(_.aika.isCurrently)
+      activeHakus = s.filter(_.isActive)
       val ytlHakus: Set[String] = activeHakus.filter(_.kkHaku).map(_.oid).toSet
       ytl ! HakuList(ytlHakus)
       ytlIntegration.setAktiivisetKKHaut(ytlHakus)
@@ -121,7 +121,9 @@ case class GetHaku(oid: String)
 
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
 
-case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int, koulutuksenAlkamiskausi: Option[String], koulutuksenAlkamisvuosi: Option[Int], kkHaku: Boolean, viimeinenHakuaikaPaattyy: Option[DateTime])
+case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int, koulutuksenAlkamiskausi: Option[String], koulutuksenAlkamisvuosi: Option[Int], kkHaku: Boolean, viimeinenHakuaikaPaattyy: Option[DateTime]) {
+  val isActive: Boolean = aika.isCurrently
+}
 
 object Haku {
   def apply(haku: RestHaku)(loppu: ReadableInstant): Haku = {
