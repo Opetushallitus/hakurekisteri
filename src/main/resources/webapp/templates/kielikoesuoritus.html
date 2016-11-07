@@ -12,7 +12,7 @@
         <div class="test-suoritusKoulutus">{{ammatillinenKielikoeText}}</div>
     </div>
 </div>
-<div class="row" ng-if="info.showArvosanat">
+<div ng-if="info.showArvosanat">
     <div ng-include="'templates/kielikoearvosanat.html'" ng-controller="KielikoeArvosanat"></div>
     <div class="form-group col-sm-12">
         <div class="pull-right">
