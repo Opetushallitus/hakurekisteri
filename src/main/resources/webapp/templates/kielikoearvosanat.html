@@ -33,7 +33,7 @@
         </div>
     </div>
     <div class="form-group col-sm-4">
-        <span ng-if="arvosana.arvio.arvosana" class="test-suoritusTila" oph-msg="suoritusrekisteri.muokkaa.hyvaksytty">Hyväksytty</span>
-        <span ng-if="!arvosana.arvio.arvosana" class="test-suoritusTila" oph-msg="suoritusrekisteri.muokkaa.hylatty">Hylätty</span>
+        <span ng-if="arvosana.arvio.arvosana === 'true'" class="test-suoritusTila" oph-msg="suoritusrekisteri.muokkaa.hyvaksytty">Hyväksytty</span>
+        <span ng-if="arvosana.arvio.arvosana === 'false'" class="test-suoritusTila" oph-msg="suoritusrekisteri.muokkaa.hylatty">Hylätty</span>
     </div>
 </div>
