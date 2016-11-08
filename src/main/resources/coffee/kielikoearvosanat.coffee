@@ -27,7 +27,7 @@ app.controller "KielikoeArvosanat", [
       [$q.all(
         $scope.arvosanat
         .filter((a) -> $scope.modified[a.id])
-        .map((a) -> a.$save().$promise.then(-> $scope.modified[a.id] = false))
+        .map((a) -> a.$save().then(-> $scope.modified[a.id] = false))
       ).then((->
       ), ->
         MessageService.addMessage
