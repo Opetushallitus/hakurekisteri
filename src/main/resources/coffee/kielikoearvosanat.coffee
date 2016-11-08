@@ -9,6 +9,7 @@ app.controller "KielikoeArvosanat", [
     Arvosanat.query {suoritus: $scope.suoritus.id}, ((arvosanatData) ->
       for a in arvosanatData
         $scope.modified[a.id] = false
+        a.myonnetty = $scope.parseFinDate(a.myonnetty)
       $scope.arvosanat = arvosanatData
       ), ->
       MessageService.addMessage
@@ -27,7 +28,10 @@ app.controller "KielikoeArvosanat", [
       [$q.all(
         $scope.arvosanat
         .filter((a) -> $scope.modified[a.id])
-        .map((a) -> a.$save().then(-> $scope.modified[a.id] = false))
+        .map((a) -> a.$save().then(->
+          $scope.modified[a.id] = false
+          a.myonnetty = $scope.parseFinDate(a.myonnetty)
+        ))
       ).then((->
       ), ->
         MessageService.addMessage
