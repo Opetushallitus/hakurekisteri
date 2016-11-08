@@ -12,11 +12,12 @@
         <div class="test-suoritusKoulutus">{{ammatillinenKielikoeText}}</div>
     </div>
 </div>
-<div ng-if="info.showArvosanat">
-    <div ng-include="'templates/kielikoearvosanat.html'" ng-controller="KielikoeArvosanat"></div>
+<div ng-include="'templates/kielikoearvosanat.html'" ng-controller="KielikoeArvosanat"></div>
+<div class="row">
     <div class="form-group col-sm-12">
         <div class="pull-right">
-            <button ng-show="isOPH() && info.editable" type="button" ng-click="poistaSuoritus()" class="btn btn-default arvosana-button test-suoritusPoista">
+            <button ng-show="isOPH() && info.editable" type="button" ng-click="poistaSuoritus()"
+                    class="btn btn-default arvosana-button test-suoritusPoista">
                 <span oph-msg="suoritusrekisteri.muokkaa.poistasuoritus">Poista</span>
                 <span class="glyphicon glyphicon-remove"></span>
             </button>
