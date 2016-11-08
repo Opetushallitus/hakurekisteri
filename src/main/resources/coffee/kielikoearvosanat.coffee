@@ -8,7 +8,6 @@ app.controller "KielikoeArvosanat", [
     $scope.modified = {}
     Arvosanat.query {suoritus: $scope.suoritus.id}, ((arvosanatData) ->
       for a in arvosanatData
-        a.arvio.arvosana = "true" == a.arvio.arvosana.toLowerCase()
         $scope.modified[a.id] = false
       $scope.arvosanat = arvosanatData
       ), ->
