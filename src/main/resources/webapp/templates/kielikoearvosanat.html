@@ -10,7 +10,7 @@
     <div class="form-group col-sm-5">
         <div class="input-group">
             <input type="text"
-                   ng-disabled="info.delete || editSuoritusDisabled(suoritus)"
+                   ng-disabled="!isOPH()"
                    ng-model="arvosana.myonnetty"
                    ng-change="markModified(arvosana)"
                    title="Syötä päivä muodossa 1.1.2014 (ilman etunollia)"
@@ -24,7 +24,7 @@
                    class="form-control input-sm datepicker test-suoritusValmistuminen" />
             <span class="input-group-btn">
                 <button type="button"
-                        ng-disabled="info.delete || editSuoritusDisabled(suoritus)"
+                        ng-disabled="!isOPH()"
                         ng-click="arvosana.myonnetty = null"
                         class="btn btn-default btn-sm">
                     <span class="glyphicon glyphicon-remove"> </span>

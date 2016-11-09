@@ -2,7 +2,7 @@ package fi.vm.sade.hakurekisteri.integration
 
 import java.util.UUID
 
-import fi.vm.sade.hakurekisteri.CleanSharedTestJettyBeforeEach
+import fi.vm.sade.hakurekisteri.{CleanSharedTestJettyBeforeEach, KomoOids}
 import fi.vm.sade.hakurekisteri.arvosana.{ArvioHyvaksytty, Arvosana}
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
 import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, SuoritusDeserializer}
@@ -152,7 +152,7 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
       kielikoeSuoritus.henkiloOid should equal(aarnenOid)
       kielikoeSuoritus.source should equal("Test")
       kielikoeSuoritus.vahvistettu should equal(true)
-      kielikoeSuoritus.komo should equal("ammatillisenKielikoe")
+      kielikoeSuoritus.komo should equal(KomoOids.ammatillisenKielikoe)
       kielikoeSuoritus.myontaja should equal("1.2.246.562.10.96421158856")
 
       val kielikoeArvosanaArrayJson = suoritusArvosanaArray.head \ "arvosanat"
