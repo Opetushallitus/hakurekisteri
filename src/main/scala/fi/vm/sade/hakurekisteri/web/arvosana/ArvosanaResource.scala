@@ -23,6 +23,7 @@ class ArvosanaResource(arvosanaActor: ActorRef, suoritusActor: ActorRef)
   override def updateEnabled(resource: Arvosana, user: Option[User]): Future[Boolean] =
     (suoritusActor ? resource.suoritus).mapTo[Option[Suoritus]].flatMap {
       case Some(v: VirallinenSuoritus) if v.komo == KomoOids.ammatillisenKielikoe => Future.successful(user.exists(_.isAdmin))
+      case Some(v) => Future.successful(user.exists(_.username == v.source))
       case _ => super.updateEnabled(resource, user)
     }
 }

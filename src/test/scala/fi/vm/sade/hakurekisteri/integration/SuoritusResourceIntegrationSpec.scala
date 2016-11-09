@@ -134,6 +134,7 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
     val aarnenKielikoe = SuoritusMock.getResourceJson("/mock-data/suoritus/suoritus-aarne-ammatillisen-kielikoe-valmis.json")
     val createdSuoritusResourceId = postSuoritus(aarnenKielikoe)
     postArvosana(s"""{  "suoritus": "$createdSuoritusResourceId", "myonnetty": "19.9.2016",
+                        "lahde": "1.2.246.562.11.00000005429",
                         "arvio": {"arvosana": "true", "asteikko": "HYVAKSYTTY" },
                         "aine": "kielikoe", "lisatieto": "FI"
                      }""")
@@ -153,7 +154,7 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
       kielikoeSuoritus.source should equal("Test")
       kielikoeSuoritus.vahvistettu should equal(true)
       kielikoeSuoritus.komo should equal(KomoOids.ammatillisenKielikoe)
-      kielikoeSuoritus.myontaja should equal("1.2.246.562.10.96421158856")
+      kielikoeSuoritus.myontaja should equal("1.2.246.562.11.00000005429")
 
       val kielikoeArvosanaArrayJson = suoritusArvosanaArray.head \ "arvosanat"
       val kielikoeArvosanaArray = kielikoeArvosanaArrayJson.extract[JArray].arr
@@ -163,6 +164,7 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
 
       arvosana.suoritus should equal(UUID.fromString(createdSuoritusResourceId))
       arvosana.arvio should equal(ArvioHyvaksytty(true))
+      arvosana.source should equal("1.2.246.562.11.00000005429")
       arvosana.aine should equal("kielikoe")
       arvosana.lisatieto should equal(Some("FI"))
       arvosana.myonnetty should equal(Some(new LocalDate(2016, 9, 19)))
