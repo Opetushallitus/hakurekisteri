@@ -35,9 +35,10 @@ app.controller "KielikoeArvosanat", [
       ).then((->
       ), ->
         MessageService.addMessage
-        type: "danger"
-        messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennuseionnistunut"
-        message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen.")]
+          type: "danger"
+          messageKey: "suoritusrekisteri.muokkaa.arvosanat.tallennuseionnistunut"
+          message: "Arvosanojen tallentamisessa tapahtui virhe. Tarkista arvosanat ja tallenna tarvittaessa uudelleen."
+        $q.reject("error saving kielikoe arvosanat"))]
 
     $scope.addDataScope($scope)
 ]
