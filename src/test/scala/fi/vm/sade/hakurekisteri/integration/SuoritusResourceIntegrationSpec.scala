@@ -135,7 +135,7 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
     val createdSuoritusResourceId = postSuoritus(aarnenKielikoe)
     postArvosana(s"""{  "suoritus": "$createdSuoritusResourceId", "myonnetty": "19.9.2016",
                         "lahde": "1.2.246.562.11.00000005429",
-                        "arvio": {"arvosana": "true", "asteikko": "HYVAKSYTTY" },
+                        "arvio": {"arvosana": "hyvaksytty", "asteikko": "HYVAKSYTTY" },
                         "aine": "kielikoe", "lisatieto": "FI"
                      }""")
 
@@ -163,7 +163,7 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
       val arvosana = arvosanaJson.extract[Arvosana]
 
       arvosana.suoritus should equal(UUID.fromString(createdSuoritusResourceId))
-      arvosana.arvio should equal(ArvioHyvaksytty(true))
+      arvosana.arvio should equal(ArvioHyvaksytty("hyvaksytty"))
       arvosana.source should equal("1.2.246.562.11.00000005429")
       arvosana.aine should equal("kielikoe")
       arvosana.lisatieto should equal(Some("FI"))
