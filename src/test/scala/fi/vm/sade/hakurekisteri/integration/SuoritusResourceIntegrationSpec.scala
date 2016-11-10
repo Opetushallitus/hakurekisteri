@@ -134,7 +134,7 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
     val aarnenKielikoe = SuoritusMock.getResourceJson("/mock-data/suoritus/suoritus-aarne-ammatillisen-kielikoe-valmis.json")
     val createdSuoritusResourceId = postSuoritus(aarnenKielikoe)
     postArvosana(s"""{  "suoritus": "$createdSuoritusResourceId", "myonnetty": "19.9.2016",
-                        "lahde": "1.2.246.562.11.00000005429",
+                        "source": "1.2.246.562.11.00000005429",
                         "arvio": {"arvosana": "hyvaksytty", "asteikko": "HYVAKSYTTY" },
                         "aine": "kielikoe", "lisatieto": "FI"
                      }""")
