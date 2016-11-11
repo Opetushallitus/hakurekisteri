@@ -3,6 +3,7 @@ package fi.vm.sade.hakurekisteri.integration.ytl
 import java.io.{FileOutputStream, File}
 import java.text.SimpleDateFormat
 import java.util.function.UnaryOperator
+import java.util.zip.ZipInputStream
 import java.util.{UUID, Date}
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
@@ -125,14 +126,21 @@ class YtlIntegration(config: OphProperties,
     val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
     val allSucceeded = new AtomicBoolean(true)
     try {
-      ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList) foreach {
-        case Left(e: Throwable) =>
-          logger.error(s"failed to fetch YTL data: ${e.getMessage}")
+      val chunks = ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList)
+      val count = chunks.size
+      chunks.zipWithIndex.foreach {
+        case (Left(e: Throwable), index) =>
+          logger.error(s"failed to fetch YTL data (patch ${index+1}/$count): ${e.getMessage}")
           allSucceeded.set(false)
-        case Right((zip, students)) =>
+        case (Right((zip, students)), index) =>
+          logger.info(s"Fetch succeeded on YTL data patch ${index+1}/$count!")
           // TODO persist students
           IOUtils.closeQuietly(zip)
       }
+    } catch {
+      case e: Throwable =>
+        allSucceeded.set(false)
+        logger.error(s"")
     } finally {
       logger.info(s"Finished sync all! All patches succeeded = ${allSucceeded.get()}!")
       atomicUpdateFetchStatus(l => l.copy(succeeded=Some(allSucceeded.get()), end = Some(new Date())))
