@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.function.UnaryOperator
 import java.util.{UUID, Date}
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 
 import akka.actor.ActorRef
 import fi.vm.sade.hakurekisteri.integration.hakemus.{IHakemusService, FullHakemus, HakemusService, HetuPersonOid}
@@ -109,7 +109,7 @@ class YtlIntegration(config: OphProperties,
 
       Future.sequence(hakemusFutures).onComplete {
         case Success(persons) =>
-          handleHakemukset(persons.flatten)
+          handleHakemukset(currentStatus.uuid, persons.flatten)
 
         case Failure(e: Throwable) =>
           logger.error(s"failed to fetch 'henkilotunnukset' from hakemus service: ${e.getMessage}")
@@ -121,23 +121,21 @@ class YtlIntegration(config: OphProperties,
 
   }
 
-  private def handleHakemukset(persons: Set[HetuPersonOid]): Unit = {
+  private def handleHakemukset(groupUuid: String, persons: Set[HetuPersonOid]): Unit = {
     val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
-
-    ytlHttpClient.fetch(hetuToPersonOid.keys.toList) match {
-      case Left(e: Throwable) =>
-        logger.error(s"failed to fetch YTL data: ${e.getMessage}")
-        atomicUpdateFetchStatus(l => l.copy(succeeded=Some(false), end = Some(new Date())))
-        throw e
-      case Right((zip, students)) =>
-        try {
-
-        // TODO persist students
-        IOUtils.closeQuietly(zip)
-        } finally {
-          logger.info(s"Successfully finished sync all!")
-          atomicUpdateFetchStatus(l => l.copy(succeeded=Some(true), end = Some(new Date())))
-        }
+    val allSucceeded = new AtomicBoolean(true)
+    try {
+      ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList) foreach {
+        case Left(e: Throwable) =>
+          logger.error(s"failed to fetch YTL data: ${e.getMessage}")
+          allSucceeded.set(false)
+        case Right((zip, students)) =>
+          // TODO persist students
+          IOUtils.closeQuietly(zip)
+      }
+    } finally {
+      logger.info(s"Finished sync all! All patches succeeded = ${allSucceeded.get()}!")
+      atomicUpdateFetchStatus(l => l.copy(succeeded=Some(allSucceeded.get()), end = Some(new Date())))
     }
   }
 

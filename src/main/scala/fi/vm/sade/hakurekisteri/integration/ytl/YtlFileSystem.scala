@@ -31,8 +31,8 @@ class YtlFileSystem(config: OphProperties) {
     }
   }
 
-  def write(uuid: String): FileOutputStream = {
-    val file = Paths.get(directoryPath.getPath(), s"${now()}_${uuid}_student-results.zip").toFile
+  def write(groupUuid: String, uuid: String): FileOutputStream = {
+    val file = Paths.get(directoryPath.getPath(), s"${now()}_${groupUuid}_${uuid}_student-results.zip").toFile
     logger.info(s"Saving file ${file}")
     new FileOutputStream(file)
   }

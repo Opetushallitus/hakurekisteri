@@ -32,6 +32,7 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
   val log = LoggerFactory.getLogger(this.getClass)
   import scala.language.implicitConversions
   implicit val formats = Student.formatsStudent
+  val chunkSize = config.getOrElse("ytl.http.chunksize", "50000").toInt
   val username = config.getProperty("ytl.http.username")
   val password = config.getProperty("ytl.http.password")
   val bufferSize = config.getOrElse("ytl.http.buffersize", "4096").toInt // 4K
@@ -86,16 +87,19 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
       (json, parse(json).extract[Student])
     })
 
-  def fetch(hetus: Seq[String]): Either[Throwable, (ZipInputStream, Iterator[Student])] = {
+  private def fetch(groupUuid: String)(hetus: Seq[String]): Either[Throwable, (ZipInputStream, Iterator[Student])] = {
     for {
       operation <- fetchOperation(hetus).right
       ok <- fetchStatus(operation.operationUuid).right
-      zip <- downloadZip(operation.operationUuid).right
+      zip <- downloadZip(groupUuid)(operation.operationUuid).right
     } yield {
       val z = new ZipInputStream(zip)
       (z, zipToStudents(z).map(_._2))
     }
   }
+
+  def fetch(groupUuid: String, hetus: Seq[String]): Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] =
+    hetus.grouped(chunkSize).map(fetch(groupUuid))
 
   @tailrec
   private def fetchStatus(uuid: String): Either[Throwable,Status] = {
@@ -118,9 +122,9 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
     }
   }
 
-  def downloadZip(uuid: String): Either[Throwable, InputStream] = {
+  def downloadZip(groupUuid: String)(uuid: String): Either[Throwable, InputStream] = {
     Try(client.get("ytl.http.host.download", uuid).expectStatus(200).execute((r:OphHttpResponse) => {
-      val output = fileSystem.write(uuid)
+      val output = fileSystem.write(groupUuid, uuid)
       val input = r.asInputStream()
       IOUtils.copyLarge(input,output)
       IOUtils.closeQuietly(input)

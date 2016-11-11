@@ -43,15 +43,16 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
   }
 
   test("Fetch many as zip") {
-    val students = ytlHttpFetch.fetch(List("050996-9574"))
+    val groupUuid = UUID.randomUUID().toString
+    val students: Iterator[Either[Throwable, (ZipInputStream, Iterator[Student])]] = ytlHttpFetch.fetch(groupUuid, List("050996-9574"))
 
-    val (zip, stream) = students.right.get
+    val (zip, stream) = students.map(_.right.get).next
     stream.size should equal (5)
   }
 
   test("Memory usage when streaming") {
     val uuid = UUID.randomUUID().toString
-    createVeryLargeZip(uuid)
+    createVeryLargeZip(uuid, uuid)
     val runtime = Runtime.getRuntime()
     System.gc()
     val usedMemoryBefore = runtime.totalMemory() - runtime.freeMemory()
@@ -62,8 +63,8 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
     println("Memory increased:" + (usedMemoryAfter - usedMemoryBefore))
   }
 
-  def createVeryLargeZip(uuid: String): Unit = {
-    val output = fileSystem.write(uuid)
+  def createVeryLargeZip(groupUuid: String, uuid: String): Unit = {
+    val output = fileSystem.write(groupUuid, uuid)
     val zout = new ZipOutputStream(output)
     val entry = new ZipEntry("verylarge.json")
     zout.putNextEntry(entry)

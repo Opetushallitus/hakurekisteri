@@ -108,6 +108,7 @@ object YtlProperties extends OphProperties {
   addDefault("ytl.http.password",System.getProperty("suoritusrekisteri_ytl_http_password"))
 }
 object TestYtlDataLocally extends App {
+  val groupUuid = UUID.randomUUID().toString
   val ssnFinder: String => Future[String] = hetu => Future.successful(hetu)
   lazy val ssnToYlioppilasXml: Map[String, String] = SplitXmlIntoChunks.extractFile(new File(YtlProperties.ytlFile)).toMap
   lazy val slowlyFetchedButCorrectlyFilteredSsns = readYtlFileWithYtlActorParser()
@@ -170,8 +171,8 @@ object TestYtlDataLocally extends App {
   }
   def downloadWithUuidFromYtl(uuid: String) = {
     val s = System.currentTimeMillis()
-    val o = fileSystem.write(uuid)
-    val i = ytlHttpFetch.downloadZip(uuid).right.get
+    val o = fileSystem.write(uuid, uuid)
+    val i = ytlHttpFetch.downloadZip(uuid)(uuid).right.get
     IOUtils.copy(i, o)
     IOUtils.closeQuietly(o)
     IOUtils.closeQuietly(i)
@@ -223,7 +224,7 @@ object TestYtlDataLocally extends App {
     student
   }
   def fetchFromYtl() = {
-    ytlHttpFetch.fetch(ssnToYlioppilasXml.keys.toList) match {
+    ytlHttpFetch.fetch(groupUuid, ssnToYlioppilasXml.keys.toList) foreach {
       case Right((zip,a)) =>
         println(a)
         IOUtils.closeQuietly(zip)
@@ -235,9 +236,10 @@ object TestYtlDataLocally extends App {
   }
   implicit val formats = Student.formatsStudent
 
-  println(slowlyFetchedButCorrectlyFilteredSsns.size)
+  //println(slowlyFetchedButCorrectlyFilteredSsns.size)
   try {
-    ytlHttpFetch.fetch(slowlyFetchedButCorrectlyFilteredSsns)
+
+    //ytlHttpFetch.fetch(slowlyFetchedButCorrectlyFilteredSsns)
     //downloadWithUuidFromYtl(YtlProperties.ytlUuid)
     //kokelaatToDiffTar(YtlProperties.ytlUuid,"diffs.tar")
   }catch {
