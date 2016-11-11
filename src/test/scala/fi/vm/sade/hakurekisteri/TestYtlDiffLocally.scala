@@ -152,12 +152,12 @@ object TestYtlDiffLocally extends App {
   }
   //Iterator(findSsn())
   //iterate()
-  Iterator(findSsn()).foreach{
+  iterate().foreach{
     case List((jsonFile, studentJson), (xmlFile, xmlKokelas)) =>
       val (kJson, kXmlOpt, ssn) = toKokelaat(studentJson, xmlKokelas)
       kXmlOpt match {
         case Some(kXml) =>
-
+          val (_, osakoeUniikit,_) = analysoi(osakokeet(kXml), osakokeet(kJson))
           val uniikit = analysoiYot(yoTodistukset(kXml), yoTodistukset(kJson))
           //val (improt1, uniikit1, korotukset1) = analysoi(osakokeet(kJson), osakokeet(kXml))
           //val (improt1, uniikit1, korotukset1) = analysoi(osakokeet(kXml), osakokeet(kJson))
@@ -166,7 +166,7 @@ object TestYtlDiffLocally extends App {
           val kaikki = Seq(improt1.map(o => Impro(toKausi(o.myonnetty),ssn)) ++ uniikit1.map(o => Uniikki(toKausi(o.myonnetty),ssn)) ++ korotukset1.map(o => Korotus(toKausi(o.myonnetty),ssn))).flatten
           val erot = uniikit1.filter(_.myonnetty.isAfter(limit)).map(o => Uniikki(toKausi(o.myonnetty),ssn))
           */
-          if(!uniikit.isEmpty) {
+          if(!uniikit.isEmpty || !osakoeUniikit.isEmpty) {
             val yoJson = yoTodistukset(kJson)
             val yoXml = yoTodistukset(kXml)
             //eroavaisuudetToXml ++= Seq(erot.head)
@@ -174,8 +174,15 @@ object TestYtlDiffLocally extends App {
           } else {
 
           }
-        case None =>
-          missing += ssn
+        case None => {
+          val u = osakokeet(kJson).filter(filterOsakoeImprobatur).sortBy(o => (o.koetunnus,o.osakoetunnus))
+          val bothEmpty = u.isEmpty && yoTodistukset(kJson).filter(filterImprobatur).isEmpty
+          if(!bothEmpty) {
+            missing += ssn
+
+          }
+          //missing += ssn
+        }
       }
 
   }
@@ -190,20 +197,6 @@ object TestYtlDiffLocally extends App {
     })
     IOUtils.closeQuietly(fw)
   }
-  println(collectSsn.size)
-  writeSsnsToFile("osakokeetPuuttuu.txt", collectSsn)
-/*
-  val v: mutable.Map[Int, Int] = mutable.Map()
-
-  eroavaisuudetToXml foreach {
-    case u: Uniikki =>
-      val year: Int = u.kausi.toLocalDate.getYear
-      v.put(year, v.get(year).getOrElse(0) + 1)
-    case _ =>
-  }
-
-  println(s"Missing ssn's ${missing.size}")
-  println(v)
-  */
-  //println(jsonVsXmlLoytyy.toString)
+  //println(collectSsn.size)
+  //writeSsnsToFile("osakokeetPuuttuu.txt", collectSsn)
 }
