@@ -12,7 +12,7 @@ object YtlRerunPolicy {
   private val logger = LoggerFactory.getLogger(YtlRerunPolicy.getClass)
 
   def rerunPolicy(expression: String, ytlIntegration: YtlIntegration): () => Unit = {
-    def nextTimestamp(expression: String, d: Date) = new SimpleDateFormat("dd.MM.yyyy hh:mm").format(new CronExpression(expression).getNextValidTimeAfter(d))
+    def nextTimestamp(expression: String, d: Date) = new SimpleDateFormat("dd.MM.yyyy HH:mm").format(new CronExpression(expression).getNextValidTimeAfter(d))
     logger.info(s"First YTL fetch at '${nextTimestamp(expression, new Date())}'")
 
     () => {
