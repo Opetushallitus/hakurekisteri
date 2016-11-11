@@ -126,9 +126,9 @@ class YtlIntegration(config: OphProperties,
     val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
     val allSucceeded = new AtomicBoolean(true)
     try {
-      val chunks = ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList)
-      val count = chunks.size
-      chunks.zipWithIndex.foreach {
+
+      val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
+      ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
         case (Left(e: Throwable), index) =>
           logger.error(s"failed to fetch YTL data (patch ${index+1}/$count): ${e.getMessage}")
           allSucceeded.set(false)
