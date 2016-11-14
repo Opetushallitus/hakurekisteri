@@ -126,7 +126,7 @@ object TestYtlDiffLocally extends App {
     }
     val student = parse(studentJson)
     val kokelasFromJson = StudentToKokelas.convert(student.ssn, student)
-    val kokelasFromXml = xmlToKokelas(xmlKokelas)
+    val kokelasFromXml = if("".equals(xmlKokelas)) None else xmlToKokelas(xmlKokelas)
     (kokelasFromJson, kokelasFromXml, student.ssn)
   }
 
@@ -178,10 +178,10 @@ object TestYtlDiffLocally extends App {
           val u = osakokeet(kJson).filter(filterOsakoeImprobatur).sortBy(o => (o.koetunnus,o.osakoetunnus))
           val bothEmpty = u.isEmpty && yoTodistukset(kJson).filter(filterImprobatur).isEmpty
           if(!bothEmpty) {
-            missing += ssn
+            //missing += ssn
 
           }
-          //missing += ssn
+          missing += ssn
         }
       }
 
@@ -197,6 +197,6 @@ object TestYtlDiffLocally extends App {
     })
     IOUtils.closeQuietly(fw)
   }
-  //println(collectSsn.size)
+  println(collectSsn.size)
   //writeSsnsToFile("osakokeetPuuttuu.txt", collectSsn)
 }
