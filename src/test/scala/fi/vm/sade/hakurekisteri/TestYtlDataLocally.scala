@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.ytl._
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil}
 import fi.vm.sade.hakurekisteri.suoritus.ItseilmoitettuTutkinto
-import fi.vm.sade.hakurekisteri.tools.Diff
+import fi.vm.sade.hakurekisteri.tools.{Zip, Diff}
 import fi.vm.sade.javautils.httpclient.ApacheOphHttpClient
 import fi.vm.sade.scalaproperties.OphProperties
 import org.apache.commons.compress.archivers.ArchiveEntry
@@ -190,37 +190,37 @@ object TestYtlDataLocally extends App {
     IOUtils.write(b, t)
     t.closeArchiveEntry()
   }
-  def kokelaatToTarBytes(json: String, xml: String): Array[Byte] = {
+  def kokelaatToTarBytes(json: String, xml: Option[String]): Array[Byte] = {
     val out = new ByteArrayOutputStream()
     val tar = new TarArchiveOutputStream(out)
 
     addEntry(tar, "student.json", json.getBytes)
-    addEntry(tar, "ylioppilas.xml", xml.getBytes)
+    addEntry(tar, "ylioppilas.xml", xml.getOrElse("").getBytes)
 
     tar.close()
     out.close()
     out.toByteArray
   }
   def kokelaatToDiffTar(uuid: String, tarFile: String) = {
-    val zip = new ZipInputStream(fileSystem.read(uuid))
-    val ytlKokelaat = ytlHttpFetch.zipToStudents(zip)
+    val inps = fileSystem.read(uuid).map(new ZipInputStream(_)).toList
+    val ytlKokelaat = ytlHttpFetch.zipToStudents(inps.toIterator)
 
     val diffsOutput = new FileOutputStream(new File(YtlProperties.ytlDonwloadDir,tarFile))
     val diffsTar = new TarArchiveOutputStream(diffsOutput)
 
     ytlKokelaat.foreach { case (json,student) =>
-      val xml: String = ssnToYlioppilasXml(student.ssn)
+      val xml = ssnToYlioppilasXml.get(student.ssn)
       addEntry(diffsTar, student.ssn + ".tar", kokelaatToTarBytes(json, xml))
     }
     IOUtils.closeQuietly(diffsTar)
     IOUtils.closeQuietly(diffsOutput)
-    IOUtils.closeQuietly(zip)
+    inps.foreach(IOUtils.closeQuietly)
     println("done writing tar")
   }
   def findSsn(uuid: String, ssn: String) = {
-    val zip = new ZipInputStream(fileSystem.read(uuid))
-    val student: Option[(String,Student)] = ytlHttpFetch.zipToStudents(zip).find { case (json,student) => student.ssn == ssn}
-    IOUtils.closeQuietly(zip)
+    val zips = fileSystem.read(uuid).map(new ZipInputStream(_))
+    val student: Option[(String,Student)] = ytlHttpFetch.zipToStudents(zips).find { case (json,student) => student.ssn == ssn}
+    zips.foreach(IOUtils.closeQuietly)
     student
   }
   def fetchFromYtl() = {

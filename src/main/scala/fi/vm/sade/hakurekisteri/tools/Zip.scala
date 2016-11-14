@@ -13,6 +13,6 @@ object Zip {
       .map(_ => z)
   }
 
-  def toInputStreams(zs: Iterator[ZipInputStream]): Iterator[InputStream] = Iterator.continually(zs).flatMap(toInputStreams)
+  def toInputStreams(zs: Iterator[ZipInputStream]): Iterator[InputStream] = Iterator.continually(zs.next()).takeWhile(z => zs.hasNext).flatMap(toInputStreams)
 
 }
