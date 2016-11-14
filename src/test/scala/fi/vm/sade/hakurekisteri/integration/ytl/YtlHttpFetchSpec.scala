@@ -22,7 +22,7 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
     var bytesRead = 0
     val p = Zip.toInputStreams(new ZipInputStream(getClass.getResource("/student-results.zip").openStream())).map(ProgressInputStream(bytesRead += _))
 
-    val students = ytlHttpFetch.zipToStudents(p).map(_._2)
+    val students = ytlHttpFetch.streamToStudents(p).map(_._2)
     bytesRead should equal (0)
     var lastReadBytes = 0
     Iterator.continually(students.next)
@@ -56,7 +56,7 @@ class YtlHttpFetchSpec extends ScalatraFunSuite with YtlMockFixture {
     val runtime = Runtime.getRuntime()
     System.gc()
     val usedMemoryBefore = runtime.totalMemory() - runtime.freeMemory()
-    val all = ytlHttpFetch.zipToStudents(new ZipInputStream(fileSystem.read(uuid)))
+    val all = ytlHttpFetch.zipToStudents(fileSystem.read(uuid).map(new ZipInputStream(_)))
     val first = all.next
     System.gc()
     val usedMemoryAfter = runtime.totalMemory() - runtime.freeMemory()

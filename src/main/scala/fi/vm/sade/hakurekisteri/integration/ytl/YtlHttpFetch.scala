@@ -52,10 +52,14 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
   val client = buildClient(builder)
 
   def zipToStudents(z: ZipInputStream): Iterator[(String,Student)] = {
-    zipToStudents(Zip.toInputStreams(z))
+    streamToStudents(Zip.toInputStreams(z))
   }
 
-  def zipToStudents(streams: Iterator[InputStream]): Iterator[(String, Student)] = streams.flatMap(
+  def zipToStudents(z: Iterator[ZipInputStream]): Iterator[(String,Student)] = {
+    streamToStudents(Zip.toInputStreams(z))
+  }
+
+  def streamToStudents(streams: Iterator[InputStream]): Iterator[(String, Student)] = streams.flatMap(
     input => {
       val parser = StudentAsyncParser()
       val data = new Array[Byte](bufferSize)
@@ -129,9 +133,10 @@ class YtlHttpFetch(config: OphProperties, fileSystem: YtlFileSystem, builder: Ap
       IOUtils.copyLarge(input,output)
       IOUtils.closeQuietly(input)
       IOUtils.closeQuietly(output)
-      fileSystem.read(uuid)
+      fileSystem.read(uuid).toList
     })) match {
-      case Success(e) => Right(e)
+      case Success(e :: Nil) => Right(e)
+      case Success(_) => Left(new RuntimeException(s"File not found with UUID $uuid"))
       case Failure(e) => Left(e)
     }
   }

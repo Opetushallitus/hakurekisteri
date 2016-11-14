@@ -20,15 +20,10 @@ class YtlFileSystem(config: OphProperties) {
       }
 
 
-  def read(uuid: String): FileInputStream = {
+  def read(uuid: String): Iterator[FileInputStream] = {
     Files.newDirectoryStream(directoryPath.toPath).iterator()
       .filter(!_.toFile.isDirectory)
-      .find(_.toString.contains(uuid)) match {
-      case Some(file) =>
-        new FileInputStream(file.toFile)
-      case None =>
-        throw new RuntimeException(s"File with uuid(${uuid}) not found in directory ${directoryPath}!")
-    }
+      .filter(_.toString.contains(uuid)).map(file => new FileInputStream(file.toFile))
   }
 
   def write(groupUuid: String, uuid: String): FileOutputStream = {
