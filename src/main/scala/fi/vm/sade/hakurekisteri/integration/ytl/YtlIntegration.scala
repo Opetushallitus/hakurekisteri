@@ -51,9 +51,13 @@ class YtlIntegration(config: OphProperties,
       hakemus.hetu match {
         case Some(hetu) =>
           logger.info(s"Syncronizing hakemus ${hakemus.oid} with YTL")
-          val (json, student) = ytlHttpClient.fetchOne(hetu)
+          ytlHttpClient.fetchOne(hetu) match {
+            case None =>
+              logger.info(s"No YTL data for hakemus ${hakemus.oid}")
+            case Some((json, student)) =>
+              writeToFile(hetu,".json", json.getBytes)
+          }
           // TODO persist students
-          writeToFile(hetu,".json", json.getBytes)
         case None =>
           logger.debug(s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!")
       }
