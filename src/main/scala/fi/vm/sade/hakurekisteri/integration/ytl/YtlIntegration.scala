@@ -55,9 +55,8 @@ class YtlIntegration(config: OphProperties,
             case None =>
               logger.info(s"No YTL data for hakemus ${hakemus.oid}")
             case Some((json, student)) =>
-              writeToFile(hetu,".json", json.getBytes)
+              persistKokelas(StudentToKokelas.convert(hetu, student))
           }
-          // TODO persist students
         case None =>
           logger.debug(s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!")
       }
@@ -137,7 +136,7 @@ class YtlIntegration(config: OphProperties,
           allSucceeded.set(false)
         case (Right((zip, students)), index) =>
           logger.info(s"Fetch succeeded on YTL data patch ${index+1}/$count!")
-          // TODO persist students
+          students.map(student => StudentToKokelas.convert(student.ssn, student)).foreach(persistKokelas)
           IOUtils.closeQuietly(zip)
       }
     } catch {
