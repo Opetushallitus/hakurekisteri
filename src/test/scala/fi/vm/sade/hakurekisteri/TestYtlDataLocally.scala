@@ -11,7 +11,7 @@ import fi.vm.sade.hakurekisteri.arvosana.Arvosana
 import fi.vm.sade.hakurekisteri.integration.ytl._
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil}
 import fi.vm.sade.hakurekisteri.suoritus.ItseilmoitettuTutkinto
-import fi.vm.sade.hakurekisteri.tools.{Zip, Diff}
+import fi.vm.sade.hakurekisteri.tools.{Zip}
 import fi.vm.sade.javautils.httpclient.ApacheOphHttpClient
 import fi.vm.sade.scalaproperties.OphProperties
 import org.apache.commons.compress.archivers.ArchiveEntry
