@@ -73,8 +73,7 @@ class YtlIntegration(config: OphProperties,
           logger.error(s"failed to fetch one hakemus from hakemus service with person OID $personOid")
           throw new RuntimeException(s"Hakemus not found with person OID $personOid!")
         }
-        val hakemus = hakemukset.head
-        sync(hakemus)
+        val hakemus = hakemukset.foreach(sync)
       case Failure(e) =>
         logger.error(s"failed to fetch one hakemus from hakemus service: ${e.getMessage}")
         throw e
