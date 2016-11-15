@@ -48,17 +48,22 @@ class YtlIntegration(config: OphProperties,
 
   def sync(hakemus: FullHakemus): Unit = {
     if(activeKKHakuOids.get().contains(hakemus.applicationSystemId)) {
-      hakemus.hetu match {
-        case Some(hetu) =>
-          logger.info(s"Syncronizing hakemus ${hakemus.oid} with YTL")
-          ytlHttpClient.fetchOne(hetu) match {
+      hakemus.personOid match {
+        case Some(personOid) =>
+          hakemus.hetu match {
+            case Some(hetu) =>
+              logger.info(s"Syncronizing hakemus ${hakemus.oid} with YTL")
+              ytlHttpClient.fetchOne(hetu) match {
+                case None =>
+                  logger.info(s"No YTL data for hakemus ${hakemus.oid}")
+                case Some((json, student)) =>
+                  persistKokelas(StudentToKokelas.convert(personOid, student))
+              }
             case None =>
-              logger.info(s"No YTL data for hakemus ${hakemus.oid}")
-            case Some((json, student)) =>
-              persistKokelas(StudentToKokelas.convert(hetu, student))
+              logger.debug(s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!")
           }
         case None =>
-          logger.debug(s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have henkilotunnus!")
+          logger.error(s"Skipping YTL update as hakemus (${hakemus.oid}) doesn't have person OID!")
       }
     } else {
       logger.debug(s"Skipping YTL update as hakemus (${hakemus.oid}) is not in active haku (not active ${hakemus.applicationSystemId})!")
@@ -136,7 +141,14 @@ class YtlIntegration(config: OphProperties,
           allSucceeded.set(false)
         case (Right((zip, students)), index) =>
           logger.info(s"Fetch succeeded on YTL data patch ${index+1}/$count!")
-          students.map(student => StudentToKokelas.convert(student.ssn, student)).foreach(persistKokelas)
+          students.flatMap(student => hetuToPersonOid.get(student.ssn) match {
+            case Some(personOid) =>
+              Some(StudentToKokelas.convert(personOid, student))
+            case None =>
+              logger.error(s"Skipping student as SSN didnt match any person OID")
+              None
+          }
+          ).foreach(persistKokelas)
           IOUtils.closeQuietly(zip)
       }
     } catch {
