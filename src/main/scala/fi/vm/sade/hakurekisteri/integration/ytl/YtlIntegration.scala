@@ -133,7 +133,6 @@ class YtlIntegration(config: OphProperties,
     val hetuToPersonOid: Map[String, String] = persons.map(person => person.hetu -> person.personOid).toMap
     val allSucceeded = new AtomicBoolean(true)
     try {
-
       val count: Int = Math.ceil(hetuToPersonOid.keys.toList.size.toDouble / ytlHttpClient.chunkSize.toDouble).toInt
       ytlHttpClient.fetch(groupUuid, hetuToPersonOid.keys.toList).zipWithIndex.foreach {
         case (Left(e: Throwable), index) =>
@@ -154,7 +153,7 @@ class YtlIntegration(config: OphProperties,
     } catch {
       case e: Throwable =>
         allSucceeded.set(false)
-        logger.error(s"")
+        logger.error(s"YTL sync all failed!", e)
     } finally {
       logger.info(s"Finished sync all! All patches succeeded = ${allSucceeded.get()}!")
       atomicUpdateFetchStatus(l => l.copy(succeeded=Some(allSucceeded.get()), end = Some(new Date())))
