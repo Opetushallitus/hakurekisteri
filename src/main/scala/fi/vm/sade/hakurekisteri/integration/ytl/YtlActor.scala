@@ -289,8 +289,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     ) kokelasFut.onComplete{
       case Failure(f) ⇒ self ! Status.Failure(f)
       case Success(Some(kokelas))  =>
-        log.debug(s"sending kokelas ${kokelas.oid} for saving")
-        self ! kokelas
+        log.debug(s"saving kokelas ${kokelas.oid} from old YTL API disabled!")
       case _ => log.info(s"ytl result with no exams found, discarding it")
     }
 
