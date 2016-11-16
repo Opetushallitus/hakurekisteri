@@ -40,7 +40,7 @@ class YtlActorUpdateSuoritusSpec extends ScalatraFunSuite with ActorSystemSuppor
   )
 
 
-  test("YtlActor should not overwrite an existing old suoritus in tila VALMIS with a new suoritus in tila KESKEN from YTL") {
+  ignore("YtlActor should not overwrite an existing old suoritus in tila VALMIS with a new suoritus in tila KESKEN from YTL") {
     withSystem({
       implicit system => {
         implicit val ec: ExecutionContext = system.dispatcher
