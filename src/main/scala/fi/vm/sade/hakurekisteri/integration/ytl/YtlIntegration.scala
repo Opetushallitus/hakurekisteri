@@ -52,10 +52,10 @@ class YtlIntegration(config: OphProperties,
         case Some(personOid) =>
           hakemus.hetu match {
             case Some(hetu) =>
-              logger.info(s"Syncronizing hakemus ${hakemus.oid} with YTL")
+              logger.debug(s"Syncronizing hakemus ${hakemus.oid} with YTL")
               ytlHttpClient.fetchOne(hetu) match {
                 case None =>
-                  logger.info(s"No YTL data for hakemus ${hakemus.oid}")
+                  logger.debug(s"No YTL data for hakemus ${hakemus.oid}")
                 case Some((json, student)) =>
                   persistKokelas(StudentToKokelas.convert(personOid, student))
               }
