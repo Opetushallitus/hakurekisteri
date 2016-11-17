@@ -26,7 +26,7 @@ class YtlResource(ytl:ActorRef, ytlIntegration: YtlIntegration)(implicit val sys
     ytl ! Send
     Accepted()
   }
-  get("/http_request") {
+  post("/http_request") {
     shouldBeAdmin
     logger.info("Fetching YTL data for everybody")
     ytlIntegration.syncAll

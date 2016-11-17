@@ -26,7 +26,7 @@ class YtlResourceSpec extends ScalatraFunSuite with DispatchSupport with Mockito
   val endPoint = mock[Endpoint]
 
   test("should launch YTL fetch") {
-    get("/http_request") {
+    post("/http_request") {
       status should be (202)
     }
     get("/http_request/050996-9574") {
