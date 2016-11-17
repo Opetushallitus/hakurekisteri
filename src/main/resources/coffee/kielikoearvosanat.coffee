@@ -1,8 +1,10 @@
 app.controller "KielikoeArvosanat", [
   "$scope"
+  "$http"
   "$q"
   "Arvosanat"
   "MessageService"
+  "LokalisointiService"
   ($scope, $http, $q, Arvosanat, MessageService, LokalisointiService) ->
     $scope.arvosanat = []
     $scope.modified = {}
