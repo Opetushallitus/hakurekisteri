@@ -13,9 +13,9 @@ app.controller "KielikoeArvosanat", [
       for a in arvosanatData
         $scope.modified[a.id] = false
         a.myonnetty = $scope.parseFinDate(a.myonnetty)
-        $scope.myontajat[a.id] = a.source
+        $scope.myontajat[a.id] = ""
         getOrganisaatio $http, a.source, (org) ->
-          $scope.myontajat[a.id] = a.source + " " + (org.nimi[LokalisointiService.lang] or org.nimi.fi or org.nimi.sv or org.nimi.en or "")
+          $scope.myontajat[a.id] = org.nimi[LokalisointiService.lang] or org.nimi.fi or org.nimi.sv or org.nimi.en or ""
       $scope.arvosanat = arvosanatData
       ), ->
       MessageService.addMessage
