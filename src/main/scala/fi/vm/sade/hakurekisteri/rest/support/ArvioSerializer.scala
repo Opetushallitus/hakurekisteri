@@ -4,6 +4,8 @@ import org.json4s.CustomSerializer
 import fi.vm.sade.hakurekisteri.arvosana._
 import org.json4s.JsonAST.{JField, JInt, JObject, JString}
 
+import scala.util.{Failure, Try}
+
 
 class ArvioSerializer extends CustomSerializer[Arvio](format => (
   {
@@ -14,7 +16,9 @@ class ArvioSerializer extends CustomSerializer[Arvio](format => (
         case JInt(yhteispisteet) => Some(yhteispisteet.toInt)
         case _ => None
       }
-      Arvio(arvosana, asteikko, pisteet)
+      Try(Arvio(arvosana, asteikko, pisteet)).recoverWith {
+        case e: UnknownScaleException => Failure(new IllegalArgumentException(e))
+      }.get
   },
   {
     case x: Arvio410 =>
