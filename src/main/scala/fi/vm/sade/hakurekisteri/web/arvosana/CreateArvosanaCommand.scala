@@ -2,10 +2,12 @@ package fi.vm.sade.hakurekisteri.web.arvosana
 
 import java.util.UUID
 
-import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvosana}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvio, Arvosana, UnknownScaleException}
 import fi.vm.sade.hakurekisteri.web.rest.support.{HakurekisteriCommand, LocalDateSupport}
 import org.joda.time.LocalDate
 import org.scalatra.commands._
+
+import scala.util.{Failure, Try}
 
 
 class CreateArvosanaCommand extends HakurekisteriCommand[Arvosana] with LocalDateSupport {
@@ -23,7 +25,9 @@ class CreateArvosanaCommand extends HakurekisteriCommand[Arvosana] with LocalDat
   override def toResource(user: String): Arvosana =
     Arvosana(
       suoritus = suoritus.value.map(UUID.fromString).get,
-      arvio = Arvio(arvio.value.get, asteikko.value.get, pisteet.value.get),
+      arvio = Try(Arvio(arvio.value.get, asteikko.value.get, pisteet.value.get)).recoverWith {
+        case e: UnknownScaleException => Failure(new IllegalArgumentException(e))
+      }.get,
       aine = aine.value.get,
       lisatieto = lisatieto.value.get,
       valinnainen = valinnainen.value.getOrElse(false),

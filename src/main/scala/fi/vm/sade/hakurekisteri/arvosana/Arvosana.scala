@@ -55,7 +55,7 @@ object Arvio {
 }
 
 
-case class UnknownScaleException(scale: String) extends IllegalArgumentException(s"unknown scale: $scale")
+case class UnknownScaleException(scale: String) extends RuntimeException(s"unknown scale: $scale")
 
 case class Arvio410(arvosana: String) extends Arvio {
   val allowable = Set[String]("4", "5", "6", "7", "8", "9", "10", "S")
