@@ -68,16 +68,14 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
     }
 
   def arvosanaResolver(arvosanat: Seq[Arvosana]): Future[Seq[(Arvosana, Set[String], Option[String])]] = {
-      val arvosanatSuorituksittain = arvosanat.groupBy(_.suoritus)
-      unauthorized.suoritusRekisteri.?(arvosanatSuorituksittain.keySet.toSeq)(Timeout(900, TimeUnit.SECONDS)).
+      unauthorized.suoritusRekisteri.?(arvosanat.map(_.suoritus))(Timeout(900, TimeUnit.SECONDS)).
         mapTo[Seq[Suoritus with Identified[UUID]]].map(suoritukset => {
-        val suoritusAuthInfo = suoritukset.map(s => (s.id, s.asInstanceOf[Suoritus])).map {
-          case (id, s: VirallinenSuoritus) if s.komo == KomoOids.ammatillisenKielikoe =>
-            (id, arvosanatSuorituksittain(id).map(_.source).toSet)
-          case (id, s: VirallinenSuoritus) => (id, Set(s.myontaja, s.source))
-          case (id, s: VapaamuotoinenSuoritus) => (id, Set(s.source))
-        }.toMap
-        arvosanat.map(a => (a, suoritusAuthInfo(a.suoritus), None))
+        val suorituksetM = suoritukset.map(s => (s.id, s.asInstanceOf[Suoritus])).toMap
+        arvosanat.map(a => suorituksetM(a.suoritus) match {
+          case s: VirallinenSuoritus if s.komo == KomoOids.ammatillisenKielikoe => (a, Set(a.source), None)
+          case s: VirallinenSuoritus => (a, Set(s.myontaja, s.source), None)
+          case s: VapaamuotoinenSuoritus => (a, Set(s.source), None)
+        })
       })
     }
 
