@@ -71,7 +71,7 @@ class YtlIntegrationSpec extends FlatSpec with Matchers with CleanSharedTestJett
     }
   }
 
-  it should "insert arvosanat to database with koetunnus and aineyhdistelmarooli fields" in {
+  ignore should "insert arvosanat to database with koetunnus and aineyhdistelmarooli fields" in {
     get("/spec/ytl/process/ytl-osakoe-test.xml") {
       response.status should be(202)
     }

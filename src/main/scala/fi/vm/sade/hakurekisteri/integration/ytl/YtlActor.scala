@@ -5,7 +5,6 @@ import java.util.UUID
 import java.util.concurrent.{Executors, TimeUnit}
 
 import akka.actor._
-import akka.event.Logging
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import com.jcraft.jsch.{ChannelSftp, SftpException}
@@ -290,8 +289,7 @@ class YtlActor(henkiloActor: ActorRef, suoritusRekisteri: ActorRef, arvosanaReki
     ) kokelasFut.onComplete{
       case Failure(f) ⇒ self ! Status.Failure(f)
       case Success(Some(kokelas))  =>
-        log.debug(s"sending kokelas ${kokelas.oid} for saving")
-        self ! kokelas
+        log.debug(s"saving kokelas ${kokelas.oid} from old YTL API disabled!")
       case _ => log.info(s"ytl result with no exams found, discarding it")
     }
 
@@ -620,10 +618,11 @@ object YTLXml {
   val syksy = "(\\d{4})S".r
   val suoritettu = "suor".r
   val kevaanAlku = new MonthDay(6, 1)
+  val syys = new MonthDay(12, 21)
 
   def parseKausi(kausi: String) = kausi match {
     case kevat(vuosi) => Some(kevaanAlku.toLocalDate(vuosi.toInt))
-    case syksy(vuosi) => Some(new MonthDay(12, 21).toLocalDate(vuosi.toInt))
+    case syksy(vuosi) => Some(syys.toLocalDate(vuosi.toInt))
     case _ => None
   }
 

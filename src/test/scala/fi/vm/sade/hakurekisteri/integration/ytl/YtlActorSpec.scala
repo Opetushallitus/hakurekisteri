@@ -70,7 +70,7 @@ class YtlActorSpec extends ScalatraFunSuite {
     }
   }
 
-  test("YtlActor should insert arvosanat to database with koetunnus and aineyhdistelmarooli fields") {
+  ignore("YtlActor should insert arvosanat to database with koetunnus and aineyhdistelmarooli fields") {
     withActors { (actor, arvosanaActor, suoritusActor) =>
       actor ! YtlResult(UUID.randomUUID(), getClass.getResource("/ytl-osakoe-test.xml").getFile)
 
@@ -84,9 +84,10 @@ class YtlActorSpec extends ScalatraFunSuite {
 
       Await.result(suoritusActor ? DeleteResource(arvosanaSA.head.suoritus, "test"), 60.seconds)
     }
+
   }
 
-  test("YtlActor should deduplicate kokeet properly") {
+  ignore("YtlActor should deduplicate kokeet properly") {
     withActors { (actor, arvosanaActor, suoritusActor) =>
       actor ! YtlResult(UUID.randomUUID(), getClass.getResource("/ytl-koe-test.xml").getFile)
 

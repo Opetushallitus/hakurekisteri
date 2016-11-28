@@ -88,4 +88,12 @@ class HakemusServiceSpec extends FlatSpec with Matchers with MockitoSugar with D
     triggerCounter should be (40)
   }
 
+  it should "return hetus and personOids" in {
+    when(endPoint.request(forPattern(".*listfull.*")))
+      .thenReturn((200, List(), getJson("hetuAndPersonOid")))
+
+    val result: Seq[HetuPersonOid] = Await.result(hakemusService.hetuAndPersonOidForHaku("testHaku"), 10.seconds)
+    Array(2,6).contains(result.length) should equal (true)
+  }
+
 }

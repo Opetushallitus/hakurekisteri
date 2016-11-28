@@ -8,7 +8,7 @@ import fi.vm.sade.hakurekisteri.dates.{Ajanjakso, InFuture}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HakuParams, KierrosRequest}
 import fi.vm.sade.hakurekisteri.integration.tarjonta._
 import fi.vm.sade.hakurekisteri.integration.valintatulos.{BatchUpdateValintatulos, UpdateValintatulos}
-import fi.vm.sade.hakurekisteri.integration.ytl.HakuList
+import fi.vm.sade.hakurekisteri.integration.ytl.{YtlIntegration, HakuList}
 import fi.vm.sade.hakurekisteri.tools.RicherString._
 import org.joda.time.{DateTime, ReadableInstant}
 
@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 
-class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef, ytl: ActorRef, config: Config) extends Actor with ActorLogging {
+class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef, ytl: ActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
 
   var activeHakus: Seq[Haku] = Seq()
@@ -55,7 +55,9 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef
     case sq: Seq[_] =>
       val s = sq.collect{ case h: Haku => h}
       activeHakus = s.filter(_.aika.isCurrently)
-      ytl ! HakuList(activeHakus.filter(_.kkHaku).map(_.oid).toSet)
+      val ytlHakus: Set[String] = activeHakus.filter(_.kkHaku).map(_.oid).toSet
+      ytl ! HakuList(ytlHakus)
+      ytlIntegration.setAktiivisetKKHaut(ytlHakus)
       log.info(s"size of active application system set: [${activeHakus.size}]")
       if (starting) {
         starting = false
