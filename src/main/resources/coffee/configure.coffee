@@ -73,9 +73,6 @@ app.run ($cacheFactory, $http, $log, MessageService) ->
   if (window.mocksOn)
     $http.defaults.cache = $cacheFactory("test")
     window.testCache = $http.defaults.cache
-  $http.get(window.url("cas.myroles")).success((roles) ->
-    window.myroles = roles
-  )
   $http.get(window.url("authentication-service.buildversion")).success(->
     return
   ).error ->

@@ -7,6 +7,7 @@ window.urls.loadFromUrls("suoritusrekisteri-web-oph.json", "rest/v1/properties")
   $http.get(window.url("cas.myroles"),
     cache: true
   ).success (myroles) ->
+    window.myroles = myroles
     setUserLang(myroles)
     angular.element(document).ready ->
       angular.bootstrap(document, ['myApp'])
