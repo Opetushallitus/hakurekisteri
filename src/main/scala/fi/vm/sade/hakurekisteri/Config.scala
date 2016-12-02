@@ -57,6 +57,7 @@ object LisapistekoulutusOids {
 
 object KomoOids {
   val pohjakoulutus = PohjakoulutusOids
+  val ammatillisenKielikoe = "ammatillisenKielikoe"
   val lisapistekoulutus = LisapistekoulutusOids
   val toisenAsteenVirkailijanKoulutukset = Set(
     pohjakoulutus.perusopetus, pohjakoulutus.lukio, pohjakoulutus.ammatillinen, pohjakoulutus.ulkomainen,

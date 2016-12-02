@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.util.Timeout
-import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor}
+import fi.vm.sade.hakurekisteri.arvosana.{Arvosana, ArvosanaJDBCActor, ArvosanatQuery}
 import fi.vm.sade.hakurekisteri.batchimport.{ImportBatch, ImportBatchActor}
 import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil, VirkailijaRestClient}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor}
@@ -14,8 +14,7 @@ import fi.vm.sade.hakurekisteri.organization.{FutureOrganizationHierarchy, Organ
 import fi.vm.sade.hakurekisteri.rest.support.{Registers, Resource}
 import fi.vm.sade.hakurekisteri.storage.Identified
 import fi.vm.sade.hakurekisteri.suoritus._
-import fi.vm.sade.hakurekisteri.{Config, Oids}
-import org.joda.time.LocalDate
+import fi.vm.sade.hakurekisteri.{Config, KomoOids, Oids}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
@@ -49,46 +48,41 @@ class AuthorizedRegisters(unauthorized: Registers, system: ActorSystem, config: 
     system.actorOf(Props(new OrganizationHierarchy[A, I](guarded, (is: Seq[A]) => is.map(i => (i, orgFinder(i).map(Set(_)).getOrElse(Set()), None)), config, organisaatioClient)), s"$resource-authorizer")
   }
 
-  val suoritusOrgResolver: PartialFunction[Suoritus, String] = {
-    case VirallinenSuoritus(komo: String,
-    myontaja: String,
-    tila: String,
-    valmistuminen: LocalDate,
-    henkilo: String,
-    yksilollistaminen,
-    suoritusKieli: String,
-    opiskeluoikeus: Option[UUID],
-    vahv: Boolean,
-    lahde: String) => myontaja
-  }
+  def suoritusResolver(suoritukset: Seq[Suoritus]): Future[Seq[(Suoritus, Set[String], Option[String])]] = {
+      val kielikoesuoritusIdt = suoritukset.collect {
+        case s: VirallinenSuoritus with Identified[_] if s.komo == KomoOids.ammatillisenKielikoe =>
+          s.id.asInstanceOf[UUID]
+      }.toSet
+      val kielikoesuoritustenMyontajat = if (kielikoesuoritusIdt.isEmpty) {
+        Future.successful(Map.empty[UUID, Set[String]])
+      } else {
+        unauthorized.arvosanaRekisteri.?(ArvosanatQuery(kielikoesuoritusIdt))(Timeout(900, TimeUnit.SECONDS))
+          .mapTo[Seq[Arvosana]].map(arvosanat => arvosanat.groupBy(_.suoritus).mapValues(_.map(_.source).toSet))
+      }
+      kielikoesuoritustenMyontajat.map(ksm => suoritukset.map {
+        case s: VirallinenSuoritus with Identified[_] =>
+          (s, ksm.getOrElse(s.id.asInstanceOf[UUID], Set(s.myontaja)), Some(s.komo))
+        case s: VirallinenSuoritus => (s, Set(s.myontaja), Some(s.komo))
+        case s => (s, Set.empty[String], None)
+      })
+    }
 
-  val suoritusKomoResolver: PartialFunction[Suoritus, String] = {
-    case VirallinenSuoritus(komo: String,
-    myontaja: String,
-    tila: String,
-    valmistuminen: LocalDate,
-    henkilo: String,
-    yksilollistaminen,
-    suoritusKieli: String,
-    opiskeluoikeus: Option[UUID],
-    vahv: Boolean,
-    lahde: String) => komo
-  }
-
-  val resolve = (arvosanat: Seq[Arvosana]) =>
+  def arvosanaResolver(arvosanat: Seq[Arvosana]): Future[Seq[(Arvosana, Set[String], Option[String])]] = {
       unauthorized.suoritusRekisteri.?(arvosanat.map(_.suoritus))(Timeout(900, TimeUnit.SECONDS)).
         mapTo[Seq[Suoritus with Identified[UUID]]].map(suoritukset => {
-        val suoritusAuthInfo = suoritukset.map(s => (s.id, s.asInstanceOf[Suoritus])).map {
-          case (id, s: VirallinenSuoritus) => (id, Set(s.myontaja, s.source))
-          case (id, s: VapaamuotoinenSuoritus) => (id, Set(s.source))
-        }.toMap
-        arvosanat.map(x => (x, suoritusAuthInfo(x.suoritus), None))
+        val suorituksetM = suoritukset.map(s => (s.id, s.asInstanceOf[Suoritus])).toMap
+        arvosanat.map(a => suorituksetM(a.suoritus) match {
+          case s: VirallinenSuoritus if s.komo == KomoOids.ammatillisenKielikoe => (a, Set(a.source), None)
+          case s: VirallinenSuoritus => (a, Set(s.myontaja, s.source), None)
+          case s: VapaamuotoinenSuoritus => (a, Set(s.source), None)
+        })
       })
+    }
 
-  override val suoritusRekisteri = authorizer[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusOrgResolver.lift, suoritusKomoResolver.lift)
+  override val suoritusRekisteri = system.actorOf(Props(new FutureOrganizationHierarchy[Suoritus, UUID](unauthorized.suoritusRekisteri, suoritusResolver, config, organisaatioClient)), "suoritus-authorizer")
   override val opiskelijaRekisteri = authorizer[Opiskelija, UUID](unauthorized.opiskelijaRekisteri, (opiskelija:Opiskelija) => Some(opiskelija.oppilaitosOid))
   override val opiskeluoikeusRekisteri = authorizer[Opiskeluoikeus, UUID](unauthorized.opiskeluoikeusRekisteri, (opiskeluoikeus:Opiskeluoikeus) => Some(opiskeluoikeus.myontaja), (opiskeluoikeus:Opiskeluoikeus) => Some(opiskeluoikeus.komo))
-  override val arvosanaRekisteri = system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](unauthorized.arvosanaRekisteri, resolve, config, organisaatioClient)), "arvosana-authorizer")
+  override val arvosanaRekisteri = system.actorOf(Props(new FutureOrganizationHierarchy[Arvosana, UUID](unauthorized.arvosanaRekisteri, arvosanaResolver, config, organisaatioClient)), "arvosana-authorizer")
   override val eraRekisteri: ActorRef = authorizer[ImportBatch, UUID](unauthorized.eraRekisteri, (era:ImportBatch) => Some(Oids.ophOrganisaatioOid))
   override val ytlSuoritusRekisteri: ActorRef = null
   override val ytlArvosanaRekisteri: ActorRef = null

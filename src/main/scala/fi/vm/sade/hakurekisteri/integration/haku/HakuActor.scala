@@ -20,7 +20,7 @@ import scala.language.implicitConversions
 class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef, ytl: ActorRef, ytlIntegration: YtlIntegration, config: Config) extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
 
-  var activeHakus: Seq[Haku] = Seq()
+  var storedHakus: Seq[Haku] = Seq()
   val hakuRefreshTime = config.integrations.hakuRefreshTimeHours.hours
   val hakemusRefreshTime = config.integrations.hakemusRefreshTimeHours.hours
   val valintatulosRefreshTimeHours = config.integrations.valintatulosRefreshTimeHours.hours
@@ -33,8 +33,8 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef
   import FutureList._
 
   def getHaku(q: GetHaku): Future[Haku] = Future {
-    activeHakus.find(_.oid == q.oid) match {
-      case None => throw HakuNotFoundException(s"no active haku found with oid ${q.oid}")
+    storedHakus.find(_.oid == q.oid) match {
+      case None => throw HakuNotFoundException(s"no stored haku found with oid ${q.oid}")
       case Some(h) => h
     }
   }
@@ -46,19 +46,20 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef
       log.info(s"updating all hakus for $self from ${sender()}")
       tarjonta ! GetHautQuery
 
-    case HakuRequest => sender ! activeHakus
+    case HakuRequest => sender ! storedHakus
 
     case q: GetHaku => getHaku(q) pipeTo sender
 
     case RestHakuResult(hakus: List[RestHaku]) => enrich(hakus).waitForAll pipeTo self
 
     case sq: Seq[_] =>
-      val s = sq.collect{ case h: Haku => h}
-      activeHakus = s.filter(_.aika.isCurrently)
+      storedHakus = sq.collect{ case h: Haku => h}
+      val activeHakus: Seq[Haku] = storedHakus.filter(_.isActive)
       val ytlHakus: Set[String] = activeHakus.filter(_.kkHaku).map(_.oid).toSet
       ytl ! HakuList(ytlHakus)
       ytlIntegration.setAktiivisetKKHaut(ytlHakus)
-      log.info(s"size of active application system set: [${activeHakus.size}]")
+      log.info(s"size of stored application system set: [${storedHakus.size}]")
+      log.info(s"active application systems: [${activeHakus.size}]")
       if (starting) {
         starting = false
         vtsUpdate.foreach(_.cancel())
@@ -99,7 +100,7 @@ class HakuActor(tarjonta: ActorRef, parametrit: ActorRef, valintaTulos: ActorRef
   }
 
   def refreshKeepAlives() {
-    valintaTulos.!(BatchUpdateValintatulos(activeHakus.map(h => UpdateValintatulos(h.oid)).toSet))
+    valintaTulos.!(BatchUpdateValintatulos(storedHakus.filter(_.isActive).map(h => UpdateValintatulos(h.oid)).toSet))
   }
 
   override def postStop(): Unit = {
@@ -121,7 +122,9 @@ case class GetHaku(oid: String)
 
 case class Kieliversiot(fi: Option[String], sv: Option[String], en: Option[String])
 
-case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int, koulutuksenAlkamiskausi: Option[String], koulutuksenAlkamisvuosi: Option[Int], kkHaku: Boolean, viimeinenHakuaikaPaattyy: Option[DateTime])
+case class Haku(nimi: Kieliversiot, oid: String, aika: Ajanjakso, kausi: String, vuosi: Int, koulutuksenAlkamiskausi: Option[String], koulutuksenAlkamisvuosi: Option[Int], kkHaku: Boolean, viimeinenHakuaikaPaattyy: Option[DateTime]) {
+  val isActive: Boolean = aika.isCurrently
+}
 
 object Haku {
   def apply(haku: RestHaku)(loppu: ReadableInstant): Haku = {

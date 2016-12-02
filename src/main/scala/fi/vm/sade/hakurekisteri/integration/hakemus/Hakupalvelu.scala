@@ -75,29 +75,13 @@ class AkkaHakupalvelu(virkailijaClient: VirkailijaRestClient, hakemusService: IH
     restRequest[Map[String, ThemeQuestion]]("haku-app.themequestions", hakuOid).map(_ ++ hardCodedLisakysymys)
   }
 
-  private def hakukohdeOids(organisaatio: Option[String], hakuOid: Option[String]): Future[Seq[String]] = {
-    val q = (organisaatio.map("organisationOid" -> _) ++ hakuOid.map("hakuOid" -> _)).toMap
-    restRequest[HakukohdeSearchResultContainer]("tarjonta-service.hakukohde.search", q)
-      .map(_.result.tulokset.flatMap(tarjoaja => tarjoaja.tulokset.map(hakukohde => hakukohde.oid)))
-  }
-
-  private def hakukohdeNimiUri(hakukohdeOid: String): Future[String] = {
-    restRequest[HakukohdeResultContainer]("tarjonta-service.hakukohde", hakukohdeOid)
-      .map(r => r.result.hakukohteenNimiUri)
-  }
-
   private def hakukohdeOids(organisaatio: Option[String],
                             hakuOid: Option[String],
-                            hakukohdekoodi: Option[String]): Future[Seq[String]] = hakukohdekoodi match {
-    case Some(koodi) =>
-      for {
-        hakukohdeOids <- hakukohdeOids(organisaatio, hakuOid)
-        nimiAndOids <- Future.sequence(hakukohdeOids.map(oid => hakukohdeNimiUri(oid).map((_, oid))))
-      } yield nimiAndOids.collect {
-        case (nimi, oid) if nimi.contains(koodi) => oid
-      }
-    case None =>
-      hakukohdeOids(organisaatio, hakuOid)
+                            hakukohdekoodi: Option[String]): Future[Seq[String]] = {
+    val hakukohteenNimiUriHakuehto = hakukohdekoodi.map(koodi => "hakukohteenNimiUri" -> s"hakukohteet_$koodi")
+    val q = (organisaatio.map("organisationOid" -> _) ++ hakuOid.map("hakuOid" -> _) ++ hakukohteenNimiUriHakuehto).toMap
+    restRequest[HakukohdeSearchResultContainer]("tarjonta-service.hakukohde.search", q)
+      .map(_.result.tulokset.flatMap(tarjoaja => tarjoaja.tulokset.map(hakukohde => hakukohde.oid)))
   }
 
   override def getHakijat(q: HakijaQuery): Future[Seq[Hakija]] = {

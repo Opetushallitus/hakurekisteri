@@ -43,6 +43,8 @@ app.factory "MuokkaaTiedot", [
         getMyRoles()
         getRestrictions()
 
+        $scope.ammatillisenKielikoeKomo = "ammatillisenKielikoe"
+
         fetchHenkilotiedot()
         fetchLuokkatiedot()
         $q.all([fetchKomos(), messageLoaded.promise, fetchSuoritukset()]).then( (arr) ->
@@ -114,6 +116,7 @@ app.factory "MuokkaaTiedot", [
             text: getOphMsg("suoritusrekisteri.komo." + komo.telma, "Työhön ja itsenäiseen elämään valmentava koulutus")
           }
         ]
+        $scope.ammatillinenKielikoeText = getOphMsg("suoritusrekisteri.komo." + $scope.ammatillisenKielikoeKomo, "Ammatillisen koulutuksen kielikoe")
 
       getMyRoles = ->
         $http.get(window.url("cas.myroles"), { cache: true }).success((data) ->
@@ -304,7 +307,7 @@ app.factory "MuokkaaTiedot", [
         return suoritus.komo != $scope.komo.ylioppilastutkinto && $scope.restrictionActiveSecondaryLevel && !$scope.isOPH()
 
       $scope.validateOppilaitoskoodiFromScopeAndUpdateMyontajaInModel = (info, model, validateError) ->
-        if model.vahvistettu and not info["delete"] and info.editable and not (model.komo and model.komo is $scope.komo.ylioppilastutkinto)
+        if model.vahvistettu and not info["delete"] and info.editable and not (model.komo and (model.komo is $scope.komo.ylioppilastutkinto or $scope.isAmmatillinenKielikoe(model.komo)))
           d = $q.defer()
           if not info.oppilaitos or not info.oppilaitos.match(/^\d{5}$/)
             if validateError
@@ -398,6 +401,9 @@ app.factory "MuokkaaTiedot", [
 
       $scope.isFromApplication = (oid) ->
         oid.indexOf("1.2.246.562.11") > -1
+
+      $scope.isAmmatillinenKielikoe = (komo) ->
+        $scope.ammatillisenKielikoeKomo == komo;
 
       $scope.hakemusLink = (oid) ->
         window.url("haku-app.virkailija.hakemus", oid)

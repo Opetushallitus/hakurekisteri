@@ -1,8 +1,10 @@
 package fi.vm.sade.hakurekisteri.rest.support
 
 import org.json4s.CustomSerializer
-import fi.vm.sade.hakurekisteri.arvosana.{ArvioOsakoe, ArvioYo, Arvio410, Arvio}
-import org.json4s.JsonAST.{JInt, JString, JField, JObject}
+import fi.vm.sade.hakurekisteri.arvosana._
+import org.json4s.JsonAST.{JField, JInt, JObject, JString}
+
+import scala.util.{Failure, Try}
 
 
 class ArvioSerializer extends CustomSerializer[Arvio](format => (
@@ -14,7 +16,9 @@ class ArvioSerializer extends CustomSerializer[Arvio](format => (
         case JInt(yhteispisteet) => Some(yhteispisteet.toInt)
         case _ => None
       }
-      Arvio(arvosana, asteikko, pisteet)
+      Try(Arvio(arvosana, asteikko, pisteet)).recoverWith {
+        case e: UnknownScaleException => Failure(new IllegalArgumentException(e))
+      }.get
   },
   {
     case x: Arvio410 =>
@@ -25,6 +29,8 @@ class ArvioSerializer extends CustomSerializer[Arvio](format => (
       JObject(JField("arvosana", JString(arvosana)) :: JField("asteikko", JString("YO")) :: Nil)
     case ArvioOsakoe(osakoepisteet) =>
       JObject(JField("arvosana", JString(osakoepisteet)) :: JField("asteikko", JString("OSAKOE")) :: Nil)
+    case ArvioHyvaksytty(arvosana) =>
+      JObject(JField("arvosana", JString(arvosana)) :: JField("asteikko", JString("HYVAKSYTTY")) :: Nil)
   }
   )
 )

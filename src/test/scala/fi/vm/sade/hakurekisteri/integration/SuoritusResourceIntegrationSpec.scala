@@ -1,27 +1,38 @@
 package fi.vm.sade.hakurekisteri.integration
 
-import fi.vm.sade.hakurekisteri.CleanSharedTestJettyBeforeEach
+import java.util.UUID
+
+import fi.vm.sade.hakurekisteri.{CleanSharedTestJettyBeforeEach, KomoOids}
+import fi.vm.sade.hakurekisteri.arvosana.{ArvioHyvaksytty, Arvosana}
 import fi.vm.sade.hakurekisteri.integration.mocks.SuoritusMock
-import fi.vm.sade.hakurekisteri.rest.support.HakurekisteriJsonSupport
-import org.joda.time.DateTime
-import org.json4s.JArray
+import fi.vm.sade.hakurekisteri.rest.support.{HakurekisteriJsonSupport, SuoritusDeserializer}
+import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, VirallinenSuoritus}
+import org.joda.time.{DateTime, LocalDate}
+import org.json4s.{JArray, JValue}
 import org.json4s.JsonAST.JObject
 import org.json4s.jackson.JsonMethods._
 import org.scalatest._
 
 class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJettyBeforeEach with Matchers with HakurekisteriJsonSupport {
+  override implicit def jsonFormats = super.jsonFormats ++ List(new SuoritusDeserializer)
+
   val lukioKomo = "1.2.246.562.5.2013061010184237348007"
   val peruskouluKomo = "1.2.246.562.13.62959769647"
-  val aarnenLukio = SuoritusMock.getSuoritusByHenkiloKomoTila("1.2.246.562.24.71944845619", lukioKomo, "KESKEN")
+  private val aarnenOid: String = "1.2.246.562.24.71944845619"
+  val aarnenLukio = SuoritusMock.getSuoritusByHenkiloKomoTila(aarnenOid, lukioKomo, "KESKEN")
   val tyynenLukio = SuoritusMock.getSuoritusByHenkiloKomoTila("1.2.246.562.24.98743797763", lukioKomo, "KESKEN")
-  val aarnenLukioValmistuminen = SuoritusMock.getSuoritusByHenkiloKomoTila("1.2.246.562.24.71944845619", lukioKomo, "VALMIS")
+  val aarnenLukioValmistuminen = SuoritusMock.getSuoritusByHenkiloKomoTila(aarnenOid, lukioKomo, "VALMIS")
   val tyynenPeruskoulu = SuoritusMock.getSuoritusByHenkiloKomoTila("1.2.246.562.24.98743797763", peruskouluKomo, "KESKEN")
 
-  def postSuoritus(suoritus: String): String =
-    post("/suoritusrekisteri/rest/v1/suoritukset", suoritus, Map("Content-Type" -> "application/json; charset=UTF-8")) {
+  def postSuoritus(suoritus: String): String = postResourceJson(suoritus, "suoritukset")
+  def postArvosana(arvosana: String): String = postResourceJson(arvosana, "arvosanat")
+
+  private def postResourceJson(content: String, endpoint: String) = {
+    post(s"/suoritusrekisteri/rest/v1/$endpoint", content, Map("Content-Type" -> "application/json; charset=UTF-8")) {
       response.status should be(201)
       parse(body).extract[JObject].values("id").asInstanceOf[String]
     }
+  }
 
   def responseIds(body: String): Seq[String] = parse(body).extract[JArray].arr
     .map(_.extract[JObject].values("id").asInstanceOf[String])
@@ -112,6 +123,51 @@ class SuoritusResourceIntegrationSpec extends FlatSpec with CleanSharedTestJetty
     get("/suoritusrekisteri/rest/v1/suoritukset", ("komo", peruskouluKomo), ("muokattuJalkeen", afterTyyne.toString)) {
       response.status should be(200)
       parse(response.body).extract[JArray].arr shouldBe empty
+    }
+  }
+
+  it should "store ammatillisenKielikoe suoritus so it is returned from oppijat" in {
+    get(s"/suoritusrekisteri/rest/v1/oppijat/$aarnenOid") {
+      (parse(response.body) \ "suoritukset").extract[JArray].arr shouldBe empty
+    }
+
+    val aarnenKielikoe = SuoritusMock.getResourceJson("/mock-data/suoritus/suoritus-aarne-ammatillisen-kielikoe-valmis.json")
+    val createdSuoritusResourceId = postSuoritus(aarnenKielikoe)
+    postArvosana(s"""{  "suoritus": "$createdSuoritusResourceId", "myonnetty": "19.9.2016",
+                        "source": "1.2.246.562.11.00000005429",
+                        "arvio": {"arvosana": "hyvaksytty", "asteikko": "HYVAKSYTTY" },
+                        "aine": "kielikoe", "lisatieto": "FI"
+                     }""")
+
+
+    get(s"/suoritusrekisteri/rest/v1/oppijat/$aarnenOid") {
+      val suoritusJson: JValue = parse(response.body) \ "suoritukset"
+      var suoritusArvosanaArray = suoritusJson.extract[JArray].arr
+      suoritusArvosanaArray should have length 1
+
+      val kielikoeSuoritusJson = suoritusArvosanaArray.head \ "suoritus"
+      val suoritus = kielikoeSuoritusJson.extract[Suoritus]
+      suoritus shouldBe an[VirallinenSuoritus]
+      val kielikoeSuoritus = suoritus.asInstanceOf[VirallinenSuoritus]
+
+      kielikoeSuoritus.henkiloOid should equal(aarnenOid)
+      kielikoeSuoritus.source should equal("Test")
+      kielikoeSuoritus.vahvistettu should equal(true)
+      kielikoeSuoritus.komo should equal(KomoOids.ammatillisenKielikoe)
+      kielikoeSuoritus.myontaja should equal("1.2.246.562.11.00000005429")
+
+      val kielikoeArvosanaArrayJson = suoritusArvosanaArray.head \ "arvosanat"
+      val kielikoeArvosanaArray = kielikoeArvosanaArrayJson.extract[JArray].arr
+      kielikoeArvosanaArray should have length 1
+      val arvosanaJson = kielikoeArvosanaArray.head
+      val arvosana = arvosanaJson.extract[Arvosana]
+
+      arvosana.suoritus should equal(UUID.fromString(createdSuoritusResourceId))
+      arvosana.arvio should equal(ArvioHyvaksytty("hyvaksytty"))
+      arvosana.source should equal("1.2.246.562.11.00000005429")
+      arvosana.aine should equal("kielikoe")
+      arvosana.lisatieto should equal(Some("FI"))
+      arvosana.myonnetty should equal(Some(new LocalDate(2016, 9, 19)))
     }
   }
 }
