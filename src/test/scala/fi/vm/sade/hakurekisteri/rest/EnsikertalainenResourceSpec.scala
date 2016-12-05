@@ -6,6 +6,7 @@ import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.ensikertalainen.{Ensikertalainen, EnsikertalainenActor, KkVastaanotto, Testihaku}
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
+import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.OpiskeluoikeusHenkilotQuery
@@ -64,7 +65,8 @@ class EnsikertalainenResourceSpec extends ScalatraFunSuite with MockitoSugar {
         case q: GetHaku => sender ! Testihaku
       }
     })),
-    hakemusService = hakemusServiceMock
+    hakemusService = hakemusServiceMock,
+    oppijaNumeroRekisteri = MockOppijaNumeroRekisteri
   ))), hakemusService = hakemusServiceMock), "/ensikertalainen")
 
   test("returns 200 ok") {

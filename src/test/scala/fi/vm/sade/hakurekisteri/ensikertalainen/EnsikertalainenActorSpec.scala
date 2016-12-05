@@ -8,6 +8,7 @@ import fi.vm.sade.hakurekisteri.MockConfig
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku, Kieliversiot}
+import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
@@ -185,7 +186,8 @@ class EnsikertalainenActorSpec extends FlatSpec with Matchers with FutureWaiting
           case q: GetHaku => sender ! Testihaku
         }
       })),
-      hakemusService = hakemusServiceMock
+      hakemusService = hakemusServiceMock,
+      oppijaNumeroRekisteri = MockOppijaNumeroRekisteri
     ) {
       override val sizeLimitForFetchingByPersons: Int = 1
     })), valintarekisteri)

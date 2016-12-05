@@ -12,6 +12,7 @@ import fi.vm.sade.hakurekisteri.ensikertalainen.{EnsikertalainenActor, Testihaku
 import fi.vm.sade.hakurekisteri.integration._
 import fi.vm.sade.hakurekisteri.integration.hakemus._
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, HakuNotFoundException}
+import fi.vm.sade.hakurekisteri.integration.henkilo.MockOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, Komo, KomoResponse, Koulutuskoodi}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriActor}
 import fi.vm.sade.hakurekisteri.opiskelija.{Opiskelija, OpiskelijaJDBCActor, OpiskelijaTable}
@@ -142,6 +143,7 @@ class OppijaResourceSpec extends ScalatraFunSuite with MockitoSugar with Dispatc
         }
       })),
       hakemusServiceMock,
+      MockOppijaNumeroRekisteri,
       config
     )))
     resource = new OppijaResource(rekisterit, hakemusServiceMock, ensikertalaisuusActor)

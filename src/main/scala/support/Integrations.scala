@@ -5,7 +5,7 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.pattern.{Backoff, BackoffSupervisor}
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.integration.hakemus._
-import fi.vm.sade.hakurekisteri.integration.henkilo.MockHenkiloActor
+import fi.vm.sade.hakurekisteri.integration.henkilo.{IOppijaNumeroRekisteri, MockHenkiloActor, MockOppijaNumeroRekisteri, OppijaNumeroRekisteri}
 import fi.vm.sade.hakurekisteri.integration.koodisto.KoodistoActor
 import fi.vm.sade.hakurekisteri.integration.organisaatio.{HttpOrganisaatioActor, MockOrganisaatioActor}
 import fi.vm.sade.hakurekisteri.integration.parametrit.{HttpParameterActor, MockParameterActor}
@@ -23,6 +23,7 @@ import org.quartz.TriggerBuilder._
 import org.quartz.impl.StdSchedulerFactory
 import org.slf4j.LoggerFactory
 import support.YtlRerunPolicy.rerunPolicy
+
 import scala.concurrent.duration._
 import scala.util.{Failure, Try}
 
@@ -43,6 +44,7 @@ trait Integrations {
   val valintarekisteri: ActorRef
   val proxies: Proxies
   val hakemusClient: VirkailijaRestClient
+  val oppijaNumeroRekisteri: IOppijaNumeroRekisteri
 }
 
 object Integrations {
@@ -91,6 +93,7 @@ class MockIntegrations(rekisterit: Registers, system: ActorSystem, config: Confi
       case a: HasPermission => sender ! true
     }
   }))
+  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = MockOppijaNumeroRekisteri
 }
 
 
@@ -188,4 +191,5 @@ class BaseIntegrations(rekisterit: Registers,
   quartzScheduler.scheduleJob(lambdaJob(rerunSync),
     newTrigger().startNow().withSchedule(cronSchedule(syncAllCronExpression)).build());
   override val hakuAppPermissionChecker: ActorRef = system.actorOf(Props(new HakuAppPermissionCheckerActor(hakuAppPermissionCheckerClient, organisaatiot)))
+  override val oppijaNumeroRekisteri: IOppijaNumeroRekisteri = new OppijaNumeroRekisteri(new VirkailijaRestClient(config.integrations.oppijaNumeroRekisteriConfig, None)(restEc, system))
 }
