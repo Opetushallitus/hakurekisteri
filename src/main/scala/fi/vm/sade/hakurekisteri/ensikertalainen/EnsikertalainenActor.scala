@@ -6,12 +6,13 @@ import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
-import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, HakemusService, IHakemusService}
+import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusHenkilotQuery, VirallinenSuoritus}
+import fi.vm.sade.hakurekisteri.tools.LinkedHenkiloOidHelper._
 import org.joda.time.{DateTime, DateTimeZone, ReadableInstant}
 
 import scala.compat.Platform
@@ -108,39 +109,48 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
     }.toSeq
   }
 
-  private def laskeEnsikertalaisuudet(q: EnsikertalainenQuery): Future[Seq[Ensikertalainen]] = for {
-    haku <- (hakuActor ? GetHaku(q.hakuOid)).mapTo[Haku]
-    tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(q.henkiloOids, q.hakuOid, q.hakukohdeOid)
-    valmistumishetket <- valmistumiset(
-      q.henkiloOids
-        .diff(tutkintovuodetHakemuksilta.keySet)
-        .diff(q.suoritukset.getOrElse(Seq()).map(_.henkiloOid).toSet),
-      q.suoritukset.getOrElse(Seq())
-    )
-    opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
-      q.henkiloOids
-        .diff(tutkintovuodetHakemuksilta.keySet)
-        .diff(valmistumishetket.keySet)
-        .diff(q.opiskeluoikeudet.getOrElse(Seq()).map(_.henkiloOid).toSet),
-      q.opiskeluoikeudet.getOrElse(Seq())
-    )
-    vastaanottohetket <- vastaanotot(
-      q.henkiloOids
-        .diff(tutkintovuodetHakemuksilta.keySet)
-        .diff(valmistumishetket.keySet)
-        .diff(opiskeluoikeuksienAlkamiset.keySet)
-    )
-  } yield {
-    q.henkiloOids.toSeq.map(henkilo => {
-      ensikertalaisuus(
-        henkilo,
-        haku.viimeinenHakuaikaPaattyy.getOrElse(throw new IllegalArgumentException(s"haku ${q.hakuOid} is missing hakuajan päätös")),
-        valmistumishetket.get(henkilo),
-        opiskeluoikeuksienAlkamiset.get(henkilo),
-        vastaanottohetket.get(henkilo),
-        tutkintovuodetHakemuksilta.get(henkilo)
+  private def laskeEnsikertalaisuudet(q: EnsikertalainenQuery): Future[Seq[Ensikertalainen]] = {
+    val henkiloLinks: Map[String, Set[String]] = fetchLinkedHenkiloOidsMap(q.henkiloOids)
+    val henkiloOidsWithLinked: Set[String] = combineLinkedHenkiloOids(q.henkiloOids, henkiloLinks)
+
+    for {
+      haku <- (hakuActor ? GetHaku(q.hakuOid)).mapTo[Haku]
+      tutkintovuodetHakemuksilta <- tutkinnotHakemuksilta(henkiloOidsWithLinked, q.hakuOid, q.hakukohdeOid)
+      valmistumishetket <- valmistumiset(
+        henkiloOidsWithLinked
+          .diff(tutkintovuodetHakemuksilta.keySet)
+          .diff(q.suoritukset.getOrElse(Seq()).map(_.henkiloOid).toSet),
+        q.suoritukset.getOrElse(Seq())
       )
-    })
+      opiskeluoikeuksienAlkamiset <- opiskeluoikeudetAlkaneet(
+        henkiloOidsWithLinked
+          .diff(tutkintovuodetHakemuksilta.keySet)
+          .diff(valmistumishetket.keySet)
+          .diff(q.opiskeluoikeudet.getOrElse(Seq()).map(_.henkiloOid).toSet),
+        q.opiskeluoikeudet.getOrElse(Seq())
+      )
+      vastaanottohetket <- vastaanotot(
+        henkiloOidsWithLinked
+          .diff(tutkintovuodetHakemuksilta.keySet)
+          .diff(valmistumishetket.keySet)
+          .diff(opiskeluoikeuksienAlkamiset.keySet)
+      )
+    } yield {
+      q.henkiloOids.toSeq.flatMap(henkilo => {
+        henkiloLinks.get(henkilo).map(links => {
+          links.map(linkedOid => {
+            ensikertalaisuus(
+              henkilo,
+              haku.viimeinenHakuaikaPaattyy.getOrElse(throw new IllegalArgumentException(s"haku ${q.hakuOid} is missing hakuajan päätös")),
+              valmistumishetket.get(linkedOid),
+              opiskeluoikeuksienAlkamiset.get(linkedOid),
+              vastaanottohetket.get(linkedOid),
+              tutkintovuodetHakemuksilta.get(linkedOid)
+            )
+          })
+        }).getOrElse(throw new Exception(""))
+      })
+    }
   }
 
   private def tutkinnotHakemuksilta(hakuOid: String): Future[Map[String, Option[Int]]] = {
