@@ -8,11 +8,11 @@ import fi.vm.sade.hakurekisteri.Config
 import fi.vm.sade.hakurekisteri.dates.Ajanjakso
 import fi.vm.sade.hakurekisteri.integration.hakemus.{FullHakemus, HakemusAnswers, IHakemusService}
 import fi.vm.sade.hakurekisteri.integration.haku.{GetHaku, Haku}
+import fi.vm.sade.hakurekisteri.integration.henkilo.IOppijaNumeroRekisteri
 import fi.vm.sade.hakurekisteri.integration.tarjonta.{GetKomoQuery, KomoResponse}
 import fi.vm.sade.hakurekisteri.integration.valintarekisteri.{EnsimmainenVastaanotto, ValintarekisteriQuery}
 import fi.vm.sade.hakurekisteri.opiskeluoikeus.{Opiskeluoikeus, OpiskeluoikeusHenkilotQuery}
 import fi.vm.sade.hakurekisteri.suoritus.{Suoritus, SuoritusHenkilotQuery, VirallinenSuoritus}
-import fi.vm.sade.hakurekisteri.tools.LinkedHenkiloOidHelper._
 import org.joda.time.{DateTime, DateTimeZone, ReadableInstant}
 
 import scala.compat.Platform
@@ -60,6 +60,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
                            tarjontaActor: ActorRef,
                            hakuActor: ActorRef,
                            hakemusService: IHakemusService,
+                           oppijaNumeroRekisteri: IOppijaNumeroRekisteri,
                            config: Config)(implicit val ec: ExecutionContext) extends Actor with ActorLogging {
 
   val syksy2014 = "2014S"
@@ -110,8 +111,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
   }
 
   private def laskeEnsikertalaisuudet(q: EnsikertalainenQuery): Future[Seq[Ensikertalainen]] = {
-    val henkiloLinks: Map[String, Set[String]] = fetchLinkedHenkiloOidsMap(q.henkiloOids)
-    val henkiloOidsWithLinked: Set[String] = combineLinkedHenkiloOids(q.henkiloOids, henkiloLinks)
+    val henkiloLinks: Map[String, Set[String]] = oppijaNumeroRekisteri.fetchLinkedHenkiloOidsMap(q.henkiloOids)
+    val henkiloOidsWithLinked: Set[String] = IOppijaNumeroRekisteri.combineLinkedHenkiloOids(q.henkiloOids, henkiloLinks)
 
     for {
       haku <- (hakuActor ? GetHaku(q.hakuOid)).mapTo[Haku]

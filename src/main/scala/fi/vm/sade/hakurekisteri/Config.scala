@@ -186,6 +186,8 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val sijoitteluServiceUrlQa = s"https://$hostQa/sijoittelu-service"
   val tarjontaServiceUrlQa = s"https://$hostQa/tarjonta-service"
   val henkiloServiceUrlQa = s"https://$hostQa/authentication-service"
+  val oppijaNumeroRekisteriServiceUrlQa = s"https://$hostQa/oppijanumerorekisteri-service"
+
   val virtaServiceUrlTest = "http://virtawstesti.csc.fi/luku/OpiskelijanTiedot"
   val virtaJarjestelmaTest = ""
   val virtaTunnusTest = ""
@@ -199,6 +201,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
   val parameterServiceUrl = properties.getOrElse("cas.service.ohjausparametrit-service", parameterServiceUrlQa)
   val organisaatioServiceUrl = properties.getOrElse("cas.service.organisaatio-service", organisaatioServiceUrlQa)
   val valintaTulosServiceUrl = properties.getOrElse("cas.service.valintatulos-service", valintaTulosServiceUrlQa)
+  val oppijaNumeroRekisteriUrl = properties.getOrElse("cas.service.oppijanumerorekisteri-service", oppijaNumeroRekisteriServiceUrlQa)
   val maxApplications = properties.getOrElse("suoritusrekisteri.hakijat.max.applications", "2000").toInt
   val virtaServiceUrl = properties.getOrElse("suoritusrekisteri.virta.service.url", virtaServiceUrlTest)
   val virtaJarjestelma = properties.getOrElse("suoritusrekisteri.virta.jarjestelma", virtaJarjestelmaTest)
@@ -219,6 +222,7 @@ class IntegrationConfig(hostQa: String, properties: Map[String, String]) {
     override val httpClientRequestTimeout: Int = 1.hours.toMillis.toInt
   }
   val valintarekisteriConfig = ServiceConfig(serviceUrl = valintaTulosServiceUrl, properties = properties)
+  val oppijaNumeroRekisteriConfig = ServiceConfig(serviceUrl = oppijaNumeroRekisteriUrl, properties = properties)
 
   val koodistoCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.koodisto", "12").toInt
   val organisaatioCacheHours = properties.getOrElse("suoritusrekisteri.cache.hours.organisaatio", "12").toInt
