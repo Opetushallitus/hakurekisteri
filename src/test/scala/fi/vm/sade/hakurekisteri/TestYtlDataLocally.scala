@@ -2,37 +2,30 @@ package fi.vm.sade.hakurekisteri
 
 import java.io._
 import java.nio.charset.Charset
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
 import java.util.UUID
 import java.util.zip.ZipInputStream
-import javafx.collections.transformation.SortedList
+import javax.net.ssl._
 
-import akka.actor.{ActorSystem}
-import fi.vm.sade.hakurekisteri.arvosana.Arvosana
+import akka.actor.ActorSystem
+import fi.vm.sade.hakurekisteri.integration.ExecutorUtil
 import fi.vm.sade.hakurekisteri.integration.ytl._
-import fi.vm.sade.hakurekisteri.integration.{ExecutorUtil}
-import fi.vm.sade.hakurekisteri.suoritus.ItseilmoitettuTutkinto
-import fi.vm.sade.hakurekisteri.tools.{Zip}
 import fi.vm.sade.javautils.httpclient.ApacheOphHttpClient
 import fi.vm.sade.scalaproperties.OphProperties
-import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.tar.{TarArchiveEntry, TarArchiveOutputStream}
 import org.apache.commons.io.IOUtils
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 import org.json4s.DefaultFormats
-import scala.annotation.tailrec
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.{immutable, SortedMap}
-import scala.concurrent.{Await, Future}
-import javax.net.ssl._;
-import java.security.{SecureRandom}
-import java.security.cert.X509Certificate
-import scala.concurrent.duration._
-import scala.io.Source
-import scala.util.{Failure, Success, Try}
 import org.json4s.jackson.Serialization._
 
-import scala.xml.pull.{EvElemStart, XMLEvent, XMLEventReader}
+import scala.collection.SortedMap
+import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
+import scala.io.Source
+import scala.util.{Failure, Success}
 
 private final class TrustManagerThatTrustsAllCertificates extends X509TrustManager {
   override def getAcceptedIssuers: Array[X509Certificate] = Array()
