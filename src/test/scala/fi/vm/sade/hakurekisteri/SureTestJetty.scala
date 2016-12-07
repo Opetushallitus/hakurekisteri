@@ -15,7 +15,8 @@ object SureTestJetty extends App {
 }
 
 object SureTestJettyWithMocks extends App {
-  new SureTestJetty(8080, config = Config.mockDevConfig).start
+  ItPostgres.start()
+  new SureTestJetty(8080, config = new MockConfig).start
 }
 
 object SharedTestJetty {
