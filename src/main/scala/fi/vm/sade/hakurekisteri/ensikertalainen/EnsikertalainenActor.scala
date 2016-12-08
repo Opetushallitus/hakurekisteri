@@ -112,6 +112,14 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
     }.toSeq
   }
 
+  def mergeEnsikertalaisuus(linked: Set[Ensikertalainen]): Ensikertalainen = {
+    var linkedData: Set[(String, Set[MenettamisenPeruste])] = linked.map(h => (
+      h.henkiloOid,
+      h.menettamisenPeruste
+    ))//TODO .reduce(henkiloOid, concat(menettamisenPeruste))
+    ???
+  }
+
   private def laskeEnsikertalaisuudet(q: EnsikertalainenQuery): Future[Seq[Ensikertalainen]] = {
     val henkiloLinks: Map[String, Set[String]] = oppijaNumeroRekisteri.fetchLinkedHenkiloOidsMap(q.henkiloOids)
     val henkiloOidsWithLinked: Set[String] = IOppijaNumeroRekisteri.combineLinkedHenkiloOids(q.henkiloOids, henkiloLinks)
@@ -141,7 +149,7 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
     } yield {
       q.henkiloOids.toSeq.flatMap(henkilo => {
         henkiloLinks.get(henkilo).map(links => {
-          links.map(linkedOid => {
+          mergeEnsikertalaisuus(links.map(linkedOid => {
             ensikertalaisuus(
               henkilo,
               haku.viimeinenHakuaikaPaattyy.getOrElse(throw new IllegalArgumentException(s"haku ${q.hakuOid} is missing hakuajan päätös")),
@@ -150,8 +158,8 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
               vastaanottohetket.get(linkedOid),
               tutkintovuodetHakemuksilta.get(linkedOid)
             )
-          })
-        }).getOrElse(throw new Exception(""))
+          }))
+        })
       })
     }
   }
