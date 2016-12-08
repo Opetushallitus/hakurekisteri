@@ -52,7 +52,9 @@ case class SuoritettuKkTutkintoHakemukselta(vuosi: Int) extends MenettamisenPeru
   override val peruste: String = "SuoritettuKkTutkintoHakemukselta"
 }
 
-case class Ensikertalainen(henkiloOid: String, ensikertalainen: Boolean, menettamisenPeruste: Option[MenettamisenPeruste])
+case class Ensikertalainen(henkiloOid: String, menettamisenPeruste: Set[MenettamisenPeruste]){
+  val ensikertalainen = menettamisenPeruste.isEmpty
+}
 
 class EnsikertalainenActor(suoritusActor: ActorRef,
                            opiskeluoikeusActor: ActorRef,
@@ -265,19 +267,18 @@ class EnsikertalainenActor(suoritusActor: ActorRef,
                        valmistuminen: Option[DateTime],
                        opiskeluoikeusAlkanut: Option[DateTime],
                        vastaanotto: Option[DateTime],
-                       suorittanutTutkinnonHakemukselta: Option[Int]): Ensikertalainen = (valmistuminen, opiskeluoikeusAlkanut, vastaanotto, suorittanutTutkinnonHakemukselta) match {
-    case (Some(tutkintopaiva), _, _, _) if tutkintopaiva.isBefore(leikkuripaiva) =>
-      Ensikertalainen(henkilo, ensikertalainen = false, Some(SuoritettuKkTutkinto(tutkintopaiva)))
-    case (_, Some(opiskeluoikeusAlkupvm), _, _) if opiskeluoikeusAlkupvm.isBefore(leikkuripaiva) =>
-      Ensikertalainen(henkilo, ensikertalainen = false, Some(OpiskeluoikeusAlkanut(opiskeluoikeusAlkupvm)))
-    case (_, _, Some(vastaanottopaiva), _) if vastaanottopaiva.isBefore(leikkuripaiva) =>
-      Ensikertalainen(henkilo, ensikertalainen = false, Some(KkVastaanotto(vastaanottopaiva)))
-    case (_, _, _, Some(vuosi)) =>
-      Ensikertalainen(henkilo, ensikertalainen = false, Some(SuoritettuKkTutkintoHakemukselta(vuosi)))
-    case _ =>
-      Ensikertalainen(henkilo, ensikertalainen = true, None)
+                       suorittanutTutkinnonHakemukselta: Option[Int]): Ensikertalainen = {
+    var s: Seq[MenettamisenPeruste] = Seq()
+    if (valmistuminen.isDefined && valmistuminen.get.isBefore(leikkuripaiva))
+      s = s :+ SuoritettuKkTutkinto(valmistuminen.get)
+    if (opiskeluoikeusAlkanut.isDefined && opiskeluoikeusAlkanut.get.isBefore(leikkuripaiva))
+      s = s :+ OpiskeluoikeusAlkanut(opiskeluoikeusAlkanut.get)
+    if (vastaanotto.isDefined && vastaanotto.get.isBefore(leikkuripaiva))
+      s = s :+ KkVastaanotto(vastaanotto.get)
+    if(suorittanutTutkinnonHakemukselta.isDefined)
+      s = s :+ SuoritettuKkTutkintoHakemukselta(suorittanutTutkinnonHakemukselta.get)
+    Ensikertalainen(henkilo, s.toSet)
   }
-
 }
 
 
